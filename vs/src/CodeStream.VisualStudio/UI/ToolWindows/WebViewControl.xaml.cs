@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows {
@@ -20,7 +21,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
 		private readonly ISessionService _sessionService;
-		private readonly IDisposable _languageServerDisconnectedEvent;
+		private IDisposable _languageServerDisconnectedEvent;
 
 		private IDisposable _languageServerReadyEvent;
 		private bool _disposed = false;
@@ -43,25 +44,30 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 					_eventAggregator = _componentModel.GetService<IEventAggregator>();
 					_sessionService = _componentModel.GetService<ISessionService>();
-					_browserService = _componentModel.GetService<IBrowserService>();
-
-					_browserService.Initialize();
-					_browserService.AttachControl(Grid);
-					_browserService.LoadSplashView();
-
-					_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
-						.Subscribe(_ => {
-							Log.Debug($"{nameof(LanguageServerDisconnectedEvent)} IsReloading={_?.IsReloading}");
+					_browserService = _componentModel.GetService<IBrowserService>();					
+					_ = _browserService.InitializeAsync().ContinueWith(_ => {
+						ThreadHelper.JoinableTaskFactory.Run(async delegate {
+							await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+							// requires UI thread 
+							_browserService.AttachControl(Grid);
+							_browserService.LoadSplashView();
+							_languageServerDisconnectedEvent = _eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+							.Subscribe(e => {
+								Log.Debug($"{nameof(LanguageServerDisconnectedEvent)} IsReloading={e?.IsReloading}");
 
 							// if we're in the process of reloading the agent, don't show the splash screen
-							if (_.IsReloading) {								
-								return;
-							}
+							if (e.IsReloading) {
+									return;
+								}
 
-							_browserService.LoadSplashView();
+								_browserService.LoadSplashView();
+							});
+
+							SetupInitialization();
 						});
 
-					SetupInitialization();
+						 
+					}, TaskScheduler.Default);			 					 
 				}
 			}
 			catch (Exception ex) {
@@ -106,8 +112,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 			if (_languageServerReadyEvent == null) {
 				Log.Debug($"{nameof(SetupInitialization)} Setting up {nameof(LanguageServerReadyEvent)} event");
 				// ReSharper disable once PossibleNullReferenceException
-				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()
-					.ObserveOnApplicationDispatcher()
+				_languageServerReadyEvent = _eventAggregator.GetEvent<LanguageServerReadyEvent>()					
 					.Subscribe(_ => {
 						Log.Debug($"{nameof(LanguageServerReadyEvent)} Received, calling {nameof(InitializeCore)}");
 						InitializeCore();

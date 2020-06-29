@@ -14,7 +14,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			var assembly = Assembly.GetAssembly(typeof(LanguageServerClientProcess));
 			string arguments = null;
 			var exe = @"node.exe";
-			var logPath = $"{Application.LogPath}vs-agent.log";
+			var logPath = $"{Application.LogPath}{Application.LogNameAgent}";
 #if DEBUG
 			var path = Path.GetDirectoryName(assembly.Location) + @"\dist\agent.js";
 			arguments = $@"--nolazy --inspect=6010 ""{path}"" --stdio --log={logPath}";

@@ -43,19 +43,14 @@ namespace CodeStream.VisualStudio.Packages {
 		private List<IDisposable> _disposables;
 		private List<VsCommandBase> _commands;
 
-		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-				AsyncPackageHelper.InitializePackage(GetType().Name);
-
 				// can only get a dialog page from a package
 				OptionsDialogPage = (IOptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
-
 				((IServiceContainer)this).AddService(typeof(SOptionsDialogPageAccessor), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
-
-				await base.InitializeAsync(cancellationToken, progress);
 
 				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
@@ -63,6 +58,12 @@ namespace CodeStream.VisualStudio.Packages {
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
 				Assumes.Present(_settingsManager);
+
+				AsyncPackageHelper.InitializeLogging(_settingsManager);
+				AsyncPackageHelper.InitializePackage(GetType().Name);
+				
+
+				await base.InitializeAsync(cancellationToken, progress);			 
 
 				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
 				Log.Debug($"{nameof(InitializeAsync)} completed");

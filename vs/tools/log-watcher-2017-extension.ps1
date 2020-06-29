@@ -1,5 +1,15 @@
-﻿$host.ui.RawUI.WindowTitle = "EXTENSION"
-$path = "$($env:LOCALAPPDATA)\Codestream\Logs\vs-extension.log" 
+﻿[CmdletBinding(PositionalBinding = $false)]
+Param(	 
+	[Parameter(Mandatory = $false)]
+	[System.String] $Matches = "", 
+
+	[Parameter(Mandatory = $false)]
+	[Alias("h")]
+	[Switch] $Help = $false
+)
+
+$host.ui.RawUI.WindowTitle = "2017 EXTENSION"
+$path = "$($env:LOCALAPPDATA)\Codestream\Logs\vs-2017-extension.log" 
 
 function Get-LogColor {
     Param([Parameter(Position=0)]
@@ -19,6 +29,6 @@ function Get-LogColor {
 
 Clear-Content $path
 gc -wait $path | ForEach {
-if ($Matches -ne "" -and !$_.Contains($Matches)) { return; }
-Write-Host -ForegroundColor (Get-LogColor $_) $_
+ if ($Matches -ne "" -and !$_.Contains($Matches)) { return; }
+ Write-Host -ForegroundColor (Get-LogColor $_) $_
 }

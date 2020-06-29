@@ -5,11 +5,9 @@ using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 using Serilog;
 using StreamJsonRpc;
 using System;
-using System.Threading;
 
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public abstract class LanguageServerClientBase : ILanguageServerClientManager {
@@ -142,10 +140,6 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				}
 
 				Log.Information($"AutoSignIn Result={autoSignInResult}");
-				Log.Debug($"Switching to UI thread");
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-				Log.Debug("Switched to UI thread");
-
 				Log.Debug($"Publishing {nameof(LanguageServerReadyEvent)}...");
 				EventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				Log.Debug($"Published {nameof(LanguageServerReadyEvent)}");

@@ -215,7 +215,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// <param name="e"></param>
 		/// <returns></returns>
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
-		public async System.Threading.Tasks.Task OnDidLogout(JToken e) {
+		public async System.Threading.Tasks.Task OnDidLogoutAsync(JToken e) {
 			try {
 				var @params = e.ToObject<DidLogoutNotification>();
 				using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLogoutNotificationType.MethodName} Reason={@params?.Reason}", Serilog.Events.LogEventLevel.Information)) {
@@ -228,7 +228,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(OnDidLogout));
+				Log.Error(ex, nameof(OnDidLogoutAsync));
 			}
 		}
 
@@ -256,7 +256,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 							componentModel.GetService<IWebviewUserSettingsService>()
 							);
 
-						authenticationController.CompleteSigninAsync(e["data"]);
+						authenticationController.CompleteSignin(e["data"]);
 					}
 				}
 				catch (Exception ex) {
@@ -300,13 +300,13 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		}
 
 		[JsonRpcMethod(DidChangeServerUrlNotificationType.MethodName)]
-		public async System.Threading.Tasks.Task DidChangeServerUrl(JToken e) {
-			using (Log.CriticalOperation($"{nameof(DidChangeServerUrl)} Method={DidChangeServerUrlNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
+		public async System.Threading.Tasks.Task DidChangeServerUrlAsync(JToken e) {
+			using (Log.CriticalOperation($"{nameof(DidChangeServerUrlAsync)} Method={DidChangeServerUrlNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
 				try {
 					_browserService.EnqueueNotification(new DidChangeServerUrlNotificationType(e));
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"Problem with {nameof(DidChangeServerUrl)}");
+					Log.Error(ex, $"Problem with {nameof(DidChangeServerUrlAsync)}");
 				}
 			}
 

@@ -1,6 +1,6 @@
-﻿#if DEBUG
-using CodeStream.VisualStudio.Core.Logging.Enrichers;
-#endif
+﻿//#if DEBUG
+//using CodeStream.VisualStudio.Core.Logging.Enrichers;
+//#endif
 using CodeStream.VisualStudio.Core.Logging.Sanitizer;
 using Serilog;
 using Serilog.Core;
@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Core.Logging {
 		private static readonly LoggingLevelSwitch _loggingLevelSwitch = new LoggingLevelSwitch(_defaultLoggingLevel);
 		private static ILogger CreateLogger() {
 			try {
-				var logPath = Path.Combine(Application.LogPath, "vs-extension.log");
+				var logPath = Path.Combine(Application.LogPath, Application.LogNameExtension);
 				var template = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{ProcessId:00000}] {Level:u4} [{ThreadId:00}] {ShortSourceContext,-25} {Message:lj}{NewLine}{Exception}";
 #if DEBUG
 				// day/month/year and processId just aren't that important when developing -- they take up space
@@ -42,14 +42,16 @@ namespace CodeStream.VisualStudio.Core.Logging {
 #endif
 					.MinimumLevel.ControlledBy(_loggingLevelSwitch)
 					.WriteTo.File(
-						new LogSanitizingFormatter(
+						formatter: new LogSanitizingFormatter(
 							new TextProcessor(),
 							new List<ISanitizingFormatRule> { new SecretsSanitizingFormatRule() },
 							new MessageTemplateTextFormatter(template, new CultureInfo("en-US"))),
-						logPath,
+						path: logPath,
 						fileSizeLimitBytes: 52428800,
-						shared: true);
-
+						buffered: false,
+						shared: true
+				);				 
+ 
 				// writing to this output request the UI thread...
 				//if (ProcessExtensions.IsVisualStudioProcess()) {
 				//	// this can cause performance issues if used at Verbose mode
@@ -101,6 +103,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine(ex);
 #if DEBUG
+				// versions of Serilog* dlls are locked to prevent...
+				// https://github.com/serilog/serilog-sinks-file/issues/159
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -115,6 +119,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine(ex);
 #if DEBUG
+				// versions of Serilog* dlls are locked to prevent...
+				// https://github.com/serilog/serilog-sinks-file/issues/159
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();
@@ -128,6 +134,8 @@ namespace CodeStream.VisualStudio.Core.Logging {
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine(ex);
 #if DEBUG
+				// versions of Serilog* dlls are locked to prevent...
+				// https://github.com/serilog/serilog-sinks-file/issues/159
 				System.Diagnostics.Debugger.Break();
 #endif
 				return new EmptyLogger();

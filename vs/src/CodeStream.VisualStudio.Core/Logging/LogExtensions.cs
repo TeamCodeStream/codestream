@@ -1,11 +1,16 @@
 ﻿using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
 using Serilog;
+using Serilog.Configuration;
+using Serilog.Core;
 using Serilog.Events;
+using Serilog.Formatting;
+using Serilog.Sinks.File;
 using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogExtensions {
@@ -38,14 +43,10 @@ namespace CodeStream.VisualStudio.Core.Logging {
 
 		public static bool IsVerboseEnabled(this ILogger log) => log.IsEnabled(LogEventLevel.Verbose);
 
-		public static Metrics WithMetrics(this ILogger log, string message) {
-#if DEBUG
-			if (!log.IsVerboseEnabled()) return null;
+		public static IMetricsBase WithMetrics(this ILogger log, string message) {
+			if (!log.IsVerboseEnabled()) return EmptyMetrics.Instance;
 
-			return new Metrics(log, message);
-#else
-			return null;
-#endif
+			return new MetricsStarter(log, $"{message}", Guid.NewGuid().ToString("n"));
 		}
 
 		[Conditional("DEBUG")]

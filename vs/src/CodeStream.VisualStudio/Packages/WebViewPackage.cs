@@ -81,7 +81,6 @@ namespace CodeStream.VisualStudio.Packages {
 				_themeEventsService = _componentModel.GetService<IThemeEventsListener>();
 				_themeEventsService.ThemeChangedEventHandler += Theme_Changed;
 
-				AsyncPackageHelper.InitializeLogging(_settingsManager);
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);

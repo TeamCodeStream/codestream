@@ -52,7 +52,7 @@ namespace CodeStream.VisualStudio.Services {
 			}
 			else {
 #if DEBUG
-				Log.DebugWithCaller($"Event Not Found={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+				Log.DebugWithCaller($"Subjects Not Found={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
 #else
 				Log.Debug($"Event Not Found={typeof(TEvent)}");
 #endif

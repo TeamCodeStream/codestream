@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.Core.UI.Extensions;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
@@ -29,16 +29,21 @@ namespace CodeStream.VisualStudio.UI {
 		}
 
 		/// <summary>
-		/// Synchronously tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
+		/// Tries to populate the marker collection while ignoring the response
 		/// </summary>
 		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
-		public bool TrySetMarkers(bool forceUpdate = false) {
-			bool result = false;
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				result = await TrySetMarkersAsync(forceUpdate);
+		public void TrySetMarkers(bool forceUpdate = false) {
+			_ = System.Threading.Tasks.Task.Run(async delegate {
+				_ = TrySetMarkersAsync(forceUpdate);
 			});
-			return result;
+		}
+
+		public void TrySetMarkersIfReady(bool forceUpdate = false) {
+			if (!IsInitialized()) return;
+			_ = System.Threading.Tasks.Task.Run(async delegate {
+				_ = TrySetMarkersAsync(forceUpdate);
+			});
 		}
 
 		/// <summary>
@@ -49,51 +54,52 @@ namespace CodeStream.VisualStudio.UI {
 		public async System.Threading.Tasks.Task<bool> TrySetMarkersAsync(bool forceUpdate = false) {
 			Uri fileUri = null;
 			bool result = false;
-			try {
-				if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
-					Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
-					return false;
-				}
-
-				fileUri = _textDocument.FilePath.ToUri();
-				if (fileUri == null) {
-					Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
-					return false;
-				}
-
-				_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
-				bool? previousResult = null;
-				if (_markers?.Markers.AnySafe() == true || forceUpdate) {
-					if (_wpfTextView.Properties.TryGetProperty(PropertyNames
-						.DocumentMarkers, out List<DocumentMarker> previousMarkersResponse)) {
-						previousResult = previousMarkersResponse.AnySafe();
+			using (var metrics = Log.WithMetrics($"{nameof(DocumentMarkerManager)}:{nameof(TrySetMarkersAsync)}")) {
+				try {
+					if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
+						Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
+						return false;
 					}
-					_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
-					_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
-					Log.Verbose($"Setting Markers({_markers?.Markers.Count}) for {fileUri}");
 
-					var current = _markers?.Markers.Any() == true;
-					if (previousResult == true && current == false) {
-						result = true;
+					fileUri = _textDocument.FilePath.ToUri();
+					if (fileUri == null) {
+						Log.Verbose($"Could not parse file path as uri={_textDocument.FilePath}");
+						return false;
 					}
-					else if (current) {
-						result = true;
+
+					_markers = await _agentService.GetMarkersForDocumentAsync(fileUri, true);
+					bool? previousResult = null;
+					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
+						if (_wpfTextView.Properties.TryGetProperty(PropertyNames
+							.DocumentMarkers, out List<DocumentMarker> previousMarkersResponse)) {
+							previousResult = previousMarkersResponse.AnySafe();
+						}
+						_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
+						_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
+						Log.Verbose($"Setting Markers({_markers?.Markers.Count}) for {fileUri}");
+
+						var current = _markers?.Markers.Any() == true;
+						if (previousResult == true && current == false) {
+							result = true;
+						}
+						else if (current) {
+							result = true;
+						}
+					}
+					else {
+						Log.Verbose("No Codemarks from agent");
+					}
+					if (_markers?.MarkersNotLocated?.AnySafe() == true) {
+						Log.Verbose($"There are {_markers?.MarkersNotLocated.Count()} markers not located");
 					}
 				}
-				else {
-					Log.Verbose("No Codemarks from agent");
+				catch (OverflowException ex) {
+					Log.Error(ex, fileUri?.ToString());
 				}
-				if (_markers?.MarkersNotLocated?.AnySafe() == true) {
-					Log.Verbose($"There are {_markers?.MarkersNotLocated.Count()} markers not located");
+				catch (Exception ex) {
+					Log.Error(ex, nameof(TrySetMarkersAsync));
 				}
 			}
-			catch (OverflowException ex) {
-				Log.Error(ex, fileUri?.ToString());
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(TrySetMarkersAsync));
-			}
-
 			return result;
 		}
 

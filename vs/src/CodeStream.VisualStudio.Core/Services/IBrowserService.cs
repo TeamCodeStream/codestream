@@ -4,7 +4,7 @@ using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Core.Services {
 	public interface IBrowserService {
-		void Initialize();
+		Task InitializeAsync();
 		/// <summary>
 		/// Sends the string to the web view
 		/// </summary>
@@ -49,6 +49,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		void EnqueueNotification(INotificationType message);
 		T GetItem<T>(string name);
 		void SetIsReloading();
-		void SetZoom(double zoomPercentage);
+		void SetZoomInBackground(double zoomPercentage);
 	}
 }

@@ -21,15 +21,17 @@ namespace CodeStream.VisualStudio.Services {
 
 		public virtual T Create() {
 			try {
-				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-				if (componentModel == null) {
-					Log.Error($"missing ComponentModel");
-				}
-				Microsoft.Assumes.Present(componentModel);
+				using (var metrics = Log.WithMetrics($"{nameof(ServiceFactory<T>)} {typeof(T)}")) {
+					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					if (componentModel == null) {
+						Log.Error($"missing ComponentModel");
+					}
+					Microsoft.Assumes.Present(componentModel);
 
-				var service = componentModel.GetService<T>();
-				Microsoft.Assumes.Present(service);
-				return service;
+					var service = componentModel.GetService<T>();
+					Microsoft.Assumes.Present(service);
+					return service;
+				}
 			}
 			catch (CompositionException ex) {
 				Log.Fatal(ex.UnwrapCompositionException(), nameof(Create) + " (Composition)");

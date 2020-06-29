@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
         private string _serverUrl = "https://api.codestream.com";
 #endif
 		private bool _disableStrictSsl = false;
-		private string _proxyUrl;
+		
 		private bool _proxyStrictSsl;
 		private ProxySupport _proxySupport;
 
@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		[Browsable(false)]
 		public Proxy Proxy { get; private set; }
 
+		[Browsable(false)]
 		public bool PauseNotifyPropertyChanged { get; set; }
 
 		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") {

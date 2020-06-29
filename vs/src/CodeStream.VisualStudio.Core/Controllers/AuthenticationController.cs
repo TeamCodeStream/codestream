@@ -96,28 +96,28 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			return false;
 		}
 
-		public bool CompleteSigninAsync(JToken loginResponse) {
+		public bool CompleteSignin(JToken loginResponse) {
 			ProcessLoginResponse processResponse = null;
 			try {
 				try {
 					processResponse = ProcessLogin(loginResponse);
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(CompleteSigninAsync)}");
+					Log.Error(ex, $"{nameof(CompleteSignin)}");
 				}
 
 				if (processResponse?.Success == true) {
-					OnSuccessAsync(loginResponse, processResponse.Email);
+					OnSuccess(loginResponse, processResponse.Email);
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(CompleteSigninAsync));
+				Log.Error(ex, nameof(CompleteSignin));
 			}
 
 			return processResponse?.Success == true;
 		}
 
-		private void OnSuccessAsync(JToken loginResponse, string email) {
+		private void OnSuccess(JToken loginResponse, string email) {
 			_sessionService.SetState(SessionState.UserSignedIn);
 			_eventAggregator.Publish(new SessionReadyEvent());
 
@@ -130,11 +130,9 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 				Log.Debug("OnSuccessAsync ThreadHelper.JoinableTaskFactory.Run...");
 
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					Log.Debug("ThreadHelper.JoinableTaskFactory.Run");
-					Log.Debug("About to SwitchToMainThreadAsync...");
+					Log.Debug("ThreadHelper.JoinableTaskFactory.Run... About to SwitchToMainThreadAsync...");					
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 					Log.Debug("SwitchedToMainThreadAsync");
-
 					using (var scope = SettingsScope.Create(_settingsManager)) {
 						scope.SettingsManager.Email = email;
 					}

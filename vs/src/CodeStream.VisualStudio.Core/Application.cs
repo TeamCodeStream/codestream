@@ -72,8 +72,11 @@ namespace CodeStream.VisualStudio.Core {
 
 		public static DeveloperSettings DeveloperOptions = new DeveloperSettings();
 
+		public static string LogNameExtension { get; set; } = "vs-extension.log";
+		public static string LogNameAgent { get; set; } = "vs-agent.log";
+
 		private static readonly Regex VersionPathRegex = new Regex(@"Microsoft Visual Studio\\(\w+)\\(\w+)\\Common7\\IDE\\devenv.exe$",
-			RegexOptions.Compiled | RegexOptions.IgnoreCase);
+					RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		static Application() {
 			BuildEnv = SolutionInfo.BuildEnv;
@@ -98,9 +101,6 @@ namespace CodeStream.VisualStudio.Core {
 			var localApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name);
 			var tempData = Path.Combine(Path.GetTempPath(), Name);
 
-			LogPath = Path.Combine(localApplicationData, "Logs") + @"\";
-			TempDataPath = Path.Combine(tempData, "Data") + @"\";
-
 			VisualStudioName = fileVersionInfo.FileDescription;
 			VisualStudioVersionString = fileVersionInfo.ProductVersion;
 			VisualStudioVersion = Version.Parse(fileVersionInfo.ProductVersion);
@@ -109,14 +109,23 @@ namespace CodeStream.VisualStudio.Core {
 			// essentially a static class of semi-primitive types that all others rely on, it's ok.
 			VisualStudioDisplayName = TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName;
 
+			string logYear = null; ;
 			if (VisualStudioVersion.Major == 15) {
-				VisualStudioVersionYear = "2017";
+				VisualStudioVersionYear = logYear = "2017";
 			}
 			else if (VisualStudioVersion.Major == 16) {
 				VisualStudioVersionYear = "2019";
 			}
+#if DEBUG
+			if (logYear != null) {
+				LogNameExtension = $"vs-{logYear}-extension.log";
+				LogNameAgent = $"vs-{logYear}-agent.log";
+			}
+#endif
+			LogPath = Path.Combine(localApplicationData, "Logs") + @"\";
+			TempDataPath = Path.Combine(tempData, "Data") + @"\";
 		}
-		
+
 		/// <summary>
 		/// Starts a process and deserialized the output into T
 		/// </summary>

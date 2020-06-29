@@ -11,7 +11,6 @@ using DotNetBrowser;
 using DotNetBrowser.Events;
 using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
@@ -52,7 +51,6 @@ namespace CodeStream.VisualStudio.Services {
 		Restarting
 	}
 
-
 	[Export(typeof(IBrowserServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class BrowserServiceFactory : ServiceFactory<IBrowserService>, IBrowserServiceFactory {
@@ -77,6 +75,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// </summary>
 		private const int QueueLimit = 99;
 
+		private Browser browser;
 		private WPFBrowserView _browserView;
 		private BrowserContext _browserContext;
 		private string _path;
@@ -100,7 +99,7 @@ namespace CodeStream.VisualStudio.Services {
 
 		[ImportingConstructor]
 		public DotNetBrowserService(
-			[Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider,
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 				IEventAggregator eventAggregator) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
@@ -178,10 +177,15 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public virtual void Initialize() {
-			Log.Verbose($"{GetType()} {nameof(Initialize)} Browser...");
-			OnInitialized();
-			Log.Verbose($"{GetType()} {nameof(Initialize)} Browser");
+		public virtual System.Threading.Tasks.Task InitializeAsync() {
+			return System.Threading.Tasks.Task.Run(async delegate {
+				using (var metrics = Log.WithMetrics(nameof(OnInitialized))) {
+					OnInitialized();
+				}
+				using (var metrics = Log.WithMetrics(nameof(InitializeWpfViewAsync))) {
+					await InitializeWpfViewAsync();
+				}
+			});
 		}
 
 		public void SetIsReloading() {
@@ -196,7 +200,7 @@ namespace CodeStream.VisualStudio.Services {
 			_path = GetOrCreateContextParamsPath();
 			_browserContext = new BrowserContext(new BrowserContextParams(_path));
 
-			var browser = BrowserFactory.Create(_browserContext, BrowserType);
+			browser = BrowserFactory.Create(_browserContext, BrowserType);
 
 			browser.Preferences.AllowDisplayingInsecureContent = false;
 			browser.Preferences.AllowRunningInsecureContent = false;
@@ -215,10 +219,12 @@ namespace CodeStream.VisualStudio.Services {
 
 			browser.RenderGoneEvent += Browser_RenderGoneEvent;
 			browser.ScriptContextCreated += Browser_ScriptContextCreated;
+		}
+
+		protected async System.Threading.Tasks.Task InitializeWpfViewAsync() {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			_browserView = new WPFBrowserView(browser);
-			browser.ConsoleMessageEvent += Browser_ConsoleMessageEvent;
-
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut3Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D3)));
@@ -303,6 +309,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public void AttachControl(FrameworkElement frameworkElement) {
+			ThreadHelper.ThrowIfNotOnUIThread();
 			var grid = frameworkElement as Grid;
 			if (grid == null)
 				throw new InvalidOperationException("Grid");
@@ -450,7 +457,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// <returns></returns>
 		public T GetItem<T>(string name) {
 			try {
-				var value = _browserView.Browser.ExecuteJavaScriptAndReturnValue($"window.localStorage.getItem('{name}')");				
+				var value = _browserView.Browser.ExecuteJavaScriptAndReturnValue($"window.localStorage.getItem('{name}')");
 				if (typeof(T) == typeof(bool)) {
 					if (value.IsUndefined()) return (T)(object)false;
 
@@ -460,13 +467,13 @@ namespace CodeStream.VisualStudio.Services {
 					throw new InvalidOperationException($"{typeof(T)} not supported");
 				}
 			}
-			catch(Exception ex) {
+			catch (Exception ex) {
 				Log.Warning(ex, nameof(GetItem));
 			}
 			return default(T);
 		}
 
-		private static string FormatConsoleMessage(ConsoleEventArgs e) {			
+		private static string FormatConsoleMessage(ConsoleEventArgs e) {
 			return $"Browser: Message={e?.Message} Source={e?.Source} Line={e?.LineNumber} Level={e.Level}";
 		}
 
@@ -725,17 +732,21 @@ namespace CodeStream.VisualStudio.Services {
 			return CloseStatus.CANCEL;
 		}
 
-		public void SetZoom(double zoomPercentage) {			
-			if (_browserView == null || _browserView.Browser == null) return;
-
+		private double _lastZoomPercentage = 0;
+		public void SetZoomInBackground(double zoomPercentage) {
+			if (_lastZoomPercentage == zoomPercentage) return;
+			if (_browserView == null || _browserView.Browser == null) return;			
 			try {
-				// https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000139467-zoom-level
-				var zoomLevel = Math.Log(zoomPercentage / 100) / Math.Log(1.2);
-				_browserView.Browser.ZoomLevel = zoomLevel;
-				Log.Verbose($"{nameof(SetZoom)} {nameof(zoomPercentage)}={zoomPercentage}");
+				_ = System.Threading.Tasks.Task.Run(() => {
+					// https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000139467-zoom-level
+					var zoomLevel = Math.Log(zoomPercentage / 100) / Math.Log(1.2);
+					_browserView.Browser.ZoomLevel = zoomLevel;
+					Log.Verbose($"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}");
+					_lastZoomPercentage = zoomPercentage;
+				});
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(SetZoom)} {nameof(zoomPercentage)}={zoomPercentage}");
+				Log.Error(ex, $"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}");
 			}
 		}
 
