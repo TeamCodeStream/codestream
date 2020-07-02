@@ -37,14 +37,14 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IComponentModel _componentModel;
 
-		private readonly Dictionary<ExtensionKind, bool> _extensions;
+		// private readonly Dictionary<ExtensionKind, bool> _extensions;
 
 		[ImportingConstructor]
 		public IdeService([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
 			try {
 				_serviceProvider = serviceProvider;
 				_componentModel = serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
-				_extensions = ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value;
+				//_extensions = ExtensionManager.Initialize(LogManager.ForContext<ExtensionManagerDummy>()).Value;
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(IdeService));
@@ -337,9 +337,10 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public bool QueryExtension(ExtensionKind extensionKind) {
-			if (_extensions == null) return false;
+			return false;
+			//if (_extensions == null) return false;
 
-			return _extensions.TryGetValue(extensionKind, out bool value) && value;
+			//return _extensions.TryGetValue(extensionKind, out bool value) && value;
 		}
 
 		public bool TryStartLiveShare() {
