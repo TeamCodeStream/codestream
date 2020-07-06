@@ -31,10 +31,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				SessionService = sessionService;
 				EventAggregator = eventAggregator;
 				SettingsServiceFactory = settingsServiceFactory;
-				var browserService = browserServiceFactory.Create();
 
 				LanguageServerProcess = new LanguageServerClientProcess();
-				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserService, SettingsServiceFactory);
+				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserServiceFactory, SettingsServiceFactory);
 
 				Log.Ctor();
 			}

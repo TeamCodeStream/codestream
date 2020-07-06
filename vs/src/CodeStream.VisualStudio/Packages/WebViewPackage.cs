@@ -7,8 +7,11 @@ using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
+using EnvDTE;
+using Microsoft;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.PlatformUI;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
@@ -65,8 +68,8 @@ namespace CodeStream.VisualStudio.Packages {
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-
+				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(_componentModel);
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_settingsManager = settingsServiceFactory.Create();
 				if (_settingsManager != null) {
@@ -93,7 +96,7 @@ namespace CodeStream.VisualStudio.Packages {
 					});
 				}
 
-				Log.Debug($"{nameof(InitializeAsync)} completed");
+				Log.Debug($"{nameof(WebViewPackage)} {nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
@@ -118,7 +121,7 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 		}
 
-		private void Theme_Changed(object sender, Microsoft.VisualStudio.PlatformUI.ThemeChangedEventArgs e) {
+		private void Theme_Changed(object sender, ThemeChangedEventArgs e) {
 			try {
 				Log.Information(nameof(Theme_Changed));
 				var browserService = _componentModel?.GetService<IBrowserService>();
@@ -190,10 +193,10 @@ namespace CodeStream.VisualStudio.Packages {
 		private async Task TryTriggerLspActivationAsync() {
 			Log.Debug($"{nameof(TryTriggerLspActivationAsync)} starting...");
 			var hasActiveEditor = false;
-			EnvDTE.DTE dte = null;
+			DTE dte = null;
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				dte = GetGlobalService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+				dte = GetGlobalService(typeof(DTE)) as DTE;
 				hasActiveEditor = dte?.Documents?.Count > 0;
 			}
 			catch (Exception ex) {

@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly IBrowserService _browserService;
+		private readonly IBrowserServiceFactory _browserServiceFactory;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
@@ -32,11 +32,11 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		public CustomMessageHandler(
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
-			IBrowserService browserService,
+			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
-			_browserService = browserService;
+			_browserServiceFactory = browserServiceFactory;
 			_settingsServiceFactory = settingsServiceFactory;
 
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
@@ -48,6 +48,16 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Uri = e.Uri.ToUri()
 					});
 				});
+		}
+
+		private IBrowserService _browserService;
+		private IBrowserService BrowserService {
+			get {
+				if (_browserService == null) {
+					_browserService = _browserServiceFactory.Create();
+				}
+				return _browserService;
+			}
 		}
 
 		/// <summary>
@@ -81,7 +91,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// <returns></returns>
 		[JsonRpcMethod(DidChangeDataNotificationType.MethodName)]
 		public void OnDidChangeData(JToken e) {
-			_browserService.EnqueueNotification(new DidChangeDataNotificationType(e));
+			BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 		}
 
 		/// <summary>
@@ -100,15 +110,15 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						break;
 					}
 				case ConnectionStatus.Reconnecting:
-					_browserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
+					BrowserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
 					break;
 				case ConnectionStatus.Reconnected: {
 						if (@params.Reset == true) {
-							_browserService.ReloadWebView();
+							BrowserService.ReloadWebView();
 							return;
 						}
 
-						_browserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
+						BrowserService.EnqueueNotification(new DidChangeConnectionStatusNotificationType(@params));
 						break;
 					}
 				default: {
@@ -142,7 +152,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					});
 				}
 
-				_browserService.EnqueueNotification(new DidChangeApiVersionCompatibilityNotificationType(e));
+				BrowserService.EnqueueNotification(new DidChangeApiVersionCompatibilityNotificationType(e));
 			}
 		}
 
@@ -168,7 +178,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			//Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
 
 			var uriString = @params.TextDocument.Uri;
-			_browserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
+			BrowserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
 				Params = new DidChangeDocumentMarkersNotification {
 					TextDocument = new TextDocumentIdentifier {
 						Uri = uriString
@@ -205,7 +215,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					}
 				});
 
-				_browserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
+				BrowserService.EnqueueNotification(new DidChangeVersionCompatibilityNotificationType(e));
 			}
 		}
 
@@ -254,7 +264,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 							_eventAggregator,
 							componentModel.GetService<ICredentialsService>(),
 							componentModel.GetService<IWebviewUserSettingsService>()
-							);
+						);
 
 						authenticationController.CompleteSignin(e["data"]);
 					}
@@ -303,7 +313,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		public async System.Threading.Tasks.Task DidChangeServerUrlAsync(JToken e) {
 			using (Log.CriticalOperation($"{nameof(DidChangeServerUrlAsync)} Method={DidChangeServerUrlNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
 				try {
-					_browserService.EnqueueNotification(new DidChangeServerUrlNotificationType(e));
+					BrowserService.EnqueueNotification(new DidChangeServerUrlNotificationType(e));
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"Problem with {nameof(DidChangeServerUrlAsync)}");

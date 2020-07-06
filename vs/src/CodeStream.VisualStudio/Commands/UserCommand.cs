@@ -33,91 +33,93 @@ namespace CodeStream.VisualStudio.Commands {
 
 		public void Update() {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			var state = _sessionService.SessionState;
-			var agentReady = _sessionService.IsAgentReady;
-			Log.Debug($"Updating {nameof(UserCommand)} SessionState={_sessionService.SessionState} AgentReady={agentReady}...");
+			using (Log.WithMetrics($"{nameof(UserCommand)} {nameof(Update)}")) {
+				var state = _sessionService.SessionState;
+				var agentReady = _sessionService.IsAgentReady;
+				Log.Debug($"Updating {nameof(UserCommand)} SessionState={_sessionService.SessionState} AgentReady={agentReady} state={state}...");
 
-			if (!agentReady) {
-				Visible = false;
-				Enabled = false;
-				Text = DefaultText;
-				return;
-			}
-			
-			try {
-				switch (state) {
-					case SessionState.UserSignInFailed: {
-							// the caching on this sucks and it doesn't always update...
-							//Visible = false;
-							//Enabled = false;
-							//Text = DefaultText;
-
-							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-							statusBar.IsFrozen(out var frozen);
-							if (frozen != 0) {
-								statusBar.FreezeOutput(0);
-							}
-							statusBar.SetText("Ready");
-							statusBar.FreezeOutput(1);
-							break;
-						}
-					case SessionState.UserSigningIn: {
-							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-							statusBar.IsFrozen(out var frozen);
-
-							if (frozen != 0) {
-								statusBar.FreezeOutput(0);
-							}
- 
-							statusBar.SetText("CodeStream: Signing In...");
-							statusBar.FreezeOutput(1);
-							break;
-						}
-					case SessionState.UserSigningOut: {
-							// the caching on this sucks and it doesn't always update...
-							//if (!_sessionService.IsReady) {
-							//	Text = "Loading...";
-							//	Visible = false;
-							//	Enabled = false;
-							//}
-							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));													
-							statusBar.IsFrozen(out var frozen);
-							if (frozen != 0) {
-								statusBar.FreezeOutput(0);
-							}
-							statusBar.SetText("CodeStream: Signing Out...");
-							statusBar.FreezeOutput(1);
-							break;
-						}
-					case SessionState.UserSignedIn: {
-							var user = _sessionService.User;
-							var env = _settingsManager?.GetUsefulEnvironmentName();
-							var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
-							
-							Visible = true;
-							Enabled = true;
-							Text = user.HasSingleTeam() ? label : $"{label} - {user.TeamName}";
-
-							var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-							statusBar.IsFrozen(out var frozen);
-							if (frozen != 0) {
-								statusBar.FreezeOutput(0);
-							}
-							statusBar.SetText("Ready");
-							statusBar.FreezeOutput(1);
-
-							break;
-						}
-					default: {
-							Visible = false;
-							Enabled = false;
-							Text = DefaultText;
-							break;
-						}
+				if (!agentReady) {
+					Visible = false;
+					Enabled = false;
+					Text = DefaultText;					
+					return;
 				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(UserCommand));
+
+				try {
+					switch (state) {
+						case SessionState.UserSignInFailed: {
+								// the caching on this sucks and it doesn't always update...
+								//Visible = false;
+								//Enabled = false;
+								//Text = DefaultText;
+
+								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+								statusBar.IsFrozen(out var frozen);
+								if (frozen != 0) {
+									statusBar.FreezeOutput(0);
+								}
+								statusBar.SetText("Ready");
+								statusBar.FreezeOutput(1);
+								break;
+							}
+						case SessionState.UserSigningIn: {
+								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+								statusBar.IsFrozen(out var frozen);
+
+								if (frozen != 0) {
+									statusBar.FreezeOutput(0);
+								}
+
+								statusBar.SetText("CodeStream: Signing In...");
+								statusBar.FreezeOutput(1);
+								break;
+							}
+						case SessionState.UserSigningOut: {
+								// the caching on this sucks and it doesn't always update...
+								//if (!_sessionService.IsReady) {
+								//	Text = "Loading...";
+								//	Visible = false;
+								//	Enabled = false;
+								//}
+								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+								statusBar.IsFrozen(out var frozen);
+								if (frozen != 0) {
+									statusBar.FreezeOutput(0);
+								}
+								statusBar.SetText("CodeStream: Signing Out...");
+								statusBar.FreezeOutput(1);
+								break;
+							}
+						case SessionState.UserSignedIn: {
+								var user = _sessionService.User;
+								var env = _settingsManager?.GetUsefulEnvironmentName();
+								var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
+
+								Visible = true;
+								Enabled = true;
+								Text = user.HasSingleTeam() ? label : $"{label} - {user.TeamName}";
+
+								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+								statusBar.IsFrozen(out var frozen);
+								if (frozen != 0) {
+									statusBar.FreezeOutput(0);
+								}
+								statusBar.SetText("Ready");
+								statusBar.FreezeOutput(1);
+
+								break;
+							}
+						default: {
+								Visible = false;
+								Enabled = false;
+								Text = DefaultText;
+								break;
+							}
+					}
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(UserCommand));
+				}
 			}
 		}
 

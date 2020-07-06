@@ -24,19 +24,24 @@ namespace CodeStream.VisualStudio.Services {
 		[Import]
 		public ISessionService SessionService { get; set; }
 
-		public IBrowserService BrowserService { get; set; }
+		private readonly IBrowserServiceFactory _browserServiceFactory;
 
 		[ImportingConstructor]
 		public CodeStreamService(IBrowserServiceFactory browserServiceFactory) {
-			try {
-				BrowserService = browserServiceFactory.Create();
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(CodeStreamService));
-			}
+			_browserServiceFactory = browserServiceFactory;
 		}
 
 		public bool IsReady => SessionService?.IsReady == true;
+
+		private IBrowserService _browserService;
+		public IBrowserService BrowserService {
+			get {
+				if (_browserService == null) {
+					_browserService = _browserServiceFactory.Create();
+				}
+				return _browserService;
+			}
+		}
 
 		public async Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor) {
 			if (IsReady) {

@@ -52,7 +52,7 @@ namespace CodeStream.VisualStudio.Packages {
 				((IServiceContainer)this).AddService(typeof(SOptionsDialogPageAccessor), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
 
-				_componentModel = GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
 				_sessionService = _componentModel.GetService<ISessionService>();
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
@@ -61,12 +61,11 @@ namespace CodeStream.VisualStudio.Packages {
 
 				AsyncPackageHelper.InitializeLogging(_settingsManager);
 				AsyncPackageHelper.InitializePackage(GetType().Name);
-				
 
-				await base.InitializeAsync(cancellationToken, progress);			 
+				await base.InitializeAsync(cancellationToken, progress);
 
 				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
-				Log.Debug($"{nameof(InitializeAsync)} completed");
+				Log.Debug($"{nameof(ServiceProviderPackage)} {nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
@@ -75,53 +74,54 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task InitializeCommandsAsync() {
 			try {
-				var userCommand = new UserCommand(_sessionService, _settingsManager);
+				using (var metrics = Log.WithMetrics(nameof(InitializeCommandsAsync))) {
+					var userCommand = new UserCommand(_sessionService, _settingsManager);
 
-				_commands = new List<VsCommandBase> {
+					_commands = new List<VsCommandBase> {
 #if DEBUG
-					new WebViewDevToolsCommand(),
+						new WebViewDevToolsCommand(),
 #endif
-					new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),					
-					new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
-					new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),					
-					new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
-					new WebViewReloadCommand(),
-					new WebViewToggleCommand(),
-					new AuthenticationCommand(_componentModel),
-					new StartWorkCommand(_sessionService),
-					userCommand
-				};
-				await JoinableTaskFactory.SwitchToMainThreadAsync();
-				await InfoBarProvider.InitializeAsync(this);
+						new WebViewReloadCommand(),
+						new WebViewToggleCommand(),
+						new AuthenticationCommand(_componentModel),
+						new StartWorkCommand(_sessionService),
+						userCommand
+					};
+					await JoinableTaskFactory.SwitchToMainThreadAsync();
+					await InfoBarProvider.InitializeAsync(this);
 
-				var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
-				foreach (var command in _commands) {
-					menuCommandService.AddCommand(command);
-				}
-				await BookmarkShortcutRegistration.InitializeAllAsync(this);
+					var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
+					foreach (var command in _commands) {
+						menuCommandService.AddCommand(command);
+					}
+					await BookmarkShortcutRegistration.InitializeAllAsync(this);
 
-				var eventAggregator = _componentModel.GetService<IEventAggregator>();
-				_disposables = new List<IDisposable> {
+					var eventAggregator = _componentModel.GetService<IEventAggregator>();
+					_disposables = new List<IDisposable> {
 					//when a user has logged in/out we alter the text of some of the commands
 					eventAggregator?.GetEvent<SessionReadyEvent>()
-					.ObserveOnApplicationDispatcher()
-					.Subscribe(_ => {
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(_ => {
 							userCommand.Update();
 					}),
 					eventAggregator?.GetEvent<SessionLogoutEvent>()
-					.ObserveOnApplicationDispatcher()
-					.Subscribe(_ => {
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(_ => {
 							userCommand.Update();
 					}),
 					eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
-					.ObserveOnApplicationDispatcher()
-					.Subscribe(_ => {
+						.ObserveOnApplicationDispatcher()
+						.Subscribe(_ => {
 							userCommand.Update();
 					}),
 
@@ -143,7 +143,8 @@ namespace CodeStream.VisualStudio.Packages {
 					//		userCommand.Update();
 					//	});
 					//})
-				};
+					};
+				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(InitializeCommandsAsync));
@@ -211,7 +212,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return false;
 
-				frame.Show();				
+				frame.Show();
 				return true;
 			}
 			catch (Exception) {
