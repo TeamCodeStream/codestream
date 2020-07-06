@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
@@ -70,22 +71,47 @@ namespace CodeStream.VisualStudio.UI.Margins {
 					Log.Warning(nameof(componentModel));
 					return;
 				}
+
 				var codeStreamService = componentModel.GetService<ICodeStreamService>();
 				if (codeStreamService == null) return;
 
-				toolWindowProvider.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
+				if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
+
+				}
+				else {
+					Log.Warning("Could not activate tool window");
+				}
 
 				var activeEditor = componentModel.GetService<IEditorService>()?.GetActiveTextEditor();
-				_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
-
-				var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
-				if (codeStreamAgentService == null) return;
-
-				_ = codeStreamAgentService.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties {{"Codemark Location", "Source File"}});
+				var sessionService = componentModel.GetService<ISessionService>();
+				if (sessionService.WebViewDidInitialize == true) {
+					_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
+					Track(componentModel);
+				}
+				else {
+					var eventAggregator = componentModel.GetService<IEventAggregator>();
+					IDisposable d = null;
+					d = eventAggregator?.GetEvent<WebviewDidInitializeEvent>().Subscribe(ev => {
+						try {
+							_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
+							Track(componentModel);
+							d.Dispose();
+						}
+						catch (Exception ex) {
+							Log.Error(ex, $"{nameof(DocumentMark_MouseDown)} event");
+						}
+					});
+				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(DocumentMark_MouseDown));
 			}
+		}
+
+
+		private void Track(IComponentModel componentModel) {
+			var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
+			_ = codeStreamAgentService?.TrackAsync(TelemetryEventNames.CodemarkClicked, new TelemetryProperties { { "Codemark Location", "Source File" } });
 		}
 	}
 }

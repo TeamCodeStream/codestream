@@ -234,7 +234,7 @@ namespace CodeStream.VisualStudio.Services {
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut7Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D7)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut8Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D8)));
 			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));
-			_browserView.InputBindings.Add(new InputBinding(new StartWorkCommand(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.W)));
+			_browserView.InputBindings.Add(new InputBinding(new StartWorkCommand(_serviceProvider.GetService<ISessionService>()), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.W)));
 
 #if DEBUG
 			Log.Debug(GetDevToolsUrl());

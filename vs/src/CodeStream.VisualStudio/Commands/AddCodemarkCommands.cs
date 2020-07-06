@@ -9,22 +9,22 @@ using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Commands {
 	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase {
-		public AddCodemarkCommentCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkCommentCommandId) { }
+		public AddCodemarkCommentCommand(ISessionService sessionService, Guid commandSet) : base(sessionService, commandSet, PackageIds.AddCodemarkCommentCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
 	}
 
 	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase {
-		public AddCodemarkIssueCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkIssueCommandId) { }
+		public AddCodemarkIssueCommand(ISessionService sessionService, Guid commandSet) : base(sessionService, commandSet, PackageIds.AddCodemarkIssueCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 	}
 
 	internal class AddCodemarkPermalinkCommand : AddCodemarkCommandBase {
-		public AddCodemarkPermalinkCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
+		public AddCodemarkPermalinkCommand(ISessionService sessionService, Guid commandSet) : base(sessionService, commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 	}
 
 	internal class AddCodemarkPermalinkInstantCommand : AddCodemarkCommandBase {
-		public AddCodemarkPermalinkInstantCommand(Guid commandSet) : base(commandSet, PackageIds.AddCodemarkPermalinkInstantCommandId) { }
+		public AddCodemarkPermalinkInstantCommand(ISessionService sessionService, Guid commandSet) : base(sessionService, commandSet, PackageIds.AddCodemarkPermalinkInstantCommandId) { }
 
 		private static readonly ILogger Log = LogManager.ForContext<AddCodemarkPermalinkInstantCommand>();
 		protected override CodemarkType CodemarkType => CodemarkType.Link;

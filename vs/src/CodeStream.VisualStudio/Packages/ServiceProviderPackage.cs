@@ -81,20 +81,20 @@ namespace CodeStream.VisualStudio.Packages {
 #if DEBUG
 					new WebViewDevToolsCommand(),
 #endif
-					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),					
-					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),					
+					new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+					new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
-					new AddCodemarkCommentCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkIssueCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),					
-					new AddCodemarkPermalinkCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
-					new AddCodemarkPermalinkInstantCommand(PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),					
+					new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+					new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
 					new WebViewReloadCommand(),
 					new WebViewToggleCommand(),
 					new AuthenticationCommand(_componentModel),
-					new StartWorkCommand(),
+					new StartWorkCommand(_sessionService),
 					userCommand
 				};
 				await JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -200,6 +200,11 @@ namespace CodeStream.VisualStudio.Packages {
 			return false;
 		}
 
+		/// <summary>
+		/// Shows the tool window
+		/// </summary>
+		/// <param name="toolWindowId">the guid of the window</param>
+		/// <returns>true if it is about to show the frame</returns>
 		public bool ShowToolWindowSafe(Guid toolWindowId) {
 			try {
 				ThreadHelper.ThrowIfNotOnUIThread();
