@@ -294,6 +294,11 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public void LoadHtml(string html) {
+			if (_browserView == null || _browserView.Browser == null) {
+				Log.Verbose($"{nameof(LoadHtml)} browserView or browser is null");
+				return;
+			}
+
 			using (Log.CriticalOperation($"{nameof(LoadHtml)}")) {
 				_browserView.Browser.LoadHTML(html);
 			}
@@ -726,7 +731,7 @@ namespace CodeStream.VisualStudio.Services {
 		private double _lastZoomPercentage = 0;
 		public void SetZoomInBackground(double zoomPercentage) {
 			if (_lastZoomPercentage == zoomPercentage) return;
-			if (_browserView == null || _browserView.Browser == null) return;			
+			if (_browserView == null || _browserView.Browser == null) return;
 			try {
 				_ = System.Threading.Tasks.Task.Run(() => {
 					// https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000139467-zoom-level
