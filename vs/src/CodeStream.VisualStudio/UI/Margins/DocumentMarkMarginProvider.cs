@@ -58,17 +58,19 @@ namespace CodeStream.VisualStudio.UI.Margins {
 					return null;
 				}
 
-				using (Log.CriticalOperation($"{nameof(DocumentMarkMarginProvider)} {nameof(CreateMargin)}", LogEventLevel.Information)) {
+				using (Log.CriticalOperation($"{nameof(DocumentMarkMarginProvider)} {nameof(CreateMargin)}", LogEventLevel.Debug)) {
 					TextViewMargin = new DocumentMarkMargin(
 						_viewTagAggregatorFactoryService,
 						_glyphFactoryProviders,
-						wpfTextViewHost, SessionService.Value, SettingsServiceFactory.Value.GetOrCreate(nameof(DocumentMarkMarginProvider))
+						wpfTextViewHost, SessionService.Value, SettingsServiceFactory.Value.GetOrCreate
+							(nameof(DocumentMarkMarginProvider))
 					);
 
 					return TextViewMargin;
 				}
 			}
 			catch (Exception ex) {
+				Log.Error(ex, nameof(CreateMargin));
 				System.Diagnostics.Debug.WriteLine(ex);
 #if DEBUG
 				System.Diagnostics.Debugger.Break();

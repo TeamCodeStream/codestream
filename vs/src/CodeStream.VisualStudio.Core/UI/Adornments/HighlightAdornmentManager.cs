@@ -25,6 +25,9 @@ namespace CodeStream.VisualStudio.Core.UI.Adornments {
 		bool SelectRange(EditorSelection selection, bool? focus);
 	}
 
+	/// <summary>
+	/// Requires UI thread
+	/// </summary>
 	public class HighlightAdornmentManager : ICanHighlightRange, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<HighlightAdornmentManager>();
 
@@ -32,6 +35,9 @@ namespace CodeStream.VisualStudio.Core.UI.Adornments {
 		private readonly IWpfTextView _textView;
 		private readonly Dictionary<int, ITextViewLine> _lineInfos;
 
+		/// <summary>
+		/// Requires UI thread
+		/// </summary>
 		public HighlightAdornmentManager(IWpfTextView textView) {
 			_textView = textView;
 			_lineInfos = new Dictionary<int, ITextViewLine>();

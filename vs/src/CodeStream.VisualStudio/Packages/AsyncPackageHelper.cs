@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
@@ -19,12 +18,13 @@ namespace CodeStream.VisualStudio.Packages {
 \____/\___/ \__,_|\___\__/\__|_|  \___|\__,_|_| |_| |_|
                                                          ");
 			Log.Information(
-				"Initializing CodeStream Extension Package={Type} v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion}) CurrentCulture={CurrentCulture}",
+				"Initializing CodeStream Extension Package={Type} v{PackageVersion} in {$VisualStudioName} ({$VisualStudioVersion}) CurrentCulture={CurrentCulture} ManagedThreadId={ManagedThreadId}",
 			   typeName,
 				Application.ExtensionVersionShort,
 				Application.VisualStudioName,
 				Application.VisualStudioVersionString,
-				System.Threading.Thread.CurrentThread.CurrentCulture);
+				System.Threading.Thread.CurrentThread.CurrentCulture,
+				System.Threading.Thread.CurrentThread.ManagedThreadId);
 		}
 
 		public static async System.Threading.Tasks.Task TryTriggerLspActivationAsync(ILogger log) {
