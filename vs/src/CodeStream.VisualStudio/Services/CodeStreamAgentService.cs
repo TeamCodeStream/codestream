@@ -167,11 +167,6 @@ namespace CodeStream.VisualStudio.Services {
 			}, cancellationToken);
 		}
 
-		public Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key) {
-			return SendAsync<GetDocumentFromKeyBindingResponse>(GetDocumentFromKeyBindingRequestType.MethodName,
-				new GetDocumentFromKeyBindingRequest { Key = key });
-		}
-
 		public Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri) {
 			return SendAsync<GetFileStreamResponse>("codestream/streams/fileStream", new GetFileStreamRequest {
 				TextDocument = new TextDocumentIdentifier { Uri = uri.ToString() }

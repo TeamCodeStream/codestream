@@ -43,15 +43,6 @@ namespace CodeStream.VisualStudio {
 		public const int AddCodemarkPermalinkCommandId = 0x0403;
 		public const int AddCodemarkPermalinkInstantCommandId = 0x0413;
 		public const int StartWorkCommandId = 0x0423;
-		public const int BookmarkCommand1CommandId = 0x0501;
-		public const int BookmarkCommand2CommandId = 0x0502;
-		public const int BookmarkCommand3CommandId = 0x0503;
-		public const int BookmarkCommand4CommandId = 0x0504;
-		public const int BookmarkCommand5CommandId = 0x0505;
-		public const int BookmarkCommand6CommandId = 0x0506;
-		public const int BookmarkCommand7CommandId = 0x0507;
-		public const int BookmarkCommand8CommandId = 0x0508;
-		public const int BookmarkCommand9CommandId = 0x0509;
 		public const int logo = 0x0001;
 		public const int auth = 0x0002;
 		public const int user = 0x0003;

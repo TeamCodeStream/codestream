@@ -95,7 +95,6 @@ namespace CodeStream.VisualStudio.Packages {
 					foreach (var command in _commands) {
 						menuCommandService.AddCommand(command);
 					}
-					await BookmarkShortcutRegistration.InitializeAllAsync(this);
 
 					var eventAggregator = _componentModel.GetService<IEventAggregator>();
 					_disposables = new List<IDisposable> {

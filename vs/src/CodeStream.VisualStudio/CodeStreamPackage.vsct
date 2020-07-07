@@ -105,88 +105,6 @@
 					<LocCanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</LocCanonicalName>
 				</Strings>
 			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand1CommandId" priority="0x0201" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand1CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand1CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand1CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand2CommandId" priority="0x0202" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand2CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand2CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand2CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand3CommandId" priority="0x0203" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand3CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand3CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand3CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand4CommandId" priority="0x0204" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand4CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand4CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand4CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand5CommandId" priority="0x0205" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand5CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand5CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand5CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand6CommandId" priority="0x0206" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand6CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand6CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand6CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand7CommandId" priority="0x0207" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand7CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand7CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand7CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand8CommandId" priority="0x0208" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand8CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand8CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand8CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="BookmarkCommand9CommandId" priority="0x0209" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>BookmarkCommand9CommandId</ButtonText>
-					<CanonicalName>CodeStream.BookmarkCommand9CommandId</CanonicalName>
-					<LocCanonicalName>CodeStream.BookmarkCommand9CommandId</LocCanonicalName>
-				</Strings>
-			</Button>
-
 
 			<Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x9999" type="Button">
 				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
@@ -302,27 +220,8 @@
 		<KeyBinding guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId"
 					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" mod2="Control Shift" key2="VK_OEM_2" />
 
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand1CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x31" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand2CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x32" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand3CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x33" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand4CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x34" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand5CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x35" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand6CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x36" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand7CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x37" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand8CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x38" />
-		<KeyBinding guid="guidWebViewPackageCmdSet" id="BookmarkCommand9CommandId"
-					editor="guidVSStd97" mod1="Control Shift" key1="VK_OEM_2" key2="0x39" />
-
 		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkCommentCommandId"
-					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
+		            editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
 		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkIssueCommandId"
 					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="i" />
 		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkPermalinkCommandId"
@@ -386,16 +285,6 @@
 			<IDSymbol name="UserCommandId" value="0x0300" />
 			<IDSymbol name="WebViewReloadCommandId" value="0x0400" />
 			<IDSymbol name="WebViewDevToolsCommandId" value="0x0600" />
-			
-			<IDSymbol name="BookmarkCommand1CommandId" value="0x0501"/>
-			<IDSymbol name="BookmarkCommand2CommandId" value="0x0502"/>
-			<IDSymbol name="BookmarkCommand3CommandId" value="0x0503"/>
-			<IDSymbol name="BookmarkCommand4CommandId" value="0x0504"/>
-			<IDSymbol name="BookmarkCommand5CommandId" value="0x0505"/>
-			<IDSymbol name="BookmarkCommand6CommandId" value="0x0506"/>
-			<IDSymbol name="BookmarkCommand7CommandId" value="0x0507"/>
-			<IDSymbol name="BookmarkCommand8CommandId" value="0x0508"/>
-			<IDSymbol name="BookmarkCommand9CommandId" value="0x0509"/>
 		</GuidSymbol>
 
 		<GuidSymbol name="guidWebViewPackageCodeWindowContextMenuCmdSet" value="{0f33235e-3a5c-42bc-b519-d888652f972c}">

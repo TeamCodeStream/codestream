@@ -225,15 +225,6 @@ namespace CodeStream.VisualStudio.Services {
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			_browserView = new WPFBrowserView(browser);
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut1Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D1)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut2Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D2)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut3Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D3)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut4Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D4)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut5Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D5)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut6Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D6)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut7Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D7)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut8Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D8)));
-			_browserView.InputBindings.Add(new InputBinding(new BookmarkShortcut9Command(), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.D9)));
 			_browserView.InputBindings.Add(new InputBinding(new StartWorkCommand(_serviceProvider.GetService<ISessionService>()), new KeyChordGesture(ModifierKeys.Shift | ModifierKeys.Control, Key.OemQuestion, Key.W)));
 
 #if DEBUG

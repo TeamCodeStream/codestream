@@ -12,7 +12,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
 		Task<JToken> ReinitializeAsync();
 		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
-		Task<GetDocumentFromKeyBindingResponse> GetDocumentFromKeyBindingAsync(int key);
 		Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
 		Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
 		Task<GetPostResponse> GetPostAsync(string streamId, string postId);
