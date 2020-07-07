@@ -88,7 +88,7 @@
     <Compile Include="Packages\AsyncPackageHelper.cs" />
     <Compile Include="Packages\CodeStreamPackage.cs" />
     <Compile Include="Packages\ProtocolHandlerPackage.cs" />
-    <Compile Include="Packages\ServiceProviderPackage.cs" />
+    <Compile Include="Packages\CommandsPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AuthenticationService.cs" />

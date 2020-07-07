@@ -29,8 +29,8 @@ namespace CodeStream.VisualStudio.Packages {
 	[Guid(PackageGuids.guidCodeStreamPackageString)]
 	[ProvideAutoLoad(Guids.ServiceProviderPackageAutoLoadId, PackageAutoLoadFlags.BackgroundLoad)]
 	// ReSharper disable once RedundantExtendsListEntry
-	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
-		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
+	public sealed class CommandsPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
+		private static readonly ILogger Log = LogManager.ForContext<CommandsPackage>();
 
 		private IComponentModel _componentModel;
 		private ISessionService _sessionService;
@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio.Packages {
 				_sessionService = _componentModel.GetService<ISessionService>();
 
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(ServiceProviderPackage));
+				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(CommandsPackage));
 
 				AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
 				AsyncPackageHelper.InitializePackage(GetType().Name);
@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Packages {
 				await base.InitializeAsync(cancellationToken, progress);
 
 				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
-				Log.Debug($"{nameof(ServiceProviderPackage)} {nameof(InitializeAsync)} completed");
+				Log.Debug($"{nameof(CommandsPackage)} {nameof(InitializeAsync)} completed");
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(InitializeAsync));
