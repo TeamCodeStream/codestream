@@ -66,7 +66,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				Assumes.Present(_sessionService);
 				Assumes.Present(_settingsManager);
 			}
-			catch(Exception ex) {
+			catch (Exception ex) {
 				Log.Error(ex, nameof(DocumentMarkMargin));
 			}
 			_iconCanvas = new Canvas { Background = Brushes.Transparent };
@@ -83,7 +83,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			TryInitialize();
 		}
 
-		private void InitializeMargin() {		
+		private void InitializeMargin() {
 			Children.Add(_iconCanvas);
 
 			var order = 0;
@@ -176,7 +176,6 @@ namespace CodeStream.VisualStudio.UI.Margins {
 				Debug.WriteLine($"Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
 			}
 
-			//OnNewLayout(e.NewOrReformattedLines, e.TranslatedLines);
 			RefreshMargin();
 		}
 
@@ -217,7 +216,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(DocumentMarkMargin));
 			}
-		}		
+		}
 
 		public FrameworkElement VisualElement {
 			get {
@@ -333,44 +332,45 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		}
 
 		void OnNewLayout(IList<ITextViewLine> newOrReformattedLines, IList<ITextViewLine> translatedLines) {
-			var newInfos = new Dictionary<object, LineInfo>();
-
-			foreach (var line in newOrReformattedLines) {
-				AddLine(newInfos, line);
-			}
-
-			foreach (var line in translatedLines) {
-				if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) {
-//#if DEBUG
-//					// why are we here?
-//					Debugger.Break();
-//#endif
-					continue;
+			using (Log.WithMetrics(nameof(OnNewLayout))) {
+				var newInfos = new Dictionary<object, LineInfo>();
+				foreach (var line in newOrReformattedLines) {
+					AddLine(newInfos, line);
 				}
 
-				_lineInfos.Remove(line.IdentityTag);
-				newInfos.Add(line.IdentityTag, info);
-				foreach (var iconInfo in info.Icons) {
-					SetTop(iconInfo.Element, iconInfo.BaseTopValue + line.TextTop);
+				foreach (var line in translatedLines) {
+					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) {
+						//#if DEBUG
+						//					// why are we here?
+						//					Debugger.Break();
+						//#endif
+						continue;
+					}
+
+					_lineInfos.Remove(line.IdentityTag);
+					newInfos.Add(line.IdentityTag, info);
+					foreach (var iconInfo in info.Icons) {
+						SetTop(iconInfo.Element, iconInfo.BaseTopValue + line.TextTop);
+					}
 				}
-			}
 
-			foreach (var line in _wpfTextViewHost.TextView.TextViewLines) {
-				if (newInfos.ContainsKey(line.IdentityTag)) continue;
+				foreach (var line in _wpfTextViewHost.TextView.TextViewLines) {
+					if (newInfos.ContainsKey(line.IdentityTag)) continue;
 
-				if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) continue;
+					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) continue;
 
-				_lineInfos.Remove(line.IdentityTag);
-				newInfos.Add(line.IdentityTag, info);
-			}
-
-			foreach (var info in _lineInfos.Values) {
-				foreach (var iconInfo in info.Icons) {
-					_childCanvases[iconInfo.Order].Children.Remove(iconInfo.Element);
+					_lineInfos.Remove(line.IdentityTag);
+					newInfos.Add(line.IdentityTag, info);
 				}
-			}
 
-			_lineInfos = newInfos;
+				foreach (var info in _lineInfos.Values) {
+					foreach (var iconInfo in info.Icons) {
+						_childCanvases[iconInfo.Order].Children.Remove(iconInfo.Element);
+					}
+				}
+
+				_lineInfos = newInfos;
+			}
 		}
 
 		public void TryInitialize() {

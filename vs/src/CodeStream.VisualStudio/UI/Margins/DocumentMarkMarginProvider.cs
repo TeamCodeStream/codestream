@@ -4,6 +4,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.UI.Extensions;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -12,6 +13,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
+using Serilog;
+using Serilog.Events;
 
 namespace CodeStream.VisualStudio.UI.Margins {
 	[Export(typeof(IWpfTextViewMarginProvider))]
@@ -24,6 +27,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 	[TextViewRole(PredefinedTextViewRoles.PrimaryDocument)]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
 	internal sealed class DocumentMarkMarginProvider : ICodeStreamMarginProvider {
+		private readonly ILogger Log = LogManager.ForContext<DocumentMarkMarginProvider>();
 		private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
 		private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
 
@@ -40,26 +44,29 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		[Import]
 		public ITextDocumentFactoryService TextDocumentFactoryService { get; set; }
 
+		[Import]
+		public Lazy<ISessionService> SessionService { get; set; }
+
+		[Import]
+		public Lazy<ISettingsServiceFactory> SettingsServiceFactory { get; set; }
+
 		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
 			try {
-				if (wpfTextViewHost == null ||
-				    !wpfTextViewHost.TextView.HasValidRoles()) return null;
+				if (wpfTextViewHost == null || !wpfTextViewHost.TextView.HasValidRoles()) return null;
 				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
 					wpfTextViewHost.TextView.TextBuffer, out var textDocument)) {
 					return null;
 				}
 
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				var sessionService = componentModel?.GetService<ISessionService>();
-				var settingsServiceFactory = componentModel?.GetService<ISettingsServiceFactory>();
+				using (Log.CriticalOperation($"{nameof(DocumentMarkMarginProvider)} {nameof(CreateMargin)}", LogEventLevel.Information)) {
+					TextViewMargin = new DocumentMarkMargin(
+						_viewTagAggregatorFactoryService,
+						_glyphFactoryProviders,
+						wpfTextViewHost, SessionService.Value, SettingsServiceFactory.Value.GetOrCreate(nameof(DocumentMarkMarginProvider))
+					);
 
-				TextViewMargin = new DocumentMarkMargin(
-					_viewTagAggregatorFactoryService,
-					_glyphFactoryProviders,
-					wpfTextViewHost, sessionService, settingsServiceFactory.Create()
-				);
-
-				return TextViewMargin;
+					return TextViewMargin;
+				}
 			}
 			catch (Exception ex) {
 				System.Diagnostics.Debug.WriteLine(ex);

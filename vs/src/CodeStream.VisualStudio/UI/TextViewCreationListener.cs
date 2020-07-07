@@ -170,7 +170,7 @@ namespace CodeStream.VisualStudio.UI {
 									if (SessionService.IsReady) {
 										OnSessionReady(wpfTextView);
 									}
-							}),
+								}),
 							EventAggregator.GetEvent<SessionLogoutEvent>()
 								.ObserveOnApplicationDispatcher()
 								.Subscribe(_ => OnSessionLogout(wpfTextView, textViewMarginProviders)),
@@ -300,7 +300,7 @@ namespace CodeStream.VisualStudio.UI {
 
 								using (metrics.Measure("TrySetMarkers")) {
 									if (wpfTextView.Properties.TryGetProperty(PropertyNames.DocumentMarkerManager, out DocumentMarkerManager documentMarkerManager) && documentMarkerManager != null) {
-										documentMarkerManager.TrySetMarkersIfReady(true);
+										documentMarkerManager.TrySetMarkers(true);
 									}
 								}
 								using (metrics.Measure($"{logPrefix} ICodeStreamWpfTextViewMargin.OnSessionReady()")) {

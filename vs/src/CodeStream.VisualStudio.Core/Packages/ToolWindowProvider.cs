@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Core.Packages {
 	public interface IToolWindowProvider {
@@ -10,18 +10,18 @@ namespace CodeStream.VisualStudio.Core.Packages {
 
 	public interface SToolWindowProvider { }
 
-	public interface SOptionsDialogPageAccessor { }
-	public interface IOptionsDialogPageAccessor {
-		IOptionsDialogPage GetOptionsDialogPage();
+	public interface SSettingsManagerAccessor { }
+	public interface ISettingsManagerAccessor {
+		ISettingsManager GetSettingsManager();
 	}
 
-	public class OptionsDialogPageAccessor : IOptionsDialogPageAccessor, SOptionsDialogPageAccessor {
-		private IOptionsDialogPage _optionsDialogPage;
-		public OptionsDialogPageAccessor(IOptionsDialogPage optionsDialogPage) {
-			_optionsDialogPage = optionsDialogPage;
+	public class SettingsManagerAccessor : ISettingsManagerAccessor, SSettingsManagerAccessor {
+		private readonly ISettingsManager _settingsManager;
+		public SettingsManagerAccessor(ISettingsManager settingsManager) {
+			_settingsManager = settingsManager;
 		}
-		public IOptionsDialogPage GetOptionsDialogPage() {
-			return _optionsDialogPage;
+		public ISettingsManager GetSettingsManager() {
+			return _settingsManager;
 		}
 	}
 }

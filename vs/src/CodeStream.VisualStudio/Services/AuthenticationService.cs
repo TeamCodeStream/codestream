@@ -63,7 +63,7 @@ namespace CodeStream.VisualStudio.Services {
 					reason == SessionSignedOutReason.MaintenanceMode ||
 					reason == SessionSignedOutReason.ReAuthenticating) {
 					try {
-						var settingsService = SettingsServiceFactory.Create();
+						var settingsService = SettingsServiceFactory.GetOrCreate(nameof(AuthenticationService));
 						await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email);
 					}
 					catch (Exception ex) {

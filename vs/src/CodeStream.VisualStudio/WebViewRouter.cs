@@ -48,7 +48,7 @@ namespace CodeStream.VisualStudio {
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
-			_settingsManager = settingsServiceFactory.Create();
+			_settingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewRouter));
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
 			_ideService = ideService;

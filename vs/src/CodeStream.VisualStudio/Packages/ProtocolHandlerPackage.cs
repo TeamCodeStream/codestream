@@ -46,12 +46,12 @@ namespace CodeStream.VisualStudio.Packages {
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
 				var settingsFactory = _componentModel.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsFactory.Create();
+				_settingsManager = settingsFactory.GetOrCreate(nameof(ProtocolPackage));
 				var sessionService = _componentModel.GetService<ISessionService>();
 
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-				AsyncPackageHelper.InitializeLogging(_settingsManager);
+				AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
 
 				//ensure the ToolWindow is visible
 				var toolWindowProvider = GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;

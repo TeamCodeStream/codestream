@@ -2,12 +2,10 @@
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.Vssdk.Commands;
-using CodeStream.VisualStudio.UI.Settings;
-using Microsoft;
+using CodeStream.VisualStudio.UI;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -18,25 +16,22 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
+using CodeStream.VisualStudio.Core;
 using Task = System.Threading.Tasks.Task;
-using CodeStream.VisualStudio.UI;
 
 namespace CodeStream.VisualStudio.Packages {
-
-
 	/// <summary>
 	/// Pseudo-package to allow for a custom service provider
 	/// </summary>
-	[ProvideService(typeof(SOptionsDialogPageAccessor))]
 	[ProvideService(typeof(SToolWindowProvider))]
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[Guid(PackageGuids.guidCodeStreamPackageString)]
+	[ProvideAutoLoad(Guids.ServiceProviderPackageAutoLoadId, PackageAutoLoadFlags.BackgroundLoad)]
 	// ReSharper disable once RedundantExtendsListEntry
 	public sealed class ServiceProviderPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
 		private static readonly ILogger Log = LogManager.ForContext<ServiceProviderPackage>();
 
-		private IOptionsDialogPage OptionsDialogPage;
 		private IComponentModel _componentModel;
 		private ISessionService _sessionService;
 		private ISettingsManager _settingsManager;
@@ -47,19 +42,15 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-				// can only get a dialog page from a package
-				OptionsDialogPage = (IOptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
-				((IServiceContainer)this).AddService(typeof(SOptionsDialogPageAccessor), CreateService, true);
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
 
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
-				Assumes.Present(_componentModel);
 				_sessionService = _componentModel.GetService<ISessionService>();
-				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsServiceFactory.Create();
-				Assumes.Present(_settingsManager);
 
-				AsyncPackageHelper.InitializeLogging(_settingsManager);
+				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
+				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(ServiceProviderPackage));
+
+				AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
@@ -74,7 +65,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private async Task InitializeCommandsAsync() {
 			try {
-				using (var metrics = Log.WithMetrics(nameof(InitializeCommandsAsync))) {
+				using (Log.WithMetrics(nameof(InitializeCommandsAsync))) {
 					var userCommand = new UserCommand(_sessionService, _settingsManager);
 
 					_commands = new List<VsCommandBase> {
@@ -91,9 +82,9 @@ namespace CodeStream.VisualStudio.Packages {
 						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
-						new WebViewReloadCommand(),
+						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),
-						new AuthenticationCommand(_componentModel),
+						new AuthenticationCommand(_componentModel, _sessionService),
 						new StartWorkCommand(_sessionService),
 						userCommand
 					};
@@ -144,6 +135,9 @@ namespace CodeStream.VisualStudio.Packages {
 					//	});
 					//})
 					};
+					if (_sessionService.IsAgentReady) {
+						userCommand.Update();
+					}
 				}
 			}
 			catch (Exception ex) {
@@ -152,8 +146,6 @@ namespace CodeStream.VisualStudio.Packages {
 		}
 
 		private object CreateService(IServiceContainer container, Type serviceType) {
-			if (typeof(SOptionsDialogPageAccessor) == serviceType)
-				return new OptionsDialogPageAccessor(OptionsDialogPage);
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
 

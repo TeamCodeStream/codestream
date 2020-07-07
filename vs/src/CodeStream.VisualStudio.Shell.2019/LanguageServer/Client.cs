@@ -17,6 +17,9 @@ using System.ComponentModel.Composition;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
+using Package = Microsoft.VisualStudio.Shell.Package;
 
 namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 
@@ -83,7 +86,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			await Task.Yield();
 			Connection connection = null;
 			try {
-				var settingsManager = SettingsServiceFactory.Create();
+				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(Client));
 				var process = LanguageServerProcess.Create(settingsManager?.GetAgentTraceLevel());
 
 				using (Log.CriticalOperation($"Started language server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
@@ -162,7 +165,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 				Log.Fatal(ex, nameof(OnLoadedAsync));
 			}
 		}
-
+		 
 		public async Task AttachForCustomMessageAsync(JsonRpc rpc) {
 			await Task.Yield();
 			_rpc = rpc;
@@ -171,6 +174,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			_rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) });
 			_rpc.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
 
+			await OnAttachedForCustomMessageAsync();
 			Log.Debug(nameof(AttachForCustomMessageAsync));
 		}
 

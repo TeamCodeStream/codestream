@@ -259,7 +259,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Assumes.Present(componentModel);
 
 						var authenticationController = new AuthenticationController(
-							_settingsServiceFactory.Create(),
+							_settingsServiceFactory.GetOrCreate(nameof(OnDidLogin)),
 							componentModel.GetService<ISessionService>(),
 							_eventAggregator,
 							componentModel.GetService<ICredentialsService>(),

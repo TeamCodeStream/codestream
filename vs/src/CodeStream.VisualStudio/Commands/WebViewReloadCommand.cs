@@ -1,5 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.Shell;
+﻿using Microsoft.VisualStudio.Shell;
 using System;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
@@ -10,15 +9,17 @@ using Serilog;
 namespace CodeStream.VisualStudio.Commands {
 	internal sealed class WebViewReloadCommand : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewReloadCommand>();
-
-		public WebViewReloadCommand() : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.WebViewReloadCommandId) { }
+		private readonly ISessionService _sessionService;
+		public WebViewReloadCommand(ISessionService sessionService) : base(PackageGuids.guidWebViewPackageCmdSet,
+			PackageIds.WebViewReloadCommandId) {
+			_sessionService = sessionService;
+		}
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			try {
 				ThreadHelper.ThrowIfNotOnUIThread();
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				var sessionService = componentModel?.GetService<ISessionService>();
-				sender.Visible = sessionService?.IsReady == true;
+				Log.Verbose(nameof(WebViewReloadCommand) +" "+ nameof(OnBeforeQueryStatus));
+				sender.Visible = _sessionService?.IsReady == true;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(WebViewReloadCommand));
@@ -28,7 +29,7 @@ namespace CodeStream.VisualStudio.Commands {
 		protected override void ExecuteUntyped(object parameter) {
 			try {
 				ThreadHelper.ThrowIfNotOnUIThread();
-
+				Log.Verbose(nameof(WebViewReloadCommand) + " " + nameof(ExecuteUntyped));
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var browserService = componentModel?.GetService<IBrowserService>();
 

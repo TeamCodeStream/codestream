@@ -14,6 +14,7 @@ namespace CodeStream.VisualStudio.Commands {
 		protected override void ExecuteUntyped(object parameter) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			try {
+				Log.Verbose(nameof(WebViewDevToolsCommand) + " " + nameof(ExecuteUntyped));
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var browserService = componentModel?.GetService<IBrowserService>();
 				var url = browserService?.GetDevToolsUrl();

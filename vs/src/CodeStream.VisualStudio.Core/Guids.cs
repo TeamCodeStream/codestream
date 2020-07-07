@@ -15,5 +15,6 @@ namespace CodeStream.VisualStudio.Core {
 
 		// Others
 		public const string LanguageClientId = "4d480d5e-ab28-4e9c-b0be-32cd08f3b8ea";
+		public const string ServiceProviderPackageAutoLoadId = "2f119bc4-4580-442f-994d-975644125ef2";
 	}
 }

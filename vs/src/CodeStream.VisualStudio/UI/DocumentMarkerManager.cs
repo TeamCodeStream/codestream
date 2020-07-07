@@ -39,13 +39,6 @@ namespace CodeStream.VisualStudio.UI {
 			});
 		}
 
-		public void TrySetMarkersIfReady(bool forceUpdate = false) {
-			if (!IsInitialized()) return;
-			_ = System.Threading.Tasks.Task.Run(async delegate {
-				_ = TrySetMarkersAsync(forceUpdate);
-			});
-		}
-
 		/// <summary>
 		/// Asynchronously tries to populate the marker collection, returns true if there was a change in marker count and the callee should update
 		/// </summary>

@@ -82,7 +82,7 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 			await System.Threading.Tasks.Task.Yield();
 			Connection connection = null;
 			try {
-				var settingsManager = SettingsServiceFactory.Create();
+				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(Client));
 				var process = LanguageServerProcess.Create(settingsManager?.GetAgentTraceLevel());
 
 				using (Log.CriticalOperation($"Started language server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
@@ -99,7 +99,7 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 			}
 
 			return connection;
-		}		
+		}
 
 		public override async Task RestartAsync() {
 			await StartStopRestartAsync(true);
@@ -170,12 +170,13 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 			_rpc.JsonSerializer.ContractResolver = new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) });
 			_rpc.JsonSerializer.NullValueHandling = NullValueHandling.Ignore;
 
+			await OnAttachedForCustomMessageAsync();
 			Log.Debug(nameof(AttachForCustomMessageAsync));
 		}
 
 		public async System.Threading.Tasks.Task OnServerInitializedAsync() {
 			try {
-				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}", Serilog.Events.LogEventLevel.Debug)) {				
+				using (Log.CriticalOperation($"{nameof(OnServerInitializedAsync)}", Serilog.Events.LogEventLevel.Debug)) {
 					_rpc.Disconnected += Rpc_Disconnected;
 
 					var componentModel = ServiceProvider.GetService(typeof(SComponentModel)) as IComponentModel;

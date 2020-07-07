@@ -1,55 +1,55 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
-using System;
-using System.ComponentModel.Composition;
-using Serilog;
-using CodeStream.VisualStudio.Core;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Packages;
 using CodeStream.VisualStudio.Core.Services;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
+using System;
+using System.ComponentModel.Composition;
+using System.Threading;
+using Serilog.Events;
 
 namespace CodeStream.VisualStudio.Services {
-	 
-
 	[Export(typeof(ISettingsServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class SettingsServiceFactory : ISettingsServiceFactory {
 		private static readonly ILogger Log = LogManager.ForContext<SettingsServiceFactory>();
 
-		private volatile ISettingsManager _settingsManager = null;
-		private static readonly object locker = new object();
-
+		private volatile ISettingsManager _settingsManager;
+		private static readonly object Locker = new object();
 
 		/// <summary>
-		/// DO NOT call this in another constructor -- possible that SOptionsDialogPageAccessor has not been registered yet
+		/// DO NOT call this in another constructor -- it is possible that SOptionsDialogPageAccessor has not been registered yet
 		/// </summary>
 		/// <returns></returns>
-		public virtual ISettingsManager Create() {
+		public ISettingsManager GetOrCreate(string source = null) {
 			try {
 				if (_settingsManager == null) {
-					lock (locker) {
+					lock (Locker) {
 						if (_settingsManager == null) {
 							ThreadHelper.ThrowIfNotOnUIThread();
-							var accessor = Package.GetGlobalService(typeof(SOptionsDialogPageAccessor)) as IOptionsDialogPageAccessor;
-							Microsoft.Assumes.Present(accessor);
-							var result = new SettingsManager(accessor?.GetOptionsDialogPage());
-
-							Log.Verbose($"{nameof(Create)} Initialized");
-							_settingsManager = result;
+							using (Log.CriticalOperation($"{nameof(SettingsServiceFactory)} {nameof(GetOrCreate)}d by source={source}", LogEventLevel.Information)) {
+								var accessor = Package.GetGlobalService(typeof(SSettingsManagerAccessor)) as
+										ISettingsManagerAccessor;
+								Microsoft.Assumes.Present(accessor);
+								_settingsManager = accessor?.GetSettingsManager();
+								return _settingsManager;
+							}
 						}
 					}
 				}
 
-				Log.Verbose($"{nameof(Create)}d");
+				Log.Verbose($"Already {nameof(GetOrCreate)}d (source={source})");
 				return _settingsManager;
 			}
 			catch (Exception ex) {
-				Log.Fatal(ex, nameof(Create));
+				Log.Fatal(ex, nameof(GetOrCreate));
 				throw;
 			}
 		}
-	}	 
+	}
 
 	public class SettingsManager : ISettingsManager, IOptions {
 		// once we don't support VS 2017, we'll be able to use something like...

@@ -124,7 +124,7 @@ namespace CodeStream.VisualStudio.Services {
 		private Task<JToken> InitializeAsync() {
 			Log.Debug($"{nameof(InitializeAsync)}");
 
-			var settingsManager = _settingsServiceFactory.Create();
+			var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(CodeStreamAgentService));
 			var extensionInfo = settingsManager.GetExtensionInfo();
 			var ideInfo = settingsManager.GetIdeInfo();
 			return SendCoreAsync<JToken>("codestream/onInitialized", new LoginRequest {
@@ -241,7 +241,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId) {
-			var settingsManager = _settingsServiceFactory.Create();
+			var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(LoginAsync));
 			return SendCoreAsync<JToken>(PasswordLoginRequestType.MethodName, new PasswordLoginRequest {
 				Email = email,
 				Password = password,
@@ -268,7 +268,7 @@ namespace CodeStream.VisualStudio.Services {
 			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var ideService = componentModel?.GetService<IIdeService>();
-				var settingsManager = _settingsServiceFactory.Create();
+				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(GetBootstrapAsync));
 				var vslsEnabled = ideService?.QueryExtension(ExtensionKind.LiveShare) == true;
 
 				// NOTE: this camelCaseSerializer is important because FromObject doesn't

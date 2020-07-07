@@ -47,10 +47,7 @@ namespace CodeStream.VisualStudio.Packages {
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
-		public static void InitializeLogging(ISettingsManager _settingsManager) {
-			if (_settingsManager == null) return;
-
-			var traceLevel = _settingsManager.GetExtensionTraceLevel();
+		public static void InitializeLogging(TraceLevel traceLevel) {
 			if (traceLevel == TraceLevel.Silent) return;
 
 #if DEBUG

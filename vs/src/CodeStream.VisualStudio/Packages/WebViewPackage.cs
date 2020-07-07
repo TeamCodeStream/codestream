@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Packages {
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsServiceFactory.Create();
+				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewPackage));
 				if (_settingsManager != null) {
 					_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 				}

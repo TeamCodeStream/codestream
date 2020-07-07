@@ -14,9 +14,11 @@ namespace CodeStream.VisualStudio.Commands {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationCommand>();
 
 		private readonly IComponentModel _componentModel;
+		private readonly ISessionService _sessionService;
 
-		public AuthenticationCommand(IComponentModel serviceProvider) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
+		public AuthenticationCommand(IComponentModel serviceProvider, ISessionService sessionService) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
 			_componentModel = serviceProvider;
+			_sessionService = sessionService;
 		}
 
 		protected override void ExecuteUntyped(object parameter) {
@@ -43,10 +45,10 @@ namespace CodeStream.VisualStudio.Commands {
 		}
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-
 			try {
-				var sessionService = _componentModel.GetService<ISessionService>();
-				var isReady = sessionService?.IsReady == true;
+				ThreadHelper.ThrowIfNotOnUIThread();
+				Log.Verbose(nameof(AuthenticationCommand) + " " + nameof(OnBeforeQueryStatus));
+				var isReady = _sessionService?.IsReady == true;
 				if (isReady) {
 					sender.Visible = true;
 					sender.Text = "Sign Out";

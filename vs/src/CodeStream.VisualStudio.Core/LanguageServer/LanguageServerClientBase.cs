@@ -8,10 +8,14 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 using StreamJsonRpc;
 using System;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public abstract class LanguageServerClientBase : ILanguageServerClientManager {
 		private readonly ILogger Log;
+		private Guid _uiContextGuid = new Guid(Guids.ServiceProviderPackageAutoLoadId);
 		protected readonly IEventAggregator EventAggregator;
 		protected readonly ISessionService SessionService;
 		protected readonly IServiceProvider ServiceProvider;
@@ -55,7 +59,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 		public object InitializationOptionsBase {
 			get {
-				var settingsManager = SettingsServiceFactory.Create();
+				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(LanguageServerClientBase));
 				if (settingsManager == null) {
 					Log.Fatal($"{nameof(settingsManager)} is null");
 				}
@@ -87,6 +91,29 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 		}
 
+
+
+		protected async Task OnAttachedForCustomMessageAsync() {
+			try {
+				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				// Sets the UI context so the custom commands will be available.
+				var monitorSelection =
+					Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(IVsMonitorSelection)) as
+						IVsMonitorSelection;
+				if (monitorSelection != null) {
+					if (monitorSelection.GetCmdUIContextCookie(ref this._uiContextGuid, out uint cookie) ==
+						VSConstants.S_OK) {
+						monitorSelection.SetCmdUIContext(cookie, 1);
+					}
+				}
+			}
+			catch (Exception ex) {
+				Log.Error(ex, nameof(OnAttachedForCustomMessageAsync));
+			}
+
+			Log.Debug(nameof(OnAttachedForCustomMessageAsync));
+		}
 
 		protected virtual void OnStopping() {
 			try {
@@ -125,7 +152,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 				try {
 					Log.Debug($"TryAutoSignInAsync starting...");
 					var authenticationController = new AuthenticationController(
-						SettingsServiceFactory.Create(),
+						SettingsServiceFactory.GetOrCreate(),
 						componentModel.GetService<ISessionService>(),
 						codeStreamAgentService,
 						EventAggregator,
