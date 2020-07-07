@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
 using System.ComponentModel.Composition;
-using System.Threading;
 using Serilog.Events;
 
 namespace CodeStream.VisualStudio.Services {
@@ -72,9 +71,6 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public IOptionsDialogPage DialogPage { get; private set; }
-
-		public SettingsManager() { }
-
 
 		public void SaveSettingsToStorage() {
 			DialogPage.SaveSettingsToStorage();

@@ -86,7 +86,7 @@
     <Compile Include="Controllers\ConfigurationController.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Packages\AsyncPackageHelper.cs" />
-    <Compile Include="Packages\CodeStreamPackage.cs" />
+    <Compile Include="Packages\SettingsPackage.cs" />
     <Compile Include="Packages\ProtocolHandlerPackage.cs" />
     <Compile Include="Packages\CommandsPackage.cs" />
     <Compile Include="Packages\WebViewPackage.cs" />

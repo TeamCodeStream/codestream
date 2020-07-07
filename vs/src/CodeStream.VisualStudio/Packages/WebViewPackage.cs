@@ -1,11 +1,8 @@
-﻿using CodeStream.VisualStudio.Controllers;
-using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Events;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UI.Settings;
 using CodeStream.VisualStudio.UI.ToolWindows;
 using EnvDTE;
 using Microsoft;
@@ -16,7 +13,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
-using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -34,12 +30,10 @@ namespace CodeStream.VisualStudio.Packages {
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionExists)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasMultipleProjects)]
 	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.SolutionHasSingleProject)]
-	[ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
 	public sealed class WebViewPackage : AsyncPackage {
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
 
-		private ISettingsManager _settingsManager;
 		private IComponentModel _componentModel;
 		private ISolutionEventsListener _solutionEventListener;
 		private IThemeEventsListener _themeEventsService;
@@ -67,14 +61,10 @@ namespace CodeStream.VisualStudio.Packages {
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
-				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
-				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewPackage));
-				if (_settingsManager != null) {
-					_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
-				}
+
+				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				_solutionEventListener = _componentModel.GetService<ISolutionEventsListener>();
 				_solutionEventListener.Opened += SolutionOrFolder_Opened;
@@ -84,6 +74,11 @@ namespace CodeStream.VisualStudio.Packages {
 				_themeEventsService = _componentModel.GetService<IThemeEventsListener>();
 				_themeEventsService.ThemeChangedEventHandler += Theme_Changed;
 
+				var manager = _componentModel.GetService<ISettingsServiceFactory>()?.GetOrCreate(nameof(WebViewPackage));
+				if (manager != null) {
+					AsyncPackageHelper.InitializeLogging(manager.GetExtensionTraceLevel());
+				}
+
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
@@ -91,9 +86,8 @@ namespace CodeStream.VisualStudio.Packages {
 				var isSolutionLoaded = await IsSolutionLoadedAsync();
 				Log.Debug($"{nameof(isSolutionLoaded)}={isSolutionLoaded}");
 				if (isSolutionLoaded) {
-					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, () => {
-						return AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
-					});
+					await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority,
+						() => AsyncPackageHelper.TryTriggerLspActivationAsync(Log));
 				}
 
 				Log.Debug($"{nameof(WebViewPackage)} {nameof(InitializeAsync)} completed");
@@ -166,7 +160,7 @@ namespace CodeStream.VisualStudio.Packages {
 				}
 
 				sessionService.SolutionName = e.FileName;
-				sessionService.ProjectType = e.ProjectType;				 
+				sessionService.ProjectType = e.ProjectType;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(SolutionOrFolder_Opened));
@@ -211,85 +205,12 @@ namespace CodeStream.VisualStudio.Packages {
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
-		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
-			if (_settingsManager == null) {
-				Log.Warning($"{nameof(DialogPage_PropertyChanged)} SettingsService is null");
-				return;
-			}
-
-			if (args.PropertyName == nameof(_settingsManager.TraceLevel)) {
-				LogManager.SetTraceLevel(_settingsManager.GetExtensionTraceLevel());
-			}
-			else if (args.PropertyName == nameof(_settingsManager.AutoHideMarkers)) {
-				var odp = sender as OptionsDialogPage;
-				if (odp == null) return;
-				var eventAggregator = _componentModel.GetService<IEventAggregator>();
-				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
-			}
-			else if (args.PropertyName == nameof(_settingsManager.ShowAvatars) ||
-				args.PropertyName == nameof(_settingsManager.ShowMarkerGlyphs)) {
-				var odp = sender as OptionsDialogPage;
-				if (odp == null) return;
-
-				var configurationController = new ConfigurationController(
-					_componentModel.GetService<IEventAggregator>(),
-					_componentModel.GetService<IBrowserService>()
-				);
-
-				switch (args.PropertyName) {
-					case nameof(_settingsManager.ShowAvatars):
-						configurationController.ToggleShowAvatars(odp.ShowAvatars);
-						break;
-					case nameof(_settingsManager.ShowMarkerGlyphs):
-						configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
-						break;
-				}
-			}
-			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
-					 args.PropertyName == nameof(_settingsManager.Team) ||
-					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
-					 args.PropertyName == nameof(_settingsManager.DisableStrictSSL)) {
-				Log.Information($"Url(s) or Team or Proxy changed");
-				try {
-					try {						
-						var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
-						if (languageServerClientManager != null) {
-							try {
-								ThreadHelper.JoinableTaskFactory.Run(async () => {
-									await languageServerClientManager.RestartAsync();
-								});
-							}
-							catch (Exception ex) {
-								Log.Warning(ex, string.Empty);
-							}
-						}
-					}
-					catch {
-						//languageServerClientManager won't be there if the agent is not already activated
-					}
-
-					var sessionService = _componentModel.GetService<ISessionService>();
-					if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
-						var browserService = _componentModel.GetService<IBrowserService>();
-						browserService?.ReloadWebView();
-					}
-				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(DialogPage_PropertyChanged));
-				}
-			}
-		}
-
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {
 				try {
 #pragma warning disable VSTHRD108
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
-
-					if (_settingsManager != null && _settingsManager.DialogPage != null) {
-						_settingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
-					}
 
 					if (_solutionEventListener != null) {
 						_solutionEventListener.Opened -= SolutionOrFolder_Opened;
@@ -300,7 +221,6 @@ namespace CodeStream.VisualStudio.Packages {
 						_themeEventsService.ThemeChangedEventHandler -= Theme_Changed;
 					}
 
-					//cheese
 					//can't do this anymore... though at this point the process is exiting so why bother?...
 					//Client.Instance?.Dispose();
 				}
