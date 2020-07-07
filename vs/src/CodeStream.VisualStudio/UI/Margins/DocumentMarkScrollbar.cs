@@ -386,6 +386,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 					}
 
 					if (_markers == null) return;
+					// filter out any missing codemarks
+					_markers = _markers.Where(_ => _.Codemark != null).ToList();
 
 					// we want all markers, those with Codemarks as well as those without (externalContent)
 					foreach (var span in snapshot.Lines) {
