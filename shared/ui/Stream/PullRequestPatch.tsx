@@ -137,7 +137,7 @@ export const PullRequestPatch = (props: {
 								{renderLineNum("")}
 								{renderLineNum("")}
 								<pre className="prettyprint">
-									@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@
+									@@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
 								</pre>
 							</div>
 							{hunk.lines.map(_ => {

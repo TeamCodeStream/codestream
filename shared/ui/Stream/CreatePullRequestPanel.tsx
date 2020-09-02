@@ -73,6 +73,9 @@ const Root = styled.div`
 			color: var(--text-color-info) !important;
 		}
 	}
+	.no-padding {
+		padding: 0;
+	}
 `;
 const PRError = styled.div`
 	padding: 15px 15px 10px 15px;
@@ -1185,6 +1188,9 @@ export const CreatePullRequestPanel = props => {
 					{!loading && !loadingBranchInfo && preconditionError.type && preconditionErrorMessages()}
 				</div>
 				<div style={{ height: "40px" }} />
+				{filesChanged.length > 0 && (
+					<PanelHeader className="no-padding" title="Comparing Changes"></PanelHeader>
+				)}
 				<PullRequestFilesChangedList
 					isLoading={loadingBranchInfo || isLoadingDiffs}
 					filesChanged={filesChanged}
