@@ -471,7 +471,7 @@ export const StatusPanel = () => {
 	};
 
 	useEffect(() => {
-		if (derivedState.startWorkCard) setCard(derivedState.startWorkCard);
+		if (derivedState.startWorkCard) selectCard(derivedState.startWorkCard);
 	}, [derivedState.startWorkCard]);
 
 	useEffect(() => {
@@ -653,6 +653,10 @@ export const StatusPanel = () => {
 		return label && derivedState.shareToSlackSupported;
 	}, [label, derivedState.shareToSlackSupported]);
 
+	console.warn("CARD IS: ", card);
+	console.warn("LABEL IS: ", label);
+	console.warn("BRANCHES ARE: ", branches);
+	console.warn("SCBC: ", showCreateBranchCheckbox);
 	const newBranch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
 		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
@@ -849,7 +853,7 @@ export const StatusPanel = () => {
 												) : card.providerIcon ? (
 													<Icon className="ticket-icon" name={card.providerIcon} />
 												) : null}
-												{card.label}
+												{card.label || card.title}
 												{card.url && (
 													<div
 														className="link-to-ticket"

@@ -1449,8 +1449,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const { issue } = repository;
 		const card = {
 			id: issue.id,
+			tokenId: issue.number,
 			number: issue.number,
-			label: issue.title,
+			title: issue.title,
 			body: issue.body,
 			url: request.url,
 			providerIcon: "mark-github"
