@@ -1021,6 +1021,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	async setAssigneeOnIssue(request: { issueId: string; assigneeId: string; onOff: boolean }) {
+		const method = request.onOff ? "addAssigneesToAssignable" : "removeAssigneesFromAssignable";
+		const Method = request.onOff ? "AddAssigneesFromAssignable" : "RemoveAssigneesFromAssignable";
+		const query = `mutation ${Method}($assignableId: String!,$assigneeIds:String!) {
+			${method}(input: {assignableId: $assignableId, assigneeIds:$assigneeIds}) {
+				  clientMutationId
+				}
+			  }`;
+
+		const response = await this.client.request<any>(query, {
+			assignableId: request.issueId,
+			assigneeIds: request.assigneeId
+		});
+		return response;
+	}
+
 	async toggleReaction(request: { subjectId: string; content: string; onOff: boolean }) {
 		const method = request.onOff ? "addReaction" : "removeReaction";
 		const Method = request.onOff ? "AddReaction" : "RemoveReaction";
@@ -1394,6 +1410,52 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		return pullRequestInfo.repository.pullRequest.id;
+	}
+
+	async getIssueIdFromUrl(request: { url: string }) {
+		// since we only have the url for the Issue -- parse it out for the
+		// data we need.
+		const uri = URI.parse(request.url);
+		const path = uri.path.split("/");
+		const owner = path[1];
+		const repo = path[2];
+		const issueNumber = parseInt(path[4], 10);
+		const issueInfo = await this.client.request<any>(
+			`query FindIssue($owner:String!,$name:String!,$issueNumber:Int!) {
+					repository(owner:$owner name:$name) {
+					  issue(number: $issueNumber) {
+						id
+						number
+						title
+						body
+					  }
+					}
+					viewer {
+						login
+						id
+					}
+				  }`,
+			{
+				owner: owner,
+				name: repo,
+				issueNumber: issueNumber
+			}
+		);
+		Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
+		// const issue = issueInfo.repository.issue;
+		// issue.viewer = issueInfo.viewer;
+		// translate to our card shape
+		const { repository, viewer } = issueInfo;
+		const { issue } = repository;
+		const card = {
+			id: issue.id,
+			number: issue.number,
+			label: issue.title,
+			body: issue.body,
+			url: request.url,
+			providerIcon: "mark-github"
+		};
+		return { ...card, viewer: issueInfo.viewer };
 	}
 
 	async toggleMilestoneOnPullRequest(request: {

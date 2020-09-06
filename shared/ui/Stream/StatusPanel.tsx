@@ -7,7 +7,12 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference, connectProvider } from "./actions";
-import { openPanel, setNewPostEntry, setCurrentCodemark } from "../store/context/actions";
+import {
+	openPanel,
+	setNewPostEntry,
+	setCurrentCodemark,
+	setStartWorkCard
+} from "../store/context/actions";
 import { CSMe, FileStatus } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -425,7 +430,8 @@ export const StatusPanel = () => {
 			isConnectedToSlack,
 			selectedShareTarget: selectedShareTarget || shareTargets[0],
 			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
-			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack")
+			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack"),
+			startWorkCard: state.context.startWorkCard
 		};
 	});
 
@@ -435,7 +441,6 @@ export const StatusPanel = () => {
 	const [label, setLabel] = useState(status.label || "");
 	const [card, setCard] = useState<any>();
 	const [loadingSlack, setLoadingSlack] = useState(false);
-	const [manuallySelectedBranch, setManuallySelectedBranch] = useState("");
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState(EMPTY_ARRAY as string[]);
@@ -464,6 +469,10 @@ export const StatusPanel = () => {
 	const toggleEditingBranch = value => {
 		setEditingBranch(value);
 	};
+
+	useEffect(() => {
+		if (derivedState.startWorkCard) setCard(derivedState.startWorkCard);
+	}, [derivedState.startWorkCard]);
 
 	useEffect(() => {
 		if (editingBranch && !disposables.length) {
@@ -497,6 +506,7 @@ export const StatusPanel = () => {
 		if (card) {
 			setLabel(card.title || "");
 			setCard(card);
+			dispatch(setStartWorkCard(undefined));
 
 			if (card.moveCardOptions && card.moveCardOptions.length) {
 				const index = card.moveCardOptions.findIndex(option =>
@@ -656,14 +666,12 @@ export const StatusPanel = () => {
 	]);
 
 	const branch = React.useMemo(() => {
-		if (manuallySelectedBranch) return manuallySelectedBranch;
 		if (customBranchName) return customBranchName;
 		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
 		// else return replaceDescriptionTokens(derivedState.branchDescriptionTemplate, label);
 	}, [
 		label,
 		card,
-		manuallySelectedBranch,
 		customBranchName,
 		derivedState.branchTicketTemplate,
 		derivedState.branchDescriptionTemplate
@@ -738,11 +746,13 @@ export const StatusPanel = () => {
 		setCard(undefined);
 		setScmError("");
 		setLoadingSlack(false);
+		dispatch(setStartWorkCard(undefined));
 	};
 
 	const clearAndSave = () => {
 		setLoadingSlack(false);
 		dispatch(setUserStatus("", "", "", "", derivedState.invisible));
+		dispatch(setStartWorkCard(undefined));
 		// FIXME clear out slack status
 	};
 
@@ -752,41 +762,6 @@ export const StatusPanel = () => {
 			: branches.includes(branch)
 			? "Switch Branch & Start Work"
 			: "Create Branch & Start Work";
-
-	const useBranchLabel =
-		branch == currentBranch
-			? "Use branch"
-			: branches.includes(branch)
-			? "Switch to branch"
-			: "Create branch";
-
-	const makeMenuItem = (branch: string, isNew?: boolean) => {
-		const iconName = branch == currentBranch ? "arrow-right" : "blank";
-		return {
-			label: (
-				<span>
-					{branch == currentBranch ? "Use " : "Switch to "}
-					<span className="monospace highlight">
-						<b>{branch}</b>
-					</span>
-					{branch == currentBranch && <> (current)</>}
-				</span>
-			),
-			key: branch,
-			icon: <Icon name={iconName} />,
-			action: () => setManuallySelectedBranch(branch)
-		};
-	};
-
-	const makeFromMenuItem = (branch: string) => {
-		const iconName = branch == currentBranch ? "arrow-right" : "blank";
-		return {
-			label: <span className="monospace">{branch}</span>,
-			key: branch,
-			icon: <Icon name={iconName} />,
-			action: () => setFromBranch(branch)
-		};
-	};
 
 	const branchMenuItems = [] as any; //branches.map(branch => makeMenuItem(branch, false)) as any;
 	if (newBranch) {
@@ -805,25 +780,18 @@ export const StatusPanel = () => {
 				disabled: !derivedState.isCurrentUserAdmin,
 				subtext: derivedState.isCurrentUserAdmin || "Disabled: admin only"
 			}
-			// { label: "-" },
-			// {
-			// 	label: (
-			// 		<span>
-			// 			Branch off of{" "}
-			// 			<span className="monospace highlight">
-			// 				<b>{currentBranch}</b>
-			// 			</span>
-			// 		</span>
-			// 	),
-			// 	key: "create",
-			// 	icon: <Icon name="git-branch" />,
-			// 	action: () => setManuallySelectedBranch(newBranch),
-			// 	submenu: [...branches.map(branch => makeFromMenuItem(branch))]
-			// }
 		);
 	}
 
-	const baseBranchMenuItems = branches.map(branch => makeFromMenuItem(branch));
+	const baseBranchMenuItems = branches.map(branch => {
+		const iconName = branch == currentBranch ? "arrow-right" : "blank";
+		return {
+			label: <span className="monospace">{branch}</span>,
+			key: branch,
+			icon: <Icon name={iconName} />,
+			action: () => setFromBranch(branch)
+		};
+	});
 
 	const repoMenuItems = (openRepos || []).map(repo => {
 		const repoId = repo.id || "";

@@ -33,7 +33,8 @@ export enum ContextActionsType {
 	SetCurrentReview = "@context/SetCurrentReview",
 	SetCreatePullRequest = "@context/SetCreatePullRequest",
 	SetCurrentPullRequest = "@context/SetCurrentPullRequest",
-	SetCurrentPullRequestAndBranch = "@context/SetCurrentPullRequestAndBranch"
+	SetCurrentPullRequestAndBranch = "@context/SetCurrentPullRequestAndBranch",
+	SetStartWorkCard = "@context/SetStartWorkCard"
 }
 
 /**

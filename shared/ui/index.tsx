@@ -67,7 +67,8 @@ import {
 	setCurrentCodemark,
 	setCurrentReview,
 	setCurrentPullRequest,
-	setCurrentPullRequestAndBranch
+	setCurrentPullRequestAndBranch,
+	setStartWorkCard
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
@@ -356,7 +357,7 @@ function listenForEvents(store) {
 				}
 				break;
 			}
-			case "review": {
+			case RouteControllerType.Review: {
 				if (route.action) {
 					switch (route.action) {
 						case "open": {
@@ -374,7 +375,7 @@ function listenForEvents(store) {
 				}
 				break;
 			}
-			case "pullRequest": {
+			case RouteControllerType.PullRequest: {
 				switch (route.action) {
 					case "open": {
 						HostApi.instance
@@ -407,6 +408,41 @@ function listenForEvents(store) {
 								}
 							});
 
+						break;
+					}
+				}
+				break;
+			}
+			case RouteControllerType.StartWork: {
+				switch (route.action) {
+					case "open": {
+						HostApi.instance
+							.send(ExecuteThirdPartyRequestUntypedType, {
+								method: "getIssueIdFromUrl",
+								providerId: route.query.providerId,
+								params: { url: route.query.url }
+							})
+							.then((issue: any) => {
+								if (issue) {
+									HostApi.instance
+										.send(ExecuteThirdPartyRequestUntypedType, {
+											method: "setAssigneeOnIssue",
+											providerId: route.query.providerId,
+											params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true }
+										})
+										.then(() => {
+											store.dispatch(setCurrentReview(""));
+											store.dispatch(setCurrentPullRequest(""));
+											store.dispatch(setStartWorkCard(issue));
+											store.dispatch(openPanel(WebviewPanels.Status));
+										});
+								} else {
+									console.warn("Unable to find issue from: ", route);
+								}
+							})
+							.catch(e => {
+								console.warn("Error: Unable to load issue from: ", route);
+							});
 						break;
 					}
 				}

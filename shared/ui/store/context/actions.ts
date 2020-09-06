@@ -118,6 +118,9 @@ export const clearCurrentPullRequest = () =>
 		id: ""
 	});
 
+export const setStartWorkCard = (card: any) =>
+	action(ContextActionsType.SetStartWorkCard, { card });
+
 export const setCurrentPullRequestAndBranch = (prId?: string) =>
 	action(ContextActionsType.SetCurrentPullRequestAndBranch, { prId });
 

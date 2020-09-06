@@ -85,7 +85,8 @@ export enum RouteControllerType {
 	Review = "review",
 	Navigate = "navigate",
 	Search = "search",
-	PullRequest = "pullRequest"
+	PullRequest = "pullRequest",
+	StartWork = "startWork"
 }
 export enum RouteActionType {
 	Open = "open"

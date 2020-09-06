@@ -106,6 +106,7 @@ export interface WebviewContext {
 	hasFocus: boolean;
 	panelStack?: (WebviewPanels | string)[];
 	activePanel?: WebviewPanels;
+	startWorkCard?: any;
 }
 
 export interface SessionState {

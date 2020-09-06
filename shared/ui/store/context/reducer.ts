@@ -134,6 +134,8 @@ export function reduceContext(
 				currentPullRequestId: action.payload.prId,
 				pullRequestCheckoutBranch: true
 			};
+		case ContextActionsType.SetStartWorkCard:
+			return { ...state, startWorkCard: action.payload.card };
 		case ContextActionsType.SetProfileUser:
 			return { ...state, profileUserId: action.payload };
 		case ContextActionsType.SetSpatialViewPRCommentsToggle:
