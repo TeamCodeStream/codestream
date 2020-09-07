@@ -416,33 +416,50 @@ function listenForEvents(store) {
 			case RouteControllerType.StartWork: {
 				switch (route.action) {
 					case "open": {
-						HostApi.instance
-							.send(ExecuteThirdPartyRequestUntypedType, {
-								method: "getIssueIdFromUrl",
-								providerId: route.query.providerId,
-								params: { url: route.query.url }
-							})
-							.then((issue: any) => {
-								if (issue) {
-									HostApi.instance
-										.send(ExecuteThirdPartyRequestUntypedType, {
-											method: "setAssigneeOnIssue",
-											providerId: route.query.providerId,
-											params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true }
-										})
-										.then(() => {
-											store.dispatch(setCurrentReview(""));
-											store.dispatch(setCurrentPullRequest(""));
-											store.dispatch(setStartWorkCard(issue));
-											store.dispatch(openPanel(WebviewPanels.Status));
-										});
-								} else {
-									console.warn("Unable to find issue from: ", route);
-								}
-							})
-							.catch(e => {
-								console.warn("Error: Unable to load issue from: ", route);
-							});
+						const { query } = route;
+						if (query.providerId === "trello*com") {
+							const card = { ...query, providerIcon: "trello" };
+							HostApi.instance
+								.send(ExecuteThirdPartyRequestUntypedType, {
+									method: "selfAssignCard",
+									providerId: card.providerId,
+									params: { cardId: card.id }
+								})
+								.then(() => {
+									store.dispatch(setCurrentReview(""));
+									store.dispatch(setCurrentPullRequest(""));
+									store.dispatch(setStartWorkCard(card));
+									store.dispatch(openPanel(WebviewPanels.Status));
+								});
+						} else {
+							HostApi.instance
+								.send(ExecuteThirdPartyRequestUntypedType, {
+									method: "getIssueIdFromUrl",
+									providerId: route.query.providerId,
+									params: { url: route.query.url }
+								})
+								.then((issue: any) => {
+									if (issue) {
+										HostApi.instance
+											.send(ExecuteThirdPartyRequestUntypedType, {
+												method: "setAssigneeOnIssue",
+												providerId: route.query.providerId,
+												params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true }
+											})
+											.then(() => {
+												store.dispatch(setCurrentReview(""));
+												store.dispatch(setCurrentPullRequest(""));
+												store.dispatch(setStartWorkCard(issue));
+												store.dispatch(openPanel(WebviewPanels.Status));
+											});
+									} else {
+										console.warn("Unable to find issue from: ", route);
+									}
+								})
+								.catch(e => {
+									console.warn("Error: Unable to load issue from: ", route);
+								});
+						}
 						break;
 					}
 				}

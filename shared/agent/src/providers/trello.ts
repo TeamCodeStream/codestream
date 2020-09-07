@@ -71,6 +71,20 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 		return { boards };
 	}
 
+	async selfAssignCard(request: { cardId: string }) {
+		await this.ensureConnected();
+
+		const response = await this.put<{}, any>(
+			`/cards/${request.cardId}?${qs.stringify({
+				idMembers: this._trelloUserId,
+				key: this.apiKey,
+				token: this.accessToken
+			})}`,
+			{}
+		);
+		return response.body;
+	}
+
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		// have to force connection here because we need apiKey and accessToken to even create our request
