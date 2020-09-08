@@ -21,6 +21,7 @@ export enum ContextActionsType {
 	SetCodemarksFileViewStyle = "@context/SetCodemarksFileViewStyle",
 	SetCodemarksShowArchived = "@context/SetCodemarksShowArchived",
 	SetCodemarksShowResolved = "@context/SetCodemarksShowResolved",
+	SetCodemarksWrapComments = "@context/SetCodemarksWrapComments",
 	SetChannelsMuteAll = "@context/SetChannelsMuteAll",
 	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
 	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
@@ -62,6 +63,7 @@ export interface ContextState extends WebviewContext {
 	codemarksFileViewStyle: "list" | "inline";
 	codemarksShowArchived: boolean;
 	codemarksShowResolved: boolean;
+	codemarksWrapComments: boolean;
 
 	spatialViewShowPRComments: boolean;
 

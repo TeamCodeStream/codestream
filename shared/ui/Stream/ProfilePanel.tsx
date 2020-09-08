@@ -22,6 +22,7 @@ import Menu from "./Menu";
 import { confirmPopup } from "./Confirm";
 import { logout } from "../store/session/actions";
 import { Button } from "../src/components/Button";
+import { Dialog } from "../src/components/Dialog";
 
 const Root = styled.div`
 	.edit-headshot {
@@ -204,105 +205,101 @@ export const ProfilePanel = () => {
 		</Row>
 	);
 	return (
-		<Root>
-			<div className="panel full-height">
-				<PanelHeader title={title}>
-					<CancelButton title="Close" onClick={() => dispatch(closePanel())} />
-				</PanelHeader>
-				<ScrollBox>
-					<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
-						<div
-							className={isMe ? "edit-headshot" : "headshot-wrap"}
-							onClick={isMe ? editAvatar : noop}
-						>
-							<Headshot person={person} size={128} />
-							{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
-						</div>
-						<Row>
-							<MetaLabel>Username</MetaLabel>
-							<Value>@{person.username}</Value>
-							{isMe && <RowIcon name="pencil" title="Edit Username" onClick={editUsername} />}
-						</Row>
-						<Row>
-							<MetaLabel>Email address</MetaLabel>
-							<Value>
-								<a href={`mailto:${person.email}`}>{person.email}</a>
-							</Value>
-							<RowIcon name="copy" title="Copy Email" onClick={copyEmail} />
-							<textarea
-								ref={emailRef}
-								value={person.email}
-								style={{ position: "absolute", left: "-9999px" }}
-							/>
-							{isMe && <RowIcon name="pencil" title="Edit Email" onClick={editEmail} />}
-						</Row>
-						<Row>
-							<MetaLabel>Timezone</MetaLabel>
-							<Value>{person.timeZone}</Value>
-							{isMe && (
-								<RowIcon
-									name="pencil"
-									title="Edit Timezone"
-									onClick={e => setEditingTimeZone(e.target)}
-								/>
-							)}
-							{editingTimeZone && (
-								<Menu
-									align="dropdownLeft"
-									items={timeZoneItems}
-									target={editingTimeZone}
-									title="Timezone"
-									action={() => setEditingTimeZone(undefined)}
-								/>
-							)}
-						</Row>
-						{(isMe || person.phoneNumber) && (
-							<Row>
-								<MetaLabel>Phone Number</MetaLabel>
-								<Value>{person.phoneNumber || "-not set-"}</Value>
-								{isMe && <RowIcon name="pencil" title="Edit Phone" onClick={editPhoneNumber} />}
-							</Row>
-						)}
-						{(isMe || person.iWorkOn) && (
-							<Row>
-								<MetaLabel>Works On</MetaLabel>
-								<Value>{person.iWorkOn || "-not set-"}</Value>
-								{isMe && <RowIcon name="pencil" title="Edit Works On" onClick={editWorksOn} />}
-							</Row>
-						)}
-						{person.lastLogin && (
-							<Row>
-								<MetaLabel>Last Login</MetaLabel>
-								<Value>
-									<Timestamp className="no-padding" time={person.lastLogin} relative />
-								</Value>
-							</Row>
-						)}
-						{false && (
-							<Row>
-								<MetaLabel>Presence</MetaLabel>
-								<Value></Value>
-							</Row>
-						)}
-						{person.status && person.status.label && (
-							<Row>
-								<MetaLabel>Currently Working On</MetaLabel>
-								<StyledUserStatus user={person} />
-							</Row>
-						)}
-						<MetaLabel>Local Modifications</MetaLabel>
-						<ModifiedRepos id={person.id} showModifiedAt />
-						{isMe && (
-							<div style={{ marginTop: "75px" }}>
-								<Button variant="destructive" onClick={cancelAccount}>
-									Delete your account
-								</Button>
-							</div>
-						)}
+		<Dialog wide noPadding>
+			<Root>
+				<PanelHeader title={title} />
+				<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
+					<div
+						className={isMe ? "edit-headshot" : "headshot-wrap"}
+						onClick={isMe ? editAvatar : noop}
+					>
+						<Headshot person={person} size={128} />
+						{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 					</div>
-				</ScrollBox>
-			</div>
-		</Root>
+					<Row>
+						<MetaLabel>Username</MetaLabel>
+						<Value>@{person.username}</Value>
+						{isMe && <RowIcon name="pencil" title="Edit Username" onClick={editUsername} />}
+					</Row>
+					<Row>
+						<MetaLabel>Email address</MetaLabel>
+						<Value>
+							<a href={`mailto:${person.email}`}>{person.email}</a>
+						</Value>
+						<RowIcon name="copy" title="Copy Email" onClick={copyEmail} />
+						<textarea
+							ref={emailRef}
+							value={person.email}
+							style={{ position: "absolute", left: "-9999px" }}
+						/>
+						{isMe && <RowIcon name="pencil" title="Edit Email" onClick={editEmail} />}
+					</Row>
+					<Row>
+						<MetaLabel>Timezone</MetaLabel>
+						<Value>{person.timeZone}</Value>
+						{isMe && (
+							<RowIcon
+								name="pencil"
+								title="Edit Timezone"
+								onClick={e => setEditingTimeZone(e.target)}
+							/>
+						)}
+						{editingTimeZone && (
+							<Menu
+								align="dropdownLeft"
+								items={timeZoneItems}
+								target={editingTimeZone}
+								title="Timezone"
+								action={() => setEditingTimeZone(undefined)}
+							/>
+						)}
+					</Row>
+					{(isMe || person.phoneNumber) && (
+						<Row>
+							<MetaLabel>Phone Number</MetaLabel>
+							<Value>{person.phoneNumber || "-not set-"}</Value>
+							{isMe && <RowIcon name="pencil" title="Edit Phone" onClick={editPhoneNumber} />}
+						</Row>
+					)}
+					{(isMe || person.iWorkOn) && (
+						<Row>
+							<MetaLabel>Works On</MetaLabel>
+							<Value>{person.iWorkOn || "-not set-"}</Value>
+							{isMe && <RowIcon name="pencil" title="Edit Works On" onClick={editWorksOn} />}
+						</Row>
+					)}
+					{person.lastLogin && (
+						<Row>
+							<MetaLabel>Last Login</MetaLabel>
+							<Value>
+								<Timestamp className="no-padding" time={person.lastLogin} relative />
+							</Value>
+						</Row>
+					)}
+					{false && (
+						<Row>
+							<MetaLabel>Presence</MetaLabel>
+							<Value></Value>
+						</Row>
+					)}
+					{person.status && person.status.label && (
+						<Row>
+							<MetaLabel>Currently Working On</MetaLabel>
+							<StyledUserStatus user={person} />
+						</Row>
+					)}
+					<MetaLabel>Local Modifications</MetaLabel>
+					<ModifiedRepos id={person.id} showModifiedAt />
+					{isMe && (
+						<div style={{ marginTop: "75px" }}>
+							<Button variant="destructive" onClick={cancelAccount}>
+								Delete your account
+							</Button>
+						</div>
+					)}
+				</div>
+			</Root>
+		</Dialog>
 	);
 };
 

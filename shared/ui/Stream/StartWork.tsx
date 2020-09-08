@@ -50,6 +50,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { GitTimeline, BranchLineDown, BranchCurve, BranchLineAcross, GitBranch } from "./Flow";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { ButtonRow } from "../src/components/Dialog";
+import { ExtensionTitle } from "./Sidebar";
 
 const StyledCheckbox = styled(Checkbox)`
 	color: var(--text-color-subtle);
@@ -137,28 +138,24 @@ const CardLink = styled.div`
 	margin: -18px 0 15px 0;
 `;
 
-const Docs = styled.div`
+export const HeaderLink = styled.span`
+	float: right;
 	cursor: pointer;
-	border-top: 1px solid var(--base-border-color);
-	padding: 15px 20px;
-	span:hover {
-		color: var(--text-color-highlight);
-	}
 	.icon {
-		display: inline-block;
+		opacity: 0.7;
+		&:hover {
+			opacity: 1;
+		}
+	}
+	display: none;
+	.narrow-icon {
 		margin-right: 5px;
-		transition: transform 0.1s;
 	}
-	.icon.rotate {
-		transform: rotate(90deg);
-	}
-	.getting-started {
-		float: right;
-	}
+	padding: 0px 5px;
 `;
 
 export const StatusSection = styled.div`
-	padding: 15px 20px 15px 20px;
+	padding: 30px 0 5px 0;
 	.icon {
 		margin-right: 5px;
 		&.ticket,
@@ -166,7 +163,7 @@ export const StatusSection = styled.div`
 			margin-right: 0;
 		}
 	}
-	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
 	.instructions {
 		display: none;
 		padding: 0 20px 20px 20px;
@@ -174,6 +171,9 @@ export const StatusSection = styled.div`
 	}
 	&.show-instructions .instructions {
 		display: block;
+	}
+	&:hover ${HeaderLink} {
+		display: inline;
 	}
 `;
 
@@ -184,13 +184,13 @@ export const WideStatusSection = styled(StatusSection)`
 `;
 
 export const H4 = styled.h4`
+	position: fixed;
 	color: var(--text-color-highlight);
-	font-weight: 400;
-	font-size: 16px;
-	margin: 0 0 5px 0;
-	&.padded {
-		padding: 0 20px;
-	}
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	margin: -25px 0 5px 0;
+	padding-left: 20px;
 	.toggle {
 		opacity: 0;
 		margin: 0 5px 0 -13px;
@@ -202,48 +202,7 @@ export const H4 = styled.h4`
 	}
 `;
 
-export const RoundedLink = styled.a`
-	float: right;
-	text-decoration: none !important;
-	text-transform: capitalize;
-	.narrow-icon {
-		margin-right: 5px;
-	}
-	.octicon-minus-circle,
-	.octicon-gear,
-	.octicon-pull-request,
-	.octicon-arrow-right {
-		margin-top: -1px;
-	}
-	background: transparent;
-	color: var(--text-color);
-	&:hover {
-		color: var(--text-color-highlight);
-		background: rgba(127, 127, 127, 0.1);
-		.vscode-dark & {
-			background: rgba(127, 127, 127, 0.3);
-		}
-	}
-	background: rgba(127, 127, 127, 0.05);
-	.vscode-dark & {
-		background: rgba(127, 127, 127, 0.15);
-	}
-	border: 1px solid var(--base-border-color);
-	padding: 3px 8px 3px 4px;
-	margin: -3px 0 2px 5px;
-	font-size: 12px;
-	border-radius: 13px;
-	.icon {
-		margin-right: 2px;
-	}
-	@media only screen and (max-width: 450px) {
-		.wide-text {
-			display: none;
-		}
-	}
-`;
-
-export const RoundedSearchLink = styled(RoundedLink)`
+export const RoundedSearchLink = styled(HeaderLink)`
 	padding: 3px 3px 3px 3px;
 	&.collapsed {
 		padding: 3px 4px 3px 4px;
@@ -345,16 +304,6 @@ const Priority = styled.div`
 	}
 `;
 
-export interface IStartWorkIssueContext {
-	setValues(values: any): void;
-	card?: any;
-}
-
-export const StartWorkIssueContext = React.createContext<IStartWorkIssueContext>({
-	card: undefined,
-	setValues: () => {}
-});
-
 export const EMPTY_STATUS = {
 	label: "",
 	ticketId: "",
@@ -365,7 +314,12 @@ export const EMPTY_STATUS = {
 
 const EMPTY_ARRAY = [];
 
-export const StatusPanel = () => {
+interface Props {
+	card: any;
+	onClose: (e?: any) => void;
+}
+
+export const StartWork = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
@@ -427,12 +381,11 @@ export const StatusPanel = () => {
 			startWorkCard: state.context.startWorkCard
 		};
 	});
-
+	const { card } = props;
 	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
-	const [label, setLabel] = useState(status.label || "");
-	const [card, setCard] = useState<any>();
+	const [label, setLabel] = useState(card.label || "");
 	const [loadingSlack, setLoadingSlack] = useState(false);
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
@@ -495,25 +448,6 @@ export const StatusPanel = () => {
 	const selectCard = card => {
 		// make sure we've got the most up-to-date set of branches
 		getBranches();
-
-		if (card) {
-			setLabel(card.title || "");
-			setCard(card);
-			dispatch(setStartWorkCard(undefined));
-
-			if (card.moveCardOptions && card.moveCardOptions.length) {
-				const index = card.moveCardOptions.findIndex(option =>
-					option.to ? option.to.id === card.idList : option.id === card.idList
-				);
-				const next = card.moveCardOptions[index + 1];
-				if (next) setMoveCardDestination(next);
-				else setMoveCardDestination(card.moveCardOptions[0]);
-			} else {
-			}
-		} else {
-			clearAndSave();
-		}
-		setLoadingSlack(false);
 	};
 
 	const dateToken = () => {
@@ -523,17 +457,6 @@ export const StatusPanel = () => {
 		const date = now.getDate();
 		return `${year}-${month > 9 ? month : "0" + month}-${date > 9 ? date : "0" + date}`;
 	};
-
-	// const replaceDescriptionTokens = (template: string, title: string = "") => {
-	// 	return template
-	// 		.replace(/\{id\}/g, "")
-	// 		.replace(/\{username\}/g, derivedState.currentUserName)
-	// 		.replace(/\{team\}/g, derivedState.teamName)
-	// 		.replace(/\{date\}/g, dateToken())
-	// 		.replace(/\{title\}/g, title.toLowerCase())
-	// 		.replace(/[\s]+/g, "-")
-	// 		.substr(0, derivedState.branchMaxLength);
-	// };
 
 	const replaceTicketTokens = (template: string, card, title: string = "") => {
 		let tokenId = "";
@@ -620,6 +543,14 @@ export const StatusPanel = () => {
 				console.warn(err);
 			}
 		});
+		if (card.moveCardOptions && card.moveCardOptions.length) {
+			const index = card.moveCardOptions.findIndex(option =>
+				option.to ? option.to.id === card.idList : option.id === card.idList
+			);
+			const next = card.moveCardOptions[index + 1];
+			if (next) setMoveCardDestination(next);
+			else setMoveCardDestination(card.moveCardOptions[0]);
+		}
 		if (derivedState.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Status Tab" });
 
@@ -734,13 +665,11 @@ export const StatusPanel = () => {
 		await dispatch(
 			setUserStatus(label, ticketId, ticketUrl, ticketProvider, derivedState.invisible)
 		);
-		clear();
-		setLoading(false);
+		props.onClose();
 	};
 
 	const clear = () => {
 		setLabel("");
-		setCard(undefined);
 		setScmError("");
 		setLoadingSlack(false);
 		dispatch(setStartWorkCard(undefined));
@@ -822,18 +751,14 @@ export const StatusPanel = () => {
 			  });
 
 	return (
-		<div className="panel full-height">
-			<CreateCodemarkIcons narrow />
-			<PanelHeader title="Tasks">
-				<div style={{ height: "5px" }} />
-			</PanelHeader>
+		<>
 			{configureBranchNames && (
 				<Modal translucent verticallyCenter>
 					<ConfigureBranchNames onClose={() => setConfigureBranchNames(false)} />
 				</Modal>
 			)}
 			{card && (
-				<Modal onClose={clear}>
+				<Modal translucent onClose={props.onClose}>
 					<Dialog className="codemark-form-container">
 						<form className="codemark-form standard-form vscroll">
 							<fieldset className="form-body" style={{ padding: "0px" }}>
@@ -983,7 +908,7 @@ export const StatusPanel = () => {
 									<div style={{ height: "5px" }}></div>
 									{scmError && <SCMError>{scmError}</SCMError>}
 									<ButtonRow>
-										<Button onClick={clear} variant="secondary">
+										<Button onClick={props.onClose} variant="secondary">
 											Cancel
 										</Button>
 										<Button
@@ -1001,125 +926,9 @@ export const StatusPanel = () => {
 					</Dialog>
 				</Modal>
 			)}
-			<ScrollBox>
-				<div className="channel-list vscroll">
-					<OpenReviews openRepos={openRepos} />
-					<OpenPullRequests openRepos={openRepos} />
-					<StatusSection>
-						<RoundedLink
-							onClick={() => {
-								dispatch(setNewPostEntry("Status"));
-								dispatch(openPanel(WebviewPanels.NewPullRequest));
-							}}
-						>
-							<Icon className="padded-icon" name="pull-request" />
-							<span className="wide-text">New </span>Pull Request
-						</RoundedLink>
-						<Tooltip
-							title={
-								<>
-									Works with local WIPs too.
-									<br />
-									Watch the{" "}
-									<a
-										onClick={() => {
-											HostApi.instance.send(OpenUrlRequestType, {
-												url: "https://youtu.be/2AyqT4z5Omc"
-											});
-											HostApi.instance.track("Viewed Review Video");
-										}}
-									>
-										video guide
-									</a>
-								</>
-							}
-							delay={1}
-						>
-							<RoundedLink
-								onClick={() => {
-									dispatch(setNewPostEntry("Status"));
-									dispatch(openPanel(WebviewPanels.NewReview));
-								}}
-							>
-								<Icon className="padded-icon" name="review" />
-								<span className="wide-text">Request </span>Review
-							</RoundedLink>
-						</Tooltip>{" "}
-						<H4>Work In Progress</H4>
-						{status && status.label && (
-							<Row style={{ marginBottom: "5px" }} className="no-hover wide">
-								<div>
-									<Icon name={status.ticketProvider || "ticket"} />
-								</div>
-								<div>{status.label}</div>
-								<div className="icons">
-									<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
-										<Icon onClick={() => clearAndSave()} className="clickable" name="x-circle" />
-									</Tooltip>
-									{status.ticketUrl && (
-										<Icon
-											title={`Open on web`}
-											delay={1}
-											placement="bottomRight"
-											name="globe"
-											className="clickable link-external"
-											onClick={e => {
-												e.stopPropagation();
-												e.preventDefault();
-												HostApi.instance.send(OpenUrlRequestType, {
-													url: status.ticketUrl
-												});
-											}}
-										/>
-									)}
-								</div>
-							</Row>
-						)}
-						<ModifiedRepos
-							id={derivedState.currentUserId}
-							onlyRepos={openRepos ? openRepos.filter(_ => _.id).map(_ => _.id!) : undefined}
-							defaultText={
-								<span className="subtle">
-									As you write code, files that have changed will appear here.
-								</span>
-							}
-						/>
-					</StatusSection>
-					<StartWorkIssueContext.Provider value={{ setValues: values => selectCard(values) }}>
-						<IssueDropdown selectedCardId={status.ticketId} />
-					</StartWorkIssueContext.Provider>
-					<div style={{ margin: "0" }}>
-						<Docs>
-							<span onClick={() => dispatch(openPanel(WebviewPanels.Flow))}>
-								<Icon name="chevron-right" />
-								CodeStream Howto <sup className="highlight">new!</sup>
-							</span>
-							<span
-								style={{ display: "none" }}
-								className="getting-started"
-								onClick={() => dispatch(openPanel(WebviewPanels.GettingStarted))}
-							>
-								<Icon name="dashboard" />
-								Getting Started
-							</span>
-						</Docs>
-					</div>
-				</div>
-			</ScrollBox>
-		</div>
+		</>
 	);
 };
-
-const Popup = styled.div`
-	z-index: 35;
-	text-align: center;
-	position: absolute;
-	top: 0px;
-	width: 100%;
-	height: 100%;
-	background: var(--app-background-color);
-	padding: 40px 20px 0 20px;
-`;
 
 const Dialog = styled.div`
 	padding: 5px 5px 15px 5px;

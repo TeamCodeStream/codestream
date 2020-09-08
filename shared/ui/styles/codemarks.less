@@ -34,11 +34,9 @@
 		}
 	}
 	&.collapsed {
-		height: 25px;
+		// height: 25px;
 		width: 100%;
-		padding-top: 5px;
-		padding-bottom: 5px;
-		padding-left: 38px;
+		padding: 2px 20px;
 		overflow: hidden;
 		.contents > .body {
 			background: none;
@@ -62,6 +60,10 @@
 			code {
 				display: inline;
 			}
+		}
+		&.wrap .contents > .body {
+			white-space: normal;
+			overflow: visible;
 		}
 		.align-far-left {
 			margin-left: -22px;
@@ -113,6 +115,15 @@
 		&:hover .show-on-hover {
 			opacity: 0.6;
 		}
+		.cs-tag {
+			margin-bottom: 0;
+		}
+		.cs-tag-container {
+			display: inline-block;
+			margin-top: -1px;
+			vertical-align: top;
+			padding-left: 10px;
+		}
 		.angle-arrow {
 			width: 16px;
 			height: 16px;
@@ -147,10 +158,22 @@
 		.username {
 			font-weight: bold;
 		}
+		.actions {
+			float: right;
+			display: none;
+			.icon {
+				margin-left: 5px;
+			}
+		}
+		&:hover .actions {
+			display: inline-block;
+		}
 	}
 	&:hover {
-		color: @text-color-highlight;
-		background: rgba(127, 127, 127, 0.4);
+		// color: @text-color-highlight;
+		// background: rgba(127, 127, 127, 0.4);
+		background: var(--app-background-color-hover);
+		color: var(--text-color-highlight);
 	}
 	&.inline {
 		position: relative;
@@ -586,24 +609,24 @@
 	width: 100%;
 	display: flex;
 	overflow: hidden;
-	margin-top: -2px;
+	// margin-top: -2px;
 
 	.progress-bar {
 		background-color: transparent;
-		height: 2px;
+		height: 1px;
 		width: 100%;
 	}
 
 	.progress-cursor {
-		width: 45%;
+		width: 25%;
 		height: inherit;
 		background-image: linear-gradient(
 			to right,
 			transparent 10%,
-			var(--text-color-info) 75%,
+			var(--text-focus-border-color) 75%,
 			transparent 90%
 		);
-		animation: 1.75s ease-in-out infinite move-cursor;
+		animation: 1s ease infinite move-cursor;
 	}
 }
 
@@ -612,7 +635,7 @@
 		transform: translateX(-100%);
 	}
 	to {
-		transform: translateX(200%);
+		transform: translateX(350%);
 	}
 }
 .related-codemark {

@@ -40,7 +40,7 @@ export enum WebviewPanels {
 	NewComment = "new-comment",
 	NewIssue = "new-issue",
 	NewReview = "new-review",
-	People = "people",
+	Team = "people",
 	Profile = "profile",
 	PullRequest = "pull-request",
 	Review = "review",
@@ -52,7 +52,11 @@ export enum WebviewPanels {
 	GettingStarted = "gtting-started", // this is a typo but now baked into user data, so let's just leave it
 	NewPullRequest = "new-pull-request",
 	Flow = "flow",
-	Tester = "tester"
+	Tester = "tester",
+	Sidebar = "sidebar",
+	OpenReviews = "open-reviews",
+	OpenPullRequests = "open-pull-requests",
+	WorkInProgress = "work-in-progress"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -84,7 +88,8 @@ export enum WebviewModals {
 	CreateTeam = "create-team",
 	Keybindings = "keybindings",
 	Notifications = "notifications",
-	ReviewSettings = "review-settings"
+	ReviewSettings = "review-settings",
+	Invite = "invite"
 }
 
 export interface WebviewContext {

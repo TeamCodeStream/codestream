@@ -8,8 +8,7 @@ import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
 import { Link } from "./Link";
 import cx from "classnames";
 import { getCodeCollisions } from "../store/users/reducer";
-import { EMPTY_STATUS } from "./StatusPanel";
-import { STEPS } from "./GettingStarted";
+import { EMPTY_STATUS } from "./StartWork";
 import { openPanel } from "./actions";
 import { PlusMenu } from "./PlusMenu";
 import { EllipsisMenu } from "./EllipsisMenu";
@@ -85,11 +84,31 @@ export function GlobalNav() {
 		dispatch(openPanel(panel));
 	};
 
-	const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
+	// const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
+	const selected = panel => false;
 	return React.useMemo(() => {
 		return (
 			<>
 				<nav className="inline" id="global-nav">
+					<label
+						className={cx({ active: plusMenuOpen })}
+						onClick={togglePlusMenu}
+						id="global-nav-plus-label"
+					>
+						<span>
+							<Icon
+								name="plus"
+								title="Create..."
+								placement="bottom"
+								delay={1}
+								trigger={["hover"]}
+							/>
+						</span>
+						{plusMenuOpen && (
+							<PlusMenu closeMenu={() => setPlusMenuOpen(undefined)} menuTarget={plusMenuOpen} />
+						)}
+					</label>
+					{/*
 					<label
 						className={cx({
 							selected: selected(WebviewPanels.Status) || selected(WebviewPanels.LandingRedirect)
@@ -121,9 +140,10 @@ export function GlobalNav() {
 							</span>
 						</Tooltip>
 					</label>
+					
 					<label
-						className={cx({ selected: selected(WebviewPanels.CodemarksForFile) })}
-						onClick={e => go(WebviewPanels.CodemarksForFile)}
+						className={cx({ selected: selected(WebviewPanels.Sidebar) })}
+						onClick={e => go(WebviewPanels.Sidebar)}
 						id="global-nav-file-label"
 					>
 						<Tooltip
@@ -146,6 +166,18 @@ export function GlobalNav() {
 							<span>
 								<Icon name="file" />
 								{hasFileConflict && <Icon name="alert" className="nav-conflict" />}
+							</span>
+						</Tooltip>
+					</label>
+						*/}
+					<label
+						className={cx({ selected: selected(WebviewPanels.Flow) })}
+						onClick={e => go(WebviewPanels.Flow)}
+						id="global-nav-file-label"
+					>
+						<Tooltip delay={1} trigger={["hover"]} title="CodeStream Help" placement="bottom">
+							<span>
+								<Icon name="question" />
 							</span>
 						</Tooltip>
 					</label>
@@ -206,9 +238,9 @@ export function GlobalNav() {
 							onPopupAlign={placeArrowTopRight}
 						/>
 					</label>
-					<label
-						className={cx({ selected: selected(WebviewPanels.People) })}
-						onClick={e => go(WebviewPanels.People)}
+					{/*<label
+						className={cx({ selected: selected(WebviewPanels.Team) })}
+						onClick={e => go(WebviewPanels.Team)}
 						id="global-nav-team-label"
 					>
 						<Tooltip
@@ -236,19 +268,21 @@ export function GlobalNav() {
 								{collisions.nav && <Icon name="alert" className="nav-conflict" />}
 							</span>
 						</Tooltip>
-					</label>
+						</label>*/}
 					<label
 						onClick={toggleEllipsisMenu}
 						className={cx({ active: ellipsisMenuOpen })}
 						id="global-nav-more-label"
 					>
-						<Icon
-							name="kebab-horizontal"
-							delay={1}
-							trigger={["hover"]}
-							title="More Actions..."
-							placement="bottomRight"
-						/>
+						<span>
+							<Icon
+								name="kebab-horizontal"
+								delay={1}
+								trigger={["hover"]}
+								title="More Actions..."
+								placement="bottomRight"
+							/>
+						</span>
 						{ellipsisMenuOpen && (
 							<EllipsisMenu
 								closeMenu={() => setEllipsisMenuOpen(undefined)}
@@ -257,34 +291,6 @@ export function GlobalNav() {
 						)}
 					</label>
 				</nav>
-				{!derivedState.composeCodemarkActive && (
-					<label
-						onClick={togglePlusMenu}
-						style={{
-							position: "fixed",
-							display: "flex",
-							justifyContent: "center",
-							alignItems: "center",
-							bottom: "15px",
-							right: "15px",
-							background: "var(--button-background-color)",
-							color: "var(--button-foreground-color)",
-							width: "40px",
-							height: "40px",
-							borderRadius: "20px",
-							cursor: "pointer",
-							boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-							zIndex: 50
-						}}
-						className={cx({ active: plusMenuOpen })}
-						id="global-nav-plus-label"
-					>
-						<Icon name="plus" />
-						{plusMenuOpen && (
-							<PlusMenu closeMenu={() => setPlusMenuOpen(undefined)} menuTarget={plusMenuOpen} />
-						)}
-					</label>
-				)}
 			</>
 		);
 	}, [

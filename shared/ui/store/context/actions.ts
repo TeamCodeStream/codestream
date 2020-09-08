@@ -77,6 +77,9 @@ export const setCodemarksShowArchived = (enabled: boolean) =>
 export const setCodemarksShowResolved = (enabled: boolean) =>
 	action(ContextActionsType.SetCodemarksShowResolved, enabled);
 
+export const setCodemarksWrapComments = (enabled: boolean) =>
+	action(ContextActionsType.SetCodemarksWrapComments, enabled);
+
 export const setCurrentCodemark = (codemarkId?: string, markerId?: string) =>
 	action(ContextActionsType.SetCurrentCodemark, { codemarkId, markerId });
 

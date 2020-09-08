@@ -3,6 +3,7 @@ import React from "react";
 import styled from "styled-components";
 import { CSText } from "./CSText";
 import Icon from "@codestream/webview/Stream/Icon";
+import { Modal } from "@codestream/webview/Stream/Modal";
 
 export const ButtonRow = styled.div`
 	text-align: right;
@@ -14,14 +15,14 @@ export const ButtonRow = styled.div`
 	}
 `;
 
-const Box = styled.div<{ narrow?: boolean }>`
+const Box = styled.div<{ narrow?: boolean; wide?: boolean; noPadding?: boolean }>`
 	background: var(--base-background-color);
 	border: 1px solid var(--base-border-color);
 	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 	.vscode-dark & {
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
 	}
-	padding: 20px 20px 20px 20px;
+	padding: ${props => (props.noPadding ? "0" : "20px 20px 20px 20px")};
 	position: relative;
 	margin: 0 auto;
 	display: inline-block;
@@ -33,9 +34,10 @@ const Box = styled.div<{ narrow?: boolean }>`
 		}
 	}
 	max-width: ${props => (props.narrow ? "420px" : "none")};
+	width: ${props => (props.wide ? "100%" : "auto")};
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ wide?: boolean }>`
 	text-align: center;
 `;
 
@@ -54,21 +56,77 @@ const Close = styled.span`
 	display: inline-block;
 `;
 
+const Expand = styled.span`
+	position: absolute;
+	top: 5px;
+	right: 30px;
+	padding: 5px;
+	margin: 0;
+	display: inline-block;
+`;
+
 interface Props {
 	title?: string;
 	className?: string;
+	noPadding?: boolean;
 	narrow?: boolean;
+	wide?: boolean;
 	onClose?(event: React.SyntheticEvent): any;
+	onMaximize?(event?: React.SyntheticEvent): any;
+	onMinimize?(event?: React.SyntheticEvent): any;
+	maximizable?: boolean;
 }
 
 export function Dialog(props: PropsWithChildren<Props>) {
-	return (
+	const [expanded, setExpanded] = React.useState(false);
+	return expanded ? (
+		<Modal noPadding>
+			{props.title && (
+				<Title>
+					<CSText as="h2">{props.title}</CSText>
+				</Title>
+			)}
+			<Expand>
+				<Icon
+					className="clickable"
+					name="minimize"
+					onClick={() => {
+						setExpanded(false);
+						if (props.onMinimize) props.onMinimize();
+					}}
+				/>
+			</Expand>
+			{props.onClose && (
+				<Close className="close">
+					<Icon className="clickable" name="x" onClick={props.onClose} />
+				</Close>
+			)}
+			{props.children}
+		</Modal>
+	) : (
 		<Container>
-			<Box className={props.className} narrow={props.narrow}>
+			<Box
+				className={props.className}
+				narrow={props.narrow}
+				wide={props.wide}
+				noPadding={props.noPadding}
+			>
 				{props.title && (
 					<Title>
 						<CSText as="h2">{props.title}</CSText>
 					</Title>
+				)}
+				{props.maximizable && (
+					<Expand>
+						<Icon
+							className="clickable"
+							name="maximize"
+							onClick={() => {
+								setExpanded(true);
+								if (props.onMaximize) props.onMaximize();
+							}}
+						/>
+					</Expand>
 				)}
 				{props.onClose && (
 					<Close className="close">
