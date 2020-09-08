@@ -286,6 +286,19 @@
 			position: relative;
 			flex: 1;
 		}
+		.badge {
+			display: inline-block;
+			// background: rgba(127, 127, 127, 0.25);
+			background: #ddd;
+			.vscode-dark& {
+				background: #333;
+			}
+			border-radius: 9px;
+			padding: 0 5px;
+			min-width: 18px;
+			text-align: center;
+			margin: 0 5px;
+		}
 		.mentions-badge,
 		.unread-badge {
 			background: @background-color-umi;
@@ -316,12 +329,14 @@
 			}
 		}
 		.icon.nav-conflict {
+			margin-left: 10px;
+			vertical-align: 1px;
 			display: inline-block;
 			color: @text-color-warning !important;
-			position: absolute;
-			bottom: -2px;
-			right: -2px;
-			z-index: 5;
+			// position: absolute;
+			// bottom: -2px;
+			// right: -2px;
+			// z-index: 5;
 			transform: scale(0.75);
 		}
 

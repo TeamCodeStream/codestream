@@ -22,7 +22,7 @@ import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe, emptyArray } from "../utils";
-import { markStreamRead, setCodemarkTypeFilter } from "./actions";
+import { markStreamRead, setCodemarkTypeFilter, closePanel } from "./actions";
 import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -40,6 +40,7 @@ import { Card } from "../src/components/Card";
 import { ProfileLink } from "../src/components/ProfileLink";
 import { Keybindings } from "./Keybindings";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import { Dialog } from "../src/components/Dialog";
 
 // see comment in SmartFormattedList.tsx
 const FormattedPluralAlias = FormattedPlural as any;
@@ -265,22 +266,8 @@ export const ActivityPanel = () => {
 	// }
 
 	return (
-		<div className="panel full-height activity-panel">
-			<CreateCodemarkIcons />
-			<PanelHeader title="Activity">
-				{/* removed as per https://teamcodestream.slack.com/archives/C7E3ED0TT/p1583288202118300
-					<div className="filters">
-						Show{" "}
-						<Filter
-							type="toggle"
-							onValue={value => dispatch(setCodemarkTypeFilter(value))}
-							selected={derivedState.codemarkTypeFilter}
-							labels={showActivityLabels}
-							items={menuItems}
-						/>
-					</div>
-				*/}
-			</PanelHeader>
+		<Dialog maximizable wide noPadding onClose={() => dispatch(closePanel())}>
+			<PanelHeader title="Activity" />
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
 					{renderActivity()}
@@ -292,18 +279,7 @@ export const ActivityPanel = () => {
 						))}
 				</div>
 			</ScrollBox>
-			{/*
-			<div className="view-selectors">
-				<span className="count">
-					Commits<div className="switch"></div>
-				</span>
-				<span className="count">
-					Branches<div className="switch"></div>
-				</span>
-				<Feedback />
-			</div>
-			*/}
-		</div>
+		</Dialog>
 	);
 };
 

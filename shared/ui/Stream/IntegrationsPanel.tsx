@@ -20,6 +20,7 @@ import Icon from "./Icon";
 import { Button } from "../src/components/Button";
 import { DropdownButton } from "./Review/DropdownButton";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
+import { Dialog } from "../src/components/Dialog";
 
 export const Provider = styled(Button)`
 	width: 100%;
@@ -50,25 +51,21 @@ const ProviderDropdown = styled(DropdownButton)`
 `;
 
 const IntegrationGroups = styled.div`
-	.title {
-		top: -16px !important;
-	}
 	h2 {
-		margin-top: 0;
+		margin-top: 15px;
 		font-size: 16px !important;
 		font-weight: 400;
-		padding-left: 20px;
+		padding: 0 0 0 20px;
 	}
 `;
 
-export const IntegrationButtons = styled.div`
+export const IntegrationButtons = styled.div<{ noBorder?: boolean }>`
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(13em, 1fr));
 	column-gap: 15px;
 	row-gap: 10px;
-	margin-bottom: 15px;
 	padding: 0 20px 20px 20px;
-	border-bottom: 1px solid var(--base-border-color);
+	border-bottom: ${props => (props.noBorder ? "none" : "1px solid var(--base-border-color)")};
 	align-items: start;
 `;
 
@@ -280,48 +277,41 @@ export const IntegrationsPanel = () => {
 	}
 
 	return (
-		<div className="panel full-height activity-panel">
-			<PanelHeader title={<>&nbsp;</>}></PanelHeader>
-			<ScrollBox>
-				<div className="channel-list vscroll">
-					<IntegrationGroups>
-						{Object.keys(derivedState.providers).length === 0 && (
+		<Dialog wide noPadding onClose={() => dispatch(closePanel())}>
+			<IntegrationGroups>
+				{Object.keys(derivedState.providers).length === 0 && (
+					<>
+						<h2>HTTPS Required</h2>
+						CodeStream integrations require a secure connection to your CodeStream server. Please
+						contact your on-prem CodeStream administrator.
+						<br />
+						<br />
+						<Button onClick={() => dispatch(closePanel())}>OK</Button>
+					</>
+				)}
+				{Object.keys(derivedState.providers).length > 0 && (
+					<>
+						{derivedState.connectedProviders.length > 0 && (
 							<>
-								<h2>HTTPS Required</h2>
-								CodeStream integrations require a secure connection to your CodeStream server.
-								Please contact your on-prem CodeStream administrator.
-								<br />
-								<br />
-								<Button onClick={() => dispatch(closePanel())}>OK</Button>
+								<h2>Active Integrations</h2>
+								<IntegrationButtons>
+									{renderConnectedProviders(derivedState.connectedProviders)}
+								</IntegrationButtons>
 							</>
 						)}
-						{Object.keys(derivedState.providers).length > 0 && (
-							<>
-								{derivedState.connectedProviders.length > 0 && (
-									<>
-										<h2>Active Integrations</h2>
-										<IntegrationButtons>
-											{renderConnectedProviders(derivedState.connectedProviders)}
-										</IntegrationButtons>
-									</>
-								)}
-								<h2>Code Host &amp; Issue Providers</h2>
-								<IntegrationButtons>
-									{renderProviders(derivedState.codeHostProviders)}
-								</IntegrationButtons>
+						<h2>Code Host &amp; Issue Providers</h2>
+						<IntegrationButtons>
+							{renderProviders(derivedState.codeHostProviders)}
+						</IntegrationButtons>
 
-								<h2>Issue Providers</h2>
-								<IntegrationButtons>
-									{renderProviders(derivedState.issueProviders)}
-								</IntegrationButtons>
+						<h2>Issue Providers</h2>
+						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
 
-								<h2>Messaging Providers</h2>
-								<IntegrationButtons>{renderMessagingProviders()}</IntegrationButtons>
-							</>
-						)}
-					</IntegrationGroups>
-				</div>
-			</ScrollBox>
-		</div>
+						<h2>Messaging Providers</h2>
+						<IntegrationButtons noBorder>{renderMessagingProviders()}</IntegrationButtons>
+					</>
+				)}
+			</IntegrationGroups>
+		</Dialog>
 	);
 };

@@ -114,6 +114,7 @@ interface Props {
 	titleOnly?: boolean;
 	query?: string;
 	onClick?: Function;
+	fullTitle?: boolean;
 }
 
 export default function SearchResult(props: Props) {
@@ -140,7 +141,7 @@ export default function SearchResult(props: Props) {
 			const markers = result.markers || [];
 			return (
 				<Tip>
-					<span dangerouslySetInnerHTML={{ __html: titleHTML }} />
+					{!props.fullTitle && <span dangerouslySetInnerHTML={{ __html: titleHTML }} />}
 					{markers.map(marker => (
 						<Marker marker={marker} />
 					))}
@@ -175,9 +176,8 @@ export default function SearchResult(props: Props) {
 	const myPosition = assignees.indexOf(derivedState.currentUserId);
 	if (myPosition > -1) assignees.unshift(assignees.splice(myPosition, 1)[0]);
 
-	let titleHTML = markdownify(
-		type === "comment" ? (result.text || "").substr(0, 80) : result.title
-	);
+	const text = props.fullTitle ? result.text || "" : (result.text || "").substr(0, 80);
+	let titleHTML = markdownify(type === "comment" ? text : result.title);
 	if (props.query) {
 		const matchQueryRegexp = new RegExp(escapeRegExp(props.query), "gi");
 		titleHTML = titleHTML.replace(matchQueryRegexp, "<u><b>$&</b></u>");

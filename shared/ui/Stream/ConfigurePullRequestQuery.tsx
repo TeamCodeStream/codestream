@@ -66,7 +66,6 @@ export function ConfigurePullRequestQuery(props: Props) {
 			const response: any = await dispatch(
 				getMyPullRequests(providerIdField, [query], props.openReposOnly, { force: true }, true)
 			);
-			console.warn("RESPONSE IS: ", response);
 			if (response && response.length) {
 				HostApi.instance.track("PR Test List Rendered", {
 					"PR Count": response.length

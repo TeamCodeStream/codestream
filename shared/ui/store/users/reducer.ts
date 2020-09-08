@@ -156,7 +156,7 @@ export const getCodeCollisions = createSelector(
 		// create a collision map of the global warning state,
 		// the user collisions, the userRepo collisions, and the file collisions
 		const collisions = {
-			nav: false,
+			nav: [] as string[],
 			users: {},
 			userRepos: {},
 			userRepoFiles: {},
@@ -183,7 +183,7 @@ export const getCodeCollisions = createSelector(
 				repo.modifiedFiles.forEach(fileRecord => {
 					// we have a collision
 					if (myModified[repo.repoId + ":" + fileRecord.file]) {
-						collisions.nav = true;
+						collisions.nav.push(user.username);
 						collisions.users[user.id] = true;
 						collisions.userRepos[`${user.id}:${repo.repoId}`] = true;
 						collisions.userRepoFiles[`${user.id}:${repo.repoId}:${fileRecord.file}`] = true;

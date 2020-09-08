@@ -55,7 +55,8 @@ import {
 	EditorSelectRangeRequestType,
 	EditorSelection,
 	EditorHighlightRangeRequestType,
-	WebviewPanels
+	WebviewPanels,
+	WebviewModals
 } from "@codestream/protocols/webview";
 import { getCurrentSelection } from "../store/editorContext/reducer";
 import Headshot from "./Headshot";
@@ -81,7 +82,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { FormattedMessage } from "react-intl";
 import { Link } from "./Link";
 import { confirmPopup } from "./Confirm";
-import { openPanel, setUserPreference } from "./actions";
+import { openPanel, openModal, setUserPreference } from "./actions";
 import CancelButton from "./CancelButton";
 import { VideoLink } from "./Flow";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -119,6 +120,7 @@ interface Props extends ConnectedProps {
 	dontAutoSelectLine?: boolean;
 	error?: string;
 	openPanel: Function;
+	openModal: Function;
 	setUserPreference: Function;
 }
 
@@ -1946,17 +1948,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								title={
 									<>
 										Retrieved from git blame.
-										{isCurrentUserAdmin && (
-											<a
-												style={{ display: "block", margin: "10px 0 0 0" }}
-												onClick={e => {
-													this.cancelCodemarkCompose(e);
-													this.props.openPanel(WebviewPanels.People);
-												}}
-											>
-												Configure Blame Map
-											</a>
-										)}
+										{isCurrentUserAdmin && <p>Configure Blame Map under MY TEAM.</p>}
 									</>
 								}
 								placement="top"
@@ -2370,6 +2362,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 const ConnectedCodemarkForm = connect(mapStateToProps, {
 	openPanel,
+	openModal,
 	setUserPreference
 })(CodemarkForm);
 

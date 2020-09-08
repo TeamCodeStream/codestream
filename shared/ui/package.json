@@ -33,6 +33,7 @@
 		"react": "16.8.6",
 		"react-contenteditable": "2.1.0",
 		"react-dom": "16.8.6",
+		"react-draggable": "^4.4.3",
 		"react-gravatar": "2.6.3",
 		"react-intl": "3.6.0",
 		"react-redux": "7.1.0",

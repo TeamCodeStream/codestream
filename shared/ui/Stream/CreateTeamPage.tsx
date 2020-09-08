@@ -120,6 +120,7 @@ export function CreateTeamPage() {
 								validate={isTeamNameValid}
 								onValidityChanged={onValidityChanged}
 								required
+								autoFocus
 							/>
 							{!teamNameValidity && (
 								<small className="explainer error-message">

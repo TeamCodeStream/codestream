@@ -9,7 +9,7 @@ import { HostApi } from "../webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { sortBy as _sortBy } from "lodash-es";
 import { logout, switchToTeam } from "../store/session/actions";
-import { EMPTY_STATUS } from "./StatusPanel";
+import { EMPTY_STATUS } from "./StartWork";
 import { MarkdownText } from "./MarkdownText";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { setProfileUser, openModal } from "../store/context/actions";
@@ -310,10 +310,10 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				disabled: true
 			},
 			buildUpgradeTeamMenuItem(),
-			{
-				label: `Invite people to ${derivedState.team.name}`,
-				action: () => dispatch(openPanel(WebviewPanels.People))
-			},
+			// {
+			// 	label: `Invite people to ${derivedState.team.name}`,
+			// 	action: () => dispatch(openModal(WebviewModals.Invite))
+			// },
 			buildAdminTeamMenuItem(),
 			buildSwitchTeamMenuItem(),
 			{ label: "-" }
@@ -361,11 +361,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					key: "keybindings",
 					action: () => dispatch(openModal(WebviewModals.Keybindings))
 				},
-				{
-					label: "Getting Started Guide",
-					key: "getting-started",
-					action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
-				},
+				// {
+				// 	label: "Getting Started Guide",
+				// 	key: "getting-started",
+				// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
+				// },
 				{
 					label: "CodeStream Flow",
 					key: "flow",

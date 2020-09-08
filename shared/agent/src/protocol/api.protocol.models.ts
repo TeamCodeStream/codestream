@@ -651,6 +651,9 @@ export interface CSMePreferences {
 	pullRequestQueries?: PullRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;
+	hiddenPaneNodes?: {
+		[nodeId: string]: boolean;
+	};
 	[key: string]: any;
 }
 

@@ -45,7 +45,7 @@ export function PlusMenu(props: PlusMenuProps) {
 	const handleStartWorkRequest = () => {
 		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
-		if (derivedState.activePanel === WebviewPanels.Status) {
+		if (derivedState.activePanel === WebviewPanels.Sidebar) {
 			const div = document.getElementById("start-work-div");
 			if (div) {
 				div.classList.add("show-instructions");
@@ -56,7 +56,7 @@ export function PlusMenu(props: PlusMenuProps) {
 				}, 1000);
 			}
 		}
-		dispatch(openPanel(WebviewPanels.Status));
+		dispatch(openPanel(WebviewPanels.Sidebar));
 	};
 
 	const go = panel => {
@@ -127,6 +127,11 @@ export function PlusMenu(props: PlusMenuProps) {
 	});
 
 	return (
-		<Menu items={menuItems} target={props.menuTarget} action={props.closeMenu} align="popupRight" />
+		<Menu
+			items={menuItems}
+			target={props.menuTarget}
+			action={props.closeMenu}
+			align="dropdownRight"
+		/>
 	);
 }

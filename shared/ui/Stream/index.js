@@ -5,7 +5,8 @@ import { connect } from "react-redux";
 import cx from "classnames";
 import { ActivityPanel } from "./ActivityPanel";
 import { ExportPanel } from "./ExportPanel";
-import { StatusPanel } from "./StatusPanel";
+import { Sidebar } from "./Sidebar";
+import { StartWork } from "./StartWork";
 import { Notifications } from "./Notifications";
 import { ChangeEmail } from "./ChangeEmail";
 import { ChangeUsername } from "./ChangeUsername";
@@ -244,7 +245,7 @@ export class SimpleStream extends Component {
 		const { q } = this.state;
 
 		// console.warn("RENDERING STREAM");
-		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Status;
+		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
 
 		const isConfigurationPanel =
 			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
@@ -325,123 +326,127 @@ export class SimpleStream extends Component {
 						{this.props.currentCodemarkId && <CodemarkView />}
 					</>
 				)}
-				{renderNav && <GlobalNav />}
-				<div className={contentClass}>
-					{activeModal && (
-						<Modal translucent onClose={this.props.closeModal}>
-							{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
-							{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
-							{activeModal === WebviewModals.Notifications && <Notifications />}
-							{activeModal === WebviewModals.ChangeEmail && <ChangeEmail />}
-							{activeModal === WebviewModals.ChangeAvatar && <ChangeAvatar />}
-							{activeModal === WebviewModals.ChangeUsername && <ChangeUsername />}
-							{activeModal === WebviewModals.ChangeFullName && <ChangeFullName />}
-							{activeModal === WebviewModals.ChangeWorksOn && <ChangeWorksOn />}
-							{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
-							{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
-							{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
-							{activeModal === WebviewModals.Keybindings && (
-								<Keybindings onClick={this.props.closeModal}>
-									<div style={{ textAlign: "right" }}>
-										<CancelButton onClick={this.props.closeModal} />
-									</div>
-								</Keybindings>
+				<GlobalNav />
+				{activePanel !== WebviewPanels.CodemarksForFile && <Sidebar />}
+				{activeModal && (
+					<Modal translucent onClose={this.props.closeModal}>
+						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}
+						{activeModal === WebviewModals.ReviewSettings && <ReviewSettings />}
+						{activeModal === WebviewModals.Notifications && <Notifications />}
+						{activeModal === WebviewModals.ChangeEmail && <ChangeEmail />}
+						{activeModal === WebviewModals.ChangeAvatar && <ChangeAvatar />}
+						{activeModal === WebviewModals.ChangeUsername && <ChangeUsername />}
+						{activeModal === WebviewModals.ChangeFullName && <ChangeFullName />}
+						{activeModal === WebviewModals.ChangeWorksOn && <ChangeWorksOn />}
+						{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
+						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
+						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
+						{activeModal === WebviewModals.Keybindings && (
+							<Keybindings onClick={this.props.closeModal}>
+								<div style={{ textAlign: "right" }}>
+									<CancelButton onClick={this.props.closeModal} />
+								</div>
+							</Keybindings>
+						)}
+					</Modal>
+				)}
+				{activePanel === WebviewPanels.CodemarksForFile && (
+					<InlineCodemarks
+						activePanel={activePanel}
+						setActivePanel={this.setActivePanel}
+						currentUserId={this.props.currentUserId}
+						currentUserName={this.props.currentUserName}
+						postAction={this.postAction}
+						multiCompose={this.state.multiCompose}
+						typeFilter="all"
+						textEditorUri={textEditorUri}
+						textEditorVisibleRanges={textEditorVisibleRanges}
+						selection={this.state.selection}
+						focusInput={this.focusInput}
+						scrollDiv={this._contentScrollDiv}
+					/>
+				)}
+				{!activeModal &&
+					activePanel !== WebviewPanels.Sidebar &&
+					activePanel !== WebviewPanels.CodemarksForFile && (
+						<Modal translucent>
+							{activePanel === WebviewPanels.Tester && <Tester />}
+							{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
+							{activePanel === WebviewPanels.Activity && <ActivityPanel />}
+							{activePanel === WebviewPanels.Export && <ExportPanel />}
+							{activePanel === WebviewPanels.PRInfo && (
+								<PRInfoModal onClose={this.props.closePanel} />
+							)}
+							{activePanel === WebviewPanels.NewComment && (
+								<CodemarkForm
+									commentType="comment"
+									streamId={this.props.postStreamId}
+									onSubmit={this.submitNoCodeCodemark}
+									onClickClose={this.props.closePanel}
+									collapsed={false}
+									positionAtLocation={false}
+									multiLocation={true}
+									dontAutoSelectLine={true}
+									setMultiLocation={this.setMultiLocation}
+								/>
+							)}
+							{activePanel === WebviewPanels.NewIssue && (
+								<CodemarkForm
+									commentType="issue"
+									streamId={this.props.postStreamId}
+									onSubmit={this.submitNoCodeCodemark}
+									onClickClose={this.props.closePanel}
+									collapsed={false}
+									positionAtLocation={false}
+									multiLocation={true}
+									dontAutoSelectLine={true}
+									setMultiLocation={this.setMultiLocation}
+								/>
+							)}
+							{activePanel === WebviewPanels.Flow && <FlowPanel />}
+							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
+							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
+							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
+							{activePanel === WebviewPanels.NewPullRequest && (
+								<CreatePullRequestPanel closePanel={this.props.closePanel} />
+							)}
+							{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
+							{activePanel.startsWith("configure-provider-youtrack-") && (
+								<ConfigureYouTrackPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-provider-azuredevops-") && (
+								<ConfigureAzureDevOpsPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-provider-jiraserver-") && (
+								<ConfigureJiraServerPanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
+							)}
+							{activePanel.startsWith("configure-enterprise-") && (
+								<ConfigureEnterprisePanel
+									providerId={configureProviderInfo[3]}
+									originLocation={configureProviderInfo[4]}
+								/>
 							)}
 						</Modal>
 					)}
-					{activePanel === WebviewPanels.CodemarksForFile && (
-						<InlineCodemarks
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							currentUserId={this.props.currentUserId}
-							currentUserName={this.props.currentUserName}
-							postAction={this.postAction}
-							multiCompose={this.state.multiCompose}
-							typeFilter="all"
-							textEditorUri={textEditorUri}
-							textEditorVisibleRanges={textEditorVisibleRanges}
-							selection={this.state.selection}
-							focusInput={this.focusInput}
-							scrollDiv={this._contentScrollDiv}
-						/>
-					)}
-					{activePanel === WebviewPanels.Tester && <Tester />}
-					{activePanel === WebviewPanels.FilterSearch && <FilterSearchPanel />}
-					{activePanel === WebviewPanels.Activity && <ActivityPanel />}
-					{activePanel === WebviewPanels.Export && <ExportPanel />}
-					{activePanel === WebviewPanels.PRInfo && <PRInfoModal onClose={this.props.closePanel} />}
-					{activePanel === WebviewPanels.NewComment && (
-						<CodemarkForm
-							commentType="comment"
-							streamId={this.props.postStreamId}
-							onSubmit={this.submitNoCodeCodemark}
-							onClickClose={this.props.closePanel}
-							collapsed={false}
-							positionAtLocation={false}
-							multiLocation={true}
-							dontAutoSelectLine={true}
-							setMultiLocation={this.setMultiLocation}
-						/>
-					)}
-					{activePanel === WebviewPanels.NewIssue && (
-						<CodemarkForm
-							commentType="issue"
-							streamId={this.props.postStreamId}
-							onSubmit={this.submitNoCodeCodemark}
-							onClickClose={this.props.closePanel}
-							collapsed={false}
-							positionAtLocation={false}
-							multiLocation={true}
-							dontAutoSelectLine={true}
-							setMultiLocation={this.setMultiLocation}
-						/>
-					)}
-					{activePanel === WebviewPanels.Flow && <FlowPanel />}
-					{activePanel === WebviewPanels.NewReview && <ReviewForm />}
-					{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
-					{activePanel === WebviewPanels.Profile && <ProfilePanel />}
-					{activePanel === WebviewPanels.NewPullRequest && (
-						<CreatePullRequestPanel closePanel={this.props.closePanel} />
-					)}
-					{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
-					{activePanel === WebviewPanels.Status && <StatusPanel />}
-					{(activePanel === WebviewPanels.People || activePanel === "invite") && (
-						<TeamPanel
-							activePanel={activePanel}
-							setActivePanel={this.setActivePanel}
-							isCodeStreamTeam
-							companyPlan={this.props.company.plan}
-							companyMemberCount={this.props.team.companyMemberCount}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-youtrack-") && (
-						<ConfigureYouTrackPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-azuredevops-") && (
-						<ConfigureAzureDevOpsPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-provider-jiraserver-") && (
-						<ConfigureJiraServerPanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-					{activePanel.startsWith("configure-enterprise-") && (
-						<ConfigureEnterprisePanel
-							providerId={configureProviderInfo[3]}
-							originLocation={configureProviderInfo[4]}
-						/>
-					)}
-				</div>
 			</div>
 		);
 	}
+
+	resetPanel = () => {
+		this.setActivePanel(WebviewPanels.Sidebar);
+		this.setActiveModal();
+		this.setCurrentPullRequest();
+		this.setCurrentReview();
+	};
 
 	setMultiCompose = async (value, state = {}, commentingContext) => {
 		// ugly hack -Pez

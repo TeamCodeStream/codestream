@@ -26,7 +26,7 @@ export const ModalRoot = React.memo(() => {
 	return <div id="modal-root" />;
 });
 
-const ModalWrapper = styled.div`
+const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 	width: 100%;
 	height: 100%;
 	position: absolute;
@@ -51,7 +51,7 @@ const ModalWrapper = styled.div`
 	}
 	div.children {
 		height: 100%;
-		padding: 50px 20px;
+		padding: ${props => (props.noPadding ? "0" : "50px 20px")};
 
 		&.vcenter {
 			height: inherit;
@@ -84,6 +84,7 @@ export interface ModalProps {
 	verticallyCenter?: boolean;
 	translucent?: boolean;
 	showGlobalNav?: boolean;
+	noPadding?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
@@ -121,6 +122,7 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	return createPortal(
 		<ModalContext.Provider value={context}>
 			<ModalWrapper
+				noPadding={props.noPadding}
 				className={`${props.translucent ? "translucent " : ""}${
 					props.showGlobalNav ? "show-global-nav " : ""
 				}`}

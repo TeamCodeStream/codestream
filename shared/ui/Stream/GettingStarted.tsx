@@ -179,7 +179,7 @@ export const STEPS = [
 		done: "Invited teammates",
 		pulse: "global-nav-team-label",
 		video: "https://www.youtube.com/watch?v=h5KI3svlq-0",
-		panel: WebviewPanels.People,
+		modal: WebviewModals.Invite,
 		isComplete: user => user.numUsersInvited > 0
 	},
 	{

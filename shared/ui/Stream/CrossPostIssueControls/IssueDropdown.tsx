@@ -20,14 +20,7 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { setUserPreference } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
-import {
-	StartWorkIssueContext,
-	RoundedLink,
-	RoundedSearchLink,
-	H4,
-	WideStatusSection,
-	EMPTY_STATUS
-} from "../StatusPanel";
+import { EMPTY_STATUS } from "../StartWork";
 import styled from "styled-components";
 import Filter from "../Filter";
 import { SmartFormattedList } from "../SmartFormattedList";
@@ -42,6 +35,10 @@ import { Button } from "@codestream/webview/src/components/Button";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
+import { Pane, PaneHeader, PaneBody } from "@codestream/webview/src/components/Pane";
+import { padding, margin, position } from "polished";
+import { min } from "lodash-es";
+import { StartWork } from "../StartWork";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -64,7 +61,8 @@ interface Props extends ConnectedProps {
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
-	selectedCardId: string;
+	selectedCardId?: string;
+	expanded?: boolean;
 }
 
 interface State {
@@ -193,6 +191,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					knownIssueProviderOptions={knownIssueProviderOptions}
 					selectedCardId={this.props.selectedCardId}
 					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
+					expanded={this.props.expanded}
 				></IssueList>
 			</>
 		);
@@ -383,8 +382,9 @@ export function Issue(props) {
 interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
-	selectedCardId: string;
+	selectedCardId?: string;
 	loadingMessage?: React.ReactNode;
+	expanded?: boolean;
 }
 
 const EMPTY_HASH = {};
@@ -421,6 +421,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	const [reload, setReload] = React.useState(1);
 	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
 	const [loadingTest, setLoadingTest] = React.useState(false);
+	const [startWorkCard, setStartWorkCard] = React.useState<any>(undefined);
 
 	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
@@ -539,7 +540,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						// setIsLoadingCard("");
 						moveCardOptions = card.lists;
 					}
-					startWorkIssueContext.setValues({
+					setStartWorkCard({
 						...card,
 						label: card.title,
 						providerIcon: provider.id === "codestream" ? "issue" : providerDisplay.icon,
@@ -552,16 +553,14 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					});
 				} else {
 					// creating a new card/issue
-					startWorkIssueContext.setValues({ ...card });
+					setStartWorkCard({ ...card });
 				}
 			} else {
-				startWorkIssueContext.setValues(undefined);
+				setStartWorkCard(undefined);
 			}
 		},
 		[loadedBoards, loadedCards]
 	);
-
-	const startWorkIssueContext = React.useContext(StartWorkIssueContext);
 
 	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
 	const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
@@ -933,7 +932,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 													<span style={{ display: "inline-block", width: "20px" }}>&nbsp;</span>
 												)}
 												{card.id === isLoadingCard ? (
-													<Icon name="sync" className="spin" />
+													<Icon name="refresh" className="spin" />
 												) : card.typeIcon ? (
 													<img className="issue-type-icon" src={card.typeIcon} />
 												) : (
@@ -956,139 +955,112 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 	};
 	return (
 		<>
+			{startWorkCard && (
+				<StartWork card={startWorkCard} onClose={() => setStartWorkCard(undefined)} />
+			)}
 			{renderCustomFilter()}
-			<WideStatusSection id="start-work-div">
-				<div className="instructions">
-					<Icon name="light-bulb" />
-					Start work by grabbing a ticket below, and creating a branch.
-				</div>
-				<div className="filters" style={{ padding: "0 20px 0 20px" }}>
-					<H4>
-						<Tooltip title="Create a ticket" placement="bottom" delay={1}>
-							<RoundedLink onClick={() => dispatch(openPanel(WebviewPanels.NewIssue))}>
-								<Icon name="plus" />
-								<span className="wide-text">New </span>
-								{cardLabel}
-							</RoundedLink>
-						</Tooltip>
-						<Tooltip title="For untracked work" placement="bottom" delay={1}>
-							<RoundedLink
-								onClick={() => {
-									selectCard({ title: "" });
-									HostApi.instance.track("StartWork Form Opened", {
-										"Opened Via": "Ad-Hoc Button"
-									});
-								}}
-							>
-								<Icon name="plus" />
-								Ad-hoc<span className="wide-text"> Work</span>
-							</RoundedLink>
-						</Tooltip>
-						{(cards.length > 0 || query) && (
-							<RoundedSearchLink className={queryOpen ? "" : "collapsed"}>
-								<Icon
-									name="search"
-									onClick={() => {
-										setQueryOpen(true);
-										document.getElementById("search-input")!.focus();
-									}}
-								/>
-								<span className="accordion">
-									<Icon
-										name="x"
-										onClick={() => {
-											setQuery("");
-											setQueryOpen(false);
-										}}
+			<PaneHeader
+				title="Issues"
+				count={cards.length}
+				id={WebviewPanels.Tasks}
+				isLoading={isLoading}
+			>
+				{!firstLoad && (
+					<Icon
+						title="Refresh"
+						onClick={() => setReload(reload + 1)}
+						className={`fixed ${isLoading ? "spin" : "spinnable"}`}
+						name="refresh"
+						placement="bottom"
+						delay={1}
+					/>
+				)}
+				<Icon
+					name="plus"
+					onClick={() => dispatch(openPanel(WebviewPanels.NewIssue))}
+					title={"New " + cardLabel}
+					placement="bottom"
+					delay={1}
+				/>
+				<Icon
+					name="plus"
+					onClick={() => {
+						selectCard({ title: "" });
+						HostApi.instance.track("StartWork Form Opened", {
+							"Opened Via": "Ad-Hoc Button"
+						});
+					}}
+					title="Start ad-hoc work"
+					placement="bottom"
+					delay={1}
+				/>
+			</PaneHeader>
+			{props.expanded && (
+				<PaneBody>
+					<div className="instructions">
+						<Icon name="light-bulb" />
+						Start work by grabbing a ticket below, and creating a branch.
+					</div>
+					<div className="filters" style={{ padding: "0 20px 0 20px" }}>
+						{props.loadingMessage ? (
+							<div style={{ margin: "0 -20px" }}>{props.loadingMessage}</div>
+						) : props.providers.length > 0 || derivedState.skipConnect ? (
+							<div style={{ paddingBottom: "5px" }}>
+								Show{" "}
+								{canFilter ? (
+									<Filter
+										title="Filter Items"
+										selected={"selectedLabel"}
+										labels={{ selectedLabel }}
+										items={[{ label: "-" }, ...menuItems.filters]}
+										align="bottomLeft"
+										dontCloseOnSelect
 									/>
-									<input
-										autoFocus={queryOpen}
-										id="search-input"
-										type="text"
-										value={query}
-										onChange={e => setQuery(e.target.value)}
-										onKeyDown={e => {
-											if (e.key == "Escape") {
-												setQuery("");
-												setQueryOpen(false);
-											}
-										}}
-									/>
-								</span>
-							</RoundedSearchLink>
-						)}
-						What are you working on?
-					</H4>
-					{props.loadingMessage ? (
-						<div style={{ margin: "0 -20px" }}>{props.loadingMessage}</div>
-					) : props.providers.length > 0 || derivedState.skipConnect ? (
-						<div style={{ paddingBottom: "5px" }}>
-							Show{" "}
-							{canFilter ? (
+								) : (
+									selectedLabel + " "
+								)}
+								from{" "}
 								<Filter
-									title="Filter Items"
-									selected={"selectedLabel"}
-									labels={{ selectedLabel }}
-									items={[{ label: "-" }, ...menuItems.filters]}
+									title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
+									selected={"providersLabel"}
+									labels={{ providersLabel }}
+									items={[{ label: "-" }, ...menuItems.services]}
 									align="bottomLeft"
 									dontCloseOnSelect
 								/>
-							) : (
-								selectedLabel + " "
-							)}
-							from{" "}
-							<Filter
-								title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
-								selected={"providersLabel"}
-								labels={{ providersLabel }}
-								items={[{ label: "-" }, ...menuItems.services]}
-								align="bottomLeft"
-								dontCloseOnSelect
-							/>
-							{!firstLoad && (
-								<Icon
-									onClick={() => setReload(reload + 1)}
-									className={`smaller fixed clickable ${isLoading ? "spin" : "spinnable"}`}
-									name="sync"
-								/>
-							)}
-						</div>
-					) : (
-						<>
-							<span>
-								Connect your issue provider(s) to make it easy to manage tasks, create branches, and
-								connect tasks to commits &amp; PRs, or{" "}
-								<Tooltip title="Connect later on the Integrations page" placement="top">
-									<Linkish
-										onClick={() => dispatch(setUserPreference(["skipConnectIssueProviders"], true))}
-									>
-										skip this step
-									</Linkish>
-								</Tooltip>
-							</span>
-							<div style={{ height: "10px" }} />
-							<IntegrationButtons style={{ marginBottom: "10px" }}>
-								{props.knownIssueProviderOptions.map(item => {
-									if (item.disabled) return null;
-									return (
-										<Provider key={item.key} onClick={item.action}>
-											{item.providerIcon}
-											{item.label}
-										</Provider>
-									);
-								})}
-							</IntegrationButtons>
-						</>
-					)}
-				</div>
-				{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
-				{cards.map(card => (
-					<Tooltip
-						key={"tt-" + card.key}
-						title="Click to start work on this item"
-						delay={1}
-						placement="bottom"
-					>
+							</div>
+						) : (
+							<>
+								<span>
+									Connect your issue provider(s) to make it easy to manage tasks, create branches,
+									and connect tasks to commits &amp; PRs, or{" "}
+									<Tooltip title="Connect later on the Integrations page" placement="top">
+										<Linkish
+											onClick={() =>
+												dispatch(setUserPreference(["skipConnectIssueProviders"], true))
+											}
+										>
+											skip this step
+										</Linkish>
+									</Tooltip>
+								</span>
+								<div style={{ height: "10px" }} />
+								<IntegrationButtons style={{ marginBottom: "10px" }}>
+									{props.knownIssueProviderOptions.map(item => {
+										if (item.disabled) return null;
+										return (
+											<Provider key={item.key} onClick={item.action}>
+												{item.providerIcon}
+												{item.label}
+											</Provider>
+										);
+									})}
+								</IntegrationButtons>
+							</>
+						)}
+					</div>
+					{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
+					{cards.map(card => (
 						<Row
 							key={card.key}
 							onClick={() => {
@@ -1163,9 +1135,9 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 								)}
 							</div>
 						</Row>
-					</Tooltip>
-				))}
-			</WideStatusSection>
+					))}
+				</PaneBody>
+			)}
 		</>
 	);
 }
@@ -1212,7 +1184,7 @@ export const Row = styled.div`
 		margin-left: auto;
 		text-align: right;
 		.icon {
-			// margin-left: 5px;
+			margin-left: 5px;
 			display: none;
 		}
 		padding-left: 2.5px;
