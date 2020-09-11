@@ -57,7 +57,7 @@
         "graphql-request": "1.8.2",
         "ignore": "3.3.10",
         "lodash-es": "4.17.15",
-        "node-fetch": "2.6.0",
+        "node-fetch": "2.6.1",
         "oauth": "0.9.15",
         "object-sizeof": "1.5.3",
         "opn": "5.4.0",
