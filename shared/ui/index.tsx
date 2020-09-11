@@ -68,7 +68,8 @@ import {
 	setCurrentReview,
 	setCurrentPullRequest,
 	setCurrentPullRequestAndBranch,
-	setStartWorkCard
+	setStartWorkCard,
+	clearCurrentPullRequest
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
@@ -427,7 +428,7 @@ function listenForEvents(store) {
 								})
 								.then(() => {
 									store.dispatch(setCurrentReview(""));
-									store.dispatch(setCurrentPullRequest(""));
+									store.dispatch(clearCurrentPullRequest());
 									store.dispatch(setStartWorkCard(card));
 									store.dispatch(openPanel(WebviewPanels.Status));
 								});
@@ -448,7 +449,7 @@ function listenForEvents(store) {
 											})
 											.then(() => {
 												store.dispatch(setCurrentReview(""));
-												store.dispatch(setCurrentPullRequest(""));
+												store.dispatch(clearCurrentPullRequest());
 												store.dispatch(setStartWorkCard(issue));
 												store.dispatch(openPanel(WebviewPanels.Status));
 											});
