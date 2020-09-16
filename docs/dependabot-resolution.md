@@ -11,7 +11,7 @@ These issues can be addressed in a few ways:
 - By accepting the pull request as is
 - By manually addressing issues with `npm`
 
-### Accepting the pull request as is
+### Accepting the pull request as is test
 
 - decide if you can use the PR as is, if so continue (if not see `Manually addressing issues` below, or the `Notes` area below)
 - choose the `Rebase & Merge` option (it should be pre-selected)
