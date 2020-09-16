@@ -728,7 +728,12 @@ const BaseReview = (props: BaseReviewProps) => {
 				{props.headerError && props.headerError.message && (
 					<div
 						className="color-warning"
-						style={{ display: "flex", padding: "10px 0", whiteSpace: "normal" }}
+						style={{
+							display: "flex",
+							padding: "10px 0",
+							whiteSpace: "normal",
+							alignItems: "flex-start"
+						}}
 					>
 						<Icon name="alert" />
 						<div style={{ paddingLeft: "10px" }}>{props.headerError.message}</div>

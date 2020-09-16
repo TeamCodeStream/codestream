@@ -66,6 +66,10 @@ export const Sidebar = () => {
 	const [firstIndex, setFirstIndex] = useState<number | undefined>(undefined);
 	const [secondIndex, setSecondIndex] = useState<number | undefined>(undefined);
 	const [dragging, setDragging] = useState(false);
+	const [windowSize, setWindowSize] = useState({
+		width: 0,
+		height: 0
+	});
 
 	const fetchOpenRepos = async () => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -81,6 +85,27 @@ export const Sidebar = () => {
 	useDidMount(() => {
 		fetchOpenRepos();
 	});
+
+	// https://usehooks.com/useWindowSize/
+	useEffect(() => {
+		// Handler to call on window resize
+		function handleResize() {
+			// Set window width/height to state
+			setWindowSize({
+				width: window.innerWidth,
+				height: window.innerHeight
+			});
+		}
+
+		// Add event listener
+		window.addEventListener("resize", handleResize);
+
+		// Call handler right away so state gets updated with initial window size
+		handleResize();
+
+		// Remove event listener on cleanup
+		return () => window.removeEventListener("resize", handleResize);
+	}, []); // Empty array ensures that effect is only run on mount
 
 	const panels: { id: WebviewPanels; collapsed: boolean; size: number }[] = React.useMemo(() => {
 		return [
@@ -100,7 +125,6 @@ export const Sidebar = () => {
 		});
 	}, [sidebarPanelPreferences, sizes]);
 
-	console.warn("PANELS ARE: ", panels);
 	const numCollapsed = useMemo(() => panels.filter(p => p.collapsed).length, [
 		sidebarPanelPreferences
 	]);
@@ -110,10 +134,10 @@ export const Sidebar = () => {
 		const expanded = panels.filter(p => !p.collapsed);
 		if (expanded.length == 0) return 1;
 		else return expanded.map(p => sizes[p.id] || p.size || 1).reduce(reducer);
-	}, [panels, sizes]);
+	}, [panels, sizes, windowSize]);
 
 	const positions = useMemo(() => {
-		const availableHeight = window.innerHeight - 40 - 25 * numCollapsed;
+		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
 		let accumulator = 40;
 		return panels.map(p => {
 			const size = sizes[p.id] || p.size || 1;
@@ -127,10 +151,10 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [sidebarPanelPreferences, sizes]);
+	}, [sidebarPanelPreferences, sizes, windowSize]);
 
 	const dragPositions = useMemo(() => {
-		const availableHeight = window.innerHeight - 40 - 25 * numCollapsed;
+		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
 		let accumulator = 40;
 		const firstExpanded = panels.findIndex(p => !p.collapsed);
 		const lastExpanded = findLastIndex(panels, p => !p.collapsed);
@@ -141,7 +165,7 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [sidebarPanelPreferences, sizes]);
+	}, [sidebarPanelPreferences, sizes, windowSize]);
 
 	const handleStart = (e: any, index: number) => {
 		let findFirstIndex = index - 1;
