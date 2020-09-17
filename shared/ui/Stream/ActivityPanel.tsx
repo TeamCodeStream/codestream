@@ -120,12 +120,14 @@ export const ActivityPanel = () => {
 	const renderActivity = () => {
 		if (derivedState.activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
-				<Keybindings>
-					The activity feed will let you know when your teammates create codemarks, assign issues,
-					request reviews, or add replies.
-					<br />
-					<br />
-				</Keybindings>
+				<div style={{ height: "75vh" }}>
+					<Keybindings>
+						The activity feed will let you know when your teammates create codemarks, assign issues,
+						request reviews, or add replies.
+						<br />
+						<br />
+					</Keybindings>
+				</div>
 			);
 		}
 

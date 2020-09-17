@@ -140,7 +140,6 @@ export const PullRequest = () => {
 		};
 	});
 
-	console.warn("CHECKOUT: ", derivedState.checkoutBranch);
 	const [activeTab, setActiveTab] = useState(1);
 	const [ghRepo, setGhRepo] = useState<any>(EMPTY_HASH);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
@@ -683,9 +682,6 @@ export const PullRequest = () => {
 									className={`${isLoadingPR ? "spin" : ""}`}
 									name="refresh"
 								/>
-							</span>
-							<span>
-								<CancelButton className="button" title="Close" onClick={exit} />
 							</span>
 						</PRActionButtons>
 					</PRStatus>

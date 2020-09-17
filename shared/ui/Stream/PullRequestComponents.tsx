@@ -11,7 +11,7 @@ export const PENDING_BORDER_COLOR = "rgba(249, 197, 19, 0.6)";
 export const PENDING_BACKGROUND_COLOR = "rgba(255, 223, 0, 0.1)";
 
 export const PRHeader = styled.div`
-	margin: 45px 15px 0 20px;
+	margin: 35px 15px 0 20px;
 	.open-external {
 		margin-left: 5px;
 		vertical-align: 3px;

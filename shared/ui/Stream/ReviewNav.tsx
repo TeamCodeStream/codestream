@@ -34,7 +34,7 @@ const NavHeader = styled.div`
 	// flex-shrink: 0;
 	// display: flex;
 	// align-items: flex-start;
-	padding: 40px 10px 10px 15px;
+	padding: 35px 10px 10px 15px;
 	// justify-content: center;
 	width: 100%;
 	${Header} {
@@ -418,21 +418,6 @@ export function ReviewNav(props: Props) {
 								/>
 							</Button>
 						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon name="x" />
-							</Button>
-						</Tooltip>
 					</div>
 				);
 			// case "closed":
@@ -474,21 +459,6 @@ export function ReviewNav(props: Props) {
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							title={
-								<>
-									Exit Review{" "}
-									<span className="binding">
-										<span className="keybinding">ESC</span>
-									</span>
-								</>
-							}
-							placement="bottom"
-						>
-							<Button variant="secondary" onClick={exit}>
-								<Icon name="x" />
 							</Button>
 						</Tooltip>
 					</div>

@@ -85,6 +85,7 @@ export interface ModalProps {
 	translucent?: boolean;
 	showGlobalNav?: boolean;
 	noPadding?: boolean;
+	noScroll?: boolean;
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
@@ -128,17 +129,21 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 				}`}
 			>
 				{props.onClose && <CancelButton onClick={props.onClose} />}
-				<ScrollBox>
-					<div className="vscroll">
-						<div
-							onClick={checkClose}
-							id="modal-children"
-							className={props.verticallyCenter ? "vcenter children" : "children"}
-						>
-							{props.children}
+				{props.noScroll ? (
+					props.children
+				) : (
+					<ScrollBox>
+						<div className="vscroll">
+							<div
+								onClick={checkClose}
+								id="modal-children"
+								className={props.verticallyCenter ? "vcenter children" : "children"}
+							>
+								{props.children}
+							</div>
 						</div>
-					</div>
-				</ScrollBox>
+					</ScrollBox>
+				)}
 			</ModalWrapper>
 		</ModalContext.Provider>,
 		modalRoot
