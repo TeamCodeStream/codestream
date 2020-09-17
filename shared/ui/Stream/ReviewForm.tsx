@@ -1997,7 +1997,7 @@ class ReviewForm extends React.Component<Props, State> {
 										<Icon
 											placement="top"
 											title="Use Latest Commit Message"
-											name="git-commit"
+											name="git-commit-vertical"
 											className="clickable"
 											onClick={() => this.setTitle(latestCommit.shortMessage)}
 										/>
@@ -2270,19 +2270,16 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	};
 };
 
-const ConnectedReviewForm = connect(
-	mapStateToProps,
-	{
-		openPanel,
-		openModal,
-		closePanel,
-		createPostAndReview,
-		editReview,
-		setUserPreference,
-		setCurrentReview,
-		setCodemarkStatus,
-		setNewPostEntry
-	}
-)(ReviewForm);
+const ConnectedReviewForm = connect(mapStateToProps, {
+	openPanel,
+	openModal,
+	closePanel,
+	createPostAndReview,
+	editReview,
+	setUserPreference,
+	setCurrentReview,
+	setCodemarkStatus,
+	setNewPostEntry
+})(ReviewForm);
 
 export { ConnectedReviewForm as ReviewForm };

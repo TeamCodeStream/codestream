@@ -124,7 +124,7 @@ export const ModifiedRepos = (props: {
 							)
 						</span>
 					</div>
-					<div style={{ margin: "0 -20px 10px -20px" }}>
+					<div style={{ margin: "0 -20px 0 -20px" }}>
 						{modifiedFiles.map(f => {
 							const hasConflict = isMe
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
@@ -150,10 +150,7 @@ export const ModifiedRepos = (props: {
 						})}
 					</div>
 					{repo.commits && repo.commits.length > 0 && (
-						<div style={{ margin: "0 -20px 0 -20px", padding: "0 0 10px 0" }}>
-							<div className="related-label" style={{ paddingLeft: "40px" }}>
-								Local Commits
-							</div>
+						<div style={{ margin: "0 -20px 0 -20px" }}>
 							{(repo.commits || []).map(c => {
 								const commit = c as any;
 								return (
@@ -170,6 +167,7 @@ export const ModifiedRepos = (props: {
 							})}
 						</div>
 					)}
+					<div style={{ height: "5px" }} />
 					{stomp && (
 						<div style={{ paddingTop: "5px" }}>
 							<span className="stomped" style={{ paddingLeft: 0 }}>
