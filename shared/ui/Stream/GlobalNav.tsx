@@ -17,6 +17,7 @@ import {
 	clearCurrentPullRequest,
 	setCreatePullRequest
 } from "../store/context/actions";
+import CancelButton from "./CancelButton";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -84,11 +85,27 @@ export function GlobalNav() {
 		dispatch(openPanel(panel));
 	};
 
+	const close = panel => {
+		dispatch(setCreatePullRequest());
+		dispatch(clearCurrentPullRequest());
+		dispatch(setCurrentReview());
+	};
+
 	// const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
 	const selected = panel => false;
 	return React.useMemo(() => {
-		return (
-			<>
+		if (currentReviewId || currentPullRequestId) {
+			return (
+				<nav className="inline" id="global-nav">
+					<label onClick={close}>
+						<span>
+							<CancelButton title="Close" onClick={close} />
+						</span>
+					</label>
+				</nav>
+			);
+		} else {
+			return (
 				<nav className="inline" id="global-nav">
 					<label
 						className={cx({ active: plusMenuOpen })}
@@ -291,8 +308,8 @@ export function GlobalNav() {
 						)}
 					</label>
 				</nav>
-			</>
-		);
+			);
+		}
 	}, [
 		derivedState.status.label,
 		activePanel,
@@ -300,8 +317,8 @@ export function GlobalNav() {
 		totalMentions,
 		collisions.nav,
 		derivedState.composeCodemarkActive,
-		derivedState.currentReviewId,
-		derivedState.currentPullRequestId,
+		currentReviewId,
+		currentPullRequestId,
 		plusMenuOpen,
 		ellipsisMenuOpen
 	]);

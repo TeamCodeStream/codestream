@@ -365,7 +365,13 @@
 			height: 100%;
 			position: absolute;
 			z-index: 50;
-			background: @app-background-color;
+			// background: @app-background-color;
+			background: rgba(255, 255, 255, 0.8);
+			backdrop-filter: blur(1px);
+			.vscode-dark& {
+				background: rgba(0, 0, 0, 0.6);
+				backdrop-filter: contrast(0.5) blur(1px);
+			}
 			// background: @base-background-color;
 		}
 		.thread-panel {

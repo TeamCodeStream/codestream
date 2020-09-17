@@ -167,7 +167,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	&:hover .toggle {
 		opacity: 1;
 	}
-	z-index: 50;
+	z-index: 49;
 	width: 100%;
 	cursor: pointer;
 	.actions {
