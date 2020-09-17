@@ -273,11 +273,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 			return (
 				<NoContent>
-					Discuss code by selecting a range and clicking an icon (
-					<Link href="https://docs.codestream.com/userguide/workflow/discuss-code/">
-						show me how
-					</Link>
-					).
+					Discuss code by selecting a range and clicking an icon.{" "}
+					<Link href="https://docs.codestream.com/userguide/workflow/discuss-code/">See how.</Link>
 				</NoContent>
 			);
 		}

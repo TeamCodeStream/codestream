@@ -13,9 +13,10 @@ import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { ReposScm } from "@codestream/protocols/agent";
 import Tag from "./Tag";
-import { Pane, PaneHeader, PaneBody } from "../src/components/Pane";
+import { Pane, PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { LoadingMessage } from "../src/components/LoadingMessage";
+import { Link } from "./Link";
 
 interface Props {
 	openRepos: ReposScm[];
@@ -70,6 +71,12 @@ export function OpenReviews(props: Props) {
 							<Icon name="sync" className="spin margin-right" />
 							<span>Loading...</span>
 						</Row>
+					)}
+					{reviewsState.bootstrapped && sortedReviews.length === 0 && (
+						<NoContent>
+							Lightweight, pre-PR code review. Get quick feedback on any code, even pre-commit.{" "}
+							<Link>Learn more.</Link>
+						</NoContent>
 					)}
 					{sortedReviews.map(review => {
 						const creator = teamMembers.find(user => user.id === review.creatorId);
