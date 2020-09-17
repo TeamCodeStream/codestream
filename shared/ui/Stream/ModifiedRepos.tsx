@@ -114,17 +114,17 @@ export const ModifiedRepos = (props: {
 							<Icon name="git-branch" />
 							{repo.branch}
 						</IconLabel>
-					</div>
-					<div style={{ margin: "0 -20px 0 -20px", padding: "5px 0 10px 0" }}>
-						<div className="related-label" style={{ paddingLeft: "40px", paddingTop: "5px" }}>
-							Modified Files (vs.{" "}
+						<span className="subtle">
+							(diffs vs.{" "}
 							<InlineMenu items={[]}>
 								<span className="monospace no-transform">
 									{repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD"}
 								</span>
 							</InlineMenu>
 							)
-						</div>
+						</span>
+					</div>
+					<div style={{ margin: "0 -20px 10px -20px" }}>
 						{modifiedFiles.map(f => {
 							const hasConflict = isMe
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]

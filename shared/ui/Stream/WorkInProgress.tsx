@@ -166,7 +166,7 @@ export const WorkInProgress = (props: Props) => {
 					name="review"
 					title={
 						<>
-							Request Review
+							Request Feedback
 							<br />
 							Watch the{" "}
 							<a
