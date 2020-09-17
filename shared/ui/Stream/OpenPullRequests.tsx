@@ -306,7 +306,8 @@ export function OpenPullRequests(props: Props) {
 			]
 		});
 	};
-	const toggleQueryHidden = (providerId, index) => {
+	const toggleQueryHidden = (e, providerId, index) => {
+		if (e.target.closest(".actions")) return;
 		const newQueries = [...queries[providerId]];
 		newQueries[index].hidden = !newQueries[index].hidden;
 		setQueries(providerId, newQueries);
@@ -455,7 +456,7 @@ export function OpenPullRequests(props: Props) {
 									return (
 										<PaneNode key={index}>
 											<PaneNodeName
-												onClick={() => toggleQueryHidden(providerId, index)}
+												onClick={e => toggleQueryHidden(e, providerId, index)}
 												title={query.name}
 												collapsed={query.hidden}
 												isLoading={isLoadingPRs || index === isLoadingPRGroup}
