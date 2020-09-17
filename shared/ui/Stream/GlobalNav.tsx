@@ -104,6 +104,16 @@ export function GlobalNav() {
 					</label>
 				</nav>
 			);
+		} else if (activePanel === WebviewPanels.CodemarksForFile) {
+			return (
+				<nav className="inline" id="global-nav">
+					<label onClick={close}>
+						<span>
+							<CancelButton title="Close" onClick={() => go(WebviewPanels.Sidebar)} />
+						</span>
+					</label>
+				</nav>
+			);
 		} else {
 			return (
 				<nav className="inline" id="global-nav">
