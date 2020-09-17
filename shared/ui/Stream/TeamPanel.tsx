@@ -204,32 +204,7 @@ class TeamPanel extends React.Component<Props, State> {
 		if (this.props.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Team Tab" });
 
-		this.disposables.push(
-			HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
-				// if we have a change to scm OR a file has been saved, update
-				if (
-					e.type === ChangeDataType.Commits ||
-					(e.type === ChangeDataType.Documents &&
-						e.data &&
-						(e.data as DocumentData).reason === "saved")
-				) {
-					this.getScmInfoSummary();
-				}
-			})
-		);
-
 		this.getSuggestedInvitees();
-
-		if (this.props.currentUserInvisible) this.clearScmInfoSummary();
-		else this.getScmInfoSummary();
-
-		this.startPolling();
-	}
-
-	componentWillUnmount() {
-		this._mounted = false;
-		this.disposables.forEach(d => d.dispose());
-		this.stopPolling();
 	}
 
 	getSuggestedInvitees = async () => {
@@ -249,31 +224,6 @@ class TeamPanel extends React.Component<Props, State> {
 			suggested.push({ email, fullName: committers[email] || email });
 		});
 		this.setState({ suggested });
-	};
-
-	private startPolling() {
-		// poll to get any changes that might happen outside the scope of
-		// the documentManager operations
-		if (!this._mounted || this._pollingTimer !== undefined) return;
-
-		this._pollingTimer = setInterval(() => {
-			this.getScmInfoSummary();
-		}, 30000); // five minutes
-	}
-
-	private stopPolling() {
-		if (this._pollingTimer === undefined) return;
-
-		clearInterval(this._pollingTimer);
-		this._pollingTimer = undefined;
-	}
-
-	getScmInfoSummary = async () => {
-		await this.props.updateModifiedRepos();
-	};
-
-	clearScmInfoSummary = async () => {
-		this.props.clearModifiedFiles(this.props.teamId);
 	};
 
 	onEmailChange = event => {
@@ -613,16 +563,6 @@ class TeamPanel extends React.Component<Props, State> {
 		});
 	}
 
-	toggleInvisible = async () => {
-		const { setUserStatus, currentUser, currentUserInvisible } = this.props;
-		this.setState({ loadingStatus: true });
-		const { label = "", ticketId = "", ticketUrl = "", ticketProvider = "" } =
-			currentUser.status || {};
-		await setUserStatus(label, ticketId, ticketUrl, ticketProvider, !currentUserInvisible);
-		await this.getScmInfoSummary();
-		this.setState({ loadingStatus: false });
-	};
-
 	changeXray = async value => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
@@ -730,36 +670,8 @@ class TeamPanel extends React.Component<Props, State> {
 														@{user.username}{" "}
 													</CSText>
 												</ProfileLink>
-												&nbsp;
-												{(!xraySetting || xraySetting === "user") && user.id === currentUserId && (
-													<Icon
-														name="broadcast"
-														className={cx("clickable spinnable nogrow", {
-															no: currentUserInvisible && !loadingStatus,
-															info: !currentUserInvisible
-														})}
-														onClick={this.toggleInvisible}
-														placement="bottom"
-														loading={loadingStatus}
-														title={
-															<TipTitle>
-																<h1>Live View: {currentUserInvisible ? "OFF" : "ON"}</h1>
-																{currentUserInvisible ? "Not sharing" : "Sharing"} local changes
-																with
-																<br />
-																teammates. Click to toggle.
-																<a
-																	className="learn-more"
-																	href="http://docs.codestream.com/userguide/features/team-live-view/"
-																>
-																	learn more
-																</a>
-															</TipTitle>
-														}
-													/>
-												)}
 											</li>
-											{<StyledUserStatus user={user} />}
+											<StyledUserStatus user={user} />
 											{user.id !== currentUserId && this.renderModifiedRepos(user)}
 										</>
 									))}
