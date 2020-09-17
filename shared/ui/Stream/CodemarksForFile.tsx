@@ -40,6 +40,7 @@ import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
 import { Button } from "../src/components/Button";
+import { Link } from "./Link";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -273,7 +274,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			return (
 				<NoContent>
 					Discuss code by selecting a range and clicking an icon (
-					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">show me how</a>
+					<Link href="https://docs.codestream.com/userguide/workflow/discuss-code/">
+						show me how
+					</Link>
 					).
 				</NoContent>
 			);

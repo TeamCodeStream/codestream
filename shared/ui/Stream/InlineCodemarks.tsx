@@ -1160,7 +1160,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
-				{!currentReviewId && !currentPullRequestId && this.renderViewSelectors()}
+				{false && !currentReviewId && !currentPullRequestId && this.renderViewSelectors()}
 			</div>
 		);
 	}

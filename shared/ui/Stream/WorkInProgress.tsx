@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Pane, PaneHeader, PaneBody } from "../src/components/Pane";
+import { Pane, PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import { ReposScm } from "@codestream/protocols/agent";
@@ -34,7 +34,7 @@ export const WorkInProgress = (props: Props) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		let status =
 			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
-		return { status, currentUserId, invisible: status.invisible || true };
+		return { status, currentUserId, invisible: status.invisible || false };
 	});
 
 	const clearAndSave = () => {
@@ -122,9 +122,9 @@ export const WorkInProgress = (props: Props) => {
 								props.openRepos ? props.openRepos.filter(_ => _.id).map(_ => _.id!) : undefined
 							}
 							defaultText={
-								<span className="subtle">
+								<NoContent style={{ marginLeft: 0, marginRight: 0 }}>
 									As you write code, files that have changed will appear here.
-								</span>
+								</NoContent>
 							}
 						/>
 					</div>
