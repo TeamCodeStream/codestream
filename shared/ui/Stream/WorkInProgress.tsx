@@ -34,7 +34,7 @@ export const WorkInProgress = (props: Props) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		let status =
 			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
-		return { status, currentUserId, invisible: status.invisible || false };
+		return { status, currentUserId, invisible: status.invisible || true };
 	});
 
 	const clearAndSave = () => {

@@ -33,9 +33,10 @@ import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
 import { DEFAULT_QUERIES } from "../store/preferences/reducer";
 import { ConfigurePullRequestQuerySettings } from "./ConfigurePullRequestQuerySettings";
-import { Pane, PaneHeader, PaneBody, PaneNode, PaneNodeName } from "../src/components/Pane";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import { configureAndConnectProvider } from "../store/providers/actions";
+import { PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
+import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 
 const PRSummaryName = styled.div`
 	padding: 2px 20px;
@@ -135,7 +136,7 @@ export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => 
 };
 
 const ConnectToCodeHost = styled.div`
-	margin: 10px 20px 0 20px;
+	// margin: 10px 20px 0 20px;
 	button {
 		margin: 0 10px 10px 0;
 	}
@@ -446,23 +447,27 @@ export function OpenPullRequests(props: Props) {
 					{props.expanded && (
 						<PaneBody>
 							{derivedState.hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
-								<ConnectToCodeHost>
-									{derivedState.PRSupportedProviders.map(provider => {
-										const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-										if (providerDisplay) {
-											return (
-												<Button
-													onClick={() =>
-														dispatch(configureAndConnectProvider(provider.id, "Status"))
-													}
-												>
-													<Icon name={providerDisplay.icon} />
-													Connect to {providerDisplay.displayName} to see your PRs
-												</Button>
-											);
-										} else return null;
-									})}
-								</ConnectToCodeHost>
+								<>
+									<NoContent>Connect to GitHub to see your PRs</NoContent>
+									<IntegrationButtons noBorder>
+										{derivedState.PRSupportedProviders.map(provider => {
+											const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+											if (providerDisplay) {
+												return (
+													<Provider
+														key={provider.id}
+														onClick={() =>
+															dispatch(configureAndConnectProvider(provider.id, "Sidebar"))
+														}
+													>
+														<Icon name={providerDisplay.icon} />
+														{providerDisplay.displayName}
+													</Provider>
+												);
+											} else return null;
+										})}
+									</IntegrationButtons>
+								</>
 							)}
 							{derivedState.PRConnectedProviders.map(connectedProvider => {
 								const providerId = connectedProvider.id;

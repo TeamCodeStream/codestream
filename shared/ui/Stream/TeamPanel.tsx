@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import Icon from "./Icon";
 import Button from "./Button";
 import Headshot from "./Headshot";
-import ScrollBox from "./ScrollBox";
 import { invite, setUserStatus } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
@@ -15,7 +14,6 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 	KickUserRequestType,
-	UpdateTeamRequestType,
 	UpdateTeamSettingsRequestType,
 	UpdateTeamAdminRequestType,
 	GetLatestCommittersRequestType
@@ -37,7 +35,6 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
 import { UserStatus } from "../src/components/UserStatus";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { SelectPeople } from "../src/components/SelectPeople";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -698,14 +695,14 @@ class TeamPanel extends React.Component<Props, State> {
 					title="My Team"
 					id={WebviewPanels.Team}
 					warning={
-						collisions.nav.length && (
+						collisions.nav.length > 0 ? (
 							<Icon
 								name="alert"
 								className="nav-conflict"
 								title={"Possible Merge Conflict w/" + collisions.nav.join(", ")}
 								placement="top"
 							/>
-						)
+						) : null
 					}
 				>
 					<Icon
@@ -719,7 +716,7 @@ class TeamPanel extends React.Component<Props, State> {
 				{this.props.expanded && (
 					<PaneBody>
 						<PaneNode>
-							<PaneNodeName id="team/teammates" title="Current Teammates" />
+							<PaneNodeName id="team/teammates" title="Current Members" />
 							{!this.props.hiddenPaneNodes["team/teammates"] && (
 								<UL>
 									{this.props.members.map(user => (
@@ -1047,7 +1044,7 @@ const mapStateToProps = state => {
 		return user;
 	});
 	const currentUser = users[session.userId];
-	const invisible = currentUser.status ? currentUser.status.invisible : false;
+	const invisible = currentUser.status ? currentUser.status.invisible : true;
 
 	const adminIds = team.adminIds;
 	const isCurrentUserAdmin = adminIds.includes(session.userId);
