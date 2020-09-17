@@ -320,12 +320,6 @@ export class SimpleStream extends Component {
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
 				)}
 				<div id="confirm-root" />
-				{(threadId || this.props.currentCodemarkId) && (
-					<>
-						<div id="panel-blanket" />
-						{this.props.currentCodemarkId && <CodemarkView />}
-					</>
-				)}
 				<GlobalNav />
 				{activePanel !== WebviewPanels.CodemarksForFile && <Sidebar />}
 				{activeModal && (
@@ -437,6 +431,12 @@ export class SimpleStream extends Component {
 							)}
 						</Modal>
 					)}
+				{(threadId || this.props.currentCodemarkId) && (
+					<>
+						<div id="panel-blanket" />
+						{this.props.currentCodemarkId && <CodemarkView />}
+					</>
+				)}
 			</div>
 		);
 	}
