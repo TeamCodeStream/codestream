@@ -30,7 +30,7 @@ export const updateModifiedRepos = () => async (dispatch, getState: () => CodeSt
 
 	const team = teams[teamId];
 
-	let invisible = currentUser.status ? currentUser.status.invisible : false;
+	let invisible = currentUser.status ? currentUser.status.invisible : true;
 
 	// if the team admin has turned on xray for everyone always, you can't turn it off
 	if (team && team.settings && team.settings.xray === "on") invisible = false;

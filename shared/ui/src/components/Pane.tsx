@@ -11,6 +11,12 @@ import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 
 const EMPTY_HASH = {};
 
+export const NoContent = styled.div`
+	color: var(--text-color-subtle);
+	margin: 0 20px 5px 20px;
+	font-size: 12px;
+`;
+
 interface PaneNodeNameProps {
 	title: string;
 	id?: string;

@@ -1001,36 +1001,36 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 						<Icon name="light-bulb" />
 						Start work by grabbing a ticket below, and creating a branch.
 					</div>
-					<div className="filters" style={{ padding: "0 20px 0 20px" }}>
-						{props.loadingMessage ? (
-							<div style={{ margin: "0 -20px" }}>{props.loadingMessage}</div>
-						) : props.providers.length > 0 || derivedState.skipConnect ? (
-							<div style={{ paddingBottom: "5px" }}>
-								Show{" "}
-								{canFilter ? (
-									<Filter
-										title="Filter Items"
-										selected={"selectedLabel"}
-										labels={{ selectedLabel }}
-										items={[{ label: "-" }, ...menuItems.filters]}
-										align="bottomLeft"
-										dontCloseOnSelect
-									/>
-								) : (
-									selectedLabel + " "
-								)}
-								from{" "}
+					{props.loadingMessage ? (
+						<div>{props.loadingMessage}</div>
+					) : props.providers.length > 0 || derivedState.skipConnect ? (
+						<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
+							Show{" "}
+							{canFilter ? (
 								<Filter
-									title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
-									selected={"providersLabel"}
-									labels={{ providersLabel }}
-									items={[{ label: "-" }, ...menuItems.services]}
+									title="Filter Items"
+									selected={"selectedLabel"}
+									labels={{ selectedLabel }}
+									items={[{ label: "-" }, ...menuItems.filters]}
 									align="bottomLeft"
 									dontCloseOnSelect
 								/>
-							</div>
-						) : (
-							<>
+							) : (
+								selectedLabel + " "
+							)}
+							from{" "}
+							<Filter
+								title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
+								selected={"providersLabel"}
+								labels={{ providersLabel }}
+								items={[{ label: "-" }, ...menuItems.services]}
+								align="bottomLeft"
+								dontCloseOnSelect
+							/>
+						</div>
+					) : (
+						<>
+							<div className="filters" style={{ padding: "0 20px 10px 20px" }}>
 								<span>
 									Connect your issue provider(s) to make it easy to manage tasks, create branches,
 									and connect tasks to commits &amp; PRs, or{" "}
@@ -1044,21 +1044,20 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 										</Linkish>
 									</Tooltip>
 								</span>
-								<div style={{ height: "10px" }} />
-								<IntegrationButtons style={{ marginBottom: "10px" }}>
-									{props.knownIssueProviderOptions.map(item => {
-										if (item.disabled) return null;
-										return (
-											<Provider key={item.key} onClick={item.action}>
-												{item.providerIcon}
-												{item.label}
-											</Provider>
-										);
-									})}
-								</IntegrationButtons>
-							</>
-						)}
-					</div>
+							</div>
+							<IntegrationButtons noBorder style={{ marginBottom: "20px" }}>
+								{props.knownIssueProviderOptions.map(item => {
+									if (item.disabled) return null;
+									return (
+										<Provider key={item.key} onClick={item.action}>
+											{item.providerIcon}
+											{item.label}
+										</Provider>
+									);
+								})}
+							</IntegrationButtons>
+						</>
+					)}
 					{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
 					{cards.map(card => (
 						<Row

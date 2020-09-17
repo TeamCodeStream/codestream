@@ -143,6 +143,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 								<div className="confirmation-code">
 									{digits.map((digit, index) => (
 										<TextInput
+											autoFocus={index === 0}
 											ref={element => (inputs.current[index] = element)}
 											key={index}
 											value={digit}

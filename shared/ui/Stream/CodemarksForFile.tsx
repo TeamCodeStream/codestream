@@ -35,7 +35,7 @@ import { isConnected } from "../store/providers/reducer";
 import * as fs from "../utilities/fs";
 import { supportsIntegrations } from "../store/configs/reducer";
 import { Keybindings } from "./Keybindings";
-import { Pane, PaneHeader } from "../src/components/Pane";
+import { Pane, PaneHeader, NoContent } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
@@ -216,66 +216,66 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 		if (textEditorUri === undefined) {
 			return (
-				<div key="no-codemarks" className="no-codemarks">
+				<NoContent>
 					<h3>No file open.</h3>
 					<p>
 						Open a source file to to start discussing code with your teammates!{" "}
 						<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">View guide.</a>
 					</p>
-				</div>
+				</NoContent>
 			);
 		} else {
 			if (this.props.children) return null;
 			const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shift-/";
 			if (isNotOnDisk(textEditorUri)) {
 				return (
-					<div className="no-codemarks">
+					<NoContent>
 						<h3>This file hasn't been saved.</h3>
 						<p>
 							Save the file before creating a codemark so that the codemark can be linked to the
 							code.
 						</p>
-					</div>
+					</NoContent>
 				);
 			}
 			if (this.state.problem === ScmError.NoRepo) {
 				return (
-					<div className="no-codemarks">
+					<NoContent>
 						<h3>This file is not part of a git repository.</h3>
 						<p>
 							CodeStream requires files to be tracked by Git so that codemarks can be linked to the
 							code.
 						</p>
 						<p>{uriToFilePath(textEditorUri)}</p>
-					</div>
+					</NoContent>
 				);
 			}
 			if (this.state.problem === ScmError.NoRemotes) {
 				return (
-					<div className="no-codemarks">
+					<NoContent>
 						<h3>This repository has no remotes.</h3>
 						<p>Please configure a remote URL for this repository before creating a codemark.</p>
-					</div>
+					</NoContent>
 				);
 			}
 			if (this.state.problem === ScmError.NoGit) {
 				return (
-					<div className="no-codemarks">
+					<NoContent>
 						<h3>Git could not be located.</h3>
 						<p>
 							CodeStream was unable to find the `git` command. Make sure it's installed and
 							configured properly.
 						</p>
-					</div>
+					</NoContent>
 				);
 			}
 
 			return (
-				<div className="subtle" style={{ margin: "10px 40px" }}>
+				<NoContent>
 					Discuss code by selecting a range and clicking an icon (
 					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">show me how</a>
 					).
-				</div>
+				</NoContent>
 			);
 		}
 	};

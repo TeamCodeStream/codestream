@@ -357,7 +357,7 @@ export const StartWork = (props: Props) => {
 		return {
 			status,
 			repos: state.repos,
-			invisible: status.invisible || false,
+			invisible: status.invisible || true,
 			teamName: team.name,
 			currentUserId: state.session.userId!,
 			currentUserName: state.users[state.session.userId!].username,

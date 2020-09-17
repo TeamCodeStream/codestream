@@ -81,6 +81,7 @@ export type ViewLocation =
 	| "PR Toggle"
 	| "Integrations Panel"
 	| "Status"
+	| "Sidebar"
 	| "Create Pull Request Panel";
 
 export const sendIssueProviderConnected = (
