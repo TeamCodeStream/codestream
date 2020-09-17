@@ -759,8 +759,8 @@ class TeamPanel extends React.Component<Props, State> {
 													/>
 												)}
 											</li>
-											<StyledUserStatus user={user} />
-											{this.renderModifiedRepos(user)}
+											{<StyledUserStatus user={user} />}
+											{user.id !== currentUserId && this.renderModifiedRepos(user)}
 										</>
 									))}
 									<form
@@ -1044,7 +1044,7 @@ const mapStateToProps = state => {
 		return user;
 	});
 	const currentUser = users[session.userId];
-	const invisible = currentUser.status ? currentUser.status.invisible : true;
+	const invisible = currentUser.status ? currentUser.status.invisible : false;
 
 	const adminIds = team.adminIds;
 	const isCurrentUserAdmin = adminIds.includes(session.userId);

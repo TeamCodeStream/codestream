@@ -7,7 +7,7 @@ import { CodeStreamState } from "../store";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { openPanel, closePanel, openModal } from "./actions";
+import { openPanel, closePanel, openModal, closeModal } from "./actions";
 import Icon from "./Icon";
 import { Headshot } from "../src/components/Headshot";
 import { MetaLabel } from "./Codemark/BaseCodemark";
@@ -205,7 +205,7 @@ export const ProfilePanel = () => {
 		</Row>
 	);
 	return (
-		<Dialog wide noPadding>
+		<Dialog wide noPadding onClose={() => dispatch(closePanel())}>
 			<Root>
 				<PanelHeader title={title} />
 				<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>

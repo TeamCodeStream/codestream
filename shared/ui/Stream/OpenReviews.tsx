@@ -58,7 +58,7 @@ export function OpenReviews(props: Props) {
 	return (
 		<>
 			<PaneHeader
-				title="Open Reviews"
+				title="Feedback Requests"
 				count={reviews.length}
 				id={WebviewPanels.OpenReviews}
 				isLoading={!reviewsState.bootstrapped}
