@@ -101,7 +101,7 @@ export function Dialog(props: PropsWithChildren<Props>) {
 					<Icon className="clickable" name="x" onClick={props.onClose} />
 				</Close>
 			)}
-			{props.children}
+			<div className="expanded">{props.children}</div>
 		</Modal>
 	) : (
 		<Container>

@@ -198,17 +198,6 @@ export function GlobalNav() {
 					</label>
 						*/}
 					<label
-						className={cx({ selected: selected(WebviewPanels.Flow) })}
-						onClick={e => go(WebviewPanels.Flow)}
-						id="global-nav-file-label"
-					>
-						<Tooltip delay={1} trigger={["hover"]} title="CodeStream Help" placement="bottom">
-							<span>
-								<Icon name="question" />
-							</span>
-						</Tooltip>
-					</label>
-					<label
 						className={cx({ selected: selected(WebviewPanels.Activity) })}
 						onClick={e => go(WebviewPanels.Activity)}
 						id="global-nav-activity-label"
@@ -264,6 +253,17 @@ export function GlobalNav() {
 							placement="bottomRight"
 							onPopupAlign={placeArrowTopRight}
 						/>
+					</label>
+					<label
+						className={cx({ selected: selected(WebviewPanels.Flow) })}
+						onClick={e => go(WebviewPanels.Flow)}
+						id="global-nav-file-label"
+					>
+						<Tooltip delay={1} trigger={["hover"]} title="Help &amp; Info" placement="bottom">
+							<span>
+								<Icon name="question" />
+							</span>
+						</Tooltip>
 					</label>
 					{/*<label
 						className={cx({ selected: selected(WebviewPanels.Team) })}
