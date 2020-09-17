@@ -4,16 +4,19 @@ import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
 import Icon from "./Icon";
-import Timestamp from "./Timestamp";
 import { getCodeCollisions } from "../store/users/reducer";
 import { ChangesetFile } from "./Review/ChangesetFile";
 import { HostApi } from "..";
 import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 import * as userSelectors from "../store/users/reducer";
 import { FileStatus } from "@codestream/protocols/api";
-import { ReposScm } from "@codestream/protocols/agent";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import { Range } from "vscode-languageserver-types";
+import { GetReposScmRequestType } from "@codestream/protocols/agent";
+import Timestamp from "./Timestamp";
+import * as path from "path-browserify";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -66,6 +69,7 @@ export const ModifiedRepos = (props: {
 	if (!derivedState.person) return null;
 
 	const [selectedFile, setSelectedFile] = React.useState("");
+	const [repoRoots, setRepoRoots] = React.useState<{ [repoId: string]: string } | undefined>();
 
 	const { repos, teamId, currentUserEmail, collisions, xrayEnabled } = derivedState;
 	const { modifiedRepos, modifiedReposModifiedAt } = person;
@@ -74,8 +78,7 @@ export const ModifiedRepos = (props: {
 	if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length)
 		return props.defaultText ? <span>{props.defaultText}</span> : null;
 
-	// FIXME we want to be able to show the diff here
-	const clickFile = (repoId, path, baseSha) => {
+	const showFileDiff = (repoId, path, baseSha) => {
 		setSelectedFile(repoId + ":" + path);
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
@@ -84,6 +87,27 @@ export const ModifiedRepos = (props: {
 			includeStaged: true,
 			baseSha
 		});
+	};
+
+	const showFile = async (repoId, filepath) => {
+		let repoRoot = "";
+
+		const response = await HostApi.instance.send(GetReposScmRequestType, {
+			inEditorOnly: false
+		});
+		if (!response.repositories) return;
+		const currentRepoInfo = response.repositories.find(r => r.id === repoId);
+		if (currentRepoInfo) {
+			repoRoot = currentRepoInfo.path;
+		}
+
+		if (repoRoot) {
+			const response = HostApi.instance.send(EditorRevealRangeRequestType, {
+				uri: path.join("file://", repoRoot, filepath),
+				range: Range.create(0, 0, 0, 0)
+			});
+			HostApi.instance.track("Modified Repos File Viewed", {});
+		}
 	};
 
 	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
@@ -130,7 +154,9 @@ export const ModifiedRepos = (props: {
 								? collisions.repoFiles[`${repo.repoId}:${f.file}`]
 								: collisions.userRepoFiles[`${person.id}:${repo.repoId}:${f.file}`];
 							const className = hasConflict ? "file-has-conflict wide" : "wide";
-							const onClick = isMe ? () => clickFile(repoId, f.file, repo.startCommit) : undefined;
+							const onClick = isMe
+								? () => showFileDiff(repoId, f.file, repo.startCommit)
+								: undefined;
 							const selected = selectedFile === repoId + ":" + f.file;
 							const vs = repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD";
 							let tooltip = isMe ? `Click to diff vs. last push: ${vs}` : undefined;
@@ -145,6 +171,24 @@ export const ModifiedRepos = (props: {
 									key={f.file}
 									tooltip={tooltip}
 									{...f}
+									actionIcons={
+										isMe && (
+											<div className="actions">
+												<Icon
+													name="goto-file"
+													className="clickable action"
+													title="Open File"
+													placement="left"
+													delay={1}
+													onClick={async e => {
+														e.stopPropagation();
+														e.preventDefault();
+														showFile(repoId, f.file);
+													}}
+												/>
+											</div>
+										)
+									}
 								/>
 							);
 						})}
