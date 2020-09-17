@@ -247,6 +247,9 @@ const Root = styled.div`
 	.animate-height & {
 		transition: height 0.25s, top 0.25s;
 	}
+	.expander {
+		margin: 0 2px 0 -2px;
+	}
 `;
 
 interface PaneProps {

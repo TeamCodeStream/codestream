@@ -325,7 +325,8 @@ export function OpenPullRequests(props: Props) {
 			]
 		});
 	};
-	const toggleQueryHidden = (providerId, index) => {
+	const toggleQueryHidden = (e, providerId, index) => {
+		if (e.target.closest(".actions")) return;
 		const newQueries = [...queries[providerId]];
 		newQueries[index].hidden = !newQueries[index].hidden;
 		setQueries(providerId, newQueries);
@@ -477,44 +478,38 @@ export function OpenPullRequests(props: Props) {
 									const providerGroups = pullRequestGroups[providerId];
 									const prGroup = providerGroups && providerGroups[index];
 									return (
-										<PRSummaryGroup key={index}>
-											<PRSummaryName onClick={() => toggleQueryHidden(providerId, index)}>
-												{isLoadingPRs || index === isLoadingPRGroup ? (
-													<Icon name="sync" className="spin" />
-												) : (
-													<Icon
-														name={query.hidden ? "chevron-right" : "chevron-down"}
-														className="chevron"
-													/>
-												)}
-												<span>{query.name}</span>
-												<div className="actions" onClick={e => e.stopPropagation()}>
-													<Icon
-														title="Reload Query"
-														delay={0.5}
-														placement="bottom"
-														name="refresh"
-														className="clickable"
-														onClick={() => reloadQuery(providerId, index)}
-													/>
-													<Icon
-														title="Edit Query"
-														delay={0.5}
-														placement="bottom"
-														name="pencil"
-														className="clickable"
-														onClick={() => editQuery(providerId, index)}
-													/>
-													<Icon
-														title="Delete Query"
-														delay={0.5}
-														placement="bottom"
-														name="x"
-														className="clickable"
-														onClick={() => deleteQuery(providerId, index)}
-													/>
-												</div>
-											</PRSummaryName>
+										<PaneNode key={index}>
+											<PaneNodeName
+												onClick={e => toggleQueryHidden(e, providerId, index)}
+												title={query.name}
+												collapsed={query.hidden}
+												isLoading={isLoadingPRs || index === isLoadingPRGroup}
+											>
+												<Icon
+													title="Reload Query"
+													delay={0.5}
+													placement="bottom"
+													name="refresh"
+													className="clickable"
+													onClick={() => reloadQuery(providerId, index)}
+												/>
+												<Icon
+													title="Edit Query"
+													delay={0.5}
+													placement="bottom"
+													name="pencil"
+													className="clickable"
+													onClick={() => editQuery(providerId, index)}
+												/>
+												<Icon
+													title="Delete Query"
+													delay={0.5}
+													placement="bottom"
+													name="x"
+													className="clickable"
+													onClick={() => deleteQuery(providerId, index)}
+												/>
+											</PaneNodeName>
 											{!query.hidden &&
 												prGroup &&
 												prGroup.map((pr, index) => {
@@ -598,7 +593,7 @@ export function OpenPullRequests(props: Props) {
 														</Tooltip>
 													);
 												})}
-										</PRSummaryGroup>
+										</PaneNode>
 									);
 								});
 							})}
