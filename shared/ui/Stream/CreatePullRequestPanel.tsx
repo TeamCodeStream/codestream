@@ -990,7 +990,7 @@ export const CreatePullRequestPanel = props => {
 														<Icon
 															placement="topRight"
 															title="Use Latest Commit Message"
-															name="git-commit"
+															name="git-commit-vertical"
 															className="clickable"
 															onClick={() => setPrTitle(latestCommit)}
 														/>
