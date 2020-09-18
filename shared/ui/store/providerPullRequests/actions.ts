@@ -256,6 +256,54 @@ export const getPullRequestCommits = (providerId: string, id: string) => async (
 	return undefined;
 };
 
+export const openPullRequestByUrl = (
+	url: string,
+	options?: {
+		checkoutBranch?: any;
+	}
+) => async (dispatch, getState: () => CodeStreamState) => {
+	let handled = false;
+	let response;
+	let providerInfo;
+	try {
+		providerInfo = await HostApi.instance.send(QueryThirdPartyRequestType, {
+			url: url
+		});
+	} catch (error) {}
+	try {
+		if (providerInfo && providerInfo.providerId) {
+			const id = await HostApi.instance.send(ExecuteThirdPartyRequestUntypedType, {
+				method: "getPullRequestIdFromUrl",
+				providerId: providerInfo.providerId,
+				params: { url }
+			});
+			if (id) {
+				dispatch(setCurrentReview(""));
+				if (options && options.checkoutBranch)
+					dispatch(setCurrentPullRequestAndBranch(id as string));
+				dispatch(setCurrentPullRequest(providerInfo.providerId, id as string));
+				handled = true;
+			}
+		}
+	} catch (error) {
+		logError(`failed to openPullRequestByUrl: ${error}`, { url });
+		let errorString = typeof error === "string" ? error : error.message;
+		if (errorString) {
+			const target = "failed with message: ";
+			const targetLength = target.length;
+			const index = errorString.indexOf(target);
+			if (index > -1) {
+				errorString = errorString.substring(index + targetLength);
+			}
+		}
+		return { error: errorString };
+	}
+	if (!handled) {
+		response = { error: "Unable to view PR" };
+	}
+	return response;
+};
+
 export const setProviderError = (
 	providerId: string,
 	id: string,

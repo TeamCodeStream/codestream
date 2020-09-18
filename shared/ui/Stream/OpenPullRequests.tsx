@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import * as providerSelectors from "../store/providers/reducer";
@@ -22,7 +22,7 @@ import {
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
-import { getMyPullRequests } from "../store/providerPullRequests/actions";
+import { getMyPullRequests, openPullRequestByUrl } from "../store/providerPullRequests/actions";
 import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
@@ -164,6 +164,7 @@ export function OpenPullRequests(props: Props) {
 
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState("");
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState(false);
+	const [loadFromUrlError, setLoadFromUrlError] = React.useState("");
 
 	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
 		[providerId: string]: GetMyPullRequestsResponse[][];
@@ -206,9 +207,10 @@ export function OpenPullRequests(props: Props) {
 			const newGroups = {};
 			console.warn("Loading the PRs...", theQueries);
 			for (const connectedProvider of derivedState.PRConnectedProviders) {
-				const queryStrings = (
-					theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id]
-				).map(_ => _.query);
+				const queriesByProvider: PullRequestQuery[] =
+					theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
+				const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
+
 				console.warn("Loading the PRs... in the loop", queryStrings);
 				try {
 					const response: any = await dispatch(
@@ -233,9 +235,10 @@ export function OpenPullRequests(props: Props) {
 			console.warn("SETTING TO: ", newGroups);
 			setPullRequestGroups(newGroups);
 		} catch (ex) {
-			if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-				// show message about re-authing?
-			}
+			console.error(ex);
+			// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+			// 	// show message about re-authing?
+			// }
 		} finally {
 			setIsLoadingPRs(false);
 
@@ -272,9 +275,10 @@ export function OpenPullRequests(props: Props) {
 				setPullRequestGroups(newGroups);
 			}
 		} catch (ex) {
-			if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-				// show message about re-authing?
-			}
+			console.error(ex);
+			// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+			// 	// show message about re-authing?
+			// }
 		} finally {
 			setIsLoadingPRGroup(undefined);
 		}
@@ -336,40 +340,20 @@ export function OpenPullRequests(props: Props) {
 	};
 
 	const goPR = async (url: string) => {
-		HostApi.instance
-			.send(QueryThirdPartyRequestType, {
-				url: url
-			})
-			.then((providerInfo: any) => {
-				if (providerInfo && providerInfo.providerId) {
-					HostApi.instance
-						.send(ExecuteThirdPartyRequestUntypedType, {
-							method: "getPullRequestIdFromUrl",
-							providerId: providerInfo.providerId,
-							params: { url }
-						})
-						.then(id => {
-							if (id) {
-								dispatch(setCurrentReview(""));
-								dispatch(setCurrentPullRequest(providerInfo.providerId, id as string));
-							} else {
-								HostApi.instance.send(OpenUrlRequestType, {
-									url
-								});
-							}
-						});
-				} else {
-					HostApi.instance.send(OpenUrlRequestType, {
-						url
-					});
-				}
-			})
-			.catch(e => {
-				HostApi.instance.send(OpenUrlRequestType, {
-					url
-				});
-			});
+		setLoadFromUrlError("");
+		const response = (await dispatch(openPullRequestByUrl(url))) as { error?: string };
+		if (response && response.error) {
+			setLoadFromUrlError(response.error);
+			const er = document.getElementById("error-row");
+			er && er.scrollIntoView({ behavior: "smooth" });
+		}
 	};
+
+	useEffect(() => {
+		if (!loadFromUrlOpen) {
+			setLoadFromUrlError("");
+		}
+	}, [loadFromUrlOpen]);
 
 	const totalPRs = useMemo(() => {
 		let total = 0;
@@ -577,44 +561,61 @@ export function OpenPullRequests(props: Props) {
 									);
 								});
 							})}
-							<Row
-								key="load"
-								className={loadFromUrlOpen ? "no-hover" : ""}
-								onClick={() => {
-									setLoadFromUrlOpen(true);
-									document.getElementById("pr-search-input")!.focus();
-								}}
-							>
-								<div>
-									<Icon name="link" />
-								</div>
-								<div>
-									<input
-										id="pr-search-input"
-										placeholder="Load PR from URL"
-										type="text"
-										style={{ background: "transparent", width: "100%" }}
-										value={loadFromUrlQuery}
-										onChange={e => setLoadFromUrlQuery(e.target.value)}
-										onKeyDown={e => {
-											if (e.key == "Escape") {
-												setLoadFromUrlQuery("");
-											}
-											if (e.key == "Enter") {
-												goPR(loadFromUrlQuery);
-											}
+
+							{derivedState.isPRSupportedCodeHostConnected && (
+								<>
+									<Row
+										key="load"
+										className={loadFromUrlOpen ? "no-hover" : ""}
+										onClick={() => {
+											setLoadFromUrlOpen(true);
+											document.getElementById("pr-search-input")!.focus();
 										}}
-										onBlur={e => setLoadFromUrlOpen(false)}
-									/>
-								</div>
-								{(loadFromUrlQuery || loadFromUrlOpen) && (
-									<div className="go-pr">
-										<Button className="go-pr" size="compact" onClick={() => goPR(loadFromUrlQuery)}>
-											Go
-										</Button>
-									</div>
-								)}
-							</Row>
+									>
+										<div>
+											<Icon name="link" />
+										</div>
+										<div>
+											<input
+												id="pr-search-input"
+												placeholder="Load PR from URL"
+												type="text"
+												style={{ background: "transparent", width: "100%" }}
+												value={loadFromUrlQuery}
+												onChange={e => setLoadFromUrlQuery(e.target.value)}
+												onKeyDown={e => {
+													if (e.key == "Escape") {
+														setLoadFromUrlQuery("");
+													}
+													if (e.key == "Enter") {
+														goPR(loadFromUrlQuery);
+													}
+												}}
+												onBlur={e => setLoadFromUrlOpen(false)}
+											/>
+										</div>
+										{(loadFromUrlQuery || loadFromUrlOpen) && (
+											<div className="go-pr">
+												<Button
+													className="go-pr"
+													size="compact"
+													onClick={() => goPR(loadFromUrlQuery)}
+												>
+													Go
+												</Button>
+											</div>
+										)}
+									</Row>
+									{loadFromUrlError && (
+										<Row id="error-row" key="url-error" className={"no-hover"}>
+											<div>
+												<Icon name="alert" />
+											</div>
+											<div title={loadFromUrlError}>{loadFromUrlError}</div>
+										</Row>
+									)}
+								</>
+							)}
 						</PaneBody>
 					)}
 				</>
