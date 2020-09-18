@@ -77,6 +77,7 @@ import { setMaintenanceMode } from "./store/session/actions";
 import { updateModifiedRepos } from "./store/users/actions";
 import { logWarning } from "./logger";
 import { fetchReview } from "./store/reviews/actions";
+import { openPullRequestByUrl } from "./store/providerPullRequests/actions";
 
 export { HostApi };
 
@@ -379,36 +380,9 @@ function listenForEvents(store) {
 			case RouteControllerType.PullRequest: {
 				switch (route.action) {
 					case "open": {
-						HostApi.instance
-							.send(QueryThirdPartyRequestType, {
-								url: route.query.url
-							})
-							.then((providerInfo: any) => {
-								if (providerInfo && providerInfo.providerId) {
-									HostApi.instance
-										.send(ExecuteThirdPartyRequestUntypedType, {
-											method: "getPullRequestIdFromUrl",
-											providerId: providerInfo.providerId,
-											params: { url: route.query.url }
-										})
-										.then((id: any) => {
-											if (id) {
-												store.dispatch(setCurrentReview(""));
-												if (route.query.checkoutBranch)
-													store.dispatch(setCurrentPullRequestAndBranch(id));
-												else store.dispatch(setCurrentPullRequest(providerInfo.providerId, id));
-											} else {
-												console.warn("Unable to load PR from: ", route);
-											}
-										})
-										.catch(e => {
-											console.warn("Unable to load PR from: ", route);
-										});
-								} else {
-									console.warn("Unable to load PR from: ", route);
-								}
-							});
-
+						store.dispatch(
+							openPullRequestByUrl(route.query.url, { checkoutBranch: route.query.checkoutBranch })
+						);
 						break;
 					}
 				}
