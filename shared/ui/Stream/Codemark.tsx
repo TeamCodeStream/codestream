@@ -865,20 +865,24 @@ export class Codemark extends React.Component<Props, State> {
 			>
 				<div className="contents">
 					{this.renderStatus(codemark)}
-					<div className="body">
-						<span className={codemark.color}>{this.renderTypeIcon()}</span>
-						{this.renderTextLinkified(codemark.title || codemark.text)}
-						{renderedTags && <span className="cs-tag-container">{renderedTags}</span>}
-						{lines && (
-							<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
-								{lines}
-							</span>
-						)}
-						{codemark.numReplies > 0 && (
-							<span className="badge" style={{ marginLeft: "15px" }}>
-								{codemark.numReplies}
-							</span>
-						)}
+					<div className="body" style={{ display: "flex", alignItems: "flex-start" }}>
+						<span style={{ flexGrow: 0, flexShrink: 0 }} className={codemark.color}>
+							{this.renderTypeIcon()}
+						</span>
+						<div>
+							{this.renderTextLinkified(codemark.title || codemark.text)}
+							{renderedTags && <span className="cs-tag-container">{renderedTags}</span>}
+							{lines && (
+								<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
+									{lines}
+								</span>
+							)}
+							{codemark.numReplies > 0 && (
+								<span className="badge" style={{ marginLeft: "15px" }}>
+									{codemark.numReplies}
+								</span>
+							)}
+						</div>
 					</div>
 				</div>
 			</div>
@@ -1750,7 +1754,7 @@ export class Codemark extends React.Component<Props, State> {
 
 		return (
 			<div
-				className={cx("codemark collapsed")}
+				className={cx("codemark collapsed", { wrap: this.props.wrap })}
 				onClick={e => {
 					e.preventDefault();
 					// @ts-ignore
@@ -1769,14 +1773,18 @@ export class Codemark extends React.Component<Props, State> {
 				onMouseLeave={this.handleMouseLeaveCodemark}
 			>
 				<div className="contents">
-					<div className="body">
-						<Icon name={externalContent.provider.icon || "codestream"} className="margin-right" />
-						{this.renderTextLinkified(marker.summary)}
-						{lines && (
-							<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
-								{lines}
-							</span>
-						)}
+					<div className="body" style={{ display: "flex", alignItems: "flex-start" }}>
+						<span style={{ flexGrow: 0, flexShrink: 0 }}>
+							<Icon name={externalContent.provider.icon || "codestream"} className="margin-right" />
+						</span>
+						<div>
+							{this.renderTextLinkified(marker.summary)}
+							{lines && (
+								<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
+									{lines}
+								</span>
+							)}
+						</div>
 						<div className="actions">
 							{((marker.externalContent!.actions || emptyArray).length > 0 ||
 								externalContent.diffHunk ||

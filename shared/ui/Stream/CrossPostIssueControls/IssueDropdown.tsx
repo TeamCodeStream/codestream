@@ -1200,6 +1200,9 @@ export const Row = styled.div`
 			display: none;
 		}
 		padding-left: 2.5px;
+		.clickable {
+			opacity: 0.7;
+		}
 	}
 	&:hover .icons .icon {
 		display: inline-block;

@@ -505,7 +505,7 @@ export function OpenPullRequests(props: Props) {
 													title="Delete Query"
 													delay={0.5}
 													placement="bottom"
-													name="x"
+													name="trash"
 													className="clickable"
 													onClick={() => deleteQuery(providerId, index)}
 												/>
