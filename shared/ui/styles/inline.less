@@ -254,19 +254,23 @@
 		text-align: center;
 		padding-top: 8px;
 		border-radius: 50%;
-		border: 1px solid @base-border-color;
-		background: @base-background-color;
+		// border: 1px solid @base-border-color;
+		// background: @base-background-color;
+		border: none;
+		background: var(--button-background-color);
+		color: var(--button-foreground-color);
 		cursor: pointer;
 		display: inline-block;
 		transition: transform 0.1s;
 		&:hover {
-			color: @text-color-info;
+			// color: @text-color-info;
 			// reduced to 1.1 to avoid issue where the larger icon
 			// overlapped the line below which made it difficult to
 			// select from line-to-line-to-line going down
 			transform: scale(1.1);
 			// border-color: @text-color-info;
 			// z-index: 16;
+			background: var(--button-background-color-hover);
 			&:before {
 				position: absolute;
 				top: -1px;
