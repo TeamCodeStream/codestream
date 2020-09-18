@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
 import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
 import { openPanel, setIssueProvider, setCurrentCodemark } from "../../store/context/actions";
@@ -404,7 +404,15 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 		let status =
 			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
 
-		return { status, currentUser, startWorkPreferences, providerIds, csIssues, skipConnect };
+		return {
+			status,
+			currentUser,
+			startWorkPreferences,
+			providerIds,
+			csIssues,
+			skipConnect,
+			startWorkCard: state.context.startWorkCard
+		};
 	});
 
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -453,6 +461,11 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			// dispatch(bootstrapCodemarks());
 		}
 	});
+
+	useEffect(() => {
+		const card = derivedState.startWorkCard;
+		if (card) selectCard({ ...card, label: card.title });
+	}, [derivedState.startWorkCard]);
 
 	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
 

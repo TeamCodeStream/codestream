@@ -310,6 +310,10 @@ export class SimpleStream extends Component {
 				? activePanel.split("-")
 				: null;
 
+		// console.warn("ACTIVE: ", activePanel);
+		// status and teams panels have been deprecated
+		if (activePanel == WebviewPanels.Status) activePanel = WebviewPanels.Sidebar;
+		if (activePanel == WebviewPanels.Team) activePanel = WebviewPanels.Sidebar;
 		return (
 			<div id="stream-root" className={streamClass}>
 				<OfflineBanner />
