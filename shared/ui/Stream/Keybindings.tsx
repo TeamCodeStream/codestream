@@ -16,9 +16,6 @@ export const Keybindings = (props: PropsWithChildren<Props>) => {
 					<FeatureFlag flag="lightningCodeReviews">
 						{isOn => isOn && <div className="function-row">{ComposeTitles.review}</div>}
 					</FeatureFlag>
-					<FeatureFlag flag="kickstart">
-						{isOn => isOn && <div className="function-row">{ComposeTitles.work}</div>}
-					</FeatureFlag>
 					<div className="function-row">{ComposeTitles.comment}</div>
 					<div className="function-row">{ComposeTitles.issue}</div>
 					<div className="function-row">{ComposeTitles.link}</div>

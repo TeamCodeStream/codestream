@@ -67,7 +67,7 @@ export function PlusMenu(props: PlusMenuProps) {
 	};
 
 	const menuItems = [] as any;
-	if (derivedState.kickstartEnabled) {
+	if (false && derivedState.kickstartEnabled) {
 		menuItems.push(
 			{
 				icon: <Icon name="ticket" />,
@@ -108,7 +108,7 @@ export function PlusMenu(props: PlusMenuProps) {
 		if (menuItems.length > 0) menuItems.push({ label: "-" });
 		menuItems.push({
 			icon: <Icon name="review" />,
-			label: "Request a Code Review",
+			label: "Request Feedback",
 			subtextWide: "Get quick feedback on your WIP",
 			action: () => go(WebviewPanels.NewReview),
 			shortcut: ComposeKeybindings.review,
