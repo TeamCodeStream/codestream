@@ -18,6 +18,7 @@ import { Pane } from "../src/components/Pane";
 import Draggable, { DraggableEvent } from "react-draggable";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
+import { css } from "react-select/src/components/SingleValue";
 
 const EMPTY_ARRAY = [];
 
@@ -107,41 +108,55 @@ export const Sidebar = () => {
 		return () => window.removeEventListener("resize", handleResize);
 	}, []); // Empty array ensures that effect is only run on mount
 
-	const panels: { id: WebviewPanels; collapsed: boolean; size: number }[] = React.useMemo(() => {
+	const panels: {
+		id: WebviewPanels;
+		collapsed: boolean;
+		maximized: boolean;
+		size: number;
+	}[] = React.useMemo(() => {
 		return [
 			WebviewPanels.OpenPullRequests,
 			WebviewPanels.OpenReviews,
+			WebviewPanels.CodemarksForFile,
 			WebviewPanels.WorkInProgress,
 			WebviewPanels.Tasks,
-			WebviewPanels.CodemarksForFile,
 			WebviewPanels.Team
 		].map(id => {
 			const settings = sidebarPanelPreferences[id] || {};
 			return {
 				id,
 				collapsed: settings.collapsed,
+				maximized: settings.maximized,
 				size: sizes[id] || Math.abs(settings.size) || 1
 			};
 		});
 	}, [sidebarPanelPreferences, sizes]);
 
-	const numCollapsed = useMemo(() => panels.filter(p => p.collapsed).length, [
-		sidebarPanelPreferences
-	]);
+	const maximizedPanel = useMemo(() => panels.find(p => p.maximized), [sidebarPanelPreferences]);
+	const collapsed = React.useCallback(
+		panel => {
+			if (maximizedPanel) return panel.id !== maximizedPanel.id;
+			else return panel.collapsed;
+		},
+		[maximizedPanel]
+	);
+
+	const numCollapsed = panels.filter(p => collapsed(p)).length;
+
 	const reducer = (accumulator, currentValue) => accumulator + currentValue;
 
 	const totalSize = useMemo(() => {
-		const expanded = panels.filter(p => !p.collapsed);
+		const expanded = panels.filter(p => !collapsed(p));
 		if (expanded.length == 0) return 1;
 		else return expanded.map(p => sizes[p.id] || p.size || 1).reduce(reducer);
-	}, [panels, sizes, windowSize]);
+	}, [panels, sizes, windowSize, numCollapsed]);
 
 	const positions = useMemo(() => {
 		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
 		let accumulator = 40;
 		return panels.map(p => {
 			const size = sizes[p.id] || p.size || 1;
-			const height = p.collapsed ? 25 : (size * availableHeight) / totalSize;
+			const height = collapsed(p) ? 25 : (size * availableHeight) / totalSize;
 			const position = {
 				id: p.id,
 				height,
@@ -151,9 +166,14 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [sidebarPanelPreferences, sizes, windowSize]);
+	}, [sidebarPanelPreferences, sizes, windowSize, numCollapsed]);
 
 	const dragPositions = useMemo(() => {
+		// if a pane is maximized, you can't drag anything around
+		if (maximizedPanel) return [];
+
+		// don't worry about using the dynamic version of collapsed because
+		// if one pane is maximized, you can't drag
 		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
 		let accumulator = 40;
 		const firstExpanded = panels.findIndex(p => !p.collapsed);
@@ -241,17 +261,17 @@ export const Sidebar = () => {
 							{(() => {
 								switch (panel.id) {
 									case WebviewPanels.OpenPullRequests:
-										return <OpenPullRequests openRepos={openRepos} expanded={!panel.collapsed} />;
+										return <OpenPullRequests openRepos={openRepos} expanded={!collapsed(panel)} />;
 									case WebviewPanels.OpenReviews:
-										return <OpenReviews openRepos={openRepos} expanded={!panel.collapsed} />;
+										return <OpenReviews openRepos={openRepos} expanded={!collapsed(panel)} />;
 									case WebviewPanels.WorkInProgress:
-										return <WorkInProgress openRepos={openRepos} expanded={!panel.collapsed} />;
+										return <WorkInProgress openRepos={openRepos} expanded={!collapsed(panel)} />;
 									case WebviewPanels.Tasks:
-										return <IssueDropdown expanded={!panel.collapsed} />;
+										return <IssueDropdown expanded={!collapsed(panel)} />;
 									case WebviewPanels.CodemarksForFile:
-										return <CodemarksForFile expanded={!panel.collapsed} />;
+										return <CodemarksForFile expanded={!collapsed(panel)} />;
 									case WebviewPanels.Team:
-										return <TeamPanel expanded={!panel.collapsed} />;
+										return <TeamPanel expanded={!collapsed(panel)} />;
 								}
 								return null;
 							})()}

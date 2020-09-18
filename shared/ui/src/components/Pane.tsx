@@ -75,7 +75,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	}
 	.actions {
 		position: absolute;
-		right: 0;
+		right: 5px;
 		top: 2px;
 		background: var(--app-background-color-hover);
 		display: none;
@@ -120,12 +120,17 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		const settings = panelPreferences[props.id] || EMPTY_HASH;
 		return {
 			settings,
+			maximized: settings.maximized,
 			collapsed: settings.collapsed
 		};
 	});
 	const togglePanel = e => {
 		if (e.target.closest(".actions")) return;
 		const newSettings = { ...derivedState.settings, collapsed: !derivedState.collapsed };
+		dispatch(setUserPreference(["sidebarPanels", props.id], newSettings));
+	};
+	const maximize = () => {
+		const newSettings = { ...derivedState.settings, maximized: !derivedState.maximized };
 		dispatch(setUserPreference(["sidebarPanels", props.id], newSettings));
 	};
 
@@ -140,7 +145,16 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			{!derivedState.collapsed && props.subtitle && props.subtitle.length > 0 ? (
 				<span className="subtle"> {props.subtitle}</span>
 			) : null}
-			{!derivedState.collapsed && <div className="actions">{props.children}</div>}
+			{!derivedState.collapsed && (
+				<div className="actions">
+					{props.children}
+					<Icon
+						name={derivedState.maximized ? "minimize" : "maximize"}
+						className="maximize"
+						onClick={maximize}
+					/>
+				</div>
+			)}
 			{props.warning && props.warning}
 			{props.isLoading && (
 				<div className="progress-container">
@@ -164,6 +178,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		margin: 0 5px 0 -13px;
 		vertical-align: -1px;
 		transition: opacity 0.1s;
+	}
+	.maximize {
+		transform: scale(0.8) rotate(-45deg);
 	}
 	&:hover .toggle {
 		opacity: 1;
@@ -194,6 +211,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			padding: 0 !important;
 			&:active {
 				transform: scale(1.2);
+			}
+			&.maximize:active {
+				transform: scale(1) rotate(-45deg);
 			}
 		}
 	}
