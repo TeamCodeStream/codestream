@@ -7,12 +7,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { setUserStatus, setUserPreference, connectProvider } from "./actions";
-import {
-	openPanel,
-	setNewPostEntry,
-	setCurrentCodemark,
-	setStartWorkCard
-} from "../store/context/actions";
+import { setCurrentCodemark, setStartWorkCard } from "../store/context/actions";
 import { CSMe, FileStatus } from "@codestream/protocols/api";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { useDidMount } from "../utilities/hooks";
@@ -377,8 +372,7 @@ export const StartWork = (props: Props) => {
 			isConnectedToSlack,
 			selectedShareTarget: selectedShareTarget || shareTargets[0],
 			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
-			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack"),
-			startWorkCard: state.context.startWorkCard
+			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack")
 		};
 	});
 	const { card } = props;
@@ -415,10 +409,6 @@ export const StartWork = (props: Props) => {
 	const toggleEditingBranch = value => {
 		setEditingBranch(value);
 	};
-
-	useEffect(() => {
-		if (derivedState.startWorkCard) selectCard(derivedState.startWorkCard);
-	}, [derivedState.startWorkCard]);
 
 	useEffect(() => {
 		if (editingBranch && !disposables.length) {
@@ -577,10 +567,10 @@ export const StartWork = (props: Props) => {
 		return label && derivedState.shareToSlackSupported;
 	}, [label, derivedState.shareToSlackSupported]);
 
-	console.warn("CARD IS: ", card);
-	console.warn("LABEL IS: ", label);
-	console.warn("BRANCHES ARE: ", branches);
-	console.warn("SCBC: ", showCreateBranchCheckbox);
+	// console.warn("CARD IS: ", card);
+	// console.warn("LABEL IS: ", label);
+	// console.warn("BRANCHES ARE: ", branches);
+	// console.warn("SCBC: ", showCreateBranchCheckbox);
 	const newBranch = React.useMemo(() => {
 		if (customBranchName) return customBranchName;
 		return replaceTicketTokens(derivedState.branchTicketTemplate, card, label);
@@ -665,14 +655,15 @@ export const StartWork = (props: Props) => {
 		await dispatch(
 			setUserStatus(label, ticketId, ticketUrl, ticketProvider, derivedState.invisible)
 		);
-		props.onClose();
+		cancel();
 	};
 
-	const clear = () => {
+	const cancel = () => {
 		setLabel("");
 		setScmError("");
 		setLoadingSlack(false);
 		dispatch(setStartWorkCard(undefined));
+		props.onClose();
 	};
 
 	const clearAndSave = () => {
@@ -758,7 +749,7 @@ export const StartWork = (props: Props) => {
 				</Modal>
 			)}
 			{card && (
-				<Modal translucent onClose={props.onClose}>
+				<Modal translucent onClose={cancel}>
 					<Dialog className="codemark-form-container">
 						<form className="codemark-form standard-form vscroll">
 							<fieldset className="form-body" style={{ padding: "0px" }}>
@@ -788,7 +779,7 @@ export const StartWork = (props: Props) => {
 													<div
 														className="link-to-ticket"
 														onClick={e => {
-															clear();
+															cancel();
 															dispatch(setCurrentCodemark(card.id));
 														}}
 													>
@@ -908,7 +899,7 @@ export const StartWork = (props: Props) => {
 									<div style={{ height: "5px" }}></div>
 									{scmError && <SCMError>{scmError}</SCMError>}
 									<ButtonRow>
-										<Button onClick={props.onClose} variant="secondary">
+										<Button onClick={cancel} variant="secondary">
 											Cancel
 										</Button>
 										<Button

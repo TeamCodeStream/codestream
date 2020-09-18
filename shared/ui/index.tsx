@@ -430,7 +430,7 @@ function listenForEvents(store) {
 									store.dispatch(setCurrentReview(""));
 									store.dispatch(clearCurrentPullRequest());
 									store.dispatch(setStartWorkCard(card));
-									store.dispatch(openPanel(WebviewPanels.Status));
+									store.dispatch(openPanel(WebviewPanels.Sidebar));
 								});
 						} else {
 							HostApi.instance
@@ -450,8 +450,10 @@ function listenForEvents(store) {
 											.then(() => {
 												store.dispatch(setCurrentReview(""));
 												store.dispatch(clearCurrentPullRequest());
-												store.dispatch(setStartWorkCard(issue));
-												store.dispatch(openPanel(WebviewPanels.Status));
+												store.dispatch(
+													setStartWorkCard({ ...issue, providerId: route.query.providerId })
+												);
+												store.dispatch(openPanel(WebviewPanels.Sidebar));
 											});
 									} else {
 										console.warn("Unable to find issue from: ", route);
