@@ -443,10 +443,10 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			const markdown = new MarkdownString(message);
 			markdown.isTrusted = true;
 
-			if (firstMarkerArgs !== undefined) {
-				const args: OpenCodemarkCommandArgs = { ...firstMarkerArgs, onlyWhenVisible: true };
-				setImmediate(() => void Container.commands.openCodemark(args));
-			}
+			// if (firstMarkerArgs !== undefined) {
+			// 	const args: OpenCodemarkCommandArgs = { ...firstMarkerArgs, onlyWhenVisible: true };
+			// 	setImmediate(() => void Container.commands.openCodemark(args));
+			// }
 
 			return new Hover(markdown, range);
 		} finally {
