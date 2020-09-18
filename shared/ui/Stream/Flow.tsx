@@ -739,7 +739,7 @@ export const FlowPanel = () => {
 	const dispatch = useDispatch();
 	const [activeTab, setActiveTab] = React.useState("1");
 	return (
-		<Dialog wide noPadding onClose={() => dispatch(closePanel())}>
+		<Dialog maximizable wide noPadding onClose={() => dispatch(closePanel())}>
 			<PanelHeader title="CodeStream Flow">
 				<div style={{ height: "5px" }} />
 			</PanelHeader>
