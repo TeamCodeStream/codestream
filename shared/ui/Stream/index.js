@@ -312,8 +312,6 @@ export class SimpleStream extends Component {
 
 		console.warn("ACTIVE: ", activePanel);
 		// status and teams panels have been deprecated
-		if (activePanel == WebviewPanels.Status) activePanel = WebviewPanels.Sidebar;
-		if (activePanel == WebviewPanels.Team) activePanel = WebviewPanels.Sidebar;
 		return (
 			<div id="stream-root" className={streamClass}>
 				<OfflineBanner />
@@ -365,6 +363,19 @@ export class SimpleStream extends Component {
 					/>
 				)}
 				{!activeModal &&
+					// these are all panels that have been retired, or are
+					// now a part of the sidebar
+					activePanel !== WebviewPanels.Team &&
+					activePanel !== WebviewPanels.Status &&
+					activePanel !== WebviewPanels.Codemarks &&
+					activePanel !== WebviewPanels.Invite &&
+					activePanel !== WebviewPanels.PullRequest &&
+					activePanel !== WebviewPanels.Review &&
+					activePanel !== WebviewPanels.Tasks &&
+					activePanel !== WebviewPanels.LandingRedirect &&
+					activePanel !== WebviewPanels.OpenReviews &&
+					activePanel !== WebviewPanels.OpenPullRequests &&
+					activePanel !== WebviewPanels.WorkInProgress &&
 					activePanel !== WebviewPanels.Sidebar &&
 					activePanel !== WebviewPanels.CodemarksForFile && (
 						<Modal translucent>
