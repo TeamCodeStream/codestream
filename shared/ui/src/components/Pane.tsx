@@ -63,6 +63,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	padding: 2px 20px;
 	display: flex;
 	cursor: pointer;
+	position: relative;
 	> .icon {
 		display: inline-block;
 		width: 16px;
@@ -71,12 +72,12 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	&:hover {
 		background: var(--app-background-color-hover);
 		color: var(--text-color-highlight);
-		.actions .icon {
-			opacity: 1;
-		}
 	}
 	.actions {
-		margin-left: auto;
+		position: absolute;
+		right: 0;
+		top: 2px;
+		background: var(--app-background-color-hover);
 		display: none;
 		.icon {
 			margin: 0 5px;
@@ -170,16 +171,17 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	z-index: 49;
 	width: 100%;
 	cursor: pointer;
-	.actions {
-		float: right;
-	}
 	.progress-container {
 		position: absolute;
 		top: 21px;
 	}
 	.actions {
+		position: absolute;
+		right: 0;
+		top: 2px;
 		display: none;
 		margin-right: 10px;
+		background: var(--app-background-color);
 		.icon {
 			vertical-align: 2px !important;
 			cursor: pointer;

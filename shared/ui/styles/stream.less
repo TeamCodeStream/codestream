@@ -2916,7 +2916,7 @@
 	}
 	.icon.clickable {
 		cursor: pointer;
-		transition: transform 0.1s;
+		// transition: transform 0.1s;
 		display: inline-block;
 		&.no {
 			opacity: 0.5;
@@ -2940,7 +2940,11 @@
 		&.hover {
 			opacity: 1;
 			color: @text-color-info !important;
-			transform: scale(1.4);
+			color: var(--text-color-highlight) !important;
+			// transform: scale(1.4);
+		}
+		&:active {
+			transform: scale(1.2);
 		}
 		&.nogrow:hover {
 			transform: scale(1);
