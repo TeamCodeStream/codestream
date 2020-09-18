@@ -83,6 +83,7 @@ interface Props extends ConnectedProps {
 	quotePost?: QuotePost;
 	shouldShowRelatableCodemark?(codemark: CodemarkPlus): boolean;
 	onChange?(text: string, formatCode: boolean): any;
+	onKeypress?(event: React.KeyboardEvent): any;
 	updateTeamTag?(team: any, tag: any): any;
 	onChangeSelectedTags?(tag: any): any;
 	onEmptyUpArrow?(event: React.KeyboardEvent): any;
@@ -573,6 +574,8 @@ export class MessageInput extends React.Component<Props, State> {
 			this.setState({ isPreviewing: false });
 			this.props.onDismiss();
 		}
+
+		if (this.props.onKeypress) this.props.onKeypress(event);
 	};
 
 	// the keypress handler for tracking up and down arrow

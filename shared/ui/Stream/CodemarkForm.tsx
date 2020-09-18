@@ -160,6 +160,7 @@ interface ConnectedProps {
 
 interface State {
 	text: string;
+	touchedText: boolean;
 	formatCode: boolean;
 	type: string;
 	codeBlocks: GetRangeScmInfoResponse[];
@@ -233,6 +234,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			crossPostIssueValues: {},
 			title: "",
 			text: "",
+			touchedText: false,
 			formatCode: false,
 			type: defaultType,
 			codeBlocks: props.codeBlock ? [props.codeBlock] : [],
@@ -344,8 +346,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
 					if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
 					this.getScmInfoForSelection(textEditorUri, range, () => {
-						if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
-						else this.focus();
+						// if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
+						this.focus();
 					});
 				}
 			}
@@ -778,6 +780,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	showConfirmationForCodemarkLocation = (type, numCodeblocks: number) => {
+		// we're going to turn this off since we have a consistent place to see comments
+		return;
 		if (this.props.skipPostCreationModal) return;
 
 		confirmPopup({
@@ -998,7 +1002,12 @@ class CodemarkForm extends React.Component<Props, State> {
 			else if (file !== newFile) location = "Different File";
 		} catch (e) {}
 
-		this.addLocation();
+		this.setState(state => ({
+			locationMenuOpen: "closed",
+			addingLocation: false,
+			liveLocation: -1
+		}));
+		// this.addLocation();
 		this.focus();
 	};
 
@@ -1521,6 +1530,8 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	renderAddLocation() {
+		return null;
+
 		if (
 			!this.props.multipleMarkersEnabled ||
 			this.props.currentPullRequestId ||
@@ -1585,6 +1596,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		return (
 			<MessageInput
+				onKeypress={() => this.setState({ touchedText: true })}
 				teamProvider={this.props.teamProvider}
 				isDirectMessage={this.props.channel.type === StreamType.Direct}
 				text={text}
@@ -1622,7 +1634,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const numCodeBlocks = codeBlocks.length;
 
-		if (multiLocation) {
+		if (true || multiLocation) {
 			return (
 				<>
 					{codeBlocks.map((codeBlock, index) => {
@@ -1732,9 +1744,10 @@ class CodemarkForm extends React.Component<Props, State> {
 							</div>
 						);
 					})}
-					{this.state.addingLocation && (
+
+					{this.state.addingLocation ? (
 						<div className="add-range" style={{ clear: "both", position: "relative" }}>
-							Select code in your editor to add a range
+							Select code from any file to add a range
 							<div className="code-buttons live">
 								<div
 									className="codemark-actions-button"
@@ -1748,6 +1761,21 @@ class CodemarkForm extends React.Component<Props, State> {
 								</div>
 							</div>
 						</div>
+					) : (
+						<Tooltip
+							placement="topLeft"
+							title="Comments can refer to multiple blocks of code, even across files."
+							delay={1}
+						>
+							<div
+								className="clickable"
+								style={{ margin: "15px 0 5px 3px", cursor: "pointer" }}
+								onClick={this.addLocation}
+							>
+								<Icon name="plus" className="clickable margin-right" />
+								Add Code Block
+							</div>
+						</Tooltip>
 					)}
 				</>
 			);
@@ -1800,7 +1828,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		// create an issue or a permalink, stop the user from doing that
 		if (commentType !== "comment" && currentReviewId) {
 			return (
-				<Modal onClose={this.cancelCompose} verticallyCenter>
+				<Modal translucent onClose={this.cancelCompose} verticallyCenter>
 					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
 						Sorry, you can't add an issue while doing a review. Mark your a comment as a "change
 						request" instead.
@@ -1815,7 +1843,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 		if (scmError) {
 			return (
-				<Modal onClose={this.cancelCompose} verticallyCenter>
+				<Modal translucent onClose={this.cancelCompose} verticallyCenter>
 					<div style={{ width: "20em", fontSize: "larger", margin: "0 auto" }}>
 						Sorry, we encountered a git error: {scmError}
 						<br />
@@ -1833,21 +1861,26 @@ class CodemarkForm extends React.Component<Props, State> {
 			);
 		}
 
-		if (this.props.multiLocation) {
+		if (true || this.props.multiLocation) {
 			return (
 				<div className="full-height-codemark-form">
 					<CancelButton onClick={this.cancelCompose} />
-					<PanelHeader title={commentType === "comment" ? "Add a Comment" : "Open an Issue"}>
-						{this.state.liveLocation > -1 && (
-							<div className="filters" style={{ padding: 0 }}>
-								Select code in your editor to add it to this{" "}
-								{commentType === "comment" ? "comment" : "issue"}.
-							</div>
-						)}
-					</PanelHeader>
+					<PanelHeader
+						title={
+							this.props.currentReviewId
+								? "Add Comment to Review"
+								: this.props.textEditorUriHasPullRequestContext
+								? "Add Comment to Pull Request"
+								: commentType === "comment"
+								? "Add a Comment"
+								: commentType === "link"
+								? "Grab a Permalink"
+								: "Open an Issue"
+						}
+					></PanelHeader>
 					<span className="plane-container">
 						<div className="codemark-form-container">{this.renderCodemarkForm()}</div>
-						{commentType === "comment" && !codeBlocks[0] && (
+						{false && commentType === "comment" && !codeBlocks[0] && (
 							<VideoLink href={"https://youtu.be/RPaIIZgaFK8"}>
 								<img src="https://i.imgur.com/9IKqpzf.png" />
 								<span>Discussing Code with CodeStream</span>
@@ -1897,10 +1930,10 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	cancelCodemarkCompose = (e?) => {
-		const { text, type } = this.state;
+		const { touchedText, type } = this.state;
 		if (!this.props.onClickClose) return;
 		// if there is codemark text, confirm the user actually wants to cancel
-		if (text && (type === "comment" || type === "issue")) {
+		if (touchedText && (type === "comment" || type === "issue")) {
 			confirmPopup({
 				title: "Are you sure?",
 				message: "Changes will not be saved.",
@@ -1933,34 +1966,31 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (unregisteredAuthors.length === 0) return null;
 
-		return (
-			<div className="checkbox-row">
-				{unregisteredAuthors.map(author => {
-					return (
-						<Checkbox
-							name={"email-" + author.email}
-							checked={emailAuthors[author.email]}
-							onChange={() => this.toggleEmail(author.email)}
-						>
-							Send to {author.username || author.email}&nbsp;&nbsp;
-							<Icon
-								name="info"
-								title={
-									<>
-										Retrieved from git blame.
-										{isCurrentUserAdmin && <p>Configure Blame Map under MY TEAM.</p>}
-									</>
-								}
-								placement="top"
-								delay={1}
-								align={{ offset: [0, 5] }}
-							/>
-						</Checkbox>
-					);
-				})}
-			</div>
-		);
-		return;
+		return unregisteredAuthors.map(author => {
+			return (
+				<div className="checkbox-row">
+					<Checkbox
+						name={"email-" + author.email}
+						checked={emailAuthors[author.email]}
+						onChange={() => this.toggleEmail(author.email)}
+					>
+						Send to {author.username || author.email}&nbsp;&nbsp;
+						<Icon
+							name="info"
+							title={
+								<>
+									Retrieved from git blame.
+									{isCurrentUserAdmin && <p>Configure Blame Map under MY TEAM.</p>}
+								</>
+							}
+							placement="top"
+							delay={1}
+							align={{ offset: [0, 5] }}
+						/>
+					</Checkbox>
+				</div>
+			);
+		});
 	};
 
 	renderCodemarkForm() {
