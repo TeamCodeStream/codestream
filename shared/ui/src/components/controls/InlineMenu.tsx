@@ -40,9 +40,11 @@ export const TextButton = styled.span`
 		white-space: nowrap;
 	}
 	.icon.inline-label {
+		display: inline-block;
 		transform: scale(0.7);
-		margin-right: 5px;
+		margin-right: 1px;
 		white-space: nowrap;
+		vertical-align: 1px;
 	}
 	&.big-chevron {
 		.octicon-chevron-down {
@@ -52,6 +54,9 @@ export const TextButton = styled.span`
 	&:focus {
 		margin: -3px;
 		border: 3px solid transparent;
+	}
+	&.no-padding {
+		padding: 0 !important;
 	}
 `;
 

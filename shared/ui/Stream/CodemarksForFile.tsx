@@ -425,7 +425,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					title="Codemarks"
 					count={count}
 					subtitle={
-						<InlineMenu className="subtle" items={domainItems}>
+						<InlineMenu className="subtle no-padding" items={domainItems}>
 							<Icon name={domainIcon} className="inline-label" />
 							{subtitle}
 						</InlineMenu>
