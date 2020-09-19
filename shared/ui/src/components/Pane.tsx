@@ -34,7 +34,7 @@ interface PaneNodeNameProps {
 	onClick?: any;
 	isLoading?: boolean;
 	count?: number;
-	subtitle?: string;
+	subtitle?: string | React.ReactNode;
 	collapsed?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
@@ -63,7 +63,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 			)}
 			{props.title}
 			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
-			{!derivedState.collapsed && props.subtitle && props.subtitle.length > 0 ? (
+			{!derivedState.collapsed && props.subtitle ? (
 				<span className="subtle"> {props.subtitle}</span>
 			) : null}
 			{!derivedState.collapsed && <div className="actions">{props.children}</div>}
@@ -118,7 +118,7 @@ interface PaneHeaderProps {
 	className?: string;
 	id: WebviewPanels | string;
 	count?: number;
-	subtitle?: string;
+	subtitle?: string | React.ReactNode;
 	isLoading?: boolean;
 	warning?: React.ReactNode;
 }
@@ -160,7 +160,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			<Icon name={derivedState.stateIcon} className="expander" />
 			{props.title}
 			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
-			{!derivedState.collapsed && props.subtitle && props.subtitle.length > 0 ? (
+			{!derivedState.collapsed && props.subtitle ? (
 				<span className="subtle"> {props.subtitle}</span>
 			) : null}
 			{!derivedState.collapsed && (

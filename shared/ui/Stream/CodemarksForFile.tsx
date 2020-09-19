@@ -33,14 +33,21 @@ import { PostEntryPoint } from "../store/context/types";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import * as fs from "../utilities/fs";
-import { supportsIntegrations } from "../store/configs/reducer";
 import { PaneHeader, NoContent, PaneState } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
 import { Button } from "../src/components/Button";
 import { Link } from "./Link";
+import { setUserPreference } from "./actions";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 
+export enum CodemarkDomainType {
+	File = "file",
+	Directory = "directory",
+	Repo = "repo",
+	All = "all"
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //   Note that there is a big potential for off-by-one errors in this file, because the webview line numbers are
@@ -62,8 +69,8 @@ interface Props {
 	textEditorUri?: string;
 	documentMarkers?: (DocumentMarker | MarkerNotLocated)[];
 	numHidden?: number;
-	supportsIntegrations?: boolean;
 	state?: PaneState;
+	codemarkDomain: CodemarkDomainType;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -80,6 +87,7 @@ interface Props {
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
+	setUserPreference: any;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 }
 
@@ -289,12 +297,81 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		return marker.locationWhenCreated[0] - 1;
 	};
 
+	switchDomain = (value: CodemarkDomainType) => {
+		const { setUserPreference } = this.props;
+		setUserPreference(["codemarkDomain"], value);
+	};
+
 	render() {
-		const { fileNameToFilterFor = "", documentMarkers = [], showHidden } = this.props;
+		const {
+			fileNameToFilterFor = "",
+			documentMarkers = [],
+			showHidden,
+			codemarkDomain
+		} = this.props;
 		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
 
 		const renderedCodemarks = {};
 		const count = documentMarkers.length;
+		const domainIcon =
+			codemarkDomain === "file"
+				? "file"
+				: codemarkDomain === "directory"
+				? "directory"
+				: codemarkDomain === "repo"
+				? "repo"
+				: "circle";
+		const subtitle =
+			codemarkDomain === "file"
+				? fs.pathBasename(fileNameToFilterFor)
+				: codemarkDomain === "directory"
+				? fs.pathDirname(fileNameToFilterFor)
+				: codemarkDomain === "repo"
+				? "codestream" // FIXME
+				: "all";
+
+		const domainItems = [
+			{
+				label: (
+					<span>
+						Current File <span className="subtle">{fs.pathBasename(fileNameToFilterFor)}</span>
+					</span>
+				),
+				key: "file",
+				icon: <Icon name="file" />,
+				action: () => this.switchDomain(CodemarkDomainType.File),
+				checked: codemarkDomain === CodemarkDomainType.File
+			},
+			{
+				label: (
+					<span>
+						Current Directory <span className="subtle">{fs.pathDirname(fileNameToFilterFor)}</span>
+					</span>
+				),
+				key: "directory",
+				icon: <Icon name="directory" />,
+				action: () => this.switchDomain(CodemarkDomainType.Directory),
+				checked: codemarkDomain === CodemarkDomainType.Directory
+			},
+			{
+				label: (
+					<span>
+						Current Repository <span className="subtle">{"codestream"}</span>
+					</span>
+				),
+				key: "repo",
+				icon: <Icon name="repo" />,
+				action: () => this.switchDomain(CodemarkDomainType.Repo),
+				checked: codemarkDomain === CodemarkDomainType.Repo
+			},
+			{
+				label: "All Codemarks in your team",
+				key: "all",
+				icon: <Icon name="circle" />,
+				action: () => this.switchDomain(CodemarkDomainType.All),
+				checked: codemarkDomain === CodemarkDomainType.All
+			}
+		];
 
 		return (
 			<>
@@ -345,9 +422,14 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
 				)}
 				<PaneHeader
-					title="File Comments"
+					title="Codemarks"
 					count={count}
-					subtitle={fs.pathBasename(fileNameToFilterFor)}
+					subtitle={
+						<InlineMenu className="subtle" items={domainItems}>
+							<Icon name={domainIcon} className="inline-label" />
+							{subtitle}
+						</InlineMenu>
+					}
 					id={WebviewPanels.CodemarksForFile}
 					isLoading={this.state.isLoading}
 				>
@@ -434,7 +516,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, configs, documentMarkers } = state;
+	const { context, editorContext, configs, documentMarkers, preferences } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
@@ -444,6 +526,8 @@ const mapStateToProps = (state: CodeStreamState) => {
 	const hasPRProvider = ["github", "bitbucket", "gitlab"].some(name =>
 		isConnected(state, { name })
 	);
+
+	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 
 	return {
 		hasPRProvider,
@@ -458,7 +542,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		textEditorUri: editorContext.textEditorUri,
 		documentMarkers: docMarkers,
 		numHidden,
-		supportsIntegrations: supportsIntegrations(configs)
+		codemarkDomain
 	};
 };
 
@@ -469,5 +553,6 @@ export default connect(mapStateToProps, {
 	openPanel,
 	setCurrentCodemark,
 	setEditorContext,
+	setUserPreference,
 	setSpatialViewPRCommentsToggle
 })(SimpleCodemarksForFile);

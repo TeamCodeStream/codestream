@@ -27,12 +27,20 @@ export const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
 	&.subtle {
 		color: var(--text-color-subtle);
+		&:hover {
+			color: ${props => props.theme.colors.textHighlight};
+		}
 	}
 	cursor: pointer;
 	white-space: nowrap;
 	.octicon-chevron-down {
 		transform: scale(0.7);
 		margin-left: 2px;
+		margin-right: 5px;
+		white-space: nowrap;
+	}
+	.icon.inline-label {
+		transform: scale(0.7);
 		margin-right: 5px;
 		white-space: nowrap;
 	}
