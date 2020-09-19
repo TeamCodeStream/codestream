@@ -34,7 +34,7 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import * as fs from "../utilities/fs";
 import { supportsIntegrations } from "../store/configs/reducer";
-import { PaneHeader, NoContent } from "../src/components/Pane";
+import { PaneHeader, NoContent, PaneState } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
@@ -63,7 +63,7 @@ interface Props {
 	documentMarkers?: (DocumentMarker | MarkerNotLocated)[];
 	numHidden?: number;
 	supportsIntegrations?: boolean;
-	expanded?: boolean;
+	state?: PaneState;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -376,7 +376,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					/>
 				</PaneHeader>
 				{documentMarkers.length === 0 && this.renderNoCodemarks()}
-				{this.props.expanded &&
+				{this.props.state === PaneState.Open &&
 					!this.state.isLoading &&
 					documentMarkers
 						.sort(
@@ -445,7 +445,6 @@ const mapStateToProps = (state: CodeStreamState) => {
 		isConnected(state, { name })
 	);
 
-	console.warn("CONTEXT: ", context);
 	return {
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,

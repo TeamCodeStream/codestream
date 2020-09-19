@@ -5,9 +5,19 @@ import ScrollBox from "@codestream/webview/Stream/ScrollBox";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { WebviewPanels } from "@codestream/protocols/webview";
-import { setUserPreference } from "@codestream/webview/Stream/actions";
+import {
+	setUserPreference,
+	setPaneCollapsed,
+	setPaneMaximized
+} from "@codestream/webview/Stream/actions";
 import { Row } from "@codestream/webview/Stream/CrossPostIssueControls/IssueDropdown";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+
+export enum PaneState {
+	Open = "open",
+	Minimized = "minimized",
+	Collapsed = "collapsed"
+}
 
 const EMPTY_HASH = {};
 
@@ -116,30 +126,38 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
-		const panelPreferences = preferences.sidebarPanels || EMPTY_HASH;
-		const settings = panelPreferences[props.id] || EMPTY_HASH;
+		const panePreferences = preferences.sidebarPanes || EMPTY_HASH;
+		const settings = panePreferences[props.id] || EMPTY_HASH;
+		const anyMaximized = Object.keys(panePreferences).find(
+			id => (panePreferences[id] || {}).maximized
+		);
+		const stateIcon =
+			anyMaximized && !settings.maximized
+				? "dash"
+				: settings.maximized
+				? "chevron-down-thin"
+				: settings.collapsed
+				? "chevron-right-thin"
+				: "chevron-down-thin";
 		return {
+			stateIcon,
 			settings,
 			maximized: settings.maximized,
-			collapsed: settings.collapsed
+			collapsed: settings.collapsed,
+			anyMaximized
 		};
 	});
 	const togglePanel = e => {
 		if (e.target.closest(".actions")) return;
-		const newSettings = { ...derivedState.settings, collapsed: !derivedState.collapsed };
-		dispatch(setUserPreference(["sidebarPanels", props.id], newSettings));
+		dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
 	};
 	const maximize = () => {
-		const newSettings = { ...derivedState.settings, maximized: !derivedState.maximized };
-		dispatch(setUserPreference(["sidebarPanels", props.id], newSettings));
+		dispatch(setPaneMaximized(props.id, !derivedState.maximized));
 	};
 
 	return (
 		<div className={props.className} onClick={togglePanel}>
-			<Icon
-				name={derivedState.collapsed ? "chevron-right-thin" : "chevron-down-thin"}
-				className="expander"
-			/>
+			<Icon name={derivedState.stateIcon} className="expander" />
 			{props.title}
 			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
 			{!derivedState.collapsed && props.subtitle && props.subtitle.length > 0 ? (

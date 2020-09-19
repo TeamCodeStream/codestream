@@ -510,6 +510,26 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 	}
 };
 
+const EMPTY_HASH = {};
+export const setPaneCollapsed = (panelId: string, value: boolean) => async (dispatch, getState) => {
+	const { preferences } = getState();
+	let maximizedPane = "";
+	// check to see if there is a maximized panel, and if so unmaximize it
+	const panePreferences = preferences.sidebarPanes || EMPTY_HASH;
+	Object.keys(panePreferences).forEach(paneId => {
+		if (panePreferences[paneId] && panePreferences[paneId].maximized) {
+			dispatch(setPaneMaximized(paneId, false));
+			maximizedPane = paneId;
+		}
+	});
+	// otherwise, expand/collapse this pane
+	if (!maximizedPane) dispatch(setUserPreference(["sidebarPanes", panelId, "collapsed"], value));
+};
+
+export const setPaneMaximized = (panelId: string, value: boolean) => async dispatch => {
+	dispatch(setUserPreference(["sidebarPanes", panelId, "maximized"], value));
+};
+
 export const setUserStatus = (
 	label: string,
 	ticketId: string,

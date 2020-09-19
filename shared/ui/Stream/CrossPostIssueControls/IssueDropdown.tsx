@@ -35,7 +35,7 @@ import { Button } from "@codestream/webview/src/components/Button";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
-import { Pane, PaneHeader, PaneBody } from "@codestream/webview/src/components/Pane";
+import { Pane, PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
 import { padding, margin, position } from "polished";
 import { min } from "lodash-es";
 import { StartWork } from "../StartWork";
@@ -62,7 +62,7 @@ interface Props extends ConnectedProps {
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
 	selectedCardId?: string;
-	expanded?: boolean;
+	state?: PaneState;
 }
 
 interface State {
@@ -191,7 +191,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					knownIssueProviderOptions={knownIssueProviderOptions}
 					selectedCardId={this.props.selectedCardId}
 					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
-					expanded={this.props.expanded}
+					state={this.props.state}
 				></IssueList>
 			</>
 		);
@@ -384,7 +384,7 @@ interface IssueListProps {
 	knownIssueProviderOptions: any;
 	selectedCardId?: string;
 	loadingMessage?: React.ReactNode;
-	expanded?: boolean;
+	state?: PaneState;
 }
 
 const EMPTY_HASH = {};
@@ -1008,7 +1008,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					delay={1}
 				/>
 			</PaneHeader>
-			{props.expanded && (
+			{props.state === PaneState.Open && (
 				<PaneBody>
 					<div className="instructions">
 						<Icon name="light-bulb" />

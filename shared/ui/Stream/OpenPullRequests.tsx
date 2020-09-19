@@ -27,7 +27,7 @@ import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
 import Tag from "./Tag";
-import { connectProvider, setUserPreference } from "./actions";
+import { setUserPreference } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
@@ -35,7 +35,14 @@ import { DEFAULT_QUERIES } from "../store/preferences/reducer";
 import { ConfigurePullRequestQuerySettings } from "./ConfigurePullRequestQuerySettings";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import { configureAndConnectProvider } from "../store/providers/actions";
-import { PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
+import {
+	PaneHeader,
+	PaneBody,
+	NoContent,
+	PaneNode,
+	PaneNodeName,
+	PaneState
+} from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 
 const PRSummaryName = styled.div`
@@ -144,7 +151,7 @@ const ConnectToCodeHost = styled.div`
 
 interface Props {
 	openRepos: ReposScm[];
-	expanded: boolean;
+	state: PaneState;
 }
 
 export function OpenPullRequests(props: Props) {
@@ -445,7 +452,7 @@ export function OpenPullRequests(props: Props) {
 							delay={1}
 						/>
 					</PaneHeader>
-					{props.expanded && (
+					{props.state === PaneState.Open && (
 						<PaneBody>
 							{derivedState.hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
 								<>

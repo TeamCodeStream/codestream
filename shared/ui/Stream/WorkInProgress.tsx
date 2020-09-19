@@ -1,7 +1,7 @@
 import React from "react";
 import cx from "classnames";
 import { useSelector, useDispatch } from "react-redux";
-import { Pane, PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
+import { Pane, PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import {
@@ -32,7 +32,7 @@ export const EMPTY_STATUS = {
 
 interface Props {
 	openRepos: ReposScm[];
-	expanded: boolean;
+	state: PaneState;
 }
 
 export const WorkInProgress = (props: Props) => {
@@ -190,7 +190,7 @@ export const WorkInProgress = (props: Props) => {
 				/>
 			</PaneHeader>
 
-			{props.expanded && (
+			{props.state === PaneState.Open && (
 				<PaneBody>
 					<div style={{ padding: "0 20px" }}>
 						{status && status.label && (

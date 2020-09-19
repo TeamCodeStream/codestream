@@ -13,14 +13,14 @@ import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { ReposScm } from "@codestream/protocols/agent";
 import Tag from "./Tag";
-import { Pane, PaneHeader, PaneBody, NoContent } from "../src/components/Pane";
+import { Pane, PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Link } from "./Link";
 
 interface Props {
 	openRepos: ReposScm[];
-	expanded: boolean;
+	state: PaneState;
 }
 
 export function OpenReviews(props: Props) {
@@ -64,7 +64,7 @@ export function OpenReviews(props: Props) {
 				id={WebviewPanels.OpenReviews}
 				isLoading={!reviewsState.bootstrapped}
 			/>
-			{props.expanded && (
+			{props.state === PaneState.Open && (
 				<PaneBody>
 					{!reviewsState.bootstrapped && (
 						<Row>

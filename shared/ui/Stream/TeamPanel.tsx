@@ -42,6 +42,7 @@ import { isOnPrem } from "../store/configs/reducer";
 import { PaneHeader, Pane, PaneBody, PaneNode, PaneNodeName } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog } from "../src/components/Dialog";
+import { PaneState } from "../src/components/Pane";
 
 const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -103,7 +104,7 @@ export const Section = styled.div`
 `;
 
 interface Props extends ConnectedProps {
-	expanded?: boolean;
+	state: PaneState;
 }
 
 interface ConnectedProps {
@@ -653,7 +654,7 @@ class TeamPanel extends React.Component<Props, State> {
 						delay={1}
 					/>
 				</PaneHeader>
-				{this.props.expanded && (
+				{this.props.state === PaneState.Open && (
 					<PaneBody>
 						<PaneNode>
 							<PaneNodeName id="team/teammates" title="Current Members" />

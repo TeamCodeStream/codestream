@@ -14,7 +14,7 @@ import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { WorkInProgress } from "./WorkInProgress";
 import CodemarksForFile from "./CodemarksForFile";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
-import { Pane } from "../src/components/Pane";
+import { Pane, PaneState } from "../src/components/Pane";
 import Draggable, { DraggableEvent } from "react-draggable";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
@@ -56,7 +56,7 @@ export const Sidebar = () => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return {
-			sidebarPanelPreferences: preferences.sidebarPanels || EMPTY_HASH,
+			sidebarPanelPreferences: preferences.sidebarPanes || EMPTY_HASH,
 			currentUserId: state.session.userId!
 		};
 	});
@@ -132,13 +132,22 @@ export const Sidebar = () => {
 		});
 	}, [sidebarPanelPreferences, sizes]);
 
-	const maximizedPanel = useMemo(() => panels.find(p => p.maximized), [sidebarPanelPreferences]);
+	const maximizedPane = useMemo(() => panels.find(p => p.maximized), [sidebarPanelPreferences]);
 	const collapsed = React.useCallback(
-		panel => {
-			if (maximizedPanel) return panel.id !== maximizedPanel.id;
-			else return panel.collapsed;
+		pane => {
+			if (maximizedPane) return pane.id !== maximizedPane.id;
+			else return pane.collapsed;
 		},
-		[maximizedPanel]
+		[maximizedPane]
+	);
+
+	const state = React.useCallback(
+		pane => {
+			if (maximizedPane) return PaneState.Minimized;
+			else if (pane.collapsed) return PaneState.Collapsed;
+			else return PaneState.Open;
+		},
+		[maximizedPane]
 	);
 
 	const numCollapsed = panels.filter(p => collapsed(p)).length;
@@ -170,7 +179,7 @@ export const Sidebar = () => {
 
 	const dragPositions = useMemo(() => {
 		// if a pane is maximized, you can't drag anything around
-		if (maximizedPanel) return [];
+		if (maximizedPane) return [];
 
 		// don't worry about using the dynamic version of collapsed because
 		// if one pane is maximized, you can't drag
@@ -226,11 +235,9 @@ export const Sidebar = () => {
 		setDragging(false);
 		if (firstIndex === undefined || secondIndex === undefined) return;
 		const firstId = positions[firstIndex].id;
-		const firstSettings = { ...sidebarPanelPreferences[firstId], size: sizes[firstId] };
-		dispatch(setUserPreference(["sidebarPanels", firstId], firstSettings));
+		dispatch(setUserPreference(["sidebarPanes", firstId, "size"], sizes[firstId]));
 		const secondId = positions[secondIndex].id;
-		const secondSettings = { ...sidebarPanelPreferences[secondId], size: sizes[secondId] };
-		dispatch(setUserPreference(["sidebarPanels", secondId], secondSettings));
+		dispatch(setUserPreference(["sidebarPanes", secondId, "size"], sizes[secondId]));
 	};
 
 	return (
@@ -261,17 +268,17 @@ export const Sidebar = () => {
 							{(() => {
 								switch (panel.id) {
 									case WebviewPanels.OpenPullRequests:
-										return <OpenPullRequests openRepos={openRepos} expanded={!collapsed(panel)} />;
+										return <OpenPullRequests openRepos={openRepos} state={state(panel)} />;
 									case WebviewPanels.OpenReviews:
-										return <OpenReviews openRepos={openRepos} expanded={!collapsed(panel)} />;
+										return <OpenReviews openRepos={openRepos} state={state(panel)} />;
 									case WebviewPanels.WorkInProgress:
-										return <WorkInProgress openRepos={openRepos} expanded={!collapsed(panel)} />;
+										return <WorkInProgress openRepos={openRepos} state={state(panel)} />;
 									case WebviewPanels.Tasks:
-										return <IssueDropdown expanded={!collapsed(panel)} />;
+										return <IssueDropdown state={state(panel)} />;
 									case WebviewPanels.CodemarksForFile:
-										return <CodemarksForFile expanded={!collapsed(panel)} />;
+										return <CodemarksForFile state={state(panel)} />;
 									case WebviewPanels.Team:
-										return <TeamPanel expanded={!collapsed(panel)} />;
+										return <TeamPanel state={state(panel)} />;
 								}
 								return null;
 							})()}
