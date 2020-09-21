@@ -261,24 +261,25 @@ export const Sidebar = () => {
 						</Draggable>
 					);
 				})}
-				{panels.map((panel, index) => {
+				{panels.map((pane, index) => {
 					const position = positions[index];
 					return (
 						<Pane top={position.top} height={position.height} tabIndex={index + 1}>
 							{(() => {
-								switch (panel.id) {
+								switch (pane.id) {
 									case WebviewPanels.OpenPullRequests:
-										return <OpenPullRequests openRepos={openRepos} state={state(panel)} />;
+										return <OpenPullRequests openRepos={openRepos} state={state(pane)} />;
 									case WebviewPanels.OpenReviews:
-										return <OpenReviews openRepos={openRepos} state={state(panel)} />;
+										return <OpenReviews openRepos={openRepos} state={state(pane)} />;
 									case WebviewPanels.WorkInProgress:
-										return <WorkInProgress openRepos={openRepos} state={state(panel)} />;
+										return <WorkInProgress openRepos={openRepos} state={state(pane)} />;
 									case WebviewPanels.Tasks:
-										return <IssueDropdown state={state(panel)} />;
+										return <IssueDropdown state={state(pane)} />;
 									case WebviewPanels.CodemarksForFile:
-										return <CodemarksForFile state={state(panel)} />;
+										//@ts-ignore
+										return <CodemarksForFile state={state(pane)} />;
 									case WebviewPanels.Team:
-										return <TeamPanel state={state(panel)} />;
+										return <TeamPanel state={state(pane)} />;
 								}
 								return null;
 							})()}

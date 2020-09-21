@@ -5,9 +5,12 @@
 		},
 		{
 			"path": "./shared/ui"
-		}
+		},
 		{
 			"path": "./shared/agent"
+		},
+		{
+			"path": "../gore"
 		}
 	],
 	"launch": {
