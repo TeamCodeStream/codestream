@@ -45,39 +45,12 @@ import {
 } from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 
-const PRSummaryName = styled.div`
-	padding: 2px 20px;
-	display: flex;
-	cursor: pointer;
-	> .icon {
-		display: inline-block;
-		width: 16px;
-		text-align: center;
-	}
-	&:hover {
-		background: var(--app-background-color-hover);
-		color: var(--text-color-highlight);
-		.actions .icon {
-			opacity: 1;
-		}
-	}
-	&:hover .actions {
-		display: block;
-	}
-`;
-const PRSummaryGroup = styled.div`
-	.pr-row {
+const Root = styled.div`
+	height: 100%;
+	${Row} {
 		padding-left: 40px;
 		.selected-icon {
 			left: 20px;
-		}
-	}
-	.actions {
-		margin-left: auto;
-		display: none;
-		.icon {
-			margin: 0 5px;
-			opacity: 0.7;
 		}
 	}
 `;
@@ -410,7 +383,7 @@ export function OpenPullRequests(props: Props) {
 		return null;
 
 	return (
-		<>
+		<Root>
 			{editingQuery && (
 				<ConfigurePullRequestQuery
 					query={
@@ -646,6 +619,6 @@ export function OpenPullRequests(props: Props) {
 					)}
 				</>
 			)}
-		</>
+		</Root>
 	);
 }
