@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import * as providerSelectors from "../store/providers/reducer";
@@ -6,7 +6,6 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
-import { H4, StatusSection, HeaderLink } from "./StartWork";
 import { setCurrentReview, setCurrentPullRequest } from "../store/context/actions";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
@@ -44,6 +43,7 @@ import {
 	PaneState
 } from "../src/components/Pane";
 import { Provider, IntegrationButtons } from "./IntegrationsPanel";
+import { usePrevious } from "../utilities/hooks";
 
 const Root = styled.div`
 	height: 100%;
@@ -175,6 +175,7 @@ export function OpenPullRequests(props: Props) {
 		{ providerId: string; index: number } | undefined
 	>(undefined);
 	const [configureQuerySettings, setConfigureQuerySettings] = React.useState(false);
+	const previousConfigureQuerySettings = usePrevious(configureQuerySettings);
 
 	const setQueries = (providerId, queries) => {
 		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
@@ -199,58 +200,65 @@ export function OpenPullRequests(props: Props) {
 		}
 	}, [derivedState.openReposOnly, derivedState.showLabels]);
 
+	const fetchPRs = useCallback(
+		async (theQueries, options?: { force?: boolean }) => {
+			setIsLoadingPRs(true);
+			let count: number | undefined = undefined;
+			try {
+				const newGroups = {};
+				console.warn("Loading the PRs...", theQueries);
+				for (const connectedProvider of derivedState.PRConnectedProviders) {
+					const queriesByProvider: PullRequestQuery[] =
+						theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
+					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
+					console.warn("Loading the PRs... in the loop", queryStrings);
+					try {
+						const response: any = await dispatch(
+							getMyPullRequests(
+								connectedProvider.id,
+								queryStrings,
+								derivedState.openReposOnly,
+								options,
+								true
+							)
+						);
+						if (response && response.length) {
+							count = 0;
+							response.forEach(group => (count += group.length));
 
-	const fetchPRs = async (theQueries, options?: { force?: boolean }) => {
-		setIsLoadingPRs(true);
-		let count: number | undefined = undefined;
-		try {
-			const newGroups = {};
-			console.warn("Loading the PRs...", theQueries);
-			for (const connectedProvider of derivedState.PRConnectedProviders) {
-				const queriesByProvider: PullRequestQuery[] =
-					theQueries[connectedProvider.id] || DEFAULT_QUERIES[connectedProvider.id];
-				const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
-
-				console.warn("Loading the PRs... in the loop", queryStrings);
-				try {
-					const response: any = await dispatch(
-						getMyPullRequests(
-							connectedProvider.id,
-							queryStrings,
-							derivedState.openReposOnly,
-							options,
-							true
-						)
-					);
-					if (response && response.length) {
-						count = 0;
-						response.forEach(group => (count += group.length));
-						console.warn("GOT SOME PULLS BACK: ", response);
-						newGroups[connectedProvider.id] = response;
+							console.warn("GOT SOME PULLS BACK: ", response);
+							newGroups[connectedProvider.id] = response;
+						}
+					} catch (ex) {
+						console.error(ex);
 					}
-				} catch (ex) {
-					console.error(ex);
 				}
-			}
-			console.warn("SETTING TO: ", newGroups);
-			setPullRequestGroups(newGroups);
-		} catch (ex) {
-			console.error(ex);
-			// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-			// 	// show message about re-authing?
-			// }
-		} finally {
-			setIsLoadingPRs(false);
+				console.warn("SETTING TO: ", newGroups);
+				setPullRequestGroups(newGroups);
+			} catch (ex) {
+				console.error(ex);
+				// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+				// 	// show message about re-authing?
+				// }
+			} finally {
+				setIsLoadingPRs(false);
 
-			HostApi.instance.track("PR List Rendered", {
-				"List State": count === undefined ? "No Auth" : count > 0 ? "PRs Listed" : "No PRs",
-				"PR Count": count,
-				Host: derivedState.PRConnectedProviders
-					? derivedState.PRConnectedProviders.map(_ => _.id)[0]
-					: undefined
-			});
-		}
-	};
+				HostApi.instance.track("PR List Rendered", {
+					"List State": count === undefined ? "No Auth" : count > 0 ? "PRs Listed" : "No PRs",
+					"PR Count": count,
+					Host: derivedState.PRConnectedProviders
+						? derivedState.PRConnectedProviders.map(_ => _.id)[0]
+						: undefined
+				});
+			}
+		},
+		[
+			editingQuery,
+			configureQuerySettings,
+			derivedState.PRConnectedProviders,
+			derivedState.openReposOnly
+		]
+	);
 
 	useMemo(() => {
 		if (derivedState.isPRSupportedCodeHostConnected) {
