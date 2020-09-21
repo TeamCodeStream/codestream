@@ -452,7 +452,7 @@ export function OpenPullRequests(props: Props) {
 							delay={1}
 						/>
 					</PaneHeader>
-					{props.state === PaneState.Open && (
+					{props.state !== PaneState.Collapsed && (
 						<PaneBody>
 							{derivedState.hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
 								<>

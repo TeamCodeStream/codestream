@@ -36,19 +36,27 @@
 	&.collapsed {
 		// height: 25px;
 		width: 100%;
-		padding: 2px 20px;
+		padding: 2px 10px 2px 20px;
 		overflow: hidden;
-		.contents > .body {
-			background: none;
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-			cursor: pointer;
+		cursor: pointer;
+		.contents {
+			.body {
+				background: none;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			span {
+				white-space: nowrap;
+			}
+			br {
+				display: none;
+			}
 			p {
 				display: inline;
 			}
 			.type-icon {
-				padding-right: 5px;
+				margin-right: 5px;
 			}
 			.file-name {
 				padding-left: 10px;
@@ -62,7 +70,8 @@
 				display: inline;
 			}
 		}
-		&.wrap .contents > .body {
+		&.wrap .contents .body,
+		&.wrap .contents span {
 			white-space: normal;
 			overflow: visible;
 		}

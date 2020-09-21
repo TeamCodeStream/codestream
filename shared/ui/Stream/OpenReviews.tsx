@@ -64,7 +64,7 @@ export function OpenReviews(props: Props) {
 				id={WebviewPanels.OpenReviews}
 				isLoading={!reviewsState.bootstrapped}
 			/>
-			{props.state === PaneState.Open && (
+			{props.state !== PaneState.Collapsed && (
 				<PaneBody>
 					{!reviewsState.bootstrapped && (
 						<Row>

@@ -654,7 +654,7 @@ class TeamPanel extends React.Component<Props, State> {
 						delay={1}
 					/>
 				</PaneHeader>
-				{this.props.state === PaneState.Open && (
+				{this.props.state !== PaneState.Collapsed && (
 					<PaneBody>
 						<PaneNode>
 							<PaneNodeName id="team/teammates" title="Current Members" />

@@ -33,7 +33,7 @@ import { PostEntryPoint } from "../store/context/types";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { isConnected } from "../store/providers/reducer";
 import * as fs from "../utilities/fs";
-import { PaneHeader, NoContent, PaneState } from "../src/components/Pane";
+import { PaneHeader, NoContent, PaneState, PaneBody } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
@@ -457,42 +457,45 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 						delay={1}
 					/>
 				</PaneHeader>
-				{documentMarkers.length === 0 && this.renderNoCodemarks()}
-				{this.props.state === PaneState.Open &&
-					!this.state.isLoading &&
-					documentMarkers
-						.sort(
-							(a, b) =>
-								this.getMarkerStartLine(a) - this.getMarkerStartLine(b) || a.createdAt - b.createdAt
-						)
-						.map(docMarker => {
-							const { codemark } = docMarker;
+				<PaneBody>
+					{documentMarkers.length === 0 && this.renderNoCodemarks()}
+					{this.props.state !== PaneState.Collapsed &&
+						!this.state.isLoading &&
+						documentMarkers
+							.sort(
+								(a, b) =>
+									this.getMarkerStartLine(a) - this.getMarkerStartLine(b) ||
+									a.createdAt - b.createdAt
+							)
+							.map(docMarker => {
+								const { codemark } = docMarker;
 
-							if (codemark) {
-								if (renderedCodemarks[codemark.id]) return null;
-								else renderedCodemarks[codemark.id] = true;
-							}
+								if (codemark) {
+									if (renderedCodemarks[codemark.id]) return null;
+									else renderedCodemarks[codemark.id] = true;
+								}
 
-							const hidden =
-								(!showHidden && codemark && (!codemark.pinned || codemark.status === "closed")) ||
-								(docMarker.externalContent && !this.props.showPRComments);
-							if (hidden) return null;
+								const hidden =
+									(!showHidden && codemark && (!codemark.pinned || codemark.status === "closed")) ||
+									(docMarker.externalContent && !this.props.showPRComments);
+								if (hidden) return null;
 
-							return (
-								<Codemark
-									key={docMarker.id}
-									contextName="Sidebar"
-									codemark={docMarker.codemark}
-									displayType="collapsed"
-									wrap={this.props.wrapComments}
-									marker={docMarker}
-									hidden={hidden}
-									highlightCodeInTextEditor
-									postAction={() => {}}
-									action={() => {}}
-								/>
-							);
-						})}
+								return (
+									<Codemark
+										key={docMarker.id}
+										contextName="Sidebar"
+										codemark={docMarker.codemark}
+										displayType="collapsed"
+										wrap={this.props.wrapComments}
+										marker={docMarker}
+										hidden={hidden}
+										highlightCodeInTextEditor
+										postAction={() => {}}
+										action={() => {}}
+									/>
+								);
+							})}
+				</PaneBody>
 			</>
 		);
 	}

@@ -190,7 +190,7 @@ export const WorkInProgress = (props: Props) => {
 				/>
 			</PaneHeader>
 
-			{props.state === PaneState.Open && (
+			{props.state !== PaneState.Collapsed && (
 				<PaneBody>
 					<div style={{ padding: "0 20px" }}>
 						{status && status.label && (

@@ -1008,7 +1008,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					delay={1}
 				/>
 			</PaneHeader>
-			{props.state === PaneState.Open && (
+			{props.state !== PaneState.Collapsed && (
 				<PaneBody>
 					<div className="instructions">
 						<Icon name="light-bulb" />

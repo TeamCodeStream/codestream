@@ -865,24 +865,27 @@ export class Codemark extends React.Component<Props, State> {
 			>
 				<div className="contents">
 					{this.renderStatus(codemark)}
-					<div className="body" style={{ display: "flex", alignItems: "flex-start" }}>
+					<div style={{ display: "flex", alignItems: "flex-start" }}>
 						<span style={{ flexGrow: 0, flexShrink: 0 }} className={codemark.color}>
 							{this.renderTypeIcon()}
 						</span>
-						<div>
+						<div className="body" style={{ flexGrow: 10 }}>
 							{this.renderTextLinkified(codemark.title || codemark.text)}
 							{renderedTags && <span className="cs-tag-container">{renderedTags}</span>}
-							{lines && (
-								<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
-									{lines}
-								</span>
-							)}
-							{codemark.numReplies > 0 && (
-								<span className="badge" style={{ marginLeft: "15px" }}>
-									{codemark.numReplies}
-								</span>
-							)}
 						</div>
+						{codemark.numReplies > 0 && (
+							<span className="badge" style={{ marginLeft: "10px", flexGrow: 0, flexShrink: 0 }}>
+								{codemark.numReplies}
+							</span>
+						)}
+						{false && lines && (
+							<span
+								style={{ marginLeft: "auto", paddingLeft: "15px", opacity: 0.75 }}
+								className="subtle"
+							>
+								{lines}
+							</span>
+						)}
 					</div>
 				</div>
 			</div>
