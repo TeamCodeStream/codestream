@@ -10,8 +10,6 @@ import {
 	setPaneCollapsed,
 	setPaneMaximized
 } from "@codestream/webview/Stream/actions";
-import { Row } from "@codestream/webview/Stream/CrossPostIssueControls/IssueDropdown";
-import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 
 export enum PaneState {
 	Open = "open",
@@ -163,7 +161,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			{!derivedState.collapsed && props.subtitle ? (
 				<span className="subtle"> {props.subtitle}</span>
 			) : null}
-			{!derivedState.collapsed && (
+			{!derivedState.collapsed && (!derivedState.anyMaximized || derivedState.maximized) && (
 				<div className="actions">
 					{props.children}
 					<Icon

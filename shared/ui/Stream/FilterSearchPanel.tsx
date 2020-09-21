@@ -26,7 +26,6 @@ import { getSavedSearchFilters } from "../store/preferences/reducer";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { Button } from "../src/components/Button";
 import { closePanel } from "../store/context/actions";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { Dialog } from "../src/components/Dialog";
 
 const SearchBar = styled.div`

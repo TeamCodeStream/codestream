@@ -46,7 +46,7 @@ export enum CodemarkDomainType {
 	File = "file",
 	Directory = "directory",
 	Repo = "repo",
-	All = "all"
+	Team = "team"
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -71,6 +71,7 @@ interface Props {
 	numHidden?: number;
 	state?: PaneState;
 	codemarkDomain: CodemarkDomainType;
+	teamName: string;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -320,7 +321,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				? "directory"
 				: codemarkDomain === "repo"
 				? "repo"
-				: "circle";
+				: "team";
 		const subtitle =
 			codemarkDomain === "file"
 				? fs.pathBasename(fileNameToFilterFor)
@@ -328,7 +329,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				? fs.pathDirname(fileNameToFilterFor)
 				: codemarkDomain === "repo"
 				? "codestream" // FIXME
-				: "all";
+				: this.props.teamName;
 
 		const domainItems = [
 			{
@@ -365,11 +366,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				checked: codemarkDomain === CodemarkDomainType.Repo
 			},
 			{
-				label: "All Codemarks in your team",
-				key: "all",
-				icon: <Icon name="circle" />,
-				action: () => this.switchDomain(CodemarkDomainType.All),
-				checked: codemarkDomain === CodemarkDomainType.All
+				label: "All Codemarks in your Team",
+				key: "team",
+				icon: <Icon name="team" />,
+				action: () => this.switchDomain(CodemarkDomainType.Team),
+				checked: codemarkDomain === CodemarkDomainType.Team
 			}
 		];
 
@@ -519,8 +520,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, configs, documentMarkers, preferences } = state;
+	const { context, editorContext, documentMarkers, preferences, teams } = state;
 
+	const teamName = teams[context.currentTeamId].name;
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
 		d => d.codemark && (!d.codemark.pinned || d.codemark.status === "closed")
@@ -533,6 +535,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 
 	return {
+		teamName,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		currentReviewId: context.currentReviewId,
