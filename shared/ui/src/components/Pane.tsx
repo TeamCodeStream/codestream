@@ -114,7 +114,7 @@ export const PaneNode = styled.div`
 `;
 
 interface PaneHeaderProps {
-	title: string;
+	title: string | React.ReactNode;
 	className?: string;
 	id: WebviewPanels | string;
 	count?: number;

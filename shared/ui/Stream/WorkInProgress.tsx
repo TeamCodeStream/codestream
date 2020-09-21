@@ -16,7 +16,7 @@ import { setNewPostEntry } from "../store/context/actions";
 import { openPanel, setUserStatus } from "./actions";
 import { HostApi } from "..";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
-import { CSMe } from "../protocols/agent/api.protocol.models";
+import { CSMe, FileStatus } from "../protocols/agent/api.protocol.models";
 import Tooltip, { TipTitle } from "./Tooltip";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { useDidMount } from "../utilities/hooks";
@@ -35,16 +35,34 @@ interface Props {
 	state: PaneState;
 }
 
+const EMPTY_HASH = {};
+const EMPTY_ARRAY = [];
 export const WorkInProgress = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
 		const currentUserId = state.session.userId!;
 		const currentUser = state.users[state.session.userId!] as CSMe;
+		const { modifiedRepos = EMPTY_HASH } = currentUser;
+
 		const xraySetting = team.settings ? team.settings.xray : "";
 		let status =
 			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
+
+		let linesAdded = 0;
+		let linesRemoved = 0;
+		(modifiedRepos[state.context.currentTeamId] || EMPTY_ARRAY).forEach(repo => {
+			(repo.modifiedFiles || EMPTY_ARRAY)
+				.filter(f => f.status !== FileStatus.untracked)
+				.forEach(f => {
+					linesAdded += f.linesAdded;
+					linesRemoved += f.linesRemoved;
+				});
+		});
+
 		return {
+			linesAdded,
+			linesRemoved,
 			teamId: state.context.currentTeamId,
 			status,
 			currentUser,
@@ -54,6 +72,7 @@ export const WorkInProgress = (props: Props) => {
 		};
 	});
 	const { status, currentUser, invisible, xraySetting, teamId } = derivedState;
+	const { linesAdded, linesRemoved } = derivedState;
 
 	const [mounted, setMounted] = React.useState(false);
 	const [pollingTimer, setPollingTimer] = React.useState<any>();
@@ -123,7 +142,15 @@ export const WorkInProgress = (props: Props) => {
 
 	return (
 		<>
-			<PaneHeader title="Work In Progress" id={WebviewPanels.WorkInProgress}>
+			<PaneHeader
+				title={
+					<>
+						Work In Progress {linesAdded > 0 && <span className="added">+{linesAdded} </span>}
+						{linesRemoved > 0 && <span className="deleted">-{linesRemoved}</span>}
+					</>
+				}
+				id={WebviewPanels.WorkInProgress}
+			>
 				&nbsp;
 				{(!xraySetting || xraySetting === "user") && (
 					<Icon

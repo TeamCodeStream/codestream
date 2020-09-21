@@ -353,16 +353,6 @@
 		pointer-events: none;
 		margin-left: 10px;
 	}
-	.added {
-		white-space: nowrap;
-		padding-left: 5px;
-		color: #66aa66;
-	}
-	.deleted {
-		white-space: nowrap;
-		padding-left: 5px;
-		color: #cc3366;
-	}
 	.icon.merge {
 		color: orange;
 		margin-left: -22px;
@@ -385,6 +375,17 @@
 	&.file-has-conflict {
 		color: @text-color-warning !important;
 	}
+}
+
+.added {
+	white-space: nowrap;
+	padding-left: 5px;
+	color: #66aa66;
+}
+.deleted {
+	white-space: nowrap;
+	padding-left: 5px;
+	color: #cc3366;
 }
 
 .icon.conflict {
