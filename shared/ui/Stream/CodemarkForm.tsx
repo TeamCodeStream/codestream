@@ -1634,7 +1634,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		const numCodeBlocks = codeBlocks.length;
 
-		if (true || multiLocation) {
+		if (multiLocation || !editingCodemark) {
 			return (
 				<>
 					{codeBlocks.map((codeBlock, index) => {
@@ -1678,20 +1678,20 @@ class CodemarkForm extends React.Component<Props, State> {
 									{file && (
 										<>
 											<span className="monospace" style={{ paddingRight: "20px" }}>
-												<Icon name="file"></Icon> {file}
+												<Icon name="file" /> {file}
 											</span>{" "}
 										</>
 									)}
 									{scm && scm.branch && (
 										<>
 											<span className="monospace" style={{ paddingRight: "20px" }}>
-												<Icon name="git-branch"></Icon> {scm.branch}
+												<Icon name="git-branch" /> {scm.branch}
 											</span>{" "}
 										</>
 									)}
 									{scm && scm.revision && (
 										<span className="monospace">
-											<Icon name="git-commit"></Icon> {scm.revision.substring(0, 7)}
+											<Icon name="git-commit" /> {scm.revision.substring(0, 7)}
 										</span>
 									)}
 								</div>
@@ -1861,7 +1861,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			);
 		}
 
-		if (true || this.props.multiLocation) {
+		if (this.props.multiLocation || !editingCodemark) {
 			return (
 				<div className="full-height-codemark-form">
 					<CancelButton onClick={this.cancelCompose} />
