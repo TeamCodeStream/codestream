@@ -52,6 +52,7 @@ export const PullRequestFilesChangedTab = (props: {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
+			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined
