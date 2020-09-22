@@ -84,7 +84,7 @@ export const CommitAndPush = (props: Props) => {
 	const setPushPreference = value => {
 		dispatch(setUserPreference(["pushAfterCommit"], value));
 	};
-	const save = async () => {
+	const save = async e => {
 		setIsLoading(true);
 		const result = await HostApi.instance.send(CommitAndPushRequestType, {
 			repoId: props.repoId,
@@ -94,6 +94,8 @@ export const CommitAndPush = (props: Props) => {
 		});
 		if (result && result.error) {
 			setScmError(result.error);
+		} else if (result && result.success) {
+			props.onClose(e);
 		}
 		setIsLoading(false);
 	};

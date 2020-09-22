@@ -990,6 +990,10 @@ export class GitService implements IGitService, Disposable {
 		try {
 			const escapedMessage = message.replace(/\'/g, "'");
 			const data = await git({ cwd: repoPath }, "commit", "-m", `"${message}"`, ...files);
+			if (pushAfterCommit) {
+				await git({ cwd: repoPath }, "pull");
+				await git({ cwd: repoPath }, "push origin");
+			}
 			return { success: true };
 		} catch (err) {
 			return { success: false, error: err.message };
