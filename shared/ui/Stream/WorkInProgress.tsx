@@ -221,7 +221,7 @@ export const WorkInProgress = (props: Props) => {
 							</Row>
 						)}
 					</div>
-					<RepoFileDiffs />
+					<RepoFileDiffs onlyRepos={props.openRepos.map(r => r.id)} />
 				</PaneBody>
 			)}
 		</>

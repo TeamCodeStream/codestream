@@ -45,7 +45,7 @@ const Repo = styled.div`
 
 const EMPTY_HASH = {};
 
-export const RepoFileDiffs = () => {
+export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session, users, teams, context, preferences } = state;
@@ -108,6 +108,7 @@ export const RepoFileDiffs = () => {
 	const modified = modifiedRepos[teamId]
 		.map(repo => {
 			const { repoId = "", authors } = repo;
+			if (props.onlyRepos && repo.repoId && !props.onlyRepos.includes(repo.repoId)) return null;
 			const trackedFiles = repo.modifiedFiles.filter(f => f.status !== FileStatus.untracked);
 			const untrackedFiles = repo.modifiedFiles.filter(f => f.status === FileStatus.untracked);
 			const repoName = repos[repoId] ? repos[repoId].name : "";
