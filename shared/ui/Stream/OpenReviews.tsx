@@ -6,7 +6,7 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { Headshot } from "../src/components/Headshot";
-import { setCurrentReview } from "../store/context/actions";
+import { setCurrentReview, setNewPostEntry, openPanel } from "../store/context/actions";
 import { useDidMount } from "../utilities/hooks";
 import { bootstrapReviews } from "../store/reviews/actions";
 import Tooltip from "./Tooltip";
@@ -63,7 +63,18 @@ export function OpenReviews(props: Props) {
 				count={reviews.length}
 				id={WebviewPanels.OpenReviews}
 				isLoading={!reviewsState.bootstrapped}
-			/>
+			>
+				<Icon
+					onClick={() => {
+						dispatch(setNewPostEntry("Status"));
+						dispatch(openPanel(WebviewPanels.NewReview));
+					}}
+					name="plus"
+					title="Request Feedback"
+					placement="bottom"
+					delay={1}
+				/>
+			</PaneHeader>
 			{props.state !== PaneState.Collapsed && (
 				<PaneBody>
 					{!reviewsState.bootstrapped && (

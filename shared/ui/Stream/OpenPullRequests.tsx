@@ -6,7 +6,7 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
-import { setCurrentReview, setCurrentPullRequest } from "../store/context/actions";
+import { setCurrentReview, setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { isConnected } from "../store/providers/reducer";
@@ -26,7 +26,7 @@ import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
 import Tag from "./Tag";
-import { setUserPreference } from "./actions";
+import { setUserPreference, openPanel } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
@@ -405,7 +405,17 @@ export function OpenPullRequests(props: Props) {
 							placement="bottom"
 							delay={1}
 						/>
-						<Icon onClick={addQuery} name="plus" title="Add Query" placement="bottom" delay={1} />
+						<Icon
+							onClick={() => {
+								dispatch(setNewPostEntry("Status"));
+								dispatch(openPanel(WebviewPanels.NewPullRequest));
+							}}
+							name="plus"
+							title="New Pull Request"
+							placement="bottom"
+							delay={1}
+						/>
+						<Icon onClick={addQuery} name="filter" title="Add Query" placement="bottom" delay={1} />
 						<Icon
 							onClick={() => setConfigureQuerySettings(true)}
 							name="gear"

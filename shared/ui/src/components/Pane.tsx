@@ -34,6 +34,7 @@ interface PaneNodeNameProps {
 	count?: number;
 	subtitle?: string | React.ReactNode;
 	collapsed?: boolean;
+	actionsVisibleIfOpen?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
@@ -85,14 +86,14 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		position: absolute;
 		right: 5px;
 		top: 2px;
-		background: var(--app-background-color-hover);
-		display: none;
+		display: ${props => (props.actionsVisibleIfOpen ? "block" : "none")};
 		.icon {
 			margin: 0 5px;
 			opacity: 0.7;
 		}
 	}
 	&:hover .actions {
+		background: var(--app-background-color-hover);
 		display: block;
 	}
 	.subtle {

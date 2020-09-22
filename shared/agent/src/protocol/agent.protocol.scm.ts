@@ -429,3 +429,21 @@ export const DiffBranchesRequestType = new RequestType<
 	void
 >("codestream/scm/branches/diff");
 
+export interface CommitAndPushRequest {
+	repoId: string;
+	message: string;
+	files: string[];
+	pushAfterCommit: boolean;
+}
+
+export interface CommitAndPushResponse {
+	success: boolean;
+	error?: string;
+}
+
+export const CommitAndPushRequestType = new RequestType<
+	CommitAndPushRequest,
+	CommitAndPushResponse,
+	void,
+	void
+>("codestream/scm/commitAndPush");

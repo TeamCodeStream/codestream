@@ -22,6 +22,8 @@ import { setNewPostEntry } from "../store/context/actions";
 import { openPanel } from "./actions";
 import { TextInput } from "../Authentication/TextInput";
 import { CommitAndPush } from "./CommitAndPush";
+import { Button } from "../src/components/Button";
+import { ButtonRow } from "../src/components/Dialog";
 
 const IconLabel = styled.span`
 	white-space: nowrap;
@@ -114,6 +116,7 @@ export const RepoFileDiffs = () => {
 					<PaneNodeName
 						id={`repo-${repoId}`}
 						title={repoName}
+						actionsVisibleIfOpen
 						subtitle={
 							<>
 								<IconLabel>

@@ -23,5 +23,5 @@ export const RepoHunkDiffs = (props: { repoId: string; filesChanged: any[] }) =>
 				</div>
 			</>
 		);
-	else return <NoContent>No diffs found.</NoContent>;
+	else return <NoContent style={{ marginTop: "20px" }}>No diffs found.</NoContent>;
 };

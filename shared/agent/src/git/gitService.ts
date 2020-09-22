@@ -981,6 +981,21 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
+	async commitAndPush(
+		repoPath: string,
+		message: string,
+		files: string[],
+		pushAfterCommit: boolean
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			const escapedMessage = message.replace(/\'/g, "'");
+			const data = await git({ cwd: repoPath }, "commit", "-m", `"${message}"`, ...files);
+			return { success: true };
+		} catch (err) {
+			return { success: false, error: err.message };
+		}
+	}
+
 	async getLocalCommits(
 		repoPath: string
 	): Promise<{ sha: string; info: {}; localOnly: boolean }[] | undefined> {

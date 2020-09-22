@@ -14,7 +14,7 @@ import { EMPTY_STATUS } from "./WorkInProgress";
 import styled from "styled-components";
 import { RepoHunkDiffs } from "./RepoHunkDiffs";
 import { PanelHeader } from "../src/components/PanelHeader";
-import { DiffBranchesRequestType } from "@codestream/protocols/agent";
+import { DiffBranchesRequestType, CommitAndPushRequestType } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
 import CancelButton from "./CancelButton";
 import ScrollBox from "./ScrollBox";
@@ -84,7 +84,19 @@ export const CommitAndPush = (props: Props) => {
 	const setPushPreference = value => {
 		dispatch(setUserPreference(["pushAfterCommit"], value));
 	};
-	const save = async () => {};
+	const save = async () => {
+		setIsLoading(true);
+		const result = await HostApi.instance.send(CommitAndPushRequestType, {
+			repoId: props.repoId,
+			message: commitMessageField,
+			pushAfterCommit: derivedState.pushAfterCommit,
+			files: filesChanged.map(f => f.file)
+		});
+		if (result && result.error) {
+			setScmError(result.error);
+		}
+		setIsLoading(false);
+	};
 
 	useDidMount(() => {
 		fetchFilesChanged();

@@ -15,7 +15,10 @@ import {
 	GetLatestCommitScmResponse,
 	DiffBranchesRequestType,
 	DiffBranchesRequest,
-	DiffBranchesResponse
+	DiffBranchesResponse,
+	CommitAndPushRequestType,
+	CommitAndPushRequest,
+	CommitAndPushResponse
 } from "../protocol/agent.protocol";
 import {
 	BlameAuthor,
@@ -1210,6 +1213,27 @@ export class ScmManager {
 
 		const commit = await git.getCommit(repoPath, request.branch);
 		return { shortMessage: commit ? commit.shortMessage : "" };
+	}
+
+	@lspHandler(CommitAndPushRequestType)
+	async commitAndPush(request: CommitAndPushRequest): Promise<CommitAndPushResponse> {
+		const { git, repositoryMappings } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		let repoPath = "";
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = (await repositoryMappings.getByRepoId(request.repoId)) || "";
+		}
+
+		const { success, error } = await git.commitAndPush(
+			repoPath,
+			request.message,
+			request.files,
+			request.pushAfterCommit
+		);
+		return { success, error };
 	}
 
 	@log()
