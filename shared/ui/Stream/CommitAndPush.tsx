@@ -101,18 +101,19 @@ export const CommitAndPush = (props: Props) => {
 			setScmError(response.error);
 		} else if (response && response.filesChanged) {
 			const { patches, data } = response.filesChanged;
-			console.warn("PATHES ARE: ", patches);
-			const filesChanged = patches.map(_ => {
-				return {
-					..._,
-					linesAdded: _.additions,
-					linesRemoved: _.deletions,
-					file: _.newFileName,
-					filename: _.newFileName,
-					hunks: _.hunks,
-					sha: _.sha
-				};
-			});
+			const filesChanged = patches
+				.map(_ => {
+					return {
+						..._,
+						linesAdded: _.additions,
+						linesRemoved: _.deletions,
+						file: _.newFileName,
+						filename: _.newFileName,
+						hunks: _.hunks,
+						sha: _.sha
+					};
+				})
+				.filter(_ => _.file);
 			setFilesChanged(filesChanged);
 			setScmError("");
 		}
