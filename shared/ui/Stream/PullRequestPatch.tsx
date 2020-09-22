@@ -36,13 +36,23 @@ const Root = styled.div`
 	}
 `;
 
+export interface Hunk {
+	oldStart: number;
+	oldLines: number;
+	newStart: number;
+	newLines: number;
+	lines: string[];
+	linedelimiters: string[];
+}
+
 export const PullRequestPatch = (props: {
-	patch: string;
+	patch?: string;
+	hunks?: Hunk[];
 	filename: string;
 	className?: string;
 }) => {
-	const { patch, filename } = props;
-	if (!patch) return null;
+	const { patch, filename, hunks } = props;
+
 	let leftLine: number;
 	let rightLine: number;
 	let width;
@@ -63,54 +73,109 @@ export const PullRequestPatch = (props: {
 		return <pre className="prettyprint" dangerouslySetInnerHTML={{ __html: html }} />;
 	};
 
-	return (
-		<Root className={props.className + " pr-patch"}>
-			{patch.split("\n").map(_ => {
-				if (_ === "\\ No newline at end of file") return null;
-				if (_.indexOf("@@ ") === 0) {
-					const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
-					if (matches) {
-						leftLine = parseInt(matches[1], 10) - 1;
-						rightLine = parseInt(matches[2]) - 1;
-						width = Math.max(4, rightLine.toString().length + 1);
+	if (patch) {
+		return (
+			<Root className={props.className + " pr-patch"}>
+				{patch.split("\n").map(_ => {
+					if (_ === "\\ No newline at end of file") return null;
+					if (_.indexOf("@@ ") === 0) {
+						const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
+						if (matches) {
+							leftLine = parseInt(matches[1], 10) - 1;
+							rightLine = parseInt(matches[2]) - 1;
+							width = Math.max(4, rightLine.toString().length + 1);
+						}
+						return (
+							<div className="header">
+								{renderLineNum("")}
+								{renderLineNum("")}
+								<pre className="prettyprint">{_}</pre>
+							</div>
+						);
+					} else if (_.indexOf("+") === 0) {
+						rightLine++;
+						return (
+							<div className="added">
+								{renderLineNum("")}
+								{renderLineNum(rightLine)}
+								{syntaxHighlight(_)}
+							</div>
+						);
+					} else if (_.indexOf("-") === 0) {
+						leftLine++;
+						return (
+							<div className="deleted">
+								{renderLineNum(leftLine)}
+								{renderLineNum("")}
+								{syntaxHighlight(_)}
+							</div>
+						);
+					} else {
+						leftLine++;
+						rightLine++;
+						return (
+							<div>
+								{renderLineNum(leftLine)}
+								{renderLineNum(rightLine)}
+								{syntaxHighlight(_)}
+							</div>
+						);
 					}
+				})}
+			</Root>
+		);
+	} else if (hunks) {
+		return (
+			<Root className={props.className + " pr-patch"}>
+				{hunks.map(hunk => {
+					leftLine = hunk.oldStart - 1;
+					rightLine = hunk.newStart - 1;
+					width = Math.max(4, rightLine.toString().length + 1);
 					return (
-						<div className="header">
-							{renderLineNum("")}
-							{renderLineNum("")}
-							<pre className="prettyprint">{_}</pre>
-						</div>
+						<>
+							<div className="header">
+								{renderLineNum("")}
+								{renderLineNum("")}
+								<pre className="prettyprint">
+									@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@
+								</pre>
+							</div>
+							{hunk.lines.map(_ => {
+								if (_ === "\\ No newline at end of file") return null;
+								if (_.indexOf("+") === 0) {
+									rightLine++;
+									return (
+										<div className="added">
+											{renderLineNum("")}
+											{renderLineNum(rightLine)}
+											{syntaxHighlight(_)}
+										</div>
+									);
+								} else if (_.indexOf("-") === 0) {
+									leftLine++;
+									return (
+										<div className="deleted">
+											{renderLineNum(leftLine)}
+											{renderLineNum("")}
+											{syntaxHighlight(_)}
+										</div>
+									);
+								} else {
+									leftLine++;
+									rightLine++;
+									return (
+										<div>
+											{renderLineNum(leftLine)}
+											{renderLineNum(rightLine)}
+											{syntaxHighlight(_)}
+										</div>
+									);
+								}
+							})}
+						</>
 					);
-				} else if (_.indexOf("+") === 0) {
-					rightLine++;
-					return (
-						<div className="added">
-							{renderLineNum("")}
-							{renderLineNum(rightLine)}
-							{syntaxHighlight(_)}
-						</div>
-					);
-				} else if (_.indexOf("-") === 0) {
-					leftLine++;
-					return (
-						<div className="deleted">
-							{renderLineNum(leftLine)}
-							{renderLineNum("")}
-							{syntaxHighlight(_)}
-						</div>
-					);
-				} else {
-					leftLine++;
-					rightLine++;
-					return (
-						<div>
-							{renderLineNum(leftLine)}
-							{renderLineNum(rightLine)}
-							{syntaxHighlight(_)}
-						</div>
-					);
-				}
-			})}
-		</Root>
-	);
+				})}
+			</Root>
+		);
+	} else return null;
 };

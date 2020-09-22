@@ -12,11 +12,6 @@ import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
-const PRCommitContent = styled.div`
-	margin: 0 20px 20px 40px;
-	position: relative;
-`;
-
 export const PRDiffHunks = styled.div`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: pre;
@@ -80,7 +75,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const mode = derivedState.pullRequestFilesChangedMode;
 
 	return (
-		<PRCommitContent>
+		<>
 			<PRSelectorButtons>
 				<span className={mode == "files" ? "selected" : ""} onClick={() => setMode("files")}>
 					Files
@@ -107,12 +102,12 @@ export const PullRequestFilesChangedList = (props: Props) => {
 						return (
 							<PRDiffHunk>
 								<h1>{_.filename}</h1>
-								<PullRequestPatch patch={_.patch} filename={_.filename} />
+								<PullRequestPatch patch={_.patch} hunks={_.hunks} filename={_.filename} />
 							</PRDiffHunk>
 						);
 					})}
 				</PRDiffHunks>
 			)}
-		</PRCommitContent>
+		</>
 	);
 };

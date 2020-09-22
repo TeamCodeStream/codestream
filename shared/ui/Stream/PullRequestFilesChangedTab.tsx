@@ -117,15 +117,17 @@ export const PullRequestFilesChangedTab = (props: {
 
 	if (!filesChanged || !filesChanged.length) return null;
 	return (
-		<PullRequestFilesChangedList
-			pr={pr}
-			filesChanged={filesChanged}
-			repositoryName={pr.repository.name}
-			baseRef={pr.baseRefOid}
-			baseRefName={pr.baseRefName}
-			headRef={pr.headRefOid}
-			headRefName={pr.headRefName}
-			isLoading={isLoading}
-		/>
+		<div style={{ position: "relative", margin: "0 20px 20px 40px" }}>
+			<PullRequestFilesChangedList
+				pr={pr}
+				filesChanged={filesChanged}
+				repositoryName={pr.repository.name}
+				baseRef={pr.baseRefOid}
+				baseRefName={pr.baseRefName}
+				headRef={pr.headRefOid}
+				headRefName={pr.headRefName}
+				isLoading={isLoading}
+			/>
+		</div>
 	);
 };

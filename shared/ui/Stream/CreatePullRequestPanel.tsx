@@ -270,12 +270,16 @@ export const CreatePullRequestPanel = props => {
 			}
 			const result = await HostApi.instance.send(CheckPullRequestPreconditionsRequestType, args);
 			if (result && result.success) {
-				setReviewBranch(result.branch!);
 				setBranches(result.branches!);
 				setRemoteBranches(result.remoteBranches!);
+
+				let newPrBranch = prBranch;
+				let newReviewBranch = args.headRefName || reviewBranch || result.branch || "";
 				if (result.pullRequestProvider && result.pullRequestProvider.defaultBranch) {
-					setPrBranch(result.pullRequestProvider.defaultBranch!);
+					newPrBranch = result.pullRequestProvider.defaultBranch;
 				}
+				setReviewBranch(newReviewBranch);
+				setPrBranch(newPrBranch);
 
 				setPrRemoteUrl(result.remoteUrl!);
 				setPrTitle(result.review!.title!);
@@ -289,6 +293,7 @@ export const CreatePullRequestPanel = props => {
 				setPrProviderId(result.providerId!);
 
 				setCurrentStep(3);
+				fetchFilesChanged(args.repoId, newPrBranch, newReviewBranch);
 				if (result.warning && result.warning.type) {
 					if (result.warning.type === "REQUIRES_UPSTREAM") {
 						setRequiresUpstream(true);
@@ -455,6 +460,7 @@ export const CreatePullRequestPanel = props => {
 		if (localPrBranch === localReviewBranch) {
 			setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
 			setFormState({ type: "", message: "", url: "", id: "" });
+			setFilesChanged([]);
 			return;
 		}
 
@@ -489,7 +495,6 @@ export const CreatePullRequestPanel = props => {
 			.then((result: CheckPullRequestPreconditionsResponse) => {
 				setPreconditionError({ type: "", message: "", url: "", id: "" });
 				setFormState({ type: "", message: "", url: "", id: "" });
-				console.warn("RESULT IS: ", result);
 				if (result && result.warning && result.warning.type === "REQUIRES_UPSTREAM") {
 					setRequiresUpstream(true);
 					setOrigins(result.origins!);
@@ -516,6 +521,7 @@ export const CreatePullRequestPanel = props => {
 				} else {
 					setFormState({ type: "", message: "", url: "", id: "" });
 				}
+				fetchFilesChanged(repoId, localPrBranch, localReviewBranch);
 				setLoadingBranchInfo(false);
 			})
 			.catch(error => {
@@ -903,10 +909,10 @@ export const CreatePullRequestPanel = props => {
 	// 	selectedRepo
 	// }, [review, selectedRepo]);
 
-	const fetchFilesChanged = async () => {
+	const fetchFilesChanged = async (repoId: string, prBranch: string, reviewBranch: string) => {
 		setIsLoadingDiffs(true);
 		const response = await HostApi.instance.send(DiffBranchesRequestType, {
-			repoId: prRepoId,
+			repoId: repoId,
 			baseRef: prBranch,
 			headRef: reviewBranch
 		});
@@ -914,15 +920,27 @@ export const CreatePullRequestPanel = props => {
 		if (response.error) {
 			setFilesChanged([]);
 		} else if (response && response.filesChanged) {
-			setFilesChanged(response.filesChanged);
+			const { patches, data } = response.filesChanged;
+			const filesChanged = patches.map(_ => {
+				return {
+					..._,
+					linesAdded: _.additions,
+					linesRemoved: _.deletions,
+					file: _.newFileName,
+					filename: _.newFileName,
+					hunks: _.hunks,
+					sha: _.sha
+				};
+			});
+			setFilesChanged(filesChanged);
 		}
 		setIsLoadingDiffs(false);
 	};
 
-	useEffect(() => {
-		if (prBranch && reviewBranch) fetchFilesChanged();
-		else setFilesChanged([]);
-	}, [prBranch, reviewBranch]);
+	// useEffect(() => {
+	// 	if (prBranch && reviewBranch) fetchFilesChanged();
+	// 	else setFilesChanged([]);
+	// }, [prBranch, reviewBranch]);
 
 	if (propsForPrePRProviderInfoModal) {
 		return <PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />;
@@ -1166,8 +1184,9 @@ export const CreatePullRequestPanel = props => {
 					</div>
 					{!loading && !loadingBranchInfo && preconditionError.type && preconditionErrorMessages()}
 				</div>
+				<div style={{ height: "40px" }} />
 				<PullRequestFilesChangedList
-					isLoading={isLoadingDiffs}
+					isLoading={loadingBranchInfo || isLoadingDiffs}
 					filesChanged={filesChanged}
 					baseRef={prBranch}
 					headRef={reviewBranch}

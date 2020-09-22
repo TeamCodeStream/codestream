@@ -415,7 +415,10 @@ export interface DiffBranchesRequest {
 }
 
 export interface DiffBranchesResponse {
-	filesChanged?: any[];
+	filesChanged?: {
+		patches: any[];
+		data: string;
+	};
 	error?: string;
 }
 
