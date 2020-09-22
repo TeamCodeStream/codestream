@@ -634,6 +634,7 @@ class TeamPanel extends React.Component<Props, State> {
 				)}
 				<PaneHeader
 					title="My Team"
+					subtitle={this.props.teamName}
 					id={WebviewPanels.Team}
 					warning={
 						collisions.nav.length > 0 ? (

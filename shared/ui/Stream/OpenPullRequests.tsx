@@ -303,11 +303,8 @@ export function OpenPullRequests(props: Props) {
 					label: "Delete Query",
 					className: "delete",
 					action: async () => {
-						console.warn("DELETING INDEX: ", index);
-						console.warn("OLD VALUE IS: ", queries[providerId]);
 						const newQueries = [...queries[providerId]];
 						newQueries.splice(index, 1);
-						console.warn("NEW VALUE IS: ", newQueries);
 						setQueries(providerId, newQueries);
 						const newGroups = [...pullRequestGroups[providerId]];
 						newGroups.splice(index, 1);
@@ -449,12 +446,14 @@ export function OpenPullRequests(props: Props) {
 								return Object.values(providerQueries).map((query: PullRequestQuery, index) => {
 									const providerGroups = pullRequestGroups[providerId];
 									const prGroup = providerGroups && providerGroups[index];
+									const count = prGroup ? prGroup.length : 0;
 									return (
 										<PaneNode key={index}>
 											<PaneNodeName
 												onClick={e => toggleQueryHidden(e, providerId, index)}
 												title={query.name}
 												collapsed={query.hidden}
+												count={count}
 												isLoading={isLoadingPRs || index === isLoadingPRGroup}
 											>
 												<Icon

@@ -1213,10 +1213,11 @@ export const Row = styled.div`
 	&:hover time {
 		display: none;
 	}
-	.status {
+	.status,
+	time {
 		color: var(--text-color-subtle);
 		opacity: 0.75;
-		padding-left: 10px;
+		padding-left: 5px;
 	}
 	&:hover .status {
 		display: none;

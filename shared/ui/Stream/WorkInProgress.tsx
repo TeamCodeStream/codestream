@@ -1,7 +1,7 @@
 import React from "react";
 import cx from "classnames";
 import { useSelector, useDispatch } from "react-redux";
-import { Pane, PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
+import { PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
 import {
@@ -21,6 +21,7 @@ import Tooltip, { TipTitle } from "./Tooltip";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { useDidMount } from "../utilities/hooks";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
+import { RepoFileDiffs } from "./RepoFileDiffs";
 
 export const EMPTY_STATUS = {
 	label: "",
@@ -53,7 +54,7 @@ export const WorkInProgress = (props: Props) => {
 		let linesRemoved = 0;
 		(modifiedRepos[state.context.currentTeamId] || EMPTY_ARRAY).forEach(repo => {
 			(repo.modifiedFiles || EMPTY_ARRAY)
-				.filter(f => f.status !== FileStatus.untracked)
+				// .filter(f => f.status !== FileStatus.untracked)
 				.forEach(f => {
 					linesAdded += f.linesAdded;
 					linesRemoved += f.linesRemoved;
@@ -65,6 +66,7 @@ export const WorkInProgress = (props: Props) => {
 			linesRemoved,
 			teamId: state.context.currentTeamId,
 			status,
+			repos: state.repos,
 			currentUser,
 			currentUserId,
 			invisible: status.invisible || false,
@@ -179,57 +181,26 @@ export const WorkInProgress = (props: Props) => {
 						}
 					/>
 				)}
-				<Icon
-					name="pull-request"
-					title="New Pull Request"
-					placement="bottom"
-					delay={1}
-					onClick={() => {
-						dispatch(setNewPostEntry("Status"));
-						dispatch(openPanel(WebviewPanels.NewPullRequest));
-					}}
-				/>
-				<Icon
-					name="review"
-					title={
-						<>
-							Request Feedback
-							<br />
-							Watch the{" "}
-							<a
-								onClick={() => {
-									HostApi.instance.send(OpenUrlRequestType, {
-										url: "https://youtu.be/2AyqT4z5Omc"
-									});
-									HostApi.instance.track("Viewed Review Video");
-								}}
-							>
-								video guide
-							</a>
-						</>
-					}
-					delay={1}
-					placement="bottom"
-					onClick={() => {
-						dispatch(setNewPostEntry("Status"));
-						dispatch(openPanel(WebviewPanels.NewReview));
-					}}
-				/>
 			</PaneHeader>
 
 			{props.state !== PaneState.Collapsed && (
 				<PaneBody>
-					<div style={{ padding: "0 20px" }}>
+					<div style={{ padding: "0 5px 0 20px" }}>
 						{status && status.label && (
-							<Row style={{ marginBottom: "5px" }} className="no-hover wide">
+							<Row className="no-hover wide">
 								<div>
 									<Icon name={status.ticketProvider || "ticket"} />
 								</div>
 								<div>{status.label}</div>
 								<div className="icons">
-									<Tooltip title="Clear work item" placement="bottomLeft" delay={1}>
-										<Icon onClick={() => clearAndSave()} className="clickable" name="x-circle" />
-									</Tooltip>
+									<Icon
+										title="Clear work item"
+										placement="bottomLeft"
+										delay={1}
+										onClick={() => clearAndSave()}
+										className="clickable"
+										name="x-circle"
+									/>
 									{status.ticketUrl && (
 										<Icon
 											title={`Open on web`}
@@ -249,18 +220,8 @@ export const WorkInProgress = (props: Props) => {
 								</div>
 							</Row>
 						)}
-						<ModifiedRepos
-							id={derivedState.currentUserId}
-							onlyRepos={
-								props.openRepos ? props.openRepos.filter(_ => _.id).map(_ => _.id!) : undefined
-							}
-							defaultText={
-								<NoContent style={{ marginLeft: 0, marginRight: 0 }}>
-									As you write code, files that have changed will appear here.
-								</NoContent>
-							}
-						/>
 					</div>
+					<RepoFileDiffs />
 				</PaneBody>
 			)}
 		</>

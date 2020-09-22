@@ -26,7 +26,7 @@ export const NoContent = styled.div`
 `;
 
 interface PaneNodeNameProps {
-	title: string;
+	title: string | React.ReactNode;
 	id?: string;
 	className?: string;
 	onClick?: any;

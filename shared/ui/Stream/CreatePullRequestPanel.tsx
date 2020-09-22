@@ -74,6 +74,10 @@ const PRError = styled.div`
 	padding: 15px 15px 10px 15px;
 	display: flex;
 	align-items: center;
+	justify-content: center;
+	button {
+		white-space: nowrap;
+	}
 	> .icon {
 		flex-grow: 0;
 		flex-shrink: 0;
