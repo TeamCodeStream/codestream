@@ -988,8 +988,8 @@ export class GitService implements IGitService, Disposable {
 		pushAfterCommit: boolean
 	): Promise<{ success: boolean; error?: string }> {
 		try {
-			const escapedMessage = message.replace(/\'/g, "'");
-			const data = await git({ cwd: repoPath }, "commit", "-m", `"${message}"`, ...files);
+			const escapedMessage = message.replace(/\'/g, "\\'");
+			const data = await git({ cwd: repoPath }, "commit", "-m", `'${message}'`, ...files);
 			if (pushAfterCommit) {
 				await git({ cwd: repoPath }, "pull");
 				await git({ cwd: repoPath }, "push", "origin");

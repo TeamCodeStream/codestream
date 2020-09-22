@@ -1,7 +1,7 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
-import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
+import { WebviewPanels, WebviewModals, WebviewPanelNames } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openPanel } from "./actions";
 import Menu from "./Menu";
@@ -16,11 +16,15 @@ import { setProfileUser, openModal } from "../store/context/actions";
 import { confirmPopup } from "./Confirm";
 import { DeleteUserRequestType, UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { setUserPreference } from "./actions";
+import { AVAILABLE_PANES } from "./Sidebar";
 
 interface EllipsisMenuProps {
 	menuTarget: any;
 	closeMenu: any;
 }
+
+const EMPTY_HASH = {};
 
 export function EllipsisMenu(props: EllipsisMenuProps) {
 	const dispatch = useDispatch();
@@ -29,6 +33,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const user = state.users[state.session.userId!];
 
 		return {
+			removedPanes: state.preferences.removedPanes || EMPTY_HASH,
 			userTeams: _sortBy(
 				Object.values(state.teams).filter(t => !t.deactivated),
 				"name"
@@ -235,9 +240,9 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => dispatch(openModal(WebviewModals.ChangeTeamName))
 				},
 				{ label: "-" },
+				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
+				{ label: "-" },
 				{ label: "Delete Team", action: deleteTeam }
-				// { label: "-" },
-				// { label: "Export Data", action: () => go(WebviewPanels.Export) }
 			];
 			return {
 				label: "Team Admin",
@@ -283,16 +288,23 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Email", action: () => popup(WebviewModals.ChangeEmail) },
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
-				// { label: "Change Password", action: "password" },
 				{ label: "-" },
 				{ label: "Sign Out", action: () => dispatch(logout()) }
-				// { label: "-" },
-				// {
-				// 	label: "Other Actions",
-				// 	action: "other",
-				// 	submenu: [{ label: "Cancel My User Account", action: cancelAccount }]
-				// }
 			]
+		},
+		{
+			label: "View",
+			action: "view",
+			submenu: AVAILABLE_PANES.map(id => {
+				return {
+					key: id,
+					label: WebviewPanelNames[id],
+					checked: !derivedState.removedPanes[id],
+					action: () => {
+						dispatch(setUserPreference(["removedPanes", id], !derivedState.removedPanes[id]));
+					}
+				};
+			})
 		},
 		{
 			label: "Notifications",
@@ -319,12 +331,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			{ label: "-" }
 		].filter(Boolean)
 	);
-
-	// FIXME apiCapabilities (this moved to the + menu on global nav)
-	// menuItems.push({
-	// 	label: "Set a Status",
-	// 	action: () => this.setActivePanel(WebviewPanels.Status)
-	// });
 
 	// Feedback:
 	// - Email support
