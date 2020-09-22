@@ -992,7 +992,7 @@ export class GitService implements IGitService, Disposable {
 			const data = await git({ cwd: repoPath }, "commit", "-m", `"${message}"`, ...files);
 			if (pushAfterCommit) {
 				await git({ cwd: repoPath }, "pull");
-				await git({ cwd: repoPath }, "push origin");
+				await git({ cwd: repoPath }, "push", "origin");
 			}
 			return { success: true };
 		} catch (err) {
