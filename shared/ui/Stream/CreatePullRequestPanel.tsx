@@ -36,17 +36,14 @@ import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CSMe } from "@codestream/protocols/api";
-import Headshot from "./Headshot";
 import { EMPTY_STATUS } from "./StartWork";
 import Tooltip from "./Tooltip";
 import { clearMyPullRequests } from "../store/providerPullRequests/actions";
-import { css } from "react-select/src/components/SingleValue";import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { css } from "react-select/src/components/SingleValue";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedTab";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-
-// base branch dropdown: show only pushed branches
-// base branch dropdown: try to default to fork point branch
 
 export const ButtonRow = styled.div`
 	text-align: right;

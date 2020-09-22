@@ -64,7 +64,7 @@ export const RepoFileDiffs = () => {
 
 	const [selectedFile, setSelectedFile] = React.useState("");
 	const [commitMessageField, setCommitMessageField] = React.useState("");
-	const [committing, setCommitting] = React.useState("");
+	const [committingToRepo, setCommittingToRepo] = React.useState<any | undefined>(undefined);
 
 	const { repos, teamId, currentUser, collisions } = derivedState;
 	const { modifiedRepos = [] } = currentUser;
@@ -137,7 +137,7 @@ export const RepoFileDiffs = () => {
 							title="Commit &amp; Push"
 							delay={1}
 							placement="bottom"
-							onClick={() => setCommitting(repoId)}
+							onClick={() => setCommittingToRepo(repo)}
 						/>
 						<Icon
 							name="review"
@@ -200,7 +200,7 @@ export const RepoFileDiffs = () => {
 								);
 							})}
 							{repo.commits && repo.commits.length > 0 && (
-								<div style={{ margin: "0 -20px 0 -20px" }}>
+								<div style={{ margin: "0" }}>
 									{(repo.commits || []).map(c => {
 										const commit = c as any;
 										return (
@@ -224,14 +224,23 @@ export const RepoFileDiffs = () => {
 		})
 		.filter(Boolean);
 
-	if (modified.length > 0)
+	if (modified.length > 0) {
+		const repoId = committingToRepo ? committingToRepo.repoId : "";
+		const repoName = repos[repoId] ? repos[repoId].name : "";
 		return (
 			<>
-				{committing && <CommitAndPush repoId={committing} onClose={() => setCommitting("")} />}
+				{committingToRepo && (
+					<CommitAndPush
+						repoId={repoId}
+						repoName={repoName}
+						branch={committingToRepo.branch}
+						onClose={() => setCommittingToRepo(undefined)}
+					/>
+				)}
 				{modified}
 			</>
 		);
-	else
+	} else
 		return (
 			<NoContent style={{ marginLeft: 0, marginRight: 0 }}>
 				As you write code, files that have changed will appear here.

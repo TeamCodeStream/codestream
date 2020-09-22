@@ -858,6 +858,7 @@ export class Codemark extends React.Component<Props, State> {
 		const renderedTags = this.renderTags(codemark);
 		return (
 			<div
+				id={`codemark-${codemark.id}`}
 				className={cx("codemark collapsed", { wrap: this.props.wrap })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}

@@ -120,6 +120,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	_updateEmitter = new ComponentUpdateEmitter();
 	_mounted = false;
 
+	renderedCodemarks = {};
+
 	constructor(props: Props) {
 		super(props);
 
@@ -168,10 +170,25 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 	componentDidUpdate(prevProps: Props) {
 		this._updateEmitter.emit();
-		const { codemarkDomain, textEditorUri } = this.props;
+		const { codemarkDomain, textEditorUri, documentMarkers } = this.props;
 		if (codemarkDomain !== CodemarkDomainType.Team) {
 			if (String(textEditorUri).length > 0 && prevProps.textEditorUri !== textEditorUri) {
 				this.onFileChanged(false, this.onFileChangedError);
+			}
+		}
+		if (
+			documentMarkers &&
+			prevProps.documentMarkers &&
+			documentMarkers.length > prevProps.documentMarkers.length
+		) {
+			for (var i = prevProps.documentMarkers.length; i < documentMarkers.length; i++) {
+				const { codemark } = documentMarkers[i];
+				if (codemark) {
+					setTimeout(() => {
+						const el = document.getElementById(`codemark-${codemark.id}`);
+						if (el) el.classList.add("highlight-pulse");
+					}, 500);
+				}
 			}
 		}
 	}
@@ -365,6 +382,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					)
 						return null;
 				}
+				this.renderedCodemarks[codemark.id] = true;
 				return (
 					<Codemark
 						key={codemark.id}
@@ -386,7 +404,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		const { documentMarkers = [], showHidden } = this.props;
 		if (documentMarkers.length === 0) return this.renderNoCodemarks();
 		if (this.state.isLoading) return null;
-		const renderedCodemarks = {};
+		const codemarksInList = {};
 		return documentMarkers
 			.sort(
 				(a, b) =>
@@ -396,8 +414,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				const { codemark } = docMarker;
 
 				if (codemark) {
-					if (renderedCodemarks[codemark.id]) return null;
-					else renderedCodemarks[codemark.id] = true;
+					if (codemarksInList[codemark.id]) return null;
+					else codemarksInList[codemark.id] = true;
+					this.renderedCodemarks[codemark.id] = true;
 				}
 
 				const hidden =

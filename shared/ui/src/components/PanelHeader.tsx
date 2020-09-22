@@ -4,6 +4,7 @@ import styled, { CSSProperties } from "styled-components";
 
 const Header = styled.div`
 	padding: 15px 20px 5px 20px;
+	color: var(--text-color-subtle);
 	.align-right-button {
 		position: absolute;
 		// opacity: 0.4;

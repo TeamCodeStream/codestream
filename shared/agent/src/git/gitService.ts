@@ -388,11 +388,12 @@ export class GitService implements IGitService, Disposable {
 	async diffBranches(
 		repoPath: string,
 		baseRef: string,
-		headRef: string
+		headRef?: string
 	): Promise<{ patches: ParsedDiff[]; data: string }> {
 		let data: string | undefined;
 		try {
-			const options = ["diff", "--no-ext-diff", "--no-prefix", baseRef, headRef];
+			const options = ["diff", "--no-ext-diff", "--no-prefix", baseRef];
+			if (headRef) options.push(headRef);
 			options.push("--");
 			data = await git({ cwd: repoPath }, ...options);
 		} catch (err) {

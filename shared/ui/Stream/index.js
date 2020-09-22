@@ -310,7 +310,7 @@ export class SimpleStream extends Component {
 				? activePanel.split("-")
 				: null;
 
-		console.warn("ACTIVE: ", activePanel);
+		// console.warn("ACTIVE: ", activePanel);
 		// status and teams panels have been deprecated
 		return (
 			<div id="stream-root" className={streamClass}>
@@ -323,7 +323,7 @@ export class SimpleStream extends Component {
 				)}
 				<div id="confirm-root" />
 				<GlobalNav />
-				{activePanel !== WebviewPanels.CodemarksForFile && <Sidebar />}
+				<Sidebar />
 				{activeModal && (
 					<Modal translucent onClose={this.props.closeModal}>
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}

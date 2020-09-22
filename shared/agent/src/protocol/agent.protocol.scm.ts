@@ -411,7 +411,7 @@ export const GetLatestCommitScmRequestType = new RequestType<
 export interface DiffBranchesRequest {
 	repoId: string;
 	baseRef: string;
-	headRef: string;
+	headRef?: string;
 }
 
 export interface DiffBranchesResponse {
