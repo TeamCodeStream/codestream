@@ -12,7 +12,10 @@ import {
 	FetchForkPointResponse,
 	GetLatestCommitScmRequest,
 	GetLatestCommitScmRequestType,
-	GetLatestCommitScmResponse
+	GetLatestCommitScmResponse,
+	DiffBranchesRequestType,
+	DiffBranchesRequest,
+	DiffBranchesResponse
 } from "../protocol/agent.protocol";
 import {
 	BlameAuthor,
@@ -1245,6 +1248,27 @@ export class ScmManager {
 		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
 		return {
 			content: contents
+		};
+	}
+
+	@log()
+	@lspHandler(DiffBranchesRequestType)
+	async diffBranches(request: DiffBranchesRequest): Promise<DiffBranchesResponse> {
+		const { git, repositoryMappings } = SessionContainer.instance();
+
+		const repo = await git.getRepositoryById(request.repoId);
+		let repoPath;
+		if (repo) {
+			repoPath = repo.path;
+		} else {
+			repoPath = await repositoryMappings.getByRepoId(request.repoId);
+		}
+
+		if (!repoPath) throw new Error(`Could not load repo with ID ${request.repoId}`);
+
+		const filesChanged = (await git.diffBranches(repoPath, request.baseRef, request.headRef)) || [];
+		return {
+			filesChanged
 		};
 	}
 

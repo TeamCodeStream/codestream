@@ -20,7 +20,8 @@ import {
 	GetBranchesRequestType,
 	ReposScm,
 	CheckPullRequestPreconditionsResponse,
-	GetLatestCommitScmRequestType
+	GetLatestCommitScmRequestType,
+	DiffBranchesRequestType
 } from "@codestream/protocols/agent";
 import { connectProvider } from "./actions";
 import { isConnected, getPRLabel } from "../store/providers/reducer";
@@ -39,7 +40,10 @@ import Headshot from "./Headshot";
 import { EMPTY_STATUS } from "./StartWork";
 import Tooltip from "./Tooltip";
 import { clearMyPullRequests } from "../store/providerPullRequests/actions";
-import { css } from "react-select/src/components/SingleValue";
+import { css } from "react-select/src/components/SingleValue";import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedTab";
+import { PullRequestPatch } from "./PullRequestPatch";
+import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 
 // base branch dropdown: show only pushed branches
 // base branch dropdown: try to default to fork point branch
@@ -215,6 +219,9 @@ export const CreatePullRequestPanel = props => {
 	const [selectedRepo, setSelectedRepo] = useState<ReposScm | undefined>(undefined);
 
 	const [currentStep, setCurrentStep] = useState(0);
+
+	const [isLoadingDiffs, setIsLoadingDiffs] = useState(false);
+	const [filesChanged, setFilesChanged] = useState<any[]>([]);
 
 	const [isWaiting, setIsWaiting] = useState(false);
 	const [propsForPrePRProviderInfoModal, setPropsForPrePRProviderInfoModal] = useState<any>();
@@ -892,6 +899,31 @@ export const CreatePullRequestPanel = props => {
 		);
 	};
 
+	// const repositoryName = React.useMemo(() => {
+	// 	selectedRepo
+	// }, [review, selectedRepo]);
+
+	const fetchFilesChanged = async () => {
+		setIsLoadingDiffs(true);
+		const response = await HostApi.instance.send(DiffBranchesRequestType, {
+			repoId: prRepoId,
+			baseRef: prBranch,
+			headRef: reviewBranch
+		});
+
+		if (response.error) {
+			setFilesChanged([]);
+		} else if (response && response.filesChanged) {
+			setFilesChanged(response.filesChanged);
+		}
+		setIsLoadingDiffs(false);
+	};
+
+	useEffect(() => {
+		if (prBranch && reviewBranch) fetchFilesChanged();
+		else setFilesChanged([]);
+	}, [prBranch, reviewBranch]);
+
 	if (propsForPrePRProviderInfoModal) {
 		return <PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />;
 	}
@@ -1134,6 +1166,14 @@ export const CreatePullRequestPanel = props => {
 					</div>
 					{!loading && !loadingBranchInfo && preconditionError.type && preconditionErrorMessages()}
 				</div>
+				<PullRequestFilesChangedList
+					isLoading={isLoadingDiffs}
+					filesChanged={filesChanged}
+					baseRef={prBranch}
+					headRef={reviewBranch}
+					baseRefName={prBranch}
+					headRefName={reviewBranch}
+				/>
 			</span>
 		</Root>
 	);

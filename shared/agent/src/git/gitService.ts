@@ -385,6 +385,21 @@ export class GitService implements IGitService, Disposable {
 		return patches;
 	}
 
+	async diffBranches(repoPath: string, baseRef: string, headRef: string): Promise<ParsedDiff[]> {
+		let data: string | undefined;
+		try {
+			const options = ["diff", "--no-ext-diff", "--no-prefix", baseRef, headRef];
+			options.push("--");
+			data = await git({ cwd: repoPath }, ...options);
+		} catch (err) {
+			Logger.warn(`Error getting diffs from branches ${repoPath}:${baseRef}:${headRef}`);
+			throw err;
+		}
+
+		const patches = parsePatch(data);
+		return patches;
+	}
+
 	// this isn't technically a git operation, but we leave it here since it's
 	// pretending to be one
 	async getNewDiff(

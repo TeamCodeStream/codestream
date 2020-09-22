@@ -10,6 +10,7 @@ import { LoadingMessage } from "../src/components/LoadingMessage";
 import { setUserPreference } from "./actions";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
+import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
@@ -18,7 +19,7 @@ const PRCommitContent = styled.div`
 	position: relative;
 `;
 
-const PRDiffHunks = styled.div`
+export const PRDiffHunks = styled.div`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
 	white-space: pre;
 }
@@ -51,7 +52,6 @@ export const PullRequestFilesChangedTab = (props: {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
-			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined
@@ -60,10 +60,6 @@ export const PullRequestFilesChangedTab = (props: {
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [filesChanged, setFilesChanged] = useState<any[]>([]);
-
-	const setMode = mode => {
-		dispatch(setUserPreference(["pullRequestFilesChangedMode"], mode));
-	};
 
 	const _mapData = data => {
 		const filesChanged = data.map(_ => {
@@ -120,43 +116,16 @@ export const PullRequestFilesChangedTab = (props: {
 		);
 
 	if (!filesChanged || !filesChanged.length) return null;
-
-	const mode = "files"; // derivedState.pullRequestFilesChangedMode;
-
 	return (
-		<PRCommitContent>
-			{/*			<PRSelectorButtons>
-				<span className={mode == "files" ? "selected" : ""} onClick={() => setMode("files")}>
-					Files
-				</span>
-				<span className={mode == "hunks" ? "selected" : ""} onClick={() => setMode("hunks")}>
-					Diff Hunks
-				</span>
-			</PRSelectorButtons>
-		*/}
-			<div style={{ height: "10px" }} />
-			{mode == "files" ? (
-				<PullRequestFilesChanged pr={pr} filesChanged={filesChanged} />
-			) : (
-				<PRDiffHunks>
-					{filesChanged.map(_ => {
-						console.warn("PATCH IS: ", _.patch);
-						return (
-							<PRDiffHunk>
-								<h1>{_.filename}</h1>
-								<PullRequestPatch patch={_.patch} filename={_.filename} />
-							</PRDiffHunk>
-						);
-					})}
-				</PRDiffHunks>
-			)}
-		</PRCommitContent>
+		<PullRequestFilesChangedList
+			pr={pr}
+			filesChanged={filesChanged}
+			repositoryName={pr.repository.name}
+			baseRef={pr.baseRefOid}
+			baseRefName={pr.baseRefName}
+			headRef={pr.headRefOid}
+			headRefName={pr.headRefName}
+			isLoading={isLoading}
+		/>
 	);
-
-	// return (
-	// 	<PRCommitContent>
-	// 		<div>
-	// 		</div>
-	// 	</PRCommitContent>
-	// );
 };
