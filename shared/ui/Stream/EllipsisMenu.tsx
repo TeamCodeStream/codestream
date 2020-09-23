@@ -34,6 +34,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 		return {
 			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
+			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			userTeams: _sortBy(
 				Object.values(state.teams).filter(t => !t.deactivated),
 				"name"
@@ -295,7 +296,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		{
 			label: "View",
 			action: "view",
-			submenu: AVAILABLE_PANES.map(id => {
+			submenu: derivedState.sidebarPaneOrder.map(id => {
 				const settings = derivedState.sidebarPanePreferences[id] || EMPTY_HASH;
 				return {
 					key: id,
