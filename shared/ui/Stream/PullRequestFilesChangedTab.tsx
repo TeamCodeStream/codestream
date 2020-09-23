@@ -14,31 +14,6 @@ import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
-const PRCommitContent = styled.div`
-	margin: 0 20px 20px 40px;
-	position: relative;
-`;
-
-export const PRDiffHunks = styled.div`
-	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
-	white-space: pre;
-}
-`;
-
-export const PRDiffHunk = styled.div`
-	border: 1px solid var(--base-border-color);
-	border-radius: 5px;
-	margin: 0 0 20px 0;
-	h1 {
-		font-size: 12px;
-		font-weight: normal;
-		margin: 0;
-		padding: 10px;
-		background: var(--base-background-color);
-		border-bottom: 1px solid var(--base-border-color);
-	}
-`;
-
 const STATUS_MAP = {
 	modified: FileStatus.modified
 };

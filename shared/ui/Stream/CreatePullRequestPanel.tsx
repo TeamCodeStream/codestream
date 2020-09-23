@@ -41,7 +41,7 @@ import Tooltip from "./Tooltip";
 import { clearMyPullRequests } from "../store/providerPullRequests/actions";
 import { css } from "react-select/src/components/SingleValue";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedTab";
+import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedList";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 

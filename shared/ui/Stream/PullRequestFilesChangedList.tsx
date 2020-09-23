@@ -23,6 +23,7 @@ export const PRDiffHunk = styled.div`
 	border-radius: 5px;
 	margin: 0 0 20px 0;
 	h1 {
+		border-radius: 5px 5px 0 0;
 		font-size: 12px;
 		font-weight: normal;
 		margin: 0;

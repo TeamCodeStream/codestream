@@ -20,6 +20,9 @@ import CancelButton from "./CancelButton";
 import ScrollBox from "./ScrollBox";
 
 const Root = styled.div`
+	height: 100%;
+	display: flex;
+	flex-direction: column;
 	#controls {
 		padding-top: 10px;
 	}
@@ -41,8 +44,10 @@ const Root = styled.div`
 
 const IconLabel = styled.span`
 	color: var(--text-color-subtle);
+	display: inline-block;
 	white-space: nowrap;
 	padding-right: 10px;
+	padding-bottom: 10px;
 	.icon {
 		margin-right: 5px;
 	}
@@ -136,23 +141,21 @@ export const CommitAndPush = (props: Props) => {
 
 	return (
 		<Modal noPadding>
-			<Root className="full-height-codemark-form">
+			<Root>
 				<PanelHeader title="Commit &amp; Push">
-					<IconLabel>
-						<Icon name="repo" />
-						{props.repoName}
-					</IconLabel>
-					<IconLabel>
-						<Icon name="git-branch" />
-						{props.repoName}
-					</IconLabel>
-				</PanelHeader>
-				<CancelButton onClick={e => props.onClose(e)} />
-				<span className="plane-container" style={{ height: "100%" }}>
-					<div className="codemark-form-container">
+					<CancelButton onClick={e => props.onClose(e)} />
+					<div className="codemark-form-container" style={{ marginTop: "10px" }}>
 						<form className="codemark-form standard-form" id="code-comment-form">
 							<fieldset className="form-body">
 								<div id="controls">
+									<IconLabel>
+										<Icon name="repo" />
+										{props.repoName}
+									</IconLabel>
+									<IconLabel>
+										<Icon name="git-branch" />
+										{props.branch}
+									</IconLabel>
 									<div key="title" className="control-group has-input-actions two-buttons">
 										<TextInput
 											name="title"
@@ -188,7 +191,7 @@ export const CommitAndPush = (props: Props) => {
 											checked={derivedState.pushAfterCommit}
 											onChange={() => setPushPreference(!derivedState.pushAfterCommit)}
 										>
-											Push to [origin]
+											Push to origin
 										</Checkbox>
 									</div>
 								</div>
@@ -204,16 +207,19 @@ export const CommitAndPush = (props: Props) => {
 							</fieldset>
 						</form>
 					</div>
-					<div style={{ margin: "0 -20px" }}>
-						<HR />
+				</PanelHeader>
+				<div style={{ flexGrow: 10, position: "relative", overflow: "hidden", paddingTop: "10px" }}>
+					<div style={{ height: "100%" }}>
 						<ScrollBox>
 							<div className="vscroll">
 								{scmError && <>Error: {scmError}</>}
 								<RepoHunkDiffs repoId={props.repoId} filesChanged={filesChanged} />
+								<br />
+								<br />
 							</div>
 						</ScrollBox>
 					</div>
-				</span>
+				</div>
 			</Root>
 		</Modal>
 	);
