@@ -49,10 +49,9 @@ export function CodemarkView() {
 			// TODO: fetch it when we have the api for that
 			dispatch(setCurrentCodemark());
 		}
-
 	});
 
-	const handleClickCancel = React.useCallback(event => {		
+	const handleClickCancel = React.useCallback(event => {
 		dispatch(setCurrentCodemark());
 	}, []);
 
@@ -76,7 +75,6 @@ export function CodemarkView() {
 
 	return (
 		<div className="codemark-view" onClick={handleClickField}>
-			<CancelButton placement="left" onClick={handleClickCancel} />
 			<div className="codemark-container">
 				<Codemark codemark={codemark} selected />
 			</div>

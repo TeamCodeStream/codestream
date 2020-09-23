@@ -127,7 +127,7 @@ export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => 
 								<span className="subtle">
 									(diffs vs.{" "}
 									<InlineMenu items={[]}>
-										<span className="monospace no-transform">
+										<span className="monospace smaller no-transform">
 											{repo.startCommit ? repo.startCommit.substr(0, 8) : "HEAD"}
 										</span>
 									</InlineMenu>
@@ -214,7 +214,7 @@ export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => 
 												</div>
 												<div>{commit.info.shortMessage}</div>
 												<div className="icons">
-													<span className="monospace">{commit.sha.substr(0, 8)}</span>
+													<span className="monospace smaller">{commit.sha.substr(0, 8)}</span>
 												</div>
 											</Row>
 										);

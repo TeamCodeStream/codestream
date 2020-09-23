@@ -18,6 +18,7 @@ import {
 	setCreatePullRequest
 } from "../store/context/actions";
 import CancelButton from "./CancelButton";
+import { setCurrentCodemark } from "../store/context/actions";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -37,6 +38,7 @@ export function GlobalNav() {
 			collisions: getCodeCollisions(state),
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			currentReviewId: state.context.currentReviewId,
+			currentCodemarkId: state.context.currentCodemarkId,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined
@@ -51,6 +53,7 @@ export function GlobalNav() {
 		totalUnread,
 		totalMentions,
 		collisions,
+		currentCodemarkId,
 		currentReviewId,
 		currentPullRequestId
 	} = derivedState;
@@ -79,21 +82,21 @@ export function GlobalNav() {
 	};
 
 	const go = panel => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
-		dispatch(setCurrentReview());
+		close();
 		dispatch(openPanel(panel));
 	};
 
-	const close = panel => {
+	const close = () => {
 		dispatch(setCreatePullRequest());
 		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
+		dispatch(setCurrentCodemark());
 	};
 
 	// const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
 	const selected = panel => false;
 	return React.useMemo(() => {
+		if (currentCodemarkId) return null;
 		if (currentReviewId || currentPullRequestId) {
 			return (
 				<nav className="inline" id="global-nav">
@@ -329,6 +332,7 @@ export function GlobalNav() {
 		derivedState.composeCodemarkActive,
 		currentReviewId,
 		currentPullRequestId,
+		currentCodemarkId,
 		plusMenuOpen,
 		ellipsisMenuOpen
 	]);

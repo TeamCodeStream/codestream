@@ -74,7 +74,8 @@ import {
 	setNewPostEntry,
 	setCurrentReview,
 	setCurrentPullRequest,
-	setProfileUser
+	setProfileUser,
+	setCurrentCodemark
 } from "../store/context/actions";
 import { last as _last, findLastIndex } from "lodash-es";
 import { Keybindings } from "./Keybindings";
@@ -446,11 +447,11 @@ export class SimpleStream extends Component {
 							)}
 						</Modal>
 					)}
-				{(threadId || this.props.currentCodemarkId) && (
-					<>
-						<div id="panel-blanket" />
-						{this.props.currentCodemarkId && <CodemarkView />}
-					</>
+				{this.props.currentCodemarkId && (
+					<Modal translucent onClose={() => this.props.setCurrentCodemark()}>
+						<CodemarkView />
+					</Modal>
+				)}
 				)}
 			</div>
 		);
