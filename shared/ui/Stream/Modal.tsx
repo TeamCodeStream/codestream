@@ -39,12 +39,12 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 	overflow: auto;
 
 	&.translucent {
-		background: rgba(255, 255, 255, 0.8);
-		backdrop-filter: blur(1px);
-		.vscode-dark & {
-			background: rgba(0, 0, 0, 0.6);
-			backdrop-filter: contrast(0.5) blur(1px);
-		}
+		// background: rgba(255, 255, 255, 0.8);
+		// backdrop-filter: blur(1px);
+		// .vscode-dark & {
+		background: transparentize(var(--app-background-color), 0.5);
+		backdrop-filter: brightness(75%) blur(1px);
+		// }
 	}
 	&.show-global-nav {
 		top: 50px;
