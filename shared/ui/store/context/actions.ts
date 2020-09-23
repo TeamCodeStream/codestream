@@ -31,6 +31,14 @@ export const closeModal = () => {
 	return action(ContextActionsType.CloseModal);
 };
 
+export const closeAllPanels = () => dispatch => {
+	dispatch(closeModal());
+	dispatch(openPanel(WebviewPanels.Sidebar));
+	dispatch(setCurrentCodemark());
+	dispatch(setCurrentReview());
+	dispatch(clearCurrentPullRequest());
+};
+
 export const focus = () => action(ContextActionsType.SetFocusState, true);
 
 export const blur = () => action(ContextActionsType.SetFocusState, false);

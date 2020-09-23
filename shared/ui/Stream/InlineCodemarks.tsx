@@ -52,7 +52,8 @@ import {
 	setCurrentCodemark,
 	setSpatialViewPRCommentsToggle,
 	repositionCodemark,
-	setComposeCodemarkActive
+	setComposeCodemarkActive,
+	closeAllPanels
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
@@ -84,6 +85,7 @@ import { supportsIntegrations } from "../store/configs/reducer";
 import { Keybindings } from "./Keybindings";
 import { setNewPostEntry } from "../store/context/actions";
 import { PullRequest } from "./PullRequest";
+import { Modal } from "./Modal";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -145,6 +147,7 @@ interface Props {
 	repositionCodemark: (
 		...args: Parameters<typeof repositionCodemark>
 	) => ReturnType<typeof repositionCodemark>;
+	closeAllPanels: Function;
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
@@ -513,7 +516,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 											hidden={hidden}
 											highlightCodeInTextEditor
 											query={this.state.query}
-											viewHeadshots={this.props.viewHeadshots}
 											postAction={this.props.postAction}
 										/>
 									</div>
@@ -1146,7 +1148,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		const composeOpen = composeCodemarkActive ? true : false;
 		return (
-			<div ref={this.root} className={cx("panel inline-panel full-height")}>
+			<Modal noPadding onClose={() => this.props.closeAllPanels()}>
 				{currentReviewId ? (
 					<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 				) : currentPullRequestId ? (
@@ -1161,7 +1163,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				)}
 				{this.state.isLoading ? null : this.renderCodemarks()}
 				{false && !currentReviewId && !currentPullRequestId && this.renderViewSelectors()}
-			</div>
+			</Modal>
 		);
 	}
 
@@ -1371,7 +1373,8 @@ export default connect(mapStateToProps, {
 	addDocumentMarker,
 	changeSelection,
 	setSpatialViewPRCommentsToggle,
-	setNewPostEntry
+	setNewPostEntry,
+	closeAllPanels
 })(SimpleInlineCodemarks);
 
 const ViewSelectorControl = styled.span`

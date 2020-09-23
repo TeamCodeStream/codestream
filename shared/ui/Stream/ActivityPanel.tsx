@@ -8,7 +8,7 @@ import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
+import { setCurrentCodemark, setCurrentReview, closeAllPanels } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -22,7 +22,7 @@ import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
 import { saveCodemarks } from "../store/codemarks/actions";
 import { safe, emptyArray } from "../utils";
-import { markStreamRead, setCodemarkTypeFilter, closePanel } from "./actions";
+import { markStreamRead } from "./actions";
 import { CSUser, CodemarkType, CSReview } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -30,16 +30,13 @@ import { getPost, getThreadPosts } from "../store/posts/reducer";
 import Menu from "./Menu";
 import { FormattedPlural } from "react-intl";
 import { Codemark } from "./Codemark/index";
-import Filter from "./Filter";
 import { Review } from "./Review";
 import { saveReviews } from "../store/reviews/actions";
 import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
-import { Card } from "../src/components/Card";
 import { ProfileLink } from "../src/components/ProfileLink";
 import { Keybindings } from "./Keybindings";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { Dialog } from "../src/components/Dialog";
 
 // see comment in SmartFormattedList.tsx
@@ -268,7 +265,7 @@ export const ActivityPanel = () => {
 	// }
 
 	return (
-		<Dialog maximizable wide noPadding onClose={() => dispatch(closePanel())}>
+		<Dialog maximizable wide noPadding onClose={() => dispatch(closeAllPanels())}>
 			<PanelHeader title="Activity" />
 			<ScrollBox>
 				<div ref={rootRef} className="channel-list vscroll">
