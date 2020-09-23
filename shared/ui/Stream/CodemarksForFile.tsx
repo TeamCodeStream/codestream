@@ -78,6 +78,7 @@ interface ConnectedProps {
 	numHidden?: number;
 	codemarkDomain: CodemarkDomainType;
 	teamName: string;
+	repoName: string;
 	repos: ReposState;
 }
 
@@ -457,49 +458,41 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: "team";
 		const subtitle =
 			codemarkDomain === CodemarkDomainType.File
-				? fs.pathBasename(fileNameToFilterFor)
+				? fs.pathBasename(fileNameToFilterFor) || "[no file]"
 				: codemarkDomain === CodemarkDomainType.Directory
-				? fs.pathDirname(fileNameToFilterFor)
+				? fs.pathDirname(fileNameToFilterFor) || "[no file]"
 				: codemarkDomain === CodemarkDomainType.Repo
-				? "codestream" // FIXME
+				? this.props.repoName || "[repository]"
 				: this.props.teamName;
 
 		const domainItems = [
 			{
-				label: (
-					<span>
-						Current File <span className="subtle">{fs.pathBasename(fileNameToFilterFor)}</span>
-					</span>
-				),
+				label: "Current File",
+				subtle: fs.pathBasename(fileNameToFilterFor),
 				key: "file",
 				icon: <Icon name="file" />,
 				action: () => this.switchDomain(CodemarkDomainType.File),
 				checked: codemarkDomain === CodemarkDomainType.File
 			},
 			{
-				label: (
-					<span>
-						Current Directory <span className="subtle">{fs.pathDirname(fileNameToFilterFor)}</span>
-					</span>
-				),
+				label: "Current Directory",
+				subtle: fs.pathDirname(fileNameToFilterFor),
 				key: "directory",
 				icon: <Icon name="directory" />,
 				action: () => this.switchDomain(CodemarkDomainType.Directory),
 				checked: codemarkDomain === CodemarkDomainType.Directory
 			},
 			{
-				label: (
-					<span>
-						Current Repository <span className="subtle">{"codestream"}</span>
-					</span>
-				),
+				label: "Current Repository",
+				subtle: this.props.repoName || "[repository]",
 				key: "repo",
 				icon: <Icon name="repo" />,
 				action: () => this.switchDomain(CodemarkDomainType.Repo),
 				checked: codemarkDomain === CodemarkDomainType.Repo
 			},
 			{
-				label: "All Codemarks in your Team",
+				label: "All Codemarks",
+				subtle: this.props.teamName,
 				key: "team",
 				icon: <Icon name="team" />,
 				action: () => this.switchDomain(CodemarkDomainType.Team),
@@ -627,11 +620,19 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		isConnected(state, { name })
 	);
 
+	let repoName = "";
+	const scmInfo = editorContext.scmInfo;
+	if (scmInfo && scmInfo.scm) {
+		const { repoId } = scmInfo.scm;
+		if (repoId && repos[repoId]) repoName = repos[repoId].name;
+	}
+
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 
 	return {
 		repos,
 		teamName,
+		repoName,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		showHidden: context.codemarksShowArchived || false,

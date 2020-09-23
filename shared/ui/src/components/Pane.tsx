@@ -204,6 +204,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 					dragFunctions.drag(e, props.id);
 				}}
 				onStop={e => {
+					// https://github.com/STRML/react-draggable/issues/49
 					if (!dragging) togglePanel(e);
 					else {
 						dragFunctions.stop(e, props.id);
