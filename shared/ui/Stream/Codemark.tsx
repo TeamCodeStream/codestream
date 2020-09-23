@@ -452,7 +452,7 @@ export class Codemark extends React.Component<Props, State> {
 			? null
 			: tags.map(tagId => {
 					const tag = teamTagsHash[tagId];
-					return tag ? <Tag tag={tag} placement="bottom" /> : null;
+					return tag ? <Tag key={tagId} tag={tag} placement="bottom" /> : null;
 			  });
 	};
 

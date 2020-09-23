@@ -33,7 +33,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const user = state.users[state.session.userId!];
 
 		return {
-			removedPanes: state.preferences.removedPanes || EMPTY_HASH,
+			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
 			userTeams: _sortBy(
 				Object.values(state.teams).filter(t => !t.deactivated),
 				"name"
@@ -296,12 +296,13 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			label: "View",
 			action: "view",
 			submenu: AVAILABLE_PANES.map(id => {
+				const settings = derivedState.sidebarPanePreferences[id] || EMPTY_HASH;
 				return {
 					key: id,
 					label: WebviewPanelNames[id],
-					checked: !derivedState.removedPanes[id],
+					checked: !settings.removed,
 					action: () => {
-						dispatch(setUserPreference(["removedPanes", id], !derivedState.removedPanes[id]));
+						dispatch(setUserPreference(["sidebarPanes", id, "removed"], !settings.removed));
 					}
 				};
 			})

@@ -62,7 +62,7 @@ interface Props extends ConnectedProps {
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
 	selectedCardId?: string;
-	state?: PaneState;
+	paneState?: PaneState;
 }
 
 interface State {
@@ -191,7 +191,7 @@ class IssueDropdown extends React.Component<Props, State> {
 					knownIssueProviderOptions={knownIssueProviderOptions}
 					selectedCardId={this.props.selectedCardId}
 					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
-					state={this.props.state}
+					paneState={this.props.paneState}
 				></IssueList>
 			</>
 		);
@@ -384,7 +384,7 @@ interface IssueListProps {
 	knownIssueProviderOptions: any;
 	selectedCardId?: string;
 	loadingMessage?: React.ReactNode;
-	state?: PaneState;
+	paneState?: PaneState;
 }
 
 const EMPTY_HASH = {};
@@ -1008,7 +1008,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					delay={1}
 				/>
 			</PaneHeader>
-			{props.state !== PaneState.Collapsed && (
+			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
 					<div className="instructions">
 						<Icon name="light-bulb" />

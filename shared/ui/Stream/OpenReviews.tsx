@@ -20,7 +20,7 @@ import { Link } from "./Link";
 
 interface Props {
 	openRepos: ReposScm[];
-	state: PaneState;
+	paneState: PaneState;
 }
 
 export function OpenReviews(props: Props) {
@@ -75,7 +75,7 @@ export function OpenReviews(props: Props) {
 					delay={1}
 				/>
 			</PaneHeader>
-			{props.state !== PaneState.Collapsed && (
+			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
 					{!reviewsState.bootstrapped && (
 						<Row>

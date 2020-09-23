@@ -104,7 +104,7 @@ export const Section = styled.div`
 `;
 
 interface Props extends ConnectedProps {
-	state: PaneState;
+	paneState: PaneState;
 }
 
 interface ConnectedProps {
@@ -655,7 +655,7 @@ class TeamPanel extends React.Component<Props, State> {
 						delay={1}
 					/>
 				</PaneHeader>
-				{this.props.state !== PaneState.Collapsed && (
+				{this.props.paneState !== PaneState.Collapsed && (
 					<PaneBody>
 						<PaneNode>
 							<PaneNodeName id="team/teammates" title="Current Members" />

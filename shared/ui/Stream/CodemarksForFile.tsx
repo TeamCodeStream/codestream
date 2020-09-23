@@ -62,7 +62,7 @@ export enum CodemarkDomainType {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 interface InheritedProps {
-	state: PaneState;
+	paneState: PaneState;
 }
 
 interface ConnectedProps {
@@ -334,7 +334,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	renderCodemarks = () => {
-		if (this.props.state === PaneState.Collapsed) return null;
+		if (this.props.paneState === PaneState.Collapsed) return null;
 		switch (this.props.codemarkDomain) {
 			case CodemarkDomainType.File:
 				return this.renderCodemarksFile();
@@ -559,7 +559,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					title="Codemarks"
 					count={count}
 					subtitle={
-						<InlineMenu className="subtle no-padding" items={domainItems}>
+						<InlineMenu className="subtle no-padding" items={domainItems} title="Show Codemarks">
 							<Icon name={domainIcon} className="inline-label" />
 							{subtitle}
 						</InlineMenu>

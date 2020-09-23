@@ -18,7 +18,7 @@ import { Pane, PaneState } from "../src/components/Pane";
 import Draggable, { DraggableEvent } from "react-draggable";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
-import { css } from "react-select/src/components/SingleValue";
+import cx from "classnames";
 
 const EMPTY_ARRAY = [];
 
@@ -49,6 +49,11 @@ export const ResizeHandle = styled.div`
 	z-index: 500;
 `;
 
+export const DragHeaderContext = React.createContext({
+	drag: (e: any, id: WebviewPanels) => {},
+	stop: (e: any, id: WebviewPanels) => {}
+});
+
 export const AVAILABLE_PANES = [
 	WebviewPanels.OpenPullRequests,
 	WebviewPanels.OpenReviews,
@@ -67,6 +72,7 @@ export const Sidebar = () => {
 		return {
 			removedPanes: preferences.removedPanes || EMPTY_HASH,
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
+			sidebarPaneOrder: preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			currentUserId: state.session.userId!
 		};
 	});
@@ -77,10 +83,8 @@ export const Sidebar = () => {
 	const [firstIndex, setFirstIndex] = useState<number | undefined>(undefined);
 	const [secondIndex, setSecondIndex] = useState<number | undefined>(undefined);
 	const [dragging, setDragging] = useState(false);
-	const [windowSize, setWindowSize] = useState({
-		width: 0,
-		height: 0
-	});
+	const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+	const [headerDragY, setHeaderDragY] = useState(0);
 
 	const fetchOpenRepos = async () => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -120,33 +124,36 @@ export const Sidebar = () => {
 
 	const panes: {
 		id: WebviewPanels;
+		removed: boolean;
 		collapsed: boolean;
 		maximized: boolean;
 		size: number;
 	}[] = React.useMemo(() => {
-		return AVAILABLE_PANES.filter(id => !derivedState.removedPanes[id]).map(id => {
+		return derivedState.sidebarPaneOrder.map(id => {
 			const settings = sidebarPanes[id] || {};
 			return {
 				id,
+				removed: settings.removed,
 				collapsed: settings.collapsed,
 				maximized: settings.maximized,
 				size: sizes[id] || Math.abs(settings.size) || 1
 			};
 		});
-	}, [sidebarPanes, sizes]);
+	}, [sidebarPanes, sizes, derivedState.sidebarPaneOrder]);
 
-	const maximizedPane = useMemo(() => panes.find(p => p.maximized), [sidebarPanes]);
+	const maximizedPane = useMemo(() => panes.find(p => p.maximized && !p.removed), [sidebarPanes]);
 	const collapsed = React.useCallback(
 		pane => {
 			if (maximizedPane) return pane.id !== maximizedPane.id;
-			else return pane.collapsed;
+			else return pane.collapsed && !pane.removed;
 		},
 		[maximizedPane]
 	);
 
 	const state = React.useCallback(
 		pane => {
-			if (maximizedPane) return PaneState.Minimized;
+			if (pane.removed) return PaneState.Removed;
+			else if (maximizedPane) return PaneState.Minimized;
 			else if (pane.collapsed) return PaneState.Collapsed;
 			else return PaneState.Open;
 		},
@@ -158,7 +165,7 @@ export const Sidebar = () => {
 	const reducer = (accumulator, currentValue) => accumulator + currentValue;
 
 	const totalSize = useMemo(() => {
-		const expanded = panes.filter(p => !collapsed(p));
+		const expanded = panes.filter(p => !p.removed && !collapsed(p));
 		if (expanded.length == 0) return 1;
 		else return expanded.map(p => sizes[p.id] || p.size || 1).reduce(reducer);
 	}, [panes, sizes, windowSize, numCollapsed]);
@@ -168,7 +175,7 @@ export const Sidebar = () => {
 		let accumulator = 40;
 		return panes.map(p => {
 			const size = sizes[p.id] || p.size || 1;
-			const height = collapsed(p) ? 25 : (size * availableHeight) / totalSize;
+			const height = p.removed ? 0 : collapsed(p) ? 25 : (size * availableHeight) / totalSize;
 			const position = {
 				id: p.id,
 				height,
@@ -178,26 +185,27 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [sidebarPanes, sizes, windowSize, numCollapsed]);
+	}, [sizes, windowSize, numCollapsed, panes]);
 
 	const dragPositions = useMemo(() => {
 		// if a pane is maximized, you can't drag anything around
 		if (maximizedPane) return [];
 
 		// don't worry about using the dynamic version of collapsed because
-		// if one pane is maximized, you can't drag
+		// if one pane is maximized, you can't drag. subtract 40 for the header padding,
+		// and 25 for each collapsed pane
 		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
 		let accumulator = 40;
 		const firstExpanded = panes.findIndex(p => !p.collapsed);
 		const lastExpanded = findLastIndex(panes, p => !p.collapsed);
 		return panes.map((p, index) => {
 			const size = sizes[p.id] || p.size || 1;
-			const height = p.collapsed ? 25 : (size * availableHeight) / totalSize;
+			const height = p.removed ? 0 : p.collapsed ? 25 : (size * availableHeight) / totalSize;
 			const position = index > firstExpanded && index <= lastExpanded ? { top: accumulator } : null;
 			accumulator += height;
 			return position;
 		});
-	}, [sidebarPanes, sizes, windowSize]);
+	}, [panes, sizes, windowSize]);
 
 	const handleStart = (e: any, index: number) => {
 		let findFirstIndex = index - 1;
@@ -243,14 +251,53 @@ export const Sidebar = () => {
 		dispatch(setUserPreference(["sidebarPanes", secondId, "size"], sizes[secondId]));
 	};
 
+	const handleDragHeader = (e: any, id: WebviewPanels) => {
+		setHeaderDragY(e.clientY);
+	};
+
+	const handleStopHeader = (e: any, id: WebviewPanels) => {
+		if (!id) return;
+
+		let paneOrder = panes.map(pane => (pane.id === id ? "TO_DELETE" : pane.id));
+		let newLocation = -1;
+		panes.forEach((pane, index) => {
+			if (pane.removed) return;
+			const position = positions[index];
+			// if the drag stop position is in the top half of div, the new location is
+			// this one (which pushes it down)
+			if (headerDragY > position.top && headerDragY < position.top + position.height / 2) {
+				newLocation = index;
+			} else if (
+				headerDragY > position.top + position.height / 2 &&
+				headerDragY < position.top + position.height
+			) {
+				// if the drag stop position is in the bottom half of the div, the new
+				// location is this one plus one
+				newLocation = index + 1;
+			}
+		});
+		setHeaderDragY(0);
+
+		if (newLocation > -1) {
+			// add it to the new one
+			paneOrder.splice(newLocation, 0, id);
+			paneOrder = paneOrder.filter(p => p !== "TO_DELETE");
+			// stop the animation for this re-ordering...
+			setDragging(true);
+			dispatch(setUserPreference(["sidebarPaneOrder"], paneOrder));
+			// .. then re-enable it
+			setTimeout(() => setDragging(false), 100);
+		}
+	};
+
 	return (
 		<Root className={dragging ? "" : "animate-height"}>
 			<CreateCodemarkIcons />
 			<ExtensionTitle>CodeStream</ExtensionTitle>
 			<Panels>
-				{panes.map((panel, index) => {
+				{panes.map((pane, index) => {
 					const position = dragPositions[index];
-					if (!position) return null;
+					if (!position || pane.removed) return null;
 					return (
 						<Draggable
 							axis="y"
@@ -264,31 +311,54 @@ export const Sidebar = () => {
 						</Draggable>
 					);
 				})}
-				{panes.map((pane, index) => {
-					const position = positions[index];
-					return (
-						<Pane top={position.top} height={position.height} tabIndex={index + 1}>
-							{(() => {
-								switch (pane.id) {
-									case WebviewPanels.OpenPullRequests:
-										return <OpenPullRequests openRepos={openRepos} state={state(pane)} />;
-									case WebviewPanels.OpenReviews:
-										return <OpenReviews openRepos={openRepos} state={state(pane)} />;
-									case WebviewPanels.WorkInProgress:
-										return <WorkInProgress openRepos={openRepos} state={state(pane)} />;
-									case WebviewPanels.Tasks:
-										return <IssueDropdown state={state(pane)} />;
-									case WebviewPanels.CodemarksForFile:
-										//@ts-ignore
-										return <CodemarksForFile state={state(pane)} />;
-									case WebviewPanels.Team:
-										return <TeamPanel state={state(pane)} />;
-								}
-								return null;
-							})()}
-						</Pane>
-					);
-				})}
+				<DragHeaderContext.Provider
+					value={{
+						drag: handleDragHeader,
+						stop: handleStopHeader
+					}}
+				>
+					{panes.map((pane, index) => {
+						if (pane.removed) return null;
+						const position = positions[index];
+						const paneState = state(pane);
+						const highlightTop =
+							headerDragY > position.top && headerDragY < position.top + position.height / 2;
+						const highlightBottom =
+							headerDragY > position.top + position.height / 2 &&
+							headerDragY < position.top + position.height;
+						return (
+							<Pane
+								className={cx({
+									highlightTop,
+									highlightBottom,
+									open: paneState === PaneState.Open
+								})}
+								top={position.top}
+								height={position.height}
+								tabIndex={index + 1}
+							>
+								{(() => {
+									switch (pane.id) {
+										case WebviewPanels.OpenPullRequests:
+											return <OpenPullRequests openRepos={openRepos} paneState={paneState} />;
+										case WebviewPanels.OpenReviews:
+											return <OpenReviews openRepos={openRepos} paneState={paneState} />;
+										case WebviewPanels.WorkInProgress:
+											return <WorkInProgress openRepos={openRepos} paneState={paneState} />;
+										case WebviewPanels.Tasks:
+											return <IssueDropdown paneState={paneState} />;
+										case WebviewPanels.CodemarksForFile:
+											//@ts-ignore
+											return <CodemarksForFile paneState={paneState} />;
+										case WebviewPanels.Team:
+											return <TeamPanel paneState={paneState} />;
+									}
+									return null;
+								})()}
+							</Pane>
+						);
+					})}
+				</DragHeaderContext.Provider>
 			</Panels>
 		</Root>
 	);

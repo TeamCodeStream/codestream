@@ -33,7 +33,7 @@ export const EMPTY_STATUS = {
 
 interface Props {
 	openRepos: ReposScm[];
-	state: PaneState;
+	paneState: PaneState;
 }
 
 const EMPTY_HASH = {};
@@ -183,7 +183,7 @@ export const WorkInProgress = (props: Props) => {
 				)}
 			</PaneHeader>
 
-			{props.state !== PaneState.Collapsed && (
+			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
 					<div style={{ padding: "0 5px 0 20px" }}>
 						{status && status.label && (

@@ -10,11 +10,14 @@ import {
 	setPaneCollapsed,
 	setPaneMaximized
 } from "@codestream/webview/Stream/actions";
+import Draggable from "react-draggable";
+import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 
 export enum PaneState {
 	Open = "open",
 	Minimized = "minimized",
-	Collapsed = "collapsed"
+	Collapsed = "collapsed",
+	Removed = "removed"
 }
 
 const EMPTY_HASH = {};
@@ -115,7 +118,7 @@ export const PaneNode = styled.div`
 interface PaneHeaderProps {
 	title: string | React.ReactNode;
 	className?: string;
-	id: WebviewPanels | string;
+	id: WebviewPanels;
 	count?: number;
 	subtitle?: string | React.ReactNode;
 	isLoading?: boolean;
@@ -146,16 +149,22 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			anyMaximized
 		};
 	});
+
+	const [dragging, setDragging] = React.useState(false);
+	const dragFunctions = React.useContext(DragHeaderContext);
+
 	const togglePanel = e => {
-		if (e.target.closest(".actions")) return;
-		dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
+		console.warn("E IS: ", e);
+		if (dragging) return;
+		if (e.target.classList.contains("pane-header") || e.target.closest(".expander"))
+			dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
 	};
 	const maximize = () => {
 		dispatch(setPaneMaximized(props.id, !derivedState.maximized));
 	};
 
-	return (
-		<div className={props.className} onClick={togglePanel}>
+	const header = (
+		<div className={"pane-header " + props.className}>
 			<Icon name={derivedState.stateIcon} className="expander" />
 			{props.title}
 			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
@@ -182,6 +191,31 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			)}
 		</div>
 	);
+
+	return (
+		<>
+			<Draggable
+				position={{ x: 0, y: 0 }}
+				cancel=".menu-popup"
+				onDrag={e => {
+					// @ts-ignore
+					if (e && e.target && e.target.closest(".menu-popup")) return;
+					setDragging(true);
+					dragFunctions.drag(e, props.id);
+				}}
+				onStop={e => {
+					if (!dragging) togglePanel(e);
+					else {
+						dragFunctions.stop(e, props.id);
+						setDragging(false);
+					}
+				}}
+			>
+				{header}
+			</Draggable>
+			{dragging && header}
+		</>
+	);
 })`
 	position: fixed;
 	// color: var(--text-color-highlight);
@@ -190,6 +224,17 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	text-transform: uppercase;
 	margin: -20px 0 5px 0;
 	padding-left: 5px;
+	&.react-draggable-dragging {
+		border: 1px solid var(--base-border-color);
+		padding-top: 2px;
+		height: 25px;
+		background: var(--base-background-color);
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		z-index: 10000;
+		.actions {
+			background: var(--base-background-color);
+		}
+	}
 	.toggle {
 		opacity: 0;
 		margin: 0 5px 0 -13px;
@@ -255,14 +300,47 @@ export function PaneBody(props: PropsWithChildren<PaneBodyProps>) {
 
 const Root = styled.div`
 	padding: 22px 0 0px 0;
+	border: 1px solid transparent;
+	border-bottom: 1px solid var(--base-border-color);
+	&.open {
+		// border: 3px solid green;
+	}
+	&.highlightTop::before {
+		content: "";
+		position: absolute;
+		display: block;
+		top: -1px;
+		left: -1px;
+		right: -1px;
+		height: 3px;
+		background: var(--text-color);
+	}
+	&.highlightTop.open::before {
+		top: 0;
+		height: 50%;
+		background: rgba(127, 127, 127, 0.25);
+	}
+	&.highlightBottom::before {
+		content: "";
+		position: absolute;
+		display: block;
+		bottom: -1px;
+		left: -1px;
+		right: -1px;
+		height: 3px;
+		background: var(--text-color);
+	}
+	&.highlightBottom.open::before {
+		bottom: 0;
+		height: 50%;
+		background: rgba(127, 127, 127, 0.25);
+	}
 	.icon {
 		&.ticket,
 		&.link-external {
 			margin-right: 0;
 		}
 	}
-	border: 1px solid transparent;
-	border-bottom: 1px solid var(--base-border-color);
 	.instructions {
 		display: none;
 		padding: 0 20px 20px 20px;
