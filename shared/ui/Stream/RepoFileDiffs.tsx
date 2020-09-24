@@ -244,10 +244,5 @@ export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => 
 				{modified}
 			</>
 		);
-	} else
-		return (
-			<NoContent style={{ marginLeft: 0, marginRight: 0 }}>
-				As you write code, files that have changed will appear here.
-			</NoContent>
-		);
+	} else return <NoContent>As you write code, files that have changed will appear here.</NoContent>;
 };
