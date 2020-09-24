@@ -105,7 +105,7 @@ export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => 
 
 	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
 
-	const modified = modifiedRepos[teamId]
+	const modified = (modifiedRepos[teamId] || [])
 		.map(repo => {
 			const { repoId = "", authors } = repo;
 			if (props.onlyRepos && repo.repoId && !props.onlyRepos.includes(repo.repoId)) return null;
