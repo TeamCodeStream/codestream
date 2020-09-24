@@ -2,6 +2,7 @@ import React from "react";
 import { ReviewChangesetFileInfo, FileStatus } from "@codestream/protocols/api";
 import styled from "styled-components";
 import Tooltip from "../Tooltip";
+import cx from "classnames";
 
 interface Props {
 	className?: string;
@@ -18,11 +19,16 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 
 	return (
 		<div
-			className={`${props.className} ${props.selected ? "selected" : ""} ${
-				props.noHover ? "no-hover" : ""
-			} ${
-				props.icon ? "with-file-icon" : ""
-			} row-with-icon-actions monospace ellipsis-left-container`}
+			className={cx(
+				"row-with-icon-actions monospace ellipsis-left-container wtf",
+				props.className,
+				{
+					selected: props.selected,
+					"no-hover": props.noHover,
+					"with-file-icon": props.icon,
+					"with-action-icons": !!props.actionIcons
+				}
+			)}
 			onClick={props.onClick}
 		>
 			{props.icon}

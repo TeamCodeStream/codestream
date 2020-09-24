@@ -1164,7 +1164,7 @@ export const Row = styled.div`
 	overflow: hidden;
 	text-overflow: ellipsis;
 	width: 100%;
-	padding: 0 5px 0 20px;
+	padding: 0 10px 0 20px;
 	&.selected {
 		color: var(--text-color-highlight);
 		font-weight: bold;
@@ -1195,6 +1195,7 @@ export const Row = styled.div`
 	.icons {
 		margin-left: auto;
 		text-align: right;
+		color: var(--text-color);
 		.icon {
 			margin-left: 10px;
 			display: none;

@@ -276,6 +276,9 @@
 			left: 20px;
 		}
 	}
+	&.with-action-icons {
+		padding-right: 40px;
+	}
 	.icon.file-icon {
 		position: absolute !important;
 		left: 0;
@@ -323,12 +326,18 @@
 	// align the X vertically centered
 	.actions {
 		position: absolute;
-		right: 3px;
+		right: 15px;
 		top: 2px;
+		&.opaque {
+			right: 0;
+		}
 	}
 	&:hover:not(.no-hover) {
 		color: @text-color-highlight;
 		background-color: @app-background-color-hover;
+		.actions.opaque {
+			background: @app-background-color-hover;
+		}
 		.icon.action {
 			display: inline-block;
 			visibility: visible;

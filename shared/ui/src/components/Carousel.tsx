@@ -18,21 +18,21 @@ interface ContentProps {
 }
 
 const Prev = styled.div`
-	left: -20px;
+	margin-right: 20px;
 	@media only screen and (max-width: 450px) {
-		left: -15px;
+		margin-right: 15px;
 	}
 	@media only screen and (max-width: 350px) {
-		left: -10px;
+		margin-right: 10px;
 	}
 `;
 const Next = styled.div`
-	right: -20px;
+	margin-left: 20px;
 	@media only screen and (max-width: 450px) {
-		right: -15px;
+		margin-left: 15px;
 	}
 	@media only screen and (max-width: 350px) {
-		right: -10px;
+		margin-left: 10px;
 	}
 `;
 
@@ -47,6 +47,7 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 			>
 				<Icon name="chevron-left" />
 			</Prev>
+			{props.children}
 			<Next
 				className={props.active < props.lastContent ? "" : "dim"}
 				onClick={() => {
@@ -55,22 +56,22 @@ export const Carousel = styled((props: PropsWithChildren<CarouselProps>) => {
 			>
 				<Icon name="chevron-right" />
 			</Next>
-			{props.children}
 		</div>
 	);
 })`
-	display: flex;
-	margin: 20px;
+	display: inline-flex;
+	flex-direction: row;
+	align-items: flex-start;
+	margin: 20px 0;
 	position: relative;
-	padding: 0 40px;
 	text-align: left;
 
 	${Prev}, ${Next} {
-		position: absolute;
-		top: 80px;
+		// position: absolute;
+		flex-shrink: 0;
+		margin-top: 80px;
 		width: 40px;
 		height: 40px;
-		background: rgba(127, 127, 127, 0.25);
 		background: var(--button-background-color);
 		&:hover:not(.dim) {
 			background: var(--button-background-color-hover);

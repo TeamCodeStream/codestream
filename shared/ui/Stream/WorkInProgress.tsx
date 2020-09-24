@@ -186,7 +186,7 @@ export const WorkInProgress = (props: Props) => {
 
 			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
-					<div style={{ padding: "0 5px 0 20px" }}>
+					<div style={{ padding: "0 10px 0 20px" }}>
 						{status && status.label && (
 							<Row className="no-hover wide">
 								<div>

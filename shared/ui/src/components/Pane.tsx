@@ -90,7 +90,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	}
 	&:hover {
 		background: var(--app-background-color-hover);
-		color: var(--text-color-highlight);
+		// color: var(--text-color-highlight);
 	}
 	.actions {
 		text-align: right;
@@ -164,7 +164,6 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	const dragFunctions = React.useContext(DragHeaderContext);
 
 	const togglePanel = e => {
-		console.warn("E IS: ", e);
 		if (dragging) return;
 		if (
 			e.target.classList.contains("pane-header") ||
@@ -193,6 +192,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 					{props.children}
 					<Icon
 						name={derivedState.maximized ? "minimize" : "maximize"}
+						title={derivedState.maximized ? "Minimize" : "Maximize"}
+						placement={"bottomRight"}
+						delay={1}
 						className="maximize"
 						onClick={maximize}
 						tabIndex={1}

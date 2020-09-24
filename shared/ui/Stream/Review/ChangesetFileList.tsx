@@ -242,6 +242,7 @@ export const ChangesetFileList = (props: {
 					const i = index++;
 					return (
 						<ChangesetFile
+							className="wide"
 							selected={selected}
 							noHover={noOnClick}
 							icon={icon && <Icon name={icon} className={iconClass} />}

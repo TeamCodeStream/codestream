@@ -1623,7 +1623,7 @@ class ReviewForm extends React.Component<Props, State> {
 				{status === FileStatus.unmerged && <span className="deleted">conflict </span>}
 				{status === FileStatus.deleted && <span className="deleted">deleted </span>}
 				{excluded ? (
-					<span className="actions">
+					<span className="actions opaque">
 						<Icon
 							name="plus"
 							title="Add to review"
@@ -1632,7 +1632,7 @@ class ReviewForm extends React.Component<Props, State> {
 							onClick={e => this.exclude(e, file)}
 						/>
 						<Icon
-							name="trashcan"
+							name="trash"
 							title="Exclude from future reviews"
 							placement="bottom"
 							className="clickable action"
@@ -1640,7 +1640,7 @@ class ReviewForm extends React.Component<Props, State> {
 						/>
 					</span>
 				) : (
-					<span className="actions">
+					<span className="actions opaque">
 						<Icon
 							name="x"
 							title="Exclude from review"

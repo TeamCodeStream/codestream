@@ -28,7 +28,6 @@ const Root = styled.div`
 		}
 	}
 	${Carousel} {
-		display: inline-block;
 		max-width: 600px;
 	}
 `;
@@ -203,7 +202,10 @@ const Action = styled.div`
 			background: #999;
 			// background: var(--button-background-color);
 		}
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+		.vscode-dark & {
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		}
 		transform: scale(1.5);
 	}
 `;
@@ -387,7 +389,10 @@ const Commit = styled.div`
 
 	.active &,
 	:hover {
-		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+		.vscode-dark& {
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+		}
 		transform: scale(1.5);
 
 		&:after {
