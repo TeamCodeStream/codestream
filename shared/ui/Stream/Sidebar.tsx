@@ -12,7 +12,7 @@ import { TeamPanel } from "./TeamPanel";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
 import { WorkInProgress } from "./WorkInProgress";
-import CodemarksForFile from "./CodemarksForFile";
+import Codemarks from "./Codemarks";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { Pane, PaneState } from "../src/components/Pane";
 import Draggable, { DraggableEvent } from "react-draggable";
@@ -24,6 +24,8 @@ const EMPTY_ARRAY = [];
 
 const Root = styled.div`
 	height: 100%;
+	background: var(--sidebar-background);
+	color: var(--sidebar-foreground);
 `;
 
 const Panels = styled.div`
@@ -62,6 +64,8 @@ export const AVAILABLE_PANES = [
 	WebviewPanels.Tasks,
 	WebviewPanels.Team
 ];
+
+export const COLLAPSED_SIZE = 22;
 
 const EMPTY_HASH = {};
 export const Sidebar = () => {
@@ -171,11 +175,15 @@ export const Sidebar = () => {
 	}, [panes, sizes, windowSize, numCollapsed]);
 
 	const positions = useMemo(() => {
-		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
+		const availableHeight = windowSize.height - 40 - COLLAPSED_SIZE * numCollapsed;
 		let accumulator = 40;
 		return panes.map(p => {
 			const size = sizes[p.id] || p.size || 1;
-			const height = p.removed ? 0 : collapsed(p) ? 25 : (size * availableHeight) / totalSize;
+			const height = p.removed
+				? 0
+				: collapsed(p)
+				? COLLAPSED_SIZE
+				: (size * availableHeight) / totalSize;
 			const position = {
 				id: p.id,
 				height,
@@ -193,14 +201,18 @@ export const Sidebar = () => {
 
 		// don't worry about using the dynamic version of collapsed because
 		// if one pane is maximized, you can't drag. subtract 40 for the header padding,
-		// and 25 for each collapsed pane
-		const availableHeight = windowSize.height - 40 - 25 * numCollapsed;
+		// and COLLAPSED_SIZE for each collapsed pane
+		const availableHeight = windowSize.height - 40 - COLLAPSED_SIZE * numCollapsed;
 		let accumulator = 40;
 		const firstExpanded = panes.findIndex(p => !p.collapsed);
 		const lastExpanded = findLastIndex(panes, p => !p.collapsed);
 		return panes.map((p, index) => {
 			const size = sizes[p.id] || p.size || 1;
-			const height = p.removed ? 0 : p.collapsed ? 25 : (size * availableHeight) / totalSize;
+			const height = p.removed
+				? 0
+				: p.collapsed
+				? COLLAPSED_SIZE
+				: (size * availableHeight) / totalSize;
 			const position = index > firstExpanded && index <= lastExpanded ? { top: accumulator } : null;
 			accumulator += height;
 			return position;
@@ -349,7 +361,7 @@ export const Sidebar = () => {
 											return <IssueDropdown paneState={paneState} />;
 										case WebviewPanels.CodemarksForFile:
 											//@ts-ignore
-											return <CodemarksForFile paneState={paneState} />;
+											return <Codemarks paneState={paneState} />;
 										case WebviewPanels.Team:
 											return <TeamPanel paneState={paneState} />;
 									}

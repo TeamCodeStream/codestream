@@ -179,6 +179,7 @@ export const WorkInProgress = (props: Props) => {
 								</a>
 							</TipTitle>
 						}
+						tabIndex={1}
 					/>
 				)}
 			</PaneHeader>

@@ -22,6 +22,7 @@ interface Props {
 	onClick?(event: React.SyntheticEvent): any;
 	onPopupAlign?: any;
 	trigger?: Trigger[];
+	tabIndex?: number;
 }
 
 const Icon = React.forwardRef<any, Props>((props, ref) => {
@@ -42,6 +43,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 			style={props.style}
 			dangerouslySetInnerHTML={{ __html: icon.toSVG() }}
 			ref={ref}
+			tabIndex={props.tabIndex}
 		/>
 	);
 

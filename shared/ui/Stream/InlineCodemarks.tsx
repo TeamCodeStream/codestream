@@ -764,12 +764,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				data-scrollable="true"
 				className={cx("scrollbox", { "off-top": firstVisibleLine > 0 })}
 			>
-				<div
-					style={{
-						padding: `${this.props.metrics.lineHeight!}px 0`,
-						margin: `-${this.props.metrics.lineHeight!}px 0`
-					}}
-				>
+				<div>
 					<div
 						style={{
 							top: paddingTop,
@@ -818,7 +813,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				lineNumber={lineNum}
 				className={cx({
 					"cs-hidden": hidden,
-					"cs-off-plane": hidden
+					"cs-off-plane": hidden,
+					"no-padding": true
 				})}
 			>
 				<div className="codemark-container">
@@ -1148,21 +1144,23 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		const composeOpen = composeCodemarkActive ? true : false;
 		return (
-			<Modal noPadding onClose={() => this.props.closeAllPanels()}>
-				{currentReviewId ? (
-					<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
-				) : currentPullRequestId ? (
-					<PullRequest />
-				) : (
-					this.renderHeader()
-				)}
-				{!currentPullRequestId && <CreateCodemarkIcons />}
-				{this.renderCodemarkForm()}
-				{this.state.showPRInfoModal && (
-					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
-				)}
-				{this.state.isLoading ? null : this.renderCodemarks()}
-				{false && !currentReviewId && !currentPullRequestId && this.renderViewSelectors()}
+			<Modal noScroll noPadding onClose={() => this.props.closeAllPanels()}>
+				<div style={{ overflow: "hidden" }}>
+					{currentReviewId ? (
+						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
+					) : currentPullRequestId ? (
+						<PullRequest />
+					) : (
+						this.renderHeader()
+					)}
+					{!currentPullRequestId && <CreateCodemarkIcons />}
+					{this.renderCodemarkForm()}
+					{this.state.showPRInfoModal && (
+						<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
+					)}
+					{this.state.isLoading ? null : this.renderCodemarks()}
+					{!currentReviewId && !currentPullRequestId && this.renderViewSelectors()}
+				</div>
 			</Modal>
 		);
 	}

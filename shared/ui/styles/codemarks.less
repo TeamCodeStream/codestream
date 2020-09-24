@@ -189,12 +189,37 @@
 		position: relative;
 		padding: 0 !important;
 		z-index: 1;
-		border: 1px solid @base-border-color;
-		background: @base-background-color;
 		// background: @app-background-color;
 		height: auto;
 		// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-		.card;
+
+		.header,
+		.detail-icons,
+		.striped-header {
+			visibility: hidden;
+		}
+
+		&.has-striped-header:not(.selected) {
+			opacity: 0.5;
+			&:hover {
+				opacity: 1;
+			}
+		}
+		margin-top: -30px;
+		&.selected {
+			margin-top: 0;
+			border: 1px solid @base-border-color;
+			background: @base-background-color;
+			.card;
+		}
+		&.selected,
+		&:hover {
+			.header,
+			.striped-header,
+			.detail-icons {
+				visibility: visible;
+			}
+		}
 		flex: auto;
 		width: 100%;
 		// overflow: hidden;
@@ -275,10 +300,13 @@
 			white-space: normal;
 			text-overflow: initial;
 			overflow-x: auto;
-			padding: 10px 10px 10px 10px !important;
+			padding: 10px 20px 10px 20px !important;
 			.code.prettyprint {
 				margin: 0;
 			}
+		}
+		&.selected .contents > .body {
+			padding: 10px 10px 10px 10px !important;
 		}
 		.contents > .body > .title > p {
 			margin: 0;

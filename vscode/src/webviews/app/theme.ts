@@ -190,6 +190,19 @@ export function initializeColorPalette() {
 
 		color = computedStyle.getPropertyValue("--vscode-button-hoverBackground").trim();
 		bodyStyle.setProperty("--button-background-color-hover", color);
+
+		color = computedStyle.getPropertyValue("--vscode-sideBar-background").trim();
+		bodyStyle.setProperty("--sidebar-background", color);
+		color = computedStyle.getPropertyValue("--vscode-sideBar-foreground").trim();
+		bodyStyle.setProperty("--sidebar-foreground", color);
+		color = computedStyle.getPropertyValue("--vscode-sideBar-border").trim();
+		bodyStyle.setProperty("--sidebar-border", color);
+		color = computedStyle.getPropertyValue("--vscode-sideBarSectionHeader-background").trim();
+		bodyStyle.setProperty("--sidebar-header-background", color);
+		color = computedStyle.getPropertyValue("--vscode-sideBarSectionHeader-foreground").trim();
+		bodyStyle.setProperty("--sidebar-header-foreground", color);
+		color = computedStyle.getPropertyValue("--vscode-sideBarSectionHeader-border").trim();
+		bodyStyle.setProperty("--sidebar-header-border", color);
 	};
 
 	const observer = new MutationObserver(onColorThemeChanged);

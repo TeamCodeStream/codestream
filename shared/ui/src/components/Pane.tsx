@@ -164,7 +164,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	};
 
 	const header = (
-		<div className={"pane-header " + props.className}>
+		<div className={"pane-header " + props.className} tabIndex={1}>
 			<Icon name={derivedState.stateIcon} className="expander" />
 			{props.title}
 			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
@@ -178,6 +178,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 						name={derivedState.maximized ? "minimize" : "maximize"}
 						className="maximize"
 						onClick={maximize}
+						tabIndex={1}
 					/>
 				</div>
 			)}
@@ -220,11 +221,23 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 })`
 	position: fixed;
 	// color: var(--text-color-highlight);
+
+	background: var(--app-background-color);
+	background: var(--sidebar-header-background);
+	color: var(--sidebar-header-foreground);
+
 	font-weight: 700;
 	font-size: 11px;
 	text-transform: uppercase;
-	margin: -20px 0 5px 0;
-	padding-left: 5px;
+	margin: -23px 0 5px 0;
+	padding-left: 4px;
+	padding-top: 1px;
+	height: 23px;
+	border: 1px solid transparent;
+	&:focus {
+		border: 1px solid var(--text-focus-border-color);
+		outline: none;
+	}
 	&.react-draggable-dragging {
 		border: 1px solid var(--base-border-color);
 		padding-top: 2px;
@@ -242,14 +255,14 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		vertical-align: -1px;
 		transition: opacity 0.1s;
 	}
-	.maximize {
+	.maximize svg {
 		transform: scale(0.8) rotate(-45deg);
 	}
 	&:hover .toggle {
 		opacity: 1;
 	}
 	z-index: 49;
-	width: 100%;
+	width: calc(100% - 2px);
 	cursor: pointer;
 	.progress-container {
 		position: absolute;
@@ -262,6 +275,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		display: none;
 		margin-right: 10px;
 		background: var(--app-background-color);
+		background: var(--sidebar-header-background);
 		.icon {
 			vertical-align: 2px !important;
 			cursor: pointer;
@@ -279,6 +293,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 				transform: scale(1) rotate(-45deg);
 			}
 		}
+	}
+	&:focus .actions {
+		display: inline;
 	}
 	.expander {
 		vertical-align: 2px;
@@ -301,8 +318,8 @@ export function PaneBody(props: PropsWithChildren<PaneBodyProps>) {
 
 const Root = styled.div`
 	padding: 22px 0 0px 0;
-	border: 1px solid transparent;
-	border-bottom: 1px solid var(--base-border-color);
+	// border: 1px solid transparent;
+	border-bottom: 1px solid var(--sidebar-header-border);
 	&.open {
 		// border: 3px solid green;
 	}
@@ -350,18 +367,14 @@ const Root = styled.div`
 	&.show-instructions .instructions {
 		display: block;
 	}
-	&:focus ${PaneHeader} .actions,
 	&:hover ${PaneHeader} .actions {
 		display: inline;
 	}
 	position: absolute;
 	overflow: hidden;
-	width: calc(100% - 2px); // absolute element w/a border
+	// width: calc(100% - 2px); // absolute element w/a border
+	width: 100%;
 	left: 1px;
-	&:focus {
-		outline: none;
-		border: 1px solid var(--text-focus-border-color);
-	}
 	.animate-height & {
 		transition: height 0.25s, top 0.25s;
 	}
@@ -382,7 +395,6 @@ export function Pane(props: PropsWithChildren<PaneProps>) {
 		<Root
 			className={props.className}
 			style={{ top: `${props.top}px`, height: `${props.height}px` }}
-			tabIndex={props.tabIndex}
 		>
 			{props.children}
 		</Root>

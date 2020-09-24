@@ -1392,7 +1392,8 @@ export class Codemark extends React.Component<Props, State> {
 					selected: selected,
 					unpinned: !codemark.pinned,
 					injecting: isInjecting,
-					repositioning: isRepositioning
+					repositioning: isRepositioning,
+					"has-striped-header": showStripedHeader
 				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
@@ -1564,7 +1565,7 @@ export class Codemark extends React.Component<Props, State> {
 							</div>
 						</CodemarkDetails>
 					)}
-					{this.state.hover && !renderExpandedBody && type !== "bookmark" && (
+					{false && this.state.hover && !renderExpandedBody && type !== "bookmark" && (
 						<div className="info-wrapper">
 							<Icon
 								className="info"

@@ -452,7 +452,6 @@ export class SimpleStream extends Component {
 						<CodemarkView />
 					</Modal>
 				)}
-				)}
 			</div>
 		);
 	}
