@@ -56,26 +56,33 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 
 	return (
 		<div className={props.className} onClick={props.onClick || toggleNode}>
-			{props.isLoading && <Icon name="sync" className="spin" />}
-			{!props.isLoading && (
-				<Icon
-					name={derivedState.collapsed ? "chevron-right-thin" : "chevron-down-thin"}
-					className="expander"
-				/>
-			)}
-			{props.title}
-			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
-			{!derivedState.collapsed && props.subtitle ? (
-				<span className="subtle"> {props.subtitle}</span>
-			) : null}
+			<div className="label">
+				{props.isLoading && <Icon name="sync" className="spin" />}
+				{!props.isLoading && (
+					<Icon
+						name={derivedState.collapsed ? "chevron-right-thin" : "chevron-down-thin"}
+						className="expander"
+					/>
+				)}
+				{props.title}
+				{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
+				{!derivedState.collapsed && props.subtitle ? (
+					<span className="subtle"> {props.subtitle}</span>
+				) : null}
+			</div>
 			{!derivedState.collapsed && <div className="actions">{props.children}</div>}
 		</div>
 	);
 })`
-	padding: 2px 20px;
+	padding: 2px 10px 2px 20px;
 	display: flex;
 	cursor: pointer;
 	position: relative;
+	.label {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 	> .icon {
 		display: inline-block;
 		width: 16px;
@@ -86,9 +93,12 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		color: var(--text-color-highlight);
 	}
 	.actions {
-		position: absolute;
-		right: 5px;
-		top: 2px;
+		text-align: right;
+		// position: absolute;
+		// right: 5px;
+		// top: 2px;
+		white-space: nowrap;
+		margin-left: auto;
 		display: ${props => (props.actionsVisibleIfOpen ? "block" : "none")};
 		.icon {
 			margin: 0 5px;
@@ -96,7 +106,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		}
 	}
 	&:hover .actions {
-		background: var(--app-background-color-hover);
+		// background: var(--app-background-color-hover);
 		display: block;
 	}
 	.subtle {
@@ -156,7 +166,11 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	const togglePanel = e => {
 		console.warn("E IS: ", e);
 		if (dragging) return;
-		if (e.target.classList.contains("pane-header") || e.target.closest(".expander"))
+		if (
+			e.target.classList.contains("pane-header") ||
+			e.target.classList.contains("label") ||
+			e.target.closest(".expander")
+		)
 			dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
 	};
 	const maximize = () => {
@@ -165,12 +179,15 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 
 	const header = (
 		<div className={"pane-header " + props.className} tabIndex={1}>
-			<Icon name={derivedState.stateIcon} className="expander" />
-			{props.title}
-			{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
-			{!derivedState.collapsed && props.subtitle ? (
-				<span className="subtle"> {props.subtitle}</span>
-			) : null}
+			<div className="label">
+				<Icon name={derivedState.stateIcon} className="expander" />
+				{props.title}
+				{props.count && props.count > 0 ? <span className="subtle"> ({props.count})</span> : null}
+				{!derivedState.collapsed && props.subtitle ? (
+					<span className="subtle"> {props.subtitle}</span>
+				) : null}
+				{props.warning && props.warning}
+			</div>
 			{!derivedState.collapsed && (!derivedState.anyMaximized || derivedState.maximized) && (
 				<div className="actions">
 					{props.children}
@@ -182,7 +199,6 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 					/>
 				</div>
 			)}
-			{props.warning && props.warning}
 			{props.isLoading && (
 				<div className="progress-container">
 					<div className="progress-bar">
@@ -234,6 +250,12 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	padding-top: 1px;
 	height: 23px;
 	border: 1px solid transparent;
+	display: flex;
+	.label {
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
 	&:focus {
 		border: 1px solid var(--text-focus-border-color);
 		outline: none;
@@ -269,13 +291,14 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		top: 21px;
 	}
 	.actions {
-		position: absolute;
-		right: 0;
-		top: 2px;
+		// position: absolute;
+		// right: 0;
+		// top: 2px;
 		display: none;
-		margin-right: 10px;
-		background: var(--app-background-color);
-		background: var(--sidebar-header-background);
+		margin-right: 7px;
+		margin-left: auto;
+		// background: var(--app-background-color);
+		// background: var(--sidebar-header-background);
 		.icon {
 			vertical-align: 2px !important;
 			cursor: pointer;
