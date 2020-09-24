@@ -20,8 +20,6 @@ import {
 	mapFileScmErrorForTelemetry
 } from "../store/editorContext/reducer";
 import {
-	setCodemarksShowArchived,
-	setCodemarksWrapComments,
 	setCurrentCodemark,
 	setSpatialViewPRCommentsToggle,
 	openPanel
@@ -89,12 +87,6 @@ interface DispatchProps {
 	fetchDocumentMarkers: (
 		...args: Parameters<typeof fetchDocumentMarkers>
 	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
-	setCodemarksShowArchived: (
-		...args: Parameters<typeof setCodemarksShowArchived>
-	) => ReturnType<typeof setCodemarksShowArchived>;
-	setCodemarksWrapComments: (
-		...args: Parameters<typeof setCodemarksWrapComments>
-	) => ReturnType<typeof setCodemarksWrapComments>;
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
@@ -131,7 +123,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			showConfiguationModal: false,
 			isLoading: props.documentMarkers ? props.documentMarkers.length === 0 : true,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
-			showHiddenField: props.showPRComments,
+			showHiddenField: props.showHidden,
 			showPRCommentsField: props.showPRComments,
 			wrapCommentsField: props.wrapComments
 		};
@@ -361,6 +353,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		if (this.state.isLoading) return null;
 		return items
 			.sort((a, b) => b.createdAt - a.createdAt)
+			.filter(codemark => !codemark.deactivated)
 			.map(codemark => {
 				const hidden =
 					//@ts-ignore
@@ -504,7 +497,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				{this.state.showConfiguationModal && (
 					<Modal translucent>
 						<Dialog
-							title="File Comment Settings"
+							title="Codemark Settings"
 							onClose={() => this.setState({ showConfiguationModal: false })}
 						>
 							<form className="standard-form">
@@ -526,6 +519,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 												Show hidden/archived codemarks
 											</Checkbox>
 											<Checkbox
+												disabled={
+													!this.props.hasPRProvider
+														? "Requires a PR Provider. Check Integrations under ellipsis menu."
+														: undefined
+												}
 												name="show-pr-comments"
 												checked={showPRCommentsField}
 												onChange={() =>
@@ -609,11 +607,12 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	saveSettings = () => {
 		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
 
-		this.props.setCodemarksShowArchived(!!showHiddenField);
-		this.props.setCodemarksWrapComments(!!wrapCommentsField);
+		this.props.setUserPreference(["codemarksShowArchived"], !!showHiddenField);
+		this.props.setUserPreference(["codemarksWrapComments"], !!wrapCommentsField);
 
 		if (this.props.hasPRProvider) {
 			// this.props.setSpatialViewPRCommentsToggle(newShowPRComments);
+			this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
 			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !showPRCommentsField);
 		} else {
 			this.setState({ showPRInfoModal: true });
@@ -652,9 +651,9 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		repoName,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
-		showHidden: context.codemarksShowArchived || false,
-		wrapComments: context.codemarksWrapComments || false,
-		showPRComments: hasPRProvider && context.spatialViewShowPRComments,
+		showHidden: preferences.codemarksShowArchived || false,
+		wrapComments: preferences.codemarksWrapComments || false,
+		showPRComments: hasPRProvider && preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
@@ -666,8 +665,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 export default withSearchableItems(
 	connect(mapStateToProps, {
 		fetchDocumentMarkers,
-		setCodemarksShowArchived,
-		setCodemarksWrapComments,
 		openPanel,
 		setCurrentCodemark,
 		setEditorContext,

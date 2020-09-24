@@ -2,19 +2,17 @@ import { PropsWithChildren } from "react";
 import React from "react";
 import styled from "styled-components";
 import Icon from "../../Stream/Icon";
+import cx from "classnames";
 
 interface Props {
 	name: string;
 	className?: string;
 	checked?: boolean;
+	disabled?: string;
 	loading?: boolean;
 	noMargin?: boolean;
 	onClickLabel?: React.MouseEventHandler;
 	onChange: (value: boolean) => void;
-}
-
-interface foo {
-	bar: boolean;
 }
 
 const Root = styled.div<{ noMargin?: boolean }>`
@@ -22,6 +20,10 @@ const Root = styled.div<{ noMargin?: boolean }>`
 	width: auto;
 	margin-bottom: ${props => (props.noMargin ? "0" : "5px")};
 	align-items: center;
+	&.disabled {
+		opacity: 0.5;
+		pointer-events: none;
+	}
 	> div {
 		text-align: center;
 		flex: 1 1 20px;
@@ -50,8 +52,9 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 
 	const id = `checkbox-${name}`;
 	const htmlFor = onClickLabel ? "" : id;
+	console.warn("DISABLED IS: ", props.disabled);
 	return (
-		<Root className={className} noMargin={noMargin}>
+		<Root className={cx(className, { disabled: props.disabled })} noMargin={noMargin}>
 			<div>
 				{loading ? (
 					<Icon className="spin" name="sync" />
@@ -70,6 +73,7 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 					{props.children}
 				</label>
 			</span>
+			{props.disabled && <span className="subtle">{props.disabled}</span>}
 		</Root>
 	);
 }

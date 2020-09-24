@@ -350,7 +350,9 @@ export class Codemark extends React.Component<Props, State> {
 
 		const { externalProvider } = codemark;
 		if (externalProvider) {
-			return <Icon name={externalProvider} className="type-icon" />;
+			const providerDisplay = PROVIDER_MAPPINGS[externalProvider];
+			if (!providerDisplay) return null;
+			return <Icon name={providerDisplay.icon} className="type-icon" />;
 		}
 		switch (codemark.type) {
 			case "question":
