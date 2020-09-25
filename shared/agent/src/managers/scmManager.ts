@@ -18,7 +18,10 @@ import {
 	DiffBranchesResponse,
 	CommitAndPushRequestType,
 	CommitAndPushRequest,
-	CommitAndPushResponse
+	CommitAndPushResponse,
+	GetRangeRequest,
+	GetRangeRequestType,
+	GetRangeResponse
 } from "../protocol/agent.protocol";
 import {
 	BlameAuthor,
@@ -1165,6 +1168,30 @@ export class ScmManager {
 		// Normalize to /n line endings
 		const content = document.getText(range).replace(/\r\n/g, "\n");
 		return { sha1: Strings.sha1(content) };
+	}
+
+	@lspHandler(GetRangeRequestType)
+	async getRange({ uri, range }: GetRangeRequest): Promise<GetRangeResponse> {
+		// Ensure range end is >= start
+		range = Ranges.ensureStartBeforeEnd(range);
+
+		let currentContent = "";
+		let currentBranch = "";
+		let currentCommitHash = "";
+		let diff = "";
+		const document = Container.instance().documents.get(uri);
+		if (document === undefined) {
+			try {
+				currentContent = await FileSystem.range(URI.parse(uri).fsPath, range);
+			} catch (ex) {
+				Logger.error(ex);
+				return { currentCommitHash: "", currentContent: "", currentBranch: "", diff: "" };
+			}
+		} else {
+			// Normalize to /n line endings
+			currentContent = document.getText(range).replace(/\r\n/g, "\n");
+		}
+		return { currentCommitHash, currentBranch, currentContent, diff };
 	}
 
 	@lspHandler(GetLatestCommittersRequestType)

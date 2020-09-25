@@ -26,6 +26,9 @@ import {
 	GetCodemarkSha1Request,
 	GetCodemarkSha1RequestType,
 	GetCodemarkSha1Response,
+	GetCodemarkRangeRequest,
+	GetCodemarkRangeRequestType,
+	GetCodemarkRangeResponse,
 	PinReplyToCodemarkRequest,
 	PinReplyToCodemarkRequestType,
 	PinReplyToCodemarkResponse,
@@ -158,10 +161,68 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		return response;
 	}
 
+	@lspHandler(GetCodemarkRangeRequestType)
+	@log()
+	async getCodemarkRange({
+		codemarkId,
+		markerId
+	}: GetCodemarkRangeRequest): Promise<GetCodemarkRangeResponse> {
+		const cc = Logger.getCorrelationContext();
+
+		const { codemarks, files, markerLocations, scm } = SessionContainer.instance();
+		const { documents } = Container.instance();
+
+		const codemark = await codemarks.getEnrichedCodemarkById(codemarkId);
+		if (codemark === undefined) {
+			throw new Error(`No codemark could be found for Id(${codemarkId})`);
+		}
+
+		if (codemark.markers == null || codemark.markers.length === 0) {
+			Logger.warn(cc, `No markers are associated with codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		if (codemark.fileStreamIds.length === 0) {
+			Logger.warn(cc, `No documents are associated with codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		// Get the most up-to-date location for the codemark
+		const marker = markerId
+			? codemark.markers.find(m => m.id === markerId) || codemark.markers[0]
+			: codemark.markers[0];
+
+		const fileStreamId = marker.fileStreamId;
+		const uri = await files.getDocumentUri(fileStreamId);
+		if (uri === undefined) {
+			Logger.warn(cc, `No document could be loaded for codemark Id(${codemarkId})`);
+			return { success: false };
+		}
+
+		const document = documents.get(uri);
+
+		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
+
+		let documentRange = {};
+
+		const location = locations[marker.id];
+		if (location != null) {
+			const range = MarkerLocation.toRange(location);
+			const response = await scm.getRange({ uri: uri, range: range });
+			documentRange = response;
+		}
+
+		const response = {
+			// Normalize to /n line endings
+			...documentRange,
+			success: true
+		};
+
+		return response;
+	}
+
 	async getIdByPostId(postId: string): Promise<string | undefined> {
-		const codemark = (await this.getAllCached()).find(
-			c => c.postId === postId
-		);
+		const codemark = (await this.getAllCached()).find(c => c.postId === postId);
 		return codemark && codemark.id;
 	}
 

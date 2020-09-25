@@ -1,6 +1,6 @@
 import React from "react";
 import * as Path from "path-browserify";
-import { connect, useDispatch } from "react-redux";
+import { connect, useDispatch, useSelector } from "react-redux";
 import { prettyPrintOne } from "code-prettify";
 import { CSMarker } from "@codestream/protocols/api";
 import { escapeHtml, safe } from "../utils";
@@ -9,17 +9,91 @@ import { CodeStreamState } from "../store";
 import { getById } from "../store/repos/reducer";
 import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import { SearchContext } from "./SearchContextProvider";
+import styled from "styled-components";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { setUserPreference } from "./actions";
+
+const Label = styled.span`
+	display: inline-block;
+	padding-right: 20px;
+	.icon {
+		margin-right: 5px;
+	}
+`;
+
+const Gear = styled.div`
+	.icon {
+		opacity: 0.7;
+	}
+	border-bottom: 1px solid var(--base-border-color);
+	flex-grow: 100;
+	text-align: right;
+`;
+
+const Tabs = styled.div`
+	display: flex;
+	align-items: flex-end;
+	width: 100%;
+	margin-bottom: -6px;
+	z-index: 50;
+	margin-top: 10px;
+	${Gear} {
+		padding-bottom: 5px;
+	}
+`;
+
+const Tab = styled.div<{ selected?: boolean }>`
+	border: ${props =>
+		props.selected ? "1px solid var(--base-border-color)" : "1px solid transparent"};
+	color: ${props => (props.selected ? "var(--text-color-highlight)" : "var(--text-color-subtle)")};
+	background: ${props => (props.selected ? "rgba(0, 0, 0, 0.1)" : "none")};
+	border-bottom: ${props => (props.selected ? "none" : "1px solid var(--base-border-color)")};
+	padding: 5px 10px;
+	&:hover {
+		color: var(--text-color-highlight);
+	}
+	z-index: 50;
+	cursor: pointer;
+`;
+
+const Root = styled.div<{ hasDiff?: boolean }>`
+	margin-top: 10px;
+	pre.code {
+		cursor: pointer;
+		border-top: ${props =>
+			props.hasDiff ? "none !important" : "1px solid var(--base-border-color)"};
+	}
+	&:hover pre.code {
+		background: rgba(0, 0, 0, 0.2);
+	}
+`;
 
 interface Props {
 	marker: CSMarker;
 	repoName?: string;
 	className?: string;
+	hasDiff?: boolean;
+	currentContent?: string;
+	diff?: string;
 }
 
 function Marker(props: Props) {
 	const { marker } = props;
 
 	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		return {
+			showRepo: preferences.markerShowRepo,
+			hideFile: preferences.markerHideFile,
+			showBranch: preferences.markerShowBranch,
+			showCommit: preferences.markerShowCommit,
+			tab: preferences.markerTab || "original"
+		};
+	});
+	const { showRepo, hideFile, showBranch, showCommit, tab } = derivedState;
+
 	const searchContext = React.useContext(SearchContext);
 	const goSearch = (e: React.SyntheticEvent, query: string) => {
 		e.preventDefault();
@@ -28,6 +102,14 @@ function Marker(props: Props) {
 		dispatch(setCurrentCodemark());
 		dispatch(setCurrentReview());
 		searchContext.goToSearch(query);
+	};
+
+	const setPreference = (key, value) => {
+		dispatch(setUserPreference([key], value));
+	};
+
+	const selectTab = value => {
+		dispatch(setUserPreference(["markerTab"], value));
 	};
 
 	const path = marker.file || "";
@@ -42,54 +124,108 @@ function Marker(props: Props) {
 	else if (marker.referenceLocations && marker.referenceLocations.length)
 		startLine = marker.referenceLocations[0].location[0];
 
-	const codeHTML = prettyPrintOne(escapeHtml(marker.code), extension, startLine);
+	const codeHTML = prettyPrintOne(
+		escapeHtml(tab === "current" ? props.currentContent || "" : marker.code),
+		extension,
+		startLine
+	);
+
+	const gear = (
+		<Gear>
+			<InlineMenu
+				className="subtle"
+				noChevronDown
+				noFocusOnSelect
+				items={[
+					{
+						key: "repo",
+						label: "Show Repo",
+						checked: !!showRepo,
+						action: () => setPreference("markerShowRepo", !showRepo)
+					},
+					{
+						key: "file",
+						label: "Show File",
+						checked: !hideFile,
+						action: () => setPreference("markerHideFile", !hideFile)
+					},
+					{
+						key: "branch",
+						label: "Show Branch",
+						checked: !!showBranch,
+						action: () => setPreference("markerShowBranch", !showBranch)
+					},
+					{
+						key: "commit",
+						label: "Show Commit",
+						checked: !!showCommit,
+						action: () => setPreference("markerShowCommit", !showCommit)
+					}
+				]}
+			>
+				<Icon name="gear" className="clickable" />
+			</InlineMenu>
+		</Gear>
+	);
 	return (
-		<div style={{ marginTop: "10px" }} className={props.className}>
+		<Root className={props.className} hasDiff={props.hasDiff}>
 			<div className="file-info">
-				{props.repoName && (
-					<>
-						<a
-							className="monospace internal-link"
-							style={{ paddingRight: "20px" }}
-							onClick={e => goSearch(e, `repo:"${props.repoName}"`)}
-						>
+				{!props.hasDiff && <span style={{ float: "right" }}>{gear}</span>}
+				{props.repoName && showRepo && (
+					<Label>
+						<span className="monospace">
 							<Icon name="repo" />
 							{props.repoName}
-						</a>{" "}
-					</>
+						</span>
+						{" " /* spaces are to allow wrapping */}
+					</Label>
 				)}
-				{marker.file && (
-					<>
-						<span className="monospace" style={{ paddingRight: "20px" }}>
-							<Icon name="file" /> {marker.file}
+				{marker.file && !hideFile && (
+					<Label>
+						<span className="monospace">
+							<Icon name="file" />
+							{marker.file}
 						</span>{" "}
-					</>
+					</Label>
 				)}
-				{marker.branchWhenCreated && (
-					<>
-						<a
-							className="monospace internal-link"
-							style={{ paddingRight: "20px" }}
-							onClick={e => goSearch(e, `branch:"${marker.branchWhenCreated}"`)}
-						>
+				{marker.branchWhenCreated && showBranch && (
+					<Label>
+						<span className="monospace">
 							<Icon name="git-branch" />
 							{marker.branchWhenCreated}
-						</a>{" "}
-					</>
+						</span>{" "}
+					</Label>
 				)}
-				{marker.commitHashWhenCreated && (
-					<span className="monospace">
-						<Icon name="git-commit-vertical" />
-						{marker.commitHashWhenCreated.substring(0, 7)}
-					</span>
+				{marker.commitHashWhenCreated && showCommit && (
+					<Label>
+						<span className="monospace">
+							<Icon name="git-commit-vertical" />
+							{marker.commitHashWhenCreated.substring(0, 7)}
+						</span>
+					</Label>
 				)}
+				<div style={{ clear: "both" }} />
 			</div>
+			{props.hasDiff && (
+				<Tabs>
+					<Tab selected={tab === "original"} onClick={() => selectTab("original")}>
+						Original
+					</Tab>
+					<Tab selected={tab === "current"} onClick={() => selectTab("current")}>
+						Current
+					</Tab>
+					<Tab selected={tab === "diff"} onClick={() => selectTab("diff")}>
+						Diff
+					</Tab>
+					{gear}
+				</Tabs>
+			)}
 			<pre
 				className="code prettyprint"
 				data-scrollable="true"
 				dangerouslySetInnerHTML={{ __html: codeHTML }}
 			/>
-		</div>
+		</Root>
 	);
 }
 

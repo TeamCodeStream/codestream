@@ -8,6 +8,7 @@ interface MenuItem {
 	action?: string | (() => void);
 	key?: string;
 	default?: boolean;
+	checked?: boolean;
 }
 
 export interface InlineMenuProps {

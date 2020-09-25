@@ -72,4 +72,54 @@ export namespace FileSystem {
 				});
 		});
 	}
+
+	export async function range(
+		path: string,
+		range?: Range,
+		encoding: HexBase64Latin1Encoding = "base64"
+	): Promise<string> {
+		let content = "";
+
+		return new Promise((resolve, reject) => {
+			if (range === undefined) {
+				fs.createReadStream(path)
+					.on("error", reject)
+					// .pipe(hash.setEncoding(encoding))
+					.once("finish", function(this: any) {
+						resolve(this.read());
+					});
+
+				return;
+			}
+
+			const startLine = range.start.line;
+			const endLine = range.end.line;
+			let count = -1;
+
+			const rl = readline
+				.createInterface({
+					input: fs.createReadStream(path),
+					historySize: 0,
+					crlfDelay: Infinity
+				} as any)
+				.on("line", (line: string) => {
+					count++;
+					if (count < startLine || count > endLine) return;
+
+					if (count === startLine && range.start.character !== 0) {
+						content += line.substring(range.start.character);
+						content += "\n";
+					} else if (count === endLine) {
+						content += line.substring(0, range.end.character);
+						rl.close();
+					} else {
+						content += line;
+						content += "\n";
+					}
+				})
+				.once("close", function() {
+					resolve(content);
+				});
+		});
+	}
 }

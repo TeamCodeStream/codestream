@@ -296,6 +296,20 @@ export const GetRangeSha1RequestType = new RequestType<
 	void
 >("codestream/scm/range/sha1");
 
+export interface GetRangeRequest {
+	uri: string;
+	range: Range;
+}
+export interface GetRangeResponse {
+	currentCommitHash?: string;
+	currentBranch?: string;
+	currentContent?: string;
+	diff?: string;
+}
+export const GetRangeRequestType = new RequestType<GetRangeRequest, GetRangeResponse, void, void>(
+	"codestream/scm/range/content"
+);
+
 export interface GetUserInfoRequest {}
 export interface GetUserInfoResponse {
 	email: string;

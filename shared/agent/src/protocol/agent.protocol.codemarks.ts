@@ -242,6 +242,24 @@ export const GetCodemarkSha1RequestType = new RequestType<
 	void
 >("codestream/codemark/sha1");
 
+export interface GetCodemarkRangeRequest {
+	codemarkId: string;
+	markerId?: string;
+}
+export interface GetCodemarkRangeResponse {
+	currentCommitHash?: string;
+	currentBranch?: string;
+	currentContent?: string;
+	diff?: string;
+	success: boolean;
+}
+export const GetCodemarkRangeRequestType = new RequestType<
+	GetCodemarkRangeRequest,
+	GetCodemarkRangeResponse,
+	void,
+	void
+>("codestream/codemark/range");
+
 export interface PinReplyToCodemarkRequest {
 	codemarkId: string;
 	postId: string;

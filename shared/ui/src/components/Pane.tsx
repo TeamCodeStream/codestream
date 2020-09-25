@@ -24,7 +24,7 @@ const EMPTY_HASH = {};
 
 export const NoContent = styled.div`
 	color: var(--text-color-subtle);
-	margin: 0 20px 5px 20px;
+	margin: 5px 20px 5px 20px;
 	font-size: 12px;
 `;
 
