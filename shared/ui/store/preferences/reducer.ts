@@ -60,6 +60,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			name: "Created by Me",
 			query: `is:pr is:open author:@me`,
 			hidden: false
+		},
+		{
+			providerId: "github*com",
+			name: "Recent",
+			query: `recent`,
+			hidden: false
 		}
 	],
 	"github/enterprise": [
@@ -80,6 +86,12 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			name: "Created by Me",
 			query: `is:pr is:open author:@me`,
 			hidden: false
+		},
+		{
+			providerId: "github/enterprise",
+			name: "Recent",
+			query: `recent`,
+			hidden: false
 		}
 	]
 };
@@ -89,7 +101,7 @@ export const getSavedPullRequestQueriesForProvider = createSelector(
 	(_, providerId: string) => providerId,
 	(preferences, providerId) => {
 		const pullRequestQueries: PullRequestQuery[] = [];
-		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
+		const queries = preferences.pullRequestQueries7 || DEFAULT_QUERIES;
 		// const queries = DEFAULT_QUERIES;
 		Object.keys(queries[providerId] || {}).forEach(key => {
 			pullRequestQueries[parseInt(key, 10)] = queries[providerId][key];

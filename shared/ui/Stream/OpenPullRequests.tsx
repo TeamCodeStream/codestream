@@ -138,7 +138,7 @@ export function OpenPullRequests(props: Props) {
 			return { ...repo, name: state.repos[id] ? state.repos[id].name : "" };
 		});
 
-		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
+		const queries = preferences.pullRequestQueries7 || DEFAULT_QUERIES;
 
 		// FIXME hardcoded github
 		const hasPRSupportedRepos = repos.filter(r => r.providerGuess === "github").length > 0;
