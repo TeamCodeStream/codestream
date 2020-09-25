@@ -86,6 +86,7 @@ import { openPanel, openModal, setUserPreference } from "./actions";
 import CancelButton from "./CancelButton";
 import { VideoLink } from "./Flow";
 import { PanelHeader } from "../src/components/PanelHeader";
+import { ReposState } from "../store/repos/types";
 
 export interface ICrossPostIssueContext {
 	setSelectedAssignees(any: any): void;
@@ -156,6 +157,7 @@ interface ConnectedProps {
 	currentPullRequestId?: string;
 	textEditorUriContext: any;
 	textEditorUriHasPullRequestContext: boolean;
+	repos: ReposState;
 }
 
 interface State {
@@ -224,6 +226,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	insertTextAtCursor?: Function;
 	focusOnMessageInput?: Function;
 	permalinkRef = React.createRef<HTMLTextAreaElement>();
+	permalinkWithCodeRef = React.createRef<HTMLTextAreaElement>();
 	private _assigneesContainerRef = React.createRef<HTMLDivElement>();
 	private _sharingAttributes?: SharingAttributes;
 
@@ -1628,6 +1631,15 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
+	copyPermalinkWithCode = (event: React.SyntheticEvent) => {
+		event.preventDefault();
+		if (this.permalinkWithCodeRef.current) {
+			this.permalinkWithCodeRef.current.select();
+			document.execCommand("copy");
+			this.setState({ copied: true });
+		}
+	};
+
 	renderCodeBlocks = () => {
 		const { codeBlocks, liveLocation } = this.state;
 		const { editingCodemark, multiLocation } = this.props;
@@ -1745,7 +1757,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						);
 					})}
 
-					{this.state.addingLocation ? (
+					{this.props.commentType === "link" ? null : this.state.addingLocation ? (
 						<div className="add-range" style={{ clear: "both", position: "relative" }}>
 							Select code from any file to add a range
 							<div className="code-buttons live">
@@ -2053,6 +2065,21 @@ class CodemarkForm extends React.Component<Props, State> {
 			!!this.state.codeBlocks[0].context.pullRequest.pullRequestReviewId
 		);
 
+		let linkWithCodeBlock = "";
+		if (this.state.linkURI) {
+			const codeBlock = this.state.codeBlocks[0];
+			linkWithCodeBlock += this.state.linkURI + "\n\n*";
+			const { scm, uri } = codeBlock;
+			if (scm && scm.repoId) {
+				const repo = this.props.repos[scm.repoId];
+				if (repo) linkWithCodeBlock += "[" + repo.name + "] ";
+			}
+			if (scm && scm.file) {
+				linkWithCodeBlock += scm.file;
+			}
+			linkWithCodeBlock += "*\n```" + codeBlock.contents + "\n```";
+		}
+
 		return [
 			<form
 				id="code-comment-form"
@@ -2152,7 +2179,13 @@ class CodemarkForm extends React.Component<Props, State> {
 									value={this.state.linkURI}
 									style={{ position: "absolute", left: "-9999px" }}
 								/>,
-								<input type="text" className="permalink" value={this.state.linkURI} />
+								<input type="text" className="permalink" value={this.state.linkURI} />,
+								<textarea
+									key="link-offscreen-2"
+									ref={this.permalinkWithCodeRef}
+									value={linkWithCodeBlock}
+									style={{ position: "absolute", left: "-9999px" }}
+								/>
 							]}
 						{commentType === "link" && !this.state.linkURI && (
 							<div id="privacy-controls" className="control-group" key="1">
@@ -2169,7 +2202,7 @@ class CodemarkForm extends React.Component<Props, State> {
 									onLabel="Public"
 									onChange={this.togglePermalinkPrivacy}
 									height={28}
-									width={80}
+									width={90}
 								/>
 							</div>
 						)}
@@ -2212,6 +2245,23 @@ class CodemarkForm extends React.Component<Props, State> {
 								title={this.state.copied ? "Close" : "Cancel"}
 								mode="button"
 							/>
+							{commentType === "link" && this.state.linkURI && !this.state.copied && (
+								<Tooltip title={"Copy Link and Code Block (Markdown)"} placement="bottom" delay={1}>
+									<Button
+										key="copy-with-block"
+										style={{
+											paddingLeft: "10px",
+											paddingRight: "10px",
+											marginRight: 0
+										}}
+										className="control-button"
+										type="submit"
+										onClick={this.copyPermalinkWithCode}
+									>
+										Copy Link w/ Code Block
+									</Button>
+								</Tooltip>
+							)}
 							<Tooltip title={submitTip} placement="bottom" delay={1}>
 								<Button
 									key="submit"
@@ -2316,7 +2366,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		session,
 		preferences,
 		providers,
-		codemarks
+		codemarks,
+		repos
 	} = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
@@ -2350,6 +2401,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const textEditorUriContext = parseCodeStreamDiffUri(editorContext.textEditorUri!);
 
 	return {
+		repos,
 		channel,
 		teamMates,
 		teamMembers,
