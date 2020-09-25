@@ -12,6 +12,7 @@ import {
 } from "@codestream/webview/Stream/actions";
 import Draggable from "react-draggable";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
+import cx from "classnames";
 
 export enum PaneState {
 	Open = "open",
@@ -161,10 +162,11 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	});
 
 	const [dragging, setDragging] = React.useState(false);
+	const [draggingBeyondMinDistance, setDraggingBeyondMinDistance] = React.useState(false);
 	const dragFunctions = React.useContext(DragHeaderContext);
 
 	const togglePanel = e => {
-		if (dragging) return;
+		if (draggingBeyondMinDistance) return;
 		if (
 			e.target.classList.contains("pane-header") ||
 			e.target.classList.contains("label") ||
@@ -177,7 +179,12 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	};
 
 	const header = (
-		<div className={"pane-header " + props.className} tabIndex={1}>
+		<div
+			className={cx("pane-header", props.className, {
+				"visualize-dragging": draggingBeyondMinDistance
+			})}
+			tabIndex={1}
+		>
 			<div className="label">
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
@@ -216,24 +223,30 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			<Draggable
 				position={{ x: 0, y: 0 }}
 				cancel=".menu-popup"
-				onDrag={e => {
+				onStart={(e, data) => {
 					// @ts-ignore
 					if (e && e.target && e.target.closest(".menu-popup")) return;
 					setDragging(true);
-					dragFunctions.drag(e, props.id);
+				}}
+				onDrag={(e, data) => {
+					// @ts-ignore
+					if (e && e.target && e.target.closest(".menu-popup")) return;
+					if (data.x > 2 || data.y > 2) {
+						setDraggingBeyondMinDistance(true);
+						dragFunctions.drag(e, props.id);
+					}
 				}}
 				onStop={e => {
 					// https://github.com/STRML/react-draggable/issues/49
-					if (!dragging) togglePanel(e);
-					else {
-						dragFunctions.stop(e, props.id);
-						setDragging(false);
-					}
+					if (!draggingBeyondMinDistance) togglePanel(e);
+					else dragFunctions.stop(e, props.id);
+					setDraggingBeyondMinDistance(false);
+					setDragging(false);
 				}}
 			>
 				{header}
 			</Draggable>
-			{dragging && header}
+			{dragging && header /* if we are dragging, leave behind another copy of the header */}
 		</>
 	);
 })`
@@ -262,7 +275,12 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		border: 1px solid var(--text-focus-border-color);
 		outline: none;
 	}
+	// make the dragged div invisible until we get beyond the minimum distance
 	&.react-draggable-dragging {
+		opacity: 0;
+	}
+	&.react-draggable-dragging.visualize-dragging {
+		opacity: 0.9;
 		border: 1px solid var(--base-border-color);
 		padding-top: 2px;
 		height: 25px;
