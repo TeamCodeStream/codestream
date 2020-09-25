@@ -70,7 +70,8 @@ import {
 	setCurrentPullRequest,
 	setCurrentPullRequestAndBranch,
 	setStartWorkCard,
-	clearCurrentPullRequest
+	clearCurrentPullRequest,
+	closeAllPanels
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/CodemarkView";
@@ -371,6 +372,7 @@ function listenForEvents(store) {
 							if (route.id) {
 								const { reviews } = store.getState();
 								const review = getReview(reviews, route.id);
+								store.dispatch(closeAllPanels());
 								if (!review) {
 									await store.dispatch(fetchReview(route.id));
 								}
@@ -385,6 +387,7 @@ function listenForEvents(store) {
 			case RouteControllerType.PullRequest: {
 				switch (route.action) {
 					case "open": {
+						store.dispatch(closeAllPanels());
 						store.dispatch(
 							openPullRequestByUrl(route.query.url, { checkoutBranch: route.query.checkoutBranch })
 						);
@@ -406,10 +409,8 @@ function listenForEvents(store) {
 									params: { cardId: card.id }
 								})
 								.then(() => {
-									store.dispatch(setCurrentReview(""));
-									store.dispatch(clearCurrentPullRequest());
+									store.dispatch(closeAllPanels());
 									store.dispatch(setStartWorkCard(card));
-									store.dispatch(openPanel(WebviewPanels.Sidebar));
 								});
 						} else {
 							HostApi.instance
@@ -427,12 +428,10 @@ function listenForEvents(store) {
 												params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true }
 											})
 											.then(() => {
-												store.dispatch(setCurrentReview(""));
-												store.dispatch(clearCurrentPullRequest());
+												store.dispatch(closeAllPanels());
 												store.dispatch(
 													setStartWorkCard({ ...issue, providerId: route.query.providerId })
 												);
-												store.dispatch(openPanel(WebviewPanels.Sidebar));
 											});
 									} else {
 										console.error("Unable to find issue from: ", route);
@@ -450,8 +449,7 @@ function listenForEvents(store) {
 			case "navigate": {
 				if (route.action) {
 					if (Object.values(WebviewPanels).includes(route.action as any)) {
-						store.dispatch(setCurrentReview(""));
-						store.dispatch(setCurrentCodemark(""));
+						store.dispatch(closeAllPanels());
 						store.dispatch(openPanel(route.action));
 					} else {
 						logWarning(`Cannot navigate to route.action=${route.action}`);
