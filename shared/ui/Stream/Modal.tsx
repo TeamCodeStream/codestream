@@ -43,7 +43,7 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 		// backdrop-filter: blur(1px);
 		// .vscode-dark & {
 		background: transparentize(var(--sidebar-background), 0.5);
-		backdrop-filter: brightness(50%) blur(1px);
+		backdrop-filter: brightness(60%) blur(1px);
 		// }
 	}
 	&.show-global-nav {

@@ -174,6 +174,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		)
 			dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
 	};
+
 	const maximize = () => {
 		dispatch(setPaneMaximized(props.id, !derivedState.maximized));
 	};
@@ -220,6 +221,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 
 	return (
 		<>
+			{dragging && header}
 			<Draggable
 				position={{ x: 0, y: 0 }}
 				cancel=".menu-popup"
@@ -227,6 +229,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 					// @ts-ignore
 					if (e && e.target && e.target.closest(".menu-popup")) return;
 					setDragging(true);
+					return;
 				}}
 				onDrag={(e, data) => {
 					// @ts-ignore
@@ -235,18 +238,19 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 						setDraggingBeyondMinDistance(true);
 						dragFunctions.drag(e, props.id);
 					}
+					return;
 				}}
 				onStop={e => {
 					// https://github.com/STRML/react-draggable/issues/49
-					if (!draggingBeyondMinDistance) togglePanel(e);
-					else dragFunctions.stop(e, props.id);
 					setDraggingBeyondMinDistance(false);
 					setDragging(false);
+					if (!draggingBeyondMinDistance) return togglePanel(e);
+					else dragFunctions.stop(e, props.id);
+					// if (!draggingBeyondMinDistance) return false;
 				}}
 			>
 				{header}
 			</Draggable>
-			{dragging && header /* if we are dragging, leave behind another copy of the header */}
 		</>
 	);
 })`
@@ -317,6 +321,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		display: none;
 		margin-right: 7px;
 		margin-left: auto;
+		margin-top: 2px;
 		// background: var(--app-background-color);
 		// background: var(--sidebar-header-background);
 		.icon {
