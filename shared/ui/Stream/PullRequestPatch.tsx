@@ -50,6 +50,7 @@ export const PullRequestPatch = (props: {
 	hunks?: Hunk[];
 	filename: string;
 	className?: string;
+	noHeader?: boolean;
 }) => {
 	const { patch, filename, hunks } = props;
 
@@ -85,6 +86,7 @@ export const PullRequestPatch = (props: {
 							rightLine = parseInt(matches[2]) - 1;
 							width = Math.max(4, rightLine.toString().length + 1);
 						}
+						if (props.noHeader) return null;
 						return (
 							<div className="header">
 								{renderLineNum("")}

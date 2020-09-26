@@ -31,6 +31,7 @@ import {
 	GetCodemarkSha1Request,
 	GetCodemarkSha1RequestType,
 	GetCodemarkSha1Response,
+	GetRangeResponse,
 	PinReplyToCodemarkRequest,
 	PinReplyToCodemarkRequestType,
 	PinReplyToCodemarkResponse,
@@ -205,7 +206,7 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
-		let documentRange = {};
+		let documentRange: GetRangeResponse | undefined = {};
 		let diff = "";
 
 		const location = locations[marker.id];
@@ -213,10 +214,20 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			const range = MarkerLocation.toRange(location);
 			const response = await scm.getRange({ uri: uri, range: range });
 			documentRange = response;
-			diff = createPatch(marker.file, marker.code, response.currentContent || "");
-			const diffs = diff.split("\n");
-			diffs.splice(0, 4);
-			diff = diffs.join("\n");
+			if (documentRange) {
+				diff = createPatch(marker.file, marker.code, response.currentContent || "");
+				const diffs = diff.split("\n");
+				diffs.splice(0, 5);
+				let startLine = 1;
+				if (marker.locationWhenCreated && marker.locationWhenCreated.length) {
+					startLine = marker.locationWhenCreated[0];
+				} else if (marker.referenceLocations && marker.referenceLocations.length) {
+					startLine = marker.referenceLocations[0].location[0];
+				}
+				const newHeader = `@@ -${startLine},${marker.code.split("\n").length} +${range.start.line +
+					1},${(documentRange.currentContent || "").split("\n").length}`;
+				diff = `${newHeader}\n${diffs.join("\n")}`;
+			}
 		}
 
 		const response = {
