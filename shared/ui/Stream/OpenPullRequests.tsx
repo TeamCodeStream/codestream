@@ -6,7 +6,7 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
-import { setCurrentReview, setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
+import { setCurrentPullRequest, setNewPostEntry } from "../store/context/actions";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { isConnected } from "../store/providers/reducer";

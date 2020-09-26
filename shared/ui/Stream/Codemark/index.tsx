@@ -76,6 +76,7 @@ type FromBaseCodemarkProps = Pick<
 	| "renderMarkers"
 	| "renderFooter"
 	| "renderActions"
+	| "noCard"
 >;
 
 interface PropsWithCodemark extends FromBaseCodemarkProps {

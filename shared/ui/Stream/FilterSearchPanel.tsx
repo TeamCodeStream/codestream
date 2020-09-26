@@ -908,7 +908,12 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					})}
 					{this.state.savingFilter && this.renderSaveFilter()}
 				</PanelHeader>
-				<div style={{ height: "calc(100vh - 200px)", overflow: "hidden" }}>
+				<div
+					style={{
+						height: this.state.maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
+						overflow: "hidden"
+					}}
+				>
 					<ScrollBox>
 						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
 							{this.state.totalItems > 0 && (

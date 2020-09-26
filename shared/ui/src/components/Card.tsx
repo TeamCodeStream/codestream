@@ -12,7 +12,8 @@ export interface CardProps {
 export const getCardProps = (props: CardProps & { [k: string]: any }): CardProps => ({
 	onClick: props.onClick,
 	hoverEffect: props.hoverEffect,
-	className: props.className
+	className: props.className,
+	noCard: props.noCard
 });
 
 const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
