@@ -555,7 +555,12 @@ class MarkerActions extends React.Component<Props, State> {
 				}}
 				onClick={e => !warning && this.handleClickJump(e)}
 			>
-				<Marker marker={marker} hasDiff={hasDiff} currentContent={currentContent} />
+				<Marker
+					marker={marker}
+					hasDiff={hasDiff}
+					currentContent={currentContent}
+					diff={this.state.diff}
+				/>
 				{warning && (
 					<div className="repo-warning">
 						<Icon name="alert" /> {this.getWarningMessage()}

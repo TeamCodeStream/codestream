@@ -12,6 +12,8 @@ import { SearchContext } from "./SearchContextProvider";
 import styled from "styled-components";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setUserPreference } from "./actions";
+import { PRDiffHunk } from "./PullRequestFilesChangedList";
+import { PullRequestPatch } from "./PullRequestPatch";
 
 const Label = styled.span`
 	display: inline-block;
@@ -130,6 +132,8 @@ function Marker(props: Props) {
 		startLine
 	);
 
+	console.warn("DIFF IS: ", props.diff);
+
 	const gear = (
 		<Gear>
 			<InlineMenu
@@ -220,11 +224,18 @@ function Marker(props: Props) {
 					{gear}
 				</Tabs>
 			)}
-			<pre
-				className="code prettyprint"
-				data-scrollable="true"
-				dangerouslySetInnerHTML={{ __html: codeHTML }}
-			/>
+			{(tab === "current" || tab === "original") && (
+				<pre
+					className="code prettyprint"
+					data-scrollable="true"
+					dangerouslySetInnerHTML={{ __html: codeHTML }}
+				/>
+			)}
+			{tab === "diff" && (
+				<PRDiffHunk style={{ marginTop: "5px", borderRadius: 0, borderTop: "none" }}>
+					<PullRequestPatch patch={props.diff} hunks={[]} filename={marker.file} />
+				</PRDiffHunk>
+			)}
 		</Root>
 	);
 }

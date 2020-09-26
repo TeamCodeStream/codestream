@@ -1,4 +1,6 @@
 "use strict";
+import { createPatch, ParsedDiff, parsePatch } from "diff";
+import { xfs } from "xfs";
 import { MessageType } from "../api/apiProvider";
 import { MarkerLocation } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
@@ -23,12 +25,12 @@ import {
 	FollowReviewRequest,
 	FollowReviewRequestType,
 	FollowReviewResponse,
-	GetCodemarkSha1Request,
-	GetCodemarkSha1RequestType,
-	GetCodemarkSha1Response,
 	GetCodemarkRangeRequest,
 	GetCodemarkRangeRequestType,
 	GetCodemarkRangeResponse,
+	GetCodemarkSha1Request,
+	GetCodemarkSha1RequestType,
+	GetCodemarkSha1Response,
 	PinReplyToCodemarkRequest,
 	PinReplyToCodemarkRequestType,
 	PinReplyToCodemarkResponse,
@@ -204,17 +206,20 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 		const { locations } = await markerLocations.getCurrentLocations(uri, fileStreamId, [marker]);
 
 		let documentRange = {};
+		let diff = "";
 
 		const location = locations[marker.id];
 		if (location != null) {
 			const range = MarkerLocation.toRange(location);
 			const response = await scm.getRange({ uri: uri, range: range });
 			documentRange = response;
+			diff = createPatch(marker.file, marker.code, response.currentContent || "");
 		}
 
 		const response = {
 			// Normalize to /n line endings
 			...documentRange,
+			diff,
 			success: true
 		};
 
