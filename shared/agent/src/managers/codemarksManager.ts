@@ -214,6 +214,9 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 			const response = await scm.getRange({ uri: uri, range: range });
 			documentRange = response;
 			diff = createPatch(marker.file, marker.code, response.currentContent || "");
+			const diffs = diff.split("\n");
+			diffs.splice(0, 4);
+			diff = diffs.join("\n");
 		}
 
 		const response = {
