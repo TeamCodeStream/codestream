@@ -78,6 +78,8 @@ interface ConnectedProps {
 	teamName: string;
 	repoName: string;
 	repos: ReposState;
+	codemarks: CodemarkPlus[];
+	count: number;
 }
 
 interface DispatchProps {
@@ -340,57 +342,25 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	renderCodemarksFromSearch = () => {
-		const {
-			items = [],
-			showHidden,
-			codemarkDomain,
-			scmInfo = {} as GetFileScmInfoResponse
-		} = this.props;
-		const { scm = {} as any } = scmInfo;
-		const { repoId } = scm;
-		const currentDirectory = fs.pathDirname(scm.file || "");
-		if (items.length === 0) return this.renderNoCodemarks();
+		const { codemarks } = this.props;
+		if (codemarks.length === 0) return this.renderNoCodemarks();
 		if (this.state.isLoading) return null;
-		return items
-			.sort((a, b) => b.createdAt - a.createdAt)
-			.filter(codemark => !codemark.deactivated)
-			.map(codemark => {
-				const hidden =
-					//@ts-ignore
-					!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
-				if (hidden) return null;
-
-				if (
-					codemarkDomain === CodemarkDomainType.Repo ||
-					codemarkDomain === CodemarkDomainType.Directory
-				) {
-					if (!((codemark as any).markers || []).find(marker => marker.repoId === repoId))
-						return null;
-				}
-				if (codemarkDomain === CodemarkDomainType.Directory) {
-					if (
-						!((codemark as any).markers || []).find(marker =>
-							fs.pathDirname(marker.file || "").startsWith(currentDirectory)
-						)
-					)
-						return null;
-				}
-				this.renderedCodemarks[codemark.id] = true;
-				return (
-					<Codemark
-						key={codemark.id}
-						contextName="Sidebar"
-						codemark={codemark as CodemarkPlus}
-						displayType="collapsed"
-						wrap={this.props.wrapComments}
-						marker={{} as MarkerNotLocated}
-						hidden={hidden}
-						highlightCodeInTextEditor
-						postAction={() => {}}
-						action={() => {}}
-					/>
-				);
-			});
+		return codemarks.map(codemark => {
+			this.renderedCodemarks[codemark.id] = true;
+			return (
+				<Codemark
+					key={codemark.id}
+					contextName="Sidebar"
+					codemark={codemark as CodemarkPlus}
+					displayType="collapsed"
+					wrap={this.props.wrapComments}
+					marker={{} as MarkerNotLocated}
+					highlightCodeInTextEditor
+					postAction={() => {}}
+					action={() => {}}
+				/>
+			);
+		});
 	};
 
 	renderCodemarksFile = () => {
@@ -435,11 +405,10 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	render() {
-		const { fileNameToFilterFor = "", documentMarkers = [], codemarkDomain } = this.props;
+		const { fileNameToFilterFor = "", documentMarkers = [], codemarkDomain, count } = this.props;
 		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
 
 		const renderedCodemarks = {};
-		const count = documentMarkers.length;
 		const domainIcon =
 			codemarkDomain === CodemarkDomainType.File
 				? "file"
@@ -623,7 +592,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 const EMPTY_ARRAY = [];
 
-const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
+const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const { context, repos, editorContext, documentMarkers, preferences, teams } = state;
 
 	const teamName = teams[context.currentTeamId].name;
@@ -645,6 +614,42 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 
+	let codemarks = [];
+	if (scmInfo && codemarkDomain !== CodemarkDomainType.File) {
+		const { items = [], showHidden } = props;
+		const { scm = {} as any } = scmInfo as GetFileScmInfoResponse;
+		const { repoId } = scm;
+		const currentDirectory = fs.pathDirname(scm.file || "");
+		codemarks = items
+			.filter(codemark => !codemark.deactivated)
+			.filter(codemark => {
+				const hidden =
+					//@ts-ignore
+					!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
+				if (hidden) return false;
+
+				if (
+					codemarkDomain === CodemarkDomainType.Repo ||
+					codemarkDomain === CodemarkDomainType.Directory
+				) {
+					if (!((codemark as any).markers || []).find(marker => marker.repoId === repoId))
+						return false;
+				}
+				if (codemarkDomain === CodemarkDomainType.Directory) {
+					if (
+						!((codemark as any).markers || []).find(marker =>
+							fs.pathDirname(marker.file || "").startsWith(currentDirectory)
+						)
+					)
+						return false;
+				}
+				return true;
+			})
+			.sort((a, b) => b.createdAt - a.createdAt);
+	}
+
+	const count = codemarkDomain === CodemarkDomainType.File ? docMarkers.length : codemarks.length;
+
 	return {
 		repos,
 		teamName,
@@ -658,6 +663,8 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
 		documentMarkers: docMarkers,
+		codemarks,
+		count,
 		numHidden,
 		codemarkDomain
 	};
