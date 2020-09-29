@@ -295,7 +295,7 @@ export function OpenPullRequests(props: Props) {
 	const deleteQuery = (providerId, index) => {
 		confirmPopup({
 			title: "Are you sure?",
-			message: "Do you want to delete this query?" + index,
+			message: "Do you want to delete this query?",
 			centered: true,
 			buttons: [
 				{ label: "Go Back", className: "control-button" },
