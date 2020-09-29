@@ -861,7 +861,7 @@ export class Codemark extends React.Component<Props, State> {
 		return (
 			<div
 				id={`codemark-${codemark.id}`}
-				className={cx("codemark collapsed", { wrap: this.props.wrap })}
+				className={cx("codemark", { collapsed: !this.props.wrap, wrap: this.props.wrap })}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
 				onMouseLeave={this.handleMouseLeaveCodemark}

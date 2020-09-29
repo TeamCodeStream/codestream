@@ -19,6 +19,8 @@ import {
 } from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import { setCurrentCodemark } from "../store/context/actions";
+import { HostApi } from "../webview-api";
+import { ReviewCloseDiffRequestType } from "@codestream/protocols/webview";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -91,6 +93,10 @@ export function GlobalNav() {
 		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(setCurrentCodemark());
+		if (currentReviewId) {
+			// tell the extension to close the diff panel in the editor
+			HostApi.instance.send(ReviewCloseDiffRequestType, {});
+		}
 	};
 
 	// const selected = panel => activePanel === panel && !currentPullRequestId && !currentReviewId; // && !plusMenuOpen && !menuOpen;
