@@ -400,14 +400,16 @@ export function OpenPullRequests(props: Props) {
 						isLoading={isLoadingPRs}
 						count={totalPRs}
 					>
-						<Icon
-							onClick={() => fetchPRs(queries, { force: true })}
-							name="refresh"
-							className={`spinnable ${isLoadingPRs ? "spin" : ""}`}
-							title="Refresh"
-							placement="bottom"
-							delay={1}
-						/>
+						{derivedState.isPRSupportedCodeHostConnected && (
+							<Icon
+								onClick={() => fetchPRs(queries, { force: true })}
+								name="refresh"
+								className={`spinnable ${isLoadingPRs ? "spin" : ""}`}
+								title="Refresh"
+								placement="bottom"
+								delay={1}
+							/>
+						)}
 						<Icon
 							onClick={() => {
 								dispatch(setNewPostEntry("Status"));
@@ -418,7 +420,15 @@ export function OpenPullRequests(props: Props) {
 							placement="bottom"
 							delay={1}
 						/>
-						<Icon onClick={addQuery} name="filter" title="Add Query" placement="bottom" delay={1} />
+						{derivedState.isPRSupportedCodeHostConnected && (
+							<Icon
+								onClick={addQuery}
+								name="filter"
+								title="Add Query"
+								placement="bottom"
+								delay={1}
+							/>
+						)}
 						<Icon
 							onClick={() => setConfigureQuerySettings(true)}
 							name="gear"
