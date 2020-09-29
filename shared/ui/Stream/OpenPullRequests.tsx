@@ -164,7 +164,7 @@ export function OpenPullRequests(props: Props) {
 
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState("");
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState(false);
-	const [loadFromUrlError, setLoadFromUrlError] = React.useState("");
+	const [prError, setPrError] = React.useState("");
 
 	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
 		[providerId: string]: GetMyPullRequestsResponse[][];
@@ -206,6 +206,7 @@ export function OpenPullRequests(props: Props) {
 			let count: number | undefined = undefined;
 			try {
 				const newGroups = {};
+				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of derivedState.PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
@@ -230,6 +231,7 @@ export function OpenPullRequests(props: Props) {
 							newGroups[connectedProvider.id] = response;
 						}
 					} catch (ex) {
+						setPrError(typeof ex === "string" ? ex : ex.message);
 						console.error(ex);
 					}
 				}
@@ -237,6 +239,7 @@ export function OpenPullRequests(props: Props) {
 				setPullRequestGroups(newGroups);
 			} catch (ex) {
 				console.error(ex);
+				setPrError(typeof ex === "string" ? ex : ex.message);
 				// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
 				// 	// show message about re-authing?
 				// }
@@ -345,10 +348,10 @@ export function OpenPullRequests(props: Props) {
 	};
 
 	const goPR = async (url: string) => {
-		setLoadFromUrlError("");
+		setPrError("");
 		const response = (await dispatch(openPullRequestByUrl(url))) as { error?: string };
 		if (response && response.error) {
-			setLoadFromUrlError(response.error);
+			setPrError(response.error);
 			const er = document.getElementById("error-row");
 			er && er.scrollIntoView({ behavior: "smooth" });
 		}
@@ -356,7 +359,7 @@ export function OpenPullRequests(props: Props) {
 
 	useEffect(() => {
 		if (!loadFromUrlOpen) {
-			setLoadFromUrlError("");
+			setPrError("");
 		}
 	}, [loadFromUrlOpen]);
 
@@ -623,12 +626,12 @@ export function OpenPullRequests(props: Props) {
 											</div>
 										)}
 									</Row>
-									{loadFromUrlError && (
-										<Row id="error-row" key="url-error" className={"no-hover"}>
+									{prError && (
+										<Row id="error-row" key="pr-error" className={"no-hover"}>
 											<div>
 												<Icon name="alert" />
 											</div>
-											<div title={loadFromUrlError}>{loadFromUrlError}</div>
+											<div title={prError}>{prError}</div>
 										</Row>
 									)}
 								</>
