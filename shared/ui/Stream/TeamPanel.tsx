@@ -60,7 +60,7 @@ export const UL = styled.ul`
 	li {
 		position: relative;
 		font-weight: normal;
-		padding: 3px 20px 2px 40px;
+		padding: 3px 10px 2px 40px;
 		margin: 0;
 		// cursor: pointer;
 		list-style: none;
@@ -286,6 +286,10 @@ class TeamPanel extends React.Component<Props, State> {
 				// 	})
 				// );
 				this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 2 } });
+				setTimeout(() => {
+					// reset from "email sent" back to "reinvite" after three seconds
+					this.setState({ invitingEmails: { ...this.state.invitingEmails, [email]: 0 } });
+				}, 3000);
 			});
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": user.email,
@@ -408,8 +412,8 @@ class TeamPanel extends React.Component<Props, State> {
 		switch (invitingEmails[user.email]) {
 			case 1:
 				return (
-					<span className="float-right">
-						<Icon className="spin" name="sync" />
+					<span className="float-right" style={{ verticalAlign: "2px" }}>
+						<Icon className="spin smaller" name="sync" />
 					</span>
 				);
 			case 2:
