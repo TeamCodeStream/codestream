@@ -42,6 +42,7 @@ import { setUserPreference } from "./actions";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 import { ReposState } from "../store/repos/types";
+import { getActiveCodemarks } from "../store/codemarks/reducer";
 
 export enum CodemarkDomainType {
 	File = "file",
@@ -344,7 +345,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	renderCodemarksFromSearch = () => {
 		const { codemarks } = this.props;
 		if (codemarks.length === 0) return this.renderNoCodemarks();
-		if (this.state.isLoading) return null;
+		// if (this.state.isLoading) return null;
 		return codemarks.map(codemark => {
 			this.renderedCodemarks[codemark.id] = true;
 			return (
@@ -593,7 +594,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
-	const { context, repos, editorContext, documentMarkers, preferences, teams } = state;
+	const { context, repos, editorContext, documentMarkers, preferences, teams, codemarks } = state;
 
 	const teamName = teams[context.currentTeamId].name;
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
@@ -614,14 +615,13 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 
-	let codemarks = [];
+	let codemarksToRender = [] as CodemarkPlus[];
 	if (scmInfo && codemarkDomain !== CodemarkDomainType.File) {
 		const { items = [], showHidden } = props;
 		const { scm = {} as any } = scmInfo as GetFileScmInfoResponse;
 		const { repoId } = scm;
 		const currentDirectory = fs.pathDirname(scm.file || "");
-		codemarks = items
-			.filter(codemark => !codemark.deactivated)
+		codemarksToRender = getActiveCodemarks(state)
 			.filter(codemark => {
 				const hidden =
 					//@ts-ignore
@@ -648,7 +648,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			.sort((a, b) => b.createdAt - a.createdAt);
 	}
 
-	const count = codemarkDomain === CodemarkDomainType.File ? docMarkers.length : codemarks.length;
+	const count =
+		codemarkDomain === CodemarkDomainType.File ? docMarkers.length : codemarksToRender.length;
 
 	return {
 		repos,
@@ -663,7 +664,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
 		documentMarkers: docMarkers,
-		codemarks,
+		codemarks: codemarksToRender,
 		count,
 		numHidden,
 		codemarkDomain

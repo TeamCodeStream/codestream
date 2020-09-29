@@ -113,6 +113,11 @@ export const getFileFilteredCodemarks = createSelector(
 		});
 	}
 );
+export const getActiveCodemarks = createSelector(getCodemarks, (codemarks: CodemarksState) => {
+	return Object.values(codemarks).filter(
+		codemark => isNotLinkType(codemark) && isNotDeprecatedType(codemark) && !codemark.deactivated
+	);
+});
 
 export const teamHasCodemarks = createSelector(getCodemarks, (codemarks: CodemarksState) => {
 	return Object.keys(codemarks).length > 0;
