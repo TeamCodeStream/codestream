@@ -616,13 +616,15 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			);
 
 			return (
-				<Keybindings>
-					Discuss code by selecting a range and clicking an icon, or use a shortcut below (
-					<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">show me how</a>
-					).
-					<br />
-					<br />
-				</Keybindings>
+				<div key="no-codemarks" className="no-codemarks-container">
+					<div className="no-codemarks">
+						<h3>No codemarks in this file.</h3>
+						<p>
+							Discuss code by selecting a range and clicking an icon{" "}
+							<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">show me how</a>
+						</p>
+					</div>
+				</div>
 			);
 		}
 	};
@@ -777,6 +779,22 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						id="inline-codemarks-field"
 					>
 						<div className="inline-codemarks vscroll-x">
+							{numAbove > 0 && (
+								<ViewSelectorButton className="above" onClick={this.showAbove}>
+									<span className="nospace">
+										{numAbove} comment{numAbove > 1 ? "s" : ""}
+									</span>
+									<Icon name="arrow-up" />
+								</ViewSelectorButton>
+							)}
+							{numBelow > 0 && (
+								<ViewSelectorButton className="below" onClick={this.showBelow}>
+									<span className="nospace">
+										{numBelow} comment{numBelow > 1 ? "s" : ""}
+									</span>
+									<Icon name="arrow-down" />
+								</ViewSelectorButton>
+							)}
 							{textEditorVisibleRanges.map((lineRange, rangeIndex) => {
 								const realFirstLine = lineRange.start.line;
 								const realLastLine = lineRange.end.line;
@@ -1088,19 +1106,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 
 		return (
 			<ViewSelectors>
-				{viewInline && numAbove > 0 && (
+				{false && viewInline && numAbove > 0 && (
 					<ViewSelectorControl onClick={this.showAbove}>
 						<span className="nospace">{numAbove}</span>
 						<Icon name="arrow-up" />
 					</ViewSelectorControl>
 				)}
-				{viewInline && numBelow > 0 && (
+				{false && viewInline && numBelow > 0 && (
 					<ViewSelectorControl onClick={this.showBelow}>
 						<span className="nospace">{numBelow}</span>
 						<Icon name="arrow-down" />
 					</ViewSelectorControl>
 				)}
-				{this.props.supportsIntegrations && (
+				{false && this.props.supportsIntegrations && (
 					<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
 						<ViewSelectorControl onClick={this.togglePRComments} id="pr-toggle">
 							<span>PRs</span>{" "}
@@ -1375,10 +1393,37 @@ export default connect(mapStateToProps, {
 	closeAllPanels
 })(SimpleInlineCodemarks);
 
+const ViewSelectorButton = styled.div`
+	position: fixed;
+	border: none;
+	padding: 2px 8px 2px 10px;
+	left: 50%;
+	transform: translateX(-50%);
+	background: var(--button-background-color);
+	color: var(--buton-foreground-color);
+	&:hover {
+		background: var(--button-background-color-hover);
+	}
+	&.above {
+		border-radius: 0 0 5px 5px;
+		top: 0;
+	}
+	&.below {
+		border-radius: 5px 5px 0 0;
+		bottom: 0;
+	}
+	.icon {
+		display: inline-block;
+		transform: scale(0.7);
+	}
+	opacity: 1;
+	cursor: pointer;
+`;
+
 const ViewSelectorControl = styled.span`
 	cursor: pointer;
 	opacity: 0.75;
-	padding: 5px 2%;
+	padding: 5px 5px;
 	white-space: nowrap;
 	:hover {
 		opacity: 1;
@@ -1406,18 +1451,16 @@ const ViewSelectorControl = styled.span`
 `;
 
 const ViewSelectors = styled.div`
-	width: 100%;
 	height: 30px;
 	position: fixed;
 	bottom: 0px;
 	right: 0;
 	display: flex;
 	justify-content: flex-end;
-	z-index: 45;
-	background: var(--app-background-color);
+	// background: var(--app-background-color);
 	padding-top: 3px;
 	padding-bottom: 5px;
-	border-top: 1px solid var(--base-border-color);
+	padding-right: 5px;
+	// border-top: 1px solid var(--base-border-color);
 	text-align: right;
-	padding-right: 60px;
 `;
