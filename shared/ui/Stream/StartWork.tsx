@@ -179,13 +179,13 @@ export const WideStatusSection = styled(StatusSection)`
 `;
 
 export const H4 = styled.h4`
-	position: fixed;
+	// position: fixed;
 	color: var(--text-color-highlight);
-	font-weight: 600;
-	font-size: 11px;
-	text-transform: uppercase;
-	margin: -25px 0 5px 0;
-	padding-left: 20px;
+	// font-weight: 600;
+	// font-size: 11px;
+	// text-transform: uppercase;
+	// margin: -25px 0 5px 0;
+	// padding-left: 20px;
 	.toggle {
 		opacity: 0;
 		margin: 0 5px 0 -13px;
@@ -789,8 +789,7 @@ export const StartWork = (props: Props) => {
 											</CardTitle>
 										) : (
 											<>
-												<H4>What are you working on?</H4>
-												<div style={{ height: "10px" }} />
+												<h3>What are you working on?</h3>
 												<input
 													id="status-input"
 													ref={inputRef}

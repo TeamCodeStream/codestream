@@ -996,7 +996,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 					delay={1}
 				/>
 				<Icon
-					name="plus"
+					name="checked-checkbox"
 					onClick={() => {
 						selectCard({ title: "" });
 						HostApi.instance.track("StartWork Form Opened", {
