@@ -19,16 +19,12 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 
 	return (
 		<div
-			className={cx(
-				"row-with-icon-actions monospace ellipsis-left-container wtf",
-				props.className,
-				{
-					selected: props.selected,
-					"no-hover": props.noHover,
-					"with-file-icon": props.icon,
-					"with-action-icons": !!props.actionIcons
-				}
-			)}
+			className={cx("row-with-icon-actions monospace ellipsis-left-container", props.className, {
+				selected: props.selected,
+				"no-hover": props.noHover,
+				"with-file-icon": props.icon,
+				"with-action-icons": !!props.actionIcons
+			})}
 			onClick={props.onClick}
 		>
 			{props.icon}

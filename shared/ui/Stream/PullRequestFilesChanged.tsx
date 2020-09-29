@@ -81,6 +81,12 @@ export const PullRequestFilesChanged = (props: Props) => {
 		setVisitedFiles(newVisitedFiles);
 	};
 
+	const unVisitFile = (visitedKey: string) => {
+		const newVisitedFiles = { ...visitedFiles, [visitedKey]: false };
+		saveVisitedFiles(newVisitedFiles, key);
+		setVisitedFiles(newVisitedFiles);
+	};
+
 	let key = "all";
 
 	const saveVisitedFiles = (newVisitedFiles, key) => {
@@ -171,7 +177,6 @@ export const PullRequestFilesChanged = (props: Props) => {
 				if (index < 0) index = derivedState.numFiles - 1;
 				if (index > derivedState.numFiles - 1) index = 0;
 				const f = filesChanged[index];
-				const visitedKey = [f.file].join(":");
 
 				const request = {
 					baseBranch: props.baseRefName,
@@ -195,7 +200,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					setErrorMessage(err || "Could not open file diff");
 				}
 
-				visitFile(visitedKey, index);
+				visitFile(f.file, index);
 
 				HostApi.instance.track("PR Diff Viewed", {
 					Host: props.pr && props.pr.providerId
@@ -293,7 +298,21 @@ export const PullRequestFilesChanged = (props: Props) => {
 				return (
 					<ChangesetFile
 						selected={selected}
-						icon={icon && <Icon name={icon} className={iconClass} />}
+						icon={
+							<Icon
+								onClick={
+									visited
+										? async e => {
+												e.preventDefault();
+												e.stopPropagation();
+												unVisitFile(f.file);
+										  }
+										: undefined
+								}
+								name={icon}
+								className={iconClass}
+							/>
+						}
 						noHover={isDisabled || loading}
 						onClick={
 							isDisabled || loading

@@ -94,6 +94,12 @@ export const ChangesetFileList = (props: {
 		setVisitedFiles(newVisitedFiles);
 	};
 
+	const unVisitFile = (visitedKey: string) => {
+		const newVisitedFiles = { ...visitedFiles, [visitedKey]: false };
+		saveVisitedFiles(newVisitedFiles, reviewCheckpointKey);
+		setVisitedFiles(newVisitedFiles);
+	};
+
 	// if we're looking at a specific checkpoint, save the visisted
 	// information under that key. if however we're looking at the overall
 	// changes, we want that to "reset" each time the review gets amended,
@@ -242,10 +248,23 @@ export const ChangesetFileList = (props: {
 					const i = index++;
 					return (
 						<ChangesetFile
-							className="wide"
 							selected={selected}
 							noHover={noOnClick}
-							icon={icon && <Icon name={icon} className={iconClass} />}
+							icon={
+								<Icon
+									onClick={
+										visited
+											? async e => {
+													e.preventDefault();
+													e.stopPropagation();
+													unVisitFile(visitedKey);
+											  }
+											: undefined
+									}
+									name={icon}
+									className={iconClass}
+								/>
+							}
 							onClick={async e => {
 								if (noOnClick) return;
 								e.preventDefault();
