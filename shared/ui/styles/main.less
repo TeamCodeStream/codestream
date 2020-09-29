@@ -451,9 +451,7 @@ body.preload * {
 	.react-select__control {
 		border: 1px solid @base-border-color;
 		background-color: @app-background-color;
-		.vscode-dark & {
-			background-color: rgba(0, 0, 0, 0.1);
-		}
+
 		color: @text-color;
 		margin: 0;
 		font-family: inherit;
@@ -767,4 +765,8 @@ body.preload * {
 }
 .loading-spinner-large {
 	.loading-spinner(64px);
+}
+
+.vscode-dark .react-select__control {
+	background-color: rgba(0, 0, 0, 0.1);
 }
