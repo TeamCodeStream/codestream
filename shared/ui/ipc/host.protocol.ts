@@ -196,3 +196,14 @@ export const CompareLocalFilesRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/files/compare`);
+
+export interface LocalFilesCloseDiffRequest {}
+
+export interface LocalFilesCloseDiffResponse {}
+
+export const LocalFilesCloseDiffRequestType = new RequestType<
+	LocalFilesCloseDiffRequest,
+	LocalFilesCloseDiffResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/files/closeDiff`);

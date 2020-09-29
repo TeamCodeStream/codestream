@@ -26,7 +26,7 @@ import {
 	EditorScrollToNotificationType,
 	EditorScrollMode,
 	NewCodemarkNotificationType,
-	WebviewPanels
+	WebviewPanels, ReviewCloseDiffRequestType, LocalFilesCloseDiffRequestType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -1157,12 +1157,23 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 	}
 
+	close() {
+		const { currentReviewId, currentPullRequestId } = this.props;
+		if (currentReviewId) {
+			HostApi.instance.send(ReviewCloseDiffRequestType, {});
+		}
+		if (currentPullRequestId) {
+			HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
+		}
+		this.props.closeAllPanels()
+	}
+
 	render() {
 		const { currentReviewId, currentPullRequestId, composeCodemarkActive } = this.props;
 
 		const composeOpen = composeCodemarkActive ? true : false;
 		return (
-			<Modal noScroll noPadding onClose={() => this.props.closeAllPanels()}>
+			<Modal noScroll noPadding onClose={() => this.close()}>
 				<div style={{ overflow: "hidden" }}>
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />

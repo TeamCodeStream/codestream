@@ -117,6 +117,7 @@ class WebViewRouter(val project: Project) {
             "host/server-url" -> updateServerUrl(message)
             "host/url/open" -> openUrl(message)
             "host/files/compare" -> compareLocalFiles(message)
+            "host/files/closeDiff" -> localFilesDiffClose(message)
             else -> logger.warn("Unhandled host message ${message.method}")
         }
         if (message.id != null) {
@@ -266,6 +267,11 @@ class WebViewRouter(val project: Project) {
         val reviewService = project.reviewService ?: return
 
         reviewService.showRevisionsDiff(request.repoId, request.filePath, request.headSha, request.headBranch, request.baseSha, request.baseBranch, request.context )
+    }
+
+    private fun localFilesDiffClose(message: WebViewMessage) {
+        val reviewService = project.reviewService ?: return
+        reviewService.closeDiff()
     }
 
     private fun parse(json: String): WebViewMessage {

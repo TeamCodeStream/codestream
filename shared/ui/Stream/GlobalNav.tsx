@@ -20,7 +20,10 @@ import {
 import CancelButton from "./CancelButton";
 import { setCurrentCodemark } from "../store/context/actions";
 import { HostApi } from "../webview-api";
-import { ReviewCloseDiffRequestType } from "@codestream/protocols/webview";
+import {
+	LocalFilesCloseDiffRequestType,
+	ReviewCloseDiffRequestType
+} from "@codestream/protocols/webview";
 
 const sum = (total, num) => total + Math.round(num);
 
@@ -96,6 +99,9 @@ export function GlobalNav() {
 		if (currentReviewId) {
 			// tell the extension to close the diff panel in the editor
 			HostApi.instance.send(ReviewCloseDiffRequestType, {});
+		}
+		if (currentPullRequestId) {
+			HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
 		}
 	};
 
