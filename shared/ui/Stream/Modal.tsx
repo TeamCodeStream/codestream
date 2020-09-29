@@ -6,6 +6,8 @@ import Tooltip from "./Tooltip";
 import ScrollBox from "./ScrollBox";
 import Icon from "./Icon";
 import { useDidMount } from "../utilities/hooks";
+import * as contextActions from "../store/context/actions";
+import { useDispatch } from "react-redux";
 
 const noopElement = document.createElement("span");
 
@@ -89,9 +91,12 @@ export interface ModalProps {
 }
 
 export function Modal(props: PropsWithChildren<ModalProps>) {
-	const modalRoot = useModalRoot();
+	let modalRoot = useModalRoot();
+	const dispatch = useDispatch();
 	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
 	const disposables: { dispose(): void }[] = [];
+
+	const [rerender, setRerender] = React.useState<boolean>(false);
 
 	useDidMount(() => {
 		if (props.onClose) {
@@ -108,6 +113,14 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 					{ source: "Modal.tsx", level: -1 }
 				)
 			);
+		}
+
+		// check to make sure we've got the right element. if not, that's
+		// because #modal-root hasn't mounted yet so we need to
+		// trigger a re-render of the main Stream/index by invoking a blur
+		if (modalRoot.tagName === "SPAN") {
+			setTimeout(() => dispatch(contextActions.blur()), 1000);
+			dispatch(contextActions.focus());
 		}
 
 		return () => {

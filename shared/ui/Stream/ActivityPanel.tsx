@@ -264,6 +264,7 @@ export const ActivityPanel = () => {
 	// 	});
 	// }
 
+	console.warn("RENDERING ACTIVITY!");
 	return (
 		<Dialog maximizable wide noPadding onClose={() => dispatch(closeAllPanels())}>
 			<PanelHeader title="Activity" />
