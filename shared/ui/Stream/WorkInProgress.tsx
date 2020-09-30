@@ -22,6 +22,7 @@ import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { useDidMount } from "../utilities/hooks";
 import { updateModifiedRepos, clearModifiedFiles } from "../store/users/actions";
 import { RepoFileDiffs } from "./RepoFileDiffs";
+import { Link } from "./Link";
 
 export const EMPTY_STATUS = {
 	label: "",
@@ -163,6 +164,7 @@ export const WorkInProgress = (props: Props) => {
 						})}
 						onClick={toggleInvisible}
 						placement="bottom"
+						trigger={["hover"]}
 						delay={1}
 						loading={loadingStatus}
 						title={
@@ -171,12 +173,12 @@ export const WorkInProgress = (props: Props) => {
 								{invisible ? "Not sharing" : "Sharing"} local changes with
 								<br />
 								teammates. Click to toggle.
-								<a
+								<Link
 									className="learn-more"
-									href="http://docs.codestream.com/userguide/features/team-live-view/"
+									href="https://docs.codestream.com/userguide/features/team-live-view/"
 								>
 									learn more
-								</a>
+								</Link>
 							</TipTitle>
 						}
 						tabIndex={1}
