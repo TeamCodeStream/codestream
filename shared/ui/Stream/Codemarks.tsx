@@ -10,7 +10,8 @@ import {
 	GetFileScmInfoResponse,
 	GetFileScmInfoRequestType,
 	MarkerNotLocated,
-	CodemarkPlus
+	CodemarkPlus,
+	MarkerNotLocatedReason
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -39,12 +40,19 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 import { ReposState } from "../store/repos/types";
 import { getActiveCodemarks } from "../store/codemarks/reducer";
+import { orderBy } from "lodash-es";
+import { CSMarker } from "@codestream/protocols/api";
 
 export enum CodemarkDomainType {
 	File = "file",
 	Directory = "directory",
 	Repo = "repo",
 	Team = "team"
+}
+
+export enum CodemarkSortType {
+	File = "file",
+	CreatedAt = "createdAt"
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -72,6 +80,7 @@ interface ConnectedProps {
 	documentMarkers?: (DocumentMarker | MarkerNotLocated)[];
 	numHidden?: number;
 	codemarkDomain: CodemarkDomainType;
+	codemarkSortType: CodemarkSortType;
 	teamName: string;
 	repoName: string;
 	repos: ReposState;
@@ -235,12 +244,12 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		}
 	}
 
-	compareStart(range1?: Range[], range2?: Range[]) {
-		if (range1 == null || range1.length === 0 || range2 == null || range2.length === 0) return true;
-		const start1 = range1[0].start.line;
-		const start2 = range2[0].start.line;
-		return start1 !== start2;
-	}
+	// compareStart(range1?: Range[], range2?: Range[]) {
+	// 	if (range1 == null || range1.length === 0 || range2 == null || range2.length === 0) return true;
+	// 	const start1 = range1[0].start.line;
+	// 	const start2 = range2[0].start.line;
+	// 	return start1 !== start2;
+	// }
 
 	renderNoCodemarks = () => {
 		const { textEditorUri } = this.props;
@@ -310,19 +319,50 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		}
 	};
 
-	getMarkerStartLine = marker => {
-		if (marker.notLocatedReason) return 0;
+	static getMarkerStartLine = (
+		// so a bunch of markerLike things can call this
+		markerLike: CSMarker | undefined
+	) => {
+		if (!markerLike) return 0;
+		if (markerLike.locationWhenCreated && markerLike.locationWhenCreated.length)
+			return markerLike.locationWhenCreated[0] - 1;
+		if (markerLike.referenceLocations) {
+			const item = markerLike.referenceLocations.find(_ => _.flags && _.flags.canonical);
+			if (item && item.location && item.location.length) {
+				return item.location[0];
+			}
+		}
+		return 0;
+	};
 
-		if (marker.range) {
-			return marker.range.start.line;
+	static getDocumentMarkerStartLine = (
+		// so a bunch of markerLike things can call this
+		markerLike: (DocumentMarker & MarkerNotLocated) | undefined
+	) => {
+		if (!markerLike || markerLike.notLocatedReason) return 0;
+		if (markerLike.range) {
+			return markerLike.range.start.line;
 		}
 
-		return marker.locationWhenCreated[0] - 1;
+		if (markerLike.locationWhenCreated && markerLike.locationWhenCreated.length)
+			return markerLike.locationWhenCreated[0] - 1;
+		if (markerLike.referenceLocations) {
+			const item = markerLike.referenceLocations.find(_ => _.flags && _.flags.canonical);
+			if (item && item.location && item.location.length) {
+				return item.location[0];
+			}
+		}
+		return 0;
 	};
 
 	switchDomain = (value: CodemarkDomainType) => {
 		const { setUserPreference } = this.props;
 		setUserPreference(["codemarkDomain"], value);
+	};
+
+	switchSort = (value: CodemarkSortType) => {
+		const { setUserPreference } = this.props;
+		setUserPreference(["codemarkSortType"], value);
 	};
 
 	renderCodemarks = () => {
@@ -361,15 +401,27 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	renderCodemarksFile = () => {
-		const { documentMarkers = [], showHidden } = this.props;
+		const { documentMarkers = [], showHidden, codemarkSortType: codemarkSortType } = this.props;
 		if (documentMarkers.length === 0) return this.renderNoCodemarks();
 		if (this.state.isLoading) return null;
 		const codemarksInList = {};
+		let codemarkSortFn;
+		if (codemarkSortType === CodemarkSortType.File) {
+			codemarkSortFn = (a: DocumentMarker, b: DocumentMarker) => {
+				return (
+					SimpleCodemarksForFile.getDocumentMarkerStartLine(
+						a as DocumentMarker & MarkerNotLocated
+					) -
+						SimpleCodemarksForFile.getDocumentMarkerStartLine(
+							b as DocumentMarker & MarkerNotLocated
+						) || b.createdAt - a.createdAt
+				);
+			};
+		} else {
+			codemarkSortFn = (a: DocumentMarker, b: DocumentMarker) => b.createdAt - a.createdAt;
+		}
 		return documentMarkers
-			.sort(
-				(a, b) =>
-					this.getMarkerStartLine(a) - this.getMarkerStartLine(b) || a.createdAt - b.createdAt
-			)
+			.sort((a, b) => codemarkSortFn(a, b))
 			.map(docMarker => {
 				const { codemark } = docMarker;
 
@@ -402,10 +454,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	render() {
-		const { fileNameToFilterFor = "", documentMarkers = [], codemarkDomain, count } = this.props;
+		const { fileNameToFilterFor = "", codemarkDomain, codemarkSortType, count } = this.props;
 		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
 
-		const renderedCodemarks = {};
 		const domainIcon =
 			codemarkDomain === CodemarkDomainType.File
 				? "file"
@@ -422,6 +473,13 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: codemarkDomain === CodemarkDomainType.Repo
 				? this.props.repoName || "[repository]"
 				: this.props.teamName;
+
+		const sortSubtitle =
+			codemarkSortType === CodemarkSortType.CreatedAt
+				? "by date"
+				: codemarkDomain === CodemarkDomainType.File
+				? "by line"
+				: "by file";
 
 		const domainItems = [
 			{
@@ -457,6 +515,37 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				checked: codemarkDomain === CodemarkDomainType.Team
 			}
 		];
+
+		let sortOptions;
+		if (codemarkDomain === CodemarkDomainType.File) {
+			sortOptions = [
+				{
+					label: "By Line",
+					key: "sort-line",
+					icon: <Icon name="file-lines" />,
+					action: () => this.switchSort(CodemarkSortType.File),
+					checked: codemarkSortType === CodemarkSortType.File
+				}
+			];
+		} else {
+			sortOptions = [
+				{
+					label: "By File",
+					key: "sort-file",
+					icon: <Icon name="file" />,
+					action: () => this.switchSort(CodemarkSortType.File),
+					checked: codemarkSortType === CodemarkSortType.File
+				}
+			];
+		}
+
+		sortOptions.push({
+			label: "By Date",
+			key: "sort-date",
+			icon: <Icon name="calendar" />,
+			action: () => this.switchSort(CodemarkSortType.CreatedAt),
+			checked: codemarkSortType === CodemarkSortType.CreatedAt
+		});
 
 		return (
 			<>
@@ -515,15 +604,29 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					title="Codemarks"
 					count={count}
 					subtitle={
-						<InlineMenu
-							className="subtle no-padding"
-							noFocusOnSelect
-							items={domainItems}
-							title="Show Codemarks"
-						>
-							<Icon name={domainIcon} className="inline-label" />
-							{subtitle}
-						</InlineMenu>
+						<>
+							<InlineMenu
+								key="codemark-display-options"
+								className="subtle no-padding"
+								noFocusOnSelect
+								items={domainItems}
+								title="Show Codemarks"
+							>
+								<Icon name={domainIcon} className="inline-label" />
+								{subtitle}
+							</InlineMenu>
+
+							<InlineMenu
+								key="codemark-sort-options"
+								className="subtle no-padding"
+								noFocusOnSelect
+								items={sortOptions}
+								title="Sort Codemarks"
+							>
+								<Icon name="sort" className="inline-label" />
+								{sortSubtitle}
+							</InlineMenu>
+						</>
 					}
 					id={WebviewPanels.CodemarksForFile}
 					isLoading={this.state.isLoading}
@@ -609,6 +712,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	}
 
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
+	const codemarkSortType: CodemarkSortType = preferences.codemarkSortType || CodemarkSortType.File;
 
 	let codemarksToRender = [] as CodemarkPlus[];
 	if (scmInfo && codemarkDomain !== CodemarkDomainType.File) {
@@ -616,6 +720,32 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		const { scm = {} as any } = scmInfo as GetFileScmInfoResponse;
 		const { repoId } = scm;
 		const currentDirectory = fs.pathDirname(scm.file || "");
+		let codemarkSortFn;
+		if (codemarkSortType === CodemarkSortType.File) {
+			codemarkSortFn = (a: CodemarkPlus, b: CodemarkPlus) => {
+				let marker1File = "0";
+				let marker2File = "0";
+				let markerA: CSMarker | undefined;
+				let markerB: CSMarker | undefined;
+				if (a.markers && a.markers.length) {
+					markerA = a.markers[0];
+					marker1File = markerA.file || "0";
+				}
+				if (b.markers && b.markers.length) {
+					markerB = b.markers[0];
+					marker2File = markerB.file || "0";
+				}
+
+				return (
+					marker1File.localeCompare(marker2File, undefined, { caseFirst: "lower" }) ||
+					SimpleCodemarksForFile.getMarkerStartLine(markerA) -
+						SimpleCodemarksForFile.getMarkerStartLine(markerB)
+				);
+			};
+		} else {
+			codemarkSortFn = (a: CodemarkPlus, b: CodemarkPlus) => b.createdAt - a.createdAt;
+		}
+
 		codemarksToRender = getActiveCodemarks(state)
 			.filter(codemark => {
 				const hidden =
@@ -640,7 +770,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 				}
 				return true;
 			})
-			.sort((a, b) => b.createdAt - a.createdAt);
+			.sort((a: CodemarkPlus, b: CodemarkPlus) => codemarkSortFn(a, b));
 	}
 
 	const count =
@@ -662,7 +792,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		codemarks: codemarksToRender,
 		count,
 		numHidden,
-		codemarkDomain
+		codemarkDomain,
+		codemarkSortType
 	};
 };
 export default withSearchableItems(
