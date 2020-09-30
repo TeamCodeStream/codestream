@@ -224,7 +224,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			{dragging && header}
 			<Draggable
 				position={{ x: 0, y: 0 }}
-				cancel=".menu-popup, a"
+				cancel=".menu-popup"
 				onStart={(e, data) => {
 					// @ts-ignore
 					if (e && e.target && e.target.closest(".menu-popup")) return;

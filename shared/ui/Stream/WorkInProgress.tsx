@@ -173,12 +173,6 @@ export const WorkInProgress = (props: Props) => {
 								{invisible ? "Not sharing" : "Sharing"} local changes with
 								<br />
 								teammates. Click to toggle.
-								<Link
-									className="learn-more"
-									href="https://docs.codestream.com/userguide/features/team-live-view/"
-								>
-									learn more
-								</Link>
 							</TipTitle>
 						}
 						tabIndex={1}
