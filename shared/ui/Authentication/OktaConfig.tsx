@@ -69,7 +69,7 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h3>Host URL</h3>
 						<p>Enter the URL you use to access your Okta account.</p>
 						<div id="controls">

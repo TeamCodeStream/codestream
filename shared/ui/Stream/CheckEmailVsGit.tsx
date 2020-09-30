@@ -21,6 +21,8 @@ export const ButtonRow = styled.div`
 		flex-grow: 1;
 		margin: 0 10px;
 		width: 100%;
+		padding: 5px 10px;
+		line-height: 1.25em;
 	}
 `;
 

@@ -10,9 +10,8 @@ export interface Props {
 }
 
 const StyledButton = styled(Button)`
-margin: 5px 0;
+	margin: 5px 0;
 `;
-
 
 export default class Dismissable extends React.Component<Props, State> {
 	static defaultProps = {
@@ -26,8 +25,8 @@ export default class Dismissable extends React.Component<Props, State> {
 			<div className="onboarding-page">
 				<form className="standard-form">
 					<fieldset className="form-body">
-						<div className="outline-box">
-							<h2>{title}</h2>
+						<div className="border-bottom-box">
+							<h3>{title}</h3>
 							{children}
 							<div id="controls">
 								<div className="button-group">

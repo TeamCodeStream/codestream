@@ -78,7 +78,7 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h2>{providerCapitalized} Authentication</h2>
 						<p>
 							Your web browser should have opened up to {aOrAn} {providerCapitalized} authentication

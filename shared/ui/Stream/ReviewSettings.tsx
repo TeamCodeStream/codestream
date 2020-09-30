@@ -49,7 +49,7 @@ export const ReviewSettings = () => {
 	};
 
 	return (
-		<Dialog title="Code Review Settings" onClose={() => dispatch(closeModal())}>
+		<Dialog title="Feedback Request Settings" onClose={() => dispatch(closeModal())}>
 			<ScrollBox>
 				<form className="standard-form vscroll">
 					<fieldset className="form-body">
@@ -70,7 +70,7 @@ export const ReviewSettings = () => {
 								</Radio>
 							</RadioGroup>
 							<div style={{ height: "20px" }}></div>
-							<label>Review Assignment: Suggested Reviewers</label>
+							<label>Suggested Reviewers</label>
 							<RadioGroup
 								name="delivery"
 								selectedValue={loadingAssignment || derivedState.reviewAssignment}

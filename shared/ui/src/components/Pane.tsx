@@ -322,6 +322,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		margin-right: 7px;
 		margin-left: auto;
 		margin-top: 1px;
+		white-space: nowrap;
 		// background: var(--app-background-color);
 		// background: var(--sidebar-header-background);
 		.icon {

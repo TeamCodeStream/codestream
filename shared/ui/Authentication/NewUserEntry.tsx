@@ -3,7 +3,6 @@ import Button from "../Stream/Button";
 import Icon from "../Stream/Icon";
 import { connect } from "react-redux";
 import { CodeStreamState } from "../store";
-import { Link } from "../Stream/Link";
 import { goToLogin, goToJoinTeam, goToSignup } from "../store/context/actions";
 import { DispatchProp } from "../store/common";
 import { HostApi } from "../webview-api";
@@ -65,30 +64,30 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 		<div className="onboarding-page">
 			<form className="standard-form">
 				<fieldset className="form-body">
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h3>Try CodeStream with your team, for free</h3>
 						<p>Create a brand-new team for you and your teammates.</p>
-						<Button className="row-button" onClick={onClickCreateTeam}>
+						<Button className="row-button no-top-margin" onClick={onClickCreateTeam}>
 							<Icon name="plus" />
 							<div className="copy">Sign Up and Create a Team</div>
 						</Button>
 					</div>
-					<div style={{ height: "25px" }}></div>
 					<JoinTeam />
-					<div style={{ height: "25px" }}></div>
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h3>Already have an account?</h3>
-						<Button className="row-button" onClick={onClickLogin}>
+						<Button className="row-button no-top-margin" onClick={onClickLogin}>
 							<Icon name="sign-in" />
 							<div className="copy">Sign In</div>
 						</Button>
 					</div>
-					<div style={{ margin: "30px 20px 0 20px" }}>
+					<div className="border-bottom-box">
+						<h3>
+							<Icon name="light-bulb" /> &nbsp;What’s a CodeStream team?
+						</h3>
 						<p>
-							<Icon name="light-bulb" /> &nbsp;<b>What’s a CodeStream team?</b>
+							Each organization that uses CodeStream has teams of their own. Teams are where all of
+							their code discussions are kept, and they can only be joined by invitation.
 						</p>
-						Each organization that uses CodeStream has teams of their own. Teams are where all of
-						their code discussions are kept, and they can only be joined by invitation.
 					</div>
 					<div id="controls">
 						<div className="footer">

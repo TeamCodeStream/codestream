@@ -8,7 +8,7 @@ import { invite, setUserStatus } from "./actions";
 import { mapFilter, keyFilter } from "../utils";
 import { difference as _difference, sortBy as _sortBy } from "lodash-es";
 import { HostApi } from "../webview-api";
-import { WebviewPanels } from "@codestream/protocols/webview";
+import { WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
 import {
 	RepoScmStatus,
 	DidChangeDataNotificationType,
@@ -30,7 +30,7 @@ import { DropdownButton } from "./Review/DropdownButton";
 import { confirmPopup } from "./Confirm";
 import styled from "styled-components";
 import { getCodeCollisions } from "../store/users/reducer";
-import { openPanel } from "../store/context/actions";
+import { openPanel, openModal } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
@@ -129,6 +129,7 @@ interface ConnectedProps {
 	reviewApproval: "user" | "anyone" | "all";
 	setUserStatus: Function;
 	openPanel: Function;
+	openModal: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	collisions: any;
@@ -658,6 +659,13 @@ class TeamPanel extends React.Component<Props, State> {
 						placement="bottom"
 						delay={1}
 					/>
+					<Icon
+						onClick={() => this.props.openModal(WebviewModals.TeamSetup)}
+						name="gear"
+						title="Team Settings"
+						placement="bottom"
+						delay={1}
+					/>
 				</PaneHeader>
 				{this.props.paneState !== PaneState.Collapsed && (
 					<PaneBody>
@@ -1019,7 +1027,8 @@ const ConnectedTeamPanel = connect(mapStateToProps, {
 	updateModifiedRepos,
 	clearModifiedFiles,
 	setUserStatus,
-	openPanel
+	openPanel,
+	openModal
 })(TeamPanel);
 
 export { ConnectedTeamPanel as TeamPanel };

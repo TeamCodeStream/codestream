@@ -117,7 +117,7 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 	return (
 		<form className="standard-form" style={{ padding: "0 0 0 0" }} onSubmit={onClickJoin}>
 			<fieldset className="form-body" style={{ padding: 0 }}>
-				<div className="outline-box">
+				<div className="border-bottom-box">
 					<h3>Is your team already on CodeStream?</h3>
 					<div id="controls">
 						<div className="control-group">

@@ -6,7 +6,7 @@ import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import Icon from "./Icon";
 import { Headshot } from "../src/components/Headshot";
-import { setCurrentReview, setNewPostEntry, openPanel } from "../store/context/actions";
+import { setCurrentReview, setNewPostEntry, openPanel, openModal } from "../store/context/actions";
 import { useDidMount } from "../utilities/hooks";
 import { bootstrapReviews } from "../store/reviews/actions";
 import Tooltip from "./Tooltip";
@@ -14,7 +14,7 @@ import Timestamp from "./Timestamp";
 import { ReposScm } from "@codestream/protocols/agent";
 import Tag from "./Tag";
 import { Pane, PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
-import { WebviewPanels } from "../ipc/webview.protocol.common";
+import { WebviewModals, WebviewPanels } from "../ipc/webview.protocol.common";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Link } from "./Link";
 
@@ -33,6 +33,7 @@ export function OpenReviews(props: Props) {
 		const reviews = reviewSelectors.getByStatusAndUser(state, "open", currentUserId);
 
 		return {
+			team: state.teams[state.context.currentTeamId],
 			teamTagsHash: userSelectors.getTeamTagsHash(state),
 			reviews,
 			currentUserId,
@@ -48,7 +49,8 @@ export function OpenReviews(props: Props) {
 		}
 	});
 
-	const { reviews, teamMembers } = derivedState;
+	const { team, reviews, teamMembers, currentUserId } = derivedState;
+	const { adminIds } = team;
 
 	const sortedReviews = React.useMemo(() => {
 		const sorted = [...reviews];
@@ -74,6 +76,15 @@ export function OpenReviews(props: Props) {
 					placement="bottom"
 					delay={1}
 				/>
+				{adminIds && adminIds.includes(currentUserId) && (
+					<Icon
+						onClick={() => dispatch(openModal(WebviewModals.ReviewSettings))}
+						name="gear"
+						title="Feedback Request Settings"
+						placement="bottom"
+						delay={1}
+					/>
+				)}
 			</PaneHeader>
 			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>

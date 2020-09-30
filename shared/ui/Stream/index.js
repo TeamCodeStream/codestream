@@ -16,6 +16,7 @@ import { ChangeWorksOn } from "./ChangeWorksOn";
 import { ChangePhoneNumber } from "./ChangePhoneNumber";
 import { ChangeAvatar } from "./ChangeAvatar";
 import { ChangeTeamName } from "./ChangeTeamName";
+import { TeamSetup } from "./TeamSetup";
 import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ProfilePanel } from "./ProfilePanel";
@@ -338,6 +339,7 @@ export class SimpleStream extends Component {
 						{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
 						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
 						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
+						{activeModal === WebviewModals.TeamSetup && <TeamSetup />}
 						{activeModal === WebviewModals.Keybindings && (
 							<Keybindings onClick={this.props.closeModal}>
 								<div style={{ textAlign: "right" }}>

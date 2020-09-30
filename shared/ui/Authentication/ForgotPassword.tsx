@@ -27,7 +27,7 @@ export const ForgotPassword = (connect(undefined) as any)((props: Props) => {
 			{emailSent ? (
 				<form className="standard-form">
 					<fieldset className="form-body">
-						<div className="outline-box">
+						<div className="border-bottom-box">
 							<h3>Password Reset</h3>
 							<p>
 								Check your email for a link to reset your password. If you don't receive it within a
@@ -74,8 +74,8 @@ function Form(props: { email?: string; onComplete: Function }) {
 
 	return (
 		<form className="standard-form" onSubmit={submit}>
-			<fieldset className="form-body">				
-				<div className="outline-box">
+			<fieldset className="form-body">
+				<div className="border-bottom-box">
 					<h3>Password Reset</h3>
 					<p>Enter your email address and we will send you a link to reset your password.</p>
 					<div id="controls">

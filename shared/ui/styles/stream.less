@@ -1062,11 +1062,19 @@
 				position: relative;
 				z-index: 50;
 				// box-shadow: 0 5px 10px #ccc;
-				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 				border-radius: 5px;
 				border: 1px solid @base-border-color;
 				// background: #eee;
-				background: @base-background-color;
+				// background: @base-background-color;
+				box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+				.vscode-dark& {
+					box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+				}
+				border-radius: 5px;
+				border: 1px solid @base-border-color;
+				// background: @app-background-color-hover;
+				// background: @base-border-color;
+				background: var(--panel-tool-background-color);
 			}
 			.matches {
 				font-size: 11px;
@@ -1094,7 +1102,7 @@
 				border-top: 1px solid @base-border-color;
 				border-bottom: 1px solid @base-border-color;
 				// background: #fff;
-				background: @base-background-color;
+				background: var(--panel-tool-background-color);
 				padding: 5px 0;
 				border-radius: 0 0 5px 5px;
 				max-height: 40vh;
@@ -2998,9 +3006,9 @@
 	.codemark-form .tab-group label {
 		max-width: calc(~"25% - 10");
 	}
-	nav.inline label > span {
-		padding: 5px 5px !important;
-	}
+	// nav.inline label > span {
+	// 	padding: 5px 5px !important;
+	// }
 }
 @media only screen and (max-width: 350px) {
 	.two-column {
@@ -3009,9 +3017,9 @@
 	.codemark-form .tab-group label b {
 		display: none;
 	}
-	nav.inline label > span {
-		padding: 5px 4px !important;
-	}
+	// nav.inline label > span {
+	// 	padding: 5px 4px !important;
+	// }
 }
 @media only screen and (max-width: 250px) {
 	.codestream {

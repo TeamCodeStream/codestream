@@ -58,7 +58,7 @@ export const TeamCreation = (connect() as any)((props: ConnectedProps & Dispatch
 		<div className="onboarding-page">
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
-					<div className="outline-box">
+					<div className="border-bottom-box">
 						<h3>Team Name</h3>
 						{props.loggedIn && (
 							<h4>You don't belong to a team yet. Enter a name to create one now.</h4>

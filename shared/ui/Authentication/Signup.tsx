@@ -272,7 +272,7 @@ export const Signup = (props: Props) => {
 				<form className="standard-form">
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
-							<div className="outline-box">
+							<div className="border-bottom-box">
 								<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
 									<Icon name="mark-github" />
 									<div className="copy">Sign Up with GitHub</div>
@@ -295,19 +295,18 @@ export const Signup = (props: Props) => {
 										<Icon name="chevron-right" />
 									</Button>
 								)}
+								<div className="separator-label">
+									<span className="or">or</span>
+								</div>
 							</div>
 						</div>
 					</fieldset>
 				</form>
 			)}
-			{derivedState.supportsIntegrations && (
-				<div style={{ textAlign: "center", paddingBottom: "20px" }}>~ or ~</div>
-			)}
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
-					<div className="outline-box">
-						<h2>Create an Account</h2>
-						<div className="spacer" />
+					<div className="border-bottom-box">
+						<h3>Create an Account</h3>
 						{wasInvited && (
 							<React.Fragment>
 								<br />
@@ -431,27 +430,25 @@ export const Signup = (props: Props) => {
 							</Button>
 						</div>
 					</div>
+					<div id="controls">
+						<div className="footer">
+							<small className="fine-print">
+								<FormattedMessage id="signUp.legal.start" />{" "}
+								<FormattedMessage id="signUp.legal.terms">
+									{text => <Link href="https://codestream.com/terms">{text}</Link>}
+								</FormattedMessage>{" "}
+								<FormattedMessage id="and" />{" "}
+								<FormattedMessage id="signUp.legal.privacyPolicy">
+									{text => <Link href="https://codestream.com/privacy">{text}</Link>}
+								</FormattedMessage>
+							</small>
+							<Link onClick={onClickGoBack}>
+								<p>{"< Back"}</p>
+							</Link>
+						</div>
+					</div>
 				</fieldset>
 			</form>
-			<div style={{ textAlign: "center" }}>
-				<small className="fine-print">
-					<FormattedMessage id="signUp.legal.start" />{" "}
-					<FormattedMessage id="signUp.legal.terms">
-						{text => <Link href="https://codestream.com/terms">{text}</Link>}
-					</FormattedMessage>{" "}
-					<FormattedMessage id="and" />{" "}
-					<FormattedMessage id="signUp.legal.privacyPolicy">
-						{text => <Link href="https://codestream.com/privacy">{text}</Link>}
-					</FormattedMessage>
-				</small>
-			</div>
-			<div id="controls">
-				<div className="footer">
-					<Link onClick={onClickGoBack}>
-						<p>{"< Back"}</p>
-					</Link>
-				</div>
-			</div>
 		</div>
 	);
 };

@@ -1,6 +1,6 @@
 import React from "react";
 
-interface State { }
+interface State {}
 
 export interface Props {
 	title: string;
@@ -18,8 +18,8 @@ export default class RoadBlock extends React.Component<Props, State> {
 			<div className="onboarding-page">
 				<form className="standard-form">
 					<fieldset className="form-body">
-						<div className="outline-box">
-							<h2>{title}</h2>
+						<div className="border-bottom-box">
+							<h3>{title}</h3>
 							{children}
 						</div>
 					</fieldset>

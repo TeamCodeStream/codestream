@@ -90,6 +90,7 @@ export enum WebviewModals {
 	ChangeWorksOn = "change-works-on",
 	ChangeTeamName = "change-team-name",
 	CreateTeam = "create-team",
+	TeamSetup = "team-setup",
 	Keybindings = "keybindings",
 	Notifications = "notifications",
 	ReviewSettings = "review-settings",

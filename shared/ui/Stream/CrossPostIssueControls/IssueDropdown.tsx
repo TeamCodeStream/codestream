@@ -1211,17 +1211,21 @@ export const Row = styled.div`
 	&:hover > div:nth-child(3) {
 		min-width: 30px;
 	}
-	&:hover time {
-		display: none;
-	}
 	.status,
 	time {
 		color: var(--text-color-subtle);
 		opacity: 0.75;
 		padding-left: 5px;
 	}
-	&:hover .status {
+	&:hover .status,
+	&:hover time {
 		display: none;
+	}
+	@media only screen and (max-width: 350px) {
+		.status,
+		time {
+			display: none;
+		}
 	}
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);

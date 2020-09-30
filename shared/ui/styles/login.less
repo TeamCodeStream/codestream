@@ -1,20 +1,32 @@
 .onboarding-page {
-	background-color: @app-background-color;
+	// background-color: @app-background-color;
 	height: 100%;
 	width: 100%;
 	display: flex;
 	flex-direction: column;
 	overflow: auto;
-	padding: 20px 0;
-	h2 {
+	background: var(--sidebar-background);
+
+	.standard-form .form-body {
+		padding: 0 !important;
+		margin: 0 !important;
+		max-width: none;
 		text-align: center;
 	}
+}
+.separator-label {
+	text-align: center;
+	position: fixed;
+	left: 0;
+	width: 100vw;
+	transform: translateY(10px);
+	z-index: 5;
 }
 
 // see https://stackoverflow.com/questions/33454533/cant-scroll-to-top-of-flex-item-that-is-overflowing-container/33455342
 .onboarding-page > div,
 .onboarding-page > form {
-	margin: auto !important;
+	margin: 0 auto !important;
 }
 
 .onboarding-page > .standard-form-wrapper {
@@ -22,6 +34,37 @@
 	width: 100%;
 }
 
+.border-bottom-box {
+	position: relative;
+	margin: 0 auto;
+	padding: 20px;
+	max-width: 420px;
+	text-align: left;
+	p {
+		margin-top: 0.5em;
+		color: var(--text-color-subtle);
+	}
+	h2,
+	h3 {
+		color: var(--text-color-highlight);
+		margin: 0 0 0 0;
+	}
+	&::after {
+		content: "";
+		position: fixed;
+		left: 0;
+		transform: translateY(20px);
+		// bottom: 0;
+		width: 100vw;
+		border-bottom: 1px solid @base-border-color;
+		z-index: 2;
+	}
+	.or {
+		display: inline-block;
+		background: var(--sidebar-background);
+		padding: 0 10px;
+	}
+}
 .outline-box {
 	border: 1px solid @base-border-color;
 	// background: @app-background-color-darker;
@@ -59,6 +102,9 @@
 	width: 100%;
 	&.no-top-margin {
 		margin-top: 10px;
+	}
+	&.zero-top-margin {
+		margin-top: 0;
 	}
 	&:hover {
 		// background-color: var(--button-background-color-hover);
@@ -118,12 +164,8 @@
 	width: 100%;
 	margin: 0 auto;
 	flex-direction: column;
-	justify-content: center;
-
-	h2,
-	h3 {
-		text-align: center;
-	}
+	// justify-content: center;
+	padding: 0;
 
 	.spacer {
 		height: 10px;
@@ -167,7 +209,7 @@
 		}
 
 		.footer {
-			margin-top: 5%;
+			margin: 20px;
 			display: flex;
 			flex-direction: column;
 			align-items: center;

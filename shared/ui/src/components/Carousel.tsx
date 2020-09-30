@@ -20,18 +20,26 @@ interface ContentProps {
 const Prev = styled.div`
 	margin-right: 20px;
 	@media only screen and (max-width: 450px) {
+		width: 30px !important;
+		height: 30px !important;
 		margin-right: 15px;
 	}
 	@media only screen and (max-width: 350px) {
+		width: 25px !important;
+		height: 25px !important;
 		margin-right: 10px;
 	}
 `;
 const Next = styled.div`
 	margin-left: 20px;
 	@media only screen and (max-width: 450px) {
+		width: 30px !important;
+		height: 30px !important;
 		margin-left: 15px;
 	}
 	@media only screen and (max-width: 350px) {
+		width: 25px !important;
+		height: 25px !important;
 		margin-left: 10px;
 	}
 `;
