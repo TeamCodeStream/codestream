@@ -45,6 +45,7 @@ import {
 	LiveShareInviteToSessionRequestType,
 	LiveShareJoinSessionRequestType,
 	LiveShareStartSessionRequestType,
+	LocalFilesCloseDiffRequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
 	NewReviewNotificationType,
@@ -953,6 +954,14 @@ export class WebviewController implements Disposable {
 							error: err.message
 						};
 					}
+				});
+
+				break;
+			}
+			case LocalFilesCloseDiffRequestType.method: {
+				webview.onIpcRequest(LocalFilesCloseDiffRequestType, e, async (_type, params) => {
+					// not supported
+					return emptyObj;
 				});
 
 				break;
