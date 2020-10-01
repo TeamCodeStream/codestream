@@ -519,7 +519,7 @@ export const PullRequest = () => {
 	// console.warn("REPO: ", ghRepo);
 	if (!pr) {
 		return (
-			<div style={{ display: "flex", justifyContent: "center" }}>
+			<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
 				<LoadingMessage>Loading Pull Request...</LoadingMessage>
 			</div>
 		);
