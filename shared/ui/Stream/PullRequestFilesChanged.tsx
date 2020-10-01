@@ -28,6 +28,17 @@ import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import { MetaIcons } from "./Review";
 import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
 import { CompareFilesProps } from "./PullRequestFilesChangedList";
+import { pathBasename, pathDirname } from "../utilities/fs";
+import { TernarySearchTree } from "../utilities/searchTree";
+
+const Directory = styled.div`
+	cursor: pointer;
+	padding: 2px 0;
+	&:hover {
+		background: var(--app-background-color-hover);
+		color: var(--text-color-highlight);
+	}
+`;
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
@@ -38,6 +49,7 @@ interface Props extends CompareFilesProps {
 	isLoading: boolean;
 	pr?: FetchThirdPartyPullRequestPullRequest;
 	withTelemetry?: boolean;
+	viewMode: "tree" | "files";
 }
 
 export const PullRequestFilesChanged = (props: Props) => {
@@ -56,9 +68,11 @@ export const PullRequestFilesChanged = (props: Props) => {
 			state.editorContext.scmInfo.uri.startsWith("codestream-diff://")
 				? state.editorContext.scmInfo.uri
 				: "";
+		const parsedDiffUri = parseCodeStreamDiffUri(matchFile || "");
 
 		return {
 			matchFile,
+			parsedDiffUri,
 			userId,
 			repos: state.repos,
 			currentRepo: getProviderPullRequestRepo(state),
@@ -267,97 +281,142 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	const latest = visitedFiles[key] ? visitedFiles[key]._latest : 0;
 
+	const fileTree = files => {};
+
+	const renderFile = (f, index, depth) => {
+		const selected = derivedState.parsedDiffUri && derivedState.parsedDiffUri.path == f.file;
+		const visited = visitedFiles[f.file];
+		if (selected && !visited) {
+			visitFile(f.file, index);
+		}
+
+		let icon;
+		// if we're loading, show a spinner
+		if (loading) icon = "sync";
+		// this file is currently selected, and visible in diff view
+		else if (selected) icon = "arrow-right";
+		// this file has been visitied during the review
+		else if (visited) icon = "ok";
+		// not yet visited, but part of the review
+		else icon = "circle";
+
+		const iconClass = loading ? "file-icon spin" : "file-icon";
+		// i is a temp variable to create the correct scope binding
+		const i = index;
+		return (
+			<>
+				<ChangesetFile
+					selected={selected}
+					viewMode={props.viewMode}
+					icon={
+						<Icon
+							onClick={
+								visited
+									? async e => {
+											e.preventDefault();
+											e.stopPropagation();
+											unVisitFile(f.file);
+									  }
+									: undefined
+							}
+							name={icon}
+							className={iconClass}
+						/>
+					}
+					noHover={isDisabled || loading}
+					onClick={
+						isDisabled || loading
+							? undefined
+							: async e => {
+									e.preventDefault();
+									goDiff(i);
+							  }
+					}
+					actionIcons={
+						!loading &&
+						!isDisabled && (
+							<div className="actions">
+								<Icon
+									name="goto-file"
+									className="clickable action"
+									title="Open File"
+									placement="left"
+									delay={1}
+									onClick={async e => {
+										e.stopPropagation();
+										e.preventDefault();
+										openFile(i);
+									}}
+								/>
+							</div>
+						)
+					}
+					key={i + ":" + f.file}
+					depth={depth}
+					{...f}
+				/>
+			</>
+		);
+	};
+
+	const toggleDirectory = hideKey => {
+		const newVisitedFiles = { ...visitedFiles, [hideKey]: !visitedFiles[hideKey] };
+		saveVisitedFiles(newVisitedFiles, key);
+		setVisitedFiles(newVisitedFiles);
+	};
+
+	const renderDirectory = (fullPath, dirPath, depth) => {
+		const hideKey = "hide:" + fullPath.join("/");
+		const hidden = visitedFiles[hideKey];
+		return (
+			<Directory
+				style={{ paddingLeft: `${depth * 10}px` }}
+				onClick={() => toggleDirectory(hideKey)}
+			>
+				<Icon name={hidden ? "chevron-right-thin" : "chevron-down-thin"} />
+				{dirPath.join("/")}
+			</Directory>
+		);
+	};
+
 	const changedFiles = React.useMemo(() => {
-		const files: any[] = [];
+		const lines: any[] = [];
 
-		let index = 0;
-		const parsed = parseCodeStreamDiffUri(derivedState.matchFile || "");
-		files.push(
-			...props.filesChanged.map(f => {
-				const visitedKey = [f.file].join(":");
+		if (props.viewMode === "tree") {
+			const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
 
-				const selected = parsed && parsed.path == f.file;
-				const visited = visitedFiles[visitedKey];
-				if (selected && !visited) {
-					visitFile(visitedKey, index);
+			props.filesChanged.forEach(f => tree.set(f.file, f));
+			let index = 0;
+			const render = (node: any, fullPath: string[], dirPath: string[], depth: number) => {
+				if (dirPath.length > 0 && (node.right || node.value)) {
+					lines.push(renderDirectory(fullPath, dirPath, depth));
+					dirPath = [];
+					depth++;
 				}
 
-				let icon;
-				// if we're loading, show a spinner
-				if (loading) icon = "sync";
-				// this file is currently selected, and visible in diff view
-				else if (selected) icon = "arrow-right";
-				// this file has been visitied during the review
-				else if (visited) icon = "ok";
-				// not yet visited, but part of the review
-				else icon = "circle";
+				const hideKey = "hide:" + fullPath.join("/");
+				if (visitedFiles[hideKey]) return;
 
-				const iconClass = loading ? "file-icon spin" : "file-icon";
-				// i is a temp variable to create the correct scope binding
-				const i = index++;
-				return (
-					<ChangesetFile
-						selected={selected}
-						icon={
-							<Icon
-								onClick={
-									visited
-										? async e => {
-												e.preventDefault();
-												e.stopPropagation();
-												unVisitFile(f.file);
-										  }
-										: undefined
-								}
-								name={icon}
-								className={iconClass}
-							/>
-						}
-						noHover={isDisabled || loading}
-						onClick={
-							isDisabled || loading
-								? undefined
-								: async e => {
-										e.preventDefault();
-										goDiff(i);
-								  }
-						}
-						actionIcons={
-							!loading &&
-							!isDisabled && (
-								<div className="actions">
-									<Icon
-										name="goto-file"
-										className="clickable action"
-										title="Open File"
-										placement="left"
-										delay={1}
-										onClick={async e => {
-											e.stopPropagation();
-											e.preventDefault();
-											openFile(i);
-										}}
-									/>
-								</div>
-							)
-						}
-						key={i + ":" + f.file}
-						{...f}
-					/>
-				);
-			})
-		);
-		return files;
-	}, [
-		goDiff,
-		derivedState.currentRepo,
-		pr,
-		loading,
-		derivedState.matchFile,
-		latest,
-		visitedFiles,
-		forkPointSha
-	]);
+				// node.value is a file object, so render the file
+				if (node.value) {
+					lines.push(renderFile(node.value, index++, depth));
+				}
+
+				// recurse deeper into file path if the dir isn't collapsed
+				if (node.mid) {
+					render(node.mid, [...fullPath, node.segment], [...dirPath, node.segment], depth);
+				}
+				// render sibling nodes at the same depth w/same dirPath
+				if (node.right) {
+					render(node.right, [...fullPath, node.segment], dirPath, depth);
+				}
+			};
+			render((tree as any)._root, [], [], 0);
+		} else {
+			lines.push(...props.filesChanged.map((f, index) => renderFile(f, index, 0)));
+		}
+		return lines;
+	}, [pr, loading, derivedState.matchFile, latest, visitedFiles, forkPointSha, props.viewMode]);
 
 	if (pr && !derivedState.currentRepo) {
 		return (
@@ -375,7 +434,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	return (
 		<>
-			{changedFiles.length > 1 && (
+			{changedFiles.length > 0 && (
 				<Meta id="changed-files">
 					<MetaLabel>
 						{props.filesChanged.length} Changed Files

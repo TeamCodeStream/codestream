@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { PRSelectorButtons } from "./PullRequestComponents";
-import styled from "styled-components";
 import { useDidMount } from "../utilities/hooks";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "../store";
-import { PullRequestFilesChanged } from "./PullRequestFilesChanged";
 import { FileStatus } from "@codestream/protocols/api";
 import { LoadingMessage } from "../src/components/LoadingMessage";
-import { setUserPreference } from "./actions";
-import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import { HostApi } from "../webview-api";
@@ -93,7 +88,7 @@ export const PullRequestFilesChangedTab = (props: {
 
 	if (!filesChanged || !filesChanged.length) return null;
 	return (
-		<div style={{ position: "relative", margin: "0 20px 20px 40px" }}>
+		<div style={{ position: "relative", margin: "0 0 20px 40px" }}>
 			<PullRequestFilesChangedList
 				pr={pr}
 				filesChanged={filesChanged}

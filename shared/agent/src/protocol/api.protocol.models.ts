@@ -647,7 +647,7 @@ export interface CSMePreferences {
 	skipGitEmailCheck?: boolean;
 	skipEmailingAuthors?: boolean;
 	skipPostCreationModal?: boolean;
-	pullRequestFilesChangedMode?: "files" | "hunks";
+	pullRequestFilesChangedMode?: "files" | "tree" | "hunks";
 	pullRequestQueries?: PullRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;

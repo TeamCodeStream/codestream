@@ -252,9 +252,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		if (textEditorUri === undefined) {
 			return (
 				<NoContent>
-					<h3>No file open.</h3>
 					<p>
-						Open a source file to to start discussing code with your teammates!{" "}
+						Open a source file to to start discussing code with your teammates{" "}
 						<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">View guide.</a>
 					</p>
 				</NoContent>
@@ -265,7 +264,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			if (isNotOnDisk(textEditorUri)) {
 				return (
 					<NoContent>
-						<h3>This file hasn't been saved.</h3>
 						<p>
 							Save the file before creating a codemark so that the codemark can be linked to the
 							code.

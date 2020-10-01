@@ -3,6 +3,7 @@ import { ReviewChangesetFileInfo, FileStatus } from "@codestream/protocols/api";
 import styled from "styled-components";
 import Tooltip from "../Tooltip";
 import cx from "classnames";
+import { pathBasename } from "@codestream/webview/utilities/fs";
 
 interface Props {
 	className?: string;
@@ -12,11 +13,14 @@ interface Props {
 	icon?: any;
 	actionIcons?: any;
 	tooltip?: any;
+	depth?: number;
+	viewMode?: "files" | "tree";
 }
 
 export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => {
 	const { linesAdded, linesRemoved, status } = props;
 
+	const filename = props.viewMode === "tree" ? pathBasename(props.file) : props.file;
 	return (
 		<div
 			className={cx("row-with-icon-actions monospace ellipsis-left-container", props.className, {
@@ -26,11 +30,12 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 				"with-action-icons": !!props.actionIcons
 			})}
 			onClick={props.onClick}
+			style={props.depth ? { paddingLeft: `${props.depth * 10}px` } : {}}
 		>
 			{props.icon}
 			<Tooltip title={props.tooltip} placement="bottom" delay={1}>
 				<span className="file-info ellipsis-left">
-					<bdi dir="ltr">{props.file}</bdi>
+					<bdi dir="ltr">{filename}</bdi>
 				</span>
 			</Tooltip>
 			{linesAdded > 0 && <span className="added">+{linesAdded} </span>}

@@ -11,6 +11,7 @@ import { setUserPreference } from "./actions";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import Icon from "./Icon";
 
 export const PRDiffHunks = styled.div`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -79,14 +80,17 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		<>
 			<PRSelectorButtons>
 				<span className={mode == "files" ? "selected" : ""} onClick={() => setMode("files")}>
-					Files
+					<Icon name="list-flat" title="List View" placement="bottom" />
+				</span>
+				<span className={mode == "tree" ? "selected" : ""} onClick={() => setMode("tree")}>
+					<Icon name="list-tree" title="Tree View" placement="bottom" />
 				</span>
 				<span className={mode == "hunks" ? "selected" : ""} onClick={() => setMode("hunks")}>
-					Diff Hunks
+					<Icon name="file-diff" title="Diff Hunks" placement="bottom" />
 				</span>
 			</PRSelectorButtons>
 			<div style={{ height: "10px" }} />
-			{mode === "files" ? (
+			{mode === "files" || mode === "tree" ? (
 				<PullRequestFilesChanged
 					pr={pr}
 					filesChanged={filesChanged}
@@ -96,6 +100,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 					headRef={props.headRef}
 					headRefName={props.headRefName}
 					isLoading={props.isLoading}
+					viewMode={mode === "files" ? "files" : "tree"}
 				/>
 			) : (
 				<PRDiffHunks>

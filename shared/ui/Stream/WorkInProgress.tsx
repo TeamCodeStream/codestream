@@ -179,7 +179,6 @@ export const WorkInProgress = (props: Props) => {
 					/>
 				)}
 			</PaneHeader>
-
 			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
 					<div style={{ padding: "0 10px 0 20px" }}>
