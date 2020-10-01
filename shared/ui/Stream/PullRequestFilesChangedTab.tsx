@@ -14,8 +14,9 @@ const STATUS_MAP = {
 };
 
 export const PullRequestFilesChangedTab = (props: {
-	fetch: Function;
 	pr: FetchThirdPartyPullRequestPullRequest;
+	fetch: Function;
+	setIsLoadingMessage: Function;
 }) => {
 	const { pr } = props;
 	const dispatch = useDispatch();
@@ -98,6 +99,8 @@ export const PullRequestFilesChangedTab = (props: {
 				headRef={pr.headRefOid}
 				headRefName={pr.headRefName}
 				isLoading={isLoading}
+				fetch={props.fetch!}
+				setIsLoadingMessage={props.setIsLoadingMessage!}
 			/>
 		</div>
 	);

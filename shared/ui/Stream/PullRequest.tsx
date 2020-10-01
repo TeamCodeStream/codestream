@@ -777,7 +777,12 @@ export const PullRequest = () => {
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
 							{activeTab === 4 && (
-								<PullRequestFilesChangedTab key="files-changed" pr={pr} fetch={fetch} />
+								<PullRequestFilesChangedTab
+									key="files-changed"
+									pr={pr}
+									fetch={fetch}
+									setIsLoadingMessage={setIsLoadingMessage}
+								/>
 							)}
 						</div>
 					</ScrollBox>

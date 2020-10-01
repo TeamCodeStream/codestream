@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { PRSelectorButtons } from "./PullRequestComponents";
+import { PRSelectorButtons, PRSubmitReviewButton } from "./PullRequestComponents";
 import styled from "styled-components";
 import { useDidMount } from "../utilities/hooks";
 import { useSelector, useDispatch } from "react-redux";
@@ -12,6 +12,8 @@ import { PullRequestPatch } from "./PullRequestPatch";
 import { getPullRequestFiles } from "../store/providerPullRequests/actions";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import Icon from "./Icon";
+import { Button } from "../src/components/Button";
+import { PullRequestFinishReview } from "./PullRequestFinishReview";
 
 export const PRDiffHunks = styled.div`
 	font-family: Menlo, Consolas, "DejaVu Sans Mono", monospace;
@@ -50,6 +52,8 @@ interface Props extends CompareFilesProps {
 	filesChanged: any[];
 	isLoading: boolean;
 	pr?: FetchThirdPartyPullRequestPullRequest;
+	fetch?: Function;
+	setIsLoadingMessage?: Function;
 }
 
 export const PullRequestFilesChangedList = (props: Props) => {
@@ -60,6 +64,8 @@ export const PullRequestFilesChangedList = (props: Props) => {
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files"
 		};
 	});
+
+	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 
 	const setMode = mode => {
 		dispatch(setUserPreference(["pullRequestFilesChangedMode"], mode));
@@ -89,6 +95,22 @@ export const PullRequestFilesChangedList = (props: Props) => {
 					<Icon name="file-diff" title="Diff Hunks" placement="bottom" />
 				</span>
 			</PRSelectorButtons>
+			{pr && !pr.pendingReview && (
+				<PRSubmitReviewButton style={{ marginTop: 0 }}>
+					<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
+						Review changes <Icon name="chevron-down" />
+					</Button>
+					{finishReviewOpen && (
+						<PullRequestFinishReview
+							pr={pr}
+							mode="dropdown"
+							fetch={props.fetch!}
+							setIsLoadingMessage={props.setIsLoadingMessage!}
+							setFinishReviewOpen={setFinishReviewOpen}
+						/>
+					)}
+				</PRSubmitReviewButton>
+			)}
 			<div style={{ height: "10px" }} />
 			{mode === "files" || mode === "tree" ? (
 				<PullRequestFilesChanged
