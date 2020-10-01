@@ -15,14 +15,17 @@ const Root = styled.div`
 		display: inline-block;
 	}
 	> div {
+		float: left;
+	}
+	> div div {
 		display: flex;
-		background-origin: content-box;
 		padding: 2px 10px;
-		> span.linenum {
+		.linenum {
 			opacity: 0.5;
 		}
 		margin: 0;
 	}
+
 	.added {
 		// background: #e6ffed;
 		background: rgba(80, 255, 0, 0.1);
@@ -76,107 +79,111 @@ export const PullRequestPatch = (props: {
 
 	if (patch) {
 		return (
-			<Root className={props.className + " pr-patch"}>
-				{patch.split("\n").map(_ => {
-					if (_ === "\\ No newline at end of file") return null;
-					if (_.indexOf("@@ ") === 0) {
-						const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
-						if (matches) {
-							leftLine = parseInt(matches[1], 10) - 1;
-							rightLine = parseInt(matches[2]) - 1;
-							width = Math.max(4, rightLine.toString().length + 1);
+			<Root className={(props.className || "") + " pr-patch"}>
+				<div style={{ position: "relative" }}>
+					{patch.split("\n").map(_ => {
+						if (_ === "\\ No newline at end of file") return null;
+						if (_.indexOf("@@ ") === 0) {
+							const matches = _.match(/@@ \-(\d+).*? \+(\d+)/);
+							if (matches) {
+								leftLine = parseInt(matches[1], 10) - 1;
+								rightLine = parseInt(matches[2]) - 1;
+								width = Math.max(4, rightLine.toString().length + 1);
+							}
+							if (props.noHeader) return null;
+							return (
+								<div className="line header">
+									{renderLineNum("")}
+									{renderLineNum("")}
+									<pre className="prettyprint">{_}</pre>
+								</div>
+							);
+						} else if (_.indexOf("+") === 0) {
+							rightLine++;
+							return (
+								<div className="line added">
+									{renderLineNum("")}
+									{renderLineNum(rightLine)}
+									{syntaxHighlight(_)}
+								</div>
+							);
+						} else if (_.indexOf("-") === 0) {
+							leftLine++;
+							return (
+								<div className="line deleted">
+									{renderLineNum(leftLine)}
+									{renderLineNum("")}
+									{syntaxHighlight(_)}
+								</div>
+							);
+						} else {
+							leftLine++;
+							rightLine++;
+							return (
+								<div className="line same">
+									{renderLineNum(leftLine)}
+									{renderLineNum(rightLine)}
+									{syntaxHighlight(_)}
+								</div>
+							);
 						}
-						if (props.noHeader) return null;
-						return (
-							<div className="header">
-								{renderLineNum("")}
-								{renderLineNum("")}
-								<pre className="prettyprint">{_}</pre>
-							</div>
-						);
-					} else if (_.indexOf("+") === 0) {
-						rightLine++;
-						return (
-							<div className="added">
-								{renderLineNum("")}
-								{renderLineNum(rightLine)}
-								{syntaxHighlight(_)}
-							</div>
-						);
-					} else if (_.indexOf("-") === 0) {
-						leftLine++;
-						return (
-							<div className="deleted">
-								{renderLineNum(leftLine)}
-								{renderLineNum("")}
-								{syntaxHighlight(_)}
-							</div>
-						);
-					} else {
-						leftLine++;
-						rightLine++;
-						return (
-							<div>
-								{renderLineNum(leftLine)}
-								{renderLineNum(rightLine)}
-								{syntaxHighlight(_)}
-							</div>
-						);
-					}
-				})}
+					})}
+				</div>
 			</Root>
 		);
 	} else if (hunks) {
 		return (
-			<Root className={props.className + " pr-patch"}>
-				{hunks.map(hunk => {
-					leftLine = hunk.oldStart - 1;
-					rightLine = hunk.newStart - 1;
-					width = Math.max(4, rightLine.toString().length + 1);
-					return (
-						<>
-							<div className="header">
-								{renderLineNum("")}
-								{renderLineNum("")}
-								<pre className="prettyprint">
-									@@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
-								</pre>
-							</div>
-							{hunk.lines.map(_ => {
-								if (_ === "\\ No newline at end of file") return null;
-								if (_.indexOf("+") === 0) {
-									rightLine++;
-									return (
-										<div className="added">
-											{renderLineNum("")}
-											{renderLineNum(rightLine)}
-											{syntaxHighlight(_)}
-										</div>
-									);
-								} else if (_.indexOf("-") === 0) {
-									leftLine++;
-									return (
-										<div className="deleted">
-											{renderLineNum(leftLine)}
-											{renderLineNum("")}
-											{syntaxHighlight(_)}
-										</div>
-									);
-								} else {
-									leftLine++;
-									rightLine++;
-									return (
-										<div>
-											{renderLineNum(leftLine)}
-											{renderLineNum(rightLine)}
-											{syntaxHighlight(_)}
-										</div>
-									);
-								}
-							})}
-						</>
-					);
-				})}
+			<Root className={(props.className || "") + " pr-patch"}>
+				<div style={{ position: "relative" }}>
+					{hunks.map(hunk => {
+						leftLine = hunk.oldStart - 1;
+						rightLine = hunk.newStart - 1;
+						width = Math.max(4, rightLine.toString().length + 1);
+						return (
+							<>
+								<div className="line header">
+									{renderLineNum("")}
+									{renderLineNum("")}
+									<pre className="prettyprint">
+										@@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
+									</pre>
+								</div>
+								{hunk.lines.map(_ => {
+									if (_ === "\\ No newline at end of file") return null;
+									if (_.indexOf("+") === 0) {
+										rightLine++;
+										return (
+											<div className="line added">
+												{renderLineNum("")}
+												{renderLineNum(rightLine)}
+												{syntaxHighlight(_)}
+											</div>
+										);
+									} else if (_.indexOf("-") === 0) {
+										leftLine++;
+										return (
+											<div className="line deleted">
+												{renderLineNum(leftLine)}
+												{renderLineNum("")}
+												{syntaxHighlight(_)}
+											</div>
+										);
+									} else {
+										leftLine++;
+										rightLine++;
+										return (
+											<div className="line same">
+												{renderLineNum(leftLine)}
+												{renderLineNum(rightLine)}
+												{syntaxHighlight(_)}
+											</div>
+										);
+									}
+								})}
+							</>
+						);
+					})}
+				</div>
 			</Root>
 		);
 	} else return null;
