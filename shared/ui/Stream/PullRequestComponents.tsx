@@ -247,6 +247,9 @@ export const PRCommentCard = styled.div`
 	border-radius: 5px;
 	padding: 10px 15px;
 	margin-left: 60px;
+	&.no-headshot {
+		margin-left: 0;
+	}
 	z-index: 2;
 	h1 {
 		font-size: 15px;

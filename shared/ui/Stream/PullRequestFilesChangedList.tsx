@@ -108,7 +108,13 @@ export const PullRequestFilesChangedList = (props: Props) => {
 						return (
 							<PRDiffHunk>
 								<h1>{_.filename}</h1>
-								<PullRequestPatch patch={_.patch} hunks={_.hunks} filename={_.filename} />
+								<PullRequestPatch
+									comment
+									pr={pr}
+									patch={_.patch}
+									hunks={_.hunks}
+									filename={_.filename}
+								/>
 							</PRDiffHunk>
 						);
 					})}

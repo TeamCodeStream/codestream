@@ -23,7 +23,7 @@ export const ChangesetFile = styled((props: ReviewChangesetFileInfo & Props) => 
 	const filename = props.viewMode === "tree" ? pathBasename(props.file) : props.file;
 	return (
 		<div
-			className={cx("row-with-icon-actions monospace ellipsis-left-container", props.className, {
+			className={cx("row-with-icon-actions ellipsis-left-container", props.className, {
 				selected: props.selected,
 				"no-hover": props.noHover,
 				"with-file-icon": props.icon,
