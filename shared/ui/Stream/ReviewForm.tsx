@@ -838,7 +838,8 @@ class ReviewForm extends React.Component<Props, State> {
 					this.props.newPostEntryPoint || "Global Nav"
 				);
 				if (createResult !== PostsActionsType.FailPendingPost) {
-					if (this.props.skipPostCreationModal) {
+					// commented out as per https://trello.com/c/LR3KD2Lj/4320-posting-comment-in-a-review-or-a-pr-leads-to-misleading-confirmation-message
+					if (true || this.props.skipPostCreationModal) {
 						this.props.closePanel();
 					} else {
 						confirmPopup({
