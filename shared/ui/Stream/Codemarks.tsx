@@ -254,7 +254,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				<NoContent>
 					<p>
 						Open a source file to to start discussing code with your teammates{" "}
-						<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">View guide.</a>
+						<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">Learn more.</a>
 					</p>
 				</NoContent>
 			);
@@ -306,7 +306,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			return (
 				<NoContent>
 					Discuss code by selecting a range and clicking an icon.{" "}
-					<Link href="https://docs.codestream.com/userguide/workflow/discuss-code/">See how.</Link>
+					<Link href="https://docs.codestream.com/userguide/workflow/discuss-code/">
+						Learn more.
+					</Link>
 				</NoContent>
 			);
 		}

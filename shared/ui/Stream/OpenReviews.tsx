@@ -97,7 +97,9 @@ export function OpenReviews(props: Props) {
 					{reviewsState.bootstrapped && sortedReviews.length === 0 && (
 						<NoContent>
 							Lightweight, pre-PR code review. Get quick feedback on any code, even pre-commit.{" "}
-							<Link>Learn more.</Link>
+							<Link href="https://docs.codestream.com/userguide/workflow/feedback-requests">
+								Learn more.
+							</Link>
 						</NoContent>
 					)}
 					{sortedReviews.map(review => {
