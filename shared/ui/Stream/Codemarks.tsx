@@ -19,11 +19,7 @@ import {
 	getFileScmError,
 	mapFileScmErrorForTelemetry
 } from "../store/editorContext/reducer";
-import {
-	setCurrentCodemark,
-	setSpatialViewPRCommentsToggle,
-	openPanel
-} from "../store/context/actions";
+import { setCurrentCodemark, openPanel } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
@@ -470,7 +466,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 							title="Codemark Settings"
 							onClose={() => this.setState({ showConfiguationModal: false })}
 						>
-							<form className="standard-form">
+							<div className="standard-form">
 								<fieldset className="form-body">
 									<div id="controls">
 										<div style={{ margin: "20px 0" }}>
@@ -508,7 +504,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 										<Button onClick={this.saveSettings}>Save Settings</Button>
 									</ButtonRow>
 								</fieldset>
-							</form>
+							</div>
 						</Dialog>
 					</Modal>
 				)}
@@ -574,19 +570,18 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		);
 	}
 
-	saveSettings = () => {
+	saveSettings = async () => {
 		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
 
-		this.props.setUserPreference(["codemarksShowArchived"], !!showHiddenField);
-		this.props.setUserPreference(["codemarksWrapComments"], !!wrapCommentsField);
-
 		if (this.props.hasPRProvider) {
-			// this.props.setSpatialViewPRCommentsToggle(newShowPRComments);
-			this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
+			await this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
 			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !showPRCommentsField);
 		} else {
 			this.setState({ showPRInfoModal: true });
 		}
+		// codemarksShowPRComments will flash if these are before it
+		this.props.setUserPreference(["codemarksShowArchived"], !!showHiddenField);
+		this.props.setUserPreference(["codemarksWrapComments"], !!wrapCommentsField);
 		this.setState({ showConfiguationModal: false });
 	};
 }
@@ -676,7 +671,6 @@ export default withSearchableItems(
 		openPanel,
 		setCurrentCodemark,
 		setEditorContext,
-		setUserPreference,
-		setSpatialViewPRCommentsToggle
+		setUserPreference
 	})(SimpleCodemarksForFile)
 );

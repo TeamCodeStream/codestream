@@ -52,7 +52,6 @@ import {
 	setCodemarksFileViewStyle,
 	setCodemarksShowArchived,
 	setCurrentCodemark,
-	setSpatialViewPRCommentsToggle,
 	repositionCodemark,
 	setComposeCodemarkActive,
 	closeAllPanels
@@ -154,10 +153,10 @@ interface Props {
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
 	changeSelection: Function;
-	setSpatialViewPRCommentsToggle: Function;
 	composeCodemarkActive: CodemarkType | undefined;
 	newPostEntryPoint?: string;
 	setNewPostEntry: Function;
+	setUserPreference: any;
 }
 
 interface State {
@@ -173,6 +172,7 @@ interface State {
 	// newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
 	multiLocationCodemarkForm: boolean;
 	codemarkFormError?: string;
+	showPRCommentsField: boolean | undefined;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -202,7 +202,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numBelow: 0,
 			numLinesVisible: props.numLinesVisible,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
-			multiLocationCodemarkForm: false
+			multiLocationCodemarkForm: false,
+			showPRCommentsField: props.showPRComments
 		};
 
 		this.docMarkersByStartLine = {};
@@ -284,7 +285,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			!prevProps.hasPRProvider &&
 			this._waitingForPRProviderConnection
 		) {
-			this.props.setSpatialViewPRCommentsToggle(true);
+			this.props.setUserPreference(["codemarksShowPRComments"], true);
 		}
 
 		this.repositionCodemarks();
@@ -1120,7 +1121,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<Icon name="arrow-down" />
 					</ViewSelectorControl>
 				)}
-				{false && this.props.supportsIntegrations && (
+				{/*  {false && this.props.supportsIntegrations && (
 					<Tooltip title="Show/hide pull request comments" placement="top" delay={1}>
 						<ViewSelectorControl onClick={this.togglePRComments} id="pr-toggle">
 							<span>PRs</span>{" "}
@@ -1132,6 +1133,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						</ViewSelectorControl>
 					</Tooltip>
 				)}
+				*/}
 				{numHidden > 0 && (
 					<Tooltip title="Show/hide archived codemarks" placement="top" delay={1}>
 						<ViewSelectorControl onClick={this.toggleShowHidden}>
@@ -1251,18 +1253,19 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showHidden));
 	};
 
-	togglePRComments = () => {
-		const newShowPRComments = !this.props.showPRComments;
-		if (this.props.hasPRProvider)
-			this.enableAnimations(() => {
-				this.props.setSpatialViewPRCommentsToggle(newShowPRComments);
-				this.props.fetchDocumentMarkers(this.props.textEditorUri!, !newShowPRComments);
-			});
-		else {
-			this._waitingForPRProviderConnection = true;
-			this.setState({ showPRInfoModal: true });
-		}
-	};
+	// togglePRComments = () => {
+	// 	const { showPRCommentsField } = this.state;
+	// 	const newShowPRComments = !this.props.showPRComments;
+	// 	if (this.props.hasPRProvider)
+	// 		this.enableAnimations(() => {
+	// 			this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
+	// 			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !newShowPRComments);
+	// 		});
+	// 	else {
+	// 		this._waitingForPRProviderConnection = true;
+	// 		this.setState({ showPRInfoModal: true });
+	// 	}
+	// };
 
 	showAbove = () => {
 		const { firstVisibleLine } = this.props;
@@ -1335,7 +1338,7 @@ const EMPTY_ARRAY = [];
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState) => {
-	const { context, editorContext, teams, configs, documentMarkers, ide } = state;
+	const { context, editorContext, preferences, teams, configs, documentMarkers, ide } = state;
 
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
 	const numHidden = docMarkers.filter(
@@ -1368,7 +1371,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		viewHeadshots: configs.showHeadshots,
 		showLabelText: false, //configs.showLabelText,
 		showHidden: context.codemarksShowArchived || false,
-		showPRComments: hasPRProvider && context.spatialViewShowPRComments,
+		showPRComments: hasPRProvider && preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,
@@ -1401,7 +1404,6 @@ export default connect(mapStateToProps, {
 	createPostAndCodemark,
 	addDocumentMarker,
 	changeSelection,
-	setSpatialViewPRCommentsToggle,
 	setNewPostEntry,
 	closeAllPanels
 })(SimpleInlineCodemarks);

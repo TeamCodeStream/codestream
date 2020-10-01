@@ -29,7 +29,6 @@ export enum ContextActionsType {
 	SetChatProviderAccess = "@context/SetChatProviderAccess",
 	SetCurrentCodemark = "@context/SetCurrentCodemark",
 	SetComposeCodemarkActive = "@context/SetComposeCodemarkActive",
-	SetSpatialViewPRCommentsToggle = "@context/SetSpatialViewPRCommentsToggle",
 	RepositionCodemark = "@context/RepositionCodemark",
 	SetCurrentReview = "@context/SetCurrentReview",
 	SetCreatePullRequest = "@context/SetCreatePullRequest",

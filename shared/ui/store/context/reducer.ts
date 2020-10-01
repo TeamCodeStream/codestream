@@ -141,8 +141,6 @@ export function reduceContext(
 			return { ...state, startWorkCard: action.payload.card };
 		case ContextActionsType.SetProfileUser:
 			return { ...state, profileUserId: action.payload };
-		case ContextActionsType.SetSpatialViewPRCommentsToggle:
-			return { ...state, spatialViewShowPRComments: action.payload };
 		case ContextActionsType.SetShowFeedbackSmiley:
 			return { ...state, showFeedbackSmiley: action.payload };
 		case ContextActionsType.SetIssueProvider:
