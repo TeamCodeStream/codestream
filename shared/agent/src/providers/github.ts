@@ -1192,7 +1192,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const queries = request.queries;
 		const buildQuery = (query: string, repoQuery: string) => {
 			const limit = query === "recent" ? 5 : 100;
-			if (query === "recent") query = "is:pr";
+			// recent is kind of a magic string, where we just look
+			// for some random PR activity to at least show you
+			// something. if you have the repo query checked, and
+			// we can query by repo, then use that. otherwise github
+			// needs at least one qualifier so we query for PRs
+			// that you were the author of
+			// https://trello.com/c/XIg6MKWy/4813-add-4th-default-pr-query-recent
+			if (query === "recent") {
+				if (repoQuery.length > 0) query = "is:pr";
+				else query = "is:pr author:@me";
+			}
 			return `query Search {
 			rateLimit {
 				limit

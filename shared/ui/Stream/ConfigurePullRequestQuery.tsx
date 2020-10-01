@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { PRHeadshot } from "../src/components/Headshot";
 import Tooltip from "./Tooltip";
@@ -15,6 +15,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import { PullRequestTooltip } from "./OpenPullRequests";
 import styled from "styled-components";
 import { PullRequestQuery } from "../protocols/agent/api.protocol.models";
+import { CodeStreamState } from "../store";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -42,6 +43,13 @@ interface Props {
 
 export function ConfigurePullRequestQuery(props: Props) {
 	const dispatch = useDispatch();
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		return {
+			allRepos: preferences.pullRequestQueryShowAllRepos
+		};
+	});
 
 	const defaultProviderId = React.useMemo(() => {
 		if (props.query && props.query.providerId) return props.query.providerId;
@@ -120,6 +128,17 @@ export function ConfigurePullRequestQuery(props: Props) {
 									}}
 								/>
 								<div style={{ height: "10px" }} />
+								{!derivedState.allRepos && (
+									<Tooltip
+										title="You can change this setting by closing the dialog and clicking the gear icon"
+										placement="bottom"
+										delay={1}
+									>
+										<span className="explainer">
+											Queries are limited to repos you have open in your editor.
+										</span>
+									</Tooltip>
+								)}
 							</div>
 						</div>
 						<ButtonRow>
