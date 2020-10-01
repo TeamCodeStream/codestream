@@ -114,7 +114,7 @@ export default function ContainerAtEditorLine(props: {
 				transform:
 					props.className && props.className.includes("cs-hidden")
 						? // tag: codemark-width
-						  `translate(calc(100% - 30px), ${adjustedPosition || position}px)`
+						  `translate(calc(100% - 10px), ${adjustedPosition || position}px)`
 						: `translateY(${adjustedPosition || position}px)`
 			}}
 			data-top={adjustedPosition || position}

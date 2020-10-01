@@ -26,7 +26,9 @@ import {
 	EditorScrollToNotificationType,
 	EditorScrollMode,
 	NewCodemarkNotificationType,
-	WebviewPanels, ReviewCloseDiffRequestType, LocalFilesCloseDiffRequestType
+	WebviewPanels,
+	ReviewCloseDiffRequestType,
+	LocalFilesCloseDiffRequestType
 } from "../ipc/webview.protocol";
 import {
 	DocumentMarker,
@@ -1165,7 +1167,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		if (currentPullRequestId) {
 			HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
 		}
-		this.props.closeAllPanels()
+		this.props.closeAllPanels();
 	}
 
 	render() {
@@ -1429,6 +1431,7 @@ const ViewSelectorButton = styled.div`
 	}
 	opacity: 1;
 	cursor: pointer;
+	z-index: 3;
 `;
 
 const ViewSelectorControl = styled.span`

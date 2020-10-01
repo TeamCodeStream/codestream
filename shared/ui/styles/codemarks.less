@@ -201,7 +201,7 @@
 		position: relative;
 		padding: 0 !important;
 		z-index: 1;
-		// background: @app-background-color;
+		background: @app-background-color;
 		height: auto;
 		// box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 
@@ -295,14 +295,19 @@
 				// visibility: hidden;
 			}
 			&.unpinned {
-				background: repeating-linear-gradient(
-					-45deg,
-					transparent,
-					transparent 5px,
-					@app-background-color 5px,
-					@app-background-color 10px
-				) !important;
+				border-left: 1px solid var(--base-border-color);
+				border-right: 1px solid var(--base-border-color);
+				background: @base-background-color;
 			}
+			// &.unpinned {
+			// 	background: repeating-linear-gradient(
+			// 		-45deg,
+			// 		transparent,
+			// 		transparent 5px,
+			// 		@app-background-color 5px,
+			// 		@app-background-color 10px
+			// 	) !important;
+			// }
 		}
 		.postslist {
 			// max-height: 200px;
