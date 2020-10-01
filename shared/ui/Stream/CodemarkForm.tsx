@@ -2077,7 +2077,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			if (scm && scm.file) {
 				linkWithCodeBlock += scm.file;
 			}
-			linkWithCodeBlock += "*\n```" + codeBlock.contents + "\n```";
+			linkWithCodeBlock += "*\n```\n" + codeBlock.contents + "\n```\n";
 		}
 
 		return [
