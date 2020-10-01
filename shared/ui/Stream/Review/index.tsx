@@ -512,6 +512,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	return (
 		<>
 			<KebabIcon
+				className="kebab"
 				onClickCapture={e => {
 					e.preventDefault();
 					e.stopPropagation();

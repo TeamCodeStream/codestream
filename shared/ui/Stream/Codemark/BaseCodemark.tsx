@@ -119,6 +119,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 			{!renderIssueDropdownAndMenu && renderedMenu}
 			{!renderIssueDropdownAndMenu && props.renderMenu && (
 				<KebabIcon
+					className="kebab"
 					onClickCapture={e => {
 						e.preventDefault();
 						e.stopPropagation();

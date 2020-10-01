@@ -72,9 +72,6 @@ const Root = styled.div`
 	${AuthorInfo} {
 		font-weight: 700;
 	}
-	${KebabIcon}, .icon.reply, ${AddReactionIcon} {
-		visibility: hidden;
-	}
 	.icon.reply {
 		margin-left: 5px;
 		margin-right: 10px;
@@ -119,7 +116,14 @@ const ReplyBody = styled.span`
 	flex-direction: column;
 	position: relative;
 
-	:hover ${KebabIcon}, :hover .icon.reply,
+	.kebab,
+	.icon.reply,
+	${AddReactionIcon} {
+		visibility: hidden;
+	}
+
+	:hover .kebab,
+	:hover .icon.reply,
 	:hover ${AddReactionIcon} {
 		visibility: visible;
 	}
@@ -346,6 +350,7 @@ export const Reply = (props: ReplyProps) => {
 						{renderedMenu}
 						{props.renderMenu && (
 							<KebabIcon
+								className="kebab"
 								onClick={e => {
 									e.preventDefault();
 									e.stopPropagation();

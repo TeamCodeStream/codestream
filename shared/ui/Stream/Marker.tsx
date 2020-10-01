@@ -174,7 +174,6 @@ function Marker(props: Props) {
 	return (
 		<Root className={props.className} hasDiff={props.hasDiff}>
 			<div className="file-info">
-				{!props.hasDiff && <span style={{ float: "right" }}>{gear}</span>}
 				{props.repoName && showRepo && (
 					<Label>
 						<span className="monospace">
@@ -208,7 +207,7 @@ function Marker(props: Props) {
 						</span>
 					</Label>
 				)}
-				<div style={{ clear: "both" }} />
+				{!props.hasDiff && <div style={{ marginLeft: "auto" }}>{gear}</div>}
 			</div>
 			{props.hasDiff && (
 				<Tabs>
