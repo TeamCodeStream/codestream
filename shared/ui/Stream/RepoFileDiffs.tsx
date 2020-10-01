@@ -106,14 +106,14 @@ export const RepoFileDiffs = (props: { onlyRepos?: (string | undefined)[] }) => 
 	const nameList = ids => ids.map(id => derivedState.userNamesById[id]).join(", ");
 
 	const modified = (modifiedRepos[teamId] || [])
-		.map(repo => {
+		.map((repo, index) => {
 			const { repoId = "", authors } = repo;
 			if (props.onlyRepos && repo.repoId && !props.onlyRepos.includes(repo.repoId)) return null;
 			const trackedFiles = repo.modifiedFiles.filter(f => f.status !== FileStatus.untracked);
 			const untrackedFiles = repo.modifiedFiles.filter(f => f.status === FileStatus.untracked);
 			const repoName = repos[repoId] ? repos[repoId].name : "";
 			return (
-				<PaneNode>
+				<PaneNode key={index}>
 					<PaneNodeName
 						id={`repo-${repoId}`}
 						title={repoName}

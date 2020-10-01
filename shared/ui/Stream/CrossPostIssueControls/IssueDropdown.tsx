@@ -1161,6 +1161,9 @@ export const Row = styled.div`
 		cursor: pointer;
 	}
 	white-space: nowrap;
+	&.wrap {
+		white-space: normal;
+	}
 	overflow: hidden;
 	text-overflow: ellipsis;
 	width: 100%;
