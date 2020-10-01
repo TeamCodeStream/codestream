@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	FetchAllRemotesRequestType,
 	GetReposScmRequestType,
 	FetchForkPointRequestType
 } from "@codestream/protocols/agent";
@@ -22,13 +21,11 @@ import * as path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
 import styled from "styled-components";
 import { parseCodeStreamDiffUri } from "../store/codemarks/actions";
-import { LocateRepoButton } from "./LocateRepoButton";
 import { Link } from "./Link";
 import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import { MetaIcons } from "./Review";
 import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
 import { CompareFilesProps } from "./PullRequestFilesChangedList";
-import { pathBasename, pathDirname } from "../utilities/fs";
 import { TernarySearchTree } from "../utilities/searchTree";
 
 const Directory = styled.div`
@@ -374,7 +371,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				onClick={() => toggleDirectory(hideKey)}
 			>
 				<Icon name={hidden ? "chevron-right-thin" : "chevron-down-thin"} />
-				{dirPath.join("/")}
+				{path.join(...dirPath)}
 			</Directory>
 		);
 	};
