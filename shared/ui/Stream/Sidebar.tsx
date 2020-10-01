@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
-import { CSMe } from "@codestream/protocols/api";
 import styled from "styled-components";
 import { OpenReviews } from "./OpenReviews";
 import { ReposScm, GetReposScmRequestType } from "../protocols/agent/agent.protocol.scm";
@@ -15,10 +14,11 @@ import { WorkInProgress } from "./WorkInProgress";
 import Codemarks from "./Codemarks";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { Pane, PaneState } from "../src/components/Pane";
-import Draggable, { DraggableEvent } from "react-draggable";
+import Draggable from "react-draggable";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
 import cx from "classnames";
+import { getSupportedPullRequestHosts, isConnected } from "../store/providers/reducer";
 
 const EMPTY_ARRAY = [];
 
@@ -71,13 +71,15 @@ const EMPTY_HASH = {};
 export const Sidebar = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences } = state;
-		const currentUser = state.users[state.session.userId!] as CSMe;
+		const { preferences, repos } = state;
+
 		return {
+			repos,
 			removedPanes: preferences.removedPanes || EMPTY_HASH,
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder: preferences.sidebarPaneOrder || AVAILABLE_PANES,
-			currentUserId: state.session.userId!
+			currentUserId: state.session.userId!,
+			hasPRProvider: getSupportedPullRequestHosts(state).find(_ => isConnected(state, { id: _.id }))
 		};
 	});
 	const { sidebarPanes } = derivedState;
@@ -126,6 +128,12 @@ export const Sidebar = () => {
 		return () => window.removeEventListener("resize", handleResize);
 	}, []); // Empty array ensures that effect is only run on mount
 
+	const showPullRequests = useMemo(() => {
+		if (derivedState.hasPRProvider) return true;
+		// FIXME hardcoded github
+		return openRepos.filter(r => r.providerGuess === "github").length > 0;
+	}, [derivedState.hasPRProvider, openRepos]);
+
 	const panes: {
 		id: WebviewPanels;
 		removed: boolean;
@@ -133,17 +141,19 @@ export const Sidebar = () => {
 		maximized: boolean;
 		size: number;
 	}[] = React.useMemo(() => {
-		return derivedState.sidebarPaneOrder.map(id => {
-			const settings = sidebarPanes[id] || {};
-			return {
-				id,
-				removed: settings.removed,
-				collapsed: settings.collapsed,
-				maximized: settings.maximized,
-				size: sizes[id] || Math.abs(settings.size) || 1
-			};
-		});
-	}, [sidebarPanes, sizes, derivedState.sidebarPaneOrder]);
+		return derivedState.sidebarPaneOrder
+			.filter(id => showPullRequests || id !== WebviewPanels.OpenPullRequests)
+			.map(id => {
+				const settings = sidebarPanes[id] || {};
+				return {
+					id,
+					removed: settings.removed,
+					collapsed: settings.collapsed,
+					maximized: settings.maximized,
+					size: sizes[id] || Math.abs(settings.size) || 1
+				};
+			});
+	}, [sidebarPanes, sizes, derivedState.sidebarPaneOrder, showPullRequests]);
 
 	const maximizedPane = useMemo(() => panes.find(p => p.maximized && !p.removed), [sidebarPanes]);
 	const collapsed = React.useCallback(
