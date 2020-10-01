@@ -170,6 +170,7 @@ export const PullRequestPatch = (props: {
 										fetch={() => {}}
 										setIsLoadingMessage={() => {}}
 										__onDidRender={() => {}}
+										onClose={() => closeComment(index)}
 									/>
 								</PRInlineComment>
 							) : null;

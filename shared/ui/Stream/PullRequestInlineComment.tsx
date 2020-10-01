@@ -20,6 +20,7 @@ interface Props {
 	fetch: Function;
 	__onDidRender: Function;
 	className?: string;
+	onClose: Function;
 }
 
 export const PullRequestInlineComment = styled((props: Props) => {
@@ -36,8 +37,8 @@ export const PullRequestInlineComment = styled((props: Props) => {
 	});
 
 	const [text, setText] = useState("");
-	const [isLoadingComment, setIsLoadingComment] = useState(false);
-	const [isLoadingCommentAndClose, setIsLoadingCommentAndClose] = useState(false);
+	const [isLoadingSingleComment, setIsLoadingSingleComment] = useState(false);
+	const [isLoadingStartReview, setIsLoadingStartReview] = useState(false);
 
 	const trackComment = type => {
 		HostApi.instance.track("PR Comment Added", {
@@ -46,41 +47,32 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		});
 	};
 
-	const onCommentClick = async (event?: React.SyntheticEvent) => {
-		setIsLoadingComment(true);
-		trackComment("Comment");
-		await dispatch(
-			api("createPullRequestComment", {
-				text: text
-			})
-		);
-		setText("");
-		fetch().then(() => setIsLoadingComment(false));
-	};
-
-	const onCommentAndCloseClick = async e => {
-		setIsLoadingMessage("Closing...");
-		setIsLoadingCommentAndClose(true);
-		trackComment("Comment and Close");
-		await api("createPullRequestCommentAndClose", {
-			text: text
-		});
+	const addSingleComment = async e => {
+		setIsLoadingMessage("Adding Comment...");
+		setIsLoadingSingleComment(true);
+		trackComment("Inline Single Comment");
+		// await api("createPullRequestCommentAndClose", {
+		// 	text: text
+		// });
 		setText("");
 		fetch().then(() => {
 			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-			setIsLoadingCommentAndClose(false);
+			setIsLoadingSingleComment(false);
 		});
 	};
 
-	const onCommentAndReopenClick = async e => {
-		setIsLoadingMessage("Reopening...");
-		setIsLoadingCommentAndClose(true);
-		trackComment("Comment and Reopen");
-		await api("createPullRequestCommentAndReopen", {
-			text: text
-		});
+	const startReview = async e => {
+		setIsLoadingMessage("Starting Review...");
+		setIsLoadingStartReview(true);
+		trackComment("Inline Start Review");
+		// await api("createPullRequestCommentAndClose", {
+		// 	text: text
+		// });
 		setText("");
-		fetch().then(() => setIsLoadingCommentAndClose(false));
+		fetch().then(() => {
+			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
+			setIsLoadingStartReview(false);
+		});
 	};
 
 	const map = {
@@ -113,20 +105,23 @@ export const PullRequestInlineComment = styled((props: Props) => {
 								text={text}
 								placeholder="Leave a comment"
 								onChange={setText}
-								onSubmit={onCommentClick}
+								onSubmit={startReview}
 								__onDidRender={stuff => props.__onDidRender(stuff)}
 							/>
 						</div>
 						<ButtonRow>
 							<div style={{ textAlign: "right", flexGrow: 1 }}>
-								<Button
-									isLoading={isLoadingCommentAndClose}
-									onClick={onCommentAndReopenClick}
-									variant="secondary"
-								>
+								<Button onClick={() => props.onClose()} variant="secondary">
 									Cancel
 								</Button>
 
+								<Button
+									isLoading={isLoadingSingleComment}
+									onClick={addSingleComment}
+									disabled={!text}
+								>
+									Add single comment
+								</Button>
 								<Tooltip
 									title={
 										<span>
@@ -139,23 +134,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 									placement="bottomRight"
 									delay={1}
 								>
-									<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
-										Add single comment
-									</Button>
-								</Tooltip>
-								<Tooltip
-									title={
-										<span>
-											Submit Comment
-											<span className="keybinding extra-pad">
-												{navigator.appVersion.includes("Macintosh") ? "⌘" : "Alt"} ENTER
-											</span>
-										</span>
-									}
-									placement="bottomRight"
-									delay={1}
-								>
-									<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
+									<Button isLoading={isLoadingStartReview} onClick={startReview} disabled={!text}>
 										Start a review
 									</Button>
 								</Tooltip>
