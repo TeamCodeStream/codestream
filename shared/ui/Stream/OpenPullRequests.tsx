@@ -138,7 +138,7 @@ export function OpenPullRequests(props: Props) {
 			return { ...repo, name: state.repos[id] ? state.repos[id].name : "" };
 		});
 
-		const queries = preferences.pullRequestQueries7 || DEFAULT_QUERIES;
+		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
 
 		// FIXME hardcoded github
 		const hasPRSupportedRepos = repos.filter(r => r.providerGuess === "github").length > 0;
@@ -235,7 +235,7 @@ export function OpenPullRequests(props: Props) {
 						console.error(ex);
 					}
 				}
-				console.warn("SETTING TO: ", newGroups);
+				// console.warn("SETTING TO: ", newGroups);
 				setPullRequestGroups(newGroups);
 			} catch (ex) {
 				console.error(ex);
@@ -317,6 +317,7 @@ export function OpenPullRequests(props: Props) {
 			]
 		});
 	};
+
 	const toggleQueryHidden = (e, providerId, index) => {
 		if (e.target.closest(".actions")) return;
 		const newQueries = [...queries[providerId]];
@@ -637,7 +638,7 @@ export function OpenPullRequests(props: Props) {
 										)}
 									</Row>
 									{prError && (
-										<Row id="error-row" key="pr-error" className={"no-hover"}>
+										<Row id="error-row" key="pr-error" className={"no-hover wrap"}>
 											<div>
 												<Icon name="alert" />
 											</div>
