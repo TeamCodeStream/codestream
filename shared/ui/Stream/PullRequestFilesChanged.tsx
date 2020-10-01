@@ -392,16 +392,15 @@ export const PullRequestFilesChanged = (props: Props) => {
 					lines.push(renderDirectory(fullPath, dirPath, depth));
 					dirPath = [];
 					depth++;
-				}
 
-				const hideKey = "hide:" + fullPath.join("/");
-				if (visitedFiles[hideKey]) return;
+					const hideKey = "hide:" + fullPath.join("/");
+					if (visitedFiles[hideKey]) return;
+				}
 
 				// node.value is a file object, so render the file
 				if (node.value) {
 					lines.push(renderFile(node.value, index++, depth));
 				}
-
 				// recurse deeper into file path if the dir isn't collapsed
 				if (node.mid) {
 					render(node.mid, [...fullPath, node.segment], [...dirPath, node.segment], depth);

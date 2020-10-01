@@ -99,9 +99,16 @@ export const PullRequestInlineComment = styled((props: Props) => {
 					</>
 				) : (
 					<>
-						<div style={{ margin: "5px 0 0 0", border: "1px solid var(--base-border-color)" }}>
+						<div
+							style={{
+								margin: "5px 0 0 0",
+								border: "1px solid var(--base-border-color)",
+								fontFamily: "var(--font-family)"
+							}}
+						>
 							<MessageInput
 								multiCompose
+								autoFocus
 								text={text}
 								placeholder="Leave a comment"
 								onChange={setText}
