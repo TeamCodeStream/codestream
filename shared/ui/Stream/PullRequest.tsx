@@ -519,9 +519,9 @@ export const PullRequest = () => {
 	// console.warn("REPO: ", ghRepo);
 	if (!pr) {
 		return (
-			<Modal verticallyCenter showGlobalNav>
+			<div style={{ display: "flex", justifyContent: "center" }}>
 				<LoadingMessage>Loading Pull Request...</LoadingMessage>
-			</Modal>
+			</div>
 		);
 	} else {
 		const statusIcon = pr.state === "OPEN" || pr.state === "CLOSED" ? "pull-request" : "git-merge";
