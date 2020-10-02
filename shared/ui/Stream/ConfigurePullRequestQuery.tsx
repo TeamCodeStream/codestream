@@ -16,6 +16,8 @@ import { PullRequestTooltip } from "./OpenPullRequests";
 import styled from "styled-components";
 import { PullRequestQuery } from "../protocols/agent/api.protocol.models";
 import { CodeStreamState } from "../store";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -44,9 +46,10 @@ interface Props {
 export function ConfigurePullRequestQuery(props: Props) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences } = state;
+		const { preferences, providers } = state;
 
 		return {
+			providers,
 			allRepos: preferences.pullRequestQueryShowAllRepos
 		};
 	});
@@ -65,6 +68,11 @@ export function ConfigurePullRequestQuery(props: Props) {
 		GetMyPullRequestsResponse[] | undefined
 	>(undefined);
 	const [isLoading, setIsLoading] = React.useState(false);
+
+	const providerDisplayName = React.useMemo(() => {
+		const { name } = derivedState.providers[providerIdField] || {};
+		return PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
+	}, [providerIdField]);
 
 	const fetchTestPRs = async query => {
 		setIsLoading(true);
@@ -103,7 +111,22 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
 								{!query.providerId && props.prConnectedProviders.length > 1 && (
-									<label>PR Provider: </label>
+									<>
+										<label>PR Provider: &nbsp;</label>
+										<InlineMenu
+											items={props.prConnectedProviders.map(provider => {
+												const providerDisplay = PROVIDER_MAPPINGS[provider.name];
+												return {
+													key: provider.id,
+													label: providerDisplay.displayName,
+													action: () => setProviderIdField(provider.id)
+												};
+											})}
+										>
+											{providerDisplayName}
+										</InlineMenu>
+										<div style={{ height: "10px" }} />
+									</>
 								)}
 								<input
 									autoFocus
