@@ -52,7 +52,7 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 
 	const id = `checkbox-${name}`;
 	const htmlFor = onClickLabel ? "" : id;
-	console.warn("DISABLED IS: ", props.disabled);
+	// console.warn("DISABLED IS: ", props.disabled);
 	return (
 		<Root className={cx(className, { disabled: props.disabled })} noMargin={noMargin}>
 			<div>

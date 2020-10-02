@@ -367,7 +367,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		const hidden = visitedFiles[hideKey];
 		return (
 			<Directory
-				style={{ paddingLeft: `${depth * 10}px` }}
+				style={{ paddingLeft: `${depth * 12}px` }}
 				onClick={() => toggleDirectory(hideKey)}
 			>
 				<Icon name={hidden ? "chevron-right-thin" : "chevron-down-thin"} />
@@ -384,7 +384,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 			props.filesChanged.forEach(f => tree.set(f.file, f));
 			let index = 0;
-			const render = (node: any, fullPath: string[], dirPath: string[], depth: number) => {
+			const render = (
+				node: any,
+				fullPath: string[],
+				dirPath: string[],
+				depth: number,
+				renderSiblings: boolean
+			) => {
 				if (dirPath.length > 0 && (node.right || node.value)) {
 					lines.push(renderDirectory(fullPath, dirPath, depth));
 					dirPath = [];
@@ -394,20 +400,37 @@ export const PullRequestFilesChanged = (props: Props) => {
 					if (visitedFiles[hideKey]) return;
 				}
 
-				// node.value is a file object, so render the file
-				if (node.value) {
-					lines.push(renderFile(node.value, index++, depth));
-				}
-				// recurse deeper into file path if the dir isn't collapsed
-				if (node.mid) {
-					render(node.mid, [...fullPath, node.segment], [...dirPath, node.segment], depth);
+				// we either render siblings, or nodes. if we aren't
+				// rendering siblings, then check to see if this node
+				// has a value or children and render them
+				if (!renderSiblings) {
+					// node.value is a file object, so render the file
+					if (node.value) {
+						lines.push(renderFile(node.value, index++, depth));
+					}
+					// recurse deeper into file path if the dir isn't collapsed
+					if (node.mid) {
+						render(node.mid, [...fullPath, node.segment], [...dirPath, node.segment], depth, true);
+					}
 				}
 				// render sibling nodes at the same depth w/same dirPath
-				if (node.right) {
-					render(node.right, [...fullPath, node.segment], dirPath, depth);
+				if (renderSiblings) {
+					// grab all the siblings, sort them, and render them.
+					const siblings: any[] = [node];
+					let n = node;
+					while (n.right) {
+						siblings.push(n.right);
+						n = n.right;
+					}
+					// sort directories first, then by segment name lexographically
+					siblings.sort(
+						(a, b) => Number(!!a.value) - Number(!!b.value) || a.segment.localeCompare(b.segment)
+					);
+					// render the siblings, but tell render not to re-render siblings
+					siblings.forEach(n => render(n, [...fullPath, n.segment], dirPath, depth, false));
 				}
 			};
-			render((tree as any)._root, [], [], 0);
+			render((tree as any)._root, [], [], 0, true);
 		} else {
 			lines.push(...props.filesChanged.map((f, index) => renderFile(f, index, 0)));
 		}
