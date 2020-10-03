@@ -251,19 +251,21 @@ export const ChangesetFileList = (props: {
 							selected={selected}
 							noHover={noOnClick}
 							icon={
-								<Icon
-									onClick={
-										visited
-											? async e => {
-													e.preventDefault();
-													e.stopPropagation();
-													unVisitFile(visitedKey);
-											  }
-											: undefined
-									}
-									name={icon}
-									className={iconClass}
-								/>
+								icon ? (
+									<Icon
+										onClick={
+											visited
+												? async e => {
+														e.preventDefault();
+														e.stopPropagation();
+														unVisitFile(visitedKey);
+												  }
+												: undefined
+										}
+										name={icon}
+										className={iconClass}
+									/>
+								) : null
 							}
 							onClick={async e => {
 								if (noOnClick) return;
