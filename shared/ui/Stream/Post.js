@@ -250,7 +250,7 @@ class Post extends React.Component {
 							alwaysRenderCode={true}
 						/>
 					) : (
-						codemark.markers.map(marker => <Marker marker={marker} />)
+						codemark.markers.map((marker, index) => <Marker marker={marker} key={index} />)
 						// this.renderCode(codemark.markers[0])
 					)}
 				</div>
@@ -443,26 +443,26 @@ class Post extends React.Component {
 
 	renderAttachments = post => {
 		if (post.files && post.files.length) {
-			return post.files.map(file => {
+			return post.files.map((file, index) => {
 				// console.log(file);
 				//<img src={preview.url} width={preview.width} height={preview.height} />
 				const { type, url, name, title, preview } = file;
 				if (type === "image") {
 					return (
-						<div className="thumbnail">
+						<div className="thumbnail" key={index}>
 							<a href={url}>{title}</a>
 						</div>
 					);
 				} else if (type === "post") {
 					return (
-						<div className="external-post">
+						<div className="external-post" key={index}>
 							<a href={url}>{title}</a>
 							<div className="preview" dangerouslySetInnerHTML={{ __html: preview }} />
 						</div>
 					);
 				} else {
 					return (
-						<div className="attachment">
+						<div className="attachment" key={index}>
 							<a href={url}>{title}</a>
 							<pre>
 								<code>{preview}</code>

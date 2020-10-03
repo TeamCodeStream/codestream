@@ -548,6 +548,7 @@ class TeamPanel extends React.Component<Props, State> {
 			);
 			return (
 				<li
+					key={repoId}
 					className="status row-with-icon-actions"
 					style={{ overflow: "hidden", whiteSpace: "nowrap", paddingLeft: "68px" }}
 				>
@@ -675,7 +676,7 @@ class TeamPanel extends React.Component<Props, State> {
 							{!this.props.hiddenPaneNodes["team/teammates"] && (
 								<UL>
 									{this.props.members.map(user => (
-										<>
+										<React.Fragment key={user.email}>
 											<li key={user.email}>
 												{this.renderAdminUser(user)}
 												<ProfileLink id={user.id}>
@@ -688,7 +689,7 @@ class TeamPanel extends React.Component<Props, State> {
 											</li>
 											<StyledUserStatus user={user} />
 											{user.id !== currentUserId && this.renderModifiedRepos(user)}
-										</>
+										</React.Fragment>
 									))}
 									<form
 										className="standard-form"
@@ -843,7 +844,7 @@ class TeamPanel extends React.Component<Props, State> {
 											</div>
 										</MapRow>
 										{mappedBlame.map(email => (
-											<MapRow>
+											<MapRow key={email}>
 												<div>{email.replace(/\*/g, ".")}</div>
 												<div>
 													{this.props.isCurrentUserAdmin ? (

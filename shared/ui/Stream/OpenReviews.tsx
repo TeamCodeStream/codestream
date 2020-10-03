@@ -1,5 +1,5 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import { CodeStreamState } from "../store";
@@ -13,9 +13,8 @@ import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { ReposScm } from "@codestream/protocols/agent";
 import Tag from "./Tag";
-import { Pane, PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
+import { PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
 import { WebviewModals, WebviewPanels } from "../ipc/webview.protocol.common";
-import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Link } from "./Link";
 
 interface Props {
@@ -23,7 +22,7 @@ interface Props {
 	paneState: PaneState;
 }
 
-export function OpenReviews(props: Props) {
+export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { session } = state;
@@ -39,12 +38,12 @@ export function OpenReviews(props: Props) {
 			currentUserId,
 			teamMembers
 		};
-	});
+	}, shallowEqual);
 
-	const reviewsState = useSelector((state: CodeStreamState) => state.reviews);
+	const bootstrapped = useSelector((state: CodeStreamState) => state.reviews.bootstrapped);
 
 	useDidMount(() => {
-		if (!reviewsState.bootstrapped) {
+		if (!bootstrapped) {
 			dispatch(bootstrapReviews());
 		}
 	});
@@ -64,7 +63,7 @@ export function OpenReviews(props: Props) {
 				title="Feedback Requests"
 				count={reviews.length}
 				id={WebviewPanels.OpenReviews}
-				isLoading={!reviewsState.bootstrapped}
+				isLoading={!bootstrapped}
 			>
 				<Icon
 					onClick={() => {
@@ -88,13 +87,13 @@ export function OpenReviews(props: Props) {
 			</PaneHeader>
 			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody>
-					{!reviewsState.bootstrapped && (
+					{!bootstrapped && (
 						<Row>
 							<Icon name="sync" className="spin margin-right" />
 							<span>Loading...</span>
 						</Row>
 					)}
-					{reviewsState.bootstrapped && sortedReviews.length === 0 && (
+					{bootstrapped && sortedReviews.length === 0 && (
 						<NoContent>
 							Lightweight, pre-PR code review. Get quick feedback on any code, even pre-commit.{" "}
 							<Link href="https://docs.codestream.com/userguide/workflow/feedback-requests">
@@ -145,4 +144,4 @@ export function OpenReviews(props: Props) {
 			)}
 		</>
 	);
-}
+});

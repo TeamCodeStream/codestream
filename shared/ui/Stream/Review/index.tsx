@@ -783,7 +783,12 @@ const BaseReview = (props: BaseReviewProps) => {
 										{props.reviewers!.map(reviewer => {
 											const addThumbsUp = approvedBy[reviewer.id] ? true : false;
 											return (
-												<HeadshotName person={reviewer} highlightMe addThumbsUp={addThumbsUp} />
+												<HeadshotName
+													key={reviewer.id}
+													person={reviewer}
+													highlightMe
+													addThumbsUp={addThumbsUp}
+												/>
 											);
 										})}
 									</MetaDescriptionForTags>

@@ -91,7 +91,7 @@ function Marker(props: Props) {
 			hideFile: preferences.markerHideFile,
 			showBranch: preferences.markerShowBranch,
 			showCommit: preferences.markerShowCommit,
-			tab: preferences.markerTab || "original"
+			tab: props.hasDiff ? preferences.markerTab || "original" : "original"
 		};
 	});
 	const { showRepo, hideFile, showBranch, showCommit, tab } = derivedState;

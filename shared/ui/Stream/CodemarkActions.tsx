@@ -39,7 +39,7 @@ class CodemarkActions extends React.Component<Props, State> {
 				? jumpToMarkerId === marker.id
 				: index === 0;
 			return (
-				<div>
+				<div key={index}>
 					<MarkerActions
 						key={marker.id}
 						codemark={codemark}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { OpenReviews } from "./OpenReviews";
@@ -19,8 +19,6 @@ import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
 import cx from "classnames";
 import { getSupportedPullRequestHosts, isConnected } from "../store/providers/reducer";
-
-const EMPTY_ARRAY = [];
 
 const Root = styled.div`
 	height: 100%;
@@ -67,8 +65,10 @@ export const AVAILABLE_PANES = [
 
 export const COLLAPSED_SIZE = 22;
 
+const EMPTY_ARRAY = [];
 const EMPTY_HASH = {};
-export const Sidebar = () => {
+const EMPTY_SIZE = { width: 0, height: 0 };
+export const Sidebar = React.memo(function Sidebar() {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences, repos } = state;
@@ -80,16 +80,18 @@ export const Sidebar = () => {
 			sidebarPaneOrder: preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			currentUserId: state.session.userId!,
 			hasPRProvider: getSupportedPullRequestHosts(state).find(_ => isConnected(state, { id: _.id }))
+				? true
+				: false
 		};
-	});
+	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>(EMPTY_ARRAY);
 	const [dragCombinedHeight, setDragCombinedHeight] = useState<number | undefined>(undefined);
-	const [sizes, setSizes] = useState({});
+	const [sizes, setSizes] = useState(EMPTY_HASH);
 	const [firstIndex, setFirstIndex] = useState<number | undefined>(undefined);
 	const [secondIndex, setSecondIndex] = useState<number | undefined>(undefined);
 	const [dragging, setDragging] = useState(false);
-	const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
+	const [windowSize, setWindowSize] = useState(EMPTY_SIZE);
 	const [headerDragY, setHeaderDragY] = useState(0);
 
 	const fetchOpenRepos = async () => {
@@ -140,51 +142,44 @@ export const Sidebar = () => {
 		collapsed: boolean;
 		maximized: boolean;
 		size: number;
-	}[] = React.useMemo(() => {
-		return derivedState.sidebarPaneOrder
-			.filter(id => showPullRequests || id !== WebviewPanels.OpenPullRequests)
-			.map(id => {
-				const settings = sidebarPanes[id] || {};
-				return {
-					id,
-					removed: settings.removed,
-					collapsed: settings.collapsed,
-					maximized: settings.maximized,
-					size: sizes[id] || Math.abs(settings.size) || 1
-				};
-			});
-	}, [sidebarPanes, sizes, derivedState.sidebarPaneOrder, showPullRequests]);
+	}[] = derivedState.sidebarPaneOrder
+		.filter(id => showPullRequests || id !== WebviewPanels.OpenPullRequests)
+		.map(id => {
+			const settings = sidebarPanes[id] || {};
+			return {
+				id,
+				removed: settings.removed,
+				collapsed: settings.collapsed,
+				maximized: settings.maximized,
+				size: sizes[id] || Math.abs(settings.size) || 1
+			};
+		});
+	// }, [sidebarPanes, sizes, derivedState.sidebarPaneOrder, showPullRequests]);
 
-	const maximizedPane = useMemo(() => panes.find(p => p.maximized && !p.removed), [sidebarPanes]);
-	const collapsed = React.useCallback(
-		pane => {
-			if (maximizedPane) return pane.id !== maximizedPane.id;
-			else return pane.collapsed && !pane.removed;
-		},
-		[maximizedPane]
-	);
+	const maximizedPane = panes.find(p => p.maximized && !p.removed);
+	const collapsed = pane => {
+		if (maximizedPane) return pane.id !== maximizedPane.id;
+		else return pane.collapsed && !pane.removed;
+	};
 
-	const state = React.useCallback(
-		pane => {
-			if (pane.removed) return PaneState.Removed;
-			else if (maximizedPane) return PaneState.Minimized;
-			else if (pane.collapsed) return PaneState.Collapsed;
-			else return PaneState.Open;
-		},
-		[maximizedPane]
-	);
+	const state = pane => {
+		if (pane.removed) return PaneState.Removed;
+		else if (maximizedPane) return PaneState.Minimized;
+		else if (pane.collapsed) return PaneState.Collapsed;
+		else return PaneState.Open;
+	};
 
 	const numCollapsed = panes.filter(p => collapsed(p)).length;
 
 	const reducer = (accumulator, currentValue) => accumulator + currentValue;
 
-	const totalSize = useMemo(() => {
+	const totalSize = (() => {
 		const expanded = panes.filter(p => !p.removed && !collapsed(p));
 		if (expanded.length == 0) return 1;
 		else return expanded.map(p => sizes[p.id] || p.size || 1).reduce(reducer);
-	}, [panes, sizes, windowSize, numCollapsed]);
+	})();
 
-	const positions = useMemo(() => {
+	const positions = (() => {
 		const availableHeight = windowSize.height - 40 - COLLAPSED_SIZE * numCollapsed;
 		let accumulator = 40;
 		return panes.map(p => {
@@ -203,9 +198,9 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [sizes, windowSize, numCollapsed, panes]);
+	})();
 
-	const dragPositions = useMemo(() => {
+	const dragPositions = (() => {
 		// if a pane is maximized, you can't drag anything around
 		if (maximizedPane) return [];
 
@@ -227,7 +222,7 @@ export const Sidebar = () => {
 			accumulator += height;
 			return position;
 		});
-	}, [panes, sizes, windowSize]);
+	})();
 
 	const handleStart = (e: any, index: number) => {
 		let findFirstIndex = index - 1;
@@ -312,6 +307,25 @@ export const Sidebar = () => {
 		}
 	};
 
+	const renderPane = (pane, paneState) => {
+		switch (pane.id) {
+			case WebviewPanels.OpenPullRequests:
+				return <OpenPullRequests openRepos={openRepos} paneState={paneState} />;
+			case WebviewPanels.OpenReviews:
+				return <OpenReviews openRepos={openRepos} paneState={paneState} />;
+			case WebviewPanels.WorkInProgress:
+				return <WorkInProgress openRepos={openRepos} paneState={paneState} />;
+			case WebviewPanels.Tasks:
+				return <IssueDropdown paneState={paneState} />;
+			case WebviewPanels.CodemarksForFile:
+				return <Codemarks paneState={paneState} />;
+			case WebviewPanels.Team:
+				return <TeamPanel paneState={paneState} />;
+		}
+		return null;
+	};
+
+	// console.warn("Rendering sidebar: ", dragging);
 	return (
 		<Root className={dragging ? "" : "animate-height"}>
 			<CreateCodemarkIcons />
@@ -322,6 +336,7 @@ export const Sidebar = () => {
 					if (!position || pane.removed) return null;
 					return (
 						<Draggable
+							key={index}
 							axis="y"
 							position={{ x: 0, y: position.top }}
 							scale={1}
@@ -350,6 +365,7 @@ export const Sidebar = () => {
 							headerDragY < position.top + position.height;
 						return (
 							<Pane
+								key={index}
 								className={cx({
 									highlightTop,
 									highlightBottom,
@@ -359,24 +375,7 @@ export const Sidebar = () => {
 								height={position.height}
 								tabIndex={index + 1}
 							>
-								{(() => {
-									switch (pane.id) {
-										case WebviewPanels.OpenPullRequests:
-											return <OpenPullRequests openRepos={openRepos} paneState={paneState} />;
-										case WebviewPanels.OpenReviews:
-											return <OpenReviews openRepos={openRepos} paneState={paneState} />;
-										case WebviewPanels.WorkInProgress:
-											return <WorkInProgress openRepos={openRepos} paneState={paneState} />;
-										case WebviewPanels.Tasks:
-											return <IssueDropdown paneState={paneState} />;
-										case WebviewPanels.CodemarksForFile:
-											//@ts-ignore
-											return <Codemarks paneState={paneState} />;
-										case WebviewPanels.Team:
-											return <TeamPanel paneState={paneState} />;
-									}
-									return null;
-								})()}
+								{renderPane(pane, paneState)}
 							</Pane>
 						);
 					})}
@@ -384,4 +383,4 @@ export const Sidebar = () => {
 			</Panels>
 		</Root>
 	);
-};
+});

@@ -27,7 +27,6 @@ const mapStateToProps = state => {
 		connectivityError: state.connectivity.error,
 		loggedIn: Boolean(state.session.userId),
 		inMaintenanceMode: Boolean(state.session.inMaintenanceMode),
-		team: team,
 		company: team ? state.companies[team.companyId] : undefined,
 		versioning: state.versioning,
 		apiVersioning: state.apiVersioning,

@@ -279,7 +279,7 @@ export const Reply = (props: ReplyProps) => {
 		// not allowing any of the capabilities (they default to off anyway)
 		const capabilities: any = {};
 		return codemark.markers.map((marker, index) => (
-			<ReviewMarkerActionsWrapper>
+			<ReviewMarkerActionsWrapper key={index}>
 				<MarkerActions
 					key={marker.id}
 					codemark={codemark}
