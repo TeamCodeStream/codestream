@@ -61,6 +61,9 @@ export const PRCommitCard = styled.div`
 		border-radius: 0 0 5px 5px;
 		border: 1px solid var(--base-border-color);
 	}
+	&:first-child:last-child {
+		border-radius: 5px;
+	}
 `;
 
 export const PRCommitDay = styled.div`
