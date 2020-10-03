@@ -36,6 +36,7 @@ const Root = styled.div`
 	.line {
 		.plus-container {
 			position: relative;
+			width: 100%;
 
 			.plus {
 				position: absolute;
@@ -115,6 +116,7 @@ export const PullRequestPatch = (props: {
 
 	const [commentOpen, setCommentOpen] = React.useState<boolean[]>([]);
 
+	let startLine: number;
 	let leftLine: number;
 	let rightLine: number;
 	let width;
@@ -167,6 +169,7 @@ export const PullRequestPatch = (props: {
 								<PRInlineComment>
 									<PullRequestInlineComment
 										pr={props.pr}
+										lineOffsetInHunk={index}
 										fetch={() => {}}
 										setIsLoadingMessage={() => {}}
 										__onDidRender={() => {}}

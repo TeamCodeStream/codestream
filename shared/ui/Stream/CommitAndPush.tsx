@@ -12,7 +12,7 @@ import { Checkbox } from "../src/components/Checkbox";
 import { TextInput } from "../Authentication/TextInput";
 import { EMPTY_STATUS } from "./WorkInProgress";
 import styled from "styled-components";
-import { RepoHunkDiffs } from "./RepoHunkDiffs";
+import { RepoDiffHunks } from "./RepoDiffHunks";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { DiffBranchesRequestType, CommitAndPushRequestType } from "@codestream/protocols/agent";
 import { useDidMount } from "../utilities/hooks";
@@ -213,7 +213,7 @@ export const CommitAndPush = (props: Props) => {
 						<ScrollBox>
 							<div className="vscroll">
 								{scmError && <>Error: {scmError}</>}
-								<RepoHunkDiffs repoId={props.repoId} filesChanged={filesChanged} />
+								<RepoDiffHunks repoId={props.repoId} filesChanged={filesChanged} />
 								<br />
 								<br />
 							</div>

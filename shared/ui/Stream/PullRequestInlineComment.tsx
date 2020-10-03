@@ -16,6 +16,7 @@ import { api, removeFromMyPullRequests } from "../store/providerPullRequests/act
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
+	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
 	fetch: Function;
 	__onDidRender: Function;

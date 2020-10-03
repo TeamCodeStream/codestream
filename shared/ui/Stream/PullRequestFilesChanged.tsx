@@ -37,9 +37,7 @@ const Directory = styled.div`
 	}
 `;
 
-// const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
-// const visitedFiles = localStore.get(VISITED_REVIEW_FILES) || {};
 
 interface Props extends CompareFilesProps {
 	filesChanged: any[];
@@ -47,6 +45,13 @@ interface Props extends CompareFilesProps {
 	pr?: FetchThirdPartyPullRequestPullRequest;
 	withTelemetry?: boolean;
 	viewMode: "tree" | "files";
+	visitFile: (filename: string, index: number) => void;
+	unVisitFile: (filename: string) => void;
+	toggleDirectory: (hideKey: string) => void;
+	visitedFiles: {
+		_latest: number;
+		[key: string]: boolean | number;
+	};
 }
 
 export const PullRequestFilesChanged = (props: Props) => {
@@ -78,34 +83,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 		};
 	});
 
-	const [visitedFiles, setVisitedFiles] = React.useState({ _latest: 0 });
+	const { visitedFiles, visitFile, unVisitFile } = props;
 	const [currentRepoRoot, setCurrentRepoRoot] = React.useState("");
 	const [forkPointSha, setForkPointSha] = React.useState("");
 	const [errorMessage, setErrorMessage] = React.useState("");
 	const [loading, setLoading] = React.useState(false);
 	const [isDisabled, setIsDisabled] = React.useState(false);
 	const [isMounted, setIsMounted] = React.useState(false);
-
-	const visitFile = (visitedKey: string, index: number) => {
-		const newVisitedFiles = { ...visitedFiles, [visitedKey]: NOW, _latest: index };
-		saveVisitedFiles(newVisitedFiles, key);
-		setVisitedFiles(newVisitedFiles);
-	};
-
-	const unVisitFile = (visitedKey: string) => {
-		const newVisitedFiles = { ...visitedFiles, [visitedKey]: false };
-		saveVisitedFiles(newVisitedFiles, key);
-		setVisitedFiles(newVisitedFiles);
-	};
-
-	let key = "all";
-
-	const saveVisitedFiles = (newVisitedFiles, key) => {
-		HostApi.instance.send(WriteTextFileRequestType, {
-			path: `${props.baseRef}-${props.headRef}.json`,
-			contents: JSON.stringify(newVisitedFiles, null, 4)
-		});
-	};
 
 	const handleForkPointResponse = forkPointResponse => {
 		if (!forkPointResponse || forkPointResponse.error) {
@@ -149,20 +133,6 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	useEffect(() => {
 		(async () => {
-			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
-				path: `${props.baseRef}-${props.headRef}.json`
-			})) as any;
-
-			try {
-				setVisitedFiles(JSON.parse(response.contents || "{}"));
-			} catch (ex) {
-				console.warn("Error parsing JSON data: ", response.contents);
-			}
-		})();
-	}, [pr, filesChanged, forkPointSha]);
-
-	useEffect(() => {
-		(async () => {
 			if (isMounted && derivedState.currentRepo && props.pr && !forkPointSha) {
 				try {
 					setLoading(true);
@@ -187,7 +157,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				setErrorMessage("");
 				if (index < 0) index = derivedState.numFiles - 1;
 				if (index > derivedState.numFiles - 1) index = 0;
-				const f = filesChanged[index];
+				const f = filesInOrder[index];
 
 				const request = {
 					baseBranch: props.baseRefName,
@@ -276,10 +246,6 @@ export const PullRequestFilesChanged = (props: Props) => {
 		});
 	};
 
-	const latest = visitedFiles[key] ? visitedFiles[key]._latest : 0;
-
-	const fileTree = files => {};
-
 	const renderFile = (f, index, depth) => {
 		const selected = derivedState.parsedDiffUri && derivedState.parsedDiffUri.path == f.file;
 		const visited = visitedFiles[f.file];
@@ -356,19 +322,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 		);
 	};
 
-	const toggleDirectory = hideKey => {
-		const newVisitedFiles = { ...visitedFiles, [hideKey]: !visitedFiles[hideKey] };
-		saveVisitedFiles(newVisitedFiles, key);
-		setVisitedFiles(newVisitedFiles);
-	};
-
 	const renderDirectory = (fullPath, dirPath, depth) => {
 		const hideKey = "hide:" + fullPath.join("/");
 		const hidden = visitedFiles[hideKey];
 		return (
 			<Directory
 				style={{ paddingLeft: `${depth * 12}px` }}
-				onClick={() => toggleDirectory(hideKey)}
+				onClick={() => props.toggleDirectory(hideKey)}
 			>
 				<Icon name={hidden ? "chevron-right-thin" : "chevron-down-thin"} />
 				{path.join(...dirPath)}
@@ -376,8 +336,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 		);
 	};
 
-	const changedFiles = React.useMemo(() => {
+	const [changedFiles, filesInOrder] = React.useMemo(() => {
 		const lines: any[] = [];
+		let filesInOrder: any[] = [];
 
 		if (props.viewMode === "tree") {
 			const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
@@ -407,6 +368,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					// node.value is a file object, so render the file
 					if (node.value) {
 						lines.push(renderFile(node.value, index++, depth));
+						filesInOrder.push(node.value);
 					}
 					// recurse deeper into file path if the dir isn't collapsed
 					if (node.mid) {
@@ -418,6 +380,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 					// grab all the siblings, sort them, and render them.
 					const siblings: any[] = [node];
 					let n = node;
+					// we don't need to check left because we sort the paths
+					// prior to inserting into the tree, so we never end up
+					// with left nodes
 					while (n.right) {
 						siblings.push(n.right);
 						n = n.right;
@@ -433,9 +398,10 @@ export const PullRequestFilesChanged = (props: Props) => {
 			render((tree as any)._root, [], [], 0, true);
 		} else {
 			lines.push(...props.filesChanged.map((f, index) => renderFile(f, index, 0)));
+			filesInOrder = [...props.filesChanged];
 		}
-		return lines;
-	}, [pr, loading, derivedState.matchFile, latest, visitedFiles, forkPointSha, props.viewMode]);
+		return [lines, filesInOrder];
+	}, [pr, loading, derivedState.matchFile, visitedFiles, forkPointSha, props.viewMode]);
 
 	if (pr && !derivedState.currentRepo) {
 		return (

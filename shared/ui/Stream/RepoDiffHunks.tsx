@@ -4,7 +4,7 @@ import { PRDiffHunks, PRDiffHunk } from "./PullRequestFilesChangedList";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PanelHeader } from "../src/components/PanelHeader";
 
-export const RepoHunkDiffs = (props: { repoId: string; filesChanged: any[] }) => {
+export const RepoDiffHunks = (props: { repoId: string; filesChanged: any[] }) => {
 	if (props.filesChanged.length > 0)
 		return (
 			<>

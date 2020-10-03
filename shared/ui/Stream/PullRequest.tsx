@@ -15,18 +15,15 @@ import {
 	setCurrentPullRequest,
 	setCurrentReview
 } from "../store/context/actions";
-import CancelButton from "./CancelButton";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	ReposScm,
-	ExecuteThirdPartyTypedType,
 	SwitchBranchRequestType,
 	DidChangeDataNotificationType,
-	ChangeDataType,
-	FetchThirdPartyPullRequestResponse
+	ChangeDataType
 } from "@codestream/protocols/agent";
 import {
 	PRHeader,
@@ -41,12 +38,10 @@ import {
 	PRPlusMinus,
 	PREditTitle,
 	PRActionButtons,
-	PRCommentCard,
 	PRSubmitReviewButton,
 	PRIAmRequested
 } from "./PullRequestComponents";
 import { LoadingMessage } from "../src/components/LoadingMessage";
-import { Modal } from "./Modal";
 import { bootstrapReviews } from "../store/reviews/actions";
 import { PullRequestConversationTab } from "./PullRequestConversationTab";
 import { PullRequestCommitsTab } from "./PullRequestCommitsTab";
@@ -54,8 +49,6 @@ import * as reviewSelectors from "../store/reviews/reducer";
 import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
 import { FloatingLoadingMessage } from "../src/components/FloatingLoadingMessage";
 import { Button } from "../src/components/Button";
-import MessageInput from "./MessageInput";
-import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import Tooltip from "./Tooltip";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import {
