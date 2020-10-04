@@ -7,6 +7,7 @@ import { UsersState, UsersActionsType } from "./types";
 import { CodeStreamState } from "..";
 import { difference, isString } from "lodash-es";
 import { getStreamForId } from "../streams/reducer";
+import { PreferencesState } from "../preferences/types";
 
 type UsersActions = ActionType<typeof actions>;
 
@@ -146,6 +147,11 @@ export const getStreamMembers = createSelector(
 			return;
 		});
 	}
+);
+
+export const getPreferences = createSelector(
+	(state: CodeStreamState) => state.preferences,
+	(preferences: PreferencesState) => preferences
 );
 
 export const getCodeCollisions = createSelector(

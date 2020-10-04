@@ -18,7 +18,9 @@ import Draggable from "react-draggable";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
 import cx from "classnames";
-import { getSupportedPullRequestHosts, isConnected } from "../store/providers/reducer";
+import { getConnectedSupportedPullRequestHosts } from "../store/providers/reducer";
+import { getPreferences } from "../store/users/reducer";
+import { getRepos } from "../store/repos/reducer";
 
 const Root = styled.div`
 	height: 100%;
@@ -71,17 +73,15 @@ const EMPTY_SIZE = { width: 0, height: 0 };
 export const Sidebar = React.memo(function Sidebar() {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences, repos } = state;
-
+		const preferences = getPreferences(state);
+		const repos = getRepos(state);
 		return {
 			repos,
 			removedPanes: preferences.removedPanes || EMPTY_HASH,
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder: preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			currentUserId: state.session.userId!,
-			hasPRProvider: getSupportedPullRequestHosts(state).find(_ => isConnected(state, { id: _.id }))
-				? true
-				: false
+			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0
 		};
 	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
@@ -325,7 +325,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		return null;
 	};
 
-	// console.warn("Rendering sidebar: ", dragging);
+	console.warn("Rendering sidebar: ", dragging);
 	return (
 		<Root className={dragging ? "" : "animate-height"}>
 			<CreateCodemarkIcons />

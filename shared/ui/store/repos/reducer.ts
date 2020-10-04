@@ -1,3 +1,5 @@
+import { createSelector } from "reselect";
+import { CodeStreamState } from "..";
 import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
@@ -23,3 +25,8 @@ export function reduceRepos(state = initialState, action: ReposActions) {
 export const getById = (state, id) => {
 	return state[id];
 };
+
+export const getRepos = createSelector(
+	(state: CodeStreamState) => state.repos,
+	(repos: ReposState) => repos
+);
