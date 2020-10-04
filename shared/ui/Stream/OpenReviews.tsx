@@ -57,6 +57,7 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 		return sorted;
 	}, [reviews]);
 
+	// console.warn("Rendering reviews...");
 	return (
 		<>
 			<PaneHeader

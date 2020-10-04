@@ -504,7 +504,9 @@ export const setUserPreference = (prefPath: string[], value: any) => async dispa
 			preferences: newPreference
 		});
 		// update with confirmed server response
-		dispatch(updatePreferences(response.preferences));
+		// turning this off so we don't get 3 updates: one optimistically, one
+		// via API return, and one via pubnub
+		// dispatch(updatePreferences(response.preferences));
 	} catch (error) {
 		logError(`Error trying to update preferences`, { message: error.message });
 	}

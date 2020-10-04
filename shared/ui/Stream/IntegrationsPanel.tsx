@@ -248,7 +248,10 @@ export const IntegrationsPanel = () => {
 			let elements = [] as any;
 			if (connectedProviders.includes(providerId)) {
 				elements.push(
-					<Provider onClick={() => dispatch(connectProvider(providerId, "Integrations Panel"))}>
+					<Provider
+						key={providerId}
+						onClick={() => dispatch(connectProvider(providerId, "Integrations Panel"))}
+					>
 						{display.icon && <Icon name={display.icon} />}
 						{`Add ${display.groupName}`}
 					</Provider>

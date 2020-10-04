@@ -1,6 +1,6 @@
 import React from "react";
 import cx from "classnames";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { PaneHeader, PaneBody, NoContent, PaneState } from "../src/components/Pane";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { ModifiedRepos } from "./ModifiedRepos";
@@ -39,7 +39,7 @@ interface Props {
 
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
-export const WorkInProgress = (props: Props) => {
+export const WorkInProgress = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
@@ -68,13 +68,12 @@ export const WorkInProgress = (props: Props) => {
 			teamId: state.context.currentTeamId,
 			status,
 			repos: state.repos,
-			currentUser,
 			currentUserId,
 			invisible: status.invisible || false,
 			xraySetting
 		};
-	});
-	const { status, currentUser, invisible, xraySetting, teamId } = derivedState;
+	}, shallowEqual);
+	const { status, invisible, xraySetting, teamId } = derivedState;
 	const { linesAdded, linesRemoved } = derivedState;
 
 	const [mounted, setMounted] = React.useState(false);
@@ -88,8 +87,7 @@ export const WorkInProgress = (props: Props) => {
 
 	const toggleInvisible = async () => {
 		setLoadingStatus(true);
-		const { label = "", ticketId = "", ticketUrl = "", ticketProvider = "" } =
-			currentUser.status || {};
+		const { label = "", ticketId = "", ticketUrl = "", ticketProvider = "" } = status || {};
 		await dispatch(setUserStatus(label, ticketId, ticketUrl, ticketProvider, !invisible));
 		await getScmInfoSummary();
 		setLoadingStatus(false);
@@ -222,4 +220,4 @@ export const WorkInProgress = (props: Props) => {
 			)}
 		</>
 	);
-};
+});

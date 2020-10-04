@@ -10,12 +10,10 @@ import {
 	ThirdPartyProviders,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyCardsRequestType
-	// FetchThirdPartyCardWorkflowRequestType
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
-import { getConnectedProviderNames } from "@codestream/webview/store/providers/reducer";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
 import { setUserPreference } from "../actions";
 import { HostApi } from "../..";
@@ -35,9 +33,7 @@ import { Button } from "@codestream/webview/src/components/Button";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { ButtonRow } from "@codestream/webview/src/components/Dialog";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
-import { Pane, PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
-import { padding, margin, position } from "polished";
-import { min } from "lodash-es";
+import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
 import { StartWork } from "../StartWork";
 
 interface ProviderInfo {
@@ -46,7 +42,7 @@ interface ProviderInfo {
 }
 
 interface ConnectedProps {
-	connectedProviderNames: string[];
+	// connectedProviderNames: string[];
 	currentTeamId: string;
 	currentUser: CSMe;
 	issueProviderConfig?: ThirdPartyProviderConfig;
@@ -136,6 +132,7 @@ class IssueDropdown extends React.Component<Props, State> {
 	};
 
 	render() {
+		// console.warn("rendering issues...");
 		const { issueProviderConfig } = this.props;
 		const providerInfo = issueProviderConfig
 			? this.getProviderInfo(issueProviderConfig.id)
@@ -281,10 +278,11 @@ class IssueDropdown extends React.Component<Props, State> {
 			);
 		} else {
 			const { name } = providerInfo.provider;
-			const { connectedProviderNames, issueProviderConfig } = this.props;
+			const { issueProviderConfig } = this.props;
 			const newValueIsNotCurrentProvider =
 				issueProviderConfig == undefined || issueProviderConfig.name !== name;
-			const newValueIsNotAlreadyConnected = !connectedProviderNames.includes(name);
+			const newValueIsNotAlreadyConnected =
+				!issueProviderConfig || !this.providerIsConnected(issueProviderConfig.id);
 			if (
 				newValueIsNotCurrentProvider &&
 				newValueIsNotAlreadyConnected &&
@@ -341,6 +339,13 @@ class IssueDropdown extends React.Component<Props, State> {
 		providerInfo = providerInfo.hosts[provider.id];
 		return providerInfo && !!providerInfo.accessToken;
 	}
+	componentWillReceiveProps(nextProps) {
+		for (const index in nextProps) {
+			if (nextProps[index] !== this.props[index]) {
+				console.warn(index, this.props[index], "-->", nextProps[index]);
+			}
+		}
+	}
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
@@ -349,15 +354,14 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		? providers[context.issueProvider]
 		: undefined;
 
-	const workPreferences = preferences.startWork || {};
+	const workPreferences = preferences.startWork || EMPTY_HASH;
 
 	return {
 		currentUser: users[session.userId!] as CSMe,
 		currentTeamId: context.currentTeamId,
 		providers,
 		issueProviderConfig: currentIssueProviderConfig,
-		connectedProviderNames: getConnectedProviderNames(state),
-		disabledProviders: workPreferences.disabledProviders || {}
+		disabledProviders: workPreferences.disabledProviders || EMPTY_HASH
 	};
 };
 
@@ -390,11 +394,11 @@ interface IssueListProps {
 const EMPTY_HASH = {};
 const EMPTY_CUSTOM_FILTERS = { selected: "", filters: {} };
 
-export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
+export const IssueList = React.memo((props: React.PropsWithChildren<IssueListProps>) => {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) => state.activeIntegrations);
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { preferences = {} } = state;
+		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
@@ -1152,7 +1156,7 @@ export function IssueList(props: React.PropsWithChildren<IssueListProps>) {
 			)}
 		</>
 	);
-}
+});
 
 export const Row = styled.div`
 	display: flex;

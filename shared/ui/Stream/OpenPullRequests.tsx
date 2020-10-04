@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import * as providerSelectors from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
@@ -127,38 +127,36 @@ interface Props {
 	paneState: PaneState;
 }
 
-export function OpenPullRequests(props: Props) {
+const e: ThirdPartyProviderConfig[] = [];
+export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const { session, preferences } = state;
-
-		const currentUserId = session.userId!;
-		const repos = props.openRepos.map(repo => {
-			const id = repo.id || "";
-			return { ...repo, name: state.repos[id] ? state.repos[id].name : "" };
-		});
+		const { session, preferences, repos } = state;
 
 		const queries = preferences.pullRequestQueries || DEFAULT_QUERIES;
 
-		// FIXME hardcoded github
-		const hasPRSupportedRepos = repos.filter(r => r.providerGuess === "github").length > 0;
-
 		const prSupportedProviders = providerSelectors.getSupportedPullRequestHosts(state);
-		const prConnectedProviders = prSupportedProviders.filter(_ => isConnected(state, { id: _.id }));
+		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
 
 		return {
-			queries,
-			teamTagsHash: userSelectors.getTeamTagsHash(state),
 			repos,
-			currentUserId,
+			queries,
 			isPRSupportedCodeHostConnected: prConnectedProviders.length > 0,
-			hasPRSupportedRepos,
-			openReposOnly: !preferences.pullRequestQueryShowAllRepos,
-			showLabels: !preferences.pullRequestQueryHideLabels,
 			PRSupportedProviders: prSupportedProviders,
-			PRConnectedProviders: prConnectedProviders
+			PRConnectedProviders: prConnectedProviders,
+			openReposOnly: !preferences.pullRequestQueryShowAllRepos,
+			showLabels: !preferences.pullRequestQueryHideLabels
 		};
+	}, shallowEqual);
+
+	const openReposWithName = props.openRepos.map(repo => {
+		const id = repo.id || "";
+		return { ...repo, name: derivedState.repos[id] ? derivedState.repos[id].name : "" };
 	});
+
+	// FIXME hardcoded github
+	const hasPRSupportedRepos =
+		openReposWithName.filter(r => r.providerGuess === "github").length > 0;
 
 	const { queries } = derivedState;
 
@@ -372,9 +370,9 @@ export function OpenPullRequests(props: Props) {
 		return total;
 	}, [pullRequestGroups]);
 
-	if (!derivedState.isPRSupportedCodeHostConnected && !derivedState.hasPRSupportedRepos)
-		return null;
+	if (!derivedState.isPRSupportedCodeHostConnected && !hasPRSupportedRepos) return null;
 
+	// console.warn("rendering pr list...");
 	return (
 		<Root>
 			{editingQuery && (
@@ -393,7 +391,7 @@ export function OpenPullRequests(props: Props) {
 			{configureQuerySettings && (
 				<ConfigurePullRequestQuerySettings onClose={() => setConfigureQuerySettings(false)} />
 			)}
-			{(derivedState.isPRSupportedCodeHostConnected || derivedState.hasPRSupportedRepos) && (
+			{(derivedState.isPRSupportedCodeHostConnected || hasPRSupportedRepos) && (
 				<>
 					<PaneHeader
 						title="Pull Requests"
@@ -440,7 +438,7 @@ export function OpenPullRequests(props: Props) {
 					</PaneHeader>
 					{props.paneState !== PaneState.Collapsed && (
 						<PaneBody>
-							{derivedState.hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
+							{hasPRSupportedRepos && !derivedState.isPRSupportedCodeHostConnected && (
 								<>
 									<NoContent>Connect to GitHub to see your PRs</NoContent>
 									<IntegrationButtons noBorder>
@@ -508,7 +506,7 @@ export function OpenPullRequests(props: Props) {
 											{!query.hidden &&
 												prGroup &&
 												prGroup.map((pr, index) => {
-													const selected = derivedState.repos.find(repo => {
+													const selected = openReposWithName.find(repo => {
 														return (
 															repo.currentBranch === pr.headRefName &&
 															pr.headRepository &&
@@ -653,4 +651,4 @@ export function OpenPullRequests(props: Props) {
 			)}
 		</Root>
 	);
-}
+});

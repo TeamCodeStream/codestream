@@ -2,7 +2,7 @@ import React, { PropsWithChildren } from "react";
 import styled from "styled-components";
 import Icon from "@codestream/webview/Stream/Icon";
 import ScrollBox from "@codestream/webview/Stream/ScrollBox";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import { WebviewPanels } from "@codestream/protocols/webview";
 import {
@@ -135,7 +135,7 @@ interface PaneHeaderProps {
 	isLoading?: boolean;
 	warning?: React.ReactNode;
 }
-export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => {
+export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
@@ -143,7 +143,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 		const settings = panePreferences[props.id] || EMPTY_HASH;
 		const anyMaximized = Object.keys(panePreferences).find(
 			id => (panePreferences[id] || {}).maximized
-		);
+		)
+			? true
+			: false;
 		const stateIcon =
 			anyMaximized && !settings.maximized
 				? "dash"
@@ -159,7 +161,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			collapsed: settings.collapsed,
 			anyMaximized
 		};
-	});
+	}, shallowEqual);
 
 	const [dragging, setDragging] = React.useState(false);
 	const [draggingBeyondMinDistance, setDraggingBeyondMinDistance] = React.useState(false);
@@ -180,7 +182,7 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 	};
 
 	const header = (
-		<div
+		<PaneHeaderRoot
 			className={cx("pane-header", props.className, {
 				"visualize-dragging": draggingBeyondMinDistance
 			})}
@@ -216,9 +218,10 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 					</div>
 				</div>
 			)}
-		</div>
+		</PaneHeaderRoot>
 	);
 
+	// if (props.id === WebviewPanels.WorkInProgress) console.warn("RENDERING PANE HEADER FOR WIP");
 	return (
 		<>
 			{dragging && header}
@@ -253,7 +256,9 @@ export const PaneHeader = styled((props: PropsWithChildren<PaneHeaderProps>) => 
 			</Draggable>
 		</>
 	);
-})`
+});
+
+const PaneHeaderRoot = styled.div`
 	position: fixed;
 	// color: var(--text-color-highlight);
 
@@ -416,7 +421,7 @@ const Root = styled.div`
 	&.show-instructions .instructions {
 		display: block;
 	}
-	&:hover ${PaneHeader} .actions {
+	&:hover ${PaneHeaderRoot} .actions {
 		display: inline;
 	}
 	position: absolute;

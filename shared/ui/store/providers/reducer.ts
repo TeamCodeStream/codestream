@@ -8,6 +8,9 @@ import { mapFilter, safe } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { createSelector } from "reselect";
 import { PROVIDER_MAPPINGS } from "@codestream/webview/Stream/CrossPostIssueControls/types";
+import { ContextState } from "../context/types";
+import { UsersState } from "../users/types";
+import { SessionState } from "../session/types";
 
 type ProviderActions = ActionType<typeof actions>;
 
@@ -79,8 +82,29 @@ export const isConnected = (
 	option: ProviderPropertyOption,
 	requiredScope?: string // ONLY WORKS FOR SLACK AND MSTEAMS
 ) => {
-	const currentUser = state.users[state.session.userId!] as CSMe;
-	const { currentTeamId } = state.context;
+	return isConnectedSelectorFriendly(
+		state.users,
+		state.context.currentTeamId,
+		state.session,
+		state.providers,
+		option,
+		requiredScope
+	);
+};
+
+// isConnected, as originally written, took `state` as an argument, which means
+// that it doesn't work well as a selector since every time anything at all changes
+// in state, it wil re-fire. this version takes slices of what's really neeed
+// rather than the overall state object.
+export const isConnectedSelectorFriendly = (
+	users: UsersState,
+	currentTeamId: string,
+	session: SessionState,
+	providers: ProvidersState,
+	option: ProviderPropertyOption,
+	requiredScope?: string // ONLY WORKS FOR SLACK AND MSTEAMS
+) => {
+	const currentUser = users[session.userId!] as CSMe;
 
 	// ensure there's provider info for the user
 	if (currentUser.providerInfo == undefined) return false;
@@ -98,7 +122,7 @@ export const isConnected = (
 					info != undefined &&
 					info.hosts != undefined &&
 					Object.keys(info.hosts).some(host => {
-						return state.providers[host] != undefined && info.hosts![host].accessToken != undefined;
+						return providers[host] != undefined && info.hosts![host].accessToken != undefined;
 					})
 				);
 			}
@@ -124,7 +148,7 @@ export const isConnected = (
 			}
 		}
 	} else {
-		const providerConfig = state.providers[option.id];
+		const providerConfig = providers[option.id];
 		const infoForProvider = getUserProviderInfo(currentUser, providerConfig.name, currentTeamId);
 		if (infoForProvider == undefined) return false;
 
@@ -144,12 +168,15 @@ export const isConnected = (
 	}
 };
 
-export const getConnectedProviderNames = (state: CodeStreamState) => {
-	return mapFilter<ThirdPartyProviderConfig, string>(
-		Object.values(state.providers),
-		providerConfig => (isConnected(state, providerConfig) ? providerConfig.name : undefined)
-	);
-};
+export const getConnectedProviderNames = createSelector(
+	(state: CodeStreamState) => state,
+	(state: CodeStreamState) => {
+		return mapFilter<ThirdPartyProviderConfig, string>(
+			Object.values(state.providers),
+			providerConfig => (isConnected(state, providerConfig) ? providerConfig.name : undefined)
+		);
+	}
+);
 
 export const getConnectedProviders = createSelector(
 	(state: CodeStreamState) => state,
@@ -222,5 +249,17 @@ export const getSupportedPullRequestHosts = createSelector(
 		return Object.values(providerConfigs).filter(
 			_ => _.id === "github*com" || _.id === "github/enterprise"
 		);
+	}
+);
+
+export const getConnectedSupportedPullRequestHosts = createSelector(
+	(state: CodeStreamState) => state.users,
+	(state: CodeStreamState) => state.context.currentTeamId,
+	(state: CodeStreamState) => state.session,
+	(state: CodeStreamState) => state.providers,
+	(users: UsersState, currentTeamId: string, session: SessionState, providers: ProvidersState) => {
+		return Object.values(providers)
+			.filter(_ => _.id === "github*com" || _.id === "github/enterprise")
+			.filter(_ => isConnectedSelectorFriendly(users, currentTeamId, session, providers, _));
 	}
 );

@@ -319,9 +319,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		}
 	};
 
-	static getMarkerStartLine = (		
-		marker: CSMarker | undefined
-	) => {
+	static getMarkerStartLine = (marker: CSMarker | undefined) => {
 		if (!marker) return 0;
 		if (marker.locationWhenCreated && marker.locationWhenCreated.length)
 			return marker.locationWhenCreated[0] - 1;
@@ -334,7 +332,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		return 0;
 	};
 
-	static getDocumentMarkerStartLine = (		
+	static getDocumentMarkerStartLine = (
 		markerLike: (DocumentMarker & MarkerNotLocated) | undefined
 	) => {
 		if (!markerLike || markerLike.notLocatedReason) return 0;
@@ -545,6 +543,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			checked: codemarkSortType === CodemarkSortType.CreatedAt
 		});
 
+		// console.warn("RENDERING CODEMARKS");
 		return (
 			<>
 				{this.state.showConfiguationModal && (
@@ -712,7 +711,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.File;
 	const codemarkSortType: CodemarkSortType = preferences.codemarkSortType || CodemarkSortType.File;
 
-	let codemarksToRender = [] as CodemarkPlus[];
+	let codemarksToRender = EMPTY_ARRAY as CodemarkPlus[];
 	if (scmInfo && codemarkDomain !== CodemarkDomainType.File) {
 		const { items = [], showHidden } = props;
 		const { scm = {} as any } = scmInfo as GetFileScmInfoResponse;
