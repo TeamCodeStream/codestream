@@ -17,7 +17,8 @@ import {
 	ExecuteThirdPartyRequestUntypedType,
 	QueryThirdPartyRequestType,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	ThirdPartyProviderConfig
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";

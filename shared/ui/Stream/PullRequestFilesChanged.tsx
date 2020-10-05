@@ -138,8 +138,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 					setLoading(true);
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
 						repoId: derivedState.currentRepo!.id!,
-						baseSha: pr.baseRefOid,
-						headSha: pr.headRefOid
+						baseSha: props.pr.baseRefOid,
+						headSha: props.pr.headRefOid
 					});
 					handleForkPointResponse(forkPointResponse);
 				} catch (err) {
