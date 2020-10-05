@@ -695,22 +695,6 @@ export class MessageInput extends React.Component<Props, State> {
 		}
 	};
 
-	buildCodemarkMenuOld = () => {
-		if (!this.state.codemarkOpen) return null;
-
-		const menuItems = [
-			{ label: "Attach Codemark...", action: "attach" },
-			{ label: "Post as reply to Codemark...", action: "reply" }
-		];
-		return (
-			<Menu
-				items={menuItems}
-				action={this.codemarkMenuAction}
-				target={this.state.codemarkMenuTarget}
-			/>
-		);
-	};
-
 	buildCodemarkMenu = () => {
 		if (!this.state.codemarkOpen) return null;
 
@@ -720,6 +704,8 @@ export class MessageInput extends React.Component<Props, State> {
 		];
 
 		const { codemarks = [] } = this.props;
+		if (codemarks.length === 0) return null;
+
 		menuItems = menuItems.concat(
 			codemarks
 				.sort((a, b) => b.createdAt - a.createdAt)
@@ -754,12 +740,6 @@ export class MessageInput extends React.Component<Props, State> {
 				})
 				.filter(Boolean)
 		);
-		if (codemarks.length === 0) {
-			menuItems = menuItems.concat(
-				{ label: "-" },
-				{ label: "No Codemarks! FIXME", action: "more" }
-			);
-		}
 		// menuItems = menuItems.concat({ label: "-" }, { label: "Show More...", action: "more" });
 		return (
 			<Menu
