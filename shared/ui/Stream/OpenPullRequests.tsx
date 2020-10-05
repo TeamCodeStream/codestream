@@ -349,6 +349,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const goPR = async (url: string) => {
 		setPrError("");
 		const response = (await dispatch(openPullRequestByUrl(url))) as { error?: string };
+
+		// fix https://trello.com/c/Gp0lsDub/4874-loading-pr-from-url-leaves-the-url-populated
+		setLoadFromUrlQuery("");
+
 		if (response && response.error) {
 			setPrError(response.error);
 			const er = document.getElementById("error-row");
