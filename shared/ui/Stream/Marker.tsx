@@ -132,8 +132,6 @@ function Marker(props: Props) {
 		startLine
 	);
 
-	console.warn("DIFF IS: ", props.diff);
-
 	const gear = (
 		<Gear>
 			<InlineMenu

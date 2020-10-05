@@ -557,7 +557,7 @@ class MarkerActions extends React.Component<Props, State> {
 			>
 				<Marker
 					marker={marker}
-					hasDiff={hasDiff}
+					hasDiff={hasDiff && !warning}
 					currentContent={currentContent}
 					diff={this.state.diff}
 				/>
