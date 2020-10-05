@@ -33,7 +33,6 @@ import Icon from "./Icon";
 import CancelButton from "./CancelButton";
 import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import { WallToWallBanner } from "./WallToWallBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
@@ -284,7 +283,6 @@ export class SimpleStream extends PureComponent {
 		return (
 			<div id="stream-root" className={streamClass}>
 				<OfflineBanner />
-				<WallToWallBanner />
 				<ModalRoot />
 				<CheckEmailVsGit />
 				{this.state.propsForPrePRProviderInfoModal && (
