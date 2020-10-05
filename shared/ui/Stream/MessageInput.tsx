@@ -1113,7 +1113,7 @@ export class MessageInput extends React.Component<Props, State> {
 							autoFocus={true}
 						/>
 					)}
-					{this.props.relatedCodemarkIds && (
+					{this.props.relatedCodemarkIds && this.props.codemarks.length > 0 && (
 						<Icon
 							key="codestream"
 							name="codestream"
@@ -1173,6 +1173,7 @@ export class MessageInput extends React.Component<Props, State> {
 	}
 }
 
+const EMPTY_ARRAY = [];
 const mapStateToProps = (
 	state: CodeStreamState,
 	props: Omit<Props, keyof ConnectedProps>
@@ -1183,7 +1184,7 @@ const mapStateToProps = (
 		currentTeam,
 		currentUserId: state.session.userId!,
 		teammates: getTeamMembers(state),
-		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || [],
+		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || EMPTY_ARRAY,
 		isInVscode: state.ide.name === "VSC",
 		teamTags: Boolean(props.withTags) ? getTeamTagsArray(state) : emptyArray,
 		channelStreams: getChannelStreamsForTeam(state, state.context.currentTeamId),
