@@ -141,6 +141,9 @@ export const ChangesetFileList = (props: {
 		})();
 	}, [review, reviewCheckpointKey]);
 
+	// we need to re-make these handlers each time visitedFiles changes, otherwise
+	// it creates a closeure over the wrong version of those variables. not sure
+	// if there is a better solution here....
 	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
