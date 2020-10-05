@@ -123,18 +123,16 @@ export const JoinTeam = (connect(undefined) as any)((props: DispatchProp) => {
 						<div className="control-group">
 							<p>Use your invitation code to connect with your teammates.</p>
 							<div className="two-col" style={{ display: "flex" }}>
-								<div style={{ width: "100%" }}>
+								<div style={{ width: "100%", position: "relative" }}>
 									<TextInput
 										value={inviteCode}
 										onChange={onChange}
 										placeholder="Enter invitation code"
+										hasError={!!error}
 									/>
 									{error && (
-										<small className="explainer error-message ">
-											<FormattedMessage
-												id={errorId}
-												defaultMessage="There is an error with that code"
-											/>
+										<small className="explainer error-message" style={{ top: "8px" }}>
+											<FormattedMessage id={errorId} defaultMessage="Invalid code." />
 										</small>
 									)}
 								</div>
