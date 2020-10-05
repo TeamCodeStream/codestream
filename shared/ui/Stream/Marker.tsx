@@ -21,6 +21,8 @@ const Label = styled.span`
 	.icon {
 		margin-right: 5px;
 	}
+	overflow: hidden;
+	text-overflow: ellipsis;
 `;
 
 const Gear = styled.div`
@@ -183,9 +185,11 @@ function Marker(props: Props) {
 				)}
 				{marker.file && !hideFile && (
 					<Label>
-						<span className="monospace">
+						<span className="monospace" style={{ display: "flex", alignItems: "center" }}>
 							<Icon name="file" />
-							{marker.file}
+							<div className="file-info ellipsis-left" style={{ paddingTop: "2px" }}>
+								<bdi dir="ltr">{marker.file}</bdi>
+							</div>
 						</span>{" "}
 					</Label>
 				)}
