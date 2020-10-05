@@ -35,7 +35,7 @@ import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
 import { Button } from "../src/components/Button";
 import { Link } from "./Link";
-import { setUserPreference } from "./actions";
+import { setUserPreference, setUserPreferences } from "./actions";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 import { ReposState } from "../store/repos/types";
@@ -99,6 +99,7 @@ interface DispatchProps {
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
 	setUserPreference: any;
+	setUserPreferences: Function;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 }
 
@@ -111,7 +112,9 @@ interface State {
 	problem: ScmError | undefined;
 	showHiddenField: boolean | undefined;
 	showPRCommentsField: boolean | undefined;
+	codemarkSortTypeField: CodemarkSortType | undefined;
 	wrapCommentsField: boolean | undefined;
+	pendingPRConnection: boolean | undefined;
 }
 
 export class SimpleCodemarksForFile extends Component<Props, State> {
@@ -133,7 +136,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
 			showHiddenField: props.showHidden,
 			showPRCommentsField: props.showPRComments,
-			wrapCommentsField: props.wrapComments
+			wrapCommentsField: props.wrapComments,
+			codemarkSortTypeField: props.codemarkSortType || CodemarkSortType.File,
+			pendingPRConnection: false
 		};
 
 		this.docMarkersByStartLine = {};
@@ -356,11 +361,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		setUserPreference(["codemarkDomain"], value);
 	};
 
-	switchSort = (value: CodemarkSortType) => {
-		const { setUserPreference } = this.props;
-		setUserPreference(["codemarkSortType"], value);
-	};
-
 	renderCodemarks = () => {
 		switch (this.props.codemarkDomain) {
 			case CodemarkDomainType.File:
@@ -451,7 +451,12 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 	render() {
 		const { fileNameToFilterFor = "", codemarkDomain, codemarkSortType, count } = this.props;
-		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
+		const {
+			showHiddenField,
+			showPRCommentsField,
+			codemarkSortTypeField,
+			wrapCommentsField
+		} = this.state;
 
 		const domainIcon =
 			codemarkDomain === CodemarkDomainType.File
@@ -469,13 +474,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: codemarkDomain === CodemarkDomainType.Repo
 				? this.props.repoName || "[repository]"
 				: this.props.teamName;
-
-		const sortSubtitle =
-			codemarkSortType === CodemarkSortType.CreatedAt
-				? "by date"
-				: codemarkDomain === CodemarkDomainType.File
-				? "by line"
-				: "by file";
 
 		const domainItems = [
 			{
@@ -512,37 +510,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			}
 		];
 
-		let sortOptions;
-		if (codemarkDomain === CodemarkDomainType.File) {
-			sortOptions = [
-				{
-					label: "By Line",
-					key: "sort-line",
-					icon: <Icon name="file-lines" />,
-					action: () => this.switchSort(CodemarkSortType.File),
-					checked: codemarkSortType === CodemarkSortType.File
-				}
-			];
-		} else {
-			sortOptions = [
-				{
-					label: "By File",
-					key: "sort-file",
-					icon: <Icon name="file" />,
-					action: () => this.switchSort(CodemarkSortType.File),
-					checked: codemarkSortType === CodemarkSortType.File
-				}
-			];
-		}
-
-		sortOptions.push({
-			label: "By Date",
-			key: "sort-date",
-			icon: <Icon name="calendar" />,
-			action: () => this.switchSort(CodemarkSortType.CreatedAt),
-			checked: codemarkSortType === CodemarkSortType.CreatedAt
-		});
-
 		// console.warn("RENDERING CODEMARKS");
 		return (
 			<>
@@ -571,18 +538,38 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 												Show hidden/archived codemarks
 											</Checkbox>
 											<Checkbox
-												disabled={
-													!this.props.hasPRProvider
-														? "Requires a PR Provider. Check Integrations under ellipsis menu."
-														: undefined
-												}
 												name="show-pr-comments"
-												checked={showPRCommentsField}
-												onChange={() =>
-													this.setState({ showPRCommentsField: !showPRCommentsField })
+												checked={
+													this.props.hasPRProvider
+														? this.state.pendingPRConnection
+															? true
+															: !!showPRCommentsField
+														: false
 												}
+												onChange={() => {
+													if (!this.props.hasPRProvider) {
+														this.setState({ showPRInfoModal: true });
+														this.setState({ pendingPRConnection: true });
+													} else {
+														this.setState({ pendingPRConnection: false });
+														this.setState({ showPRCommentsField: !showPRCommentsField });
+													}
+												}}
 											>
 												Show comments from Pull Requests
+											</Checkbox>
+											<Checkbox
+												name="sort-codemarks"
+												checked={codemarkSortTypeField === CodemarkSortType.CreatedAt}
+												onChange={e =>
+													this.setState({
+														codemarkSortTypeField: e
+															? CodemarkSortType.CreatedAt
+															: CodemarkSortType.File
+													})
+												}
+											>
+												Sort comments by date
 											</Checkbox>
 										</div>
 									</div>
@@ -595,7 +582,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					</Modal>
 				)}
 				{this.state.showPRInfoModal && (
-					<PRInfoModal onClose={() => this.setState({ showPRInfoModal: false })} />
+					<PRInfoModal
+						onClose={() => {
+							this.setState({ showPRInfoModal: false });
+						}}
+					/>
 				)}
 				<PaneHeader
 					title="Codemarks"
@@ -611,17 +602,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 							>
 								<Icon name={domainIcon} className="inline-label" />
 								{subtitle}
-							</InlineMenu>
-
-							<InlineMenu
-								key="codemark-sort-options"
-								className="subtle no-padding"
-								noFocusOnSelect
-								items={sortOptions}
-								title="Sort Codemarks"
-							>
-								<Icon name="sort" className="inline-label" />
-								{sortSubtitle}
 							</InlineMenu>
 						</>
 					}
@@ -671,17 +651,27 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	}
 
 	saveSettings = async () => {
-		const { showHiddenField, showPRCommentsField, wrapCommentsField } = this.state;
+		const {
+			showHiddenField,
+			showPRCommentsField,
+			codemarkSortTypeField,
+			wrapCommentsField
+		} = this.state;
 
+		let preferences = {
+			codemarksShowArchived: !!showHiddenField,
+			codemarksWrapComments: !!wrapCommentsField,
+			codemarkSortType: codemarkSortTypeField
+		} as any;
 		if (this.props.hasPRProvider) {
-			await this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
-			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !showPRCommentsField);
+			preferences.codemarksShowPRComments = !!showPRCommentsField;
 		} else {
-			this.setState({ showPRInfoModal: true });
+			preferences.codemarksShowPRComments = false;
 		}
-		// codemarksShowPRComments will flash if these are before it
-		this.props.setUserPreference(["codemarksShowArchived"], !!showHiddenField);
-		this.props.setUserPreference(["codemarksWrapComments"], !!wrapCommentsField);
+		await this.props.setUserPreferences(preferences);
+		if (this.props.hasPRProvider) {
+			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !showPRCommentsField);
+		}
 		this.setState({ showConfiguationModal: false });
 	};
 }
@@ -799,6 +789,7 @@ export default withSearchableItems(
 		openPanel,
 		setCurrentCodemark,
 		setEditorContext,
-		setUserPreference
+		setUserPreference,
+		setUserPreferences
 	})(SimpleCodemarksForFile)
 );
