@@ -54,7 +54,8 @@ import {
 	setCurrentCodemark,
 	repositionCodemark,
 	setComposeCodemarkActive,
-	closeAllPanels
+	closePanel,
+	closeAllModals
 } from "../store/context/actions";
 import { sortBy as _sortBy } from "lodash-es";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
@@ -148,7 +149,8 @@ interface Props {
 	repositionCodemark: (
 		...args: Parameters<typeof repositionCodemark>
 	) => ReturnType<typeof repositionCodemark>;
-	closeAllPanels: Function;
+	closePanel: Function;
+	closeAllModals: Function;
 
 	createPostAndCodemark: (...args: Parameters<typeof createPostAndCodemark>) => any;
 	addDocumentMarker: Function;
@@ -1165,11 +1167,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const { currentReviewId, currentPullRequestId } = this.props;
 		if (currentReviewId) {
 			HostApi.instance.send(ReviewCloseDiffRequestType, {});
-		}
-		if (currentPullRequestId) {
+			this.props.closeAllModals();
+		} else if (currentPullRequestId) {
 			HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
+			this.props.closeAllModals();
+		} else {
+			this.props.closePanel();
 		}
-		this.props.closeAllPanels();
 	}
 
 	render() {
@@ -1405,7 +1409,8 @@ export default connect(mapStateToProps, {
 	addDocumentMarker,
 	changeSelection,
 	setNewPostEntry,
-	closeAllPanels
+	closeAllModals,
+	closePanel
 })(SimpleInlineCodemarks);
 
 const ViewSelectorButton = styled.div`

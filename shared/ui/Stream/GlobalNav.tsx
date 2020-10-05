@@ -92,6 +92,7 @@ export function GlobalNav() {
 	};
 
 	const close = () => {
+		console.warn("CLOSING");
 		dispatch(setCreatePullRequest());
 		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
@@ -109,27 +110,7 @@ export function GlobalNav() {
 	const selected = panel => false;
 	return React.useMemo(() => {
 		if (currentCodemarkId) return null;
-		if (currentReviewId || currentPullRequestId) {
-			return (
-				<nav className="inline" id="global-nav">
-					<label onClick={close}>
-						<span>
-							<CancelButton title="Close" onClick={close} />
-						</span>
-					</label>
-				</nav>
-			);
-		} else if (activePanel === WebviewPanels.CodemarksForFile) {
-			return (
-				<nav className="inline" id="global-nav">
-					<label onClick={close}>
-						<span>
-							<CancelButton title="Close" onClick={() => go(WebviewPanels.Sidebar)} />
-						</span>
-					</label>
-				</nav>
-			);
-		} else {
+		else {
 			return (
 				<nav className="inline" id="global-nav">
 					<label

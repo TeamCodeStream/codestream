@@ -649,6 +649,9 @@ const mapStateToProps = state => {
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,
+		// even though we don't use hasFocus, leave this in here because of a re-render
+		// call from Modal.tsx -Pez
+		hasFocus: context.hasFocus,
 		currentPullRequestId: context.currentPullRequest ? context.currentPullRequest.id : undefined,
 		activePanel: context.panelStack[0],
 		activeModal: context.activeModal,

@@ -173,7 +173,7 @@ function Marker(props: Props) {
 	);
 	return (
 		<Root className={props.className} hasDiff={props.hasDiff}>
-			<div className="file-info">
+			<div className="file-info" style={{ display: "flex", flexFlow: "row wrap" }}>
 				{props.repoName && showRepo && (
 					<Label>
 						<span className="monospace">

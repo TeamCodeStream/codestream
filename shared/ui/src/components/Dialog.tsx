@@ -15,7 +15,12 @@ export const ButtonRow = styled.div`
 	}
 `;
 
-const Box = styled.div<{ narrow?: boolean; wide?: boolean; noPadding?: boolean }>`
+const Box = styled.div<{
+	narrow?: boolean;
+	wide?: boolean;
+	noPadding?: boolean;
+	limitHeight?: boolean;
+}>`
 	background: var(--base-background-color);
 	border: 1px solid var(--base-border-color);
 	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
@@ -35,6 +40,8 @@ const Box = styled.div<{ narrow?: boolean; wide?: boolean; noPadding?: boolean }
 	}
 	max-width: ${props => (props.narrow ? "420px" : "none")};
 	width: ${props => (props.wide ? "100%" : "auto")};
+	max-height: ${props => (props.limitHeight ? "90vh" : "none")};
+	overflow: ${props => (props.limitHeight ? "hidden" : "visible")};
 `;
 
 const Container = styled.div<{ wide?: boolean }>`
@@ -75,6 +82,7 @@ interface Props {
 	onMaximize?(event?: React.SyntheticEvent): any;
 	onMinimize?(event?: React.SyntheticEvent): any;
 	maximizable?: boolean;
+	limitHeight?: boolean;
 }
 
 export function Dialog(props: PropsWithChildren<Props>) {
@@ -110,6 +118,7 @@ export function Dialog(props: PropsWithChildren<Props>) {
 				narrow={props.narrow}
 				wide={props.wide}
 				noPadding={props.noPadding}
+				limitHeight={props.limitHeight}
 			>
 				{props.title && (
 					<Title>

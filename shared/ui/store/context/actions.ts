@@ -39,6 +39,13 @@ export const closeAllPanels = () => dispatch => {
 	dispatch(clearCurrentPullRequest());
 };
 
+export const closeAllModals = () => dispatch => {
+	dispatch(closeModal());
+	dispatch(setCurrentCodemark());
+	dispatch(setCurrentReview());
+	dispatch(clearCurrentPullRequest());
+};
+
 export const focus = () => action(ContextActionsType.SetFocusState, true);
 
 export const blur = () => action(ContextActionsType.SetFocusState, false);

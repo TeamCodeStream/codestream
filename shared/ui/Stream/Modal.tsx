@@ -96,8 +96,6 @@ export function Modal(props: PropsWithChildren<ModalProps>) {
 	const [context] = React.useState<ModalContextType>(() => ({ zIndex: 3000 }));
 	const disposables: { dispose(): void }[] = [];
 
-	const [rerender, setRerender] = React.useState<boolean>(false);
-
 	useDidMount(() => {
 		if (props.onClose) {
 			disposables.push(

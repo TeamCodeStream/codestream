@@ -325,7 +325,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		return null;
 	};
 
-	console.warn("Rendering sidebar: ", dragging);
+	// console.warn("Rendering sidebar: ", dragging);
 	return (
 		<Root className={dragging ? "" : "animate-height"}>
 			<CreateCodemarkIcons />

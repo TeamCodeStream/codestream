@@ -76,6 +76,8 @@ export const ActivityPanel = () => {
 		};
 	});
 
+	const [maximized, setMaximized] = React.useState(false);
+
 	const fetchActivity = React.useCallback(async () => {
 		const response = await HostApi.instance.send(FetchActivityRequestType, {
 			limit: 50,
@@ -264,21 +266,34 @@ export const ActivityPanel = () => {
 	// 	});
 	// }
 
-	console.warn("RENDERING ACTIVITY!");
+	// console.warn("RENDERING ACTIVITY!");
 	return (
-		<Dialog maximizable wide noPadding onClose={() => dispatch(closeAllPanels())}>
+		<Dialog
+			wide
+			noPadding
+			onMaximize={() => setMaximized(true)}
+			onMinimize={() => setMaximized(false)}
+			onClose={() => dispatch(closeAllPanels())}
+		>
 			<PanelHeader title="Activity" />
-			<ScrollBox>
-				<div ref={rootRef} className="channel-list vscroll">
-					{renderActivity()}
-					{derivedState.hasMoreActivity &&
-						(derivedState.activity.length === 0 ? (
-							<LoadingMessage>Loading latest activity...</LoadingMessage>
-						) : (
-							<LoadingMessage ref={targetRef}>Loading more...</LoadingMessage>
-						))}
-				</div>
-			</ScrollBox>
+			<div
+				style={{
+					height: maximized ? "calc(100vh - 50px)" : "calc(100vh - 200px)",
+					overflow: "hidden"
+				}}
+			>
+				<ScrollBox>
+					<div ref={rootRef} className="channel-list vscroll">
+						{renderActivity()}
+						{derivedState.hasMoreActivity &&
+							(derivedState.activity.length === 0 ? (
+								<LoadingMessage>Loading latest activity...</LoadingMessage>
+							) : (
+								<LoadingMessage ref={targetRef}>Loading more...</LoadingMessage>
+							))}
+					</div>
+				</ScrollBox>
+			</div>
 		</Dialog>
 	);
 };
