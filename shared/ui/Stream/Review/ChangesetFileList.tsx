@@ -148,7 +148,7 @@ export const ChangesetFileList = (props: {
 		];
 
 		return () => disposables.forEach(disposable => disposable.dispose());
-	}, [checkpoint]);
+	}, [visitedFiles]);
 
 	const goDiff = async index => {
 		if (index < 0) index = derivedState.numFiles - 1;
