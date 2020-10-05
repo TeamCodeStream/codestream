@@ -1113,6 +1113,47 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			throw new Error("Invalid eventType");
 		}
 
+		const existingReview = await this.client.request<any>(
+			`query ExistingReviews($pullRequestId:ID!) {
+				rateLimit {
+				cost
+				resetAt
+				remaining
+				limit
+			}
+			node(id: $pullRequestId) {
+			  ... on PullRequest {
+				id
+				reviews(last: 100) {
+				  nodes {
+					state
+					viewerDidAuthor
+				  }
+				}
+			  }
+			}
+		  }
+		  `,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
+		if (
+			existingReview?.node?.reviews?.nodes?.length === 0 ||
+			existingReview?.node?.reviews?.nodes?.find((_: any) => _.viewerDidAuthor) == null
+		) {
+			void (await this.client.request<any>(
+				`mutation AddPullRequestReview($pullRequestId:String!) {
+				addPullRequestReview(input: {pullRequestId: $pullRequestId, body: ""}) {
+					clientMutationId
+				}
+			  }
+			  `,
+				{
+					pullRequestId: request.pullRequestId
+				}
+			));
+		}
 		const query = `mutation SubmitPullRequestReview($pullRequestId:String!, $body:String) {
 			submitPullRequestReview(input: {event: ${request.eventType}, body: $body, pullRequestId: $pullRequestId}){
 			  clientMutationId
