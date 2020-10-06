@@ -278,7 +278,7 @@ export const ActivityPanel = () => {
 			<PanelHeader title="Activity" />
 			<div
 				style={{
-					height: maximized ? "calc(100vh - 50px)" : "calc(100vh - 200px)",
+					height: maximized ? "calc(100vh - 50px)" : "calc(100vh - 120px)",
 					overflow: "hidden"
 				}}
 			>

@@ -53,7 +53,7 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 	}
 	div.children {
 		height: 100%;
-		padding: ${props => (props.noPadding ? "0" : "50px 20px")};
+		padding: ${props => (props.noPadding ? "0" : "40px 20px")};
 
 		&.vcenter {
 			height: inherit;
