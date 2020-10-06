@@ -43,6 +43,6 @@ export class WebviewSidebarActivator implements TreeDataProvider<object>, Dispos
 		Container.webview.toggle();
 
 		// Ensure getChildren will get called again
-		this._onDidChangeTreeData.fire();
+		this._onDidChangeTreeData.fire(undefined);
 	}
 }

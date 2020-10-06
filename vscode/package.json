@@ -5,6 +5,7 @@
     "version": "9.1.1",
     "author": "CodeStream",
     "publisher": "CodeStream",
+    "enableProposedApi": true,
     "license": "UNLICENSED",
     "homepage": "https://codestream.com",
     "bugs": {
@@ -15,7 +16,7 @@
         "url": "https://github.com/TeamCodeStream/CodeStream"
     },
     "engines": {
-        "vscode": "^1.38.0"
+        "vscode": "^1.49.0"
     },
     "main": "./dist/extension",
     "icon": "assets/images/codestream.png",
@@ -35,7 +36,25 @@
         "slack"
     ],
     "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "codestream-activitybar",
+                    "title": "CodeStream",
+                    "icon": "assets/images/codestream.svg"
+                }
+            ]
+        },
         "views": {
+            "codestream-activitybar": [
+                {
+                    "id": "activitybar.codestream",
+                    "type": "webview",
+                    "name": "CodeStream",
+                    "icon": "assets/images/codestream.svg",
+                    "contextualTitle": "CodeStream"
+                }
+            ],
             "scm": [
                 {
                     "id": "scmTreeDataProvider",
@@ -602,7 +621,7 @@
         "@types/node": "10.11.7",
         "@types/node-fetch": "2.5.0",
         "@types/uuid": "3.4.5",
-        "@types/vscode": "1.38.0",
+        "@types/vscode": "1.49.0",
         "@typescript-eslint/eslint-plugin": "2.18.0",
         "@typescript-eslint/eslint-plugin-tslint": "2.18.0",
         "@typescript-eslint/parser": "2.18.0",

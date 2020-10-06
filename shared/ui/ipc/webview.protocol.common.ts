@@ -125,6 +125,7 @@ export interface SessionState {
 	inMaintenanceMode?: boolean;
 }
 
+export type SidebarLocation = "left" | "right" | "top" | "bottom" | "floating";
 export interface EditorContext {
 	scmInfo?: GetFileScmInfoResponse;
 	activeFile?: string;
@@ -135,6 +136,9 @@ export interface EditorContext {
 	metrics?: EditorMetrics;
 	textEditorLineCount?: number;
 	visibleEditorCount?: number; // only populated (and used) by vscode
+	sidebar?: {
+		location?: SidebarLocation;
+	};
 }
 
 export interface WebviewConfigs {

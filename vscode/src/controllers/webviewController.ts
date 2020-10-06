@@ -2,6 +2,7 @@
 import * as fs from "fs";
 import {
 	ApiVersionCompatibility,
+	BootstrapResponse,
 	ConnectionStatus,
 	DidChangeApiVersionCompatibilityNotification,
 	DidChangeApiVersionCompatibilityNotificationType,
@@ -71,10 +72,12 @@ import {
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
-	WebviewPanels,
 	TraverseDiffsRequestType,
 	CompareLocalFilesRequestType,
-	NewPullRequestNotificationType, ShowPullRequestNotificationType
+	NewPullRequestNotificationType,
+	ShowPullRequestNotificationType,
+	WebviewPanels,
+	SidebarLocation
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -94,6 +97,7 @@ import {
 import { NotificationType, RequestType } from "vscode-languageclient";
 import { Strings } from "system/string";
 import { openUrl } from "urlHandler";
+import { toLoggableIpcMessage, WebviewLike } from "webviews/webviewLike";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,
@@ -107,7 +111,7 @@ import { Container } from "../container";
 import { Editor } from "../extensions";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
-import { CodeStreamWebviewPanel, toLoggableIpcMessage } from "../webviews/webviewPanel";
+
 import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 
@@ -123,19 +127,17 @@ export interface WebviewState {
 }
 
 export class WebviewController implements Disposable {
-	// private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
+	private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
 	private _context: WebviewContext | undefined;
 	private _disposable: Disposable | undefined;
 	private _disposableWebview: Disposable | undefined;
-	private _webview: CodeStreamWebviewPanel | undefined;
 	private _versionCompatibility: VersionCompatibility | undefined;
 	private _apiVersionCompatibility: ApiVersionCompatibility | undefined;
 	private _missingCapabilities: CSApiCapabilities | undefined;
-	private _resuscitations: number = 1;
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
-	constructor(public readonly session: CodeStreamSession) {
+	constructor(public readonly session: CodeStreamSession, private _webview?: WebviewLike) {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
@@ -218,7 +220,10 @@ export class WebviewController implements Disposable {
 				// only show if the state is explicitly set to false
 				// (ignore if it's undefined)
 				if (state.hidden === false) {
-					this.show();
+					if (!this._webview || this._webview.type === "panel") {
+						// don't auto show when in the sidebar -- let the IDE dictate its state
+						this.show();
+					}
 				}
 
 				break;
@@ -450,46 +455,54 @@ export class WebviewController implements Disposable {
 		if (this._webview === undefined) {
 			// // Kick off the bootstrap compute to be ready for later
 			// this._bootstrapPromise = this.getBootstrap();
-
-			this._webview = new CodeStreamWebviewPanel(this.session, await this.getHtml());
-
-			const webview = this._webview;
-
-			this._disposableWebview = Disposable.from(
-				this._webview.onDidClose(this.onWebviewClosed, this),
-				this._webview.onDidMessageReceive(
-					(...args) => this.onWebviewMessageReceived(webview, ...args),
-					this
-				),
-				Container.agent.onDidChangeConnectionStatus(
-					(...args) => this.onConnectionStatusChanged(webview, ...args),
-					this
-				),
-				Container.agent.onDidChangeData((...args) => this.onDataChanged(webview, ...args), this),
-				Container.agent.onDidChangeDocumentMarkers(
-					(...args) => this.onDocumentMarkersChanged(webview, ...args),
-					this
-				),
-				window.onDidChangeTextEditorSelection(
-					Functions.debounce<(e: TextEditorSelectionChangeEvent) => any>(
-						(...args) => this.onEditorSelectionChanged(webview, ...args),
-						250,
-						{
-							maxWait: 250
-						}
-					),
-					this
-				),
-				window.onDidChangeTextEditorVisibleRanges(
-					(...args) => this.onEditorVisibleRangesChanged(webview, ...args),
-					this
-				),
-				configuration.onDidChange((...args) => this.onConfigurationChanged(webview, ...args), this),
-
-				// Keep this at the end otherwise the above subscriptions can fire while disposing
-				this._webview
-			);
+			//
+			//
+			// uncomment for panel
+			// this._webview = new CodeStreamWebviewPanel(
+			// 	this.session,
+			// 	await this.getHtml(),
+			// 	this.onWebviewInitialized
+			// );
 		}
+	}
+
+	onWebviewInitialized() {
+		const webview = this._webview!;
+
+		this._disposableWebview = Disposable.from(
+			this._webview!.onDidClose(this.onWebviewClosed, this),
+			this._webview!.onDidMessageReceive(
+				(...args) => this.onWebviewMessageReceived(webview, ...args),
+				this
+			),
+			Container.agent.onDidChangeConnectionStatus(
+				(...args) => this.onConnectionStatusChanged(webview, ...args),
+				this
+			),
+			Container.agent.onDidChangeData((...args) => this.onDataChanged(webview, ...args), this),
+			Container.agent.onDidChangeDocumentMarkers(
+				(...args) => this.onDocumentMarkersChanged(webview, ...args),
+				this
+			),
+			window.onDidChangeTextEditorSelection(
+				Functions.debounce<(e: TextEditorSelectionChangeEvent) => any>(
+					(...args) => this.onEditorSelectionChanged(webview, ...args),
+					250,
+					{
+						maxWait: 250
+					}
+				),
+				this
+			),
+			window.onDidChangeTextEditorVisibleRanges(
+				(...args) => this.onEditorVisibleRangesChanged(webview, ...args),
+				this
+			),
+			configuration.onDidChange((...args) => this.onConfigurationChanged(webview, ...args), this),
+
+			// Keep this at the end otherwise the above subscriptions can fire while disposing
+			this._webview!
+		);
 	}
 
 	@log({
@@ -558,7 +571,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private async onConnectionStatusChanged(
-		webview: CodeStreamWebviewPanel,
+		webview: WebviewLike,
 		e: DidChangeConnectionStatusNotification
 	) {
 		if (!webview.visible) return;
@@ -584,7 +597,7 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private onConfigurationChanged(webview: CodeStreamWebviewPanel, e: ConfigurationChangeEvent) {
+	private onConfigurationChanged(webview: WebviewLike, e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("traceLevel").value) ||
 			configuration.changed(e, configuration.name("showAvatars").value)
@@ -596,21 +609,15 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private onDataChanged(webview: CodeStreamWebviewPanel, e: DidChangeDataNotification) {
+	private onDataChanged(webview: WebviewLike, e: DidChangeDataNotification) {
 		webview.notify(DidChangeDataNotificationType, e);
 	}
 
-	private onDocumentMarkersChanged(
-		webview: CodeStreamWebviewPanel,
-		e: DidChangeDocumentMarkersNotification
-	) {
+	private onDocumentMarkersChanged(webview: WebviewLike, e: DidChangeDocumentMarkersNotification) {
 		webview.notify(DidChangeDocumentMarkersNotificationType, e);
 	}
 
-	private async onEditorSelectionChanged(
-		webview: CodeStreamWebviewPanel,
-		e: TextEditorSelectionChangeEvent
-	) {
+	private async onEditorSelectionChanged(webview: WebviewLike, e: TextEditorSelectionChangeEvent) {
 		if (e.textEditor !== this._lastEditor) return;
 
 		webview.notify(HostDidChangeEditorSelectionNotificationType, {
@@ -622,7 +629,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private onEditorVisibleRangesChanged(
-		webview: CodeStreamWebviewPanel,
+		webview: WebviewLike,
 		e: TextEditorVisibleRangesChangeEvent
 	) {
 		if (e.textEditor !== this._lastEditor) return;
@@ -645,7 +652,7 @@ export class WebviewController implements Disposable {
 		this.closeWebview("user");
 	}
 
-	private async onWebviewMessageReceived(webview: CodeStreamWebviewPanel, e: WebviewIpcMessage) {
+	private async onWebviewMessageReceived(webview: WebviewLike, e: WebviewIpcMessage) {
 		try {
 			Logger.log(`Webview: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
@@ -683,7 +690,7 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private onWebviewNotification(webview: CodeStreamWebviewPanel, e: WebviewIpcNotificationMessage) {
+	private onWebviewNotification(webview: WebviewLike, e: WebviewIpcNotificationMessage) {
 		switch (e.method) {
 			case WebviewDidInitializeNotificationType.method: {
 				// view is rendered and ready to receive messages
@@ -742,7 +749,7 @@ export class WebviewController implements Disposable {
 		});
 	}
 
-	private async onWebviewRequest(webview: CodeStreamWebviewPanel, e: WebviewIpcRequestMessage) {
+	private async onWebviewRequest(webview: WebviewLike, e: WebviewIpcRequestMessage) {
 		switch (e.method) {
 			case BootstrapInHostRequestType.method: {
 				Logger.log("WebviewPanel: Bootstrapping webview...", `SignedIn=${this.session.signedIn}`);
@@ -1034,7 +1041,9 @@ export class WebviewController implements Disposable {
 				} catch {}
 				this._disposableWebview = undefined;
 			}
-			this._webview = undefined;
+			if (this._webview && this._webview.type === "panel") {
+				this._webview = undefined;
+			}
 		}
 	}
 
@@ -1075,6 +1084,12 @@ export class WebviewController implements Disposable {
 	private getActiveEditorContext(): EditorContext {
 		let editorContext: EditorContext = {};
 		if (this._lastEditor !== undefined) {
+			let sidebarLocation: SidebarLocation = "left";
+			try {
+				sidebarLocation = workspace.getConfiguration("workbench.sideBar").get("location") || "left";
+			} catch (err) {
+				Logger.debug(`getActiveEditorContext sidebarLocation: ${err}`);
+			}
 			editorContext = {
 				activeFile: workspace.asRelativePath(this._lastEditor.document.uri),
 				metrics: Editor.getMetrics(this._lastEditor.document.uri),
@@ -1082,7 +1097,10 @@ export class WebviewController implements Disposable {
 				textEditorVisibleRanges: Editor.toSerializableRange(this._lastEditor.visibleRanges),
 				textEditorSelections: Editor.toEditorSelections(this._lastEditor.selections),
 				textEditorLineCount: this._lastEditor.document.lineCount,
-				visibleEditorCount: window.visibleTextEditors.length
+				visibleEditorCount: window.visibleTextEditors.length,
+				sidebar: {
+					location: sidebarLocation
+				}
 			};
 		}
 		return editorContext;
@@ -1164,7 +1182,12 @@ export class WebviewController implements Disposable {
 		this._webview.notify(HostDidChangeActiveEditorNotificationType, { editor: editor });
 	}
 
-	private updateState(hidden: boolean = false) {
+	private updateState(hidden: boolean | undefined = undefined) {
+		if (hidden === undefined && this._webview && this._webview.type === "sidebar") {
+			// default the sidebar to hidden
+			hidden = true;
+		}
+
 		try {
 			if (!this.session.signedIn) return;
 

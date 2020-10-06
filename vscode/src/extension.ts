@@ -11,6 +11,8 @@ import {
 	workspace
 } from "vscode";
 import { ScmTreeDataProvider } from "views/scmTreeDataProvider";
+import { CodeStreamWebviewSidebar } from "webviews/webviewSidebar";
+import { WebviewLike } from "webviews/webviewLike";
 import { GitExtension } from "./@types/git";
 import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, GlobalState, setContext } from "./common";
@@ -65,25 +67,41 @@ export async function activate(context: ExtensionContext) {
 		cfg = configuration.get<Config>();
 	}
 
-	await Container.initialize(context, cfg, {
-		extension: {
-			build: info.buildNumber,
-			buildEnv: info.assetEnvironment,
-			version: extensionVersion,
-			versionFormatted: formattedVersion
+	let webviewLikeSidebar: (WebviewLike & CodeStreamWebviewSidebar) | undefined = undefined;
+	// this plumping lives here rather than the WebviewController as it needs to get activated here
+	webviewLikeSidebar = new CodeStreamWebviewSidebar(Container.session, context.extensionUri);
+	context.subscriptions.push(
+		window.registerWebviewViewProvider(CodeStreamWebviewSidebar.viewType, webviewLikeSidebar, {
+			webviewOptions: {
+				retainContextWhenHidden: true
+			}
+		})
+	);
+
+	await Container.initialize(
+		context,
+		cfg,
+		{
+			extension: {
+				build: info.buildNumber,
+				buildEnv: info.assetEnvironment,
+				version: extensionVersion,
+				versionFormatted: formattedVersion
+			},
+			gitPath: git,
+			ide: {
+				name: "VS Code",
+				version: vscodeVersion,
+				// Visual Studio Code or Visual Studio Code - Insiders
+				detail: edition
+			},
+			isDebugging: Logger.isDebugging,
+			serverUrl: cfg.serverUrl,
+			disableStrictSSL: cfg.disableStrictSSL,
+			traceLevel: Logger.level
 		},
-		gitPath: git,
-		ide: {
-			name: "VS Code",
-			version: vscodeVersion,
-			// Visual Studio Code or Visual Studio Code - Insiders
-			detail: edition
-		},
-		isDebugging: Logger.isDebugging,
-		serverUrl: cfg.serverUrl,
-		disableStrictSSL: cfg.disableStrictSSL,
-		traceLevel: Logger.level
-	});
+		webviewLikeSidebar
+	);
 
 	const scmTreeDataProvider = new ScmTreeDataProvider();
 	window.registerTreeDataProvider("scmTreeDataProvider", scmTreeDataProvider);
@@ -94,7 +112,7 @@ export async function activate(context: ExtensionContext) {
 	context.subscriptions.push(new ProtocolHandler());
 
 	const previousVersion = context.globalState.get<string>(GlobalState.Version);
-	showStartupUpgradeMessage(context, extensionVersion, previousVersion);
+	showStartupUpgradeMessage(extensionVersion, previousVersion);
 	if (previousVersion === undefined) {
 		// show CS on initial install
 		await Container.webview.show();
@@ -141,11 +159,7 @@ export async function gitPath(): Promise<string> {
 // Add any versions here that we want to skip for blog posts
 const skipVersions = [Versions.from(1, 2)];
 
-async function showStartupUpgradeMessage(
-	context: ExtensionContext,
-	version: string,
-	previousVersion: string | undefined
-) {
+async function showStartupUpgradeMessage(version: string, previousVersion: string | undefined) {
 	// if this is the first install, there is no previous message... don't show
 	if (!previousVersion) return;
 

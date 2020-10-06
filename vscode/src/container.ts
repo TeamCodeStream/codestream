@@ -1,6 +1,7 @@
 "use strict";
 import { ReviewDiffContentProvider } from "providers/diffContentProvider";
 import { ExtensionContext } from "vscode";
+import { WebviewLike } from "webviews/webviewLike";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
@@ -15,14 +16,15 @@ import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
-import { SetServerUrlRequestType} from "./protocols/agent/agent.protocol";
+import { SetServerUrlRequestType } from "./protocols/agent/agent.protocol";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
 	static async initialize(
 		context: ExtensionContext,
 		config: Config,
-		agentOptions: BaseAgentOptions
+		agentOptions: BaseAgentOptions,
+		webviewLike?: WebviewLike
 	) {
 		this._context = context;
 		this._config = config;
@@ -46,11 +48,8 @@ export class Container {
 		context.subscriptions.push((this._selectionDecoration = new SelectionDecorationProvider()));
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
-		context.subscriptions.push((this._webview = new WebviewController(this._session)));
-		// context.subscriptions.push(new WebviewSidebarActivator());
-
+		context.subscriptions.push((this._webview = new WebviewController(this._session, webviewLike)));
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
-
 		await this._agent.start();
 	}
 
