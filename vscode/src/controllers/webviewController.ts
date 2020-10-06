@@ -423,10 +423,7 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	async openPullRequest(
-		providerId: string,
-		pullRequestId: string
-	): Promise<void> {
+	async openPullRequest(providerId: string, pullRequestId: string): Promise<void> {
 		if (!this._webview) {
 			// it's possible that the webview is closing...
 			return;

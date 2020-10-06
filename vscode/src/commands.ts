@@ -166,13 +166,13 @@ export class Commands implements Disposable {
 
 		// Try to designate the diff view in the column to the left the webview
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
+		// let column = Container.webview.viewColumn as number | undefined;
+		// if (column !== undefined) {
+		// 	column--;
+		// 	if (column <= 0) {
+		// 		column = undefined;
+		// 	}
+		// }
 
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
@@ -182,7 +182,7 @@ export class Commands implements Disposable {
 			{
 				preserveFocus: false,
 				preview: true,
-				viewColumn: column || ViewColumn.Beside
+				viewColumn: ViewColumn.Active
 			}
 		);
 
@@ -607,48 +607,50 @@ export class Commands implements Disposable {
 		}
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
+		// let column = Container.webview.viewColumn as number | undefined;
+		// if (column !== undefined) {
+		// 	column--;
+		// 	if (column <= 0) {
+		// 		column = undefined;
+		// 	}
+		// }
 
 		const document = await workspace.openTextDocument();
 		return window.showTextDocument(document, {
 			preserveFocus: false,
 			preview: false,
-			viewColumn: column || ViewColumn.Beside
+			viewColumn: ViewColumn.Active
 		});
 	}
 
 	private async getViewColumn(): Promise<number> {
-		// <HACK>>
-		// sometimes the webview misrepresents what
-		// its viewColumn value is (it returns a number high than it should)
-		// try to force an editor to be active so we can get a valid
-		// webview.viewColumn later
-		try {
-			const editor = window.activeTextEditor;
-			if (editor === undefined) {
-				void (await commands.executeCommand(BuiltInCommands.NextEditor));
-				await Container.webview.show();
-			}
-		} catch {}
-		// </HACK>
+		return ViewColumn.Active;
 
-		// FYI, see showMarkerDiff() above
-		// Try to designate the diff view in the column to the left the webview
-		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		let column = Container.webview.viewColumn as number | undefined;
+		// // <HACK>>
+		// // sometimes the webview misrepresents what
+		// // its viewColumn value is (it returns a number high than it should)
+		// // try to force an editor to be active so we can get a valid
+		// // webview.viewColumn later
+		// try {
+		// 	const editor = window.activeTextEditor;
+		// 	if (editor === undefined) {
+		// 		void (await commands.executeCommand(BuiltInCommands.NextEditor));
+		// 		await Container.webview.show();
+		// 	}
+		// } catch {}
+		// // </HACK>
 
-		if (column !== undefined) {
-			column--;
-			if (column <= 0) {
-				column = undefined;
-			}
-		}
-		return column || ViewColumn.Beside;
+		// // FYI, see showMarkerDiff() above
+		// // Try to designate the diff view in the column to the left the webview
+		// // FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
+		// let column = Container.webview.viewColumn as number | undefined;
+
+		// if (column !== undefined) {
+		// 	column--;
+		// 	if (column <= 0) {
+		// 		column = undefined;
+		// 	}
+		// }
+		// return column || ViewColumn.Active;
 	}
 }
