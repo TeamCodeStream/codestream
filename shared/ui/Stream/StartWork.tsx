@@ -751,7 +751,7 @@ export const StartWork = (props: Props) => {
 			{card && (
 				<Modal translucent onClose={cancel}>
 					<Dialog className="codemark-form-container">
-						<form className="codemark-form standard-form vscroll">
+						<div className="codemark-form standard-form vscroll">
 							<fieldset className="form-body" style={{ padding: "0px" }}>
 								<div id="controls">
 									<StatusInput>
@@ -800,6 +800,10 @@ export const StartWork = (props: Props) => {
 													type="text"
 													onChange={e => handleChangeStatus(e.target.value)}
 													placeholder="Enter Description"
+													onKeyDown={e => {
+														if (e.key == "Escape") cancel();
+														if (e.key == "Enter") save();
+													}}
 												/>
 											</>
 										)}
@@ -912,7 +916,7 @@ export const StartWork = (props: Props) => {
 									</ButtonRow>
 								</div>
 							</fieldset>
-						</form>
+						</div>
 					</Dialog>
 				</Modal>
 			)}
