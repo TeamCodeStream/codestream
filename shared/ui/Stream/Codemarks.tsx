@@ -10,8 +10,7 @@ import {
 	GetFileScmInfoResponse,
 	GetFileScmInfoRequestType,
 	MarkerNotLocated,
-	CodemarkPlus,
-	MarkerNotLocatedReason
+	CodemarkPlus
 } from "@codestream/protocols/agent";
 import { Range } from "vscode-languageserver-types";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
@@ -450,13 +449,15 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 	};
 
 	render() {
-		const { fileNameToFilterFor = "", codemarkDomain, codemarkSortType, count } = this.props;
+		const { fileNameToFilterFor = "", codemarkDomain, textEditorUri, count } = this.props;
 		const {
 			showHiddenField,
 			showPRCommentsField,
 			codemarkSortTypeField,
 			wrapCommentsField
 		} = this.state;
+
+		const file = uriToFilePath(textEditorUri || "");
 
 		const domainIcon =
 			codemarkDomain === CodemarkDomainType.File
@@ -468,7 +469,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: "team";
 		const subtitle =
 			codemarkDomain === CodemarkDomainType.File
-				? fs.pathBasename(fileNameToFilterFor) || "[no file]"
+				? fs.pathBasename(file) || "[no file]"
 				: codemarkDomain === CodemarkDomainType.Directory
 				? fs.pathDirname(fileNameToFilterFor) || "[no file]"
 				: codemarkDomain === CodemarkDomainType.Repo
@@ -478,7 +479,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		const domainItems = [
 			{
 				label: "Current File",
-				subtle: fs.pathBasename(fileNameToFilterFor),
+				subtle: fs.pathBasename(file),
 				key: "file",
 				icon: <Icon name="file" />,
 				action: () => this.switchDomain(CodemarkDomainType.File),
@@ -679,7 +680,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 const EMPTY_ARRAY = [];
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
-	const { context, repos, editorContext, documentMarkers, preferences, teams, codemarks } = state;
+	const { context, repos, editorContext, documentMarkers, preferences, teams } = state;
 
 	const teamName = teams[context.currentTeamId].name;
 	const docMarkers = documentMarkers[editorContext.textEditorUri || ""] || EMPTY_ARRAY;
