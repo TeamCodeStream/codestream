@@ -1784,6 +1784,39 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return true;
 	}
 
+	async createPullRequestInlineComment(request: {
+		pullRequestId: string;
+		text: string;
+		rightSha: string;
+		filePath: string;
+		startLine: number;
+	}) {
+		const result = await this.createCommitComment({
+			pullRequestId: request.pullRequestId,
+			sha: request.rightSha,
+			text: request.text || "",
+			path: request.filePath,
+			startLine: request.startLine
+		});
+
+		return result;
+	}
+
+	async createPullRequestInlineReviewComment(request: {
+		pullRequestId: string;
+		text: string;
+		filePath: string;
+		startLine: number;
+	}) {
+		const result = await this.createPullRequestReviewComment({
+			pullRequestId: request.pullRequestId,
+			text: request.text || "",
+			filePath: request.filePath,
+			position: request.startLine
+		});
+		return result;
+	}
+
 	async deletePullRequestComment(request: {
 		id: string;
 		type: "ISSUE_COMMENT" | "REVIEW_COMMENT";

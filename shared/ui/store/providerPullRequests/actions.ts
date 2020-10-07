@@ -343,6 +343,8 @@ export const api = <T = any, R = any>(
 		| "createPullRequestCommentAndClose"
 		| "createPullRequestCommentAndReopen"
 		| "deletePullRequestComment"
+		| "createPullRequestInlineComment"
+		| "createPullRequestInlineReviewComment"
 		| "deletePullRequestReview"
 		| "getIssues"
 		| "getLabels"

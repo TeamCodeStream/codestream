@@ -115,7 +115,7 @@ interface Props extends CompareFilesProps {
 }
 
 export const PullRequestFilesChangedList = (props: Props) => {
-	const { filesChanged, isLoading, pr } = props;
+	const { filesChanged, fetch, isLoading, pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -353,6 +353,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 								{!hidden && (
 									<PullRequestPatch
 										comment
+										fetch={fetch}
 										pr={pr}
 										patch={_.patch}
 										hunks={_.hunks}

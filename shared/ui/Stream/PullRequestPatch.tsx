@@ -106,13 +106,14 @@ export interface Hunk {
 export const PullRequestPatch = (props: {
 	patch?: string;
 	hunks?: Hunk[];
+	fetch?: Function;
 	filename: string;
 	className?: string;
 	noHeader?: boolean;
 	comment?: boolean;
 	pr?: FetchThirdPartyPullRequestPullRequest;
 }) => {
-	const { patch, filename, hunks } = props;
+	const { fetch, patch, filename, hunks } = props;
 
 	const [commentOpen, setCommentOpen] = React.useState<boolean[]>([]);
 
@@ -169,8 +170,9 @@ export const PullRequestPatch = (props: {
 								<PRInlineComment>
 									<PullRequestInlineComment
 										pr={props.pr}
+										filename={filename}
 										lineOffsetInHunk={index}
-										fetch={() => {}}
+										fetch={fetch!}
 										setIsLoadingMessage={() => {}}
 										__onDidRender={() => {}}
 										onClose={() => closeComment(index)}

@@ -1,21 +1,20 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "../store";
-import Icon from "./Icon";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import { PRHeadshot } from "../src/components/Headshot";
 import MessageInput from "./MessageInput";
-import { CSMe } from "@codestream/protocols/api";
 import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api, removeFromMyPullRequests } from "../store/providerPullRequests/actions";
+import { CSMe } from "@codestream/protocols/api";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
+	filename: string;
 	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
 	fetch: Function;
@@ -26,7 +25,7 @@ interface Props {
 
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, fetch, setIsLoadingMessage } = props;
+	const { pr, filename, fetch, lineOffsetInHunk, setIsLoadingMessage } = props;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return {
@@ -52,28 +51,39 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		setIsLoadingMessage("Adding Comment...");
 		setIsLoadingSingleComment(true);
 		trackComment("Inline Single Comment");
-		// await api("createPullRequestCommentAndClose", {
-		// 	text: text
-		// });
+		await dispatch(
+			api("createPullRequestInlineComment", {
+				filePath: filename,
+				// uses real line numbers instead of index
+				startLine: lineOffsetInHunk + 1,
+				text: text,
+				rightSha: pr.headRefOid
+			})
+		);
 		setText("");
-		fetch().then(() => {
-			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-			setIsLoadingSingleComment(false);
-		});
+
+		fetch();
+		setIsLoadingSingleComment(false);
+		props.onClose();
 	};
 
 	const startReview = async e => {
 		setIsLoadingMessage("Starting Review...");
 		setIsLoadingStartReview(true);
 		trackComment("Inline Start Review");
-		// await api("createPullRequestCommentAndClose", {
-		// 	text: text
-		// });
+
+		await dispatch(
+			api("createPullRequestInlineReviewComment", {
+				filePath: filename,
+				startLine: lineOffsetInHunk,
+				text: text
+			})
+		);
 		setText("");
-		fetch().then(() => {
-			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-			setIsLoadingStartReview(false);
-		});
+
+		fetch();
+		setIsLoadingStartReview(false);
+		props.onClose();
 	};
 
 	const map = {
@@ -126,7 +136,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 								<Button
 									isLoading={isLoadingSingleComment}
 									onClick={addSingleComment}
-									disabled={!text}
+									disabled={(pr && pr.pendingReview != null) || !text}
 								>
 									Add single comment
 								</Button>
@@ -143,7 +153,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 									delay={1}
 								>
 									<Button isLoading={isLoadingStartReview} onClick={startReview} disabled={!text}>
-										Start a review
+										{pr.pendingReview ? "Add to review" : "Start a review"}
 									</Button>
 								</Tooltip>
 							</div>
