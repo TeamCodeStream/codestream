@@ -329,7 +329,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	return (
 		<Root className={dragging ? "" : "animate-height"}>
 			<CreateCodemarkIcons />
-			<ExtensionTitle>CodeStream</ExtensionTitle>
+			{/*<ExtensionTitle>CodeStream</ExtensionTitle>*/}
 			<Panels>
 				{panes.map((pane, index) => {
 					const position = dragPositions[index];
