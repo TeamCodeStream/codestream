@@ -39,7 +39,7 @@ export class Configuration {
 
 	private _onDidChangeAny = new EventEmitter<ConfigurationChangeEvent>();
 	get onDidChangeAny(): Event<ConfigurationChangeEvent> {
-		return this._onDidChange.event;
+		return this._onDidChangeAny.event;
 	}
 
 	private _onWillChange = new EventEmitter<ConfigurationWillChangeEvent>();

@@ -3,6 +3,7 @@ import { Range } from "vscode-languageserver-types";
 import {
 	EditorMetrics,
 	EditorSelection,
+	EditorSidebarLocation,
 	IpcRoutes,
 	WebviewConfigs
 } from "./webview.protocol.common";
@@ -26,6 +27,14 @@ export const HostDidChangeActiveEditorNotificationType = new NotificationType<
 	HostDidChangeActiveEditorNotification,
 	void
 >(`${IpcRoutes.Webview}/editor/didChangeActive`);
+
+export interface HostDidChangeLayoutNotification {
+	sidebar?: EditorSidebarLocation;
+}
+export const HostDidChangeLayoutNotificationType = new NotificationType<
+	HostDidChangeLayoutNotification,
+	void
+>(`${IpcRoutes.Webview}/editor/didChangeLayout`);
 
 export interface HostDidChangeVisibleEditorsNotification {
 	count: number;

@@ -1,6 +1,6 @@
 "use strict";
 import { ReviewDiffContentProvider } from "providers/diffContentProvider";
-import { ExtensionContext } from "vscode";
+import { ExtensionContext, workspace } from "vscode";
 import { WebviewLike } from "webviews/webviewLike";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
@@ -33,6 +33,12 @@ export class Container {
 		this._versionBuild = agentOptions.extension.build;
 		this._versionFormatted = agentOptions.extension.versionFormatted;
 		this._agent = new CodeStreamAgentConnection(context, agentOptions);
+		// populate the initial values for the config items we care about.
+		Container.interestedConfigurationItems.forEach(element => {
+			try {
+				element.value = element.getValue() as any;
+			} catch {}
+		});
 
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
@@ -50,8 +56,18 @@ export class Container {
 
 		context.subscriptions.push((this._webview = new WebviewController(this._session, webviewLike)));
 		context.subscriptions.push(configuration.onWillChange(this.onConfigurationChanging, this));
+		context.subscriptions.push(configuration.onDidChangeAny(this.onConfigurationChangeAny, this));
+
 		await this._agent.start();
 	}
+
+	// these are config items that we want to know about (if they change)
+	static interestedConfigurationItems = [
+		{
+			getValue: () => workspace.getConfiguration("workbench.sideBar").get("location") || "left",
+			value: ""
+		}
+	];
 
 	static setServerUrl(serverUrl: string, disableStrictSSL: boolean) {
 		this._session.setServerUrl(serverUrl);
@@ -63,6 +79,25 @@ export class Container {
 
 		if (configuration.changed(e.change, configuration.name("traceLevel").value)) {
 			Logger.level = configuration.get<TraceLevel>(configuration.name("traceLevel").value);
+		}
+	}
+
+	private static onConfigurationChangeAny() {
+		let requiresUpdate = false;
+		for (const item of Container.interestedConfigurationItems) {
+			const currentValue = item.value;
+
+			let newValue;
+			try {
+				newValue = item.getValue();
+			} catch {}
+			if (!requiresUpdate) {
+				requiresUpdate = currentValue !== newValue;
+			}
+			item.value = newValue as any;
+		}
+		if (requiresUpdate) {
+			void this.webview.layoutChanged();
 		}
 	}
 

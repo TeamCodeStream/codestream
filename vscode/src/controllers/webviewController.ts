@@ -1,5 +1,4 @@
 "use strict";
-import * as fs from "fs";
 import {
 	ApiVersionCompatibility,
 	BootstrapResponse,
@@ -77,7 +76,8 @@ import {
 	NewPullRequestNotificationType,
 	ShowPullRequestNotificationType,
 	WebviewPanels,
-	SidebarLocation
+	SidebarLocation,
+	HostDidChangeLayoutNotificationType
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -433,6 +433,21 @@ export class WebviewController implements Disposable {
 		this._webview!.notify(ShowPullRequestNotificationType, {
 			providerId,
 			id: pullRequestId
+		});
+	}
+
+	@log()
+	async layoutChanged(): Promise<void> {
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
+		}
+
+		// TODO: Change this to be a request vs a notification
+		this._webview!.notify(HostDidChangeLayoutNotificationType, {
+			sidebar: {
+				location: this.tryGetSidebarLocation()
+			}
 		});
 	}
 
@@ -1078,15 +1093,20 @@ export class WebviewController implements Disposable {
 		};
 	}
 
-	private getActiveEditorContext(): EditorContext {
+	tryGetSidebarLocation(): SidebarLocation {
+		let sidebarLocation: SidebarLocation;
+		try {
+			sidebarLocation = workspace.getConfiguration("workbench.sideBar").get("location") || "left";
+		} catch (err) {
+			Logger.debug(`sidebarLocation: ${err}`);
+			sidebarLocation = "left";
+		}
+		return sidebarLocation as SidebarLocation;
+	}
+
+	getActiveEditorContext(): EditorContext {
 		let editorContext: EditorContext = {};
 		if (this._lastEditor !== undefined) {
-			let sidebarLocation: SidebarLocation = "left";
-			try {
-				sidebarLocation = workspace.getConfiguration("workbench.sideBar").get("location") || "left";
-			} catch (err) {
-				Logger.debug(`getActiveEditorContext sidebarLocation: ${err}`);
-			}
 			editorContext = {
 				activeFile: workspace.asRelativePath(this._lastEditor.document.uri),
 				metrics: Editor.getMetrics(this._lastEditor.document.uri),
@@ -1096,32 +1116,11 @@ export class WebviewController implements Disposable {
 				textEditorLineCount: this._lastEditor.document.lineCount,
 				visibleEditorCount: window.visibleTextEditors.length,
 				sidebar: {
-					location: sidebarLocation
+					location: this.tryGetSidebarLocation()
 				}
 			};
 		}
 		return editorContext;
-	}
-
-	private _html: string | undefined;
-	private async getHtml(): Promise<string> {
-		// NOTE: if you use workspace.openTextDocument, it will put the webview.html into
-		// the lsp document cache, use fs.readFile instead
-
-		if (!Logger.isDebugging && this._html) {
-			return this._html;
-		}
-		this._html = await new Promise<string>((resolve, reject) => {
-			fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(data);
-				}
-			});
-		});
-
-		return this._html;
 	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {

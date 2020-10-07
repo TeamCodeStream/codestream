@@ -4,9 +4,10 @@ import * as actions from "./actions";
 import { ActionType } from "../common";
 import { createSelector } from "reselect";
 import { range } from "@codestream/webview/utils";
-import { EditorMetrics, EditorScrollMode } from "@codestream/protocols/webview";
+import { EditorContext, EditorMetrics, EditorScrollMode } from "@codestream/protocols/webview";
 import { GetFileScmInfoResponse, GetRangeScmInfoResponse } from "@codestream/protocols/agent";
 import { CodeStreamState } from "..";
+import { IdeState } from "../ide/types";
 
 type EditorContextActions = ActionType<typeof actions>;
 
@@ -26,6 +27,10 @@ const initialState: EditorContextState = {
 
 export function reduceEditorContext(state = initialState, action: EditorContextActions) {
 	switch (action.type) {
+		case EditorContextActionsType.SetEditorLayout: {
+			return { ...state, ...action.payload };
+		}
+
 		case EditorContextActionsType.SetEditorContext: {
 			const { metrics }: { metrics?: EditorMetrics } = action.payload;
 			if (metrics != null) {
@@ -163,3 +168,17 @@ export const mapFileScmErrorForTelemetry = (error: string) => {
 	if (error === ScmError.NoRemotes) return "NoRemotes";
 	return "Unknown";
 };
+
+export const getSidebarLocation = createSelector(
+	(state: CodeStreamState) => state.editorContext,
+	(state: CodeStreamState) => state.ide,
+	(editorContext: EditorContext, ideState: IdeState) => {
+		let position = editorContext.sidebar && editorContext.sidebar.location;
+		if (!position) {
+			if (ideState.name === "VSC") position = "left";
+			else position = "right";
+		}
+
+		return position;
+	}
+);

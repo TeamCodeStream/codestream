@@ -1,6 +1,7 @@
 "use strict";
 import * as fs from "fs";
 import {
+	HostDidChangeFocusNotificationType,
 	isIpcResponseMessage,
 	ShowStreamNotificationType,
 	WebviewIpcMessage,
@@ -19,7 +20,9 @@ import {
 	ViewColumn,
 	WebviewView,
 	WebviewViewProvider,
-	WebviewViewResolveContext
+	WebviewViewResolveContext,
+	window,
+	WindowState
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-jsonrpc";
 
@@ -91,7 +94,10 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 
 		webviewView.webview.html = await this.getHtml();
 
-		this._disposable = Disposable.from(webviewView.onDidDispose(this.onWebviewDisposed, this));
+		this._disposable = Disposable.from(
+			webviewView.onDidDispose(this.onWebviewDisposed, this),
+			window.onDidChangeWindowState(this.onWindowStateChanged, this)
+		);
 
 		Container.webview.onWebviewInitialized();
 		await this.triggerIpc();
@@ -154,11 +160,11 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	// 	}
 	// }
 
-	// private onWindowStateChanged(e: WindowState) {
-	// 	if (this._panelState.visible) {
-	// 		this.notify(HostDidChangeFocusNotificationType, { focused: e.focused });
-	// 	}
-	// }
+	private onWindowStateChanged(e: WindowState) {
+		if (this.visible) {
+			this.notify(HostDidChangeFocusNotificationType, { focused: e.focused });
+		}
+	}
 
 	get viewColumn(): ViewColumn | undefined {
 		return undefined; // this._view._panel.viewColumn;

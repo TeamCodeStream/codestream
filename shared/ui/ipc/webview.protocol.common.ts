@@ -1,6 +1,5 @@
 import { GetFileScmInfoResponse } from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
-import { EditorSelection } from "./webview.protocol";
 
 export const MaxRangeValue = 2147483647;
 
@@ -22,6 +21,12 @@ export interface EditorMetrics {
 	margins?: EditorMargins;
 	scrollMode?: EditorScrollMode;
 	scrollRatio?: number;
+}
+
+export type SidebarLocation = "left" | "right" | "top" | "bottom" | "floating";
+
+export interface EditorSidebarLocation {
+	location?: SidebarLocation;
 }
 
 export interface EditorSelection extends Range {
@@ -125,7 +130,6 @@ export interface SessionState {
 	inMaintenanceMode?: boolean;
 }
 
-export type SidebarLocation = "left" | "right" | "top" | "bottom" | "floating";
 export interface EditorContext {
 	scmInfo?: GetFileScmInfoResponse;
 	activeFile?: string;
@@ -136,6 +140,12 @@ export interface EditorContext {
 	metrics?: EditorMetrics;
 	textEditorLineCount?: number;
 	visibleEditorCount?: number; // only populated (and used) by vscode
+	sidebar?: {
+		location?: SidebarLocation;
+	};
+}
+
+export interface EditorLayout {
 	sidebar?: {
 		location?: SidebarLocation;
 	};

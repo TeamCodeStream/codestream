@@ -20,7 +20,8 @@ import {
 	WebviewDidInitializeNotificationType,
 	WebviewPanels,
 	HostDidChangeVisibleEditorsNotificationType,
-	ShowPullRequestNotificationType
+	ShowPullRequestNotificationType,
+	HostDidChangeLayoutNotificationType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -60,7 +61,7 @@ import { updatePreferences } from "./store/preferences/actions";
 import { updateDocument, removeDocument, resetDocuments } from "./store/documents/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { updateConfigs } from "./store/configs/actions";
-import { setEditorContext } from "./store/editorContext/actions";
+import { setEditorContext, setEditorLayout } from "./store/editorContext/actions";
 import {
 	blur,
 	focus,
@@ -219,6 +220,10 @@ function listenForEvents(store) {
 			};
 		}
 		store.dispatch(setEditorContext(context));
+	});
+
+	api.on(HostDidChangeLayoutNotificationType, async params => {
+		store.dispatch(setEditorLayout(params));
 	});
 
 	api.on(HostDidChangeVisibleEditorsNotificationType, async params => {

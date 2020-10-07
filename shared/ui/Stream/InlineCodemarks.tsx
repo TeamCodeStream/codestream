@@ -579,7 +579,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 								CodeStream requires files to be tracked by Git so that codemarks can be linked to
 								the code.
 							</p>
-							<p>{uriToFilePath(textEditorUri)}</p>
+							<p>{textEditorUri ? uriToFilePath(textEditorUri) : undefined}</p>
 						</div>
 					</div>
 				);
