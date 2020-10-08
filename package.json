@@ -16,8 +16,5 @@
   "bugs": {
     "url": "https://github.com/TeamCodeStream/codestream/issues"
   },
-  "homepage": "https://github.com/TeamCodeStream/codestream#readme",
-  "devDependencies": {
-    "@types/vscode": "^1.48.0"
-  }
+  "homepage": "https://github.com/TeamCodeStream/codestream#readme"
 }
