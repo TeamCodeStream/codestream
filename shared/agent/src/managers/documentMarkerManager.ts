@@ -297,20 +297,50 @@ export class DocumentMarkerManager {
 				}
 
 				let startLine = 1;
+				let gotoLine = 1;
 				if (comment.diffHunk) {
 					// this data looks like this => `@@ -234,3 +234,20 @@`
 					const match = comment.diffHunk.match("@@ (.+) (.+) @@");
 					if (match && match.length >= 2) {
 						try {
+							/* // "vscode:prepublish" is actually line 72
+
+							'@@ -72,15 +72,15 @@\n
+								"vscode:prepublish": "npm run build"\n
+								},\n
+								"devDependencies": {\n
+							-    "@types/glob": "7.1.1",\n
+							+    "@types/glob": "7.1.3",\n
+								"@types/mocha": "7.0.2",\n
+								"@types/natural-compare-lite": "1.4.0",\n
+								"@types/node": "14.0.1",\n
+								"@types/vscode": "1.31.0",\n
+								"glob": "7.1.6",\n
+								"mocha": "7.1.2",\n
+							-    "typescript": "3.9.2",\n
+							-    "vscode-test": "1.3.0"\n
+							+    "typescript": "4.0.3",\n
+							+    "vscode-test": "1.4.0"\n   },\n
+								"dependencies": {\n
+								"natural-compare-lite": "1.4.0"';
+							*/
+
 							// the @@ line is actually not the first line... so subtract 1
 							startLine = parseInt(match[2].split(",")[0].replace("+", ""), 10) - 1;
+							gotoLine = startLine;
+							const hunkLines = comment.diffHunk.split("\n");
+							for (let i = 0; i < hunkLines.length; i++) {
+								// don't increment for line removals aka, lines that start with -
+								if (hunkLines[i][0] === "-") continue;
+								if (i === comment.position) break;
+
+								gotoLine += 1;
+							}
 						} catch {}
 					}
 				} else {
 					return;
 				}
-
-				const gotoLine = startLine + comment.position;
 
 				const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 				documentMarkers.push({
