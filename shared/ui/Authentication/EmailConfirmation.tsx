@@ -110,7 +110,9 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 			<form className="standard-form" onSubmit={onSubmit}>
 				<fieldset className="form-body">
 					<div className="border-bottom-box">
-						<h3>Check Your Email</h3>
+						<h3>
+							<FormattedMessage id="confirmation.checkEmail" defaultMessage="Check Your Email" />
+						</h3>
 						<FormattedMessage id="confirmation.instructions" tagName="p" />
 						<FormattedMessage id="confirmation.didNotReceive">
 							{text => (
