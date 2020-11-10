@@ -3505,9 +3505,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		// TODO: Need to page if there are more than 100 review threads
 		try {
-			const query = `query pr($owner:String!, $repo:String!) {
-				repository(name: $repo, owner: $owner${cursor ? `, after: $cursor` : ""}) {
-					pullRequests(states: [OPEN, MERGED], first: 100, orderBy: { field: UPDATED_AT, direction: DESC }) {
+			const query = `query pr($owner:String!, $repo:String!${cursor ? `, $cursor:String` : ""}) {
+				repository(name: $repo, owner: $owner) {
+					pullRequests(states: [OPEN, MERGED], first: 100, orderBy: { field: UPDATED_AT, direction: DESC }${
+						cursor ? `, after: $cursor` : ""
+					}) {
 						totalCount
 						pageInfo {
 							startCursor
