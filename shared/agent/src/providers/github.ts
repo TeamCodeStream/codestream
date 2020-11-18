@@ -708,11 +708,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			const repoInfo = await this.getRepoInfo({ remote: request.remote });
-			if (repoInfo && repoInfo.error) {
-				return {
-					error: repoInfo.error
-				};
+			let repositoryId = "";
+			if (request.providerRepositoryId) {
+				repositoryId = request.providerRepositoryId;
+			} else {
+				const repoInfo = await this.getRepoInfo({ remote: request.remote });
+				if (repoInfo && repoInfo.id) {
+					repositoryId = repoInfo.id;
+				} else {
+					return {
+						error: repoInfo.error
+					};
+				}
 			}
 
 			const createPullRequestResponse = await this.mutate<GitHubCreatePullRequestResponse>(
@@ -728,7 +735,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				  }`,
 				{
-					repositoryId: repoInfo!.id,
+					repositoryId: repositoryId,
 					baseRefName: request.baseRefName,
 					title: request.title,
 					headRefName: request.headRefName,
@@ -818,7 +825,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
-	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
+	async getForkedRepos(
+		request: { remote: string },
+		recurseFailsafe?: boolean
+	): Promise<ProviderGetForkedReposResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
@@ -834,6 +844,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				   		id
 						name
 						nameWithOwner
+						parent {
+							id
+							nameWithOwner
+						}
 						defaultBranchRef {
 							name
 						}
@@ -859,6 +873,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								id
 								name
 								nameWithOwner
+								owner {
+									login
+								}
 								defaultBranchRef {
 									name
 								}
@@ -883,6 +900,20 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					name: name
 				}
 			);
+
+			// if this is a fork, get the forks of the parent
+			if (response.repository.parent && !recurseFailsafe) {
+				Logger.log("Getting parent forked repos");
+				const result = await this.getForkedRepos(
+					{ remote: "https://example.com/" + response.repository.parent.nameWithOwner },
+					true
+				);
+				return {
+					parent: result.parent,
+					forks: result.forks
+				};
+			}
+
 			const forks = response.repository.forks.nodes.sort((a: any, b: any) => {
 				if (b.nameWithOwner < a.nameWithOwner) return 1;
 				if (a.nameWithOwner < b.nameWithOwner) return -1;

@@ -145,9 +145,9 @@ export const CreatePullRequestPanel = props => {
 			reviewId: context.createPullRequestReviewId,
 			isConnectedToGitHub: isConnected(state, { name: "github" }),
 			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
+			isConnectedToBitbucket: isConnected(state, { name: "bitbucket" }),
 			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
 			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
-			isConnectedToBitbucket: isConnected(state, { name: "bitbucket" }),
 			isConnectedToBitbucketServer: isConnected(state, { name: "bitbucket_server" }),
 			prLabel: getPRLabel(state),
 			currentRepo: context.currentRepo
@@ -410,6 +410,10 @@ export const CreatePullRequestPanel = props => {
 		setSubmitting(true);
 		setFormState({ message: "", type: "", url: "", id: "" });
 		setPreconditionError({ message: "", type: "", url: "", id: "" });
+		const headRefName = acrossForks
+			? `${headForkedRepo.owner.login}:${reviewBranch}`
+			: reviewBranch;
+		const providerRepositoryId = acrossForks ? baseForkedRepo.id : undefined;
 		try {
 			const result = await HostApi.instance.send(CreatePullRequestRequestType, {
 				reviewId: derivedState.reviewId!,
@@ -418,7 +422,8 @@ export const CreatePullRequestPanel = props => {
 				title: prTitle,
 				description: prText,
 				baseRefName: prBranch,
-				headRefName: reviewBranch,
+				headRefName: headRefName,
+				providerRepositoryId: providerRepositoryId,
 				remote: prRemoteUrl,
 				remoteName: prUpstreamOn && prUpstream ? prUpstream : undefined,
 				addresses: addressesStatus
@@ -542,7 +547,8 @@ export const CreatePullRequestPanel = props => {
 				} else {
 					setFormState({ type: "", message: "", url: "", id: "" });
 				}
-				fetchFilesChanged(result.repoId!, localPrBranch, localReviewBranch);
+				// is there a way to fetch diffs across forks w/provider APIs?
+				if (!acrossForks) fetchFilesChanged(result.repoId!, localPrBranch, localReviewBranch);
 				setLoadingBranchInfo(false);
 			})
 			.catch(error => {
@@ -647,7 +653,10 @@ export const CreatePullRequestPanel = props => {
 				label: _.name,
 				searchLabel: _.name,
 				key: _.name,
-				action: () => setPrBranch(_.name)
+				action: () => {
+					setPrBranch(_.name);
+					checkPullRequestBranchPreconditions(_.name, reviewBranch);
+				}
 			};
 		});
 		if (items.length === 0) return null;
@@ -697,7 +706,10 @@ export const CreatePullRequestPanel = props => {
 				label: _.name,
 				searchLabel: _.name,
 				key: _.name,
-				action: () => setReviewBranch(_.name)
+				action: () => {
+					setReviewBranch(_.name);
+					checkPullRequestBranchPreconditions(prBranch, _.name);
+				}
 			};
 		});
 		if (items.length === 0) return null;
@@ -773,6 +785,7 @@ export const CreatePullRequestPanel = props => {
 			items.unshift({ label: "-" });
 			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
 		}
+		if (!baseForkedRepo) return null;
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -805,6 +818,7 @@ export const CreatePullRequestPanel = props => {
 			items.unshift({ label: "-" });
 			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
 		}
+		if (!headForkedRepo) return null;
 		return (
 			<span>
 				<DropdownButton variant="secondary" items={items}>
@@ -1165,14 +1179,13 @@ export const CreatePullRequestPanel = props => {
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
-				{/*!reviewId &&
-					(derivedState.isConnectedToGitHub || derivedState.isConnectedToGitHubEnterprise) && (
-						<>
-							{" "}
-							If you need to, you can also{" "}
-							<a onClick={() => setAcrossForks(!acrossForks)}>compare across forks</a>.
-						</>
-					) */}
+				{!reviewId && prProviderId === "github*com" && (
+					<>
+						{" "}
+						If you need to, you can also{" "}
+						<a onClick={() => setAcrossForks(!acrossForks)}>compare across forks</a>.
+					</>
+				)}
 			</PanelHeader>
 			<CancelButton onClick={props.closePanel} />
 			<span className="plane-container">
@@ -1418,16 +1431,18 @@ export const CreatePullRequestPanel = props => {
 				{filesChanged.length > 0 && (
 					<PanelHeader className="no-padding" title="Comparing Changes"></PanelHeader>
 				)}
-				<PullRequestFilesChangedList
-					readOnly
-					isLoading={loadingBranchInfo || isLoadingDiffs}
-					repoId={prRepoId}
-					filesChanged={filesChanged}
-					baseRef={prBranch}
-					headRef={reviewBranch}
-					baseRefName={prBranch}
-					headRefName={reviewBranch}
-				/>
+				{!acrossForks && (
+					<PullRequestFilesChangedList
+						readOnly
+						isLoading={loadingBranchInfo || isLoadingDiffs}
+						repoId={prRepoId}
+						filesChanged={filesChanged}
+						baseRef={prBranch}
+						headRef={reviewBranch}
+						baseRefName={prBranch}
+						headRefName={reviewBranch}
+					/>
+				)}
 			</span>
 		</Root>
 	);
