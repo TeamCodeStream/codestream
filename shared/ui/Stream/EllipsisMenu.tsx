@@ -39,7 +39,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			userTeams: _sortBy(
-				Object.values(state.teams).filter(t => !t.deactivated),
+				Object.values(state.teams).filter((t) => !t.deactivated),
 				"name"
 			),
 			currentTeamId: state.context.currentTeamId,
@@ -52,7 +52,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			pluginVersion: state.pluginVersion,
 			xraySetting: team.settings ? team.settings.xray : "",
 			multipleReviewersApprove: isFeatureEnabled(state, "multipleReviewersApprove"),
-			isOnPrem: onPrem
+			isOnPrem: onPrem,
 		};
 	});
 
@@ -60,7 +60,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const { userTeams, currentTeamId } = derivedState;
 
 		const buildSubmenu = () => {
-			const items = userTeams.map(team => {
+			const items = userTeams.map((team) => {
 				const isCurrentTeam = team.id === currentTeamId;
 				return {
 					key: team.id,
@@ -70,7 +70,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					noHover: isCurrentTeam,
 					action: () => {
 						if (!isCurrentTeam) dispatch(switchToTeam(team.id));
-					}
+					},
 				};
 			}) as any;
 
@@ -82,7 +82,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: "Create New Team",
 					action: () => {
 						dispatch(openModal(WebviewModals.CreateTeam));
-					}
+					},
 				}
 			);
 
@@ -91,14 +91,14 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 		return {
 			label: "Switch Team",
-			submenu: buildSubmenu()
+			submenu: buildSubmenu(),
 		};
 	};
 
 	const go = (panel: WebviewPanels) => dispatch(openPanel(panel));
 	const popup = (modal: WebviewModals) => dispatch(openModal(modal));
 
-	const openUrl = url => {
+	const openUrl = (url) => {
 		HostApi.instance.send(OpenUrlRequestType, { url });
 	};
 
@@ -113,49 +113,49 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const planDetails = {
 			BUSINESS: {
 				label: "Your organization is on CodeStream's Business Plan.",
-				upgrade: true
+				upgrade: true,
 			},
 			ENTERPRISE: {
 				label: "Your organization is on CodeStream's Enterprise Plan.",
-				upgrade: true
+				upgrade: true,
 			},
 			SALES: {
 				label: "Your organization is pending expiration.",
-				upgrade: true
+				upgrade: true,
 			},
 			EDUCATION: {
-				label: "Your organization is on CodeStream's free Educational Use Plan."
+				label: "Your organization is on CodeStream's free Educational Use Plan.",
 			},
 			OPENSOURCE: {
-				label: "Your organization is on CodeStream's free Open Source Plan."
+				label: "Your organization is on CodeStream's free Open Source Plan.",
 			},
 			FREEPLAN: {
 				label: "Your organization is on CodeStream's Free Plan.",
-				upgrade: true
+				upgrade: true,
 			},
 			UNEXPIRED: {
 				label: "Your organization is on CodeStream's Free Plan.",
-				upgrade: true
+				upgrade: true,
 			},
 			"14DAYTRIAL": {
 				label: "Your organization is currently in a free trial period.",
-				upgrade: true
+				upgrade: true,
 			},
 			"30DAYTRIAL": {
 				label: "Your organization is currently in a free trial period.",
-				upgrade: true
+				upgrade: true,
 			},
 			FREEBETA: {
-				label: "Your organization is currently being comp'd. Lucky you."
+				label: "Your organization is currently being comp'd. Lucky you.",
 			},
 			BUSDEV: {
 				label: "Your organization is currently in a free trial period.",
-				upgrade: true
+				upgrade: true,
 			},
 			TRIALEXPIRED: {
 				label: "Your trial has expired.",
-				upgrade: true
-			}
+				upgrade: true,
+			},
 		};
 
 		const details = planDetails[plan];
@@ -168,23 +168,28 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					style={{
 						fontSize: "smaller",
 						maxWidth: "240px",
-						whiteSpace: "normal"
+						whiteSpace: "normal",
 					}}
 				>
 					{details.label + " "}
 					{upgradeCloud && <a href="">Upgrade.</a>}
-					{upgradeOnPrem && <>To upgrade, contact <Link href="mailto:sales@codestream.com">sales@codestream.com</Link>.</>}
+					{upgradeOnPrem && (
+						<>
+							To upgrade, contact{" "}
+							<Link href="mailto:sales@codestream.com">sales@codestream.com</Link>.
+						</>
+					)}
 				</div>
 			),
 			noHover: !upgradeCloud,
-			action: upgradeCloud ? goUpgrade : () => {}
+			action: upgradeCloud ? goUpgrade : () => {},
 		};
 	};
 
-	const changeXray = async value => {
+	const changeXray = async (value) => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: derivedState.team.id,
-			settings: { xray: value }
+			settings: { xray: value },
 		});
 	};
 
@@ -194,7 +199,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			message:
 				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
 			centered: false,
-			buttons: [{ label: "OK", className: "control-button" }]
+			buttons: [{ label: "OK", className: "control-button" }],
 		});
 	};
 
@@ -211,50 +216,50 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 						{
 							label: "Always On",
 							checked: xraySetting === "on",
-							action: () => changeXray("on")
+							action: () => changeXray("on"),
 						},
 						{
 							label: "Always Off",
 							checked: xraySetting === "off",
-							action: () => changeXray("off")
+							action: () => changeXray("off"),
 						},
 						{
 							label: "User Selectable",
 							checked: !xraySetting || xraySetting === "user",
-							action: () => changeXray("user")
+							action: () => changeXray("user"),
 						},
 						{ label: "-", action: () => {} },
 						{
 							label: "What is Live View?",
 							action: () => {
 								HostApi.instance.send(OpenUrlRequestType, {
-									url: "https://docs.codestream.com/userguide/features/myteam-section/"
+									url: "https://docs.codestream.com/userguide/features/myteam-section/",
 								});
-							}
-						}
-					]
+							},
+						},
+					],
 				},
 				{
 					label: "Feedback Request Settings...",
 					key: "review-settings",
 					action: () => dispatch(openModal(WebviewModals.ReviewSettings)),
-					disabled: !derivedState.multipleReviewersApprove
+					disabled: !derivedState.multipleReviewersApprove,
 				},
 				{ label: "-" },
 				{
 					label: "Change Team Name",
 					key: "change-team-name",
-					action: () => dispatch(openModal(WebviewModals.ChangeTeamName))
+					action: () => dispatch(openModal(WebviewModals.ChangeTeamName)),
 				},
 				{ label: "-" },
 				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
 				{ label: "-" },
-				{ label: "Delete Team", action: deleteTeam }
+				{ label: "Delete Team", action: deleteTeam },
 			];
 			return {
 				label: "Team Admin",
 				key: "admin",
-				submenu
+				submenu,
 			};
 		} else return null;
 	};
@@ -275,7 +280,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					<MarkdownText text={currentUserStatus.label} excludeParagraphWrap={true}></MarkdownText>
 				</>
 			),
-			key: "status"
+			key: "status",
 		});
 	}
 
@@ -289,20 +294,20 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => {
 						dispatch(setProfileUser(derivedState.currentUserId));
 						go(WebviewPanels.Profile);
-					}
+					},
 				},
 				{ label: "Change Profile Photo", action: () => popup(WebviewModals.ChangeAvatar) },
 				{ label: "Change Email", action: () => popup(WebviewModals.ChangeEmail) },
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				{ label: "-" },
-				{ label: "Sign Out", action: () => dispatch(logout()) }
-			]
+				{ label: "Sign Out", action: () => dispatch(logout()) },
+			],
 		},
 		{
 			label: "View",
 			action: "view",
-			submenu: derivedState.sidebarPaneOrder.map(id => {
+			submenu: derivedState.sidebarPaneOrder.map((id) => {
 				const settings = derivedState.sidebarPanePreferences[id] || EMPTY_HASH;
 				return {
 					key: id,
@@ -313,16 +318,16 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 						if (!settings.removed) {
 							HostApi.instance.track("Sidebar Adjusted", {
 								Section: id,
-								Adjustment: "Hidden"
+								Adjustment: "Hidden",
 							});
 						}
-					}
+					},
 				};
-			})
+			}),
 		},
 		{
 			label: "Notifications",
-			action: () => dispatch(openModal(WebviewModals.Notifications))
+			action: () => dispatch(openModal(WebviewModals.Notifications)),
 		}
 	);
 
@@ -333,7 +338,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				label: <h3>{derivedState.team.name}</h3>,
 				key: "teamheader",
 				noHover: true,
-				disabled: true
+				disabled: true,
 			},
 			buildUpgradeTeamMenuItem(),
 			// {
@@ -342,7 +347,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			// },
 			buildAdminTeamMenuItem(),
 			buildSwitchTeamMenuItem(),
-			{ label: "-" }
+			{ label: "-" },
 		].filter(Boolean)
 	);
 
@@ -360,7 +365,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		{ label: "Integrations", action: () => dispatch(openPanel(WebviewPanels.Integrations)) },
 		{
 			label: "Feedback",
-			action: () => openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback")
+			action: () => openUrl("mailto:team@codestream.com?Subject=CodeStream Feedback"),
 		},
 		{
 			label: "Help",
@@ -369,17 +374,17 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{
 					label: "Documentation",
 					key: "documentation",
-					action: () => openUrl("https://help.codestream.com")
+					action: () => openUrl("https://help.codestream.com"),
 				},
 				{
 					label: "Video Library",
 					key: "videos",
-					action: () => openUrl("https://www.codestream.com/video-library")
+					action: () => openUrl("https://www.codestream.com/video-library"),
 				},
 				{
 					label: "Keybindings",
 					key: "keybindings",
-					action: () => dispatch(openModal(WebviewModals.Keybindings))
+					action: () => dispatch(openModal(WebviewModals.Keybindings)),
 				},
 				// {
 				// 	label: "Getting Started Guide",
@@ -389,19 +394,19 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{
 					label: "CodeStream Flow",
 					key: "flow",
-					action: () => dispatch(openPanel(WebviewPanels.Flow))
+					action: () => dispatch(openPanel(WebviewPanels.Flow)),
 				},
 				{
 					label: "What's New",
 					key: "whats-new",
-					action: () => openUrl("https://www.codestream.com/blog")
+					action: () => openUrl("https://www.codestream.com/blog"),
 				},
 				{
 					label: "Report an Issue",
 					key: "issue",
-					action: () => openUrl("https://github.com/TeamCodeStream/codestream/issues")
-				}
-			]
+					action: () => openUrl("https://github.com/TeamCodeStream/codestream/issues"),
+				},
+			],
 		},
 		{ label: "-" }
 	);
@@ -431,3 +436,5 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		<Menu items={menuItems} target={props.menuTarget} action={props.closeMenu} align="bottomLeft" />
 	);
 }
+
+// test comment
