@@ -905,6 +905,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			if (response.repository.parent && !recurseFailsafe) {
 				Logger.log("Getting parent forked repos");
 				const result = await this.getForkedRepos(
+					// this use of "example.com" is just to provide the URL parser something to parse
 					{ remote: "https://example.com/" + response.repository.parent.nameWithOwner },
 					true
 				);

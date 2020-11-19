@@ -369,8 +369,8 @@ export interface CreatePullRequestRequest {
 	description?: string;
 	baseRefName: string;
 	headRefName: string;
-	providerRepositoryId?: string; // for use across forks
-	remote: string; // to look up the repo ID on the provider
+	providerRepositoryId?: string /* for use across forks */;
+	remote: string /* to look up the repo ID on the provider */;
 	remoteName?: string;
 	addresses?: {
 		title: string;

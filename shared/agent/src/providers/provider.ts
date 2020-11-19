@@ -946,8 +946,8 @@ export interface ProviderGetForkedReposResponse {
 
 export interface ProviderCreatePullRequestRequest {
 	providerId: string;
-	providerRepositoryId?: string; // for use across forks
-	remote: string; // to look up the repo ID on the provider
+	providerRepositoryId?: string /* for use across forks */;
+	remote: string /* to look up the repo ID on the provider */;
 	title: string;
 	description?: string;
 	baseRefName: string;
