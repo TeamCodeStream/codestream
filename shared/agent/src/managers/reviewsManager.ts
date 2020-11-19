@@ -760,7 +760,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			let remoteBranch;
 			const branchRemote = await git.getBranchRemote(repo.path, headRefName!);
 			if (!branchRemote) {
-				Logger.log(`Couldn't find branchRepot for ${repo.path} and ${headRefName}`);
+				Logger.log(`Couldn't find branchRemote for ${repo.path} and ${headRefName}`);
 				warning = {
 					type: "REQUIRES_UPSTREAM"
 				};
