@@ -61,7 +61,8 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["azuredevops", "Azure DevOps"],
 	["slack", "Slack"],
 	["msteams", "Microsoft Teams"],
-	["okta", "Okta"]
+	["okta", "Okta"],
+	["clubhouse", "Clubhouse"]
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {

@@ -86,6 +86,7 @@ export * from "./azuredevops";
 export * from "./slack";
 export * from "./msteams";
 export * from "./okta";
+export * from "./clubhouse";
 
 const PR_QUERIES = [
 	{
@@ -194,7 +195,7 @@ export class ThirdPartyProviderRegistry {
 		});
 
 		return newProvidersPRs;
-	};
+	}
 
 	private fireNewPRsNotifications(providersPRs: ProviderPullRequests[]) {
 		const prNotificationMessages: PullRequestsChangedData[] = [];

@@ -1864,7 +1864,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					anchorFormat: "[${text}](${url})"
 				};
 		}
-	};
+	}
 
 	createProviderCard = async (
 		providerCardRequest: {
@@ -2077,6 +2077,18 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					break;
 				}
 
+				case "clubhouse": {
+					response = await providerRegistry.createCard({
+						providerId: attributes.issueProvider.id,
+						data: {
+							description,
+							name: providerCardRequest.codemark.title,
+							projectId: attributes.projectId,
+							assignees: attributes.assignees
+						}
+					});
+					break;
+				}
 				default:
 					return undefined;
 			}
@@ -2091,7 +2103,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			Logger.error(error, `failed to create a ${attributes.issueProvider.name} card:`);
 			return undefined;
 		}
-	};
+	}
 }
 
 async function resolveCreatePostResponse(response: CreatePostResponse) {

@@ -2,6 +2,7 @@ import { Index } from "../common";
 import {
 	TrelloList,
 	TrelloBoard,
+	ClubhouseProject,
 	JiraBoard,
 	GitHubBoard,
 	BitbucketBoard,
@@ -73,6 +74,11 @@ export interface AzureDevOpsIntegrationData extends ActiveIntegrationData {
 export interface YouTrackIntegrationData extends ActiveIntegrationData {
 	projects?: YouTrackBoard[];
 	currentProject?: YouTrackBoard;
+}
+
+export interface ClubhouseIntegrationData extends ActiveIntegrationData {
+	projects?: ClubhouseProject[];
+	currentProject?: ClubhouseProject;
 }
 
 export interface ActiveIntegrationsState extends Index<ActiveIntegrationData> {}

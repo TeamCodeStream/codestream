@@ -545,6 +545,11 @@ export interface CSOktaProviderInfo {
 	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
 }
 
+export interface CSClubhouseProviderInfo {
+	accessToken: string;
+	hosts: { [host: string]: CSAzureDevOpsProviderInfo };
+}
+
 export type CSProviderInfos =
 	| CSAsanaProviderInfo
 	| CSBitbucketProviderInfo
@@ -557,7 +562,8 @@ export type CSProviderInfos =
 	| CSTrelloProviderInfo
 	| CSYouTrackProviderInfo
 	| CSAzureDevOpsProviderInfo
-	| CSOktaProviderInfo;
+	| CSOktaProviderInfo
+	| CSClubhouseProviderInfo;
 
 type Filter<T, U> = T extends U ? T : never;
 export type CSRefreshableProviderInfos = Filter<CSProviderInfos, { refreshToken: string }>;

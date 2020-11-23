@@ -35,6 +35,7 @@ import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
+import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import * as actions from "./actions";
 import { canCreateCodemark, editCodemark } from "../store/codemarks/actions";
@@ -276,6 +277,9 @@ export class SimpleStream extends PureComponent {
 			activePanel.startsWith("configure-enterprise-")
 				? activePanel.split("-")
 				: null;
+		const enterpriseProvider = activePanel.startsWith("configure-enterprise-");
+		const [, , providerName, providerId, origin] = configureProviderInfo || [];
+		const customConfigureProvider = providerName ? ["azuredevops", "youtrack", "jiraserver"].find(name => name === providerName) : null;
 
 		// console.warn("ACTIVE: ", activePanel);
 		// status and teams panels have been deprecated
@@ -384,28 +388,34 @@ export class SimpleStream extends PureComponent {
 								<CreatePullRequestPanel closePanel={this.props.closePanel} />
 							)}
 							{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
-							{activePanel.startsWith("configure-provider-youtrack-") && (
+							{configureProviderInfo && !enterpriseProvider && !customConfigureProvider && (
+								<ConfigureTokenProviderPanel
+									providerId={providerId}
+									originLocation={origin}
+								/>
+							)}
+							{customConfigureProvider === "youtrack" && (
 								<ConfigureYouTrackPanel
-									providerId={configureProviderInfo[3]}
-									originLocation={configureProviderInfo[4]}
+									providerId={providerId}
+									originLocation={origin}
 								/>
 							)}
-							{activePanel.startsWith("configure-provider-azuredevops-") && (
+							{customConfigureProvider === "azuredevops" && (
 								<ConfigureAzureDevOpsPanel
-									providerId={configureProviderInfo[3]}
-									originLocation={configureProviderInfo[4]}
+									providerId={providerId}
+									originLocation={origin}
 								/>
 							)}
-							{activePanel.startsWith("configure-provider-jiraserver-") && (
+							{customConfigureProvider === "jiraserver" && (
 								<ConfigureJiraServerPanel
-									providerId={configureProviderInfo[3]}
-									originLocation={configureProviderInfo[4]}
+									providerId={providerId}
+									originLocation={origin}
 								/>
 							)}
-							{activePanel.startsWith("configure-enterprise-") && (
+							{enterpriseProvider && (
 								<ConfigureEnterprisePanel
-									providerId={configureProviderInfo[3]}
-									originLocation={configureProviderInfo[4]}
+									providerId={providerId}
+									originLocation={origin}
 								/>
 							)}
 						</Modal>

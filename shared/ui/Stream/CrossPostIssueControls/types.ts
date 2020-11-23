@@ -50,6 +50,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		helpUrl:
 			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html"
 	},
+	clubhouse: {
+		displayName: "Clubhouse",
+		icon: "bitbucket", // TODO
+		helpUrl: "https://help.clubhouse.io/hc/en-us/articles/205701199-Clubhouse-API-Tokens",
+		supportsStartWork: true
+	},
 	codestream: {
 		displayName: "CodeStream",
 		icon: "codestream"
