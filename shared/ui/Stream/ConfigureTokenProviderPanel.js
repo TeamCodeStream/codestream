@@ -18,7 +18,9 @@ export class ConfigureTokenProviderPanel extends Component {
 	state = this.initialState;
 
 	focusInput() {
-		document.getElementById("configure-provider-access-token").focus();
+
+		const el = document.getElementById("configure-provider-access-token");
+		el && el.focus();
 	}
 
 	componentDidMount() {
