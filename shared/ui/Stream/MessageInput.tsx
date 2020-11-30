@@ -1065,7 +1065,7 @@ export class MessageInput extends React.Component<Props, State> {
 		const groups = text.split(/\[#(\d+)]/);
 		let index = 0;
 		while (index < groups.length) {
-			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={false} />);
+			blocks.push(<MarkdownText text={groups[index]} inline={false} />);
 			if (index + 1 < groups.length) {
 				const markerIndex = parseInt(groups[index + 1], 10);
 				if (markerIndex > 0) {

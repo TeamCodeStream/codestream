@@ -173,7 +173,12 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				>
 					{details.label + " "}
 					{upgradeCloud && <a href="">Upgrade.</a>}
-					{upgradeOnPrem && <>To upgrade, contact <Link href="mailto:sales@codestream.com">sales@codestream.com</Link>.</>}
+					{upgradeOnPrem && (
+						<>
+							To upgrade, contact{" "}
+							<Link href="mailto:sales@codestream.com">sales@codestream.com</Link>.
+						</>
+					)}
 				</div>
 			),
 			noHover: !upgradeCloud,
@@ -272,7 +277,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					) : (
 						<Icon name="ticket" />
 					)}
-					<MarkdownText text={currentUserStatus.label} excludeParagraphWrap={true}></MarkdownText>
+					<MarkdownText text={currentUserStatus.label} inline={true}></MarkdownText>
 				</>
 			),
 			key: "status"

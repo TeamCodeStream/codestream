@@ -7,7 +7,7 @@ export const MarkdownText = styled(
 		text: string;
 		as?: "string" | React.ElementType | React.Component;
 		className?: string;
-		excludeParagraphWrap?: boolean;
+		inline?: boolean;
 		excludeOnlyEmoji?: boolean;
 		isHtml?: boolean;
 	}) => {
@@ -22,7 +22,7 @@ export const MarkdownText = styled(
 					__html: props.isHtml
 						? props.text
 						: markdownifyToHtml(props.text, {
-								excludeParagraphWrap: !!props.excludeParagraphWrap,
+								inline: !!props.inline,
 								excludeOnlyEmoji: !!props.excludeOnlyEmoji
 						  })
 				}

@@ -210,7 +210,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 							<MarkdownText
 								text={comment.bodyHTML ? comment.bodyHTML : comment.bodyText}
 								isHtml={comment.bodyHTML ? true : false}
-								excludeParagraphWrap
+								inline
 							/>
 						)}
 					</>
@@ -279,7 +279,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									<MarkdownText
 										text={c.bodyHTML ? c.bodyHTML : c.bodyText}
 										isHtml={c.bodyHTML ? true : false}
-										excludeParagraphWrap
+										inline
 									/>
 								)}
 							</PRCodeCommentBody>

@@ -261,13 +261,7 @@ export const Reply = (props: ReplyProps) => {
 	const renderEmote = () => {
 		let matches = (props.post.text || "").match(/^\/me\s+(.*)/);
 		if (matches) {
-			return (
-				<MarkdownText
-					text={matches[1]}
-					className="emote"
-					excludeParagraphWrap={true}
-				></MarkdownText>
-			);
+			return <MarkdownText text={matches[1]} className="emote" inline={true}></MarkdownText>;
 		} else return null;
 	};
 	const emote = renderEmote();

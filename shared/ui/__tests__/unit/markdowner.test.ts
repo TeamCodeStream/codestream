@@ -23,17 +23,13 @@ describe("markdownify (with options)", () => {
 		["a", "a"],
 		["<p>b</p>", "&lt;p&gt;b&lt;/p&gt;"]
 	])(".markdownify(%j, %j)", (a, expected) => {
-		expect(markdownify(a, { excludeParagraphWrap: true, excludeOnlyEmoji: false })).toStrictEqual(
-			expected
-		);
+		expect(markdownify(a, { inline: true, excludeOnlyEmoji: false })).toStrictEqual(expected);
 	});
 });
 
 describe("markdownify (only emoji)", () => {
 	it("is only emoji", () => {
-		expect(markdownify(":+1:", { excludeParagraphWrap: true, excludeOnlyEmoji: false })).toContain(
-			"only-emoji"
-		);
+		expect(markdownify(":+1:", { inline: true, excludeOnlyEmoji: false })).toContain("only-emoji");
 	});
 });
 
@@ -49,16 +45,14 @@ describe("markdownify with code fences", () => {
 			`<code>.icon.rotate { \t\t\t\ttransform: rotate(90deg); \t\t\t} \t\t\t.getting-started { \t\t\t\tfloat: right; \t\t\t}</code>`
 		]
 	])(".markdownify(%j, %j)", (a, expected) => {
-		const actual = markdownify(a, { excludeParagraphWrap: true, excludeOnlyEmoji: false });
+		const actual = markdownify(a, { inline: true, excludeOnlyEmoji: false });
 		console.log(actual);
 		expect(actual).toStrictEqual(expected);
 	});
 	test.each([["```testing```", "<p><code>testing</code></p>"]])(
 		".markdownify(%j, %j)",
 		(a, expected) => {
-			expect(
-				markdownify(a, { excludeParagraphWrap: false, excludeOnlyEmoji: false })
-			).toStrictEqual(expected);
+			expect(markdownify(a, { inline: false, excludeOnlyEmoji: false })).toStrictEqual(expected);
 		}
 	);
 });

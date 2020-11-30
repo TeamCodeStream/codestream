@@ -10,7 +10,16 @@ import React from "react";
 import { CodeStreamState } from "../store";
 
 interface MarkdownOptions {
-	excludeParagraphWrap: boolean;
+	/**
+	 * When true, the renderInline function will be used.
+	 * While this does not include a wrapper <p> tag, it also
+	 * will not render html highlighting, so any code wrapped in
+	 * ``` will be displayed as a single line.
+	 *
+	 * @type {boolean}
+	 * @memberof MarkdownOptions
+	 */
+	inline: boolean;
 	excludeOnlyEmoji: boolean;
 }
 
@@ -58,7 +67,7 @@ export const markdownify = (text: string, options?: MarkdownOptions) => {
 	const identifyOnlyEmoji = !options || !options.excludeOnlyEmoji;
 	try {
 		const replaced =
-			options && options.excludeParagraphWrap
+			options && options.inline
 				? md.renderInline(text, { references: {} })
 				: md
 						.render(text, { references: {} })

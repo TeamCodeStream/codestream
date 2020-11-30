@@ -332,15 +332,14 @@ export class Codemark extends React.Component<Props, State> {
 
 	renderTextReplaceCodeBlocks = (text: string) => {
 		const { codemark, capabilities } = this.props;
-		if (!codemark || !codemark.markers)
-			return <MarkdownText text={text} excludeParagraphWrap={true} />;
+		if (!codemark || !codemark.markers) return <MarkdownText text={text} inline={true} />;
 
 		const blocks: any[] = [];
 		const groups = text.split(/\[#(\d+)]/);
 		let index = 0;
 		this.skipMarkers = [];
 		while (index < groups.length) {
-			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={false} />);
+			blocks.push(<MarkdownText text={groups[index]} />);
 			if (index + 1 < groups.length) {
 				const markerIndex = parseInt(groups[index + 1], 10);
 				if (markerIndex > 0) {
@@ -904,7 +903,7 @@ export class Codemark extends React.Component<Props, State> {
 							{this.renderTypeIcon()}
 						</span>
 						<div className="body" style={{ flexGrow: 10 }}>
-							<MarkdownText text={codemark.title || codemark.text} excludeParagraphWrap={true} />
+							<MarkdownText text={codemark.title || codemark.text} inline={true} />
 							{renderedTags && <span className="cs-tag-container">{renderedTags}</span>}
 						</div>
 						{codemark.numReplies > 0 && (
@@ -1370,9 +1369,7 @@ export class Codemark extends React.Component<Props, State> {
 		// menuItems.push({ label: "Set Keybinding", action: "set-keybinding", submenu: submenu });
 
 		const description =
-			codemark.title && codemark.text ? (
-				<MarkdownText text={codemark.text} excludeParagraphWrap={true} />
-			) : null;
+			codemark.title && codemark.text ? <MarkdownText text={codemark.text} inline={true} /> : null;
 
 		// show a striped header if the codemark is selected, or unhidden, and it matches
 		// manual-archive, resolved, or deleted state
@@ -1409,7 +1406,7 @@ export class Codemark extends React.Component<Props, State> {
 		// 			onMouseLeave={this.handleMouseLeaveCodemark}
 		// 			style={{ display: "flex", alignItems: "center" }}
 		// 		>
-		// 			<div><MarkdownText text={codemark.title || codemark.text} excludeParagraphWrap={true} /></div>
+		// 			<div><MarkdownText text={codemark.title || codemark.text} inline={true} /></div>
 		// 			<div className="author" style={{ paddingLeft: "10px" }}>
 		// 				<b>{author.username}</b>
 		// 				<Timestamp relative time={codemark.createdAt} />
@@ -1493,10 +1490,7 @@ export class Codemark extends React.Component<Props, State> {
 							{!renderExpandedBody && type === "bookmark" ? (
 								<>
 									<span className={codemark.color}>{this.renderTypeIcon()}</span>
-									<MarkdownText
-										text={codemark.title || codemark.text}
-										excludeParagraphWrap={true}
-									/>
+									<MarkdownText text={codemark.title || codemark.text} inline={true} />
 									<div className="right">
 										<span onClick={this.handleMenuClick}>
 											{menuOpen && (
@@ -1691,7 +1685,7 @@ export class Codemark extends React.Component<Props, State> {
 								<PullRequestPatch patch={externalContent.diffHunk} filename={marker.file} />
 							</PRCodeCommentPatch>
 						)}
-						<MarkdownText text={marker.summary} excludeParagraphWrap={true} />
+						<MarkdownText text={marker.summary} inline={true} />
 						{!selected && this.renderPinnedReplies()}
 						{!selected && this.renderDetailIcons(marker)}
 						{((marker.externalContent!.actions || emptyArray).length > 0 ||
@@ -1839,7 +1833,7 @@ export class Codemark extends React.Component<Props, State> {
 							<Icon name={externalContent.provider.icon || "codestream"} className="margin-right" />
 						</span>
 						<div>
-							<MarkdownText text={marker.summary} excludeParagraphWrap={true} />
+							<MarkdownText text={marker.summary} inline={true} />
 							{lines && (
 								<span style={{ paddingLeft: "15px", opacity: 0.75 }} className="subtle">
 									{lines}
@@ -1943,7 +1937,7 @@ export class Codemark extends React.Component<Props, State> {
 							<Icon className="pinned-reply-star" name="star" />{" "}
 							<Headshot size={18} person={this.props.pinnedAuthors[i]} />
 							<div className="pinned-reply-body">
-								<MarkdownText text={post.text} excludeParagraphWrap={true} />
+								<MarkdownText text={post.text} inline={true} />
 							</div>
 						</div>
 					);
