@@ -29,7 +29,7 @@ import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import { ServicesState } from "../store/services/types";
 import { getSlashCommands } from "./SlashCommands";
 import { MarkdownText } from "./MarkdownText";
-import { markdownify } from "./Markdowner";
+
 import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/reducer";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
@@ -1065,7 +1065,7 @@ export class MessageInput extends React.Component<Props, State> {
 		const groups = text.split(/\[#(\d+)]/);
 		let index = 0;
 		while (index < groups.length) {
-			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={true} />);
+			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={false} />);
 			if (index + 1 < groups.length) {
 				const markerIndex = parseInt(groups[index + 1], 10);
 				if (markerIndex > 0) {

@@ -340,7 +340,7 @@ export class Codemark extends React.Component<Props, State> {
 		let index = 0;
 		this.skipMarkers = [];
 		while (index < groups.length) {
-			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={true} />);
+			blocks.push(<MarkdownText text={groups[index]} excludeParagraphWrap={false} />);
 			if (index + 1 < groups.length) {
 				const markerIndex = parseInt(groups[index + 1], 10);
 				if (markerIndex > 0) {

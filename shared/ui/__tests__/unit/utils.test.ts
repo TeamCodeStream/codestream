@@ -28,12 +28,12 @@ describe("utils", () => {
 	// so we can't insert text into a dom node after paste
 	// (you can't programmatically paste either)
 	// https://stackoverflow.com/questions/52974607/document-execcommand-is-not-a-function-in-vue-test-utils
-	
+
 	// NOTE: the inputs here are rather... hard to follow, but they came from
-	// looking at the inputs to replaceHtml when it was called while in 
+	// looking at the inputs to replaceHtml when it was called while in
 	// a browser debugging session. ContentEditable uses <div>s and <br>s
-	// for linebreaks and it is not possible to assume that creating a 
-	// contentEditable will behave the same while running tests 
+	// for linebreaks and it is not possible to assume that creating a
+	// contentEditable will behave the same while running tests
 	// without an actual browser.
 	test.each([
 		["", ""],
@@ -41,7 +41,7 @@ describe("utils", () => {
 		["012345", "012345"],
 		["true", "true"],
 		["<div>foo</div>", "foo"],
-		[`1\n2\n3\n4`, `1\n2\n3\n4`],
+		[`<div>1</div><div>2</div><div>3</div><div>4</div>`, `1\n2\n3\n4`],
 		["a", "a"],
 		// contentEditable blankline looks like below
 		["<div><br></div>", ""],
@@ -63,16 +63,19 @@ describe("utils", () => {
 			`&lt;ol&gt;<div>&lt;li&gt;bad&lt;li&gt;</div><div>&lt;li&gt;markup</div><div>&lt;/ul&gt;</div>`,
 			"<ol>\n<li>bad<li>\n<li>markup\n</ul>"
 		],
-		[`\`\`\` &lt;h1&gt;h1&lt;/h1&gt;<div> &lt;h2&gt;h2&gt;&lt;/h2&gt;</div><div>\`\`\`</div>`,
-		`\`\`\` <h1>h1</h1>\n <h2>h2></h2>\n\`\`\``]
+		[
+			`\`\`\` &lt;h1&gt;h1&lt;/h1&gt;<div> &lt;h2&gt;h2&gt;&lt;/h2&gt;</div><div>\`\`\`</div>`,
+			`\`\`\` <h1>h1</h1>\n <h2>h2></h2>\n\`\`\``
+		],
+		["<div>foo</div><div>bar</div>", "foo\nbar"]
 	])(".replaceHtml(%s)", (a, expected) => {
 		expect(replaceHtml(a)).toBe(expected);
 	});
 
 	test.each([
 		["", ""],
-		["\n\n","\n\n"],
-		[" \n \n"," \n \n"],
+		["\n\n", "\n\n"],
+		[" \n \n", " \n \n"],
 		["just text", "just text"],
 		[`just\ntext`, `just\ntext`],
 		["012345", "012345"],

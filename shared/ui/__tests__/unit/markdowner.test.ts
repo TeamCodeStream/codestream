@@ -36,3 +36,29 @@ describe("markdownify (only emoji)", () => {
 		);
 	});
 });
+
+describe("markdownify with code fences", () => {
+	test.each([
+		[
+			`\`\`\`.icon.rotate {
+				transform: rotate(90deg);
+			}
+			.getting-started {
+				float: right;
+			}\`\`\``,
+			`<code>.icon.rotate { \t\t\t\ttransform: rotate(90deg); \t\t\t} \t\t\t.getting-started { \t\t\t\tfloat: right; \t\t\t}</code>`
+		]
+	])(".markdownify(%j, %j)", (a, expected) => {
+		const actual = markdownify(a, { excludeParagraphWrap: true, excludeOnlyEmoji: false });
+		console.log(actual);
+		expect(actual).toStrictEqual(expected);
+	});
+	test.each([["```testing```", "<p><code>testing</code></p>"]])(
+		".markdownify(%j, %j)",
+		(a, expected) => {
+			expect(
+				markdownify(a, { excludeParagraphWrap: false, excludeOnlyEmoji: false })
+			).toStrictEqual(expected);
+		}
+	);
+});
