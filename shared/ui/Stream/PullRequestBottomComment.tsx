@@ -13,6 +13,7 @@ import { CSMe } from "@codestream/protocols/api";
 import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api, removeFromMyPullRequests } from "../store/providerPullRequests/actions";
+import { replaceHtml } from "../utils";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -51,7 +52,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		trackComment("Comment");
 		await dispatch(
 			api("createPullRequestComment", {
-				text: text
+				text: replaceHtml(text)
 			})
 		);
 		setText("");
