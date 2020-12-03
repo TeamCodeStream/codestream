@@ -56,7 +56,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			})
 		);
 		setText("");
-		fetch().then(() => setIsLoadingComment(false));
+		setIsLoadingComment(false);
 	};
 
 	const onCommentAndCloseClick = async e => {

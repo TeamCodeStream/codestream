@@ -166,6 +166,134 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
+		case ProviderPullRequestActionsTypes.HandleDirectives: {
+			const newState = { ...state.pullRequests };
+			let providerId = action.payload.providerId;
+			let id = action.payload.id;
+			newState[providerId] = newState[action.payload.providerId] || {};
+			newState[providerId][id] = {
+				...newState[providerId][id]
+			};
+			if (newState[providerId][id] && newState[providerId][id].conversations) {
+				const pr = newState[providerId][id].conversations.repository.pullRequest;
+				for (const directive of action.payload.data) {
+					if (directive.type === "replace") {
+						const paths = directive.target.split(".");
+						let result = "";
+						for (const path of paths) {
+							result += `['${path}']`;
+						}
+						eval(`pr${result} = directive.data`);
+					} else if (directive.type === "add") {
+						const paths = directive.target.split(".");
+						let result = "";
+						for (const path of paths) {
+							result += `['${path}']`;
+						}
+						eval(`pr${result}.push(directive.data)`);
+					} else if (directive.type === "addReaction") {
+						if (directive.data.subject.__typename === "PullRequest") {
+							pr.reactionGroups
+								.find(_ => _.content === directive.data.reaction.content)
+								.users.nodes.push(directive.data.reaction.user);
+						} else {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+							if (node) {
+								node.reactionGroups
+									.find(_ => _.content === directive.data.reaction.content)
+									.users.nodes.push(directive.data.reaction.user);
+							} else {
+								console.warn(`Could not find node with id ${directive.data.subject.id}`);
+							}
+						}
+					} else if (directive.type === "removeReaction") {
+						if (directive.data.subject.__typename === "PullRequest") {
+							pr.reactionGroups.find(
+								_ => _.content === directive.data.reaction.content
+							).users.nodes = pr.reactionGroups
+								.find(_ => _.content === directive.data.reaction.content)
+								.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+						} else {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+							if (node) {
+								node.reactionGroups.find(
+									_ => _.content === directive.data.reaction.content
+								).users.nodes = node.reactionGroups
+									.find(_ => _.content === directive.data.reaction.content)
+									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+							} else {
+								console.warn(`Could not find node with id ${directive.data.subject.id}`);
+							}
+						}
+					} else if (directive.type === "removeNode") {
+						pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+					} else if (directive.type === "updateNode") {
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (node) {
+							for (const key in directive.data) {
+								node[key] = directive.data[key];
+							}
+						} else {
+							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+						}
+					} else if (directive.type === "addNode") {
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (!node) {
+							pr.timelineItems.nodes.push(directive.data);
+						} else {
+							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+						}
+					} else if (directive.type === "updatePullRequestReviewComment") {
+						let done = false;
+						for (const edge of pr.reviewThreads.edges) {
+							if (!edge.node.comments) continue;
+							for (const comment of edge.node.comments.nodes) {
+								if (comment.id === directive.data.id) {
+									for (const key in directive.data) {
+										comment[key] = directive.data[key];
+									}
+									done = true;
+								}
+								if (done) break;
+							}
+							if (done) break;
+						}
+					} else if (directive.type === "updatePullRequestReviewCommentNode") {
+						const node = pr.timelineItems.nodes.find(
+							_ => _.id === directive.data.pullRequestReview.id
+						);
+						if (node && node.comments) {
+							for (const comment of node.comments.nodes) {
+								if (comment.id !== directive.data.id) continue;
+								for (const key in directive.data) {
+									comment[key] = directive.data[key];
+								}
+								break;
+							}
+						} else {
+							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+						}
+					} else if (directive.type === "updatePullRequestReview") {
+						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+						if (node) {
+							for (const key in directive.data) {
+								node[key] = directive.data[key];
+							}
+						} else {
+							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+						}
+					} else if (directive.type === "updatePullRequest") {
+						for (const key in directive.data) {
+							pr[key] = directive.data[key];
+						}
+					}
+				}
+			}
+			return {
+				myPullRequests: { ...state.myPullRequests },
+				pullRequests: newState
+			};
+		}
 		case "RESET":
 			return initialState;
 		default:

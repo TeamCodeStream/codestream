@@ -51,6 +51,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 									pullRequestReviewId: node.id
 								})
 							);
+							fetch();
 						} else {
 							await dispatch(
 								api("deletePullRequestComment", {
@@ -60,7 +61,6 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 								})
 							);
 						}
-						fetch();
 					}
 				}
 			]

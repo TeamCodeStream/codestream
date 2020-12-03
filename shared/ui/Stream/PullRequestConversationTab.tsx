@@ -205,14 +205,13 @@ export const PullRequestConversationTab = (props: {
 			});
 	};
 
-	const setIsDraftPullRequest = async (onOff: boolean) => {
+	const markPullRequestReadyForReview = async (onOff: boolean) => {
 		setIsLoadingMessage("Updating...");
 		await dispatch(
-			api("setIsDraftPullRequest", {
-				onOff
+			api("markPullRequestReadyForReview", {
+				isReady: onOff
 			})
 		);
-		fetch();
 	};
 
 	const mergePullRequest = useCallback(
@@ -257,24 +256,18 @@ export const PullRequestConversationTab = (props: {
 				break;
 		}
 
-		await dispatch(
-			api("lockPullRequest", {
-				lockReason: reason
-			})
-		);
-		fetch().then(() => {
-			setIsLocking(false);
-			setIsLoadingLocking(false);
-		});
+		await dispatch(api("lockPullRequest", { lockReason: reason }));
+
+		setIsLocking(false);
+		setIsLoadingLocking(false);
 	};
 
 	const unlockPullRequest = async () => {
 		setIsLoadingLocking(true);
 		await dispatch(api("unlockPullRequest", {}));
-		fetch().then(() => {
-			setIsLocking(false);
-			setIsLoadingLocking(false);
-		});
+
+		setIsLocking(false);
+		setIsLoadingLocking(false);
 	};
 
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
@@ -482,7 +475,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -529,7 +521,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableProjects = async (e?) => {
@@ -660,18 +651,18 @@ export const PullRequestConversationTab = (props: {
 	// 	}
 	// }, [availableIssues, pr]);
 
-	const setIssue = async (id: string, onOff: boolean) => {
-		setIsLoadingMessage(onOff ? "Adding Issue..." : "Removing Issue...");
-		await dispatch(
-			api("setIssueOnPullRequest", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName,
-				issueId: id,
-				onOff
-			})
-		);
-		fetch();
-	};
+	// const setIssue = async (id: string, onOff: boolean) => {
+	// 	setIsLoadingMessage(onOff ? "Adding Issue..." : "Removing Issue...");
+	// 	await dispatch(
+	// 		api("setIssueOnPullRequest", {
+	// 			owner: ghRepo.repoOwner,
+	// 			repo: ghRepo.repoName,
+	// 			issueId: id,
+	// 			onOff
+	// 		})
+	// 	);
+	// 	fetch();
+	// };
 
 	const toggleSubscription = async () => {
 		const onOff = pr.viewerSubscription === "SUBSCRIBED" ? false : true;
@@ -683,7 +674,6 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const requiredApprovingReviewCount = useMemo(() => {
@@ -822,7 +812,7 @@ export const PullRequestConversationTab = (props: {
 								<Button
 									className="no-wrap"
 									variant="secondary"
-									onClick={() => setIsDraftPullRequest(true)}
+									onClick={() => markPullRequestReadyForReview(true)}
 								>
 									Ready for review
 								</Button>

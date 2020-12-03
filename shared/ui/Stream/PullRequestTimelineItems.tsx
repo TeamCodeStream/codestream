@@ -137,49 +137,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 		});
 	};
 
-	const handleEdit = async (id: string, type: "PR" | "ISSUE" | "REVIEW" | "REVIEW_COMMENT") => {
-		setIsLoadingMessage("Updating Comment...");
-		try {
-			const value = pendingComments[id];
-			if (value == null) return;
-
-			await dispatch(
-				api(
-					type === "REVIEW_COMMENT"
-						? "updateReviewComment"
-						: type === "ISSUE"
-						? "updateIssueComment"
-						: type === "PR"
-						? "updatePullRequestBody"
-						: "updateReview",
-					{
-						id,
-						body: value
-					}
-				)
-			);
-
-			fetch().then(() => {
-				setPendingComments({
-					...pendingComments,
-					[id]: undefined
-				});
-				setEditingComments({
-					...editingComments,
-					[id]: false
-				});
-			});
-		} catch (ex) {
-			console.warn(ex);
-		} finally {
-			setIsLoadingMessage();
-		}
-	};
-
-	const handleOnChangeReviewOptions = (value: string) => {
-		setReviewOption(value);
-	};
-
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return {
@@ -208,7 +165,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								targetId={pr.id}
 								setIsLoadingMessage={setIsLoadingMessage}
-								fetch={fetch}
 								reactionGroups={pr.reactionGroups}
 							/>
 							<PullRequestCommentMenu
@@ -248,7 +204,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						pr={pr}
 						targetId={pr.id}
 						setIsLoadingMessage={setIsLoadingMessage}
-						fetch={fetch}
 						reactionGroups={pr.reactionGroups}
 					/>
 				</PRCommentCard>
@@ -282,7 +237,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														pr={pr}
 														targetId={item.id}
 														setIsLoadingMessage={setIsLoadingMessage}
-														fetch={fetch}
 														reactionGroups={item.reactionGroups}
 													/>
 													<PullRequestCommentMenu
@@ -320,7 +274,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												pr={pr}
 												targetId={item.id}
 												setIsLoadingMessage={setIsLoadingMessage}
-												fetch={fetch}
 												reactionGroups={item.reactionGroups}
 											/>
 										</>
@@ -374,7 +327,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 															pr={pr}
 															targetId={item.id}
 															setIsLoadingMessage={setIsLoadingMessage}
-															fetch={fetch}
 															reactionGroups={item.reactionGroups}
 														/>
 														<PullRequestCommentMenu
@@ -414,7 +366,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													pr={pr}
 													targetId={item.id}
 													setIsLoadingMessage={setIsLoadingMessage}
-													fetch={fetch}
 													reactionGroups={item.reactionGroups}
 												/>
 											</>

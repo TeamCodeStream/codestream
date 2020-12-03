@@ -62,10 +62,8 @@ export const PullRequestEditingComment = styled((props: Props) => {
 				)
 			);
 
-			fetch().then(() => {
-				setText("");
-				done();
-			});
+			setText("");
+			done();
 		} catch (ex) {
 			console.warn(ex);
 		} finally {

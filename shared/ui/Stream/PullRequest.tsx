@@ -378,9 +378,8 @@ export const PullRequest = () => {
 	const saveTitle = async () => {
 		setIsLoadingMessage("Saving Title...");
 		setSavingTitle(true);
-
 		await dispatch(api("updatePullRequestTitle", { title }));
-		fetch();
+		setSavingTitle(false);
 	};
 
 	const getOpenRepos = async () => {
@@ -497,7 +496,8 @@ export const PullRequest = () => {
 				}, 5000);
 			}
 			interval = setInterval(async () => {
-				if (intervalCounter >= 120) {
+				// checks for 1 hour
+				if (intervalCounter >= 60) {
 					interval && clearInterval(interval);
 					intervalCounter = 0;
 					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
@@ -528,7 +528,7 @@ export const PullRequest = () => {
 					console.error(ex);
 					interval && clearInterval(interval);
 				}
-			}, 60000); //60000 === 1 minute
+			}, 300000); //300000 === 5 minute interval
 		}
 
 		return () => {

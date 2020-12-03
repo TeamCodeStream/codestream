@@ -180,7 +180,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									pr={pr}
 									targetId={comment.id}
 									setIsLoadingMessage={setIsLoadingMessage}
-									fetch={props.fetch}
 									reactionGroups={comment.reactionGroups}
 								/>
 								<PullRequestCommentMenu
@@ -220,7 +219,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 				pr={pr}
 				targetId={comment.id}
 				setIsLoadingMessage={setIsLoadingMessage}
-				fetch={props.fetch}
 				reactionGroups={comment.reactionGroups}
 			/>
 			{comment.replies &&
@@ -249,7 +247,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 											pr={pr}
 											targetId={c.id}
 											setIsLoadingMessage={setIsLoadingMessage}
-											fetch={props.fetch}
 											reactionGroups={c.reactionGroups}
 										/>
 										<PullRequestCommentMenu
@@ -287,7 +284,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								targetId={c.id}
 								setIsLoadingMessage={setIsLoadingMessage}
-								fetch={props.fetch}
 								reactionGroups={c.reactionGroups}
 							/>
 						</div>

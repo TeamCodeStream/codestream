@@ -73,6 +73,13 @@ export const clearPullRequestError = (providerId: string, id: string) =>
 		undefined
 	});
 
+export const handleDirective = (providerId: string, id: string, data: any) =>
+	action(ProviderPullRequestActionsTypes.HandleDirectives, {
+		providerId,
+		id,
+		data
+	});
+
 const _getPullRequestConversationsFromProvider = async (providerId: string, id: string) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
@@ -399,11 +406,11 @@ export const api = <T = any, R = any>(
 		| "getProjects"
 		| "getReviewers"
 		| "lockPullRequest"
+		| "markPullRequestReadyForReview"
 		| "mergePullRequest"
 		| "removeReviewerFromPullRequest"
 		| "resolveReviewThread"
 		| "setAssigneeOnPullRequest"
-		| "setIsDraftPullRequest"
 		| "setIssueOnPullRequest"
 		| "setLabelOnPullRequest"
 		| "submitReview"
@@ -442,13 +449,35 @@ export const api = <T = any, R = any>(
 
 		params = params || {};
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
-		const response = await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
+		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
 			providerId: providerId,
 			params: params
-		});
+		})) as any;
 		if (response && (!options || (options && !options.preventClearError))) {
 			dispatch(clearPullRequestError(providerId, pullRequestId));
+		}
+		// if (response && response.directive) {
+		// 	if (response.directive === "add") {
+		// 		dispatch(addTimelineNode(providerId, pullRequestId, response.data));
+		// 	} else if (response.directive === "remove") {
+		// 		dispatch(removeTimelineNode(providerId, pullRequestId, response.data));
+		// 	} // else if (response.directive === "updateLabels") {
+		// 	// 	dispatch(updatePullRequestLabels(providerId, pullRequestId, response.data));
+		// 	// }
+		// 	else {
+		// 		console.warn("no directive");
+		// 		return response as R;
+		// 	}
+		// 	return {
+		// 		handled: true
+		// 	};
+		// }
+		if (response && response.directives) {
+			dispatch(handleDirective(providerId, pullRequestId, response.directives));
+			return {
+				handled: true
+			};
 		}
 		return response as R;
 	} catch (error) {
