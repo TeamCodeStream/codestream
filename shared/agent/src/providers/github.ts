@@ -1983,19 +1983,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
-	// async closePullRequest(request: { pullRequestId: string }) {
-	// 	const query = `mutation ClosePullRequest($pullRequestId:ID!) {
-	// 		closePullRequest(input: {pullRequestId: $pullRequestId}) {
-	// 			  clientMutationId
-	// 			}
-	// 		  }`;
-
-	// 	const response = await this.mutate<any>(query, {
-	// 		pullRequestId: request.pullRequestId
-	// 	});
-	// 	return true;
-	// }
-
 	/**
 	 * Returns a string only if it satisfies the current version (GHE only)
 	 *
@@ -2609,11 +2596,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
+		const directives: any = [];
+		const response = { directives: directives };
 		if (request.text) {
-			await this.mutate<any>(
+			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
 				addComment(input: {subjectId: $pullRequestId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 10) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			  }`,
 				{
@@ -2621,12 +2642,37 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					body: request.text
 				}
 			);
+
+			directives.push({
+				type: "addNode",
+				data: response1.addComment.timelineEdge.node
+			});
 		}
 
-		await this.mutate<any>(
+		const response2 = await this.mutate<any>(
 			`mutation ClosePullRequest($pullRequestId:ID!) {
 			closePullRequest(input: {pullRequestId: $pullRequestId}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 10) {
+						nodes {
+						  ... on ClosedEvent {
+							__typename
+							id
+							actor {
+							  login
+							  avatarUrl
+							}
+							createdAt
+						  }
+						}
+					  }
+				  }
 				}
 			}`,
 			{
@@ -2634,15 +2680,64 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return true;
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergeable: response2.closePullRequest.pullRequest.mergeable,
+				merged: response2.closePullRequest.pullRequest.merged,
+				mergedAt: response2.closePullRequest.pullRequest.mergedAt,
+				state: response2.closePullRequest.pullRequest.state,
+				updatedAt: response2.closePullRequest.pullRequest.updatedAt
+			}
+		});
+		directives.push({
+			type: "addNodes",
+			data: response2.closePullRequest.pullRequest.timelineItems.nodes
+		});
+
+		return response;
 	}
 
 	async createPullRequestCommentAndReopen(request: { pullRequestId: string; text: string }) {
+		const directives: any = [];
+		const response = { directives: directives };
 		if (request.text) {
-			await this.mutate<any>(
+			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
 				addComment(input: {subjectId: $pullRequestId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 10) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			  }`,
 				{
@@ -2650,20 +2745,59 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					body: request.text
 				}
 			);
+
+			directives.push({
+				type: "addNode",
+				data: response1.addComment.timelineEdge.node
+			});
 		}
 
-		await this.mutate<any>(
+		const response2 = await this.mutate<any>(
 			`mutation ReopenPullRequest($pullRequestId:ID!) {
 			reopenPullRequest(input: {pullRequestId: $pullRequestId}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 1) {
+						nodes {
+						  ... on ReopenedEvent {
+							id
+							__typename
+							actor {
+							  login
+							  avatarUrl
+							}
+							createdAt
+						  }
+						}
+					  }
+				  }
 				}
 			}`,
 			{
 				pullRequestId: request.pullRequestId
 			}
 		);
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergeable: response2.reopenPullRequest.pullRequest.mergeable,
+				merged: response2.reopenPullRequest.pullRequest.merged,
+				mergedAt: response2.reopenPullRequest.pullRequest.mergedAt,
+				state: response2.reopenPullRequest.pullRequest.state,
+				updatedAt: response2.reopenPullRequest.pullRequest.updatedAt
+			}
+		});
+		directives.push({
+			type: "addNodes",
+			data: response2.reopenPullRequest.pullRequest.timelineItems.nodes
+		});
 
-		return true;
+		return response;
 	}
 
 	async resolveReviewThread(request: { threadId: string }) {
@@ -3155,6 +3289,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		  }`,
 			`... on ClosedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
@@ -3517,6 +3652,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			createdAt
 		  }`,
 			`... on ReopenedEvent {
+			id
 			__typename
 			actor {
 			  login

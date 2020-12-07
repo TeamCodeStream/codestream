@@ -242,7 +242,7 @@ export function reduceProviderPullRequests(
 						if (!node) {
 							pr.timelineItems.nodes.push(directive.data);
 						} else {
-							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "addNodes") {
 						for (const newNode of directive.data) {
@@ -251,7 +251,7 @@ export function reduceProviderPullRequests(
 							if (!node) {
 								pr.timelineItems.nodes.push(newNode);
 							} else {
-								console.warn(`Node already exists: id ${directive.data.subject.id}`);
+								console.warn(`Node already exists: id ${newNode.id}`);
 							}
 						}
 					} else if (directive.type === "updatePullRequestReviewComment") {

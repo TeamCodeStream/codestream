@@ -1114,7 +1114,6 @@ export const PullRequestConversationTab = (props: {
 				</PRComment>
 				<PullRequestBottomComment
 					pr={pr}
-					fetch={fetch}
 					setIsLoadingMessage={setIsLoadingMessage}
 					__onDidRender={__onDidRender}
 				/>

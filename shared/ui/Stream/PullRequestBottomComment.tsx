@@ -18,14 +18,13 @@ import { replaceHtml } from "../utils";
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	__onDidRender: Function;
 	className?: string;
 }
 
 export const PullRequestBottomComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, fetch, setIsLoadingMessage } = props;
+	const { pr, setIsLoadingMessage } = props;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		return {
@@ -69,10 +68,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			})
 		);
 		setText("");
-		fetch().then(() => {
-			dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-			setIsLoadingCommentAndClose(false);
-		});
+		dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
+		setIsLoadingCommentAndClose(false);
 	};
 
 	const onCommentAndReopenClick = async e => {
@@ -85,7 +82,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			})
 		);
 		setText("");
-		fetch().then(() => setIsLoadingCommentAndClose(false));
+		setIsLoadingCommentAndClose(false);
 	};
 
 	const map = {

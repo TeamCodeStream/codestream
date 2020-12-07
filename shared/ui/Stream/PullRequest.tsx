@@ -63,7 +63,6 @@ import {
 	getProviderPullRequestRepo
 } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
-import { Modal } from "./Modal";
 import { PullRequestFileComments } from "./PullRequestFileComments";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPreferences } from "../store/users/reducer";
@@ -334,10 +333,6 @@ export const PullRequest = () => {
 		}
 	}, [pr && pr.headRefName, derivedState.checkoutBranch]);
 
-	const hasRepoOpen = useMemo(() => {
-		return pr && openRepos.find(_ => _.name === pr.repository.name);
-	}, [pr, openRepos]);
-
 	useEffect(() => {
 		if (!pr) return;
 
@@ -459,15 +454,26 @@ export const PullRequest = () => {
 	});
 
 	const _checkMergeabilityStatus = async () => {
-		if (!pr) return undefined;
+		if (
+			!derivedState.currentPullRequest ||
+			!derivedState.currentPullRequest.conversations ||
+			!derivedState.currentPullRequest.conversations.repository ||
+			!derivedState.currentPullRequest.conversations.repository.pullRequest
+		)
+			return undefined;
 		try {
 			const response = (await dispatch(
 				api("getPullRequestLastUpdated", {}, { preventClearError: true })
 			)) as any;
-			if (pr && response && response.mergeable !== pr.mergeable) {
+			if (
+				derivedState.currentPullRequest &&
+				response &&
+				response.mergeable !==
+					derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable
+			) {
 				console.log(
 					"getPullRequestLastUpdated is updating (mergeable)",
-					pr.mergeable,
+					derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable,
 					response.mergeable
 				);
 				reload();
@@ -478,63 +484,72 @@ export const PullRequest = () => {
 		}
 		return undefined;
 	};
+
 	const checkMergeabilityStatus = useCallback(() => {
 		_checkMergeabilityStatus();
-	}, [pr, derivedState.currentPullRequestId]);
+	}, [derivedState.currentPullRequest, derivedState.currentPullRequestId]);
 
 	let interval;
 	let intervalCounter = 0;
 	useEffect(() => {
 		interval && clearInterval(interval);
-		if (pr) {
-			if (autoCheckedMergeability === "UNCHECKED" && pr.mergeable === "UNKNOWN") {
-				console.log("PullRequest pr mergeable is UNKNOWN");
-				setTimeout(() => {
-					_checkMergeabilityStatus().then(_ => {
-						setAutoCheckedMergeability(_ ? "CHECKED" : "UNKNOWN");
-					});
-				}, 5000);
-			}
-			interval = setInterval(async () => {
-				// checks for 1 hour
-				if (intervalCounter >= 60) {
-					interval && clearInterval(interval);
-					intervalCounter = 0;
-					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
-					return;
-				}
-				try {
-					const response = (await dispatch(
-						api(
-							"getPullRequestLastUpdated",
-							{},
-							{ preventClearError: true, preventErrorReporting: true }
-						)
-					)) as any;
-					if (pr && response && response.updatedAt !== pr.updatedAt) {
-						console.log(
-							"getPullRequestLastUpdated is updating",
-							response.updatedAt,
-							pr.updatedAt,
-							intervalCounter
-						);
-						intervalCounter = 0;
-						reload();
-						clearInterval(interval);
-					} else {
-						intervalCounter++;
-					}
-				} catch (ex) {
-					console.error(ex);
-					interval && clearInterval(interval);
-				}
-			}, 300000); //300000 === 5 minute interval
+		if (!derivedState.currentPullRequest) return;
+
+		if (
+			autoCheckedMergeability === "UNCHECKED" ||
+			derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable === "UNKNOWN"
+		) {
+			console.log("PullRequest pr mergeable is UNKNOWN");
+			setTimeout(() => {
+				_checkMergeabilityStatus().then(_ => {
+					setAutoCheckedMergeability(_ ? "CHECKED" : "UNKNOWN");
+				});
+			}, 5000);
 		}
+		interval = setInterval(async () => {
+			// checks for 1 hour
+			if (intervalCounter >= 12) {
+				interval && clearInterval(interval);
+				intervalCounter = 0;
+				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+				return;
+			}
+			try {
+				const response = (await dispatch(
+					api(
+						"getPullRequestLastUpdated",
+						{},
+						{ preventClearError: true, preventErrorReporting: true }
+					)
+				)) as any;
+				if (
+					derivedState.currentPullRequest &&
+					response &&
+					response.updatedAt !==
+						derivedState.currentPullRequest.conversations.repository.pullRequest.updatedAt
+				) {
+					console.log(
+						"getPullRequestLastUpdated is updating",
+						response.updatedAt,
+						derivedState.currentPullRequest.conversations.repository.pullRequest.updatedAt,
+						intervalCounter
+					);
+					intervalCounter = 0;
+					reload();
+					clearInterval(interval);
+				} else {
+					intervalCounter++;
+				}
+			} catch (ex) {
+				console.error(ex);
+				interval && clearInterval(interval);
+			}
+		}, 300000); //300000 === 5 minute interval
 
 		return () => {
 			interval && clearInterval(interval);
 		};
-	}, [pr, autoCheckedMergeability]);
+	}, [derivedState.currentPullRequest, autoCheckedMergeability]);
 
 	const iAmRequested = useMemo(() => {
 		if (pr) {
