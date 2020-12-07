@@ -225,9 +225,7 @@ export const PullRequestConversationTab = (props: {
 				})
 			)) as any;
 			if (response) {
-				fetch().then(_ => {
-					dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
-				});
+				dispatch(removeFromMyPullRequests(pr.providerId, derivedState.currentPullRequestId!));
 			}
 		},
 		[

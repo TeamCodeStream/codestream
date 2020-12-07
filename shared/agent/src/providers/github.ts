@@ -2390,13 +2390,92 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation MergePullRequest($pullRequestId:ID!) {
 			mergePullRequest(input: {pullRequestId: $pullRequestId, mergeMethod: ${request.mergeMethod}}) {
 				  clientMutationId
+				  pullRequest {
+					state
+					mergeable
+					merged
+					mergedAt
+					updatedAt
+					timelineItems(last: 10) {
+					  nodes {
+						... on ReferencedEvent {
+						  id
+						  __typename
+						  actor {
+							login
+							avatarUrl
+						  }
+						  commit {
+							messageBody
+							messageHeadline
+							status {
+							  state
+							}
+							oid
+							abbreviatedOid
+							author {
+							  avatarUrl
+							  name
+							  user {
+								login
+							  }
+							}
+							committer {
+							  avatarUrl
+							  name
+							  user {
+								login
+							  }
+							}
+						  }
+						}
+						... on MergedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+						  }
+						  mergeRefName
+						  createdAt
+						  commit {
+							abbreviatedOid
+						  }
+						}
+						... on ClosedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+						  }
+						  createdAt
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 		const response = await this.mutate<any>(query, {
 			pullRequestId: request.pullRequestId
 		});
 
-		return true;
+		const pullRequestData = {
+			canBeRebased: false,
+			mergeStateStatus: "UNKNOWN",
+			mergeable: response.mergePullRequest.pullRequest.mergeable,
+			merged: response.mergePullRequest.pullRequest.merged,
+			mergedAt: response.mergePullRequest.pullRequest.mergedAt,
+			state: response.mergePullRequest.pullRequest.state,
+			updatedAt: response.mergePullRequest.pullRequest.updatedAt
+		};
+
+		return {
+			directives: [
+				{ type: "updatePullRequest", data: pullRequestData },
+				{ type: "addNodes", data: response.mergePullRequest.pullRequest.timelineItems.nodes }
+			]
+		};
 	}
 
 	async lockPullRequest(request: { pullRequestId: string; lockReason: string }) {

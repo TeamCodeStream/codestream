@@ -237,11 +237,22 @@ export function reduceProviderPullRequests(
 							console.warn(`Could not find node with id ${directive.data.subject.id}`);
 						}
 					} else if (directive.type === "addNode") {
+						if (!directive.data.id) continue;
 						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
 						if (!node) {
 							pr.timelineItems.nodes.push(directive.data);
 						} else {
 							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+						}
+					} else if (directive.type === "addNodes") {
+						for (const newNode of directive.data) {
+							if (!newNode.id) continue;
+							const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+							if (!node) {
+								pr.timelineItems.nodes.push(newNode);
+							} else {
+								console.warn(`Node already exists: id ${directive.data.subject.id}`);
+							}
 						}
 					} else if (directive.type === "updatePullRequestReviewComment") {
 						let done = false;
