@@ -177,21 +177,7 @@ export function reduceProviderPullRequests(
 			if (newState[providerId][id] && newState[providerId][id].conversations) {
 				const pr = newState[providerId][id].conversations.repository.pullRequest;
 				for (const directive of action.payload.data) {
-					if (directive.type === "replace") {
-						const paths = directive.target.split(".");
-						let result = "";
-						for (const path of paths) {
-							result += `['${path}']`;
-						}
-						eval(`pr${result} = directive.data`);
-					} else if (directive.type === "add") {
-						const paths = directive.target.split(".");
-						let result = "";
-						for (const path of paths) {
-							result += `['${path}']`;
-						}
-						eval(`pr${result}.push(directive.data)`);
-					} else if (directive.type === "addReaction") {
+					if (directive.type === "addReaction") {
 						if (directive.data.subject.__typename === "PullRequest") {
 							pr.reactionGroups
 								.find(_ => _.content === directive.data.reaction.content)
