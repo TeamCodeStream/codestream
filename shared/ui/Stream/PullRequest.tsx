@@ -508,7 +508,7 @@ export const PullRequest = () => {
 		}
 		interval = setInterval(async () => {
 			// checks for 1 hour
-			if (intervalCounter >= 12) {
+			if (intervalCounter >= 60) {
 				interval && clearInterval(interval);
 				intervalCounter = 0;
 				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
@@ -544,7 +544,7 @@ export const PullRequest = () => {
 				console.error(ex);
 				interval && clearInterval(interval);
 			}
-		}, 300000); //300000 === 5 minute interval
+		}, 60000); //60000 === 5 minute interval
 
 		return () => {
 			interval && clearInterval(interval);
