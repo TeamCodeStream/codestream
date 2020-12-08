@@ -3,11 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { PRButtonRow } from "./PullRequestComponents";
-import { HostApi } from "../webview-api";
-import {
-	ExecuteThirdPartyTypedType,
-	FetchThirdPartyPullRequestPullRequest
-} from "@codestream/protocols/agent";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import MessageInput from "./MessageInput";
 import { CSMe } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
@@ -17,7 +13,6 @@ import { api } from "../store/providerPullRequests/actions";
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	className?: string;
 	id: string;
 	type: "PR" | "ISSUE" | "REVIEW" | "REVIEW_COMMENT";
@@ -27,17 +22,7 @@ interface Props {
 
 export const PullRequestEditingComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const { pr, fetch, setIsLoadingMessage, type, id, done } = props;
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const currentUser = state.users[state.session.userId!] as CSMe;
-		return {
-			currentUser,
-			currentPullRequestId: state.context.currentPullRequest
-				? state.context.currentPullRequest.id
-				: undefined
-		};
-	});
-
+	const { pr, setIsLoadingMessage, type, id, done } = props;
 	const [text, setText] = useState(props.text);
 
 	const handleEdit = async () => {

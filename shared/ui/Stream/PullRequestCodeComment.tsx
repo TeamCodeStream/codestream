@@ -95,8 +95,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					threadId: threadId
 				})
 			);
-
-			await props.fetch();
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
@@ -112,8 +110,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					threadId: threadId
 				})
 			);
-
-			await props.fetch();
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
@@ -198,7 +194,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 						{editingComments[comment.id] ? (
 							<PullRequestEditingComment
 								pr={pr}
-								fetch={props.fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								id={comment.id}
 								type={"REVIEW_COMMENT"}
@@ -265,7 +260,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								{editingComments[c.id] ? (
 									<PullRequestEditingComment
 										pr={pr}
-										fetch={props.fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 										id={c.id}
 										type={"REVIEW_COMMENT"}

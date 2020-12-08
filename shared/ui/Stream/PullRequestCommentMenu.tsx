@@ -1,16 +1,6 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
+import { useDispatch } from "react-redux";
 import Icon from "./Icon";
-import Menu from "./Menu";
-import { emojify } from "./Markdowner";
-import styled from "styled-components";
-import { PRReactions, PRReaction } from "./PullRequestComponents";
-import Tooltip from "./Tooltip";
-import { SmartFormattedList } from "./SmartFormattedList";
-import { HostApi } from "../webview-api";
-import { ExecuteThirdPartyTypedType } from "@codestream/protocols/agent";
-import { DropdownButton } from "./Review/DropdownButton";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import copy from "copy-to-clipboard";
 import { confirmPopup } from "./Confirm";

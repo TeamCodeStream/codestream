@@ -558,13 +558,12 @@ export const PullRequestConversationTab = (props: {
 
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
-		await dispatch(
+		dispatch(
 			api("toggleProjectOnPullRequest", {
 				projectId: id,
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -609,13 +608,12 @@ export const PullRequestConversationTab = (props: {
 
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
-		await dispatch(
+		dispatch(
 			api("toggleMilestoneOnPullRequest", {
 				milestoneId: id,
 				onOff
 			})
 		);
-		fetch();
 	};
 
 	// const fetchAvailableIssues = async (e?) => {

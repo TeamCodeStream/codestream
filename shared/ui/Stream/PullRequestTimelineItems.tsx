@@ -182,7 +182,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						{editingComments[pr.id] ? (
 							<PullRequestEditingComment
 								pr={pr}
-								fetch={fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								id={pr.id}
 								type={"PR"}
@@ -255,7 +254,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												{editingComments[item.id] ? (
 													<PullRequestEditingComment
 														pr={pr}
-														fetch={fetch}
 														setIsLoadingMessage={setIsLoadingMessage}
 														id={item.id}
 														type={"ISSUE"}
@@ -347,7 +345,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													{editingComments[item.id] ? (
 														<PullRequestEditingComment
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															id={item.id}
 															type={"REVIEW"}

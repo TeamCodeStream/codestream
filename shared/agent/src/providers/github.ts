@@ -1,4 +1,5 @@
 "use strict";
+import * as fs from "fs";
 import { GitRemoteLike, GitRepository } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Response } from "node-fetch";
@@ -2310,6 +2311,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation UpdatePullRequest($pullRequestId:ID!, $milestoneId: ID) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, milestoneId: $milestoneId}) {
 				  clientMutationId
+				  pullRequest {
+					updatedAt
+					milestone {
+					  id
+					  title
+					  state
+					  description
+					  number
+					}
+					timelineItems(last: 1, itemTypes: MILESTONED_EVENT) {
+					  nodes {
+						... on DemilestonedEvent {
+						  __typename
+						  id
+						  actor {
+							login
+							avatarUrl
+							resourcePath
+							url
+						  }
+						  milestoneTitle
+						  createdAt
+						}
+					  }
+					}
+				  }
 				}
 			  }`;
 
@@ -2318,7 +2345,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			milestoneId: request.onOff ? request.milestoneId : null
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: { milestone: response.updatePullRequest.pullRequest.milestone }
+				},
+				{ type: "addNode", data: response.updatePullRequest.pullRequest.timelineItems.nodes[0] }
+			]
+		};
 	}
 
 	async toggleProjectOnPullRequest(request: {
@@ -2331,6 +2366,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation UpdatePullRequest($pullRequestId:ID!, $projectIds: [ID!]) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, projectIds: $projectIds}) {
 				  clientMutationId
+				  pullRequest {
+					projectCards(first: 10) {
+						nodes {
+						  id
+						  note
+						  state
+						  project {
+							name
+							id
+						  }
+						}
+					  }
+				  }
 				}
 			  }`;
 		if (request.onOff) {
@@ -2343,7 +2391,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			projectIds: [...projectIds]
 		});
-		return response;
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: { projectCards: response.updatePullRequest.pullRequest.projectCards }
+				}
+			]
+		};
 	}
 
 	async updatePullRequestTitle(request: { pullRequestId: string; title: string }) {
@@ -2807,13 +2862,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			`mutation ResolveReviewThread($threadId:ID!) {
 				resolveReviewThread(input: {threadId:$threadId}) {
 				  clientMutationId
+				  thread {
+					isResolved
+					viewerCanResolve
+					viewerCanUnresolve
+					id
+				  }
 				}
 			}`,
 			{
 				threadId: request.threadId
 			}
 		);
-		return response;
+		const thread = response.resolveReviewThread.thread;
+		return {
+			directives: [
+				{
+					type: "resolveReviewThread",
+					data: {
+						isResolved: thread.isResolved,
+						viewerCanResolve: thread.viewerCanResolve,
+						viewerCanUnresolve: thread.viewerCanUnresolve,
+						threadId: thread.id
+					}
+				}
+			]
+		};
 	}
 
 	async unresolveReviewThread(request: { threadId: string }) {
@@ -2821,13 +2895,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			`mutation UnresolveReviewThread($threadId:ID!) {
 				unresolveReviewThread(input: {threadId:$threadId}) {
 				  clientMutationId
+				  thread {
+					isResolved
+					viewerCanResolve
+					viewerCanUnresolve
+					id
+				  }
 				}
 			}`,
 			{
 				threadId: request.threadId
 			}
 		);
-		return response;
+		const thread = response.unresolveReviewThread.thread;
+		return {
+			directives: [
+				{
+					type: "unresolveReviewThread",
+					data: {
+						isResolved: thread.isResolved,
+						viewerCanResolve: thread.viewerCanResolve,
+						viewerCanUnresolve: thread.viewerCanUnresolve,
+						threadId: thread.id
+					}
+				}
+			]
+		};
 	}
 
 	async addComment(request: { subjectId: string; text: string }) {
@@ -3330,13 +3423,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			//   }`,
 			`... on DemilestonedEvent {
 			__typename
+			id
 			actor {
 			  login
 			  avatarUrl
 			  resourcePath
 			  url
 			}
-			id
 			milestoneTitle
 			createdAt
 		  }`,
@@ -3641,9 +3734,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }`,
-			`... on RemovedFromProjectEvent {
-			__typename
-		  }`,
+			// 	`... on RemovedFromProjectEvent {
+			// 	__typename
+			//   }`,
 			`... on RenamedTitleEvent {
 			__typename
 			actor {

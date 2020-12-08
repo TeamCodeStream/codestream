@@ -282,7 +282,7 @@ export function reduceProviderPullRequests(
 								break;
 							}
 						} else {
-							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "updatePullRequestReview") {
 						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
@@ -291,11 +291,42 @@ export function reduceProviderPullRequests(
 								node[key] = directive.data[key];
 							}
 						} else {
-							console.warn(`Could not find node with id ${directive.data.subject.id}`);
+							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "updatePullRequest") {
 						for (const key in directive.data) {
 							pr[key] = directive.data[key];
+						}
+					} else if (
+						directive.type === "resolveReviewThread" ||
+						directive.type === "unresolveReviewThread"
+					) {
+						const nodeWrapper = pr.reviewThreads.edges.find(
+							_ => _.node.id === directive.data.threadId
+						);
+						if (nodeWrapper && nodeWrapper.node) {
+							for (const key in directive.data) {
+								nodeWrapper.node[key] = directive.data[key];
+							}
+						} else {
+							console.warn(`Could not find node with id ${directive.data.threadId}`);
+						}
+
+						const reviews = pr.timelineItems.nodes.filter(
+							_ => _.__typename === "PullRequestReview"
+						);
+						if (reviews) {
+							for (const review of reviews) {
+								for (const comment of review.comments.nodes) {
+									if (comment.threadId !== directive.data.threadId) continue;
+
+									for (const key in directive.data) {
+										comment[key] = directive.data[key];
+									}
+
+									break;
+								}
+							}
 						}
 					}
 				}
