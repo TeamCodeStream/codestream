@@ -188,8 +188,6 @@ export function reduceProviderPullRequests(
 								node.reactionGroups
 									.find(_ => _.content === directive.data.reaction.content)
 									.users.nodes.push(directive.data.reaction.user);
-							} else {
-								console.warn(`Could not find node with id ${directive.data.subject.id}`);
 							}
 						}
 					} else if (directive.type === "removeReaction") {
@@ -207,8 +205,6 @@ export function reduceProviderPullRequests(
 								).users.nodes = node.reactionGroups
 									.find(_ => _.content === directive.data.reaction.content)
 									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
-							} else {
-								console.warn(`Could not find node with id ${directive.data.subject.id}`);
 							}
 						}
 					} else if (directive.type === "removeNode") {
@@ -219,16 +215,12 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								node[key] = directive.data[key];
 							}
-						} else {
-							console.warn(`Could not find node with id ${directive.data.subject.id}`);
 						}
 					} else if (directive.type === "addNode") {
 						if (!directive.data.id) continue;
 						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
 						if (!node) {
 							pr.timelineItems.nodes.push(directive.data);
-						} else {
-							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "addNodes") {
 						for (const newNode of directive.data) {
@@ -236,8 +228,6 @@ export function reduceProviderPullRequests(
 							const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
 							if (!node) {
 								pr.timelineItems.nodes.push(newNode);
-							} else {
-								console.warn(`Node already exists: id ${newNode.id}`);
 							}
 						}
 					} else if (directive.type === "updatePullRequestReviewComment") {
@@ -267,8 +257,6 @@ export function reduceProviderPullRequests(
 								}
 								break;
 							}
-						} else {
-							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "updatePullRequestReview") {
 						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
@@ -276,8 +264,6 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								node[key] = directive.data[key];
 							}
-						} else {
-							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
 					} else if (directive.type === "updatePullRequestReviewers") {
 						pr.reviewRequests.nodes.length = 0;
@@ -307,8 +293,6 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								nodeWrapper.node[key] = directive.data[key];
 							}
-						} else {
-							console.warn(`Could not find node with id ${directive.data.threadId}`);
 						}
 
 						const reviews = pr.timelineItems.nodes.filter(

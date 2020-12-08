@@ -73,7 +73,7 @@ export const clearPullRequestError = (providerId: string, id: string) =>
 		undefined
 	});
 
-export const handleDirective = (providerId: string, id: string, data: any) =>
+export const handleDirectives = (providerId: string, id: string, data: any) =>
 	action(ProviderPullRequestActionsTypes.HandleDirectives, {
 		providerId,
 		id,
@@ -457,24 +457,9 @@ export const api = <T = any, R = any>(
 		if (response && (!options || (options && !options.preventClearError))) {
 			dispatch(clearPullRequestError(providerId, pullRequestId));
 		}
-		// if (response && response.directive) {
-		// 	if (response.directive === "add") {
-		// 		dispatch(addTimelineNode(providerId, pullRequestId, response.data));
-		// 	} else if (response.directive === "remove") {
-		// 		dispatch(removeTimelineNode(providerId, pullRequestId, response.data));
-		// 	} // else if (response.directive === "updateLabels") {
-		// 	// 	dispatch(updatePullRequestLabels(providerId, pullRequestId, response.data));
-		// 	// }
-		// 	else {
-		// 		console.warn("no directive");
-		// 		return response as R;
-		// 	}
-		// 	return {
-		// 		handled: true
-		// 	};
-		// }
+
 		if (response && response.directives) {
-			dispatch(handleDirective(providerId, pullRequestId, response.directives));
+			dispatch(handleDirectives(providerId, pullRequestId, response.directives));
 			return {
 				handled: true
 			};
