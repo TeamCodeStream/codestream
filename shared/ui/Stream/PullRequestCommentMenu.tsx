@@ -50,6 +50,9 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 									pullRequestId: pr.id
 								})
 							);
+							if (props.nodeType !== "ISSUE_COMMENT") {
+								fetch();
+							}
 						}
 					}
 				}
