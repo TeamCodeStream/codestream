@@ -281,7 +281,15 @@ export function reduceProviderPullRequests(
 						}
 					} else if (directive.type === "updatePullRequest") {
 						for (const key in directive.data) {
-							pr[key] = directive.data[key];
+							if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
+								// clear out the array, but keep its reference
+								pr[key].nodes.length = 0;
+								for (const n of directive.data[key].nodes) {
+									pr[key].nodes.push(n);
+								}
+							} else {
+								pr[key] = directive.data[key];
+							}
 						}
 					} else if (
 						directive.type === "resolveReviewThread" ||

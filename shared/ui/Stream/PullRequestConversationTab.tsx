@@ -181,7 +181,7 @@ export const PullRequestConversationTab = (props: {
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY);
 	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
-	const [availableIssues, setAvailableIssues] = useState(EMPTY_ARRAY);
+	// const [availableIssues, setAvailableIssues] = useState(EMPTY_ARRAY);
 	const [isLocking, setIsLocking] = useState(false);
 	const [isLockingReason, setIsLockingReason] = useState("");
 	const [isLoadingLocking, setIsLoadingLocking] = useState(false);
@@ -394,7 +394,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Reviewers...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableReviewers, pr]);
+	}, [derivedState.currentPullRequest, availableReviewers, pr]);
 
 	const removeReviewer = async id => {
 		setIsLoadingMessage("Removing Reviewer...");
@@ -463,7 +463,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Assignees...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableAssignees, pr]);
+	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
 	const toggleAssignee = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Assignee..." : "Removing Assignee...");
@@ -509,7 +509,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableLabels, pr]);
+	}, [derivedState.currentPullRequest, availableLabels, pr]);
 
 	const setLabel = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
@@ -554,7 +554,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Projects...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableProjects, pr]);
+	}, [derivedState.currentPullRequest, availableProjects, pr]);
 
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
@@ -604,7 +604,7 @@ export const PullRequestConversationTab = (props: {
 		} else {
 			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
 		}
-	}, [availableMilestones, pr]);
+	}, [derivedState.currentPullRequest, availableMilestones, pr]);
 
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
