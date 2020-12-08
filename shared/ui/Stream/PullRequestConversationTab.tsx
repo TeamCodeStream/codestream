@@ -403,7 +403,6 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
-		fetch();
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -413,7 +412,6 @@ export const PullRequestConversationTab = (props: {
 				userId: id
 			})
 		);
-		fetch();
 	};
 
 	const fetchAvailableAssignees = async (e?) => {

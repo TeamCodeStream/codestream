@@ -279,6 +279,11 @@ export function reduceProviderPullRequests(
 						} else {
 							console.warn(`Could not find node with id ${directive.data.id}`);
 						}
+					} else if (directive.type === "updatePullRequestReviewers") {
+						pr.reviewRequests.nodes.length = 0;
+						for (const data of directive.data) {
+							pr.reviewRequests.nodes.push(data);
+						}
 					} else if (directive.type === "updatePullRequest") {
 						for (const key in directive.data) {
 							if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {

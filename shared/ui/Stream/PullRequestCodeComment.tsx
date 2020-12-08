@@ -49,7 +49,7 @@ interface Props {
 }
 
 export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
-	const { item, comment, author, fetch, setIsLoadingMessage, pr } = props;
+	const { item, comment, author, setIsLoadingMessage, pr } = props;
 	const dispatch = useDispatch();
 
 	const [openComments, setOpenComments] = useState({});
