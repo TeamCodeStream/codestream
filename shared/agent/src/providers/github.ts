@@ -3582,6 +3582,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			this._transform(`[... on ConvertToDraftEvent {
 				__typename
 				id
+				createdAt
 				actor {
 				  login
 				  avatarUrl
@@ -3887,9 +3888,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }`,
-			// 	`... on ReadyForReviewEvent {
-			// 	__typename
-			//   }`,
+			this._transform(`[... on ReadyForReviewEvent {
+			__typename
+			id
+			createdAt
+			actor {
+			  login
+			  avatarUrl
+			}
+		  }:>2.20.0]`),
 			`... on ReferencedEvent {
 			__typename
 			id

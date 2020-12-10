@@ -836,6 +836,30 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 							</PRTimelineItem>
 						);
 					}
+					case "ConvertToDraftEvent": {
+						return (
+							<PRTimelineItem key={index} className="tall">
+								<Icon name="circle" className="circled" />
+								<PRTimelineItemBody>
+									<PRHeadshotName key={index} person={item.actor} />
+									marked this pull request as draft
+									<Timestamp time={item.createdAt!} relative />
+								</PRTimelineItemBody>
+							</PRTimelineItem>
+						);
+					}
+					case "ReadyForReviewEvent": {
+						return (
+							<PRTimelineItem key={index} className="tall">
+								<Icon name="eye" className="circled" />
+								<PRTimelineItemBody>
+									<PRHeadshotName key={index} person={item.actor} />
+									marked this pull request as ready for review
+									<Timestamp time={item.createdAt!} relative />
+								</PRTimelineItemBody>
+							</PRTimelineItem>
+						);
+					}
 					case "HeadRefForcePushedEvent":
 					case "BaseRefForcePushedEvent": {
 						return (
