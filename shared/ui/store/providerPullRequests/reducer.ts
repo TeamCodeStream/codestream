@@ -351,7 +351,19 @@ export const getCurrentProviderPullRequest = createSelector(
 		return undefined;
 	}
 );
+export const getCurrentProviderPullRequestLastUpdated = createSelector(
+	getCurrentProviderPullRequest,
 
+	providerPullRequest => {
+		if (!providerPullRequest) return undefined;
+		return providerPullRequest &&
+			providerPullRequest.conversations &&
+			providerPullRequest.conversations.repository &&
+			providerPullRequest.conversations.repository.pullRequest
+			? providerPullRequest.conversations.repository.pullRequest.updatedAt
+			: undefined;
+	}
+);
 /**
  *  Attempts to get a CS repo for the current PR
  */

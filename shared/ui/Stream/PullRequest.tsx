@@ -60,6 +60,7 @@ import {
 } from "../store/providerPullRequests/actions";
 import {
 	getCurrentProviderPullRequest,
+	getCurrentProviderPullRequestLastUpdated,
 	getProviderPullRequestRepo
 } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
@@ -114,6 +115,7 @@ export const PullRequest = () => {
 		const team = state.teams[state.context.currentTeamId];
 		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
+		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
 			providerPullRequests: providerPullRequests,
@@ -130,6 +132,7 @@ export const PullRequest = () => {
 				? state.context.currentPullRequest.commentId
 				: undefined,
 			currentPullRequest: currentPullRequest,
+			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
 			composeCodemarkActive: state.context.composeCodemarkActive,
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
@@ -525,13 +528,12 @@ export const PullRequest = () => {
 				if (
 					derivedState.currentPullRequest &&
 					response &&
-					response.updatedAt !==
-						derivedState.currentPullRequest.conversations.repository.pullRequest.updatedAt
+					response.updatedAt !== derivedState.currentPullRequestLastUpdated
 				) {
-					console.log(
+					console.warn(
 						"getPullRequestLastUpdated is updating",
 						response.updatedAt,
-						derivedState.currentPullRequest.conversations.repository.pullRequest.updatedAt,
+						derivedState.currentPullRequestLastUpdated,
 						intervalCounter
 					);
 					intervalCounter = 0;
@@ -539,6 +541,7 @@ export const PullRequest = () => {
 					clearInterval(interval);
 				} else {
 					intervalCounter++;
+					console.log("incrementing counter", intervalCounter);
 				}
 			} catch (ex) {
 				console.error(ex);
@@ -549,7 +552,11 @@ export const PullRequest = () => {
 		return () => {
 			interval && clearInterval(interval);
 		};
-	}, [derivedState.currentPullRequest, autoCheckedMergeability]);
+	}, [
+		derivedState.currentPullRequestLastUpdated,
+		derivedState.currentPullRequest,
+		autoCheckedMergeability
+	]);
 
 	const iAmRequested = useMemo(() => {
 		if (pr) {

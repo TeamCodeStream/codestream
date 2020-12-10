@@ -3193,10 +3193,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation AddCommentToPullRequest($subjectId:ID!, $body:String!) {
 				addComment(input: {subjectId: $subjectId, body:$body}) {
 					clientMutationId
-					subject {
-						... on PullRequest {
-						  id
-						  updatedAt
+					commentEdge {
+						node {
+						  pullRequest {
+							updatedAt
+						  }
 						}
 					  }
 				   		timelineEdge {
@@ -3239,11 +3240,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			body: request.text
 		});
 
+		// NOTE must use the commentEdge to get the PR
+		// and not from the subject, as the subject data is stale
+		// at this point
 		return {
-			directives: [ {
-				type:"updatePullRequest",
-				data: response.subject.updatedAt
-			},
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: response.addComment.commentEdge.node.pullRequest
+				},
 				{
 					type: "addNode",
 					data: response.addComment.timelineEdge.node
@@ -3324,14 +3329,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				]
 			};
 		}
-		// TODO
+		// TODO for other types
 		return undefined;
-		// return {
-		// 	directive: "remove",
-		// 	data: {
-		// 		id: request.id
-		// 	}
-		// };
 	}
 
 	_pullRequestIdCache: Map<
