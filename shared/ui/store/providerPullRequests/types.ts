@@ -36,6 +36,13 @@ export type ProviderPullRequestsState = {
 	pullRequests: Index<
 		Index<{
 			conversations: any;
+
+			/**
+			 * Client side date tracking of when this was last added to the redux store
+			 *
+			 * @type {(number | undefined)}
+			 */
+			conversationsLastFetch: number | undefined;
 			files?: any[];
 			collaborators?: any[];
 			commits?: any[];

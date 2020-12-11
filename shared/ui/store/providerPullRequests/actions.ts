@@ -22,6 +22,7 @@ import {
 	setCurrentPullRequestAndBranch,
 	setCurrentReview
 } from "../context/actions";
+import { isAnHourOld } from "./reducer";
 
 export const reset = () => action("RESET");
 
@@ -144,16 +145,22 @@ export const getPullRequestConversations = (providerId: string, id: string) => a
 		if (provider) {
 			const pr = provider[id];
 			if (pr && pr.conversations) {
-				console.log(
-					`fetched pullRequest conversations from store providerId=${providerId} id=${id}`
-				);
-				return pr.conversations;
+				if (isAnHourOld(pr.conversationsLastFetch)) {
+					console.warn(
+						`stale pullRequest conversations from store providerId=${providerId} id=${id}, re-fetching...`
+					);
+				} else {
+					console.log(
+						`fetched pullRequest conversations from store providerId=${providerId} id=${id}`
+					);
+					return pr.conversations;
+				}
 			}
 		}
 
 		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
-		dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
-		dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
+		await dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
+		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;
 	} catch (error) {
 		logError(`failed to get pullRequest conversations: ${error}`, { providerId, id });

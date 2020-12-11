@@ -61,7 +61,8 @@ import {
 import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
-	getProviderPullRequestRepo
+	getProviderPullRequestRepo,
+	isAnHourOld
 } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
 import { PullRequestFileComments } from "./PullRequestFileComments";
@@ -225,7 +226,13 @@ export const PullRequest = () => {
 		if (providerPullRequests) {
 			let data = providerPullRequests[derivedState.currentPullRequestId!];
 			if (data) {
-				_assignState(data.conversations);
+				if (isAnHourOld(data.conversationsLastFetch)) {
+					console.warn(`pr id=${derivedState.currentPullRequestId} is too old, resetting`);
+					// setPR to undefined to trigger loader
+					setPr(undefined);
+				} else {
+					_assignState(data.conversations);
+				}
 			}
 		}
 	}, [

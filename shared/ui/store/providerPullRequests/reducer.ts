@@ -137,7 +137,8 @@ export function reduceProviderPullRequests(
 			const newState = createNewObject(state, action);
 			newState[action.payload.providerId][action.payload.id] = {
 				...newState[action.payload.providerId][action.payload.id],
-				conversations: action.payload.pullRequest
+				conversations: action.payload.pullRequest,
+				conversationsLastFetch: Date.now()
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
@@ -353,7 +354,6 @@ export const getCurrentProviderPullRequest = createSelector(
 );
 export const getCurrentProviderPullRequestLastUpdated = createSelector(
 	getCurrentProviderPullRequest,
-
 	providerPullRequest => {
 		if (!providerPullRequest) return undefined;
 		return providerPullRequest &&
@@ -411,3 +411,7 @@ export const getProviderPullRequestCollaborators = createSelector(
 		return currentPr ? currentPr.collaborators : [];
 	}
 );
+
+export const isAnHourOld = conversationsLastFetch => {
+	return conversationsLastFetch > 0 && Date.now() - conversationsLastFetch > 60 * 60 * 1000;
+};
