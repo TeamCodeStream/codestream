@@ -507,7 +507,11 @@ export const PullRequest = () => {
 
 		if (
 			autoCheckedMergeability === "UNCHECKED" ||
-			derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable === "UNKNOWN"
+			(derivedState.currentPullRequest.conversations &&
+				derivedState.currentPullRequest.conversations.repository &&
+				derivedState.currentPullRequest.conversations.repository.pullRequest &&
+				derivedState.currentPullRequest.conversations.repository.pullRequest.mergeable ===
+					"UNKNOWN")
 		) {
 			console.log("PullRequest pr mergeable is UNKNOWN");
 			setTimeout(() => {
