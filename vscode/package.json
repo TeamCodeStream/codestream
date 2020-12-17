@@ -556,7 +556,7 @@
         }
     },
     "activationEvents": [
-        "*"
+        "onStartupFinished"
     ],
     "scripts": {
         "analyze:bundle": "webpack --env.analyzeBundle",
