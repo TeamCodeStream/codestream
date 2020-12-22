@@ -153,7 +153,9 @@ export const Sidebar = React.memo(function Sidebar() {
 	const showPullRequests = useMemo(() => {
 		if (derivedState.hasPRProvider) return true;
 		// FIXME hardcoded github
-		return openRepos.filter(r => r.providerGuess === "github").length > 0;
+		return (
+			openRepos.filter(r => r.providerGuess === "github" || r.providerGuess === "gitlab").length > 0
+		);
 	}, [derivedState.hasPRProvider, openRepos]);
 
 	const panes: {

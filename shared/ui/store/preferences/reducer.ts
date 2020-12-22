@@ -113,6 +113,22 @@ export const DEFAULT_QUERIES: { [providerId: string]: PullRequestQuery[] } = {
 			query: `recent`,
 			hidden: false
 		}
+	],
+	"gitlab*com": [
+		{
+			providerId: "gitlab*com",
+			name: "cheese",
+			query: `cheese`,
+			hidden: false
+		}
+	],
+	"gitlab/enterprise": [
+		{
+			providerId: "gitlab/enterprise",
+			name: "cheese",
+			query: `cheese`,
+			hidden: false
+		}
 	]
 };
 

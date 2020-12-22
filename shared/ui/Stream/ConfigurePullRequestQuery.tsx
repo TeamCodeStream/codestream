@@ -204,7 +204,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 												<span>
 													{pr.title} #{pr.number}
 												</span>
-												{pr.labels && pr.labels.nodes.length > 0 && (
+												{pr.labels && pr.labels.nodes && pr.labels.nodes.length > 0 && (
 													<span className="cs-tag-container">
 														{pr.labels.nodes.map((_, index) => (
 															<Tag key={index} tag={{ label: _.name, color: `#${_.color}` }} />
