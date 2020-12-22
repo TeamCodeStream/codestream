@@ -725,7 +725,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																</Row>
 															</Tooltip>
 														);
-													} else if (providerId === "gitlab*com") {
+													} else if (
+														providerId === "gitlab*com" ||
+														providerId === "gitlab/enterprise"
+													) {
 														const selected = false;
 														// const selected = openReposWithName.find(repo => {
 														// 	return (
