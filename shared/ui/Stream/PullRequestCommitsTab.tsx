@@ -4,12 +4,10 @@ import { getPullRequestCommits } from "@codestream/webview/store/providerPullReq
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { PRHeadshotName } from "../src/components/HeadshotName";
-import { PRContent } from "./PullRequestComponents";
 import styled from "styled-components";
 import copy from "copy-to-clipboard";
 import { groupBy } from "lodash-es";
@@ -101,7 +99,7 @@ const PRCommitButtons = styled.div`
 `;
 
 export const PullRequestCommitsTab = props => {
-	const { pr, ghRepo } = props;
+	const { pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -142,7 +140,7 @@ export const PullRequestCommitsTab = props => {
 	if (isLoading)
 		return (
 			<div style={{ marginTop: "100px" }}>
-				<LoadingMessage>Loading Changed Files...</LoadingMessage>
+				<LoadingMessage>Loading Commits...</LoadingMessage>
 			</div>
 		);
 
@@ -156,7 +154,6 @@ export const PullRequestCommitsTab = props => {
 	// 	}).format(new Date(_.commit.authoredDate).getTime());
 	// });
 
-	console.warn("DOMMITRS: ", commits);
 	return (
 		<PRCommitContent>
 			{Object.keys(commits).map((day, index) => {
@@ -200,7 +197,11 @@ export const PullRequestCommitsTab = props => {
 												className="clickable"
 												onClick={() => copy(commit.abbreviatedOid)}
 											/>
-											<Link href={pr.url.replace(/\/pull\/\d+$/, `/tree/${commit.abbreviatedOid}`)}>
+											<Link
+												href={
+													pr.url && pr.url.replace(/\/pull\/\d+$/, `/tree/${commit.abbreviatedOid}`)
+												}
+											>
 												<Icon
 													title="Browse the repository at this point in the history on GitHub"
 													className="clickable"

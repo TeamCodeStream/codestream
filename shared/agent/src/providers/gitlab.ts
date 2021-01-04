@@ -20,6 +20,8 @@ import {
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	FetchThirdPartyPullRequestCommitsRequest,
+	FetchThirdPartyPullRequestCommitsResponse,
 	GetMyPullRequestsRequest,
 	GetMyPullRequestsResponse,
 	GitLabBoard,
@@ -906,6 +908,49 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return response;
 	}
 
+	async restGet<T extends object>(url: string) {
+		const response = await this.get<T>(url);
+		if (
+			response &&
+			response.response &&
+			response.response.headers &&
+			Logger.level === TraceLevel.Debug
+		) {
+			try {
+				const e = new Error();
+				if (e.stack) {
+					let functionName;
+					try {
+						functionName = e.stack
+							.split("\n")
+							.filter(
+								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restGet") === -1
+							)![0]
+							.match(/GitLabProvider\.(\w+)/)![1];
+					} catch (ex) {
+						functionName = "unknown";
+					}
+
+					if (!this._queryLogger.restApi.fns[functionName]) {
+						this._queryLogger.restApi.fns[functionName] = {
+							count: 1
+						};
+					} else {
+						const existing = this._queryLogger.restApi.fns[functionName];
+						existing.count++;
+						this._queryLogger.restApi.fns[functionName] = existing;
+					}
+				}
+
+				Logger.log(JSON.stringify(this._queryLogger, null, 4));
+			} catch (err) {
+				console.warn(err);
+			}
+		}
+
+		return response;
+	}
+
 	_pullRequestCache: Map<string, any> = new Map();
 
 	@log()
@@ -1243,6 +1288,34 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+	}
+
+	async getPullRequestCommits(
+		request: FetchThirdPartyPullRequestCommitsRequest
+	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
+		const query = await this.restGet(`/projects/bcanzanella%2Ffoo/merge_requests/3/commits`);
+
+		return (query.body as any[]).map(_ => {
+			return {
+				abbreviatedOid: _.short_id,
+				author: {
+					name: _.author_name,
+					avatarUrl: `https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=80&amp;d=identicon`,
+					user: {
+						login: _.author_name
+					}
+				},
+				committer: {
+					name: _.committer_name,
+					avatarUrl: `https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=80&amp;d=identicon`,
+					user: {
+						login: _.committer_name
+					}
+				},
+				message: _.message,
+				authoredDate: _.authored_date
+			};
+		});
 	}
 }
 

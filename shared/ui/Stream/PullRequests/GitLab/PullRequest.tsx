@@ -568,7 +568,7 @@ export const PullRequest = () => {
 									/>
 								</>
 							)}
-							{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
+							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
 							{activeTab === 4 && (
 								// <PullRequestFilesChangedTab
 								// 	key="files-changed"
