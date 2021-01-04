@@ -87,6 +87,7 @@ import { supportsIntegrations } from "../store/configs/reducer";
 import { Keybindings } from "./Keybindings";
 import { setNewPostEntry } from "../store/context/actions";
 import { PullRequest } from "./PullRequest";
+import { PullRequest as GitLabPullRequest } from "./PullRequests/GitLab/PullRequest";
 import { Modal } from "./Modal";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

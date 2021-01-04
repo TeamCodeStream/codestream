@@ -18,7 +18,7 @@ import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 
 interface Props {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	pr: FetchThirdPartyPullRequestPullRequest | any;
 	setIsLoadingMessage: Function;
 	__onDidRender: Function;
 	className?: string;

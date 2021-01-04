@@ -1,5 +1,6 @@
 "use strict";
 import { toRepoName } from "../git/utils";
+import { GraphQLClient } from "graphql-request";
 import { flatten } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
@@ -8,9 +9,12 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
-import { Logger } from "../logger";
+import { Logger, TraceLevel } from "../logger";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
+
 import {
 	CreateThirdPartyCardRequest,
+	DidChangePullRequestCommentsNotificationType,
 	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
@@ -39,6 +43,7 @@ import {
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
 } from "./provider";
+import { Directives } from "./directives";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -681,6 +686,563 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 
 		return response;
+	}
+
+	get graphQlBaseUrl() {
+		return `${this.baseUrl.replace("/v4", "")}/graphql`;
+	}
+	protected _client: GraphQLClient | undefined;
+	protected async client(): Promise<GraphQLClient> {
+		if (this._client === undefined) {
+			this._client = new GraphQLClient(this.graphQlBaseUrl);
+		}
+		if (!this.accessToken) {
+			throw new Error("Could not get a GitLab personal access token");
+		}
+
+		this._client.setHeaders({
+			Authorization: `Bearer ${this.accessToken}`
+		});
+
+		return this._client;
+	}
+
+	_isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
+		const networkErrors = [
+			"ENOTFOUND",
+			"ETIMEDOUT",
+			"EAI_AGAIN",
+			"ECONNRESET",
+			"ECONNREFUSED",
+			"ENETDOWN",
+			"ENETUNREACH",
+			"socket disconnected before secure",
+			"socket hang up"
+		];
+
+		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
+			return ReportSuppressedMessages.NetworkError;
+		} else if (
+			(ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) ||
+			(this.providerConfig.id === "gitlab/enterprise" &&
+				ex.response &&
+				ex.response.error &&
+				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use gitlab") > -1)
+		) {
+			return ReportSuppressedMessages.ConnectionError;
+		} else if (
+			(ex.response && ex.response.message === "Bad credentials") ||
+			(ex.response &&
+				ex.response.errors instanceof Array &&
+				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
+		) {
+			return ReportSuppressedMessages.AccessTokenInvalid;
+		} else {
+			return undefined;
+		}
+	}
+
+	_queryLogger: {
+		restApi: {
+			rateLimit?: { remaining: number; limit: number; used: number; reset: number };
+			fns: any;
+		};
+		graphQlApi: {
+			rateLimit?: {
+				remaining: number;
+				resetAt: string;
+				resetInMinutes: number;
+				last?: { name: string; cost: number };
+			};
+			fns: any;
+		};
+	} = {
+		graphQlApi: { fns: {} },
+		restApi: { fns: {} }
+	};
+	async query<T = any>(query: string, variables: any = undefined) {
+		if (this._providerInfo && this._providerInfo.tokenError) {
+			delete this._client;
+			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
+		}
+
+		let response;
+		try {
+			response = await (await this.client()).request<any>(query, variables);
+		} catch (ex) {
+			Logger.warn("GitLab query caught:", ex);
+			const exType = this._isSuppressedException(ex);
+			if (exType !== undefined) {
+				// if (exType !== ReportSuppressedMessages.NetworkError) {
+				// 	// we know about this error, and we want to give the user a chance to correct it
+				// 	// (but throwing up a banner), rather than logging the error to sentry
+				// 	this.session.api.setThirdPartyProviderInfo({
+				// 		providerId: this.providerConfig.id,
+				// 		data: {
+				// 			tokenError: {
+				// 				error: ex,
+				// 				occurredAt: Date.now(),
+				// 				isConnectionError: exType === ReportSuppressedMessages.ConnectionError
+				// 			}
+				// 		}
+				// 	});
+				// 	delete this._client;
+				// }
+				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
+				throw new InternalError(exType, { error: ex });
+			} else {
+				// this is an unexpected error, throw the exception normally
+				throw ex;
+			}
+		}
+
+		try {
+			if (Logger.level === TraceLevel.Debug && response && response.rateLimit) {
+				this._queryLogger.graphQlApi.rateLimit = {
+					remaining: response.rateLimit.remaining,
+					resetAt: response.rateLimit.resetAt,
+					resetInMinutes: Math.floor(
+						(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
+							new Date().getTime()) /
+							1000 /
+							60
+					)
+				};
+				const e = new Error();
+				if (e.stack) {
+					let functionName;
+					try {
+						functionName = e.stack
+							.split("\n")
+							.filter(
+								_ =>
+									(_.indexOf("GitLabProvider") > -1 ||
+										_.indexOf("GitLabEnterpriseProvider") > -1) &&
+									_.indexOf(".query") === -1
+							)![0]
+							.match(/GitHubProvider\.(\w+)/)![1];
+					} catch (err) {
+						functionName = "unknown";
+						Logger.warn(err);
+					}
+					this._queryLogger.graphQlApi.rateLimit.last = {
+						name: functionName,
+						cost: response.rateLimit.cost
+					};
+					if (!this._queryLogger.graphQlApi.fns[functionName]) {
+						this._queryLogger.graphQlApi.fns[functionName] = {
+							count: 1,
+							cumulativeCost: response.rateLimit.cost,
+							averageCost: response.rateLimit.cost
+						};
+					} else {
+						const existing = this._queryLogger.graphQlApi.fns[functionName];
+						existing.count++;
+						existing.cumulativeCost += response.rateLimit.cost;
+						existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
+						this._queryLogger.graphQlApi.fns[functionName] = existing;
+					}
+				}
+
+				Logger.log(JSON.stringify(this._queryLogger, null, 4));
+			}
+		} catch (err) {
+			Logger.warn(err);
+		}
+
+		return response;
+	}
+
+	async mutate<T>(query: string, variables: any = undefined) {
+		const response = await (await this.client()).request<T>(query, variables);
+		if (Logger.level === TraceLevel.Debug) {
+			try {
+				const e = new Error();
+				if (e.stack) {
+					let functionName;
+					try {
+						functionName = e.stack
+							.split("\n")
+							.filter(
+								_ =>
+									(_.indexOf("GitLabProvider") > -1 ||
+										_.indexOf("GitLabEnterpriseProvider") > -1) &&
+									_.indexOf(".mutate") === -1
+							)![0]
+							.match(/GitLabProvider\.(\w+)/)![1];
+					} catch (err) {
+						Logger.warn(err);
+						functionName = "unknown";
+					}
+					if (!this._queryLogger.graphQlApi.rateLimit) {
+						this._queryLogger.graphQlApi.rateLimit = {
+							remaining: -1,
+							resetAt: "",
+							resetInMinutes: -1
+						};
+					}
+					this._queryLogger.graphQlApi.rateLimit.last = {
+						name: functionName,
+						// mutate costs are 1
+						cost: 1
+					};
+					if (!this._queryLogger.graphQlApi.fns[functionName]) {
+						this._queryLogger.graphQlApi.fns[functionName] = {
+							count: 1
+						};
+					} else {
+						const existing = this._queryLogger.graphQlApi.fns[functionName];
+						existing.count++;
+
+						this._queryLogger.graphQlApi.fns[functionName] = existing;
+					}
+				}
+
+				Logger.log(JSON.stringify(this._queryLogger, null, 4));
+			} catch (err) {
+				Logger.warn(err);
+			}
+		}
+		return response;
+	}
+
+	_pullRequestCache: Map<string, any> = new Map();
+
+	@log()
+	async getPullRequest(request: any): Promise<any> {
+		const { scm: scmManager } = SessionContainer.instance();
+		await this.ensureConnected();
+
+		if (request.force) {
+			this._pullRequestCache.delete(request.pullRequestId);
+		} else {
+			const cached = this._pullRequestCache.get(request.pullRequestId);
+			if (cached) {
+				return cached;
+			}
+		}
+
+		let response = {} as any;
+		try {
+			const q = `query {
+				project(fullPath: "bcanzanella/foo") {
+				  name
+				  # this returns merge request
+				  mergeRequest(iid: "2") {
+					id
+					iid					
+					createdAt,
+					title
+					webUrl	
+					state
+					author {
+						username
+					  }
+					  commitCount
+					  sourceProject{
+						name
+						webUrl					   
+						fullPath
+					  }
+					discussions {
+					  nodes {
+						createdAt
+						id
+						notes {
+						  nodes {
+							author {
+							  username
+							  avatarUrl
+							}
+							body
+							bodyHtml
+							confidential
+							createdAt
+							discussion {
+							  id
+							  replyId
+							  createdAt
+							}
+							id
+							position{
+							  x
+							  y
+							  newLine
+							  newPath
+							  oldLine
+							  oldPath
+							  filePath
+							}
+							project {
+							  name
+							}
+							resolvable
+							resolved
+							resolvedAt
+							resolvedBy {
+							  username
+							  avatarUrl
+							}
+							system
+							systemNoteIconName
+							updatedAt
+							userPermissions {
+							  readNote
+							  resolveNote
+							  awardEmoji
+							  createNote
+							}
+						  }
+						}
+						replyId
+						resolvable
+						resolved
+						resolvedAt
+						resolvedBy{
+						  username
+						  avatarUrl
+						}
+					  }
+					}
+				  }
+				  
+				  
+			  
+				  
+				}
+			  }`;
+			// let timelineQueryResponse;
+			// if (request.owner == null && request.repo == null) {
+			// 	const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+			// 	repoOwner = data.owner;
+			// 	repoName = data.name;
+			// } else {
+			// 	repoOwner = request.owner!;
+			// 	repoName = request.repo!;
+			// }
+			// const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
+			// do {
+			// 	timelineQueryResponse = await this.pullRequestTimelineQuery(
+			// 		repoOwner,
+			// 		repoName,
+			// 		pullRequestNumber,
+			// 		timelineQueryResponse &&
+			// 			timelineQueryResponse.repository.pullRequest &&
+			// 			timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo &&
+			// 			timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.endCursor
+			// 	);
+			// 	if (timelineQueryResponse === undefined) break;
+			// 	response = timelineQueryResponse;
+
+			// 	allTimelineItems = allTimelineItems.concat(
+			// 		timelineQueryResponse.repository.pullRequest.timelineItems.nodes
+			// 	);
+			// } while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
+
+			const response = await this.query(q);
+			response.project.mergeRequest.providerId = this.providerConfig?.id;
+
+			return response;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		// if (response?.repository?.pullRequest) {
+		// 	const { repos } = SessionContainer.instance();
+		// 	const prRepo = await this.getPullRequestRepo(
+		// 		await repos.get(),
+		// 		response.repository.pullRequest
+		// 	);
+
+		// 	if (prRepo?.id) {
+		// 		try {
+		// 			const prForkPointSha = await scmManager.getForkPointRequestType({
+		// 				repoId: prRepo.id,
+		// 				baseSha: response.repository.pullRequest.baseRefOid,
+		// 				headSha: response.repository.pullRequest.headRefOid
+		// 			});
+
+		// 			response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
+		// 		} catch (err) {
+		// 			Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
+		// 		}
+		// 	}
+		// }
+		// if (response?.repository?.pullRequest?.timelineItems != null) {
+		// 	response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
+		// }
+		// response.repository.pullRequest.repoUrl = response.repository.url;
+		// response.repository.pullRequest.baseUrl = response.repository.url.replace(
+		// 	response.repository.resourcePath,
+		// 	""
+		// );
+
+		// response.repository.repoOwner = repoOwner!;
+		// response.repository.repoName = repoName!;
+
+		// response.repository.pullRequest.providerId = this.providerConfig.id;
+		// response.repository.providerId = this.providerConfig.id;
+
+		this._pullRequestCache.set(request.pullRequestId, response);
+		return response;
+	}
+
+	@log()
+	async createPullRequestComment(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<Directives> {
+		const response = (await this.mutate(
+			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
+			createNote(input: {noteableId:$noteableId, body:$body}){
+				clientMutationId
+				note{
+					project {
+						mergeRequest(iid: $iid) {						 
+							discussions(last:5) {
+						nodes {
+						  createdAt
+						  id
+						  notes {
+							nodes {
+							  author {
+								username
+								avatarUrl
+							  }
+							  body
+							  bodyHtml
+							  confidential
+							  createdAt
+							  discussion {
+								id
+								replyId
+								createdAt
+							  }
+							  id
+							  position {
+								x
+								y
+								newLine
+								newPath
+								oldLine
+								oldPath
+								filePath
+							  }
+							  project {
+								name
+							  }
+							  resolvable
+							  resolved
+							  resolvedAt
+							  resolvedBy {
+								username
+								avatarUrl
+							  }
+							  system
+							  systemNoteIconName
+							  updatedAt
+							  userPermissions {
+								readNote
+								resolveNote
+								awardEmoji
+								createNote
+							  }
+							}
+						  }
+						  replyId
+						  resolvable
+						  resolved
+						  resolvedAt
+						  resolvedBy {
+							username
+							avatarUrl
+						  }
+						}
+					 
+						  }
+						}
+					  }
+					id      
+					body
+					createdAt
+					confidential
+					author {
+					  username
+					  avatarUrl
+					}
+					updatedAt
+					userPermissions{
+					  adminNote
+					  awardEmoji
+					  createNote
+					  readNote
+					  resolveNote
+					  
+					}      
+				  }			
+			}
+		  }`,
+			{
+				noteableId: `gid://gitlab/MergeRequest/${request.pullRequestId}`,
+				body: request.text,
+				iid: "2"
+			}
+		)) as any;
+
+		const addedNode = response.createNote.note.project.mergeRequest.discussions.nodes.find(
+			(_: any) => {
+				if (_.notes.nodes.find((x: any) => x.id === response.createNote.note.id)) {
+					return _;
+				}
+				return undefined;
+			}
+		);
+		return {
+			directives: [
+				// {
+				// 	type: "updatePullRequest",
+				// 	data: response.addComment.commentEdge.node.pullRequest
+				// },
+				{
+					type: "addNode",
+					data: addedNode
+				}
+			]
+		};
+	}
+
+	async deletePullRequestComment(request: {
+		id: string;
+		pullRequestId: string;
+	}): Promise<Directives | undefined> {
+		const query = `mutation DestroyNote($id: ID!){
+			destroyNote(input:{id:$id}){
+			  clientMutationId 
+			  note {
+				id          
+			  }
+			}
+		  }`;
+
+		await this.mutate<any>(query, {
+			id: request.id
+		});
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			commentId: request.id
+		});
+
+		return {
+			directives: [
+				{
+					type: "removeNode",
+					data: {
+						id: request.id
+					}
+				}
+			]
+		};
 	}
 }
 
