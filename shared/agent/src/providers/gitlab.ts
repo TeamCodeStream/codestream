@@ -22,6 +22,7 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
+	FetchThirdPartyPullRequestFilesResponse,
 	GetMyPullRequestsRequest,
 	GetMyPullRequestsResponse,
 	GitLabBoard,
@@ -976,7 +977,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				  mergeRequest(iid: "2") {
 					id
 					iid					
-					createdAt,
+					createdAt
+					sourceBranch
+					targetBranch
 					title
 					webUrl	
 					state
@@ -984,11 +987,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						username
 					  }
 					  commitCount
-					  sourceProject{
+					sourceProject{
 						name
 						webUrl					   
 						fullPath
-					  }
+					}
 					discussions {
 					  nodes {
 						createdAt
@@ -1049,11 +1052,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					  }
 					}
-				  }
-				  
-				  
-			  
-				  
+				  }	  				  
 				}
 			  }`;
 			// let timelineQueryResponse;
@@ -1086,6 +1085,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			const response = await this.query(q);
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
+			response.project.mergeRequest.baseRefOid =
+				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
+			response.project.mergeRequest.baseRefName = response.project.mergeRequest.targetBranch;
+			response.project.mergeRequest.headRefOid =
+				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha;
+			response.project.mergeRequest.headRefName = response.project.mergeRequest.sourceBranch;
+			response.project.mergeRequest.repository = {
+				name: "cheese"
+			};
 
 			return response;
 		} catch (ex) {
@@ -1229,7 +1237,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{
 				noteableId: `gid://gitlab/MergeRequest/${request.pullRequestId}`,
 				body: request.text,
-				iid: "2"
+				iid: "3"
 			}
 		)) as any;
 
@@ -1316,6 +1324,114 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				authoredDate: _.authored_date
 			};
 		});
+	}
+
+	_pullRequestIdCache: Map<
+		string,
+		{
+			pullRequestNumber: number;
+			name: string;
+			owner: string;
+		}
+	> = new Map<
+		string,
+		{
+			pullRequestNumber: number;
+			name: string;
+			owner: string;
+		}
+	>();
+	async getRepoOwnerFromPullRequestId(
+		pullRequestId: string
+	): Promise<{
+		pullRequestNumber: number;
+		name: string;
+		owner: string;
+	}> {
+		if (this._pullRequestIdCache.has(pullRequestId)) {
+			return this._pullRequestIdCache.get(pullRequestId)!;
+		}
+
+		const query = `query GetRepoIdFromPullRequestId($id: [ID!]!) {
+			 
+			nodes(ids: $id) {
+			  ... on PullRequest {
+				number
+				repository {
+				  name
+				  owner {
+					login
+				  }
+				}
+			  }
+			}
+		  }`;
+		const response = await this.query<any>(query, {
+			id: pullRequestId
+		});
+
+		const data = {
+			pullRequestNumber: response.nodes[0].number,
+			name: response.nodes[0].repository.name,
+			owner: response.nodes[0].repository.owner.login
+		};
+		this._pullRequestIdCache.set(pullRequestId, data);
+
+		return data;
+	}
+
+	async getPullRequestFilesChanged(request: {
+		pullRequestId: string;
+	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
+		//const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+
+		// https://developer.github.com/v3/pulls/#list-pull-requests-files
+		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
+		try {
+			let url: string | undefined = `/projects/8/merge_requests/3/changes`;
+			//	do {
+			const apiResponse = await this.restGet<{
+				changes: {
+					old_path: string;
+					new_path: string;
+					diff?: string;
+				}[];
+			}>(url);
+			const mappped: FetchThirdPartyPullRequestFilesResponse[] = apiResponse.body.changes.map(_ => {
+				return {
+					sha: "ABCDEF",
+					status: "",
+					additions: 0,
+					changes: 0,
+					deletions: 0,
+					filename: _.new_path,
+					patch: _.diff
+				};
+			});
+			changedFiles.push(...mappped);
+			// 	url = this.nextPage(apiResponse.response);
+			// } while (url);
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+
+		return changedFiles;
+
+		// const data = await this.restGet<any>(
+		// 	`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`
+		// );
+		// return data.body;
+
+		// const pullRequestReviewId = await this.getPullRequestReviewId(request);
+		// return {
+		// 	files: data.body,
+		// 	context: {
+		// 		pullRequest: {
+		// 			userCurrentReviewId: pullRequestReviewId
+		// 		}
+		// 	}
+		// };
 	}
 }
 

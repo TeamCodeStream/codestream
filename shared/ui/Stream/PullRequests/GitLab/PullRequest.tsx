@@ -570,13 +570,12 @@ export const PullRequest = () => {
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
 							{activeTab === 4 && (
-								// <PullRequestFilesChangedTab
-								// 	key="files-changed"
-								// 	pr={pr}
-								// 	fetch={fetch}
-								// 	setIsLoadingMessage={setIsLoadingMessage}
-								// />
-								<></>
+								<PullRequestFilesChangedTab
+									key="files-changed"
+									pr={pr as any}
+									fetch={fetch}
+									setIsLoadingMessage={setIsLoadingMessage}
+								/>
 							)}
 						</div>
 					</ScrollBox>

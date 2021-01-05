@@ -388,9 +388,16 @@ export const getProviderPullRequestRepo = createSelector(
 			if (!currentPr || !currentPr.conversations || !currentPr.conversations.repository) {
 				return undefined;
 			}
-			const repoName = currentPr.conversations.repository.repoName.toLowerCase();
-			const repoUrl = currentPr.conversations.repository.url.toLowerCase();
-
+			let repoName;
+			let repoUrl;
+			if (!currentPr.conversations.repository) {
+				debugger;
+				repoName = currentPr.conversations.project.name.toLowerCase();
+				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
+			} else {
+				repoName = currentPr.conversations.repository.repoName.toLowerCase();
+				repoUrl = currentPr.conversations.repository.url.toLowerCase();
+			}
 			let matchingRepos = repos.filter(_ =>
 				_.remotes.some(
 					r =>

@@ -256,7 +256,7 @@ export const PullRequestFilesChangedTab = (props: {
 			<PullRequestFilesChangedList
 				pr={pr}
 				filesChanged={filesChanged}
-				repositoryName={pr.repository.name}
+				repositoryName={pr.repository && pr.repository.name}
 				baseRef={baseRef}
 				baseRefName={commitBased ? pr.headRefName : pr.baseRefName}
 				headRef={commitBased ? prCommitsRange[prCommitsRange.length - 1] : pr.headRefOid}
