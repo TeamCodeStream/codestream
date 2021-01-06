@@ -1401,6 +1401,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ relatedCodemarkIds });
 	};
 
+	handlePaste = e => {
+		if (!e.clipboardData || !e.clipboardData.files) return;
+
+		this.handleAttachFiles(e.clipboardData.files);
+	};
+
 	handleAttachFiles = async files => {
 		if (!files || files.length === 0) return;
 		HostApi.instance.track("File Attached", {});
@@ -1688,6 +1694,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				renderCodeBlocks={this.renderCodeBlocks}
 				attachFiles={this.handleAttachFiles}
 				__onDidRender={__onDidRender}
+				onPaste={this.handlePaste}
 			/>
 		);
 	};

@@ -108,6 +108,7 @@ interface Props extends ConnectedProps {
 	renderCodeBlock?(index: number, force: boolean): React.ReactNode | null;
 	renderCodeBlocks?(): React.ReactNode | null;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
+	onPaste?(e: ClipboardEvent): void;
 }
 
 export class MessageInput extends React.Component<Props, State> {
@@ -137,13 +138,16 @@ export class MessageInput extends React.Component<Props, State> {
 		// so that HTML doesn't get pasted into the input field. without this,
 		// HTML would be rendered as HTML when pasted
 		if (this._contentEditable) {
-			this._contentEditable.htmlEl.addEventListener("paste", function(e) {
+			this._contentEditable.htmlEl.addEventListener("paste", e => {
 				e.preventDefault();
 				let text = e.clipboardData!.getData("text/plain");
 				text = asPastedText(text);
 				document.execCommand("insertText", false, text);
 				// const text = e.clipboardData!.getData("text/plain");
 				// document.execCommand("insertHTML", false, text.replace(/\n/g, "<br>"));
+				if (this.props.onPaste) {
+					this.props.onPaste(e);
+				}
 			});
 			this.disposables.push(
 				KeystrokeDispatcher.onKeyDown(
