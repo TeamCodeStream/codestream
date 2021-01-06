@@ -1409,27 +1409,32 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 
 		for (const file of files) {
-			const data = new FormData();
-			data.append("file", file);
-			// console.warn("DATA IS: ", data);
-			// console.warn("FILE IS: ", file);
-			// console.warn("FORM DATA: ", JSON.stringify(data, null, 4));
-			// for (var key of data.entries()) {
-			// 	console.warn(key[0] + ", " + key[1]);
-			// }
-
-			try {
-				const response = await Server.post("/upload-file", JSON.parse(JSON.stringify(data)));
-				if (response && response.url) {
-					file.status = "uploaded";
-					file.url = response.url;
-				} else {
+			const reader = new FileReader();
+			reader.addEventListener("loadend", async () => {
+				try {
+					const response = await Server.post("/upload-file", {
+						buffer: new Uint8Array(reader.result as ArrayBuffer),
+						// can't pass all the file properties (it's not clone-able)
+						file: {
+							name: file.name,
+							path: file.path,
+							size: file.size,
+							status: file.status,
+							type: file.type
+						}
+					});
+					if (response && response.url) {
+						file.status = "uploaded";
+						file.url = response.url;
+					} else {
+						file.status = "error";
+					}
+				} catch (e) {
+					console.warn("Error uploading file: ", e);
 					file.status = "error";
 				}
-			} catch (e) {
-				console.warn("Error uploading file: ", e);
-				file.status = "error";
-			}
+			});
+			reader.readAsArrayBuffer(file);
 		}
 
 		this.setState({ attachments: [...this.state.attachments, ...files] });

@@ -30,7 +30,21 @@ export class ServerManager {
 	@lspHandler(CodeStreamApiPostRequestType)
 	async post(request: { url: string; body?: any }): Promise<any> {
 		try {
-			return this.session.api.post(request.url, request.body);
+			let response;
+			if (request.url.indexOf("/upload-file") === 0) {
+				const len = Object.keys(request.body.buffer).length;
+				// pivot the object back into an array
+				const arr = [];
+				for (let i = 0; i < len; i++) {
+					arr[i] = request.body.buffer[i];
+				}
+				// TODO remove the await
+				response = await this.session.api.post(request.url, arr);
+			} else {
+				// TODO remove the await
+				response = await this.session.api.post(request.url, request.body);
+			}
+			return response;
 		} catch (e) {
 			Logger.error(e, "Could not POST", {
 				url: request.url
