@@ -1198,10 +1198,8 @@ export class MessageInput extends React.Component<Props, State> {
 							{this.props.attachFilesEnabled && this.props.attachFiles && (
 								<Tooltip
 									title={
-										<div>
-											Attach file
-											<div style={{ height: "10px" }} />
-											or drag &amp; drop
+										<div style={{ maxWidth: "150px" }}>
+											Attach files by dragging &amp; dropping, selecting, or pasting them.
 										</div>
 									}
 									placement="top"
