@@ -146,7 +146,8 @@ export function reduceContext(
 								providerId: action.payload.providerId,
 								id: action.payload.id,
 								commentId: action.payload.commentId,
-								source: action.payload.source
+								source: action.payload.source,
+								metadata: action.payload.metadata
 						  }
 						: undefined,
 				pullRequestCheckoutBranch: false

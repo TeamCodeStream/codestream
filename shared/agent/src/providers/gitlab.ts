@@ -10,6 +10,7 @@ import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { Logger, TraceLevel } from "../logger";
+
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 
 import {
@@ -925,7 +926,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						functionName = e.stack
 							.split("\n")
 							.filter(
-								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restGet") === -1
+								_ =>
+									_.indexOf("GitLabProvider") > -1 &&
+									_.indexOf("GitLabProvider.restGet") === -1 &&
+									_.indexOf("GitLabEnterpriseProvider") > -1 &&
+									_.indexOf("GitLabEnterpriseProvider.restGet") === -1
 							)![0]
 							.match(/GitLabProvider\.(\w+)/)![1];
 					} catch (ex) {
@@ -956,6 +961,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequest(request: any): Promise<any> {
+		if (request.metadata) {
+			request = { ...request, ...request.metadata };
+		}
 		const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
@@ -970,11 +978,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let response = {} as any;
 		try {
-			const q = `query {
-				project(fullPath: "bcanzanella/foo") {
-				  name
-				  # this returns merge request
-				  mergeRequest(iid: "2") {
+			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
+				project(fullPath: $fullPath) {
+				  name				  
+				  mergeRequest(iid: $iid) {
 					id
 					iid					
 					createdAt
@@ -986,7 +993,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					author {
 						username
 					  }
-					  commitCount
+					commitCount
 					sourceProject{
 						name
 						webUrl					   
@@ -1083,7 +1090,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// 	);
 			// } while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
 
-			const response = await this.query(q);
+			const response = await this.query(q, {
+				fullPath: request.projectFullPath,
+				iid: request.iid.toString(),
+				id: request.id.toString()
+			});
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
 				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
@@ -1301,21 +1312,31 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		const query = await this.restGet(`/projects/bcanzanella%2Ffoo/merge_requests/3/commits`);
+		if (!request.metadata) throw Error("metadata is required");
+		//const query = await this.restGet(`/projects/bcanzanella%2Ffoo/merge_requests/3/commits`);
+
+		const url = `/projects/${encodeURIComponent(request.metadata.projectFullPath)}/merge_requests/${
+			request.metadata.iid
+		}/commits`;
+		const query = await this.restGet(url);
 
 		return (query.body as any[]).map(_ => {
 			return {
 				abbreviatedOid: _.short_id,
 				author: {
 					name: _.author_name,
-					avatarUrl: `https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=80&amp;d=identicon`,
+					avatarUrl: `https://www.gravatar.com/avatar/${Strings.md5(
+						_.author_email
+					)}?s=50&amp;d=identicon`,
 					user: {
 						login: _.author_name
 					}
 				},
 				committer: {
 					name: _.committer_name,
-					avatarUrl: `https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=80&amp;d=identicon`,
+					avatarUrl: `https://www.gravatar.com/avatar/${Strings.md5(
+						_.committer_email
+					)}?s=50&amp;d=identicon`,
 					user: {
 						login: _.committer_name
 					}

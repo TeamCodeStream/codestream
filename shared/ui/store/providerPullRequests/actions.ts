@@ -89,11 +89,16 @@ export const handleDirectives = (providerId: string, id: string, data: any) =>
 		data
 	});
 
-const _getPullRequestConversationsFromProvider = async (providerId: string, id: string) => {
+const _getPullRequestConversationsFromProvider = async (
+	providerId: string,
+	id: string,
+	metadata?: any
+) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
 		pullRequestId: id,
-		force: true
+		force: true,
+		metadata: metadata
 	});
 
 	let response2: FetchAssignableUsersResponse | undefined = undefined;
@@ -127,12 +132,13 @@ const _getPullRequestConversationsFromProvider = async (providerId: string, id: 
 
 export const getPullRequestConversationsFromProvider = (
 	providerId: string,
-	id: string
+	id: string,
+	metadata?: any
 ) => async dispatch => {
 	try {
 		dispatch(clearPullRequestError(providerId, id));
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
+		const responses = await _getPullRequestConversationsFromProvider(providerId, id, metadata);
 		dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 
@@ -143,10 +149,11 @@ export const getPullRequestConversationsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestConversations = (providerId: string, id: string) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const getPullRequestConversations = (
+	providerId: string,
+	id: string,
+	metadata?: any
+) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
@@ -166,7 +173,7 @@ export const getPullRequestConversations = (providerId: string, id: string) => a
 			}
 		}
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
+		const responses = await _getPullRequestConversationsFromProvider(providerId, id, metadata);
 		await dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;
@@ -284,12 +291,14 @@ export const clearPullRequestCommits = (providerId: string, id: string) =>
 
 export const getPullRequestCommitsFromProvider = (
 	providerId: string,
-	id: string
+	id: string,
+	metadata: any
 ) => async dispatch => {
 	try {
 		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId,
-			pullRequestId: id
+			pullRequestId: id,
+			metadata: metadata
 		});
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
@@ -299,7 +308,7 @@ export const getPullRequestCommitsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestCommits = (providerId: string, id: string) => async (
+export const getPullRequestCommits = (providerId: string, id: string, metadata: any) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
@@ -315,7 +324,8 @@ export const getPullRequestCommits = (providerId: string, id: string) => async (
 		}
 		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId: providerId,
-			pullRequestId: id
+			pullRequestId: id,
+			metadata: metadata
 		});
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
@@ -474,6 +484,9 @@ export const api = <T = any, R = any>(
 
 		params = params || {};
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
+		if (currentPullRequest.metadata) {
+			params = { ...params, ...currentPullRequest.metadata };
+		}
 		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
 			providerId: providerId,

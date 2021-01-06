@@ -357,6 +357,7 @@ export interface FetchThirdPartyPullRequestRequest {
 	 * if true, clear this PR from the cache and re-fetch from the provider
 	 */
 	force?: boolean;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestFilesResponse {
@@ -634,6 +635,7 @@ export const FetchThirdPartyPullRequestRequestType = new RequestType<
 export interface FetchThirdPartyPullRequestCommitsRequest {
 	providerId: string;
 	pullRequestId: string;
+	metadata?: any;
 }
 
 export interface FetchThirdPartyPullRequestCommitsResponse {

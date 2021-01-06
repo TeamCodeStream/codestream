@@ -129,6 +129,7 @@ export interface WebviewContext {
 				commentId?: string;
 				/* defined if this was triggered by an external means (like an IDE button, etc.) */
 				source?: string;
+				metadata?: any;
 		  }
 		| undefined;
 	profileUserId?: string;
