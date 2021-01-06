@@ -956,6 +956,13 @@
 			&.hide {
 				display: none;
 			}
+			transition: opacity 0.2s;
+			&.invisible {
+				opacity: 0;
+			}
+		}
+		.active-drag .message-input {
+			opacity: 0;
 		}
 		.message-input:empty {
 			white-space: nowrap;
@@ -3258,4 +3265,29 @@ li,
 	display: inline-block;
 	transform: scale(0.75);
 	margin: 0;
+}
+
+.drop-target {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	justify-content: center;
+	align-items: center;
+	outline: 1px solid var(--base-border-color);
+	display: none;
+	.expand {
+		transition: transform 0.2s;
+	}
+	&.hover {
+		backdrop-filter: brightness(120%);
+		color: var(--text-color-highlight);
+		.expand {
+			transform: scale(1.1);
+		}
+	}
+}
+.active-drag .drop-target {
+	display: flex;
 }

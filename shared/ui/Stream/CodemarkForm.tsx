@@ -43,7 +43,7 @@ import {
 	keyFilter,
 	safe
 } from "../utils";
-import { HostApi } from "../webview-api";
+import { HostApi, Server } from "../webview-api";
 import Button from "./Button";
 import CrossPostIssueControls from "./CrossPostIssueControls";
 import Tag from "./Tag";
@@ -103,6 +103,14 @@ export const CrossPostIssueContext = React.createContext<ICrossPostIssueContext>
 	setSelectedAssignees: () => {},
 	setValues: () => {}
 });
+
+export interface AttachedFile {
+	name: string;
+	type: string;
+	size: number;
+	url?: string;
+	status: "uploading" | "error" | "uploaded" | undefined;
+}
 
 interface Props extends ConnectedProps {
 	streamId: string;
@@ -204,6 +212,7 @@ interface State {
 		[index: number]: boolean;
 	};
 	relatedCodemarkIds?: any;
+	attachments: AttachedFile[];
 	addingLocation?: boolean;
 	editingLocation: number;
 	liveLocation: number;
@@ -215,6 +224,7 @@ interface State {
 	isInsidePrChangeSet: boolean;
 	changedPrLines: GetShaDiffsRangesResponse[];
 	isPreviewing?: boolean;
+	isDragging: number;
 }
 
 function merge(defaults: Partial<State>, codemark: CSCodemark): State {
@@ -272,7 +282,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			isReviewLoading: false,
 			isInsidePrChangeSet: false,
 			changedPrLines: [],
-			deleteMarkerLocations: {}
+			deleteMarkerLocations: {},
+			attachments: [],
+			isDragging: 0
 		};
 
 		const state = props.editingCodemark
@@ -1110,6 +1122,10 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.insertTextAtCursor && this.insertTextAtCursor(`[#${index + 1}]`);
 	};
 
+	pinImage = (filename: string, url: string, event?: React.SyntheticEvent) => {
+		this.insertTextAtCursor && this.insertTextAtCursor(`![${filename}](${url})`);
+	};
+
 	selectLocation = (action: "add" | "edit" | "delete") => {
 		this.setState({ locationMenuOpen: "closed" });
 	};
@@ -1289,6 +1305,60 @@ class CodemarkForm extends React.Component<Props, State> {
 		);
 	};
 
+	renderAttachedFiles = () => {
+		const { attachments } = this.state;
+
+		if (!attachments || attachments.length === 0) return;
+		return (
+			<div className="related" key="attached-files">
+				<div className="related-label">Attachments</div>
+				{attachments.map((file, index) => {
+					const icon =
+						file.status === "uploading" ? (
+							<Icon name="sync" className="spin" style={{ verticalAlign: "3px" }} />
+						) : file.status === "error" ? (
+							<Icon name="alert" className="spinnable" />
+						) : (
+							<Icon name="file" className="spinnable" />
+						);
+					const isImage = file.type.startsWith("image");
+					const imageInjected =
+						isImage && file.url ? this.state.text.includes(`![${file.name}](${file.url})`) : false;
+					return (
+						<div key={index} className="attachment">
+							<span>{icon}</span>
+							<span>{file.name}</span>
+							<span>
+								{isImage && file.url && (
+									<Icon
+										title={
+											imageInjected
+												? `This image is in the markdown above`
+												: `Insert this image in markdown`
+										}
+										placement="bottomRight"
+										name="pin"
+										className={imageInjected ? "clickable selected" : "clickable"}
+										onMouseDown={e => this.pinImage(file.name, file.url!, e)}
+									/>
+								)}
+								<Icon
+									name="x"
+									className="clickable"
+									onClick={() => {
+										const attachments = [...this.state.attachments];
+										attachments.splice(index, 1);
+										this.setState({ attachments });
+									}}
+								/>
+							</span>
+						</div>
+					);
+				})}
+			</div>
+		);
+	};
+
 	handleKeyPress = (event: React.KeyboardEvent) => {
 		if (event.key == "Enter") return this.switchChannel(event);
 	};
@@ -1329,6 +1399,49 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 		}
 		this.setState({ relatedCodemarkIds });
+	};
+
+	handleAttachFiles = async files => {
+		if (!files || files.length === 0) return;
+		HostApi.instance.track("File Attached", {});
+		[...files].forEach(file => {
+			file.status = "uploading";
+		});
+
+		for (const file of files) {
+			const data = new FormData();
+			data.append("file", file);
+			// console.warn("DATA IS: ", data);
+			// console.warn("FILE IS: ", file);
+			// console.warn("FORM DATA: ", JSON.stringify(data, null, 4));
+			// for (var key of data.entries()) {
+			// 	console.warn(key[0] + ", " + key[1]);
+			// }
+
+			try {
+				const response = await Server.post("/upload-file", JSON.parse(JSON.stringify(data)));
+				if (response && response.url) {
+					file.status = "uploaded";
+					file.url = response.url;
+				} else {
+					file.status = "error";
+				}
+			} catch (e) {
+				console.warn("Error uploading file: ", e);
+				file.status = "error";
+			}
+		}
+
+		this.setState({ attachments: [...this.state.attachments, ...files] });
+
+		// setTimeout(() => {
+		// 	const attachments = [...this.state.attachments];
+		// 	attachments.forEach(file => {
+		// 		file.status = "uploaded";
+		// 		file.url = "http://static.codestream.com/uc/" + file.name;
+		// 	});
+		// 	this.setState({ attachments });
+		// }, 2000);
 	};
 
 	handleChangeRelated = codemarkIds => {
@@ -1568,6 +1681,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				setIsPreviewing={isPreviewing => this.setState({ isPreviewing })}
 				renderCodeBlock={this.renderCodeBlock}
 				renderCodeBlocks={this.renderCodeBlocks}
+				attachFiles={this.handleAttachFiles}
 				__onDidRender={__onDidRender}
 			/>
 		);
@@ -2105,6 +2219,12 @@ class CodemarkForm extends React.Component<Props, State> {
 		});
 	};
 
+	handleDragEnter = () => this.setState({ isDragging: this.state.isDragging + 1 });
+	handleDragLeave = () => this.setState({ isDragging: this.state.isDragging - 1 });
+	handleDrop = () => {
+		this.setState({ isDragging: 0 });
+	};
+
 	renderCodemarkForm() {
 		const { editingCodemark, currentUser } = this.props;
 		const commentType = this.getCommentType();
@@ -2180,11 +2300,18 @@ class CodemarkForm extends React.Component<Props, State> {
 			linkWithCodeBlock += "*\n```\n" + codeBlock.contents + "\n```\n";
 		}
 
+		console.warn("IS DRAGGING: ", this.state.isDragging);
 		return [
 			<form
 				id="code-comment-form"
-				className={cx("codemark-form", "standard-form", { "google-style": true })}
+				className={cx("codemark-form", "standard-form", {
+					"active-drag": this.state.isDragging > 0
+				})}
 				key="two"
+				onDragEnter={this.handleDragEnter}
+				onDrop={this.handleDrop}
+				onDragOver={e => e.preventDefault()}
+				onDragLeave={this.handleDragLeave}
 			>
 				<fieldset className="form-body">
 					{hasError && (
@@ -2319,7 +2446,9 @@ class CodemarkForm extends React.Component<Props, State> {
 							</Tooltip>
 						</div>
 					)}
+					<div style={{ clear: "both" }} />
 					{/* this.renderPrivacyControls() */}
+					{this.renderAttachedFiles()}
 					{this.renderRelatedCodemarks()}
 					{this.renderTags()}
 					{!this.state.isPreviewing && this.renderCodeBlocks()}

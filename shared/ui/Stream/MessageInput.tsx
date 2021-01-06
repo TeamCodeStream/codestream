@@ -25,12 +25,12 @@ import { confirmPopup } from "./Confirm";
 import { CodemarkPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { getTeamTagsArray, getTeamMembers, getUsernames } from "../store/users/reducer";
-import { getChannelStreamsForTeam } from "../store/streams/reducer";
+// import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import { ServicesState } from "../store/services/types";
-import { getSlashCommands } from "./SlashCommands";
 import { MarkdownText } from "./MarkdownText";
 
 import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/reducer";
+import Tooltip from "./Tooltip";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -44,6 +44,7 @@ interface State {
 	emojiOpen: boolean;
 	codemarkOpen: boolean;
 	tagsOpen: false | "select" | "edit" | "create";
+	attachOpen: boolean;
 	cursorPosition?: any;
 	currentPopup?: PopupType;
 	popupPrefix?: string;
@@ -53,6 +54,7 @@ interface State {
 	emojiMenuTarget?: any;
 	codemarkMenuTarget?: any;
 	tagsMenuTarget?: any;
+	attachMenuTarget?: any;
 	editingTag?: any;
 	customColor?: string;
 	q?: string;
@@ -60,6 +62,7 @@ interface State {
 	formatCode: boolean;
 	insertPrefix: string;
 	isPreviewing: boolean;
+	isDropTarget: boolean;
 }
 
 interface ConnectedProps {
@@ -70,10 +73,10 @@ interface ConnectedProps {
 	teammates: CSUser[];
 	currentUserId: string;
 	teamTags: CSTag[];
-	channelStreams: CSChannelStream[];
+	// channelStreams: CSChannelStream[];
 	services: ServicesState;
-	slashCommands: any[];
 	usernames: string[];
+	attachFilesEnabled: boolean;
 }
 
 interface Props extends ConnectedProps {
@@ -99,6 +102,7 @@ interface Props extends ConnectedProps {
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
 	toggleCodemark?: Function;
+	attachFiles?: Function;
 	autoFocus?: boolean;
 	className?: string;
 	renderCodeBlock?(index: number, force: boolean): React.ReactNode | null;
@@ -116,11 +120,13 @@ export class MessageInput extends React.Component<Props, State> {
 			emojiOpen: false,
 			codemarkOpen: false,
 			tagsOpen: false,
+			attachOpen: false,
 			customColor: "",
 			codemarkMenuStart: 0,
 			formatCode: false,
 			insertPrefix: "",
-			isPreviewing: false
+			isPreviewing: false,
+			isDropTarget: false
 		};
 	}
 
@@ -227,6 +233,11 @@ export class MessageInput extends React.Component<Props, State> {
 		KeystrokeDispatcher.levelDown();
 	};
 
+	hideFilePicker = () => {
+		this.setState({ attachOpen: false });
+		KeystrokeDispatcher.levelDown();
+	};
+
 	addEmoji = (emoji: typeof emojiData[string]) => {
 		this.setState({ emojiOpen: false });
 		if (emoji && emoji.colons) {
@@ -293,35 +304,17 @@ export class MessageInput extends React.Component<Props, State> {
 					});
 				}
 			});
-		} else if (type === "slash-commands") {
-			// TODO: filtering these commands should happen higher up in the tree
-			if (this.props.slashCommands) {
-				this.props.slashCommands.map(command => {
-					if (command.appliesTo != null && Array.isArray(command.appliesTo)) {
-						if (!command.appliesTo.includes(this.props.teamProvider)) return;
-					}
-
-					if (command.channelOnly && this.props.isDirectMessage) return;
-					if (command.requires && !this.props.services[command.requires]) return;
-
-					const toMatch = command.id.toLowerCase();
-					if (toMatch.indexOf(normalizedPrefix) === 0) {
-						command.identifier = command.id;
-						itemsToShow.push(command);
-					}
-				});
-			}
-		} else if (type === "channels") {
-			Object.values(this.props.channelStreams || []).forEach(channel => {
-				const toMatch = channel.name.toLowerCase();
-				if (toMatch.indexOf(normalizedPrefix) !== -1) {
-					itemsToShow.push({
-						id: channel.name,
-						identifier: "#" + channel.name,
-						description: channel.purpose || ""
-					});
-				}
-			});
+			// } else if (type === "channels") {
+			// 	Object.values(this.props.channelStreams || []).forEach(channel => {
+			// 		const toMatch = channel.name.toLowerCase();
+			// 		if (toMatch.indexOf(normalizedPrefix) !== -1) {
+			// 			itemsToShow.push({
+			// 				id: channel.name,
+			// 				identifier: "#" + channel.name,
+			// 				description: channel.purpose || ""
+			// 			});
+			// 		}
+			// 	});
 		} else if (type === "emojis") {
 			if (normalizedPrefix && normalizedPrefix.length > 1) {
 				Object.keys(emojiData).map(emojiId => {
@@ -377,7 +370,7 @@ export class MessageInput extends React.Component<Props, State> {
 		const nodeText = node.textContent || "";
 		const upToCursor = nodeText.substring(0, range.startOffset);
 		const peopleMatch = upToCursor.match(/(?:^|\s)@([a-zA-Z0-9_.+]*)$/);
-		const channelMatch = upToCursor.match(/(?:^|\s)#([a-zA-Z0-9_.+]*)$/);
+		// const channelMatch = upToCursor.match(/(?:^|\s)#([a-zA-Z0-9_.+]*)$/);
 		const emojiMatch = upToCursor.match(/(?:^|\s):([a-z+_]*)$/);
 		const slashMatch = newPostText.match(/^\/([a-zA-Z0-9+]*)$/);
 		if (this.state.currentPopup === "at-mentions") {
@@ -394,13 +387,13 @@ export class MessageInput extends React.Component<Props, State> {
 				// if the line doesn't start with /word, then hide the popup
 				this.hidePopup();
 			}
-		} else if (this.state.currentPopup === "channels") {
-			if (channelMatch) {
-				this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
-			} else {
-				// if the line doesn't end with #word, then hide the popup
-				this.hidePopup();
-			}
+			// } else if (this.state.currentPopup === "channels") {
+			// 	if (channelMatch) {
+			// 		this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
+			// 	} else {
+			// 		// if the line doesn't end with #word, then hide the popup
+			// 		this.hidePopup();
+			// 	}
 		} else if (this.state.currentPopup === "emojis") {
 			if (emojiMatch) {
 				this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
@@ -413,7 +406,7 @@ export class MessageInput extends React.Component<Props, State> {
 			if (slashMatch && !this.props.multiCompose) {
 				this.showPopupSelectors(slashMatch[0].replace(/\//, ""), "slash-commands");
 			}
-			if (channelMatch) this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
+			// if (channelMatch) this.showPopupSelectors(channelMatch[1].replace(/#/, ""), "channels");
 			if (emojiMatch) this.showPopupSelectors(emojiMatch[1].replace(/:/, ""), "emojis");
 		}
 
@@ -440,8 +433,8 @@ export class MessageInput extends React.Component<Props, State> {
 
 		if (this.state.currentPopup === "slash-commands") {
 			toInsert = id + "\u00A0";
-		} else if (this.state.currentPopup === "channels") {
-			toInsert = id + "\u00A0";
+			// } else if (this.state.currentPopup === "channels") {
+			// 	toInsert = id + "\u00A0";
 		} else if (this.state.currentPopup === "emojis") {
 			toInsert = id + ":\u00A0";
 		} else {
@@ -578,8 +571,8 @@ export class MessageInput extends React.Component<Props, State> {
 			this.showPopupSelectors("", "emojis");
 		} else if (!multiCompose && event.key === "/" && newPostText.length === 0) {
 			this.showPopupSelectors("", "slash-commands");
-		} else if (event.key === "#") {
-			this.showPopupSelectors("", "channels");
+			// } else if (event.key === "#") {
+			// 	this.showPopupSelectors("", "channels");
 		} else if (
 			event.charCode === 13 &&
 			!event.shiftKey &&
@@ -606,6 +599,7 @@ export class MessageInput extends React.Component<Props, State> {
 			else if (this.state.emojiOpen) this.hideEmojiPicker();
 			else if (this.state.codemarkOpen) this.hideCodemarkPicker();
 			else if (this.state.tagsOpen) this.hideTagsPicker();
+			else if (this.state.attachOpen) this.hideFilePicker();
 			// else this.handleDismissThread();
 		} else {
 			let newIndex = 0;
@@ -661,6 +655,11 @@ export class MessageInput extends React.Component<Props, State> {
 				this.hideTagsPicker();
 				event.stopPropagation();
 			}
+		} else if (this.state.attachOpen) {
+			if (event.key === "Escape") {
+				this.hideFilePicker();
+				event.stopPropagation();
+			}
 		} else {
 			if (event.key == "Escape" && multiCompose && this.props.onDismiss) {
 				this.props.onDismiss();
@@ -712,6 +711,15 @@ export class MessageInput extends React.Component<Props, State> {
 					this.props.toggleCodemark(codemark);
 				}
 		}
+	};
+
+	handleChangeFiles = () => {
+		if (!this.props.attachFiles) return;
+		const attachElement = document.getElementById("attachment") as HTMLInputElement;
+		if (!attachElement) return;
+		console.warn("FILES ARE: ", attachElement.files);
+
+		this.props.attachFiles(attachElement.files);
 	};
 
 	buildCodemarkMenu = () => {
@@ -775,6 +783,14 @@ export class MessageInput extends React.Component<Props, State> {
 		this.setState(state => ({
 			tagsOpen: "select",
 			tagsMenuTarget: event.target
+		}));
+	};
+
+	handleClickAttachButton = (event: React.SyntheticEvent) => {
+		event.persist();
+		this.setState(state => ({
+			attachOpen: true,
+			attachMenuTarget: event.target
 		}));
 	};
 
@@ -1096,8 +1112,18 @@ export class MessageInput extends React.Component<Props, State> {
 		);
 	};
 
+	handleDragEnter = () => this.setState({ isDropTarget: true });
+	handleDragLeave = () => this.setState({ isDropTarget: false });
+	handleDrop = e => {
+		this.setState({ isDropTarget: false });
+		// e.stopPropagation();
+		e.preventDefault();
+
+		if (this.props.attachFiles) this.props.attachFiles(e.dataTransfer.files);
+	};
+
 	render() {
-		const { isPreviewing, formatCode } = this.state;
+		const { isPreviewing, formatCode, isDropTarget } = this.state;
 		const { placeholder, text, __onDidRender } = this.props;
 
 		__onDidRender &&
@@ -1115,91 +1141,137 @@ export class MessageInput extends React.Component<Props, State> {
 					onKeyDown={this.handleKeyDown}
 					style={{ position: "relative" }}
 				>
-					<div key="message-attach-icons" className="message-attach-icons">
-						{!isPreviewing && (
-							<>
+					{!isPreviewing && !isDropTarget && (
+						<div key="message-attach-icons" className="message-attach-icons">
+							<Icon
+								key="preview"
+								name="markdown"
+								title={
+									<div style={{ textAlign: "center" }}>
+										Click to Preview
+										<div style={{ paddingTop: "5px" }}>
+											<a href="https://www.markdownguide.org/cheat-sheet/">Markdown help</a>
+										</div>
+									</div>
+								}
+								placement="top"
+								align={{ offset: [5, 0] }}
+								delay={1}
+								className={cx("preview", { hover: isPreviewing })}
+								onClick={this.handleClickPreview}
+							/>
+							{this.props.teammates.length > 0 && (
 								<Icon
-									key="preview"
-									name="markdown"
+									key="mention"
+									name="mention"
+									title="Mention a teammate"
+									placement="topRight"
+									align={{ offset: [18, 0] }}
+									delay={1}
+									className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
+									onClick={this.handleClickAtMentions}
+								/>
+							)}
+							<Icon
+								key="smiley"
+								name="smiley"
+								title="Add an emoji"
+								placement="topRight"
+								align={{ offset: [9, 0] }}
+								delay={1}
+								className={cx("smiley", {
+									hover: this.state.emojiOpen
+								})}
+								onClick={this.handleClickEmojiButton}
+							/>
+							{this.state.emojiOpen && (
+								<EmojiPicker
+									addEmoji={this.addEmoji}
+									target={this.state.emojiMenuTarget}
+									autoFocus={true}
+								/>
+							)}
+							{this.props.attachFilesEnabled && this.props.attachFiles && (
+								<Tooltip
 									title={
-										<div style={{ textAlign: "center" }}>
-											Click to Preview
-											<div style={{ paddingTop: "5px" }}>
-												<a href="https://www.markdownguide.org/cheat-sheet/">Markdown help</a>
-											</div>
+										<div>
+											Attach file
+											<div style={{ height: "10px" }} />
+											or drag &amp; drop
 										</div>
 									}
 									placement="top"
 									align={{ offset: [5, 0] }}
 									delay={1}
-									className={cx("preview", { hover: isPreviewing })}
-									onClick={this.handleClickPreview}
-								/>
-								{this.props.teammates.length > 0 && (
-									<Icon
-										key="mention"
-										name="mention"
-										title="Mention a teammate"
-										placement="topRight"
-										align={{ offset: [18, 0] }}
-										delay={1}
-										className={cx("mention", { hover: this.state.currentPopup === "at-mentions" })}
-										onClick={this.handleClickAtMentions}
-									/>
-								)}
+									trigger={["hover"]}
+								>
+									<span className="icon-wrapper">
+										<input
+											type="file"
+											id="attachment"
+											name="attachment"
+											multiple
+											title=""
+											onChange={this.handleChangeFiles}
+											style={{
+												top: 0,
+												left: 0,
+												width: "16px",
+												height: "16px",
+												position: "absolute",
+												opacity: 0,
+												zIndex: 5,
+												cursor: "pointer"
+											}}
+										/>
+										<label htmlFor="attachment">
+											<Icon
+												key="paperclip"
+												name="paperclip"
+												className={cx("attach", { hover: this.state.attachOpen })}
+											/>
+										</label>
+									</span>
+								</Tooltip>
+							)}
+							{this.props.relatedCodemarkIds && this.props.codemarks.length > 0 && (
 								<Icon
-									key="smiley"
-									name="smiley"
-									title="Add an emoji"
-									placement="topRight"
-									align={{ offset: [9, 0] }}
+									key="codestream"
+									name="codestream"
+									title="Add a related codemark"
+									placement="top"
+									align={{ offset: [5, 0] }}
 									delay={1}
-									className={cx("smiley", {
-										hover: this.state.emojiOpen
-									})}
-									onClick={this.handleClickEmojiButton}
+									className={cx("codestream", { hover: this.state.codemarkOpen })}
+									onClick={this.handleClickCodemarkButton}
 								/>
-								{this.state.emojiOpen && (
-									<EmojiPicker
-										addEmoji={this.addEmoji}
-										target={this.state.emojiMenuTarget}
-										autoFocus={true}
-									/>
-								)}
-								{this.props.relatedCodemarkIds && this.props.codemarks.length > 0 && (
-									<Icon
-										key="codestream"
-										name="codestream"
-										title="Add a related codemark"
-										placement="top"
-										align={{ offset: [5, 0] }}
-										delay={1}
-										className={cx("codestream", { hover: this.state.codemarkOpen })}
-										onClick={this.handleClickCodemarkButton}
-									/>
-								)}
-								{this.buildCodemarkMenu()}
-								{this.props.withTags && (
-									<Icon
-										key="tag"
-										name="tag"
-										title="Add tags"
-										placement="top"
-										align={{ offset: [5, 0] }}
-										delay={1}
-										className={cx("tags", { hover: this.state.tagsOpen })}
-										onClick={this.handleClickTagButton}
-									/>
-								)}
-								{this.buildTagMenu()}
-							</>
-						)}
-					</div>
+							)}
+							{this.buildCodemarkMenu()}
+							{this.props.withTags && (
+								<Icon
+									key="tag"
+									name="tag"
+									title="Add tags"
+									placement="top"
+									align={{ offset: [5, 0] }}
+									delay={1}
+									className={cx("tags", { hover: this.state.tagsOpen })}
+									onClick={this.handleClickTagButton}
+								/>
+							)}
+							{this.buildTagMenu()}
+						</div>
+					)}
 					{isPreviewing && (
 						<div className={cx("message-input preview", { "format-code": formatCode })}>
 							{this.renderTextReplaceCodeBlocks(
 								replaceHtml(this._contentEditable!.htmlEl.innerHTML) || ""
 							)}
+						</div>
+					)}
+					{this.props.attachFilesEnabled && this.props.attachFiles && (
+						<div className={cx("drop-target", { hover: this.state.isDropTarget })}>
+							<span className="expand">Drop here</span>
 						</div>
 					)}
 					<AtMentionsPopup
@@ -1213,12 +1285,17 @@ export class MessageInput extends React.Component<Props, State> {
 						<ContentEditable
 							className={cx(
 								"message-input",
+								"hide-on-drop",
 								btoa(unescape(encodeURIComponent(placeholder || ""))),
 								{
 									"format-code": formatCode,
+									invisible: this.state.isDropTarget,
 									hide: isPreviewing
 								}
 							)}
+							onDragEnter={this.handleDragEnter}
+							onDrop={this.handleDrop}
+							onDragLeave={this.handleDragLeave}
 							id="input-div"
 							onChange={this.handleChange}
 							onBlur={this.handleBlur}
@@ -1258,11 +1335,11 @@ const mapStateToProps = (
 		codemarks: codemarkSelectors.getTypeFilteredCodemarks(state) || EMPTY_ARRAY,
 		isInVscode: state.ide.name === "VSC",
 		teamTags: Boolean(props.withTags) ? getTeamTagsArray(state) : emptyArray,
-		channelStreams: getChannelStreamsForTeam(state, state.context.currentTeamId),
+		// channelStreams: getChannelStreamsForTeam(state, state.context.currentTeamId),
 		services: state.services,
-		slashCommands: getSlashCommands(state.capabilities),
 		currentUser: state.users[state.session.userId!] as CSMe,
-		usernames: getUsernames(state)
+		usernames: getUsernames(state),
+		attachFilesEnabled: true // isFeatureEnabled(state, "attachFiles")
 	};
 };
 

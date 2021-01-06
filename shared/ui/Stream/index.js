@@ -316,7 +316,11 @@ export class SimpleStream extends PureComponent {
 				)}
 				<div id="confirm-root" />
 				{activePanel !== WebviewPanels.Onboard && <GlobalNav />}
-				{activePanel === WebviewPanels.Onboard ? <Onboard /> : <Sidebar />}
+				{activePanel === WebviewPanels.Onboard ? (
+					<Onboard type={this.props.onboardingTestGroup} />
+				) : (
+					<Sidebar />
+				)}
 				{activeModal && (
 					<Modal translucent>
 						{activeModal === WebviewModals.CreateTeam && <CreateTeamPage />}

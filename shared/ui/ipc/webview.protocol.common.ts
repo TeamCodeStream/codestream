@@ -62,7 +62,8 @@ export enum WebviewPanels {
 	OpenReviews = "open-reviews",
 	OpenPullRequests = "open-pull-requests",
 	WorkInProgress = "work-in-progress",
-	Onboard = "onboard"
+	Onboard = "onboard",
+	Commits = "commits"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their

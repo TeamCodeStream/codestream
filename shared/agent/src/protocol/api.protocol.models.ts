@@ -255,6 +255,21 @@ export interface CSReview extends CSEntity {
 	pullRequestProviderId?: string;
 }
 
+export interface Attachment {
+	mimetype: string;
+	name: string;
+	title: string;
+	type: string;
+	url: string;
+	preview?:
+		| string
+		| {
+				url: string;
+				width: number;
+				height: number;
+		  };
+}
+
 export interface CSPost extends CSEntity {
 	teamId: string;
 	streamId: string;
@@ -264,27 +279,12 @@ export interface CSPost extends CSEntity {
 	seqNum: number | string;
 	hasBeenEdited: boolean;
 	mentionedUserIds?: string[];
-	origin?: "email" | "slack" | "msteams";
+	origin?: "email" | "slack" | "msteams" | "editor";
 	reactions?: { [key: string]: string[] };
 	codemarkId?: string;
 	reviewCheckpoint?: number;
 	reviewId?: string;
-	files?: [
-		{
-			mimetype: string;
-			name: string;
-			title: string;
-			type: string;
-			url: string;
-			preview?:
-				| string
-				| {
-						url: string;
-						width: number;
-						height: number;
-				  };
-		}
-	];
+	files?: Attachment[];
 }
 
 export interface CSRemote {
