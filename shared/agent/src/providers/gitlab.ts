@@ -957,6 +957,63 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return response;
 	}
 
+	async restPost<T extends object, R extends object>(url: string, variables: any) {
+		const response = await this.post<T, R>(url, variables);
+		if (
+			response &&
+			response.response &&
+			response.response.headers &&
+			Logger.level === TraceLevel.Debug
+		) {
+			try {
+				const rateLimit: any = {};
+				["limit", "remaining", "used", "reset"].forEach(key => {
+					try {
+						rateLimit[key] = parseInt(
+							response.response.headers.get(`x-ratelimit-${key}`) as string,
+							10
+						);
+					} catch (e) {
+						Logger.warn(e);
+					}
+				});
+
+				this._queryLogger.restApi.rateLimit = rateLimit;
+
+				const e = new Error();
+				if (e.stack) {
+					let functionName;
+					try {
+						functionName = e.stack
+							.split("\n")
+							.filter(
+								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restPost") === -1
+							)![0]
+							.match(/GitLabProvider\.(\w+)/)![1];
+					} catch (ex) {
+						functionName = "unknown";
+					}
+
+					if (!this._queryLogger.restApi.fns[functionName]) {
+						this._queryLogger.restApi.fns[functionName] = {
+							count: 1
+						};
+					} else {
+						const existing = this._queryLogger.restApi.fns[functionName];
+						existing.count++;
+						this._queryLogger.restApi.fns[functionName] = existing;
+					}
+				}
+
+				Logger.log(JSON.stringify(this._queryLogger, null, 4));
+			} catch (err) {
+				console.warn(err);
+			}
+		}
+
+		return response;
+	}
+
 	_pullRequestCache: Map<string, any> = new Map();
 
 	@log()
@@ -992,7 +1049,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					state
 					author {
 						username
-					  }
+					}
+					diffRefs {
+						baseSha
+						headSha
+						startSha
+					}
 					commitCount
 					sourceProject{
 						name
@@ -1453,6 +1515,82 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// 		}
 		// 	}
 		// };
+	}
+
+	async createPullRequestInlineComment(request: {
+		pullRequestId: string;
+		text: string;
+		rightSha: string;
+		filePath: string;
+		startLine: number;
+		position?: number;
+		metadata?: any;
+	}) {
+		const result = await this.createCommitComment(request);
+		return result;
+	}
+
+	async createCommitComment(request: {
+		pullRequestId: string;
+		rightSha: string;
+		text: string;
+		filePath: string;
+		startLine: number;
+		// use endLine for multi-line comments
+		endLine?: number;
+		// used for old servers
+		position?: number;
+		metadata?: any;
+	}) {
+		const payload = {
+			//	id: request.metadata.projectFullPath,
+			commit_id: request.rightSha,
+			//path: request.filePath,
+			body: request.text,
+			position: {
+				// base_sha:"",
+				// start_sha:"",
+				// head_sha:"",
+				base_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
+				head_sha: "a10e73cf84eae38286df56f4b58fa221d7eefc44",
+				start_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
+				position_type: "text",
+				//	old_path: request.filePath,
+				//	old_line: request.startLine,
+				new_path: request.filePath,
+				new_line: request.startLine
+			}
+		};
+
+		const data = await this.restPost<any, any>(
+			`/projects/${encodeURIComponent(request.metadata.projectFullPath)}/merge_requests/${
+				request.metadata.iid
+			}/discussions`,
+			payload
+		);
+
+		// const payload = {
+		// 	//	id: request.metadata.projectFullPath,
+		// 	//sha: request.rightSha,
+		// 	path: request.filePath,
+		// 	note: request.text,
+		// 	line: request.startLine,
+		// 	line_type: "new"
+		// };
+
+		// const data = await this.restPost<any, any>(
+		// 	`/projects/${encodeURIComponent(request.metadata.projectFullPath)}/repository/commits/${
+		// 		request.rightSha
+		// 	}/comments`,
+		// 	payload
+		// );
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId
+		});
+
+		return data.body;
 	}
 }
 

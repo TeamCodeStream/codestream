@@ -486,6 +486,7 @@ export const api = <T = any, R = any>(
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
 		if (currentPullRequest.metadata) {
 			params = { ...params, ...currentPullRequest.metadata };
+			params.metadata = currentPullRequest.metadata;
 		}
 		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,

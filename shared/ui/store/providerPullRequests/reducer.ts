@@ -391,7 +391,7 @@ export const getProviderPullRequestRepo = createSelector(
 			let repoName;
 			let repoUrl;
 			if (!currentPr.conversations.repository) {
-				debugger;
+				// debugger;
 				repoName = currentPr.conversations.project.name.toLowerCase();
 				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
 			} else {

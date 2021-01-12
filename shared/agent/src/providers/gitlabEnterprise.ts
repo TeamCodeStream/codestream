@@ -27,7 +27,8 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		// header. See https://docs.gitlab.com/ee/api/#oauth2-tokens
 		// and https://docs.gitlab.com/11.11/ee/api/README.html
 		return {
-			"PRIVATE-TOKEN": this.accessToken!
+			"PRIVATE-TOKEN": this.accessToken!,
+			"Content-Type": "application/json"
 		};
 	}
 
