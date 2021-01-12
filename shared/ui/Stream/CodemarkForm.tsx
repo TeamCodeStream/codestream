@@ -12,7 +12,8 @@ import {
 	BlameAuthor,
 	GetShaDiffsRangesRequestType,
 	GetShaDiffsRangesResponse,
-	GetReposScmRequestType
+	UploadFileRequest,
+	UploadFileRequestType
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -109,7 +110,7 @@ export interface AttachedFile {
 	type: string;
 	size: number;
 	url?: string;
-	status: "uploading" | "error" | "uploaded" | undefined;
+	status?: "uploading" | "error" | "uploaded";
 }
 
 interface Props extends ConnectedProps {
@@ -729,9 +730,9 @@ class CodemarkForm extends React.Component<Props, State> {
 			text,
 			selectedChannelId,
 			selectedTags,
-			relatedCodemarkIds
+			relatedCodemarkIds,
+			attachments
 		} = this.state;
-
 		// FIXME
 		const codeBlock = codeBlocks[0];
 
@@ -837,7 +838,8 @@ class CodemarkForm extends React.Component<Props, State> {
 				parentPostId,
 				isChangeRequest: this.state.isChangeRequest,
 				addedUsers: keyFilter(this.state.emailAuthors),
-				isProviderReview: this.state.isProviderReview
+				isProviderReview: this.state.isProviderReview,
+				attachments
 			};
 			if (this.props.teamProvider === "codestream") {
 				const retVal = await this.props.onSubmit({
@@ -1413,37 +1415,30 @@ class CodemarkForm extends React.Component<Props, State> {
 		[...files].forEach(file => {
 			file.status = "uploading";
 		});
+		const attachments: AttachedFile[] = [];
 
 		for (const file of files) {
-			const reader = new FileReader();
-			reader.addEventListener("loadend", async () => {
-				try {
-					const response = await Server.post("/upload-file", {
-						buffer: new Uint8Array(reader.result as ArrayBuffer),
-						// can't pass all the file properties (it's not clone-able)
-						file: {
-							name: file.name,
-							path: file.path,
-							size: file.size,
-							status: file.status,
-							type: file.type
-						}
-					});
-					if (response && response.url) {
-						file.status = "uploaded";
-						file.url = response.url;
-					} else {
-						file.status = "error";
-					}
-				} catch (e) {
-					console.warn("Error uploading file: ", e);
+			try {
+				const response = await HostApi.instance.send(UploadFileRequestType, {
+					path: file.path,
+					name: file.name,
+					size: file.size,
+					type: file.type
+				});
+				if (response && response.url) {
+					file.status = "uploaded";
+					file.url = response.url;
+					attachments.push(response);
+				} else {
 					file.status = "error";
 				}
-			});
-			reader.readAsArrayBuffer(file);
+			} catch (e) {
+				console.warn("Error uploading file: ", e);
+				file.status = "error";
+			}
 		}
 
-		this.setState({ attachments: [...this.state.attachments, ...files] });
+		this.setState({ attachments: [...this.state.attachments, ...attachments] });
 
 		// setTimeout(() => {
 		// 	const attachments = [...this.state.attachments];

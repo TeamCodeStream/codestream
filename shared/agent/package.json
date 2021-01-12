@@ -54,6 +54,7 @@
         "diff": "4.0.2",
         "diff-match-patch": "1.0.4",
         "eol": "0.9.1",
+        "form-data": "3.0.0",
         "graphql-request": "1.8.2",
         "ignore": "3.3.10",
         "lodash-es": "4.17.15",

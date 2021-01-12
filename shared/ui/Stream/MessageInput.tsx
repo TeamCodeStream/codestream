@@ -28,7 +28,7 @@ import { getTeamTagsArray, getTeamMembers, getUsernames } from "../store/users/r
 // import { getChannelStreamsForTeam } from "../store/streams/reducer";
 import { ServicesState } from "../store/services/types";
 import { MarkdownText } from "./MarkdownText";
-
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/reducer";
 import Tooltip from "./Tooltip";
 
@@ -1341,7 +1341,7 @@ const mapStateToProps = (
 		services: state.services,
 		currentUser: state.users[state.session.userId!] as CSMe,
 		usernames: getUsernames(state),
-		attachFilesEnabled: true // isFeatureEnabled(state, "attachFiles")
+		attachFilesEnabled: isFeatureEnabled(state, "fileUploads")
 	};
 };
 
