@@ -743,21 +743,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																className={selected ? "pr-row selected" : "pr-row"}
 																onClick={() => {
 																	dispatch(
-																		setCurrentPullRequest(
-																			pr.providerId,
-																			pr.id,
-																			undefined,
-																			undefined,
-																			{
-																				id: pr.id,
-																				//foo/bar!6
-																				projectFullPath: pr.references.full.replace(
-																					pr.reference,
-																					""
-																				),
-																				iid: pr.iid
-																			}
-																		)
+																		setCurrentPullRequest(pr.providerId, pr.references.full)
 																	);
 
 																	HostApi.instance.track("PR Clicked", {

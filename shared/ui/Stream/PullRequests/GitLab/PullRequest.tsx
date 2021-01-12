@@ -132,9 +132,6 @@ export const PullRequest = () => {
 			currentPullRequestCommentId: state.context.currentPullRequest
 				? state.context.currentPullRequest.commentId
 				: undefined,
-			currentPullRequestMetadata: state.context.currentPullRequest
-				? state.context.currentPullRequest.metadata
-				: undefined,
 			currentPullRequest: currentPullRequest,
 			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
 			composeCodemarkActive: state.context.composeCodemarkActive,
@@ -267,8 +264,7 @@ export const PullRequest = () => {
 		const response = (await dispatch(
 			getPullRequestConversations(
 				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!,
-				derivedState.currentPullRequestMetadata!
+				derivedState.currentPullRequestId!
 			)
 		)) as any;
 		setGeneralError("");
@@ -294,8 +290,7 @@ export const PullRequest = () => {
 		const response = (await dispatch(
 			getPullRequestConversationsFromProvider(
 				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!,
-				derivedState.currentPullRequestMetadata!
+				derivedState.currentPullRequestId!
 			)
 		)) as any;
 		_assignState(response);

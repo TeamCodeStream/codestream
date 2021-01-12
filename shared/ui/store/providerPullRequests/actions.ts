@@ -91,14 +91,12 @@ export const handleDirectives = (providerId: string, id: string, data: any) =>
 
 const _getPullRequestConversationsFromProvider = async (
 	providerId: string,
-	id: string,
-	metadata?: any
+	id: string
 ) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
 		pullRequestId: id,
-		force: true,
-		metadata: metadata
+		force: true
 	});
 
 	let response2: FetchAssignableUsersResponse | undefined = undefined;
@@ -132,13 +130,12 @@ const _getPullRequestConversationsFromProvider = async (
 
 export const getPullRequestConversationsFromProvider = (
 	providerId: string,
-	id: string,
-	metadata?: any
+	id: string
 ) => async dispatch => {
 	try {
 		dispatch(clearPullRequestError(providerId, id));
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id, metadata);
+		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
 		dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 
@@ -151,8 +148,7 @@ export const getPullRequestConversationsFromProvider = (
 
 export const getPullRequestConversations = (
 	providerId: string,
-	id: string,
-	metadata?: any
+	id: string
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		const state = getState();
@@ -173,7 +169,7 @@ export const getPullRequestConversations = (
 			}
 		}
 
-		const responses = await _getPullRequestConversationsFromProvider(providerId, id, metadata);
+		const responses = await _getPullRequestConversationsFromProvider(providerId, id);
 		await dispatch(_addPullRequestConversations(providerId, id, responses.conversations));
 		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;

@@ -301,51 +301,108 @@ export class DocumentMarkerManager {
 				pullRequestId
 			}
 		});
-		const pr = result.repository.pullRequest;
-		const comments: any[] = [];
-		pr.timelineItems.nodes
-			.filter((node: any) => node.__typename === "PullRequestReview")
-			.forEach((review: any) => {
-				review.comments &&
-					review.comments.nodes.forEach((comment: any) => {
-						if (comment.path === parsedUri.path) comments.push(comment);
-					});
-			});
-
 		const documentMarkers: DocumentMarker[] = [];
 
-		const provider = providerRegistry
-			.getProviders()
-			.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
-		if (provider) {
-			const gitRepo = await git.getRepositoryById(parsedUri.repoId);
-			const repoPath = path.join(gitRepo ? gitRepo.path : "", parsedUri.path);
-			const diff = await git.getDiffBetweenCommits(
-				parsedUri.leftSha,
-				parsedUri.rightSha,
-				repoPath,
-				true
-			);
-
-			const diffWithMetadata = gitUtils.translatePositionToLineNumber(diff);
-
-			comments.forEach(async (comment: any) => {
-				let summary = comment.body || comment.bodyText;
-				if (summary.length !== 0) {
-					summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
+		if (providerId === "gitlab/enterprise" || providerId === "gitlab*com") {
+			const pr = result.project.mergeRequest;
+			const comments: any[] = [];
+			result.project.mergeRequest.discussions.nodes.forEach((_: any) => {
+				if (_.notes && _.notes.nodes) {
+					_.notes.nodes.forEach((n: any) => {
+						if (n.position && n.position.newPath === parsedUri.path) {
+							comments.push(n);
+						}
+					});
 				}
+			});
 
-				let gotoLine = 1;
-				if (comment.diffHunk && diffWithMetadata) {
-					const lineNumber = gitUtils.getLineNumber(diffWithMetadata, comment.position);
-					if (lineNumber != null) {
-						gotoLine = lineNumber;
+			const provider = providerRegistry
+				.getProviders()
+				.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
+			if (provider) {
+				comments.forEach(async (comment: any) => {
+					let summary = comment.body;
+					if (summary.length !== 0) {
+						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
+					}
+
+					let gotoLine = comment.position.newLine;
+
+					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+					documentMarkers.push({
+						createdAt: +new Date(comment.createdAt),
+						modifiedAt: +new Date(comment.createdAt),
+						id: comment.id,
+						file: comment.position.newPath,
+						repoId: "",
+						creatorId: comment.author.username,
+						teamId: "",
+						fileStreamId: "",
+						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
+						code: "",
+						fileUri: documentId.uri,
+						creatorName: comment.author ? comment.author.username : "Unknown",
+						range: MarkerLocation.toRangeFromArray(location),
+						location: MarkerLocation.fromArray(location, comment.id),
+						title: pr.title,
+						summary: summary,
+						summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
+						type: CodemarkType.Comment,
+						externalContent: {
+							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
+							externalId: pr.id,
+							externalChildId: comment.id,
+							externalType: "pr",
+							title: comment.body,
+							subhead: ""
+						}
+					});
+				});
+			}
+		} else {
+			// TODO this is all GH-specific
+			const pr = result.repository.pullRequest;
+			const comments: any[] = [];
+			pr.timelineItems.nodes
+				.filter((node: any) => node.__typename === "PullRequestReview")
+				.forEach((review: any) => {
+					review.comments &&
+						review.comments.nodes.forEach((comment: any) => {
+							if (comment.path === parsedUri.path) comments.push(comment);
+						});
+				});
+			const provider = providerRegistry
+				.getProviders()
+				.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
+			if (provider) {
+				const gitRepo = await git.getRepositoryById(parsedUri.repoId);
+				const repoPath = path.join(gitRepo ? gitRepo.path : "", parsedUri.path);
+				const diff = await git.getDiffBetweenCommits(
+					parsedUri.leftSha,
+					parsedUri.rightSha,
+					repoPath,
+					true
+				);
+
+				const diffWithMetadata = gitUtils.translatePositionToLineNumber(diff);
+
+				comments.forEach(async (comment: any) => {
+					let summary = comment.body || comment.bodyText;
+					if (summary.length !== 0) {
+						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
+					}
+
+					let gotoLine = 1;
+					if (comment.diffHunk && diffWithMetadata) {
+						const lineNumber = gitUtils.getLineNumber(diffWithMetadata, comment.position);
+						if (lineNumber != null) {
+							gotoLine = lineNumber;
+						} else {
+							return;
+						}
 					} else {
 						return;
 					}
-				} else {
-					return;
-				}
 
 				const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 				documentMarkers.push({
@@ -376,7 +433,7 @@ export class DocumentMarkerManager {
 						subhead: ""
 					}
 				});
-			});
+			}
 		}
 		return {
 			markers: documentMarkers,
@@ -526,6 +583,15 @@ export class DocumentMarkerManager {
 	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
 		const cc = Logger.getCorrelationContext();
 
+		const {
+			codemarks,
+			files,
+			markers,
+			markerLocations,
+			users,
+			reviews,
+			posts
+		} = SessionContainer.instance();
 		const { documents } = Container.instance();
 		const doc = documents.get(documentId.uri);
 		const documentUri = URI.parse(documentId.uri);
@@ -650,6 +716,11 @@ export class DocumentMarkerManager {
 						if (missingLocation) {
 							markersNotLocated.push({
 								...marker,
+								fileUri: documentUri.toString(),
+								codemark: codemark,
+								creatorName: (creator && creator.username) || "Unknown",
+								range: MarkerLocation.toRange(location),
+								location: location,
 								...(title ? { title } : {}),
 								summary: summary,
 								summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
@@ -664,16 +735,35 @@ export class DocumentMarkerManager {
 									"location not found"}, reason: ${missingLocation.reason}`
 							);
 						} else {
-							markersNotLocated.push({
-								...marker,
-								...(title ? { title } : {}),
-								summary: summary,
-								summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-								creatorName: (creator && creator.username) || "Unknown",
-								codemark: codemark,
-								notLocatedReason: MarkerNotLocatedReason.UNKNOWN
-							});
-							Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
+							const missingLocation = missingLocations[marker.id];
+							if (missingLocation) {
+								markersNotLocated.push({
+									...marker,
+									...(title ? { title } : {}),
+									summary: summary,
+									summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
+									creatorName: (creator && creator.username) || "Unknown",
+									codemark: codemark,
+									notLocatedReason: missingLocation.reason,
+									notLocatedDetails: missingLocation.details
+								});
+								Logger.log(
+									cc,
+									`MARKERS: ${marker.id}=${missingLocation.details ||
+										"location not found"}, reason: ${missingLocation.reason}`
+								);
+							} else {
+								markersNotLocated.push({
+									...marker,
+									...(title ? { title } : {}),
+									summary: summary,
+									summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
+									creatorName: (creator && creator.username) || "Unknown",
+									codemark: codemark,
+									notLocatedReason: MarkerNotLocatedReason.UNKNOWN
+								});
+								Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
+							}
 						}
 					}
 				} catch (ex) {

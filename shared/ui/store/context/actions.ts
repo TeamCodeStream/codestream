@@ -151,10 +151,8 @@ export const setCurrentPullRequest = (
 	providerId: string,
 	id: string,
 	commentId?: string,
-	source?: string,
-	metadata?: any
-) =>
-	action(ContextActionsType.SetCurrentPullRequest, { providerId, id, commentId, source, metadata });
+	source?: string
+) => action(ContextActionsType.SetCurrentPullRequest, { providerId, id, commentId, source });
 
 export const setNewPullRequestOptions = (options?: { branch: NewPullRequestBranch }) =>
 	action(ContextActionsType.SetNewPullRequestOptions, { options });
@@ -164,8 +162,7 @@ export const clearCurrentPullRequest = () =>
 		providerId: "",
 		id: "",
 		commentId: "",
-		source: "",
-		metadata: undefined
+		source: ""
 	});
 
 export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });

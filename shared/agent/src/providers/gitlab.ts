@@ -675,10 +675,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (item && item.body) {
 				response[index] = item.body
 					.filter((_: any) => _.id)
-					.map((pr: { created_att: string }) => ({
+					.map((pr: { created_at: string; references: { full: string } }) => ({
 						...pr,
+						// override the singular id with one that has the repoOwnerName + iid
+						id: pr.references.full,
 						providerId: this.providerConfig?.id,
-						createdAt: new Date(pr.created_att).getTime()
+						createdAt: new Date(pr.created_at).getTime()
 					}));
 
 				if (!queries[index].match(/\bsort:/)) {
@@ -1018,10 +1020,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequest(request: any): Promise<any> {
-		if (request.metadata) {
-			request = { ...request, ...request.metadata };
+		if (request.pullRequestId.indexOf("!") > -1) {
+			request.projectFullPath = request.pullRequestId.split("!")[0];
+			request.iid = request.pullRequestId.split("!")[1];
 		}
-		const { scm: scmManager } = SessionContainer.instance();
+
+		//const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
 		if (request.force) {
@@ -1154,8 +1158,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			const response = await this.query(q, {
 				fullPath: request.projectFullPath,
-				iid: request.iid.toString(),
-				id: request.id.toString()
+				iid: request.iid.toString()
 			});
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
@@ -1165,8 +1168,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha;
 			response.project.mergeRequest.headRefName = response.project.mergeRequest.sourceBranch;
 			response.project.mergeRequest.repository = {
-				name: "cheese"
+				name: response.project.mergeRequest.sourceProject.name,
+				nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
+				url: response.project.mergeRequest.sourceProject.webUrl
 			};
+			response.project.mergeRequest.id =
+				response.project.mergeRequest.repository.nameWithOwner +
+				"!" +
+				response.project.mergeRequest.iid;
 
 			return response;
 		} catch (ex) {
@@ -1201,12 +1210,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// 	response.repository.resourcePath,
 		// 	""
 		// );
-
-		// response.repository.repoOwner = repoOwner!;
-		// response.repository.repoName = repoName!;
-
-		// response.repository.pullRequest.providerId = this.providerConfig.id;
-		// response.repository.providerId = this.providerConfig.id;
 
 		this._pullRequestCache.set(request.pullRequestId, response);
 		return response;
@@ -1374,12 +1377,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		if (!request.metadata) throw Error("metadata is required");
-		//const query = await this.restGet(`/projects/bcanzanella%2Ffoo/merge_requests/3/commits`);
-
-		const url = `/projects/${encodeURIComponent(request.metadata.projectFullPath)}/merge_requests/${
-			request.metadata.iid
-		}/commits`;
+		let projectFullPath = request.pullRequestId.split("!")[0];
+		let iid = request.pullRequestId.split("!")[1];
+		const url = `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/commits`;
 		const query = await this.restGet(url);
 
 		return (query.body as any[]).map(_ => {
@@ -1424,54 +1424,18 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			owner: string;
 		}
 	>();
-	async getRepoOwnerFromPullRequestId(
-		pullRequestId: string
-	): Promise<{
-		pullRequestNumber: number;
-		name: string;
-		owner: string;
-	}> {
-		if (this._pullRequestIdCache.has(pullRequestId)) {
-			return this._pullRequestIdCache.get(pullRequestId)!;
-		}
-
-		const query = `query GetRepoIdFromPullRequestId($id: [ID!]!) {
-			 
-			nodes(ids: $id) {
-			  ... on PullRequest {
-				number
-				repository {
-				  name
-				  owner {
-					login
-				  }
-				}
-			  }
-			}
-		  }`;
-		const response = await this.query<any>(query, {
-			id: pullRequestId
-		});
-
-		const data = {
-			pullRequestNumber: response.nodes[0].number,
-			name: response.nodes[0].repository.name,
-			owner: response.nodes[0].repository.owner.login
-		};
-		this._pullRequestIdCache.set(pullRequestId, data);
-
-		return data;
-	}
 
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
-		//const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-
 		// https://developer.github.com/v3/pulls/#list-pull-requests-files
 		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
+		const projectFullPath = request.pullRequestId.split("!")[0];
+		const iid = request.pullRequestId.split("!")[1];
 		try {
-			let url: string | undefined = `/projects/8/merge_requests/3/changes`;
+			let url: string | undefined = `/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/changes`;
 			//	do {
 			const apiResponse = await this.restGet<{
 				changes: {
@@ -1517,6 +1481,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// };
 	}
 
+	async getPullRequestReviewId(request: { pullRequestId: string }) {
+		//TODO?
+		return undefined;
+	}
+
 	async createPullRequestInlineComment(request: {
 		pullRequestId: string;
 		text: string;
@@ -1526,46 +1495,51 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		position?: number;
 		metadata?: any;
 	}) {
-		const result = await this.createCommitComment(request);
+		const result = await this.createCommitComment({
+			...request,
+			path: request.filePath,
+			sha: request.rightSha
+		});
 		return result;
 	}
 
 	async createCommitComment(request: {
 		pullRequestId: string;
-		rightSha: string;
+		sha: string;
 		text: string;
-		filePath: string;
+		path: string;
 		startLine: number;
 		// use endLine for multi-line comments
 		endLine?: number;
 		// used for old servers
 		position?: number;
-		metadata?: any;
 	}) {
+		let projectFullPath = request.pullRequestId.split("!")[0];
+		let iid = request.pullRequestId.split("!")[1];
+
 		const payload = {
 			//	id: request.metadata.projectFullPath,
-			commit_id: request.rightSha,
+			commit_id: request.sha,
 			//path: request.filePath,
 			body: request.text,
 			position: {
 				// base_sha:"",
 				// start_sha:"",
 				// head_sha:"",
+				// TODO fix these
 				base_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
 				head_sha: "a10e73cf84eae38286df56f4b58fa221d7eefc44",
 				start_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
 				position_type: "text",
 				//	old_path: request.filePath,
 				//	old_line: request.startLine,
-				new_path: request.filePath,
+				new_path: request.path,
 				new_line: request.startLine
 			}
 		};
 
 		const data = await this.restPost<any, any>(
-			`/projects/${encodeURIComponent(request.metadata.projectFullPath)}/merge_requests/${
-				request.metadata.iid
-			}/discussions`,
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
 			payload
 		);
 
