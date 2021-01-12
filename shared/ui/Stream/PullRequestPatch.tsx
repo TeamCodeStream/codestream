@@ -202,7 +202,12 @@ export const PullRequestPatch = (props: {
 								</PRInlineComment>
 							) : null;
 
-						const commentsOnLine = (props.comments || []).filter(_ => _.comment.position == index);
+						// TODO check this out again -- there are different models for GH vs GL
+						const commentsOnLine: any[] = (props.comments || []).filter(_ =>
+							typeof _.comment.position === "number"
+								? _.comment.position == index
+								: _.comment.position.newLine == rightLine + 1
+						);
 						const comments =
 							commentsOnLine.length === 0 ? null : (
 								<PRCommentsInPatch>

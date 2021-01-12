@@ -697,6 +697,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	get graphQlBaseUrl() {
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
+
 	protected _client: GraphQLClient | undefined;
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
@@ -1172,6 +1173,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
 				url: response.project.mergeRequest.sourceProject.webUrl
 			};
+			response.project.mergeRequest.url = response.project.mergeRequest.sourceProject.webUrl;
+
 			response.project.mergeRequest.id =
 				response.project.mergeRequest.repository.nameWithOwner +
 				"!" +

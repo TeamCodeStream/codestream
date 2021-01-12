@@ -581,15 +581,14 @@ export const PullRequest = () => {
 					</ScrollBox>
 				)}
 				{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
-					// <PullRequestFileComments
-					// 	pr={pr}
-					// 	fetch={fetch}
-					// 	setIsLoadingMessage={setIsLoadingMessage}
-					// 	commentId={derivedState.currentPullRequestCommentId}
-					// 	quote={() => {}}
-					// 	onClose={closeFileComments}
-					// />
-					<></>
+					<PullRequestFileComments
+						pr={pr as any}
+						fetch={fetch}
+						setIsLoadingMessage={setIsLoadingMessage}
+						commentId={derivedState.currentPullRequestCommentId}
+						quote={() => {}}
+						onClose={closeFileComments}
+					/>
 				)}
 			</Root>
 		</ThemeProvider>

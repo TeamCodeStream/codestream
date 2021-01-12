@@ -157,7 +157,7 @@ export const PRAuthorBadges = (props: {
 	const nodeAuthor = node.author || GHOST;
 	const prAuthor = pr.author || GHOST;
 	if (prAuthor.login === nodeAuthor.login) {
-		const isMe = nodeAuthor.login === pr.viewer.login;
+		const isMe = pr.viewer && nodeAuthor.login === pr.viewer.login;
 		badges.push(
 			<Tooltip
 				key="author"

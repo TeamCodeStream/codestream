@@ -35,13 +35,16 @@ interface Props {
 }
 
 export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
-	const { quote, fetch, setIsLoadingMessage, pr } = props;
+	const { quote, pr } = props;
 	const dispatch = useDispatch();
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined
@@ -80,18 +83,38 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 
 	const commentMap = React.useMemo(() => {
 		const map = {} as any;
-		const reviews = pr
-			? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
-			: [];
-		reviews.forEach(review => {
-			if (!review.comments) return;
-			review.comments.nodes.forEach(comment => {
-				if (!map[comment.path]) map[comment.path] = [];
-				map[comment.path].push({ review, comment });
-				if (comment.id === props.commentId || comment.threadId === props.commentId)
-					setFilename(comment.path);
+		if (
+			derivedState.currentPullRequestProviderId === "gitlab*com" ||
+			derivedState.currentPullRequestProviderId === "gitlab/enterprise"
+		) {
+			(pr as any).discussions.nodes.forEach((review: any) => {
+				if (review.notes && review.notes.nodes) {
+					review.notes.nodes.forEach((comment: any) => {
+						const position = comment.position;
+						if (position) {
+							if (!map[position.newPath]) map[position.newPath] = [];
+							map[position.newPath].push({ review, comment: comment });
+							if (comment.id === props.commentId) {
+								setFilename(comment.position.newPath);
+							}
+						}
+					});
+				}
 			});
-		});
+		} else {
+			const reviews = pr
+				? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
+				: [];
+			reviews.forEach(review => {
+				if (!review.comments) return;
+				review.comments.nodes.forEach(comment => {
+					if (!map[comment.path]) map[comment.path] = [];
+					map[comment.path].push({ review, comment });
+					if (comment.id === props.commentId || comment.threadId === props.commentId)
+						setFilename(comment.path);
+				});
+			});
+		}
 		return map;
 	}, [pr]);
 
@@ -111,7 +134,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 								className="clickable"
 								onClick={e => copy(filename)}
 							/>{" "}
-							{pr && (
+							{pr && pr.url && (
 								<Link href={pr.url.replace(/\/pull\/\d+$/, `/blob/${pr.headRefOid}/${filename}`)}>
 									<Icon
 										title="Open File on Remote"
