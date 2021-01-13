@@ -375,6 +375,151 @@ export const PullRequest = () => {
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				<PRHeader>
+					<div className="detail-page-header border-bottom-0 pt-0 pb-0">
+						<div className="detail-page-header-body">
+							<div className="issuable-status-box status-box status-box-open">
+								<svg className="s16 d-block d-sm-none" data-testid="issue-open-m-icon"></svg>
+								<span className="d-none d-sm-block">Open</span>
+							</div>
+							<div className="issuable-meta">
+								<div className="gl-display-inline-block"></div>
+								Opened
+								<time className="js-timeago" title="Jan 4, 2021 2:04pm EST">
+									1 week ago
+								</time>
+								by
+								<strong>
+									<a
+										className="author-link js-user-link d-none d-sm-inline"
+										data-user-id="6"
+										data-username="bcanzanella"
+										data-name="brian canzanella"
+										href="http://gitlab.codestream.us/bcanzanella"
+									>
+										<img
+											className="avatar avatar-inline s24 js-lazy-loaded qa-js-lazy-loaded"
+											alt=""
+											src="B%20(!3)%20%C2%B7%20Merge%20Requests%20%C2%B7%20brian%20canzanella%20_%20foo%20%C2%B7%20GitLab_files/f690a9cf57126732dd0cb5d9b1563390_003.jpg"
+											width="24"
+										/>
+										<span className="author">brian canzanella</span>
+									</a>
+									<a
+										className="author-link js-user-link d-inline d-sm-none"
+										href="http://gitlab.codestream.us/bcanzanella"
+									>
+										<span className="author">@bcanzanella</span>
+									</a>
+								</strong>
+								<span
+									className="user-access-role has-tooltip d-none d-xl-inline-block gl-ml-3"
+									title="This user has the maintainer role in the foo project."
+								>
+									Maintainer
+								</span>
+								<span className="has-tooltip gl-ml-2" title="1st contribution!"></span>
+								<span id="task_status" className="d-none d-md-inline-block gl-ml-3"></span>
+								<span id="task_status_short" className="d-md-none"></span>
+							</div>
+							<a
+								className="btn btn-default float-right d-block d-sm-none gutter-toggle issuable-gutter-toggle js-sidebar-toggle"
+								href="#"
+								data-original-title="Expand sidebar"
+							>
+								<svg className="s16" data-testid="chevron-double-lg-left-icon"></svg>
+							</a>
+						</div>
+						<div className="detail-page-header-actions js-issuable-actions">
+							<div className="clearfix issue-btn-group dropdown">
+								<button
+									className="btn btn-default float-left d-md-none"
+									data-toggle="dropdown"
+									type="button"
+								>
+									Options
+									<i aria-hidden="true" data-hidden="true" className="fa fa-caret-down"></i>
+								</button>
+								<div className="dropdown-menu dropdown-menu-right">
+									<ul>
+										<li>
+											<a href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3/edit">
+												Edit
+											</a>
+										</li>
+										<li>
+											<a
+												className="js-draft-toggle-button"
+												rel="nofollow"
+												data-method="put"
+												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bwip_event%5D=wip"
+											>
+												Mark as draft
+											</a>
+										</li>
+										<li className="js-close-item">
+											<a
+												title="Close merge request"
+												rel="nofollow"
+												data-method="put"
+												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=close"
+											>
+												Close
+											</a>
+										</li>
+										<li className="hidden">
+											<a
+												className="reopen-mr-link"
+												title="Reopen merge request"
+												rel="nofollow"
+												data-method="put"
+												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=reopen"
+											>
+												Reopen
+											</a>
+										</li>
+									</ul>
+								</div>
+								<a
+									className="d-none d-md-block btn gl-button btn-grouped js-issuable-edit qa-edit-button"
+									href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3/edit"
+								>
+									Edit
+								</a>
+								<div className="float-left btn-group gl-ml-3 issuable-close-dropdown d-none d-md-inline-flex js-issuable-close-dropdown">
+									<a
+										className="btn gl-button js-draft-toggle-button btn-warning btn-warning-secondary"
+										rel="nofollow"
+										data-method="put"
+										href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bwip_event%5D=wip"
+									>
+										Mark as draft{" "}
+									</a>
+									<button
+										name="button"
+										type="button"
+										className="btn gl-button dropdown-toggle btn-warning btn-warning-secondary"
+										data-toggle="dropdown"
+									>
+										<span className="sr-only">Toggle dropdown</span>
+										<svg className="s12" data-testid="angle-down-icon"></svg>
+									</button>
+									<ul className="js-issuable-close-menu dropdown-menu dropdown-menu-right">
+										<li>
+											<a
+												rel="nofollow"
+												data-method="put"
+												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=close"
+											>
+												<div className="description">
+													<strong className="title">Close merge request</strong>
+												</div>
+											</a>
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
 					{/* {iAmRequested && activeTab == 1 && (
 						<PRIAmRequested>
 							<div>
@@ -392,108 +537,7 @@ export const PullRequest = () => {
 							</Button>
 						</PRIAmRequested>
 					)} */}
-					<PRPreamble>
-						<PRStatusButton
-							disabled
-							fullOpacity
-							// variant={
-							// 	pr.isDraft
-							// 		? "neutral"
-							// 		: pr.state === "OPEN"
-							// 		? "success"
-							// 		: pr.state === "MERGED"
-							// 		? "merged"
-							// 		: pr.state === "CLOSED"
-							// 		? "destructive"
-							// 		: "primary"
-							// }
-						>
-							<Icon name={statusIcon} />
-							{pr && pr.state}
-						</PRStatusButton>
-						Opened <Timestamp time={pr.createdAt} relative /> by {pr.author.username}
-					</PRPreamble>
-					<PRTitle className={editingTitle ? "editing" : ""}>
-						{editingTitle ? (
-							<PREditTitle>
-								<input
-									id="title-input"
-									name="title"
-									value={title}
-									className="input-text control"
-									autoFocus
-									type="text"
-									onChange={e => setTitle(e.target.value)}
-									placeholder=""
-								/>
-								<Button onClick={saveTitle} isLoading={savingTitle}>
-									Save
-								</Button>
-								<Button
-									variant="secondary"
-									onClick={() => {
-										setTitle("");
-										setSavingTitle(false);
-										setEditingTitle(false);
-									}}
-								>
-									Cancel
-								</Button>
-							</PREditTitle>
-						) : (
-							<>
-								{title || pr.title}{" "}
-								<Tooltip title="Open on GitLab" placement="top">
-									<span>
-										<Link href={pr.webUrl}>
-											#{pr.iid}
-											<Icon name="link-external" className="open-external" />
-										</Link>
-									</span>
-								</Tooltip>
-							</>
-						)}
-					</PRTitle>
-					<PRStatus>
-						<a
-							href="#"
-							onClick={e => {
-								e.preventDefault();
-								dispatch(
-									api("toggleReaction", {
-										subjectId: "ASd",
-										content: "+1",
-										onOff: true
-									})
-								);
-							}}
-						>
-							+1
-						</a>
-						{/* <PRStatusMessage>
-							<PRAuthor>{pr.author.username}</PRAuthor>
-							<PRAction>
-								{action} {pr.commits && pr.commits.totalCount} commits into{" "}
-								<Link href={`${pr.repoUrl}/tree/${pr.baseRefName}`}>
-									<PRBranch>
-										{pr.repository.name}:{pr.baseRefName}
-									</PRBranch>
-								</Link>
-								{" from "}
-								<Link href={`${pr.repoUrl}/tree/${pr.headRefName}`}>
-									<PRBranch>{pr.headRefName}</PRBranch>
-								</Link>{" "}
-								<Icon
-									title="Copy"
-									placement="bottom"
-									name="copy"
-									className="clickable"
-									onClick={e => copy(pr.baseRefName)}
-								/>
-							</PRAction>
-							<Timestamp time={pr.createdAt} relative />
-						</PRStatusMessage> */}
-					</PRStatus>
+
 					{derivedState.currentPullRequest &&
 						derivedState.currentPullRequest.error &&
 						derivedState.currentPullRequest.error.message && (
