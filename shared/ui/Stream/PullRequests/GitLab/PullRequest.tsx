@@ -103,6 +103,72 @@ const Root = styled.div`
 		}
 	}
 `;
+
+const Container = styled.div`
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+`;
+const Left = styled.div`
+	flex-grow: 1;
+`;
+const Right = styled.div`
+	width: 200px;
+	border-left: 1px solid #333;
+	padding: 3px;
+`;
+
+const Header = styled.div``;
+const State = styled.span`
+	background: green;
+	color: #fff;
+	border-radius: 4px;
+	padding: 3px 8px 3px 8px;
+	line-height: 24px;
+`;
+
+const RoundImg = styled.span`
+	img {
+		border-radius: 50%;
+		padding-left: 2px;
+		vertical-align: middle;
+		height: 25px;
+	}
+`;
+
+const BigRoundImg = styled.span`
+	img {
+		border-radius: 50%;
+		margin: 0px 15px 0px 10px;
+		vertical-align: middle;
+		height: 40px;
+	}
+`;
+
+const Role = styled.span`
+	border-radius: 15px;
+	color: #666;
+	border: 1px solid #cfcfcf;
+	padding: 0px 10px 0px 10px;
+`;
+
+const AsideBlock = styled.div`
+	padding: 5px 5px 20px 15px;
+	margin: 10px;
+	border-bottom: 1px solid #cfcfcf;
+`;
+
+const Box = styled.div`
+	padding: 10px;
+	margin: 0px 5px 10px 5px;
+	border: 1px solid #dbdbdb;
+	border-radius: 4px;
+`;
+
+const Reply = styled.div`
+	background: red;
+`;
+
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let insertText;
@@ -157,6 +223,7 @@ export const PullRequest = () => {
 		webUrl: string;
 		state: string;
 		author: {
+			name: string;
 			username: string;
 		};
 		commitCount: string;
@@ -375,168 +442,18 @@ export const PullRequest = () => {
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				<PRHeader>
-					<div className="detail-page-header border-bottom-0 pt-0 pb-0">
-						<div className="detail-page-header-body">
-							<div className="issuable-status-box status-box status-box-open">
-								<svg className="s16 d-block d-sm-none" data-testid="issue-open-m-icon"></svg>
-								<span className="d-none d-sm-block">Open</span>
-							</div>
-							<div className="issuable-meta">
-								<div className="gl-display-inline-block"></div>
-								Opened
-								<time className="js-timeago" title="Jan 4, 2021 2:04pm EST">
-									1 week ago
-								</time>
-								by
-								<strong>
-									<a
-										className="author-link js-user-link d-none d-sm-inline"
-										data-user-id="6"
-										data-username="bcanzanella"
-										data-name="brian canzanella"
-										href="http://gitlab.codestream.us/bcanzanella"
-									>
-										<img
-											className="avatar avatar-inline s24 js-lazy-loaded qa-js-lazy-loaded"
-											alt=""
-											src="B%20(!3)%20%C2%B7%20Merge%20Requests%20%C2%B7%20brian%20canzanella%20_%20foo%20%C2%B7%20GitLab_files/f690a9cf57126732dd0cb5d9b1563390_003.jpg"
-											width="24"
-										/>
-										<span className="author">brian canzanella</span>
-									</a>
-									<a
-										className="author-link js-user-link d-inline d-sm-none"
-										href="http://gitlab.codestream.us/bcanzanella"
-									>
-										<span className="author">@bcanzanella</span>
-									</a>
-								</strong>
-								<span
-									className="user-access-role has-tooltip d-none d-xl-inline-block gl-ml-3"
-									title="This user has the maintainer role in the foo project."
-								>
-									Maintainer
-								</span>
-								<span className="has-tooltip gl-ml-2" title="1st contribution!"></span>
-								<span id="task_status" className="d-none d-md-inline-block gl-ml-3"></span>
-								<span id="task_status_short" className="d-md-none"></span>
-							</div>
-							<a
-								className="btn btn-default float-right d-block d-sm-none gutter-toggle issuable-gutter-toggle js-sidebar-toggle"
-								href="#"
-								data-original-title="Expand sidebar"
-							>
-								<svg className="s16" data-testid="chevron-double-lg-left-icon"></svg>
-							</a>
-						</div>
-						<div className="detail-page-header-actions js-issuable-actions">
-							<div className="clearfix issue-btn-group dropdown">
-								<button
-									className="btn btn-default float-left d-md-none"
-									data-toggle="dropdown"
-									type="button"
-								>
-									Options
-									<i aria-hidden="true" data-hidden="true" className="fa fa-caret-down"></i>
-								</button>
-								<div className="dropdown-menu dropdown-menu-right">
-									<ul>
-										<li>
-											<a href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3/edit">
-												Edit
-											</a>
-										</li>
-										<li>
-											<a
-												className="js-draft-toggle-button"
-												rel="nofollow"
-												data-method="put"
-												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bwip_event%5D=wip"
-											>
-												Mark as draft
-											</a>
-										</li>
-										<li className="js-close-item">
-											<a
-												title="Close merge request"
-												rel="nofollow"
-												data-method="put"
-												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=close"
-											>
-												Close
-											</a>
-										</li>
-										<li className="hidden">
-											<a
-												className="reopen-mr-link"
-												title="Reopen merge request"
-												rel="nofollow"
-												data-method="put"
-												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=reopen"
-											>
-												Reopen
-											</a>
-										</li>
-									</ul>
-								</div>
-								<a
-									className="d-none d-md-block btn gl-button btn-grouped js-issuable-edit qa-edit-button"
-									href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3/edit"
-								>
-									Edit
-								</a>
-								<div className="float-left btn-group gl-ml-3 issuable-close-dropdown d-none d-md-inline-flex js-issuable-close-dropdown">
-									<a
-										className="btn gl-button js-draft-toggle-button btn-warning btn-warning-secondary"
-										rel="nofollow"
-										data-method="put"
-										href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bwip_event%5D=wip"
-									>
-										Mark as draft{" "}
-									</a>
-									<button
-										name="button"
-										type="button"
-										className="btn gl-button dropdown-toggle btn-warning btn-warning-secondary"
-										data-toggle="dropdown"
-									>
-										<span className="sr-only">Toggle dropdown</span>
-										<svg className="s12" data-testid="angle-down-icon"></svg>
-									</button>
-									<ul className="js-issuable-close-menu dropdown-menu dropdown-menu-right">
-										<li>
-											<a
-												rel="nofollow"
-												data-method="put"
-												href="http://gitlab.codestream.us/bcanzanella/foo/-/merge_requests/3?merge_request%5Bstate_event%5D=close"
-											>
-												<div className="description">
-													<strong className="title">Close merge request</strong>
-												</div>
-											</a>
-										</li>
-									</ul>
-								</div>
-							</div>
-						</div>
-					</div>
-					{/* {iAmRequested && activeTab == 1 && (
-						<PRIAmRequested>
-							<div>
-								<b>{pr.author.login}</b> requested your review
-								<span className="wide-text"> on this pull request</span>.
-							</div>
-							<Button
-								variant="success"
-								size="compact"
-								onClick={() => {
-									setActiveTab(4);
-								}}
-							>
-								Add <span className="wide-text">your</span> review
-							</Button>
-						</PRIAmRequested>
-					)} */}
+					<Header>
+						<State>{pr.state}</State> Opened <Timestamp time={pr.createdAt} /> by
+						<RoundImg>
+							<img
+								alt="head"
+								src="https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=48&d=identicon"
+							/>
+						</RoundImg>
+						<b className="ml-5 mr-5">{pr.author.name}</b>
+						<Role className="ml-5">Maintainer</Role>
+					</Header>
+					<h1>B</h1>
 
 					{derivedState.currentPullRequest &&
 						derivedState.currentPullRequest.error &&
@@ -576,40 +493,72 @@ export const PullRequest = () => {
 								// 	setIsLoadingMessage={setIsLoadingMessage}
 								// />
 								<>
-									{pr.discussions.nodes.map((_: any) => {
-										return _.notes.nodes.map(x => {
-											return (
+									<Container>
+										<Left>
+											{pr.discussions.nodes.map((_: any) => {
+												return _.notes.nodes.map(x => {
+													return (
+														<Box>
+															<BigRoundImg>
+																<img
+																	style={{ float: "left" }}
+																	alt="headshot"
+																	src={x.author.avatarUrl}
+																/>
+															</BigRoundImg>
+															<div style={{ float: "right" }}>
+																<Role>Maintainer</Role>
+																(S) (R) (Edit) (dots)
+															</div>
+															<div>
+																{x.author.name} {x.author.username} &middot;{" "}
+																<Timestamp time={x.createdAt} />
+															</div>
+
+															<div style={{ paddingTop: "15px" }}>
+																{x.body}
+																<br /> id: {x.id}
+																<br />
+																iid {x.iid}
+																<a
+																	href="#"
+																	onClick={e => {
+																		e.preventDefault();
+																		dispatch(
+																			api("deletePullRequestComment", {
+																				id: x.id
+																			})
+																		);
+																	}}
+																>
+																	delete
+																</a>
+															</div>
+														</Box>
+													);
+												});
+											})}
+										</Left>
+										<PullRequestBottomComment
+											pr={pr}
+											setIsLoadingMessage={setIsLoadingMessage}
+											__onDidRender={__onDidRender}
+										/>
+										<Right>
+											<AsideBlock>
 												<div>
-													<img src={x.author.avatarUrl} />
-													{x.createdAt}
-													<div>{x.body}</div>
-													<div>
-														id: {x.id}
-														<br />
-														iid {x.iid}
-													</div>
-													<a
-														href="#"
-														onClick={e => {
-															e.preventDefault();
-															dispatch(
-																api("deletePullRequestComment", {
-																	id: x.id
-																})
-															);
-														}}
-													>
-														delete
-													</a>
+													0 Assignees <span style={{ float: "right" }}>Edit</span>
 												</div>
-											);
-										});
-									})}
-									<PullRequestBottomComment
-										pr={pr}
-										setIsLoadingMessage={setIsLoadingMessage}
-										__onDidRender={__onDidRender}
-									/>
+												<div>None - assign yourself</div>
+											</AsideBlock>
+											<AsideBlock>
+												<div>
+													Milestone <span style={{ float: "right" }}>Edit</span>
+												</div>
+												<div>None</div>
+											</AsideBlock>
+										</Right>
+									</Container>
 								</>
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}

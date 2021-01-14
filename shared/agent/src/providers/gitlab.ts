@@ -1053,7 +1053,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					webUrl	
 					state
 					author {
+						name
 						username
+						avatarUrl
 					}
 					diffRefs {
 						baseSha
@@ -1073,6 +1075,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						notes {
 						  nodes {
 							author {
+							  name
 							  username
 							  avatarUrl
 							}
