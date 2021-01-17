@@ -8,21 +8,28 @@ import Tooltip from "./Tooltip";
 import MessageInput from "./MessageInput";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
-import { CodemarkPlus, Capabilities } from "@codestream/protocols/agent";
-import { createPost } from "./actions";
-import { CSUser, CSMe, CSPost } from "@codestream/protocols/api";
+import {
+	CodemarkPlus,
+	Capabilities,
+	UploadFileRequestType,
+	UploadFileRequest
+} from "@codestream/protocols/agent";
+import { createPost, setCodemarkStatus } from "./actions";
+import { CSUser, CSMe, CSPost, CodemarkType } from "@codestream/protocols/api";
 import { getTeamProvider } from "../store/teams/reducer";
 import { replaceHtml } from "../utils";
 import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
+import { AttachmentField } from "./CodemarkForm";
 
 interface State {
 	editingPostId?: string;
 	text: string;
 	formatCode: boolean;
 	isLoadingReplies: boolean;
+	attachments: AttachmentField[];
 }
 
 interface Props {
@@ -41,6 +48,9 @@ interface Props {
 
 	onSubmitPost?: any;
 	createPost(...args: Parameters<typeof createPost>): ReturnType<ReturnType<typeof createPost>>;
+	setCodemarkStatus(
+		...args: Parameters<typeof setCodemarkStatus>
+	): ReturnType<ReturnType<typeof setCodemarkStatus>>;
 	postAction?(...args: any[]): any;
 }
 
@@ -52,7 +62,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.state = {
 			text: this.getCachedText(),
 			formatCode: false,
-			isLoadingReplies: true
+			isLoadingReplies: true,
+			attachments: []
 		};
 	}
 
@@ -101,6 +112,11 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		});
 	};
 
+	resolveCodemark = async () => {
+		await this.submitReply();
+		this.props.setCodemarkStatus(this.props.codemark.id, "closed");
+	};
+
 	handleOnChange = (text: string, formatCode: boolean) => {
 		this.cacheText(text);
 		this.setState({ text, formatCode });
@@ -124,6 +140,70 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.setState({ isLoadingReplies: false });
 	};
 
+	handlePaste = e => {
+		if (!e.clipboardData || !e.clipboardData.files) return;
+
+		this.handleAttachFiles(e.clipboardData.files);
+	};
+
+	replaceAttachment = (attachment, index) => {
+		attachment = { ...attachment, mimetype: attachment.type || attachment.mimetype };
+		const { attachments } = this.state;
+		let newAttachments = [...attachments];
+		newAttachments.splice(index, 1, attachment);
+		this.setState({ attachments: newAttachments });
+	};
+
+	handleAttachFiles = async files => {
+		if (!files || files.length === 0) return;
+
+		const { attachments } = this.state;
+		let index = attachments.length;
+
+		HostApi.instance.track("File Attached", {});
+
+		[...files].forEach(file => {
+			file.status = "uploading";
+		});
+		// add the dropped files to the list of attachments, with uploading state
+		this.setState({ attachments: [...attachments, ...files] });
+
+		for (const file of files) {
+			try {
+				const request: UploadFileRequest = {
+					path: file.path,
+					name: file.name,
+					size: file.size,
+					mimetype: file.type
+				};
+				if (!file.path) {
+					// encode as base64 to send to the agent
+					const toBase64 = file =>
+						new Promise((resolve, reject) => {
+							const reader = new FileReader();
+							reader.readAsDataURL(file);
+							reader.onload = () => resolve(reader.result);
+							reader.onerror = error => reject(error);
+						});
+					request.buffer = await toBase64(file);
+				}
+				const response = await HostApi.instance.send(UploadFileRequestType, request);
+				if (response && response.url) {
+					this.replaceAttachment(response, index);
+				} else {
+					file.status = "error";
+					this.replaceAttachment(file, index);
+				}
+			} catch (e) {
+				console.warn("Error uploading file: ", e);
+				file.status = "error";
+				file.error = e;
+				this.replaceAttachment(file, index);
+			}
+			index++;
+		}
+	};
+
 	render() {
 		const { codemark, capabilities, author, currentUserId } = this.props;
 
@@ -134,6 +214,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 				Submit Reply<span className="keybinding extra-pad">{modifier} ENTER</span>
 			</span>
 		);
+
+		const typeLabel = codemark.type === CodemarkType.Issue ? "Issue" : "Discussion";
 
 		const threadId = codemark.postId || "";
 		return (
@@ -207,23 +289,40 @@ export class CodemarkDetails extends React.Component<Props, State> {
 								onChange={this.handleOnChange}
 								onSubmit={this.submitReply}
 								multiCompose={true}
+								attachFiles={this.handleAttachFiles}
 							/>
 							<div style={{ display: "flex" }}>
 								<div style={{ textAlign: "right", flexGrow: 1 }}>
+									{codemark.status !== "closed" && (
+										<Tooltip title={submitTip} placement="bottom" delay={1}>
+											<Button
+												key="resolve"
+												style={{
+													margin: "10px",
+													paddingLeft: "10px",
+													paddingRight: "10px"
+												}}
+												className={cx("control-button cancel")}
+												type="submit"
+												onClick={this.resolveCodemark}
+											>
+												Resolve {this.state.text ? "with Comment" : typeLabel}
+											</Button>
+										</Tooltip>
+									)}
 									<Tooltip title={submitTip} placement="bottom" delay={1}>
 										<Button
 											key="submit"
 											style={{
 												// fixed width to handle the isLoading case
 												width: "80px",
-												margin: "10px 0",
-												float: "right"
+												margin: "10px 0"
 											}}
 											className={cx("control-button", { cancel: !this.state.text })}
 											type="submit"
 											onClick={this.submitReply}
 										>
-											Submit
+											Comment
 										</Button>
 									</Tooltip>
 								</div>
@@ -269,4 +368,4 @@ const mapStateToProps = (state: CodeStreamState, props: { codemark: CodemarkPlus
 	};
 };
 
-export default connect(mapStateToProps, { createPost })(CodemarkDetails);
+export default connect(mapStateToProps, { createPost, setCodemarkStatus })(CodemarkDetails);
