@@ -137,7 +137,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 						</div>
 						{!isPreviewing && (
 							<ButtonRow>
-								{pr.state === "CLOSED" ? (
+								{pr.state.toLowerCase() === "closed" ? (
 									<div style={{ textAlign: "right", flexGrow: 1 }}>
 										<Button
 											disabled={pr.merged}

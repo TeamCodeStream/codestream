@@ -73,6 +73,7 @@ import {
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { PullRequestBottomComment } from "../../PullRequestBottomComment";
+import { PropsWithTheme } from "@codestream/webview/src/themes";
 
 const Root = styled.div`
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
@@ -119,13 +120,15 @@ const Right = styled.div`
 `;
 
 const Header = styled.div``;
-const State = styled.span`
-	background: green;
-	color: #fff;
-	border-radius: 4px;
-	padding: 3px 8px 3px 8px;
-	line-height: 24px;
-`;
+
+const State = styled.span(
+	(props: PropsWithTheme<{ state: string }>) =>
+		`background: ${props.state === "open" ? "green" : "red"},
+	color: "#fff",
+	borderRadius: "4px",
+	padding: "3px 8px 3px 8px",
+	lineHeight: "24px"`
+);
 
 const RoundImg = styled.span`
 	img {
@@ -443,7 +446,8 @@ export const PullRequest = () => {
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				<PRHeader>
 					<Header>
-						<State>{pr.state}</State> Opened <Timestamp time={pr.createdAt} /> by
+						<State state={pr.state.toLowerCase()}>{pr.state}</State> Opened{" "}
+						<Timestamp time={pr.createdAt} /> by
 						<RoundImg>
 							<img
 								alt="head"
@@ -538,12 +542,12 @@ export const PullRequest = () => {
 													);
 												});
 											})}
+											<PullRequestBottomComment
+												pr={pr}
+												setIsLoadingMessage={setIsLoadingMessage}
+												__onDidRender={__onDidRender}
+											/>
 										</Left>
-										<PullRequestBottomComment
-											pr={pr}
-											setIsLoadingMessage={setIsLoadingMessage}
-											__onDidRender={__onDidRender}
-										/>
 										<Right>
 											<AsideBlock>
 												<div>

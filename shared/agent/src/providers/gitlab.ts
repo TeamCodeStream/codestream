@@ -1017,6 +1017,49 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return response;
 	}
 
+	async restPut<T extends object, R extends object>(url: string, variables: any) {
+		const response = await this.put<T, R>(url, variables);
+		if (
+			response &&
+			response.response &&
+			response.response.headers &&
+			Logger.level === TraceLevel.Debug
+		) {
+			try {
+				const e = new Error();
+				if (e.stack) {
+					let functionName;
+					try {
+						functionName = e.stack
+							.split("\n")
+							.filter(
+								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restPost") === -1
+							)![0]
+							.match(/GitLabProvider\.(\w+)/)![1];
+					} catch (ex) {
+						functionName = "unknown";
+					}
+
+					if (!this._queryLogger.restApi.fns[functionName]) {
+						this._queryLogger.restApi.fns[functionName] = {
+							count: 1
+						};
+					} else {
+						const existing = this._queryLogger.restApi.fns[functionName];
+						existing.count++;
+						this._queryLogger.restApi.fns[functionName] = existing;
+					}
+				}
+
+				Logger.log(JSON.stringify(this._queryLogger, null, 4));
+			} catch (err) {
+				console.warn(err);
+			}
+		}
+
+		return response;
+	}
+
 	_pullRequestCache: Map<
 		string,
 		{
@@ -1063,6 +1106,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					title
 					webUrl	
 					state
+					mergedAt
 					author {
 						name
 						username
@@ -1193,6 +1237,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response.project.mergeRequest.repository.nameWithOwner +
 				"!" +
 				response.project.mergeRequest.iid;
+			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
 			this._pullRequestCache.set(request.pullRequestId, response);
 		} catch (ex) {
 			Logger.error(ex);
@@ -1243,9 +1288,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			request.projectFullPath = request.pullRequestId.split("!")[0];
 			request.iid = request.pullRequestId.split("!")[1];
 		}
-		request.noteableId = `gid://gitlab/MergeRequest/${
-			this._pullRequestCache.get(request.pullRequestId)?.project.mergeRequest.id.split("!")[1]
-		}`;
+		request.noteableId = `gid://gitlab/MergeRequest/${request.iid}`;
 
 		const response = (await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
@@ -1352,6 +1395,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return undefined;
 			}
 		);
+
 		return {
 			directives: [
 				// {
@@ -1399,6 +1443,99 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+	}
+
+	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
+		let projectFullPath = request.pullRequestId.split("!")[0];
+		let iid = request.pullRequestId.split("!")[1];
+		const noteableId = `gid://gitlab/MergeRequest/${iid}`;
+		if (request.text) {
+			void (await this.mutate(
+				`mutation CreateNote($noteableId:ID!, $body:String!){
+				createNote(input: {noteableId:$noteableId, body:$body}){
+					clientMutationId
+					note{
+						id      
+						body
+						createdAt
+						confidential
+						author {
+						  username
+						  avatarUrl
+						}
+						updatedAt
+						userPermissions{
+						  adminNote
+						  awardEmoji
+						  createNote
+						  readNote
+						  resolveNote
+						  
+						}      
+					  }			
+				}
+			  }`,
+				{
+					noteableId: noteableId,
+					body: request.text
+				}
+			)) as any;
+		}
+
+		// https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
+		await this.restPut(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
+			state_event: "close"
+		});
+
+		return true;
+	}
+
+	async createPullRequestCommentAndReopen(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<any> {
+		let projectFullPath = request.pullRequestId.split("!")[0];
+		let iid = request.pullRequestId.split("!")[1];
+		const noteableId = `gid://gitlab/MergeRequest/${iid}`;
+
+		if (request.text) {
+			void (await this.mutate(
+				`mutation CreateNote($noteableId:ID!, $body:String!){
+				createNote(input: {noteableId:$noteableId, body:$body}){
+					clientMutationId
+					note{
+						id      
+						body
+						createdAt
+						confidential
+						author {
+						  username
+						  avatarUrl
+						}
+						updatedAt
+						userPermissions{
+						  adminNote
+						  awardEmoji
+						  createNote
+						  readNote
+						  resolveNote
+						  
+						}      
+					  }			
+				}
+			  }`,
+				{
+					noteableId: noteableId,
+					body: request.text
+				}
+			)) as any;
+		}
+
+		// https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
+		await this.restPut(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
+			state_event: "reopen"
+		});
+		return true;
 	}
 
 	async getPullRequestCommits(
