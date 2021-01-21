@@ -1,7 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
 import cx from "classnames";
-import Button from "./Button";
 import PostList from "./PostList";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
@@ -22,6 +21,9 @@ import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
+import { DropdownButton } from "./Review/DropdownButton";
+import { Button } from "../src/components/Button";
+import { ButtonRow } from "../src/components/Dialog";
 
 interface State {
 	editingPostId?: string;
@@ -30,6 +32,7 @@ interface State {
 	isLoadingReplies: boolean;
 	attachments: AttachmentField[];
 	isDragging: number;
+	resolveMethod: "ARCHIVE" | "RESOLVE";
 }
 
 interface Props {
@@ -64,7 +67,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 			formatCode: false,
 			isLoadingReplies: true,
 			attachments: [],
-			isDragging: 0
+			isDragging: 0,
+			resolveMethod: "RESOLVE"
 		};
 	}
 
@@ -146,6 +150,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 	handleDragEnter = () => this.setState({ isDragging: this.state.isDragging + 1 });
 	handleDragLeave = () => this.setState({ isDragging: this.state.isDragging - 1 });
 	handleDrop = () => this.setState({ isDragging: 0 });
+
+	setResolveMethod = resolveMethod => this.setState({ resolveMethod });
 
 	render() {
 		const { codemark, capabilities, author, currentUserId } = this.props;
@@ -241,42 +247,43 @@ export class CodemarkDetails extends React.Component<Props, State> {
 								attachments={this.state.attachments}
 								setAttachments={this.setAttachments}
 							/>
-							<div style={{ display: "flex" }}>
-								<div style={{ textAlign: "right", flexGrow: 1 }}>
-									{codemark.status !== "closed" && (
-										<Tooltip title={submitTip} placement="bottom" delay={1}>
-											<Button
-												key="resolve"
-												style={{
-													margin: "10px",
-													paddingLeft: "10px",
-													paddingRight: "10px"
-												}}
-												className={cx("control-button cancel")}
-												type="submit"
-												onClick={this.resolveCodemark}
-											>
-												Resolve {this.state.text ? "with Comment" : typeLabel}
-											</Button>
-										</Tooltip>
-									)}
+							<ButtonRow>
+								{codemark.status !== "closed" && (
 									<Tooltip title={submitTip} placement="bottom" delay={1}>
-										<Button
-											key="submit"
-											style={{
-												// fixed width to handle the isLoading case
-												width: "80px",
-												margin: "10px 0"
-											}}
-											className={cx("control-button", { cancel: !this.state.text })}
-											type="submit"
-											onClick={this.submitReply}
-										>
-											Comment
-										</Button>
+										<DropdownButton
+											items={[
+												{
+													key: "resolve",
+													label: `Resolve ${this.state.text ? "with Comment" : typeLabel}`,
+													onSelect: () => this.setResolveMethod("RESOLVE"),
+													action: () => this.resolveCodemark()
+												},
+												{
+													key: "archive",
+													label: `Resolve & Archive ${
+														this.state.text ? "with Comment" : typeLabel
+													}`,
+													onSelect: () => this.setResolveMethod("ARCHIVE"),
+													action: () => this.resolveCodemark()
+												}
+											]}
+											selectedKey="resolve"
+											variant="secondary"
+											splitDropdown
+										/>
 									</Tooltip>
-								</div>
-							</div>
+								)}
+								<Tooltip title={submitTip} placement="bottom" delay={1}>
+									<Button
+										key="submit"
+										variant={this.state.text ? "primary" : "secondary"}
+										onClick={this.submitReply}
+									>
+										Comment
+									</Button>
+								</Tooltip>
+							</ButtonRow>
+							<div style={{ height: "10px" }} />
 						</div>
 					)}
 				</div>
