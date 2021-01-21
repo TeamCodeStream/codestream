@@ -5,7 +5,15 @@ import ContentEditable from "react-contenteditable";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as actions from "./actions";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
-import { CSChannelStream, CSPost, CSUser, CSTeam, CSTag, CSMe } from "@codestream/protocols/api";
+import {
+	CSChannelStream,
+	CSPost,
+	CSUser,
+	CSTeam,
+	CSTag,
+	CSMe,
+	Attachment
+} from "@codestream/protocols/api";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import {
 	createRange,
@@ -22,7 +30,11 @@ import Menu from "./Menu";
 import Button from "./Button";
 import Icon from "./Icon";
 import { confirmPopup } from "./Confirm";
-import { CodemarkPlus } from "@codestream/protocols/agent";
+import {
+	CodemarkPlus,
+	UploadFileRequest,
+	UploadFileRequestType
+} from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { getTeamTagsArray, getTeamMembers, getUsernames } from "../store/users/reducer";
 // import { getChannelStreamsForTeam } from "../store/streams/reducer";
@@ -31,6 +43,7 @@ import { MarkdownText } from "./MarkdownText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/reducer";
 import Tooltip from "./Tooltip";
+import { HostApi } from "../webview-api";
 
 type PopupType = "at-mentions" | "slash-commands" | "channels" | "emojis";
 
@@ -39,6 +52,11 @@ type QuotePost = CSPost & { author: { username: string } };
 const tuple = <T extends string[]>(...args: T) => args;
 
 const COLOR_OPTIONS = tuple("blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray");
+
+export interface AttachmentField extends Attachment {
+	status?: "uploading" | "error" | "uploaded";
+	error?: string;
+}
 
 interface State {
 	emojiOpen: boolean;
@@ -102,9 +120,10 @@ interface Props extends ConnectedProps {
 	toggleTag?: Function;
 	relatedCodemarkIds?: any;
 	toggleCodemark?: Function;
-	attachFiles?: Function;
 	autoFocus?: boolean;
 	className?: string;
+	attachments?: AttachmentField[];
+	setAttachments?(attachments: AttachmentField[]): void;
 	renderCodeBlock?(index: number, force: boolean): React.ReactNode | null;
 	renderCodeBlocks?(): React.ReactNode | null;
 	__onDidRender?(stuff: { [key: string]: any }): any; // HACKy: sneaking internals to parent
@@ -205,6 +224,135 @@ export class MessageInput extends React.Component<Props, State> {
 			this.insertNewlineAtCursor();
 		});
 	}
+
+	pinImage = (filename: string, url: string) => {
+		this.insertTextAtCursor(`![${filename}](${url})`);
+	};
+
+	renderAttachedFiles = () => {
+		const { attachments = [] } = this.props;
+
+		if (!attachments || attachments.length === 0) return;
+		return (
+			<div className="related" key="attached-files">
+				<div className="related-label">Attachments</div>
+				{attachments.map((file, index) => {
+					const icon =
+						file.status === "uploading" ? (
+							<Icon name="sync" className="spin" style={{ verticalAlign: "3px" }} />
+						) : file.status === "error" ? (
+							<Icon name="alert" className="spinnable" />
+						) : (
+							<Icon name="paperclip" className="spinnable" />
+						);
+					const isImage = (file.mimetype || "").startsWith("image");
+					const text = replaceHtml(this._contentEditable!.htmlEl.innerHTML) || "";
+					const imageInjected =
+						isImage && file.url ? text.includes(`![${file.name}](${file.url})`) : false;
+					return (
+						<Tooltip title={file.error} placement="top" delay={1}>
+							<div key={index} className="attachment">
+								<span>{icon}</span>
+								<span>{file.name}</span>
+								<span>
+									{isImage && file.url && (
+										<Icon
+											title={
+												imageInjected
+													? `This image is in the markdown above`
+													: `Insert this image in markdown`
+											}
+											placement="bottomRight"
+											align={{ offset: [20, 0] }}
+											name="pin"
+											className={imageInjected ? "clickable selected" : "clickable"}
+											onMouseDown={e => !imageInjected && this.pinImage(file.name, file.url!)}
+										/>
+									)}
+									<Icon
+										name="x"
+										className="clickable"
+										onClick={() => {
+											const { attachments = [] } = this.props;
+											const newAttachments = [...attachments];
+											newAttachments.splice(index, 1);
+											if (this.props.setAttachments) this.props.setAttachments(newAttachments);
+										}}
+									/>
+								</span>
+							</div>
+						</Tooltip>
+					);
+				})}
+			</div>
+		);
+	};
+
+	handlePaste = e => {
+		if (!e.clipboardData || !e.clipboardData.files) return;
+
+		this.attachFiles(e.clipboardData.files);
+	};
+
+	replaceAttachment = (attachment, index) => {
+		attachment = { ...attachment, mimetype: attachment.type || attachment.mimetype };
+		const { attachments = [] } = this.props;
+		let newAttachments = [...attachments];
+		newAttachments.splice(index, 1, attachment);
+		// this.setState({ attachments: newAttachments });
+		if (this.props.setAttachments) this.props.setAttachments(newAttachments);
+	};
+
+	attachFiles = async files => {
+		if (!files || files.length === 0) return;
+
+		const { attachments = [] } = this.props;
+		let index = attachments.length;
+
+		HostApi.instance.track("File Attached", {});
+
+		[...files].forEach(file => {
+			file.status = "uploading";
+		});
+		// add the dropped files to the list of attachments, with uploading state
+		// this.setState({ attachments: [...attachments, ...files] });
+		if (this.props.setAttachments) this.props.setAttachments([...attachments, ...files]);
+
+		for (const file of files) {
+			try {
+				const request: UploadFileRequest = {
+					path: file.path,
+					name: file.name,
+					size: file.size,
+					mimetype: file.type
+				};
+				if (!file.path) {
+					// encode as base64 to send to the agent
+					const toBase64 = file =>
+						new Promise((resolve, reject) => {
+							const reader = new FileReader();
+							reader.readAsDataURL(file);
+							reader.onload = () => resolve(reader.result);
+							reader.onerror = error => reject(error);
+						});
+					request.buffer = await toBase64(file);
+				}
+				const response = await HostApi.instance.send(UploadFileRequestType, request);
+				if (response && response.url) {
+					this.replaceAttachment(response, index);
+				} else {
+					file.status = "error";
+					this.replaceAttachment(file, index);
+				}
+			} catch (e) {
+				console.warn("Error uploading file: ", e);
+				file.status = "error";
+				file.error = e;
+				this.replaceAttachment(file, index);
+			}
+			index++;
+		}
+	};
 
 	// for keypresses that we can't capture with standard
 	// javascript events
@@ -719,12 +867,11 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	handleChangeFiles = () => {
-		if (!this.props.attachFiles) return;
 		const attachElement = document.getElementById("attachment") as HTMLInputElement;
 		if (!attachElement) return;
 		console.warn("FILES ARE: ", attachElement.files);
 
-		this.props.attachFiles(attachElement.files);
+		this.attachFiles(attachElement.files);
 	};
 
 	buildCodemarkMenu = () => {
@@ -1124,7 +1271,7 @@ export class MessageInput extends React.Component<Props, State> {
 		// e.stopPropagation();
 		e.preventDefault();
 
-		if (this.props.attachFiles) this.props.attachFiles(e.dataTransfer.files);
+		this.attachFiles(e.dataTransfer.files);
 	};
 
 	render() {
@@ -1196,15 +1343,15 @@ export class MessageInput extends React.Component<Props, State> {
 									autoFocus={true}
 								/>
 							)}
-							{this.props.attachFilesEnabled && this.props.attachFiles && (
+							{this.props.attachFilesEnabled && this.props.setAttachments && (
 								<Tooltip
 									title={
 										<div style={{ maxWidth: "150px" }}>
 											Attach files by dragging &amp; dropping, selecting, or pasting them.
 										</div>
 									}
-									placement="top"
-									align={{ offset: [5, 0] }}
+									placement="topRight"
+									align={{ offset: [20, 0] }}
 									delay={1}
 									trigger={["hover"]}
 								>
@@ -1271,7 +1418,7 @@ export class MessageInput extends React.Component<Props, State> {
 							)}
 						</div>
 					)}
-					{this.props.attachFilesEnabled && this.props.attachFiles && (
+					{this.props.attachFilesEnabled && this.props.setAttachments && (
 						<div className={cx("drop-target", { hover: this.state.isDropTarget })}>
 							<span className="expand">Drop here</span>
 						</div>
@@ -1309,6 +1456,7 @@ export class MessageInput extends React.Component<Props, State> {
 						/>
 					</AtMentionsPopup>
 				</div>
+				{this.renderAttachedFiles()}
 				{isPreviewing && this.renderExitPreview()}
 			</>
 		);

@@ -11,7 +11,7 @@ import { PostPlus } from "@codestream/protocols/agent";
 import { confirmPopup } from "../Confirm";
 import { Reply } from "./Reply";
 import Menu from "../Menu";
-import MessageInput from "../MessageInput";
+import MessageInput, { AttachmentField } from "../MessageInput";
 import Button from "../Button";
 import { groupBy } from "lodash-es";
 import { Dispatch } from "@codestream/webview/store/common";
@@ -50,6 +50,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
 	const [editingPostId, setEditingPostId] = React.useState<string | undefined>();
 	const [newReplyText, setNewReplyText] = React.useState("");
+	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
 
 	const contextValue = React.useMemo(
@@ -75,11 +76,13 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 				replyingToPostId!,
 				replaceHtml(newReplyText)!,
 				null,
-				findMentionedUserIds(teamMates, newReplyText)
+				findMentionedUserIds(teamMates, newReplyText),
+				{ files: attachments }
 			)
 		);
 		setIsLoading(false);
 		setNewReplyText("");
+		setAttachments([]);
 		setReplyingToPostId(undefined);
 	};
 
@@ -142,6 +145,8 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 										onSubmit={submit}
 										multiCompose
 										autoFocus
+										attachments={attachments}
+										setAttachments={setAttachments}
 									/>
 								</ComposeWrapper>
 								<div style={{ display: "flex", justifyContent: "flex-end" }}>

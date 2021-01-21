@@ -81,6 +81,7 @@ import { PullRequestPatch } from "./PullRequestPatch";
 import MarkerActions from "./MarkerActions";
 import { MarkdownText } from "./MarkdownText";
 import { AddReactionIcon, Reactions } from "./Reactions";
+import { Attachments } from "./Attachments";
 
 interface State {
 	hover: boolean;
@@ -1608,7 +1609,7 @@ export class Codemark extends React.Component<Props, State> {
 									</div>
 								)}
 								{this.renderTagsAndAssigneesSelected(codemark)}
-								{this.renderAttachments(this.props.post)}
+								{this.props.post && <Attachments post={this.props.post} />}
 								{description && (
 									<div className="related">
 										<div className="related-label">Description</div>

@@ -40,6 +40,7 @@ import { ProfileLink } from "../src/components/ProfileLink";
 import EmojiPicker from "./EmojiPicker";
 import { AddReactionIcon, Reactions } from "./Reactions";
 import { MarkdownText } from "./MarkdownText";
+import { Attachments } from "./Attachments";
 
 class Post extends React.Component {
 	state = {
@@ -418,7 +419,7 @@ class Post extends React.Component {
 						{this.renderCodeBlockFile()}
 					</div>
 					{/*!this.props.showDetails &&*/ codeBlock}
-					{this.renderAttachments(post)}
+					{this.props.post && <Attachments post={this.props.post} />}
 				</div>
 				<Reactions post={post} />
 				{/*this.renderReactions(post)*/}
@@ -438,40 +439,6 @@ class Post extends React.Component {
 				<br />,
 				<a href={codemark.externalProviderUrl}>Open on {providerDisplay.displayName}</a>
 			];
-		}
-		return null;
-	};
-
-	renderAttachments = post => {
-		if (post.files && post.files.length) {
-			return post.files.map((file, index) => {
-				// console.log(file);
-				//<img src={preview.url} width={preview.width} height={preview.height} />
-				const { type, url, name, title, preview } = file;
-				if (type === "image") {
-					return (
-						<div className="thumbnail" key={index}>
-							<a href={url}>{title}</a>
-						</div>
-					);
-				} else if (type === "post") {
-					return (
-						<div className="external-post" key={index}>
-							<a href={url}>{title}</a>
-							<div className="preview" dangerouslySetInnerHTML={{ __html: preview }} />
-						</div>
-					);
-				} else {
-					return (
-						<div className="attachment" key={index}>
-							<a href={url}>{title}</a>
-							<pre>
-								<code>{preview}</code>
-							</pre>
-						</div>
-					);
-				}
-			});
 		}
 		return null;
 	};

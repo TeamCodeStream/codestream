@@ -5,7 +5,7 @@ import Button from "./Button";
 import PostList from "./PostList";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
-import MessageInput from "./MessageInput";
+import MessageInput, { AttachmentField } from "./MessageInput";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import CodemarkActions from "./CodemarkActions";
 import {
@@ -22,7 +22,6 @@ import { DelayedRender } from "../Container/DelayedRender";
 import { localStore } from "../utilities/storage";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
-import { AttachmentField } from "./CodemarkForm";
 
 interface State {
 	editingPostId?: string;
@@ -30,6 +29,7 @@ interface State {
 	formatCode: boolean;
 	isLoadingReplies: boolean;
 	attachments: AttachmentField[];
+	isDragging: number;
 }
 
 interface Props {
@@ -63,7 +63,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 			text: this.getCachedText(),
 			formatCode: false,
 			isLoadingReplies: true,
-			attachments: []
+			attachments: [],
+			isDragging: 0
 		};
 	}
 
@@ -96,11 +97,11 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 	submitReply = async () => {
 		const { codemark } = this.props;
-		const { text, formatCode } = this.state;
+		const { text, formatCode, attachments } = this.state;
 		const mentionedUserIds = findMentionedUserIds(this.props.teammates, text);
 		const threadId = codemark ? codemark.postId : "";
 		const { createPost } = this.props;
-		this.setState({ text: "" });
+		this.setState({ text: "", attachments: [] });
 		this.cacheText("");
 
 		// don't create empty replies
@@ -108,7 +109,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 		let replyText = formatCode ? "```" + text + "```" : text;
 		await createPost(codemark.streamId, threadId, replaceHtml(replyText)!, null, mentionedUserIds, {
-			entryPoint: "Codemark"
+			entryPoint: "Codemark",
+			files: attachments
 		});
 	};
 
@@ -140,69 +142,10 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		this.setState({ isLoadingReplies: false });
 	};
 
-	handlePaste = e => {
-		if (!e.clipboardData || !e.clipboardData.files) return;
-
-		this.handleAttachFiles(e.clipboardData.files);
-	};
-
-	replaceAttachment = (attachment, index) => {
-		attachment = { ...attachment, mimetype: attachment.type || attachment.mimetype };
-		const { attachments } = this.state;
-		let newAttachments = [...attachments];
-		newAttachments.splice(index, 1, attachment);
-		this.setState({ attachments: newAttachments });
-	};
-
-	handleAttachFiles = async files => {
-		if (!files || files.length === 0) return;
-
-		const { attachments } = this.state;
-		let index = attachments.length;
-
-		HostApi.instance.track("File Attached", {});
-
-		[...files].forEach(file => {
-			file.status = "uploading";
-		});
-		// add the dropped files to the list of attachments, with uploading state
-		this.setState({ attachments: [...attachments, ...files] });
-
-		for (const file of files) {
-			try {
-				const request: UploadFileRequest = {
-					path: file.path,
-					name: file.name,
-					size: file.size,
-					mimetype: file.type
-				};
-				if (!file.path) {
-					// encode as base64 to send to the agent
-					const toBase64 = file =>
-						new Promise((resolve, reject) => {
-							const reader = new FileReader();
-							reader.readAsDataURL(file);
-							reader.onload = () => resolve(reader.result);
-							reader.onerror = error => reject(error);
-						});
-					request.buffer = await toBase64(file);
-				}
-				const response = await HostApi.instance.send(UploadFileRequestType, request);
-				if (response && response.url) {
-					this.replaceAttachment(response, index);
-				} else {
-					file.status = "error";
-					this.replaceAttachment(file, index);
-				}
-			} catch (e) {
-				console.warn("Error uploading file: ", e);
-				file.status = "error";
-				file.error = e;
-				this.replaceAttachment(file, index);
-			}
-			index++;
-		}
-	};
+	setAttachments = (attachments: AttachmentField[]) => this.setState({ attachments });
+	handleDragEnter = () => this.setState({ isDragging: this.state.isDragging + 1 });
+	handleDragLeave = () => this.setState({ isDragging: this.state.isDragging - 1 });
+	handleDrop = () => this.setState({ isDragging: 0 });
 
 	render() {
 		const { codemark, capabilities, author, currentUserId } = this.props;
@@ -219,7 +162,13 @@ export class CodemarkDetails extends React.Component<Props, State> {
 
 		const threadId = codemark.postId || "";
 		return (
-			<div className="codemark-details">
+			<div
+				className={cx("codemark-details", { "active-drag": this.state.isDragging > 0 })}
+				onDragEnter={this.handleDragEnter}
+				onDrop={this.handleDrop}
+				onDragOver={e => e.preventDefault()}
+				onDragLeave={this.handleDragLeave}
+			>
 				{this.props.children}
 				<CodemarkActions
 					codemark={codemark}
@@ -289,7 +238,8 @@ export class CodemarkDetails extends React.Component<Props, State> {
 								onChange={this.handleOnChange}
 								onSubmit={this.submitReply}
 								multiCompose={true}
-								attachFiles={this.handleAttachFiles}
+								attachments={this.state.attachments}
+								setAttachments={this.setAttachments}
 							/>
 							<div style={{ display: "flex" }}>
 								<div style={{ textAlign: "right", flexGrow: 1 }}>

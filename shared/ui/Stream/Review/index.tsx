@@ -59,7 +59,7 @@ import {
 } from "@codestream/webview/store/context/actions";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
-import MessageInput from "../MessageInput";
+import MessageInput, { AttachmentField } from "../MessageInput";
 import styled from "styled-components";
 import Button from "../Button";
 import {
@@ -1022,6 +1022,7 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: string }) => {
 	const dispatch = useDispatch<Dispatch>();
 	const [text, setText] = React.useState("");
+	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
@@ -1043,7 +1044,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					accessMemberIds: [],
 					isChangeRequest: true,
 					tags: [],
-					isPseudoCodemark: true
+					isPseudoCodemark: true,
+					files: attachments
 				})
 			);
 		} else {
@@ -1055,7 +1057,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 					null,
 					findMentionedUserIds(teamMates, text),
 					{
-						entryPoint: "Review"
+						entryPoint: "Review",
+						files: attachments
 					}
 				)
 			);
@@ -1063,6 +1066,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 		}
 		setIsLoading(false);
 		setText("");
+		setAttachments([]);
 	};
 
 	return (
@@ -1073,6 +1077,8 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				placeholder="Add Comment..."
 				onChange={setText}
 				onSubmit={submit}
+				attachments={attachments}
+				setAttachments={setAttachments}
 			/>
 			<div style={{ display: "flex", flexWrap: "wrap" }}>
 				<div style={{ opacity: 0.7, paddingTop: "10px" }}>

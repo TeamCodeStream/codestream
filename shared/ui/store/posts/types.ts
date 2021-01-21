@@ -4,7 +4,14 @@ import { PostPlus } from "@codestream/protocols/agent";
 export interface PendingPost
 	extends Pick<
 		PostPlus,
-		"id" | "text" | "streamId" | "parentPostId" | "creatorId" | "createdAt" | "reviewCheckpoint"
+		| "id"
+		| "text"
+		| "streamId"
+		| "parentPostId"
+		| "creatorId"
+		| "createdAt"
+		| "reviewCheckpoint"
+		| "files"
 	> {
 	pending: true;
 	codemark: {};

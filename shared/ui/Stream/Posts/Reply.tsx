@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import cx from "classnames";
-import { CSUser } from "@codestream/protocols/api";
+import { CSPost, CSUser } from "@codestream/protocols/api";
 import { PostPlus } from "@codestream/protocols/agent";
 import React from "react";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
@@ -31,6 +31,7 @@ import { editCodemark } from "@codestream/webview/store/codemarks/actions";
 import Tag from "../Tag";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 import { AddReactionIcon, Reactions } from "../Reactions";
+import { Attachments } from "../Attachments";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -108,6 +109,9 @@ const Root = styled.div`
 		left: 11px;
 		background: var(--text-color);
 		opacity: 0.25;
+	}
+	.related {
+		margin: 10px 0;
 	}
 `;
 
@@ -409,6 +413,7 @@ export const Reply = (props: ReplyProps) => {
 					<>
 						<Content>
 							<MarkdownText text={postText} />
+							<Attachments post={props.post as CSPost} />
 							{hasTags && (
 								<MetaDescriptionForTags>
 									{codemark!.tags!.map((tagId: string) => {

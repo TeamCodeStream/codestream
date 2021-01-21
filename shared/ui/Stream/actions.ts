@@ -289,7 +289,8 @@ export const createPost = (
 				codemark,
 				creatorId: session.userId!,
 				createdAt: new Date().getTime(),
-				pending: true
+				pending: true,
+				files: extra.files
 			})
 		);
 	}
@@ -354,7 +355,8 @@ export const createPost = (
 				parentPostId,
 				mentionedUserIds: mentions,
 				entryPoint: extra.entryPoint,
-				reviewCheckpoint: extra.reviewCheckpoint
+				reviewCheckpoint: extra.reviewCheckpoint,
+				files: extra.files
 			});
 		}
 		const response = await responsePromise;
