@@ -1,4 +1,4 @@
-import { CSReview, CSReviewChangeset, CSRepoChange } from "@codestream/protocols/api";
+import { CSReview, CSReviewChangeset, CSRepoChange, Attachment } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReviewsActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -78,6 +78,7 @@ export interface NewReviewAttributes {
 	mentionedUserIds?: string[];
 	addedUsers?: string[];
 	entryPoint?: string;
+	files?: Attachment[];
 }
 
 export interface CreateReviewError {

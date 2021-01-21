@@ -1266,7 +1266,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			streamId: stream.id,
 			dontSendEmail: false,
 			mentionedUserIds: request.mentionedUserIds,
-			addedUsers: request.addedUsers
+			addedUsers: request.addedUsers,
+			files: request.attributes.files
 		});
 
 		review = response.review!;

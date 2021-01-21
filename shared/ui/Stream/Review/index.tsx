@@ -99,6 +99,7 @@ import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { getPost } from "../../store/posts/reducer";
 import { AddReactionIcon, Reactions } from "../Reactions";
+import { Attachments } from "../Attachments";
 
 interface RepoMetadata {
 	repoName: string;
@@ -781,6 +782,7 @@ const BaseReview = (props: BaseReviewProps) => {
 							<Reactions className="reactions no-pad-left" post={props.post} />
 						</div>
 					)}
+					{!props.collapsed && props.post && <Attachments post={props.post as CSPost} />}
 					{!props.collapsed && (hasTags || hasReviewers) && (
 						<MetaRow>
 							{hasTags && (
@@ -975,6 +977,13 @@ const renderMetaSectionCollapsed = (props: BaseReviewProps) => {
 							name="eye"
 						/>
 					</span>
+				)}
+				{props.post && props.post.files && props.post.files.length > 0 && (
+					<Tooltip title="Show attachments" placement="bottom">
+						<span className="detail-icon">
+							<Icon name="paperclip" /> {props.post.files.length}
+						</span>
+					</Tooltip>
 				)}
 				{props.review.numReplies > 0 && (
 					<Tooltip title="Show replies" placement="bottom">

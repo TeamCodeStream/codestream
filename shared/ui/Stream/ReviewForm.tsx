@@ -52,7 +52,7 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import { getTeamMembers, getTeamTagsArray, getTeamMates } from "../store/users/reducer";
-import MessageInput from "./MessageInput";
+import MessageInput, { AttachmentField } from "./MessageInput";
 import {
 	openPanel,
 	openModal,
@@ -231,6 +231,8 @@ interface State {
 	addressesIssues: { [codemarkId: string]: boolean };
 	requestFeedbackOnCommit: boolean;
 	showRequestFeedbackOnCommitToggle: boolean;
+	attachments: AttachmentField[];
+	isDragging: number;
 }
 
 function merge(defaults: Partial<State>, review: CSReview): State {
@@ -284,7 +286,9 @@ class ReviewForm extends React.Component<Props, State> {
 			commitListLength: 10,
 			allReviewersMustApprove: false,
 			currentFile: "",
-			addressesIssues: {}
+			addressesIssues: {},
+			attachments: [],
+			isDragging: 0
 		};
 
 		const state = props.editingReview
@@ -421,13 +425,22 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const { isEditing, isAmending, textEditorUri, currentRepoPath, isInVscode, requestFeedbackOnCommit } = this.props;
+		const {
+			isEditing,
+			isAmending,
+			textEditorUri,
+			currentRepoPath,
+			isInVscode,
+			requestFeedbackOnCommit
+		} = this.props;
 		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
 		if (!isEditing && !isAmending) {
-			const isRequestingFeedbackOnCommit = this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
-			const showRequestFeedbackOnCommitToggle = isInVscode && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit)
+			const isRequestingFeedbackOnCommit =
+				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
+			const showRequestFeedbackOnCommitToggle =
+				isInVscode && (isRequestingFeedbackOnCommit || !requestFeedbackOnCommit);
 			this.setState({ showRequestFeedbackOnCommitToggle });
 		}
 
@@ -748,7 +761,8 @@ class ReviewForm extends React.Component<Props, State> {
 			allReviewersMustApprove,
 			includeSaved,
 			includeStaged,
-			reviewerEmails
+			reviewerEmails,
+			attachments
 		} = this.state;
 
 		// FIXME first, process the email-only reviewers
@@ -876,7 +890,8 @@ class ReviewForm extends React.Component<Props, State> {
 							includeStaged: includeStaged && scm!.stagedFiles.length > 0,
 							checkpoint: 0
 						}
-					]
+					],
+					files: attachments
 				} as any;
 
 				const { type: createResult } = await this.props.createPostAndReview(
@@ -940,6 +955,8 @@ class ReviewForm extends React.Component<Props, State> {
 			this.props.setNewPostEntry(undefined);
 		}
 	};
+
+	setAttachments = (attachments: AttachmentField[]) => this.setState({ attachments });
 
 	isFormInvalid = () => {
 		const { text, title } = this.state;
@@ -1128,6 +1145,8 @@ class ReviewForm extends React.Component<Props, State> {
 				selectedTags={this.state.selectedTags}
 				__onDidRender={__onDidRender}
 				autoFocus={isAmending ? true : false}
+				attachments={this.state.attachments}
+				setAttachments={this.setAttachments}
 			/>
 		);
 	};
@@ -1186,9 +1205,15 @@ class ReviewForm extends React.Component<Props, State> {
 								)}
 
 								{this.state.showRequestFeedbackOnCommitToggle && (
-									<>	
-										<span className="subhead muted">Auto-prompt for feedback when committing: </span>
-										<span key="toggle-auto-fr" className="headline-flex" style={{"display":"inline-block"}}>
+									<>
+										<span className="subhead muted">
+											Auto-prompt for feedback when committing:{" "}
+										</span>
+										<span
+											key="toggle-auto-fr"
+											className="headline-flex"
+											style={{ display: "inline-block" }}
+										>
 											<LabeledSwitch
 												key="auto-feedback-toggle"
 												on={this.props.requestFeedbackOnCommit}
@@ -1201,7 +1226,6 @@ class ReviewForm extends React.Component<Props, State> {
 										</span>
 									</>
 								)}
-
 
 								{!this.props.isEditing && totalModifiedLines > 200 && (
 									<div style={{ display: "flex", padding: "10px 0 0 2px" }}>
