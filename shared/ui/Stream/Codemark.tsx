@@ -591,7 +591,8 @@ export class Codemark extends React.Component<Props, State> {
 			if (
 				target.tagName === "A" ||
 				target.closest(".post.reply") ||
-				target.closest(".external-provider")
+				target.closest(".external-provider") ||
+				target.closest(".icon-wrapper")
 			)
 				return false;
 		}

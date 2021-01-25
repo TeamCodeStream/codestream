@@ -1146,6 +1146,7 @@ class ReviewForm extends React.Component<Props, State> {
 				__onDidRender={__onDidRender}
 				autoFocus={isAmending ? true : false}
 				attachments={this.state.attachments}
+				attachmentContainerType="review"
 				setAttachments={this.setAttachments}
 			/>
 		);

@@ -238,13 +238,13 @@ export class CodemarkDetails extends React.Component<Props, State> {
 							</div>
 
 							<MessageInput
-								teamProvider={this.props.teamProvider}
 								text={this.state.text}
 								placeholder="Reply..."
 								onChange={this.handleOnChange}
 								onSubmit={this.submitReply}
 								multiCompose={true}
 								attachments={this.state.attachments}
+								attachmentContainerType="reply"
 								setAttachments={this.setAttachments}
 							/>
 							<ButtonRow>

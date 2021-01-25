@@ -1087,6 +1087,7 @@ const ReplyInput = (props: { reviewId: string; parentPostId: string; streamId: s
 				onChange={setText}
 				onSubmit={submit}
 				attachments={attachments}
+				attachmentContainerType="reply"
 				setAttachments={setAttachments}
 			/>
 			<div style={{ display: "flex", flexWrap: "wrap" }}>

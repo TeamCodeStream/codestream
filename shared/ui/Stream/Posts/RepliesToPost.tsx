@@ -146,6 +146,7 @@ export const RepliesToPost = (props: { streamId: string; parentPostId: string })
 										multiCompose
 										autoFocus
 										attachments={attachments}
+										attachmentContainerType="reply"
 										setAttachments={setAttachments}
 									/>
 								</ComposeWrapper>
