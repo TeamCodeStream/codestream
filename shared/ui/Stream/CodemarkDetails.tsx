@@ -248,7 +248,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 								setAttachments={this.setAttachments}
 							/>
 							<ButtonRow>
-								{codemark.status !== "closed" && (
+								{false && codemark.status !== "closed" && (
 									<Tooltip title={submitTip} placement="bottom" delay={1}>
 										<DropdownButton
 											items={[
