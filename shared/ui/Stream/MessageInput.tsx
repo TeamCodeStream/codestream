@@ -344,6 +344,10 @@ export class MessageInput extends React.Component<Props, State> {
 					file.status = "error";
 					this.replaceAttachment(file, index);
 				}
+				HostApi.instance.track("File Attached", {
+					"File Type": file.type,
+					Parent: "codemark"
+				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
 				file.status = "error";
