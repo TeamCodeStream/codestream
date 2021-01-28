@@ -49,6 +49,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 				filePath: filename,
 				startLine: lineNumber,
 				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
 				rightSha: pr.headRefOid,
 				// old servers
 				position: lineOffsetInHunk

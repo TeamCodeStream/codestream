@@ -1602,7 +1602,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			)}/merge_requests/${iid}/changes`;
 			//	do {
 			const apiResponse = await this.restGet<{
+				diff_refs: {
+					base_sha: string;
+					head_sha: string;
+					start_sha: string;
+				};
 				changes: {
+					sha: string;
 					old_path: string;
 					new_path: string;
 					diff?: string;
@@ -1610,13 +1616,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}>(url);
 			const mappped: FetchThirdPartyPullRequestFilesResponse[] = apiResponse.body.changes.map(_ => {
 				return {
-					sha: "ABCDEF",
+					sha: _.sha,
 					status: "",
 					additions: 0,
 					changes: 0,
 					deletions: 0,
 					filename: _.new_path,
-					patch: _.diff
+					patch: _.diff,
+					diffRefs: apiResponse.body.diff_refs
 				};
 			});
 			changedFiles.push(...mappped);
@@ -1653,6 +1660,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async createPullRequestInlineComment(request: {
 		pullRequestId: string;
 		text: string;
+		leftSha: string;
 		rightSha: string;
 		filePath: string;
 		startLine: number;
@@ -1669,6 +1677,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async createCommitComment(request: {
 		pullRequestId: string;
+		// leftSha
+		leftSha: string;
+		// rightSha
 		sha: string;
 		text: string;
 		path: string;
@@ -1682,21 +1693,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let iid = request.pullRequestId.split("!")[1];
 
 		const payload = {
-			//	id: request.metadata.projectFullPath,
-			commit_id: request.sha,
-			//path: request.filePath,
 			body: request.text,
 			position: {
-				// base_sha:"",
-				// start_sha:"",
-				// head_sha:"",
-				// TODO fix these
-				base_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
-				head_sha: "a10e73cf84eae38286df56f4b58fa221d7eefc44",
-				start_sha: "3bf8094f0d54fc70a66698bd582f25c77243de3b",
+				base_sha: request.leftSha,
+				head_sha: request.sha,
+				start_sha: request.leftSha,
 				position_type: "text",
-				//	old_path: request.filePath,
-				//	old_line: request.startLine,
 				new_path: request.path,
 				new_line: request.startLine
 			}
