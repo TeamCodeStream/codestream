@@ -1709,22 +1709,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			payload
 		);
 
-		// const payload = {
-		// 	//	id: request.metadata.projectFullPath,
-		// 	//sha: request.rightSha,
-		// 	path: request.filePath,
-		// 	note: request.text,
-		// 	line: request.startLine,
-		// 	line_type: "new"
-		// };
-
-		// const data = await this.restPost<any, any>(
-		// 	`/projects/${encodeURIComponent(request.metadata.projectFullPath)}/repository/commits/${
-		// 		request.rightSha
-		// 	}/comments`,
-		// 	payload
-		// );
-
 		this._pullRequestCache.delete(request.pullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId
