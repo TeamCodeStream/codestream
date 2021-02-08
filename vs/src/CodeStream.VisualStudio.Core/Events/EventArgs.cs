@@ -71,4 +71,11 @@ namespace CodeStream.VisualStudio.Core.Events {
 	public sealed class DocumentMarkerChangedEvent : EventBase {
 		public Uri Uri { get; set; }
 	}
+
+	public sealed class UserPreferencesChangedEvent : EventBase {
+		public DidChangeUserPreferencesData Data { get; }
+		public UserPreferencesChangedEvent(DidChangeUserPreferencesData data) {
+			Data = data;
+		}
+	}
 }

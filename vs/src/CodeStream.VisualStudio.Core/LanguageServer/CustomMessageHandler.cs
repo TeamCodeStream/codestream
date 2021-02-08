@@ -27,7 +27,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
+		private readonly Subject<UserPreferencesChangedSubjectArgs> _userPreferencesChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
+		private readonly IDisposable _userPreferencesChangedSubscription;
 
 		public CustomMessageHandler(
 			IServiceProvider serviceProvider,
@@ -40,6 +42,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			_settingsServiceFactory = settingsServiceFactory;
 
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
+			_userPreferencesChangedSubject = new Subject<UserPreferencesChangedSubjectArgs>();
 
 			_documentMarkerChangedSubscription = _documentMarkerChangedSubject
 				.Throttle(TimeSpan.FromMilliseconds(500))
@@ -47,6 +50,12 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					_eventAggregator.Publish(new DocumentMarkerChangedEvent {
 						Uri = e.Uri.ToUri()
 					});
+				});
+
+			_userPreferencesChangedSubscription = _userPreferencesChangedSubject
+				.Throttle(TimeSpan.FromMilliseconds(500))
+				.Subscribe(e => {
+					_eventAggregator.Publish(new UserPreferencesChangedEvent(e.Data));
 				});
 		}
 
@@ -91,6 +100,15 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// <returns></returns>
 		[JsonRpcMethod(DidChangeDataNotificationType.MethodName)]
 		public void OnDidChangeData(JToken e) {
+
+			var type = e["type"];
+			if (type?.Value<string>() == "preferences") {
+				var preferences = e.ToObjectSafe<DidChangeUserPreferencesEvent>();
+				if (preferences?.Data != null) {
+					_userPreferencesChangedSubject.OnNext(new UserPreferencesChangedSubjectArgs(preferences.Data));
+				}
+			}
+
 			BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 		}
 
@@ -162,6 +180,13 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			}
 			public string Uri { get; private set; }
 			public JToken Token { get; set; }
+		}
+
+		public class UserPreferencesChangedSubjectArgs {
+			public DidChangeUserPreferencesData Data { get; }
+			public UserPreferencesChangedSubjectArgs(DidChangeUserPreferencesData data ) {
+				Data = data;			 
+			}		 
 		}
 
 		/// <summary>

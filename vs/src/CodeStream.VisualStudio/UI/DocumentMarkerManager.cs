@@ -58,7 +58,7 @@ namespace CodeStream.VisualStudio.UI {
 						return false;
 					}
 
-					_markers = await _agentService.GetMarkersForDocumentAsync(uri, true);
+					_markers = await _agentService.GetMarkersForDocumentAsync(uri);
 					bool? previousResult = null;
 					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
 						if (_wpfTextView.Properties.TryGetProperty(PropertyNames

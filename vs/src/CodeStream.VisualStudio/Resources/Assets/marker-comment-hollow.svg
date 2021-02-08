@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16">
+    <path fill="#424242" stroke="#fff" d="M14 1.25H2a1 1 0 0 0-1 1v8c0 .6.5 1 1 1h2v3.5l3.5-3.5H14c.6 0 1-.5 1-1v-8c0-.6-.5-1-1-1zm0 9H7l-2 2.2v-2.2H2v-8h12v8z" paint-order="stroke"/>
+</svg>
+<!--<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"> <path d="M14 2.5H2a1 1 0 0 0-1 1v8c0 .6.5 1 1 1h2V16l3.5-3.5H14c.6 0 1-.5 1-1v-8c0-.6-.5-1-1-1zm0 9H7l-2 2.2v-2.2H2v-8h12v8z"/> </svg>-->
+<!--hollow version for vs <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"> <path fill="#424242" stroke="#fff" d="M14 1.25H2a1 1 0 0 0-1 1v8c0 .6.5 1 1 1h2v3.5l3.5-3.5H14c.6 0 1-.5 1-1v-8c0-.6-.5-1-1-1zm0 9H7l-2 2.2v-2.2H2v-8h12v8z" paint-order="stroke"/> </svg>-->

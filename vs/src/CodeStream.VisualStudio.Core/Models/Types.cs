@@ -30,10 +30,12 @@ namespace CodeStream.VisualStudio.Core.Models {
 		Comment,
 		Issue,
 		// Obsolete
-		Bookmark,
+		// Bookmark,
 		Question,
-		Trap,
-		Link
+		// Obsolete
+		// Trap,
+		Link,
+		Prcomment
 	}
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]

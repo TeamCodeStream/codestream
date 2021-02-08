@@ -17,13 +17,27 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public override string Method => MethodName;
 	}
 
-	public class DidChangeDataNotificationTypeParams { }
+	public class DidChangeUserPreferencesData {
+		public bool? CodemarksShowPRComments { get; set; }
+		public bool? CodemarksHideReviews { get; set; }
+		public bool? CodemarksHideResolved { get; set; }
+		public bool? CodemarksShowArchived { get; set; }
+	}
+
+	public class DidChangeUserPreferencesEvent {
+		public string Type { get; set; } = "preferences";
+		public DidChangeUserPreferencesData Data { get; set; }
+	} 
+	
+	public class DidChangeDataNotificationTypeParams {
+		 
+	}
 	public class DidChangeDataNotificationType : NotificationType<DidChangeDataNotificationTypeParams> {
 		private readonly JToken _token;
 
 		public DidChangeDataNotificationType(JToken token) {
 			_token = token;
-		}
+		}		 
 
 		public const string MethodName = "codestream/didChangeData";
 		public override string Method => MethodName;

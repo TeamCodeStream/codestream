@@ -97,11 +97,11 @@ namespace CodeStream.VisualStudio.UI {
 					if (wpfTextView == null || !wpfTextView.HasValidDocumentRoles()) return;
 
 					IVirtualTextDocument virtualTextDocument = null;
-					if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView,	out virtualTextDocument)) {
+					if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService, wpfTextView, out virtualTextDocument)) {
 						Log.Warning($"{logPrefix} Could not create virtualTextDocument");
 						return;
-					}				 			 
-				 
+					}
+
 					Log.Verbose($"{logPrefix} pre-Lock");
 					lock (WeakTableLock) {
 						Log.Verbose($"{logPrefix} in-Lock");
@@ -118,7 +118,7 @@ namespace CodeStream.VisualStudio.UI {
 								wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.DocumentMarkerManager,
 									() => new DocumentMarkerManager(CodeStreamAgentServiceFactory.Create(), wpfTextView, virtualTextDocument));
 							}
-							wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.TextViewDocument, ()=> virtualTextDocument);
+							wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.TextViewDocument, () => virtualTextDocument);
 							wpfTextView.Properties.GetOrCreateSingletonProperty(PropertyNames.TextViewState, () => new TextViewState());
 #if DEBUG
 							if (TextViewCache == null) {
@@ -301,6 +301,13 @@ namespace CodeStream.VisualStudio.UI {
 												Log.Verbose(
 													$"{nameof(DocumentMarkerChangedEvent)} State={state?.Initialized}, _={e?.Uri}");
 												_ = OnDocumentMarkerChangedAsync(wpfTextView, e);
+											}),
+										EventAggregator.GetEvent<UserPreferencesChangedEvent>()
+											.ObserveOn(Scheduler.Default)
+											.Subscribe(e => {
+												Log.Verbose(
+													$"{nameof(UserPreferencesChangedEvent)} State={state?.Initialized}");
+												_ = OnUserPreferencesChangedAsync(wpfTextView, e);
 											})
 									});
 
@@ -390,7 +397,7 @@ namespace CodeStream.VisualStudio.UI {
 					if (virtualTextDocument == null) return;
 
 					var activeTextEditor = EditorService.CreateActiveTextEditor(virtualTextDocument, wpfTextView);
-					if (activeTextEditor!= null) {
+					if (activeTextEditor != null) {
 						_ = CodeStreamService.ChangeActiveEditorAsync(virtualTextDocument.Uri, activeTextEditor);
 						SetZoomLevelCore(wpfTextView.ZoomLevel, metrics);
 					}
@@ -433,7 +440,7 @@ namespace CodeStream.VisualStudio.UI {
 					if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewDocument, out IVirtualTextDocument virtualTextDocument)) {
 						return;
 					}
- 
+
 					var fileUri = virtualTextDocument.Uri;
 					try {
 						if (e.Uri.EqualsIgnoreCase(fileUri)) {
@@ -459,6 +466,36 @@ namespace CodeStream.VisualStudio.UI {
 					}
 					catch (Exception ex) {
 						Log.Warning(ex, $"{nameof(DocumentMarkerChangedEvent)} for {fileUri}");
+					}
+				}
+			});
+		}
+
+		private System.Threading.Tasks.Task OnUserPreferencesChangedAsync(IWpfTextView wpfTextView, UserPreferencesChangedEvent e) {
+			return System.Threading.Tasks.Task.Run(async delegate {
+				await TaskScheduler.Default;
+				using (var metrics = Log.WithMetrics(nameof(OnUserPreferencesChangedAsync))) {
+					if (!wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewDocument, out IVirtualTextDocument virtualTextDocument)) {
+						return;
+					}
+
+					try {
+						using (metrics.Measure("TrySetMarkers")) {
+							await wpfTextView
+								.Properties
+								.GetProperty<DocumentMarkerManager>(PropertyNames.DocumentMarkerManager)
+								?.TrySetMarkersAsync(true);
+						}
+						using (metrics.Measure("OnMarkerChanged")) {
+							wpfTextView
+								.Properties
+								.GetProperty<List<ICodeStreamWpfTextViewMargin>>(PropertyNames
+									.TextViewMarginProviders)
+								.OnMarkerChanged();
+						}
+					}
+					catch (Exception ex) {
+						Log.Warning(ex, $"{nameof(UserPreferencesChangedEvent)}");
 					}
 				}
 			});
@@ -628,7 +665,7 @@ namespace CodeStream.VisualStudio.UI {
 				IVirtualTextDocument virtualTextDocument;
 				using (var metrics = Log.WithMetrics(nameof(OnTextViewLayoutChangedSubjectHandlerAsync))) {
 					Debug.WriteLine($"{nameof(OnTextViewLayoutChangedSubjectHandlerAsync)} RequiresMarkerCheck={subject.RequiresMarkerCheck} TriggerTextViewLayoutChanged={subject.TriggerTextViewLayoutChanged}");
-					wpfTextView = subject.WpfTextView;					
+					wpfTextView = subject.WpfTextView;
 
 					if (wpfTextView.Properties.TryGetProperty(PropertyNames.TextViewDocument, out virtualTextDocument)) {
 						// don't trigger for changes that don't result in lines being added or removed

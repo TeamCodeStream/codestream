@@ -181,8 +181,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public List<string> MarkerIds { get; set; }
 		public List<string> FileStreamIds { get; set; }
 		public ProviderType? ProviderType { get; set; }
-		public CodemarkType Type { get; set; }
-		public string Color { get; set; }
+		public CodemarkType Type { get; set; }		
 		public string Status { get; set; }
 		public string Title { get; set; }
 		public List<string> Assignees { get; set; }
@@ -209,12 +208,28 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string FileStreamId { get; set; }
 		public string CodemarkId { get; set; }
 		public string Code { get; set; }
+		public string Color {
+			get {
+				// TODO: -- Use a setting?
+				return !Pinned ? "gray" : Status == "closed" ? "purple" : "green";				
+			}
+		}
 		public string CreatorAvatar { get; set; }
 		public string CreatorName { get; set; }
 		public string CommitHashWhenCreated { get; set; }
 		public CsCodemark Codemark { get; set; }
 		public ExternalContent ExternalContent { get; set; }
 		public Range Range { get; set; }
+		public bool Pinned {
+			get {
+				return Codemark?.Pinned == true;
+			}
+		}
+		public string Status {
+			get {				
+				return Codemark?.Status ?? "open";
+			}
+		}
 		public string Summary { get; set; }
 		public string SummaryMarkdown { get; set; }
 		public CodemarkType Type { get; set; }
@@ -470,7 +485,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 	public class DocumentMarkersRequest {
 		public TextDocumentIdentifier TextDocument { get; set; }
-		public DocumentMarkersFilters Filters { get; set; }
+		public bool ApplyFilters { get; set; }
 	}
 
 	public class DocumentMarkersResponse {

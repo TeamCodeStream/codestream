@@ -16,12 +16,14 @@ namespace CodeStream.VisualStudio.UI.Glyphs {
 
 			// Ensure we can draw a glyph for this marker.
 			var documentMarkGlyphTag = tag as DocumentMarkGlyphTag;
+			 
+			if (documentMarkGlyphTag?.DocumentMarker?.Codemark != null ||
+				documentMarkGlyphTag?.DocumentMarker?.Type == Core.Models.CodemarkType.Prcomment) {
 
-			if (documentMarkGlyphTag == null ||
-				documentMarkGlyphTag.DocumentMarker == null ||
-				documentMarkGlyphTag.DocumentMarker.Codemark == null) return null;
+				return new DocumentMark(new DocumentMarkViewModel(documentMarkGlyphTag.DocumentMarker));
+			}
 
-			return new DocumentMark(new DocumentMarkViewModel(documentMarkGlyphTag.DocumentMarker));
+			return null;
 		}
 	}
 }
