@@ -405,34 +405,35 @@ export class DocumentMarkerManager {
 						return;
 					}
 
-				const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
-				documentMarkers.push({
-					createdAt: +new Date(comment.createdAt),
-					modifiedAt: +new Date(comment.createdAt),
-					id: comment.id,
-					file: comment.path,
-					repoId: "",
-					creatorId: comment.author.login,
-					teamId: "",
-					fileStreamId: "",
-					creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
-					code: "",
-					fileUri: documentId.uri,
-					creatorName: comment.author ? comment.author.login : "Unknown",
-					range: MarkerLocation.toRangeFromArray(location),
-					location: MarkerLocation.fromArray(location, comment.id),
-					title: pr.title,
-					summary: summary,
-					summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-					type: CodemarkType.PRComment,
-					externalContent: {
-						provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
-						externalId: pr.id,
-						externalChildId: comment.id,
-						externalType: "pr",
-						title: comment.bodyText,
-						subhead: ""
-					}
+					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+					documentMarkers.push({
+						createdAt: +new Date(comment.createdAt),
+						modifiedAt: +new Date(comment.createdAt),
+						id: comment.id,
+						file: comment.path,
+						repoId: "",
+						creatorId: comment.author.login,
+						teamId: "",
+						fileStreamId: "",
+						creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
+						code: "",
+						fileUri: documentId.uri,
+						creatorName: comment.author ? comment.author.login : "Unknown",
+						range: MarkerLocation.toRangeFromArray(location),
+						location: MarkerLocation.fromArray(location, comment.id),
+						title: pr.title,
+						summary: summary,
+						summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
+						type: CodemarkType.PRComment,
+						externalContent: {
+							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
+							externalId: pr.id,
+							externalChildId: comment.id,
+							externalType: "pr",
+							title: comment.bodyText,
+							subhead: ""
+						}
+					});
 				});
 			}
 		}
