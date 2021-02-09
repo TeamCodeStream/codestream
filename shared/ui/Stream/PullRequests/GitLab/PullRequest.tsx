@@ -455,7 +455,7 @@ export const PullRequest = () => {
 							/>
 						</RoundImg>
 						<b className="ml-5 mr-5">{pr.author.name}</b>
-						<Role className="ml-5">Maintainer</Role>
+						{/* <Role className="ml-5">Maintainer</Role> */}
 					</Header>
 					<h1>B</h1>
 
@@ -511,7 +511,7 @@ export const PullRequest = () => {
 																/>
 															</BigRoundImg>
 															<div style={{ float: "right" }}>
-																<Role>Maintainer</Role>
+																{/* <Role>Maintainer</Role> */}
 																(S) (R) (Edit) (dots)
 															</div>
 															<div>
