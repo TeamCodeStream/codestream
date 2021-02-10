@@ -803,259 +803,29 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		try {
-			if (Logger.level === TraceLevel.Debug && response && response.rateLimit) {
-				this._queryLogger.graphQlApi.rateLimit = {
-					remaining: response.rateLimit.remaining,
-					resetAt: response.rateLimit.resetAt,
-					resetInMinutes: Math.floor(
-						(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
-							new Date().getTime()) /
-							1000 /
-							60
-					)
-				};
-				const e = new Error();
-				if (e.stack) {
-					let functionName;
-					try {
-						functionName = e.stack
-							.split("\n")
-							.filter(
-								_ =>
-									(_.indexOf("GitLabProvider") > -1 ||
-										_.indexOf("GitLabEnterpriseProvider") > -1) &&
-									_.indexOf(".query") === -1
-							)![0]
-							.match(/GitHubProvider\.(\w+)/)![1];
-					} catch (err) {
-						functionName = "unknown";
-						Logger.warn(err);
-					}
-					this._queryLogger.graphQlApi.rateLimit.last = {
-						name: functionName,
-						cost: response.rateLimit.cost
-					};
-					if (!this._queryLogger.graphQlApi.fns[functionName]) {
-						this._queryLogger.graphQlApi.fns[functionName] = {
-							count: 1,
-							cumulativeCost: response.rateLimit.cost,
-							averageCost: response.rateLimit.cost
-						};
-					} else {
-						const existing = this._queryLogger.graphQlApi.fns[functionName];
-						existing.count++;
-						existing.cumulativeCost += response.rateLimit.cost;
-						existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
-						this._queryLogger.graphQlApi.fns[functionName] = existing;
-					}
-				}
-
-				Logger.log(JSON.stringify(this._queryLogger, null, 4));
-			}
-		} catch (err) {
-			Logger.warn(err);
-		}
-
 		return response;
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
 		const response = await (await this.client()).request<T>(query, variables);
-		if (Logger.level === TraceLevel.Debug) {
-			try {
-				const e = new Error();
-				if (e.stack) {
-					let functionName;
-					try {
-						functionName = e.stack
-							.split("\n")
-							.filter(
-								_ =>
-									(_.indexOf("GitLabProvider") > -1 ||
-										_.indexOf("GitLabEnterpriseProvider") > -1) &&
-									_.indexOf(".mutate") === -1
-							)![0]
-							.match(/GitLabProvider\.(\w+)/)![1];
-					} catch (err) {
-						Logger.warn(err);
-						functionName = "unknown";
-					}
-					if (!this._queryLogger.graphQlApi.rateLimit) {
-						this._queryLogger.graphQlApi.rateLimit = {
-							remaining: -1,
-							resetAt: "",
-							resetInMinutes: -1
-						};
-					}
-					this._queryLogger.graphQlApi.rateLimit.last = {
-						name: functionName,
-						// mutate costs are 1
-						cost: 1
-					};
-					if (!this._queryLogger.graphQlApi.fns[functionName]) {
-						this._queryLogger.graphQlApi.fns[functionName] = {
-							count: 1
-						};
-					} else {
-						const existing = this._queryLogger.graphQlApi.fns[functionName];
-						existing.count++;
 
-						this._queryLogger.graphQlApi.fns[functionName] = existing;
-					}
-				}
-
-				Logger.log(JSON.stringify(this._queryLogger, null, 4));
-			} catch (err) {
-				Logger.warn(err);
-			}
-		}
 		return response;
 	}
 
 	async restGet<T extends object>(url: string) {
 		const response = await this.get<T>(url);
-		if (
-			response &&
-			response.response &&
-			response.response.headers &&
-			Logger.level === TraceLevel.Debug
-		) {
-			try {
-				const e = new Error();
-				if (e.stack) {
-					let functionName;
-					try {
-						functionName = e.stack
-							.split("\n")
-							.filter(
-								_ =>
-									_.indexOf("GitLabProvider") > -1 &&
-									_.indexOf("GitLabProvider.restGet") === -1 &&
-									_.indexOf("GitLabEnterpriseProvider") > -1 &&
-									_.indexOf("GitLabEnterpriseProvider.restGet") === -1
-							)![0]
-							.match(/GitLabProvider\.(\w+)/)![1];
-					} catch (ex) {
-						functionName = "unknown";
-					}
-
-					if (!this._queryLogger.restApi.fns[functionName]) {
-						this._queryLogger.restApi.fns[functionName] = {
-							count: 1
-						};
-					} else {
-						const existing = this._queryLogger.restApi.fns[functionName];
-						existing.count++;
-						this._queryLogger.restApi.fns[functionName] = existing;
-					}
-				}
-
-				Logger.log(JSON.stringify(this._queryLogger, null, 4));
-			} catch (err) {
-				console.warn(err);
-			}
-		}
 
 		return response;
 	}
 
 	async restPost<T extends object, R extends object>(url: string, variables: any) {
 		const response = await this.post<T, R>(url, variables);
-		if (
-			response &&
-			response.response &&
-			response.response.headers &&
-			Logger.level === TraceLevel.Debug
-		) {
-			try {
-				const rateLimit: any = {};
-				["limit", "remaining", "used", "reset"].forEach(key => {
-					try {
-						rateLimit[key] = parseInt(
-							response.response.headers.get(`x-ratelimit-${key}`) as string,
-							10
-						);
-					} catch (e) {
-						Logger.warn(e);
-					}
-				});
-
-				this._queryLogger.restApi.rateLimit = rateLimit;
-
-				const e = new Error();
-				if (e.stack) {
-					let functionName;
-					try {
-						functionName = e.stack
-							.split("\n")
-							.filter(
-								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restPost") === -1
-							)![0]
-							.match(/GitLabProvider\.(\w+)/)![1];
-					} catch (ex) {
-						functionName = "unknown";
-					}
-
-					if (!this._queryLogger.restApi.fns[functionName]) {
-						this._queryLogger.restApi.fns[functionName] = {
-							count: 1
-						};
-					} else {
-						const existing = this._queryLogger.restApi.fns[functionName];
-						existing.count++;
-						this._queryLogger.restApi.fns[functionName] = existing;
-					}
-				}
-
-				Logger.log(JSON.stringify(this._queryLogger, null, 4));
-			} catch (err) {
-				console.warn(err);
-			}
-		}
 
 		return response;
 	}
 
 	async restPut<T extends object, R extends object>(url: string, variables: any) {
 		const response = await this.put<T, R>(url, variables);
-		if (
-			response &&
-			response.response &&
-			response.response.headers &&
-			Logger.level === TraceLevel.Debug
-		) {
-			try {
-				const e = new Error();
-				if (e.stack) {
-					let functionName;
-					try {
-						functionName = e.stack
-							.split("\n")
-							.filter(
-								_ => _.indexOf("GitLabProvider") > -1 && _.indexOf("GitLabProvider.restPost") === -1
-							)![0]
-							.match(/GitLabProvider\.(\w+)/)![1];
-					} catch (ex) {
-						functionName = "unknown";
-					}
-
-					if (!this._queryLogger.restApi.fns[functionName]) {
-						this._queryLogger.restApi.fns[functionName] = {
-							count: 1
-						};
-					} else {
-						const existing = this._queryLogger.restApi.fns[functionName];
-						existing.count++;
-						this._queryLogger.restApi.fns[functionName] = existing;
-					}
-				}
-
-				Logger.log(JSON.stringify(this._queryLogger, null, 4));
-			} catch (err) {
-				console.warn(err);
-			}
-		}
 
 		return response;
 	}
@@ -1398,10 +1168,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		return {
 			directives: [
-				// {
-				// 	type: "updatePullRequest",
-				// 	data: response.addComment.commentEdge.node.pullRequest
-				// },
 				{
 					type: "addNode",
 					data: addedNode
@@ -1446,48 +1212,48 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
-		let projectFullPath = request.pullRequestId.split("!")[0];
-		let iid = request.pullRequestId.split("!")[1];
-		const noteableId = `gid://gitlab/MergeRequest/${iid}`;
+		const projectFullPath = request.pullRequestId.split("!")[0];
+		const iid = request.pullRequestId.split("!")[1];
+		let directives: any = [];
+
 		if (request.text) {
-			void (await this.mutate(
-				`mutation CreateNote($noteableId:ID!, $body:String!){
-				createNote(input: {noteableId:$noteableId, body:$body}){
-					clientMutationId
-					note{
-						id      
-						body
-						createdAt
-						confidential
-						author {
-						  username
-						  avatarUrl
-						}
-						updatedAt
-						userPermissions{
-						  adminNote
-						  awardEmoji
-						  createNote
-						  readNote
-						  resolveNote
-						  
-						}      
-					  }			
-				}
-			  }`,
-				{
-					noteableId: noteableId,
-					body: request.text
-				}
-			)) as any;
+			const response1 = await this.createPullRequestComment({ ...request, iid: iid });
+			if (response1.directives) {
+				directives = directives.concat(response1.directives);
+			}
 		}
 
 		// https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
-		await this.restPut(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
+		const mergeRequestUpdatedResponse = await this.restPut<
+			{ state_event: string },
+			{
+				merge_status: string;
+				merged_at: any;
+				state: string;
+				updated_at: any;
+				closed_at: any;
+				closed_by: any;
+			}
+		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
 			state_event: "close"
 		});
 
-		return true;
+		const body = mergeRequestUpdatedResponse.body;
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergedAt: body.merged_at,
+				mergeStatus: body.merge_status,
+				state: body.state,
+				updatedAt: body.updated_at,
+				closedAt: body.closed_at,
+				closedBy: body.closed_by
+			}
+		});
+
+		return {
+			directives: directives
+		};
 	}
 
 	async createPullRequestCommentAndReopen(request: {
@@ -1496,46 +1262,46 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<any> {
 		let projectFullPath = request.pullRequestId.split("!")[0];
 		let iid = request.pullRequestId.split("!")[1];
-		const noteableId = `gid://gitlab/MergeRequest/${iid}`;
+		let directives: any = [];
 
 		if (request.text) {
-			void (await this.mutate(
-				`mutation CreateNote($noteableId:ID!, $body:String!){
-				createNote(input: {noteableId:$noteableId, body:$body}){
-					clientMutationId
-					note{
-						id      
-						body
-						createdAt
-						confidential
-						author {
-						  username
-						  avatarUrl
-						}
-						updatedAt
-						userPermissions{
-						  adminNote
-						  awardEmoji
-						  createNote
-						  readNote
-						  resolveNote
-						  
-						}      
-					  }			
-				}
-			  }`,
-				{
-					noteableId: noteableId,
-					body: request.text
-				}
-			)) as any;
+			const response1 = await this.createPullRequestComment({ ...request, iid: iid });
+			if (response1.directives) {
+				directives = directives.concat(response1.directives);
+			}
 		}
 
 		// https://docs.gitlab.com/ee/api/merge_requests.html#update-mr
-		await this.restPut(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
+		const mergeRequestUpdatedResponse = await this.restPut<
+			{ state_event: string },
+			{
+				merged_at: any;
+				merge_status: string;
+				state: string;
+				updated_at: any;
+				closed_at: any;
+				closed_by: any;
+			}
+		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
 			state_event: "reopen"
 		});
-		return true;
+
+		const body = mergeRequestUpdatedResponse.body;
+		directives.push({
+			type: "updatePullRequest",
+			data: {
+				mergedAt: body.merged_at,
+				mergeStatus: body.merge_status,
+				state: body.state,
+				updatedAt: body.updated_at,
+				closedAt: body.closed_at,
+				closedBy: body.closed_by
+			}
+		});
+
+		return {
+			directives: directives
+		};
 	}
 
 	async getPullRequestCommits(
