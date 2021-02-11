@@ -171,7 +171,7 @@ export function reduceProviderPullRequests(
 							//	}
 						} else if (directive.type === "removeNode") {
 							// if (!directive.data.id) continue;
-							console.log(pr.discussions.nodes, directive.data.id);
+							// console.log(pr.discussions.nodes, directive.data.id);
 							for (const node of pr.discussions.nodes) {
 								node.notes.nodes = node.notes.nodes.filter(x => x.id !== directive.data.id);
 							}

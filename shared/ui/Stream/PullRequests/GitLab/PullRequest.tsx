@@ -500,47 +500,80 @@ export const PullRequest = () => {
 									<Container>
 										<Left>
 											{pr.discussions.nodes.map((_: any) => {
-												return _.notes.nodes.map(x => {
+												if (_.type === "merge-request") {
 													return (
-														<Box>
-															<BigRoundImg>
-																<img
-																	style={{ float: "left" }}
-																	alt="headshot"
-																	src={x.author.avatarUrl}
-																/>
-															</BigRoundImg>
-															<div style={{ float: "right" }}>
-																{/* <Role>Maintainer</Role> */}
-																(S) (R) (Edit) (dots)
-															</div>
-															<div>
-																{x.author.name} {x.author.username} &middot;{" "}
-																<Timestamp time={x.createdAt} />
-															</div>
-
-															<div style={{ paddingTop: "15px" }}>
-																{x.body}
-																<br /> id: {x.id}
-																<br />
-																iid {x.iid}
-																<a
-																	href="#"
-																	onClick={e => {
-																		e.preventDefault();
-																		dispatch(
-																			api("deletePullRequestComment", {
-																				id: x.id
-																			})
-																		);
-																	}}
-																>
-																	delete
-																</a>
-															</div>
-														</Box>
+														<div>
+															{_.createdAt}
+															mr: {JSON.stringify(_, null, 2)}
+															<br />
+															<br />
+														</div>
 													);
-												});
+												} else if (_.type === "milestone") {
+													return (
+														<div>
+															{_.milestone}
+															label:{JSON.stringify(_, null, 2)}
+															<br />
+															<br />
+														</div>
+													);
+												} else if (_.type === "label") {
+													return (
+														<div>
+															{_.createdAt}
+															label:{JSON.stringify(_, null, 2)}
+															<br />
+															<br />
+														</div>
+													);
+												} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
+													return _.notes.nodes.map(x => {
+														return (
+															<Box>
+																<BigRoundImg>
+																	<img
+																		style={{ float: "left" }}
+																		alt="headshot"
+																		src={x.author.avatarUrl}
+																	/>
+																</BigRoundImg>
+																<div style={{ float: "right" }}>
+																	{/* <Role>Maintainer</Role> */}
+																	(S) (R) (Edit) (dots)
+																</div>
+																<div>
+																	{x.author.name} {x.author.username} &middot;{" "}
+																	<Timestamp time={x.createdAt} />
+																</div>
+
+																<div style={{ paddingTop: "15px" }}>
+																	{x.body}
+																	<br /> id: {x.id}
+																	<br />
+																	iid {x.iid}
+																	<a
+																		href="#"
+																		onClick={e => {
+																			e.preventDefault();
+																			dispatch(
+																				api("deletePullRequestComment", {
+																					id: x.id
+																				})
+																			);
+																		}}
+																	>
+																		delete
+																	</a>
+																	{JSON.stringify(_, null, 4)}
+																</div>
+															</Box>
+														);
+													});
+												} else {
+													console.warn("why here?", _);
+													return undefined;
+												}
 											})}
 											<PullRequestBottomComment
 												pr={pr}
@@ -548,7 +581,7 @@ export const PullRequest = () => {
 												__onDidRender={__onDidRender}
 											/>
 										</Left>
-										<Right>
+										{/* <Right>
 											<AsideBlock>
 												<div>
 													0 Assignees <span style={{ float: "right" }}>Edit</span>
@@ -561,7 +594,7 @@ export const PullRequest = () => {
 												</div>
 												<div>None</div>
 											</AsideBlock>
-										</Right>
+										</Right> */}
 									</Container>
 								</>
 							)}

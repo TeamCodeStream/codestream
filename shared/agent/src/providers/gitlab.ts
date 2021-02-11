@@ -877,6 +877,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					webUrl	
 					state
 					mergedAt
+					projectId
 					author {
 						name
 						username
@@ -1009,6 +1010,66 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response.project.mergeRequest.iid;
 			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
 			this._pullRequestCache.set(request.pullRequestId, response);
+
+			const projectEvents = ((await this.restGet(
+				`/projects/${encodeURIComponent(request.projectFullPath)}/events`
+			))!.body as any[])
+				.filter(
+					_ =>
+						_.target_iid.toString() === response.project.mergeRequest.iid &&
+						_.action_name !== "commented on"
+				)
+				.map(_ => {
+					return {
+						type: "merge-request",
+						author: _.author,
+						action: _.action_name,
+						createdAt: _.created_at,
+						id: _.id,
+						projectId: _.project_id,
+						targetId: _.target_id,
+						targetTitle: _.target_title,
+						targetType: _.target_type
+					};
+				});
+			const labelEvents = ((await this.restGet(
+				`/projects/${encodeURIComponent(request.projectFullPath)}/merge_requests/${
+					request.iid
+				}/resource_label_events`
+			))!.body as any[]).map(_ => {
+				return {
+					type: "label",
+					createdAt: _.created_at,
+					action: _.action,
+					id: _.id,
+					label: _.label,
+					resourceType: _.resource_type,
+					user: _.user
+				};
+			});
+			const milestoneEvents = ((await this.restGet(
+				`/projects/${encodeURIComponent(request.projectFullPath)}/merge_requests/${
+					request.iid
+				}/resource_milestone_events`
+			))!.body as any[]).map(_ => {
+				return {
+					type: "milestone",
+					createdAt: _.created_at,
+					action: _.action,
+					id: _.id,
+					label: _.label,
+					resourceType: _.resource_type,
+					user: _.user
+				};
+			});
+
+			response.project.mergeRequest.discussions.nodes.push(...projectEvents);
+			response.project.mergeRequest.discussions.nodes.push(...labelEvents);
+			response.project.mergeRequest.discussions.nodes.push(...milestoneEvents);
+			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
+				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
+			);
+			console.log(projectEvents);
 		} catch (ex) {
 			Logger.error(ex);
 		}
