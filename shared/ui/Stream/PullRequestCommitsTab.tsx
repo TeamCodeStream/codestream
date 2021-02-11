@@ -102,7 +102,22 @@ export const PullRequestCommitsTab = props => {
 	const { pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const currentPullRequestProviderId = state.context.currentPullRequest
+			? state.context.currentPullRequest.providerId
+			: null;
+		let providerName;
+		if (currentPullRequestProviderId) {
+			providerName =
+				currentPullRequestProviderId === "github*com" ||
+				currentPullRequestProviderId === "github/enterprise"
+					? "GitHub"
+					: currentPullRequestProviderId === "gitlab*com" ||
+					  currentPullRequestProviderId === "gitlab/enterprise"
+					? "GitLab"
+					: undefined;
+		}
 		return {
+			providerName: providerName,
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			currentPullRequest: state.context.currentPullRequest,
 			currentPullRequestId: state.context.currentPullRequest
@@ -188,10 +203,15 @@ export const PullRequestCommitsTab = props => {
 										<span className="subtle"> committed</span>
 										<Timestamp time={commit.authoredDate} relative />
 										<PRCommitButtons>
-											<Tooltip title="View commit on GitHub" placement="bottom">
+											<Tooltip
+												title={"View commit on " + derivedState.providerName}
+												placement="bottom"
+											>
 												<span>
 													<Link
-														href={`${pr.url}/commits/${commit.abbreviatedOid}`}
+														href={
+															commit.url ? commit.url : `${pr.url}/commits/${commit.abbreviatedOid}`
+														}
 														className="monospace"
 													>
 														{commit.abbreviatedOid}
@@ -205,18 +225,25 @@ export const PullRequestCommitsTab = props => {
 												className="clickable"
 												onClick={() => copy(commit.abbreviatedOid)}
 											/>
-											<Link
-												href={
-													pr.url && pr.url.replace(/\/pull\/\d+$/, `/tree/${commit.abbreviatedOid}`)
-												}
-											>
-												<Icon
-													title="Browse the repository at this point in the history on GitHub"
-													className="clickable"
-													placement="bottomRight"
-													name="code"
-												/>
-											</Link>
+											{derivedState.providerName &&
+												derivedState.providerName.indexOf("GitHub") > -1 && (
+													<Link
+														href={
+															pr.url &&
+															pr.url.replace(/\/pull\/\d+$/, `/tree/${commit.abbreviatedOid}`)
+														}
+													>
+														<Icon
+															title={
+																"Browse the repository at this point in the history on " +
+																derivedState.providerName
+															}
+															className="clickable"
+															placement="bottomRight"
+															name="code"
+														/>
+													</Link>
+												)}
 										</PRCommitButtons>
 									</PRCommitCard>
 								);

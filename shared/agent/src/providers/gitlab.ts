@@ -9,7 +9,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
-import { Logger, TraceLevel } from "../logger";
+import { Logger } from "../logger";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 
@@ -850,7 +850,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			request.iid = request.pullRequestId.split("!")[1];
 		}
 
-		//const { scm: scmManager } = SessionContainer.instance();
+		// const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
 		if (request.force) {
@@ -1186,8 +1186,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							username
 							avatarUrl
 						  }
-						}
-					 
+						}					 
 						  }
 						}
 					  }
@@ -1370,32 +1369,56 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
 		let projectFullPath = request.pullRequestId.split("!")[0];
 		let iid = request.pullRequestId.split("!")[1];
-		const url = `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/commits`;
-		const query = await this.restGet(url);
+		const projectFullPathEncoded = encodeURIComponent(projectFullPath);
+		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits`;
+		const query = await this.restGet<
+			{
+				author_email: string;
+				author_name: string;
+				authored_date: string;
+				committed_date: string;
+				committer_email: string;
+				committer_name: string;
+				created_at: string;
+				id: string;
+				message: string;
+				parent_ids?: string[];
+				short_id: string;
+				title: string;
+				web_url: string;
+			}[]
+		>(url);
 
-		return (query.body as any[]).map(_ => {
+		return query.body.map(_ => {
+			const authorAvatarUrl = `https://www.gravatar.com/avatar/${Strings.md5(
+				_.author_email
+			)}?s=50&amp;d=identicon`;
+			let commiterAvatarUrl = authorAvatarUrl;
+			if (_.author_email !== _.committer_email) {
+				commiterAvatarUrl = `https://www.gravatar.com/avatar/${Strings.md5(
+					_.committer_email
+				)}?s=50&amp;d=identicon`;
+			}
 			return {
+				//commitId: _.id,
 				abbreviatedOid: _.short_id,
 				author: {
 					name: _.author_name,
-					avatarUrl: `https://www.gravatar.com/avatar/${Strings.md5(
-						_.author_email
-					)}?s=50&amp;d=identicon`,
+					avatarUrl: authorAvatarUrl,
 					user: {
 						login: _.author_name
 					}
 				},
 				committer: {
 					name: _.committer_name,
-					avatarUrl: `https://www.gravatar.com/avatar/${Strings.md5(
-						_.committer_email
-					)}?s=50&amp;d=identicon`,
+					avatarUrl: commiterAvatarUrl,
 					user: {
 						login: _.committer_name
 					}
 				},
 				message: _.message,
-				authoredDate: _.authored_date
+				authoredDate: _.authored_date,
+				url: _.web_url
 			};
 		});
 	}
