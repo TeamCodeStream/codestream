@@ -5,7 +5,7 @@ import { ProviderPullRequestActionsTypes, ProviderPullRequestsState } from "./ty
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { CSRepository } from "@codestream/protocols/api";
-import { ContextActionsType } from "../context/types";
+import { ContextActionsType, ContextState } from "../context/types";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -407,6 +407,8 @@ export const getMyPullRequests = (state: CodeStreamState) =>
 const currentPullRequest = (state: CodeStreamState) => state.context.currentPullRequest;
 const currentPullRequestId = (state: CodeStreamState) =>
 	state.context.currentPullRequest ? state.context.currentPullRequest.id : undefined;
+const currentPullRequestProviderId = (state: CodeStreamState) =>
+	state.context.currentPullRequest ? state.context.currentPullRequest.providerId : undefined;
 
 /**
  * Gets the PR object for the currentPullRequestId
@@ -494,6 +496,7 @@ export const getProviderPullRequestRepo = createSelector(
 	}
 );
 
+// TODO make this generic so that we don't need it
 export const getProviderPullRequestRepo2 = createSelector(
 	getRepos,
 	getCurrentProviderPullRequest,
@@ -535,6 +538,24 @@ export const getProviderPullRequestRepo2 = createSelector(
 			console.error(error);
 		}
 		return currentRepo;
+	}
+);
+
+export const getPullRequestId = createSelector(
+	(state: CodeStreamState) => state.context,
+	getCurrentProviderPullRequest,
+	(context: ContextState, pr: any) => {
+		if (!context.currentPullRequest || !pr || !pr.conversations) return "";
+		if (
+			context.currentPullRequest.providerId === "gitlab*com" ||
+			context.currentPullRequest.providerId === "gitlab/enterprise"
+		) {
+			return JSON.stringify({
+				id: pr.conversations.project.mergeRequest.id,
+				full: pr.conversations.project.mergeRequest.references.full
+			});
+		}
+		return pr.conversations.repository.pullRequest.id;
 	}
 );
 
