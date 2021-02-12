@@ -399,26 +399,18 @@ export const PullRequest = () => {
 	};
 
 	const numComments = useMemo(() => {
-		if (!pr || !pr.discussions || !pr.discussions.nodes) return 0;
+		if (!derivedState.currentPullRequest || !derivedState.currentPullRequest.conversations)
+			return 0;
+		const _pr = derivedState.currentPullRequest.conversations.project.mergeRequest;
+		if (!_pr || !_pr.discussions || !_pr.discussions.nodes) return 0;
 		const reducer = (accumulator, node) => {
-			let count = 0;
-			if (!node || !node.__typename) return accumulator;
-			const typename = node.__typename;
-			if (typename && typename.indexOf("Comment") > -1) count = 1;
-			if (typename === "PullRequestReview") {
-				// pullrequestreview can have a top-level comment,
-				// and multiple comment threads.
-				if (node.body) count++; // top-level comment (optional)
-				count += node.comments.nodes.length; // threads
-				node.comments.nodes.forEach(c => {
-					// each thread can have replies
-					if (c.replies) count += c.replies.length;
-				});
+			if (node && node.notes && node.notes.nodes && node.notes.nodes.length) {
+				return node.notes.nodes.length + accumulator;
 			}
-			return count + accumulator;
+			return accumulator;
 		};
-		return pr.discussions.nodes.reduce(reducer, 0);
-	}, [pr]);
+		return _pr.discussions.nodes.reduce(reducer, 0);
+	}, [derivedState.currentPullRequest]);
 
 	const statusIcon =
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
@@ -470,7 +462,7 @@ export const PullRequest = () => {
 					<Tabs style={{ marginTop: 0 }}>
 						<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
 							<Icon name="comment" />
-							<span className="wide-text">Conversation</span>
+							<span className="wide-text">Overview</span>
 							<PRBadge>{numComments}</PRBadge>
 						</Tab>
 						<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
@@ -504,7 +496,7 @@ export const PullRequest = () => {
 													return (
 														<div>
 															{_.createdAt}
-															mr: {JSON.stringify(_, null, 2)}
+															mr: <pre>{JSON.stringify(_, null, 2)}</pre>
 															<br />
 															<br />
 														</div>
@@ -513,7 +505,7 @@ export const PullRequest = () => {
 													return (
 														<div>
 															{_.milestone}
-															label:{JSON.stringify(_, null, 2)}
+															label:<pre>{JSON.stringify(_, null, 2)}</pre>
 															<br />
 															<br />
 														</div>
@@ -522,54 +514,58 @@ export const PullRequest = () => {
 													return (
 														<div>
 															{_.createdAt}
-															label:{JSON.stringify(_, null, 2)}
+															label:<pre>{JSON.stringify(_, null, 2)}</pre>
 															<br />
 															<br />
 														</div>
 													);
 												} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
-													return _.notes.nodes.map(x => {
-														return (
-															<Box>
-																<BigRoundImg>
-																	<img
-																		style={{ float: "left" }}
-																		alt="headshot"
-																		src={x.author.avatarUrl}
-																	/>
-																</BigRoundImg>
-																<div style={{ float: "right" }}>
-																	{/* <Role>Maintainer</Role> */}
-																	(S) (R) (Edit) (dots)
-																</div>
-																<div>
-																	{x.author.name} {x.author.username} &middot;{" "}
-																	<Timestamp time={x.createdAt} />
-																</div>
-
-																<div style={{ paddingTop: "15px" }}>
-																	{x.body}
-																	<br /> id: {x.id}
-																	<br />
-																	iid {x.iid}
-																	<a
-																		href="#"
-																		onClick={e => {
-																			e.preventDefault();
-																			dispatch(
-																				api("deletePullRequestComment", {
-																					id: x.id
-																				})
-																			);
-																		}}
-																	>
-																		delete
-																	</a>
-																	{JSON.stringify(_, null, 4)}
-																</div>
-															</Box>
-														);
-													});
+													return (
+														<Box>
+															{_.notes.nodes.map(x => {
+																return (
+																	<>
+																		<BigRoundImg>
+																			<img
+																				style={{ float: "left" }}
+																				alt="headshot"
+																				src={x.author.avatarUrl}
+																			/>
+																		</BigRoundImg>
+																		{/* <div style={{ float: "right" }}>
+																		<Role>Maintainer</Role> 
+																			(S) (R) (Edit) (dots)
+																		</div>*/}
+																		<div>
+																			<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
+																			<Timestamp time={x.createdAt} />
+																		</div>
+																		<div style={{ paddingTop: "15px" }}>
+																			{x.body}
+																			<br /> id: {x.id}
+																			<br />
+																			iid {x.iid}
+																			<a
+																				href="#"
+																				onClick={e => {
+																					e.preventDefault();
+																					dispatch(
+																						api("deletePullRequestComment", {
+																							id: x.id
+																						})
+																					);
+																				}}
+																			>
+																				deleteThis!
+																			</a>
+																			<br />
+																			<pre>{JSON.stringify(x, null, 2)}</pre>
+																		</div>
+																	</>
+																);
+															})}
+														</Box>
+													);
 												} else {
 													console.warn("why here?", _);
 													return undefined;

@@ -169,12 +169,66 @@ export function reduceProviderPullRequests(
 							// if (!node) {
 							pr.discussions.nodes.push(directive.data);
 							//	}
-						} else if (directive.type === "removeNode") {
+						}
+						if (directive.type === "addNodes") {
 							// if (!directive.data.id) continue;
-							// console.log(pr.discussions.nodes, directive.data.id);
-							for (const node of pr.discussions.nodes) {
-								node.notes.nodes = node.notes.nodes.filter(x => x.id !== directive.data.id);
+							for (const d of directive.data) {
+								if (!d.id) {
+									console.warn("missing id");
+									continue;
+								}
+								const node = pr.discussions.nodes.find(_ => _.id === d.id);
+								if (!node) {
+									pr.discussions.nodes.push(d);
+								}
 							}
+						} else if (directive.type === "removeNode") {
+							if (!directive.data.id) continue;
+
+							let nodeIndex = 0;
+							let nodeRemoveIndex = -1;
+							let pseudoGoto = false;
+							for (const node of pr.discussions.nodes) {
+								if (node.id === directive.data.id) {
+									// is an outer node
+									nodeRemoveIndex = nodeIndex;
+									break;
+								}
+								if (node.notes && node.notes.nodes.length) {
+									let noteIndex = 0;
+									for (const note of node.notes.nodes) {
+										if (note.id === directive.data.id) {
+											// if this is the first note, nuke all the replies too
+											// by removing the parent node
+											if (noteIndex === 0) {
+												nodeRemoveIndex = nodeIndex;
+												pseudoGoto = true;
+												break;
+											} else {
+												node.notes.nodes.splice(noteIndex, 1);
+												pseudoGoto = true;
+												break;
+											}
+										}
+										noteIndex++;
+									}
+								}
+
+								if (pseudoGoto) {
+									break;
+								}
+								nodeIndex++;
+							}
+							if (nodeRemoveIndex > -1) {
+								pr.discussions.nodes.splice(nodeRemoveIndex, 1);
+							}
+							// const index = pr.discussions.nodes.indexOf(x => x.id === directive.data.id);
+							// if (index > -1) {
+							// 	pr.discussions.nodes.splice(index, 1);
+							// }
+							// for (const node of pr.discussions.nodes) {
+							// 	node.notes.nodes = node.notes.nodes.filter(x => x.id !== directive.data.id);
+							// }
 						} else if (directive.type === "updatePullRequest") {
 							for (const key in directive.data) {
 								if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {

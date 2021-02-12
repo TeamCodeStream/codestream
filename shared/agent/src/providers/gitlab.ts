@@ -675,10 +675,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (item && item.body) {
 				response[index] = item.body
 					.filter((_: any) => _.id)
-					.map((pr: { created_at: string; references: { full: string } }) => ({
+					.map((pr: { created_at: string; id: string }) => ({
 						...pr,
-						// override the singular id with one that has the repoOwnerName + iid
-						id: pr.references.full,
+						id: `gid://gitlab/MergeRequest/${pr.id}`,
 						providerId: this.providerConfig?.id,
 						createdAt: new Date(pr.created_at).getTime()
 					}));
@@ -844,19 +843,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	> = new Map();
 
 	@log()
-	async getPullRequest(request: any): Promise<any> {
-		if (request.pullRequestId.indexOf("!") > -1) {
-			request.projectFullPath = request.pullRequestId.split("!")[0];
-			request.iid = request.pullRequestId.split("!")[1];
+	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
+		let projectFullPath;
+		let iid;
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+			projectFullPath = parsed.full.split("!")[0];
+			iid = parsed.full.split("!")[1];
 		}
 
 		// const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
 		if (request.force) {
-			this._pullRequestCache.delete(request.pullRequestId);
+			this._pullRequestCache.delete(actualPullRequestId);
 		} else {
-			const cached = this._pullRequestCache.get(request.pullRequestId);
+			const cached = this._pullRequestCache.get(actualPullRequestId);
 			if (cached) {
 				return cached;
 			}
@@ -987,8 +991,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// } while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
 
 			response = await this.query(q, {
-				fullPath: request.projectFullPath,
-				iid: request.iid.toString()
+				fullPath: projectFullPath,
+				iid: iid.toString()
 			});
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
@@ -1003,73 +1007,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				url: response.project.mergeRequest.sourceProject.webUrl
 			};
 			response.project.mergeRequest.url = response.project.mergeRequest.sourceProject.webUrl;
-
-			response.project.mergeRequest.id =
-				response.project.mergeRequest.repository.nameWithOwner +
-				"!" +
-				response.project.mergeRequest.iid;
 			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
-			this._pullRequestCache.set(request.pullRequestId, response);
 
-			const projectEvents = ((await this.restGet(
-				`/projects/${encodeURIComponent(request.projectFullPath)}/events`
-			))!.body as any[])
-				.filter(
-					_ =>
-						_.target_iid.toString() === response.project.mergeRequest.iid &&
-						_.action_name !== "commented on"
-				)
-				.map(_ => {
-					return {
-						type: "merge-request",
-						author: _.author,
-						action: _.action_name,
-						createdAt: _.created_at,
-						id: _.id,
-						projectId: _.project_id,
-						targetId: _.target_id,
-						targetTitle: _.target_title,
-						targetType: _.target_type
-					};
-				});
-			const labelEvents = ((await this.restGet(
-				`/projects/${encodeURIComponent(request.projectFullPath)}/merge_requests/${
-					request.iid
-				}/resource_label_events`
-			))!.body as any[]).map(_ => {
-				return {
-					type: "label",
-					createdAt: _.created_at,
-					action: _.action,
-					id: _.id,
-					label: _.label,
-					resourceType: _.resource_type,
-					user: _.user
-				};
-			});
-			const milestoneEvents = ((await this.restGet(
-				`/projects/${encodeURIComponent(request.projectFullPath)}/merge_requests/${
-					request.iid
-				}/resource_milestone_events`
-			))!.body as any[]).map(_ => {
-				return {
-					type: "milestone",
-					createdAt: _.created_at,
-					action: _.action,
-					id: _.id,
-					label: _.label,
-					resourceType: _.resource_type,
-					user: _.user
-				};
-			});
+			this._pullRequestCache.set(actualPullRequestId, response);
 
-			response.project.mergeRequest.discussions.nodes.push(...projectEvents);
-			response.project.mergeRequest.discussions.nodes.push(...labelEvents);
-			response.project.mergeRequest.discussions.nodes.push(...milestoneEvents);
+			(
+				await Promise.all([
+					this._projectEvents(projectFullPath, iid),
+					this._labelEvents(projectFullPath, iid),
+					this._milestoneEvents(projectFullPath, iid)
+				])
+			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
+
+			// response.project.mergeRequest.discussions.nodes.push(
+			// 	...(await this._projectEvents(projectFullPath, iid))
+			// );
+			// response.project.mergeRequest.discussions.nodes.push(
+			// 	...(await this._labelEvents(projectFullPath, iid))
+			// );
+			// response.project.mergeRequest.discussions.nodes.push(
+			// 	...(await this._milestoneEvents(projectFullPath, iid))
+			// );
 			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
-			console.log(projectEvents);
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -1115,11 +1076,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		projectFullPath?: string;
 		iid?: string;
 	}): Promise<Directives> {
-		if (request.pullRequestId.indexOf("!") > -1) {
-			request.projectFullPath = request.pullRequestId.split("!")[0];
-			request.iid = request.pullRequestId.split("!")[1];
+		let noteableId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			noteableId = parsed.id;
+			request.projectFullPath = parsed.full.split("!")[0];
+			request.iid = parsed.full.split("!")[1];
 		}
-		request.noteableId = `gid://gitlab/MergeRequest/${request.iid}`;
+		request.noteableId = noteableId;
 
 		const response = (await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
@@ -1217,12 +1181,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		)) as any;
 
+		// find the nested node/note
 		const addedNode = response.createNote.note.project.mergeRequest.discussions.nodes.find(
 			(_: any) => {
-				if (_.notes.nodes.find((x: any) => x.id === response.createNote.note.id)) {
-					return _;
-				}
-				return undefined;
+				return _.notes.nodes.find((n: any) => n.id === response.createNote.note.id);
 			}
 		);
 
@@ -1240,7 +1202,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		id: string;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
-		const query = `mutation DestroyNote($id: ID!){
+		let noteId = request.id;
+		let actualPullRequestId;
+
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+		}
+
+		const query = `mutation DestroyNote($id:ID!){
 			destroyNote(input:{id:$id}){
 			  clientMutationId 
 			  note {
@@ -1250,13 +1220,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		  }`;
 
 		await this.mutate<any>(query, {
-			id: request.id
+			id: noteId
 		});
 
-		this._pullRequestCache.delete(request.pullRequestId);
+		this._pullRequestCache.delete(actualPullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId,
-			commentId: request.id
+			pullRequestId: actualPullRequestId,
+			commentId: noteId
 		});
 
 		return {
@@ -1272,8 +1242,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
-		const projectFullPath = request.pullRequestId.split("!")[0];
-		const iid = request.pullRequestId.split("!")[1];
+		const parsed = JSON.parse(request.pullRequestId);
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
 		let directives: any = [];
 
 		if (request.text) {
@@ -1311,6 +1283,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		});
 
+		directives.push({
+			type: "addNodes",
+			data: await this._projectEvents(projectFullPath, iid)
+		});
+
 		return {
 			directives: directives
 		};
@@ -1320,8 +1297,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		text: string;
 	}): Promise<any> {
-		let projectFullPath = request.pullRequestId.split("!")[0];
-		let iid = request.pullRequestId.split("!")[1];
+		const parsed = JSON.parse(request.pullRequestId);
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
 		let directives: any = [];
 
 		if (request.text) {
@@ -1358,6 +1337,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				closedBy: body.closed_by
 			}
 		});
+		directives.push({
+			type: "addNodes",
+			data: await this._projectEvents(projectFullPath, iid)
+		});
 
 		return {
 			directives: directives
@@ -1367,8 +1350,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		let projectFullPath = request.pullRequestId.split("!")[0];
-		let iid = request.pullRequestId.split("!")[1];
+		const parsed = JSON.parse(request.pullRequestId);
+		request.pullRequestId = parsed.id;
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
 		const projectFullPathEncoded = encodeURIComponent(projectFullPath);
 		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits`;
 		const query = await this.restGet<
@@ -1444,8 +1430,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		// https://developer.github.com/v3/pulls/#list-pull-requests-files
 		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
-		const projectFullPath = request.pullRequestId.split("!")[0];
-		const iid = request.pullRequestId.split("!")[1];
+		const parsed = JSON.parse(request.pullRequestId);
+		request.pullRequestId = parsed.id;
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
 		try {
 			let url: string | undefined = `/projects/${encodeURIComponent(
 				projectFullPath
@@ -1539,8 +1528,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used for old servers
 		position?: number;
 	}) {
-		let projectFullPath = request.pullRequestId.split("!")[0];
-		let iid = request.pullRequestId.split("!")[1];
+		const parsed = JSON.parse(request.pullRequestId);
+		const actualPullRequestId = parsed.id;
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
 
 		const payload = {
 			body: request.text,
@@ -1559,12 +1550,69 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			payload
 		);
 
-		this._pullRequestCache.delete(request.pullRequestId);
+		this._pullRequestCache.delete(actualPullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId
+			pullRequestId: actualPullRequestId
 		});
 
 		return data.body;
+	}
+
+	private async _projectEvents(projectFullPath: string, iid: string) {
+		const projectEvents = ((await this.restGet(
+			`/projects/${encodeURIComponent(projectFullPath)}/events`
+		))!.body as any[])
+			.filter(_ => _.target_iid.toString() === iid && _.action_name !== "commented on")
+			.map(_ => {
+				return {
+					type: "merge-request",
+					author: _.author,
+					action: _.action_name,
+					createdAt: _.created_at,
+					id: _.id,
+					projectId: _.project_id,
+					targetId: _.target_id,
+					targetTitle: _.target_title,
+					targetType: _.target_type
+				};
+			});
+		return projectEvents;
+	}
+
+	private async _milestoneEvents(projectFullPath: string, iid: string) {
+		const milestoneEvents = ((await this.restGet(
+			`/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/resource_milestone_events`
+		))!.body as any[]).map(_ => {
+			return {
+				type: "milestone",
+				createdAt: _.created_at,
+				action: _.action,
+				id: _.id,
+				label: _.label,
+				resourceType: _.resource_type,
+				user: _.user
+			};
+		});
+		return milestoneEvents;
+	}
+
+	private async _labelEvents(projectFullPath: string, iid: string) {
+		const labelEvents = ((await this.restGet(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/resource_label_events`
+		))!.body as any[]).map(_ => {
+			return {
+				type: "label",
+				createdAt: _.created_at,
+				action: _.action,
+				id: _.id,
+				label: _.label,
+				resourceType: _.resource_type,
+				user: _.user
+			};
+		});
+		return labelEvents;
 	}
 }
 
