@@ -111,6 +111,25 @@ export namespace Strings {
 			.digest(encoding);
 	}
 
+	export function toGravatar(
+		email: string,
+		size: number = 50,
+		fallbackOption:
+			| "404"
+			| "mp"
+			| "identicon"
+			| "monsterid"
+			| "wavatar"
+			| "retro"
+			| "robohash"
+			| "blank" = "identicon"
+	): string {
+		return `https://www.gravatar.com/avatar/${md5(
+			(email || "").trim().toLowerCase(),
+			"hex"
+		)}?r=g&s=${size}&d=${fallbackOption}`;
+	}
+
 	export function normalizePath(
 		fileName: string,
 		options: { addLeadingSlash?: boolean; stripTrailingSlash?: boolean } = {

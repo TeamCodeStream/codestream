@@ -1,5 +1,4 @@
 "use strict";
-import { toRepoName } from "../git/utils";
 import { GraphQLClient } from "graphql-request";
 import { flatten } from "lodash-es";
 import { Response } from "node-fetch";
@@ -9,6 +8,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
+import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -31,12 +31,7 @@ import {
 	GitLabCreateCardResponse,
 	MoveThirdPartyCardRequest
 } from "../protocol/agent.protocol";
-import {
-	CodemarkType,
-	CSGitLabProviderInfo,
-	CSLocationArray,
-	CSReferenceLocation
-} from "../protocol/api.protocol";
+import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
 import {
 	getRemotePaths,
@@ -728,13 +723,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
 			return ReportSuppressedMessages.NetworkError;
-		} else if (
-			(ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) ||
-			(this.providerConfig.id === "gitlab/enterprise" &&
-				ex.response &&
-				ex.response.error &&
-				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use gitlab") > -1)
-		) {
+		} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
 			return ReportSuppressedMessages.ConnectionError;
 		} else if (
 			(ex.response && ex.response.message === "Bad credentials") ||
@@ -779,21 +768,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			Logger.warn("GitLab query caught:", ex);
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
-				// if (exType !== ReportSuppressedMessages.NetworkError) {
-				// 	// we know about this error, and we want to give the user a chance to correct it
-				// 	// (but throwing up a banner), rather than logging the error to sentry
-				// 	this.session.api.setThirdPartyProviderInfo({
-				// 		providerId: this.providerConfig.id,
-				// 		data: {
-				// 			tokenError: {
-				// 				error: ex,
-				// 				occurredAt: Date.now(),
-				// 				isConnectionError: exType === ReportSuppressedMessages.ConnectionError
-				// 			}
-				// 		}
-				// 	});
-				// 	delete this._client;
-				// }
+				if (exType !== ReportSuppressedMessages.NetworkError) {
+					// we know about this error, and we want to give the user a chance to correct it
+					// (but throwing up a banner), rather than logging the error to sentry
+					this.session.api.setThirdPartyProviderInfo({
+						providerId: this.providerConfig.id,
+						data: {
+							tokenError: {
+								error: ex,
+								occurredAt: Date.now(),
+								isConnectionError: exType === ReportSuppressedMessages.ConnectionError
+							}
+						}
+					});
+					delete this._client;
+				}
 				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
 				throw new InternalError(exType, { error: ex });
 			} else {
@@ -806,27 +795,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
-		const response = await (await this.client()).request<T>(query, variables);
-
-		return response;
+		return (await this.client()).request<T>(query, variables);
 	}
 
 	async restGet<T extends object>(url: string) {
-		const response = await this.get<T>(url);
-
-		return response;
+		return this.get<T>(url);
 	}
 
 	async restPost<T extends object, R extends object>(url: string, variables: any) {
-		const response = await this.post<T, R>(url, variables);
-
-		return response;
+		return this.post<T, R>(url, variables);
 	}
 
 	async restPut<T extends object, R extends object>(url: string, variables: any) {
-		const response = await this.put<T, R>(url, variables);
-
-		return response;
+		return this.put<T, R>(url, variables);
 	}
 
 	_pullRequestCache: Map<
@@ -870,15 +851,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		try {
 			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
 				project(fullPath: $fullPath) {
-				  name				  
+				  name
 				  mergeRequest(iid: $iid) {
 					id
-					iid					
+					iid
 					createdAt
 					sourceBranch
 					targetBranch
 					title
-					webUrl	
+					webUrl
 					state
 					mergedAt
 					projectId
@@ -895,7 +876,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					commitCount
 					sourceProject{
 						name
-						webUrl					   
+						webUrl
 						fullPath
 					}
 					discussions {
@@ -959,41 +940,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					  }
 					}
-				  }	  				  
+				  }
 				}
 			  }`;
-			// let timelineQueryResponse;
-			// if (request.owner == null && request.repo == null) {
-			// 	const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-			// 	repoOwner = data.owner;
-			// 	repoName = data.name;
-			// } else {
-			// 	repoOwner = request.owner!;
-			// 	repoName = request.repo!;
-			// }
-			// const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
-			// do {
-			// 	timelineQueryResponse = await this.pullRequestTimelineQuery(
-			// 		repoOwner,
-			// 		repoName,
-			// 		pullRequestNumber,
-			// 		timelineQueryResponse &&
-			// 			timelineQueryResponse.repository.pullRequest &&
-			// 			timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo &&
-			// 			timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.endCursor
-			// 	);
-			// 	if (timelineQueryResponse === undefined) break;
-			// 	response = timelineQueryResponse;
-
-			// 	allTimelineItems = allTimelineItems.concat(
-			// 		timelineQueryResponse.repository.pullRequest.timelineItems.nodes
-			// 	);
-			// } while (timelineQueryResponse.repository.pullRequest.timelineItems.pageInfo.hasNextPage);
 
 			response = await this.query(q, {
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			});
+
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
 				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
@@ -1016,18 +971,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					this._projectEvents(projectFullPath, iid),
 					this._labelEvents(projectFullPath, iid),
 					this._milestoneEvents(projectFullPath, iid)
-				])
+				]).catch(ex => {
+					Logger.error(ex);
+					throw ex;
+				})
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
-			// response.project.mergeRequest.discussions.nodes.push(
-			// 	...(await this._projectEvents(projectFullPath, iid))
-			// );
-			// response.project.mergeRequest.discussions.nodes.push(
-			// 	...(await this._labelEvents(projectFullPath, iid))
-			// );
-			// response.project.mergeRequest.discussions.nodes.push(
-			// 	...(await this._milestoneEvents(projectFullPath, iid))
-			// );
 			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
@@ -1091,66 +1040,66 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				clientMutationId
 				note{
 					project {
-						mergeRequest(iid: $iid) {						 
+						mergeRequest(iid: $iid) {
 							discussions(last:5) {
-						nodes {
-						  createdAt
-						  id
-						  notes {
 							nodes {
-							  author {
-								username
-								avatarUrl
-							  }
-							  body
-							  bodyHtml
-							  confidential
-							  createdAt
-							  discussion {
-								id
-								replyId
+							createdAt
+							id
+							notes {
+								nodes {
+								author {
+									username
+									avatarUrl
+								}
+								body
+								bodyHtml
+								confidential
 								createdAt
-							  }
-							  id
-							  position {
-								x
-								y
-								newLine
-								newPath
-								oldLine
-								oldPath
-								filePath
-							  }
-							  project {
-								name
-							  }
-							  resolvable
-							  resolved
-							  resolvedAt
-							  resolvedBy {
-								username
-								avatarUrl
-							  }
-							  system
-							  systemNoteIconName
-							  updatedAt
-							  userPermissions {
-								readNote
-								resolveNote
-								awardEmoji
-								createNote
-							  }
+								discussion {
+									id
+									replyId
+									createdAt
+								}
+								id
+								position {
+									x
+									y
+									newLine
+									newPath
+									oldLine
+									oldPath
+									filePath
+								}
+								project {
+									name
+								}
+								resolvable
+								resolved
+								resolvedAt
+								resolvedBy {
+									username
+									avatarUrl
+								}
+								system
+								systemNoteIconName
+								updatedAt
+								userPermissions {
+										readNote
+										resolveNote
+										awardEmoji
+										createNote
+									}
+								}
 							}
-						  }
-						  replyId
-						  resolvable
-						  resolved
-						  resolvedAt
-						  resolvedBy {
-							username
-							avatarUrl
-						  }
-						}					 
+							replyId
+							resolvable
+							resolved
+							resolvedAt
+							resolvedBy {
+									username
+									avatarUrl
+								}
+							} 
 						  }
 						}
 					  }
@@ -1163,16 +1112,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  avatarUrl
 					}
 					updatedAt
-					userPermissions{
+					userPermissions {
 					  adminNote
 					  awardEmoji
 					  createNote
 					  readNote
 					  resolveNote
-					  
-					}      
-				  }			
-			}
+					}
+				  }
+				}
 		  }`,
 			{
 				noteableId: request.noteableId,
@@ -1202,7 +1150,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		id: string;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
-		let noteId = request.id;
+		const noteId = request.id;
 		let actualPullRequestId;
 
 		if (request.pullRequestId) {
@@ -1210,14 +1158,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			actualPullRequestId = parsed.id;
 		}
 
-		const query = `mutation DestroyNote($id:ID!){
-			destroyNote(input:{id:$id}){
-			  clientMutationId 
-			  note {
-				id          
-			  }
-			}
-		  }`;
+		const query = `
+				mutation DestroyNote($id:ID!) {
+					destroyNote(input:{id:$id}) {
+			  			clientMutationId 
+			  				note {
+								id
+			  				}
+						}
+		  			}`;
 
 		await this.mutate<any>(query, {
 			id: noteId
@@ -1376,17 +1325,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		>(url);
 
 		return query.body.map(_ => {
-			const authorAvatarUrl = `https://www.gravatar.com/avatar/${Strings.md5(
-				_.author_email
-			)}?s=50&amp;d=identicon`;
+			const authorAvatarUrl = Strings.toGravatar(_.author_email);
 			let commiterAvatarUrl = authorAvatarUrl;
 			if (_.author_email !== _.committer_email) {
-				commiterAvatarUrl = `https://www.gravatar.com/avatar/${Strings.md5(
-					_.committer_email
-				)}?s=50&amp;d=identicon`;
+				commiterAvatarUrl = Strings.toGravatar(_.committer_email);
 			}
 			return {
-				//commitId: _.id,
+				// commitId: _.id,
 				abbreviatedOid: _.short_id,
 				author: {
 					name: _.author_name,
@@ -1436,10 +1381,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const iid = parsed.full.split("!")[1];
 
 		try {
-			let url: string | undefined = `/projects/${encodeURIComponent(
+			const url: string | undefined = `/projects/${encodeURIComponent(
 				projectFullPath
 			)}/merge_requests/${iid}/changes`;
-			//	do {
+
 			const apiResponse = await this.restGet<{
 				diff_refs: {
 					base_sha: string;
@@ -1466,8 +1411,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				};
 			});
 			changedFiles.push(...mappped);
-			// 	url = this.nextPage(apiResponse.response);
-			// } while (url);
 		} catch (err) {
 			Logger.error(err);
 			debugger;
@@ -1562,7 +1505,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const projectEvents = ((await this.restGet(
 			`/projects/${encodeURIComponent(projectFullPath)}/events`
 		))!.body as any[])
-			.filter(_ => _.target_iid.toString() === iid && _.action_name !== "commented on")
+			// exclude the "comment" events as those exist in discussion/notes
+			.filter(
+				_ =>
+					/*_.target_iid.toString() === iid && */ _.action_name !== "commented on" &&
+					_.action_name !== "pushed to"
+			)
 			.map(_ => {
 				return {
 					type: "merge-request",
