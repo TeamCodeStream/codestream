@@ -79,8 +79,8 @@ const PRLabel = {
 export const getPRLabel = createSelector(
 	(state: CodeStreamState) => state,
 	(state: CodeStreamState): LabelHash => {
-		return isConnected(state, { name: "gitlab" }) ||
-			isConnected(state, { name: "gitlab_enterprise" })
+		return isConnected(state, { id: "gitlab*com" }) ||
+			isConnected(state, { id: "gitlab/enterprise" })
 			? MRLabel
 			: PRLabel;
 	}

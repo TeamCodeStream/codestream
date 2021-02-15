@@ -118,7 +118,12 @@ export const CreatePullRequestPanel = props => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers, context, configs } = state;
 
-		const supportedPullRequestViewProviders = ["github*com", "github/enterprise"];
+		const supportedPullRequestViewProviders = [
+			"github*com",
+			"github/enterprise",
+			"gitlab*com",
+			"gitlab/enterprise"
+		];
 		const codeHostProviders = Object.keys(providers).filter(id =>
 			[
 				"github",
@@ -141,12 +146,12 @@ export const CreatePullRequestPanel = props => {
 			providers: providers,
 			codeHostProviders: codeHostProviders,
 			reviewId: context.createPullRequestReviewId,
-			isConnectedToGitHub: isConnected(state, { name: "github" }),
-			isConnectedToGitLab: isConnected(state, { name: "gitlab" }),
-			isConnectedToBitbucket: isConnected(state, { name: "bitbucket" }),
-			isConnectedToGitHubEnterprise: isConnected(state, { name: "github_enterprise" }),
-			isConnectedToGitLabEnterprise: isConnected(state, { name: "gitlab_enterprise" }),
-			isConnectedToBitbucketServer: isConnected(state, { name: "bitbucket_server" }),
+			isConnectedToGitHub: isConnected(state, { id: "github*com" }),
+			isConnectedToGitLab: isConnected(state, { id: "gitlab*com" }),
+			isConnectedToBitbucket: isConnected(state, { id: "bitbucket*org" }),
+			isConnectedToGitHubEnterprise: isConnected(state, { id: "github/enterprise" }),
+			isConnectedToGitLabEnterprise: isConnected(state, { id: "gitlab/enterprise" }),
+			isConnectedToBitbucketServer: isConnected(state, { id: "bitbucket/server" }),
 			prLabel: getPRLabel(state),
 			currentRepo: context.currentRepo,
 			ideName: state.ide.name,

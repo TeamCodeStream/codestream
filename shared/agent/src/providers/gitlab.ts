@@ -427,7 +427,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				defaultBranch: projectResponse.body.default_branch,
 				pullRequests: mergeRequestsResponse.body.map(_ => {
 					return {
-						id: _.iid.toString(),
+						id: JSON.stringify({ full: _.references.full, id: _.iid.toString() }),
+						iid: _.iid.toString(),
 						url: _.web_url,
 						baseRefName: _.target_branch,
 						headRefName: _.source_branch
@@ -1641,4 +1642,7 @@ interface GitLabMergeRequestInfoResponse {
 	web_url: string;
 	source_branch: string;
 	target_branch: string;
+	references: {
+		full: string;
+	};
 }
