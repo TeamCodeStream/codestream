@@ -143,6 +143,9 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		const ideName = state.ide.name && state.ide.name.toUpperCase();
 		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
 		return {
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
 			currentRepo: getProviderPullRequestRepo(state),
 			diffSelectorEnabled: !requiresDiffHunkView,
 			pullRequestFilesChangedMode: requiresDiffHunkView
@@ -209,22 +212,50 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		})();
 	}, [pr, filesChanged]);
 
-	const commentMap = React.useMemo(() => {
-		const map = {} as any;
-		const reviews =
-			pr && pr.timelineItems
-				? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
-				: [];
-		reviews.forEach(review => {
-			if (review.comments) {
-				review.comments.nodes.forEach(comment => {
-					if (!map[comment.path]) map[comment.path] = [];
-					map[comment.path].push({ review, comment });
+	const commentMap: {
+		[commentFilePath: string]: {
+			review: any;
+			comment: any;
+		}[];
+	} = React.useMemo(() => {
+		const map = {} as {
+			[commentFilePath: string]: {
+				review: any;
+				comment: any;
+			}[];
+		};
+		if (
+			derivedState.currentPullRequestProviderId === "github*com" ||
+			derivedState.currentPullRequestProviderId === "github/enterprise"
+		) {
+			const reviews =
+				pr && pr.timelineItems
+					? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
+					: [];
+			reviews.forEach(review => {
+				if (review.comments) {
+					review.comments.nodes.forEach(comment => {
+						if (!map[comment.path]) map[comment.path] = [];
+						map[comment.path].push({ review, comment });
+					});
+				}
+			});
+		} else if (
+			(pr && derivedState.currentPullRequestProviderId === "gitlab*com") ||
+			derivedState.currentPullRequestProviderId === "gitlab/enterprise"
+		) {
+			(pr as any)
+				.discussions!.nodes.filter(_ => _.notes)
+				.map(_ => _.notes.nodes[0])
+				.forEach(comment => {
+					if (comment.position && comment.position.newPath) {
+						if (!map[comment.position.newPath]) map[comment.position.newPath] = [];
+						map[comment.position.newPath].push({ review: {}, comment: comment });
+					}
 				});
-			}
-		});
+		}
 		return map;
-	}, [pr]);
+	}, [pr, derivedState.currentPullRequestProviderId]);
 
 	if (isLoading || isLoadingVisited)
 		return (

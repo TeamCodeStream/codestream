@@ -197,8 +197,14 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 							/>
 						) : (
 							<MarkdownText
-								text={comment.bodyHTML ? comment.bodyHTML : comment.bodyText}
-								isHtml={comment.bodyHTML ? true : false}
+								text={
+									comment.bodyHTML
+										? comment.bodyHTML
+										: comment.bodyHtml
+										? comment.bodyHtml
+										: comment.bodyText
+								}
+								isHtml={comment.bodyHTML || comment.bodyHtml ? true : false}
 								inline
 							/>
 						)}
