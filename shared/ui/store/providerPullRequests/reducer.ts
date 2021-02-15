@@ -24,14 +24,24 @@ export function reduceProviderPullRequests(
 	state = initialState,
 	action: ProviderPullRequestActions
 ): ProviderPullRequestsState {
+	let id;
+	if ((action as any).payload! && (action as any).payload.id) {
+		// need to get the underlying id here if we're part of a composite
+		// id, we need to parse it and get the _real_ id.
+		if ((action as any).payload.id.indexOf("{") === 0) {
+			id = JSON.parse((action as any).payload.id).id;
+		} else {
+			id = (action as any).payload.id;
+		}
+	}
 	switch (action.type) {
 		case ContextActionsType.SetCurrentPullRequest: {
-			if (action.payload && action.payload.id && action.payload.providerId) {
+			if (action.payload && id && action.payload.providerId) {
 				const newState = createNewObject(state, action);
-				newState[action.payload.providerId][action.payload.id] = {
-					...newState[action.payload.providerId][action.payload.id]
+				newState[action.payload.providerId][id] = {
+					...newState[action.payload.providerId][id]
 				};
-				newState[action.payload.providerId][action.payload.id].error = undefined;
+				newState[action.payload.providerId][id].error = undefined;
 				return {
 					myPullRequests: { ...state.myPullRequests },
 					pullRequests: newState
@@ -61,11 +71,11 @@ export function reduceProviderPullRequests(
 		case ProviderPullRequestActionsTypes.AddPullRequestFiles: {
 			const newState = createNewObject(state, action);
 			const files = {
-				...newState[action.payload.providerId][action.payload.id].files
+				...newState[action.payload.providerId][id].files
 			};
 			files[action.payload.commits] = action.payload.pullRequestFiles;
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				files
 			};
 			return {
@@ -75,8 +85,8 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestFiles: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				files: []
 			};
 			return {
@@ -86,8 +96,8 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCommits: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				commits: action.payload.pullRequestCommits
 			};
 			return {
@@ -97,8 +107,8 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestCommits: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				commits: []
 			};
 			return {
@@ -108,8 +118,8 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCollaborators: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				collaborators: action.payload.collaborators
 			};
 			return {
@@ -119,8 +129,8 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id],
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id],
 				conversations: action.payload.pullRequest,
 				conversationsLastFetch: Date.now()
 			};
@@ -131,10 +141,10 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestError: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id]
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id]
 			};
-			newState[action.payload.providerId][action.payload.id].error = undefined;
+			newState[action.payload.providerId][id].error = undefined;
 			return {
 				myPullRequests: { ...state.myPullRequests },
 				pullRequests: newState
@@ -142,10 +152,10 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestError: {
 			const newState = createNewObject(state, action);
-			newState[action.payload.providerId][action.payload.id] = {
-				...newState[action.payload.providerId][action.payload.id]
+			newState[action.payload.providerId][id] = {
+				...newState[action.payload.providerId][id]
 			};
-			newState[action.payload.providerId][action.payload.id].error = action.payload.error;
+			newState[action.payload.providerId][id].error = action.payload.error;
 			return {
 				myPullRequests: { ...state.myPullRequests },
 				pullRequests: newState
@@ -154,7 +164,6 @@ export function reduceProviderPullRequests(
 		case ProviderPullRequestActionsTypes.HandleDirectives: {
 			const newState = { ...state.pullRequests };
 			let providerId = action.payload.providerId;
-			let id = action.payload.id;
 			newState[providerId] = newState[action.payload.providerId] || {};
 			newState[providerId][id] = {
 				...newState[providerId][id]
@@ -243,146 +252,143 @@ export function reduceProviderPullRequests(
 							}
 						}
 					}
-
-					return {
-						myPullRequests: { ...state.myPullRequests },
-						pullRequests: newState
-					};
-				}
-
-				const pr = newState[providerId][id].conversations.repository.pullRequest;
-				for (const directive of action.payload.data) {
-					if (directive.type === "addReaction") {
-						if (directive.data.subject.__typename === "PullRequest") {
-							pr.reactionGroups
-								.find(_ => _.content === directive.data.reaction.content)
-								.users.nodes.push(directive.data.reaction.user);
-						} else {
-							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
-							if (node) {
-								node.reactionGroups
+				} else if (providerId === "github*com" || providerId === "github/enterprise") {
+					const pr = newState[providerId][id].conversations.repository.pullRequest;
+					for (const directive of action.payload.data) {
+						if (directive.type === "addReaction") {
+							if (directive.data.subject.__typename === "PullRequest") {
+								pr.reactionGroups
 									.find(_ => _.content === directive.data.reaction.content)
 									.users.nodes.push(directive.data.reaction.user);
+							} else {
+								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+								if (node) {
+									node.reactionGroups
+										.find(_ => _.content === directive.data.reaction.content)
+										.users.nodes.push(directive.data.reaction.user);
+								}
 							}
-						}
-					} else if (directive.type === "removeReaction") {
-						if (directive.data.subject.__typename === "PullRequest") {
-							pr.reactionGroups.find(
-								_ => _.content === directive.data.reaction.content
-							).users.nodes = pr.reactionGroups
-								.find(_ => _.content === directive.data.reaction.content)
-								.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
-						} else {
-							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
-							if (node) {
-								node.reactionGroups.find(
+						} else if (directive.type === "removeReaction") {
+							if (directive.data.subject.__typename === "PullRequest") {
+								pr.reactionGroups.find(
 									_ => _.content === directive.data.reaction.content
-								).users.nodes = node.reactionGroups
+								).users.nodes = pr.reactionGroups
 									.find(_ => _.content === directive.data.reaction.content)
 									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+							} else {
+								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+								if (node) {
+									node.reactionGroups.find(
+										_ => _.content === directive.data.reaction.content
+									).users.nodes = node.reactionGroups
+										.find(_ => _.content === directive.data.reaction.content)
+										.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+								}
 							}
-						}
-					} else if (directive.type === "removeNode") {
-						pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
-					} else if (directive.type === "updateNode") {
-						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
-						if (node) {
-							for (const key in directive.data) {
-								node[key] = directive.data[key];
+						} else if (directive.type === "removeNode") {
+							pr.timelineItems.nodes = pr.timelineItems.nodes.filter(
+								_ => _.id !== directive.data.id
+							);
+						} else if (directive.type === "updateNode") {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+							if (node) {
+								for (const key in directive.data) {
+									node[key] = directive.data[key];
+								}
 							}
-						}
-					} else if (directive.type === "addNode") {
-						if (!directive.data.id) continue;
-						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
-						if (!node) {
-							pr.timelineItems.nodes.push(directive.data);
-						}
-					} else if (directive.type === "addNodes") {
-						for (const newNode of directive.data) {
-							if (!newNode.id) continue;
-							const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+						} else if (directive.type === "addNode") {
+							if (!directive.data.id) continue;
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
 							if (!node) {
-								pr.timelineItems.nodes.push(newNode);
+								pr.timelineItems.nodes.push(directive.data);
 							}
-						}
-					} else if (directive.type === "updatePullRequestReviewComment") {
-						let done = false;
-						for (const edge of pr.reviewThreads.edges) {
-							if (!edge.node.comments) continue;
-							for (const comment of edge.node.comments.nodes) {
-								if (comment.id === directive.data.id) {
-									for (const key in directive.data) {
-										comment[key] = directive.data[key];
+						} else if (directive.type === "addNodes") {
+							for (const newNode of directive.data) {
+								if (!newNode.id) continue;
+								const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+								if (!node) {
+									pr.timelineItems.nodes.push(newNode);
+								}
+							}
+						} else if (directive.type === "updatePullRequestReviewComment") {
+							let done = false;
+							for (const edge of pr.reviewThreads.edges) {
+								if (!edge.node.comments) continue;
+								for (const comment of edge.node.comments.nodes) {
+									if (comment.id === directive.data.id) {
+										for (const key in directive.data) {
+											comment[key] = directive.data[key];
+										}
+										done = true;
 									}
-									done = true;
+									if (done) break;
 								}
 								if (done) break;
 							}
-							if (done) break;
-						}
-					} else if (directive.type === "updatePullRequestReviewCommentNode") {
-						const node = pr.timelineItems.nodes.find(
-							_ => _.id === directive.data.pullRequestReview.id
-						);
-						if (node && node.comments) {
-							for (const comment of node.comments.nodes) {
-								if (comment.id !== directive.data.id) continue;
-								for (const key in directive.data) {
-									comment[key] = directive.data[key];
-								}
-								break;
-							}
-						}
-					} else if (directive.type === "updatePullRequestReview") {
-						const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
-						if (node) {
-							for (const key in directive.data) {
-								node[key] = directive.data[key];
-							}
-						}
-					} else if (directive.type === "updatePullRequestReviewers") {
-						pr.reviewRequests.nodes.length = 0;
-						for (const data of directive.data) {
-							pr.reviewRequests.nodes.push(data);
-						}
-					} else if (directive.type === "updatePullRequest") {
-						for (const key in directive.data) {
-							if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
-								// clear out the array, but keep its reference
-								pr[key].nodes.length = 0;
-								for (const n of directive.data[key].nodes) {
-									pr[key].nodes.push(n);
-								}
-							} else {
-								pr[key] = directive.data[key];
-							}
-						}
-					} else if (
-						directive.type === "resolveReviewThread" ||
-						directive.type === "unresolveReviewThread"
-					) {
-						const nodeWrapper = pr.reviewThreads.edges.find(
-							_ => _.node.id === directive.data.threadId
-						);
-						if (nodeWrapper && nodeWrapper.node) {
-							for (const key in directive.data) {
-								nodeWrapper.node[key] = directive.data[key];
-							}
-						}
-
-						const reviews = pr.timelineItems.nodes.filter(
-							_ => _.__typename === "PullRequestReview"
-						);
-						if (reviews) {
-							for (const review of reviews) {
-								for (const comment of review.comments.nodes) {
-									if (comment.threadId !== directive.data.threadId) continue;
-
+						} else if (directive.type === "updatePullRequestReviewCommentNode") {
+							const node = pr.timelineItems.nodes.find(
+								_ => _.id === directive.data.pullRequestReview.id
+							);
+							if (node && node.comments) {
+								for (const comment of node.comments.nodes) {
+									if (comment.id !== directive.data.id) continue;
 									for (const key in directive.data) {
 										comment[key] = directive.data[key];
 									}
-
 									break;
+								}
+							}
+						} else if (directive.type === "updatePullRequestReview") {
+							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+							if (node) {
+								for (const key in directive.data) {
+									node[key] = directive.data[key];
+								}
+							}
+						} else if (directive.type === "updatePullRequestReviewers") {
+							pr.reviewRequests.nodes.length = 0;
+							for (const data of directive.data) {
+								pr.reviewRequests.nodes.push(data);
+							}
+						} else if (directive.type === "updatePullRequest") {
+							for (const key in directive.data) {
+								if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
+									// clear out the array, but keep its reference
+									pr[key].nodes.length = 0;
+									for (const n of directive.data[key].nodes) {
+										pr[key].nodes.push(n);
+									}
+								} else {
+									pr[key] = directive.data[key];
+								}
+							}
+						} else if (
+							directive.type === "resolveReviewThread" ||
+							directive.type === "unresolveReviewThread"
+						) {
+							const nodeWrapper = pr.reviewThreads.edges.find(
+								_ => _.node.id === directive.data.threadId
+							);
+							if (nodeWrapper && nodeWrapper.node) {
+								for (const key in directive.data) {
+									nodeWrapper.node[key] = directive.data[key];
+								}
+							}
+
+							const reviews = pr.timelineItems.nodes.filter(
+								_ => _.__typename === "PullRequestReview"
+							);
+							if (reviews) {
+								for (const review of reviews) {
+									for (const comment of review.comments.nodes) {
+										if (comment.threadId !== directive.data.threadId) continue;
+
+										for (const key in directive.data) {
+											comment[key] = directive.data[key];
+										}
+
+										break;
+									}
 								}
 							}
 						}
@@ -404,19 +410,44 @@ const getRepos = (state: CodeStreamState) => Object.values(state.repos);
 export const getProviderPullRequests = (state: CodeStreamState) => state.providerPullRequests;
 export const getMyPullRequests = (state: CodeStreamState) =>
 	state.providerPullRequests.myPullRequests;
-const currentPullRequest = (state: CodeStreamState) => state.context.currentPullRequest;
-const currentPullRequestId = (state: CodeStreamState) =>
-	state.context.currentPullRequest ? state.context.currentPullRequest.id : undefined;
-const currentPullRequestProviderId = (state: CodeStreamState) =>
-	state.context.currentPullRequest ? state.context.currentPullRequest.providerId : undefined;
+
+/**
+ * Gets the raw id of the pullRequest/mergeRequest as set by setCurrentPullRequest
+ *
+ * */
+export const getPullRequestId = createSelector(
+	(state: CodeStreamState) => state.context,
+	(context: ContextState) => {
+		return context.currentPullRequest ? context.currentPullRequest.id : "";
+	}
+);
+
+/**
+ * Gets the exact, parsed id of the pullRequest/mergeRequest. GitLab has a multi-id
+ * setup, and this returns only the "id" part, or if GitHub, returns the value asis.
+ *
+ * */
+export const getPullRequestExactId = createSelector(
+	(state: CodeStreamState) => state.context,
+	(context: ContextState) => {
+		if (!context.currentPullRequest) return "";
+		if (
+			context.currentPullRequest.providerId === "gitlab*com" ||
+			context.currentPullRequest.providerId === "gitlab/enterprise"
+		) {
+			return JSON.parse(context.currentPullRequest.id).id;
+		}
+		return context.currentPullRequest.id;
+	}
+);
 
 /**
  * Gets the PR object for the currentPullRequestId
  */
 export const getCurrentProviderPullRequest = createSelector(
 	getProviderPullRequests,
-	currentPullRequestId,
-	(providerPullRequests, id) => {
+	getPullRequestExactId,
+	(providerPullRequests, id: string) => {
 		if (!id) return undefined;
 		for (const providerPullRequest of Object.values(providerPullRequests)) {
 			for (const pullRequests of Object.values(providerPullRequest)) {
@@ -428,6 +459,7 @@ export const getCurrentProviderPullRequest = createSelector(
 		return undefined;
 	}
 );
+
 export const getCurrentProviderPullRequestLastUpdated = createSelector(
 	getCurrentProviderPullRequest,
 	providerPullRequest => {
@@ -538,24 +570,6 @@ export const getProviderPullRequestRepo2 = createSelector(
 			console.error(error);
 		}
 		return currentRepo;
-	}
-);
-
-export const getPullRequestId = createSelector(
-	(state: CodeStreamState) => state.context,
-	getCurrentProviderPullRequest,
-	(context: ContextState, pr: any) => {
-		if (!context.currentPullRequest || !pr || !pr.conversations) return "";
-		if (
-			context.currentPullRequest.providerId === "gitlab*com" ||
-			context.currentPullRequest.providerId === "gitlab/enterprise"
-		) {
-			return JSON.stringify({
-				id: pr.conversations.project.mergeRequest.id,
-				full: pr.conversations.project.mergeRequest.references.full
-			});
-		}
-		return pr.conversations.repository.pullRequest.id;
 	}
 );
 

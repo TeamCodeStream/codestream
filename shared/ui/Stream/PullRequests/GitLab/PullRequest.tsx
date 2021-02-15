@@ -8,7 +8,8 @@ import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
 	getProviderPullRequestRepo2,
-	isAnHourOld
+	getPullRequestExactId,
+	getPullRequestId
 } from "../../../store/providerPullRequests/reducer";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
 
@@ -74,6 +75,7 @@ import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { PullRequestBottomComment } from "../../PullRequestBottomComment";
 import { PropsWithTheme } from "@codestream/webview/src/themes";
+import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 
 const Root = styled.div`
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
@@ -185,9 +187,10 @@ export const PullRequest = () => {
 		const team = state.teams[state.context.currentTeamId];
 		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
+		const currentPullRequestIdExact = getPullRequestExactId(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
-			viewPreference: getPreferences(state).pullRequestView || "auto",
+			viewPreference: (getPreferences(state) || {}).pullRequestView || "auto",
 			providerPullRequests: providerPullRequests,
 			reviewsState: state.reviews,
 			reviews: reviewSelectors.getAllReviews(state),
@@ -195,9 +198,8 @@ export const PullRequest = () => {
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
 				: undefined,
-			currentPullRequestId: state.context.currentPullRequest
-				? state.context.currentPullRequest.id
-				: undefined,
+			currentPullRequestId: getPullRequestId(state),
+			currentPullRequestIdExact: currentPullRequestIdExact,
 			currentPullRequestCommentId: state.context.currentPullRequest
 				? state.context.currentPullRequest.commentId
 				: undefined,
@@ -211,29 +213,14 @@ export const PullRequest = () => {
 			currentRepo: getProviderPullRequestRepo2(state)
 		};
 	});
+
 	const [activeTab, setActiveTab] = useState(1);
 	const [ghRepo, setGhRepo] = useState<any>(EMPTY_HASH);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
-	const [pr, setPr] = useState<{
-		providerId: string;
-		id: string;
-		iid: string;
-		title: string;
-		createdAt: string;
-		webUrl: string;
-		state: string;
-		author: {
-			name: string;
-			username: string;
-		};
-		commitCount: string;
-		discussions: {
-			nodes: {}[];
-		};
-	}>();
+
 	const [openRepos, setOpenRepos] = useState<any[]>(EMPTY_ARRAY);
 	const [editingTitle, setEditingTitle] = useState(false);
 	const [savingTitle, setSavingTitle] = useState(false);
@@ -267,11 +254,14 @@ export const PullRequest = () => {
 		if (pr) dispatch(setCurrentPullRequest(pr.providerId, pr.id));
 	};
 
-	const _assignState = pr => {
-		if (!pr) return;
+	const _assignState = _pr => {
+		if (!_pr) return;
+		if (!_pr.project) {
+			console.warn("possible bad request");
+		}
+		// TODO is this needed??
 		//setGhRepo(pr.repository);
-		setPr(pr.project.mergeRequest);
-		setTitle(pr.project.mergeRequest.title);
+		setTitle(_pr.project.mergeRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
 		setIsLoadingPR(false);
@@ -280,7 +270,7 @@ export const PullRequest = () => {
 
 	const getOpenRepos = async () => {
 		const { reposState } = derivedState;
-		const response = await HostApi.instance.send(GetReposScmRequestType, {
+		const response: GetReposScmResponse = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true
 		});
@@ -310,22 +300,42 @@ export const PullRequest = () => {
 		const providerPullRequests =
 			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
 		if (providerPullRequests) {
-			let data = providerPullRequests[derivedState.currentPullRequestId!];
+			let data = providerPullRequests[derivedState.currentPullRequestIdExact!];
 			if (data) {
-				if (isAnHourOld(data.conversationsLastFetch)) {
-					console.warn(`pr id=${derivedState.currentPullRequestId} is too old, resetting`);
-					// setPR to undefined to trigger loader
-					setPr(undefined);
-				} else {
-					_assignState(data.conversations);
-				}
+				_assignState(data.conversations);
+			} else {
+				console.warn(`could not find match for idExact=${derivedState.currentPullRequestIdExact}`);
 			}
 		}
 	}, [
 		derivedState.currentPullRequestProviderId,
-		derivedState.currentPullRequestId,
+		derivedState.currentPullRequestIdExact,
 		derivedState.providerPullRequests
 	]);
+
+	const pr: {
+		providerId: string;
+		id: string;
+		iid: string;
+		title: string;
+		createdAt: string;
+		webUrl: string;
+		state: string;
+		author: {
+			name: string;
+			username: string;
+		};
+		commitCount: string;
+		discussions: {
+			nodes: {}[];
+		};
+	} = useMemo(() => {
+		return derivedState.currentPullRequest &&
+			derivedState.currentPullRequest.conversations &&
+			derivedState.currentPullRequest.conversations.project
+			? derivedState.currentPullRequest.conversations.project.mergeRequest
+			: undefined;
+	}, [derivedState.currentPullRequest]);
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
@@ -339,7 +349,6 @@ export const PullRequest = () => {
 		)) as any;
 		setGeneralError("");
 		if (response.error) {
-			// FIXME do something with it
 			setIsLoadingPR(false);
 			setIsLoadingMessage("");
 			setGeneralError(response.error);
