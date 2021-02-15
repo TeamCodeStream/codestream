@@ -1209,6 +1209,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						currentPullRequestProviderId === "github*com" ||
 						currentPullRequestProviderId === "github/enterprise" ? (
 							<PullRequest />
+						) : currentPullRequestProviderId === "gitlab*com" ||
+						  currentPullRequestProviderId === "gitlab/enterprise" ? (
+							<GitLabPullRequest />
 						) : (
 							<div id="oops">
 								<form className="standard-form">
