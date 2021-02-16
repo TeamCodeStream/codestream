@@ -970,6 +970,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
 			};
 
+			response.project.mergeRequest.discussions.nodes.forEach((_: any) => {
+				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
+					_.notes.nodes.forEach((n: any) => {
+						if (n.discussion && n.discussion.id) {
+							// hijack the "databaseId" that github uses
+							n.databaseId = n.discussion.id
+								.replace("gid://gitlab/DiffDiscussion/", "")
+								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
+						}
+					});
+					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes.nodes[0].id);
+				}
+			});
 			this._pullRequestCache.set(actualPullRequestId, response);
 
 			(
@@ -1021,6 +1034,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// 	response.repository.resourcePath,
 		// 	""
 		// );
+	}
+
+	@log()
+	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
+		let projectFullPath;
+		let iid;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			projectFullPath = parsed.full.split("!")[0];
+			iid = parsed.full.split("!")[1];
+		}
+
+		const data = await this.restPost(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions/${
+				request.commentId
+			}/notes`,
+			{
+				body: request.text
+			}
+		);
+		return data.body;
 	}
 
 	@log()
