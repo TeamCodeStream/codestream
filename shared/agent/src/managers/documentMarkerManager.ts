@@ -351,7 +351,7 @@ export class DocumentMarkerManager {
 						type: CodemarkType.Comment,
 						externalContent: {
 							provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
-							externalId: pr.id,
+							externalId: pr.idComputed,
 							externalChildId: comment.id,
 							externalType: "pr",
 							title: comment.body,

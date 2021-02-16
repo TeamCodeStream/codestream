@@ -435,7 +435,12 @@ export const getPullRequestExactId = createSelector(
 			context.currentPullRequest.providerId === "gitlab*com" ||
 			context.currentPullRequest.providerId === "gitlab/enterprise"
 		) {
-			return JSON.parse(context.currentPullRequest.id).id;
+			try {
+				return JSON.parse(context.currentPullRequest.id).id;
+			} catch (ex) {
+				console.warn(ex, context.currentPullRequest);
+				throw ex;
+			}
 		}
 		return context.currentPullRequest.id;
 	}

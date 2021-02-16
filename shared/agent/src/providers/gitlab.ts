@@ -970,6 +970,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
 			};
 
+			const mergeRequestFullId = JSON.stringify({
+				id: response.project.mergeRequest.id,
+				full: response.project.mergeRequest.references.full
+			});
+			response.project.mergeRequest.idComputed = mergeRequestFullId;
 			response.project.mergeRequest.discussions.nodes.forEach((_: any) => {
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
 					_.notes.nodes.forEach((n: any) => {
@@ -978,9 +983,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							n.databaseId = n.discussion.id
 								.replace("gid://gitlab/DiffDiscussion/", "")
 								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
+							n.mergeRequestIdComputed = mergeRequestFullId;
 						}
 					});
 					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes.nodes[0].id);
+					// remove all the replies from the parent (they're now on replies)
+					_.notes.nodes.length = 1;
 				}
 			});
 			this._pullRequestCache.set(actualPullRequestId, response);
