@@ -352,6 +352,11 @@ export const PullRequest = () => {
 
 	const pr: {
 		providerId: string;
+		pendingReview: {
+			comments: {
+				totalCount: number;
+			};
+		};
 		idComputed: string;
 		isDraft?: boolean;
 		id: string;
@@ -372,6 +377,9 @@ export const PullRequest = () => {
 		changesCount: number;
 		discussions: {
 			nodes: {}[];
+		};
+		files: {
+			nodes: any[];
 		};
 	} = useMemo(() => {
 		return derivedState.currentPullRequest &&
@@ -571,6 +579,49 @@ export const PullRequest = () => {
 							<span className="wide-text">Changes</span>
 							<PRBadge>{(pr && pr.changesCount) || 0}</PRBadge>
 						</Tab>
+						{pr.pendingReview ? (
+							<PRSubmitReviewButton>
+								<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
+									Finish<span className="wide-text"> review</span>
+									<PRBadge>
+										{pr.pendingReview.comments ? pr.pendingReview.comments.totalCount : 0}
+									</PRBadge>
+									<Icon name="chevron-down" />
+								</Button>
+								{finishReviewOpen && (
+									<PullRequestFinishReview
+										pr={pr as any}
+										mode="dropdown"
+										fetch={fetch}
+										setIsLoadingMessage={setIsLoadingMessage}
+										setFinishReviewOpen={setFinishReviewOpen}
+									/>
+								)}
+							</PRSubmitReviewButton>
+						) : (
+							<PRPlusMinus>
+								<span className="added">
+									+
+									{!pr.files
+										? 0
+										: pr.files.nodes
+												.map(_ => _.additions)
+												.reduce((acc, val) => acc + val, 0)
+												.toString()
+												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+								</span>{" "}
+								<span className="deleted">
+									-
+									{!pr.files
+										? 0
+										: pr.files.nodes
+												.map(_ => _.deletions)
+												.reduce((acc, val) => acc + val, 0)
+												.toString()
+												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+								</span>
+							</PRPlusMinus>
+						)}
 					</Tabs>
 				</PRHeader>
 				{!derivedState.composeCodemarkActive && (

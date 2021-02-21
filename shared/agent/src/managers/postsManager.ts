@@ -1031,7 +1031,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							pullRequestId: parsedUri.context.pullRequest.id,
 							// pullRequestReviewId will be looked up
 							text: request.attributes.text || "",
+							leftSha: parsedUri.leftSha,
+							sha: parsedUri.rightSha,
 							filePath: parsedUri.path,
+							startLine: startLine,
 							position: lineWithMetadata.position
 						}
 					});

@@ -71,7 +71,10 @@ export const PullRequestInlineComment = styled((props: Props) => {
 			api("createPullRequestInlineReviewComment", {
 				filePath: filename,
 				position: lineOffsetInHunk,
-				text: replaceHtml(text)
+				startLine: lineNumber,
+				text: replaceHtml(text),
+				leftSha: pr.baseRefOid,
+				sha: pr.headRefOid
 			})
 		);
 		setText("");

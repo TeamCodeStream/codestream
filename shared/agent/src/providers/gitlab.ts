@@ -813,15 +813,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	_pullRequestCache: Map<
 		string,
-		{
-			project: {
-				name: string;
-				mergeRequest: {
-					id: string;
-					iid: string;
-				};
-			};
-		}
+		// TODO fix this up -- there's a definition below
+		any
+		// {
+		// 	project: {
+		// 		name: string;
+		// 		mergeRequest: {
+		// 			id: string;
+		// 			iid: string;
+		// 		};
+		// 	};
+		// }
 	> = new Map();
 
 	@log()
@@ -848,7 +850,67 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		let response = {} as any;
+		let response = {} as {
+			project: {
+				mergeRequest: {
+					baseRefName: string;
+					baseRefOid: string;
+					createdAt: string;
+					diffRefs: any;
+					discussions: {
+						nodes: {
+							createdAt: string;
+							id: string;
+							_pending?: boolean;
+							notes?: {
+								nodes: {
+									id: string;
+									author: {
+										name: string;
+										username: string;
+										avatarUrl: string;
+									};
+									body: string;
+									position: any;
+									createdAt: string;
+								}[];
+							};
+						}[];
+					};
+					headRefName: string;
+					headRefOid: string;
+					id: string;
+					idComputed: string;
+					iid: string;
+					sourceBranch: string;
+					targetBranch: string;
+					title: string;
+					webUrl: string;
+					state: string;
+					mergedAt: string;
+					reference: string;
+					repository: {
+						name: string;
+						nameWithOwner: string;
+						url: string;
+					};
+					projectId: string;
+					sourceProject: any;
+					url: string;
+					merged: boolean;
+					references: {
+						full: string;
+					};
+
+					providerId: string;
+					pendingReview: {
+						comments: {
+							totalCount: number;
+						};
+					};
+				};
+			};
+		};
 		try {
 			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
 				project(fullPath: $fullPath) {
@@ -979,7 +1041,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
 					_.notes.nodes.forEach((n: any) => {
 						if (n.discussion && n.discussion.id) {
-							// hijack the "databaseId" that github uses
+							// HACK hijack the "databaseId" that github uses
 							n.databaseId = n.discussion.id
 								.replace("gid://gitlab/DiffDiscussion/", "")
 								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
@@ -992,6 +1054,43 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			});
 			this._pullRequestCache.set(actualPullRequestId, response);
+			const pendingReview = this._pendingReviewStore.get(response.project.mergeRequest.id);
+			if (pendingReview) {
+				response.project.mergeRequest.pendingReview = {
+					comments: {
+						totalCount: pendingReview.length
+					}
+				};
+				// TODO figure out IDs, dates, author
+				response.project.mergeRequest.discussions.nodes.push({
+					id: "undefined",
+					_pending: true,
+					createdAt: new Date().toISOString(),
+					notes: {
+						nodes: pendingReview.map(_ => {
+							return {
+								_pending: true,
+								// TODO get the real author
+								author: {
+									name: "Pending",
+									username: "pending",
+									avatarUrl: "https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png"
+								},
+								state: "PENDING",
+								body: _.text,
+								bodyText: _.text,
+								createdAt: new Date().toISOString(),
+								id: "undefined",
+								position: {
+									oldPath: _.filePath,
+									newPath: _.filePath,
+									newLine: _.startLine
+								}
+							};
+						})
+					}
+				});
+			}
 
 			(
 				await Promise.all([
@@ -1063,6 +1162,130 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		);
 		return data.body;
+	}
+
+	private _pendingReviewStore: Map<string, any[]> = new Map<string, any[]>();
+
+	@log()
+	async getPullRequestReviewId(request: { pullRequestId: string }) {
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+		}
+		const existing = this._pendingReviewStore.has(actualPullRequestId);
+		return existing;
+	}
+
+	async createPullRequestInlineReviewComment(request: {
+		pullRequestId: string;
+		text: string;
+		filePath: string;
+		startLine?: number;
+		position: number;
+		leftSha?: string;
+		sha?: string;
+	}) {
+		const result = await this.createPullRequestReviewComment(request);
+		return result;
+	}
+
+	async createPullRequestReviewComment(request: {
+		pullRequestId: string;
+		pullRequestReviewId?: string;
+		text: string;
+		filePath?: string;
+		startLine?: number;
+		position?: number;
+		leftSha?: string;
+		sha?: string;
+	}) {
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+		}
+
+		if (this._pendingReviewStore.has(actualPullRequestId)) {
+			const existingPendingReviews = this._pendingReviewStore.get(actualPullRequestId);
+			let newPendingReviews = existingPendingReviews || [];
+			newPendingReviews.push({
+				request
+			});
+			this._pendingReviewStore.set(actualPullRequestId, newPendingReviews);
+		} else {
+			this._pendingReviewStore.set(actualPullRequestId, [request]);
+		}
+
+		this._pullRequestCache.delete(actualPullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: actualPullRequestId,
+			filePath: request.filePath
+		});
+
+		return true;
+	}
+
+	async getPendingReview(request: { pullRequestId: string }) {
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+		}
+		return this._pendingReviewStore.has(actualPullRequestId);
+	}
+
+	async submitReview(request: {
+		pullRequestId: string;
+		text: string;
+		eventType: string;
+		// used with old servers
+		pullRequestReviewId?: string;
+	}) {
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+		}
+
+		// TODO add directives
+		if (!request.eventType) {
+			request.eventType = "COMMENT";
+		}
+		if (
+			request.eventType !== "COMMENT" &&
+			request.eventType !== "APPROVE" &&
+			// for some reason I cannot get DISMISS to work...
+			// request.eventType !== "DISMISS" &&
+			request.eventType !== "REQUEST_CHANGES"
+		) {
+			throw new Error("Invalid eventType");
+		}
+
+		const existingReviewComments = this._pendingReviewStore.get(actualPullRequestId);
+		if (existingReviewComments?.length) {
+			for (const comment of existingReviewComments) {
+				try {
+					await this.createPullRequestInlineComment({
+						...comment,
+						pullRequestId: request.pullRequestId
+					});
+				} catch (ex) {
+					Logger.warn(ex, "Failed to add commit");
+				}
+			}
+			this._pendingReviewStore.set(actualPullRequestId, []);
+		}
+
+		if (request.text) {
+			await this.createPullRequestComment({
+				pullRequestId: request.pullRequestId,
+				text: request.text,
+				noteableId: actualPullRequestId
+			});
+		}
+
+		return true;
 	}
 
 	@log()
@@ -1482,14 +1705,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// };
 	}
 
-	async getPullRequestReviewId(request: { pullRequestId: string }) {
-		//TODO?
-		return undefined;
-	}
-
 	async createPullRequestInlineComment(request: {
 		pullRequestId: string;
 		text: string;
+		sha?: string;
 		leftSha: string;
 		rightSha: string;
 		filePath: string;
@@ -1500,7 +1719,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const result = await this.createCommitComment({
 			...request,
 			path: request.filePath,
-			sha: request.rightSha
+			sha: request.sha || request.rightSha
 		});
 		return result;
 	}

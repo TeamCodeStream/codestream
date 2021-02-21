@@ -248,7 +248,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				.discussions!.nodes.filter(_ => _.notes)
 				.map(_ => _.notes.nodes[0])
 				.forEach(comment => {
-					if (comment.position && comment.position.newPath) {
+					if (comment && comment.position && comment.position.newPath) {
 						if (!map[comment.position.newPath]) map[comment.position.newPath] = [];
 						map[comment.position.newPath].push({ review: {}, comment: comment });
 					}
