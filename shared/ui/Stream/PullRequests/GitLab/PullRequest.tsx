@@ -696,6 +696,13 @@ export const PullRequest = () => {
 												<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
 													<PRBranch>{pr.sourceBranch}</PRBranch>
 												</Link>{" "}
+												<Icon
+													name="copy"
+													className="clickable"
+													title="Copy source branch"
+													placement="top"
+													onClick={e => copy(pr.sourceBranch)}
+												/>{" "}
 												<b>into</b>{" "}
 												<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
 													<PRBranch>{pr.targetBranch}</PRBranch>
@@ -706,7 +713,7 @@ export const PullRequest = () => {
 													{isLoadingBranch ? (
 														<Icon name="sync" className="spin" />
 													) : (
-														<span onClick={checkout}>
+														<span onClick={cantCheckoutReason ? () => {} : checkout}>
 															<Tooltip
 																title={
 																	<>
