@@ -46,6 +46,7 @@ import { Provider, IntegrationButtons } from "./IntegrationsPanel";
 import { usePrevious } from "../utilities/hooks";
 import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { getPRLabel } from "../store/providers/reducer";
 const Root = styled.div`
 	height: 100%;
 	.pr-row {
@@ -177,7 +178,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
-			hideLabels: preferences.pullRequestQueryHideLabels
+			hideLabels: preferences.pullRequestQueryHideLabels,
+			prLabel: getPRLabel(state)
 		};
 	}, shallowEqual);
 
@@ -475,7 +477,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			{(derivedState.isPRSupportedCodeHostConnected || hasPRSupportedRepos) && (
 				<>
 					<PaneHeader
-						title="Pull Requests"
+						title={derivedState.prLabel.PullRequests}
 						id={WebviewPanels.OpenPullRequests}
 						isLoading={isLoadingPRs}
 						count={totalPRs}
@@ -497,7 +499,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								dispatch(openPanel(WebviewPanels.NewPullRequest));
 							}}
 							name="plus"
-							title="New Pull Request"
+							title={`New ${derivedState.prLabel.PullRequest}`}
 							placement="bottom"
 							delay={1}
 						/>
