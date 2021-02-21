@@ -78,6 +78,7 @@ import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { DropdownButton } from "../../Review/DropdownButton";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 const Root = styled.div`
 	span.narrow-text {
@@ -371,6 +372,7 @@ export const PullRequest = () => {
 			username: string;
 			avatarUrl: string;
 		};
+		headRefName: string;
 		sourceBranch: string;
 		targetBranch: string;
 		commitCount: number;
@@ -380,6 +382,11 @@ export const PullRequest = () => {
 		};
 		files: {
 			nodes: any[];
+		};
+		repository: {
+			name: string;
+			nameWithOwner: string;
+			url: string;
 		};
 	} = useMemo(() => {
 		return derivedState.currentPullRequest &&
@@ -425,6 +432,51 @@ export const PullRequest = () => {
 			)
 		)) as any;
 		_assignState(response);
+	};
+
+	const cantCheckoutReason = useMemo(() => {
+		if (pr) {
+			const currentRepo = openRepos.find(_ => _.name === pr.repository.name);
+			if (!currentRepo) {
+				return `You don't have the ${pr.repository.name} repo open in your IDE`;
+			}
+			if (currentRepo.currentBranch == pr.headRefName) {
+				return `You are on the ${pr.headRefName} branch`;
+			}
+			return "";
+		} else {
+			return "PR not loaded";
+		}
+	}, [pr, openRepos, currentRepoChanged]);
+
+	const checkout = async () => {
+		if (!pr) return;
+		setIsLoadingBranch(true);
+		const result = await HostApi.instance.send(SwitchBranchRequestType, {
+			branch: pr!.headRefName,
+			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
+		});
+		if (result.error) {
+			console.warn("ERROR FROM SET BRANCH: ", result.error);
+			confirmPopup({
+				title: "Git Error",
+				className: "wide",
+				message: (
+					<div className="monospace" style={{ fontSize: "11px" }}>
+						{result.error}
+					</div>
+				),
+				centered: false,
+				buttons: [{ label: "OK", className: "control-button" }]
+			});
+			setIsLoadingBranch(false);
+			return;
+		} else {
+			setIsLoadingBranch(false);
+			getOpenRepos();
+		}
+		// i don't think we need to reload here, do we?
+		// fetch("Reloading...");
 	};
 
 	const __onDidRender = functions => {
@@ -640,25 +692,65 @@ export const PullRequest = () => {
 										<OutlineBox>
 											<Icon name="pull-request" className="bigger" />
 											<div>
-												<b>Request to merge</b> <PRBranch>{pr.sourceBranch}</PRBranch> <b>into</b>{" "}
-												<PRBranch>{pr.targetBranch}</PRBranch>
+												<b>Request to merge</b>{" "}
+												<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
+													<PRBranch>{pr.sourceBranch}</PRBranch>
+												</Link>{" "}
+												<b>into</b>{" "}
+												<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
+													<PRBranch>{pr.targetBranch}</PRBranch>
+												</Link>
 											</div>
 											<div className="right">
 												<Button className="margin-right-10" variant="secondary">
-													<Icon
-														className="narrow-text"
-														name="git-branch"
-														title="Check out branch"
-														placement="top"
-													/>
-													<span className="wide-text">Check out branch</span>
+													{isLoadingBranch ? (
+														<Icon name="sync" className="spin" />
+													) : (
+														<span onClick={checkout}>
+															<Tooltip
+																title={
+																	<>
+																		Checkout Branch
+																		{cantCheckoutReason && (
+																			<div className="subtle smaller" style={{ maxWidth: "200px" }}>
+																				Disabled: {cantCheckoutReason}
+																			</div>
+																		)}
+																	</>
+																}
+																trigger={["hover"]}
+																placement="top"
+															>
+																<span>
+																	<Icon className="narrow-text" name="git-branch" />
+																	<span className="wide-text">Check out branch</span>
+																</span>
+															</Tooltip>
+														</span>
+													)}
 												</Button>
 												<DropdownButton
 													title="Download as"
 													variant="secondary"
 													items={[
-														{ label: "Email patches", key: "email" },
-														{ label: "Plain diff", key: "plain" }
+														{
+															label: "Email patches",
+															key: "email",
+															action: () => {
+																HostApi.instance.send(OpenUrlRequestType, {
+																	url: `${pr.repository.url}/-/merge_requests/${pr.iid}.patch`
+																});
+															}
+														},
+														{
+															label: "Plain diff",
+															key: "plain",
+															action: () => {
+																HostApi.instance.send(OpenUrlRequestType, {
+																	url: `${pr.repository.url}/-/merge_requests/${pr.iid}.diff`
+																});
+															}
+														}
 													]}
 												>
 													<Icon name="download" title="Download..." placement="top" />
