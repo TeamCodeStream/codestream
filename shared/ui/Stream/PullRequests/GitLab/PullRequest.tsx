@@ -594,7 +594,12 @@ export const PullRequest = () => {
 											</div>
 											<div className="right">
 												<Button className="margin-right-10" variant="secondary">
-													<Icon className="narrow-text" name="git-branch" />
+													<Icon
+														className="narrow-text"
+														name="git-branch"
+														title="Check out branch"
+														placement="top"
+													/>
 													<span className="wide-text">Check out branch</span>
 												</Button>
 												<DropdownButton
@@ -605,7 +610,7 @@ export const PullRequest = () => {
 														{ label: "Plain diff", key: "plain" }
 													]}
 												>
-													<Icon name="download" />
+													<Icon name="download" title="Download..." placement="top" />
 												</DropdownButton>
 											</div>
 										</OutlineBox>
