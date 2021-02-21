@@ -188,7 +188,6 @@ export function CodeStreamHeadshot(props: Omit<HeadshotProps, "person">) {
 export interface PRHeadshotProps {
 	person: {
 		avatarUrl: string;
-		login: string;
 	};
 	size?: number;
 	hardRightBorder?: boolean;

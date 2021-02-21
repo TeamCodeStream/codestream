@@ -76,11 +76,19 @@ import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { PullRequestBottomComment } from "../../PullRequestBottomComment";
 import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
+import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { DropdownButton } from "../../Review/DropdownButton";
 
 const Root = styled.div`
+	span.narrow-text {
+		display: none !important;
+	}
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
 		.wide-text {
 			display: none;
+		}
+		span.narrow-text {
+			display: inline-block !important;
 		}
 	}
 	a {
@@ -105,6 +113,23 @@ const Root = styled.div`
 			}
 		}
 	}
+	${PRHeadshotName} {
+		font-weight: bold;
+	}
+	${PRHeader} {
+		margin-top: 10px;
+		margin-bottom: 20px;
+	}
+	${PRTitle} {
+		margin-top: 10px;
+		margin-bottom: 15px;
+	}
+	${PRStatusButton} {
+		border-radius: 4px;
+	}
+	${PRBranch} {
+		color: var(--text-color-info);
+	}
 `;
 
 const Container = styled.div`
@@ -121,16 +146,10 @@ const Right = styled.div`
 	padding: 3px;
 `;
 
-const Header = styled.div``;
-
-const State = styled.span(
-	(props: PropsWithTheme<{ state: string }>) =>
-		`background: ${props.state === "open" ? "green" : "red"},
-	color: "#fff",
-	borderRadius: "4px",
-	padding: "3px 8px 3px 8px",
-	lineHeight: "24px"`
-);
+const Header = styled.div`
+	margin-right: 35px;
+	display: flex;
+`;
 
 const RoundImg = styled.span`
 	img {
@@ -172,6 +191,23 @@ const Box = styled.div`
 
 const Reply = styled.div`
 	background: red;
+`;
+
+const OutlineBox = styled.div`
+	align-items: center;
+	border-radius: 5px;
+	border: 1px solid var(--base-border-color);
+	padding: 10px;
+	margin: 0 20px 20px 20px;
+	display: flex;
+	.right {
+		margin-left: auto;
+	}
+	.bigger {
+		display: inline-block;
+		transform: scale(1.5);
+		margin: 0 15px 0 10px;
+	}
 `;
 
 const EMPTY_HASH = {};
@@ -317,17 +353,23 @@ export const PullRequest = () => {
 	const pr: {
 		providerId: string;
 		idComputed: string;
+		isDraft?: boolean;
 		id: string;
 		iid: string;
 		title: string;
 		createdAt: string;
 		webUrl: string;
 		state: string;
+		url: string;
 		author: {
 			name: string;
 			username: string;
+			avatarUrl: string;
 		};
-		commitCount: string;
+		sourceBranch: string;
+		targetBranch: string;
+		commitCount: number;
+		changesCount: number;
 		discussions: {
 			nodes: {}[];
 		};
@@ -436,12 +478,18 @@ export const PullRequest = () => {
 		} else {
 			return (
 				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
-					<LoadingMessage>Loading Pull Request...</LoadingMessage>
+					<LoadingMessage>Loading Merge Request...</LoadingMessage>
 				</div>
 			);
 		}
 	}
 
+	const stateMap = {
+		opened: "open",
+		closed: "closed",
+		merged: "merged"
+	};
+	console.warn("PR: ", pr);
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<Root className="panel full-height">
@@ -449,18 +497,54 @@ export const PullRequest = () => {
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				<PRHeader>
 					<Header>
-						<State state={pr.state.toLowerCase()}>{pr.state}</State> Opened{" "}
-						<Timestamp time={pr.createdAt} /> by
-						<RoundImg>
-							<img
-								alt="head"
-								src="https://www.gravatar.com/avatar/f690a9cf57126732dd0cb5d9b1563390?s=48&d=identicon"
-							/>
-						</RoundImg>
-						<b className="ml-5 mr-5">{pr.author.name}</b>
-						{/* <Role className="ml-5">Maintainer</Role> */}
+						<div style={{ marginRight: "10px" }}>
+							<PRStatusButton
+								disabled
+								fullOpacity
+								size="compact"
+								variant={
+									pr.isDraft
+										? "neutral"
+										: pr.state === "opened"
+										? "success"
+										: pr.state === "merged"
+										? "merged"
+										: pr.state === "closed"
+										? "destructive"
+										: "primary"
+								}
+							>
+								{pr.isDraft ? "Draft" : stateMap[pr.state]}
+							</PRStatusButton>
+							Opened <Timestamp className="no-padding" time={pr.createdAt} relative /> by{" "}
+							<PRHeadshotName person={pr.author} />
+							{/* <Role className="ml-5">Maintainer</Role> */}
+						</div>
+						<div style={{ marginLeft: "auto" }}>
+							<DropdownButton
+								variant="secondary"
+								splitDropdown
+								items={[
+									{ label: "Edit", key: "edit" },
+									{ label: "Mark as draft", key: "draft" },
+									{ label: "Close", key: "close" }
+								]}
+							>
+								Edit
+							</DropdownButton>
+						</div>
 					</Header>
-					<h1>B</h1>
+					<PRTitle>
+						{pr.title}{" "}
+						<Tooltip title="Open on GitLab" placement="top">
+							<span>
+								<Link href={pr.url}>
+									#{pr.iid}
+									<Icon name="link-external" className="open-external" />
+								</Link>
+							</span>
+						</Tooltip>
+					</PRTitle>
 
 					{derivedState.currentPullRequest &&
 						derivedState.currentPullRequest.error &&
@@ -472,19 +556,20 @@ export const PullRequest = () => {
 						)}
 					<Tabs style={{ marginTop: 0 }}>
 						<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
-							<Icon name="comment" />
+							<Icon className="narrow-text" name="comment" />
 							<span className="wide-text">Overview</span>
 							<PRBadge>{numComments}</PRBadge>
 						</Tab>
 						<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
-							<Icon name="git-commit" />
+							<Icon className="narrow-text" name="git-commit" />
 							<span className="wide-text">Commits</span>
-							<PRBadge>{pr && pr.commitCount}</PRBadge>
+							<PRBadge>{(pr && pr.commitCount) || 0}</PRBadge>
 						</Tab>
 
 						<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
-							<Icon name="plus-minus" />
-							<span className="wide-text">Files Changed</span>
+							<Icon className="narrow-text" name="plus-minus" />
+							<span className="wide-text">Changes</span>
+							<PRBadge>{(pr && pr.changesCount) || 0}</PRBadge>
 						</Tab>
 					</Tabs>
 				</PRHeader>
@@ -500,6 +585,31 @@ export const PullRequest = () => {
 								// 	setIsLoadingMessage={setIsLoadingMessage}
 								// />
 								<>
+									{pr && (
+										<OutlineBox>
+											<Icon name="pull-request" className="bigger" />
+											<div>
+												<b>Request to merge</b> <PRBranch>{pr.sourceBranch}</PRBranch> <b>into</b>{" "}
+												<PRBranch>{pr.targetBranch}</PRBranch>
+											</div>
+											<div className="right">
+												<Button className="margin-right-10" variant="secondary">
+													<Icon className="narrow-text" name="git-branch" />
+													<span className="wide-text">Check out branch</span>
+												</Button>
+												<DropdownButton
+													title="Download as"
+													variant="secondary"
+													items={[
+														{ label: "Email patches", key: "email" },
+														{ label: "Plain diff", key: "plain" }
+													]}
+												>
+													<Icon name="download" />
+												</DropdownButton>
+											</div>
+										</OutlineBox>
+									)}
 									<Container>
 										<Left>
 											{pr.discussions.nodes.map((_: any) => {

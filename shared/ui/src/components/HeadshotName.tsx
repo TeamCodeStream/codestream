@@ -77,7 +77,8 @@ export function HeadshotName(props: HeadshotNameProps) {
 export interface PRHeadshotNameProps {
 	person: {
 		avatarUrl: string;
-		login: string;
+		login?: string;
+		username?: string;
 		name?: string;
 		user?: {
 			login: string;
@@ -98,6 +99,8 @@ export const PRHeadshotName = styled((props: PRHeadshotNameProps) => {
 	// leave this for future when we can determine it's you
 	const me = false;
 
+	const username = props.person.login || props.person.username || "";
+
 	return (
 		<Root className={props.className} onClick={props.onClick}>
 			<HeadshotWrapper className={props.noName ? "no-padding" : ""}>
@@ -111,7 +114,7 @@ export const PRHeadshotName = styled((props: PRHeadshotNameProps) => {
 			</HeadshotWrapper>
 			{!props.noName && (
 				<span className={cx("headshot-name", { "at-mention me": me })}>
-					{props.person.login || (props.person.user ? props.person.user.login : props.person.name)}
+					{username || (props.person.user ? props.person.user.login : props.person.name)}
 				</span>
 			)}
 		</Root>

@@ -23,6 +23,7 @@ export interface DropdownButtonProps extends ButtonProps {
 		checked?: boolean;
 		onSelect?: () => void; // callback for when you select an item with a splitDropdown
 	}[];
+	title?: string;
 	splitDropdown?: boolean;
 	wrap?: boolean;
 	selectedKey?: string;
@@ -106,6 +107,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					align={align}
 					action={maybeToggleMenu}
 					target={buttonRef.current}
+					title={props.title}
 					items={items}
 					focusOnSelect={buttonRef.current}
 					wrap={props.wrap}

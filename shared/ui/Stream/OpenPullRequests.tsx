@@ -759,7 +759,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																	)}
 																	<PRHeadshot
 																		person={{
-																			login: pr.author.username,
 																			avatarUrl: pr.author.avatar_url
 																		}}
 																	/>
