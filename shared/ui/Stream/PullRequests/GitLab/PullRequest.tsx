@@ -362,6 +362,7 @@ export const PullRequest = () => {
 		isDraft?: boolean;
 		id: string;
 		iid: string;
+		number: number;
 		title: string;
 		createdAt: string;
 		webUrl: string;
@@ -576,8 +577,15 @@ export const PullRequest = () => {
 							>
 								{pr.isDraft ? "Draft" : stateMap[pr.state]}
 							</PRStatusButton>
-							Opened <Timestamp className="no-padding" time={pr.createdAt} relative /> by{" "}
-							<PRHeadshotName person={pr.author} />
+							Opened{" "}
+							<Timestamp
+								className="no-padding"
+								time={pr.createdAt}
+								relative
+								showTooltip
+								placement="bottom"
+							/>{" "}
+							by <PRHeadshotName person={pr.author} />
 							{/* <Role className="ml-5">Maintainer</Role> */}
 						</div>
 						<div style={{ marginLeft: "auto" }}>
@@ -599,7 +607,7 @@ export const PullRequest = () => {
 						<Tooltip title="Open on GitLab" placement="top">
 							<span>
 								<Link href={pr.url}>
-									#{pr.iid}
+									#{pr.number}
 									<Icon name="link-external" className="open-external" />
 								</Link>
 							</span>
@@ -745,7 +753,7 @@ export const PullRequest = () => {
 															key: "email",
 															action: () => {
 																HostApi.instance.send(OpenUrlRequestType, {
-																	url: `${pr.repository.url}/-/merge_requests/${pr.iid}.patch`
+																	url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
 																});
 															}
 														},
@@ -754,7 +762,7 @@ export const PullRequest = () => {
 															key: "plain",
 															action: () => {
 																HostApi.instance.send(OpenUrlRequestType, {
-																	url: `${pr.repository.url}/-/merge_requests/${pr.iid}.diff`
+																	url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
 																});
 															}
 														}

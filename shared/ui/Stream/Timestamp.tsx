@@ -1,6 +1,7 @@
 import React from "react";
 import { PropsWithChildren } from "react";
 import styled from "styled-components";
+import Tooltip, { Placement } from "./Tooltip";
 
 export const MINUTE = 60;
 export const HOUR = MINUTE * 60;
@@ -113,6 +114,18 @@ const prettyDateDay = function(time, abbreviated?: boolean) {
 	}
 };
 
+const prettyDateDayTime = function(time, abbreviated?: boolean) {
+	if (time === 0 || time === null || time === undefined) return "";
+	return new Intl.DateTimeFormat("en", {
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+		hour: "numeric",
+		minute: "2-digit",
+		timeZoneName: "short"
+	}).format(time);
+};
+
 const prettyTime = function(time) {
 	var prettyTime;
 	// time = this.adjustedTime(time, options.timezone_info);
@@ -140,6 +153,8 @@ interface Props {
 	time: number | string;
 	edited?: boolean;
 	abbreviated?: boolean;
+	showTooltip?: boolean;
+	placement?: Placement;
 }
 
 const StyledTime = styled.time`
@@ -166,30 +181,42 @@ export default function Timestamp(props: PropsWithChildren<Props>) {
 
 	const edited = props.edited ? " (edited)" : "";
 
-	if (props.relative)
-		return (
+	let timeDiv: JSX.Element | undefined = undefined;
+	if (props.relative) {
+		timeDiv = (
 			<StyledTime className={props.className}>
 				{distanceOfTimeInWords(time as number, true, props.abbreviated)}
 				{edited}
 			</StyledTime>
 		);
+	} else {
+		const timeText = prettyTime(time);
+		const timeDetails = prettyDateDay(time, props.abbreviated);
 
-	const timeText = prettyTime(time);
-	const timeDetails = prettyDateDay(time, props.abbreviated);
+		if (props.dateOnly)
+			timeDiv = (
+				<StyledTime className={props.className}>
+					{timeDetails}
+					{edited}
+				</StyledTime>
+			);
+		else
+			timeDiv = (
+				<StyledTime className={props.className}>
+					{timeText}
+					<span className="details">{timeDetails}</span>
+					{edited}
+				</StyledTime>
+			);
+	}
 
-	if (props.dateOnly)
+	if (props.showTooltip) {
 		return (
-			<StyledTime className={props.className}>
-				{timeDetails}
-				{edited}
-			</StyledTime>
+			<Tooltip title={prettyDateDayTime(time)} placement={props.placement}>
+				{timeDiv}
+			</Tooltip>
 		);
-	else
-		return (
-			<StyledTime className={props.className}>
-				{timeText}
-				<span className="details">{timeDetails}</span>
-				{edited}
-			</StyledTime>
-		);
+	} else {
+		return timeDiv;
+	}
 }
