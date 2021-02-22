@@ -79,8 +79,13 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { DropdownButton } from "../../Review/DropdownButton";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
+import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { ApproveBox } from "./ApproveBox";
+import { MergeBox } from "./MergeBox";
 
 const Root = styled.div`
+	background: var(--sidebar-background) !important;
 	span.narrow-text {
 		display: none !important;
 	}
@@ -119,7 +124,7 @@ const Root = styled.div`
 	}
 	${PRHeader} {
 		margin-top: 10px;
-		margin-bottom: 20px;
+		margin-bottom: 0px;
 	}
 	${PRTitle} {
 		margin-top: 10px;
@@ -140,6 +145,12 @@ const Container = styled.div`
 `;
 const Left = styled.div`
 	flex-grow: 1;
+	pre {
+		background: var(--app-background-color);
+		padding: 10px;
+		max-width: 100vw;
+		overflow: auto;
+	}
 `;
 const Right = styled.div`
 	width: 200px;
@@ -194,20 +205,48 @@ const Reply = styled.div`
 	background: red;
 `;
 
-const OutlineBox = styled.div`
-	align-items: center;
+export const OutlineBox = styled.div`
 	border-radius: 5px;
 	border: 1px solid var(--base-border-color);
+	margin: 0 20px 15px 20px;
+`;
+
+export const FlexRow = styled.div`
+	align-items: center;
 	padding: 10px;
-	margin: 0 20px 20px 20px;
 	display: flex;
 	.right {
 		margin-left: auto;
+		white-space: nowrap;
 	}
 	.bigger {
 		display: inline-block;
 		transform: scale(1.5);
 		margin: 0 15px 0 10px;
+	}
+	.overlap {
+		position: absolute !important;
+		top: -5px;
+		right: 5px;
+		display: inline-block;
+		transform: scale(0.75);
+	}
+	.pad-left {
+		padding-left: 10px;
+	}
+	textarea {
+		margin: 5px 0 5px 0;
+		width: 100% !important;
+		height: 75px;
+	}
+`;
+
+export const ReactAndDisplayOptions = styled.div`
+	margin: 0 20px;
+	display: flex;
+	align-items: center;
+	button {
+		margin-left: 10px;
 	}
 `;
 
@@ -220,13 +259,19 @@ let focusOnMessageInput;
 export const PullRequest = () => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const currentPullRequestIdExact = getPullRequestExactId(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
+		const order = preferences.pullRequestTimelineOrder || "oldest";
+		const filter = preferences.pullRequestTimelineFilter || "all";
+
 		return {
+			order,
+			filter,
 			viewPreference: (getPreferences(state) || {}).pullRequestView || "auto",
 			providerPullRequests: providerPullRequests,
 			reviewsState: state.reviews,
@@ -545,10 +590,17 @@ export const PullRequest = () => {
 		}
 	}
 
+	const { order, filter } = derivedState;
+
 	const stateMap = {
 		opened: "open",
 		closed: "closed",
 		merged: "merged"
+	};
+	const filterMap = {
+		all: "Show all activity",
+		history: "Show history only",
+		comments: "Show comments only"
 	};
 	console.warn("PR: ", pr);
 	return (
@@ -698,81 +750,148 @@ export const PullRequest = () => {
 								<>
 									{pr && (
 										<OutlineBox>
-											<Icon name="pull-request" className="bigger" />
-											<div>
-												<b>Request to merge</b>{" "}
-												<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
-													<PRBranch>{pr.sourceBranch}</PRBranch>
-												</Link>{" "}
-												<Icon
-													name="copy"
-													className="clickable"
-													title="Copy source branch"
-													placement="top"
-													onClick={e => copy(pr.sourceBranch)}
-												/>{" "}
-												<b>into</b>{" "}
-												<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
-													<PRBranch>{pr.targetBranch}</PRBranch>
-												</Link>
-											</div>
-											<div className="right">
-												<Button className="margin-right-10" variant="secondary">
-													{isLoadingBranch ? (
-														<Icon name="sync" className="spin" />
-													) : (
-														<span onClick={cantCheckoutReason ? () => {} : checkout}>
-															<Tooltip
-																title={
-																	<>
-																		Checkout Branch
-																		{cantCheckoutReason && (
-																			<div className="subtle smaller" style={{ maxWidth: "200px" }}>
-																				Disabled: {cantCheckoutReason}
-																			</div>
-																		)}
-																	</>
+											<FlexRow>
+												<Icon name="pull-request" className="bigger" />
+												<div>
+													<b>Request to merge</b>{" "}
+													<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
+														<PRBranch>{pr.sourceBranch}</PRBranch>
+													</Link>{" "}
+													<Icon
+														name="copy"
+														className="clickable"
+														title="Copy source branch"
+														placement="top"
+														onClick={e => copy(pr.sourceBranch)}
+													/>{" "}
+													<b>into</b>{" "}
+													<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
+														<PRBranch>{pr.targetBranch}</PRBranch>
+													</Link>
+												</div>
+												<div className="right">
+													<Button className="margin-right-10" variant="secondary">
+														{isLoadingBranch ? (
+															<Icon name="sync" className="spin" />
+														) : (
+															<span onClick={cantCheckoutReason ? () => {} : checkout}>
+																<Tooltip
+																	title={
+																		<>
+																			Checkout Branch
+																			{cantCheckoutReason && (
+																				<div
+																					className="subtle smaller"
+																					style={{ maxWidth: "200px" }}
+																				>
+																					Disabled: {cantCheckoutReason}
+																				</div>
+																			)}
+																		</>
+																	}
+																	trigger={["hover"]}
+																	placement="top"
+																>
+																	<span>
+																		<Icon className="narrow-text" name="git-branch" />
+																		<span className="wide-text">Check out branch</span>
+																	</span>
+																</Tooltip>
+															</span>
+														)}
+													</Button>
+													<DropdownButton
+														title="Download as"
+														variant="secondary"
+														items={[
+															{
+																label: "Email patches",
+																key: "email",
+																action: () => {
+																	HostApi.instance.send(OpenUrlRequestType, {
+																		url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
+																	});
 																}
-																trigger={["hover"]}
-																placement="top"
-															>
-																<span>
-																	<Icon className="narrow-text" name="git-branch" />
-																	<span className="wide-text">Check out branch</span>
-																</span>
-															</Tooltip>
-														</span>
-													)}
-												</Button>
-												<DropdownButton
-													title="Download as"
-													variant="secondary"
-													items={[
-														{
-															label: "Email patches",
-															key: "email",
-															action: () => {
-																HostApi.instance.send(OpenUrlRequestType, {
-																	url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
-																});
+															},
+															{
+																label: "Plain diff",
+																key: "plain",
+																action: () => {
+																	HostApi.instance.send(OpenUrlRequestType, {
+																		url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
+																	});
+																}
 															}
-														},
-														{
-															label: "Plain diff",
-															key: "plain",
-															action: () => {
-																HostApi.instance.send(OpenUrlRequestType, {
-																	url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
-																});
-															}
-														}
-													]}
-												>
-													<Icon name="download" title="Download..." placement="top" />
-												</DropdownButton>
-											</div>
+														]}
+													>
+														<Icon name="download" title="Download..." placement="top" />
+													</DropdownButton>
+												</div>
+											</FlexRow>
 										</OutlineBox>
 									)}
+									{pr && <ApproveBox pr={pr} />}
+									{pr && <MergeBox pr={pr} />}
+									<ReactAndDisplayOptions>
+										<PullRequestReactions
+											pr={pr as any}
+											targetId={pr.id}
+											setIsLoadingMessage={setIsLoadingMessage}
+											reactionGroups={[]}
+										/>
+										<div style={{ marginLeft: "auto" }}>
+											<DropdownButton
+												variant="secondary"
+												items={[
+													{
+														label: "Oldest first",
+														key: "oldest",
+														checked: order === "oldest",
+														action: () =>
+															dispatch(setUserPreference(["pullRequestTimelineOrder"], "oldest"))
+													},
+													{
+														label: "Newest first",
+														key: "newest",
+														checked: order === "newest",
+														action: () =>
+															dispatch(setUserPreference(["pullRequestTimelineOrder"], "newest"))
+													}
+												]}
+											>
+												{order === "oldest" ? "Oldest first" : "Newest first"}
+											</DropdownButton>
+											<DropdownButton
+												variant="secondary"
+												items={[
+													{
+														label: "Show all activity",
+														key: "all",
+														checked: filter === "all",
+														action: () =>
+															dispatch(setUserPreference(["pullRequestTimelineFilter"], "all"))
+													},
+													{ label: "-" },
+													{
+														label: "Show comments only",
+														key: "comments",
+														checked: filter === "comments",
+														action: () =>
+															dispatch(setUserPreference(["pullRequestTimelineFilter"], "comments"))
+													},
+													{
+														label: "Show history only",
+														key: "history",
+														checked: filter === "history",
+														action: () =>
+															dispatch(setUserPreference(["pullRequestTimelineFilter"], "history"))
+													}
+												]}
+											>
+												{filterMap[filter] || filter}
+											</DropdownButton>
+										</div>
+									</ReactAndDisplayOptions>
 									<Container>
 										<Left>
 											{pr.discussions.nodes.map((_: any) => {
