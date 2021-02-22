@@ -79,8 +79,7 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { DropdownButton } from "../../Review/DropdownButton";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
-import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { PullRequestReactions } from "./PullRequestReactions";
 import { ApproveBox } from "./ApproveBox";
 import { MergeBox } from "./MergeBox";
 
@@ -119,6 +118,9 @@ const Root = styled.div`
 			}
 		}
 	}
+	b {
+		color: var(--text-color-highlight);
+	}
 	${PRHeadshotName} {
 		font-weight: bold;
 	}
@@ -153,9 +155,10 @@ const Left = styled.div`
 	}
 `;
 const Right = styled.div`
-	width: 200px;
-	border-left: 1px solid #333;
+	width: 750px;
 	padding: 3px;
+	text-align: center;
+	background-color: rgba(127, 127, 127, 0.1);
 `;
 
 const Header = styled.div`
@@ -242,9 +245,11 @@ export const FlexRow = styled.div`
 `;
 
 export const ReactAndDisplayOptions = styled.div`
-	margin: 0 20px;
+	margin: 0 20px 10px 20px;
 	display: flex;
 	align-items: center;
+	padding-bottom: 15px;
+	border-bottom: 1px solid var(--base-border-color);
 	button {
 		margin-left: 10px;
 	}
@@ -837,6 +842,7 @@ export const PullRequest = () => {
 											pr={pr as any}
 											targetId={pr.id}
 											setIsLoadingMessage={setIsLoadingMessage}
+											thumbsFirst
 											reactionGroups={[]}
 										/>
 										<div style={{ marginLeft: "auto" }}>
@@ -980,7 +986,8 @@ export const PullRequest = () => {
 												__onDidRender={__onDidRender}
 											/>
 										</Left>
-										{/* <Right>
+										{/* 
+										<Right>
 											<AsideBlock>
 												<div>
 													0 Assignees <span style={{ float: "right" }}>Edit</span>
@@ -993,7 +1000,8 @@ export const PullRequest = () => {
 												</div>
 												<div>None</div>
 											</AsideBlock>
-										</Right> */}
+										</Right>
+										*/}
 									</Container>
 								</>
 							)}
