@@ -126,6 +126,19 @@ const Root = styled.div<{ splitDropdown?: boolean }>`
 		margin-left: ${props => (props.splitDropdown ? "0" : "5px")};
 		transform: scale(0.8);
 	}
+	${props => {
+		return props.splitDropdown
+			? `	button:first-of-type {
+		border-top-right-radius: 0 !important;
+		border-bottom-right-radius: 0 !important;
+	}
+	button:last-of-type {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+`
+			: "";
+	}}
 	button + button {
 		// border-left: 1px solid var(--base-border-color) !important;
 		margin-left: 1px !important;

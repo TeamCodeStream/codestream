@@ -49,7 +49,9 @@ export const MergeBox = props => {
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className="bigger green-color" />
-				<Button variant="success">Merge</Button>
+				<Button className="action-button" variant="success">
+					Merge
+				</Button>
 				<div className="pad-left">
 					<Checkbox
 						checked={deleteBranch}

@@ -11,7 +11,7 @@ export const ApproveBox = props => {
 					<Icon name="person" className="bigger" />
 					<Icon name="check" className="overlap" />
 				</div>
-				<Button>Approve</Button>
+				<Button className="action-button">Approve</Button>
 				<div className="pad-left">
 					Approval is optional <Icon name="info" title="About this feature" placement="top" />
 				</div>

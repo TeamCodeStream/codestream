@@ -138,6 +138,9 @@ const Root = styled.div`
 	${PRBranch} {
 		color: var(--text-color-info);
 	}
+	button {
+		border-radius: 4px;
+	}
 `;
 
 const Container = styled.div`
@@ -236,6 +239,9 @@ export const FlexRow = styled.div`
 	}
 	.pad-left {
 		padding-left: 10px;
+	}
+	.action-button {
+		width: 75px;
 	}
 	textarea {
 		margin: 5px 0 5px 0;
