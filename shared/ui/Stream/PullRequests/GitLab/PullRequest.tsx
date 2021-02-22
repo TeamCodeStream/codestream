@@ -253,11 +253,12 @@ export const FlexRow = styled.div`
 export const ReactAndDisplayOptions = styled.div`
 	margin: 0 20px 10px 20px;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	padding-bottom: 15px;
 	border-bottom: 1px solid var(--base-border-color);
 	button {
 		margin-left: 10px;
+		height: 35px;
 	}
 `;
 
