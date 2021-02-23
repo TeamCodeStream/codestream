@@ -9,6 +9,7 @@ import Tooltip from "../../Tooltip";
 import { SmartFormattedList } from "../../SmartFormattedList";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { api } from "../../../store/providerPullRequests/actions";
+import EmojiPicker from "../../EmojiPicker";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
@@ -83,51 +84,13 @@ export const PullRequestReactButton = styled((props: Props) => {
 		return reaction.users.nodes.find(_ => _.login === me);
 	};
 
-	const makeIcon = (name: string, title: string, key: string) => {
-		const emoji = emojify(":" + name + ":");
-		const iReacted = isMine(key);
-		return (
-			<PRReact
-				onMouseEnter={() => setMenuTitle(title)}
-				onMouseLeave={() => setMenuTitle("")}
-				onClick={() => saveReaction(key, !iReacted)}
-				className={iReacted ? "mine" : ""}
-			>
-				<span dangerouslySetInnerHTML={{ __html: emoji }} />
-			</PRReact>
-		);
-	};
 	return (
 		<span className={props.className}>
 			{open && (
-				<Menu
-					title={
-						<div style={{ fontSize: "13px", fontWeight: "normal" }}>
-							{menuTitle || "Pick your reaction"}
-						</div>
-					}
-					align="bottomRight"
-					noCloseIcon
+				<EmojiPicker
+					addEmoji={key => saveReaction(key, !isMine(key))}
 					target={open}
-					items={[
-						{ label: "-" },
-						{
-							fragment: (
-								<div style={{ padding: "10px" }}>
-									{makeIcon("+1", "+1", "THUMBS_UP")}
-									{makeIcon("-1", "-1", "THUMBS_DOWN")}
-									{makeIcon("smile", "Laugh", "LAUGH")}
-									{makeIcon("tada", "Hooray", "HOORAY")}
-									<div style={{ height: "5px" }} />
-									{makeIcon("confused", "Confused", "CONFUSED")}
-									{makeIcon("heart", "Heart", "HEART")}
-									{makeIcon("rocket", "Rocket", "ROCKET")}
-									{makeIcon("eyes", "Eyes", "EYES")}
-								</div>
-							)
-						}
-					]}
-					action={() => setOpen(undefined)}
+					autoFocus={true}
 				/>
 			)}
 			<Icon
