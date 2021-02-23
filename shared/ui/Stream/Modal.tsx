@@ -34,12 +34,15 @@ const ModalWrapper = styled.div<{ noPadding?: boolean }>`
 	position: absolute;
 	z-index: 3000;
 	left: 0;
+	top: 0;
 	background-color: var(--app-background-color);
 	// background-color: rgba(0, 0, 0, 0.25);
 	// backdrop-filter: brightness(50%);
 	padding: 0;
 	overflow: auto;
-
+	&::-webkit-scrollbar {
+		display: none;
+	}
 	&.translucent {
 		// background: rgba(255, 255, 255, 0.8);
 		// backdrop-filter: blur(1px);

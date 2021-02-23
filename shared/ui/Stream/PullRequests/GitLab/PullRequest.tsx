@@ -3,7 +3,6 @@ import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMe
 import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
 import { Tabs, Tab } from "@codestream/webview/src/components/Tabs";
 import { CodeStreamState } from "@codestream/webview/store";
-import copy from "copy-to-clipboard";
 import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
@@ -68,6 +67,7 @@ import {
 import { HostApi } from "../../../webview-api";
 import {
 	clearCurrentPullRequest,
+	closeAllModals,
 	setCurrentPullRequest,
 	setCurrentReview
 } from "../../../store/context/actions";
@@ -78,13 +78,17 @@ import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { DropdownButton } from "../../Review/DropdownButton";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { LocalFilesCloseDiffRequestType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { PullRequestReactions } from "./PullRequestReactions";
 import { ApproveBox } from "./ApproveBox";
 import { MergeBox } from "./MergeBox";
+import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
+import { SummaryBox } from "./SummaryBox";
 
 const Root = styled.div`
-	background: var(--sidebar-background) !important;
+	position: absolute;
+	width: 100%;
+	background: var(-app-background-color) !important;
 	span.narrow-text {
 		display: none !important;
 	}
@@ -125,12 +129,13 @@ const Root = styled.div`
 		font-weight: bold;
 	}
 	${PRHeader} {
-		margin-top: 10px;
+		margin-top: 20px;
 		margin-bottom: 0px;
 	}
 	${PRTitle} {
 		margin-top: 10px;
-		margin-bottom: 15px;
+		margin-bottom: 5px;
+		color: var(--text-color-highlight);
 	}
 	${PRStatusButton} {
 		border-radius: 4px;
@@ -143,29 +148,40 @@ const Root = styled.div`
 	}
 `;
 
-const Container = styled.div`
-	display: flex;
-	flex-direction: row;
-	height: 100%;
-`;
 const Left = styled.div`
-	flex-grow: 1;
 	pre {
 		background: var(--app-background-color);
 		padding: 10px;
-		max-width: 100vw;
 		overflow: auto;
 	}
+	width: 100%;
+	padding-right: 48px;
+	min-height: 100%;
 `;
 const Right = styled.div`
-	width: 750px;
-	padding: 3px;
-	text-align: center;
+	width: 48px;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	right: 0;
 	background-color: rgba(127, 127, 127, 0.1);
+	background-color: var(--sidebar-background);
+	z-index: 30;
+	transition: width 0.2s;
+	&.expanded {
+		width: 250px;
+		border-left: 1px solid (--base-border-color);
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	}
+`;
+
+const HR = styled.div`
+	width: 100%;
+	height: 1px;
+	background: var(--base-border-color);
 `;
 
 const Header = styled.div`
-	margin-right: 35px;
 	display: flex;
 `;
 
@@ -195,15 +211,29 @@ const Role = styled.span`
 `;
 
 const AsideBlock = styled.div`
-	padding: 5px 5px 20px 15px;
-	margin: 10px;
-	border-bottom: 1px solid #cfcfcf;
+	height: 48px;
+	width: 100%;
+	display: flex;
+	place-items: center;
+	justify-content: center;
+	cursor: pointer;
+	display: flex;
+	.icon {
+		opacity: 0.7;
+	}
+	&:hover {
+		.icon {
+			opacity: 1;
+			color: var(--text-color-highlight);
+		}
+		backdrop-filter: brightness(70%);
+	}
 `;
 
 const Box = styled.div`
 	padding: 10px;
-	margin: 0px 5px 10px 5px;
-	border: 1px solid #dbdbdb;
+	margin: 0px 20px 15px 20px;
+	border: 1px solid var(--base-border-color);
 	border-radius: 4px;
 `;
 
@@ -250,18 +280,6 @@ export const FlexRow = styled.div`
 	}
 `;
 
-export const ReactAndDisplayOptions = styled.div`
-	margin: 0 20px 10px 20px;
-	display: flex;
-	align-items: stretch;
-	padding-bottom: 15px;
-	border-bottom: 1px solid var(--base-border-color);
-	button {
-		margin-left: 10px;
-		height: 35px;
-	}
-`;
-
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let insertText;
@@ -303,8 +321,7 @@ export const PullRequest = () => {
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
-			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepo: getProviderPullRequestRepo2(state)
+			checkoutBranch: state.context.pullRequestCheckoutBranch
 		};
 	});
 
@@ -313,13 +330,12 @@ export const PullRequest = () => {
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
-	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
 
+	const [rightOpen, setRightOpen] = useState(false);
 	const [openRepos, setOpenRepos] = useState<any[]>(EMPTY_ARRAY);
 	const [editingTitle, setEditingTitle] = useState(false);
 	const [savingTitle, setSavingTitle] = useState(false);
 	const [title, setTitle] = useState("");
-	const [currentRepoChanged, setCurrentRepoChanged] = useState(false);
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 	const [autoCheckedMergeability, setAutoCheckedMergeability] = useState<
 		autoCheckedMergeabilityStatus
@@ -492,51 +508,6 @@ export const PullRequest = () => {
 		_assignState(response);
 	};
 
-	const cantCheckoutReason = useMemo(() => {
-		if (pr) {
-			const currentRepo = openRepos.find(_ => _.name === pr.repository.name);
-			if (!currentRepo) {
-				return `You don't have the ${pr.repository.name} repo open in your IDE`;
-			}
-			if (currentRepo.currentBranch == pr.headRefName) {
-				return `You are on the ${pr.headRefName} branch`;
-			}
-			return "";
-		} else {
-			return "PR not loaded";
-		}
-	}, [pr, openRepos, currentRepoChanged]);
-
-	const checkout = async () => {
-		if (!pr) return;
-		setIsLoadingBranch(true);
-		const result = await HostApi.instance.send(SwitchBranchRequestType, {
-			branch: pr!.headRefName,
-			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
-		});
-		if (result.error) {
-			console.warn("ERROR FROM SET BRANCH: ", result.error);
-			confirmPopup({
-				title: "Git Error",
-				className: "wide",
-				message: (
-					<div className="monospace" style={{ fontSize: "11px" }}>
-						{result.error}
-					</div>
-				),
-				centered: false,
-				buttons: [{ label: "OK", className: "control-button" }]
-			});
-			setIsLoadingBranch(false);
-			return;
-		} else {
-			setIsLoadingBranch(false);
-			getOpenRepos();
-		}
-		// i don't think we need to reload here, do we?
-		// fetch("Reloading...");
-	};
-
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
 		insertNewline = functions.insertNewlineAtCursor;
@@ -595,7 +566,14 @@ export const PullRequest = () => {
 			);
 		} else {
 			return (
-				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
+				<div
+					style={{
+						display: "flex",
+						height: "100vh",
+						alignItems: "center",
+						background: "var(--app-background-color)"
+					}}
+				>
 					<LoadingMessage>Loading Merge Request...</LoadingMessage>
 				</div>
 			);
@@ -609,149 +587,156 @@ export const PullRequest = () => {
 		closed: "closed",
 		merged: "merged"
 	};
-	const filterMap = {
-		all: "Show all activity",
-		history: "Show history only",
-		comments: "Show comments only"
-	};
 	console.warn("PR: ", pr);
+
+	const discussions =
+		order === "newest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<Root className="panel full-height">
-				<CreateCodemarkIcons narrow onebutton />
+			<Root>
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
-				<PRHeader>
-					<Header>
-						<div style={{ marginRight: "10px" }}>
-							<PRStatusButton
-								disabled
-								fullOpacity
-								size="compact"
-								variant={
-									pr.isDraft
-										? "neutral"
-										: pr.state === "opened"
-										? "success"
-										: pr.state === "merged"
-										? "merged"
-										: pr.state === "closed"
-										? "destructive"
-										: "primary"
-								}
-							>
-								{pr.isDraft ? "Draft" : stateMap[pr.state]}
-							</PRStatusButton>
-							Opened{" "}
-							<Timestamp
-								className="no-padding"
-								time={pr.createdAt}
-								relative
-								showTooltip
-								placement="bottom"
-							/>{" "}
-							by <PRHeadshotName person={pr.author} />
-							{/* <Role className="ml-5">Maintainer</Role> */}
-						</div>
-						<div style={{ marginLeft: "auto" }}>
-							<DropdownButton
-								variant="secondary"
-								splitDropdown
-								items={[
-									{ label: "Edit", key: "edit" },
-									{ label: "Mark as draft", key: "draft" },
-									{ label: "Close", key: "close" }
-								]}
-							>
-								Edit
-							</DropdownButton>
-						</div>
-					</Header>
-					<PRTitle>
-						{pr.title}{" "}
-						<Tooltip title="Open on GitLab" placement="top">
-							<span>
-								<Link href={pr.url}>
-									#{pr.number}
-									<Icon name="link-external" className="open-external" />
-								</Link>
-							</span>
-						</Tooltip>
-					</PRTitle>
-
-					{derivedState.currentPullRequest &&
-						derivedState.currentPullRequest.error &&
-						derivedState.currentPullRequest.error.message && (
-							<PRError>
-								<Icon name="alert" />
-								<div>{derivedState.currentPullRequest.error.message}</div>
-							</PRError>
-						)}
-					<Tabs style={{ marginTop: 0 }}>
-						<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
-							<Icon className="narrow-text" name="comment" />
-							<span className="wide-text">Overview</span>
-							<PRBadge>{numComments}</PRBadge>
-						</Tab>
-						<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
-							<Icon className="narrow-text" name="git-commit" />
-							<span className="wide-text">Commits</span>
-							<PRBadge>{(pr && pr.commitCount) || 0}</PRBadge>
-						</Tab>
-
-						<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
-							<Icon className="narrow-text" name="plus-minus" />
-							<span className="wide-text">Changes</span>
-							<PRBadge>{(pr && pr.changesCount) || 0}</PRBadge>
-						</Tab>
-						{pr.pendingReview ? (
-							<PRSubmitReviewButton>
-								<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
-									Finish<span className="wide-text"> review</span>
-									<PRBadge>
-										{pr.pendingReview.comments ? pr.pendingReview.comments.totalCount : 0}
-									</PRBadge>
-									<Icon name="chevron-down" />
-								</Button>
-								{finishReviewOpen && (
-									<PullRequestFinishReview
-										pr={pr as any}
-										mode="dropdown"
-										fetch={fetch}
-										setIsLoadingMessage={setIsLoadingMessage}
-										setFinishReviewOpen={setFinishReviewOpen}
-									/>
-								)}
-							</PRSubmitReviewButton>
-						) : (
-							<PRPlusMinus>
-								<span className="added">
-									+
-									{!pr.files
-										? 0
-										: pr.files.nodes
-												.map(_ => _.additions)
-												.reduce((acc, val) => acc + val, 0)
-												.toString()
-												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-								</span>{" "}
-								<span className="deleted">
-									-
-									{!pr.files
-										? 0
-										: pr.files.nodes
-												.map(_ => _.deletions)
-												.reduce((acc, val) => acc + val, 0)
-												.toString()
-												.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+				<Left>
+					<PRHeader>
+						<Header>
+							<div style={{ marginRight: "10px" }}>
+								<PRStatusButton
+									disabled
+									fullOpacity
+									size="compact"
+									variant={
+										pr.isDraft
+											? "neutral"
+											: pr.state === "opened"
+											? "success"
+											: pr.state === "merged"
+											? "merged"
+											: pr.state === "closed"
+											? "destructive"
+											: "primary"
+									}
+								>
+									{pr.isDraft ? "Draft" : stateMap[pr.state]}
+								</PRStatusButton>
+								Opened{" "}
+								<Timestamp
+									className="no-padding"
+									time={pr.createdAt}
+									relative
+									showTooltip
+									placement="bottom"
+								/>{" "}
+								by <PRHeadshotName person={pr.author} />
+								{/* <Role className="ml-5">Maintainer</Role> */}
+							</div>
+							<div style={{ marginLeft: "auto" }}>
+								<DropdownButton
+									variant="secondary"
+									splitDropdown
+									items={[
+										{ label: "Edit", key: "edit" },
+										{ label: "Mark as draft", key: "draft" },
+										{ label: "Close", key: "close" }
+									]}
+								>
+									Edit
+								</DropdownButton>
+							</div>
+						</Header>
+						<PRTitle>
+							{pr.title}{" "}
+							<Tooltip title="Open on GitLab" placement="top">
+								<span>
+									<Link href={pr.url}>
+										#{pr.number}
+										<Icon name="link-external" className="open-external" />
+									</Link>
 								</span>
-							</PRPlusMinus>
-						)}
-					</Tabs>
-				</PRHeader>
-				{!derivedState.composeCodemarkActive && (
-					<ScrollBox>
-						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
-							{activeTab === 1 && (
+							</Tooltip>
+						</PRTitle>
+						{derivedState.currentPullRequest &&
+							derivedState.currentPullRequest.error &&
+							derivedState.currentPullRequest.error.message && (
+								<PRError>
+									<Icon name="alert" />
+									<div>{derivedState.currentPullRequest.error.message}</div>
+								</PRError>
+							)}
+					</PRHeader>
+					<div
+						className="sticky"
+						style={{
+							position: "sticky",
+							background: "var(--app-background-color)",
+							zIndex: 20,
+							top: 0,
+							paddingTop: "10px"
+						}}
+					>
+						<Tabs style={{ margin: "0 20px 10px 20px" }}>
+							<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
+								<Icon className="narrow-text" name="comment" />
+								<span className="wide-text">Overview</span>
+								<PRBadge>{numComments}</PRBadge>
+							</Tab>
+							<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
+								<Icon className="narrow-text" name="git-commit" />
+								<span className="wide-text">Commits</span>
+								<PRBadge>{(pr && pr.commitCount) || 0}</PRBadge>
+							</Tab>
+
+							<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
+								<Icon className="narrow-text" name="plus-minus" />
+								<span className="wide-text">Changes</span>
+								<PRBadge>{(pr && pr.changesCount) || 0}</PRBadge>
+							</Tab>
+							{pr.pendingReview ? (
+								<PRSubmitReviewButton>
+									<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
+										Finish<span className="wide-text"> review</span>
+										<PRBadge>
+											{pr.pendingReview.comments ? pr.pendingReview.comments.totalCount : 0}
+										</PRBadge>
+										<Icon name="chevron-down" />
+									</Button>
+									{finishReviewOpen && (
+										<PullRequestFinishReview
+											pr={pr as any}
+											mode="dropdown"
+											fetch={fetch}
+											setIsLoadingMessage={setIsLoadingMessage}
+											setFinishReviewOpen={setFinishReviewOpen}
+										/>
+									)}
+								</PRSubmitReviewButton>
+							) : (
+								<PRPlusMinus>
+									<span className="added">
+										+
+										{!pr.files
+											? 0
+											: pr.files.nodes
+													.map(_ => _.additions)
+													.reduce((acc, val) => acc + val, 0)
+													.toString()
+													.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+									</span>{" "}
+									<span className="deleted">
+										-
+										{!pr.files
+											? 0
+											: pr.files.nodes
+													.map(_ => _.deletions)
+													.reduce((acc, val) => acc + val, 0)
+													.toString()
+													.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+									</span>
+								</PRPlusMinus>
+							)}
+						</Tabs>
+					</div>
+					{!derivedState.composeCodemarkActive && (
+						<>
+							{activeTab === 1 && pr && (
 								// <PullRequestConversationTab
 								// 	ghRepo={ghRepo}
 								// 	fetch={fetch}
@@ -760,256 +745,95 @@ export const PullRequest = () => {
 								// 	setIsLoadingMessage={setIsLoadingMessage}
 								// />
 								<>
-									{pr && (
-										<OutlineBox>
-											<FlexRow>
-												<Icon name="pull-request" className="bigger" />
+									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
+									<ApproveBox pr={pr} />
+									<MergeBox pr={pr} />
+									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
+									{discussions.map((_: any) => {
+										if (_.type === "merge-request") {
+											return (
 												<div>
-													<b>Request to merge</b>{" "}
-													<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
-														<PRBranch>{pr.sourceBranch}</PRBranch>
-													</Link>{" "}
-													<Icon
-														name="copy"
-														className="clickable"
-														title="Copy source branch"
-														placement="top"
-														onClick={e => copy(pr.sourceBranch)}
-													/>{" "}
-													<b>into</b>{" "}
-													<Link href={`${pr.repository.url}/-/tree/${pr.targetBranch}`}>
-														<PRBranch>{pr.targetBranch}</PRBranch>
-													</Link>
+													{_.createdAt}
+													mr: <pre>{JSON.stringify(_, null, 2)}</pre>
+													<br />
+													<br />
 												</div>
-												<div className="right">
-													<Button className="margin-right-10" variant="secondary">
-														{isLoadingBranch ? (
-															<Icon name="sync" className="spin" />
-														) : (
-															<span onClick={cantCheckoutReason ? () => {} : checkout}>
-																<Tooltip
-																	title={
-																		<>
-																			Checkout Branch
-																			{cantCheckoutReason && (
-																				<div
-																					className="subtle smaller"
-																					style={{ maxWidth: "200px" }}
-																				>
-																					Disabled: {cantCheckoutReason}
-																				</div>
-																			)}
-																		</>
-																	}
-																	trigger={["hover"]}
-																	placement="top"
-																>
-																	<span>
-																		<Icon className="narrow-text" name="git-branch" />
-																		<span className="wide-text">Check out branch</span>
-																	</span>
-																</Tooltip>
-															</span>
-														)}
-													</Button>
-													<DropdownButton
-														title="Download as"
-														variant="secondary"
-														items={[
-															{
-																label: "Email patches",
-																key: "email",
-																action: () => {
-																	HostApi.instance.send(OpenUrlRequestType, {
-																		url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
-																	});
-																}
-															},
-															{
-																label: "Plain diff",
-																key: "plain",
-																action: () => {
-																	HostApi.instance.send(OpenUrlRequestType, {
-																		url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
-																	});
-																}
-															}
-														]}
-													>
-														<Icon name="download" title="Download..." placement="top" />
-													</DropdownButton>
+											);
+										} else if (_.type === "milestone") {
+											return (
+												<div>
+													{_.milestone}
+													label:<pre>{JSON.stringify(_, null, 2)}</pre>
+													<br />
+													<br />
 												</div>
-											</FlexRow>
-										</OutlineBox>
-									)}
-									{pr && <ApproveBox pr={pr} />}
-									{pr && <MergeBox pr={pr} />}
-									<ReactAndDisplayOptions>
-										<PullRequestReactions
-											pr={pr as any}
-											targetId={pr.id}
-											setIsLoadingMessage={setIsLoadingMessage}
-											thumbsFirst
-											reactionGroups={[]}
-										/>
-										<div style={{ marginLeft: "auto" }}>
-											<DropdownButton
-												variant="secondary"
-												items={[
-													{
-														label: "Oldest first",
-														key: "oldest",
-														checked: order === "oldest",
-														action: () =>
-															dispatch(setUserPreference(["pullRequestTimelineOrder"], "oldest"))
-													},
-													{
-														label: "Newest first",
-														key: "newest",
-														checked: order === "newest",
-														action: () =>
-															dispatch(setUserPreference(["pullRequestTimelineOrder"], "newest"))
-													}
-												]}
-											>
-												{order === "oldest" ? "Oldest first" : "Newest first"}
-											</DropdownButton>
-											<DropdownButton
-												variant="secondary"
-												items={[
-													{
-														label: "Show all activity",
-														key: "all",
-														checked: filter === "all",
-														action: () =>
-															dispatch(setUserPreference(["pullRequestTimelineFilter"], "all"))
-													},
-													{ label: "-" },
-													{
-														label: "Show comments only",
-														key: "comments",
-														checked: filter === "comments",
-														action: () =>
-															dispatch(setUserPreference(["pullRequestTimelineFilter"], "comments"))
-													},
-													{
-														label: "Show history only",
-														key: "history",
-														checked: filter === "history",
-														action: () =>
-															dispatch(setUserPreference(["pullRequestTimelineFilter"], "history"))
-													}
-												]}
-											>
-												{filterMap[filter] || filter}
-											</DropdownButton>
-										</div>
-									</ReactAndDisplayOptions>
-									<Container>
-										<Left>
-											{pr.discussions.nodes.map((_: any) => {
-												if (_.type === "merge-request") {
-													return (
-														<div>
-															{_.createdAt}
-															mr: <pre>{JSON.stringify(_, null, 2)}</pre>
-															<br />
-															<br />
-														</div>
-													);
-												} else if (_.type === "milestone") {
-													return (
-														<div>
-															{_.milestone}
-															label:<pre>{JSON.stringify(_, null, 2)}</pre>
-															<br />
-															<br />
-														</div>
-													);
-												} else if (_.type === "label") {
-													return (
-														<div>
-															{_.createdAt}
-															label:<pre>{JSON.stringify(_, null, 2)}</pre>
-															<br />
-															<br />
-														</div>
-													);
-												} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
-													return (
-														<Box>
-															{_.notes.nodes.map(x => {
-																return (
-																	<>
-																		<BigRoundImg>
-																			<img
-																				style={{ float: "left" }}
-																				alt="headshot"
-																				src={x.author.avatarUrl}
-																			/>
-																		</BigRoundImg>
-																		{/* <div style={{ float: "right" }}>
+											);
+										} else if (_.type === "label") {
+											return (
+												<div>
+													{_.createdAt}
+													label:<pre>{JSON.stringify(_, null, 2)}</pre>
+													<br />
+													<br />
+												</div>
+											);
+										} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
+											return (
+												<OutlineBox style={{ padding: "20px" }}>
+													{_.notes.nodes.map(x => {
+														return (
+															<>
+																<BigRoundImg>
+																	<img
+																		style={{ float: "left" }}
+																		alt="headshot"
+																		src={x.author.avatarUrl}
+																	/>
+																</BigRoundImg>
+																{/* <div style={{ float: "right" }}>
 																		<Role>Maintainer</Role> 
 																			(S) (R) (Edit) (dots)
 																		</div>*/}
-																		<div>
-																			<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
-																			<Timestamp time={x.createdAt} />
-																		</div>
-																		<div style={{ paddingTop: "15px" }}>
-																			{x.body}
-																			<br /> id: {x.id}
-																			<br />
-																			iid {x.iid}
-																			<a
-																				href="#"
-																				onClick={e => {
-																					e.preventDefault();
-																					dispatch(
-																						api("deletePullRequestComment", {
-																							id: x.id
-																						})
-																					);
-																				}}
-																			>
-																				deleteThis!
-																			</a>
-																			<br />
-																			<pre>{JSON.stringify(x, null, 2)}</pre>
-																		</div>
-																	</>
-																);
-															})}
-														</Box>
-													);
-												} else {
-													console.warn("why here?", _);
-													return undefined;
-												}
-											})}
-											<PullRequestBottomComment
-												pr={pr}
-												setIsLoadingMessage={setIsLoadingMessage}
-												__onDidRender={__onDidRender}
-											/>
-										</Left>
-										{/* 
-										<Right>
-											<AsideBlock>
-												<div>
-													0 Assignees <span style={{ float: "right" }}>Edit</span>
-												</div>
-												<div>None - assign yourself</div>
-											</AsideBlock>
-											<AsideBlock>
-												<div>
-													Milestone <span style={{ float: "right" }}>Edit</span>
-												</div>
-												<div>None</div>
-											</AsideBlock>
-										</Right>
-										*/}
-									</Container>
+																<div>
+																	<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
+																	<Timestamp time={x.createdAt} />
+																</div>
+																<div style={{ paddingTop: "15px" }}>
+																	{x.body}
+																	<br /> id: {x.id}
+																	<br />
+																	iid {x.iid}
+																	<a
+																		href="#"
+																		onClick={e => {
+																			e.preventDefault();
+																			dispatch(
+																				api("deletePullRequestComment", {
+																					id: x.id
+																				})
+																			);
+																		}}
+																	>
+																		deleteThis!
+																	</a>
+																	<br />
+																	<pre>{JSON.stringify(x, null, 2)}</pre>
+																</div>
+															</>
+														);
+													})}
+												</OutlineBox>
+											);
+										} else {
+											console.warn("why here?", _);
+											return undefined;
+										}
+									})}
+									<PullRequestBottomComment
+										pr={pr}
+										setIsLoadingMessage={setIsLoadingMessage}
+										__onDidRender={__onDidRender}
+									/>
 								</>
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
@@ -1021,19 +845,107 @@ export const PullRequest = () => {
 									setIsLoadingMessage={setIsLoadingMessage}
 								/>
 							)}
+						</>
+					)}
+					{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
+						<PullRequestFileComments
+							pr={pr as any}
+							fetch={fetch}
+							setIsLoadingMessage={setIsLoadingMessage}
+							commentId={derivedState.currentPullRequestCommentId}
+							quote={() => {}}
+							onClose={closeFileComments}
+						/>
+					)}
+				</Left>
+				<Right className={rightOpen ? "expanded" : "collapsed"}>
+					<Tooltip title="Close view" placement="left">
+						<AsideBlock
+							onClick={() => {
+								HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
+								dispatch(closeAllModals());
+							}}
+						>
+							<Icon className="clickable" name="x" />
+						</AsideBlock>
+					</Tooltip>
+					<HR />
+					<Tooltip title="Expand sidebar" placement="left">
+						<AsideBlock onClick={() => setRightOpen(!rightOpen)}>
+							<Icon
+								className="clickable"
+								name={rightOpen ? "chevron-right-thin" : "chevron-left-thin"}
+							/>
+						</AsideBlock>
+					</Tooltip>
+					<HR />
+					<Tooltip title="Add a to do" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="checked-checkbox" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Assignee(s)" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="person" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Milestone" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="clock" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Time tracking" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="clock" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Labels" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="tag" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Unlocked" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="unlock" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Participants" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="team" />
+						</AsideBlock>
+					</Tooltip>
+					<HR />
+					<Tooltip title="Notifications on" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="bell" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Copy reference" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="copy" />
+						</AsideBlock>
+					</Tooltip>
+					<Tooltip title="Copy branch name" placement="left">
+						<AsideBlock>
+							<Icon className="clickable" name="copy" />
+						</AsideBlock>
+					</Tooltip>
+
+					{/*
+					<AsideBlock>
+						<div>
+							0 Assignees <span style={{ float: "right" }}>Edit</span>
 						</div>
-					</ScrollBox>
-				)}
-				{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
-					<PullRequestFileComments
-						pr={pr as any}
-						fetch={fetch}
-						setIsLoadingMessage={setIsLoadingMessage}
-						commentId={derivedState.currentPullRequestCommentId}
-						quote={() => {}}
-						onClose={closeFileComments}
-					/>
-				)}
+						<div>None - assign yourself</div>
+					</AsideBlock>
+					<AsideBlock>
+						<div>
+							Milestone <span style={{ float: "right" }}>Edit</span>
+						</div>
+						<div>None</div>
+					</AsideBlock>
+*/}
+				</Right>
 			</Root>
 		</ThemeProvider>
 	);

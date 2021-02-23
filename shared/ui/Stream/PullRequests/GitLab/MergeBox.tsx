@@ -80,7 +80,7 @@ export const MergeBox = props => {
 			<FlexRow
 				onClick={() => setModifyCommit(!modifyCommit)}
 				style={{
-					background: "var(--app-background-color)",
+					background: "var(--base-background-color)",
 					borderTop: "1px solid var(--base-border-color)",
 					borderBottom: "1px solid var(--base-border-color)",
 					cursor: "pointer"
