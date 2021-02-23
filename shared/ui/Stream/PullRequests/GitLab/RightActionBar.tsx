@@ -133,7 +133,7 @@ export const RightActionBar = props => {
 			<AsideBlock onClick={() => !rightOpen && close}>
 				{rightOpen ? (
 					<JustifiedRow>
-						<label>Close view / collapse</label>
+						<label>Close view / Collapse</label>
 						<div>
 							<Icon className="clickable margin-right" name="x" onClick={close} />
 							<Icon
