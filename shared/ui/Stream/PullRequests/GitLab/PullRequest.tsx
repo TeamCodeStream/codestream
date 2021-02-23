@@ -202,6 +202,7 @@ export const FlexRow = styled.div`
 	align-items: center;
 	padding: 10px;
 	display: flex;
+	flex-wrap: wrap;
 	.right {
 		margin-left: auto;
 		white-space: nowrap;
@@ -547,7 +548,7 @@ export const PullRequest = () => {
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
 
 	const bottomComment = (
-		<div style={{ marginRight: "20px" }}>
+		<div style={{ margin: "0 20px" }}>
 			<PullRequestBottomComment
 				pr={pr}
 				setIsLoadingMessage={setIsLoadingMessage}

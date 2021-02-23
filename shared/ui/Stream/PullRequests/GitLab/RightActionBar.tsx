@@ -30,7 +30,8 @@ const Right = styled.div`
 	z-index: 30;
 	transition: width 0.2s;
 	&.expanded {
-		width: 250px;
+		width: 265px;
+		max-width: 100vw;
 		border-left: 1px solid (--base-border-color);
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		padding: 0 15px;
@@ -91,7 +92,7 @@ const JustifiedRow = styled.div`
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
-		padding-right: 10px;
+		padding-right: 5px;
 	}
 	> :nth-child(2) {
 		margin-left: auto;
@@ -105,13 +106,6 @@ const Subtle = styled.div`
 	color: var(--text-color-subtle);
 `;
 
-const openAssignees = () => {};
-const openMilestone = () => {};
-const openTimeTracking = () => {};
-const openLabels = () => {};
-const openLock = () => {};
-const openParticipants = () => {};
-
 export const RightActionBar = props => {
 	const { pr, rightOpen, setRightOpen } = props;
 	const dispatch = useDispatch();
@@ -119,62 +113,67 @@ export const RightActionBar = props => {
 	const [notificationsOn, setNotificationsOn] = useState(true);
 	const [lockOn, setLockOn] = useState(false);
 
+	const close = () => {
+		HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
+		dispatch(closeAllModals());
+	};
+
+	const openAssignees = () => setRightOpen(true);
+	const openMilestone = () => setRightOpen(true);
+	const openTimeTracking = () => setRightOpen(true);
+	const openLabels = () => setRightOpen(true);
+	const openLock = () => setRightOpen(true);
+	const openParticipants = () => setRightOpen(true);
+	const openToDo = () => setRightOpen(true);
+
 	const reference = pr.url;
 	const sourceBranch = pr.sourceBranch;
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
-			<AsideBlock
-				onClick={() => {
-					HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
-					dispatch(closeAllModals());
-				}}
-			>
+			<AsideBlock onClick={() => !rightOpen && close}>
 				{rightOpen ? (
 					<JustifiedRow>
-						<label>Close view</label>
-						<Icon className="clickable" name="x" title="Close view" placement="left" />
+						<label>Close view / collapse</label>
+						<div>
+							<Icon className="clickable margin-right" name="x" onClick={close} />
+							<Icon
+								className="clickable"
+								name="chevron-right-thin"
+								onClick={() => setRightOpen(false)}
+							/>
+						</div>
 					</JustifiedRow>
 				) : (
 					<Icon className="clickable" name="x" title="Close view" placement="left" />
 				)}
 			</AsideBlock>
 			{!rightOpen && <HR />}
-			<AsideBlock onClick={() => !rightOpen && setRightOpen(true)}>
-				<Tooltip>
-					{rightOpen ? (
-						<JustifiedRow>
-							<label>To Do</label>
-							<div style={{ display: "flex" }}>
-								<Button variant="secondary">Add a to do</Button>
-								<IconButton style={{ marginRight: 0 }}>
-									<Icon
-										className="clickable padded"
-										title="Collapse sidebar"
-										placement="left"
-										name="chevron-right-thin"
-										onClick={() => setRightOpen(false)}
-									/>
-								</IconButton>
-							</div>
-						</JustifiedRow>
-					) : (
-						<Icon
-							className="clickable"
-							title="Expand sidebar"
-							placement="left"
-							name="chevron-left-thin"
-						/>
-					)}
-				</Tooltip>
-			</AsideBlock>
-			{!rightOpen && <HR />}
 			{!rightOpen && (
-				<AsideBlock>
-					<Tooltip title="Add a to do" placement="left">
-						<Icon className="clickable" name="checked-checkbox" />
-					</Tooltip>
+				<AsideBlock onClick={() => !rightOpen && setRightOpen(true)}>
+					<Icon
+						className="clickable"
+						title="Expand sidebar"
+						placement="left"
+						name="chevron-left-thin"
+					/>
 				</AsideBlock>
 			)}
+			{!rightOpen && <HR />}
+			<AsideBlock onClick={() => !rightOpen && openToDo()}>
+				{rightOpen ? (
+					<JustifiedRow>
+						<label>To Do</label>
+						<Button variant="secondary">Add a to do</Button>
+					</JustifiedRow>
+				) : (
+					<Icon
+						className="clickable"
+						name="checked-checkbox"
+						title="Add a to do"
+						placement="left"
+					/>
+				)}
+			</AsideBlock>
 			<AsideBlock onClick={() => !rightOpen && openAssignees()}>
 				{rightOpen ? (
 					<>

@@ -53,6 +53,7 @@ export const PRReaction = styled.div`
 	display: inline-block;
 	padding: 3px 10px;
 	margin-right: 10px;
+	margin-bottom: 5px;
 	border: 1px solid var(--base-border-color);
 	border-radius: 4px;
 	cursor: pointer;
@@ -119,15 +120,18 @@ export const PullRequestReactButton = styled((props: Props) => {
 
 export const PRReactions = styled.div`
 	display: flex;
-	align-items: stretch;
+	flex-wrap: wrap;
 	${PullRequestReactButton} {
 		display: inline-block;
 		border: 1px solid var(--base-border-color);
 		border-radius: 4px;
 		padding: 3px 10px !important;
 		margin-right: 5px;
+		margin-bottom: 5px;
 		display: flex;
 		place-items: center;
+		height: 35px;
+		flex-grow: 0;
 	}
 `;
 

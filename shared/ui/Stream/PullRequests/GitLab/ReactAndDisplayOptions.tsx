@@ -15,11 +15,12 @@ import { DropdownButton } from "../../Review/DropdownButton";
 export const Root = styled.div`
 	margin: 0 20px 15px 20px;
 	display: flex;
-	align-items: stretch;
-	padding-bottom: 15px;
+	flex-wrap: wrap;
+	padding-bottom: 10px;
 	border-bottom: 1px solid var(--base-border-color);
 	button {
 		margin-left: 10px;
+		margin-bottom: 5px;
 		height: 35px;
 	}
 `;
@@ -52,7 +53,7 @@ export const ReactAndDisplayOptions = props => {
 				thumbsFirst
 				reactionGroups={pr.reactionGroups}
 			/>
-			<div style={{ marginLeft: "auto" }}>
+			<div style={{ marginLeft: "auto", textAlign: "right" }}>
 				<DropdownButton
 					variant="secondary"
 					items={[
