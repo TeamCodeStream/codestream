@@ -78,12 +78,12 @@ import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { DropdownButton } from "../../Review/DropdownButton";
-import { LocalFilesCloseDiffRequestType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { PullRequestReactions } from "./PullRequestReactions";
 import { ApproveBox } from "./ApproveBox";
 import { MergeBox } from "./MergeBox";
 import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
 import { SummaryBox } from "./SummaryBox";
+import { RightActionBar } from "./RightActionBar";
 
 const Root = styled.div`
 	position: absolute;
@@ -158,28 +158,6 @@ const Left = styled.div`
 	padding-right: 48px;
 	min-height: 100%;
 `;
-const Right = styled.div`
-	width: 48px;
-	height: 100%;
-	position: fixed;
-	top: 0;
-	right: 0;
-	background-color: rgba(127, 127, 127, 0.1);
-	background-color: var(--sidebar-background);
-	z-index: 30;
-	transition: width 0.2s;
-	&.expanded {
-		width: 250px;
-		border-left: 1px solid (--base-border-color);
-		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-	}
-`;
-
-const HR = styled.div`
-	width: 100%;
-	height: 1px;
-	background: var(--base-border-color);
-`;
 
 const Header = styled.div`
 	display: flex;
@@ -208,33 +186,6 @@ const Role = styled.span`
 	color: #666;
 	border: 1px solid #cfcfcf;
 	padding: 0px 10px 0px 10px;
-`;
-
-const AsideBlock = styled.div`
-	height: 48px;
-	width: 100%;
-	display: flex;
-	place-items: center;
-	justify-content: center;
-	cursor: pointer;
-	display: flex;
-	.icon {
-		opacity: 0.7;
-	}
-	&:hover {
-		.icon {
-			opacity: 1;
-			color: var(--text-color-highlight);
-		}
-		backdrop-filter: brightness(70%);
-	}
-`;
-
-const Box = styled.div`
-	padding: 10px;
-	margin: 0px 20px 15px 20px;
-	border: 1px solid var(--base-border-color);
-	border-radius: 4px;
 `;
 
 const Reply = styled.div`
@@ -589,8 +540,22 @@ export const PullRequest = () => {
 	};
 	console.warn("PR: ", pr);
 
-	const discussions =
-		order === "newest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
+	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
+
+	let discussions = order === "newest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
+	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
+	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
+
+	const bottomComment = (
+		<div style={{ marginRight: "20px" }}>
+			<PullRequestBottomComment
+				pr={pr}
+				setIsLoadingMessage={setIsLoadingMessage}
+				__onDidRender={__onDidRender}
+			/>
+		</div>
+	);
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<Root>
@@ -749,6 +714,7 @@ export const PullRequest = () => {
 									<ApproveBox pr={pr} />
 									<MergeBox pr={pr} />
 									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
+									{order === "newest" && bottomComment}
 									{discussions.map((_: any) => {
 										if (_.type === "merge-request") {
 											return (
@@ -829,11 +795,7 @@ export const PullRequest = () => {
 											return undefined;
 										}
 									})}
-									<PullRequestBottomComment
-										pr={pr}
-										setIsLoadingMessage={setIsLoadingMessage}
-										__onDidRender={__onDidRender}
-									/>
+									{order === "oldest" && bottomComment}
 								</>
 							)}
 							{activeTab === 2 && <PullRequestCommitsTab pr={pr} />}
@@ -858,94 +820,12 @@ export const PullRequest = () => {
 						/>
 					)}
 				</Left>
-				<Right className={rightOpen ? "expanded" : "collapsed"}>
-					<Tooltip title="Close view" placement="left">
-						<AsideBlock
-							onClick={() => {
-								HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
-								dispatch(closeAllModals());
-							}}
-						>
-							<Icon className="clickable" name="x" />
-						</AsideBlock>
-					</Tooltip>
-					<HR />
-					<Tooltip title="Expand sidebar" placement="left">
-						<AsideBlock onClick={() => setRightOpen(!rightOpen)}>
-							<Icon
-								className="clickable"
-								name={rightOpen ? "chevron-right-thin" : "chevron-left-thin"}
-							/>
-						</AsideBlock>
-					</Tooltip>
-					<HR />
-					<Tooltip title="Add a to do" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="checked-checkbox" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Assignee(s)" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="person" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Milestone" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="clock" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Time tracking" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="clock" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Labels" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="tag" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Unlocked" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="unlock" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Participants" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="team" />
-						</AsideBlock>
-					</Tooltip>
-					<HR />
-					<Tooltip title="Notifications on" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="bell" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Copy reference" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="copy" />
-						</AsideBlock>
-					</Tooltip>
-					<Tooltip title="Copy branch name" placement="left">
-						<AsideBlock>
-							<Icon className="clickable" name="copy" />
-						</AsideBlock>
-					</Tooltip>
-
-					{/*
-					<AsideBlock>
-						<div>
-							0 Assignees <span style={{ float: "right" }}>Edit</span>
-						</div>
-						<div>None - assign yourself</div>
-					</AsideBlock>
-					<AsideBlock>
-						<div>
-							Milestone <span style={{ float: "right" }}>Edit</span>
-						</div>
-						<div>None</div>
-					</AsideBlock>
-*/}
-				</Right>
+				<RightActionBar
+					pr={pr}
+					rightOpen={rightOpen}
+					setRightOpen={setRightOpen}
+					setIsLoadingMessage={setIsLoadingMessage}
+				/>
 			</Root>
 		</ThemeProvider>
 	);
