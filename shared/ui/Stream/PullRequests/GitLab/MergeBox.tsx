@@ -83,6 +83,7 @@ export const MergeBox = props => {
 					background: "var(--base-background-color)",
 					borderTop: "1px solid var(--base-border-color)",
 					borderBottom: "1px solid var(--base-border-color)",
+					flexWrap: "nowrap",
 					cursor: "pointer"
 				}}
 			>
