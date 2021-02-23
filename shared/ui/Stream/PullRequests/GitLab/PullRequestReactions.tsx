@@ -16,7 +16,19 @@ interface Props {
 	targetId: string;
 	setIsLoadingMessage: Function;
 	className?: string;
-	reactionGroups?: any;
+	reactionGroups?: {
+		content: string;
+		data: {
+			awardable_id: number;
+			id: number;
+			name: string;
+			user: {
+				id: number;
+				avatar_url: string;
+				username: string;
+			};
+		}[];
+	}[];
 }
 
 export const PRReact = styled.div`
@@ -77,18 +89,21 @@ export const PullRequestReactButton = styled((props: Props) => {
 	};
 
 	const isMine = (key: string) => {
-		const me = props.pr.viewer ? props.pr.viewer.login : "FIXME";
+		const me = props.pr.viewer ? props.pr.viewer.login : "";
+		if (!me) return false;
 		if (!props.reactionGroups) return false;
 		const reaction = props.reactionGroups.find(_ => _.content === key);
 		if (!reaction) return false;
-		return reaction.users.nodes.find(_ => _.login === me);
+		return reaction.data.find(_ => _.user.username === me);
 	};
 
 	return (
 		<span className={props.className}>
 			{open && (
 				<EmojiPicker
-					addEmoji={key => saveReaction(key, !isMine(key))}
+					addEmoji={key => {
+						saveReaction(key.id, !isMine(key.id));
+					}}
 					target={open}
 					autoFocus={true}
 				/>
@@ -152,50 +167,57 @@ export const PullRequestReactions = (props: ReactionProps) => {
 	if (!reactionGroups) return null;
 
 	const dispatch = useDispatch();
-	const saveReaction = async (key: string, onOff: boolean) => {
+	const saveReaction = async (key: string, onOff: boolean, id?: string) => {
 		props.setIsLoadingMessage("Saving Reaction...");
 
 		await dispatch(
 			api("toggleReaction", {
 				subjectId: props.targetId,
 				content: key,
-				onOff
+				onOff,
+				id
 			})
 		);
 	};
 
-	const me = props.pr.viewer ? props.pr.viewer.login : "FIXME";
+	const me = props.pr.viewer ? props.pr.viewer.login : "";
 
 	const makeReaction = (reactionId, index) => {
-		const reaction = reactionGroups.find(r => r.content === reactionId) || { content: reactionId };
-		const num = reaction.users ? reaction.users.nodes.length : 0;
+		const reaction = reactionGroups.find(r => r.content === reactionId);
+		// this is the emoji's id aka "heart_eyes"
+		const reactionContent = reaction ? reaction.content : reactionId;
+		const data = reaction ? reaction.data : [];
 		// if (num == 0) return null;
-		const emoji = emojify(":" + reaction.content + ":");
-		const loginList = reaction.users ? reaction.users.nodes.map(_ => _.login) : [];
+		const emoji = emojify(":" + reactionContent + ":");
+		const loginList = data.map(_ => _.user.username);
 		const logins = <SmartFormattedList value={loginList} />;
 		const title =
 			loginList.length > 0 ? (
 				<>
-					{logins} reacted with {REACTION_NAME_MAP[reaction.content]} emoji
+					{logins} reacted with {REACTION_NAME_MAP[reactionContent]} emoji
 				</>
 			) : (
 				""
 			);
 		const iReacted = loginList.includes(me);
+		const myReaction = data.find(_ => _.user.username === me) || {};
 		return (
 			<Tooltip key={index} placement="bottomLeft" delay={1} title={title} trigger={["hover"]}>
 				<PRReaction
 					className={iReacted ? "mine" : ""}
-					onClick={() => saveReaction(reaction.content, !iReacted)}
+					onClick={() => saveReaction(reactionContent, !iReacted, myReaction.id)}
 				>
-					<span dangerouslySetInnerHTML={{ __html: emoji }} /> {num}
+					<span dangerouslySetInnerHTML={{ __html: emoji }} /> {data.length}
 				</PRReaction>
 			</Tooltip>
 		);
 	};
 
 	const reactions = reactionGroups
-		.map((reaction, index) => makeReaction(reaction, index))
+		.filter(_ =>
+			props.thumbsFirst ? _.content !== "thumbsup" && _.content !== "thumbsdown" : true
+		)
+		.map((reaction, index) => makeReaction(reaction.content, index))
 		.filter(Boolean);
 
 	if (reactions.length > 0 || props.thumbsFirst)

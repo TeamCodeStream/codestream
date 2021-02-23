@@ -50,7 +50,7 @@ export const ReactAndDisplayOptions = props => {
 				targetId={pr.id}
 				setIsLoadingMessage={setIsLoadingMessage}
 				thumbsFirst
-				reactionGroups={[]}
+				reactionGroups={pr.reactionGroups}
 			/>
 			<div style={{ marginLeft: "auto" }}>
 				<DropdownButton

@@ -250,6 +250,23 @@ export function reduceProviderPullRequests(
 									pr[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "addReaction") {
+							const reaction = pr.reactionGroups.find(_ => _.content === directive.data.name);
+							if (reaction) {
+								reaction.data.push(directive.data);
+							} else {
+								pr.reactionGroups.push({ content: directive.data.name, data: [directive.data] });
+							}
+						} else if (directive.type === "removeReaction") {
+							const group = pr.reactionGroups.find(_ => _.content === directive.data.content);
+							if (group) {
+								group.data = group.data.filter(_ => _.user.username !== directive.data.username);
+								if (group.data.length === 0) {
+									pr.reactionGroups = pr.reactionGroups.filter(
+										_ => _.content !== directive.data.content
+									);
+								}
+							}
 						}
 					}
 				} else if (providerId === "github*com" || providerId === "github/enterprise") {

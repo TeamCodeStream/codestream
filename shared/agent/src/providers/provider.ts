@@ -528,7 +528,11 @@ export abstract class ThirdPartyProviderBase<
 
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;
-					json = resp.json() as Promise<R>;
+					if (options?.useRawResponse) {
+						json = resp.text() as any;
+					} else {
+						json = resp.json() as Promise<R>;
+					}
 				}
 			}
 

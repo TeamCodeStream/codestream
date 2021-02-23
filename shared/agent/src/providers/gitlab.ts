@@ -1,6 +1,6 @@
 "use strict";
 import { GraphQLClient } from "graphql-request";
-import { flatten } from "lodash-es";
+import { flatten, groupBy } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
@@ -812,6 +812,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async restPut<T extends object, R extends object>(url: string, variables: any) {
 		return this.put<T, R>(url, variables);
 	}
+	async restDelete<R extends object>(url: string, options: { useRawResponse: boolean }) {
+		return this.delete<R>(url, {}, options);
+	}
+
+	_gitlabUsername?: string;
 
 	_pullRequestCache: Map<
 		string,
@@ -853,6 +858,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		let response = {} as {
+			currentUser: any;
 			project: {
 				mergeRequest: {
 					baseRefName: string;
@@ -879,43 +885,67 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							};
 						}[];
 					};
+					downvotes: number;
 					headRefName: string;
 					headRefOid: string;
 					id: string;
 					idComputed: string;
 					iid: string;
-					number: number;
-					sourceBranch: string;
-					targetBranch: string;
-					title: string;
-					webUrl: string;
-					state: string;
-					mergedAt: string;
-					reference: string;
-					repository: {
-						name: string;
-						nameWithOwner: string;
-						url: string;
-					};
-					projectId: string;
-					sourceProject: any;
-					url: string;
 					merged: boolean;
-					references: {
-						full: string;
-					};
-
-					providerId: string;
+					mergedAt: string;
+					number: number;
 					pendingReview: {
 						comments: {
 							totalCount: number;
 						};
 					};
+					projectId: string;
+					// CS providerId
+					providerId: string;
+					reactionGroups: {
+						content: string;
+						data: {
+							awardable_id: number;
+							id: number;
+							name: string;
+							user: {
+								id: number;
+								avatar_url: string;
+								username: string;
+							};
+						}[];
+					}[];
+					reference: string;
+					references: {
+						full: string;
+					};
+					repository: {
+						name: string;
+						nameWithOwner: string;
+						url: string;
+					};
+					sourceBranch: string;
+					state: string;
+					sourceProject: any;
+					targetBranch: string;
+					title: string;
+
+					upvotes: number;
+					url: string;
+					viewer: {
+						login: string;
+					};
+					webUrl: string;
 				};
 			};
 		};
 		try {
 			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
+				currentUser {
+					name
+					username
+					id
+				}
 				project(fullPath: $fullPath) {
 				  name
 				  mergeRequest(iid: $iid) {
@@ -946,6 +976,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						webUrl
 						fullPath
 					}
+					upvotes
+					downvotes
 					discussions {
 					  nodes {
 						createdAt
@@ -1016,6 +1048,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				iid: iid.toString()
 			});
 
+			response.project.mergeRequest.viewer = {
+				login: response.currentUser.username
+			};
+			this._gitlabUsername = response.currentUser.username;
+			// awards are "reactions" aka "emojis"
+			const awards = await this.restGet<any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`
+			);
+			const grouped = groupBy(awards.body, (_: { name: string }) => _.name);
+			response.project.mergeRequest.reactionGroups =
+				Object.keys(grouped).map(_ => {
+					return { content: _, data: grouped[_] };
+				}) || [];
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
 				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
@@ -1606,7 +1651,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				commiterAvatarUrl = Strings.toGravatar(_.committer_email);
 			}
 			return {
-				// commitId: _.id,
+				oid: _.id,
 				abbreviatedOid: _.short_id,
 				author: {
 					name: _.author_name,
@@ -1644,6 +1689,69 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			owner: string;
 		}
 	>();
+
+	async toggleReaction(request: {
+		pullRequestId: string;
+		subjectId: string;
+		content: string;
+		onOff: boolean;
+		id?: string;
+	}): Promise<Directives | undefined> {
+		const parsed = JSON.parse(request.pullRequestId);
+		request.pullRequestId = parsed.id;
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
+		try {
+			if (request.onOff) {
+				const response = await this.restPost<
+					{
+						name: string;
+					},
+					any
+				>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`, {
+					name: request.content
+				});
+				return {
+					directives: [
+						{
+							type: "addReaction",
+							data: response.body
+						}
+					]
+				};
+			} else {
+				if (!request.id) throw new Error("MissingId");
+
+				// with DELETEs we don't get a JSON response
+				const response = await this.restDelete<String>(
+					`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji/${
+						request.id
+					}`,
+					{
+						useRawResponse: true
+					}
+				);
+				if (response.body === "") {
+					return {
+						directives: [
+							{
+								type: "removeReaction",
+								data: {
+									content: request.content,
+									username: this._gitlabUsername
+								}
+							}
+						]
+					};
+				}
+			}
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return undefined;
+	}
 
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
