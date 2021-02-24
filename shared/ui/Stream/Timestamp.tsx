@@ -26,7 +26,7 @@ export const distanceOfTimeInWords = (
 	abbreviated?: boolean
 ): string => {
 	const now = new Date().getTime();
-	let seconds: number = Math.floor((now - time) / 1000);
+	let seconds: number = relativeToNow ? Math.floor((now - time) / 1000) : time;
 	const isAgo: boolean = seconds >= 0;
 
 	seconds = Math.abs(seconds);

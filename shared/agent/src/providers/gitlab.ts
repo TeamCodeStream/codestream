@@ -54,6 +54,7 @@ interface GitLabProject {
 interface GitLabUser {
 	id: string;
 	name: string;
+	avatar_url: string;
 }
 
 @lspProvider("gitlab")
@@ -833,6 +834,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// }
 	> = new Map();
 
+	async getReviewers(request: { pullRequestId: string }) {
+		let projectFullPath;
+		let iid;
+		let actualPullRequestId;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			actualPullRequestId = parsed.id;
+			projectFullPath = parsed.full.split("!")[0];
+			iid = parsed.full.split("!")[1];
+		}
+
+		const response = await this.restGet<GitLabUser[]>(
+			`/projects/${encodeURIComponent(projectFullPath)}/users`
+		);
+		return {
+			users: response.body.map(u => ({ ...u, avatarUrl: u.avatar_url, displayName: u.name }))
+		};
+	}
+
 	@log()
 	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
 		let projectFullPath;
@@ -978,6 +998,39 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 					upvotes
 					downvotes
+					milestone {
+						title
+						webPath
+						dueDate
+					}
+					subscribed
+					userDiscussionsCount
+					discussionLocked
+					assignees(last: 100) {
+						nodes {
+						  id
+						  name
+						  username
+						  avatarUrl
+						}
+					  }
+					participants(last:100) {
+						nodes {
+						  id
+						  name
+						  username
+						  avatarUrl
+						}
+					  }
+					labels(last: 100) {
+						nodes {
+						  color
+						  textColor
+						  title
+						}
+					  }
+					timeEstimate
+					totalTimeSpent
 					discussions {
 					  nodes {
 						createdAt
@@ -1335,6 +1388,92 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		return true;
+	}
+
+	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
+		let projectFullPath;
+		let iid;
+		if (request.pullRequestId) {
+			const parsed = JSON.parse(request.pullRequestId);
+			projectFullPath = parsed.full.split("!")[0];
+			iid = parsed.full.split("!")[1];
+		}
+
+		const type = request.onOff ? "subscribe" : "unsubscribe";
+		const data = await this.restPost<{}, { subscribed: string }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/${type}`,
+			{}
+		);
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						subscribed: data.body.subscribed
+					}
+				}
+			]
+		};
+	}
+
+	parseId(pullRequestId: string) {
+		const parsed = JSON.parse(pullRequestId);
+		return {
+			projectFullPath: parsed.full.split("!")[0],
+			iid: parsed.full.split("!")[1]
+		};
+	}
+
+	async lockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restPost<{}, { state: string }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/lock`,
+			{}
+		);
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						state: data.body.state
+					}
+				}
+			]
+		};
+	}
+
+	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restPost<{}, { state: string }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/unlock`,
+			{}
+		);
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						state: data.body.state
+					}
+				}
+			]
+		};
+	}
+
+	async createToDo(request: { pullRequestId: string }): Promise<Directives> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restPost<{}, { state: string }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/todo`,
+			{}
+		);
+
+		return { directives: [] };
 	}
 
 	@log()

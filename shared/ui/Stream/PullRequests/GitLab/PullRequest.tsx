@@ -77,6 +77,7 @@ import { PullRequestBottomComment } from "../../PullRequestBottomComment";
 import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../Review/DropdownButton";
 import { PullRequestReactions } from "./PullRequestReactions";
 import { ApproveBox } from "./ApproveBox";
@@ -126,7 +127,14 @@ const Root = styled.div`
 		color: var(--text-color-highlight);
 	}
 	${PRHeadshotName} {
-		font-weight: bold;
+		img {
+			border-radius: 50%;
+		}
+	}
+	${PRHeadshot} {
+		img {
+			border-radius: 50%;
+		}
 	}
 	${PRHeader} {
 		margin-top: 20px;
@@ -145,6 +153,9 @@ const Root = styled.div`
 	}
 	button {
 		border-radius: 4px;
+	}
+	button.narrow {
+		padding: 1px 3px !important;
 	}
 `;
 
@@ -324,7 +335,7 @@ export const PullRequest = () => {
 		}
 		// TODO is this needed??
 		//setGhRepo(pr.repository);
-		setTitle(_pr.project.mergeRequest.title);
+		if (_pr && _pr.project) setTitle(_pr.project.mergeRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
 		setIsLoadingPR(false);
@@ -414,6 +425,8 @@ export const PullRequest = () => {
 			nameWithOwner: string;
 			url: string;
 		};
+		userDiscussionsCount: number;
+		discussionLocked: boolean;
 	} = useMemo(() => {
 		return derivedState.currentPullRequest &&
 			derivedState.currentPullRequest.conversations &&
@@ -493,7 +506,11 @@ export const PullRequest = () => {
 	};
 
 	const numComments = useMemo(() => {
-		if (!derivedState.currentPullRequest || !derivedState.currentPullRequest.conversations)
+		if (
+			!derivedState.currentPullRequest ||
+			!derivedState.currentPullRequest.conversations ||
+			!derivedState.currentPullRequest.conversations.project
+		)
 			return 0;
 		const _pr = derivedState.currentPullRequest.conversations.project.mergeRequest;
 		if (!_pr || !_pr.discussions || !_pr.discussions.nodes) return 0;
@@ -583,6 +600,17 @@ export const PullRequest = () => {
 								>
 									{pr.isDraft ? "Draft" : stateMap[pr.state]}
 								</PRStatusButton>
+								{pr.discussionLocked && (
+									<PRStatusButton
+										className="narrow"
+										disabled
+										fullOpacity
+										size="compact"
+										variant="warning"
+									>
+										<Icon name="lock" style={{ margin: 0 }} />
+									</PRStatusButton>
+								)}
 								Opened{" "}
 								<Timestamp
 									className="no-padding"
@@ -642,7 +670,7 @@ export const PullRequest = () => {
 							<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
 								<Icon className="narrow-text" name="comment" />
 								<span className="wide-text">Overview</span>
-								<PRBadge>{numComments}</PRBadge>
+								<PRBadge>{pr.userDiscussionsCount}</PRBadge>
 							</Tab>
 							<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
 								<Icon className="narrow-text" name="git-commit" />

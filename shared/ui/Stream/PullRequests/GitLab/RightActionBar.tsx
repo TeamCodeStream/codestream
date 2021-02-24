@@ -1,23 +1,28 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
 import { Button } from "@codestream/webview/src/components/Button";
-import { OutlineBox, FlexRow } from "./PullRequest";
-import { CodeStreamState } from "@codestream/webview/store";
 import { Link } from "../../Link";
 import styled from "styled-components";
-import { DropdownButton } from "../../Review/DropdownButton";
-import { PRBranch } from "../../PullRequestComponents";
 import copy from "copy-to-clipboard";
-import Tooltip from "../../Tooltip";
 import { HostApi } from "../../../webview-api";
-import { SwitchBranchRequestType } from "@codestream/protocols/agent";
-import { confirmPopup } from "../../Confirm";
-import { getProviderPullRequestRepo2 } from "@codestream/webview/store/providerPullRequests/reducer";
 import { LocalFilesCloseDiffRequestType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { closeAllModals } from "@codestream/webview/store/context/actions";
 import { Switch } from "@codestream/webview/src/components/controls/Switch";
-import { IconButton } from "./MergeBox";
+import { api } from "../../../store/providerPullRequests/actions";
+import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import { PRError } from "../../PullRequestComponents";
+import { CSMe } from "@codestream/protocols/api";
+import { CodeStreamState } from "@codestream/webview/store";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
+import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
+import Tag from "../../Tag";
+import { confirmPopup } from "../../Confirm";
+import { distanceOfTimeInWords } from "../../Timestamp";
+import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
+import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFilesChangedList";
 
 const Right = styled.div`
 	width: 48px;
@@ -30,10 +35,10 @@ const Right = styled.div`
 	z-index: 30;
 	transition: width 0.2s;
 	&.expanded {
-		width: 265px;
+		width: 250px;
 		max-width: 100vw;
 		border-left: 1px solid (--base-border-color);
-		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
 		padding: 0 15px;
 	}
 	a {
@@ -44,6 +49,9 @@ const Right = styled.div`
 	}
 	label {
 		color: var(--text-color-highlight);
+	}
+	.spin {
+		vertical-align: 3px;
 	}
 `;
 
@@ -71,7 +79,10 @@ const AsideBlock = styled.div`
 			opacity: 1;
 			color: var(--text-color-highlight);
 		}
-		backdrop-filter: brightness(70%);
+		backdrop-filter: brightness(97%);
+	}
+	.vscode-dark .collapsed &:hover {
+		backdrop-filter: brightness(120%);
 	}
 	.expanded & + & {
 		border-top: 1px solid var(--base-border-color);
@@ -101,48 +112,220 @@ const JustifiedRow = styled.div`
 	}
 `;
 
-const Subtle = styled.div`
+const Subtle = styled.span`
 	padding-top: 5px;
 	color: var(--text-color-subtle);
+	a {
+		color: var(--text-color-subtle) !important;
+	}
 `;
 
+const IconWithLabel = styled.div`
+	text-align: center;
+	max-width: 100%;
+	> div {
+		text-align: center;
+		font-size: 11px;
+		opacity: 0.7;
+		padding: 0 5px;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+`;
+
+export const ButtonRow = styled.div`
+	display: flex;
+	justify-content: stretch;
+	margin: 0 -5px;
+	button {
+		width: 50%;
+		margin: 0 5px;
+		white-space: nowrap;
+	}
+`;
+
+const EMPTY_HASH = {};
+const EMPTY_ARRAY = [];
+const EMPTY_ARRAY_2 = [];
+const EMPTY_ARRAY_3 = [];
+
 export const RightActionBar = props => {
-	const { pr, rightOpen, setRightOpen } = props;
+	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
 
-	const [notificationsOn, setNotificationsOn] = useState(true);
-	const [lockOn, setLockOn] = useState(false);
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const currentUser = state.users[state.session.userId!] as CSMe;
+		const team = state.teams[state.context.currentTeamId];
+		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
+		const skipGitEmailCheck = state.preferences.skipGitEmailCheck;
+		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
+		const currentPullRequest = getCurrentProviderPullRequest(state);
+		const { preferences, ide } = state;
+
+		return {
+			defaultMergeMethod: preferences.lastPRMergeMethod || "SQUASH",
+			currentUser,
+			currentPullRequestId: state.context.currentPullRequest
+				? state.context.currentPullRequest.id
+				: undefined,
+			blameMap,
+			currentPullRequest: currentPullRequest,
+			team,
+			skipGitEmailCheck,
+			addBlameMapEnabled,
+			isInVscode: ide.name === "VSC"
+		};
+	});
+
+	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
+	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY_2);
+	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
+	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
+	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
+	const [lockOn, setLockOn] = useState<boolean>(pr.discussionLocked);
 
 	const close = () => {
 		HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
 		dispatch(closeAllModals());
 	};
 
+	const fetchAvailableAssignees = async (e?) => {
+		if (availableAssignees === undefined) {
+			setAvailableAssignees(EMPTY_ARRAY);
+		}
+		const assignees = (await dispatch(api("getReviewers", {}))) as any;
+		setAvailableAssignees(assignees.users);
+	};
+
+	const assigneeMenuItems = React.useMemo(() => {
+		if (
+			availableAssignees === undefined &&
+			derivedState.currentPullRequest &&
+			derivedState.currentPullRequest.error &&
+			derivedState.currentPullRequest.error.message
+		) {
+			return [
+				{
+					label: (
+						<PRError>
+							<Icon name="alert" />
+							<div>{derivedState.currentPullRequest.error.message}</div>
+						</PRError>
+					),
+					noHover: true
+				}
+			];
+		}
+		const assigneeIds = pr.assignees.nodes.map(_ => _.login);
+		if (availableAssignees && availableAssignees.length) {
+			const menuItems = (availableAssignees || []).map((_: any) => ({
+				checked: assigneeIds.includes(_.login),
+				label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
+				subtle: _.name,
+				searchLabel: `${_.login}:${_.name}`,
+				key: _.id,
+				action: () => toggleAssignee(_.id, !assigneeIds.includes(_.login))
+			})) as any;
+			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading Assignees...</LoadingMessage>, noHover: true }];
+		}
+	}, [derivedState.currentPullRequest, availableAssignees, pr]);
+
+	const toggleAssignee = async (id: string, onOff: boolean) => {
+		setIsLoadingMessage(onOff ? "Adding Assignee..." : "Removing Assignee...");
+		await dispatch(
+			api("setAssigneeOnPullRequest", {
+				assigneeId: id,
+				onOff
+			})
+		);
+	};
+
+	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
+	const setNotificationsOn = async (onOff: boolean) => {
+		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
+		setIsLoadingNotifications(true);
+		await dispatch(
+			api("updatePullRequestSubscription", {
+				onOff
+			})
+		);
+		setIsLoadingNotifications(false);
+	};
+
 	const openAssignees = () => setRightOpen(true);
 	const openMilestone = () => setRightOpen(true);
 	const openTimeTracking = () => setRightOpen(true);
 	const openLabels = () => setRightOpen(true);
-	const openLock = () => setRightOpen(true);
+	const openLock = () => {
+		setRightOpen(true);
+		if (pr.discussionLocked) {
+			confirmPopup({
+				message: (
+					<>
+						Unlock this merge request? <b>Everyone</b> will be able to comment.
+					</>
+				),
+				buttons: [
+					{ label: "Cancel", className: "control-button" },
+					{
+						label: "Unlock",
+						className: "delete",
+						action: () => {
+							setIsLoadingMessage("Unlocking...");
+							dispatch(api("unlockPullRequest", {}));
+						}
+					}
+				]
+			});
+		} else {
+			confirmPopup({
+				message: (
+					<>
+						Lock this merge request? Only <b>project members</b> will be able to comment.
+					</>
+				),
+				buttons: [
+					{ label: "Cancel", className: "control-button" },
+					{
+						label: "Lock",
+						className: "delete",
+						action: () => {
+							setIsLoadingMessage("Locking...");
+							dispatch(api("lockPullRequest", {}));
+						}
+					}
+				]
+			});
+		}
+	};
 	const openParticipants = () => setRightOpen(true);
 	const openToDo = () => setRightOpen(true);
 
 	const reference = pr.url;
 	const sourceBranch = pr.sourceBranch;
+	const numLabels = pr.labels ? pr.labels.nodes.length : 0;
+	const numParticipants = pr.participants ? pr.participants.nodes.length : 0;
+	const timeSpent = distanceOfTimeInWords(pr.totalTimeSpent, false, true);
+	const timeEstimate = distanceOfTimeInWords(pr.timeEstimate, false, true);
+	const pct = pr.timeEstimate > 0 ? (100 * pr.totalTimeSpent) / pr.timeEstimate : 0;
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
-			<AsideBlock onClick={() => !rightOpen && close}>
+			<AsideBlock onClick={() => !rightOpen && close()}>
 				{rightOpen ? (
-					<JustifiedRow>
-						<label>Close view / Collapse</label>
-						<div>
-							<Icon className="clickable margin-right" name="x" onClick={close} />
-							<Icon
-								className="clickable"
-								name="chevron-right-thin"
-								onClick={() => setRightOpen(false)}
-							/>
-						</div>
-					</JustifiedRow>
+					<ButtonRow>
+						<Button variant="secondary" onClick={close}>
+							<Icon className="clickable margin-right" name="x" />
+							Close view
+						</Button>
+						<Button variant="secondary" onClick={() => setRightOpen(false)}>
+							<Icon className="clickable" name="chevron-right-thin" />
+							Collapse
+						</Button>
+					</ButtonRow>
 				) : (
 					<Icon className="clickable" name="x" title="Close view" placement="left" />
 				)}
@@ -179,10 +362,35 @@ export const RightActionBar = props => {
 					<>
 						<JustifiedRow>
 							<label>Assignees</label>
-							<Link onClick={openAssignees}>Edit</Link>
+							<Link onClick={openAssignees}>
+								<InlineMenu
+									items={assigneeMenuItems}
+									onOpen={fetchAvailableAssignees}
+									title="Assign to"
+									noChevronDown
+									noFocusOnSelect
+								>
+									Edit
+								</InlineMenu>
+							</Link>
 						</JustifiedRow>
-						<Subtle>None - assign yourself</Subtle>
+						<Subtle>
+							{pr.assignees && pr.assignees.nodes.length > 0 ? (
+								pr.assignees.nodes.map((_: any, index: number) => (
+									<span key={index}>
+										<PRHeadshotName key={_.avatarUrl} person={_} size={20} />
+										<br />
+									</span>
+								))
+							) : (
+								<>
+									None - <a onClick={() => toggleAssignee(pr.viewer.id, true)}>assign yourself</a>
+								</>
+							)}
+						</Subtle>
 					</>
+				) : pr.assignees && pr.assignees.nodes.length > 0 ? (
+					<PRHeadshot person={pr.assignees.nodes[0]} size={20} />
 				) : (
 					<Icon className="clickable" name="person" title="Assignee(s)" placement="left" />
 				)}
@@ -194,10 +402,19 @@ export const RightActionBar = props => {
 							<label>Milestone</label>
 							<Link onClick={openMilestone}>Edit</Link>
 						</JustifiedRow>
-						<Subtle>None</Subtle>
+						<Subtle>
+							{pr.milestone && pr.milestone.title ? (
+								<Link href={pr.milestone.webPath}>{pr.milestone.title}</Link>
+							) : (
+								"None"
+							)}
+						</Subtle>
 					</>
 				) : (
-					<Icon className="clickable" name="clock" title="Milestone" placement="left" />
+					<IconWithLabel>
+						<Icon className="clickable" name="clock" title="Milestone" placement="left" />
+						<div>{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}</div>
+					</IconWithLabel>
 				)}
 			</AsideBlock>
 			<AsideBlock onClick={() => !rightOpen && openTimeTracking()}>
@@ -206,13 +423,76 @@ export const RightActionBar = props => {
 						<JustifiedRow>
 							<label>Time tracking</label>
 							<span>
-								<Icon name="info" />
+								<Icon
+									name="info"
+									onClick={() => {
+										confirmPopup({
+											title: "Track time with quick actions",
+											message: (
+												<>
+													<p>
+														Quick actions can be used in the issues description and comment boxes.
+													</p>
+													<p>
+														<span className="monospace">/estimate</span> will update the estimated
+														time with the latest command.
+													</p>
+													<p>
+														<span className="monospace">/spend</span> will update the sum of the
+														time spent.
+													</p>
+												</>
+											),
+											buttons: [
+												{ label: "Done", className: "control-button" },
+												{
+													label: "Learn more",
+													action: () => {
+														HostApi.instance.send(OpenUrlRequestType, {
+															url: "http://gitlab.codestream.us/help/user/project/time_tracking.md"
+														});
+													}
+												}
+											]
+										});
+									}}
+								/>
 							</span>
 						</JustifiedRow>
-						<Subtle>No estimate or time spent</Subtle>
+						<Subtle>
+							{!pr.timeEstimate && !pr.totalTimeSpent && "No estimate or time spent"}
+							{!!pr.timeEstimate && !pr.totalTimeSpent && (
+								<Subtle>Estimated: {timeEstimate}</Subtle>
+							)}
+							{!pr.timeEstimate && !!pr.totalTimeSpent && <Subtle>Spent: {timeSpent}</Subtle>}
+							{!!pr.timeEstimate && !!pr.totalTimeSpent && (
+								<>
+									<PRProgress style={{ width: "100%", maxWidth: "none", margin: 0 }}>
+										<PRProgressLine>
+											{pct > 0 && <PRProgressFill style={{ width: pct + "%" }} />}
+										</PRProgressLine>
+									</PRProgress>
+									<div style={{ display: "flex", marginTop: "5px" }}>
+										<div>Spent {timeSpent}</div>
+										<div style={{ marginLeft: "auto" }}>Est {timeEstimate}</div>
+									</div>
+								</>
+							)}
+						</Subtle>
 					</>
 				) : (
-					<Icon className="clickable" name="clock" title="Time tracking" placement="left" />
+					<IconWithLabel>
+						<Icon className="clickable" name="clock" title="Time tracking" placement="left" />
+						<div>
+							{pr.totalTimeSpent || pr.timeEstimate ? (
+								<>
+									{pr.totalTimeSpent ? timeSpent : "--"} / {pr.timeEstimate ? timeEstimate : "--"}
+								</>
+							) : (
+								"None"
+							)}
+						</div>
+					</IconWithLabel>
 				)}
 			</AsideBlock>
 			<AsideBlock onClick={() => !rightOpen && openLabels()}>
@@ -222,10 +502,24 @@ export const RightActionBar = props => {
 							<label>Labels</label>
 							<Link onClick={openLabels}>Edit</Link>
 						</JustifiedRow>
-						<Subtle>None</Subtle>
+						<Subtle>
+							{pr.labels && pr.labels.nodes.length > 0
+								? pr.labels.nodes.map((_: any, index: number) => (
+										<Tag key={index} tag={{ label: _.title, color: `${_.color}` }} />
+								  ))
+								: "None"}
+						</Subtle>
 					</>
 				) : (
-					<Icon className="clickable" name="tag" title="Labels" placement="left" />
+					<IconWithLabel>
+						<Icon
+							className="clickable"
+							name="tag"
+							title={numLabels > 0 ? pr.labels.nodes.map(_ => _.title).join(", ") : "Labels"}
+							placement="left"
+						/>
+						{numLabels > 0 && <div>{numLabels}</div>}
+					</IconWithLabel>
 				)}
 			</AsideBlock>
 			<AsideBlock onClick={() => !rightOpen && openLock()}>
@@ -258,12 +552,26 @@ export const RightActionBar = props => {
 				{rightOpen ? (
 					<>
 						<JustifiedRow>
-							<label>Participant</label>
+							<label>
+								{numParticipants === 1 ? "1 Participant" : `${numParticipants} Participants`}
+							</label>
 						</JustifiedRow>
-						<Subtle>headshots here....</Subtle>
+						<Subtle>
+							{pr.participants && pr.participants.nodes.length > 0
+								? pr.participants.nodes.map((_: any, index: number) => (
+										<span key={index}>
+											<PRHeadshotName key={_.avatarUrl} person={_} size={20} />
+											<br />
+										</span>
+								  ))
+								: "None"}
+						</Subtle>
 					</>
 				) : (
-					<Icon className="clickable" name="team" title="Participants" placement="left" />
+					<IconWithLabel>
+						<Icon className="clickable" name="team" title="Participants" placement="left" />
+						{numParticipants > 0 && <div>{numParticipants}</div>}
+					</IconWithLabel>
 				)}
 			</AsideBlock>
 			{!rightOpen && <HR />}
@@ -271,14 +579,16 @@ export const RightActionBar = props => {
 				{rightOpen ? (
 					<JustifiedRow>
 						<label>Notifications</label>
-						<Switch on={notificationsOn} onChange={() => setNotificationsOn(!notificationsOn)} />
+						<Switch on={pr.subscribed} onChange={() => setNotificationsOn(!pr.subscribed)} />
 					</JustifiedRow>
+				) : isLoadingNotifications ? (
+					<Icon className="clickable spin" name="sync" />
 				) : (
 					<Icon
-						onClick={() => setNotificationsOn(!notificationsOn)}
+						onClick={() => setNotificationsOn(!pr.subscribed)}
 						className="clickable"
-						name={notificationsOn ? "bell" : "bell-slash"}
-						title={notificationsOn ? "Notifications on" : "Notifications off"}
+						name={pr.subscribed ? "bell" : "bell-slash"}
+						title={pr.subscribed ? "Notifications on" : "Notifications off"}
 						placement="left"
 					/>
 				)}
