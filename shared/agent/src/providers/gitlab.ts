@@ -1000,6 +1000,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					downvotes
 					milestone {
 						title
+						id
 						webPath
 						dueDate
 					}
@@ -1024,6 +1025,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  }
 					labels(last: 100) {
 						nodes {
+						  id
 						  color
 						  textColor
 						  title
@@ -1514,6 +1516,20 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	async getMilestones(request: { pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/milestones`);
+		return data.body;
+	}
+
+	async getLabels(request: { pullRequestId: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/labels`);
+		return data.body;
+	}
+
 	@log()
 	async createPullRequestComment(request: {
 		pullRequestId: string;
@@ -1866,6 +1882,61 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			owner: string;
 		}
 	>();
+
+	async toggleMilestoneOnPullRequest(request: {
+		pullRequestId: string;
+		milestoneId: string;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		try {
+			const response = await this.restPut<{ name: string }, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+				{
+					milestone_id: request.milestoneId
+				}
+			);
+			return {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							milestone: response.body.milestone
+						}
+					}
+				]
+			};
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return undefined;
+	}
+
+	async setLabelOnPullRequest(request: {
+		pullRequestId: string;
+		labelId: string;
+		onOff: boolean;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const { labelId } = request;
+
+		try {
+			const response = await this.restPut<{ name: string }, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+				request.onOff ? { add_labels: labelId } : { remove_labels: labelId }
+			);
+			Logger.log("RESPONSE IS: ", response);
+			// FIXME this doesn't return enough data to update the MR
+			return {
+				directives: []
+			};
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return undefined;
+	}
 
 	async toggleReaction(request: {
 		pullRequestId: string;

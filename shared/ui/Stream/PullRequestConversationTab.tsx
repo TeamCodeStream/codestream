@@ -64,7 +64,7 @@ import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
 import cx from "classnames";
 
-const Circle = styled.div`
+export const Circle = styled.div`
 	width: 12px;
 	height: 12px;
 	border-radius: 6px;

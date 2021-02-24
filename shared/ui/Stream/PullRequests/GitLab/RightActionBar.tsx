@@ -23,6 +23,7 @@ import { confirmPopup } from "../../Confirm";
 import Timestamp, { distanceOfTimeInWords, workingHoursTimeEstimate } from "../../Timestamp";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFilesChangedList";
+import { Circle } from "../../PullRequestConversationTab";
 
 const Right = styled.div`
 	width: 48px;
@@ -253,7 +254,8 @@ export const RightActionBar = props => {
 		if (availableMilestones && availableMilestones.length) {
 			const existingMilestoneId = pr.milestone ? pr.milestone.id : "";
 			const menuItems = availableMilestones.map((_: any) => {
-				const checked = existingMilestoneId === _.id;
+				const checked =
+					existingMilestoneId === `gid://gitlab/Milestone/${_.id}` || existingMilestoneId === _.id;
 				return {
 					checked,
 					label: _.title,
@@ -265,10 +267,17 @@ export const RightActionBar = props => {
 							<Timestamp time={_.dueOn} dateOnly />
 						</>
 					),
-					action: () => setMilestone(_.id, !checked)
+					action: () => setMilestone(_.id)
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
+			menuItems.push({ label: "-", searchLabel: "" });
+			menuItems.push({
+				label: "No milestone",
+				searchLabel: "",
+				checked: false,
+				action: () => setMilestone("")
+			});
 			return menuItems;
 		} else if (availableMilestones) {
 			return [
@@ -279,14 +288,52 @@ export const RightActionBar = props => {
 		}
 	}, [derivedState.currentPullRequest, availableMilestones, pr]);
 
-	const setMilestone = async (id: string, onOff: boolean) => {
-		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
+	const setMilestone = async (id: string) => {
+		setIsLoadingMessage(id ? "Setting Milestone..." : "Clearing Milestone...");
 		dispatch(
 			api("toggleMilestoneOnPullRequest", {
-				milestoneId: id,
-				onOff
+				milestoneId: id
 			})
 		);
+	};
+
+	const fetchAvailableLabels = async (e?) => {
+		const labels = (await dispatch(api("getLabels", {}))) as any;
+		console.warn("LABELS: ", labels);
+		setAvailableLabels(labels);
+	};
+
+	const labelMenuItems = React.useMemo(() => {
+		if (availableLabels && availableLabels.length) {
+			const existingLabelIds = pr.labels ? pr.labels.nodes.map(_ => _.id) : [];
+			const menuItems = availableLabels.map((_: any) => {
+				const checked =
+					existingLabelIds.includes(_.id) ||
+					existingLabelIds.includes(`gid://gitlab/ProjectLabel/${_.id}`);
+				return {
+					checked,
+					label: (
+						<>
+							<Circle style={{ backgroundColor: `${_.color}` }} />
+							{_.name}
+						</>
+					),
+					searchLabel: _.name,
+					key: _.id,
+					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
+					action: () => setLabel(_.name, !checked)
+				};
+			}) as any;
+			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
+		}
+	}, [derivedState.currentPullRequest, availableLabels, pr]);
+
+	const setLabel = async (id: string, onOff: boolean) => {
+		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
+		await dispatch(api("setLabelOnPullRequest", { labelId: id, onOff }));
 	};
 
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -467,7 +514,15 @@ export const RightActionBar = props => {
 					<>
 						<JustifiedRow>
 							<label>Milestone</label>
-							<Link onClick={openMilestone}>Edit</Link>
+							<InlineMenu
+								items={milestoneMenuItems}
+								onOpen={fetchAvailableMilestones}
+								title="Set milestone"
+								noChevronDown
+								noFocusOnSelect
+							>
+								Edit
+							</InlineMenu>
 						</JustifiedRow>
 						<Subtle>
 							{pr.milestone && pr.milestone.title ? (
@@ -567,7 +622,15 @@ export const RightActionBar = props => {
 					<>
 						<JustifiedRow>
 							<label>Labels</label>
-							<Link onClick={openLabels}>Edit</Link>
+							<InlineMenu
+								items={labelMenuItems}
+								onOpen={fetchAvailableLabels}
+								title="Assign labels"
+								noChevronDown
+								noFocusOnSelect
+							>
+								Edit{" "}
+							</InlineMenu>
 						</JustifiedRow>
 						<Subtle>
 							{pr.labels && pr.labels.nodes.length > 0
