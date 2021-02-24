@@ -248,11 +248,7 @@ export const RightActionBar = props => {
 	const setNotificationsOn = async (onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
 		setIsLoadingNotifications(true);
-		await dispatch(
-			api("updatePullRequestSubscription", {
-				onOff
-			})
-		);
+		await dispatch(api("updatePullRequestSubscription", { onOff }));
 		setIsLoadingNotifications(false);
 	};
 
@@ -302,8 +298,18 @@ export const RightActionBar = props => {
 			});
 		}
 	};
-	const openParticipants = () => setRightOpen(true);
-	const openToDo = () => setRightOpen(true);
+
+	const hasToDo = pr.currentUserTodos
+		? pr.currentUserTodos.nodes.find(_ => _.state === "pending")
+		: false;
+	const [isLoadingToDo, setIsLoadingToDo] = useState(false);
+	const toggleToDo = async () => {
+		setIsLoadingMessage(hasToDo ? "Marking as done..." : "Adding to do...");
+		setIsLoadingToDo(true);
+		if (hasToDo) await dispatch(api("markToDoDone", { id: hasToDo.id }));
+		else await dispatch(api("createToDo", {}));
+		setIsLoadingToDo(false);
+	};
 
 	const reference = pr.url;
 	const sourceBranch = pr.sourceBranch;
@@ -342,16 +348,20 @@ export const RightActionBar = props => {
 				</AsideBlock>
 			)}
 			{!rightOpen && <HR />}
-			<AsideBlock onClick={() => !rightOpen && openToDo()}>
+			<AsideBlock onClick={() => !rightOpen && toggleToDo()}>
 				{rightOpen ? (
 					<JustifiedRow>
 						<label>To Do</label>
-						<Button variant="secondary">Add a to do</Button>
+						<Button isLoading={isLoadingToDo} variant="secondary" onClick={toggleToDo}>
+							{hasToDo ? "Mark as done" : "Add a to do"}
+						</Button>
 					</JustifiedRow>
+				) : isLoadingToDo ? (
+					<Icon className="clickable spin" name="sync" />
 				) : (
 					<Icon
 						className="clickable"
-						name="checked-checkbox"
+						name={hasToDo ? "checked-checkbox" : "checkbox-add"}
 						title="Add a to do"
 						placement="left"
 					/>

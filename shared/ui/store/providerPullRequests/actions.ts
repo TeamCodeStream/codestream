@@ -89,10 +89,7 @@ export const handleDirectives = (providerId: string, id: string, data: any) =>
 		data
 	});
 
-const _getPullRequestConversationsFromProvider = async (
-	providerId: string,
-	id: string
-) => {
+const _getPullRequestConversationsFromProvider = async (providerId: string, id: string) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
 		pullRequestId: id,
@@ -146,10 +143,10 @@ export const getPullRequestConversationsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestConversations = (
-	providerId: string,
-	id: string
-) => async (dispatch, getState: () => CodeStreamState) => {
+export const getPullRequestConversations = (providerId: string, id: string) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
 	try {
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
@@ -425,9 +422,10 @@ export const api = <T = any, R = any>(
 		| "createPullRequestComment"
 		| "createPullRequestCommentAndClose"
 		| "createPullRequestCommentAndReopen"
-		| "deletePullRequestComment"
 		| "createPullRequestInlineComment"
 		| "createPullRequestInlineReviewComment"
+		| "createToDo"
+		| "deletePullRequestComment"
 		| "deletePullRequestReview"
 		| "getIssues"
 		| "getLabels"
@@ -438,6 +436,7 @@ export const api = <T = any, R = any>(
 		| "getReviewers"
 		| "lockPullRequest"
 		| "markPullRequestReadyForReview"
+		| "markToDoDone"
 		| "mergePullRequest"
 		| "removeReviewerFromPullRequest"
 		| "resolveReviewThread"
