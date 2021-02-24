@@ -23,6 +23,9 @@ export const plural = (word: string, count: number, many?: string): string => {
 	}
 };
 
+// this is to support conversion of a number of seconds to how many working days/weeks
+// it would take to complete
+// https://docs.gitlab.com/ee/user/project/time_tracking.html
 export const workingHoursTimeEstimate = (seconds: number, abbreviated: boolean): string => {
 	let distance: number;
 	let when: string;
