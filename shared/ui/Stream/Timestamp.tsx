@@ -6,8 +6,11 @@ import Tooltip, { Placement } from "./Tooltip";
 export const MINUTE = 60;
 export const HOUR = MINUTE * 60;
 export const DAY = 24 * HOUR;
+export const WORKDAY = 8 * HOUR;
 export const WEEK = DAY * 7;
+export const WORKWEEK = 5 * WORKDAY;
 export const MONTH = (DAY * 365) / 12;
+export const WORKMONTH = 4 * WORKWEEK;
 export const YEAR = DAY * 365;
 
 export const plural = (word: string, count: number, many?: string): string => {
@@ -18,6 +21,37 @@ export const plural = (word: string, count: number, many?: string): string => {
 	} else {
 		return word + "s";
 	}
+};
+
+export const workingHoursTimeEstimate = (seconds: number, abbreviated: boolean): string => {
+	let distance: number;
+	let when: string;
+
+	if (seconds < MINUTE) {
+		// less than 1 minute, show the seconds
+		when = `${seconds}${abbreviated ? "s" : plural(" second", seconds)}`;
+	} else if (seconds < HOUR) {
+		// less than 1 hour, show the minutes
+		distance = Math.floor(seconds / 60);
+		when = `${distance}${abbreviated ? "min" : plural(" minute", distance)}`;
+	} else if (seconds < WORKDAY) {
+		// less than 8 hours (one working day), show the hours
+		distance = Math.round(seconds / HOUR);
+		when = `${distance}${abbreviated ? "h" : plural(" hour", distance)}`;
+	} else if (seconds < WORKWEEK) {
+		// less than 5 working days, show the days
+		distance = Math.round(seconds / WORKDAY);
+		when = `${distance}${abbreviated ? "d" : plural(" day", distance)}`;
+	} else if (seconds < WORKMONTH) {
+		// less than 4 working weeks, show the weeks
+		distance = Math.round(seconds / WORKWEEK);
+		when = `${distance}${abbreviated ? "w" : plural(" week", distance)}`;
+	} else {
+		distance = Math.round(seconds / WORKMONTH);
+		when = `${distance}${abbreviated ? "m" : plural(" month", distance)}`;
+	}
+
+	return when;
 };
 
 export const distanceOfTimeInWords = (

@@ -20,7 +20,7 @@ import { getCurrentProviderPullRequest } from "@codestream/webview/store/provide
 import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
 import Tag from "../../Tag";
 import { confirmPopup } from "../../Confirm";
-import { distanceOfTimeInWords } from "../../Timestamp";
+import Timestamp, { distanceOfTimeInWords, workingHoursTimeEstimate } from "../../Timestamp";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFilesChangedList";
 
@@ -125,9 +125,9 @@ const IconWithLabel = styled.div`
 	max-width: 100%;
 	> div {
 		text-align: center;
-		font-size: 11px;
+		font-size: 10px;
 		opacity: 0.7;
-		padding: 0 5px;
+		padding: 0 4px;
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -244,6 +244,51 @@ export const RightActionBar = props => {
 		);
 	};
 
+	const fetchAvailableMilestones = async (e?) => {
+		const milestones = (await dispatch(api("getMilestones", {}))) as any;
+		setAvailableMilestones(milestones);
+	};
+
+	const milestoneMenuItems = React.useMemo(() => {
+		if (availableMilestones && availableMilestones.length) {
+			const existingMilestoneId = pr.milestone ? pr.milestone.id : "";
+			const menuItems = availableMilestones.map((_: any) => {
+				const checked = existingMilestoneId === _.id;
+				return {
+					checked,
+					label: _.title,
+					searchLabel: _.title,
+					key: _.id,
+					subtext: _.dueOn && (
+						<>
+							Due by
+							<Timestamp time={_.dueOn} dateOnly />
+						</>
+					),
+					action: () => setMilestone(_.id, !checked)
+				};
+			}) as any;
+			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
+			return menuItems;
+		} else if (availableMilestones) {
+			return [
+				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true }
+			];
+		} else {
+			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
+		}
+	}, [derivedState.currentPullRequest, availableMilestones, pr]);
+
+	const setMilestone = async (id: string, onOff: boolean) => {
+		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
+		dispatch(
+			api("toggleMilestoneOnPullRequest", {
+				milestoneId: id,
+				onOff
+			})
+		);
+	};
+
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 	const setNotificationsOn = async (onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
@@ -315,9 +360,21 @@ export const RightActionBar = props => {
 	const sourceBranch = pr.sourceBranch;
 	const numLabels = pr.labels ? pr.labels.nodes.length : 0;
 	const numParticipants = pr.participants ? pr.participants.nodes.length : 0;
-	const timeSpent = distanceOfTimeInWords(pr.totalTimeSpent, false, true);
-	const timeEstimate = distanceOfTimeInWords(pr.timeEstimate, false, true);
+	const timeSpent = workingHoursTimeEstimate(pr.totalTimeSpent, true);
+	const timeEstimate = workingHoursTimeEstimate(pr.timeEstimate, true);
 	const pct = pr.timeEstimate > 0 ? (100 * pr.totalTimeSpent) / pr.timeEstimate : 0;
+	const milestoneTooltip = React.useMemo(() => {
+		const { milestone } = pr;
+		if (!milestone) return undefined;
+		if (milestone.dueDate)
+			return (
+				<div style={{ textAlign: "center" }}>
+					<div style={{ textAlign: "center" }}>{milestone.title}</div>
+					{milestone.dueDate}
+				</div>
+			);
+		else return milestone.title;
+	}, [pr.milestone]);
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
 			<AsideBlock onClick={() => !rightOpen && close()}>
@@ -362,7 +419,7 @@ export const RightActionBar = props => {
 					<Icon
 						className="clickable"
 						name={hasToDo ? "checked-checkbox" : "checkbox-add"}
-						title="Add a to do"
+						title={hasToDo ? "Mark as done" : "Add a to do"}
 						placement="left"
 					/>
 				)}
@@ -422,7 +479,7 @@ export const RightActionBar = props => {
 					</>
 				) : (
 					<IconWithLabel>
-						<Icon className="clickable" name="clock" title="Milestone" placement="left" />
+						<Icon className="clickable" name="clock" title={milestoneTooltip} placement="left" />
 						<div>{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}</div>
 					</IconWithLabel>
 				)}
@@ -496,7 +553,7 @@ export const RightActionBar = props => {
 						<div>
 							{pr.totalTimeSpent || pr.timeEstimate ? (
 								<>
-									{pr.totalTimeSpent ? timeSpent : "--"} / {pr.timeEstimate ? timeEstimate : "--"}
+									{pr.totalTimeSpent ? timeSpent : "--"}/{pr.timeEstimate ? timeEstimate : "--"}
 								</>
 							) : (
 								"None"
