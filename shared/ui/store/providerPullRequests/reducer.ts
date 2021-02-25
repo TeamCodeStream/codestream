@@ -172,14 +172,24 @@ export function reduceProviderPullRequests(
 				if (providerId === "gitlab*com" || providerId === "gitlab/enterprise") {
 					const pr = newState[providerId][id].conversations.project.mergeRequest;
 					for (const directive of action.payload.data) {
-						if (directive.type === "addNode") {
+						if (directive.type === "addApprovedBy") {
+							for (const d of directive.data) {
+								if (!pr.approvedBy.nodes.find(_ => _.username === d.username)) {
+									pr.approvedBy.nodes.push(d);
+								}
+							}
+						} else if (directive.type === "removeApprovedBy") {
+							pr.approvedBy.nodes.length = 0;
+							for (const d of directive.data) {
+								pr.approvedBy.nodes.push(d);
+							}
+						} else if (directive.type === "addNode") {
 							// if (!directive.data.id) continue;
 							// const node = pr.discussions.nodes.find(_ => _.id === directive.data.id);
 							// if (!node) {
 							pr.discussions.nodes.push(directive.data);
 							//	}
-						}
-						if (directive.type === "addNodes") {
+						} else if (directive.type === "addNodes") {
 							// if (!directive.data.id) continue;
 							for (const d of directive.data) {
 								if (!d.id) {

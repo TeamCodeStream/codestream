@@ -881,6 +881,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			currentUser: any;
 			project: {
 				mergeRequest: {
+					approvedBy: {
+						nodes: {
+							avatarUrl: string;
+							name: string;
+							username: string;
+						};
+					};
 					baseRefName: string;
 					baseRefOid: string;
 					createdAt: string;
@@ -969,6 +976,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				project(fullPath: $fullPath) {
 				  name
 				  mergeRequest(iid: $iid) {
+					approvedBy {
+						nodes {
+						  avatarUrl
+						  name
+						  username
+						}
+					}
 					id
 					iid
 					createdAt
@@ -2126,6 +2140,56 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 
 		return data.body;
+	}
+
+	public async togglePullRequestApproval(request: {
+		pullRequestId: string;
+		approve: boolean;
+	}): Promise<Directives | undefined> {
+		const parsed = JSON.parse(request.pullRequestId);
+		const projectFullPath = parsed.full.split("!")[0];
+		const iid = parsed.full.split("!")[1];
+
+		let response;
+		const type: any = request.approve ? "addApprovedBy" : "removeApprovedBy";
+
+		// NOTE there's no graphql for these
+		if (request.approve) {
+			response = await this.restPost<any, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/approve`,
+				{}
+			);
+		} else {
+			try {
+				response = await this.restPost<any, any>(
+					`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/unapprove`,
+					{}
+				);
+			} catch (ex) {
+				// this will throw a 404 error if it's alreay been unapproved
+				// but you can approve many times
+				Logger.warn(ex.message);
+			}
+		}
+
+		return {
+			directives: [
+				{
+					type: type,
+					data:
+						response &&
+						response.body.approved_by.map(
+							(_: { user: { avatar_url: string; username: string; name: string } }) => {
+								return {
+									avatarUrl: _.user.avatar_url,
+									username: _.user.username,
+									name: _.user.name
+								};
+							}
+						)
+				}
+			]
+		};
 	}
 
 	private async _projectEvents(projectFullPath: string, iid: string) {

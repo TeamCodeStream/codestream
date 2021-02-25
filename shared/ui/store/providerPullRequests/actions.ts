@@ -447,6 +447,7 @@ export const api = <T = any, R = any>(
 		| "toggleReaction"
 		| "toggleMilestoneOnPullRequest"
 		| "toggleProjectOnPullRequest"
+		| "togglePullRequestApproval"
 		| "unresolveReviewThread"
 		| "updateIssueComment"
 		| "unlockPullRequest"
