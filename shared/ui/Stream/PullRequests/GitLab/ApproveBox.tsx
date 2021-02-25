@@ -4,6 +4,8 @@ import Icon from "../../Icon";
 import { Button } from "@codestream/webview/src/components/Button";
 import { OutlineBox, FlexRow } from "./PullRequest";
 import { api } from "../../../store/providerPullRequests/actions";
+import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import Tooltip from "../../Tooltip";
 
 export const ApproveBox = props => {
 	const dispatch = useDispatch();
@@ -16,10 +18,9 @@ export const ApproveBox = props => {
 		);
 	};
 
-	const iHaveApproved =
-		props.pr.approvedBy &&
-		props.pr.approvedBy.nodes &&
-		props.pr.approvedBy.nodes.find(_ => _.username === props.pr.viewer.login);
+	const approvers = props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
+	const iHaveApproved = approvers.find(_ => _.username === props.pr.viewer.login);
+	const isApproved = approvers.length > 0;
 
 	return (
 		<OutlineBox>
@@ -28,19 +29,35 @@ export const ApproveBox = props => {
 					<Icon name="person" className="bigger" />
 					<Icon name="check" className="overlap" />
 				</div>
-				<Button className="action-button" onClick={e => onApproveClick(e, !iHaveApproved)}>
-					{iHaveApproved ? <>Revoke Approval</> : <>Approve</>}
-				</Button>
+				{iHaveApproved ? (
+					<Tooltip title="Revoke approval" placement="top">
+						<Button
+							className="action-button"
+							variant="warning"
+							onClick={e => onApproveClick(e, !iHaveApproved)}
+						>
+							Revoke
+						</Button>
+					</Tooltip>
+				) : (
+					<Button className="action-button" onClick={e => onApproveClick(e, !iHaveApproved)}>
+						Approve
+					</Button>
+				)}
 				<div className="pad-left">
-					Approval is optional <Icon name="info" title="About this feature" placement="top" />
-				</div>
-				<div className="pad-left">
-					{props.pr.approvedBy.nodes.length > 0 && <span>Approved by</span>}{" "}
-					{props.pr.approvedBy &&
-						props.pr.approvedBy.nodes &&
-						props.pr.approvedBy.nodes.map(_ => {
-							return <span>{_.username}</span>;
-						})}
+					{isApproved ? (
+						<>
+							<b>Merge request approved. </b>
+							Approved by{" "}
+							{approvers.map(_ => (
+								<PRHeadshotName person={_} />
+							))}
+						</>
+					) : (
+						<>
+							Approval is optional <Icon name="info" title="About this feature" placement="top" />
+						</>
+					)}
 				</div>
 			</FlexRow>
 		</OutlineBox>
