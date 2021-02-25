@@ -301,7 +301,7 @@ export const getPullRequestCommitsFromProvider = (
 	return undefined;
 };
 
-export const getPullRequestCommits = (providerId: string, id: string, metadata: any) => async (
+export const getPullRequestCommits = (providerId: string, id: string) => async (
 	dispatch,
 	getState: () => CodeStreamState
 ) => {
@@ -317,8 +317,7 @@ export const getPullRequestCommits = (providerId: string, id: string, metadata: 
 		}
 		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId: providerId,
-			pullRequestId: id,
-			metadata: metadata
+			pullRequestId: id
 		});
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;

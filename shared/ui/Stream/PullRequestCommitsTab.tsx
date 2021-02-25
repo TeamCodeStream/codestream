@@ -122,9 +122,6 @@ export const PullRequestCommitsTab = props => {
 			currentPullRequest: state.context.currentPullRequest,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
-				: undefined,
-			currentPullRequestMetadata: state.context.currentPullRequest
-				? state.context.currentPullRequest.metadata
 				: undefined
 		};
 	});
@@ -150,11 +147,7 @@ export const PullRequestCommitsTab = props => {
 		setIsLoading(true);
 		(async () => {
 			const data = await dispatch(
-				getPullRequestCommits(
-					pr.providerId,
-					derivedState.currentPullRequestId!,
-					derivedState.currentPullRequestMetadata
-				)
+				getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!)
 			);
 			_mapData(data);
 		})();
