@@ -963,6 +963,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						login: string;
 					};
 					webUrl: string;
+					workInProgress: boolean;
 				};
 			};
 		};
@@ -992,6 +993,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					webUrl
 					state
 					mergedAt
+					workInProgress
 					reference
 					projectId
 					author {
@@ -1916,6 +1918,48 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						type: "updatePullRequest",
 						data: {
 							milestone: response.body.milestone
+						}
+					}
+				]
+			};
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return undefined;
+	}
+
+	async setWorkInProgressOnPullRequest(request: {
+		pullRequestId: string;
+		onOff: boolean;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		try {
+			const response = await this.mutate<any>(
+				`mutation MergeRequestSetWip($projectPath: ID!, $iid: String!, $wip: Boolean!) {
+					mergeRequestSetWip(input: {projectPath: $projectPath, iid: $iid, wip: $wip}) {
+					  mergeRequest {
+						title
+						workInProgress
+					  }
+					}
+				  }
+				  `,
+				{
+					projectPath: projectFullPath,
+					iid: iid,
+					wip: request.onOff
+				}
+			);
+
+			return {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							workInProgress: response.mergeRequestSetWip.mergeRequest.workInProgress,
+							title: response.mergeRequestSetWip.mergeRequest.title
 						}
 					}
 				]

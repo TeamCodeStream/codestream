@@ -409,6 +409,7 @@ export const PullRequest = () => {
 			username: string;
 			avatarUrl: string;
 		};
+		workInProgress: boolean;
 		headRefName: string;
 		sourceBranch: string;
 		targetBranch: string;
@@ -549,6 +550,16 @@ export const PullRequest = () => {
 		}
 	}
 
+	const toggleWorkInProgress = async () => {
+		const onOff = !pr.workInProgress;
+		setIsLoadingMessage(onOff ? "Marking as draft..." : "Marking as ready...");
+		await dispatch(
+			api("setWorkInProgressOnPullRequest", {
+				onOff
+			})
+		);
+	};
+
 	const { order, filter } = derivedState;
 
 	const stateMap = {
@@ -628,7 +639,11 @@ export const PullRequest = () => {
 									splitDropdown
 									items={[
 										{ label: "Edit", key: "edit" },
-										{ label: "Mark as draft", key: "draft" },
+										{
+											label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
+											key: "draft",
+											action: () => toggleWorkInProgress()
+										},
 										{ label: "Close", key: "close" }
 									]}
 								>

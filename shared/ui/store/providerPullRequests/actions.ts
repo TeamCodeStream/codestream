@@ -443,6 +443,7 @@ export const api = <T = any, R = any>(
 		| "setAssigneeOnPullRequest"
 		| "setIssueOnPullRequest"
 		| "setLabelOnPullRequest"
+		| "setWorkInProgressOnPullRequest"
 		| "submitReview"
 		| "toggleReaction"
 		| "toggleMilestoneOnPullRequest"
