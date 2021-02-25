@@ -1453,9 +1453,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async lockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restPost<{}, { state: string }>(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/lock`,
-			{}
+		const data = await this.restPut<{}, { discussion_locked: boolean }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+			{ discussion_locked: true }
 		);
 
 		return {
@@ -1463,7 +1463,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				{
 					type: "updatePullRequest",
 					data: {
-						state: data.body.state
+						discussionLocked: data.body.discussion_locked
 					}
 				}
 			]
@@ -1473,9 +1473,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restPost<{}, { state: string }>(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/unlock`,
-			{}
+		const data = await this.restPut<{}, { discussion_locked: boolean }>(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+			{ discussion_locked: false }
 		);
 
 		return {
@@ -1483,7 +1483,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				{
 					type: "updatePullRequest",
 					data: {
-						state: data.body.state
+						discussionLocked: data.body.discussion_locked
 					}
 				}
 			]

@@ -24,6 +24,7 @@ import Timestamp, { distanceOfTimeInWords, workingHoursTimeEstimate } from "../.
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { PRProgress, PRProgressFill, PRProgressLine } from "../../PullRequestFilesChangedList";
 import { Circle } from "../../PullRequestConversationTab";
+import Tooltip from "../../Tooltip";
 
 const Right = styled.div`
 	width: 48px;
@@ -184,7 +185,6 @@ export const RightActionBar = props => {
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
 	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
-	const [lockOn, setLockOn] = useState<boolean>(pr.discussionLocked);
 
 	const close = () => {
 		HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
@@ -429,6 +429,7 @@ export const RightActionBar = props => {
 			);
 		else return milestone.title;
 	}, [pr.milestone]);
+
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
 			<AsideBlock onClick={() => !rightOpen && close()}>
@@ -511,7 +512,11 @@ export const RightActionBar = props => {
 						</Subtle>
 					</>
 				) : pr.assignees && pr.assignees.nodes.length > 0 ? (
-					<PRHeadshot person={pr.assignees.nodes[0]} size={20} />
+					<Tooltip title={pr.assignees.nodes[0].name} placement="left">
+						<span>
+							<PRHeadshot person={pr.assignees.nodes[0]} size={20} />
+						</span>
+					</Tooltip>
 				) : (
 					<Icon className="clickable" name="person" title="Assignee(s)" placement="left" />
 				)}
@@ -669,18 +674,18 @@ export const RightActionBar = props => {
 						<Subtle>
 							<Icon
 								className="margin-right"
-								name={lockOn ? "lock" : "unlock"}
-								title={lockOn ? "Locked" : "Unlocked"}
+								name={pr.discussionLocked ? "lock" : "unlock"}
+								title={pr.discussionLocked ? "Locked" : "Unlocked"}
 								placement="left"
 							/>
-							{lockOn ? "Locked" : "Unlocked"}
+							{pr.discussionLocked ? "Locked" : "Unlocked"}
 						</Subtle>
 					</>
 				) : (
 					<Icon
 						className="clickable"
-						name={lockOn ? "lock" : "unlock"}
-						title={lockOn ? "Locked" : "Unlocked"}
+						name={pr.discussionLocked ? "lock" : "unlock"}
+						title={pr.discussionLocked ? "Locked" : "Unlocked"}
 						placement="left"
 					/>
 				)}
