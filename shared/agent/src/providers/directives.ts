@@ -9,6 +9,7 @@ export interface Directives {
 			| "removeReaction"
 			| "removeApprovedBy"
 			| "resolveReviewThread"
+			| "setLabels"
 			| "unresolveReviewThread"
 			| "updateNode"
 			| "updatePullRequest"

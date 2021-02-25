@@ -321,7 +321,7 @@ export const RightActionBar = props => {
 					searchLabel: _.name,
 					key: _.id,
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
-					action: () => setLabel(_.name, !checked)
+					action: () => setLabel(`gid://gitlab/ProjectLabel/${_.id}`, !checked)
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
@@ -333,7 +333,14 @@ export const RightActionBar = props => {
 
 	const setLabel = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
-		await dispatch(api("setLabelOnPullRequest", { labelId: id, onOff }));
+
+		await dispatch(
+			api("setLabelOnPullRequest", {
+				labelIds: onOff
+					? [id].concat(pr.labels.nodes.map(_ => _.id))
+					: pr.labels.nodes.map(_ => _.id).filter(_ => _ !== id)
+			})
+		);
 	};
 
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);

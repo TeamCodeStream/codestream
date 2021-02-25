@@ -1929,21 +1929,42 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async setLabelOnPullRequest(request: {
 		pullRequestId: string;
-		labelId: string;
+		labelIds: string[];
 		onOff: boolean;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
-		const { labelId } = request;
 
 		try {
-			const response = await this.restPut<{ name: string }, any>(
-				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
-				request.onOff ? { add_labels: labelId } : { remove_labels: labelId }
+			const response = await this.mutate<any>(
+				`mutation MergeRequestSetLabels($projectPath: ID!, $iid: String!, $labelIds: [LabelID!]!) {
+					mergeRequestSetLabels(input: {projectPath: $projectPath, iid: $iid, labelIds: $labelIds}) {
+					  mergeRequest {
+						labels(last: 100) {
+						  nodes {
+							id
+							color
+							textColor
+							title
+						  }
+						}
+					  }
+					}
+				  }
+				  `,
+				{
+					projectPath: projectFullPath,
+					iid: iid,
+					labelIds: request.labelIds
+				}
 			);
-			Logger.log("RESPONSE IS: ", response);
-			// FIXME this doesn't return enough data to update the MR
+
 			return {
-				directives: []
+				directives: [
+					{
+						type: "setLabels",
+						data: response.mergeRequestSetLabels.mergeRequest.labels
+					}
+				]
 			};
 		} catch (err) {
 			Logger.error(err);
