@@ -2127,21 +2127,44 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		return changedFiles;
+	}
 
-		// const data = await this.restGet<any>(
-		// 	`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`
-		// );
-		// return data.body;
+	async mergePullRequest(request: {
+		pullRequestId: string;
+		message: string;
+		deleteSourceBranch?: boolean;
+		squashCommits?: boolean;
+		includeMergeRequestDescription: boolean;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		// const pullRequestReviewId = await this.getPullRequestReviewId(request);
-		// return {
-		// 	files: data.body,
-		// 	context: {
-		// 		pullRequest: {
-		// 			userCurrentReviewId: pullRequestReviewId
-		// 		}
-		// 	}
-		// };
+		try {
+			const response = await this.restPut<any, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/merge`,
+				{
+					merge_commit_message: request.message,
+					squash: request.squashCommits,
+					should_remove_source_branch: request.deleteSourceBranch
+				}
+			);
+			// Logger.log(JSON.stringify(response));
+			return {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							merged: true,
+							state: response.body.state,
+							mergedAt: response.body.merged_at,
+							updatedAt: response.body.updated_at
+						}
+					}
+				]
+			};
+		} catch (ex) {
+			Logger.warn(ex.message);
+		}
+		return undefined;
 	}
 
 	async createPullRequestInlineComment(request: {

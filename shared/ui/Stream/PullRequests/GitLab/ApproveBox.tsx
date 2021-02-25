@@ -29,21 +29,26 @@ export const ApproveBox = props => {
 					<Icon name="person" className="bigger" />
 					<Icon name="check" className="overlap" />
 				</div>
-				{iHaveApproved ? (
-					<Tooltip title="Revoke approval" placement="top">
-						<Button
-							className="action-button"
-							variant="warning"
-							onClick={e => onApproveClick(e, !iHaveApproved)}
-						>
-							Revoke
-						</Button>
-					</Tooltip>
-				) : (
-					<Button className="action-button" onClick={e => onApproveClick(e, !iHaveApproved)}>
-						Approve
-					</Button>
+				{!props.pr.merged && (
+					<>
+						{iHaveApproved ? (
+							<Tooltip title="Revoke approval" placement="top">
+								<Button
+									className="action-button"
+									variant="warning"
+									onClick={e => onApproveClick(e, !iHaveApproved)}
+								>
+									Revoke
+								</Button>
+							</Tooltip>
+						) : (
+							<Button className="action-button" onClick={e => onApproveClick(e, !iHaveApproved)}>
+								Approve
+							</Button>
+						)}
+					</>
 				)}
+
 				<div className="pad-left">
 					{isApproved ? (
 						<>

@@ -9,6 +9,7 @@ import { setUserPreference } from "../../actions";
 import { Link } from "../../Link";
 import { CommandLineInstructions } from "./CommandLineInstructions";
 import styled from "styled-components";
+import { api } from "../../../store/providerPullRequests/actions";
 
 export const IconButton = styled.div`
 	flex-grow: 0;
@@ -45,11 +46,24 @@ export const MergeBox = props => {
 	if (showCommandLine) {
 		return <CommandLineInstructions pr={props.pr} onClose={() => setShowCommandLine(false)} />;
 	}
+
+	const mergePullRequest = async (e: any) => {
+		//setIsLoadingMessage("Merging...");
+		dispatch(
+			api("mergePullRequest", {
+				message: "",
+				deleteSourceBranch: deleteBranch,
+				squashCommits: squash
+				// includeMergeRequestDescription: false // ???????????
+			})
+		);
+	};
+
 	return (
 		<OutlineBox>
 			<FlexRow>
 				<Icon name="check-circle" className="bigger green-color" />
-				<Button className="action-button" variant="success">
+				<Button className="action-button" variant="success" onClick={e => mergePullRequest(e)}>
 					Merge
 				</Button>
 				<div className="pad-left">
