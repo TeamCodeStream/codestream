@@ -85,6 +85,7 @@ import { MergeBox } from "./MergeBox";
 import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
 import { SummaryBox } from "./SummaryBox";
 import { RightActionBar } from "./RightActionBar";
+import { MarkdownText } from "../../MarkdownText";
 
 const Root = styled.div`
 	position: absolute;
@@ -761,6 +762,7 @@ export const PullRequest = () => {
 									{order === "newest" && bottomComment}
 									{discussions.map((_: any) => {
 										if (_.type === "merge-request") {
+											return null;
 											return (
 												<div>
 													{_.createdAt}
@@ -770,6 +772,7 @@ export const PullRequest = () => {
 												</div>
 											);
 										} else if (_.type === "milestone") {
+											return null;
 											return (
 												<div>
 													{_.milestone}
@@ -779,6 +782,7 @@ export const PullRequest = () => {
 												</div>
 											);
 										} else if (_.type === "label") {
+											return null;
 											return (
 												<div>
 													{_.createdAt}
@@ -789,7 +793,7 @@ export const PullRequest = () => {
 											);
 										} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
 											return (
-												<OutlineBox style={{ padding: "20px" }}>
+												<OutlineBox style={{ padding: "10px" }}>
 													{_.notes.nodes.map(x => {
 														return (
 															<>
@@ -808,26 +812,8 @@ export const PullRequest = () => {
 																	<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
 																	<Timestamp time={x.createdAt} />
 																</div>
-																<div style={{ paddingTop: "15px" }}>
-																	{x.body}
-																	<br /> id: {x.id}
-																	<br />
-																	iid {x.iid}
-																	<a
-																		href="#"
-																		onClick={e => {
-																			e.preventDefault();
-																			dispatch(
-																				api("deletePullRequestComment", {
-																					id: x.id
-																				})
-																			);
-																		}}
-																	>
-																		deleteThis!
-																	</a>
-																	<br />
-																	<pre>{JSON.stringify(x, null, 2)}</pre>
+																<div style={{ paddingTop: "10px" }}>
+																	<MarkdownText text={x.body} />
 																</div>
 															</>
 														);
@@ -836,7 +822,7 @@ export const PullRequest = () => {
 											);
 										} else {
 											console.warn("why here?", _);
-											return undefined;
+											return null;
 										}
 									})}
 									{order === "oldest" && bottomComment}
