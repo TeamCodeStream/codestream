@@ -561,6 +561,16 @@ export const PullRequest = () => {
 		);
 	};
 
+	const reopen = async () => {
+		setIsLoadingMessage("Reopening...");
+		await dispatch(api("createPullRequestCommentAndReopen", { text: "" }));
+	};
+
+	const close = async () => {
+		setIsLoadingMessage("Closing...");
+		await dispatch(api("createPullRequestCommentAndClose", { text: "" }));
+	};
+
 	const { order, filter } = derivedState;
 
 	const stateMap = {
@@ -635,21 +645,37 @@ export const PullRequest = () => {
 								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
 							<div style={{ marginLeft: "auto" }}>
-								<DropdownButton
-									variant="secondary"
-									splitDropdown
-									items={[
-										{ label: "Edit", key: "edit" },
-										{
-											label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
-											key: "draft",
-											action: () => toggleWorkInProgress()
-										},
-										{ label: "Close", key: "close" }
-									]}
-								>
-									Edit
-								</DropdownButton>
+								{pr.state === "closed" ? (
+									<DropdownButton
+										variant="secondary"
+										splitDropdown
+										splitDropdownInstandAction
+										selectedKey="edit"
+										items={[
+											{ label: "Edit", key: "edit" },
+											{ label: "Reopen", key: "reopen", action: reopen }
+										]}
+									>
+										Edit
+									</DropdownButton>
+								) : (
+									<DropdownButton
+										variant="secondary"
+										splitDropdown
+										splitDropdownInstandAction
+										items={[
+											{ label: "Edit", key: "edit" },
+											{
+												label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
+												key: "draft",
+												action: () => toggleWorkInProgress()
+											},
+											{ label: "Close", key: "close", action: close }
+										]}
+									>
+										Edit
+									</DropdownButton>
+								)}
 							</div>
 						</Header>
 						<PRTitle>

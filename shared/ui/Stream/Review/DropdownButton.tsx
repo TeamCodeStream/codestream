@@ -25,15 +25,23 @@ export interface DropdownButtonProps extends ButtonProps {
 	}[];
 	title?: string;
 	splitDropdown?: boolean;
+	splitDropdownInstandAction?: boolean;
 	wrap?: boolean;
 	selectedKey?: string;
 	isMultiSelect?: boolean;
 	itemsRange?: string[];
 }
 
-// operates in two modes. if splitDropdown is false (the default), it's a dropdown menu
-// if splitDropdown is true, then the chevron just changes the selection, but you have
+// operates in two modes. if splitDropdown is false (the default), it's a dropdown menu.
+// if splitDropdown is true, then the chevron is separated from the main button action,
+// and it opens the menu. selecting a menu item just changes the selection, but you have
 // to click the button to perform the action
+//
+// however -- if splitDropdownInstantAction is true, then the dropdown will:
+// a) perform the action immediately on the main button
+// b) open a menu if you click the chevron
+// c) perform the action immediately when the menu is exposed and you select an option
+// for an example, see the dropdown here: http://gitlab.codestream.us/pez/onprem-awesome-1/-/merge_requests/1
 export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProps>) {
 	const buttonRef = React.useRef<HTMLElement>(null);
 	const [menuIsOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
@@ -56,7 +64,8 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 			}
 			item.checked = item.key === selectedKey;
 			item.action = () => {
-				setSelectedKey(item.key);
+				if (props.splitDropdownInstandAction && item.buttonAction) item.buttonAction();
+				else setSelectedKey(item.key);
 				item.onSelect && item.onSelect();
 			};
 		});
