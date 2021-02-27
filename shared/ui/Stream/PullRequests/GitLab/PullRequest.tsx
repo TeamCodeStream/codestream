@@ -1,12 +1,10 @@
 import { CSMe } from "@codestream/protocols/api";
-import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
 import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
 import { Tabs, Tab } from "@codestream/webview/src/components/Tabs";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
-	getProviderPullRequestRepo2,
 	getPullRequestExactId,
 	getPullRequestId
 } from "../../../store/providerPullRequests/reducer";
@@ -14,50 +12,29 @@ import { LoadingMessage } from "../../../src/components/LoadingMessage";
 
 import { getPreferences } from "../../../store/users/reducer";
 import Tooltip from "../../Tooltip";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as reviewSelectors from "../../../store/reviews/reducer";
 import styled, { ThemeProvider } from "styled-components";
-import { setUserPreference } from "../../actions";
-import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
-import { confirmPopup } from "../../Confirm";
 import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
+import { GetReposScmRequestType } from "@codestream/protocols/agent";
 import {
-	FetchThirdPartyPullRequestPullRequest,
-	GetReposScmRequestType,
-	ReposScm,
-	SwitchBranchRequestType,
-	DidChangeDataNotificationType,
-	ChangeDataType
-} from "@codestream/protocols/agent";
-import {
-	PRAction,
-	PRActionButtons,
-	PRAuthor,
 	PRBadge,
 	PRBranch,
-	PRCommentCard,
-	PREditTitle,
 	PRError,
 	PRHeader,
-	PRIAmRequested,
 	PRPlusMinus,
-	PRPreamble,
-	PRStatus,
 	PRStatusButton,
-	PRStatusMessage,
 	PRSubmitReviewButton,
 	PRTitle
 } from "../../PullRequestComponents";
-import { PullRequestConversationTab } from "../../PullRequestConversationTab";
 import { PullRequestFileComments } from "../../PullRequestFileComments";
 import { PullRequestFilesChangedTab } from "../../PullRequestFilesChangedTab";
 import { PullRequestFinishReview } from "../../PullRequestFinishReview";
-import ScrollBox from "../../ScrollBox";
 import Timestamp from "../../Timestamp";
 import {
 	api,
@@ -65,29 +42,23 @@ import {
 	getPullRequestConversationsFromProvider
 } from "../../../store/providerPullRequests/actions";
 import { HostApi } from "../../../webview-api";
-import {
-	clearCurrentPullRequest,
-	closeAllModals,
-	setCurrentPullRequest,
-	setCurrentReview
-} from "../../../store/context/actions";
+import { setCurrentPullRequest } from "../../../store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { PullRequestBottomComment } from "../../PullRequestBottomComment";
-import { PropsWithTheme } from "@codestream/webview/src/themes";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../Review/DropdownButton";
-import { PullRequestReactions } from "./PullRequestReactions";
 import { ApproveBox } from "./ApproveBox";
 import { MergeBox } from "./MergeBox";
 import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
 import { SummaryBox } from "./SummaryBox";
 import { RightActionBar } from "./RightActionBar";
 import { MarkdownText } from "../../MarkdownText";
+import { EditPullRequest } from "./EditPullRequest";
 
-const Root = styled.div`
+export const PullRequestRoot = styled.div`
 	position: absolute;
 	width: 100%;
 	background: var(-app-background-color) !important;
@@ -290,7 +261,7 @@ export const PullRequest = () => {
 	});
 
 	const [activeTab, setActiveTab] = useState(1);
-	const [ghRepo, setGhRepo] = useState<any>(EMPTY_HASH);
+	const [isEditing, setIsEditing] = useState(false);
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
@@ -561,6 +532,8 @@ export const PullRequest = () => {
 		);
 	};
 
+	const edit = () => setIsEditing(true);
+
 	const reopen = async () => {
 		setIsLoadingMessage("Reopening...");
 		await dispatch(api("createPullRequestCommentAndReopen", { text: "" }));
@@ -598,8 +571,15 @@ export const PullRequest = () => {
 
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<Root>
+			<PullRequestRoot>
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
+				{isEditing && (
+					<EditPullRequest
+						pr={pr}
+						setIsEditing={setIsEditing}
+						setIsLoadingMessage={setIsLoadingMessage}
+					/>
+				)}
 				<Left>
 					<PRHeader>
 						<Header>
@@ -652,7 +632,7 @@ export const PullRequest = () => {
 										splitDropdownInstandAction
 										selectedKey="edit"
 										items={[
-											{ label: "Edit", key: "edit" },
+											{ label: "Edit", key: "edit", action: edit },
 											{ label: "Reopen", key: "reopen", action: reopen }
 										]}
 									>
@@ -664,7 +644,7 @@ export const PullRequest = () => {
 										splitDropdown
 										splitDropdownInstandAction
 										items={[
-											{ label: "Edit", key: "edit" },
+											{ label: "Edit", key: "edit", action: edit },
 											{
 												label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
 												key: "draft",
@@ -683,7 +663,7 @@ export const PullRequest = () => {
 							<Tooltip title="Open on GitLab" placement="top">
 								<span>
 									<Link href={pr.url}>
-										#{pr.number}
+										!{pr.number}
 										<Icon name="link-external" className="open-external" />
 									</Link>
 								</span>
@@ -882,7 +862,7 @@ export const PullRequest = () => {
 					setRightOpen={setRightOpen}
 					setIsLoadingMessage={setIsLoadingMessage}
 				/>
-			</Root>
+			</PullRequestRoot>
 		</ThemeProvider>
 	);
 };
