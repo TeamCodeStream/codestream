@@ -68,13 +68,37 @@ const HR = styled.div`
 	background: var(--base-border-color);
 `;
 
-const TDLabel = styled.td`
+const ResponsiveRow = styled.div`
+	display: flex;
+	flex-wrap: wrap;
+	align-items: top;
+`;
+
+const ResponsiveLabel = styled.label`
 	text-align: right;
 	color: var(--text-color-highlight);
 	font-weight: bold;
+	.codemark-form & {
+		margin-top: 10px !important;
+	}
+	padding-right: 5px;
+	flex: 0 0 22%;
+	max-width: 22%;
+	@media only screen and (max-width: 350px) {
+		flex: 0 0 100%;
+		max-width: 100%;
+		text-align: left;
+	}
 `;
 
-const TDValue = styled.td`
+const ResponsiveValue = styled.div`
+	flex: 0 0 75%;
+	max-width: 75%;
+	@media only screen and (max-width: 350px) {
+		flex: 0 0 100%;
+		max-width: 100%;
+		padding: 5px 0 5px 0;
+	}
 	padding: 5px 0 5px 10px;
 	button {
 		width: 200px;
@@ -140,6 +164,11 @@ export const EditPullRequest = props => {
 		) : (
 			"None"
 		);
+	const assignedToMe =
+		pr.viewer &&
+		pr.assignees &&
+		pr.assignees.nodes.length === 1 &&
+		pr.assignees.nodes[0].username === pr.viewer.login;
 
 	const labels =
 		pr.labels && pr.labels.nodes.length > 0 ? (
@@ -200,50 +229,53 @@ export const EditPullRequest = props => {
 									setIsPreviewing={value => setIsPreviewing(value)}
 								/>
 								<div style={{ height: "10px" }} />
-								<table>
-									<tr>
-										<TDLabel>Assignee</TDLabel>
-										<TDValue>
-											<DropdownButton spread variant="secondary" items={[]}>
+								<ResponsiveRow>
+									<ResponsiveLabel>Assignee</ResponsiveLabel>
+									<ResponsiveValue>
+										<div style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}>
+											<DropdownButton fillParent variant="secondary" items={[]}>
 												{assignees}
 											</DropdownButton>
-											&nbsp;&nbsp;&nbsp;
-											<Link href="" onClick={() => {}}>
-												Assign to me
+											{!assignedToMe && pr.viewer.login && (
+												<div style={{ paddingLeft: "10px" }}>
+													<Link href="" onClick={() => {}}>
+														Assign to me
+													</Link>
+												</div>
+											)}
+										</div>
+									</ResponsiveValue>
+								</ResponsiveRow>
+								<ResponsiveRow>
+									<ResponsiveLabel>Milestone</ResponsiveLabel>
+									<ResponsiveValue>
+										<DropdownButton fillParent variant="secondary" items={[]}>
+											{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}
+										</DropdownButton>
+									</ResponsiveValue>
+								</ResponsiveRow>
+								<ResponsiveRow>
+									<ResponsiveLabel>Labels</ResponsiveLabel>
+									<ResponsiveValue>
+										<DropdownButton fillParent variant="secondary" items={[]}>
+											{labels}
+										</DropdownButton>
+									</ResponsiveValue>
+								</ResponsiveRow>
+								<ResponsiveRow>
+									<ResponsiveLabel>Merge options</ResponsiveLabel>
+									<ResponsiveValue>
+										<Checkbox name="delete-branch" onChange={() => {}}>
+											Delete source branch when merge request is accepted.
+										</Checkbox>
+										<Checkbox name="delete-branch" onChange={() => {}}>
+											Squash commits when merge request is accepted.{" "}
+											<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
+												<Icon name="info" />
 											</Link>
-										</TDValue>
-									</tr>
-									<tr>
-										<TDLabel>Milestone</TDLabel>
-										<TDValue>
-											<DropdownButton spread variant="secondary" items={[]}>
-												{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}
-											</DropdownButton>
-										</TDValue>
-									</tr>
-									<tr>
-										<TDLabel>Labels</TDLabel>
-										<TDValue>
-											<DropdownButton spread variant="secondary" items={[]}>
-												{labels}
-											</DropdownButton>
-										</TDValue>
-									</tr>
-									<tr>
-										<TDLabel>Merge options</TDLabel>
-										<TDValue>
-											<Checkbox name="delete-branch" onChange={() => {}}>
-												Delete source branch when merge request is accepted.
-											</Checkbox>
-											<Checkbox name="delete-branch" onChange={() => {}}>
-												Squash commits when merge request is accepted.{" "}
-												<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
-													<Icon name="info" />
-												</Link>
-											</Checkbox>
-										</TDValue>
-									</tr>
-								</table>
+										</Checkbox>
+									</ResponsiveValue>
+								</ResponsiveRow>
 								<ButtonRow>
 									<Button variant="success" onClick={save}>
 										Save changes

@@ -73,6 +73,11 @@ export default class Menu extends Component {
 				{ source: "Menu.js", level: -1 }
 			)
 		);
+		// when a Menu is used within a MessageInput component, we want to be able
+		// to re-focus the TEXTAREA (contenteditable div) after the menu closes.
+		// we also want to be ablet to respond to keyboard events such as arrow-up
+		// or arrow-down to move the selection, when the menu itself doesn't have
+		// focus. focusInput and focus-button help make that possible
 		if (this.props.focusInput && this.props.focusInput.current) {
 			this.props.focusInput.current.addEventListener("keydown", this.handleKeyDown);
 		}

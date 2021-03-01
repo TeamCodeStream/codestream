@@ -73,7 +73,11 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	}
 
 	return (
-		<Root className={props.className} splitDropdown={props.splitDropdown} spread={props.spread}>
+		<Root
+			className={props.className}
+			splitDropdown={props.splitDropdown}
+			fillParent={props.fillParent}
+		>
 			{props.splitDropdown ? (
 				<>
 					<Button
@@ -129,8 +133,8 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	);
 }
 
-const Root = styled.div<{ splitDropdown?: boolean; spread?: boolean }>`
-	display: inline-block;
+const Root = styled.div<{ splitDropdown?: boolean; fillParent?: boolean }>`
+	display: ${props => (props.fillParent ? "block" : "inline-block")};
 	position: relative;
 	.octicon-chevron-down {
 		margin-left: ${props => (props.splitDropdown ? "0" : "5px")};
@@ -155,11 +159,14 @@ const Root = styled.div<{ splitDropdown?: boolean; spread?: boolean }>`
 	}
 	white-space: ${props => (props.splitDropdown ? "nowrap" : "")};
 	${props => {
-		return props.spread
+		return props.fillParent
 			? `
 			button {
 	justify-content: left;
+	text-align: left;
 	> span {
+		overflow: hidden;
+		text-overflow: ellipsis;
 		text-align: left;
 		width: 100%;
 		.icon {

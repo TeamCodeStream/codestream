@@ -1424,13 +1424,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
-		let projectFullPath;
-		let iid;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			projectFullPath = parsed.full.split("!")[0];
-			iid = parsed.full.split("!")[1];
-		}
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		const type = request.onOff ? "subscribe" : "unsubscribe";
 		const data = await this.restPost<{}, { subscribed: string }>(
@@ -1448,6 +1442,51 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+	}
+
+	async setAssigneeOnPullRequest(request: { pullRequestId: string; username: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		try {
+			const response = await this.mutate<any>(
+				`mutation MergeRequestSetAssignees($projectPath: ID!, $iid: String!, $assignees: [String!]!) {
+				mergeRequestSetAssignees(input: {projectPath: $projectPath, iid: $iid, assigneeUsernames: $assignees}) {
+				  mergeRequest {
+					title
+					assignees(last: 100) {
+						nodes {
+						  id
+						  name
+						  username
+						  avatarUrl
+						}
+					  }
+				  }
+				}
+			  }
+			  `,
+				{
+					projectPath: projectFullPath,
+					iid: iid,
+					assignees: [request.username]
+				}
+			);
+
+			return {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							assignees: response.mergeRequestSetAssignees.mergeRequest.assignees
+						}
+					}
+				]
+			};
+		} catch (err) {
+			Logger.error(err);
+			debugger;
+		}
+		return undefined;
 	}
 
 	parseId(pullRequestId: string) {

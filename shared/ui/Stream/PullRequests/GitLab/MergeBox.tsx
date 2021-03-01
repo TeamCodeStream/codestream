@@ -78,7 +78,7 @@ export const MergeBox = props => {
 						Merge
 					</Button>
 					<div className="pad-left">
-						This merge request is still a draft
+						<b>This merge request is still a draft</b>
 						<br />
 						Draft merge requests can't be merged.
 					</div>

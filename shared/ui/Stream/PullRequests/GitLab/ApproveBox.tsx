@@ -6,6 +6,7 @@ import { OutlineBox, FlexRow } from "./PullRequest";
 import { api } from "../../../store/providerPullRequests/actions";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import Tooltip from "../../Tooltip";
+import { Link } from "../../Link";
 
 export const ApproveBox = props => {
 	const dispatch = useDispatch();
@@ -60,7 +61,10 @@ export const ApproveBox = props => {
 						</>
 					) : (
 						<>
-							Approval is optional <Icon name="info" title="About this feature" placement="top" />
+							Approval is optional{" "}
+							<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/merge_request_approvals">
+								<Icon name="info" title="About this feature" placement="top" />
+							</Link>
 						</>
 					)}
 				</div>
