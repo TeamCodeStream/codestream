@@ -1132,7 +1132,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				iid: iid.toString()
 			});
 
-			Logger.warn("RESPONSE: " + JSON.stringify(response, null, 4));
 			response.project.mergeRequest.viewer = {
 				login: response.currentUser.username,
 				name: response.currentUser.name,
