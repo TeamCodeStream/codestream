@@ -24,6 +24,7 @@ export interface DropdownButtonProps extends ButtonProps {
 		onSelect?: () => void; // callback for when you select an item with a splitDropdown
 	}[];
 	title?: string;
+	spread?: boolean;
 	splitDropdown?: boolean;
 	splitDropdownInstandAction?: boolean;
 	wrap?: boolean;
@@ -72,7 +73,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	}
 
 	return (
-		<Root className={props.className} splitDropdown={props.splitDropdown}>
+		<Root className={props.className} splitDropdown={props.splitDropdown} spread={props.spread}>
 			{props.splitDropdown ? (
 				<>
 					<Button
@@ -128,7 +129,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 	);
 }
 
-const Root = styled.div<{ splitDropdown?: boolean }>`
+const Root = styled.div<{ splitDropdown?: boolean; spread?: boolean }>`
 	display: inline-block;
 	position: relative;
 	.octicon-chevron-down {
@@ -153,4 +154,20 @@ const Root = styled.div<{ splitDropdown?: boolean }>`
 		margin-left: 1px !important;
 	}
 	white-space: ${props => (props.splitDropdown ? "nowrap" : "")};
+	${props => {
+		return props.spread
+			? `
+			button {
+	justify-content: left;
+	> span {
+		text-align: left;
+		width: 100%;
+		.icon {
+			float: right;
+		}
+	}
+}
+`
+			: "";
+	}}
 `;

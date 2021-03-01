@@ -129,6 +129,21 @@ export const PullRequestRoot = styled.div`
 	button.narrow {
 		padding: 1px 3px !important;
 	}
+	.icon.circled {
+		display: inline-flex;
+		height: 30px;
+		width: 30px;
+		border-radius: 15px;
+		place-items: center;
+		justify-content: center;
+		color: var(--text-color-subtle);
+		border: 1px solid var(--base-border-color);
+		margin: 0 10px 0 15px;
+		vertical-align: -3px;
+		svg {
+			opacity: 0.7;
+		}
+	}
 `;
 
 const Left = styled.div`
@@ -158,7 +173,7 @@ const RoundImg = styled.span`
 const BigRoundImg = styled.span`
 	img {
 		border-radius: 50%;
-		margin: 0px 15px 0px 10px;
+		margin: 0px 15px 0px 0px;
 		vertical-align: middle;
 		height: 40px;
 	}
@@ -179,6 +194,33 @@ export const OutlineBox = styled.div`
 	border-radius: 5px;
 	border: 1px solid var(--base-border-color);
 	margin: 0 20px 15px 20px;
+	position: relative;
+	& + &:after {
+		content: "";
+		display: block;
+		position: absolute;
+		height: 15px;
+		width: 1px;
+		left: 30px;
+		top: -15px;
+		background: var(--base-border-color);
+	}
+`;
+
+export const ActionBox = styled.div`
+	border-radius: 5px;
+	margin: 0 20px 15px 20px;
+	position: relative;
+	& + &:after {
+		content: "";
+		display: block;
+		position: absolute;
+		height: 15px;
+		width: 1px;
+		left: 30px;
+		top: -15px;
+		background: var(--base-border-color);
+	}
 `;
 
 export const FlexRow = styled.div`
@@ -193,7 +235,8 @@ export const FlexRow = styled.div`
 	.bigger {
 		display: inline-block;
 		transform: scale(1.5);
-		margin: 0 15px 0 10px;
+		margin: 0 15px 0 12px;
+		opacity: 0.7;
 	}
 	.overlap {
 		position: absolute !important;
@@ -213,6 +256,10 @@ export const FlexRow = styled.div`
 		width: 100% !important;
 		height: 75px;
 	}
+`;
+
+const Description = styled.div`
+	margin: 20px;
 `;
 
 const EMPTY_HASH = {};
@@ -372,6 +419,7 @@ export const PullRequest = () => {
 		iid: string;
 		number: number;
 		title: string;
+		description: string;
 		createdAt: string;
 		webUrl: string;
 		state: string;
@@ -761,9 +809,10 @@ export const PullRequest = () => {
 								// 	setIsLoadingMessage={setIsLoadingMessage}
 								// />
 								<>
+									{pr.description && <Description>{pr.description}</Description>}
 									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
 									<ApproveBox pr={pr} />
-									<MergeBox pr={pr} />
+									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									{order === "newest" && bottomComment}
 									{discussions.map((_: any) => {
@@ -778,15 +827,22 @@ export const PullRequest = () => {
 												</div>
 											);
 										} else if (_.type === "milestone") {
-											return null;
-											return (
-												<div>
-													{_.milestone}
-													label:<pre>{JSON.stringify(_, null, 2)}</pre>
-													<br />
-													<br />
-												</div>
-											);
+											if (_.action === "removed")
+												return (
+													<ActionBox>
+														<Icon name="clock" className="circled" />
+														<b>{_.user.name}</b> @{_.user.username} removed milestone{" "}
+														<Timestamp relative time={_.createdAt} />
+													</ActionBox>
+												);
+											else
+												return (
+													<ActionBox>
+														<Icon name="clock" className="circled" />
+														<b>{_.user.name}</b> @{_.user.username} changed milestone{" "}
+														<Timestamp relative time={_.createdAt} />
+													</ActionBox>
+												);
 										} else if (_.type === "label") {
 											return null;
 											return (
@@ -815,6 +871,7 @@ export const PullRequest = () => {
 																			(S) (R) (Edit) (dots)
 																		</div>*/}
 																<div>
+																	{/* <pre>{JSON.stringify(_, null, 2)}</pre> */}
 																	<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
 																	<Timestamp time={x.createdAt} />
 																</div>

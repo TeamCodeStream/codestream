@@ -990,6 +990,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					sourceBranch
 					targetBranch
 					title
+					description
 					webUrl
 					state
 					mergedAt

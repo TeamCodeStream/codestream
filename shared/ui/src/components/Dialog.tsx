@@ -41,6 +41,9 @@ const Box = styled.div<{
 		.form-body {
 			padding: 0;
 		}
+		fieldset {
+			max-width: ${props => (props.wide ? "none" : "420px")};
+		}
 	}
 	max-width: ${props => (props.narrow ? "420px" : "none")};
 	width: ${props => (props.wide ? "100%" : "auto")};

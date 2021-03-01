@@ -10,22 +10,32 @@ import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
 import { PRBranch, PRError, PRHeader, PRTitle } from "../../PullRequestComponents";
-import { HostApi } from "../../../webview-api";
+import { api } from "../../../store/providerPullRequests/actions";
 import MessageInput from "../../MessageInput";
 import { TextInput } from "@codestream/webview/Authentication/TextInput";
 import { Modal } from "../../Modal";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
+import { PullRequestRoot } from "./PullRequest";
+import { confirmPopup } from "../../Confirm";
+import { closeAllModals } from "@codestream/webview/store/context/actions";
+import { DropdownButton } from "../../Review/DropdownButton";
+import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { SmartFormattedList } from "../../SmartFormattedList";
 
-const Root = styled.div``;
+const Label = styled.div`
+	margin-top: 20px;
+	color: var(--text-color-highlight);
+	font-weight: bold;
+`;
 
-const Header = styled.div`
-	display: flex;
+const Subtle = styled.div`
+	color: var(--text-color-subtle);
 `;
 
 const ButtonRow = styled.div`
 	display: flex;
 	align-items: center;
-	padding: 10px 0 0 0;
+	padding: 20px 0 0 0;
 `;
 
 const Right = styled.div`
@@ -58,6 +68,22 @@ const HR = styled.div`
 	background: var(--base-border-color);
 `;
 
+const TDLabel = styled.td`
+	text-align: right;
+	color: var(--text-color-highlight);
+	font-weight: bold;
+`;
+
+const TDValue = styled.td`
+	padding: 5px 0 5px 10px;
+	button {
+		width: 200px;
+	}
+	a {
+		white-space: nowrap;
+	}
+`;
+
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let insertText;
@@ -75,49 +101,97 @@ export const EditPullRequest = props => {
 	const [title, setTitle] = useState<string>(pr.title || "");
 	const [description, setDescription] = useState<string>(pr.description || "");
 	const [isPreviewing, setIsPreviewing] = useState(false);
-	const [isLoadingMessage, setIsLoadingMessage] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
 
-	const save = () => {};
-	const deletePR = () => {};
+	const save = async () => {
+		setIsLoading(true);
+		await dispatch(
+			api("updatePullRequest", {
+				title,
+				description
+			})
+		);
+		cancel();
+	};
+	const deletePR = () => {
+		confirmPopup({
+			title: "Are you sure?",
+			message: "Merge request will be removed.",
+			centered: true,
+			buttons: [
+				{ label: "Go Back", className: "control-button" },
+				{
+					label: "Delete",
+					className: "delete",
+					wait: true,
+					action: () => {
+						dispatch(api("deletePullRequest", {}));
+						dispatch(closeAllModals());
+					}
+				}
+			]
+		});
+	};
 	const cancel = () => setIsEditing(false);
 
+	const assignees =
+		pr.assignees && pr.assignees.nodes.length > 0 ? (
+			<SmartFormattedList value={pr.assignees.nodes.map(_ => _.username)} />
+		) : (
+			"None"
+		);
+
+	const labels =
+		pr.labels && pr.labels.nodes.length > 0 ? (
+			<SmartFormattedList value={pr.labels.nodes.map(_ => _.title)} />
+		) : (
+			"None"
+		);
+
 	return (
-		<Root>
-			<Modal translucent>
-				<Dialog onClose={cancel} title={`Edit Merge Request !{pr.number}`}>
-					From <PRBranch>{pr.sourceBranch}</PRBranch> into {pr.targetBranch}
-					<HR />
-					{pr.error && pr.error.message && (
-						<PRError>
-							<Icon name="alert" />
-							<div>{pr.error.message}</div>
-						</PRError>
-					)}
-					<table>
-						<tr>
-							<td>
-								<label>Title</label>
-							</td>
-							<td>
-								<TextInput value={title} onChange={setTitle}></TextInput>
-								<br />
-								<Link href="" onClick={() => {}}>
-									Remove the Draft prefix
-								</Link>{" "}
-								from the title to allow this merge request to be merged when it's ready.
-								<br />
-								Add{" "}
-								<Link href="" onClick={() => {}}>
-									description templates
-								</Link>{" "}
-								to help your contributors communicate effectively!
-							</td>
-						</tr>
-						<tr>
-							<td>
-								<label>Description</label>
-							</td>
-							<td>
+		<Modal translucent>
+			<Dialog wide onClose={cancel} title={`Edit Merge Request !${pr.number}`}>
+				<PullRequestRoot style={{ position: "static", background: "inherit !important" }}>
+					<div className="standard-form codemark-form">
+						<fieldset className="form-body">
+							<div id="controls" className="control-group">
+								From <PRBranch>{pr.sourceBranch}</PRBranch> into{" "}
+								<DropdownButton variant="secondary" items={[]}>
+									<span className="monospace">{pr.targetBranch}</span>
+								</DropdownButton>
+								{pr.error && pr.error.message && (
+									<PRError>
+										<Icon name="alert" />
+										<div>{pr.error.message}</div>
+									</PRError>
+								)}
+								<Label>Title</Label>
+								<TextInput value={title} onChange={setTitle} />
+								<Subtle>
+									{title.startsWith("Draft: ") ? (
+										<>
+											<Link href="" onClick={() => setTitle(title.replace("Draft: ", ""))}>
+												Remove the Draft prefix
+											</Link>{" "}
+											from the title to allow this merge request to be merged when it's ready.
+										</>
+									) : (
+										<>
+											<Link href="" onClick={() => setTitle(`Draft: ${title}`)}>
+												Start the title with Draft: or WIP:
+											</Link>{" "}
+											to prevent a merge request that is a work in progress from being merged before
+											it's ready.
+										</>
+									)}
+									<br />
+									Add{" "}
+									<Link href="http://gitlab.codestream.us/help/user/project/description_templates">
+										description templates
+									</Link>{" "}
+									to help your contributors communicate effectively!
+								</Subtle>
+								<Label>Description</Label>
 								<MessageInput
 									multiCompose
 									text={description}
@@ -125,24 +199,69 @@ export const EditPullRequest = props => {
 									onChange={setDescription}
 									setIsPreviewing={value => setIsPreviewing(value)}
 								/>
-							</td>
-						</tr>
-					</table>
-					<ButtonRow>
-						<Button variant="success" onClick={save}>
-							Save changes
-						</Button>
-						<Right>
-							<Button variant="destructive" onClick={deletePR}>
-								Delete
-							</Button>
-							<Button variant="secondary" onClick={cancel}>
-								Cancel
-							</Button>
-						</Right>
-					</ButtonRow>
-				</Dialog>
-			</Modal>
-		</Root>
+								<div style={{ height: "10px" }} />
+								<table>
+									<tr>
+										<TDLabel>Assignee</TDLabel>
+										<TDValue>
+											<DropdownButton spread variant="secondary" items={[]}>
+												{assignees}
+											</DropdownButton>
+											&nbsp;&nbsp;&nbsp;
+											<Link href="" onClick={() => {}}>
+												Assign to me
+											</Link>
+										</TDValue>
+									</tr>
+									<tr>
+										<TDLabel>Milestone</TDLabel>
+										<TDValue>
+											<DropdownButton spread variant="secondary" items={[]}>
+												{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}
+											</DropdownButton>
+										</TDValue>
+									</tr>
+									<tr>
+										<TDLabel>Labels</TDLabel>
+										<TDValue>
+											<DropdownButton spread variant="secondary" items={[]}>
+												{labels}
+											</DropdownButton>
+										</TDValue>
+									</tr>
+									<tr>
+										<TDLabel>Merge options</TDLabel>
+										<TDValue>
+											<Checkbox name="delete-branch" onChange={() => {}}>
+												Delete source branch when merge request is accepted.
+											</Checkbox>
+											<Checkbox name="delete-branch" onChange={() => {}}>
+												Squash commits when merge request is accepted.{" "}
+												<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
+													<Icon name="info" />
+												</Link>
+											</Checkbox>
+										</TDValue>
+									</tr>
+								</table>
+								<ButtonRow>
+									<Button variant="success" onClick={save}>
+										Save changes
+									</Button>
+									<Right>
+										<Button variant="destructive" onClick={deletePR}>
+											Delete
+										</Button>
+										<Button variant="secondary" onClick={cancel}>
+											Cancel
+										</Button>
+									</Right>
+								</ButtonRow>
+							</div>
+						</fieldset>
+					</div>
+				</PullRequestRoot>
+			</Dialog>
+		</Modal>
 	);
 };

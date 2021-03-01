@@ -59,6 +59,37 @@ export const MergeBox = props => {
 		);
 	};
 
+	const toggleWorkInProgress = async () => {
+		const onOff = !props.pr.workInProgress;
+		props.setIsLoadingMessage(onOff ? "Marking as draft..." : "Marking as ready...");
+		await dispatch(
+			api("setWorkInProgressOnPullRequest", {
+				onOff
+			})
+		);
+	};
+
+	if (props.pr.workInProgress) {
+		return (
+			<OutlineBox>
+				<FlexRow>
+					<Icon name="alert" className="bigger" />
+					<Button className="action-button" variant="secondary" disabled>
+						Merge
+					</Button>
+					<div className="pad-left">
+						This merge request is still a draft
+						<br />
+						Draft merge requests can't be merged.
+					</div>
+					<div className="pad-left">
+						<Button onClick={toggleWorkInProgress}>Mark as ready</Button>
+					</div>
+				</FlexRow>
+			</OutlineBox>
+		);
+	}
+
 	return (
 		<OutlineBox>
 			<FlexRow>
