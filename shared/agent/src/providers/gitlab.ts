@@ -960,7 +960,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					upvotes: number;
 					url: string;
 					viewer: {
+						name: string;
 						login: string;
+						avatarUrl: string;
 					};
 					webUrl: string;
 					workInProgress: boolean;
@@ -972,6 +974,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				currentUser {
 					name
 					username
+					avatarUrl
 					id
 				}
 				project(fullPath: $fullPath) {
@@ -1129,8 +1132,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				iid: iid.toString()
 			});
 
+			Logger.warn("RESPONSE: " + JSON.stringify(response, null, 4));
 			response.project.mergeRequest.viewer = {
-				login: response.currentUser.username
+				login: response.currentUser.username,
+				name: response.currentUser.name,
+				avatarUrl: response.currentUser.avatarUrl
 			};
 			this._gitlabUsername = response.currentUser.username;
 			// awards are "reactions" aka "emojis"

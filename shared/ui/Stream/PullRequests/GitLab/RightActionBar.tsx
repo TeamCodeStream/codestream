@@ -641,7 +641,7 @@ export const RightActionBar = props => {
 								noChevronDown
 								noFocusOnSelect
 							>
-								Edit{" "}
+								Edit
 							</InlineMenu>
 						</JustifiedRow>
 						<Subtle>
