@@ -38,7 +38,7 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
 	}
 
-	get baseUrl() {
+	get baseWebUrl() {
 		const { host, apiHost, isEnterprise, forEnterprise } = this.providerConfig;
 		let returnHost;
 		if (isEnterprise) {
@@ -48,7 +48,11 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		} else {
 			returnHost = `https://${apiHost}`;
 		}
-		return `${returnHost}${this.apiPath}`;
+		return returnHost;
+	}
+
+	get baseUrl() {
+		return `${this.baseWebUrl}${this.apiPath}`;
 	}
 
 	@log()

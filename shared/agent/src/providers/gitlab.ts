@@ -977,6 +977,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					};
 					webUrl: string;
 					workInProgress: boolean;
+					baseWebUrl: string;
 					// forceRemoveSourceBranch: boolean;
 					// squashOnMerge: boolean;
 				};
@@ -1180,6 +1181,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 			response.project.mergeRequest.number = parseInt(response.project.mergeRequest.iid, 10);
 			response.project.mergeRequest.url = response.project.mergeRequest.sourceProject.webUrl;
+			response.project.mergeRequest.baseWebUrl = this.baseWebUrl;
 			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
 			// build this so that it aligns with what the REST api created
 			response.project.mergeRequest.references = {

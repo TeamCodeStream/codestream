@@ -581,7 +581,7 @@ export const RightActionBar = props => {
 													label: "Learn more",
 													action: () => {
 														HostApi.instance.send(OpenUrlRequestType, {
-															url: "http://gitlab.codestream.us/help/user/project/time_tracking.md"
+															url: `${props.pr.baseWebUrl}/help/user/project/time_tracking.md`
 														});
 													}
 												}

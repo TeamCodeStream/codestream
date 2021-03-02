@@ -62,7 +62,9 @@ export const ApproveBox = props => {
 					) : (
 						<>
 							Approval is optional{" "}
-							<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/merge_request_approvals">
+							<Link
+								href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/merge_request_approvals`}
+							>
 								<Icon name="info" title="About this feature" placement="top" />
 							</Link>
 						</>

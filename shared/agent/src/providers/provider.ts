@@ -232,9 +232,12 @@ export abstract class ThirdPartyProviderBase<
 	}
 
 	get baseUrl() {
+		return `${this.baseWebUrl}${this.apiPath}`;
+	}
+
+	get baseWebUrl() {
 		const { host, apiHost, isEnterprise } = this.providerConfig;
-		const returnHost = isEnterprise ? host : `https://${apiHost}`;
-		return `${returnHost}${this.apiPath}`;
+		return isEnterprise ? host : `https://${apiHost}`;
 	}
 
 	async addEnterpriseHost(

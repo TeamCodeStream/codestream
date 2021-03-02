@@ -46,7 +46,9 @@ export const CommandLineInstructions = props => {
 					<Icon name="copy" onClick={() => copy(Step4)} />
 				</Flex>
 				<b>Tip:</b> You can also checkout merge requests locally by following{" "}
-				<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/reviewing_and_managing_merge_requests.md#checkout-merge-requests-locally-through-the-head-ref">
+				<Link
+					href={`${props.pr.baseWebUrl}/help/user/project/merge_requests/reviewing_and_managing_merge_requests.md#checkout-merge-requests-locally-through-the-head-ref`}
+				>
 					these guidelines.
 				</Link>
 			</Dialog>

@@ -357,7 +357,7 @@ export const EditPullRequest = props => {
 									)}
 									<br />
 									Add{" "}
-									<Link href="http://gitlab.codestream.us/help/user/project/description_templates">
+									<Link href={`${pr.baseWebUrl}/help/user/project/description_templates`}>
 										description templates
 									</Link>{" "}
 									to help your contributors communicate effectively!
@@ -428,7 +428,9 @@ export const EditPullRequest = props => {
 												onChange={() => setSquashCommits(!squashCommits)}
 											>
 												Squash commits when merge request is accepted.{" "}
-												<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
+												<Link
+													href={`${pr.baseWebUrl}/help/user/project/merge_requests/squash_and_merge`}
+												>
 													<Icon name="info" />
 												</Link>
 											</Checkbox>
