@@ -3,6 +3,7 @@ import { RequestType } from "vscode-languageserver-protocol";
 
 export interface ReadTextFileRequest {
 	path: string;
+	baseDir?: string;
 }
 
 export interface ReadTextFileResponse {

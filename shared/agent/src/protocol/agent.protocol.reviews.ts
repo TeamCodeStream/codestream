@@ -350,6 +350,8 @@ export interface CheckPullRequestPreconditionsResponse {
 	branches?: string[];
 	remoteBranches?: string[];
 	pullRequestTemplate?: string;
+	pullRequestTemplateNames?: string[];
+	pullRequestTemplatePath?: string;
 	commitsBehindOriginHeadBranch?: string;
 	warning?: {
 		message?: string;

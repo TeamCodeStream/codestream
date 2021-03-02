@@ -26,7 +26,9 @@ export class TextFilesManager {
 	@lspHandler(ReadTextFileRequestType)
 	async readTextFile(request: ReadTextFileRequest): Promise<ReadTextFileResponse> {
 		try {
-			const file = this.textFilePath(request.path);
+			const file = request.baseDir
+				? path.join(request.baseDir, request.path)
+				: this.textFilePath(request.path);
 			if (!fs.existsSync(file)) return {};
 			const contents = await xfs.readText(file);
 			Logger.debug(`Read data ${contents} from ${file}`);

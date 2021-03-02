@@ -79,6 +79,7 @@ import {
 import { Arrays, log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
+import * as fs from "fs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 import { resolveCreatePostResponse, trackReviewPostCreation } from "./postsManager";
 import Timer = NodeJS.Timer;
@@ -821,7 +822,16 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				(await xfs.readText(path.join(repo.path, "docs/pull_request_template.md"))) ||
 				(await xfs.readText(path.join(repo.path, "docs/PULL_REQUEST_TEMPLATE.md"))) ||
 				(await xfs.readText(path.join(repo.path, ".github/pull_request_template.md"))) ||
-				(await xfs.readText(path.join(repo.path, ".github/PULL_REQUEST_TEMPLATE.md")));
+				(await xfs.readText(path.join(repo.path, ".github/PULL_REQUEST_TEMPLATE.md"))) ||
+				(await xfs.readText(path.join(repo.path, ".gitlab/merge_request_template.md")));
+
+			let pullRequestTemplateNames: string[] = [];
+			const templatePath = path.join(repo.path, ".gitlab", "merge_request_templates");
+			if (fs.existsSync(templatePath) && fs.lstatSync(templatePath).isDirectory()) {
+				pullRequestTemplateNames = (await fs.readdirSync(templatePath))
+					.filter(filepath => filepath.endsWith(".md"))
+					.map(filepath => filepath.replace(/\.md$/, ""));
+			}
 
 			const baseBranchRemote = await git.getBranchRemote(repo.path, baseRefName!);
 			const commitsBehindOrigin = await git.getBranchCommitsStatus(
@@ -836,6 +846,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				remoteUrl: remoteUrl,
 				providerId: providerId,
 				pullRequestTemplate,
+				pullRequestTemplateNames,
+				pullRequestTemplatePath: templatePath,
 				remotes: remotes,
 				origins: originNames,
 				remoteBranch: remoteBranch,
