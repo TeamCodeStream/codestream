@@ -383,7 +383,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const toggleQueryHidden = (e, providerId, index) => {
 		if (e.target.closest(".actions")) return;
-		const newQueries = [...queries[providerId]];
+		const providerQueries = queries[providerId] || DEFAULT_QUERIES[providerId];
+		const newQueries = [...providerQueries];
 		newQueries[index].hidden = !newQueries[index].hidden;
 		setQueries(providerId, newQueries);
 	};
@@ -800,22 +801,22 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																			delay={1}
 																		/>
 																	</span>
-																	{/* <Icon
+																	<Icon
 																		name="review"
 																		className="clickable"
 																		title="Review Changes"
 																		placement="bottomLeft"
 																		delay={1}
-																	/> */}
+																	/>
 																	<Timestamp time={pr.created_at} relative abbreviated />
-																	{/* numComments > 0 && (
+																	{pr.user_notes_count > 0 && (
 																		<span
 																			className="badge"
 																			style={{ margin: "0 0 0 10px", flexGrow: 0, flexShrink: 0 }}
 																		>
-																			{numComments}
+																			{pr.user_notes_count}
 																		</span>
-																	) */}
+																	)}
 																</div>
 															</Row>
 														);
