@@ -148,7 +148,7 @@ export const PullRequestRoot = styled.div`
 `;
 
 const Left = styled.div`
-	pre {
+	pre.stringify {
 		background: var(--app-background-color);
 		padding: 10px;
 		overflow: auto;
@@ -825,7 +825,7 @@ export const PullRequest = () => {
 											return (
 												<div>
 													{_.createdAt}
-													mr: <pre>{JSON.stringify(_, null, 2)}</pre>
+													mr: <pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
 													<br />
 													<br />
 												</div>
@@ -852,7 +852,7 @@ export const PullRequest = () => {
 											return (
 												<div>
 													{_.createdAt}
-													label:<pre>{JSON.stringify(_, null, 2)}</pre>
+													label:<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
 													<br />
 													<br />
 												</div>
@@ -875,7 +875,7 @@ export const PullRequest = () => {
 																			(S) (R) (Edit) (dots)
 																		</div>*/}
 																<div>
-																	{/* <pre>{JSON.stringify(_, null, 2)}</pre> */}
+																	{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
 																	<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
 																	<Timestamp time={x.createdAt} />
 																</div>
