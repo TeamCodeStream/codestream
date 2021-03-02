@@ -1187,7 +1187,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 
 			const mergeRequestFullId = JSON.stringify({
-				id: response.project.mergeRequest.id,
+				id: response.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", ""),
 				full: response.project.mergeRequest.references.full
 			});
 			response.project.mergeRequest.idComputed = mergeRequestFullId;
