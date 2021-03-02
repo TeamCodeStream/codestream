@@ -42,7 +42,7 @@ import {
 	getPullRequestConversationsFromProvider
 } from "../../../store/providerPullRequests/actions";
 import { HostApi } from "../../../webview-api";
-import { setCurrentPullRequest } from "../../../store/context/actions";
+import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
 import { PullRequestBottomComment } from "../../PullRequestBottomComment";
@@ -57,6 +57,7 @@ import { SummaryBox } from "./SummaryBox";
 import { RightActionBar } from "./RightActionBar";
 import { MarkdownText } from "../../MarkdownText";
 import { EditPullRequest } from "./EditPullRequest";
+import CancelButton from "../../CancelButton";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -564,6 +565,9 @@ export const PullRequest = () => {
 						background: "var(--sidebar-background)"
 					}}
 				>
+					<div style={{ position: "absolute", top: "20px", left: "20px" }}>
+						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
+					</div>
 					<LoadingMessage>Loading Merge Request...</LoadingMessage>
 				</div>
 			);
