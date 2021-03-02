@@ -936,6 +936,7 @@ export interface PullRequestComment {
 	author: {
 		id: string;
 		nickname: string;
+		username?: string;
 	};
 	createdAt: number;
 	id: string;

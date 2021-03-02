@@ -591,7 +591,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					id: glComment.id.toString(),
 					author: {
 						id: glComment.author.id.toString(),
-						nickname: glComment.author.name
+						nickname: glComment.author.name,
+						login: glComment.author.name
 					},
 					path: glComment.position.new_path,
 					text: glComment.body,
@@ -827,7 +828,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this.delete<R>(url, {}, options);
 	}
 
-	_gitlabUsername?: string;
+	_gitlabLogin?: string;
 
 	_pullRequestCache: Map<
 		string,
@@ -895,7 +896,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes: {
 							avatarUrl: string;
 							name: string;
-							username: string;
+							login: string;
 						};
 					};
 					baseRefName: string;
@@ -912,7 +913,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									id: string;
 									author: {
 										name: string;
-										username: string;
+										login: string;
 										avatarUrl: string;
 									};
 									body: string;
@@ -948,7 +949,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							user: {
 								id: number;
 								avatar_url: string;
-								username: string;
+								login: string;
 							};
 						}[];
 					}[];
@@ -987,7 +988,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
 				currentUser {
 					name
-					username
+					login:username
 					avatarUrl
 					id
 				}
@@ -998,7 +999,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes {
 						  avatarUrl
 						  name
-						  username
+						  login:username
 						}
 					}
 					id
@@ -1016,7 +1017,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					projectId
 					author {
 						name
-						username
+						login:username
 						avatarUrl
 					}
 					diffRefs {
@@ -1046,7 +1047,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes {
 						  id
 						  name
-						  username
+						  login:username
 						  avatarUrl
 						}
 					  }
@@ -1054,7 +1055,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes {
 						  id
 						  name
-						  username
+						  login:username
 						  avatarUrl
 						}
 					  }
@@ -1085,7 +1086,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						  nodes {
 							author {
 							  name
-							  username
+							  login:username
 							  avatarUrl
 							}
 							body
@@ -1114,7 +1115,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							resolved
 							resolvedAt
 							resolvedBy {
-							  username
+							  login:username
 							  avatarUrl
 							}
 							system
@@ -1132,8 +1133,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						resolvable
 						resolved
 						resolvedAt
-						resolvedBy{
-						  username
+						resolvedBy {
+						  login:username
 						  avatarUrl
 						}
 					  }
@@ -1149,11 +1150,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			response.project.mergeRequest.viewer = {
 				id: response.currentUser.id,
-				login: response.currentUser.username,
+				login: response.currentUser.login,
 				name: response.currentUser.name,
 				avatarUrl: response.currentUser.avatarUrl
 			};
-			this._gitlabUsername = response.currentUser.username;
+			this._gitlabLogin = response.currentUser.login;
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`
@@ -1229,7 +1230,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								// TODO get the real author
 								author: {
 									name: "Pending",
-									username: "pending",
+									login: "pending",
 									avatarUrl: "https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png"
 								},
 								state: "PENDING",
@@ -1465,7 +1466,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
-	async setAssigneeOnPullRequest(request: { pullRequestId: string; username: string }) {
+	async setAssigneeOnPullRequest(request: { pullRequestId: string; login: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
@@ -1478,7 +1479,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes {
 						  id
 						  name
-						  username
+						  login:username
 						  avatarUrl
 						}
 					  }
@@ -1489,7 +1490,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				{
 					projectPath: projectFullPath,
 					iid: iid,
-					assignees: [request.username]
+					assignees: [request.login]
 				}
 			);
 
@@ -1706,7 +1707,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							notes {
 								nodes {
 								author {
-									username
+									login:username
 									avatarUrl
 								}
 								body
@@ -1735,7 +1736,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								resolved
 								resolvedAt
 								resolvedBy {
-									username
+									login:username
 									avatarUrl
 								}
 								system
@@ -1754,19 +1755,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							resolved
 							resolvedAt
 							resolvedBy {
-									username
+									login:username
 									avatarUrl
 								}
-							} 
+							}
 						  }
 						}
 					  }
-					id      
+					id
 					body
 					createdAt
 					confidential
 					author {
-					  username
+					  login:username
 					  avatarUrl
 					}
 					updatedAt
@@ -2195,7 +2196,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								type: "removeReaction",
 								data: {
 									content: request.content,
-									username: this._gitlabUsername
+									login: this._gitlabLogin
 								}
 							}
 						]
@@ -2399,7 +2400,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							(_: { user: { avatar_url: string; username: string; name: string } }) => {
 								return {
 									avatarUrl: _.user.avatar_url,
-									username: _.user.username,
+									login: _.user.username,
 									name: _.user.name
 								};
 							}
@@ -2509,7 +2510,7 @@ interface GitLabPullRequestComment {
 interface GitLabPullRequestCommentAuthor {
 	id: number;
 	name: string;
-	username: string;
+	login: string;
 	state: string;
 	avatar_url: string;
 	web_url: string;

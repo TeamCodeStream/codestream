@@ -218,15 +218,15 @@ export const RightActionBar = props => {
 				}
 			];
 		}
-		const assigneeIds = pr.assignees.nodes.map(_ => _.username);
+		const assigneeIds = pr.assignees.nodes.map(_ => _.login);
 		if (availableAssignees && availableAssignees.length) {
 			const menuItems = (availableAssignees || []).map((_: any) => ({
-				checked: assigneeIds.includes(_.username),
-				label: <PRHeadshotName person={{ ..._, user: _.username }} className="no-padding" />,
+				checked: assigneeIds.includes(_.login),
+				label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
 				subtle: _.name,
-				searchLabel: `${_.username}:${_.name}`,
+				searchLabel: `${_.login}:${_.name}`,
 				key: _.id,
-				action: () => setAssignee(_.username)
+				action: () => setAssignee(_.login)
 			})) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -235,11 +235,11 @@ export const RightActionBar = props => {
 		}
 	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
-	const setAssignee = async (username: string) => {
+	const setAssignee = async (login: string) => {
 		setIsLoadingMessage("Setting Assignee...");
 		await dispatch(
 			api("setAssigneeOnPullRequest", {
-				username
+				login
 			})
 		);
 	};
@@ -504,7 +504,7 @@ export const RightActionBar = props => {
 								))
 							) : (
 								<>
-									None - <a onClick={() => setAssignee(pr.viewer.username)}>assign yourself</a>
+									None - <a onClick={() => setAssignee(pr.viewer.login)}>assign yourself</a>
 								</>
 							)}
 						</Subtle>

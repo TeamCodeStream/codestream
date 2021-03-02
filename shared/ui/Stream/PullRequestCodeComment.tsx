@@ -163,7 +163,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					<>
 						<PRHeadshot key={comment.id} size={30} person={comment.author || GHOST} />
 						<PRThreadedCommentHeader>
-							{author.login}
+							<b>{author.login}</b>
 							<Timestamp time={comment.createdAt} />
 							<PRActionIcons>
 								<PRAuthorBadges pr={pr} node={comment} isPending={item.state === "PENDING"} />

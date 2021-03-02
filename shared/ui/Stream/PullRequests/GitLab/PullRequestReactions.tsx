@@ -25,7 +25,7 @@ interface Props {
 			user: {
 				id: number;
 				avatar_url: string;
-				username: string;
+				login: string;
 			};
 		}[];
 	}[];
@@ -95,7 +95,7 @@ export const PullRequestReactButton = styled((props: Props) => {
 		if (!props.reactionGroups) return false;
 		const reaction = props.reactionGroups.find(_ => _.content === key);
 		if (!reaction) return false;
-		return reaction.data.find(_ => _.user.username === me);
+		return reaction.data.find(_ => _.user.login === me);
 	};
 
 	return (
@@ -193,7 +193,7 @@ export const PullRequestReactions = (props: ReactionProps) => {
 		const data = reaction ? reaction.data : [];
 		// if (num == 0) return null;
 		const emoji = emojify(":" + reactionContent + ":");
-		const loginList = data.map(_ => _.user.username);
+		const loginList = data.map(_ => _.user.login);
 		const logins = <SmartFormattedList value={loginList} />;
 		const title =
 			loginList.length > 0 ? (
@@ -204,7 +204,7 @@ export const PullRequestReactions = (props: ReactionProps) => {
 				""
 			);
 		const iReacted = loginList.includes(me);
-		const myReaction = data.find(_ => _.user.username === me) || {};
+		const myReaction = data.find(_ => _.user.login === me) || {};
 		return (
 			<Tooltip key={index} placement="bottomLeft" delay={1} title={title} trigger={["hover"]}>
 				<PRReaction

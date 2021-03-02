@@ -427,7 +427,7 @@ export const PullRequest = () => {
 		url: string;
 		author: {
 			name: string;
-			username: string;
+			login: string;
 			avatarUrl: string;
 		};
 		workInProgress: boolean;
@@ -835,7 +835,7 @@ export const PullRequest = () => {
 												return (
 													<ActionBox>
 														<Icon name="clock" className="circled" />
-														<b>{_.user.name}</b> @{_.user.username} removed milestone{" "}
+														<b>{_.user.name}</b> @{_.user.login} removed milestone{" "}
 														<Timestamp relative time={_.createdAt} />
 													</ActionBox>
 												);
@@ -843,7 +843,7 @@ export const PullRequest = () => {
 												return (
 													<ActionBox>
 														<Icon name="clock" className="circled" />
-														<b>{_.user.name}</b> @{_.user.username} changed milestone{" "}
+														<b>{_.user.name}</b> @{_.user.login} changed milestone{" "}
 														<Timestamp relative time={_.createdAt} />
 													</ActionBox>
 												);
@@ -876,7 +876,7 @@ export const PullRequest = () => {
 																		</div>*/}
 																<div>
 																	{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
-																	<b>{x.author.name}</b> @{x.author.username} &middot;{" "}
+																	<b>{x.author.name}</b> @{x.author.login} &middot;{" "}
 																	<Timestamp time={x.createdAt} />
 																</div>
 																<div style={{ paddingTop: "10px" }}>
