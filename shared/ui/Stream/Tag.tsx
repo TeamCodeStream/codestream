@@ -35,12 +35,7 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 	if (tag.color.startsWith("#")) {
 		const brightness = lightOrDark(tag.color);
 		tagDiv = (
-			<div
-				key={tag.id}
-				className={`cs-tag ${brightness}`}
-				style={{ background: tag.color }}
-				onClick={() => goSearch(`tag:${label}`)}
-			>
+			<div key={tag.id} className={`cs-tag ${brightness}`} style={{ background: tag.color }}>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>
 		);
@@ -49,7 +44,6 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 			<div
 				key={tag.id}
 				className={`cs-tag ${tag.color}-background${tag.color === "yellow" ? " light" : ""}`}
-				onClick={() => goSearch(`tag:${label}`)}
 			>
 				<div>&nbsp;{tag.label}&nbsp;</div>
 			</div>

@@ -133,13 +133,26 @@ export const EditPullRequest = props => {
 	const [description, setDescription] = useState<string>(pr.description || "");
 	const [isPreviewing, setIsPreviewing] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [deleteSourceBranch, setDeleteSourceBranch] = useState(pr.forceRemoveSourceBranch);
+	const [squashCommits, setSquashCommits] = useState(pr.squashOnMerge);
 
 	const save = async () => {
 		setIsLoading(true);
 		await dispatch(
 			api("updatePullRequest", {
 				title,
-				description
+				description,
+				targetBranch: "master", // FIXME
+				labels: labelsField.map(_ => _.title).join(","),
+				milestoneId: milestoneField
+					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
+					: "",
+				assigneeId: assigneesField
+					.filter(_ => _.id)
+					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
+					.join(","),
+				deleteSourceBranch,
+				squashCommits
 			})
 		);
 		cancel();
@@ -201,11 +214,7 @@ export const EditPullRequest = props => {
 					searchLabel: `${_.username}:${_.name}`,
 					key: _.id,
 					action: () => {
-						const newAssignees = [
-							...assigneesField.filter(assignee => assignee.username !== _.username)
-						];
-						if (!checked) newAssignees.unshift(_);
-						setAssigneesField(newAssignees);
+						setAssigneesField([{ ..._ }]);
 					}
 				} as any;
 			});
@@ -281,10 +290,10 @@ export const EditPullRequest = props => {
 					label: _.title,
 					searchLabel: _.title,
 					key: _.id,
-					subtext: _.dueOn && (
+					subtext: (_.dueOn || _.due_on) && (
 						<>
 							Due by
-							<Timestamp time={_.dueOn} dateOnly />
+							<Timestamp time={_.dueOn || _.due_on} dateOnly />
 						</>
 					),
 					action: () => setMilestoneField(_)
@@ -403,10 +412,20 @@ export const EditPullRequest = props => {
 								<ResponsiveRow>
 									<ResponsiveLabel>Merge options</ResponsiveLabel>
 									<ResponsiveValue>
-										<Checkbox name="delete-branch" onChange={() => {}}>
-											Delete source branch when merge request is accepted.
-										</Checkbox>
-										<Checkbox name="squash" onChange={() => {}}>
+										{false && (
+											<Checkbox
+												name="delete-branch"
+												checked={deleteSourceBranch}
+												onChange={() => setDeleteSourceBranch(!deleteSourceBranch)}
+											>
+												Delete source branch when merge request is accepted.
+											</Checkbox>
+										)}
+										<Checkbox
+											name="squash"
+											checked={squashCommits}
+											onChange={() => setSquashCommits(!squashCommits)}
+										>
 											Squash commits when merge request is accepted.{" "}
 											<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
 												<Icon name="info" />
@@ -415,7 +434,7 @@ export const EditPullRequest = props => {
 									</ResponsiveValue>
 								</ResponsiveRow>
 								<ButtonRow>
-									<Button variant="success" onClick={save}>
+									<Button variant="success" onClick={save} isLoading={isLoading}>
 										Save changes
 									</Button>
 									<Right>

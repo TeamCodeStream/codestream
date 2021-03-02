@@ -960,12 +960,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					upvotes: number;
 					url: string;
 					viewer: {
+						id: string;
 						name: string;
 						login: string;
 						avatarUrl: string;
 					};
 					webUrl: string;
 					workInProgress: boolean;
+					// forceRemoveSourceBranch: boolean;
+					// squashOnMerge: boolean;
 				};
 			};
 		};
@@ -1027,6 +1030,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					subscribed
 					userDiscussionsCount
 					discussionLocked
+					forceRemoveSourceBranch
 					assignees(last: 100) {
 						nodes {
 						  id
@@ -1133,6 +1137,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 
 			response.project.mergeRequest.viewer = {
+				id: response.currentUser.id,
 				login: response.currentUser.username,
 				name: response.currentUser.name,
 				avatarUrl: response.currentUser.avatarUrl
@@ -1147,6 +1152,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				Object.keys(grouped).map(_ => {
 					return { content: _, data: grouped[_] };
 				}) || [];
+			// const restMR = await this.restGet<any>(
+			// `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`
+			// );
+			// response.project.mergeRequest.squashOnMerge = restMR.body.squash;
 			response.project.mergeRequest.providerId = this.providerConfig?.id;
 			response.project.mergeRequest.baseRefOid =
 				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
@@ -1535,6 +1544,65 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+	}
+
+	async updatePullRequest(request: {
+		pullRequestId: string;
+		targetBranch: string;
+		title: string;
+		description: string;
+		labels: string;
+		milestoneId: string;
+		assigneeId: string;
+		// deleteSourceBranch?: boolean;
+		// squashCommits?: boolean;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		try {
+			const { body } = await this.restPut<any, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
+				{
+					target_branch: request.targetBranch,
+					title: request.title,
+					description: request.description,
+					labels: request.labels,
+					assignee_id: request.assigneeId,
+					milestone_id: request.milestoneId
+					// squash: !!request.squashCommits
+				}
+			);
+			// Logger.log("editPullRequest response: " + JSON.stringify(body, null, 4));
+			const milestone = body.milestone || null;
+			if (milestone) {
+				milestone.createdAt = milestone.created_at;
+				milestone.dueDate = milestone.due_date;
+			}
+			return {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							title: body.title,
+							workInProgress: body.work_in_progress,
+							description: body.description,
+							targetBranch: body.target_branch,
+							assignees: {
+								nodes: body.assignees.map((assignee: any) => {
+									return { ...assignee, avatarUrl: assignee.avatar_url };
+								})
+							},
+							milestone
+							// squashOnMerge: body.squash
+							// shouldRemoveSourceBranch: body.force_remove_source_branch
+						}
+					}
+				]
+			};
+		} catch (ex) {
+			Logger.warn(ex.message);
+		}
+		return undefined;
 	}
 
 	async createToDo(request: { pullRequestId: string }): Promise<Directives> {
