@@ -766,9 +766,14 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		d => d.codemark && (!d.codemark.pinned || d.codemark.status === "closed")
 	).length;
 
-	const hasPRProvider = ["github", "bitbucket", "gitlab"].some(name =>
-		isConnected(state, { name })
-	);
+	const hasPRProvider = [
+		"github",
+		"github_enterprise",
+		"bitbucket",
+		"bitbucket_enterprise",
+		"gitlab",
+		"gitlab_enterprise"
+	].some(name => isConnected(state, { name }));
 
 	let repoName = "";
 	const scmInfo = editorContext.scmInfo;

@@ -84,17 +84,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				icon: "gitlab",
 				id: this.providerConfig.id
 			},
-			subhead: `#${comment.pullRequest.id}`,
-			actions: [
-				{
-					label: "Open Note",
-					uri: comment.url
-				},
-				{
-					label: `Open Merge Request #${comment.pullRequest.id}`,
-					uri: comment.pullRequest.url
-				}
-			]
+			subhead: `!${comment.pullRequest.id}`,
+			externalId: comment.pullRequest.externalId,
+			externalChildId: comment.id,
+			externalType: "PullRequest",
+			title: comment.pullRequest.title,
+			diffHunk: comment.diffHunk,
+			actions: []
+			// subhead: `#${comment.pullRequest.id}`,
+			// actions: [
+			// 	{
+			// 		label: "Open Note",
+			// 		uri: comment.url
+			// 	},
+			// 	{
+			// 		label: `Open Merge Request !${comment.pullRequest.id}`,
+			// 		uri: comment.pullRequest.url
+			// 	}
+			// ]
 		};
 	}
 
@@ -543,6 +550,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			)}/merge_requests?state=${state}`;
 			do {
 				const apiResponse = await this.get<GitLabPullRequest[]>(url);
+				// Logger.log("Got ack" + JSON.stringify(apiResponse, null, 4));
 				prs.push(...apiResponse.body);
 				url = this.nextPage(apiResponse.response);
 			} while (url);
@@ -596,10 +604,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					createdAt: new Date(glComment.created_at).getTime(),
 					pullRequest: {
 						id: pr.iid,
+						externalId: JSON.stringify({ full: pr.references?.full, id: pr.id }),
 						url: pr.web_url,
 						isOpen: pr.state === "opened",
 						targetBranch: pr.target_branch,
-						sourceBranch: pr.source_branch
+						sourceBranch: pr.source_branch,
+						title: pr.title
 					}
 				};
 			});
@@ -2469,6 +2479,11 @@ interface GitLabPullRequest {
 	state: string;
 	target_branch: string;
 	source_branch: string;
+	references?: {
+		short: string;
+		relative: string;
+		full: string;
+	};
 }
 
 interface GitLabPullRequestComment {

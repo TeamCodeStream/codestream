@@ -94,7 +94,10 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 						if (position) {
 							if (!map[position.newPath]) map[position.newPath] = [];
 							map[position.newPath].push({ review, comment: comment });
-							if (comment.id === props.commentId) {
+							if (
+								comment.id === props.commentId ||
+								comment.id.toString().replace("gid://gitlab/DiffNote/", "") === props.commentId
+							) {
 								setFilename(comment.position.newPath);
 							}
 						}
