@@ -91,7 +91,7 @@ export const PullRequestFilesChangedTab = (props: {
 				_mapData(data);
 			}
 		})();
-	}, [derivedState.providerPullRequests, prCommitsRange]);
+	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange]);
 
 	useDidMount(() => {
 		setIsLoading(true);
