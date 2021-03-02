@@ -765,7 +765,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 																</div>
 																<div>
 																	<span>
-																		#{pr.number} {pr.title}
+																		!{pr.number} {pr.title}
 																	</span>
 																	{pr.labels &&
 																		pr.labels &&
