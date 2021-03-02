@@ -1587,8 +1587,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getLabels(request: { pullRequestId: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const data = await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/labels`);
-		return data.body;
+		const { body = [] } = await this.restGet<any[]>(
+			`/projects/${encodeURIComponent(projectFullPath)}/labels`
+		);
+		return body.map(label => {
+			return { ...label, title: label.name };
+		});
 	}
 
 	@log()

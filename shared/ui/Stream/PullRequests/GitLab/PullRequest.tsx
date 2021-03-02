@@ -561,7 +561,7 @@ export const PullRequest = () => {
 						display: "flex",
 						height: "100vh",
 						alignItems: "center",
-						background: "var(--app-background-color)"
+						background: "var(--sidebar-background)"
 					}}
 				>
 					<LoadingMessage>Loading Merge Request...</LoadingMessage>

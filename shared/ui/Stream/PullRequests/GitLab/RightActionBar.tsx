@@ -298,7 +298,6 @@ export const RightActionBar = props => {
 
 	const fetchAvailableLabels = async (e?) => {
 		const labels = (await dispatch(api("getLabels", {}))) as any;
-		console.warn("LABELS: ", labels);
 		setAvailableLabels(labels);
 	};
 

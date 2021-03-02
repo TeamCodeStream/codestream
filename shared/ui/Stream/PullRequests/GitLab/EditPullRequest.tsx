@@ -21,6 +21,11 @@ import { closeAllModals } from "@codestream/webview/store/context/actions";
 import { DropdownButton } from "../../Review/DropdownButton";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { SmartFormattedList } from "../../SmartFormattedList";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
+import Timestamp from "../../Timestamp";
+import { Circle } from "../../PullRequestConversationTab";
 
 const Label = styled.div`
 	margin-top: 20px;
@@ -110,6 +115,8 @@ const ResponsiveValue = styled.div`
 
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
+const EMPTY_ARRAY_2 = [];
+const EMPTY_ARRAY_3 = [];
 let insertText;
 let insertNewline;
 let focusOnMessageInput;
@@ -156,26 +163,152 @@ export const EditPullRequest = props => {
 			]
 		});
 	};
+
+	useDidMount(() => {
+		fetchAvailableAssignees();
+		fetchAvailableMilestones();
+		fetchAvailableLabels();
+	});
+
 	const cancel = () => setIsEditing(false);
 
-	const assignees =
-		pr.assignees && pr.assignees.nodes.length > 0 ? (
-			<SmartFormattedList value={pr.assignees.nodes.map(_ => _.username)} />
-		) : (
-			"None"
-		);
-	const assignedToMe =
-		pr.viewer &&
-		pr.assignees &&
-		pr.assignees.nodes.length === 1 &&
-		pr.assignees.nodes[0].username === pr.viewer.login;
+	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
+	const fetchAvailableAssignees = async (e?) => {
+		if (availableAssignees === undefined) {
+			setAvailableAssignees(EMPTY_ARRAY);
+		}
+		const assignees = (await dispatch(api("getReviewers", {}))) as any;
+		setAvailableAssignees(assignees.users);
+	};
 
-	const labels =
-		pr.labels && pr.labels.nodes.length > 0 ? (
-			<SmartFormattedList value={pr.labels.nodes.map(_ => _.title)} />
+	const [assigneesField, setAssigneesField] = useState(pr.assignees ? pr.assignees.nodes : []);
+	const assigneesLabel =
+		assigneesField.length > 0 ? (
+			<SmartFormattedList value={assigneesField.map(_ => _.username)} />
 		) : (
 			"None"
 		);
+
+	const assigneeMenuItems = React.useMemo(() => {
+		const assigneeIds = assigneesField.map(_ => _.username);
+		if (availableAssignees && availableAssignees.length) {
+			const menuItems = (availableAssignees || []).map((_: any) => {
+				const checked = assigneeIds.includes(_.username);
+				return {
+					checked,
+					label: <PRHeadshotName person={{ ..._, user: _.username }} className="no-padding" />,
+					subtle: _.name,
+					searchLabel: `${_.username}:${_.name}`,
+					key: _.id,
+					action: () => {
+						const newAssignees = [
+							...assigneesField.filter(assignee => assignee.username !== _.username)
+						];
+						if (!checked) newAssignees.unshift(_);
+						setAssigneesField(newAssignees);
+					}
+				} as any;
+			});
+			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading Assignees...</LoadingMessage>, noHover: true }];
+		}
+	}, [availableAssignees, assigneesField]);
+
+	const assignedToMe =
+		pr.viewer && assigneesField.length === 1 && assigneesField[0].username === pr.viewer.login;
+
+	const [labelsField, setLabelsField] = useState(pr.labels ? pr.labels.nodes : []);
+	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
+	const labelsLabel =
+		labelsField.length > 0 ? <SmartFormattedList value={labelsField.map(_ => _.title)} /> : "None";
+
+	const fetchAvailableLabels = async (e?) => {
+		const labels = (await dispatch(api("getLabels", {}))) as any;
+		setAvailableLabels(labels);
+	};
+
+	const labelMenuItems = React.useMemo(() => {
+		if (availableLabels && availableLabels.length) {
+			const existingLabelIds = labelsField ? labelsField.map(_ => _.id) : [];
+			const menuItems = availableLabels.map((_: any) => {
+				const longId = `gid://gitlab/ProjectLabel/${_.id}`;
+				const checked = existingLabelIds.includes(_.id) || existingLabelIds.includes(longId);
+				return {
+					checked,
+					label: (
+						<>
+							<Circle style={{ backgroundColor: `${_.color}` }} />
+							{_.title}
+						</>
+					),
+					searchLabel: _.title,
+					key: _.id,
+					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
+					action: () => {
+						const newLabels = [
+							...labelsField.filter(label => label.id !== _.id && label.id !== longId)
+						];
+						if (!checked) newLabels.unshift(_);
+						setLabelsField(newLabels);
+					}
+				};
+			}) as any;
+			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
+		}
+	}, [availableLabels, labelsField]);
+
+	const [milestoneField, setMilestoneField] = useState(pr.milestone);
+	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
+
+	const fetchAvailableMilestones = async (e?) => {
+		const milestones = (await dispatch(api("getMilestones", {}))) as any;
+		setAvailableMilestones(milestones);
+	};
+
+	const milestoneMenuItems = React.useMemo(() => {
+		if (availableMilestones && availableMilestones.length) {
+			const existingMilestoneId = milestoneField ? milestoneField.id : "";
+			const menuItems = availableMilestones.map((_: any) => {
+				const checked =
+					existingMilestoneId === `gid://gitlab/Milestone/${_.id}` || existingMilestoneId === _.id;
+				return {
+					checked,
+					label: _.title,
+					searchLabel: _.title,
+					key: _.id,
+					subtext: _.dueOn && (
+						<>
+							Due by
+							<Timestamp time={_.dueOn} dateOnly />
+						</>
+					),
+					action: () => setMilestoneField(_)
+				};
+			}) as any;
+			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
+			menuItems.push({ label: "-", searchLabel: "" });
+			menuItems.push({
+				label: "No milestone",
+				searchLabel: "",
+				checked: false,
+				action: () => setMilestoneField(undefined)
+			});
+			return menuItems;
+		} else if (availableMilestones) {
+			return [
+				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true }
+			];
+		} else {
+			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
+		}
+	}, [availableMilestones, milestoneField]);
+
+	const milestoneLabel = milestoneField ? milestoneField.title : "None";
 
 	return (
 		<Modal translucent>
@@ -233,12 +366,17 @@ export const EditPullRequest = props => {
 									<ResponsiveLabel>Assignee</ResponsiveLabel>
 									<ResponsiveValue>
 										<div style={{ display: "flex", flexWrap: "wrap", alignItems: "center" }}>
-											<DropdownButton fillParent variant="secondary" items={[]}>
-												{assignees}
+											<DropdownButton fillParent variant="secondary" items={assigneeMenuItems}>
+												{assigneesLabel}
 											</DropdownButton>
 											{!assignedToMe && pr.viewer.login && (
 												<div style={{ paddingLeft: "10px" }}>
-													<Link href="" onClick={() => {}}>
+													<Link
+														href=""
+														onClick={() =>
+															setAssigneesField([{ ...pr.viewer, username: pr.viewer.login }])
+														}
+													>
 														Assign to me
 													</Link>
 												</div>
@@ -249,16 +387,16 @@ export const EditPullRequest = props => {
 								<ResponsiveRow>
 									<ResponsiveLabel>Milestone</ResponsiveLabel>
 									<ResponsiveValue>
-										<DropdownButton fillParent variant="secondary" items={[]}>
-											{pr.milestone && pr.milestone.title ? pr.milestone.title : "None"}
+										<DropdownButton fillParent variant="secondary" items={milestoneMenuItems}>
+											{milestoneLabel}
 										</DropdownButton>
 									</ResponsiveValue>
 								</ResponsiveRow>
 								<ResponsiveRow>
 									<ResponsiveLabel>Labels</ResponsiveLabel>
 									<ResponsiveValue>
-										<DropdownButton fillParent variant="secondary" items={[]}>
-											{labels}
+										<DropdownButton fillParent variant="secondary" items={labelMenuItems}>
+											{labelsLabel}
 										</DropdownButton>
 									</ResponsiveValue>
 								</ResponsiveRow>
@@ -268,7 +406,7 @@ export const EditPullRequest = props => {
 										<Checkbox name="delete-branch" onChange={() => {}}>
 											Delete source branch when merge request is accepted.
 										</Checkbox>
-										<Checkbox name="delete-branch" onChange={() => {}}>
+										<Checkbox name="squash" onChange={() => {}}>
 											Squash commits when merge request is accepted.{" "}
 											<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
 												<Icon name="info" />
