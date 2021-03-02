@@ -388,7 +388,7 @@ export const PRSubmitReviewButton = styled.div`
 			box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
 		}
 		width: calc(100vw - 30px);
-		max-width: 600px;
+		max-width: min(600px, calc(100vw - 80px));
 		label {
 			color: var(--text-color-highlight);
 		}
