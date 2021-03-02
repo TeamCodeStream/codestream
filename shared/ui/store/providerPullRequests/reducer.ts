@@ -516,16 +516,18 @@ export const getProviderPullRequestRepo = createSelector(
 		let currentRepo: CSRepository | undefined = undefined;
 
 		try {
-			if (!currentPr || !currentPr.conversations || !currentPr.conversations.repository) {
+			if (!currentPr || !currentPr.conversations) {
 				return undefined;
 			}
 			let repoName;
 			let repoUrl;
 			if (!currentPr.conversations.repository) {
+				// this is for gitlab
 				// debugger;
 				repoName = currentPr.conversations.project.name.toLowerCase();
 				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
 			} else {
+				// this is the github case
 				repoName = currentPr.conversations.repository.repoName.toLowerCase();
 				repoUrl = currentPr.conversations.repository.url.toLowerCase();
 			}

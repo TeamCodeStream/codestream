@@ -409,30 +409,32 @@ export const EditPullRequest = props => {
 										</DropdownButton>
 									</ResponsiveValue>
 								</ResponsiveRow>
-								<ResponsiveRow>
-									<ResponsiveLabel>Merge options</ResponsiveLabel>
-									<ResponsiveValue>
-										{false && (
+								{false && (
+									<ResponsiveRow>
+										<ResponsiveLabel>Merge options</ResponsiveLabel>
+										<ResponsiveValue>
+											{false && (
+												<Checkbox
+													name="delete-branch"
+													checked={deleteSourceBranch}
+													onChange={() => setDeleteSourceBranch(!deleteSourceBranch)}
+												>
+													Delete source branch when merge request is accepted.
+												</Checkbox>
+											)}
 											<Checkbox
-												name="delete-branch"
-												checked={deleteSourceBranch}
-												onChange={() => setDeleteSourceBranch(!deleteSourceBranch)}
+												name="squash"
+												checked={squashCommits}
+												onChange={() => setSquashCommits(!squashCommits)}
 											>
-												Delete source branch when merge request is accepted.
+												Squash commits when merge request is accepted.{" "}
+												<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
+													<Icon name="info" />
+												</Link>
 											</Checkbox>
-										)}
-										<Checkbox
-											name="squash"
-											checked={squashCommits}
-											onChange={() => setSquashCommits(!squashCommits)}
-										>
-											Squash commits when merge request is accepted.{" "}
-											<Link href="http://gitlab.codestream.us/help/user/project/merge_requests/squash_and_merge">
-												<Icon name="info" />
-											</Link>
-										</Checkbox>
-									</ResponsiveValue>
-								</ResponsiveRow>
+										</ResponsiveValue>
+									</ResponsiveRow>
+								)}
 								<ButtonRow>
 									<Button variant="success" onClick={save} isLoading={isLoading}>
 										Save changes

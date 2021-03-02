@@ -192,7 +192,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const hasPRSupportedRepos =
 		openReposWithName.filter(r => r.providerGuess === "github" || r.providerGuess === "gitlab")
 			.length > 0;
-	console.log(hasPRSupportedRepos, openReposWithName);
+	// console.log(hasPRSupportedRepos, openReposWithName);
 
 	const { queries } = derivedState;
 
