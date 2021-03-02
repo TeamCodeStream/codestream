@@ -1014,7 +1014,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						startSha
 					}
 					commitCount
-					sourceProject{
+					sourceProject {
 						name
 						webUrl
 						fullPath

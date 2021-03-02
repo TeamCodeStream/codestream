@@ -388,9 +388,10 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 				// Determine if the marker needs to be inline (i.e. part of the content or overlayed)
 				let position = "inline";
 				try {
-					position = editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
-						? "inline"
-						: "overlay";
+					position =
+						editor.document.lineAt(start).firstNonWhitespaceCharacterIndex === 0
+							? "inline"
+							: "overlay";
 				} catch (e) {
 					Logger.error(e);
 				}
@@ -496,18 +497,24 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 							sourceUri: uri
 						};
 
+						const isGitHub = ["github*com", "github/enterprise"].includes(
+							m.externalContent.provider.id
+						);
+						const isGitLab = ["gitlab*com", "gitlab/enterprise"].includes(
+							m.externalContent.provider.id
+						);
 						let typeString = "Comment";
 						if (m.type === "prcomment") {
-							if (["gitlab*com", "gitlab/enterprise"].includes(m.externalContent.provider.id)) {
+							if (isGitLab) {
 								typeString = "MR Comment";
 							} else {
 								typeString = "PR Comment";
 							}
 						}
-						message += `__${m.creatorName}__, ${m.fromNow()} \n\n ${
-							m.summaryMarkdown
-						} \n\n __PULL REQUEST__\n\n`;
-						if (externalContent.provider.id === "github*com") {
+						message += `__${m.creatorName}__, ${m.fromNow()} \n\n ${m.summaryMarkdown} \n\n __${
+							isGitLab ? "MERGE" : "PULL"
+						} REQUEST__\n\n`;
+						if (isGitHub) {
 							message += "  $(github-inverted) ";
 						}
 						message += m.title  ? m.title : "";
