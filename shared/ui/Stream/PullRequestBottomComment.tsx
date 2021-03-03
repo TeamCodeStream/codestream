@@ -16,6 +16,7 @@ import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { DropdownButton } from "./Review/DropdownButton";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest | any;
@@ -99,6 +100,94 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
+	const [commentType, setCommentType] = useState("comment");
+	const submitButton = (
+		<Tooltip
+			title={
+				<span>
+					Submit Comment
+					<span className="keybinding extra-pad">
+						{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
+					</span>
+				</span>
+			}
+			placement="bottomRight"
+			delay={1}
+		>
+			{pr.providerId.includes("gitlab") ? (
+				<DropdownButton
+					isLoading={isLoadingComment}
+					onClick={onCommentClick}
+					disabled={!text}
+					splitDropdown
+					selectedKey={commentType}
+					items={[
+						{
+							label: "Comment",
+							key: "comment",
+							checked: commentType === "comment",
+							subtext: (
+								<span>
+									Add a general comment
+									<br />
+									to this merge request.
+								</span>
+							),
+							action: () => setCommentType("comment")
+						},
+						{ label: "-" },
+						{
+							label: "Start thread",
+							key: "thread",
+							checked: commentType === "thread",
+							subtext: (
+								<span>
+									Discuss a specific suggestion or
+									<br />
+									question that needs to be resolved.
+								</span>
+							),
+							action: () => setCommentType("thread")
+						}
+					]}
+				>
+					Comment
+				</DropdownButton>
+			) : (
+				<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
+					Comment
+				</Button>
+			)}
+		</Tooltip>
+	);
+
+	const reopenButton = (
+		<Button
+			disabled={pr.merged}
+			isLoading={isLoadingCommentAndClose}
+			onClick={onCommentAndReopenClick}
+			variant="secondary"
+		>
+			{text ? "Reopen and comment" : "Reopen pull request"}
+		</Button>
+	);
+
+	const closeButton = pr.merged ? null : (
+		<Button
+			isLoading={isLoadingCommentAndClose}
+			onClick={onCommentAndCloseClick}
+			variant="secondary"
+		>
+			<Icon name="issue-closed" className="red-color margin-right" />
+			{text ? "Close and comment" : "Close pull request"}
+		</Button>
+	);
+
+	const buttons =
+		pr.state.toLowerCase() === "closed"
+			? [reopenButton, submitButton]
+			: [closeButton, submitButton];
+
 	return (
 		<PRComment>
 			<PRHeadshot size={40} person={pr.viewer}></PRHeadshot>
@@ -137,72 +226,15 @@ export const PullRequestBottomComment = styled((props: Props) => {
 						</div>
 						{!isPreviewing && (
 							<ButtonRow>
-								{pr.state.toLowerCase() === "closed" ? (
-									<div style={{ textAlign: "right", flexGrow: 1 }}>
-										<Button
-											disabled={pr.merged}
-											isLoading={isLoadingCommentAndClose}
-											onClick={onCommentAndReopenClick}
-											variant="secondary"
-										>
-											{text ? "Reopen and comment" : "Reopen pull request"}
-										</Button>
-
-										<Tooltip
-											title={
-												<span>
-													Submit Comment
-													<span className="keybinding extra-pad">
-														{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
-													</span>
-												</span>
-											}
-											placement="bottomRight"
-											delay={1}
-										>
-											<Button
-												isLoading={isLoadingComment}
-												onClick={onCommentClick}
-												disabled={!text}
-											>
-												Comment
-											</Button>
-										</Tooltip>
-									</div>
-								) : (
-									<div style={{ textAlign: "right", flexGrow: 1 }}>
-										{!pr.merged && (
-											<Button
-												isLoading={isLoadingCommentAndClose}
-												onClick={onCommentAndCloseClick}
-												variant="secondary"
-											>
-												<Icon name="issue-closed" className="red-color margin-right" />
-												{text ? "Close and comment" : "Close pull request"}
-											</Button>
-										)}
-										<Tooltip
-											title={
-												<span>
-													Submit Comment
-													<span className="keybinding extra-pad">
-														{navigator.appVersion.includes("Macintosh") ? "⌘" : "Ctrl"} ENTER
-													</span>
-												</span>
-											}
-											placement="bottomRight"
-											delay={1}
-										>
-											<Button
-												isLoading={isLoadingComment}
-												onClick={onCommentClick}
-												disabled={!text}
-											>
-												Comment
-											</Button>
-										</Tooltip>
-									</div>
-								)}
+								<div
+									style={{
+										textAlign: pr.providerId.includes("gitlab") ? "left" : "right",
+										marginLeft: pr.providerId.includes("gitlab") ? "-10px" : 0,
+										flexGrow: 1
+									}}
+								>
+									{pr.providerId.includes("gitlab") ? [...buttons].reverse() : buttons}
+								</div>
 							</ButtonRow>
 						)}
 					</>

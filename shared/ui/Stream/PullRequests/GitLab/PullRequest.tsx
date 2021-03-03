@@ -877,7 +877,7 @@ export const PullRequest = () => {
 																<div>
 																	{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
 																	<b>{x.author.name}</b> @{x.author.login} &middot;{" "}
-																	<Timestamp time={x.createdAt} />
+																	<Timestamp relative time={x.createdAt} />
 																</div>
 																<div style={{ paddingTop: "10px" }}>
 																	<MarkdownText text={x.body} />
