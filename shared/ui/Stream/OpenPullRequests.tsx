@@ -564,7 +564,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 										<div>
 											<input
 												id="pr-search-input"
-												placeholder="Load PR from URL"
+												placeholder={`Load ${derivedState.prLabel.PR} from URL`}
 												type="text"
 												style={{ background: "transparent", width: "100%" }}
 												value={loadFromUrlQuery}
