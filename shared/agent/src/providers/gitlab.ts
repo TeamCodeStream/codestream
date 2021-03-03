@@ -1122,6 +1122,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							systemNoteIconName
 							updatedAt
 							userPermissions {
+							  adminNote
 							  readNote
 							  resolveNote
 							  awardEmoji
@@ -1743,6 +1744,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								systemNoteIconName
 								updatedAt
 								userPermissions {
+										adminNote
 										readNote
 										resolveNote
 										awardEmoji

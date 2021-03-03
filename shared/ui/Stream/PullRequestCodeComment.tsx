@@ -1,5 +1,3 @@
-import { CompareLocalFilesRequestType } from "@codestream/protocols/webview";
-import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
 import {
 	PRActionIcons,
 	PRButtonRow,
@@ -7,8 +5,8 @@ import {
 	PRCodeCommentWrapper,
 	PRThreadedCommentHeader
 } from "./PullRequestComponents";
-import React, { PropsWithChildren, useCallback, useState } from "react";
-import { PRHeadshot, Headshot } from "../src/components/Headshot";
+import React, { PropsWithChildren, useState } from "react";
+import { PRHeadshot } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
@@ -164,7 +162,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 						<PRHeadshot key={comment.id} size={30} person={comment.author || GHOST} />
 						<PRThreadedCommentHeader>
 							<b>{author.login}</b>
-							<Timestamp time={comment.createdAt} />
+							<Timestamp time={comment.createdAt} relative />
 							<PRActionIcons>
 								<PRAuthorBadges pr={pr} node={comment} isPending={item.state === "PENDING"} />
 								<PullRequestReactButton
@@ -235,7 +233,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								<PRHeadshot key={c.id + i} size={30} person={c.author || GHOST} />
 								<PRThreadedCommentHeader>
 									<b>{(c.author || GHOST).login}</b>
-									<Timestamp time={c.createdAt} />
+									<Timestamp time={c.createdAt} relative />
 									{c.includesCreatedEdit ? <> • edited</> : ""}
 									<PRActionIcons>
 										<PRAuthorBadges pr={pr} node={c} />

@@ -1,8 +1,6 @@
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../../../store";
+import { useDispatch } from "react-redux";
 import Icon from "../../Icon";
-import Menu from "../../Menu";
 import { emojify } from "../../Markdowner";
 import styled from "styled-components";
 import Tooltip from "../../Tooltip";

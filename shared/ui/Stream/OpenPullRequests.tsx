@@ -47,6 +47,7 @@ import { usePrevious } from "../utilities/hooks";
 import { getMyPullRequests as getMyPullRequestsSelector } from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPRLabel } from "../store/providers/reducer";
+
 const Root = styled.div`
 	height: 100%;
 	.pr-row {

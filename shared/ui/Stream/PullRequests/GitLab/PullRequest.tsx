@@ -565,7 +565,7 @@ export const PullRequest = () => {
 						background: "var(--sidebar-background)"
 					}}
 				>
-					<div style={{ position: "absolute", top: "20px", left: "20px" }}>
+					<div style={{ position: "absolute", top: "20px", right: "20px" }}>
 						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
 					</div>
 					<LoadingMessage>Loading Merge Request...</LoadingMessage>

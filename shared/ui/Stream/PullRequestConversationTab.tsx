@@ -1,5 +1,5 @@
 import React, { useState, useReducer, useCallback, useMemo, FunctionComponent } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "../store";
 import { Button } from "../src/components/Button";
@@ -63,6 +63,7 @@ import { api } from "../store/providerPullRequests/actions";
 import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
 import cx from "classnames";
+import { getPRLabel } from "../store/providers/reducer";
 
 export const Circle = styled.div`
 	width: 12px;
@@ -146,6 +147,10 @@ export const PRAuthorBadges = (props: {
 	node: any;
 	isPending?: boolean;
 }) => {
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return { prLabel: getPRLabel(state) };
+	}, shallowEqual);
+
 	const { pr, node, isPending } = props;
 
 	const badges: any[] = [];
@@ -161,7 +166,9 @@ export const PRAuthorBadges = (props: {
 		badges.push(
 			<Tooltip
 				key="author"
-				title={`${isMe ? "You are" : "This user is"} the author of this pull request`}
+				title={`${isMe ? "You are" : "This user is"} the author of this ${
+					derivedState.prLabel.pullrequest
+				}`}
 				placement="bottom"
 			>
 				<div className="author">Author</div>

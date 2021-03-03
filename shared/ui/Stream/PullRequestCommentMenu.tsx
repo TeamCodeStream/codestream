@@ -20,6 +20,9 @@ interface CommentMenuProps {
 
 export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 	const { pr, node, setEdit, quote, isPending, fetch, setIsLoadingMessage } = props;
+
+	console.warn("MENU IS: ", props);
+
 	const dispatch = useDispatch();
 	const deleteComment = () => {
 		confirmPopup({
@@ -74,7 +77,10 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 		items.push({ label: "Quote Reply", key: "quote", action: () => quote(node.body) });
 	}
 
-	if (node.viewerCanUpdate && setEdit) {
+	if (
+		(node.viewerCanUpdate || (node.userPermissions && node.userPermissions.adminNote)) &&
+		setEdit
+	) {
 		items.push({ label: "-" });
 		items.push({
 			label: "Edit",
@@ -85,7 +91,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 		});
 	}
 
-	if (props.viewerCanDelete) {
+	if (props.viewerCanDelete || (node.userPermissions && node.userPermissions.adminNote)) {
 		items.push({
 			label: "Delete",
 			key: "delete",
