@@ -58,6 +58,7 @@ import { RightActionBar } from "./RightActionBar";
 import { MarkdownText } from "../../MarkdownText";
 import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
+import Tag from "../../Tag";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -149,6 +150,7 @@ export const PullRequestRoot = styled.div`
 
 const Left = styled.div`
 	pre.stringify {
+		font-size: 10px;
 		background: var(--app-background-color);
 		padding: 10px;
 		overflow: auto;
@@ -209,9 +211,10 @@ export const OutlineBox = styled.div`
 `;
 
 export const ActionBox = styled.div`
-	border-radius: 5px;
 	margin: 0 20px 15px 20px;
 	position: relative;
+	display: flex;
+	align-items: center;
 	& + &:after {
 		content: "";
 		display: block;
@@ -621,6 +624,17 @@ export const PullRequest = () => {
 		</div>
 	);
 
+	const iconMap = {
+		user: "person",
+		"pencil-square": "pencil",
+		commit: "git-commit",
+		"lock-open": "unlock",
+		lock: "lock",
+		timer: "clock",
+		unapproval: "x",
+		approval: "check"
+	};
+
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
 			<PullRequestRoot>
@@ -825,16 +839,20 @@ export const PullRequest = () => {
 												return (
 													<ActionBox>
 														<Icon name="reopen" className="circled" />
-														<b>{_.author.name}</b> @{_.author.username} reopened
-														<Timestamp relative time={_.createdAt} />
+														<div>
+															<b>{_.author.name}</b> @{_.author.username} reopened
+															<Timestamp relative time={_.createdAt} />
+														</div>
 													</ActionBox>
 												);
 											} else if (_.action === "closed") {
 												return (
 													<ActionBox>
 														<Icon name="minus-circle" className="circled" />
-														<b>{_.author.name}</b> @{_.author.username} closed
-														<Timestamp relative time={_.createdAt} />
+														<div>
+															<b>{_.author.name}</b> @{_.author.username} closed
+															<Timestamp relative time={_.createdAt} />
+														</div>
 													</ActionBox>
 												);
 											}
@@ -851,40 +869,84 @@ export const PullRequest = () => {
 											if (_.action === "removed")
 												return (
 													<ActionBox>
-														<Icon name="clock" className="circled" />
-														<b>{_.user.name}</b> @{_.user.login} removed milestone{" "}
-														<Timestamp relative time={_.createdAt} />
+														<Icon
+															name="clock"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
+														<div>
+															<b>{_.user.name}</b> @{_.user.username} removed milestone{" "}
+															<Timestamp relative time={_.createdAt} />
+														</div>
 													</ActionBox>
 												);
 											else
 												return (
 													<ActionBox>
-														<Icon name="clock" className="circled" />
-														<b>{_.user.name}</b> @{_.user.login} changed milestone{" "}
-														<Timestamp relative time={_.createdAt} />
+														<Icon
+															name="clock"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
+														<div>
+															<b>{_.user.name}</b> @{_.user.username} changed milestone{" "}
+															<Timestamp relative time={_.createdAt} />
+														</div>
 													</ActionBox>
 												);
 										} else if (_.type === "label") {
-											// return null;
-											return (
-												<div>
-													{_.createdAt}
-													label:<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
-													<br />
-													<br />
-												</div>
-											);
+											if (_.action === "removed")
+												return (
+													<ActionBox>
+														<Icon name="tag" className="circled" />
+														<div>
+															<b>{_.user.name}</b> @{_.user.login} removed label{" "}
+															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
+															<Timestamp relative time={_.createdAt} />
+														</div>
+													</ActionBox>
+												);
+											else
+												return (
+													<ActionBox>
+														<Icon name="tag" className="circled" />
+														<div>
+															<b>{_.user.name}</b> @{_.user.login} added label{" "}
+															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
+															<Timestamp relative time={_.createdAt} />
+														</div>
+													</ActionBox>
+												);
 										} else if (_.notes && _.notes.nodes && _.notes.nodes.length > 0) {
 											return (
-												<OutlineBox style={{ padding: "10px" }}>
-													{_.notes.nodes.map(x => {
+												<>
+													{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
+													{_.notes.nodes.map(note => {
+														if (note.system) {
+															return (
+																<ActionBox>
+																	<Icon
+																		name={iconMap[note.systemNoteIconName] || "blank"}
+																		className="circled"
+																		title={
+																			<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
+																		}
+																	/>
+																	<div>
+																		<b>{note.author.name}</b> @{note.author.login}{" "}
+																		<MarkdownText inline text={note.body} />
+																		<Timestamp relative time={note.createdAt} />
+																	</div>
+																</ActionBox>
+															);
+														}
 														return (
-															<>
+															<OutlineBox style={{ padding: "10px" }}>
 																<BigRoundImg>
 																	<img
 																		style={{ float: "left" }}
 																		alt="headshot"
-																		src={x.author.avatarUrl}
+																		src={note.author.avatarUrl}
 																	/>
 																</BigRoundImg>
 																{/* <div style={{ float: "right" }}>
@@ -892,17 +954,16 @@ export const PullRequest = () => {
 																			(S) (R) (Edit) (dots)
 																		</div>*/}
 																<div>
-																	{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
-																	<b>{x.author.name}</b> @{x.author.login} &middot;{" "}
-																	<Timestamp relative time={x.createdAt} />
+																	<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
+																	<Timestamp relative time={note.createdAt} />
 																</div>
 																<div style={{ paddingTop: "10px" }}>
-																	<MarkdownText text={x.body} />
+																	<MarkdownText text={note.body} />
 																</div>
-															</>
+															</OutlineBox>
 														);
 													})}
-												</OutlineBox>
+												</>
 											);
 										} else {
 											console.warn("why here?", _);
