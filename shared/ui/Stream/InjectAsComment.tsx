@@ -21,7 +21,6 @@ interface Props {
 	setPinned: Function;
 	codemark: CodemarkPlus;
 	replies: any[];
-	marker?: CSMarker;
 	author: CSUser;
 	fetchThread: Function;
 	markerId: String;
@@ -64,43 +63,14 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 		const [hasPosts, setHasPosts] = useState(false);
 
 		const inject = () => {
-			const { markerId } = props;
-
-			// let localMarker: CSMarker = {
-			// 	branchWhenCreated: "",
-			// 	code: "",
-			// 	codemarkId: "",
-			// 	commitHashWhenCreated: "",
-			// 	createdAt: 0,
-			// 	creatorId: "",
-			// 	deactivated: false,
-			// 	file: "",
-			// 	fileStreamId: "",
-			// 	id: "",
-			// 	modifiedAt: 0,
-			// 	postId: "",
-			// 	postStreamId: "",
-			// 	referenceLocations: [],
-			// 	remoteCodeUrl: {displayName: "", name: "", url: ""},
-			// 	locationWhenCreated: [],
-			// 	repoId: "",
-			// 	teamId: "",
-			// 	version: 1,
-			// };
-			let localMarker: CSMarker;
-
-			for (let i = 0; i < props.codemark.markers!.length; ++i) {
-				if (markerId == props.codemark.markers![i].id) {
-					localMarker = props.codemark.markers![i];
-				}
-			}			
+			const marker: CSMarker = props.codemark.markers!.find(marker => marker.id === props.markerId)!;
 			
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "InjectAsComment",
 				properties: { "Author?": false }
 			});
 			HostApi.instance.send(InsertTextRequestType, {
-				marker: localMarker,
+				marker: marker,
 				text: codemarkAsCommentString(),
 				indentAfterInsert: false // set this to true once vscode fixes their bug
 			});
