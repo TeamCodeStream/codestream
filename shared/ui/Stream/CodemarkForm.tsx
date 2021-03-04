@@ -348,6 +348,17 @@ class CodemarkForm extends React.Component<Props, State> {
 		} = this.props;
 		const { codeBlocks } = this.state;
 
+		if (textEditorUriHasPullRequestContext) {
+			const changedPrLines = await HostApi.instance.send(GetShaDiffsRangesRequestType, {
+				repoId: textEditorUriContext.repoId,
+				filePath: textEditorUriContext.path,
+				baseSha: textEditorUriContext.leftSha,
+				headSha: textEditorUriContext.rightSha
+			});
+
+			this.setState({ changedPrLines });
+		}
+
 		if (codeBlocks.length === 1) {
 			if (isRangeEmpty(codeBlocks[0].range)) {
 				this.selectRangeInEditor(codeBlocks[0].uri, forceAsLine(codeBlocks[0].range));
@@ -372,17 +383,6 @@ class CodemarkForm extends React.Component<Props, State> {
 			}
 		}
 		// if (!multiLocation) this.focus();
-
-		if (textEditorUriHasPullRequestContext) {
-			const changedPrLines = await HostApi.instance.send(GetShaDiffsRangesRequestType, {
-				repoId: textEditorUriContext.repoId,
-				filePath: textEditorUriContext.path,
-				baseSha: textEditorUriContext.leftSha,
-				headSha: textEditorUriContext.rightSha
-			});
-
-			this.setState({ changedPrLines });
-		}
 	}
 
 	rangesAreEqual(range1?: Range, range2?: Range) {
