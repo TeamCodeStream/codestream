@@ -26,6 +26,7 @@ import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName"
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../../Timestamp";
 import { Circle } from "../../PullRequestConversationTab";
+import { HostApi } from "@codestream/webview/index";
 
 const Label = styled.div`
 	margin-top: 20px;
@@ -135,6 +136,7 @@ export const EditPullRequest = props => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [deleteSourceBranch, setDeleteSourceBranch] = useState(pr.forceRemoveSourceBranch);
 	const [squashCommits, setSquashCommits] = useState(pr.squashOnMerge);
+	const [targetBranch, setTargetBranch] = useState(pr.targetBranch);
 
 	const save = async () => {
 		setIsLoading(true);
@@ -142,7 +144,7 @@ export const EditPullRequest = props => {
 			api("updatePullRequest", {
 				title,
 				description,
-				targetBranch: "master", // FIXME
+				targetBranch,
 				labels: labelsField.map(_ => _.title).join(","),
 				milestoneId: milestoneField
 					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
@@ -177,10 +179,18 @@ export const EditPullRequest = props => {
 		});
 	};
 
+	const [remoteBranches, setRemoteBranches] = useState([] as any[]);
+
+	const fetchRemoteBranches = async () => {
+		const response = (await dispatch(api("remoteBranches", {}))) as any;
+		setRemoteBranches(response.filter(_ => _.name !== pr.sourceBranch));
+	};
+
 	useDidMount(() => {
 		fetchAvailableAssignees();
 		fetchAvailableMilestones();
 		fetchAvailableLabels();
+		fetchRemoteBranches();
 	});
 
 	const cancel = () => setIsEditing(false);
@@ -327,8 +337,17 @@ export const EditPullRequest = props => {
 						<fieldset className="form-body">
 							<div id="controls" className="control-group">
 								From <PRBranch>{pr.sourceBranch}</PRBranch> into{" "}
-								<DropdownButton variant="secondary" items={[]}>
-									<span className="monospace">{pr.targetBranch}</span>
+								<DropdownButton
+									variant="secondary"
+									items={remoteBranches.map(branch => {
+										return {
+											label: branch.name,
+											key: branch.name,
+											action: () => setTargetBranch(branch.name)
+										};
+									})}
+								>
+									<span className="monospace">{targetBranch}</span>
 								</DropdownButton>
 								{pr.error && pr.error.message && (
 									<PRError>

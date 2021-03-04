@@ -1571,6 +1571,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	async remoteBranches(request: { pullRequestId: string }) {
+		const { projectFullPath } = this.parseId(request.pullRequestId);
+
+		const data = await this.restGet(
+			`/projects/${encodeURIComponent(projectFullPath)}/repository/branches`
+		);
+
+		return data.body;
+	}
+
 	async updatePullRequest(request: {
 		pullRequestId: string;
 		targetBranch: string;

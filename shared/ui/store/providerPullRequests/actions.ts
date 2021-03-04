@@ -439,6 +439,7 @@ export const api = <T = any, R = any>(
 		| "markPullRequestReadyForReview"
 		| "markToDoDone"
 		| "mergePullRequest"
+		| "remoteBranches"
 		| "removeReviewerFromPullRequest"
 		| "resolveReviewThread"
 		| "setAssigneeOnPullRequest"

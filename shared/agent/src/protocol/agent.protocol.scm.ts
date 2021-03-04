@@ -569,3 +569,23 @@ export const GetCommitsFilesRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/commits/files");
+
+export interface GetRemoteBranchesRequest {
+	repoId: string;
+}
+
+export interface GetRemoteBranchesResponse {
+	success: boolean;
+	branches: string[];
+	error?: {
+		message: string;
+		type: "REPO_NOT_FOUND" | "REPO_NOT_OPEN" | "COMMIT_NOT_FOUND" | "UNKNOWN" | string;
+	};
+}
+
+export const GetRemoteBranchesRequestType = new RequestType<
+	GetRemoteBranchesRequest,
+	GetRemoteBranchesResponse,
+	void,
+	void
+>("codestream/scm/remoteBranches");
