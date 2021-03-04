@@ -241,8 +241,9 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				}
 			});
 		} else if (
-			(pr && derivedState.currentPullRequestProviderId === "gitlab*com") ||
-			derivedState.currentPullRequestProviderId === "gitlab/enterprise"
+			pr &&
+			(derivedState.currentPullRequestProviderId === "gitlab*com" ||
+				derivedState.currentPullRequestProviderId === "gitlab/enterprise")
 		) {
 			(pr as any)
 				.discussions!.nodes.filter(_ => _.notes)
