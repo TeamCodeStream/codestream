@@ -251,7 +251,12 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				.forEach(comment => {
 					if (comment && comment.position && comment.position.newPath) {
 						if (!map[comment.position.newPath]) map[comment.position.newPath] = [];
-						map[comment.position.newPath].push({ review: {}, comment: comment });
+						map[comment.position.newPath].push({
+							review: {
+								state: comment.state
+							},
+							comment: comment
+						});
 					}
 				});
 		}
