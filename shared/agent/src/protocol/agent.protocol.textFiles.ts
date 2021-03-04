@@ -32,3 +32,11 @@ export const WriteTextFileRequestType = new RequestType<
 	void,
 	void
 >("codestream/text-files/write");
+
+export interface DeleteTextFileRequest {
+	path: string;
+}
+
+export interface DeleteTextFileResponse {
+	success?: boolean;
+}

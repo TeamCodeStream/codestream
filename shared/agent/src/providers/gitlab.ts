@@ -29,7 +29,8 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
-	MoveThirdPartyCardRequest
+	MoveThirdPartyCardRequest,
+	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
@@ -43,6 +44,7 @@ import {
 	ThirdPartyIssueProviderBase
 } from "./provider";
 import { Directives } from "./directives";
+import { CodeStreamSession } from "session";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -75,6 +77,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			Authorization: `Bearer ${this.accessToken}`,
 			"Content-Type": "application/json"
 		};
+	}
+	private gitLabReviewStore: GitLabReviewStore;
+
+	constructor(session: CodeStreamSession, providerConfig: ThirdPartyProviderConfig) {
+		super(session, providerConfig);
+		this.gitLabReviewStore = new GitLabReviewStore();
 	}
 
 	protected getPRExternalContent(comment: PullRequestComment) {
@@ -1221,8 +1229,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
 			};
 
+			const base_id = response.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", "");
 			const mergeRequestFullId = JSON.stringify({
-				id: response.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", ""),
+				id: base_id,
 				full: response.project.mergeRequest.references.full
 			});
 			response.project.mergeRequest.idComputed = mergeRequestFullId;
@@ -1243,11 +1252,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			});
 			this._pullRequestCache.set(actualPullRequestId, response);
-			const pendingReview = this._pendingReviewStore.get(response.project.mergeRequest.id);
-			if (pendingReview) {
+			const pendingReview = await this.gitLabReviewStore.get(base_id);
+			if (pendingReview?.comments?.length) {
 				response.project.mergeRequest.pendingReview = {
 					comments: {
-						totalCount: pendingReview.length
+						totalCount: pendingReview.comments.length
 					}
 				};
 				// TODO figure out IDs, dates, author
@@ -1256,7 +1265,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					_pending: true,
 					createdAt: new Date().toISOString(),
 					notes: {
-						nodes: pendingReview.map(_ => {
+						nodes: pendingReview.comments.map(_ => {
 							return {
 								_pending: true,
 								// TODO get the real author
@@ -1367,7 +1376,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return data.body;
 	}
 
-	private _pendingReviewStore: Map<string, any[]> = new Map<string, any[]>();
+	// private _pendingReviewStore: Map<string, any[]> = new Map<string, any[]>();
 
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
@@ -1376,7 +1385,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			const parsed = JSON.parse(request.pullRequestId);
 			actualPullRequestId = parsed.id;
 		}
-		const existing = this._pendingReviewStore.has(actualPullRequestId);
+		const existing = this.gitLabReviewStore.exists(actualPullRequestId);
 		return existing;
 	}
 
@@ -1409,16 +1418,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			actualPullRequestId = parsed.id;
 		}
 
-		if (this._pendingReviewStore.has(actualPullRequestId)) {
-			const existingPendingReviews = this._pendingReviewStore.get(actualPullRequestId);
-			let newPendingReviews = existingPendingReviews || [];
-			newPendingReviews.push({
-				request
-			});
-			this._pendingReviewStore.set(actualPullRequestId, newPendingReviews);
-		} else {
-			this._pendingReviewStore.set(actualPullRequestId, [request]);
-		}
+		this.gitLabReviewStore.add(actualPullRequestId, request);
 
 		this._pullRequestCache.delete(actualPullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
@@ -1429,14 +1429,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return true;
 	}
 
-	async getPendingReview(request: { pullRequestId: string }) {
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-		}
-		return this._pendingReviewStore.has(actualPullRequestId);
-	}
+	// async getPendingReview(request: { pullRequestId: string }) {
+	// 	let actualPullRequestId;
+	// 	if (request.pullRequestId) {
+	// 		const parsed = JSON.parse(request.pullRequestId);
+	// 		actualPullRequestId = parsed.id;
+	// 	}
+	// 	return this._pendingReviewStore.has(actualPullRequestId);
+	// }
 
 	async submitReview(request: {
 		pullRequestId: string;
@@ -1465,9 +1465,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			throw new Error("Invalid eventType");
 		}
 
-		const existingReviewComments = this._pendingReviewStore.get(actualPullRequestId);
-		if (existingReviewComments?.length) {
-			for (const comment of existingReviewComments) {
+		const existingReviewComments = await this.gitLabReviewStore.get(actualPullRequestId);
+		if (existingReviewComments?.comments?.length) {
+			for (const comment of existingReviewComments.comments) {
 				try {
 					await this.createPullRequestInlineComment({
 						...comment,
@@ -1477,7 +1477,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					Logger.warn(ex, "Failed to add commit");
 				}
 			}
-			this._pendingReviewStore.set(actualPullRequestId, []);
+			await this.gitLabReviewStore.deleteReview(actualPullRequestId);
 		}
 
 		if (request.text) {
@@ -1560,6 +1560,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	parseId(pullRequestId: string) {
 		const parsed = JSON.parse(pullRequestId);
 		return {
+			id: parsed.id,
 			projectFullPath: parsed.full.split("!")[0],
 			iid: parsed.full.split("!")[1]
 		};
@@ -1747,7 +1748,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			request.projectFullPath = parsed.full.split("!")[0];
 			request.iid = parsed.full.split("!")[1];
 		}
-		request.noteableId = noteableId;
+		request.noteableId = `gid://gitlab/MergeRequest/${noteableId}`;
 
 		const response = (await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
@@ -1864,16 +1865,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async deletePullRequestComment(request: {
 		id: string;
+		type: string;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
-		let actualPullRequestId;
-
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-		}
-
+		const { id } = this.parseId(request.pullRequestId);
 		const query = `
 				mutation DestroyNote($id:ID!) {
 					destroyNote(input:{id:$id}) {
@@ -1888,9 +1884,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			id: noteId
 		});
 
-		this._pullRequestCache.delete(actualPullRequestId);
+		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: actualPullRequestId,
+			pullRequestId: id,
 			commentId: noteId
 		});
 
@@ -2488,6 +2484,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	async deletePullRequestReview(request: {
+		pullRequestId: string;
+		pullRequestReviewId: string;
+	}): Promise<any> {
+		const { id } = this.parseId(request.pullRequestId);
+
+		await this.gitLabReviewStore.deleteReview(id);
+
+		this._pullRequestCache.delete(request.pullRequestId);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId
+		});
+		return true;
+	}
+
 	private async _projectEvents(projectFullPath: string, iid: string) {
 		const projectEvents = ((await this.restGet(
 			`/projects/${encodeURIComponent(projectFullPath)}/events`
@@ -2548,6 +2559,94 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 		});
 		return labelEvents;
+	}
+}
+
+interface GitLabReview {
+	version: string;
+	comments: any[];
+}
+class GitLabReviewStore {
+	private path: string = "gitlab-review";
+	private version: string = "1.0.0";
+	private buildPath(reviewId: string) {
+		return this.path + "-" + reviewId + ".json";
+	}
+	async add(reviewId: string, comment: any) {
+		try {
+			const { textFiles } = SessionContainer.instance();
+			const path = this.buildPath(reviewId);
+			const current = (
+				await textFiles.readTextFile({
+					path: path
+				})
+			).contents;
+			const data = JSON.parse(current || "{}") || ({} as GitLabReview);
+			if (data && data.comments) {
+				data.comments.push(comment);
+			} else {
+				data.version = this.version;
+				data.comments = [comment];
+			}
+			await textFiles.writeTextFile({
+				path: path,
+				contents: JSON.stringify(data)
+			});
+
+			return true;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return false;
+	}
+
+	async get(reviewId: string): Promise<GitLabReview | undefined> {
+		try {
+			const { textFiles } = SessionContainer.instance();
+			const path = this.buildPath(reviewId);
+			const current = (
+				await textFiles.readTextFile({
+					path: path
+				})
+			)?.contents;
+			const data = JSON.parse(current || "{}") as GitLabReview;
+			return data;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return undefined;
+	}
+
+	async exists(reviewId: string) {
+		const { textFiles } = SessionContainer.instance();
+		const path = this.buildPath(reviewId);
+		const data = await textFiles.readTextFile({
+			path: path
+		});
+		return !!data?.contents;
+	}
+
+	updateComment(reviewId: string, commentId: string) {
+		// TODO
+	}
+
+	async deleteReview(reviewId: string) {
+		try {
+			const { textFiles } = SessionContainer.instance();
+			const path = this.buildPath(reviewId);
+			await textFiles.deleteTextFile({
+				path: path
+			});
+
+			return true;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return false;
+	}
+
+	deleteComment(reviewId: string, commentId: string) {
+		// TODO
 	}
 }
 

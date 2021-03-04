@@ -4,6 +4,8 @@ import * as path from "path";
 import { CodeStreamSession } from "session";
 import { Logger } from "../logger";
 import {
+	DeleteTextFileRequest,
+	DeleteTextFileResponse,
 	ReadTextFileRequest,
 	ReadTextFileRequestType,
 	ReadTextFileResponse,
@@ -22,8 +24,8 @@ export class TextFilesManager {
 		return path.join(os.homedir(), ".codestream", file);
 	}
 
-	@log()
 	@lspHandler(ReadTextFileRequestType)
+	@log()
 	async readTextFile(request: ReadTextFileRequest): Promise<ReadTextFileResponse> {
 		try {
 			const file = request.baseDir
@@ -39,14 +41,32 @@ export class TextFilesManager {
 		return {};
 	}
 
-	@log()
 	@lspHandler(WriteTextFileRequestType)
+	@log()
 	async writeTextFile(request: WriteTextFileRequest): Promise<WriteTextFileResponse> {
 		const { path, contents } = request;
 		try {
 			const file = this.textFilePath(path);
 			await xfs.writeTextAtomic(contents, file);
 			Logger.debug(`Saved contents ${contents} to ${file}`);
+			return {
+				success: true
+			};
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return {
+			success: false
+		};
+	}
+
+	@log()
+	async deleteTextFile(request: DeleteTextFileRequest): Promise<DeleteTextFileResponse> {
+		const { path } = request;
+		try {
+			const file = this.textFilePath(path);
+			await xfs.deleteFile(file);
+			Logger.debug(`Deleted ${file}`);
 			return {
 				success: true
 			};

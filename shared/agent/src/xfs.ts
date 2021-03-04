@@ -46,4 +46,20 @@ export namespace xfs {
 			});
 		});
 	}
+
+	export async function deleteFile(destPath: string): Promise<boolean> {
+		return new Promise<boolean>((resolve, reject) => {
+			if (!destPath || destPath.indexOf("..") > -1) {
+				reject(false);
+			} else {
+				fs.unlink(destPath, err => {
+					if (err) {
+						reject(false);
+					} else {
+						resolve(true);
+					}
+				});
+			}
+		});
+	}
 }
