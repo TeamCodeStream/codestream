@@ -498,7 +498,10 @@ export const CreatePullRequestPanel = props => {
 				});
 				success = true;
 				setFormState({ message: "", type: "", url: "", id: "" });
-				if (result.id && (prProviderId === "github*com" || prProviderId === "github/enterprise")) {
+				if (
+					result.id &&
+					derivedState.supportedPullRequestViewProviders.find(_ => _ === prProviderId)
+				) {
 					props.closePanel();
 					dispatch(setCurrentPullRequest(prProviderId, result.id!));
 				} else {
