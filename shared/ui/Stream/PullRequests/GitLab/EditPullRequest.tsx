@@ -207,7 +207,7 @@ export const EditPullRequest = props => {
 	const [assigneesField, setAssigneesField] = useState(pr.assignees ? pr.assignees.nodes : []);
 	const assigneesLabel =
 		assigneesField.length > 0 ? (
-			<SmartFormattedList value={assigneesField.map(_ => _.username)} />
+			<SmartFormattedList value={assigneesField.map(_ => _.username || _.login)} />
 		) : (
 			"None"
 		);

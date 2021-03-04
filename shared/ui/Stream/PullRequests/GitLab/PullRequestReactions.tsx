@@ -22,7 +22,6 @@ interface Props {
 			name: string;
 			user: {
 				id: number;
-				avatar_url: string;
 				login: string;
 			};
 		}[];

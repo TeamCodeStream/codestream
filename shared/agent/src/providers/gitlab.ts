@@ -1189,7 +1189,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			const grouped = groupBy(awards.body, (_: { name: string }) => _.name);
 			response.project.mergeRequest.reactionGroups =
 				Object.keys(grouped).map(_ => {
-					return { content: _, data: grouped[_] };
+					const data = grouped[_];
+					data.forEach(r => {
+						r.user.login = r.user.username;
+						r.user.avatarUrl = r.user.avatar_url;
+					});
+					return { content: _, data };
 				}) || [];
 			// const restMR = await this.restGet<any>(
 			// `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`

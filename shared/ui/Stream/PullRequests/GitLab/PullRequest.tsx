@@ -962,7 +962,7 @@ export const PullRequest = () => {
 												</>
 											);
 										} else {
-											console.warn("why here?", _);
+											// console.warn("why here?", _);
 											return printNote(_);
 										}
 									})}
