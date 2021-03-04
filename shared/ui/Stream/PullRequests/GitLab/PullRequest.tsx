@@ -632,7 +632,44 @@ export const PullRequest = () => {
 		lock: "lock",
 		timer: "clock",
 		unapproval: "x",
-		approval: "check"
+		approval: "check",
+		fork: "git-branch"
+	};
+
+	const printNote = note => {
+		if (note.system) {
+			return (
+				<ActionBox>
+					<Icon
+						name={iconMap[note.systemNoteIconName] || "blank"}
+						className="circled"
+						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+					/>
+					<div>
+						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={note.body} />
+						<Timestamp relative time={note.createdAt} />
+					</div>
+				</ActionBox>
+			);
+		}
+		return (
+			<OutlineBox style={{ padding: "10px" }}>
+				<BigRoundImg>
+					<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+				</BigRoundImg>
+				{/* <div style={{ float: "right" }}>
+						<Role>Maintainer</Role> 
+							(S) (R) (Edit) (dots)
+						</div>*/}
+				<div>
+					<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
+					<Timestamp relative time={note.createdAt} />
+				</div>
+				<div style={{ paddingTop: "10px" }}>
+					<MarkdownText text={note.body} />
+				</div>
+			</OutlineBox>
+		);
 	};
 
 	return (
@@ -921,53 +958,12 @@ export const PullRequest = () => {
 											return (
 												<>
 													{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
-													{_.notes.nodes.map(note => {
-														if (note.system) {
-															return (
-																<ActionBox>
-																	<Icon
-																		name={iconMap[note.systemNoteIconName] || "blank"}
-																		className="circled"
-																		title={
-																			<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
-																		}
-																	/>
-																	<div>
-																		<b>{note.author.name}</b> @{note.author.login}{" "}
-																		<MarkdownText inline text={note.body} />
-																		<Timestamp relative time={note.createdAt} />
-																	</div>
-																</ActionBox>
-															);
-														}
-														return (
-															<OutlineBox style={{ padding: "10px" }}>
-																<BigRoundImg>
-																	<img
-																		style={{ float: "left" }}
-																		alt="headshot"
-																		src={note.author.avatarUrl}
-																	/>
-																</BigRoundImg>
-																{/* <div style={{ float: "right" }}>
-																		<Role>Maintainer</Role> 
-																			(S) (R) (Edit) (dots)
-																		</div>*/}
-																<div>
-																	<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
-																	<Timestamp relative time={note.createdAt} />
-																</div>
-																<div style={{ paddingTop: "10px" }}>
-																	<MarkdownText text={note.body} />
-																</div>
-															</OutlineBox>
-														);
-													})}
+													{_.notes.nodes.map(note => printNote(note))}
 												</>
 											);
 										} else {
 											console.warn("why here?", _);
-											return null;
+											return printNote(_);
 										}
 									})}
 									{order === "oldest" && bottomComment}

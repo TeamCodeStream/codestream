@@ -885,6 +885,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							};
 						}[];
 					};
+					notes: {
+						nodes: {
+							createdAt: string;
+							id: string;
+							_pending?: boolean;
+							notes?: {
+								nodes: {
+									id: string;
+									author: {
+										name: string;
+										login: string;
+										avatarUrl: string;
+									};
+									body: string;
+									position: any;
+									createdAt: string;
+								}[];
+							};
+						}[];
+					};
 					downvotes: number;
 					headRefName: string;
 					headRefOid: string;
@@ -1040,7 +1060,36 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  }
 					timeEstimate
 					totalTimeSpent
-					discussions {
+					notes {
+						nodes {
+						  author {
+							name
+							login:username
+							avatarUrl
+						  }
+						  body
+						  bodyHtml
+						  confidential
+						  createdAt
+						  discussion {
+							id
+							replyId
+							createdAt
+						  }
+						  id
+						  system
+						  systemNoteIconName
+						  updatedAt
+						  userPermissions {
+							adminNote
+							readNote
+							resolveNote
+							awardEmoji
+							createNote
+						  }
+						}
+					}
+				  discussions {
 					  nodes {
 						createdAt
 						id
@@ -1223,6 +1272,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				})
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
+			response.project.mergeRequest.discussions.nodes.push(
+				...response.project.mergeRequest.notes.nodes
+			);
 			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
