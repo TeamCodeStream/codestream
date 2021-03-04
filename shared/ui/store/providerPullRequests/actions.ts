@@ -421,6 +421,7 @@ export const api = <T = any, R = any>(
 		| "createPullRequestComment"
 		| "createPullRequestCommentAndClose"
 		| "createPullRequestCommentAndReopen"
+		| "createPullRequestThread"
 		| "createPullRequestInlineComment"
 		| "createPullRequestInlineReviewComment"
 		| "createToDo"

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import styled from "styled-components";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
@@ -17,6 +17,8 @@ import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 import { DropdownButton } from "./Review/DropdownButton";
+import { CodeStreamState } from "../store";
+import { getPRLabel } from "../store/providers/reducer";
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest | any;
@@ -28,6 +30,12 @@ interface Props {
 export const PullRequestBottomComment = styled((props: Props) => {
 	const dispatch = useDispatch();
 	const { pr, setIsLoadingMessage } = props;
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		return {
+			prLabel: getPRLabel(state)
+		};
+	});
 
 	const [text, setText] = useState("");
 	const [isLoadingComment, setIsLoadingComment] = useState(false);
@@ -44,11 +52,9 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	const onCommentClick = async (event?: React.SyntheticEvent) => {
 		setIsLoadingComment(true);
 		trackComment("Comment");
-		await dispatch(
-			api("createPullRequestComment", {
-				text: replaceHtml(text)
-			})
-		);
+		if (commentType === "thread")
+			await dispatch(api("createPullRequestThread", { text: replaceHtml(text) }));
+		else await dispatch(api("createPullRequestComment", { text: replaceHtml(text) }));
 		setText("");
 		setIsLoadingComment(false);
 	};
@@ -59,7 +65,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		trackComment("Comment and Close");
 		await dispatch(
 			api("createPullRequestCommentAndClose", {
-				text: replaceHtml(text)
+				text: replaceHtml(text),
+				startThread: commentType === "thread"
 			})
 		);
 
@@ -79,7 +86,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		trackComment("Comment and Reopen");
 		await dispatch(
 			api("createPullRequestCommentAndReopen", {
-				text: replaceHtml(text)
+				text: replaceHtml(text),
+				startThread: commentType === "thread"
 			})
 		);
 
@@ -117,7 +125,6 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			{pr.providerId.includes("gitlab") ? (
 				<DropdownButton
 					isLoading={isLoadingComment}
-					onClick={onCommentClick}
 					disabled={!text}
 					splitDropdown
 					selectedKey={commentType}
@@ -133,7 +140,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 									to this merge request.
 								</span>
 							),
-							action: () => setCommentType("comment")
+							onSelect: () => setCommentType("comment"),
+							action: () => onCommentClick()
 						},
 						{ label: "-" },
 						{
@@ -147,7 +155,8 @@ export const PullRequestBottomComment = styled((props: Props) => {
 									question that needs to be resolved.
 								</span>
 							),
-							action: () => setCommentType("thread")
+							onSelect: () => setCommentType("thread"),
+							action: () => onCommentClick()
 						}
 					]}
 				>
@@ -168,7 +177,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			onClick={onCommentAndReopenClick}
 			variant="secondary"
 		>
-			{text ? "Reopen and comment" : "Reopen pull request"}
+			{text ? "Reopen and comment" : `Reopen ${derivedState.prLabel.pullrequest}`}
 		</Button>
 	);
 
@@ -179,7 +188,11 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			variant="secondary"
 		>
 			<Icon name="issue-closed" className="red-color margin-right" />
-			{text ? "Close and comment" : "Close pull request"}
+			{text
+				? commentType === "thread"
+					? `Start thread & close ${derivedState.prLabel.pullrequest}`
+					: "Close and comment"
+				: `Close ${derivedState.prLabel.pullrequest}`}
 		</Button>
 	);
 

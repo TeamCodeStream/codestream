@@ -607,7 +607,7 @@ export const PullRequest = () => {
 
 	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
 
-	let discussions = order === "newest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
+	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
 
@@ -681,7 +681,7 @@ export const PullRequest = () => {
 									<DropdownButton
 										variant="secondary"
 										splitDropdown
-										splitDropdownInstandAction
+										splitDropdownInstantAction
 										selectedKey="edit"
 										items={[
 											{ label: "Edit", key: "edit", action: edit },
@@ -694,7 +694,7 @@ export const PullRequest = () => {
 									<DropdownButton
 										variant="secondary"
 										splitDropdown
-										splitDropdownInstandAction
+										splitDropdownInstantAction
 										items={[
 											{ label: "Edit", key: "edit", action: edit },
 											{
@@ -821,7 +821,24 @@ export const PullRequest = () => {
 									{order === "newest" && bottomComment}
 									{discussions.map((_: any) => {
 										if (_.type === "merge-request") {
-											return null;
+											if (_.action === "opened") {
+												return (
+													<ActionBox>
+														<Icon name="reopen" className="circled" />
+														<b>{_.author.name}</b> @{_.author.username} reopened
+														<Timestamp relative time={_.createdAt} />
+													</ActionBox>
+												);
+											} else if (_.action === "closed") {
+												return (
+													<ActionBox>
+														<Icon name="minus-circle" className="circled" />
+														<b>{_.author.name}</b> @{_.author.username} closed
+														<Timestamp relative time={_.createdAt} />
+													</ActionBox>
+												);
+											}
+											// return null;
 											return (
 												<div>
 													{_.createdAt}
@@ -848,7 +865,7 @@ export const PullRequest = () => {
 													</ActionBox>
 												);
 										} else if (_.type === "label") {
-											return null;
+											// return null;
 											return (
 												<div>
 													{_.createdAt}
@@ -857,7 +874,7 @@ export const PullRequest = () => {
 													<br />
 												</div>
 											);
-										} else if (_.notes && _.notes.nodes && _.notes.nodes.length) {
+										} else if (_.notes && _.notes.nodes && _.notes.nodes.length > 0) {
 											return (
 												<OutlineBox style={{ padding: "10px" }}>
 													{_.notes.nodes.map(x => {

@@ -1322,6 +1322,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return data.body;
 	}
 
+	@log()
+	async createPullRequestThread(request: { pullRequestId: string; text: string }) {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const data = await this.restPost(
+			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
+			{ body: request.text }
+		);
+		return data.body;
+	}
+
 	private _pendingReviewStore: Map<string, any[]> = new Map<string, any[]>();
 
 	@log()
@@ -1851,7 +1862,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
-	async createPullRequestCommentAndClose(request: { pullRequestId: string; text: string }) {
+	async createPullRequestCommentAndClose(request: {
+		pullRequestId: string;
+		text: string;
+		startThread: boolean;
+	}) {
 		const parsed = JSON.parse(request.pullRequestId);
 		const projectFullPath = parsed.full.split("!")[0];
 		const iid = parsed.full.split("!")[1];
@@ -1859,9 +1874,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let directives: any = [];
 
 		if (request.text) {
-			const response1 = await this.createPullRequestComment({ ...request, iid: iid });
-			if (response1.directives) {
-				directives = directives.concat(response1.directives);
+			if (request.startThread) {
+				const response1 = await this.createPullRequestThread({ ...request });
+				// if (response1.directives) {
+				// directives = directives.concat(response1.directives);
+				// }
+			} else {
+				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			}
 		}
 
@@ -1906,6 +1928,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async createPullRequestCommentAndReopen(request: {
 		pullRequestId: string;
 		text: string;
+		startThread: boolean;
 	}): Promise<any> {
 		const parsed = JSON.parse(request.pullRequestId);
 		const projectFullPath = parsed.full.split("!")[0];
@@ -1914,9 +1937,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		let directives: any = [];
 
 		if (request.text) {
-			const response1 = await this.createPullRequestComment({ ...request, iid: iid });
-			if (response1.directives) {
-				directives = directives.concat(response1.directives);
+			if (request.startThread) {
+				const response1 = await this.createPullRequestThread({ ...request });
+				// if (response1.directives) {
+				// directives = directives.concat(response1.directives);
+				// }
+			} else {
+				const response1 = await this.createPullRequestComment({ ...request, iid: iid });
+				if (response1.directives) {
+					directives = directives.concat(response1.directives);
+				}
 			}
 		}
 
