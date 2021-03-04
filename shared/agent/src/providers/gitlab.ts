@@ -2245,6 +2245,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`, {
 					name: request.content
 				});
+				response.body.user.login = response.body.user.username;
+				response.body.user.avatarUrl = response.body.user.avatar_url;
 				return {
 					directives: [
 						{

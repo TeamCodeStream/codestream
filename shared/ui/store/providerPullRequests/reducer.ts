@@ -270,7 +270,7 @@ export function reduceProviderPullRequests(
 						} else if (directive.type === "removeReaction") {
 							const group = pr.reactionGroups.find(_ => _.content === directive.data.content);
 							if (group) {
-								group.data = group.data.filter(_ => _.user.username !== directive.data.username);
+								group.data = group.data.filter(_ => _.user.login !== directive.data.login);
 								if (group.data.length === 0) {
 									pr.reactionGroups = pr.reactionGroups.filter(
 										_ => _.content !== directive.data.content
