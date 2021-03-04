@@ -48,6 +48,7 @@ import { CodemarkType, CSMe, CSProviderInfos, CSReferenceLocation } from "../pro
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
 import * as url from "url";
+import { GraphQLClient } from "graphql-request";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
@@ -208,6 +209,7 @@ export abstract class ThirdPartyProviderBase<
 	protected _ensuringConnection: Promise<void> | undefined;
 	protected _providerInfo: TProviderInfo | undefined;
 	protected _httpsAgent: HttpsAgent | undefined;
+	protected _client: GraphQLClient | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
@@ -918,6 +920,60 @@ export abstract class ThirdPartyIssueProviderBase<
 		}
 
 		return documentMarkers;
+	}
+
+	protected _isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
+		const networkErrors = [
+			"ENOTFOUND",
+			"ETIMEDOUT",
+			"EAI_AGAIN",
+			"ECONNRESET",
+			"ECONNREFUSED",
+			"ENETDOWN",
+			"ENETUNREACH",
+			"socket disconnected before secure",
+			"socket hang up"
+		];
+
+		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
+			return ReportSuppressedMessages.NetworkError;
+		} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
+			return ReportSuppressedMessages.ConnectionError;
+		} else if (
+			(ex.response && ex.response.message === "Bad credentials") ||
+			(ex.response &&
+				ex.response.errors instanceof Array &&
+				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
+		) {
+			return ReportSuppressedMessages.AccessTokenInvalid;
+		} else {
+			return undefined;
+		}
+	}
+
+	protected trySetThirdPartyProviderInfo(ex: Error, exType?: ReportSuppressedMessages | undefined) {
+		if (!ex) return;
+
+		exType = exType || this._isSuppressedException(ex);
+		if (exType !== undefined && exType !== ReportSuppressedMessages.NetworkError) {
+			// we know about this error, and we want to give the user a chance to correct it
+			// (but throwing up a banner), rather than logging the error to sentry
+			this.session.api.setThirdPartyProviderInfo({
+				providerId: this.providerConfig.id,
+				data: {
+					tokenError: {
+						error: ex,
+						occurredAt: Date.now(),
+						isConnectionError: exType === ReportSuppressedMessages.ConnectionError,
+						providerMessage:
+							exType === ReportSuppressedMessages.OAuthAppAccessRestrictionError ? ex.message : null
+					}
+				}
+			});
+			if (this._client) {
+				delete this._client;
+			}
+		}
 	}
 }
 

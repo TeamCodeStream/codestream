@@ -707,7 +707,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return `${this.baseUrl.replace("/v4", "")}/graphql`;
 	}
 
-	protected _client: GraphQLClient | undefined;
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
 			const options: { [key: string]: any } = {};
@@ -725,35 +724,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 
 		return this._client;
-	}
-
-	_isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
-		const networkErrors = [
-			"ENOTFOUND",
-			"ETIMEDOUT",
-			"EAI_AGAIN",
-			"ECONNRESET",
-			"ECONNREFUSED",
-			"ENETDOWN",
-			"ENETUNREACH",
-			"socket disconnected before secure",
-			"socket hang up"
-		];
-
-		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
-			return ReportSuppressedMessages.NetworkError;
-		} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
-			return ReportSuppressedMessages.ConnectionError;
-		} else if (
-			(ex.response && ex.response.message === "Bad credentials") ||
-			(ex.response &&
-				ex.response.errors instanceof Array &&
-				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
-		) {
-			return ReportSuppressedMessages.AccessTokenInvalid;
-		} else {
-			return undefined;
-		}
 	}
 
 	_queryLogger: {
@@ -788,19 +758,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
 				if (exType !== ReportSuppressedMessages.NetworkError) {
-					// we know about this error, and we want to give the user a chance to correct it
-					// (but throwing up a banner), rather than logging the error to sentry
-					this.session.api.setThirdPartyProviderInfo({
-						providerId: this.providerConfig.id,
-						data: {
-							tokenError: {
-								error: ex,
-								occurredAt: Date.now(),
-								isConnectionError: exType === ReportSuppressedMessages.ConnectionError
-							}
-						}
-					});
-					delete this._client;
+					this.trySetThirdPartyProviderInfo(ex, exType);
 				}
 				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
 				throw new InternalError(exType, { error: ex });
