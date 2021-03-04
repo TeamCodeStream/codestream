@@ -621,6 +621,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 
+		//TODO
 		let repoQuery =
 			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
 		if (request.isOpen) {
@@ -632,7 +633,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					for (const repo of reposResponse.repositories) {
 						if (repo.remotes) {
 							for (const remote of repo.remotes) {
-								const urlToTest = `anything://${remote.domain}/${remote.path}`;
+								const urlToTest = remote.webUrl;
 								const results = await providerRegistry.queryThirdParty({ url: urlToTest });
 								if (results && results.providerId === this.providerConfig.id) {
 									const ownerData = this.getOwnerFromRemote(urlToTest);
