@@ -89,16 +89,45 @@ export * from "./okta";
 export * from "./clubhouse";
 export * from "./linear";
 
-const PR_QUERIES = [
-	{
-		name: "is waiting on your review",
-		query: `is:pr is:open review-requested:@me -author:@me`
-	},
-	{
-		name: "was assigned to you",
-		query: `is:pr is:open assignee:@me -author:@me`
-	}
-];
+const PR_QUERIES: {
+	[Identifier: string]: {
+		name: string;
+		query: string;
+	}[];
+} = {
+	gitlab: [
+		{
+			name: "was assigned to you",
+			query: `state:opened scope:assigned_to_me`
+		}
+	],
+	gitlab_enterprise: [
+		{
+			name: "was assigned to you",
+			query: `state:opened scope:assigned_to_me`
+		}
+	],
+	github: [
+		{
+			name: "is waiting on your review",
+			query: `is:pr is:open review-requested:@me -author:@me`
+		},
+		{
+			name: "was assigned to you",
+			query: `is:pr is:open assignee:@me -author:@me`
+		}
+	],
+	github_enterprise: [
+		{
+			name: "is waiting on your review",
+			query: `is:pr is:open review-requested:@me -author:@me`
+		},
+		{
+			name: "was assigned to you",
+			query: `is:pr is:open assignee:@me -author:@me`
+		}
+	]
+};
 
 interface ProviderPullRequests {
 	providerName: string;
@@ -124,7 +153,12 @@ export class ThirdPartyProviderRegistry {
 			ThirdPartyProviderSupportsPullRequests => {
 			const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
 			const name = thirdPartyIssueProvider.getConfig().name;
-			return name === "github" || name === "github_enterprise";
+			return (
+				name === "github" ||
+				name === "github_enterprise" ||
+				name === "gitlab" ||
+				name === "gitlab_enterprise"
+			);
 		});
 		const providersPullRequests: ProviderPullRequests[] = [];
 
@@ -135,16 +169,19 @@ export class ThirdPartyProviderRegistry {
 					Logger.debug(`pullRequestsStateHandler: ignoring ${provider.name} because of tokenError`);
 					continue;
 				}
-				const pullRequests = await provider.getMyPullRequests({
-					queries: PR_QUERIES.map(_ => _.query)
-				});
-
-				if (pullRequests) {
-					providersPullRequests.push({
-						providerName: provider.name,
-						queriedPullRequests: pullRequests
+				const queries = PR_QUERIES[provider.name];
+				if (queries.length) {
+					const pullRequests = await provider.getMyPullRequests({
+						queries: queries.map(_ => _.query)
 					});
-					succeededCount++;
+
+					if (pullRequests) {
+						providersPullRequests.push({
+							providerName: provider.name,
+							queriedPullRequests: pullRequests
+						});
+						succeededCount++;
+					}
 				}
 			} catch (ex) {
 				Logger.warn(`pullRequestsStateHandler: ${typeof ex === "string" ? ex : ex.message}`);
@@ -222,7 +259,7 @@ export class ThirdPartyProviderRegistry {
 			_.queriedPullRequests.map((pullRequests: GetMyPullRequestsResponse[], queryIndex: number) => {
 				prNotificationMessages.push(
 					...pullRequests.map(pullRequest => ({
-						queryName: PR_QUERIES[queryIndex].name,
+						queryName: PR_QUERIES[_.providerName][queryIndex].name,
 						pullRequest
 					}))
 				);

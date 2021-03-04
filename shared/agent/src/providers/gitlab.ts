@@ -370,7 +370,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			return {
 				title: title,
-				url: createPullRequestResponse.body.web_url
+				url: createPullRequestResponse.body.web_url,
+				id: JSON.stringify({
+					full: `${owner}/${name}${createPullRequestResponse.body.reference}`,
+					id: createPullRequestResponse.body.id
+				})
 			};
 		} catch (ex) {
 			Logger.error(ex, `${this.displayName}: createPullRequest`, {
@@ -685,13 +689,23 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			if (item && item.body) {
 				response[index] = item.body
 					.filter((_: any) => _.id)
-					.map((pr: { created_at: string; id: string; iid: string }) => ({
-						...pr,
-						id: `gid://gitlab/MergeRequest/${pr.id}`,
-						providerId: this.providerConfig?.id,
-						createdAt: new Date(pr.created_at).getTime(),
-						number: parseInt(pr.iid, 10)
-					}));
+					.map(
+						(pr: {
+							created_at: string;
+							id: string;
+							iid: string;
+							references: { full: string };
+						}) => ({
+							...pr,
+							base_id: pr.id,
+							// along the way, this id will need to be baked
+							// (used in toast notifications which later needs a singular id)
+							id: JSON.stringify({ full: pr.references.full, id: pr.id }),
+							providerId: this.providerConfig?.id,
+							createdAt: new Date(pr.created_at).getTime(),
+							number: parseInt(pr.iid, 10)
+						})
+					);
 
 				if (!queries[index].match(/\bsort:/)) {
 					response[index] = response[index].sort(
@@ -2592,8 +2606,10 @@ interface GitLabCreateMergeRequestRequest {
 }
 
 interface GitLabCreateMergeRequestResponse {
+	id: string;
 	iid: string;
 	title: string;
+	reference: string;
 	web_url: string;
 }
 
