@@ -1227,7 +1227,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
 			};
 
-			const base_id = response.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", "");
+			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
 			const mergeRequestFullId = JSON.stringify({
 				id: base_id,
 				full: response.project.mergeRequest.references.full
@@ -1698,7 +1698,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request.projectFullPath = projectFullPath;
 		request.iid = iid;
 		noteableId = id;
-		request.noteableId = `gid://gitlab/MergeRequest/${noteableId}`;
+		request.noteableId = this.toMergeRequestGid(noteableId);
 
 		const response = (await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!, $iid:String!){
@@ -2444,9 +2444,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// data we need.
 		const uri = URI.parse(request.url);
 		const path = uri.path.split("/");
-		const owner = path[1];
-		const repo = path[2];
-		const iid = path[5];
+		let id = [];
+		// both are valid
+		// http://gitlab.codestream.us/my-group/my-subgroup/baz/-/merge_requests/1
+		// http://gitlab.codestream.us/project/repo/-/merge_requests/1
+		for (let i = 0; i < path.length; i++) {
+			const current = path[i];
+			if (!current) continue;
+			if (current === "-") break;
+			id.push(current);
+		}
+
+		const iid = path[path.length - 1];
+		const fullPath = id.join("/");
 		const pullRequestInfo = await this.query<any>(
 			`query getId($fullPath: ID!, $iid: String!) {
 				project(fullPath: $fullPath) {
@@ -2459,14 +2469,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			  }
 			  `,
 			{
-				fullPath: `${owner}/${repo}`,
+				fullPath: fullPath,
 				iid: iid
 			}
 		);
 		try {
 			return JSON.stringify({
-				full: `${owner}/${repo}!${iid}`,
-				id: pullRequestInfo.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", "")
+				full: `${fullPath}!${iid}`,
+				id: this.fromMergeRequestGid(pullRequestInfo.project.mergeRequest.id)
 			});
 		} catch (ex) {
 			Logger.warn(ex);
@@ -2561,6 +2571,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private toKeyValuePair(q: string) {
 		const kvp = q.split(":");
 		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(kvp[1])}`;
+	}
+
+	private toMergeRequestGid(id: string) {
+		return `gid://gitlab/MergeRequest/${id}`;
+	}
+
+	private fromMergeRequestGid(gid: string) {
+		return gid.replace("gid://gitlab/MergeRequest/", "");
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
