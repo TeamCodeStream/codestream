@@ -910,6 +910,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					createdAt: string;
 					diffRefs: any;
 					discussions: {
+						pageInfo: {
+							endCursor: string;
+							hasNextPage: boolean;
+						};
 						nodes: {
 							createdAt: string;
 							id: string;
@@ -1011,22 +1015,22 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 		};
 		try {
-			const q = `query GetPullRequest($fullPath:ID!, $iid:String!) {
+			const q = `query GetPullRequest($fullPath: ID!, $iid: String!, $after:String) {
 				currentUser {
-					name
-					login:username
-					avatarUrl
-					id
+				  name
+				  login: username
+				  avatarUrl
+				  id
 				}
 				project(fullPath: $fullPath) {
 				  name
 				  mergeRequest(iid: $iid) {
 					approvedBy {
-						nodes {
-						  avatarUrl
-						  name
-						  login:username
-						}
+					  nodes {
+						avatarUrl
+						name
+						login: username
+					  }
 					}
 					id
 					iid
@@ -1042,69 +1046,73 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					reference
 					projectId
 					author {
-						name
-						login:username
-						avatarUrl
+					  name
+					  login: username
+					  avatarUrl
 					}
 					diffRefs {
-						baseSha
-						headSha
-						startSha
+					  baseSha
+					  headSha
+					  startSha
 					}
 					commitCount
 					sourceProject {
-						name
-						webUrl
-						fullPath
+					  name
+					  webUrl
+					  fullPath
 					}
 					upvotes
 					downvotes
 					milestone {
-						title
-						id
-						webPath
-						dueDate
+					  title
+					  id
+					  webPath
+					  dueDate
 					}
 					subscribed
 					userDiscussionsCount
 					discussionLocked
 					forceRemoveSourceBranch
 					assignees(last: 100) {
-						nodes {
-						  id
-						  name
-						  login:username
-						  avatarUrl
-						}
+					  nodes {
+						id
+						name
+						login: username
+						avatarUrl
 					  }
-					participants(last:100) {
-						nodes {
-						  id
-						  name
-						  login:username
-						  avatarUrl
-						}
+					}
+					participants(last: 100) {
+					  nodes {
+						id
+						name
+						login: username
+						avatarUrl
 					  }
+					}
 					labels(last: 100) {
-						nodes {
-						  id
-						  color
-						  textColor
-						  title
-						}
+					  nodes {
+						id
+						color
+						textColor
+						title
 					  }
-					  currentUserTodos(last: 100) {
-						nodes {
-						  action
-						  body
-						  id
-						  targetType
-						  state
-						}
+					}
+					currentUserTodos(last: 100) {
+					  nodes {
+						action
+						body
+						id
+						targetType
+						state
 					  }
+					}
 					timeEstimate
 					totalTimeSpent
-				    discussions {
+					discussions(first:100, after:$after) {
+					  pageInfo{
+						endCursor
+						hasNextPage
+					  }
 					  nodes {
 						createdAt
 						id
@@ -1112,7 +1120,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						  nodes {
 							author {
 							  name
-							  login:username
+							  login: username
 							  avatarUrl
 							}
 							body
@@ -1125,7 +1133,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							  createdAt
 							}
 							id
-							position{
+							position {
 							  x
 							  y
 							  newLine
@@ -1141,7 +1149,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							resolved
 							resolvedAt
 							resolvedBy {
-							  login:username
+							  login: username
 							  avatarUrl
 							}
 							system
@@ -1161,19 +1169,31 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						resolved
 						resolvedAt
 						resolvedBy {
-						  login:username
+						  login: username
 						  avatarUrl
 						}
 					  }
 					}
 				  }
 				}
-			  }`;
-
-			response = await this.query(q, {
-				fullPath: projectFullPath,
-				iid: iid.toString()
-			});
+			  }
+			  `;
+			let discussions: any[] = [];
+			let after = "";
+			while (true) {
+				response = await this.query(q, {
+					fullPath: projectFullPath,
+					iid: iid.toString(),
+					after: after
+				});
+				discussions = discussions.concat(response.project.mergeRequest.discussions.nodes);
+				if (response.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
+					after = response.project.mergeRequest.discussions.pageInfo.endCursor;
+				} else {
+					break;
+				}
+			}
+			response.project.mergeRequest.discussions.nodes = discussions;
 
 			response.project.mergeRequest.viewer = {
 				id: response.currentUser.id,
