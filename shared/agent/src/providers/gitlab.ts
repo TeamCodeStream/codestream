@@ -2560,7 +2560,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					.map(_ => {
 						return {
 							type: "merge-request",
-							author: _.author,
+							author: this.fromRestUser(_.author),
 							action: _.action_name,
 							createdAt: _.created_at,
 							id: _.id,
@@ -2580,6 +2580,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return results;
 	}
 
+	private fromRestUser(user: { [key: string]: any }) {
+		user.login = user.username;
+		user.avatarUrl = user.avatar_url;
+		return user;
+	}
+
 	private async _milestoneEvents(projectFullPath: string, iid: string) {
 		const milestoneEvents = ((await this.restGet(
 			`/projects/${encodeURIComponent(
@@ -2593,7 +2599,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				id: _.id,
 				label: _.label,
 				resourceType: _.resource_type,
-				user: _.user
+				author: this.fromRestUser(_.user)
 			};
 		});
 		return milestoneEvents;
@@ -2610,7 +2616,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				id: _.id,
 				label: _.label,
 				resourceType: _.resource_type,
-				user: _.user
+				author: this.fromRestUser(_.user)
 			};
 		});
 		return labelEvents;

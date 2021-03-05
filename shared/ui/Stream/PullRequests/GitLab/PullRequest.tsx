@@ -21,7 +21,10 @@ import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
 import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
-import { GetReposScmRequestType } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GetReposScmRequestType
+} from "@codestream/protocols/agent";
 import {
 	PRBadge,
 	PRBranch,
@@ -60,6 +63,7 @@ import { MarkdownText } from "../../MarkdownText";
 import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
 import Tag from "../../Tag";
+import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -179,7 +183,7 @@ const BigRoundImg = styled.span`
 		border-radius: 50%;
 		margin: 0px 15px 0px 0px;
 		vertical-align: middle;
-		height: 40px;
+		height: 30px;
 	}
 `;
 
@@ -208,6 +212,19 @@ export const OutlineBox = styled.div`
 		left: 30px;
 		top: -15px;
 		background: var(--base-border-color);
+	}
+`;
+
+const ReplyForm = styled.div`
+	background: var(--base-background-color);
+	border-top: 1px solid var(--base-border-color);
+	border-radius: 0 0 4px 4px;
+	margin: 10px -10px -10px -10px;
+	padding: 10px;
+	${PRHeadshot} {
+		position: absolute;
+		left: 0;
+		top: 0;
 	}
 `;
 
@@ -270,6 +287,18 @@ const Description = styled.div`
 const TabActions = styled.div`
 	margin-top: -5px;
 	margin-left: auto;
+`;
+
+const Collapse = styled.div`
+	background: var(--base-background-color);
+	border-top: 1px solid var(--base-border-color);
+	border-bottom: 1px solid var(--base-border-color);
+	padding: 10px;
+	margin: 10px -10px;
+	cursor: pointer;
+	&:hover {
+		background: var(--app-background-color-hover);
+	}
 `;
 
 const EMPTY_HASH = {};
@@ -663,29 +692,75 @@ export const PullRequest = () => {
 				</ActionBox>
 			);
 		}
+		const replies = note.replies || [];
 		return (
 			<OutlineBox style={{ padding: "10px" }}>
 				{note.author && (
-					<BigRoundImg>
-						<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-					</BigRoundImg>
+					<>
+						<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
+							<BigRoundImg>
+								<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+							</BigRoundImg>
+						</Tooltip>
+						<div>
+							<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
+							<Timestamp relative time={note.createdAt} />
+						</div>
+					</>
 				)}
 				{!note.author && <pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-
-				{/* <div style={{ float: "right" }}>
-						<Role>Maintainer</Role> 
-							(S) (R) (Edit) (dots)
-						</div>*/}
-				{note.author && (
-					<div>
-						<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
-						<Timestamp relative time={note.createdAt} />
-					</div>
-				)}
 
 				<div style={{ paddingTop: "10px" }}>
 					<MarkdownText text={note.body} />
 				</div>
+				{note.resolvable && (
+					<>
+						{note.replies.length > 0 && (
+							<Collapse>
+								<Icon name="chevron-down-thin" /> Collapse replies
+							</Collapse>
+						)}
+						{replies.map(reply => {
+							return (
+								<>
+									{reply.author && (
+										<>
+											<Tooltip
+												title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+											>
+												<BigRoundImg>
+													<img
+														style={{ float: "left" }}
+														alt="headshot"
+														src={reply.author.avatarUrl}
+													/>
+												</BigRoundImg>
+											</Tooltip>
+											<div>
+												<b>{reply.author.name}</b> @{reply.author.login} &middot;{" "}
+												<Timestamp relative time={reply.createdAt} />
+											</div>
+										</>
+									)}
+
+									<div style={{ paddingTop: "10px" }}>
+										<MarkdownText text={reply.body} />
+									</div>
+								</>
+							);
+						})}
+						<ReplyForm>
+							<PullRequestReplyComment
+								pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+								mode={note}
+								fetch={fetch}
+								databaseId={note.id}
+								isOpen={false}
+								__onDidRender={__onDidRender}
+							/>
+						</ReplyForm>
+					</>
+				)}
 			</OutlineBox>
 		);
 	};
@@ -889,34 +964,70 @@ export const PullRequest = () => {
 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									{order === "newest" && bottomComment}
-									{discussions.map((_: any) => {
+									{discussions.map((_: any, index: number) => {
 										if (_.type === "merge-request") {
 											if (_.action === "opened") {
 												return (
-													<ActionBox>
-														<Icon name="reopen" className="circled" />
+													<ActionBox key={index}>
+														<Icon
+															name="reopen"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
 														<div>
-															<b>{_.author.name}</b> @{_.author.username} reopened
+															<b>{_.author.name}</b> @{_.author.login} reopened
 															<Timestamp relative time={_.createdAt} />
 														</div>
 													</ActionBox>
 												);
 											} else if (_.action === "closed") {
 												return (
-													<ActionBox>
-														<Icon name="minus-circle" className="circled" />
+													<ActionBox key={index}>
+														<Icon
+															name="minus-circle"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
 														<div>
-															<b>{_.author.name}</b> @{_.author.username} closed
+															<b>{_.author.name}</b> @{_.author.login} closed
+															<Timestamp relative time={_.createdAt} />
+														</div>
+													</ActionBox>
+												);
+											} else if (_.action === "approved") {
+												return (
+													<ActionBox key={index}>
+														<Icon
+															name="check"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
+														<div>
+															<b>{_.author.name}</b> @{_.author.login} approved this merge request
+															<Timestamp relative time={_.createdAt} />
+														</div>
+													</ActionBox>
+												);
+											} else if (_.action === "unapproved") {
+												return (
+													<ActionBox key={index}>
+														<Icon
+															name="minus-circle"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
+														<div>
+															<b>{_.author.name}</b> @{_.author.login} unapproved this merge request
 															<Timestamp relative time={_.createdAt} />
 														</div>
 													</ActionBox>
 												);
 											}
-											// return null;
 											return (
 												<div>
-													{_.createdAt}
-													mr: <pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
+													unknown merge-request node:
+													<br />
+													<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
 													<br />
 													<br />
 												</div>
@@ -924,28 +1035,28 @@ export const PullRequest = () => {
 										} else if (_.type === "milestone") {
 											if (_.action === "removed")
 												return (
-													<ActionBox>
+													<ActionBox key={index}>
 														<Icon
 															name="clock"
 															className="circled"
 															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 														/>
 														<div>
-															<b>{_.user.name}</b> @{_.user.username} removed milestone{" "}
+															<b>{_.author.name}</b> @{_.author.login} removed milestone{" "}
 															<Timestamp relative time={_.createdAt} />
 														</div>
 													</ActionBox>
 												);
 											else
 												return (
-													<ActionBox>
+													<ActionBox key={index}>
 														<Icon
 															name="clock"
 															className="circled"
 															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 														/>
 														<div>
-															<b>{_.user.name}</b> @{_.user.username} changed milestone{" "}
+															<b>{_.author.name}</b> @{_.author.login} changed milestone{" "}
 															<Timestamp relative time={_.createdAt} />
 														</div>
 													</ActionBox>
@@ -953,10 +1064,10 @@ export const PullRequest = () => {
 										} else if (_.type === "label") {
 											if (_.action === "removed")
 												return (
-													<ActionBox>
+													<ActionBox key={index}>
 														<Icon name="tag" className="circled" />
 														<div>
-															<b>{_.user.name}</b> @{_.user.login} removed label{" "}
+															<b>{_.author.name}</b> @{_.author.login} removed label{" "}
 															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
 															<Timestamp relative time={_.createdAt} />
 														</div>
@@ -964,10 +1075,10 @@ export const PullRequest = () => {
 												);
 											else
 												return (
-													<ActionBox>
+													<ActionBox key={index}>
 														<Icon name="tag" className="circled" />
 														<div>
-															<b>{_.user.name}</b> @{_.user.login} added label{" "}
+															<b>{_.author.name}</b> @{_.author.login} added label{" "}
 															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
 															<Timestamp relative time={_.createdAt} />
 														</div>
