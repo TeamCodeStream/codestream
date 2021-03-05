@@ -21,7 +21,6 @@ import {
 	DocumentMarkerExternalContent,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
-	FetchDocumentMarkersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -988,7 +987,7 @@ export abstract class ThirdPartyIssueProviderBase<
 	 * @returns array of owner/repo strings
 	 */
 	protected async getOpenedRepos(): Promise<string[]> {
-		let repos: string[] = [];
+		const repos: string[] = [];
 		const { scm, providerRegistry } = SessionContainer.instance();
 		const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
 		if (!reposResponse.repositories || !reposResponse.repositories.length) return repos;

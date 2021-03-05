@@ -5,7 +5,6 @@ import { GitRemoteLike } from "../git/gitService";
 import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
-import { Logger } from "../logger";
 
 @lspProvider("gitlab_enterprise")
 export class GitLabEnterpriseProvider extends GitLabProvider {
