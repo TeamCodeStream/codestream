@@ -2488,10 +2488,40 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return true;
 	}
 
-	private async _projectEvents(projectFullPath: string, iid: string) {
-		const projectEventsResponse = (
-			await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/events`)
-		)?.body as any[];
+	async getPullRequestIdFromUrl(request: { url: string }) {
+		// since we only the url for the PR -- parse it out for the
+		// data we need.
+		const uri = URI.parse(request.url);
+		const path = uri.path.split("/");
+		const owner = path[1];
+		const repo = path[2];
+		const iid = path[5];
+		const pullRequestInfo = await this.query<any>(
+			`query getId($fullPath: ID!, $iid: String!) {
+				project(fullPath: $fullPath) {
+				  webUrl
+				  name
+				  mergeRequest(iid: $iid) {
+					id
+				  }
+				}
+			  }
+			  `,
+			{
+				fullPath: `${owner}/${repo}`,
+				iid: iid
+			}
+		);
+		try {
+			return JSON.stringify({
+				full: `${owner}/${repo}!${iid}`,
+				id: pullRequestInfo.project.mergeRequest.id.replace("gid://gitlab/MergeRequest/", "")
+			});
+		} catch (ex) {
+			Logger.warn(ex);
+			throw ex;
+		}
+	}
 
 		// exclude the "comment" events as those exist in discussion/notes
 		const projectEvents = projectEventsResponse
