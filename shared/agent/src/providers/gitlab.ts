@@ -11,6 +11,7 @@ import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
+import { Dates } from "../system";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 
@@ -1304,7 +1305,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			(
 				await Promise.all([
-					this.getProjectEvents(projectFullPath, iid),
+					this.getProjectEvents(
+						projectFullPath,
+						iid,
+						Dates.fromIsoToYearMonthDay(response.project.mergeRequest.createdAt)
+					),
 					this.getLabelEvents(projectFullPath, iid),
 					this.getMilestoneEvents(projectFullPath, iid)
 				]).catch(ex => {
@@ -1942,6 +1947,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{
 				merge_status: string;
 				merged_at: any;
+				created_at: string;
 				state: string;
 				updated_at: any;
 				closed_at: any;
@@ -1966,7 +1972,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		directives.push({
 			type: "addNodes",
-			data: await this.getProjectEvents(projectFullPath, iid)
+			data: await this.getProjectEvents(
+				projectFullPath,
+				iid,
+				Dates.fromIsoToYearMonthDay(body.created_at)
+			)
 		});
 
 		return {
@@ -2009,6 +2019,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				updated_at: any;
 				closed_at: any;
 				closed_by: any;
+				created_at: any;
 			}
 		>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`, {
 			state_event: "reopen"
@@ -2028,7 +2039,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 		directives.push({
 			type: "addNodes",
-			data: await this.getProjectEvents(projectFullPath, iid)
+			data: await this.getProjectEvents(
+				projectFullPath,
+				iid,
+				Dates.fromIsoToYearMonthDay(body.created_at)
+			)
 		});
 
 		return {
@@ -2544,30 +2559,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
-	private async getProjectEvents(projectFullPath: string, iid: string): Promise<any[]> {
-		return this._paginateRestResponse(
-			`/projects/${encodeURIComponent(projectFullPath)}/events?target_type=merge_request`,
-			data => {
-				return data
-					.filter(
-						_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
-					)
-					.map(_ => {
-						return {
-							type: "merge-request",
-							author: this.fromRestUser(_.author),
-							action: _.action_name,
-							createdAt: _.created_at,
-							id: _.id,
-							projectId: _.project_id,
-							targetId: _.target_id,
-							targetIid: _.target_iid,
-							targetTitle: _.target_title,
-							targetType: _.target_type
-						};
-					});
-			}
-		);
+	private async getProjectEvents(
+		projectFullPath: string,
+		iid: string,
+		/* formatted as YYYY-MM-DD */
+		after?: string
+	): Promise<any[]> {
+		// after = https://docs.gitlab.com/ee/api/events.html#date-formatting
+		// only care about events after the MR was created
+		let url = `/projects/${encodeURIComponent(projectFullPath)}/events?target_type=merge_request`;
+		if (after) {
+			url += `&after=${after}`;
+		}
+		return this._paginateRestResponse(url, data => {
+			return data
+				.filter(
+					_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
+				)
+				.map(_ => {
+					return {
+						type: "merge-request",
+						author: this.fromRestUser(_.author),
+						action: _.action_name,
+						createdAt: _.created_at,
+						id: _.id,
+						projectId: _.project_id,
+						targetId: _.target_id,
+						targetIid: _.target_iid,
+						targetTitle: _.target_title,
+						targetType: _.target_type
+					};
+				});
+		});
 	}
 
 	private async getMilestoneEvents(projectFullPath: string, iid: string) {

@@ -147,4 +147,11 @@ export namespace Dates {
 			format: (format: string) => _format(date, format)
 		};
 	}
+
+	export function fromIsoToYearMonthDay(isoDateString: string) {
+		if (!isoDateString) return undefined;
+
+		const date = new Date(isoDateString);
+		return date.toISOString().substring(0, 10);
+	}
 }
