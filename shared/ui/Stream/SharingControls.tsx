@@ -32,7 +32,8 @@ import { CSTeamSettings } from "@codestream/protocols/api";
 const TextButton = styled.span`
 	color: ${props => props.theme.colors.textHighlight};
 	cursor: pointer;
-	.octicon-chevron-down {
+	.octicon-chevron-down,
+	.octicon-chevron-down-thin {
 		transform: scale(0.7);
 		margin-left: 2px;
 		margin-right: 5px;

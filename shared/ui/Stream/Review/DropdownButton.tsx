@@ -100,7 +100,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 							toggleMenu(true);
 						}}
 					>
-						<Icon name="chevron-down" className="chevron-down" />
+						<Icon name="chevron-down-thin" className="chevron-down" />
 					</Button>
 				</>
 			) : (
@@ -114,7 +114,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					ref={buttonRef}
 				>
 					{props.children}
-					<Icon name="chevron-down" className="chevron-down" />
+					<Icon name="chevron-down-thin" className="chevron-down" />
 				</Button>
 			)}
 			{menuIsOpen && buttonRef.current && (
@@ -137,7 +137,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 const Root = styled.div<{ splitDropdown?: boolean; fillParent?: boolean }>`
 	display: ${props => (props.fillParent ? "block" : "inline-block")};
 	position: relative;
-	.octicon-chevron-down {
+	.octicon-chevron-down-thin {
 		margin-left: ${props => (props.splitDropdown ? "0" : "5px")};
 		transform: scale(0.8);
 	}

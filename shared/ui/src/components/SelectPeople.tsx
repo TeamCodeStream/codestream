@@ -11,7 +11,8 @@ import Icon from "@codestream/webview/Stream/Icon";
 
 const ClickTarget = styled.span`
 	cursor: pointer;
-	.octicon-chevron-down {
+	.octicon-chevron-down,
+	.octicon-chevron-down-thin {
 		display: inline-block;
 		transform: scale(0.8);
 		margin-left: 2px;

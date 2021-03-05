@@ -36,7 +36,8 @@ export const TextButton = styled.span`
 	}
 	cursor: pointer;
 	white-space: nowrap;
-	.octicon-chevron-down {
+	.octicon-chevron-down,
+	.octicon-chevron-down-thin {
 		transform: scale(0.7);
 		margin-left: 2px;
 		margin-right: 5px;
@@ -50,7 +51,8 @@ export const TextButton = styled.span`
 		vertical-align: 1px;
 	}
 	&.big-chevron {
-		.octicon-chevron-down {
+		.octicon-chevron-down,
+		.octicon-chevron-down-thin {
 			transform: scale(1);
 		}
 	}

@@ -120,6 +120,14 @@ export const PRSelectorButtons = styled.div`
 	> span + span {
 		border-left: 1px solid var(--base-border-color);
 	}
+	> span.label {
+		cursor: default;
+		padding-left: 10px;
+		padding-right: 10px;
+		&:hover {
+			background: var(--app-background-color);
+		}
+	}
 `;
 
 export const PREditTitle = styled.div`

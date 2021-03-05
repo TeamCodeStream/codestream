@@ -28,6 +28,7 @@ import {
 	PRError,
 	PRHeader,
 	PRPlusMinus,
+	PRSelectorButtons,
 	PRStatusButton,
 	PRSubmitReviewButton,
 	PRTitle
@@ -266,6 +267,11 @@ const Description = styled.div`
 	margin: 20px;
 `;
 
+const TabActions = styled.div`
+	margin-top: -5px;
+	margin-left: auto;
+`;
+
 const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let insertText;
@@ -440,7 +446,7 @@ export const PullRequest = () => {
 		commitCount: number;
 		changesCount: number;
 		discussions: {
-			nodes: {}[];
+			nodes: any[];
 		};
 		files: {
 			nodes: any[];
@@ -551,6 +557,21 @@ export const PullRequest = () => {
 	const statusIcon =
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
+	const unresolvedComments = useMemo(() => {
+		if (!pr) return 0;
+		if (!pr.discussions) return 0;
+		let unresolved = 0;
+		pr.discussions.nodes.forEach(node => {
+			if (node.resolvable && !node.resolved) unresolved++;
+			if (node.notes && node.notes.nodes) {
+				node.notes.nodes.forEach(note => {
+					if (note.resolvable && !note.resolved) unresolved++;
+				});
+			}
+		});
+		return unresolved;
+	}, [pr]);
+
 	if (!pr) {
 		if (generalError) {
 			return (
@@ -659,6 +680,7 @@ export const PullRequest = () => {
 						<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
 					</BigRoundImg>
 				)}
+				{!note.author && <pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
 
 				{/* <div style={{ float: "right" }}>
 						<Role>Maintainer</Role> 
@@ -834,28 +856,29 @@ export const PullRequest = () => {
 									)}
 								</PRSubmitReviewButton>
 							) : (
-								<PRPlusMinus>
-									<span className="added">
-										+
-										{!pr.files
-											? 0
-											: pr.files.nodes
-													.map(_ => _.additions)
-													.reduce((acc, val) => acc + val, 0)
-													.toString()
-													.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-									</span>{" "}
-									<span className="deleted">
-										-
-										{!pr.files
-											? 0
-											: pr.files.nodes
-													.map(_ => _.deletions)
-													.reduce((acc, val) => acc + val, 0)
-													.toString()
-													.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
-									</span>
-								</PRPlusMinus>
+								<TabActions>
+									<PRSelectorButtons>
+										<Tooltip placement="top" title="7 unresolved threads">
+											<span className="label">
+												{unresolvedComments}
+												<span className="wide-text"> unresolved</span>
+											</span>
+										</Tooltip>
+										<span onClick={() => {}}>
+											<Icon name="plus" title="Resolve all threads in new issue" placement="top" />
+										</span>
+										<span onClick={() => {}}>
+											<Icon
+												name="comment-go"
+												title="Jump to next unresolved thread"
+												placement="top"
+											/>
+										</span>
+										<span onClick={() => {}}>
+											<Icon name="chevron-up-thin" title="Collapse all threads" placement="top" />
+										</span>
+									</PRSelectorButtons>
+								</TabActions>
 							)}
 						</Tabs>
 					</div>
