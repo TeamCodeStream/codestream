@@ -188,11 +188,18 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			variant="secondary"
 		>
 			<Icon name="issue-closed" className="red-color margin-right" />
-			{text
-				? commentType === "thread"
-					? `Start thread & close ${derivedState.prLabel.pullrequest}`
-					: "Close and comment"
-				: `Close ${derivedState.prLabel.pullrequest}`}
+			{text ? (
+				commentType === "thread" ? (
+					<>
+						Start thread & close
+						<span className="wide-text"> {derivedState.prLabel.pullrequest}</span>
+					</>
+				) : (
+					"Close and comment"
+				)
+			) : (
+				`Close ${derivedState.prLabel.pullrequest}`
+			)}
 		</Button>
 	);
 
