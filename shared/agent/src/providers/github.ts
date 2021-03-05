@@ -2143,25 +2143,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
 		if (request.isOpen) {
 			try {
-				const { scm, providerRegistry } = SessionContainer.instance();
-				const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
-				const repos = [];
-				if (reposResponse?.repositories) {
-					for (const repo of reposResponse.repositories) {
-						if (repo.remotes) {
-							for (const remote of repo.remotes) {
-								const urlToTest = remote.webUrl;
-								const results = await providerRegistry.queryThirdParty({ url: urlToTest });
-								if (results && results.providerId === this.providerConfig.id) {
-									const ownerData = this.getOwnerFromRemote(urlToTest);
-									if (ownerData) {
-										repos.push(`${ownerData.owner}/${ownerData.name}`);
-									}
-								}
-							}
-						}
-					}
-				}
+				const repos = await this.getOpenedRepos();
 				if (repos.length) {
 					repoQuery = repos.map(_ => `repo:${_}`).join(" ") + " ";
 				} else {
@@ -2171,7 +2153,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					return [];
 				}
 			} catch (ex) {
-				Logger.error(ex);
+				Logger.warn(ex);
 			}
 		}
 

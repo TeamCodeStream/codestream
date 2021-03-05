@@ -37,6 +37,7 @@ import {
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider, Strings } from "../system";
 import {
+	ApiResponse,
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
@@ -47,6 +48,7 @@ import {
 } from "./provider";
 import { Directives } from "./directives";
 import { CodeStreamSession } from "session";
+import { RepositoryLocator } from "git/repositoryLocator";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -642,56 +644,52 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 
-		//TODO
-		let repoQuery =
-			request && request.owner && request.repo ? `repo:${request.owner}/${request.repo} ` : "";
+		let repos: string[] = [];
 		if (request.isOpen) {
 			try {
-				const { scm, providerRegistry } = SessionContainer.instance();
-				const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
-				const repos = [];
-				if (reposResponse?.repositories) {
-					for (const repo of reposResponse.repositories) {
-						if (repo.remotes) {
-							for (const remote of repo.remotes) {
-								const urlToTest = remote.webUrl;
-								const results = await providerRegistry.queryThirdParty({ url: urlToTest });
-								if (results && results.providerId === this.providerConfig.id) {
-									const ownerData = this.getOwnerFromRemote(urlToTest);
-									if (ownerData) {
-										repos.push(`${ownerData.owner}/${ownerData.name}`);
-									}
-								}
-							}
-						}
-					}
-				}
-				if (repos.length) {
-					repoQuery = repos.map(_ => `repo:${_}`).join(" ") + " ";
-				} else {
+				repos = await this.getOpenedRepos();
+				if (!repos.length) {
 					Logger.log(`getMyPullRequests: request.isOpen=true, but no repos found, returning empty`);
 					return [];
 				}
 			} catch (ex) {
-				Logger.error(ex);
+				Logger.warn(ex);
 			}
 		}
 
 		let queries = request.queries;
 
-		// https://docs.gitlab.com/ee/api/merge_requests.html
-		const items = await Promise.all(
-			queries.map(_ => {
-				const exploded = _.split(" ")
-					.map(q => {
-						const kvp = q.split(":");
-						return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(kvp[1])}`;
-					})
+		let items;
+		let promises: Promise<ApiResponse<any>>[] = [];
+		if (repos.length) {
+			// https://docs.gitlab.com/ee/api/merge_requests.html
+			queries.forEach(query => {
+				const exploded = query
+					.split(" ")
+					.map(q => this.toKeyValuePair(q))
 					.join("&");
 
-				return this.get<any>(`/merge_requests/?${exploded}&with_labels_details=true`);
-			})
-		).catch(ex => {
+				repos.forEach(repo => {
+					promises.push(
+						this.get<any>(
+							`/projects/${encodeURIComponent(
+								repo
+							)}/merge_requests?${exploded}&with_labels_details=true`
+						)
+					);
+				});
+			});
+		} else {
+			promises = queries.map(_ => {
+				return this.get<any>(
+					`/merge_requests?${_.split(" ")
+						.map(q => this.toKeyValuePair(q))
+						.join("&")}&with_labels_details=true`
+				);
+			});
+		}
+
+		items = await Promise.all(promises).catch(ex => {
 			Logger.error(ex);
 			let errString;
 			if (ex.response) {
@@ -701,6 +699,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 			throw new Error(errString);
 		});
+
 		const response: any[][] = [];
 		items.forEach((item: any, index) => {
 			if (item && item.body) {
@@ -2557,6 +2556,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		delete user.username;
 		delete user.avatar_url;
 		return user;
+	}
+
+	private toKeyValuePair(q: string) {
+		const kvp = q.split(":");
+		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(kvp[1])}`;
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {

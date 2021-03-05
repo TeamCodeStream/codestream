@@ -975,6 +975,41 @@ export abstract class ThirdPartyIssueProviderBase<
 			}
 		}
 	}
+
+	protected getOwnerFromRemote(remote: string): { owner: string; name: string } {
+		return {
+			owner: "",
+			name: ""
+		};
+	}
+
+	/**
+	 * Repos that are opened in the editor
+	 * @returns array of owner/repo strings
+	 */
+	protected async getOpenedRepos(): Promise<string[]> {
+		let repos: string[] = [];
+		const { scm, providerRegistry } = SessionContainer.instance();
+		const reposResponse = await scm.getRepos({ inEditorOnly: true, includeProviders: true });
+		if (!reposResponse.repositories || !reposResponse.repositories.length) return repos;
+
+		for (const repo of reposResponse.repositories) {
+			if (!repo.remotes) continue;
+
+			for (const remote of repo.remotes) {
+				const urlToTest = remote.webUrl;
+				const results = await providerRegistry.queryThirdParty({ url: urlToTest });
+				if (results && results.providerId === this.providerConfig.id) {
+					const ownerData = this.getOwnerFromRemote(urlToTest);
+					if (ownerData) {
+						repos.push(`${ownerData.owner}/${ownerData.name}`);
+					}
+				}
+			}
+		}
+
+		return repos;
+	}
 }
 
 export abstract class ThirdPartyPostProviderBase<
