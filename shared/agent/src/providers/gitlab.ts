@@ -1104,36 +1104,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  }
 					timeEstimate
 					totalTimeSpent
-					notes {
-						nodes {
-						  author {
-							name
-							login:username
-							avatarUrl
-						  }
-						  body
-						  bodyHtml
-						  confidential
-						  createdAt
-						  discussion {
-							id
-							replyId
-							createdAt
-						  }
-						  id
-						  system
-						  systemNoteIconName
-						  updatedAt
-						  userPermissions {
-							adminNote
-							readNote
-							resolveNote
-							awardEmoji
-							createNote
-						  }
-						}
-					}
-				  discussions {
+				    discussions {
 					  nodes {
 						createdAt
 						id
@@ -1321,9 +1292,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				})
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
-			response.project.mergeRequest.discussions.nodes.push(
-				...response.project.mergeRequest.notes.nodes
-			);
 			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
@@ -2521,15 +2489,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private async _projectEvents(projectFullPath: string, iid: string) {
-		const projectEvents = ((await this.restGet(
-			`/projects/${encodeURIComponent(projectFullPath)}/events`
-		))!.body as any[])
-			// exclude the "comment" events as those exist in discussion/notes
-			.filter(
-				_ =>
-					/*_.target_iid.toString() === iid && */ _.action_name !== "commented on" &&
-					_.action_name !== "pushed to"
-			)
+		const projectEventsResponse = (
+			await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/events`)
+		)?.body as any[];
+
+		// exclude the "comment" events as those exist in discussion/notes
+		const projectEvents = projectEventsResponse
+			.filter(_ => _.target_iid.toString() === iid && _.target_type === "MergeRequest")
 			.map(_ => {
 				return {
 					type: "merge-request",
@@ -2539,6 +2505,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					id: _.id,
 					projectId: _.project_id,
 					targetId: _.target_id,
+					targetIid: _.target_iid,
 					targetTitle: _.target_title,
 					targetType: _.target_type
 				};
