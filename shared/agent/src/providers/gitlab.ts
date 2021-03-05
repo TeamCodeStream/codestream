@@ -2545,14 +2545,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	private async _projectEvents(projectFullPath: string, iid: string): Promise<any[]> {
 		let page: string | null = "1";
-		let results = [];
+		let results: any[] = [];
 		while (true) {
 			const projectEventsResponse = (await this.restGet(
 				`/projects/${encodeURIComponent(projectFullPath)}/events?page=${page}`
 			)) as any;
 
 			// exclude the "comment" events as those exist in discussion/notes
-			results.push(
+			results = results.concat(
 				(projectEventsResponse?.body as any[])
 					.filter(
 						_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
