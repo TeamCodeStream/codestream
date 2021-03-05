@@ -412,6 +412,7 @@ export interface StatusContext {
 
 export interface FetchThirdPartyPullRequestPullRequest {
 	id: string;
+	iid?: string;
 	providerId: string; // e.g. "github*com"
 	// this is the parent repo
 	repository: {

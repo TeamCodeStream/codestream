@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
@@ -81,6 +81,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 		const parsedDiffUri = parseCodeStreamDiffUri(matchFile || "");
 
 		return {
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
 			matchFile,
 			parsedDiffUri,
 			userId,
@@ -124,6 +127,19 @@ export const PullRequestFilesChanged = (props: Props) => {
 		}
 	};
 
+	const getRef = useMemo(() => {
+		if (props.pr && derivedState.currentPullRequestProviderId) {
+			if (derivedState.currentPullRequestProviderId.indexOf("github") > -1) {
+				return `refs/pull/${props.pr.number}/head`;
+			} else if (derivedState.currentPullRequestProviderId.indexOf("gitlab") > -1) {
+				return `merge-requests/${props.pr.iid}/head`;
+			} else if (derivedState.currentPullRequestProviderId.indexOf("bitbucket") > -1) {
+				return "";
+			}
+		}
+		return "";
+	}, [derivedState.currentPullRequestProviderId, props.pr]);
+
 	useDidMount(() => {
 		if (derivedState.currentRepo) {
 			(async () => {
@@ -134,8 +150,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 						repoId: derivedState.currentRepo!.id!,
 						baseSha: props.baseRef,
 						headSha: props.headRef,
-						// TODO check ref format for GitLab and Bitbucket
-						ref: props.pr && `refs/pull/${props.pr.number}/head`
+						ref: getRef
 					});
 				} catch (ex) {
 					console.error(ex);
