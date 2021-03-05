@@ -2523,24 +2523,41 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
-		// exclude the "comment" events as those exist in discussion/notes
-		const projectEvents = projectEventsResponse
-			.filter(_ => _.target_iid.toString() === iid && _.target_type === "MergeRequest")
-			.map(_ => {
-				return {
-					type: "merge-request",
-					author: _.author,
-					action: _.action_name,
-					createdAt: _.created_at,
-					id: _.id,
-					projectId: _.project_id,
-					targetId: _.target_id,
-					targetIid: _.target_iid,
-					targetTitle: _.target_title,
-					targetType: _.target_type
-				};
-			});
-		return projectEvents;
+	private async _projectEvents(projectFullPath: string, iid: string): Promise<any[]> {
+		let page: string | null = "1";
+		let results = [];
+		while (true) {
+			const projectEventsResponse = (await this.restGet(
+				`/projects/${encodeURIComponent(projectFullPath)}/events?page=${page}`
+			)) as any;
+
+			// exclude the "comment" events as those exist in discussion/notes
+			results.push(
+				(projectEventsResponse?.body as any[])
+					.filter(
+						_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
+					)
+					.map(_ => {
+						return {
+							type: "merge-request",
+							author: _.author,
+							action: _.action_name,
+							createdAt: _.created_at,
+							id: _.id,
+							projectId: _.project_id,
+							targetId: _.target_id,
+							targetIid: _.target_iid,
+							targetTitle: _.target_title,
+							targetType: _.target_type
+						};
+					})
+			);
+			page = projectEventsResponse.response.headers.get("x-next-page");
+			if (!page) {
+				break;
+			}
+		}
+		return results;
 	}
 
 	private async _milestoneEvents(projectFullPath: string, iid: string) {

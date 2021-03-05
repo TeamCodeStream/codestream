@@ -654,17 +654,23 @@ export const PullRequest = () => {
 		}
 		return (
 			<OutlineBox style={{ padding: "10px" }}>
-				<BigRoundImg>
-					<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-				</BigRoundImg>
+				{note.author && (
+					<BigRoundImg>
+						<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+					</BigRoundImg>
+				)}
+
 				{/* <div style={{ float: "right" }}>
 						<Role>Maintainer</Role> 
 							(S) (R) (Edit) (dots)
 						</div>*/}
-				<div>
-					<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
-					<Timestamp relative time={note.createdAt} />
-				</div>
+				{note.author && (
+					<div>
+						<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
+						<Timestamp relative time={note.createdAt} />
+					</div>
+				)}
+
 				<div style={{ paddingTop: "10px" }}>
 					<MarkdownText text={note.body} />
 				</div>
