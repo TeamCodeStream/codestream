@@ -20,7 +20,7 @@ export const ApproveBox = props => {
 	};
 
 	const approvers = props.pr.approvedBy ? props.pr.approvedBy.nodes : [];
-	const iHaveApproved = approvers.find(_ => _.username === props.pr.viewer.login);
+	const iHaveApproved = approvers.find(_ => _.login === props.pr.viewer.login);
 	const isApproved = approvers.length > 0;
 
 	return (

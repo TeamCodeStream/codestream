@@ -174,7 +174,7 @@ export function reduceProviderPullRequests(
 					for (const directive of action.payload.data) {
 						if (directive.type === "addApprovedBy") {
 							for (const d of directive.data) {
-								if (!pr.approvedBy.nodes.find(_ => _.username === d.username)) {
+								if (!pr.approvedBy.nodes.find(_ => _.login === d.login)) {
 									pr.approvedBy.nodes.push(d);
 								}
 							}

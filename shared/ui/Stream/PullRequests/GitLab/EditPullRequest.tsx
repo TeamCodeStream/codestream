@@ -207,21 +207,21 @@ export const EditPullRequest = props => {
 	const [assigneesField, setAssigneesField] = useState(pr.assignees ? pr.assignees.nodes : []);
 	const assigneesLabel =
 		assigneesField.length > 0 ? (
-			<SmartFormattedList value={assigneesField.map(_ => _.username || _.login)} />
+			<SmartFormattedList value={assigneesField.map(_ => _.login)} />
 		) : (
 			"None"
 		);
 
 	const assigneeMenuItems = React.useMemo(() => {
-		const assigneeIds = assigneesField.map(_ => _.username);
+		const assigneeIds = assigneesField.map(_ => _.login);
 		if (availableAssignees && availableAssignees.length) {
 			const menuItems = (availableAssignees || []).map((_: any) => {
-				const checked = assigneeIds.includes(_.username);
+				const checked = assigneeIds.includes(_.login);
 				return {
 					checked,
-					label: <PRHeadshotName person={{ ..._, user: _.username }} className="no-padding" />,
+					label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
 					subtle: _.name,
-					searchLabel: `${_.username}:${_.name}`,
+					searchLabel: `${_.login}:${_.name}`,
 					key: _.id,
 					action: () => {
 						setAssigneesField([{ ..._ }]);
