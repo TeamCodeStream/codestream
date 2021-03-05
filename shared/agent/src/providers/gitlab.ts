@@ -2583,6 +2583,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private fromRestUser(user: { [key: string]: any }) {
 		user.login = user.username;
 		user.avatarUrl = user.avatar_url;
+		delete user.username;
+		delete user.avatar_url;
 		return user;
 	}
 

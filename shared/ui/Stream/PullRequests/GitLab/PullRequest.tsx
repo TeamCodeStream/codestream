@@ -1065,7 +1065,11 @@ export const PullRequest = () => {
 											if (_.action === "removed")
 												return (
 													<ActionBox key={index}>
-														<Icon name="tag" className="circled" />
+														<Icon
+															name="tag"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
 														<div>
 															<b>{_.author.name}</b> @{_.author.login} removed label{" "}
 															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
@@ -1076,7 +1080,11 @@ export const PullRequest = () => {
 											else
 												return (
 													<ActionBox key={index}>
-														<Icon name="tag" className="circled" />
+														<Icon
+															name="tag"
+															className="circled"
+															title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
+														/>
 														<div>
 															<b>{_.author.name}</b> @{_.author.login} added label{" "}
 															<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
