@@ -558,18 +558,8 @@ export const PullRequest = () => {
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
 	const unresolvedComments = useMemo(() => {
-		if (!pr) return 0;
-		if (!pr.discussions) return 0;
-		let unresolved = 0;
-		pr.discussions.nodes.forEach(node => {
-			if (node.resolvable && !node.resolved) unresolved++;
-			if (node.notes && node.notes.nodes) {
-				node.notes.nodes.forEach(note => {
-					if (note.resolvable && !note.resolved) unresolved++;
-				});
-			}
-		});
-		return unresolved;
+		if (!pr || !pr.discussions || !pr.discussions.nodes) return 0;
+		return pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length;
 	}, [pr]);
 
 	if (!pr) {
