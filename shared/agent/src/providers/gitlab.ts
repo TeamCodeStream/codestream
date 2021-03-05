@@ -122,7 +122,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(): Promise<FetchThirdPartyBoardsResponse> {
 		await this.ensureConnected();
 		const openProjects = await this.getOpenProjectsByRemotePath();
 
@@ -228,10 +228,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	// FIXME
 	@log()
-	async moveCard(request: MoveThirdPartyCardRequest) {}
+	async moveCard() {}
 
 	@log()
-	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
+	async getCards(): Promise<FetchThirdPartyCardsResponse> {
 		await this.ensureConnected();
 
 		const { body } = await this.get<any[]>(
@@ -793,7 +793,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		return response;
+		return response as T;
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
@@ -854,15 +854,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	> = new Map();
 
 	async getReviewers(request: { pullRequestId: string }) {
-		let projectFullPath;
-		let iid;
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-			projectFullPath = parsed.full.split("!")[0];
-			iid = parsed.full.split("!")[1];
-		}
+		const { projectFullPath } = this.parseId(request.pullRequestId);
 
 		const response = await this.restGet<GitLabUser[]>(
 			`/projects/${encodeURIComponent(projectFullPath)}/users`
@@ -874,23 +866,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
-		let projectFullPath;
-		let iid;
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-			projectFullPath = parsed.full.split("!")[0];
-			iid = parsed.full.split("!")[1];
-		}
+		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		// const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
 		if (request.force) {
-			this._pullRequestCache.delete(actualPullRequestId);
+			this._pullRequestCache.delete(id);
 		} else {
-			const cached = this._pullRequestCache.get(actualPullRequestId);
+			const cached = this._pullRequestCache.get(id);
 			if (cached) {
 				return cached;
 			}
@@ -1264,7 +1248,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					_.notes.nodes.length = 1;
 				}
 			});
-			this._pullRequestCache.set(actualPullRequestId, response);
+			this._pullRequestCache.set(id, response);
 			const pendingReview = await this.gitLabReviewStore.get(base_id);
 			if (pendingReview?.comments?.length) {
 				response.project.mergeRequest.pendingReview = {
@@ -1360,14 +1344,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
-		let projectFullPath;
-		let iid;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			projectFullPath = parsed.full.split("!")[0];
-			iid = parsed.full.split("!")[1];
-		}
-
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 		const data = await this.restPost(
 			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions/${
 				request.commentId
@@ -1394,12 +1371,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-		}
-		const existing = this.gitLabReviewStore.exists(actualPullRequestId);
+		const { id } = this.parseId(request.pullRequestId);
+		const existing = this.gitLabReviewStore.exists(id);
 		return existing;
 	}
 
@@ -1426,34 +1399,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha?: string;
 		sha?: string;
 	}) {
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-		}
+		const { id } = this.parseId(request.pullRequestId);
 
-		this.gitLabReviewStore.add(actualPullRequestId, {
+		this.gitLabReviewStore.add(id, {
 			...request,
 			createdAt: new Date().toISOString()
 		});
 
-		this._pullRequestCache.delete(actualPullRequestId);
+		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: actualPullRequestId,
+			pullRequestId: id,
 			filePath: request.filePath
 		});
 
 		return true;
 	}
-
-	// async getPendingReview(request: { pullRequestId: string }) {
-	// 	let actualPullRequestId;
-	// 	if (request.pullRequestId) {
-	// 		const parsed = JSON.parse(request.pullRequestId);
-	// 		actualPullRequestId = parsed.id;
-	// 	}
-	// 	return this._pendingReviewStore.has(actualPullRequestId);
-	// }
 
 	async submitReview(request: {
 		pullRequestId: string;
@@ -1462,11 +1422,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used with old servers
 		pullRequestReviewId?: string;
 	}) {
-		let actualPullRequestId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			actualPullRequestId = parsed.id;
-		}
+		const { id } = this.parseId(request.pullRequestId);
 
 		// TODO add directives
 		if (!request.eventType) {
@@ -1482,7 +1438,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			throw new Error("Invalid eventType");
 		}
 
-		const existingReviewComments = await this.gitLabReviewStore.get(actualPullRequestId);
+		const existingReviewComments = await this.gitLabReviewStore.get(id);
 		if (existingReviewComments?.comments?.length) {
 			for (const comment of existingReviewComments.comments) {
 				try {
@@ -1494,14 +1450,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					Logger.warn(ex, "Failed to add commit");
 				}
 			}
-			await this.gitLabReviewStore.deleteReview(actualPullRequestId);
+			await this.gitLabReviewStore.deleteReview(id);
 		}
 
 		if (request.text) {
 			await this.createPullRequestComment({
 				pullRequestId: request.pullRequestId,
 				text: request.text,
-				noteableId: actualPullRequestId
+				noteableId: id
 			});
 		}
 
@@ -1733,14 +1689,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	async getMilestones(request: { pullRequestId: string }) {
-		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const { projectFullPath } = this.parseId(request.pullRequestId);
 
 		const data = await this.restGet(`/projects/${encodeURIComponent(projectFullPath)}/milestones`);
 		return data.body;
 	}
 
 	async getLabels(request: { pullRequestId: string }) {
-		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const { projectFullPath } = this.parseId(request.pullRequestId);
 
 		const { body = [] } = await this.restGet<any[]>(
 			`/projects/${encodeURIComponent(projectFullPath)}/labels`
@@ -1759,12 +1715,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		iid?: string;
 	}): Promise<Directives> {
 		let noteableId;
-		if (request.pullRequestId) {
-			const parsed = JSON.parse(request.pullRequestId);
-			noteableId = parsed.id;
-			request.projectFullPath = parsed.full.split("!")[0];
-			request.iid = parsed.full.split("!")[1];
-		}
+
+		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+		request.projectFullPath = projectFullPath;
+		request.iid = iid;
+		noteableId = id;
 		request.noteableId = `gid://gitlab/MergeRequest/${noteableId}`;
 
 		const response = (await this.mutate(
@@ -1924,15 +1879,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		text: string;
 		startThread: boolean;
 	}) {
-		const parsed = JSON.parse(request.pullRequestId);
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
-
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 		let directives: any = [];
 
 		if (request.text) {
 			if (request.startThread) {
-				const response1 = await this.createPullRequestThread({ ...request });
 				// if (response1.directives) {
 				// directives = directives.concat(response1.directives);
 				// }
@@ -1992,15 +1943,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		text: string;
 		startThread: boolean;
 	}): Promise<any> {
-		const parsed = JSON.parse(request.pullRequestId);
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		let directives: any = [];
 
 		if (request.text) {
 			if (request.startThread) {
-				const response1 = await this.createPullRequestThread({ ...request });
 				// if (response1.directives) {
 				// directives = directives.concat(response1.directives);
 				// }
@@ -2057,10 +2005,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		const parsed = JSON.parse(request.pullRequestId);
-		request.pullRequestId = parsed.id;
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		const projectFullPathEncoded = encodeURIComponent(projectFullPath);
 		const url = `/projects/${projectFullPathEncoded}/merge_requests/${iid}/commits`;
@@ -2253,10 +2198,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		onOff: boolean;
 		id?: string;
 	}): Promise<Directives | undefined> {
-		const parsed = JSON.parse(request.pullRequestId);
-		request.pullRequestId = parsed.id;
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
 			if (request.onOff) {
@@ -2317,10 +2259,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		// https://developer.github.com/v3/pulls/#list-pull-requests-files
 		const changedFiles: FetchThirdPartyPullRequestFilesResponse[] = [];
-		const parsed = JSON.parse(request.pullRequestId);
-		request.pullRequestId = parsed.id;
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
 			const url: string | undefined = `/projects/${encodeURIComponent(
@@ -2432,10 +2371,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used for old servers
 		position?: number;
 	}) {
-		const parsed = JSON.parse(request.pullRequestId);
-		const actualPullRequestId = parsed.id;
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
 		const payload = {
 			body: request.text,
@@ -2454,9 +2390,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			payload
 		);
 
-		this._pullRequestCache.delete(actualPullRequestId);
+		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: actualPullRequestId
+			pullRequestId: id
 		});
 
 		return data.body;
@@ -2466,9 +2402,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		approve: boolean;
 	}): Promise<Directives | undefined> {
-		const parsed = JSON.parse(request.pullRequestId);
-		const projectFullPath = parsed.full.split("!")[0];
-		const iid = parsed.full.split("!")[1];
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		let response;
 		const type: any = request.approve ? "addApprovedBy" : "removeApprovedBy";
@@ -2520,9 +2454,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		await this.gitLabReviewStore.deleteReview(id);
 
-		this._pullRequestCache.delete(request.pullRequestId);
+		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId
+			pullRequestId: id
 		});
 		return true;
 	}
@@ -2740,7 +2674,7 @@ class GitLabReviewStore {
 		return undefined;
 	}
 
-	updateComment(reviewId: string, commentId: string) {
+	updateComment() {
 		// TODO
 	}
 
@@ -2759,7 +2693,7 @@ class GitLabReviewStore {
 		return false;
 	}
 
-	deleteComment(reviewId: string, commentId: string) {
+	deleteComment() {
 		// TODO
 	}
 }
