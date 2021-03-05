@@ -61,6 +61,13 @@ interface GitLabUser {
 	avatar_url: string;
 }
 
+interface GitLabCurrentUser {
+	avatarUrl: string;
+	id: string;
+	login: string;
+	name: string;
+}
+
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
@@ -815,15 +822,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this.delete<R>(url, {}, options);
 	}
 
-	_currentGitlabLogin?: {
-		avatarUrl: string;
-		id: string;
-		login: string;
-		name: string;
-	};
+	_currentGitlabUser?: GitLabCurrentUser;
 
 	async currentUser() {
-		if (!this._currentGitlabLogin) {
+		if (!this._currentGitlabUser) {
 			const data = await this.query<any>(`
 			{
 				currentUser {
@@ -833,9 +835,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					avatarUrl
 				}
 			}`);
-			this._currentGitlabLogin = data.currentUser;
+			this._currentGitlabUser = data.currentUser;
 		}
-		return this._currentGitlabLogin;
+		return this._currentGitlabUser;
 	}
 
 	_pullRequestCache: Map<
@@ -1257,34 +1259,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				};
 				const user = (await this.currentUser())!;
-				// TODO figure out IDs, dates, author
-				response.project.mergeRequest.discussions.nodes.push({
-					id: "undefined",
-					_pending: true,
-					createdAt: pendingReview.comments[0].createdAt,
-					notes: {
-						nodes: pendingReview.comments.map(_ => {
-							return {
-								_pending: true,
-								author: {
-									name: user.name,
-									login: user.login,
-									avatarUrl: user.avatarUrl
-								},
-								state: "PENDING",
-								body: _.text,
-								bodyText: _.text,
-								createdAt: _.createdAt,
-								id: "undefined",
-								position: {
-									oldPath: _.filePath,
-									newPath: _.filePath,
-									newLine: _.startLine
-								}
-							};
-						})
-					}
-				});
+				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
+					pendingReview.comments.map(_ => {
+						return this.gitLabReviewStore.mapToDiscussionNode(_, user);
+					})
+				);
 			}
 
 			(
@@ -2695,6 +2674,36 @@ class GitLabReviewStore {
 
 	deleteComment() {
 		// TODO
+	}
+
+	mapToDiscussionNode(_: any, user: GitLabCurrentUser) {
+		return {
+			_pending: true,
+			id: "undefined",
+			createdAt: _.createdAt,
+			notes: {
+				nodes: [
+					{
+						_pending: true,
+						author: {
+							name: user.name,
+							login: user.login,
+							avatarUrl: user.avatarUrl
+						},
+						state: "PENDING",
+						body: _.text,
+						bodyText: _.text,
+						createdAt: _.createdAt,
+						id: "undefined",
+						position: {
+							oldPath: _.filePath,
+							newPath: _.filePath,
+							newLine: _.startLine
+						}
+					}
+				]
+			}
+		};
 	}
 }
 
