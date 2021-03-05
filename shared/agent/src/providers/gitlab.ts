@@ -1277,7 +1277,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				response.project.mergeRequest.discussions.nodes.push({
 					id: "undefined",
 					_pending: true,
-					createdAt: new Date().toISOString(),
+					createdAt: pendingReview.comments[0].createdAt,
 					notes: {
 						nodes: pendingReview.comments.map(_ => {
 							return {
@@ -1290,7 +1290,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								state: "PENDING",
 								body: _.text,
 								bodyText: _.text,
-								createdAt: new Date().toISOString(),
+								createdAt: _.createdAt,
 								id: "undefined",
 								position: {
 									oldPath: _.filePath,
@@ -1432,7 +1432,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			actualPullRequestId = parsed.id;
 		}
 
-		this.gitLabReviewStore.add(actualPullRequestId, request);
+		this.gitLabReviewStore.add(actualPullRequestId, {
+			...request,
+			createdAt: new Date().toISOString()
+		});
 
 		this._pullRequestCache.delete(actualPullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
@@ -2669,12 +2672,15 @@ interface GitLabReview {
 	version: string;
 	comments: any[];
 }
+
 class GitLabReviewStore {
 	private path: string = "gitlab-review";
 	private version: string = "1.0.0";
+
 	private buildPath(reviewId: string) {
 		return this.path + "-" + reviewId + ".json";
 	}
+
 	async add(reviewId: string, comment: any) {
 		try {
 			const { textFiles } = SessionContainer.instance();
@@ -2683,7 +2689,7 @@ class GitLabReviewStore {
 				await textFiles.readTextFile({
 					path: path
 				})
-			).contents;
+			)?.contents;
 			const data = JSON.parse(current || "{}") || ({} as GitLabReview);
 			if (data && data.comments) {
 				data.comments.push(comment);
@@ -2721,12 +2727,17 @@ class GitLabReviewStore {
 	}
 
 	async exists(reviewId: string) {
-		const { textFiles } = SessionContainer.instance();
-		const path = this.buildPath(reviewId);
-		const data = await textFiles.readTextFile({
-			path: path
-		});
-		return !!data?.contents;
+		try {
+			const { textFiles } = SessionContainer.instance();
+			const path = this.buildPath(reviewId);
+			const data = await textFiles.readTextFile({
+				path: path
+			});
+			return !!data?.contents;
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return undefined;
 	}
 
 	updateComment(reviewId: string, commentId: string) {
