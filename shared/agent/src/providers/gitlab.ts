@@ -4,6 +4,7 @@ import { flatten, groupBy } from "lodash-es";
 import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
+import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
@@ -1303,9 +1304,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 			(
 				await Promise.all([
-					this._projectEvents(projectFullPath, iid),
-					this._labelEvents(projectFullPath, iid),
-					this._milestoneEvents(projectFullPath, iid)
+					this.getProjectEvents(projectFullPath, iid),
+					this.getLabelEvents(projectFullPath, iid),
+					this.getMilestoneEvents(projectFullPath, iid)
 				]).catch(ex => {
 					Logger.error(ex);
 					throw ex;
@@ -1965,7 +1966,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		directives.push({
 			type: "addNodes",
-			data: await this._projectEvents(projectFullPath, iid)
+			data: await this.getProjectEvents(projectFullPath, iid)
 		});
 
 		return {
@@ -2027,7 +2028,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 		directives.push({
 			type: "addNodes",
-			data: await this._projectEvents(projectFullPath, iid)
+			data: await this.getProjectEvents(projectFullPath, iid)
 		});
 
 		return {
@@ -2543,17 +2544,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
-	private async _projectEvents(projectFullPath: string, iid: string): Promise<any[]> {
-		let page: string | null = "1";
-		let results: any[] = [];
-		while (true) {
-			const projectEventsResponse = (await this.restGet(
-				`/projects/${encodeURIComponent(projectFullPath)}/events?page=${page}`
-			)) as any;
-
-			// exclude the "comment" events as those exist in discussion/notes
-			results = results.concat(
-				(projectEventsResponse?.body as any[])
+	private async getProjectEvents(projectFullPath: string, iid: string): Promise<any[]> {
+		return this._paginateRestResponse(
+			`/projects/${encodeURIComponent(projectFullPath)}/events?target_type=merge_request`,
+			data => {
+				return data
 					.filter(
 						_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
 					)
@@ -2570,14 +2565,51 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							targetTitle: _.target_title,
 							targetType: _.target_type
 						};
-					})
-			);
-			page = projectEventsResponse.response.headers.get("x-next-page");
-			if (!page) {
-				break;
+					});
 			}
-		}
-		return results;
+		);
+	}
+
+	private async getMilestoneEvents(projectFullPath: string, iid: string) {
+		return this._paginateRestResponse(
+			`/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/resource_milestone_events`,
+			data => {
+				return data.map(_ => {
+					return {
+						type: "milestone",
+						createdAt: _.created_at,
+						action: _.action,
+						id: _.id,
+						label: _.label,
+						resourceType: _.resource_type,
+						author: this.fromRestUser(_.user)
+					};
+				});
+			}
+		);
+	}
+
+	private async getLabelEvents(projectFullPath: string, iid: string) {
+		return this._paginateRestResponse(
+			`/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/resource_label_events`,
+			data => {
+				return data.map(_ => {
+					return {
+						type: "label",
+						createdAt: _.created_at,
+						action: _.action,
+						id: _.id,
+						label: _.label,
+						resourceType: _.resource_type,
+						author: this.fromRestUser(_.user)
+					};
+				});
+			}
+		);
 	}
 
 	private fromRestUser(user: { [key: string]: any }) {
@@ -2588,40 +2620,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return user;
 	}
 
-	private async _milestoneEvents(projectFullPath: string, iid: string) {
-		const milestoneEvents = ((await this.restGet(
-			`/projects/${encodeURIComponent(
-				projectFullPath
-			)}/merge_requests/${iid}/resource_milestone_events`
-		))!.body as any[]).map(_ => {
-			return {
-				type: "milestone",
-				createdAt: _.created_at,
-				action: _.action,
-				id: _.id,
-				label: _.label,
-				resourceType: _.resource_type,
-				author: this.fromRestUser(_.user)
-			};
-		});
-		return milestoneEvents;
-	}
+	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
+		let page: string | null = "1";
+		let results: any[] = [];
 
-	private async _labelEvents(projectFullPath: string, iid: string) {
-		const labelEvents = ((await this.restGet(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/resource_label_events`
-		))!.body as any[]).map(_ => {
-			return {
-				type: "label",
-				createdAt: _.created_at,
-				action: _.action,
-				id: _.id,
-				label: _.label,
-				resourceType: _.resource_type,
-				author: this.fromRestUser(_.user)
-			};
-		});
-		return labelEvents;
+		const parsed = new nodeUrl.URL(url, "codestream://");
+
+		while (true) {
+			parsed.searchParams.set("page", page);
+			const requestUrl = parsed.pathname + "?" + parsed.searchParams.toString();
+			const response = await this.restGet<any>(requestUrl);
+			results = results.concat(map(response.body as any[]));
+			const nextPage = response.response.headers.get("x-next-page");
+			if (nextPage === page || !nextPage) {
+				break;
+			} else {
+				page = nextPage;
+			}
+		}
+		return results;
 	}
 }
 
