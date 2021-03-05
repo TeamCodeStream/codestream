@@ -813,7 +813,28 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this.delete<R>(url, {}, options);
 	}
 
-	_gitlabLogin?: string;
+	_currentGitlabLogin?: {
+		avatarUrl: string;
+		id: string;
+		login: string;
+		name: string;
+	};
+
+	async currentUser() {
+		if (!this._currentGitlabLogin) {
+			const data = await this.query<any>(`
+			{
+				currentUser {
+					id
+					login:username
+					name
+					avatarUrl
+				}
+			}`);
+			this._currentGitlabLogin = data.currentUser;
+		}
+		return this._currentGitlabLogin;
+	}
 
 	_pullRequestCache: Map<
 		string,
@@ -1189,7 +1210,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				name: response.currentUser.name,
 				avatarUrl: response.currentUser.avatarUrl
 			};
-			this._gitlabLogin = response.currentUser.login;
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`
@@ -1259,6 +1279,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						totalCount: pendingReview.comments.length
 					}
 				};
+				const user = (await this.currentUser())!;
 				// TODO figure out IDs, dates, author
 				response.project.mergeRequest.discussions.nodes.push({
 					id: "undefined",
@@ -1268,11 +1289,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						nodes: pendingReview.comments.map(_ => {
 							return {
 								_pending: true,
-								// TODO get the real author
 								author: {
-									name: "Pending",
-									login: "pending",
-									avatarUrl: "https://about.gitlab.com/images/press/logo/png/gitlab-icon-rgb.png"
+									name: user.name,
+									login: user.login,
+									avatarUrl: user.avatarUrl
 								},
 								state: "PENDING",
 								body: _.text,
@@ -2263,6 +2283,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						useRawResponse: true
 					}
 				);
+				const user = await this.currentUser();
 				if (response.body === "") {
 					return {
 						directives: [
@@ -2270,7 +2291,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								type: "removeReaction",
 								data: {
 									content: request.content,
-									login: this._gitlabLogin
+									login: user?.login
 								}
 							}
 						]
