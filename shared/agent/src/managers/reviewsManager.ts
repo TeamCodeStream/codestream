@@ -813,8 +813,11 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			const pullRequestTemplate =
 				(await xfs.readText(path.join(repo.path, "pull_request_template.md"))) ||
+				(await xfs.readText(path.join(repo.path, "PULL_REQUEST_TEMPLATE.md"))) ||
 				(await xfs.readText(path.join(repo.path, "docs/pull_request_template.md"))) ||
-				(await xfs.readText(path.join(repo.path, ".github/pull_request_template.md")));
+				(await xfs.readText(path.join(repo.path, "docs/PULL_REQUEST_TEMPLATE.md"))) ||
+				(await xfs.readText(path.join(repo.path, ".github/pull_request_template.md"))) ||
+				(await xfs.readText(path.join(repo.path, ".github/PULL_REQUEST_TEMPLATE.md")));
 
 			const baseBranchRemote = await git.getBranchRemote(repo.path, baseRefName!);
 			const commitsBehindOrigin = await git.getBranchCommitsStatus(
