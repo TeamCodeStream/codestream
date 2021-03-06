@@ -894,6 +894,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					};
 					baseRefName: string;
 					baseRefOid: string;
+					changesCount: number;
+					commitCount: number;
 					createdAt: string;
 					diffRefs: any;
 					discussions: {
@@ -1180,7 +1182,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					break;
 				}
 			}
+			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
+			// build this so that it aligns with what the REST api created
+			response.project.mergeRequest.references = {
+				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
+			};
+			const mergeRequestFullId = JSON.stringify({
+				id: base_id,
+				full: response.project.mergeRequest.references.full
+			});
 			response.project.mergeRequest.discussions.nodes = discussions;
+
+			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
+			response.project.mergeRequest.commitCount = (
+				await this.getPullRequestCommits({
+					providerId: this.providerConfig.id,
+					pullRequestId: mergeRequestFullId
+				})
+			)?.length;
+			response.project.mergeRequest.changesCount = (
+				await this.getPullRequestFilesChanged({ pullRequestId: mergeRequestFullId })
+			)?.length;
 
 			response.project.mergeRequest.viewer = {
 				id: response.currentUser.id,
@@ -1222,16 +1244,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.mergeRequest.url = response.project.mergeRequest.sourceProject.webUrl;
 			response.project.mergeRequest.baseWebUrl = this.baseWebUrl;
 			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
-			// build this so that it aligns with what the REST api created
-			response.project.mergeRequest.references = {
-				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
-			};
 
-			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
-			const mergeRequestFullId = JSON.stringify({
-				id: base_id,
-				full: response.project.mergeRequest.references.full
-			});
 			response.project.mergeRequest.idComputed = mergeRequestFullId;
 			response.project.mergeRequest.discussions.nodes.forEach((_: any) => {
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {

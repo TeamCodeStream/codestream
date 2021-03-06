@@ -715,7 +715,7 @@ export const PullRequest = () => {
 				</div>
 				{note.resolvable && (
 					<>
-						{note.replies.length > 0 && (
+						{replies.length > 0 && (
 							<Collapse>
 								<Icon name="chevron-down-thin" /> Collapse replies
 							</Collapse>
