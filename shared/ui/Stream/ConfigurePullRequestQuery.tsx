@@ -90,6 +90,15 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
+	const customPullRequestFilterExample = React.useMemo(() => {
+		if (derivedState.providers[providerIdField]) {
+			const { name } = derivedState.providers[providerIdField];
+			return PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].customPullRequestFilterExample : "";
+		} else {
+			return "";
+		}
+	}, [providerIdField]);
+
 	const fetchTestPRs = async query => {
 		setIsLoading(true);
 		setTestPRSummaries(undefined);
@@ -118,7 +127,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 			<Dialog title={title} narrow onClose={() => props.onClose()}>
 				<div className="standard-form">
 					<fieldset className="form-body">
-						The variable @me can be used to specify the logged in user within a search.{" "}
+						{customPullRequestFilterExample}
 						{customPullRequestFilterHelpLink && (
 							<Link href={customPullRequestFilterHelpLink}>Search syntax</Link>
 						)}
