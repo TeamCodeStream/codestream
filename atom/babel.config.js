@@ -6,12 +6,13 @@ module.exports = function(api) {
 			[
 				"@babel/plugin-transform-runtime",
 				{
-					useESModules: true,
-				},
+					useESModules: true
+				}
 			],
+			"@babel/plugin-proposal-optional-chaining",
 			"@babel/plugin-syntax-dynamic-import",
 			"@babel/proposal-class-properties",
-			"@babel/proposal-object-rest-spread",
+			"@babel/proposal-object-rest-spread"
 		],
 		presets: [
 			[
@@ -19,15 +20,15 @@ module.exports = function(api) {
 				{
 					targets: {
 						chrome: "66",
-						esmodules: true,
+						esmodules: true
 					},
 					modules: false,
 					useBuiltIns: "entry",
-					corejs: 2,
-				},
+					corejs: 2
+				}
 			],
 			"@babel/preset-typescript",
-			"@babel/preset-react",
-		],
+			"@babel/preset-react"
+		]
 	};
 };
