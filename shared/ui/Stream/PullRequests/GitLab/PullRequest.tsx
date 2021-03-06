@@ -950,15 +950,12 @@ export const PullRequest = () => {
 					{!derivedState.composeCodemarkActive && (
 						<>
 							{activeTab === 1 && pr && (
-								// <PullRequestConversationTab
-								// 	ghRepo={ghRepo}
-								// 	fetch={fetch}
-								// 	autoCheckedMergeability={autoCheckedMergeability}
-								// 	checkMergeabilityStatus={() => {}}
-								// 	setIsLoadingMessage={setIsLoadingMessage}
-								// />
 								<>
-									{pr.description && <Description>{pr.description}</Description>}
+									{pr.description && (
+										<Description>
+											<MarkdownText text={pr.description.replace(/<\/?sup>/g, "")} />
+										</Description>
+									)}
 									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
 									<ApproveBox pr={pr} />
 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
