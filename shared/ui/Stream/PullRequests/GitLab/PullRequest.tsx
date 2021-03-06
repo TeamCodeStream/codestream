@@ -273,6 +273,9 @@ export const FlexRow = styled.div`
 	.action-button {
 		width: 75px;
 	}
+	.disabled {
+		cursor: not-allowed;
+	}
 	textarea {
 		margin: 5px 0 5px 0;
 		width: 100% !important;

@@ -993,6 +993,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 					upvotes: number;
 					url: string;
+					userPermissions: {
+						canMerge: boolean;
+					};
 					viewer: {
 						id: string;
 						name: string;
@@ -1101,6 +1104,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 					timeEstimate
 					totalTimeSpent
+					userPermissions {
+						canMerge
+					}
 					discussions(first:100, after:$after) {
 					  pageInfo{
 						endCursor

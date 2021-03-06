@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
 import { Button } from "@codestream/webview/src/components/Button";
@@ -10,6 +10,7 @@ import { Link } from "../../Link";
 import { CommandLineInstructions } from "./CommandLineInstructions";
 import styled from "styled-components";
 import { api } from "../../../store/providerPullRequests/actions";
+import { getCurrentProviderPullRequestObject } from "../../../store/providerPullRequests/reducer";
 
 export const IconButton = styled.div`
 	flex-grow: 0;
@@ -37,7 +38,8 @@ export const MergeBox = props => {
 
 		return {
 			deleteBranch,
-			squash
+			squash,
+			pr: getCurrentProviderPullRequestObject(state)
 		};
 	});
 	const [modifyCommit, setModifyCommit] = useState(false);
@@ -92,87 +94,109 @@ export const MergeBox = props => {
 
 	return (
 		<OutlineBox>
-			<FlexRow>
-				<Icon name="check-circle" className="bigger green-color" />
-				<Button className="action-button" variant="success" onClick={e => mergePullRequest(e)}>
-					Merge
-				</Button>
-				<div className="pad-left">
-					<Checkbox
-						checked={deleteBranch}
-						name="delete-branch"
-						noMargin
-						onChange={() => {
-							dispatch(setUserPreference(["pullRequestDeleteSourceBranch"], !deleteBranch));
-						}}
-					>
-						Delete source branch
-					</Checkbox>
-				</div>
-				<div className="pad-left">
-					<Checkbox
-						checked={squash}
-						name="squash"
-						noMargin
-						onChange={() => {
-							dispatch(setUserPreference(["pullRequestSquashCommits"], !squash));
-						}}
-					>
-						Squash commits <Icon name="info" title="What is squashing?" placement="top" />
-					</Checkbox>
-				</div>
-			</FlexRow>
-			<FlexRow
-				onClick={() => setModifyCommit(!modifyCommit)}
-				style={{
-					background: "var(--base-background-color)",
-					borderTop: "1px solid var(--base-border-color)",
-					borderBottom: "1px solid var(--base-border-color)",
-					flexWrap: "nowrap",
-					cursor: "pointer"
-				}}
-			>
-				{modifyCommit ? (
+			{derivedState.pr &&
+				derivedState.pr.userPermissions &&
+				derivedState.pr.userPermissions.canMerge && (
 					<>
-						<IconButton>
-							<Icon name="chevron-down" />
-						</IconButton>
-						<div>Collapse</div>
-					</>
-				) : (
-					<>
-						<IconButton>
-							<Icon name="chevron-right" />
-						</IconButton>
-						<div>
-							<b>{"2 commits"}</b> and <b>{"1 merge commit"}</b> will be added to{" "}
-							{props.pr.targetBranch}.{" "}
-							<Link href="" onClick={() => setModifyCommit(true)}>
-								Modify merge commit
-							</Link>
-						</div>
+						<FlexRow>
+							<Icon name="check-circle" className="bigger green-color" />
+							<Button
+								className="action-button"
+								variant="success"
+								onClick={e => mergePullRequest(e)}
+							>
+								Merge
+							</Button>
+							<div className="pad-left">
+								<Checkbox
+									checked={deleteBranch}
+									name="delete-branch"
+									noMargin
+									onChange={() => {
+										dispatch(setUserPreference(["pullRequestDeleteSourceBranch"], !deleteBranch));
+									}}
+								>
+									Delete source branch
+								</Checkbox>
+							</div>
+							<div className="pad-left">
+								<Checkbox
+									checked={squash}
+									name="squash"
+									noMargin
+									onChange={() => {
+										dispatch(setUserPreference(["pullRequestSquashCommits"], !squash));
+									}}
+								>
+									Squash commits <Icon name="info" title="What is squashing?" placement="top" />
+								</Checkbox>
+							</div>
+						</FlexRow>
+						<FlexRow
+							onClick={() => setModifyCommit(!modifyCommit)}
+							style={{
+								background: "var(--base-background-color)",
+								borderTop: "1px solid var(--base-border-color)",
+								borderBottom: "1px solid var(--base-border-color)",
+								flexWrap: "nowrap",
+								cursor: "pointer"
+							}}
+						>
+							{modifyCommit ? (
+								<>
+									<IconButton>
+										<Icon name="chevron-down" />
+									</IconButton>
+									<div>Collapse</div>
+								</>
+							) : (
+								<>
+									<IconButton>
+										<Icon name="chevron-right" />
+									</IconButton>
+									<div>
+										<b>{"2 commits"}</b> and <b>{"1 merge commit"}</b> will be added to{" "}
+										{props.pr.targetBranch}.{" "}
+										<Link href="" onClick={() => setModifyCommit(true)}>
+											Modify merge commit
+										</Link>
+									</div>
+								</>
+							)}
+						</FlexRow>
+						{modifyCommit && (
+							<FlexRow>
+								<div style={{ paddingLeft: "40px", width: "100%" }}>
+									<b>Merge commit message</b>
+									<textarea></textarea>
+									<Checkbox noMargin name="commitMessage" onChange={() => {}}>
+										Include merge request description
+									</Checkbox>
+								</div>
+							</FlexRow>
+						)}
+						<FlexRow>
+							<div style={{ paddingLeft: "40px", width: "100%" }}>
+								<i>You can merge this merge request manually using the</i>{" "}
+								<Link href="" onClick={() => setShowCommandLine(!showCommandLine)}>
+									command line
+								</Link>
+							</div>
+						</FlexRow>
 					</>
 				)}
-			</FlexRow>
-			{modifyCommit && (
-				<FlexRow>
-					<div style={{ paddingLeft: "40px", width: "100%" }}>
-						<b>Merge commit message</b>
-						<textarea></textarea>
-						<Checkbox noMargin name="commitMessage" onChange={() => {}}>
-							Include merge request description
-						</Checkbox>
-					</div>
-				</FlexRow>
-			)}
-			<FlexRow>
-				<div style={{ paddingLeft: "40px", width: "100%" }}>
-					<i>You can merge this merge request manually using the</i>{" "}
-					<Link href="" onClick={() => setShowCommandLine(!showCommandLine)}>
-						command line
-					</Link>
-				</div>
-			</FlexRow>
+			{derivedState.pr &&
+				(!derivedState.pr.userPermissions || !derivedState.pr.userPermissions.canMerge) && (
+					<FlexRow>
+						<Icon name="check-circle" className="bigger green-color" />
+						<Button className="action-button disabled" variant="neutral" disabled={true}>
+							Merge
+						</Button>
+						<div className="pad-left">
+							Ask someone with write access to this repository to merge this request
+						</div>
+					</FlexRow>
+				)}
 		</OutlineBox>
 	);
 };

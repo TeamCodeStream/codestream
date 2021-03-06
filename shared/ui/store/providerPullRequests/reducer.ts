@@ -475,6 +475,13 @@ export const getPullRequestExactId = createSelector(
 	}
 );
 
+export const getPullRequestProviderId = createSelector(
+	(state: CodeStreamState) => state.context,
+	(context: ContextState) => {
+		return context.currentPullRequest ? context.currentPullRequest.providerId : undefined;
+	}
+);
+
 /**
  * Gets the PR object for the currentPullRequestId
  */
@@ -488,6 +495,22 @@ export const getCurrentProviderPullRequest = createSelector(
 				if (!pullRequests) continue;
 				const data = pullRequests[id];
 				if (data) return data;
+			}
+		}
+		return undefined;
+	}
+);
+
+export const getCurrentProviderPullRequestObject = createSelector(
+	getCurrentProviderPullRequest,
+	getPullRequestProviderId,
+	(providerPullRequest, providerId) => {
+		if (providerId) {
+			if (providerId.indexOf("github") > -1) {
+				return providerPullRequest.conversations.repository.pullRequest;
+			}
+			if (providerId.indexOf("gitlab") > -1) {
+				return providerPullRequest.conversations.project.mergeRequest;
 			}
 		}
 		return undefined;
