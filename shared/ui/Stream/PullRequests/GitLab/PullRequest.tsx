@@ -21,7 +21,10 @@ import { Button } from "../../../src/components/Button";
 import { Link } from "../../Link";
 import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
-import { GetReposScmRequestType } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GetReposScmRequestType
+} from "@codestream/protocols/agent";
 import {
 	PRBadge,
 	PRBranch,
@@ -62,6 +65,7 @@ import CancelButton from "../../CancelButton";
 import Tag from "../../Tag";
 import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 import { Timeline } from "./Timeilne";
+import { PRAuthorBadges } from "../../PullRequestConversationTab";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -627,7 +631,7 @@ export const PullRequest = () => {
 
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<PullRequestRoot>
+			<PullRequestRoot className="gitlab">
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
 				{isEditing && (
 					<EditPullRequest
@@ -678,6 +682,10 @@ export const PullRequest = () => {
 									placement="bottom"
 								/>{" "}
 								by <PRHeadshotName person={pr.author} />
+								<PRAuthorBadges
+									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+									node={pr}
+								/>
 								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
 							<div style={{ marginLeft: "auto" }}>
@@ -821,7 +829,12 @@ export const PullRequest = () => {
 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									{order === "newest" && bottomComment}
-									<Timeline pr={pr} order={order} filter={filter} />
+									<Timeline
+										pr={pr}
+										order={order}
+										filter={filter}
+										setIsLoadingMessage={setIsLoadingMessage}
+									/>
 									{order === "oldest" && bottomComment}
 								</>
 							)}

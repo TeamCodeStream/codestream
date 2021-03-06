@@ -397,6 +397,9 @@ export const PRSubmitReviewButton = styled.div`
 		}
 		width: calc(100vw - 30px);
 		max-width: min(600px, calc(100vw - 80px));
+		.gitlab & {
+			max-width: min(600px, calc(100vw - 110px));
+		}
 		label {
 			color: var(--text-color-highlight);
 		}
@@ -1119,6 +1122,9 @@ export const PRCommentsInPatch = styled.div`
 	}
 	${PRCard} {
 		max-width: min(600px, calc(100vw - 80px));
+		.gitlab & {
+			max-width: min(600px, calc(100vw - 110px));
+		}
 	}
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
 		${PRReactions} {

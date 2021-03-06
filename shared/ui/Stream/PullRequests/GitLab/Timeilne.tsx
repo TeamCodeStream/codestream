@@ -9,12 +9,11 @@ import { ActionBox, OutlineBox } from "./PullRequest";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import styled from "styled-components";
-
-interface Props {
-	pr: any;
-	filter: "history" | "comments" | "all";
-	order: "oldest" | "newest";
-}
+import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";
+import { PRActionIcons, PRCommentHeader } from "../../PullRequestComponents";
+import { PRAuthorBadges } from "../../PullRequestConversationTab";
+import { PullRequestEditingComment } from "../../PullRequestEditingComment";
+import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 
 const BigRoundImg = styled.span`
 	img {
@@ -30,7 +29,7 @@ const ReplyForm = styled.div`
 	border-top: 1px solid var(--base-border-color);
 	border-radius: 0 0 4px 4px;
 	margin: 10px -10px -10px -10px;
-	padding: 10px;
+	padding: 10px 10px 10px 10px;
 	${PRHeadshot} {
 		position: absolute;
 		left: 0;
@@ -50,12 +49,26 @@ const Collapse = styled.div`
 	}
 `;
 
+export const OutlineBoxHeader = styled.div`
+	display: flex;
+	flex-wrap: wrap;
+	align-items: top;
+	border-radius: 4px 4px 0 0;
+`;
+
 let insertText;
 let insertNewline;
 let focusOnMessageInput;
 
+interface Props {
+	pr: any;
+	filter: "history" | "comments" | "all";
+	order: "oldest" | "newest";
+	setIsLoadingMessage: Function;
+}
+
 export const Timeline = (props: Props) => {
-	const { pr, order, filter } = props;
+	const { pr, order, filter, setIsLoadingMessage } = props;
 	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
@@ -80,6 +93,33 @@ export const Timeline = (props: Props) => {
 
 	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
 
+	const quote = text => {
+		if (!insertText) return;
+		focusOnMessageInput &&
+			focusOnMessageInput(() => {
+				insertText && insertText(text.replace(/^/gm, "> "));
+				insertNewline && insertNewline();
+			});
+	};
+
+	const [editingComments, setEditingComments] = useState({});
+	const [pendingComments, setPendingComments] = useState({});
+
+	const doneEditingComment = id => {
+		setEditingComments({ ...editingComments, [id]: false });
+	};
+
+	const setEditingComment = (comment, value) => {
+		setEditingComments({
+			...editingComments,
+			[comment.id]: value
+		});
+		setPendingComments({
+			...pendingComments,
+			[comment.id]: value ? comment.body : ""
+		});
+	};
+
 	const printNote = note => {
 		if (note.system) {
 			return (
@@ -99,27 +139,103 @@ export const Timeline = (props: Props) => {
 		const replies = note.replies || [];
 		return (
 			<OutlineBox style={{ padding: "10px" }}>
-				{note.author && (
+				{note.position && (
 					<>
-						<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
-							<BigRoundImg>
-								<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-							</BigRoundImg>
-						</Tooltip>
-						<div>
-							<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
-							<Timestamp relative time={note.createdAt} />
-						</div>
+						<OutlineBoxHeader style={{ flexWrap: "nowrap" }}>
+							{note.author && (
+								<div style={{ flexGrow: 1 }}>
+									<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
+										<BigRoundImg>
+											<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+										</BigRoundImg>
+									</Tooltip>
+									<div>
+										<b>{note.author.name}</b> @{note.author.login} started a thread on the diff
+										<Timestamp relative time={note.createdAt} />
+										<br />
+										Last updated <Timestamp relative time={note.updatedAt} />
+									</div>
+								</div>
+							)}
+
+							<PRActionIcons>
+								<span onClick={() => {}}>
+									<Icon name="chevron-up-thin" /> Toggle thread
+								</span>
+							</PRActionIcons>
+						</OutlineBoxHeader>
+						<Collapse>
+							<Icon name="file" /> {note.position.newPath}
+						</Collapse>
 					</>
 				)}
-				{!note.author && <pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+				<OutlineBoxHeader>
+					{note.author && (
+						<div style={{ flexGrow: 1 }}>
+							<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
+								<BigRoundImg>
+									<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+								</BigRoundImg>
+							</Tooltip>
+							<div>
+								<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
+								<Timestamp relative time={note.createdAt} />
+							</div>
+						</div>
+					)}
+					{!note.author && <pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+
+					<PRActionIcons>
+						<PRAuthorBadges
+							pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+							node={note}
+						/>
+						<PullRequestReactButton
+							pr={pr}
+							targetId={note.id}
+							setIsLoadingMessage={setIsLoadingMessage}
+							reactionGroups={note.reactionGroups}
+						/>
+
+						<PullRequestCommentMenu
+							pr={pr}
+							fetch={fetch}
+							setIsLoadingMessage={setIsLoadingMessage}
+							node={note}
+							nodeType="REVIEW"
+							viewerCanDelete={note.viewerCanDelete && note.state === "PENDING"}
+							setEdit={setEditingComment}
+							quote={quote}
+							isPending={note.state === "PENDING"}
+						/>
+					</PRActionIcons>
+				</OutlineBoxHeader>
 
 				<div style={{ paddingTop: "10px" }}>
-					<MarkdownText text={note.body} />
+					{editingComments[note.id] ? (
+						<PullRequestEditingComment
+							pr={pr}
+							setIsLoadingMessage={setIsLoadingMessage}
+							id={note.id}
+							type={"ISSUE"}
+							text={pendingComments[note.id]}
+							done={() => doneEditingComment(note.id)}
+						/>
+					) : (
+						<>
+							<MarkdownText text={note.body} />
+							<PullRequestReactions
+								pr={pr}
+								targetId={note.id}
+								setIsLoadingMessage={setIsLoadingMessage}
+								reactionGroups={note.reactionGroups}
+							/>
+						</>
+					)}
 				</div>
 				{note.resolvable && (
 					<>
-						{replies.length > 0 && (
+						{replies.length > 0 && !note.position && (
 							<Collapse>
 								<Icon name="chevron-down-thin" /> Collapse replies
 							</Collapse>

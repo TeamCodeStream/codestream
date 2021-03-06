@@ -21,7 +21,7 @@ interface CommentMenuProps {
 export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 	const { pr, node, setEdit, quote, isPending, fetch, setIsLoadingMessage } = props;
 
-	console.warn("MENU IS: ", props);
+	// console.warn("MENU IS: ", props);
 
 	const dispatch = useDispatch();
 	const deleteComment = () => {

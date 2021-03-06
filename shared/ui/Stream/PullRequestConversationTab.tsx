@@ -19,8 +19,7 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 	CheckRun,
-	StatusContext,
-	CheckConclusionState
+	StatusContext
 } from "@codestream/protocols/agent";
 import {
 	PRContent,
@@ -187,7 +186,7 @@ export const PRAuthorBadges = (props: {
 			</Tooltip>
 		);
 	} else {
-		console.warn("NO MEMBER ASSOCIATION FOR: ", node.authorAssociation);
+		// console.warn("NO MEMBER ASSOCIATION FOR: ", node.authorAssociation);
 	}
 	return <>{badges}</>;
 };

@@ -91,11 +91,12 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		RESOLVED: "resolved"
 	};
 
+	const marginWidth = pr.providerId.includes("github") ? "110px" : "80px";
 	return (
 		<PRComment
 			style={{
 				margin: "15px",
-				maxWidth: "min(600px, calc(100vw - 80px))"
+				maxWidth: `min(600px, calc(100vw - ${marginWidth}))`
 			}}
 		>
 			<PRCommentCard className="no-headshot no-arrow">
