@@ -96,6 +96,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		this.gitLabReviewStore = new GitLabReviewStore();
 	}
 
+	async ensureInitialized() {
+		await this.setCurrentUser();
+	}
+
 	protected getPRExternalContent(comment: PullRequestComment) {
 		return {
 			provider: {
@@ -823,7 +827,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	_currentGitlabUser?: GitLabCurrentUser;
 
-	async currentUser() {
+	async setCurrentUser() {
 		if (!this._currentGitlabUser) {
 			const data = await this.query<any>(`
 			{
@@ -1270,10 +1274,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						totalCount: pendingReview.comments.length
 					}
 				};
-				const user = (await this.currentUser())!;
+
 				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
 					pendingReview.comments.map(_ => {
-						return this.gitLabReviewStore.mapToDiscussionNode(_, user);
+						return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
 					})
 				);
 			}
@@ -2223,7 +2227,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						useRawResponse: true
 					}
 				);
-				const user = await this.currentUser();
 				if (response.body === "") {
 					return {
 						directives: [
@@ -2231,7 +2234,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								type: "removeReaction",
 								data: {
 									content: request.content,
-									login: user?.login
+									login: this._currentGitlabUser?.login
 								}
 							}
 						]
@@ -2583,7 +2586,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	private toKeyValuePair(q: string) {
 		const kvp = q.split(":");
-		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(kvp[1])}`;
+		let value = kvp[1];
+		if (value === "@me") {
+			value = this._currentGitlabUser!.login!;
+		}
+		return `${encodeURIComponent(kvp[0])}=${encodeURIComponent(value)}`;
 	}
 
 	private toMergeRequestGid(id: string) {
