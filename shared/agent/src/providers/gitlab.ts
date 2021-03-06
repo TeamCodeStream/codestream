@@ -1737,6 +1737,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							notes {
 								nodes {
 								author {
+									name
 									login:username
 									avatarUrl
 								}
