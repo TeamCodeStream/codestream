@@ -24,7 +24,7 @@ import {
 	setCurrentPullRequestAndBranch,
 	setCurrentReview
 } from "../context/actions";
-import { isAnHourOld } from "./reducer";
+import { getPullRequestExactId, isAnHourOld } from "./reducer";
 
 export const reset = () => action("RESET");
 
@@ -197,10 +197,11 @@ export const getPullRequestFiles = (
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		const commitsIndex = JSON.stringify(commits);
+		let exactId = getPullRequestExactId(state);
 		if (provider) {
-			const pr = provider[id];
+			const pr = provider[exactId];
 			if (pr && pr.files && pr.files[commitsIndex] && pr.files[commitsIndex].length) {
-				console.log(`fetched pullRequest files from store providerId=${providerId} id=${id}`);
+				console.log(`fetched pullRequest files from store providerId=${providerId} id=${exactId}`);
 				return pr.files[commitsIndex];
 			}
 		}
@@ -309,9 +310,12 @@ export const getPullRequestCommits = (providerId: string, id: string) => async (
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		if (provider) {
-			const pr = provider[id];
+			const exactId = getPullRequestExactId(state);
+			const pr = provider[exactId];
 			if (pr && pr.commits && pr.commits.length) {
-				console.log(`fetched pullRequest commits from store providerId=${providerId} id=${id}`);
+				console.log(
+					`fetched pullRequest commits from store providerId=${providerId} id=${exactId}`
+				);
 				return pr.commits;
 			}
 		}
