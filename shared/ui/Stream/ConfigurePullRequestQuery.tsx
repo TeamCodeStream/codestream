@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { PRHeadshot } from "../src/components/Headshot";
 import Tooltip from "./Tooltip";
-import { HostApi } from "../webview-api";
 import { GetMyPullRequestsResponse, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { Button } from "../src/components/Button";
 import { getMyPullRequests } from "../store/providerPullRequests/actions";
@@ -11,13 +10,13 @@ import Tag from "./Tag";
 import { Modal } from "./Modal";
 import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Link } from "./Link";
-import { Checkbox } from "../src/components/Checkbox";
 import { PullRequestTooltip } from "./OpenPullRequests";
 import styled from "styled-components";
 import { PullRequestQuery } from "../protocols/agent/api.protocol.models";
 import { CodeStreamState } from "../store";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { getPRLabel } from "../store/providers/reducer";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -49,6 +48,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 		const { preferences, providers } = state;
 
 		return {
+			prLabel: getPRLabel(state),
 			providers,
 			allRepos:
 				preferences.pullRequestQueryShowAllRepos == null
@@ -81,6 +81,15 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
+	const customPullRequestFilterHelpLink = React.useMemo(() => {
+		if (derivedState.providers[providerIdField]) {
+			const { name } = derivedState.providers[providerIdField];
+			return PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].customPullRequestFilterHelpLink : "";
+		} else {
+			return "";
+		}
+	}, [providerIdField]);
+
 	const fetchTestPRs = async query => {
 		setIsLoading(true);
 		setTestPRSummaries(undefined);
@@ -101,16 +110,18 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	};
 
-	const title = query.query ? "Edit Pull Request Query" : "New Pull Request Query";
+	const title = query.query
+		? `Edit ${derivedState.prLabel.PullRequest} Query`
+		: `New ${derivedState.prLabel.PullRequest} Query`;
 	return (
 		<Modal translucent>
 			<Dialog title={title} narrow onClose={() => props.onClose()}>
 				<div className="standard-form">
 					<fieldset className="form-body">
 						The variable @me can be used to specify the logged in user within a search.{" "}
-						<Link href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">
-							Search syntax
-						</Link>
+						{customPullRequestFilterHelpLink && (
+							<Link href={customPullRequestFilterHelpLink}>Search syntax</Link>
+						)}
 						.
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
@@ -187,7 +198,9 @@ export function ConfigurePullRequestQuery(props: Props) {
 					</fieldset>
 					{testPRSummaries !== undefined && (
 						<PRTestResults>
-							{testPRSummaries.length === 0 && <i>No PRs match this query</i>}
+							{testPRSummaries.length === 0 && (
+								<i>No {derivedState.prLabel.PRs} match this query</i>
+							)}
 							{testPRSummaries.map(pr => {
 								return (
 									<Tooltip
