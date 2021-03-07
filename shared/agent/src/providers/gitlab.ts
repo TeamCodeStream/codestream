@@ -60,6 +60,7 @@ interface GitLabProject {
 interface GitLabUser {
 	id: string;
 	name: string;
+	username: string;
 	avatar_url: string;
 }
 
@@ -292,7 +293,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		await this.ensureConnected();
 
 		const response = await this.get<GitLabUser[]>(`/projects/${request.boardId}/users`);
-		return { users: response.body.map(u => ({ ...u, displayName: u.name })) };
+		return { users: response.body.map(u => ({ ...u, displayName: u.username })) };
 	}
 
 	@log()

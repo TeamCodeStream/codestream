@@ -97,15 +97,27 @@ const _getPullRequestConversationsFromProvider = async (providerId: string, id: 
 	});
 
 	let response2: FetchAssignableUsersResponse | undefined = undefined;
+	let boardId;
 	if (
 		response1 &&
 		response1.repository &&
 		response1.repository.repoOwner &&
 		response1.repository.repoName
 	) {
+		boardId = `${response1.repository.repoOwner}/${response1.repository.repoName}`;
+	} else if (
+		response1 &&
+		(response1 as any).project &&
+		(response1 as any).project.mergeRequest &&
+		(response1 as any).project.mergeRequest.repository.nameWithOwner
+	) {
+		// gitlab requires this to be encoded
+		boardId = encodeURIComponent((response1 as any).project.mergeRequest.repository.nameWithOwner);
+	}
+	if (boardId) {
 		response2 = await HostApi.instance.send(FetchAssignableUsersRequestType, {
 			providerId: providerId,
-			boardId: `${response1.repository.repoOwner}/${response1.repository.repoName}`
+			boardId: boardId
 		});
 	}
 	return {
