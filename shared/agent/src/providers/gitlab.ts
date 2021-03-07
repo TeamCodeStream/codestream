@@ -844,20 +844,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this._currentGitlabUser;
 	}
 
-	_pullRequestCache: Map<
-		string,
-		// TODO fix this up -- there's a definition below
-		any
-		// {
-		// 	project: {
-		// 		name: string;
-		// 		mergeRequest: {
-		// 			id: string;
-		// 			iid: string;
-		// 		};
-		// 	};
-		// }
-	> = new Map();
+	_pullRequestCache: Map<string, GitLabMergeRequest> = new Map();
 
 	async getReviewers(request: { pullRequestId: string }) {
 		const { projectFullPath } = this.parseId(request.pullRequestId);
@@ -874,7 +861,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	async getPullRequest(request: { pullRequestId: string; force?: boolean }): Promise<any> {
 		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
-		// const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
 
 		if (request.force) {
@@ -886,131 +872,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		let response = {} as {
-			currentUser: any;
-			project: {
-				mergeRequest: {
-					approvedBy: {
-						nodes: {
-							avatarUrl: string;
-							name: string;
-							login: string;
-						};
-					};
-					baseRefName: string;
-					baseRefOid: string;
-					changesCount: number;
-					commitCount: number;
-					createdAt: string;
-					diffRefs: any;
-					discussions: {
-						pageInfo: {
-							endCursor: string;
-							hasNextPage: boolean;
-						};
-						nodes: {
-							createdAt: string;
-							id: string;
-							_pending?: boolean;
-							notes?: {
-								nodes: {
-									id: string;
-									author: {
-										name: string;
-										login: string;
-										avatarUrl: string;
-									};
-									body: string;
-									position: any;
-									createdAt: string;
-								}[];
-							};
-						}[];
-					};
-					notes: {
-						nodes: {
-							createdAt: string;
-							id: string;
-							_pending?: boolean;
-							notes?: {
-								nodes: {
-									id: string;
-									author: {
-										name: string;
-										login: string;
-										avatarUrl: string;
-									};
-									body: string;
-									position: any;
-									createdAt: string;
-								}[];
-							};
-						}[];
-					};
-					downvotes: number;
-					headRefName: string;
-					headRefOid: string;
-					id: string;
-					idComputed: string;
-					iid: string;
-					merged: boolean;
-					mergedAt: string;
-					number: number;
-					pendingReview: {
-						comments: {
-							totalCount: number;
-						};
-					};
-					projectId: string;
-					// CS providerId
-					providerId: string;
-					reactionGroups: {
-						content: string;
-						data: {
-							awardable_id: number;
-							id: number;
-							name: string;
-							user: {
-								id: number;
-								avatar_url: string;
-								login: string;
-							};
-						}[];
-					}[];
-					reference: string;
-					references: {
-						full: string;
-					};
-					repository: {
-						name: string;
-						nameWithOwner: string;
-						url: string;
-					};
-					sourceBranch: string;
-					state: string;
-					sourceProject: any;
-					targetBranch: string;
-					title: string;
-
-					upvotes: number;
-					url: string;
-					userPermissions: {
-						canMerge: boolean;
-					};
-					viewer: {
-						id: string;
-						name: string;
-						login: string;
-						avatarUrl: string;
-					};
-					webUrl: string;
-					workInProgress: boolean;
-					baseWebUrl: string;
-					// forceRemoveSourceBranch: boolean;
-					// squashOnMerge: boolean;
-				};
-			};
-		};
+		let response = {} as GitLabMergeRequest;
 		try {
 			const q = `query GetPullRequest($fullPath: ID!, $iid: String!, $after:String) {
 				currentUser {
@@ -2839,5 +2701,131 @@ interface GitLabMergeRequestInfoResponse {
 	target_branch: string;
 	references: {
 		full: string;
+	};
+}
+
+interface GitLabMergeRequest {
+	currentUser: any;
+	project: {
+		mergeRequest: {
+			approvedBy: {
+				nodes: {
+					avatarUrl: string;
+					name: string;
+					login: string;
+				};
+			};
+			baseRefName: string;
+			baseRefOid: string;
+			changesCount: number;
+			commitCount: number;
+			createdAt: string;
+			diffRefs: any;
+			discussions: {
+				pageInfo: {
+					endCursor: string;
+					hasNextPage: boolean;
+				};
+				nodes: {
+					createdAt: string;
+					id: string;
+					_pending?: boolean;
+					notes?: {
+						nodes: {
+							id: string;
+							author: {
+								name: string;
+								login: string;
+								avatarUrl: string;
+							};
+							body: string;
+							position: any;
+							createdAt: string;
+						}[];
+					};
+				}[];
+			};
+			notes: {
+				nodes: {
+					createdAt: string;
+					id: string;
+					_pending?: boolean;
+					notes?: {
+						nodes: {
+							id: string;
+							author: {
+								name: string;
+								login: string;
+								avatarUrl: string;
+							};
+							body: string;
+							position: any;
+							createdAt: string;
+						}[];
+					};
+				}[];
+			};
+			downvotes: number;
+			headRefName: string;
+			headRefOid: string;
+			id: string;
+			idComputed: string;
+			iid: string;
+			merged: boolean;
+			mergedAt: string;
+			number: number;
+			pendingReview: {
+				comments: {
+					totalCount: number;
+				};
+			};
+			projectId: string;
+			// CS providerId
+			providerId: string;
+			reactionGroups: {
+				content: string;
+				data: {
+					awardable_id: number;
+					id: number;
+					name: string;
+					user: {
+						id: number;
+						avatar_url: string;
+						login: string;
+					};
+				}[];
+			}[];
+			reference: string;
+			references: {
+				full: string;
+			};
+			repository: {
+				name: string;
+				nameWithOwner: string;
+				url: string;
+			};
+			sourceBranch: string;
+			state: string;
+			sourceProject: any;
+			targetBranch: string;
+			title: string;
+
+			upvotes: number;
+			url: string;
+			userPermissions: {
+				canMerge: boolean;
+			};
+			viewer: {
+				id: string;
+				name: string;
+				login: string;
+				avatarUrl: string;
+			};
+			webUrl: string;
+			workInProgress: boolean;
+			baseWebUrl: string;
+			// forceRemoveSourceBranch: boolean;
+			// squashOnMerge: boolean;
+		};
 	};
 }
