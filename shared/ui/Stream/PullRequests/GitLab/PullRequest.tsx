@@ -64,7 +64,7 @@ import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
 import Tag from "../../Tag";
 import { PullRequestReplyComment } from "../../PullRequestReplyComment";
-import { Timeline } from "./Timeilne";
+import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 
 export const PullRequestRoot = styled.div`
