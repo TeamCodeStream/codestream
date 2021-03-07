@@ -23,7 +23,8 @@ import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	GetReposScmRequestType
+	GetReposScmRequestType,
+	GitLabMergeRequest
 } from "@codestream/protocols/agent";
 import {
 	PRBadge,
@@ -62,8 +63,6 @@ import { RightActionBar } from "./RightActionBar";
 import { MarkdownText } from "../../MarkdownText";
 import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
-import Tag from "../../Tag";
-import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 
@@ -416,49 +415,7 @@ export const PullRequest = () => {
 		derivedState.providerPullRequests
 	]);
 
-	const pr: {
-		providerId: string;
-		pendingReview: {
-			comments: {
-				totalCount: number;
-			};
-		};
-		idComputed: string;
-		isDraft?: boolean;
-		id: string;
-		iid: string;
-		number: number;
-		title: string;
-		description: string;
-		createdAt: string;
-		webUrl: string;
-		state: string;
-		url: string;
-		author: {
-			name: string;
-			login: string;
-			avatarUrl: string;
-		};
-		workInProgress: boolean;
-		headRefName: string;
-		sourceBranch: string;
-		targetBranch: string;
-		commitCount: number;
-		changesCount: number;
-		discussions: {
-			nodes: any[];
-		};
-		files: {
-			nodes: any[];
-		};
-		repository: {
-			name: string;
-			nameWithOwner: string;
-			url: string;
-		};
-		userDiscussionsCount: number;
-		discussionLocked: boolean;
-	} = useMemo(() => {
+	const pr: GitLabMergeRequest = useMemo(() => {
 		return derivedState.currentPullRequest &&
 			derivedState.currentPullRequest.conversations &&
 			derivedState.currentPullRequest.conversations.project

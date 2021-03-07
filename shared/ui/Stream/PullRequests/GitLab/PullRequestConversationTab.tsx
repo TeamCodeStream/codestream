@@ -223,11 +223,11 @@ export const PullRequestConversationTab = (props: {
 			setIsLoadingMessage("Merging...");
 			dispatch(setUserPreference(["lastPRMergeMethod"], options.mergeMethod));
 
-			const response = (await dispatch(
+			const response = await dispatch(
 				api("mergePullRequest", {
 					mergeMethod: options.mergeMethod
 				})
-			)) as any;
+			);
 			if (response) {
 				HostApi.instance.emit(DidChangeDataNotificationType.method, {
 					type: ChangeDataType.PullRequests

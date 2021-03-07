@@ -6,7 +6,10 @@ import Tag from "../../Tag";
 import Timestamp from "../../Timestamp";
 import Tooltip from "../../Tooltip";
 import { ActionBox, OutlineBox } from "./PullRequest";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GitLabMergeRequest
+} from "@codestream/protocols/agent";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import styled from "styled-components";
 import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";
@@ -61,7 +64,7 @@ let insertNewline;
 let focusOnMessageInput;
 
 interface Props {
-	pr: any;
+	pr: GitLabMergeRequest;
 	filter: "history" | "comments" | "all";
 	order: "oldest" | "newest";
 	setIsLoadingMessage: Function;

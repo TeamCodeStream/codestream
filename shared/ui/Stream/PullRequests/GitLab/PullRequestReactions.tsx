@@ -5,12 +5,15 @@ import { emojify } from "../../Markdowner";
 import styled from "styled-components";
 import Tooltip from "../../Tooltip";
 import { SmartFormattedList } from "../../SmartFormattedList";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GitLabMergeRequest
+} from "@codestream/protocols/agent";
 import { api } from "../../../store/providerPullRequests/actions";
 import EmojiPicker from "../../EmojiPicker";
 
 interface Props {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	pr: GitLabMergeRequest;
 	targetId: string;
 	setIsLoadingMessage: Function;
 	className?: string;
@@ -133,7 +136,7 @@ export const PRReactions = styled.div`
 `;
 
 interface ReactionProps {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	pr: GitLabMergeRequest;
 	// node: any;
 	reactionGroups: any;
 	targetId: string;
