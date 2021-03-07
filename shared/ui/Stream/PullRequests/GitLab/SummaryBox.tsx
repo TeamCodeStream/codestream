@@ -14,7 +14,7 @@ import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HostApi } from "../../../webview-api";
 import { SwitchBranchRequestType } from "@codestream/protocols/agent";
 import { confirmPopup } from "../../Confirm";
-import { getProviderPullRequestRepo2 } from "@codestream/webview/store/providerPullRequests/reducer";
+import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
 
 export const Root = styled.div`
 	margin: 0 20px 10px 20px;
@@ -35,7 +35,7 @@ export const SummaryBox = props => {
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
 			filter: preferences.pullRequestTimelineFilter || "all",
-			currentRepo: getProviderPullRequestRepo2(state)
+			currentRepo: getProviderPullRequestRepo(state)
 		};
 	});
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);

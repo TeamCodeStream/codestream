@@ -535,7 +535,8 @@ export const getCurrentProviderPullRequestLastUpdated = createSelector(
 export const getProviderPullRequestRepo = createSelector(
 	getRepos,
 	getCurrentProviderPullRequest,
-	(repos, currentPr) => {
+	getPullRequestProviderId,
+	(repos, currentPr, providerId) => {
 		let currentRepo: CSRepository | undefined = undefined;
 
 		try {
@@ -544,61 +545,15 @@ export const getProviderPullRequestRepo = createSelector(
 			}
 			let repoName;
 			let repoUrl;
-			if (!currentPr.conversations.repository) {
-				// this is for gitlab
-				// debugger;
-				repoName = currentPr.conversations.project.name.toLowerCase();
-				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
-			} else {
+			if (providerId && providerId.indexOf("github") > -1) {
 				// this is the github case
 				repoName = currentPr.conversations.repository.repoName.toLowerCase();
 				repoUrl = currentPr.conversations.repository.url.toLowerCase();
+			} else if (providerId && providerId.indexOf("gitlab") > -1) {
+				// this is for gitlab
+				repoName = currentPr.conversations.project.name.toLowerCase();
+				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
 			}
-			let matchingRepos = repos.filter(_ =>
-				_.remotes.some(
-					r =>
-						r.normalizedUrl &&
-						r.normalizedUrl.length > 2 &&
-						r.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-						repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1
-				)
-			);
-			if (matchingRepos.length === 1) {
-				currentRepo = matchingRepos[0];
-			} else {
-				let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
-				if (matchingRepos2.length != 1) {
-					matchingRepos2 = repos.filter(_ =>
-						_.remotes.some(r => repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
-					);
-					if (matchingRepos2.length === 1) {
-						currentRepo = matchingRepos2[0];
-					} else {
-						console.error(`Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`);
-					}
-				} else {
-					currentRepo = matchingRepos2[0];
-				}
-			}
-		} catch (error) {
-			console.error(error);
-		}
-		return currentRepo;
-	}
-);
-
-// TODO make this generic so that we don't need it
-export const getProviderPullRequestRepo2 = createSelector(
-	getRepos,
-	getCurrentProviderPullRequest,
-	(repos, currentPr) => {
-		let currentRepo: CSRepository | undefined = undefined;
-
-		try {
-			if (!currentPr || !currentPr.sourceProject) return undefined;
-			const repoName = currentPr.sourceProject.name.toLowerCase();
-			const repoUrl = currentPr.sourceProject.webUrl.toLowerCase();
-
 			let matchingRepos = repos.filter(_ =>
 				_.remotes.some(
 					r =>
