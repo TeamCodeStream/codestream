@@ -189,6 +189,7 @@ export const Timeline = (props: Props) => {
 						<PRAuthorBadges
 							pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
 							node={note}
+							isPending={note.state === "PENDING"}
 						/>
 						<PullRequestReactButton
 							pr={pr}
