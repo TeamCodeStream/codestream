@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Icon from "../../Icon";
 import { MarkdownText } from "../../MarkdownText";
 import { PullRequestReplyComment } from "../../PullRequestReplyComment";
@@ -21,6 +21,8 @@ import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReact
 import { Button } from "@codestream/webview/src/components/Button";
 import { PullRequestPatch } from "../../PullRequestPatch";
 import copy from "copy-to-clipboard";
+import { HostApi } from "@codestream/webview/webview-api";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 const BigRoundImg = styled.span`
 	img {
@@ -338,8 +340,75 @@ export const Timeline = (props: Props) => {
 		);
 	};
 
+	const linkHijacker = (e: any) => {
+		if (
+			e &&
+			e.target &&
+			e.target.tagName === "A" &&
+			(e.target.text === "Compare with previous version" ||
+				e.target.classList.contains("gfm-commit"))
+		) {
+			e.preventDefault();
+			HostApi.instance.send(OpenUrlRequestType, { url: e.target.getAttribute("href")! });
+			e.stopPropagation();
+		}
+	};
+
+	useEffect(() => {
+		document.addEventListener("click", linkHijacker);
+		return () => {
+			document.removeEventListener("click", linkHijacker);
+		};
+	}, []);
+
+	const fixAnchorTags = (children: HTMLCollection) => {
+		Array.from(children).forEach((c: Element) => {
+			if (c.tagName === "A") {
+				let href = c.getAttribute("href");
+				if (href && href.indexOf("http") !== 0) {
+					href = `${pr.baseWebUrl}${href}`;
+					c.setAttribute("href", href);
+				}
+			}
+			if (c.children) {
+				fixAnchorTags(c.children);
+			}
+		});
+	};
+
 	const printNote = note => {
 		if (note.system) {
+			// get the message from the first node in the bodyHtml
+			const wrapper = document.createElement("div");
+			wrapper.innerHTML = note.bodyHtml || "";
+			const label = wrapper.children[0].textContent || "";
+
+			if (note.systemNoteIconName === "commit") {
+				wrapper.children[0].remove();
+				fixAnchorTags(wrapper.children);
+				const otherChildren = Array.from(wrapper.children).map(_ => {
+					return <MarkdownText inline text={_.outerHTML} isHtml={true} />;
+				});
+
+				return (
+					<>
+						<ActionBox>
+							<Icon
+								name={iconMap[note.systemNoteIconName] || "blank"}
+								className="circled"
+								title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+							/>
+							<div>
+								<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
+								<Timestamp relative time={note.createdAt} />
+							</div>
+						</ActionBox>
+						<ActionBox>
+							<div style={{ paddingLeft: "50px" }}>{otherChildren}</div>
+						</ActionBox>
+					</>
+				);
+			}
 			return (
 				<ActionBox>
 					<Icon
@@ -348,7 +417,7 @@ export const Timeline = (props: Props) => {
 						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
 					/>
 					<div>
-						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={note.body} />
+						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
 						<Timestamp relative time={note.createdAt} />
 					</div>
 				</ActionBox>
