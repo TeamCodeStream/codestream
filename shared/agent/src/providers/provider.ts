@@ -938,7 +938,15 @@ export abstract class ThirdPartyIssueProviderBase<
 			return ReportSuppressedMessages.NetworkError;
 		} else if (ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) {
 			return ReportSuppressedMessages.ConnectionError;
-		} else if (
+		}
+		// else if (
+		// 	(ex?.response?.message || ex?.message || "").indexOf(
+		// 		"enabled OAuth App access restrictions"
+		// 	) > -1
+		// ) {
+		// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
+		// }
+		else if (
 			(ex.response && ex.response.message === "Bad credentials") ||
 			(ex.response &&
 				ex.response.errors instanceof Array &&

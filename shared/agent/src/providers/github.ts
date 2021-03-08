@@ -206,51 +206,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	restApi: { fns: {} }
 	// };
 
-	_isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
-		const networkErrors = [
-			"ENOTFOUND",
-			"ETIMEDOUT",
-			"EAI_AGAIN",
-			"ECONNABORTED",
-			"ECONNRESET",
-			"ECONNREFUSED",
-			"EHOSTUNREACH",
-			"ENETDOWN",
-			"ENETUNREACH",
-			"socket disconnected before secure",
-			"socket hang up"
-		];
-
-		if (ex.message && networkErrors.some(e => ex.message.match(new RegExp(e)))) {
-			return ReportSuppressedMessages.NetworkError;
-		} else if (
-			(ex.message && ex.message.match(/GraphQL Error \(Code: 404\)/)) ||
-			(this.providerConfig.id === "github/enterprise" &&
-				ex.response &&
-				ex.response.error &&
-				ex.response.error.toLowerCase().indexOf("cookies must be enabled to use github") > -1)
-		) {
-			return ReportSuppressedMessages.ConnectionError;
-		}
-		// else if (
-		// 	(ex?.response?.message || ex?.message || "").indexOf(
-		// 		"enabled OAuth App access restrictions"
-		// 	) > -1
-		// ) {
-		// 	return ReportSuppressedMessages.OAuthAppAccessRestrictionError;
-		// }
-		else if (
-			(ex.response && ex.response.message === "Bad credentials") ||
-			(ex.response &&
-				ex.response.errors instanceof Array &&
-				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
-		) {
-			return ReportSuppressedMessages.AccessTokenInvalid;
-		} else {
-			return undefined;
-		}
-	}
-
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;
