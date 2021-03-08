@@ -928,6 +928,7 @@ export abstract class ThirdPartyIssueProviderBase<
 			"EAI_AGAIN",
 			"ECONNRESET",
 			"ECONNREFUSED",
+			"EHOSTUNREACH",
 			"ENETDOWN",
 			"ENETUNREACH",
 			"socket disconnected before secure",
