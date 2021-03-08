@@ -112,6 +112,8 @@ export const PullRequestReactButton = styled((props: Props) => {
 			<Icon
 				name="smiley"
 				className="clickable"
+				title="Add reaction"
+				placement="bottom"
 				onClick={e => setOpen(open ? undefined : e.target)}
 			/>
 		</span>

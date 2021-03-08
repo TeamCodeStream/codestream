@@ -13,11 +13,14 @@ import {
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import styled from "styled-components";
 import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";
-import { PRActionIcons, PRCommentHeader } from "../../PullRequestComponents";
+import { PRActionIcons, PRCodeCommentReplyInput } from "../../PullRequestComponents";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 import { Link } from "../../Link";
 import { PullRequestEditingComment } from "../../PullRequestEditingComment";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
+import { Button } from "@codestream/webview/src/components/Button";
+import { PullRequestPatch } from "../../PullRequestPatch";
+import copy from "copy-to-clipboard";
 
 const BigRoundImg = styled.span`
 	img {
@@ -34,10 +37,21 @@ const ReplyForm = styled.div`
 	border-radius: 0 0 4px 4px;
 	margin: 10px -10px -10px -10px;
 	padding: 10px 10px 10px 10px;
+	display: flex;
+	button {
+		margin-left: 10px;
+		flex-grow: 0;
+	}
 	${PRHeadshot} {
 		position: absolute;
 		left: 0;
 		top: 0;
+	}
+	${PullRequestReplyComment} {
+		flex-grow: 1;
+	}
+	${PRCodeCommentReplyInput} {
+		border-radius: 4px;
 	}
 `;
 
@@ -63,10 +77,40 @@ export const OutlineBoxHeader = styled.div`
 	flex-wrap: wrap;
 	align-items: top;
 	border-radius: 4px 4px 0 0;
+	padding-left: 40px;
+	position: relative;
+	${BigRoundImg} {
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
 `;
 
 const ToggleThread = styled.span`
 	cursor: pointer;
+`;
+
+const Comment = styled.div`
+	position: relative;
+	&.nth-reply {
+		padding-top: 15px;
+	}
+`;
+
+const CodeCommentPatch = styled.div`
+	margin: -10px -10px 15px -10px;
+	border-bottom: 1px solid var(--base-border-color);
+	.codemark.inline & {
+		margin 10px 0;
+		border: 1px solid var(--base-border-color);
+	}
+	.pr-patch {
+		border: none;
+	}
+`;
+
+const CommentBody = styled.div`
+	padding: 5px 0 5px 40px;
 `;
 
 let insertText;
@@ -171,25 +215,44 @@ export const Timeline = (props: Props) => {
 					</PRActionIcons>
 				</OutlineBoxHeader>
 				{!hiddenComments[note.id] && (
-					<Collapse>
-						<Icon name="file" /> {note.position.newPath}
-					</Collapse>
+					<>
+						<Collapse>
+							<Icon name="file" /> {note.position.newPath}{" "}
+							<Icon
+								name="copy"
+								onClick={() => copy(note.position.newPath)}
+								title="Copy file path"
+								placement="top"
+							/>
+						</Collapse>
+						<CodeCommentPatch>
+							<PullRequestPatch
+								patch={
+									'@@ -13,11 +13,17 @@ import {\n     FIXME THIS IS HARDCODED\n import { PRHeadshot } from "@codestream/webview/src/components/Headshot";\n import styled from "styled-components";\n import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";\n-import { PRActionIcons, PRCommentHeader } from "../../PullRequestComponents";\n+import {\n+       PRActionIcons,\n+       PRCodeCommentPatch,\n+       PRCodeCommentReplyInput\n'
+								}
+								filename={note.position.newPath}
+								truncateLargePatches
+							/>
+						</CodeCommentPatch>
+					</>
 				)}
 			</>
 		);
 	};
 
-	const printComment = note => {
+	const printComment = (note, index, isResolvable?: boolean) => {
 		return (
-			<>
+			<Comment className={index === 0 ? "first-reply" : "nth-reply"}>
 				<OutlineBoxHeader>
 					{note.author && (
+						<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
+							<BigRoundImg>
+								<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+							</BigRoundImg>
+						</Tooltip>
+					)}
+					{note.author && (
 						<div style={{ flexGrow: 1 }}>
-							<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
-								<BigRoundImg>
-									<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-								</BigRoundImg>
-							</Tooltip>
 							<div>
 								<b>{note.author.name}</b> @{note.author.login} &middot;{" "}
 								<Timestamp relative time={note.createdAt} />
@@ -204,6 +267,14 @@ export const Timeline = (props: Props) => {
 							node={note}
 							isPending={note.state === "PENDING"}
 						/>
+						{isResolvable && (
+							<Icon
+								name="check-circle"
+								className="clickable"
+								title="Resolve thread"
+								placement="bottom"
+							/>
+						)}
 						<PullRequestReactButton
 							pr={pr}
 							targetId={note.id}
@@ -225,7 +296,7 @@ export const Timeline = (props: Props) => {
 					</PRActionIcons>
 				</OutlineBoxHeader>
 
-				<div style={{ paddingTop: "10px" }}>
+				<CommentBody>
 					{editingComments[note.id] ? (
 						<PullRequestEditingComment
 							pr={pr}
@@ -246,7 +317,23 @@ export const Timeline = (props: Props) => {
 							/>
 						</>
 					)}
-				</div>
+				</CommentBody>
+			</Comment>
+		);
+	};
+
+	const repliesSummary = replies => {
+		const lastReply = replies[replies.length - 1];
+		return (
+			<>
+				<Link>{replies.length === 1 ? "1 reply" : `${replies.length} replies`}</Link>
+				{lastReply.author && (
+					<>
+						{" "}
+						Last reply by {lastReply.author.name || lastReply.author.login}{" "}
+						<Timestamp relative time={lastReply.createdAt} />
+					</>
+				)}
 			</>
 		);
 	};
@@ -273,26 +360,11 @@ export const Timeline = (props: Props) => {
 		if (note.position && hiddenComments[note.id])
 			return <OutlineBox style={{ padding: "10px" }}>{printCodeCommentHeader(note)}</OutlineBox>;
 
-		const repliesSummary = replies => {
-			const lastReply = replies[replies.length - 1];
-			return (
-				<>
-					<Link>{replies.length === 1 ? "1 reply" : `${replies.length} replies`}</Link>
-					{lastReply.author && (
-						<>
-							{" "}
-							Last reply by {lastReply.author.name || lastReply.author.login}{" "}
-							<Timestamp relative time={lastReply.createdAt} />
-						</>
-					)}
-				</>
-			);
-		};
 		const replies = note.replies || [];
 		return (
 			<OutlineBox style={{ padding: "10px" }}>
 				{note.position && printCodeCommentHeader(note)}
-				{printComment(note)}
+				{printComment(note, 0, note.resolvable)}
 				{note.resolvable && (
 					<>
 						{replies.length > 0 && !note.position && (
@@ -306,7 +378,8 @@ export const Timeline = (props: Props) => {
 								{hiddenComments[note.id] ? repliesSummary(replies) : "Collapse replies"}
 							</Collapse>
 						)}
-						{!hiddenComments[note.id] && replies.map(reply => printComment(reply))}
+						{!hiddenComments[note.id] &&
+							replies.map((reply, index) => printComment(reply, index + 1))}
 						{!hiddenComments[note.id] && (
 							<ReplyForm>
 								<PullRequestReplyComment
@@ -317,6 +390,9 @@ export const Timeline = (props: Props) => {
 									isOpen={false}
 									__onDidRender={__onDidRender}
 								/>
+								<Button variant="secondary" onClick={() => {}}>
+									Resolve<span className="wide-text"> thread</span>
+								</Button>
 							</ReplyForm>
 						)}
 					</>

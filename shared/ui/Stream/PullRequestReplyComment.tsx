@@ -90,7 +90,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 	};
 
 	return (
-		<PRCodeCommentReply>
+		<PRCodeCommentReply className={props.className}>
 			<PRHeadshot size={30} person={pr.viewer} />
 
 			<PRCodeCommentReplyInput className={open ? "open-comment" : ""} onClick={() => setOpen(true)}>
