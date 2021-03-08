@@ -15,6 +15,7 @@ import styled from "styled-components";
 import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";
 import { PRActionIcons, PRCommentHeader } from "../../PullRequestComponents";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
+import { Link } from "../../Link";
 import { PullRequestEditingComment } from "../../PullRequestEditingComment";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 
@@ -50,6 +51,11 @@ const Collapse = styled.div`
 	&:hover {
 		background: var(--app-background-color-hover);
 	}
+	&.collapsed {
+		margin: 10px -10px -10px -10px;
+		border-bottom: none;
+		border-radius: 0 0 4px 4px;
+	}
 `;
 
 export const OutlineBoxHeader = styled.div`
@@ -57,6 +63,10 @@ export const OutlineBoxHeader = styled.div`
 	flex-wrap: wrap;
 	align-items: top;
 	border-radius: 4px 4px 0 0;
+`;
+
+const ToggleThread = styled.span`
+	cursor: pointer;
 `;
 
 let insertText;
@@ -69,6 +79,11 @@ interface Props {
 	order: "oldest" | "newest";
 	setIsLoadingMessage: Function;
 }
+
+const EMPTY_HASH = {};
+const EMPTY_HASH_1 = {};
+const EMPTY_HASH_2 = {};
+const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
 	const { pr, order, filter, setIsLoadingMessage } = props;
@@ -105,8 +120,9 @@ export const Timeline = (props: Props) => {
 			});
 	};
 
-	const [editingComments, setEditingComments] = useState({});
-	const [pendingComments, setPendingComments] = useState({});
+	const [editingComments, setEditingComments] = useState(EMPTY_HASH_1);
+	const [pendingComments, setPendingComments] = useState(EMPTY_HASH_2);
+	const [hiddenComments, setHiddenComments] = useState(EMPTY_HASH_3);
 
 	const doneEditingComment = id => {
 		setEditingComments({ ...editingComments, [id]: false });
@@ -123,55 +139,49 @@ export const Timeline = (props: Props) => {
 		});
 	};
 
-	const printNote = note => {
-		if (note.system) {
-			return (
-				<ActionBox>
-					<Icon
-						name={iconMap[note.systemNoteIconName] || "blank"}
-						className="circled"
-						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-					/>
-					<div>
-						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={note.body} />
-						<Timestamp relative time={note.createdAt} />
-					</div>
-				</ActionBox>
-			);
-		}
-		const replies = note.replies || [];
+	const printCodeCommentHeader = note => {
 		return (
-			<OutlineBox style={{ padding: "10px" }}>
-				{note.position && (
-					<>
-						<OutlineBoxHeader style={{ flexWrap: "nowrap" }}>
-							{note.author && (
-								<div style={{ flexGrow: 1 }}>
-									<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
-										<BigRoundImg>
-											<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-										</BigRoundImg>
-									</Tooltip>
-									<div>
-										<b>{note.author.name}</b> @{note.author.login} started a thread on the diff
-										<Timestamp relative time={note.createdAt} />
-										<br />
-										Last updated <Timestamp relative time={note.updatedAt} />
-									</div>
-								</div>
-							)}
+			<>
+				<OutlineBoxHeader style={{ flexWrap: "nowrap" }}>
+					{note.author && (
+						<div style={{ flexGrow: 1 }}>
+							<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
+								<BigRoundImg>
+									<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+								</BigRoundImg>
+							</Tooltip>
+							<div>
+								<b>{note.author.name}</b> @{note.author.login} started a thread on the diff
+								<Timestamp relative time={note.createdAt} />
+								<br />
+								Last updated <Timestamp relative time={note.updatedAt} />
+							</div>
+						</div>
+					)}
 
-							<PRActionIcons>
-								<span onClick={() => {}}>
-									<Icon name="chevron-up-thin" /> Toggle thread
-								</span>
-							</PRActionIcons>
-						</OutlineBoxHeader>
-						<Collapse>
-							<Icon name="file" /> {note.position.newPath}
-						</Collapse>
-					</>
+					<PRActionIcons>
+						<ToggleThread
+							onClick={() => {
+								setHiddenComments({ ...hiddenComments, [note.id]: !hiddenComments[note.id] });
+							}}
+						>
+							<Icon name={hiddenComments[note.id] ? "chevron-down-thin" : "chevron-up-thin"} />{" "}
+							Toggle thread
+						</ToggleThread>
+					</PRActionIcons>
+				</OutlineBoxHeader>
+				{!hiddenComments[note.id] && (
+					<Collapse>
+						<Icon name="file" /> {note.position.newPath}
+					</Collapse>
 				)}
+			</>
+		);
+	};
+
+	const printComment = note => {
+		return (
+			<>
 				<OutlineBoxHeader>
 					{note.author && (
 						<div style={{ flexGrow: 1 }}>
@@ -237,52 +247,78 @@ export const Timeline = (props: Props) => {
 						</>
 					)}
 				</div>
+			</>
+		);
+	};
+
+	const printNote = note => {
+		if (note.system) {
+			return (
+				<ActionBox>
+					<Icon
+						name={iconMap[note.systemNoteIconName] || "blank"}
+						className="circled"
+						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+					/>
+					<div>
+						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={note.body} />
+						<Timestamp relative time={note.createdAt} />
+					</div>
+				</ActionBox>
+			);
+		}
+
+		// if it's a review thread, and the thread is collapsed, just
+		// render the header
+		if (note.position && hiddenComments[note.id])
+			return <OutlineBox style={{ padding: "10px" }}>{printCodeCommentHeader(note)}</OutlineBox>;
+
+		const repliesSummary = replies => {
+			const lastReply = replies[replies.length - 1];
+			return (
+				<>
+					<Link>{replies.length === 1 ? "1 reply" : `${replies.length} replies`}</Link>
+					{lastReply.author && (
+						<>
+							{" "}
+							Last reply by {lastReply.author.name || lastReply.author.login}{" "}
+							<Timestamp relative time={lastReply.createdAt} />
+						</>
+					)}
+				</>
+			);
+		};
+		const replies = note.replies || [];
+		return (
+			<OutlineBox style={{ padding: "10px" }}>
+				{note.position && printCodeCommentHeader(note)}
+				{printComment(note)}
 				{note.resolvable && (
 					<>
 						{replies.length > 0 && !note.position && (
-							<Collapse>
-								<Icon name="chevron-down-thin" /> Collapse replies
+							<Collapse
+								className={hiddenComments[note.id] ? "collapsed" : ""}
+								onClick={() => {
+									setHiddenComments({ ...hiddenComments, [note.id]: !hiddenComments[note.id] });
+								}}
+							>
+								<Icon name={hiddenComments[note.id] ? "chevron-right-thin" : "chevron-down-thin"} />{" "}
+								{hiddenComments[note.id] ? repliesSummary(replies) : "Collapse replies"}
 							</Collapse>
 						)}
-						{replies.map(reply => {
-							return (
-								<>
-									{reply.author && (
-										<>
-											<Tooltip
-												title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-											>
-												<BigRoundImg>
-													<img
-														style={{ float: "left" }}
-														alt="headshot"
-														src={reply.author.avatarUrl}
-													/>
-												</BigRoundImg>
-											</Tooltip>
-											<div>
-												<b>{reply.author.name}</b> @{reply.author.login} &middot;{" "}
-												<Timestamp relative time={reply.createdAt} />
-											</div>
-										</>
-									)}
-
-									<div style={{ paddingTop: "10px" }}>
-										<MarkdownText text={reply.body} />
-									</div>
-								</>
-							);
-						})}
-						<ReplyForm>
-							<PullRequestReplyComment
-								pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
-								mode={note}
-								fetch={fetch}
-								databaseId={note.id}
-								isOpen={false}
-								__onDidRender={__onDidRender}
-							/>
-						</ReplyForm>
+						{!hiddenComments[note.id] && replies.map(reply => printComment(reply))}
+						{!hiddenComments[note.id] && (
+							<ReplyForm>
+								<PullRequestReplyComment
+									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+									mode={note}
+									fetch={fetch}
+									databaseId={note.id}
+									isOpen={false}
+									__onDidRender={__onDidRender}
+								/>
+							</ReplyForm>
+						)}
 					</>
 				)}
 			</OutlineBox>

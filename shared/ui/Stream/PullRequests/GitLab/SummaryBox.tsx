@@ -136,7 +136,9 @@ export const SummaryBox = props => {
 					</Button>
 					<DropdownButton
 						title="Download as"
+						noCloseIcon
 						variant="secondary"
+						narrow
 						items={[
 							{
 								label: "Email patches",

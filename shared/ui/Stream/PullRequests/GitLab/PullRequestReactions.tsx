@@ -198,7 +198,7 @@ export const PullRequestReactions = (props: ReactionProps) => {
 		const title =
 			loginList.length > 0 ? (
 				<>
-					{logins} reacted with {REACTION_NAME_MAP[reactionContent]} emoji
+					{logins} reacted with {reactionContent} emoji
 				</>
 			) : (
 				""

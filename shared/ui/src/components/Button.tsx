@@ -162,6 +162,7 @@ export const ButtonRoot = styled.button<ButtonProps>(props => {
 	${getFontSize(props.size, props.variant)}
 	${getPadding(props.size, props.variant)}
 	${getLineHeight(props.size, props.variant)}
+	${props.narrow ? "padding-left: 3px; padding-right: 3px;" : ""}
 	border-radius: 0;
 	border: 1px solid transparent !important;
 	outline: none !important;
@@ -209,6 +210,7 @@ export interface ButtonProps extends PropsWithChildren<{}> {
 	fillParent?: boolean;
 	className?: string;
 	tabIndex?: number;
+	narrow?: boolean;
 }
 
 export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {
@@ -221,7 +223,8 @@ export function getButtonProps<P extends ButtonProps>(props: P): ButtonProps {
 		prependIcon: props.prependIcon,
 		appendIcon: props.appendIcon,
 		onClick: props.onClick,
-		fillParent: props.fillParent
+		fillParent: props.fillParent,
+		narrow: props.narrow
 	};
 }
 

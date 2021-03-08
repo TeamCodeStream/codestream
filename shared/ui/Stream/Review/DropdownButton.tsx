@@ -29,7 +29,7 @@ export interface DropdownButtonProps extends ButtonProps {
 	splitDropdownInstantAction?: boolean;
 	wrap?: boolean;
 	selectedKey?: string;
-	isMultiSelect?: boolean;
+	noCloseIcon?: boolean;	isMultiSelect?: boolean;
 	itemsRange?: string[];
 }
 
@@ -99,6 +99,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 							e.stopPropagation();
 							toggleMenu(true);
 						}}
+						narrow
 					>
 						<Icon name="chevron-down-thin" className="chevron-down" />
 					</Button>
@@ -124,6 +125,7 @@ export function DropdownButton(props: React.PropsWithChildren<DropdownButtonProp
 					target={buttonRef.current}
 					title={props.title}
 					items={items}
+					noCloseIcon={props.noCloseIcon}
 					focusOnSelect={buttonRef.current}
 					wrap={props.wrap}
 					isMultiSelect={props.isMultiSelect}
@@ -139,7 +141,7 @@ const Root = styled.div<{ splitDropdown?: boolean; fillParent?: boolean }>`
 	position: relative;
 	.octicon-chevron-down-thin {
 		margin-left: ${props => (props.splitDropdown ? "0" : "5px")};
-		transform: scale(0.8);
+		transform: scale(0.85);
 	}
 	${props => {
 		return props.splitDropdown
