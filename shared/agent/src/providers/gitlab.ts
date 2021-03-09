@@ -12,16 +12,12 @@ import { GitRepository } from "../git/models/repository";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
 import { Dates } from "../system";
-
 import { InternalError, ReportSuppressedMessages } from "../agentError";
-
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
 	DocumentMarker,
-	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
-	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
@@ -31,7 +27,6 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
-	MoveThirdPartyCardRequest,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
@@ -47,8 +42,7 @@ import {
 	ThirdPartyIssueProviderBase
 } from "./provider";
 import { Directives } from "./directives";
-import { CodeStreamSession } from "session";
-import { RepositoryLocator } from "git/repositoryLocator";
+import { CodeStreamSession } from "../session";
 
 interface GitLabProject {
 	path_with_namespace: any;
