@@ -2064,16 +2064,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		onOff: boolean;
 		id?: string;
 	}): Promise<Directives | undefined> {
-		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+		const { projectFullPath, iid, id } = this.parseId(request.pullRequestId);
 
 		try {
+			let url = `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`;
+			if (request.subjectId && request.subjectId != id) url += `/notes/${request.subjectId}`;
+			url += "/award_emoji";
+
 			if (request.onOff) {
-				const response = await this.restPost<
-					{
-						name: string;
-					},
-					any
-				>(`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`, {
+				const response = await this.restPost<{ name: string }, any>(`${url}`, {
 					name: request.content
 				});
 				response.body.user.login = response.body.user.username;
@@ -2081,6 +2080,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				return {
 					directives: [
 						{
+							// FIXME -- if the subjectId is a note, update the note
 							type: "addReaction",
 							data: response.body
 						}
@@ -2090,18 +2090,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				if (!request.id) throw new Error("MissingId");
 
 				// with DELETEs we don't get a JSON response
-				const response = await this.restDelete<String>(
-					`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji/${
-						request.id
-					}`,
-					{
-						useRawResponse: true
-					}
-				);
+				const response = await this.restDelete<String>(`${url}/${request.id}`, {
+					useRawResponse: true
+				});
 				if (response.body === "") {
 					return {
 						directives: [
 							{
+								// FIXME -- if the subjectId is a note, update the note
 								type: "removeReaction",
 								data: {
 									content: request.content,

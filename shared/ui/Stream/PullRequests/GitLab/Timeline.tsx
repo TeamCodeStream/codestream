@@ -302,7 +302,7 @@ export const Timeline = (props: Props) => {
 						)}
 						<PullRequestReactButton
 							pr={pr}
-							targetId={note.id}
+							targetId={note.id.replace(/.*\//, "")}
 							setIsLoadingMessage={setIsLoadingMessage}
 							reactionGroups={note.reactionGroups}
 						/>
@@ -637,6 +637,13 @@ export const Timeline = (props: Props) => {
 					return printNote(_);
 				}
 			})}
+			<div
+				style={{
+					height: "1px",
+					background: "var(--base-border-color)",
+					margin: "0 20px 30px 20px"
+				}}
+			/>
 		</>
 	);
 };

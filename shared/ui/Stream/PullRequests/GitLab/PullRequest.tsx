@@ -199,14 +199,14 @@ export const OutlineBox = styled.div`
 	border: 1px solid var(--base-border-color);
 	margin: 0 20px 15px 20px;
 	position: relative;
-	& + &:after {
+	:after {
 		content: "";
 		display: block;
 		position: absolute;
 		height: 15px;
 		width: 1px;
 		left: 30px;
-		top: -15px;
+		top: 100%;
 		background: var(--base-border-color);
 	}
 `;
