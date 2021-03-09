@@ -207,23 +207,6 @@ export const OutlineBox = styled.div`
 	}
 `;
 
-export const ActionBox = styled.div`
-	margin: 0 20px 15px 20px;
-	position: relative;
-	display: flex;
-	align-items: center;
-	& + &:after {
-		content: "";
-		display: block;
-		position: absolute;
-		height: 15px;
-		width: 1px;
-		left: 30px;
-		top: -15px;
-		background: var(--base-border-color);
-	}
-`;
-
 export const FlexRow = styled.div`
 	align-items: center;
 	padding: 10px;

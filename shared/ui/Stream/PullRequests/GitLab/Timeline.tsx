@@ -5,7 +5,7 @@ import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 import Tag from "../../Tag";
 import Timestamp from "../../Timestamp";
 import Tooltip from "../../Tooltip";
-import { ActionBox, OutlineBox } from "./PullRequest";
+import { OutlineBox } from "./PullRequest";
 import {
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest
@@ -23,6 +23,28 @@ import { PullRequestPatch } from "../../PullRequestPatch";
 import copy from "copy-to-clipboard";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+
+const ActionBox = styled.div`
+	margin: 0 20px 15px 20px;
+	position: relative;
+	display: flex;
+	align-items: flex-start;
+
+	&:after {
+		content: "";
+		display: block;
+		position: absolute;
+		height: calc(100% - 15px);
+		width: 1px;
+		left: 30px;
+		top: 30px;
+		background: var(--base-border-color);
+	}
+`;
+
+const ActionBody = styled.div`
+	padding-top: 5px;
+`;
 
 const BigRoundImg = styled.span`
 	img {
@@ -387,7 +409,9 @@ export const Timeline = (props: Props) => {
 				wrapper.children[0].remove();
 				fixAnchorTags(wrapper.children);
 				const otherChildren = Array.from(wrapper.children).map(_ => {
-					return <MarkdownText inline text={_.outerHTML} isHtml={true} />;
+					const text = _.outerHTML.replace(/>\n/g, ">").replace(/\n\n/g, "");
+					console.warn("TEXT IS: ", text);
+					return <MarkdownText inline text={text} isHtml={true} />;
 				});
 
 				return (
@@ -398,13 +422,11 @@ export const Timeline = (props: Props) => {
 								className="circled"
 								title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
 							/>
-							<div>
+							<ActionBody>
 								<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
 								<Timestamp relative time={note.createdAt} />
-							</div>
-						</ActionBox>
-						<ActionBox>
-							<div style={{ paddingLeft: "50px" }}>{otherChildren}</div>
+								<div>{otherChildren}</div>
+							</ActionBody>
 						</ActionBox>
 					</>
 				);
@@ -416,10 +438,10 @@ export const Timeline = (props: Props) => {
 						className="circled"
 						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
 					/>
-					<div>
+					<ActionBody>
 						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
 						<Timestamp relative time={note.createdAt} />
-					</div>
+					</ActionBody>
 				</ActionBox>
 			);
 		}
@@ -482,10 +504,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} reopened
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					} else if (_.action === "closed") {
@@ -496,10 +518,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} closed
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					} else if (_.action === "approved") {
@@ -510,10 +532,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} approved this merge request
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					} else if (_.action === "unapproved") {
@@ -524,10 +546,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} unapproved this merge request
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					}
@@ -549,10 +571,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} removed milestone{" "}
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					else
@@ -563,10 +585,10 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} changed milestone{" "}
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 				} else if (_.type === "label") {
@@ -578,11 +600,11 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} removed label{" "}
 									<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 					else
@@ -593,11 +615,11 @@ export const Timeline = (props: Props) => {
 									className="circled"
 									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
 								/>
-								<div>
+								<ActionBody>
 									<b>{_.author.name}</b> @{_.author.login} added label{" "}
 									<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
 									<Timestamp relative time={_.createdAt} />
-								</div>
+								</ActionBody>
 							</ActionBox>
 						);
 				} else if (_.notes && _.notes.nodes && _.notes.nodes.length > 0) {
