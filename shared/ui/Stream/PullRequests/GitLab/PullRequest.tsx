@@ -308,6 +308,7 @@ export const PullRequest = () => {
 	const [isLoadingPR, setIsLoadingPR] = useState(false);
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
+	const [collapseAll, setCollapseAll] = useState(false);
 
 	const [rightOpen, setRightOpen] = useState(false);
 	const [openRepos, setOpenRepos] = useState<any[]>(EMPTY_ARRAY);
@@ -753,8 +754,12 @@ export const PullRequest = () => {
 												placement="top"
 											/>
 										</span>
-										<span onClick={() => {}}>
-											<Icon name="chevron-up-thin" title="Collapse all threads" placement="top" />
+										<span onClick={() => setCollapseAll(!collapseAll)}>
+											<Icon
+												name={collapseAll ? "chevron-down-thin" : "chevron-up-thin"}
+												title={collapseAll ? "Expand all threads" : "Collapse all threads"}
+												placement="top"
+											/>
 										</span>
 									</PRSelectorButtons>
 								</TabActions>
@@ -781,6 +786,7 @@ export const PullRequest = () => {
 										filter={filter}
 										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
+										collapseAll={collapseAll}
 									/>
 									{order === "oldest" && bottomComment}
 								</>

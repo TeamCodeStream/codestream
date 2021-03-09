@@ -147,6 +147,7 @@ interface Props {
 	order: "oldest" | "newest";
 	setIsLoadingMessage: Function;
 	fetch: Function;
+	collapseAll?: boolean;
 }
 
 const EMPTY_HASH = {};
@@ -207,6 +208,22 @@ export const Timeline = (props: Props) => {
 			[comment.id]: value ? comment.body : ""
 		});
 	};
+
+	useEffect(() => {
+		if (props.collapseAll) {
+			const hidden = {};
+			discussions.forEach(discussion => {
+				if (discussion.notes && discussion.notes.nodes) {
+					discussion.notes.nodes.forEach(node => {
+						hidden[node.id] = true;
+					});
+				}
+			});
+			setHiddenComments(hidden);
+		} else {
+			setHiddenComments({});
+		}
+	}, [props.collapseAll]);
 
 	const printCodeCommentHeader = note => {
 		return (
