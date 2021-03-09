@@ -146,6 +146,7 @@ interface Props {
 	filter: "history" | "comments" | "all";
 	order: "oldest" | "newest";
 	setIsLoadingMessage: Function;
+	fetch: Function;
 }
 
 const EMPTY_HASH = {};
@@ -154,7 +155,7 @@ const EMPTY_HASH_2 = {};
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
-	const { pr, order, filter, setIsLoadingMessage } = props;
+	const { pr, order, filter, setIsLoadingMessage, fetch } = props;
 	let discussions = order === "oldest" ? pr.discussions.nodes : [...pr.discussions.nodes].reverse();
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
@@ -209,7 +210,7 @@ export const Timeline = (props: Props) => {
 
 	const printCodeCommentHeader = note => {
 		return (
-			<>
+			<React.Fragment key={`note-${note.id}`}>
 				<OutlineBoxHeader style={{ flexWrap: "nowrap" }}>
 					{note.author && (
 						<div style={{ flexGrow: 1 }}>
@@ -239,7 +240,7 @@ export const Timeline = (props: Props) => {
 					</PRActionIcons>
 				</OutlineBoxHeader>
 				{!hiddenComments[note.id] && (
-					<>
+					<React.Fragment key="collapse">
 						<Collapse>
 							<Icon name="file" /> {note.position.newPath}{" "}
 							<Icon
@@ -258,15 +259,15 @@ export const Timeline = (props: Props) => {
 								truncateLargePatches
 							/>
 						</CodeCommentPatch>
-					</>
+					</React.Fragment>
 				)}
-			</>
+			</React.Fragment>
 		);
 	};
 
 	const printComment = (note, index, isResolvable?: boolean) => {
 		return (
-			<Comment className={index === 0 ? "first-reply" : "nth-reply"}>
+			<Comment className={index === 0 ? "first-reply" : "nth-reply"} key={"comment-" + index}>
 				<OutlineBoxHeader>
 					{note.author && (
 						<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
@@ -311,7 +312,7 @@ export const Timeline = (props: Props) => {
 							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							node={note}
-							nodeType="REVIEW"
+							nodeType="ROOT_COMMENT"
 							viewerCanDelete={note.viewerCanDelete && note.state === "PENDING"}
 							setEdit={setEditingComment}
 							quote={quote}
@@ -408,31 +409,29 @@ export const Timeline = (props: Props) => {
 			if (note.systemNoteIconName === "commit") {
 				wrapper.children[0].remove();
 				fixAnchorTags(wrapper.children);
-				const otherChildren = Array.from(wrapper.children).map(_ => {
+				const otherChildren = Array.from(wrapper.children).map((_, index) => {
 					const text = _.outerHTML.replace(/>\n/g, ">").replace(/\n\n/g, "");
-					console.warn("TEXT IS: ", text);
-					return <MarkdownText inline text={text} isHtml={true} />;
+					// console.warn("TEXT IS: ", text);
+					return <MarkdownText inline text={text} isHtml={true} key={index} />;
 				});
 
 				return (
-					<>
-						<ActionBox>
-							<Icon
-								name={iconMap[note.systemNoteIconName] || "blank"}
-								className="circled"
-								title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-							/>
-							<ActionBody>
-								<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
-								<Timestamp relative time={note.createdAt} />
-								<div>{otherChildren}</div>
-							</ActionBody>
-						</ActionBox>
-					</>
+					<ActionBox key={note.id}>
+						<Icon
+							name={iconMap[note.systemNoteIconName] || "blank"}
+							className="circled"
+							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+						/>
+						<ActionBody>
+							<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
+							<Timestamp relative time={note.createdAt} />
+							<div>{otherChildren}</div>
+						</ActionBody>
+					</ActionBox>
 				);
 			}
 			return (
-				<ActionBox>
+				<ActionBox key={note.id}>
 					<Icon
 						name={iconMap[note.systemNoteIconName] || "blank"}
 						className="circled"
@@ -449,11 +448,15 @@ export const Timeline = (props: Props) => {
 		// if it's a review thread, and the thread is collapsed, just
 		// render the header
 		if (note.position && hiddenComments[note.id])
-			return <OutlineBox style={{ padding: "10px" }}>{printCodeCommentHeader(note)}</OutlineBox>;
+			return (
+				<OutlineBox style={{ padding: "10px" }} key={note.id}>
+					{printCodeCommentHeader(note)}
+				</OutlineBox>
+			);
 
 		const replies = note.replies || [];
 		return (
-			<OutlineBox style={{ padding: "10px" }}>
+			<OutlineBox style={{ padding: "10px" }} key={note.id}>
 				{note.position && printCodeCommentHeader(note)}
 				{printComment(note, 0, note.resolvable)}
 				{note.resolvable && (
@@ -624,10 +627,10 @@ export const Timeline = (props: Props) => {
 						);
 				} else if (_.notes && _.notes.nodes && _.notes.nodes.length > 0) {
 					return (
-						<>
+						<React.Fragment key={index}>
 							{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
 							{_.notes.nodes.map(note => printNote(note))}
-						</>
+						</React.Fragment>
 					);
 				} else {
 					// console.warn("why here?", _);

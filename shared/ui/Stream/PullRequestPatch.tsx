@@ -100,6 +100,8 @@ export const PRInlineComment = styled.div`
 	border-bottom: 1px solid var(--base-border-color);
 `;
 
+const Ellipsis = styled.span``;
+
 export interface Hunk {
 	oldStart: number;
 	oldLines: number;
@@ -187,7 +189,7 @@ export const PullRequestPatch = (props: {
 
 						const commentForm =
 							props.pr && props.fetch && commentOpen[index] ? (
-								<PRInlineComment>
+								<PRInlineComment key={"ic-" + index}>
 									<PullRequestInlineComment
 										pr={props.pr}
 										mode={props.mode}
@@ -210,7 +212,7 @@ export const PullRequestPatch = (props: {
 						);
 						const comments =
 							commentsOnLine.length === 0 ? null : (
-								<PRCommentsInPatch>
+								<PRCommentsInPatch key={"cip-" + index}>
 									{commentsOnLine.map(({ comment, review }, index) => (
 										<PRComment key={index} style={{ margin: 0 }} data-comment-id={comment.id}>
 											<PRCard>
@@ -252,7 +254,7 @@ export const PullRequestPatch = (props: {
 							rightLine++;
 							switch (true) {
 								case shouldSkipLine && index === patchLength - patchShowContextLines - 1:
-									return <>...</>;
+									return <Ellipsis key={index}>...</Ellipsis>;
 								case shouldSkipLine:
 									return undefined;
 								default:
@@ -272,7 +274,7 @@ export const PullRequestPatch = (props: {
 							leftLine++;
 							switch (true) {
 								case shouldSkipLine && index === patchLength - patchShowContextLines - 1:
-									return <>...</>;
+									return <Ellipsis key={index}>...</Ellipsis>;
 								case shouldSkipLine:
 									return undefined;
 								default:
@@ -293,7 +295,7 @@ export const PullRequestPatch = (props: {
 							rightLine++;
 							switch (true) {
 								case shouldSkipLine && index === patchLength - patchShowContextLines - 1:
-									return <>...</>;
+									return <Ellipsis key={index}>...</Ellipsis>;
 								case shouldSkipLine:
 									return undefined;
 								default:
@@ -323,20 +325,20 @@ export const PullRequestPatch = (props: {
 						rightLine = hunk.newStart - 1;
 						width = Math.max(4, rightLine.toString().length + 1);
 						return (
-							<>
-								<div className="line header">
+							<React.Fragment key={index}>
+								<div className="line header" key="line-header">
 									{renderLineNum("")}
 									{renderLineNum("")}
 									<pre className="prettyprint">
 										@@ -{hunk.oldStart},{hunk.oldLines} +{hunk.newStart},{hunk.newLines} @@
 									</pre>
 								</div>
-								{hunk.lines.map(_ => {
+								{hunk.lines.map((_, i) => {
 									if (_ === "\\ No newline at end of file") return null;
 									if (_.indexOf("+") === 0) {
 										rightLine++;
 										return (
-											<div className="line added">
+											<div className="line added" key={`line-added-${i}`}>
 												{renderLineNum("")}
 												{renderLineNum(rightLine)}
 												{syntaxHighlight(_, index)}
@@ -345,7 +347,7 @@ export const PullRequestPatch = (props: {
 									} else if (_.indexOf("-") === 0) {
 										leftLine++;
 										return (
-											<div className="line deleted">
+											<div className="line deleted" key={`line-deleted-${i}`}>
 												{renderLineNum(leftLine)}
 												{renderLineNum("")}
 												{syntaxHighlight(_, index)}
@@ -355,7 +357,7 @@ export const PullRequestPatch = (props: {
 										leftLine++;
 										rightLine++;
 										return (
-											<div className="line same">
+											<div className="line same" key={`line-same-${i}`}>
 												{renderLineNum(leftLine)}
 												{renderLineNum(rightLine)}
 												{syntaxHighlight(_, index)}
@@ -363,7 +365,7 @@ export const PullRequestPatch = (props: {
 										);
 									}
 								})}
-							</>
+							</React.Fragment>
 						);
 					})}
 				</div>

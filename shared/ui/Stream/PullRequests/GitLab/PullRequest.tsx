@@ -779,6 +779,7 @@ export const PullRequest = () => {
 										pr={pr}
 										order={order}
 										filter={filter}
+										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 									{order === "oldest" && bottomComment}

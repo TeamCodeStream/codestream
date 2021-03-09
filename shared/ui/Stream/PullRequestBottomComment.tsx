@@ -121,9 +121,11 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			}
 			placement="bottomRight"
 			delay={1}
+			key="submit-tt"
 		>
 			{pr.providerId.includes("gitlab") ? (
 				<DropdownButton
+					key="gitlab-dd"
 					isLoading={isLoadingComment}
 					disabled={!text}
 					splitDropdown
@@ -163,7 +165,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 					Comment
 				</DropdownButton>
 			) : (
-				<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text}>
+				<Button isLoading={isLoadingComment} onClick={onCommentClick} disabled={!text} key="button">
 					Comment
 				</Button>
 			)}
@@ -176,6 +178,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			isLoading={isLoadingCommentAndClose}
 			onClick={onCommentAndReopenClick}
 			variant="secondary"
+			key="reopen"
 		>
 			{text ? "Reopen and comment" : `Reopen ${derivedState.prLabel.pullrequest}`}
 		</Button>
@@ -186,6 +189,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			isLoading={isLoadingCommentAndClose}
 			onClick={onCommentAndCloseClick}
 			variant="secondary"
+			key="close"
 		>
 			<Icon name="issue-closed" className="red-color margin-right" />
 			{text ? (

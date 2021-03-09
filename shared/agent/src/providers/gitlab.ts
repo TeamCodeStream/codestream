@@ -1710,7 +1710,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const query = `
 				mutation DestroyNote($id:ID!) {
 					destroyNote(input:{id:$id}) {
-			  			clientMutationId 
+			  			clientMutationId
 			  				note {
 								id
 			  				}
@@ -1721,6 +1721,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			id: noteId
 		});
 
+		Logger.log("DELETING: " + noteId);
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
