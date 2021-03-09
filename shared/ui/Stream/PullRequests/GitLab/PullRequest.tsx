@@ -27,6 +27,7 @@ import {
 	GitLabMergeRequest
 } from "@codestream/protocols/agent";
 import {
+	PRActionIcons,
 	PRBadge,
 	PRBranch,
 	PRError,
@@ -168,6 +169,9 @@ const Left = styled.div`
 
 const Header = styled.div`
 	display: flex;
+	${PRActionIcons} {
+		display: inline-flex;
+	}
 `;
 
 const RoundImg = styled.span`
@@ -622,10 +626,12 @@ export const PullRequest = () => {
 									placement="bottom"
 								/>{" "}
 								by <PRHeadshotName person={pr.author} />
-								<PRAuthorBadges
-									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
-									node={pr}
-								/>
+								<PRActionIcons>
+									<PRAuthorBadges
+										pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+										node={pr}
+									/>
+								</PRActionIcons>
 								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
 							<div style={{ marginLeft: "auto" }}>
