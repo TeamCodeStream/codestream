@@ -1,13 +1,14 @@
 import React, { useState, useCallback } from "react";
 import { Link } from "../Stream/Link";
 import { connect } from "react-redux";
-import { goToSignup, SupportedSSOProvider } from "../store/context/actions";
+import { goToSignup, SupportedSSOProvider, goToLogin } from "../store/context/actions";
 import { useInterval, useRetryingCallback, useTimeout } from "../utilities/hooks";
 import { DispatchProp } from "../store/common";
 import { inMillis } from "../utils";
 import { SignupType, startIDESignin, startSSOSignin, validateSignup } from "./actions";
 import { capitalize } from "@codestream/webview/utils";
 import { LoginResult } from "@codestream/protocols/api";
+import { useDispatch } from "react-redux";
 
 const noop = () => Promise.resolve();
 
@@ -23,6 +24,7 @@ interface Props extends DispatchProp {
 
 export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 	const [isWaiting, setIsWaiting] = useState(true);
+	const dispatch = useDispatch();
 
 	const stopWaiting = useCallback(() => {
 		setIsWaiting(false);
@@ -42,13 +44,14 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 			props.dispatch(
 				startIDESignin(
 					props.provider,
-					props.type !== undefined 
+					props.type !== undefined
 						? {
-							type: props.type,
-							inviteCode: props.inviteCode,
-							fromSignup: props.fromSignup,
-							useIDEAuth: true
-						} : undefined
+								type: props.type,
+								inviteCode: props.inviteCode,
+								fromSignup: props.fromSignup,
+								useIDEAuth: true
+						  }
+						: undefined
 				)
 			);
 		} else {
@@ -61,13 +64,27 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 								inviteCode: props.inviteCode,
 								hostUrl: props.hostUrl,
 								fromSignup: props.fromSignup
-						}
+						  }
 						: undefined
 				)
 			);
 		}
 		setIsWaiting(true);
 	};
+
+	const onClickGoBack = useCallback(
+		(event: React.SyntheticEvent) => {
+			event.preventDefault();
+			switch (props.fromSignup) {
+				case true: {
+					return dispatch(goToSignup());
+				}
+				default:
+					return dispatch(goToLogin());
+			}
+		},
+		[props.type]
+	);
 
 	const validate = useCallback(async () => {
 		try {
@@ -110,7 +127,8 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 								</strong>
 							) : (
 								<strong>
-									{props.gotError ? "Login failed" : "Login timed out"}. Please <Link onClick={onClickTryAgain}>try again</Link>
+									{props.gotError ? "Login failed" : "Login timed out"}. Please{" "}
+									<Link onClick={onClickTryAgain}>try again</Link>
 								</strong>
 							)}
 						</div>
@@ -119,10 +137,9 @@ export const ProviderAuth = (connect(undefined) as any)((props: Props) => {
 						Something went wrong? <Link href="mailto:support@codestream.com">Contact support</Link>{" "}
 						or <Link onClick={onClickTryAgain}>Try again</Link>
 					</p>
-					<p>
-						Don't want to use {providerCapitalized}?{" "}
-						<Link onClick={onClickGoToSignup}>Sign up with CodeStream</Link> instead.
-					</p>
+					<Link onClick={onClickGoBack}>
+						<p>{"< Back"}</p>
+					</Link>
 				</fieldset>
 			</form>
 		</div>
