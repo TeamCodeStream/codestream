@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
 import { MarkdownText } from "../../MarkdownText";
 import { PullRequestReplyComment } from "../../PullRequestReplyComment";
@@ -23,6 +24,7 @@ import { PullRequestPatch } from "../../PullRequestPatch";
 import copy from "copy-to-clipboard";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { api } from "../../../store/providerPullRequests/actions";
 
 const ActionBox = styled.div`
 	margin: 0 20px 15px 20px;
@@ -62,6 +64,7 @@ const ReplyForm = styled.div`
 	margin: 10px -10px -10px -10px;
 	padding: 10px 10px 10px 10px;
 	display: flex;
+	align-items: flex-start;
 	button {
 		margin-left: 10px;
 		flex-grow: 0;
@@ -70,6 +73,11 @@ const ReplyForm = styled.div`
 		position: absolute;
 		left: 0;
 		top: 0;
+	}
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		${PRHeadshot} {
+			display: none;
+		}
 	}
 	${PullRequestReplyComment} {
 		flex-grow: 1;
@@ -137,9 +145,9 @@ const CommentBody = styled.div`
 	padding: 5px 0 5px 40px;
 `;
 
-let insertText;
-let insertNewline;
-let focusOnMessageInput;
+let insertText = {};
+let insertNewline = {};
+let focusOnMessageInput = {};
 
 interface Props {
 	pr: GitLabMergeRequest;
@@ -161,6 +169,8 @@ export const Timeline = (props: Props) => {
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
 
+	const dispatch = useDispatch();
+
 	const iconMap = {
 		user: "person",
 		"pencil-square": "pencil",
@@ -173,20 +183,21 @@ export const Timeline = (props: Props) => {
 		fork: "git-branch"
 	};
 
-	const __onDidRender = functions => {
-		insertText = functions.insertTextAtCursor;
-		insertNewline = functions.insertNewlineAtCursor;
-		focusOnMessageInput = functions.focus;
+	const __onDidRender = (functions, id) => {
+		insertText[id] = functions.insertTextAtCursor;
+		insertNewline[id] = functions.insertNewlineAtCursor;
+		focusOnMessageInput[id] = functions.focus;
 	};
 
 	const isComment = _ => _.notes && _.notes.nodes && _.notes.nodes.length;
 
-	const quote = text => {
+	const quote = (text, id) => {
 		if (!insertText) return;
 		focusOnMessageInput &&
-			focusOnMessageInput(() => {
-				insertText && insertText(text.replace(/^/gm, "> "));
-				insertNewline && insertNewline();
+			focusOnMessageInput[id] &&
+			focusOnMessageInput[id](() => {
+				insertText && insertText[id](text.replace(/^/gm, "> "));
+				insertNewline && insertNewline[id]();
 			});
 	};
 
@@ -282,7 +293,7 @@ export const Timeline = (props: Props) => {
 		);
 	};
 
-	const printComment = (note, index, isResolvable?: boolean) => {
+	const printComment = (note: any, parent: any, index: number, isResolvable?: boolean) => {
 		return (
 			<Comment className={index === 0 ? "first-reply" : "nth-reply"} key={"comment-" + index}>
 				<OutlineBoxHeader>
@@ -332,7 +343,14 @@ export const Timeline = (props: Props) => {
 							nodeType="ROOT_COMMENT"
 							viewerCanDelete={note.viewerCanDelete && note.state === "PENDING"}
 							setEdit={setEditingComment}
-							quote={quote}
+							quote={text => {
+								const id = parent ? parent.id : note.id;
+								quote(text, id);
+								setOpenComments({
+									...openComments,
+									[id]: true
+								});
+							}}
 							isPending={note.state === "PENDING"}
 						/>
 					</PRActionIcons>
@@ -364,6 +382,8 @@ export const Timeline = (props: Props) => {
 		);
 	};
 
+	const [openComments, setOpenComments] = useState({});
+
 	const repliesSummary = replies => {
 		const lastReply = replies[replies.length - 1];
 		return (
@@ -392,6 +412,13 @@ export const Timeline = (props: Props) => {
 			HostApi.instance.send(OpenUrlRequestType, { url: e.target.getAttribute("href")! });
 			e.stopPropagation();
 		}
+	};
+
+	const [resolvingNote, setResolvingNote] = useState("");
+	const resolveNote = async id => {
+		setResolvingNote(id);
+		await dispatch(api("resolveReviewThread", { id, onOff: true }));
+		setResolvingNote("");
 	};
 
 	useEffect(() => {
@@ -475,7 +502,7 @@ export const Timeline = (props: Props) => {
 		return (
 			<OutlineBox style={{ padding: "10px" }} key={note.id}>
 				{note.position && printCodeCommentHeader(note)}
-				{printComment(note, 0, note.resolvable)}
+				{printComment(note, undefined, 0, note.resolvable)}
 				{note.resolvable && (
 					<>
 						{replies.length > 0 && !note.position && (
@@ -490,7 +517,7 @@ export const Timeline = (props: Props) => {
 							</Collapse>
 						)}
 						{!hiddenComments[note.id] &&
-							replies.map((reply, index) => printComment(reply, index + 1))}
+							replies.map((reply, index) => printComment(reply, note, index + 1))}
 						{!hiddenComments[note.id] && (
 							<ReplyForm>
 								<PullRequestReplyComment
@@ -498,10 +525,16 @@ export const Timeline = (props: Props) => {
 									mode={note}
 									fetch={fetch}
 									databaseId={note.id}
-									isOpen={false}
-									__onDidRender={__onDidRender}
+									isOpen={openComments[note.id]}
+									__onDidRender={functions => {
+										__onDidRender(functions, note.id);
+									}}
 								/>
-								<Button variant="secondary" onClick={() => {}}>
+								<Button
+									variant="secondary"
+									onClick={() => resolveNote(note.id)}
+									isLoading={resolvingNote === note.id}
+								>
 									Resolve<span className="wide-text"> thread</span>
 								</Button>
 							</ReplyForm>

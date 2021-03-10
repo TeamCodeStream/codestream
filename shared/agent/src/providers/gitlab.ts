@@ -1203,14 +1203,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
-		const data = await this.restPost(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions/${
-				request.commentId
-			}/notes`,
-			{
-				body: request.text
-			}
-		);
+		const commentId = request.commentId.replace(/.*\//, "");
+		const url = `/projects/${encodeURIComponent(
+			projectFullPath
+		)}/merge_requests/${iid}/discussions/${commentId}/notes`;
+		const data = await this.restPost(url, {
+			body: request.text
+		});
 		return data.body;
 	}
 
@@ -1691,6 +1690,36 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					data: addedNode
 				}
 			]
+		};
+	}
+
+	async resolveReviewThread(request: {
+		id: string;
+		onOff: boolean;
+		type: string;
+		pullRequestId: string;
+	}): Promise<Directives | undefined> {
+		const noteId = request.id;
+		const { id } = this.parseId(request.pullRequestId);
+		const query = `
+				mutation DiscussionToggleResolve($id:ID!, $resolve: Boolean!) {
+					discussionToggleResolve(input:{id:$id, resolve:$resolve}) {
+			  			clientMutationId
+			  				discussion {
+								id
+			  				}
+						}
+		  			}`;
+
+		await this.mutate<any>(query, {
+			id: noteId,
+			resolve: request.onOff
+		});
+
+		Logger.log("RESOLVING: " + noteId);
+
+		return {
+			directives: []
 		};
 	}
 

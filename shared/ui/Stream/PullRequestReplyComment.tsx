@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
@@ -34,6 +34,8 @@ export const PullRequestReplyComment = styled((props: Props) => {
 	const [open, setOpen] = useState(props.isOpen);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isPreviewing, setIsPreviewing] = useState(false);
+
+	useEffect(() => setOpen(props.isOpen), [props.isOpen]);
 
 	const handleComment = async () => {
 		try {
