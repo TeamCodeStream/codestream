@@ -11,6 +11,7 @@ export interface Directives {
 			| "resolveReviewThread"
 			| "setLabels"
 			| "unresolveReviewThread"
+			| "updateDiscussionNote"
 			| "updateNode"
 			| "updatePullRequest"
 			| "updatePullRequestReview"

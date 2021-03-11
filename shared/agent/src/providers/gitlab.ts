@@ -1187,7 +1187,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
 
 			response.project.mergeRequest.idComputed = mergeRequestFullId;
-			response.project.mergeRequest.discussions.nodes.forEach((_: any) => {
+			response.project.mergeRequest.discussions.nodes.forEach((_: DiscussionNode) => {
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
 					_.notes.nodes.forEach((n: any) => {
 						if (n.discussion && n.discussion.id) {
@@ -1199,7 +1199,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							this.toAuthorAbsolutePath(n.author);
 						}
 					});
-					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes.nodes[0].id);
+					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes?.nodes[0].id);
 					// remove all the replies from the parent (they're now on replies)
 					_.notes.nodes.length = 1;
 				}
@@ -2521,6 +2521,39 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			Logger.warn(ex);
 			throw ex;
 		}
+	}
+
+	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateNote($id: NoteID!, $body: String!) {
+			updateNote(input: {id: $id, body: $body}) {
+			  clientMutationId
+			  note {
+				updatedAt
+				body
+				bodyHtml
+				id
+				discussion {
+       			 id
+      			}
+			  }
+			}
+		  }
+		  `,
+			{
+				id: request.id,
+				body: request.body
+			}
+		);
+
+		return {
+			directives: [
+				{
+					type: "updateDiscussionNote",
+					data: response.updateNote.note
+				}
+			]
+		};
 	}
 
 	private async getProjectEvents(

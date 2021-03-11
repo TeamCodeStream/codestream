@@ -96,6 +96,25 @@ export interface DiscussionNode {
 				newPath: string;
 				newLine: string;
 			};
+
+			replies?: {
+				_pending?: boolean;
+				id: string;
+				author: {
+					name: string;
+					login: string;
+					avatarUrl: string;
+				};
+				state: string;
+				body: string;
+				bodyText: string;
+				createdAt: string;
+				position: {
+					oldPath: string;
+					newPath: string;
+					newLine: string;
+				};
+			}[];
 		}[];
 	};
 	resolved: boolean;

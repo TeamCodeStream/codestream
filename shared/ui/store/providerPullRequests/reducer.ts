@@ -6,7 +6,7 @@ import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { CSRepository } from "@codestream/protocols/api";
 import { ContextActionsType, ContextState } from "../context/types";
-import { GitLabMergeRequest } from "@codestream/protocols/agent";
+import { DiscussionNode, GitLabMergeRequest } from "@codestream/protocols/agent";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -249,6 +249,40 @@ export function reduceProviderPullRequests(
 							}
 							if (nodeRemoveIndex > -1) {
 								pr.discussions.nodes.splice(nodeRemoveIndex, 1);
+							}
+						} else if (directive.type === "updateDiscussionNote") {
+							const discussionNode = pr.discussions.nodes.find(
+								(_: DiscussionNode) => _.id === directive.data.discussion.id
+							);
+							if (discussionNode) {
+								const note = discussionNode?.notes?.nodes.find(_ => _.id === directive.data.id);
+								if (note) {
+									const keys = Object.keys(directive.data).filter(
+										_ => _ !== "discussion" && _ !== "id"
+									);
+									for (const k of keys) {
+										note[k] = directive.data[k];
+									}
+								}
+								// typescript is killing me here...
+								else if (
+									discussionNode.notes?.nodes &&
+									discussionNode.notes.nodes.length > 0 &&
+									discussionNode.notes.nodes[0] &&
+									discussionNode.notes.nodes[0].replies?.length
+								) {
+									const reply = discussionNode!.notes!.nodes![0]?.replies?.find(
+										_ => _.id === directive.data.id
+									);
+									if (reply) {
+										const keys = Object.keys(directive.data).filter(
+											_ => _ !== "discussion" && _ !== "id"
+										);
+										for (const k of keys) {
+											reply[k] = directive.data[k];
+										}
+									}
+								}
 							}
 						} else if (directive.type === "updateNode") {
 							const node = pr.discussions.nodes.find((_: any) => _.id === directive.data.id);
