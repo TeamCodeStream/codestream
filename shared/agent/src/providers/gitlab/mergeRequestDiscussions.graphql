@@ -1,0 +1,17 @@
+#import "./fragments/discussion.graphql"
+
+query GetMergeRequestDiscussions($fullPath: ID!, $iid: String!, $after: String) {
+	project(fullPath: $fullPath) {
+		mergeRequest(iid: $iid) {
+			discussions(first: 100, after: $after) {
+				pageInfo {
+					endCursor
+					hasNextPage
+				}
+				nodes {
+					...discussionFragment
+				}
+			}
+		}
+	}
+}

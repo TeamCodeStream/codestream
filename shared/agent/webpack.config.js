@@ -29,10 +29,7 @@ module.exports = function(env, argv) {
 				{
 					source: "dist/agent-pkg.js",
 					// TODO: Use environment variable if exists
-					destination: path.resolve(
-						__dirname,
-						"../../vs/src/CodeStream.VisualStudio/dist/agent.js"
-					)
+					destination: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio/dist/agent.js")
 				},
 				{
 					source: "dist/agent-pkg.js.map",
@@ -45,18 +42,12 @@ module.exports = function(env, argv) {
 				{
 					source: "dist/agent-pkg.js",
 					// TODO: Use environment variable if exists
-					destination: path.resolve(
-						__dirname,
-						"../../jb/src/main/resources/agent/agent-pkg.js"
-					)
+					destination: path.resolve(__dirname, "../../jb/src/main/resources/agent/agent-pkg.js")
 				},
 				{
 					source: "dist/agent-pkg.js.map",
 					// TODO: Use environment variable if exists
-					destination: path.resolve(
-						__dirname,
-						"../../jb/src/main/resources/agent/agent-pkg.js.map"
-					)
+					destination: path.resolve(__dirname, "../../jb/src/main/resources/agent/agent-pkg.js.map")
 				}
 			]
 		}
@@ -125,6 +116,15 @@ module.exports = function(env, argv) {
 					exclude: /node_modules|\.d\.ts$/,
 					test: /\.tsx?$/,
 					use: "ts-loader"
+				},
+				{
+					test: /\.(graphql|gql)$/,
+					exclude: /node_modules|\.d\.ts$/,
+					use: [
+						{
+							loader: "graphql-tag/loader"
+						}
+					]
 				}
 			],
 			// Removes `Critical dependency: the request of a dependency is an expression` from `./node_modules/vscode-languageserver/lib/files.js`

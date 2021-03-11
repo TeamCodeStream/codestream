@@ -1,0 +1,60 @@
+fragment discussionFragment on Discussion {
+	createdAt
+	id
+	notes {
+		nodes {
+			author {
+				name
+				login: username
+				avatarUrl
+			}
+			body
+			bodyHtml
+			confidential
+			createdAt
+			discussion {
+				id
+				replyId
+				createdAt
+			}
+			id
+			position {
+				x
+				y
+				newLine
+				newPath
+				oldLine
+				oldPath
+				filePath
+			}
+			project {
+				name
+			}
+			resolvable
+			resolved
+			resolvedAt
+			resolvedBy {
+				login: username
+				avatarUrl
+			}
+			system
+			systemNoteIconName
+			updatedAt
+			userPermissions {
+				adminNote
+				readNote
+				resolveNote
+				awardEmoji
+				createNote
+			}
+		}
+	}
+	replyId
+	resolvable
+	resolved
+	resolvedAt
+	resolvedBy {
+		login: username
+		avatarUrl
+	}
+}

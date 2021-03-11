@@ -45,6 +45,9 @@ import {
 } from "./provider";
 import { Directives } from "./directives";
 import { CodeStreamSession } from "../session";
+import { print } from "graphql";
+import mergeRequestQuery from "./gitlab/mergeRequest.graphql";
+import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -870,222 +873,47 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let response = {} as GitLabMergeRequestWrapper;
 		try {
-			const q = `query GetPullRequest($fullPath: ID!, $iid: String!, $after:String) {
-				currentUser {
-				  name
-				  login: username
-				  avatarUrl
-				  id
-				}
-				project(fullPath: $fullPath) {
-				  name
-				  mergeRequestsEnabled
-				  mergeRequestsFfOnlyEnabled   
-				  removeSourceBranchAfterMerge 			  
-				  mergeRequest(iid: $iid) {
-					approvedBy {
-					  nodes {
-						avatarUrl
-						name
-						login: username
-					  }
-					}
-					id
-					iid
-					createdAt
-					sourceBranch
-					targetBranch
-					title
-					description
-					webUrl
-					state
-					mergedAt
-					workInProgress
-					reference
-					projectId
-					mergeWhenPipelineSucceeds
-					mergeableDiscussionsState
-					author {
-					  name
-					  login: username
-					  avatarUrl
-					}
-					diffRefs {
-					  baseSha
-					  headSha
-					  startSha
-					}
-					pipelines(first:1) {
-						nodes {
-							id
-							status							
-							stages {
-							  nodes{
-								name
-								detailedStatus{
-								  label
-								  tooltip
-								}								
-							  }
-							}
-							detailedStatus {							  
-							  favicon							  
-							  icon
-							  label
-							  text
-							  tooltip
-							}
-						}
-					}
-					commitCount
-					sourceProject {
-					  name
-					  webUrl
-					  fullPath
-					}
-					upvotes
-					downvotes
-					milestone {
-					  title
-					  id
-					  webPath
-					  dueDate
-					}
-					subscribed
-					userDiscussionsCount
-					discussionLocked
-					forceRemoveSourceBranch
-					assignees(last: 100) {
-					  nodes {
-						id
-						name
-						login: username
-						avatarUrl
-					  }
-					}
-					participants(last: 100) {
-					  nodes {
-						id
-						name
-						login: username
-						avatarUrl
-					  }
-					}
-					labels(last: 100) {
-					  nodes {
-						id
-						color
-						textColor
-						title
-					  }
-					}
-					currentUserTodos(last: 100) {
-					  nodes {
-						action
-						body
-						id
-						targetType
-						state
-					  }
-					}
-					timeEstimate
-					totalTimeSpent
-					userPermissions {
-						canMerge
-					}
-					discussions(first:100, after:$after) {
-					  pageInfo{
-						endCursor
-						hasNextPage
-					  }
-					  nodes {
-						createdAt
-						id
-						notes {
-						  nodes {
-							author {
-							  name
-							  login: username
-							  avatarUrl
-							}
-							body
-							bodyHtml
-							confidential
-							createdAt
-							discussion {
-							  id
-							  replyId
-							  createdAt
-							}
-							id
-							position {
-							  x
-							  y
-							  newLine
-							  newPath
-							  oldLine
-							  oldPath
-							  filePath
-							}
-							project {
-							  name
-							}
-							resolvable
-							resolved
-							resolvedAt
-							resolvedBy {
-							  login: username
-							  avatarUrl
-							}
-							system
-							systemNoteIconName
-							updatedAt
-							userPermissions {
-							  adminNote
-							  readNote
-							  resolveNote
-							  awardEmoji
-							  createNote
-							}
-						  }
-						}
-						replyId
-						resolvable
-						resolved
-						resolvedAt
-						resolvedBy {
-						  login: username
-						  avatarUrl
-						}
-					  }
-					}
-				  }
-				}
-			  }
-			  `;
+			let query: string;
+			query = print(mergeRequestQuery);
+
 			let discussions: any[] = [];
-			let after = "";
-			while (true) {
-				response = await this.query(q, {
-					fullPath: projectFullPath,
-					iid: iid.toString(),
-					after: after
-				});
-				discussions = discussions.concat(response.project.mergeRequest.discussions.nodes);
-				if (response.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
-					after = response.project.mergeRequest.discussions.pageInfo.endCursor;
-				} else {
-					break;
+			let i = 0;
+			const args = {
+				fullPath: projectFullPath,
+				iid: iid.toString()
+			};
+			response = await this.query(query, args);
+			discussions = discussions.concat(response.project.mergeRequest.discussions.nodes);
+			if (response.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
+				let after = response.project.mergeRequest.discussions.pageInfo.endCursor;
+				const paginatedQuery = print(mergeRequestDiscussionQuery);
+				while (true) {
+					const paginated = await this.query(paginatedQuery, {
+						...args,
+						after: after
+					});
+					discussions = discussions.concat(paginated.project.mergeRequest.discussions.nodes);
+					if (paginated.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
+						after = paginated.project.mergeRequest.discussions.pageInfo.endCursor;
+						i++;
+						Logger.log(`getPullRequest paginating discussions ${i}`);
+					} else {
+						break;
+					}
 				}
 			}
+
+			response.project.mergeRequest.discussions.nodes = discussions;
 			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
 
+			// project settings
 			const project = await this.restGet<{
 				merge_method: string;
 				only_allow_merge_if_all_discussions_are_resolved: boolean;
 				only_allow_merge_if_pipeline_succeeds: boolean;
 				allow_merge_on_skipped_pipeline: boolean;
 			}>(`/projects/${encodeURIComponent(projectFullPath)}`);
+
 			response.project.mergeMethod = project.body.merge_method!;
 			response.project.allowMergeOnSkippedPipeline = project.body.allow_merge_on_skipped_pipeline;
 			response.project.onlyAllowMergeIfAllDiscussionsAreResolved =
@@ -1093,6 +921,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.onlyAllowMergeIfPipelineSucceeds =
 				project.body.only_allow_merge_if_pipeline_succeeds;
 
+			// merge request settings
 			const mergeRequest = await this.restGet<{
 				diverged_commits_count: number;
 			}>(
@@ -1100,7 +929,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					projectFullPath
 				)}/merge_requests/${iid}?include_diverged_commits_count=true`
 			);
+			response.project.mergeRequest.divergedCommitsCount =
+				mergeRequest.body.diverged_commits_count || 0;
 
+			// pipelines
 			const pipelines = await this.restGet<any[]>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/pipelines?ref=${
 					response.project.mergeRequest.headRefName
@@ -1121,8 +953,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					webUrl: pipeline.web_url
 				};
 			}
-			response.project.mergeRequest.divergedCommitsCount =
-				mergeRequest.body.diverged_commits_count || 0;
 
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
 			// build this so that it aligns with what the REST api created
@@ -1133,28 +963,23 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				id: base_id,
 				full: response.project.mergeRequest.references.full
 			});
-			response.project.mergeRequest.discussions.nodes = discussions;
-			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
-			const commits = await this.getPullRequestCommits({
-				providerId: this.providerConfig.id,
-				pullRequestId: mergeRequestFullId
-			});
 
-			response.project.mergeRequest.commitCount = commits?.length;
+			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
+			response.project.mergeRequest.commitCount = (
+				await this.getPullRequestCommits({
+					providerId: this.providerConfig.id,
+					pullRequestId: mergeRequestFullId
+				})
+			)?.length;
 			response.project.mergeRequest.changesCount = (
 				await this.getPullRequestFilesChanged({ pullRequestId: mergeRequestFullId })
 			)?.length;
 
-			response.project.mergeRequest.viewer = {
-				id: response.currentUser.id,
-				login: response.currentUser.login,
-				name: response.currentUser.name,
-				avatarUrl: response.currentUser.avatarUrl
-			};
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/award_emoji`
 			);
+			// massage awards into a model we want
 			const grouped = groupBy(awards.body, (_: { name: string }) => _.name);
 			response.project.mergeRequest.reactionGroups =
 				Object.keys(grouped).map(_ => {
@@ -1165,28 +990,34 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					});
 					return { content: _, data };
 				}) || [];
-			// const restMR = await this.restGet<any>(
-			// `/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`
-			// );
-			// response.project.mergeRequest.squashOnMerge = restMR.body.squash;
-			response.project.mergeRequest.providerId = this.providerConfig?.id;
-			response.project.mergeRequest.baseRefOid =
-				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha;
-			response.project.mergeRequest.baseRefName = response.project.mergeRequest.targetBranch;
-			response.project.mergeRequest.headRefOid =
-				response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha;
-			response.project.mergeRequest.headRefName = response.project.mergeRequest.sourceBranch;
-			response.project.mergeRequest.repository = {
-				name: response.project.mergeRequest.sourceProject.name,
-				nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
-				url: response.project.mergeRequest.sourceProject.webUrl
-			};
-			response.project.mergeRequest.number = parseInt(response.project.mergeRequest.iid, 10);
-			response.project.mergeRequest.url = response.project.mergeRequest.sourceProject.webUrl;
-			response.project.mergeRequest.baseWebUrl = this.baseWebUrl;
-			response.project.mergeRequest.merged = !!response.project.mergeRequest.mergedAt;
 
-			response.project.mergeRequest.idComputed = mergeRequestFullId;
+			response.project.mergeRequest = {
+				...response.project.mergeRequest,
+				providerId: this.providerConfig?.id,
+				baseRefOid:
+					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.baseSha,
+				baseRefName: response.project.mergeRequest.targetBranch,
+				headRefOid:
+					response.project.mergeRequest.diffRefs && response.project.mergeRequest.diffRefs.headSha,
+				headRefName: response.project.mergeRequest.sourceBranch,
+				repository: {
+					name: response.project.mergeRequest.sourceProject.name,
+					nameWithOwner: response.project.mergeRequest.sourceProject.fullPath,
+					url: response.project.mergeRequest.sourceProject.webUrl
+				},
+				number: parseInt(response.project.mergeRequest.iid, 10),
+				url: response.project.mergeRequest.sourceProject.webUrl,
+				baseWebUrl: this.baseWebUrl,
+				merged: !!response.project.mergeRequest.mergedAt,
+				idComputed: mergeRequestFullId,
+				viewer: {
+					id: response.currentUser.id,
+					login: response.currentUser.login,
+					name: response.currentUser.name,
+					avatarUrl: response.currentUser.avatarUrl
+				}
+			};
+			// massage into replies
 			response.project.mergeRequest.discussions.nodes.forEach((_: DiscussionNode) => {
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
 					_.notes.nodes.forEach((n: any) => {
@@ -1205,7 +1036,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			});
 
-			this._pullRequestCache.set(id, response);
+			// add reviews
 			const pendingReview = await this.gitLabReviewStore.get(base_id);
 			if (pendingReview?.comments?.length) {
 				response.project.mergeRequest.pendingReview = {
@@ -1221,6 +1052,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				);
 			}
 
+			// get all timeline events
 			(
 				await Promise.all([
 					this.getProjectEvents(
@@ -1236,44 +1068,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				})
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
+			// sort all the nodes
 			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
+
+			this._pullRequestCache.set(id, response);
 		} catch (ex) {
-			Logger.error(ex);
+			Logger.error(ex, "getMergeRequest", {
+				...request
+			});
 		}
 
 		return response;
-
-		// if (response?.repository?.pullRequest) {
-		// 	const { repos } = SessionContainer.instance();
-		// 	const prRepo = await this.getPullRequestRepo(
-		// 		await repos.get(),
-		// 		response.repository.pullRequest
-		// 	);
-
-		// 	if (prRepo?.id) {
-		// 		try {
-		// 			const prForkPointSha = await scmManager.getForkPointRequestType({
-		// 				repoId: prRepo.id,
-		// 				baseSha: response.repository.pullRequest.baseRefOid,
-		// 				headSha: response.repository.pullRequest.headRefOid
-		// 			});
-
-		// 			response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
-		// 		} catch (err) {
-		// 			Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
-		// 		}
-		// 	}
-		// }
-		// if (response?.repository?.pullRequest?.timelineItems != null) {
-		// 	response.repository.pullRequest.timelineItems.nodes = allTimelineItems;
-		// }
-		// response.repository.pullRequest.repoUrl = response.repository.url;
-		// response.repository.pullRequest.baseUrl = response.repository.url.replace(
-		// 	response.repository.resourcePath,
-		// 	""
-		// );
 	}
 
 	@log()

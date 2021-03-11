@@ -1,0 +1,20 @@
+fragment pipelineFragment on Pipeline {
+	id
+	status
+	stages {
+		nodes {
+			name
+			detailedStatus {
+				label
+				tooltip
+			}
+		}
+	}
+	detailedStatus {
+		favicon
+		icon
+		label
+		text
+		tooltip
+	}
+}

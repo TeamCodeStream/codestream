@@ -1,0 +1,121 @@
+#import "./fragments/pipeline.graphql"
+#import "./fragments/discussion.graphql"
+
+query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
+	currentUser {
+		name
+		login: username
+		avatarUrl
+		id
+	}
+	project(fullPath: $fullPath) {
+		name
+		mergeRequestsEnabled
+		mergeRequestsFfOnlyEnabled
+		removeSourceBranchAfterMerge
+		mergeRequest(iid: $iid) {
+			approvedBy {
+				nodes {
+					avatarUrl
+					name
+					login: username
+				}
+			}
+			id
+			iid
+			createdAt
+			sourceBranch
+			targetBranch
+			title
+			description
+			webUrl
+			state
+			mergedAt
+			workInProgress
+			reference
+			projectId
+			mergeWhenPipelineSucceeds
+			mergeableDiscussionsState
+			author {
+				name
+				login: username
+				avatarUrl
+			}
+			diffRefs {
+				baseSha
+				headSha
+				startSha
+			}
+			pipelines(first: 1) {
+				nodes {
+					...pipelineFragment
+				}
+			}
+			commitCount
+			sourceProject {
+				name
+				webUrl
+				fullPath
+			}
+			upvotes
+			downvotes
+			milestone {
+				title
+				id
+				webPath
+				dueDate
+			}
+			subscribed
+			userDiscussionsCount
+			discussionLocked
+			forceRemoveSourceBranch
+			assignees(last: 100) {
+				nodes {
+					id
+					name
+					login: username
+					avatarUrl
+				}
+			}
+			participants(last: 100) {
+				nodes {
+					id
+					name
+					login: username
+					avatarUrl
+				}
+			}
+			labels(last: 15) {
+				nodes {
+					id
+					color
+					textColor
+					title
+				}
+			}
+			currentUserTodos(last: 50) {
+				nodes {
+					action
+					body
+					id
+					targetType
+					state
+				}
+			}
+			timeEstimate
+			totalTimeSpent
+			userPermissions {
+				canMerge
+			}
+			discussions(first: 50, after: $after) {
+				pageInfo {
+					endCursor
+					hasNextPage
+				}
+				nodes {
+					...discussionFragment
+				}
+			}
+		}
+	}
+}
