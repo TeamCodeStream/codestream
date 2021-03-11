@@ -1277,16 +1277,56 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
-		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
-		const commentId = request.commentId.replace(/.*\//, "");
-		const url = `/projects/${encodeURIComponent(
-			projectFullPath
-		)}/merge_requests/${iid}/discussions/${commentId}/notes`;
-		const data = await this.restPost(url, {
-			body: request.text
-		});
-		return data.body;
+	async createCommentReply(request: {
+		pullRequestId: string;
+		parentId: string;
+		text: string;
+	}): Promise<Directives> {
+		const { id } = this.parseId(request.pullRequestId);
+		const response = await this.query<any>(
+			`mutation createNote($noteableId: NoteableID!, $discussionId: DiscussionID!, $body: String!) {
+			createNote(input: {noteableId: $noteableId, discussionId: $discussionId, body: $body}) {
+			  clientMutationId
+			  note {
+				author {
+					name
+					login: username
+					avatarUrl
+				  }
+				  body
+				  bodyHtml
+				  createdAt
+				  discussion {
+					id
+					replyId
+					createdAt
+				  }
+				  id	   				   
+				  resolvable
+				  resolved
+				  updatedAt
+				  userPermissions {
+					adminNote
+					readNote
+					resolveNote
+					awardEmoji
+					createNote
+				  }
+			  }
+			}
+		  }
+		  `,
+			{
+				// mergeRequest
+				noteableId: this.toMergeRequestGid(id),
+				// the parent discussion
+				discussionId: request.parentId,
+				body: request.text
+			}
+		);
+		return {
+			directives: [{ type: "addReply", data: response.createNote.note }]
+		};
 	}
 
 	@log()
@@ -1309,6 +1349,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return existing;
 	}
 
+	@log()
 	async createPullRequestInlineReviewComment(request: {
 		pullRequestId: string;
 		text: string;
@@ -1322,6 +1363,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return result;
 	}
 
+	@log()
 	async createPullRequestReviewComment(request: {
 		pullRequestId: string;
 		pullRequestReviewId?: string;
@@ -1348,6 +1390,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return true;
 	}
 
+	@log()
 	async submitReview(request: {
 		pullRequestId: string;
 		text: string;
@@ -1397,6 +1440,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return true;
 	}
 
+	@log()
 	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
@@ -1418,7 +1462,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
-	async setAssigneeOnPullRequest(request: { pullRequestId: string; login: string }) {
+	@log()
+	async setAssigneeOnPullRequest(request: {
+		pullRequestId: string;
+		login: string;
+	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
@@ -1816,6 +1864,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async deletePullRequestComment(request: {
 		id: string;
 		type: string;
@@ -1837,7 +1886,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			id: noteId
 		});
 
-		Logger.log("DELETING: " + noteId);
 		this._pullRequestCache.delete(id);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
@@ -1856,6 +1904,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async createPullRequestCommentAndClose(request: {
 		pullRequestId: string;
 		text: string;
@@ -1920,6 +1969,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async createPullRequestCommentAndReopen(request: {
 		pullRequestId: string;
 		text: string;
@@ -1984,6 +2034,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
 	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
@@ -2055,6 +2106,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	>();
 
+	@log()
 	async toggleMilestoneOnPullRequest(request: {
 		pullRequestId: string;
 		milestoneId: string;
@@ -2085,6 +2137,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return undefined;
 	}
 
+	@log()
 	async setWorkInProgressOnPullRequest(request: {
 		pullRequestId: string;
 		onOff: boolean;
@@ -2127,6 +2180,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return undefined;
 	}
 
+	@log()
 	async setLabelOnPullRequest(request: {
 		pullRequestId: string;
 		labelIds: string[];
@@ -2173,6 +2227,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return undefined;
 	}
 
+	@log()
 	async toggleReaction(request: {
 		pullRequestId: string;
 		subjectId: string;
@@ -2231,6 +2286,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return undefined;
 	}
 
+	@log()
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
@@ -2277,6 +2333,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return changedFiles;
 	}
 
+	@log()
 	async cancelMergeWhenPipelineSucceeds(request: {
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
@@ -2301,6 +2358,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async mergePullRequest(request: {
 		pullRequestId: string;
 		message: string;
@@ -2355,6 +2413,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
+	@log()
 	async createPullRequestInlineComment(request: {
 		pullRequestId: string;
 		text: string;
@@ -2374,6 +2433,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return result;
 	}
 
+	@log()
 	async createCommitComment(request: {
 		pullRequestId: string;
 		// leftSha
@@ -2415,6 +2475,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return data.body;
 	}
 
+	@log()
 	public async togglePullRequestApproval(request: {
 		pullRequestId: string;
 		approve: boolean;
@@ -2463,6 +2524,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	@log()
 	async deletePullRequestReview(request: {
 		pullRequestId: string;
 		pullRequestReviewId: string;
@@ -2523,6 +2585,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
+	@log()
 	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation UpdateNote($id: NoteID!, $body: String!) {

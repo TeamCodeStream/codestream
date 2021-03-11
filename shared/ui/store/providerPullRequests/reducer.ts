@@ -210,6 +210,23 @@ export function reduceProviderPullRequests(
 							} else {
 								pr.reactionGroups.push({ content: directive.data.name, data: [directive.data] });
 							}
+						} else if (directive.type === "addReply") {
+							const discussionNode = pr.discussions.nodes.find(
+								(_: DiscussionNode) => _.id === directive.data.discussion.id
+							);
+							if (discussionNode) {
+								const firstNode = discussionNode?.notes?.nodes[0];
+								if (firstNode) {
+									const replies = firstNode.replies;
+									if (firstNode.replies == null) {
+										firstNode.replies = [directive.data];
+									} else if (!firstNode.replies.find(_ => _.id === directive.data.id)) {
+										firstNode.replies.push(directive.data);
+									}
+								} else {
+									console.warn("Could not find node", discussionNode);
+								}
+							}
 						} else if (directive.type === "removeNode") {
 							if (!directive.data.id) continue;
 

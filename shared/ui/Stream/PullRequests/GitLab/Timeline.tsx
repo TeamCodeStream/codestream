@@ -537,6 +537,7 @@ export const Timeline = (props: Props) => {
 									mode={note}
 									fetch={fetch}
 									databaseId={note.id}
+									parentId={note.discussion.id}
 									isOpen={openComments[note.id]}
 									__onDidRender={functions => {
 										__onDidRender(functions, note.id);

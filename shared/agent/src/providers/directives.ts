@@ -5,6 +5,7 @@ export interface Directives {
 			| "addNode"
 			| "addNodes"
 			| "addReaction"
+			| "addReply"
 			| "removeNode"
 			| "removeReaction"
 			| "removeApprovedBy"

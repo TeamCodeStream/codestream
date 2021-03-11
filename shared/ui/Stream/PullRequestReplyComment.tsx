@@ -4,15 +4,11 @@ import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { PRButtonRow, PRCodeCommentReply, PRCodeCommentReplyInput } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
-import {
-	ExecuteThirdPartyTypedType,
-	FetchThirdPartyPullRequestPullRequest
-} from "@codestream/protocols/agent";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import MessageInput from "./MessageInput";
-import { CSMe } from "@codestream/protocols/api";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
-import { Headshot, PRHeadshot } from "../src/components/Headshot";
+import { PRHeadshot } from "../src/components/Headshot";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 
@@ -22,18 +18,30 @@ interface Props {
 	fetch: Function;
 	className?: string;
 	databaseId: string;
+	parentId?: string;
 	isOpen: boolean;
 	__onDidRender: Function;
 }
 
 export const PullRequestReplyComment = styled((props: Props) => {
-	const { pr, fetch, databaseId } = props;
+	const { pr, fetch, databaseId, parentId } = props;
 	const dispatch = useDispatch();
 
 	const [text, setText] = useState("");
 	const [open, setOpen] = useState(props.isOpen);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isPreviewing, setIsPreviewing] = useState(false);
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { context } = state;
+
+		return {
+			isGitLab:
+				context.currentPullRequest && context.currentPullRequest.providerId
+					? context.currentPullRequest.providerId.indexOf("gitlab") > -1
+					: false
+		};
+	});
 
 	useEffect(() => setOpen(props.isOpen), [props.isOpen]);
 
@@ -49,15 +57,21 @@ export const PullRequestReplyComment = styled((props: Props) => {
 
 			await dispatch(
 				api("createCommentReply", {
+					parentId: parentId,
 					commentId: databaseId,
 					text: replaceHtml(text)
 				})
 			);
-
-			fetch().then(() => {
+			if (derivedState.isGitLab) {
 				setText("");
 				setOpen(false);
-			});
+			} else {
+				// TODO GH doesn't support directives for this yet
+				fetch().then(() => {
+					setText("");
+					setOpen(false);
+				});
+			}
 		} catch (ex) {
 			console.warn(ex);
 		} finally {
