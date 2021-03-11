@@ -180,7 +180,9 @@ export const Timeline = (props: Props) => {
 		timer: "clock",
 		unapproval: "x",
 		approval: "check",
-		fork: "git-branch"
+		fork: "git-branch",
+		"comment-dots": "comment",
+		"git-merge": "git-merge"
 	};
 
 	const __onDidRender = (functions, id) => {
