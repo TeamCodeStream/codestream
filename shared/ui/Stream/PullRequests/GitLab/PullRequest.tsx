@@ -22,6 +22,8 @@ import { Link } from "../../Link";
 import { autoCheckedMergeabilityStatus } from "../../PullRequest";
 import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
 import {
+	ChangeDataType,
+	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	GitLabMergeRequest
@@ -377,13 +379,23 @@ export const PullRequest = () => {
 		if (!derivedState.reviewsState.bootstrapped) {
 			dispatch(bootstrapReviews());
 		}
-
+		let _didChangeDataNotification;
 		getOpenRepos();
 		initialFetch().then(_ => {
 			HostApi.instance.track("PR Details Viewed", {
 				Host: derivedState.currentPullRequestProviderId
 			});
+
+			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
+				if (e.type === ChangeDataType.Commits) {
+					fetch("Updating...");
+				}
+			});
 		});
+
+		return () => {
+			_didChangeDataNotification && _didChangeDataNotification.dispose();
+		};
 	});
 
 	useEffect(() => {
