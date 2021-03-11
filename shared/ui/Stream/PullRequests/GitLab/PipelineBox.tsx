@@ -86,10 +86,14 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 						return (
 							<Tooltip
 								placement="top"
+								delay={1}
+								trigger={["hover"]}
 								overlayStyle={{ zIndex: "3000" }}
-								title={_.detailedStatus.tooltip}
+								title={`${_.name}: ${_.detailedStatus.tooltip}`}
 							>
-								<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
+								<span>
+									<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
+								</span>
 							</Tooltip>
 						);
 					})}
