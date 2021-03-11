@@ -117,6 +117,23 @@ export const Notifications = props => {
 								Don't automatically follow any codemarks or feedback requests
 							</Radio>
 						</RadioGroup>
+						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
+							<div style={{ marginTop: "20px" }}>
+								<p className="explainer">Deliver notifications via:</p>
+								<RadioGroup
+									name="delivery"
+									selectedValue={derivedState.notificationDeliveryPreference}
+									onChange={handleChangeDelivery}
+									loading={loadingDelivery}
+								>
+									<Radio value={CSNotificationDeliveryPreference.All}>Email &amp; Desktop</Radio>
+									<Radio value={CSNotificationDeliveryPreference.EmailOnly}>Email only</Radio>
+									<Radio value={CSNotificationDeliveryPreference.ToastOnly}>Desktop only</Radio>
+									<Radio value={CSNotificationDeliveryPreference.Off}>None</Radio>
+								</RadioGroup>
+							</div>
+						)}
+						<h3>Other Email Notifications</h3>
 						<div style={{ marginTop: "20px" }}>
 							<Checkbox
 								name="frReminders"
@@ -147,22 +164,6 @@ export const Notifications = props => {
 								Send me weekly emails summarizing my activity
 							</Checkbox>
 						</div>
-						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
-							<div style={{ marginTop: "20px" }}>
-								<p className="explainer">Deliver notifications via:</p>
-								<RadioGroup
-									name="delivery"
-									selectedValue={derivedState.notificationDeliveryPreference}
-									onChange={handleChangeDelivery}
-									loading={loadingDelivery}
-								>
-									<Radio value={CSNotificationDeliveryPreference.All}>Email &amp; Desktop</Radio>
-									<Radio value={CSNotificationDeliveryPreference.EmailOnly}>Email only</Radio>
-									<Radio value={CSNotificationDeliveryPreference.ToastOnly}>Desktop only</Radio>
-									<Radio value={CSNotificationDeliveryPreference.Off}>None</Radio>
-								</RadioGroup>
-							</div>
-						)}
 						<p>&nbsp;</p>
 
 						<p>
