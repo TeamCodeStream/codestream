@@ -188,7 +188,7 @@ const ButtonAppend = styled.div`
 	margin-left: 10px;
 `;
 
-type ButtonVariant =
+export type ButtonVariant =
 	| "primary"
 	| "secondary"
 	| "destructive"
