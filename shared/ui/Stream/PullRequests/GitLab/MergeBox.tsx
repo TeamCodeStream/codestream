@@ -204,8 +204,15 @@ export const MergeBox = props => {
 						Merge
 					</Button>
 					<div className="pad-left">
-						The pipeline for this merge request failed. Please retry the job or push a new commit to
-						fix the failure
+						{derivedState.pipeline.status === "FAILED" && (
+							<>
+								The pipeline for this merge request failed. Please retry the job or push a new
+								commit to fix the failure
+							</>
+						)}
+						{derivedState.pipeline.status === "CANCELED" && (
+							<>You can only merge once the items above are resolved.</>
+						)}
 					</div>
 				</FlexRow>
 			</OutlineBox>

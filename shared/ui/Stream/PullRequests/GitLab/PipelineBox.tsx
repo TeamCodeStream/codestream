@@ -47,7 +47,7 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 		derivedState.prRoot &&
 		derivedState.prRoot.project &&
 		derivedState.prRoot.project.onlyAllowMergeIfPipelineSucceeds &&
-		!pipeline
+		(!pipeline || pipeline.status === "CANCELED")
 	) {
 		return (
 			<OutlineBox>
