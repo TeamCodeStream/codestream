@@ -36,7 +36,7 @@ const iconForStatus = {
 
 export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage: Function }) => {
 	const pr = props.pr;
-	const pipeline = pr.pipelines && pr.pipelines.nodes && pr.pipelines.nodes[0];
+	const pipeline = pr?.pipelines?.nodes[0];
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
 			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper
@@ -44,9 +44,7 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 	});
 
 	if (
-		derivedState.prRoot &&
-		derivedState.prRoot.project &&
-		derivedState.prRoot.project.onlyAllowMergeIfPipelineSucceeds &&
+		derivedState?.prRoot?.project?.onlyAllowMergeIfPipelineSucceeds &&
 		(!pipeline || pipeline.status === "CANCELED")
 	) {
 		return (
