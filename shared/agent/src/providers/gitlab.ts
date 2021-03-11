@@ -1776,26 +1776,43 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
-		const { id } = this.parseId(request.pullRequestId);
-		const query = `
-				mutation DiscussionToggleResolve($id:ID!, $resolve: Boolean!) {
-					discussionToggleResolve(input:{id:$id, resolve:$resolve}) {
-			  			clientMutationId
-			  				discussion {
-								id
-			  				}
+		const response = await this.mutate<any>(
+			`
+		mutation DiscussionToggleResolve($id:ID!, $resolve: Boolean!) {
+			discussionToggleResolve(input:{id:$id, resolve:$resolve}) {
+				  clientMutationId
+					  discussion {
+						id
+						resolvedAt
+						resolved
+						resolvable
+						resolvedBy {
+							  login: username
+							  avatarUrl
 						}
-		  			}`;
-
-		await this.mutate<any>(query, {
-			id: noteId,
-			resolve: request.onOff
-		});
-
-		Logger.log("RESOLVING: " + noteId);
+						notes {
+							nodes {
+							  id
+							  resolvable
+							  resolved
+							}
+						}
+					  }
+				  }
+			  }`,
+			{
+				id: noteId,
+				resolve: request.onOff
+			}
+		);
 
 		return {
-			directives: []
+			directives: [
+				{
+					type: "updateNode",
+					data: response.discussionToggleResolve.discussion
+				}
+			]
 		};
 	}
 

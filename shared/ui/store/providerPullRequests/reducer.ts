@@ -6,6 +6,7 @@ import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { CSRepository } from "@codestream/protocols/api";
 import { ContextActionsType, ContextState } from "../context/types";
+import { GitLabMergeRequest } from "@codestream/protocols/agent";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -170,7 +171,8 @@ export function reduceProviderPullRequests(
 			};
 			if (newState[providerId][id] && newState[providerId][id].conversations) {
 				if (providerId === "gitlab*com" || providerId === "gitlab/enterprise") {
-					const pr = newState[providerId][id].conversations.project.mergeRequest;
+					const pr = newState[providerId][id].conversations.project
+						.mergeRequest as GitLabMergeRequest;
 					for (const directive of action.payload.data) {
 						if (directive.type === "addApprovedBy") {
 							for (const d of directive.data) {
@@ -248,13 +250,26 @@ export function reduceProviderPullRequests(
 							if (nodeRemoveIndex > -1) {
 								pr.discussions.nodes.splice(nodeRemoveIndex, 1);
 							}
-							// const index = pr.discussions.nodes.indexOf(x => x.id === directive.data.id);
-							// if (index > -1) {
-							// 	pr.discussions.nodes.splice(index, 1);
-							// }
-							// for (const node of pr.discussions.nodes) {
-							// 	node.notes.nodes = node.notes.nodes.filter(x => x.id !== directive.data.id);
-							// }
+						} else if (directive.type === "updateNode") {
+							const node = pr.discussions.nodes.find((_: any) => _.id === directive.data.id);
+							if (node) {
+								for (const key in directive.data) {
+									if (key === "notes") {
+										for (const note of directive.data.notes.nodes) {
+											if (node.notes) {
+												let existingNote = node.notes.nodes.find(_ => _.id === note.id);
+												if (existingNote) {
+													for (const k in note) {
+														existingNote[k] = note[k];
+													}
+												}
+											}
+										}
+									} else {
+										node[key] = directive.data[key];
+									}
+								}
+							}
 						} else if (directive.type === "updatePullRequest") {
 							for (const key in directive.data) {
 								if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {

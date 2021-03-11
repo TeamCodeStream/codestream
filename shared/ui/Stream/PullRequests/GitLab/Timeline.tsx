@@ -295,7 +295,13 @@ export const Timeline = (props: Props) => {
 		);
 	};
 
-	const printComment = (note: any, parent: any, index: number, isResolvable?: boolean) => {
+	const printComment = (
+		note: any,
+		parent: any,
+		index: number,
+		isResolvable?: boolean,
+		resolved?: boolean
+	) => {
 		return (
 			<Comment className={index === 0 ? "first-reply" : "nth-reply"} key={"comment-" + index}>
 				<OutlineBoxHeader>
@@ -325,7 +331,7 @@ export const Timeline = (props: Props) => {
 						{isResolvable && (
 							<Icon
 								name="check-circle"
-								className="clickable"
+								className={`clickable ${resolved ? "green-color" : ""}`}
 								title="Resolve thread"
 								placement="bottom"
 							/>
@@ -417,9 +423,9 @@ export const Timeline = (props: Props) => {
 	};
 
 	const [resolvingNote, setResolvingNote] = useState("");
-	const resolveNote = async id => {
+	const resolveNote = async (id, shouldResolve) => {
 		setResolvingNote(id);
-		await dispatch(api("resolveReviewThread", { id, onOff: true }));
+		await dispatch(api("resolveReviewThread", { id, onOff: shouldResolve }));
 		setResolvingNote("");
 	};
 
@@ -505,7 +511,7 @@ export const Timeline = (props: Props) => {
 		return (
 			<OutlineBox style={{ padding: "10px" }} key={note.id} className={className}>
 				{note.position && printCodeCommentHeader(note)}
-				{printComment(note, undefined, 0, note.resolvable)}
+				{printComment(note, undefined, 0, note.resolvable, note.resolved)}
 				{note.resolvable && (
 					<>
 						{replies.length > 0 && !note.position && (
@@ -533,13 +539,24 @@ export const Timeline = (props: Props) => {
 										__onDidRender(functions, note.id);
 									}}
 								/>
-								<Button
-									variant="secondary"
-									onClick={() => resolveNote(note.id)}
-									isLoading={resolvingNote === note.id}
-								>
-									Resolve<span className="wide-text"> thread</span>
-								</Button>
+								{note.resolved && (
+									<Button
+										variant="secondary"
+										onClick={() => resolveNote(note.discussion.id, false)}
+										isLoading={resolvingNote === note.id}
+									>
+										Unresolve<span className="wide-text"> thread</span>
+									</Button>
+								)}
+								{!note.resolved && (
+									<Button
+										variant="secondary"
+										onClick={() => resolveNote(note.discussion.id, true)}
+										isLoading={resolvingNote === note.id}
+									>
+										Resolve<span className="wide-text"> thread</span>
+									</Button>
+								)}
 							</ReplyForm>
 						)}
 					</>

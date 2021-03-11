@@ -108,7 +108,7 @@ export interface GitLabMergeRequest {
 			avatarUrl: string;
 			name: string;
 			login: string;
-		};
+		}[];
 	};
 	author: {
 		avatarUrl: string;
@@ -139,6 +139,14 @@ export interface GitLabMergeRequest {
 	idComputed: string;
 	iid: string;
 	isDraft: boolean;
+	labels: {
+		nodes: {
+			id: string;
+			color: string;
+			textColor: string;
+			title: string;
+		}[];
+	};
 	merged: boolean;
 	mergeableDiscussionsState: boolean;
 	mergedAt: string;
