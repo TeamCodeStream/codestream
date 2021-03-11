@@ -330,10 +330,13 @@ export const Timeline = (props: Props) => {
 						/>
 						{isResolvable && (
 							<Icon
-								name="check-circle"
-								className={`clickable ${resolved ? "green-color" : ""}`}
+								name={resolvingNote === note.discussion.id ? "sync" : "check-circle"}
+								className={`clickable ${resolvingNote === note.discussion.id ? "spin" : ""} ${
+									resolved ? "green-color" : ""
+								}`}
 								title="Resolve thread"
 								placement="bottom"
+								onClick={() => resolveNote(note.discussion.id, !note.resolved)}
 							/>
 						)}
 						<PullRequestReactButton
@@ -543,7 +546,7 @@ export const Timeline = (props: Props) => {
 									<Button
 										variant="secondary"
 										onClick={() => resolveNote(note.discussion.id, false)}
-										isLoading={resolvingNote === note.id}
+										isLoading={resolvingNote === note.discussion.id}
 									>
 										Unresolve<span className="wide-text"> thread</span>
 									</Button>
@@ -552,7 +555,7 @@ export const Timeline = (props: Props) => {
 									<Button
 										variant="secondary"
 										onClick={() => resolveNote(note.discussion.id, true)}
-										isLoading={resolvingNote === note.id}
+										isLoading={resolvingNote === note.discussion.id}
 									>
 										Resolve<span className="wide-text"> thread</span>
 									</Button>
