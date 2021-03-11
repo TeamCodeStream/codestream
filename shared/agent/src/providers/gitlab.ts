@@ -1078,6 +1078,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					break;
 				}
 			}
+			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
 
 			const project = await this.restGet<{
 				merge_method: string;
@@ -1195,6 +1196,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								.replace("gid://gitlab/DiffDiscussion/", "")
 								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
 							n.mergeRequestIdComputed = mergeRequestFullId;
+							this.toAuthorAbsolutePath(n.author);
 						}
 					});
 					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes.nodes[0].id);
@@ -2603,6 +2605,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	private fromMergeRequestGid(gid: string) {
 		return gid.replace("gid://gitlab/MergeRequest/", "");
+	}
+
+	private toAuthorAbsolutePath(author: any) {
+		if (author?.avatarUrl.indexOf("/") === 0) {
+			// no really great way to handle this...
+			author.avatarUrl = `https://gitlab.com${author.avatarUrl}`;
+		}
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
