@@ -521,18 +521,16 @@ export const PullRequest = () => {
 		const div = threads[threadIndex];
 		setThreadIndex(threadIndex === threads.length - 1 ? 0 : threadIndex + 1);
 		if (div) {
-			div.classList.add("highlight-outline");
-			// div.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-
 			const modalRoot = document.getElementById("modal-root");
 			if (modalRoot) {
 				const y = div.getBoundingClientRect().top + modalRoot.children[0].scrollTop - 60;
 				modalRoot.children[0].scrollTo({ top: y, behavior: "smooth" });
 			}
 
-			setTimeout(() => {
-				div.classList.remove("highlight-outline");
-			}, 1000);
+			// start the outline 500ms later, to give it time to scroll into view
+			setTimeout(() => div.classList.add("highlight-outline"), 500);
+			// remove the class once animation stops in case we need to add it back again later
+			setTimeout(() => div.classList.remove("highlight-outline"), 2000);
 		}
 	};
 
