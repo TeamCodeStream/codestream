@@ -1205,8 +1205,13 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			(currentPullRequestProviderId === "gitlab*com" ||
 				currentPullRequestProviderId === "gitlab/enterprise");
 		return (
-			<Modal noScroll noPadding onClose={isGitLabPR ? undefined : () => this.close()} sidebarBackground={!!currentReviewId}>
-				<div style={{ overflow: "hidden" }}>
+			<Modal
+				noScroll
+				noPadding
+				onClose={isGitLabPR ? undefined : () => this.close()}
+				sidebarBackground={!!currentReviewId}
+			>
+				<div style={{ overflow: isGitLabPR ? "visible" : "hidden" }}>
 					{currentReviewId ? (
 						<ReviewNav reviewId={currentReviewId} composeOpen={composeOpen} />
 					) : currentPullRequestId ? (

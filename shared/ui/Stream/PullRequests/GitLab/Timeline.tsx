@@ -491,18 +491,19 @@ export const Timeline = (props: Props) => {
 			);
 		}
 
+		const className = note.resolvable && !note.resolved ? "unresolved-thread-start" : "";
 		// if it's a review thread, and the thread is collapsed, just
 		// render the header
 		if (note.position && hiddenComments[note.id])
 			return (
-				<OutlineBox style={{ padding: "10px" }} key={note.id}>
+				<OutlineBox style={{ padding: "10px" }} key={note.id} className={className}>
 					{printCodeCommentHeader(note)}
 				</OutlineBox>
 			);
 
 		const replies = note.replies || [];
 		return (
-			<OutlineBox style={{ padding: "10px" }} key={note.id}>
+			<OutlineBox style={{ padding: "10px" }} key={note.id} className={className}>
 				{note.position && printCodeCommentHeader(note)}
 				{printComment(note, undefined, 0, note.resolvable)}
 				{note.resolvable && (

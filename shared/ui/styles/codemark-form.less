@@ -254,6 +254,7 @@
 	50% {
 		color: @text-color-highlight;
 		background: rgba(127, 127, 127, 0.25);
+		border-color: orange;
 	}
 	100% {
 		color: @text-color;
@@ -263,6 +264,20 @@
 
 .highlight-pulse {
 	animation: highlight-fade 1.25s ease 1;
+}
+
+@keyframes highlight-outline {
+	50% {
+		color: @text-color-highlight;
+		border-color: orange;
+	}
+	100% {
+		color: @text-color;
+	}
+}
+
+.highlight-outline {
+	animation: highlight-outline 1.25s ease 1;
 }
 
 .row-with-icon-actions {

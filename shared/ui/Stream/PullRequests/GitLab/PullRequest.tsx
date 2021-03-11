@@ -515,6 +515,27 @@ export const PullRequest = () => {
 		return _pr.discussions.nodes.reduce(reducer, 0);
 	}, [derivedState.currentPullRequest]);
 
+	const [threadIndex, setThreadIndex] = useState(0);
+	const jumpToNextThread = () => {
+		const threads = document.getElementsByClassName("unresolved-thread-start");
+		const div = threads[threadIndex];
+		setThreadIndex(threadIndex === threads.length - 1 ? 0 : threadIndex + 1);
+		if (div) {
+			div.classList.add("highlight-outline");
+			// div.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+
+			const modalRoot = document.getElementById("modal-root");
+			if (modalRoot) {
+				const y = div.getBoundingClientRect().top + modalRoot.children[0].scrollTop - 60;
+				modalRoot.children[0].scrollTo({ top: y, behavior: "smooth" });
+			}
+
+			setTimeout(() => {
+				div.classList.remove("highlight-outline");
+			}, 1000);
+		}
+	};
+
 	const statusIcon =
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
@@ -522,32 +543,6 @@ export const PullRequest = () => {
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return 0;
 		return pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length;
 	}, [pr]);
-
-	if (!pr) {
-		if (generalError) {
-			return (
-				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
-					<div style={{ textAlign: "center" }}>Error: {generalError}</div>
-				</div>
-			);
-		} else {
-			return (
-				<div
-					style={{
-						display: "flex",
-						height: "100vh",
-						alignItems: "center",
-						background: "var(--sidebar-background)"
-					}}
-				>
-					<div style={{ position: "absolute", top: "20px", right: "20px" }}>
-						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
-					</div>
-					<LoadingMessage>Loading Merge Request...</LoadingMessage>
-				</div>
-			);
-		}
-	}
 
 	const toggleWorkInProgress = async () => {
 		const onOff = !pr.workInProgress;
@@ -579,6 +574,32 @@ export const PullRequest = () => {
 		merged: "merged"
 	};
 	console.warn("PR: ", pr);
+
+	if (!pr) {
+		if (generalError) {
+			return (
+				<div style={{ display: "flex", height: "100vh", alignItems: "center" }}>
+					<div style={{ textAlign: "center" }}>Error: {generalError}</div>
+				</div>
+			);
+		} else {
+			return (
+				<div
+					style={{
+						display: "flex",
+						height: "100vh",
+						alignItems: "center",
+						background: "var(--sidebar-background)"
+					}}
+				>
+					<div style={{ position: "absolute", top: "20px", right: "20px" }}>
+						<CancelButton onClick={() => dispatch(clearCurrentPullRequest())} />
+					</div>
+					<LoadingMessage>Loading Merge Request...</LoadingMessage>
+				</div>
+			);
+		}
+	}
 
 	const bottomComment = (
 		<div style={{ margin: "0 20px" }}>
@@ -754,7 +775,7 @@ export const PullRequest = () => {
 							) : (
 								<TabActions>
 									<PRSelectorButtons>
-										<Tooltip placement="top" title="7 unresolved threads">
+										<Tooltip placement="top" title={`${unresolvedComments} unresolved threads`}>
 											<span className="label">
 												{unresolvedComments}
 												<span className="wide-text"> unresolved</span>
@@ -763,7 +784,7 @@ export const PullRequest = () => {
 										<span onClick={() => {}}>
 											<Icon name="plus" title="Resolve all threads in new issue" placement="top" />
 										</span>
-										<span onClick={() => {}}>
+										<span onClick={jumpToNextThread}>
 											<Icon
 												name="comment-go"
 												title="Jump to next unresolved thread"
