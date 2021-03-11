@@ -16,6 +16,7 @@ import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
+	DiscussionNode,
 	DocumentMarker,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsResponse,
@@ -27,6 +28,7 @@ import {
 	GitLabBoard,
 	GitLabCreateCardRequest,
 	GitLabCreateCardResponse,
+	GitLabMergeRequestWrapper,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
@@ -838,7 +840,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this._currentGitlabUser;
 	}
 
-	_pullRequestCache: Map<string, GitLabMergeRequest> = new Map();
+	_pullRequestCache: Map<string, GitLabMergeRequestWrapper> = new Map();
 
 	async getReviewers(request: { pullRequestId: string }) {
 		const { projectFullPath } = this.parseId(request.pullRequestId);
@@ -866,7 +868,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		}
 
-		let response = {} as GitLabMergeRequest;
+		let response = {} as GitLabMergeRequestWrapper;
 		try {
 			const q = `query GetPullRequest($fullPath: ID!, $iid: String!, $after:String) {
 				currentUser {
@@ -877,6 +879,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 				project(fullPath: $fullPath) {
 				  name
+				  mergeRequestsEnabled
+				  mergeRequestsFfOnlyEnabled   
+				  removeSourceBranchAfterMerge 			  
 				  mergeRequest(iid: $iid) {
 					approvedBy {
 					  nodes {
@@ -898,6 +903,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					workInProgress
 					reference
 					projectId
+					mergeWhenPipelineSucceeds
+					mergeableDiscussionsState
 					author {
 					  name
 					  login: username
@@ -907,6 +914,28 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  baseSha
 					  headSha
 					  startSha
+					}
+					pipelines(last:1) {
+						nodes {
+							id
+							status							
+							stages {
+							  nodes{
+								name
+								detailedStatus{
+								  label
+								  tooltip
+								}								
+							  }
+							}
+							detailedStatus {							  
+							  favicon							  
+							  icon
+							  label
+							  text
+							  tooltip
+							}
+						}
 					}
 					commitCount
 					sourceProject {
@@ -1049,24 +1078,68 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					break;
 				}
 			}
+
+			const project = await this.restGet<{
+				merge_method: string;
+				only_allow_merge_if_all_discussions_are_resolved: boolean;
+				only_allow_merge_if_pipeline_succeeds: boolean;
+				allow_merge_on_skipped_pipeline: boolean;
+			}>(`/projects/${encodeURIComponent(projectFullPath)}`);
+			response.project.mergeMethod = project.body.merge_method!;
+			response.project.allowMergeOnSkippedPipeline = project.body.allow_merge_on_skipped_pipeline;
+			response.project.onlyAllowMergeIfAllDiscussionsAreResolved =
+				project.body.only_allow_merge_if_all_discussions_are_resolved;
+			response.project.onlyAllowMergeIfPipelineSucceeds =
+				project.body.only_allow_merge_if_pipeline_succeeds;
+
+			const mergeRequest = await this.restGet<{
+				diverged_commits_count: number;
+			}>(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}?include_diverged_commits_count=true`
+			);
+
+			const pipelines = await this.restGet<any[]>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/pipelines?ref=${
+					response.project.mergeRequest.headRefName
+				}`
+			);
+			if (
+				pipelines.body &&
+				pipelines.body.length &&
+				response.project?.mergeRequest?.pipelines &&
+				response.project?.mergeRequest?.pipelines?.nodes.length > 0
+			) {
+				const pipeline = pipelines.body[0];
+				response.project.mergeRequest.pipelines.nodes[0] = {
+					...response.project.mergeRequest.pipelines.nodes[0],
+					id: pipeline.id,
+					ref: pipeline.ref,
+					sha: pipeline.sha,
+					webUrl: pipeline.web_url
+				};
+			}
+			response.project.mergeRequest.divergedCommitsCount =
+				mergeRequest.body.diverged_commits_count || 0;
+
 			const base_id = this.fromMergeRequestGid(response.project.mergeRequest.id);
 			// build this so that it aligns with what the REST api created
 			response.project.mergeRequest.references = {
-				full: `${response.project.mergeRequest.sourceProject.fullPath}${response.project.mergeRequest.reference}`
+				full: `${projectFullPath}!${iid}`
 			};
 			const mergeRequestFullId = JSON.stringify({
 				id: base_id,
 				full: response.project.mergeRequest.references.full
 			});
 			response.project.mergeRequest.discussions.nodes = discussions;
-
 			// NOTE the following are _supposed_ to exist on the graph results, butttt they're null
-			response.project.mergeRequest.commitCount = (
-				await this.getPullRequestCommits({
-					providerId: this.providerConfig.id,
-					pullRequestId: mergeRequestFullId
-				})
-			)?.length;
+			const commits = await this.getPullRequestCommits({
+				providerId: this.providerConfig.id,
+				pullRequestId: mergeRequestFullId
+			});
+
+			response.project.mergeRequest.commitCount = commits?.length;
 			response.project.mergeRequest.changesCount = (
 				await this.getPullRequestFilesChanged({ pullRequestId: mergeRequestFullId })
 			)?.length;
@@ -1129,6 +1202,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					_.notes.nodes.length = 1;
 				}
 			});
+
 			this._pullRequestCache.set(id, response);
 			const pendingReview = await this.gitLabReviewStore.get(base_id);
 			if (pendingReview?.comments?.length) {
@@ -2184,11 +2258,36 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return changedFiles;
 	}
 
+	async cancelMergeWhenPipelineSucceeds(request: {
+		pullRequestId: string;
+	}): Promise<Directives | undefined> {
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
+
+		const response = await this.restPost<any, any>(
+			`/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/cancel_merge_when_pipeline_succeeds`,
+			{}
+		);
+		Logger.log(`cancelMergeWhenPipelineSucceeds:${JSON.stringify(response.body)}`);
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						mergeWhenPipelineSucceeds: false
+					}
+				}
+			]
+		};
+	}
+
 	async mergePullRequest(request: {
 		pullRequestId: string;
 		message: string;
 		deleteSourceBranch?: boolean;
 		squashCommits?: boolean;
+		mergeWhenPipelineSucceeds?: boolean;
 		includeMergeRequestDescription: boolean;
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
@@ -2199,10 +2298,25 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				{
 					merge_commit_message: request.message,
 					squash: request.squashCommits,
+					merge_when_pipeline_succeeds: request.mergeWhenPipelineSucceeds,
 					should_remove_source_branch: request.deleteSourceBranch
 				}
 			);
-			// Logger.log(JSON.stringify(response));
+			if (response.body.merge_when_pipeline_succeeds) {
+				// only updating the future state..
+				return {
+					directives: [
+						{
+							type: "updatePullRequest",
+							data: {
+								state: response.body.state,
+								mergeWhenPipelineSucceeds: response.body.merge_when_pipeline_succeeds,
+								updatedAt: response.body.updated_at
+							}
+						}
+					]
+				};
+			}
 			return {
 				directives: [
 					{
@@ -2217,9 +2331,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				]
 			};
 		} catch (ex) {
-			Logger.warn(ex.message);
+			Logger.warn(ex.message, ex);
+			throw new Error("Failed to accept merge request.");
 		}
-		return undefined;
 	}
 
 	async createPullRequestInlineComment(request: {
@@ -2608,15 +2722,18 @@ class GitLabReviewStore {
 		// TODO
 	}
 
-	mapToDiscussionNode(_: any, user: GitLabCurrentUser) {
+	mapToDiscussionNode(_: any, user: GitLabCurrentUser): DiscussionNode {
 		return {
 			_pending: true,
 			id: "undefined",
 			createdAt: _.createdAt,
+			resolved: false,
+			resolvable: false,
 			notes: {
 				nodes: [
 					{
 						_pending: true,
+						id: "undefined",
 						author: {
 							name: user.name,
 							login: user.login,
@@ -2626,7 +2743,6 @@ class GitLabReviewStore {
 						body: _.text,
 						bodyText: _.text,
 						createdAt: _.createdAt,
-						id: "undefined",
 						position: {
 							oldPath: _.filePath,
 							newPath: _.filePath,
@@ -2721,131 +2837,5 @@ interface GitLabMergeRequestInfoResponse {
 	target_branch: string;
 	references: {
 		full: string;
-	};
-}
-
-interface GitLabMergeRequest {
-	currentUser: any;
-	project: {
-		mergeRequest: {
-			approvedBy: {
-				nodes: {
-					avatarUrl: string;
-					name: string;
-					login: string;
-				};
-			};
-			baseRefName: string;
-			baseRefOid: string;
-			changesCount: number;
-			commitCount: number;
-			createdAt: string;
-			diffRefs: any;
-			discussions: {
-				pageInfo: {
-					endCursor: string;
-					hasNextPage: boolean;
-				};
-				nodes: {
-					createdAt: string;
-					id: string;
-					_pending?: boolean;
-					notes?: {
-						nodes: {
-							id: string;
-							author: {
-								name: string;
-								login: string;
-								avatarUrl: string;
-							};
-							body: string;
-							position: any;
-							createdAt: string;
-						}[];
-					};
-				}[];
-			};
-			notes: {
-				nodes: {
-					createdAt: string;
-					id: string;
-					_pending?: boolean;
-					notes?: {
-						nodes: {
-							id: string;
-							author: {
-								name: string;
-								login: string;
-								avatarUrl: string;
-							};
-							body: string;
-							position: any;
-							createdAt: string;
-						}[];
-					};
-				}[];
-			};
-			downvotes: number;
-			headRefName: string;
-			headRefOid: string;
-			id: string;
-			idComputed: string;
-			iid: string;
-			merged: boolean;
-			mergedAt: string;
-			number: number;
-			pendingReview: {
-				comments: {
-					totalCount: number;
-				};
-			};
-			projectId: string;
-			// CS providerId
-			providerId: string;
-			reactionGroups: {
-				content: string;
-				data: {
-					awardable_id: number;
-					id: number;
-					name: string;
-					user: {
-						id: number;
-						avatar_url: string;
-						login: string;
-					};
-				}[];
-			}[];
-			reference: string;
-			references: {
-				full: string;
-			};
-			repository: {
-				name: string;
-				nameWithOwner: string;
-				url: string;
-			};
-			sourceBranch: string;
-			state: string;
-			sourceProject: any;
-			targetBranch: string;
-			title: string;
-
-			upvotes: number;
-			url: string;
-			userPermissions: {
-				canMerge: boolean;
-			};
-			viewer: {
-				id: string;
-				name: string;
-				login: string;
-				avatarUrl: string;
-			};
-			webUrl: string;
-			workInProgress: boolean;
-			baseWebUrl: string;
-			// forceRemoveSourceBranch: boolean;
-			// squashOnMerge: boolean;
-		};
 	};
 }

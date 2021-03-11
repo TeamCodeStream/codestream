@@ -47,8 +47,59 @@ export interface GitLabMergeRequestWrapper {
 	error: any;
 	currentUser: any;
 	project: {
+		mergeRequestsEnabled: boolean;
+		mergeRequestsFfOnlyEnabled: boolean;
+		removeSourceBranchAfterMerge: boolean;
+		onlyAllowMergeIfPipelineSucceeds: boolean;
+		allowMergeOnSkippedPipeline: boolean;
+		onlyAllowMergeIfAllDiscussionsAreResolved: boolean;
+		/*
+		merge:
+		Merge commit
+		Every merge creates a merge commit
+
+		rebase_merge:
+		Merge commit with semi-linear history
+		Every merge creates a merge commit
+		Fast-forward merges only
+		When conflicts arise the user is given the option to rebase
+
+		ff:
+		Fast-forward merge
+		No merge commits are created
+		Fast-forward merges only
+		When conflicts arise the user is given the option to rebase */
+		mergeMethod?: "ff" | "rebase_merge" | "merge" | string | undefined;
 		mergeRequest: GitLabMergeRequest;
 	};
+}
+
+export interface DiscussionNode {
+	_pending?: boolean;
+	id: string;
+	createdAt: string;
+	notes?: {
+		nodes: {
+			_pending?: boolean;
+			id: string;
+			author: {
+				name: string;
+				login: string;
+				avatarUrl: string;
+			};
+			state: string;
+			body: string;
+			bodyText: string;
+			createdAt: string;
+			position: {
+				oldPath: string;
+				newPath: string;
+				newLine: string;
+			};
+		}[];
+	};
+	resolved: boolean;
+	resolvable: boolean;
 }
 
 export interface GitLabMergeRequest {
@@ -78,27 +129,9 @@ export interface GitLabMergeRequest {
 			endCursor: string;
 			hasNextPage: boolean;
 		};
-		nodes: {
-			createdAt: string;
-			id: string;
-			_pending?: boolean;
-			notes?: {
-				nodes: {
-					id: string;
-					author: {
-						name: string;
-						login: string;
-						avatarUrl: string;
-					};
-					body: string;
-					position: any;
-					createdAt: string;
-				}[];
-			};
-			resolved: boolean;
-			resolvable: boolean;
-		}[];
+		nodes: DiscussionNode[];
 	};
+	divergedCommitsCount: number;
 	downvotes: number;
 	headRefName: string;
 	headRefOid: string;
@@ -107,15 +140,62 @@ export interface GitLabMergeRequest {
 	iid: string;
 	isDraft: boolean;
 	merged: boolean;
+	mergeableDiscussionsState: boolean;
 	mergedAt: string;
+	mergeWhenPipelineSucceeds: boolean;
 	number: number;
+	pipelines?: {
+		nodes: {
+			id: string;
+			status:
+				| "CREATED"
+				| "WAITING_FOR_RESOURCE"
+				| "PREPARING"
+				| "PENDING"
+				| "RUNNING"
+				| "FAILED"
+				| "SUCCESS"
+				| "CANCELED"
+				| "SKIPPED"
+				| "MANUAL"
+				| "SCHEDULED"
+				| string;
+			stages: {
+				nodes: {
+					name: string;
+					detailedStatus: {
+						label: string;
+						tooltip: string;
+					};
+				}[];
+			};
+			detailedStatus: {
+				icon: string;
+				label: string;
+				text: string;
+				tooltip: string;
+			};
+			/* this is the branch ref
+			merged in from REST 
+			*/
+			sha?: string;
+			/* this is the branch ref
+			merged in from REST 
+			*/
+			ref?: string;
+			/* link to the pipeline in the web
+			merged in from REST 
+			*/
+			webUrl?: string;
+		}[];
+	};
 	pendingReview: {
 		comments: {
 			totalCount: number;
 		};
 	};
 	projectId: string;
-	// CS providerId
+	/* CS providerId */
 	providerId: string;
 	reactionGroups: {
 		content: string;

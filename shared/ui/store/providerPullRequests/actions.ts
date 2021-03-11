@@ -433,6 +433,7 @@ export const clearProviderError = (
 export const api = <T = any, R = any>(
 	method:
 		| "addReviewerToPullRequest"
+		| "cancelMergeWhenPipelineSucceeds"
 		| "createCommentReply"
 		| "createPullRequestComment"
 		| "createPullRequestCommentAndClose"

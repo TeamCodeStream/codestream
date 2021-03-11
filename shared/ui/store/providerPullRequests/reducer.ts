@@ -501,6 +501,22 @@ export const getCurrentProviderPullRequest = createSelector(
 	}
 );
 
+export const getCurrentProviderPullRequestRootObject = createSelector(
+	getCurrentProviderPullRequest,
+	getPullRequestProviderId,
+	(providerPullRequest, providerId) => {
+		if (providerId) {
+			if (providerId.indexOf("github") > -1) {
+				return providerPullRequest.conversations;
+			}
+			if (providerId.indexOf("gitlab") > -1) {
+				return providerPullRequest.conversations;
+			}
+		}
+		return undefined;
+	}
+);
+
 export const getCurrentProviderPullRequestObject = createSelector(
 	getCurrentProviderPullRequest,
 	getPullRequestProviderId,

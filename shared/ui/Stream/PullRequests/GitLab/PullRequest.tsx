@@ -68,6 +68,7 @@ import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
 import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
+import { PipelineBox } from "./PipelineBox";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -237,6 +238,9 @@ export const FlexRow = styled.div`
 	}
 	.pad-left {
 		padding-left: 10px;
+	}
+	.pl5 {
+		padding-left: 5px;
 	}
 	.action-button {
 		width: 75px;
@@ -789,6 +793,7 @@ export const PullRequest = () => {
 									)}
 									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
 									<ApproveBox pr={pr} />
+									<PipelineBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									{order === "newest" && bottomComment}
