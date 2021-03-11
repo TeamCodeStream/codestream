@@ -915,7 +915,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					  headSha
 					  startSha
 					}
-					pipelines(last:1) {
+					pipelines(first:1) {
 						nodes {
 							id
 							status							
