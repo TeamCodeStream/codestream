@@ -7,9 +7,13 @@ import { api } from "../../../store/providerPullRequests/actions";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import Tooltip from "../../Tooltip";
 import { Link } from "../../Link";
+import { GitLabMergeRequest } from "@codestream/protocols/agent";
 
-export const ApproveBox = props => {
+export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	const dispatch = useDispatch();
+
+	// once we can get additional approval data, we can relax/remove this
+	if (!props.pr.userPermissions?.canMerge) return null;
 
 	const onApproveClick = async (e: React.MouseEvent<Element, MouseEvent>, approve: boolean) => {
 		dispatch(
