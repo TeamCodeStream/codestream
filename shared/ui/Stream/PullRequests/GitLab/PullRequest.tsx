@@ -537,10 +537,10 @@ export const PullRequest = () => {
 	const statusIcon =
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
-	const unresolvedComments = useMemo(() => {
+	const unresolvedComments = (() => {
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return 0;
 		return pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length;
-	}, [pr]);
+	})();
 
 	const toggleWorkInProgress = async () => {
 		const onOff = !pr.workInProgress;
