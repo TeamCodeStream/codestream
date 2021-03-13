@@ -128,6 +128,9 @@ export const PRSelectorButtons = styled.div`
 			background: var(--app-background-color);
 		}
 	}
+	a {
+		color: var(--text-color);
+	}
 `;
 
 export const PREditTitle = styled.div`
@@ -851,6 +854,9 @@ export const PRActionIcons = styled.div`
 	.icon {
 		opacity: 0.5;
 		margin-left: 10px;
+		&.green-color {
+			opacity: 1;
+		}
 	}
 `;
 

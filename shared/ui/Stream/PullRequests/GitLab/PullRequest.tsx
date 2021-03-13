@@ -515,31 +515,39 @@ export const PullRequest = () => {
 		return _pr.discussions.nodes.reduce(reducer, 0);
 	}, [derivedState.currentPullRequest]);
 
+	const scrollToDiv = div => {
+		if (!div) return;
+		const modalRoot = document.getElementById("modal-root");
+		if (modalRoot) {
+			// the 60 is because of the height of the sticky header; we want to give the
+			// div a little space at the top
+			const y = div.getBoundingClientRect().top + modalRoot.children[0].scrollTop - 60;
+			modalRoot.children[0].scrollTo({ top: y, behavior: "smooth" });
+		}
+
+		// start the outline 500ms later, to give it time to scroll into view
+		setTimeout(() => div.classList.add("highlight-outline"), 500);
+		// remove the class once animation stops in case we need to add it back again later
+		setTimeout(() => div.classList.remove("highlight-outline"), 2000);
+	};
+
 	const [threadIndex, setThreadIndex] = useState(0);
 	const jumpToNextThread = () => {
 		const threads = document.getElementsByClassName("unresolved-thread-start");
-		const div = threads[threadIndex];
-		setThreadIndex(threadIndex === threads.length - 1 ? 0 : threadIndex + 1);
-		if (div) {
-			const modalRoot = document.getElementById("modal-root");
-			if (modalRoot) {
-				const y = div.getBoundingClientRect().top + modalRoot.children[0].scrollTop - 60;
-				modalRoot.children[0].scrollTo({ top: y, behavior: "smooth" });
-			}
-
-			// start the outline 500ms later, to give it time to scroll into view
-			setTimeout(() => div.classList.add("highlight-outline"), 500);
-			// remove the class once animation stops in case we need to add it back again later
-			setTimeout(() => div.classList.remove("highlight-outline"), 2000);
-		}
+		const div = threads[threadIndex] || threads[0]; // if we're off the edge go back to beginning
+		scrollToDiv(div);
+		setThreadIndex(threadIndex >= threads.length - 1 ? 0 : threadIndex + 1);
 	};
 
 	const statusIcon =
 		pr && (pr.state === "OPEN" || pr.state === "CLOSED") ? "pull-request" : "git-merge";
 
-	const unresolvedComments = (() => {
-		if (!pr || !pr.discussions || !pr.discussions.nodes) return 0;
-		return pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length;
+	const [unresolvedThreads, resolvedThreads] = (() => {
+		if (!pr || !pr.discussions || !pr.discussions.nodes) return [0, 0];
+		return [
+			pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length,
+			pr.discussions.nodes.filter(_ => _.resolvable && _.resolved).length
+		];
 	})();
 
 	const toggleWorkInProgress = async () => {
@@ -770,24 +778,51 @@ export const PullRequest = () => {
 										/>
 									)}
 								</PRSubmitReviewButton>
-							) : (
+							) : unresolvedThreads > 0 ? (
 								<TabActions>
 									<PRSelectorButtons>
-										<Tooltip placement="top" title={`${unresolvedComments} unresolved threads`}>
+										<Tooltip placement="top" title={`${unresolvedThreads} unresolved threads`}>
 											<span className="label">
-												{unresolvedComments}
+												{unresolvedThreads}
 												<span className="wide-text"> unresolved</span>
 											</span>
 										</Tooltip>
-										<span onClick={() => {}}>
-											<Icon name="plus" title="Resolve all threads in new issue" placement="top" />
+										<span>
+											<Link
+												href={`${pr.repository.url}/-/issues/new?merge_request_to_resolve_discussions_of=${pr.number}`}
+											>
+												<Icon
+													className="clickable"
+													name="plus"
+													title="Resolve all threads in new issue"
+													placement="top"
+												/>
+											</Link>
 										</span>
 										<span onClick={jumpToNextThread}>
 											<Icon
+												className="clickable"
 												name="comment-go"
 												title="Jump to next unresolved thread"
 												placement="top"
 											/>
+										</span>
+										<span onClick={() => setCollapseAll(!collapseAll)}>
+											<Icon
+												className="clickable"
+												name={collapseAll ? "chevron-down-thin" : "chevron-up-thin"}
+												title={collapseAll ? "Expand all threads" : "Collapse all threads"}
+												placement="top"
+											/>
+										</span>
+									</PRSelectorButtons>
+								</TabActions>
+							) : resolvedThreads > 0 ? (
+								<TabActions>
+									<PRSelectorButtons>
+										<span className="label">
+											<Icon name="check-circle" className="green-color margin-right" />
+											All <span className="wide-text">threads </span>resolved
 										</span>
 										<span onClick={() => setCollapseAll(!collapseAll)}>
 											<Icon
@@ -798,7 +833,7 @@ export const PullRequest = () => {
 										</span>
 									</PRSelectorButtons>
 								</TabActions>
-							)}
+							) : null}
 						</Tabs>
 					</div>
 					{!derivedState.composeCodemarkActive && (

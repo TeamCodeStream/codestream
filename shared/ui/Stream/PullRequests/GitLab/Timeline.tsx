@@ -145,6 +145,20 @@ const CommentBody = styled.div`
 	padding: 5px 0 5px 40px;
 `;
 
+const MultiButton = styled.div`
+	button:first-of-type {
+		border-top-right-radius: 0 !important;
+		border-bottom-right-radius: 0 !important;
+	}
+	button:last-of-type {
+		border-top-left-radius: 0 !important;
+		border-bottom-left-radius: 0 !important;
+	}
+	button + button {
+		margin-left: 1px !important;
+	}
+`;
+
 let insertText = {};
 let insertNewline = {};
 let focusOnMessageInput = {};
@@ -182,7 +196,8 @@ export const Timeline = (props: Props) => {
 		approval: "check",
 		fork: "git-branch",
 		"comment-dots": "comment",
-		"git-merge": "git-merge"
+		"git-merge": "git-merge",
+		comment: "comment"
 	};
 
 	const __onDidRender = (functions, id) => {
@@ -553,13 +568,31 @@ export const Timeline = (props: Props) => {
 									</Button>
 								)}
 								{!note.resolved && (
-									<Button
-										variant="secondary"
-										onClick={() => resolveNote(note.discussion.id, true)}
-										isLoading={resolvingNote === note.discussion.id}
-									>
-										Resolve<span className="wide-text"> thread</span>
-									</Button>
+									<MultiButton>
+										<Button
+											variant="secondary"
+											onClick={() => resolveNote(note.discussion.id, true)}
+											isLoading={resolvingNote === note.discussion.id}
+										>
+											Resolve<span className="wide-text"> thread</span>
+										</Button>
+										<Button
+											variant="secondary"
+											narrow
+											onClick={() =>
+												HostApi.instance.send(OpenUrlRequestType, {
+													url: `${pr.repository.url}/-/issues/new?discussion_to_resolve=${note.databaseId}&merge_request_to_resolve_discussions_of=${pr.number}`
+												})
+											}
+										>
+											<Icon
+												name="plus"
+												title="Resolve this thread in a new issue"
+												placement="topRight"
+												align={{ offset: [28, -5] }}
+											/>
+										</Button>
+									</MultiButton>
 								)}
 							</ReplyForm>
 						)}
