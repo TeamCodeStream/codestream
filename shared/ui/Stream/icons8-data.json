@@ -676,5 +676,8 @@
 	},
 	"cancel": {
 		"path": "<path d=\"M1.5 1.5L14.5 14.5\" stroke=\"currentColor\" stroke-linecap=\"round\"/>"
+	},
+	"double-chevron-right": {
+		"path": "<path d=\"M8 14L14 8L8 2\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><path d=\"M3 14L9 8L3 2\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>"
 	}
 }
