@@ -90,7 +90,8 @@ export const SummaryBox = props => {
 			<FlexRow>
 				<Icon name="pull-request" className="bigger" />
 				<div>
-					<b>Request to merge</b>{" "}
+					<b>Request to merge</b>
+					<br />
 					<Link href={`${pr.repository.url}/-/tree/${pr.sourceBranch}`}>
 						<PRBranch>{pr.sourceBranch}</PRBranch>
 					</Link>{" "}
