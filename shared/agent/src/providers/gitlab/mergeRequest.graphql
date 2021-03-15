@@ -105,6 +105,7 @@ query GetPullRequest($fullPath: ID!, $iid: String!, $after: String) {
 			timeEstimate
 			totalTimeSpent
 			userPermissions {
+				adminMergeRequest
 				canMerge
 			}
 			discussions(first: 50, after: $after) {

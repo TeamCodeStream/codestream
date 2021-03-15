@@ -278,6 +278,7 @@ export interface GitLabMergeRequest {
 	url: string;
 	userDiscussionsCount: number;
 	userPermissions: {
+		adminMergeRequest: boolean;
 		canMerge: boolean;
 	};
 	viewer: {

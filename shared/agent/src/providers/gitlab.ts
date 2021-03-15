@@ -836,7 +836,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					avatarUrl
 				}
 			}`);
-			this._currentGitlabUser = data.currentUser;
+			this._currentGitlabUser = this.toAuthorAbsolutePath(data.currentUser);
 		}
 		return this._currentGitlabUser;
 	}
@@ -850,7 +850,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			`/projects/${encodeURIComponent(projectFullPath)}/users`
 		);
 		return {
-			users: response.body.map(u => ({ ...u, avatarUrl: u.avatar_url, displayName: u.name }))
+			users: response.body.map(u => ({
+				...u,
+				avatarUrl: this.avatarUrl(u.avatar_url),
+				displayName: u.name
+			}))
 		};
 	}
 
@@ -984,7 +988,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					const data = grouped[_];
 					data.forEach(r => {
 						r.user.login = r.user.username;
-						r.user.avatarUrl = r.user.avatar_url;
+						r.user.avatarUrl = this.avatarUrl(r.user.avatar_url);
 					});
 					return { content: _, data };
 				}) || [];
@@ -1012,7 +1016,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					id: response.currentUser.id,
 					login: response.currentUser.login,
 					name: response.currentUser.name,
-					avatarUrl: response.currentUser.avatarUrl
+					avatarUrl: this.avatarUrl(response.currentUser.avatarUrl)
 				}
 			};
 			// massage into replies
@@ -1104,7 +1108,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					replyId
 					createdAt
 				  }
-				  id	   				   
+				  id
 				  resolvable
 				  resolved
 				  updatedAt
@@ -1127,6 +1131,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				body: request.text
 			}
 		);
+		this.toAuthorAbsolutePath(response.createNote.note.author);
 		return {
 			directives: [{ type: "addReply", data: response.createNote.note }]
 		};
@@ -1297,6 +1302,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			);
 
+			(response.mergeRequestSetAssignees.mergeRequest.assignees || []).map((assignee: any) => {
+				this.toAuthorAbsolutePath(assignee);
+			});
 			return {
 				directives: [
 					{
@@ -1416,7 +1424,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							targetBranch: body.target_branch,
 							assignees: {
 								nodes: body.assignees.map((assignee: any) => {
-									return { ...assignee, avatarUrl: assignee.avatar_url };
+									return { ...assignee, avatarUrl: this.avatarUrl(assignee.avatar_url) };
 								})
 							},
 							milestone
@@ -2050,7 +2058,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					name: request.content
 				});
 				response.body.user.login = response.body.user.username;
-				response.body.user.avatarUrl = response.body.user.avatar_url;
+				response.body.user.avatarUrl = this.avatarUrl(response.body.user.avatar_url);
 				return {
 					directives: [
 						{
@@ -2316,7 +2324,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						response.body.approved_by.map(
 							(_: { user: { avatar_url: string; username: string; name: string } }) => {
 								return {
-									avatarUrl: _.user.avatar_url,
+									avatarUrl: this.avatarUrl(_.user.avatar_url),
 									login: _.user.username,
 									name: _.user.name
 								};
@@ -2518,9 +2526,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		);
 	}
 
+	private avatarUrl(url: string) {
+		return url.startsWith("/") ? `${this.baseUrl}${url}` : url;
+	}
+
 	private fromRestUser(user: { [key: string]: any }) {
 		user.login = user.username;
-		user.avatarUrl = user.avatar_url;
+		user.avatarUrl = this.avatarUrl(user.avatar_url);
 		delete user.username;
 		delete user.avatar_url;
 		return user;
@@ -2546,8 +2558,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private toAuthorAbsolutePath(author: any) {
 		if (author?.avatarUrl.indexOf("/") === 0) {
 			// no really great way to handle this...
-			author.avatarUrl = `https://gitlab.com${author.avatarUrl}`;
+			author.avatarUrl = `${this.baseUrl}${author.avatarUrl}`;
 		}
+		return author;
 	}
 
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
@@ -2558,12 +2571,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		while (true) {
 			parsed.searchParams.set("page", page);
-			const requestUrl = parsed.pathname + "?" + parsed.searchParams.toString();
+			const requestUrl = `${parsed.pathname}?${parsed.searchParams.toString()}`;
 			const response = await this.restGet<any>(requestUrl);
 			results = results.concat(map(response.body as any[]));
+			// Logger.warn("RESPONSE: " + JSON.stringify(response.body, null, 4));
 			const nextPage = response.response.headers.get("x-next-page");
 			if (nextPage === page || !nextPage) {
 				break;
+				// } else if (parseInt(page, 10) > 10) {
+				// 	break;
 			} else {
 				page = nextPage;
 			}

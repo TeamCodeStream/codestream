@@ -787,6 +787,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	};
 
 	// console.warn("rendering pr list...");
+	console.warn("CONNECT: ", PRConnectedProviders);
 	return (
 		<Root>
 			{editingQuery && (

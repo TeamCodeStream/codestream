@@ -678,39 +678,41 @@ export const PullRequest = () => {
 								</PRActionIcons>
 								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
-							<div style={{ marginLeft: "auto" }}>
-								{pr.state === "closed" ? (
-									<DropdownButton
-										variant="secondary"
-										splitDropdown
-										splitDropdownInstantAction
-										selectedKey="edit"
-										items={[
-											{ label: "Edit", key: "edit", action: edit },
-											{ label: "Reopen", key: "reopen", action: reopen }
-										]}
-									>
-										Edit
-									</DropdownButton>
-								) : (
-									<DropdownButton
-										variant="secondary"
-										splitDropdown
-										splitDropdownInstantAction
-										items={[
-											{ label: "Edit", key: "edit", action: edit },
-											{
-												label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
-												key: "draft",
-												action: () => toggleWorkInProgress()
-											},
-											{ label: "Close", key: "close", action: close }
-										]}
-									>
-										Edit
-									</DropdownButton>
-								)}
-							</div>
+							{pr.userPermissions.adminMergeRequest && (
+								<div style={{ marginLeft: "auto" }}>
+									{pr.state === "closed" ? (
+										<DropdownButton
+											variant="secondary"
+											splitDropdown
+											splitDropdownInstantAction
+											selectedKey="edit"
+											items={[
+												{ label: "Edit", key: "edit", action: edit },
+												{ label: "Reopen", key: "reopen", action: reopen }
+											]}
+										>
+											Edit
+										</DropdownButton>
+									) : (
+										<DropdownButton
+											variant="secondary"
+											splitDropdown
+											splitDropdownInstantAction
+											items={[
+												{ label: "Edit", key: "edit", action: edit },
+												{
+													label: pr.workInProgress ? "Mark as ready" : "Mark as draft",
+													key: "draft",
+													action: () => toggleWorkInProgress()
+												},
+												{ label: "Close", key: "close", action: close }
+											]}
+										>
+											Edit
+										</DropdownButton>
+									)}
+								</div>
+							)}
 						</Header>
 						<PRTitle>
 							{pr.title}{" "}
