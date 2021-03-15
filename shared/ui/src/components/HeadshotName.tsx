@@ -91,6 +91,7 @@ export interface PRHeadshotNameProps {
 	className?: string;
 	addThumbsUp?: boolean;
 	noName?: boolean;
+	fullName?: boolean;
 }
 
 export const PRHeadshotName = styled((props: PRHeadshotNameProps) => {
@@ -99,7 +100,9 @@ export const PRHeadshotName = styled((props: PRHeadshotNameProps) => {
 	// leave this for future when we can determine it's you
 	const me = false;
 
-	const username = props.person.login || props.person.username || "";
+	const username = props.fullName
+		? props.person.name
+		: props.person.login || props.person.username || "";
 
 	return (
 		<Root className={props.className} onClick={props.onClick}>
