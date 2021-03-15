@@ -661,7 +661,7 @@ export const PullRequest = () => {
 										<Icon name="lock" style={{ margin: 0 }} />
 									</PRStatusButton>
 								)}
-								Opened{" "}
+								{pr.state === "opened" ? "Opened " : "Created "}
 								<Timestamp
 									className="no-padding"
 									time={pr.createdAt}
@@ -669,7 +669,7 @@ export const PullRequest = () => {
 									showTooltip
 									placement="bottom"
 								/>{" "}
-								by <PRHeadshotName person={pr.author} />
+								by <PRHeadshotName person={pr.author} fullName />
 								<PRActionIcons>
 									<PRAuthorBadges
 										pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
