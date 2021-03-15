@@ -74,48 +74,68 @@ export interface GitLabMergeRequestWrapper {
 	};
 }
 
+export interface Note {
+	_pending?: boolean;
+	id: string;
+	author: {
+		name: string;
+		login: string;
+		avatarUrl: string;
+	};
+	/* backward compat */
+	databaseId?: number | string;
+	state?: string;
+	system?: boolean;
+	systemNoteIconName: string;
+	label?: {
+		color: string;
+		name: string;
+	};
+	milestone?: {
+		title: string;
+		url: string;
+	};
+	body: string;
+	bodyText: string;
+	bodyHtml?: string;
+	createdAt: string;
+	position: {
+		oldPath: string;
+		newPath: string;
+		newLine: string;
+	};
+	resolved: boolean;
+	discussion: {
+		id?: string;
+	};
+	resolvable: boolean;
+	replies?: {
+		_pending?: boolean;
+		id: string;
+		author: {
+			name: string;
+			login: string;
+			avatarUrl: string;
+		};
+		state: string;
+		body: string;
+		bodyText: string;
+		createdAt: string;
+		position: {
+			oldPath: string;
+			newPath: string;
+			newLine: string;
+		};
+	}[];
+}
+
 export interface DiscussionNode {
 	_pending?: boolean;
+	type?: string;
 	id: string;
 	createdAt: string;
 	notes?: {
-		nodes: {
-			_pending?: boolean;
-			id: string;
-			author: {
-				name: string;
-				login: string;
-				avatarUrl: string;
-			};
-			state: string;
-			body: string;
-			bodyText: string;
-			createdAt: string;
-			position: {
-				oldPath: string;
-				newPath: string;
-				newLine: string;
-			};
-
-			replies?: {
-				_pending?: boolean;
-				id: string;
-				author: {
-					name: string;
-					login: string;
-					avatarUrl: string;
-				};
-				state: string;
-				body: string;
-				bodyText: string;
-				createdAt: string;
-				position: {
-					oldPath: string;
-					newPath: string;
-					newLine: string;
-				};
-			}[];
-		}[];
+		nodes: Note[];
 	};
 	resolved: boolean;
 	resolvable: boolean;

@@ -3,11 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
 import { MarkdownText } from "../../MarkdownText";
 import { PullRequestReplyComment } from "../../PullRequestReplyComment";
-import Tag from "../../Tag";
 import Timestamp from "../../Timestamp";
 import Tooltip from "../../Tooltip";
 import { OutlineBox } from "./PullRequest";
 import {
+	Note,
+	DiscussionNode,
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest
 } from "@codestream/protocols/agent";
@@ -25,6 +26,7 @@ import copy from "copy-to-clipboard";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { api } from "../../../store/providerPullRequests/actions";
+import Tag from "../../Tag";
 
 const ActionBox = styled.div`
 	margin: 0 20px 15px 20px;
@@ -197,7 +199,16 @@ export const Timeline = (props: Props) => {
 		fork: "git-branch",
 		"comment-dots": "comment",
 		"git-merge": "git-merge",
-		comment: "comment"
+		comment: "comment",
+		// label-*, milestone-*, merge-request-* are mapped from legacy data
+		"label-remove": "tag",
+		"label-add": "tag",
+		"milestone-remove": "clock",
+		"milestone-add": "clock",
+		"merge-request-reopened": "reopen",
+		"merge-request-closed": "minus-circle",
+		"merge-request-approved": "check",
+		"merge-request-unapproved": "minus-circle"
 	};
 
 	const __onDidRender = (functions, id) => {
@@ -469,21 +480,73 @@ export const Timeline = (props: Props) => {
 		});
 	};
 
-	const printNote = note => {
+	const printNote = (note: Note) => {
 		if (note.system) {
-			// get the message from the first node in the bodyHtml
-			const wrapper = document.createElement("div");
-			wrapper.innerHTML = note.bodyHtml || "";
-			const label = wrapper.children[0].textContent || "";
-
-			if (note.systemNoteIconName === "commit") {
-				wrapper.children[0].remove();
-				fixAnchorTags(wrapper.children);
-				const otherChildren = Array.from(wrapper.children).map((_, index) => {
-					const text = _.outerHTML.replace(/>\n/g, ">").replace(/\n\n/g, "");
-					// console.warn("TEXT IS: ", text);
-					return <MarkdownText inline text={text} isHtml={true} key={index} />;
-				});
+			let label;
+			let wrapper;
+			if (note.bodyHtml) {
+				// if we have html, we need to parse out the text.
+				// get the message from the first node in the bodyHtml
+				try {
+					const wrapper = document.createElement("div");
+					wrapper.innerHTML = note.bodyHtml || "";
+					label = wrapper.children[0].textContent || "";
+				} catch (ex) {
+					label = note.body || "";
+				}
+			} else {
+				label = note.body;
+			}
+			if (note.systemNoteIconName?.indexOf("label-") > -1) {
+				return (
+					<ActionBox key={note.id}>
+						<Icon
+							name="tag"
+							className="circled"
+							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+						/>
+						<ActionBody>
+							<b>{note.author.name}</b> @{note.author.login} {note.body} a label{" "}
+							{note.label && <Tag tag={{ label: note.label.name, color: `${note.label.color}` }} />}
+							<Timestamp relative time={note.createdAt} />
+						</ActionBody>
+					</ActionBox>
+				);
+			} else if (note.systemNoteIconName?.indexOf("merge-request-") > -1) {
+				return (
+					<ActionBox key={note.id}>
+						<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
+						<ActionBody>
+							<b>{note.author.name}</b> @{note.author.login} {note.body} merge request
+							<Timestamp relative time={note.createdAt} />
+						</ActionBody>
+					</ActionBox>
+				);
+			} else if (note.systemNoteIconName?.indexOf("milestone-") > -1) {
+				return (
+					<ActionBox key={note.id}>
+						<Icon
+							name="clock"
+							className="circled"
+							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
+						/>
+						<ActionBody>
+							<b>{note.author.name}</b> @{note.author.login} {note.body} a milestone{" "}
+							<Link href={note.milestone?.url}>%{note.milestone?.title}</Link>
+							<Timestamp relative time={note.createdAt} />
+						</ActionBody>
+					</ActionBox>
+				);
+			} else if (note.systemNoteIconName === "commit") {
+				let otherChildren;
+				if (wrapper) {
+					wrapper.children[0].remove();
+					fixAnchorTags(wrapper.children);
+					otherChildren = Array.from(wrapper.children).map((_: any, index: number) => {
+						const text = _.outerHTML.replace(/>\n/g, ">").replace(/\n\n/g, "");
+						return <MarkdownText inline text={text} isHtml={true} key={index} />;
+					});
+				}
 
 				return (
 					<ActionBox key={note.id}>
@@ -549,7 +612,6 @@ export const Timeline = (props: Props) => {
 							<ReplyForm>
 								<PullRequestReplyComment
 									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
-									mode={note}
 									fetch={fetch}
 									databaseId={note.id}
 									parentId={note.discussion.id}
@@ -604,144 +666,21 @@ export const Timeline = (props: Props) => {
 
 	return (
 		<>
-			{discussions.map((_: any, index: number) => {
-				if (_.type === "merge-request") {
-					if (_.action === "opened") {
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="reopen"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} reopened
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					} else if (_.action === "closed") {
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="minus-circle"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} closed
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					} else if (_.action === "approved") {
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="check"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} approved this merge request
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					} else if (_.action === "unapproved") {
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="minus-circle"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} unapproved this merge request
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					}
-					return (
-						<div>
-							unknown merge-request node:
-							<br />
-							<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>
-							<br />
-							<br />
-						</div>
-					);
-				} else if (_.type === "milestone") {
-					if (_.action === "removed")
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="clock"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} removed milestone{" "}
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					else
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="clock"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} changed milestone{" "}
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-				} else if (_.type === "label") {
-					if (_.action === "removed")
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="tag"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} removed label{" "}
-									<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-					else
-						return (
-							<ActionBox key={index}>
-								<Icon
-									name="tag"
-									className="circled"
-									title={<pre className="stringify">{JSON.stringify(_, null, 2)}</pre>}
-								/>
-								<ActionBody>
-									<b>{_.author.name}</b> @{_.author.login} added label{" "}
-									<Tag tag={{ label: _.label.name, color: `${_.label.color}` }} />
-									<Timestamp relative time={_.createdAt} />
-								</ActionBody>
-							</ActionBox>
-						);
-				} else if (_.notes && _.notes.nodes && _.notes.nodes.length > 0) {
+			{discussions.map((discussionNode: DiscussionNode, index: number) => {
+				if (
+					discussionNode.notes &&
+					discussionNode.notes.nodes &&
+					discussionNode.notes.nodes.length
+				) {
 					return (
 						<React.Fragment key={index}>
 							{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
-							{_.notes.nodes.map(note => printNote(note))}
+							{discussionNode.notes.nodes.map(note => printNote(note))}
 						</React.Fragment>
 					);
 				} else {
-					// console.warn("why here?", _);
-					return printNote(_);
+					console.warn("why here?", discussionNode);
+					return null; //printNote(discussionNode);
 				}
 			})}
 			<div

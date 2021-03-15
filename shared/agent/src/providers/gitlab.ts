@@ -11,7 +11,6 @@ import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
-import { Dates } from "../system";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
 	CreateThirdPartyCardRequest,
@@ -48,7 +47,6 @@ import { CodeStreamSession } from "../session";
 import { print } from "graphql";
 import mergeRequestQuery from "./gitlab/mergeRequest.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
-
 interface GitLabProject {
 	path_with_namespace: any;
 	id: string;
@@ -1030,7 +1028,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							this.toAuthorAbsolutePath(n.author);
 						}
 					});
-					_.notes.nodes[0].replies = _.notes.nodes.filter((x: any) => x.id != _.notes?.nodes[0].id);
+					_.notes.nodes[0].replies = _.notes.nodes.filter(
+						(x: any) => x.id != _.notes?.nodes[0].id
+					) as any;
 					// remove all the replies from the parent (they're now on replies)
 					_.notes.nodes.length = 1;
 				}
@@ -1055,13 +1055,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// get all timeline events
 			(
 				await Promise.all([
-					this.getProjectEvents(
-						projectFullPath,
-						iid,
-						Dates.fromIsoToYearMonthDay(response.project.mergeRequest.createdAt)
-					),
 					this.getLabelEvents(projectFullPath, iid),
-					this.getMilestoneEvents(projectFullPath, iid)
+					this.getMilestoneEvents(projectFullPath, iid),
+					this.getStateEvents(projectFullPath, iid)
 				]).catch(ex => {
 					Logger.error(ex);
 					throw ex;
@@ -1069,7 +1065,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
 			// sort all the nodes
-			response.project.mergeRequest.discussions.nodes.sort((a: any, b: any) =>
+			response.project.mergeRequest.discussions.nodes.sort((a: DiscussionNode, b: DiscussionNode) =>
 				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
 
@@ -1427,6 +1423,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							// squashOnMerge: body.squash
 							// shouldRemoveSourceBranch: body.force_remove_source_branch
 						}
+					},
+					{
+						type: "addNodes",
+						data: await this.getMilestoneEvents(projectFullPath, iid)
 					}
 				]
 			};
@@ -1764,11 +1764,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		directives.push({
 			type: "addNodes",
-			data: await this.getProjectEvents(
-				projectFullPath,
-				iid,
-				Dates.fromIsoToYearMonthDay(body.created_at)
-			)
+			data: await this.getStateEvents(projectFullPath, iid)
 		});
 
 		return {
@@ -1829,11 +1825,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		});
 		directives.push({
 			type: "addNodes",
-			data: await this.getProjectEvents(
-				projectFullPath,
-				iid,
-				Dates.fromIsoToYearMonthDay(body.created_at)
-			)
+			data: await this.getStateEvents(projectFullPath, iid)
 		});
 
 		return {
@@ -2024,6 +2016,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					{
 						type: "setLabels",
 						data: response.mergeRequestSetLabels.mergeRequest.labels
+					},
+					{
+						type: "addNodes",
+						data: await this.getLabelEvents(projectFullPath, iid)
 					}
 				]
 			};
@@ -2426,41 +2422,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
-	private async getProjectEvents(
+	private async getMilestoneEvents(
 		projectFullPath: string,
-		iid: string,
-		/* formatted as YYYY-MM-DD */
-		after?: string
-	): Promise<any[]> {
-		// after = https://docs.gitlab.com/ee/api/events.html#date-formatting
-		// only care about events after the MR was created
-		let url = `/projects/${encodeURIComponent(projectFullPath)}/events?target_type=merge_request`;
-		if (after) {
-			url += `&after=${after}`;
-		}
-		return this._paginateRestResponse(url, data => {
-			return data
-				.filter(
-					_ => _.target_iid && _.target_iid.toString() === iid && _.target_type === "MergeRequest"
-				)
-				.map(_ => {
-					return {
-						type: "merge-request",
-						author: this.fromRestUser(_.author),
-						action: _.action_name,
-						createdAt: _.created_at,
-						id: _.id,
-						projectId: _.project_id,
-						targetId: _.target_id,
-						targetIid: _.target_iid,
-						targetTitle: _.target_title,
-						targetType: _.target_type
-					};
-				});
-		});
-	}
-
-	private async getMilestoneEvents(projectFullPath: string, iid: string) {
+		iid: string
+	): Promise<DiscussionNode[]> {
 		return this._paginateRestResponse(
 			`/projects/${encodeURIComponent(
 				projectFullPath
@@ -2468,20 +2433,31 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			data => {
 				return data.map(_ => {
 					return {
-						type: "milestone",
-						createdAt: _.created_at,
-						action: _.action,
 						id: _.id,
-						label: _.label,
-						resourceType: _.resource_type,
-						author: this.fromRestUser(_.user)
+						createdAt: _.created_at,
+						notes: {
+							nodes: [
+								{
+									createdAt: _.created_at,
+									system: true,
+									systemNoteIconName: `milestone-${_.action}`,
+									author: this.fromRestUser(_.user),
+									body: `${_.action === "add" ? "added" : "removed"}`,
+									milestone: {
+										title: _.milestone.title,
+										url: _.milestone.web_url
+									},
+									discussion: {}
+								}
+							]
+						}
 					};
 				});
 			}
 		);
 	}
 
-	private async getLabelEvents(projectFullPath: string, iid: string) {
+	private async getLabelEvents(projectFullPath: string, iid: string): Promise<DiscussionNode[]> {
 		return this._paginateRestResponse(
 			`/projects/${encodeURIComponent(
 				projectFullPath
@@ -2489,13 +2465,53 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			data => {
 				return data.map(_ => {
 					return {
-						type: "label",
-						createdAt: _.created_at,
-						action: _.action,
 						id: _.id,
-						label: _.label,
-						resourceType: _.resource_type,
-						author: this.fromRestUser(_.user)
+						createdAt: _.created_at,
+						notes: {
+							nodes: [
+								{
+									createdAt: _.created_at,
+									system: true,
+									systemNoteIconName: `label-${_.action}`,
+									author: this.fromRestUser(_.user),
+									body: `${_.action === "add" ? "added" : "removed"}`,
+									discussion: {},
+									label: {
+										description: _.label.description,
+										color: _.label.color,
+										name: _.label.name
+									}
+								}
+							]
+						}
+					};
+				});
+			}
+		);
+	}
+
+	private async getStateEvents(projectFullPath: string, iid: string): Promise<DiscussionNode[]> {
+		return this._paginateRestResponse(
+			`/projects/${encodeURIComponent(
+				projectFullPath
+			)}/merge_requests/${iid}/resource_state_events`,
+			data => {
+				return data.map(_ => {
+					return {
+						id: _.id,
+						createdAt: _.created_at,
+						notes: {
+							nodes: [
+								{
+									createdAt: _.created_at,
+									system: true,
+									systemNoteIconName: `merge-request-${_.state}`,
+									author: this.fromRestUser(_.user),
+									body: _.state,
+									discussion: {}
+								}
+							]
+						}
 					};
 				});
 			}
@@ -2668,6 +2684,10 @@ class GitLabReviewStore {
 							login: user.login,
 							avatarUrl: user.avatarUrl
 						},
+						resolved: false,
+						resolvable: true,
+						systemNoteIconName: "",
+						discussion: {},
 						state: "PENDING",
 						body: _.text,
 						bodyText: _.text,
