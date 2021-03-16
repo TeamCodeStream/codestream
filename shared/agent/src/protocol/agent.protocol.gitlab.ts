@@ -109,6 +109,19 @@ export interface Note {
 		id?: string;
 	};
 	resolvable: boolean;
+	reactionGroups?: {
+		content: string;
+		data: {
+			awardable_id: number;
+			id: number;
+			name: string;
+			user: {
+				id: number;
+				avatar_url: string;
+				login: string;
+			};
+		}[];
+	}[];
 	replies?: {
 		_pending?: boolean;
 		id: string;
@@ -286,6 +299,7 @@ export interface GitLabMergeRequest {
 		name: string;
 		login: string;
 		avatarUrl: string;
+		viewerCanDelete?: boolean;
 	};
 	webUrl: string;
 	workInProgress: boolean;

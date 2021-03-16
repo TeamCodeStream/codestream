@@ -322,7 +322,7 @@ export const Timeline = (props: Props) => {
 	};
 
 	const printComment = (
-		note: any,
+		note: Note,
 		parent: any,
 		index: number,
 		isResolvable?: boolean,
@@ -378,7 +378,7 @@ export const Timeline = (props: Props) => {
 							setIsLoadingMessage={setIsLoadingMessage}
 							node={note}
 							nodeType="ROOT_COMMENT"
-							viewerCanDelete={note.viewerCanDelete && note.state === "PENDING"}
+							viewerCanDelete={note.state === "PENDING"}
 							setEdit={setEditingComment}
 							quote={text => {
 								const id = parent ? parent.id : note.id;
@@ -405,7 +405,14 @@ export const Timeline = (props: Props) => {
 						/>
 					) : (
 						<>
-							<MarkdownText text={note.body} />
+							<MarkdownText
+								text={
+									note.bodyHtml
+										? note.bodyHtml.replace(/\<table /g, '<table class="gitlab-table" ')
+										: note.body
+								}
+								isHtml={note.bodyHtml != null}
+							/>
 							<PullRequestReactions
 								pr={pr}
 								targetId={note.id}
@@ -607,7 +614,7 @@ export const Timeline = (props: Props) => {
 							</Collapse>
 						)}
 						{!hiddenComments[note.id] &&
-							replies.map((reply, index) => printComment(reply, note, index + 1))}
+							replies.map((reply, index) => printComment(reply as Note, note, index + 1))}
 						{!hiddenComments[note.id] && (
 							<ReplyForm>
 								<PullRequestReplyComment

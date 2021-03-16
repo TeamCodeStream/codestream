@@ -1044,7 +1044,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					id: response.currentUser.id,
 					login: response.currentUser.login,
 					name: response.currentUser.name,
-					avatarUrl: this.avatarUrl(response.currentUser.avatarUrl)
+					avatarUrl: this.avatarUrl(response.currentUser.avatarUrl),
+					// we don't really have a great mapping here...
+					viewerCanDelete: response.project.mergeRequest.userPermissions.adminMergeRequest
 				}
 			};
 			// massage into replies
