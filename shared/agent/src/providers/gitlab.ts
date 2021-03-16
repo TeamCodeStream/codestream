@@ -1607,8 +1607,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 									avatarUrl
 								}
 								body
-								bodyHtml
-								confidential
+								bodyHtml								
 								createdAt
 								discussion {
 									id
@@ -1662,7 +1661,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					id
 					body
 					createdAt
-					confidential
 					author {
 					  login:username
 					  avatarUrl

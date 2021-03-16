@@ -10,7 +10,6 @@ fragment discussionFragment on Discussion {
 			}
 			body
 			bodyHtml
-			confidential
 			createdAt
 			discussion {
 				id
