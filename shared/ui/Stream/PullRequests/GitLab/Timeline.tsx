@@ -614,7 +614,7 @@ export const Timeline = (props: Props) => {
 							</Collapse>
 						)}
 						{!hiddenComments[note.id] &&
-							replies.map((reply, index) => printComment(reply as Note, note, index + 1))}
+							replies.map((reply, index) => printComment(reply as any, note, index + 1))}
 						{!hiddenComments[note.id] && (
 							<ReplyForm>
 								<PullRequestReplyComment
