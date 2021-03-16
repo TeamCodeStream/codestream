@@ -102,7 +102,9 @@ export interface Note {
 	position: {
 		oldPath: string;
 		newPath: string;
-		newLine: string;
+		newLine: number;
+		diffRefs?: any;
+		patch?: string;
 	};
 	resolved: boolean;
 	discussion: {

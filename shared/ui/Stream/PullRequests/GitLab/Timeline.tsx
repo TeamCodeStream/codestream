@@ -308,9 +308,8 @@ export const Timeline = (props: Props) => {
 						</Collapse>
 						<CodeCommentPatch>
 							<PullRequestPatch
-								patch={
-									'@@ -13,11 +13,17 @@ import {\n     FIXME THIS IS HARDCODED\n import { PRHeadshot } from "@codestream/webview/src/components/Headshot";\n import styled from "styled-components";\n import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";\n-import { PRActionIcons, PRCommentHeader } from "../../PullRequestComponents";\n+import {\n+       PRActionIcons,\n+       PRCodeCommentPatch,\n+       PRCodeCommentReplyInput\n'
-								}
+								noHeader={true}
+								patch={note.position.patch}
 								filename={note.position.newPath}
 								truncateLargePatches
 							/>

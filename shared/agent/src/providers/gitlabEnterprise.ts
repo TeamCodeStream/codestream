@@ -5,18 +5,11 @@ import { URI } from "vscode-uri";
 import { GitRemoteLike } from "../git/gitService";
 import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
-import { GitLabProvider } from "./gitlab";
+import { GitLabProvider, GitLabVersion } from "./gitlab";
 import { Container } from "../container";
-
-interface GitLabVersion {
-	version: string;
-	revision: string;
-}
 
 @lspProvider("gitlab_enterprise")
 export class GitLabEnterpriseProvider extends GitLabProvider {
-	private _version: GitLabVersion | undefined;
-
 	get displayName() {
 		return "GitLab Self-Managed";
 	}

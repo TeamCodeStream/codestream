@@ -9,7 +9,7 @@ import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { GitRepository } from "../git/models/repository";
-import { toRepoName } from "../git/utils";
+import { ParsedDiffWithMetadata, toRepoName, translatePositionToLineNumber } from "../git/utils";
 import { Logger } from "../logger";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
@@ -49,6 +49,7 @@ import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
 import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
 import { merge } from "lodash";
+import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -71,10 +72,16 @@ interface GitLabCurrentUser {
 	name: string;
 }
 
+export interface GitLabVersion {
+	version: string;
+	revision: string;
+}
+
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
 	private _gitlabUserId: string | undefined;
 	private _projectsByRemotePath = new Map<string, GitLabProject>();
+	protected _version: GitLabVersion | undefined;
 
 	get displayName() {
 		return "GitLab";
@@ -1001,9 +1008,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					pullRequestId: mergeRequestFullId
 				})
 			)?.length;
-			response.project.mergeRequest.changesCount = (
-				await this.getPullRequestFilesChanged({ pullRequestId: mergeRequestFullId })
-			)?.length;
+			const filesChanged = await this.getPullRequestFilesChanged({
+				pullRequestId: mergeRequestFullId
+			});
+			response.project.mergeRequest.changesCount = filesChanged?.length;
 
 			// awards are "reactions" aka "emojis"
 			const awards = await this.restGet<any>(
@@ -1049,6 +1057,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					viewerCanDelete: response.project.mergeRequest.userPermissions.adminMergeRequest
 				}
 			};
+
+			const parsedPatches = new Map<string, ParsedDiffWithMetadata>();
 			// massage into replies
 			response.project.mergeRequest.discussions.nodes.forEach((_: DiscussionNode) => {
 				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
@@ -1060,6 +1070,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
 							n.mergeRequestIdComputed = mergeRequestFullId;
 							this.toAuthorAbsolutePath(n.author);
+						}
+						if (n.position?.diffRefs && n.position?.newPath && filesChanged?.length) {
+							try {
+								let processedPatch = parsedPatches.get(n.position.newPath);
+								if (!processedPatch) {
+									const found = filesChanged.find(_ => _.filename === n.position.newPath);
+									if (found?.patch) {
+										processedPatch = translatePositionToLineNumber(parsePatch(found.patch)[0]);
+										if (processedPatch) {
+											parsedPatches.set(n.position.newPath, processedPatch);
+										}
+									}
+								}
+								if (processedPatch?.hunks && processedPatch.hunks.length > 0) {
+									const lines = processedPatch?.hunks[0].linesWithMetadata
+										.filter(
+											_ =>
+												_.lineNumber &&
+												_.lineNumber <= n.position.newLine &&
+												_.lineNumber >= n.position.newLine - 7
+										)
+										.map(_ => _.line);
+									const length = lines?.length || 1;
+									const start = n.position.newLine + 1 - length;
+									const header = `@@ -${start},${length} +${start},${n.position.newLine} @@`;
+									n.position.patch = header + "\n" + lines?.join("\n");
+								}
+							} catch (ex) {
+								Logger.warn("getMergeRequest diffs", {
+									error: ex
+								});
+							}
 						}
 					});
 					_.notes.nodes[0].replies = _.notes.nodes.filter(
@@ -1177,8 +1219,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		);
 		return data.body;
 	}
-
-	// private _pendingReviewStore: Map<string, any[]> = new Map<string, any[]>();
 
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
@@ -2289,31 +2329,40 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// used for old servers
 		position?: number;
 	}) {
-		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+		try {
+			const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
 
-		const payload = {
-			body: request.text,
-			position: {
-				base_sha: request.leftSha,
-				head_sha: request.sha,
-				start_sha: request.leftSha,
-				position_type: "text",
-				new_path: request.path,
-				new_line: request.startLine
-			}
-		};
+			const payload = {
+				body: request.text,
+				position: {
+					base_sha: request.leftSha,
+					head_sha: request.sha,
+					start_sha: request.leftSha,
+					position_type: "text",
+					new_path: request.path,
+					new_line: request.startLine
+				}
+			};
 
-		const data = await this.restPost<any, any>(
-			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
-			payload
-		);
+			// https://docs.gitlab.com/ee/api/discussions.html#create-new-merge-request-thread
+			const data = await this.restPost<any, any>(
+				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
+				payload
+			);
 
-		this._pullRequestCache.delete(id);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: id
-		});
+			this._pullRequestCache.delete(id);
+			this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+				pullRequestId: id
+			});
 
-		return data.body;
+			return data.body;
+		} catch (ex) {
+			Logger.warn(`createCommitComment`, {
+				request: request,
+				error: ex
+			});
+			throw ex;
+		}
 	}
 
 	@log()
@@ -2340,7 +2389,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				);
 			} catch (ex) {
 				// this will throw a 404 error if it's alreay been unapproved
-				// but you can approve many times
+				// but you can approve many times. just ignore it.
 				Logger.warn(ex.message);
 			}
 		}
@@ -2802,6 +2851,11 @@ interface GitLabPullRequestCommentPosition {
 	position_type: string;
 	old_line?: number;
 	new_line: number;
+	line_range: {
+		start: {
+			new_line: number;
+		};
+	};
 }
 
 interface GitLabCreateMergeRequestRequest {

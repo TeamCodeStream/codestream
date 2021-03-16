@@ -26,6 +26,11 @@ fragment discussionFragment on Discussion {
 				oldLine
 				oldPath
 				filePath
+				diffRefs {
+					baseSha
+					headSha
+					startSha
+				}
 			}
 			project {
 				name
