@@ -844,7 +844,11 @@ export const PullRequest = () => {
 								<>
 									{pr.description && (
 										<Description>
-											<MarkdownText text={pr.description.replace(/<\/?sup>/g, "")} />
+											<MarkdownText
+												text={pr.description
+													.replace(/<!--[\s\S]*?-->/g, "")
+													.replace(/<\/?sup>/g, "")}
+											/>
 										</Description>
 									)}
 									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
