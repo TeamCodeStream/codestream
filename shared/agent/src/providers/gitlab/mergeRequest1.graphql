@@ -1,0 +1,53 @@
+#import "./fragments/pipeline.graphql"
+
+query GetPullRequest($fullPath: ID!, $iid: String!) {
+	project(fullPath: $fullPath) {
+		mergeRequest(iid: $iid) {
+			approvedBy(first: 50) {
+				nodes {
+					avatarUrl
+					name
+					login: username
+				}
+			}
+			pipelines(first: 1) {
+				nodes {
+					...pipelineFragment
+				}
+			}
+			assignees(last: 100) {
+				nodes {
+					id
+					name
+					login: username
+					avatarUrl
+				}
+			}
+			participants(last: 100) {
+				nodes {
+					id
+					name
+					login: username
+					avatarUrl
+				}
+			}
+			labels(last: 15) {
+				nodes {
+					id
+					color
+					textColor
+					title
+				}
+			}
+			currentUserTodos(last: 50) {
+				nodes {
+					action
+					body
+					id
+					targetType
+					state
+				}
+			}
+		}
+	}
+}

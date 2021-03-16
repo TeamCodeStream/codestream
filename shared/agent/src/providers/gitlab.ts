@@ -45,8 +45,11 @@ import {
 import { Directives } from "./directives";
 import { CodeStreamSession } from "../session";
 import { print } from "graphql";
-import mergeRequestQuery from "./gitlab/mergeRequest.graphql";
+import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
+import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
 import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
+import { merge } from "lodash";
+
 interface GitLabProject {
 	path_with_namespace: any;
 	id: string;
@@ -888,19 +891,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let response = {} as GitLabMergeRequestWrapper;
 		try {
-			let query: string;
-			query = print(mergeRequestQuery);
-
-			let discussions: any[] = [];
+			let discussions: DiscussionNode[] = [];
 			let i = 0;
 			const args = {
 				fullPath: projectFullPath,
 				iid: iid.toString()
 			};
-			response = await this.query(query, args);
-			discussions = discussions.concat(response.project.mergeRequest.discussions.nodes);
-			if (response.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
-				let after = response.project.mergeRequest.discussions.pageInfo.endCursor;
+			let response0 = await this.query(print(mergeRequest0Query), args);
+			discussions = discussions.concat(response0.project.mergeRequest.discussions.nodes);
+			if (response0.project.mergeRequest.discussions.pageInfo?.hasNextPage) {
+				let after = response0.project.mergeRequest.discussions.pageInfo.endCursor;
 				const paginatedQuery = print(mergeRequestDiscussionQuery);
 				while (true) {
 					const paginated = await this.query(paginatedQuery, {
@@ -917,6 +917,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			}
+
+			const response1 = await this.query(print(mergeRequest1Query), args);
+			response = merge(
+				{
+					project: {
+						mergeRequest: {
+							discussions: {
+								nodes: []
+							}
+						}
+					}
+				},
+				response0,
+				response1
+			);
 
 			response.project.mergeRequest.discussions.nodes = discussions;
 			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
