@@ -87,6 +87,19 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			"Content-Type": "application/json"
 		};
 	}
+
+	get apiPath() {
+		return "/api/v4";
+	}
+
+	get baseUrl() {
+		return `${this.baseWebUrl}${this.apiPath}`;
+	}
+
+	get baseWebUrl() {
+		return `https://gitlab.com`;
+	}
+
 	private gitLabReviewStore: GitLabReviewStore;
 
 	constructor(session: CodeStreamSession, providerConfig: ThirdPartyProviderConfig) {
@@ -2527,7 +2540,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	private avatarUrl(url: string) {
-		return url.startsWith("/") ? `${this.baseUrl}${url}` : url;
+		return url.startsWith("/") ? `${this.baseWebUrl}${url}` : url;
 	}
 
 	private fromRestUser(user: { [key: string]: any }) {
@@ -2558,7 +2571,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	private toAuthorAbsolutePath(author: any) {
 		if (author?.avatarUrl.indexOf("/") === 0) {
 			// no really great way to handle this...
-			author.avatarUrl = `${this.baseUrl}${author.avatarUrl}`;
+			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
 		}
 		return author;
 	}
