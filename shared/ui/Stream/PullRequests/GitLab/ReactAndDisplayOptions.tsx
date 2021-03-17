@@ -47,7 +47,7 @@ export const ReactAndDisplayOptions = props => {
 	return (
 		<Root>
 			<PullRequestReactions
-				pr={pr as any}
+				pr={pr}
 				targetId={pr.id.replace(/.*\//, "")}
 				setIsLoadingMessage={setIsLoadingMessage}
 				thumbsFirst

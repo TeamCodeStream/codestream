@@ -45,7 +45,12 @@ export interface GitLabFetchListsResponse {
 
 export interface GitLabMergeRequestWrapper {
 	error: any;
-	currentUser: any;
+	currentUser: {
+		name: string;
+		login: string;
+		avatarUrl: string;
+		id: string;
+	};
 	project: {
 		mergeRequestsEnabled: boolean;
 		mergeRequestsFfOnlyEnabled: boolean;
@@ -252,7 +257,12 @@ export interface GitLabMergeRequest {
 		}[];
 	};
 	pendingReview: {
-		comments: {
+		id: string;
+		author: {
+			login: string;
+			avatarUrl: string;
+		};
+		comments?: {
 			totalCount: number;
 		};
 	};
@@ -303,6 +313,7 @@ export interface GitLabMergeRequest {
 		avatarUrl: string;
 		viewerCanDelete?: boolean;
 	};
+	viewerDidAuthor: boolean;
 	webUrl: string;
 	workInProgress: boolean;
 	baseWebUrl: string;

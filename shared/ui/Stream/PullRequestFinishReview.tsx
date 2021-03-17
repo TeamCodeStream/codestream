@@ -1,8 +1,4 @@
-import React, { useState, useReducer } from "react";
-import {
-	FetchThirdPartyPullRequestPullRequest,
-	ExecuteThirdPartyTypedType
-} from "../protocols/agent/agent.protocol.providers";
+import React, { useState } from "react";
 import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
@@ -16,27 +12,26 @@ import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 
 export const PullRequestFinishReview = (props: {
-	pr: FetchThirdPartyPullRequestPullRequest;
+	pr: {
+		providerId: string;
+		viewerDidAuthor: boolean;
+		pendingReview: {
+			id: string;
+			author: {
+				login: string;
+				avatarUrl: string;
+			};
+			comments?: {
+				totalCount: number;
+			};
+		};
+	};
 	mode: "dropdown" | "timeline";
 	fetch: Function;
 	setIsLoadingMessage: Function;
 	setFinishReviewOpen?: Function;
 }) => {
 	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const currentUser = state.users[state.session.userId!] as CSMe;
-		const team = state.teams[state.context.currentTeamId];
-		return {
-			reviewsState: state.reviews,
-			currentUser,
-			currentPullRequestId: state.context.currentPullRequest
-				? state.context.currentPullRequest.id
-				: undefined,
-			composeCodemarkActive: state.context.composeCodemarkActive,
-			team
-		};
-	});
-
 	const [reviewText, setReviewText] = useState("");
 	const [submittingReview, setSubmittingReview] = useState(false);
 	const [reviewType, setReviewType] = useState<"COMMENT" | "APPROVE" | "REQUEST_CHANGES">(

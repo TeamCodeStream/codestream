@@ -772,7 +772,7 @@ export const PullRequest = () => {
 									</Button>
 									{finishReviewOpen && (
 										<PullRequestFinishReview
-											pr={pr as any}
+											pr={pr}
 											mode="dropdown"
 											fetch={fetch}
 											setIsLoadingMessage={setIsLoadingMessage}

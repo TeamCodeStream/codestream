@@ -1115,18 +1115,22 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			// add reviews
 			const pendingReview = await this.gitLabReviewStore.get(base_id);
 			if (pendingReview?.comments?.length) {
+				const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
+					return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
+				});
+				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
+					commentsAsDiscussionNodes
+				);
 				response.project.mergeRequest.pendingReview = {
+					id: "undefined",
+					author: commentsAsDiscussionNodes[0].notes?.nodes[0].author!,
 					comments: {
 						totalCount: pendingReview.comments.length
 					}
 				};
-
-				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
-					pendingReview.comments.map(_ => {
-						return this.gitLabReviewStore.mapToDiscussionNode(_, this._currentGitlabUser!);
-					})
-				);
 			}
+			response.project.mergeRequest.viewerDidAuthor =
+				response.project.mergeRequest.author.login == response.currentUser.login;
 
 			// get all timeline events
 			(
