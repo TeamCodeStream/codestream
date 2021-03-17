@@ -270,11 +270,9 @@ export const Timeline = (props: Props) => {
 				<OutlineBoxHeader style={{ flexWrap: "nowrap" }}>
 					{note.author && (
 						<div style={{ flexGrow: 1 }}>
-							<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
-								<BigRoundImg>
-									<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-								</BigRoundImg>
-							</Tooltip>
+							<BigRoundImg>
+								<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+							</BigRoundImg>
 							<div>
 								<b>{note.author.name}</b> @{note.author.login} started a thread on the diff
 								<Timestamp relative time={note.createdAt} />
@@ -331,11 +329,9 @@ export const Timeline = (props: Props) => {
 			<Comment className={index === 0 ? "first-reply" : "nth-reply"} key={"comment-" + index}>
 				<OutlineBoxHeader>
 					{note.author && (
-						<Tooltip title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}>
-							<BigRoundImg>
-								<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
-							</BigRoundImg>
-						</Tooltip>
+						<BigRoundImg>
+							<img style={{ float: "left" }} alt="headshot" src={note.author.avatarUrl} />
+						</BigRoundImg>
 					)}
 					{note.author && (
 						<div style={{ flexGrow: 1 }}>
@@ -345,7 +341,6 @@ export const Timeline = (props: Props) => {
 							</div>
 						</div>
 					)}
-					{!note.author && <pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
 
 					<PRActionIcons>
 						<PRAuthorBadges
@@ -506,11 +501,7 @@ export const Timeline = (props: Props) => {
 			if (note.systemNoteIconName?.indexOf("label-") > -1) {
 				return (
 					<ActionBox key={note.id}>
-						<Icon
-							name="tag"
-							className="circled"
-							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-						/>
+						<Icon name="tag" className="circled" />
 						<ActionBody>
 							<b>{note.author.name}</b> @{note.author.login} {note.body} a label{" "}
 							{note.label && <Tag tag={{ label: note.label.name, color: `${note.label.color}` }} />}
@@ -531,11 +522,7 @@ export const Timeline = (props: Props) => {
 			} else if (note.systemNoteIconName?.indexOf("milestone-") > -1) {
 				return (
 					<ActionBox key={note.id}>
-						<Icon
-							name="clock"
-							className="circled"
-							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-						/>
+						<Icon name="clock" className="circled" />
 						<ActionBody>
 							<b>{note.author.name}</b> @{note.author.login} {note.body} a milestone{" "}
 							<Link href={note.milestone?.url}>%{note.milestone?.title}</Link>
@@ -556,11 +543,7 @@ export const Timeline = (props: Props) => {
 
 				return (
 					<ActionBox key={note.id}>
-						<Icon
-							name={iconMap[note.systemNoteIconName] || "blank"}
-							className="circled"
-							title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-						/>
+						<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
 						<ActionBody>
 							<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
 							<Timestamp relative time={note.createdAt} />
@@ -571,11 +554,7 @@ export const Timeline = (props: Props) => {
 			}
 			return (
 				<ActionBox key={note.id}>
-					<Icon
-						name={iconMap[note.systemNoteIconName] || "blank"}
-						className="circled"
-						title={<pre className="stringify">{JSON.stringify(note, null, 2)}</pre>}
-					/>
+					<Icon name={iconMap[note.systemNoteIconName] || "blank"} className="circled" />
 					<ActionBody>
 						<b>{note.author.name}</b> @{note.author.login} <MarkdownText inline text={label} />
 						<Timestamp relative time={note.createdAt} />
@@ -680,7 +659,6 @@ export const Timeline = (props: Props) => {
 				) {
 					return (
 						<React.Fragment key={index}>
-							{/* <pre className="stringify">{JSON.stringify(_, null, 2)}</pre> */}
 							{discussionNode.notes.nodes.map(note => printNote(note))}
 						</React.Fragment>
 					);
