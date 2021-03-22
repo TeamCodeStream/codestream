@@ -875,6 +875,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return {
 			users: response.body.map(u => ({
 				...u,
+				login: u.username,
 				avatarUrl: this.avatarUrl(u.avatar_url),
 				displayName: u.name
 			}))
@@ -1376,9 +1377,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			);
 
-			(response.mergeRequestSetAssignees.mergeRequest.assignees || []).map((assignee: any) => {
-				this.toAuthorAbsolutePath(assignee);
-			});
+			(response.mergeRequestSetAssignees.mergeRequest.assignees.nodes || []).map(
+				(assignee: any) => {
+					this.toAuthorAbsolutePath(assignee);
+				}
+			);
 			return {
 				directives: [
 					{

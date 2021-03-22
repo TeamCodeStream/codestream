@@ -236,7 +236,7 @@ export const RightActionBar = props => {
 	}, [derivedState.currentPullRequest, availableAssignees, pr]);
 
 	const setAssignee = async (login: string) => {
-		setIsLoadingMessage("Setting Assignee...");
+		setIsLoadingMessage("Setting Assignee to " + login + "...");
 		await dispatch(
 			api("setAssigneeOnPullRequest", {
 				login
