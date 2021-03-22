@@ -161,6 +161,13 @@ export interface DiscussionNode {
 	resolvable: boolean;
 }
 
+export interface GitLabUser {
+	avatarUrl: string;
+	name: string;
+	login: string;
+	id: string;
+}
+
 export interface GitLabMergeRequest {
 	approvedBy: {
 		nodes: {
@@ -169,11 +176,9 @@ export interface GitLabMergeRequest {
 			login: string;
 		}[];
 	};
-	author: {
-		avatarUrl: string;
-		name: string;
-		login: string;
-		id: string;
+	author: GitLabUser;
+	assignees: {
+		nodes: GitLabUser[];
 	};
 	baseRefName: string;
 	baseRefOid: string;
@@ -211,6 +216,9 @@ export interface GitLabMergeRequest {
 	mergedAt: string;
 	mergeWhenPipelineSucceeds: boolean;
 	number: number;
+	participants: {
+		nodes: GitLabUser[];
+	};
 	pipelines?: {
 		nodes: {
 			id: string;

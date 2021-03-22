@@ -244,6 +244,57 @@ export const RightActionBar = props => {
 		);
 	};
 
+	const fetchAvailableReviewers = async (e?) => {
+		if (availableReviewers === undefined) {
+			setAvailableReviewers(EMPTY_ARRAY);
+		}
+		const reviewers = (await dispatch(api("getReviewers", {}))) as any;
+		setAvailableReviewers(reviewers.users);
+	};
+
+	const reviewerMenuItems = React.useMemo(() => {
+		if (
+			availableReviewers === undefined &&
+			derivedState.currentPullRequest &&
+			derivedState.currentPullRequest.error &&
+			derivedState.currentPullRequest.error.message
+		) {
+			return [
+				{
+					label: (
+						<PRError>
+							<Icon name="alert" />
+							<div>{derivedState.currentPullRequest.error.message}</div>
+						</PRError>
+					),
+					noHover: true
+				}
+			];
+		}
+		if (!pr.reviewers) return [];
+		const reviewerIds = pr.reviewers.nodes.map(_ => _.login);
+		if (availableReviewers && availableReviewers.length) {
+			const menuItems = (availableReviewers || []).map((_: any) => ({
+				checked: reviewerIds.includes(_.login),
+				label: <PRHeadshotName person={{ ..._, user: _.login }} className="no-padding" />,
+				subtle: _.name,
+				searchLabel: `${_.login}:${_.name}`,
+				key: _.id,
+				action: () => setReviewer(_.login, !reviewerIds.includes(_.login))
+			})) as any;
+			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
+			return menuItems;
+		} else {
+			return [{ label: <LoadingMessage>Loading Reviewers...</LoadingMessage>, noHover: true }];
+		}
+	}, [derivedState.currentPullRequest, availableReviewers, pr]);
+
+	const setReviewer = async (login: string, onOff: boolean) => {
+		setIsLoadingMessage(onOff ? "Adding Reviewer..." : "Removing Reviewer...");
+		if (onOff) await dispatch(api("addReviewerToPullRequest", { login }));
+		else dispatch(api("removeReviewerFromPullRequest", { login }));
+	};
+
 	const fetchAvailableMilestones = async (e?) => {
 		const milestones = (await dispatch(api("getMilestones", {}))) as any;
 		setAvailableMilestones(milestones);

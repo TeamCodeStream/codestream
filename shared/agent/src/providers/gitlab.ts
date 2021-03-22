@@ -944,6 +944,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			response.project.mergeRequest.discussions.nodes = discussions;
 			this.toAuthorAbsolutePath(response.project.mergeRequest.author);
 
+			response.project.mergeRequest.assignees.nodes.forEach(node => {
+				this.toAuthorAbsolutePath(node);
+			});
+			response.project.mergeRequest.participants.nodes.forEach(node => {
+				this.toAuthorAbsolutePath(node);
+			});
+
 			// project settings
 			const project = await this.restGet<{
 				merge_method: string;
