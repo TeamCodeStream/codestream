@@ -24,7 +24,7 @@ export interface ProviderDisplay {
 	customPullRequestFilterHelpLink?: string;
 	customPullRequestFilterExample?: string;
 
-	supportsPR2CR?: boolean;
+	supportsPRManagement?: boolean;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -84,7 +84,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customPullRequestFilterExample:
 			"The variable @me can be used to specify the logged in user within a search. ",
 		supportsStartWork: true,
-		supportsPR2CR: true
+		supportsPRManagement: true
 	},
 	github_enterprise: {
 		displayName: "GitHub Enterprise",
@@ -103,7 +103,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			"The variable @me can be used to specify the logged in user within a search. ",
 		customPullRequestFilterHelpLink:
 			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
-		supportsStartWork: true
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	gitlab: {
 		displayName: "GitLab",
@@ -113,7 +114,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		cardLabel: "issue",
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
-		supportsStartWork: true
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	gitlab_enterprise: {
 		displayName: "GitLab Self-Managed",
@@ -126,7 +128,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		cardLabel: "issue",
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
-		supportsStartWork: true
+		supportsStartWork: true,
+		supportsPRManagement: true
 	},
 	jira: {
 		displayName: "Jira",

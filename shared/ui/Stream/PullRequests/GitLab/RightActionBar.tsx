@@ -479,6 +479,11 @@ export const RightActionBar = props => {
 		else return milestone.title;
 	}, [pr.milestone]);
 
+	const pluralize = (word: string, list) => {
+		if (list && list.nodes && list.nodes.length == 1) return word;
+		else return `${word}s`;
+	};
+
 	return (
 		<Right className={rightOpen ? "expanded" : "collapsed"}>
 			<AsideBlock onClick={() => !rightOpen && close()}>
@@ -532,7 +537,7 @@ export const RightActionBar = props => {
 				{rightOpen ? (
 					<>
 						<JustifiedRow>
-							<label>Assignees</label>
+							<label>{pluralize("Assignee", pr.assignees)}</label>
 							<Link onClick={openAssignees}>
 								<InlineMenu
 									items={assigneeMenuItems}
@@ -575,7 +580,7 @@ export const RightActionBar = props => {
 					{rightOpen ? (
 						<>
 							<JustifiedRow>
-								<label>Reviewers</label>
+								<label>{pluralize("Reviewer", pr.reviewers)}</label>
 								<Link onClick={openReviewers}>
 									<InlineMenu
 										items={reviewerMenuItems}

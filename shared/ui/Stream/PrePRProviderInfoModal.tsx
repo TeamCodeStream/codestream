@@ -47,7 +47,7 @@ export interface PrePRProviderInfoModalProps {
 }
 
 export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
-	const { displayName, icon, supportsPR2CR } = PROVIDER_MAPPINGS[props.providerName];
+	const { displayName, icon, supportsPRManagement } = PROVIDER_MAPPINGS[props.providerName];
 
 	const prLabel = getPRLabelForProvider(props.providerName);
 
@@ -81,7 +81,7 @@ export const PrePRProviderInfoModal = (props: PrePRProviderInfoModalProps) => {
 							</CSText>
 						</div>
 					</Section>
-					{supportsPR2CR && (
+					{supportsPRManagement && (
 						<Section>
 							<Icon name="pull-request" />
 							<div>
