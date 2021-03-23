@@ -84,7 +84,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		const response = await this.get<YouTrackCard[]>(
 			`/issues?${qs.stringify({
 				fields: "id,idReadable,modified,summary,description",
-				query: "for: me"
+				query: "for: me state:unresolved"
 			})}`
 		);
 		const url =
