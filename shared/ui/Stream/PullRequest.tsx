@@ -531,11 +531,11 @@ export const PullRequest = () => {
 				_checkMergeabilityStatus().then(_ => {
 					setAutoCheckedMergeability(_ ? "CHECKED" : "UNKNOWN");
 				});
-			}, 5000);
+			}, 8000);
 		}
 		interval = setInterval(async () => {
-			// checks for 1 hour
-			if (intervalCounter >= 60) {
+			// checks for 15 min
+			if (intervalCounter >= 3) {
 				interval && clearInterval(interval);
 				intervalCounter = 0;
 				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
@@ -571,7 +571,7 @@ export const PullRequest = () => {
 				console.error(ex);
 				interval && clearInterval(interval);
 			}
-		}, 60000); //60000 === 1 minute interval
+		}, 300000); //300000 === 5 minute interval
 
 		return () => {
 			interval && clearInterval(interval);
