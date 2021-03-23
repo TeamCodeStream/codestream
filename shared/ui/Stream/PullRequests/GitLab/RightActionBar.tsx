@@ -182,8 +182,8 @@ export const RightActionBar = props => {
 
 	const [availableLabels, setAvailableLabels] = useState(EMPTY_ARRAY);
 	const [availableReviewers, setAvailableReviewers] = useState(EMPTY_ARRAY_2);
+	const [supportsReviewers, setSupportsReviewers] = useState(false);
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
-	const [availableProjects, setAvailableProjects] = useState<[] | undefined>();
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
 
 	const close = () => {
@@ -271,8 +271,7 @@ export const RightActionBar = props => {
 				}
 			];
 		}
-		if (!pr.reviewers) return [];
-		const reviewerIds = pr.reviewers.nodes.map(_ => _.login);
+		const reviewerIds = pr && pr.reviewers ? pr.reviewers.nodes.map(_ => _.login) : [];
 		if (availableReviewers && availableReviewers.length) {
 			const menuItems = (availableReviewers || []).map((_: any) => ({
 				checked: reviewerIds.includes(_.login),
@@ -401,6 +400,7 @@ export const RightActionBar = props => {
 	};
 
 	const openAssignees = () => setRightOpen(true);
+	const openReviewers = () => setRightOpen(true);
 	const openMilestone = () => setRightOpen(true);
 	const openTimeTracking = () => setRightOpen(true);
 	const openLabels = () => setRightOpen(true);
@@ -570,6 +570,48 @@ export const RightActionBar = props => {
 					<Icon className="clickable" name="person" title="Assignee(s)" placement="left" />
 				)}
 			</AsideBlock>
+			{supportsReviewers && (
+				<AsideBlock onClick={() => !rightOpen && openReviewers()}>
+					{rightOpen ? (
+						<>
+							<JustifiedRow>
+								<label>Reviewers</label>
+								<Link onClick={openReviewers}>
+									<InlineMenu
+										items={reviewerMenuItems}
+										onOpen={fetchAvailableReviewers}
+										title="Request review"
+										noChevronDown
+										noFocusOnSelect
+									>
+										Edit
+									</InlineMenu>
+								</Link>
+							</JustifiedRow>
+							<Subtle>
+								{pr.reviewers && pr.reviewers.nodes.length > 0 ? (
+									pr.reviewers.nodes.map((_: any, index: number) => (
+										<span key={index}>
+											<PRHeadshotName key={_.avatarUrl} person={_} size={20} />
+											<br />
+										</span>
+									))
+								) : (
+									<>None</>
+								)}
+							</Subtle>
+						</>
+					) : pr.reviewers && pr.reviewers.nodes.length > 0 ? (
+						<Tooltip title={pr.reviewers.nodes[0].name} placement="left">
+							<span>
+								<PRHeadshot person={pr.reviewers.nodes[0]} size={20} />
+							</span>
+						</Tooltip>
+					) : (
+						<Icon className="clickable" name="person" title="Reviewer(s)" placement="left" />
+					)}
+				</AsideBlock>
+			)}
 			<AsideBlock onClick={() => !rightOpen && openMilestone()}>
 				{rightOpen ? (
 					<>
