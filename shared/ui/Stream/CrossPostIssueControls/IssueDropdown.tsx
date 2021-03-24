@@ -42,6 +42,7 @@ import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/compone
 import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
 import { isOnPrem } from "../../store/configs/reducer";
+import { Link } from "../Link";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -1096,9 +1097,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							</IntegrationButtons>
 							<IssueMissing>
 								Don't see your service?{" "}
-								<a href="https://github.com/TeamCodeStream/codestream/issues?q=is%3Aissue+is%3Aopen+label%3A%22issue+tracker%22">
+								<Link href="https://github.com/TeamCodeStream/codestream/issues?q=is%3Aissue+is%3Aopen+label%3A%22issue+tracker%22">
 									Let us know.
-								</a>
+								</Link>
 							</IssueMissing>
 						</>
 					)}
