@@ -1094,6 +1094,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									);
 								})}
 							</IntegrationButtons>
+							<IssueMissing>
+								Don't see your service?{" "}
+								<a href="https://github.com/TeamCodeStream/codestream/issues?q=is%3Aissue+is%3Aopen+label%3A%22issue+tracker%22">
+									Let us know.
+								</a>
+							</IssueMissing>
 						</>
 					)}
 					{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
@@ -1308,4 +1314,9 @@ const Linkish = styled.span`
 	:hover {
 		color: var(--text-color-highlight);
 	}
+`;
+
+const IssueMissing = styled.div`
+	text-align: center;
+	padding: 0px 20px 0px 20px;
 `;
