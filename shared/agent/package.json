@@ -62,7 +62,7 @@
         "oauth": "0.9.15",
         "object-sizeof": "1.5.3",
         "opn": "5.4.0",
-        "pubnub": "4.21.7",
+        "pubnub": "4.30.1",
         "semver": "7.3.2",
         "socketcluster-client": "16.0.1",
         "string-similarity": "3.0.0",
