@@ -76,8 +76,12 @@ function Form(props: { email?: string; onComplete: Function }) {
 		<form className="standard-form" onSubmit={submit}>
 			<fieldset className="form-body">
 				<div className="border-bottom-box">
-					<h3>Password Reset</h3>
-					<p>Enter your email address and we will send you a link to reset your password.</p>
+					<h3>
+						<FormattedMessage id="signUp.passwordReset" defaultMessage="Password Reset" />
+					</h3>
+					<h3>
+						<FormattedMessage id="signUp.passwordResetEnterEmail" defaultMessage="Enter your email address and we will send you a link to reset your password." />
+					</h3>
 					<div id="controls">
 						<div className="control-group">
 							<br />
