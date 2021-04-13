@@ -420,6 +420,17 @@ export function reduceProviderPullRequests(
 									pr.timelineItems.nodes.push(newNode);
 								}
 							}
+						} else if (directive.type === "addLegacyCommentReply") {
+							for (const node of pr.timelineItems.nodes) {
+								if (!node.comments) continue;
+								for (const comment of node.comments.nodes) {
+									if (directive.data._inReplyToId === comment.databaseId) {
+										if (!comment.replies) comment.replies = [];
+										comment.replies.push(directive.data);
+										break;
+									}
+								}
+							}
 						} else if (directive.type === "updatePullRequestReviewComment") {
 							let done = false;
 							for (const edge of pr.reviewThreads.edges) {

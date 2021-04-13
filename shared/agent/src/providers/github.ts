@@ -43,7 +43,7 @@ import {
 
 import semver from "semver";
 import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
-import { Arrays, Functions, log, lspProvider, Strings } from "../system";
+import { Arrays, Dates, Functions, log, lspProvider, Strings } from "../system";
 import {
 	ApiResponse,
 	getOpenedRepos,
@@ -3150,7 +3150,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return data.body;
 	}
 
-	async createCommentReply(request: { pullRequestId: string; commentId: string; text: string }) {
+	private _createReactionGroups() {
+		return [
+			"THUMBS_UP",
+			"THUMBS_DOWN",
+			"LAUGH",
+			"HOORAY",
+			"CONFUSED",
+			"HEART",
+			"ROCKET",
+			"EYES"
+		].map(type => {
+			return {
+				content: type,
+				users: {
+					nodes: []
+				}
+			};
+		});
+	}
+
+	async createCommentReply(request: {
+		pullRequestId: string;
+		parentId: string;
+		commentId: string;
+		text: string;
+	}): Promise<Directives> {
 		// https://developer.github.com/v3/pulls/comments/#create-a-reply-for-a-review-comment
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const data = await this.restPost<any, any>(
@@ -3159,7 +3184,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				body: request.text
 			}
 		);
-		return data.body;
+		// GH doesn't provide a way to add comment replies via the graphQL api
+		// see https://stackoverflow.com/questions/55708085/is-there-a-way-to-reply-to-pull-request-review-comments-with-the-github-api-v4
+		// below, we're crafting a response that looks like what graphQL would give us
+		const body = data.body;
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addLegacyCommentReply",
+					data: {
+						// this isn't normally part of the response, but it's
+						// the databaseId of the parent comment
+						_inReplyToId: body.in_reply_to_id,
+						author: {
+							login: body.user.login,
+							avatarUrl: body.user.avatar_url
+						},
+						authorAssociation: body.author_association,
+						body: body.body,
+						bodyText: body.body,
+						createdAt: body.created_at,
+						id: body.node_id,
+						replyTo: {
+							id: body.node_id
+						},
+						reactionGroups: this._createReactionGroups(),
+						viewerCanUpdate: true,
+						viewerCanReact: true,
+						viewerCanDelete: true
+					}
+				}
+			]
+		};
 	}
 
 	async createPullRequestComment(request: {

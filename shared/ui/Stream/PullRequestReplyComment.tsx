@@ -32,17 +32,6 @@ export const PullRequestReplyComment = styled((props: Props) => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isPreviewing, setIsPreviewing] = useState(false);
 
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const { context } = state;
-
-		return {
-			isGitLab:
-				context.currentPullRequest && context.currentPullRequest.providerId
-					? context.currentPullRequest.providerId.indexOf("gitlab") > -1
-					: false
-		};
-	});
-
 	useEffect(() => setOpen(props.isOpen), [props.isOpen]);
 
 	const handleComment = async () => {
@@ -62,16 +51,9 @@ export const PullRequestReplyComment = styled((props: Props) => {
 					text: replaceHtml(text)
 				})
 			);
-			if (derivedState.isGitLab) {
-				setText("");
-				setOpen(false);
-			} else {
-				// TODO GH doesn't support directives for this yet
-				fetch().then(() => {
-					setText("");
-					setOpen(false);
-				});
-			}
+
+			setText("");
+			setOpen(false);
 		} catch (ex) {
 			console.warn(ex);
 		} finally {

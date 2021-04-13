@@ -2,6 +2,7 @@ export interface Directives {
 	directives: {
 		type:
 			| "addApprovedBy"
+			| "addLegacyCommentReply"
 			| "addNode"
 			| "addNodes"
 			| "addReaction"
