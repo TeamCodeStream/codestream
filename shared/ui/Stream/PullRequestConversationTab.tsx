@@ -199,12 +199,11 @@ let focusOnMessageInput;
 
 export const PullRequestConversationTab = (props: {
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	ghRepo: any;
 	checkMergeabilityStatus: Function;
 	autoCheckedMergeability: autoCheckedMergeabilityStatus;
 }) => {
-	const { ghRepo, fetch, setIsLoadingMessage } = props;
+	const { ghRepo, setIsLoadingMessage } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
@@ -717,7 +716,6 @@ export const PullRequestConversationTab = (props: {
 	// 			onOff
 	// 		})
 	// 	);
-	// 	fetch();
 	// };
 
 	const toggleSubscription = async () => {
@@ -842,7 +840,6 @@ export const PullRequestConversationTab = (props: {
 					<PullRequestTimelineItems
 						pr={pr}
 						setIsLoadingMessage={setIsLoadingMessage}
-						fetch={fetch}
 						quote={quote}
 					/>
 					<PRFoot />

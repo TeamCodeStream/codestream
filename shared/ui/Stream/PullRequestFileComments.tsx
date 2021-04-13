@@ -11,7 +11,7 @@ import { FileStatus } from "@codestream/protocols/api";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { Modal } from "./Modal";
-import { useDidMount } from '../utilities/hooks';
+import { useDidMount } from "../utilities/hooks";
 
 const Root = styled.div`
 	background: var(--app-background-color);
@@ -27,7 +27,7 @@ const STATUS_MAP = {
 
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
-	fetch: Function;
+
 	setIsLoadingMessage: Function;
 	commentId: string;
 	quote: Function;
@@ -165,7 +165,6 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 							commentId={props.commentId}
 							setIsLoadingMessage={props.setIsLoadingMessage}
 							quote={quote}
-							fetch={props.fetch!}
 						/>
 					)}
 				</PRDiffHunk>

@@ -71,9 +71,8 @@ interface Props {
 }
 
 export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
-	const { pr, setIsLoadingMessage, fetch } = props;
+	const { pr, setIsLoadingMessage } = props;
 	if (!pr || !pr.timelineItems) return null;
-	const dispatch = useDispatch();
 
 	const [reviewOption, setReviewOption] = useState("COMMENT");
 	const [reviewOptionText, setReviewOptionText] = useState("");
@@ -81,32 +80,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	const [pendingComments, setPendingComments] = useState({});
 	const [editingComments, setEditingComments] = useState({});
 	const [expandedComments, setExpandedComments] = useState({});
-
-	// const [pendingComment, setPendingComment] = useState("");
-	// const submitReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: reviewOption
-	// 		}
-	// 	));
-	// 	props.fetch();
-	// };
-
-	// const cancelReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: "DISMISS"
-	// 		}
-	// 	));
-
-	// 	props.fetch();
-	// };
 
 	const doneEditingComment = id => {
 		setEditingComments({ ...editingComments, [id]: false });
@@ -166,7 +139,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								node={pr}
 								nodeType={"ROOT_COMMENT"}
-								fetch={fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								setEdit={setEditingComment}
 								quote={props.quote}
@@ -230,7 +202,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 
 													<PullRequestCommentMenu
 														pr={pr}
-														fetch={fetch}
 														setIsLoadingMessage={setIsLoadingMessage}
 														node={item}
 														nodeType="ISSUE_COMMENT"
@@ -290,7 +261,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									<PullRequestFinishReview
 										pr={pr}
 										mode="timeline"
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
@@ -314,7 +284,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 
 														<PullRequestCommentMenu
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															node={item}
 															nodeType="REVIEW"
@@ -491,7 +460,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														</PRCodeCommentPatch>
 														<PullRequestCodeComment
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															item={item}
 															comment={comment}

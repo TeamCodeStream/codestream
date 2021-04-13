@@ -22,7 +22,6 @@ interface Props {
 	lineNumber?: number | undefined;
 	lineOffsetInHunk: number;
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	__onDidRender: Function;
 	className?: string;
 	onClose: Function;
@@ -30,15 +29,7 @@ interface Props {
 
 export const PullRequestInlineComment = styled((props: Props) => {
 	const dispatch = useDispatch();
-	const {
-		pr,
-		filename,
-		fetch,
-		oldLineNumber,
-		lineNumber,
-		lineOffsetInHunk,
-		setIsLoadingMessage
-	} = props;
+	const { pr, filename, oldLineNumber, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -83,7 +74,6 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		);
 		setText("");
 
-		fetch();
 		setIsLoadingSingleComment(false);
 		props.onClose();
 	};
@@ -106,7 +96,6 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		);
 		setText("");
 
-		fetch();
 		setIsLoadingStartReview(false);
 		props.onClose();
 	};

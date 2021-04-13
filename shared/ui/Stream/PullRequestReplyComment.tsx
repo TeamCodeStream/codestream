@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { PRButtonRow, PRCodeCommentReply, PRCodeCommentReplyInput } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
@@ -15,7 +14,6 @@ import { replaceHtml } from "../utils";
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
-	fetch: Function;
 	className?: string;
 	databaseId: string;
 	parentId?: string;
@@ -24,7 +22,7 @@ interface Props {
 }
 
 export const PullRequestReplyComment = styled((props: Props) => {
-	const { pr, fetch, databaseId, parentId } = props;
+	const { pr, databaseId, parentId } = props;
 	const dispatch = useDispatch();
 
 	const [text, setText] = useState("");

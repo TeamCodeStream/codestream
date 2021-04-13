@@ -867,7 +867,6 @@ export const PullRequest = () => {
 										<PullRequestFinishReview
 											pr={pr}
 											mode="dropdown"
-											fetch={fetch}
 											setIsLoadingMessage={setIsLoadingMessage}
 											setFinishReviewOpen={setFinishReviewOpen}
 										/>
@@ -954,7 +953,6 @@ export const PullRequest = () => {
 										pr={pr}
 										order={order}
 										filter={filter}
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 										collapseAll={collapseAll}
 									/>
@@ -966,7 +964,6 @@ export const PullRequest = () => {
 								<PullRequestFilesChangedTab
 									key="files-changed"
 									pr={pr as any}
-									fetch={fetch}
 									setIsLoadingMessage={setIsLoadingMessage}
 								/>
 							)}
@@ -975,7 +972,6 @@ export const PullRequest = () => {
 					{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
 						<PullRequestFileComments
 							pr={pr as any}
-							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							commentId={derivedState.currentPullRequestCommentId}
 							quote={() => {}}

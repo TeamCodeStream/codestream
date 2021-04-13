@@ -34,7 +34,7 @@ interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
 	setIsLoadingMessage: Function;
-	fetch: Function;
+
 	item: any;
 	comment: any;
 	author: any;
@@ -173,7 +173,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 								/>
 								<PullRequestCommentMenu
 									pr={pr}
-									fetch={props.fetch}
 									setIsLoadingMessage={setIsLoadingMessage}
 									node={comment}
 									nodeType="REVIEW_COMMENT"
@@ -245,7 +244,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 										/>
 										<PullRequestCommentMenu
 											pr={pr}
-											fetch={props.fetch}
 											setIsLoadingMessage={setIsLoadingMessage}
 											node={c}
 											nodeType="REVIEW_COMMENT"
@@ -287,7 +285,6 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					<PullRequestReplyComment
 						pr={pr}
 						mode={props.mode}
-						fetch={props.fetch}
 						/* GitLab-specific */
 						parentId={comment.id || comment?.discussion?.id}
 						databaseId={comment.databaseId}

@@ -872,7 +872,6 @@ export const PullRequest = () => {
 										<PullRequestFinishReview
 											pr={pr}
 											mode="dropdown"
-											fetch={fetch}
 											setIsLoadingMessage={setIsLoadingMessage}
 											setFinishReviewOpen={setFinishReviewOpen}
 										/>
@@ -910,18 +909,16 @@ export const PullRequest = () => {
 								{activeTab === 1 && (
 									<PullRequestConversationTab
 										ghRepo={ghRepo}
-										fetch={fetch}
 										autoCheckedMergeability={autoCheckedMergeability}
 										checkMergeabilityStatus={checkMergeabilityStatus}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
-								{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} fetch={fetch} />}
+								{activeTab === 2 && <PullRequestCommitsTab pr={pr} ghRepo={ghRepo} />}
 								{activeTab === 4 && (
 									<PullRequestFilesChangedTab
 										key="files-changed"
 										pr={pr}
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
@@ -931,7 +928,6 @@ export const PullRequest = () => {
 					{!derivedState.composeCodemarkActive && derivedState.currentPullRequestCommentId && (
 						<PullRequestFileComments
 							pr={pr}
-							fetch={fetch}
 							setIsLoadingMessage={setIsLoadingMessage}
 							commentId={derivedState.currentPullRequestCommentId}
 							quote={() => {}}

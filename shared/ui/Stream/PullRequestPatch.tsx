@@ -117,7 +117,6 @@ export const PullRequestPatch = (props: {
 	patch?: string;
 	mode?: string;
 	hunks?: Hunk[];
-	fetch?: Function;
 	filename: string;
 	className?: string;
 	noHeader?: boolean;
@@ -202,7 +201,7 @@ export const PullRequestPatch = (props: {
 							oldLineNumber: number | undefined = undefined,
 							type: "-" | "+" | undefined = undefined
 						) =>
-							props.pr && props.fetch && commentOpen[index] ? (
+							props.pr && commentOpen[index] ? (
 								<PRInlineComment key={"ic-" + index}>
 									<PullRequestInlineComment
 										pr={props.pr}
@@ -224,7 +223,6 @@ export const PullRequestPatch = (props: {
 											derivedState.isGitLab ? (type !== "-" ? rightLine : undefined) : rightLine + 1
 										}
 										lineOffsetInHunk={index}
-										fetch={props.fetch}
 										setIsLoadingMessage={() => {}}
 										__onDidRender={() => {}}
 										onClose={() => closeComment(index)}
@@ -256,7 +254,6 @@ export const PullRequestPatch = (props: {
 												<PullRequestCodeComment
 													pr={props.pr!}
 													mode={props.mode}
-													fetch={props.fetch!}
 													setIsLoadingMessage={props.setIsLoadingMessage!}
 													item={review}
 													comment={comment}

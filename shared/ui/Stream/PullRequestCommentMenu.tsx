@@ -14,12 +14,11 @@ interface CommentMenuProps {
 	setEdit?: Function;
 	quote?: Function;
 	isPending?: boolean;
-	fetch: Function;
 	setIsLoadingMessage: Function;
 }
 
 export const PullRequestCommentMenu = (props: CommentMenuProps) => {
-	const { pr, node, setEdit, quote, isPending, fetch, setIsLoadingMessage } = props;
+	const { pr, node, setEdit, quote, isPending, setIsLoadingMessage } = props;
 
 	// console.warn("MENU IS: ", props);
 
@@ -44,7 +43,6 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 									pullRequestReviewId: node.id
 								})
 							);
-							fetch();
 						} else {
 							await dispatch(
 								api("deletePullRequestComment", {
@@ -53,9 +51,6 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 									id: node.id
 								})
 							);
-							if (props.nodeType !== "ISSUE_COMMENT") {
-								fetch();
-							}
 						}
 					}
 				}

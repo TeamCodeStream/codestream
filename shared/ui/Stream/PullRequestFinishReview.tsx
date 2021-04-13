@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
-import { CSMe } from "../protocols/agent/api.protocol.models";
+import { useDispatch } from "react-redux";
 import { HostApi } from "..";
 import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
@@ -27,7 +25,6 @@ export const PullRequestFinishReview = (props: {
 		};
 	};
 	mode: "dropdown" | "timeline";
-	fetch: Function;
 	setIsLoadingMessage: Function;
 	setFinishReviewOpen?: Function;
 }) => {
@@ -39,7 +36,7 @@ export const PullRequestFinishReview = (props: {
 	);
 	const [isPreviewing, setIsPreviewing] = useState(false);
 
-	const { pr, mode, fetch, setIsLoadingMessage, setFinishReviewOpen } = props;
+	const { pr, mode, setIsLoadingMessage, setFinishReviewOpen } = props;
 
 	const supportsFinishReviewTypes = !pr.providerId.includes("gitlab");
 
@@ -57,7 +54,6 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
-		return fetch();
 	};
 
 	const cancelReview = async (e, id) => {
@@ -68,7 +64,6 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
-		fetch();
 	};
 
 	const pendingCommentCount =

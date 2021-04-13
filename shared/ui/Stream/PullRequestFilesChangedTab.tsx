@@ -32,7 +32,6 @@ interface DropdownItem {
 
 export const PullRequestFilesChangedTab = (props: {
 	pr: FetchThirdPartyPullRequestPullRequest;
-	fetch: Function;
 	setIsLoadingMessage: Function;
 }) => {
 	const { pr } = props;
@@ -277,7 +276,6 @@ export const PullRequestFilesChangedTab = (props: {
 				headRef={commitBased ? prCommitsRange[prCommitsRange.length - 1] : pr.headRefOid}
 				headRefName={pr.headRefName}
 				isLoading={isLoading}
-				fetch={props.fetch!}
 				setIsLoadingMessage={props.setIsLoadingMessage!}
 				commitBased={commitBased}
 				accessRawDiffs={accessRawDiffs}

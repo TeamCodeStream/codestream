@@ -17,8 +17,8 @@ import {
 	PRKebabIcon,
 	PRIconOutdated
 } from "./PullRequestComponents";
-import React, { PropsWithChildren, useCallback, useState } from "react";
-import { PRHeadshot, Headshot } from "../src/components/Headshot";
+import React, { PropsWithChildren, useState } from "react";
+import { PRHeadshot } from "../src/components/Headshot";
 import Timestamp from "./Timestamp";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
@@ -33,7 +33,7 @@ import { PRAuthorBadges } from "./PullRequestConversationTab";
 import * as Path from "path-browserify";
 import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { HostApi } from "../webview-api";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { CSMe } from "@codestream/protocols/api";
 import { SmartFormattedList } from "./SmartFormattedList";
@@ -42,7 +42,6 @@ import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestPatch } from "./PullRequestPatch";
 import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { PullRequestEditingComment } from "./PullRequestEditingComment";
-import { api } from "../store/providerPullRequests/actions";
 import { PullRequestCodeComment } from "./PullRequestCodeComment";
 import * as path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
@@ -66,47 +65,17 @@ const ReviewIcons = {
 interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	setIsLoadingMessage: Function;
-	fetch: Function;
 	quote: Function;
 }
 
 export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
-	const { pr, setIsLoadingMessage, fetch } = props;
+	const { pr, setIsLoadingMessage } = props;
 	if (!pr || !pr.timelineItems) return null;
-	const dispatch = useDispatch();
 
-	const [reviewOption, setReviewOption] = useState("COMMENT");
-	const [reviewOptionText, setReviewOptionText] = useState("");
 	const [openComments, setOpenComments] = useState({});
 	const [pendingComments, setPendingComments] = useState({});
 	const [editingComments, setEditingComments] = useState({});
 	const [expandedComments, setExpandedComments] = useState({});
-
-	// const [pendingComment, setPendingComment] = useState("");
-	// const submitReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: reviewOption
-	// 		}
-	// 	));
-	// 	props.fetch();
-	// };
-
-	// const cancelReview = async (event?: React.SyntheticEvent) => {
-	// 	await dispatch(api(
-	// 		"submitReview",
-
-	// 		{
-	// 			text: reviewOptionText,
-	// 			eventType: "DISMISS"
-	// 		}
-	// 	));
-
-	// 	props.fetch();
-	// };
 
 	const doneEditingComment = id => {
 		setEditingComments({ ...editingComments, [id]: false });
@@ -171,7 +140,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 								pr={pr}
 								node={pr}
 								nodeType={"ROOT_COMMENT"}
-								fetch={fetch}
 								setIsLoadingMessage={setIsLoadingMessage}
 								setEdit={setEditingComment}
 								quote={props.quote}
@@ -240,7 +208,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													/>
 													<PullRequestCommentMenu
 														pr={pr}
-														fetch={fetch}
 														setIsLoadingMessage={setIsLoadingMessage}
 														node={item}
 														nodeType="ISSUE_COMMENT"
@@ -300,7 +267,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 									<PullRequestFinishReview
 										pr={pr}
 										mode="timeline"
-										fetch={fetch}
 										setIsLoadingMessage={setIsLoadingMessage}
 									/>
 								)}
@@ -329,7 +295,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														/>
 														<PullRequestCommentMenu
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															node={item}
 															nodeType="REVIEW"
@@ -514,7 +479,6 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 														</PRCodeCommentPatch>
 														<PullRequestCodeComment
 															pr={pr}
-															fetch={fetch}
 															setIsLoadingMessage={setIsLoadingMessage}
 															item={item}
 															comment={comment}
