@@ -25,7 +25,7 @@ import { getConnectedProviders } from "../providers/reducer";
 import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
 import { isObject } from "lodash-es";
-import { getPullRequestConversationsFromProvider } from "../providerPullRequests/actions";
+import { handleDirectives } from "../providerPullRequests/actions";
 
 export const reset = () => action("RESET");
 
@@ -121,14 +121,21 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 		if (response) {
 			let result;
 			let responseAsPassthrough = (response as any) as CreatePassthroughCodemarkResponse;
-			if (responseAsPassthrough.isPassThrough) {
-				// is pass through -- aka a fake "codemark" that was sent to a code provider
-				dispatch(
-					getPullRequestConversationsFromProvider(
-						responseAsPassthrough.pullRequest.providerId,
-						responseAsPassthrough.pullRequest.id
-					)
-				);
+			if (responseAsPassthrough?.isPassThrough) {
+				if (responseAsPassthrough && responseAsPassthrough.directives) {
+					dispatch(
+						handleDirectives(
+							responseAsPassthrough.pullRequest.providerId,
+							responseAsPassthrough.pullRequest.id,
+							responseAsPassthrough.directives.directives
+						)
+					);
+					return {
+						handled: true
+					};
+				} else {
+					console.error("missing directives", response);
+				}
 			} else {
 				result = dispatch(addCodemarks([response.codemark]));
 				dispatch(addStreams([response.stream]));

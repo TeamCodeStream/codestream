@@ -5,6 +5,7 @@ import * as fs from "fs";
 import { groupBy, last, orderBy } from "lodash-es";
 import sizeof from "object-sizeof";
 import * as path from "path";
+import { Directives } from "../providers/directives";
 import { TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
@@ -985,6 +986,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			} else {
 				fileWithUrl = codeBlock.scm?.file;
 			}
+
+			let result: Promise<Directives>;
 			// only fall in here if we don't have a start OR we dont have both
 			if (!startHunk || (!startHunk && !endHunk)) {
 				// if we couldn't find a hunk, we're going to go down the path of using
@@ -995,7 +998,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					)}`
 				);
 
-				const result = await providerRegistry.executeMethod({
+				result = await providerRegistry.executeMethod({
 					method: "addComment",
 					providerId: parsedUri.context.pullRequest.providerId,
 					params: {
@@ -1007,7 +1010,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				return {
 					isPassThrough: true,
 					pullRequest: parsedUri.context.pullRequest,
-					success: result != null
+					success: result != null,
+					directives: result
 				};
 			}
 
@@ -1022,7 +1026,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				},
 				diff
 			);
-			let result;
+
 			if (request.isProviderReview) {
 				if (lineWithMetadata) {
 					result = await providerRegistry.executeMethod({
@@ -1051,7 +1055,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					calculatedEndLine = endHunk ? endLine : undefined;
 				}
 				// is a single comment against a commit
-				result = await providerRegistry.executeMethod({
+				result = (await providerRegistry.executeMethod({
 					method: "createCommitComment",
 					providerId: parsedUri.context.pullRequest.providerId,
 					params: {
@@ -1071,13 +1075,14 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							endLine: endLine
 						}
 					}
-				});
+				})) as Promise<Directives>;
 			}
 
 			return {
 				isPassThrough: true,
 				pullRequest: parsedUri.context.pullRequest,
-				success: result != null
+				success: result != null,
+				directives: result
 			};
 		}
 

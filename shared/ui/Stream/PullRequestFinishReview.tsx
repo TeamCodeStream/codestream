@@ -8,22 +8,25 @@ import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
+import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 
 export const PullRequestFinishReview = (props: {
-	pr: {
-		providerId: string;
-		viewerDidAuthor: boolean;
-		pendingReview: {
-			id: string;
-			author: {
-				login: string;
-				avatarUrl: string;
-			};
-			comments?: {
-				totalCount: number;
-			};
-		};
-	};
+	pr:
+		| {
+				providerId: string;
+				viewerDidAuthor: boolean;
+				pendingReview: {
+					id: string;
+					author: {
+						login: string;
+						avatarUrl: string;
+					};
+					comments?: {
+						totalCount: number;
+					};
+				};
+		  }
+		| FetchThirdPartyPullRequestPullRequest;
 	mode: "dropdown" | "timeline";
 	setIsLoadingMessage: Function;
 	setFinishReviewOpen?: Function;
@@ -141,7 +144,7 @@ export const PullRequestFinishReview = (props: {
 						Submit<span className="wide-text"> review</span>
 					</Button>
 					{pendingCommentCount > 0 && (
-						<Button variant="secondary" onClick={e => cancelReview(e, pr.pendingReview.id)}>
+						<Button variant="secondary" onClick={e => cancelReview(e, pr.pendingReview?.id)}>
 							Cancel review
 						</Button>
 					)}

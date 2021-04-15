@@ -111,6 +111,7 @@ export interface CreatePassthroughCodemarkResponse {
 		id: string;
 	};
 	success: boolean;
+	directives?: any;
 }
 
 export const CreateShareableCodemarkRequestType = new RequestType<

@@ -1895,7 +1895,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			filePath: request.filePath
 		});
 
-		const graphResults = await this.fetchUpdatedCommentData(ownerData);
+		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
 		this.mapPullRequestModel(graphResults);
 
 		const directives = [
@@ -1939,7 +1939,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		};
 	}
 
-	private async fetchUpdatedCommentData(ownerData: {
+	private async fetchUpdatedReviewCommentData(ownerData: {
 		owner: string;
 		name: string;
 		pullRequestNumber: number;
@@ -2143,6 +2143,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		name: string;
 		pullRequestNumber: number;
 	}) {
+		// costs 1
 		return this.query<any>(
 			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
 				rateLimit {
@@ -3456,12 +3457,43 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		};
 	}
 
-	async addComment(request: { subjectId: string; text: string }) {
-		// does not require return directives
+	async addComment(request: { subjectId: string; text: string }): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation AddComment($subjectId:ID!,$body:String!) {
 				addComment(input: {subjectId:$subjectId, body:$body}) {
 				  clientMutationId
+				  timelineEdge {
+					node {
+					  ... on IssueComment {
+						__typename
+						id
+						author {
+						  login
+						  avatarUrl
+						}
+						authorAssociation
+						body
+						bodyText
+						bodyHTML
+						createdAt
+						includesCreatedEdit
+						isMinimized
+						minimizedReason
+						reactionGroups {
+						  content
+						  users(first: 1) {
+							nodes {
+							  login
+							}
+						  }
+						}
+						resourcePath
+						viewerCanUpdate
+						viewerCanReact
+						viewerCanDelete
+					  }
+					}
+				  }
 				}
 			}`,
 			{
@@ -3469,7 +3501,21 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				body: request.text
 			}
 		);
-		return response;
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addNode",
+					data: response.addComment.timelineEdge.node
+				}
+			]
+		};
 	}
 
 	@log()
@@ -3527,7 +3573,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId
 		});
 
-		const graphResults = await this.fetchUpdatedCommentData(ownerData);
+		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
 		this.mapPullRequestModel(graphResults);
 
 		const directives = [
@@ -3798,40 +3844,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			commentId: request.id
 		});
 
-		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-		const pendingReviews = await this.fetchPendingReviews(ownerData);
-
-		const viewerId = pendingReviews?.viewer?.id;
-		const myPendingReview = pendingReviews?.repository?.pullRequest?.reviews?.nodes.find(
-			(_: any) => _.author.id === viewerId
-		);
 		const directives = [
 			{
 				type: "updatePullRequest",
 				data: {
 					updatedAt: Dates.toUtcIsoNow()
 				}
-			},
-			{
+			}
+		] as any;
+		if (request.type === "REVIEW_COMMENT") {
+			directives.push({
 				type: "removeComment",
 				data: {
 					id: request.id
 				}
-			}
-		] as any;
-
-		if (!myPendingReview) {
-			directives.push({
-				type: "removePendingReview",
-				data: null
 			});
-		} else {
-			if (request.type === "REVIEW_COMMENT") {
+			const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+			const pendingReviews = await this.fetchPendingReviews(ownerData);
+			const viewerId = pendingReviews?.viewer?.id;
+			const myPendingReview = pendingReviews?.repository?.pullRequest?.reviews?.nodes.find(
+				(_: any) => _.author.id === viewerId
+			);
+			if (!myPendingReview) {
+				directives.push({
+					type: "removePendingReview",
+					data: null
+				});
+			} else {
 				directives.push({
 					type: "updateReviewCommentsCount",
 					data: myPendingReview
 				});
 			}
+		} else {
+			directives.push({
+				type: "removeNode",
+				data: {
+					id: request.id
+				}
+			});
 		}
 
 		return {
