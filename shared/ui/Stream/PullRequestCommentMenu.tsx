@@ -52,6 +52,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 								})
 							);
 						}
+						setIsLoadingMessage("");
 					}
 				}
 			]

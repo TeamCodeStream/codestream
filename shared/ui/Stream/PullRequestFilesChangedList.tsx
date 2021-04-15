@@ -262,7 +262,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				});
 		}
 		return map;
-	}, [pr, derivedState.currentPullRequestProviderId]);
+	}, [pr?.updatedAt, derivedState.currentPullRequestProviderId]);
 
 	if (isLoading || isLoadingVisited)
 		return (

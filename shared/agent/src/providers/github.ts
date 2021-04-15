@@ -179,24 +179,24 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	async ensureInitialized() {}
 
-	// _queryLogger: {
-	// 	restApi: {
-	// 		rateLimit?: { remaining: number; limit: number; used: number; reset: number };
-	// 		fns: any;
-	// 	};
-	// 	graphQlApi: {
-	// 		rateLimit?: {
-	// 			remaining: number;
-	// 			resetAt: string;
-	// 			resetInMinutes: number;
-	// 			last?: { name: string; cost: number };
-	// 		};
-	// 		fns: any;
-	// 	};
-	// } = {
-	// 	graphQlApi: { fns: {} },
-	// 	restApi: { fns: {} }
-	// };
+	_queryLogger: {
+		restApi: {
+			rateLimit?: { remaining: number; limit: number; used: number; reset: number };
+			fns: any;
+		};
+		graphQlApi: {
+			rateLimit?: {
+				remaining: number;
+				resetAt: string;
+				resetInMinutes: number;
+				last?: { name: string; cost: number };
+			};
+			fns: any;
+		};
+	} = {
+		graphQlApi: { fns: {} },
+		restApi: { fns: {} }
+	};
 
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
@@ -205,7 +205,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		const starting = performance.now();
-		let response;
+		let response: any;
 		try {
 			response = await (await this.client()).request<T>(query, variables);
 		} catch (ex) {
@@ -220,61 +220,61 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				// this is an unexpected error, throw the exception normally
 				throw ex;
 			}
+		} finally {
+			try {
+				if (response && response.rateLimit) {
+					this._queryLogger.graphQlApi.rateLimit = {
+						remaining: response.rateLimit.remaining,
+						resetAt: response.rateLimit.resetAt,
+						resetInMinutes: Math.floor(
+							(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
+								new Date().getTime()) /
+								1000 /
+								60
+						)
+					};
+					const e = new Error();
+					if (e.stack) {
+						let functionName;
+						try {
+							functionName = e.stack
+								.split("\n")
+								.filter(
+									_ =>
+										(_.indexOf("GitHubProvider") > -1 ||
+											_.indexOf("GitHubEnterpriseProvider") > -1) &&
+										_.indexOf(".query") === -1
+								)![0]
+								.match(/GitHubProvider\.(\w+)/)![1];
+						} catch (err) {
+							functionName = "unknown";
+							Logger.warn(err);
+						}
+						this._queryLogger.graphQlApi.rateLimit.last = {
+							name: functionName,
+							cost: response.rateLimit.cost
+						};
+						if (!this._queryLogger.graphQlApi.fns[functionName]) {
+							this._queryLogger.graphQlApi.fns[functionName] = {
+								count: 1,
+								cumulativeCost: response.rateLimit.cost,
+								averageCost: response.rateLimit.cost
+							};
+						} else {
+							const existing = this._queryLogger.graphQlApi.fns[functionName];
+							existing.count++;
+							existing.cumulativeCost += response.rateLimit.cost;
+							existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
+							this._queryLogger.graphQlApi.fns[functionName] = existing;
+						}
+					}
+
+					Logger.log(JSON.stringify(this._queryLogger, null, 4));
+				}
+			} catch (err) {
+				Logger.warn(err);
+			}
 		}
-
-		// try {
-		// 	if (Logger.level === TraceLevel.Debug && response && response.rateLimit) {
-		// 		this._queryLogger.graphQlApi.rateLimit = {
-		// 			remaining: response.rateLimit.remaining,
-		// 			resetAt: response.rateLimit.resetAt,
-		// 			resetInMinutes: Math.floor(
-		// 				(new Date(new Date(response.rateLimit.resetAt).toString()).getTime() -
-		// 					new Date().getTime()) /
-		// 					1000 /
-		// 					60
-		// 			)
-		// 		};
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ =>
-		// 							(_.indexOf("GitHubProvider") > -1 ||
-		// 								_.indexOf("GitHubEnterpriseProvider") > -1) &&
-		// 							_.indexOf(".query") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (err) {
-		// 				functionName = "unknown";
-		// 				Logger.warn(err);
-		// 			}
-		// 			this._queryLogger.graphQlApi.rateLimit.last = {
-		// 				name: functionName,
-		// 				cost: response.rateLimit.cost
-		// 			};
-		// 			if (!this._queryLogger.graphQlApi.fns[functionName]) {
-		// 				this._queryLogger.graphQlApi.fns[functionName] = {
-		// 					count: 1,
-		// 					cumulativeCost: response.rateLimit.cost,
-		// 					averageCost: response.rateLimit.cost
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.graphQlApi.fns[functionName];
-		// 				existing.count++;
-		// 				existing.cumulativeCost += response.rateLimit.cost;
-		// 				existing.averageCost = Math.floor(existing.cumulativeCost / existing.count);
-		// 				this._queryLogger.graphQlApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	}
-		// } catch (err) {
-		// 	Logger.warn(err);
-		// }
 
 		return response;
 	}
@@ -1861,7 +1861,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 		filePath?: string;
 		position?: number;
-	}) {
+	}): Promise<Directives> {
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		let query;
 		if (request.pullRequestReviewId) {
 			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $pullRequestReviewId:ID!, $filePath:String, $position:Int) {
@@ -1886,7 +1887,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  `;
 		}
 
-		const response = await this.mutate<any>(query, request);
+		void (await this.mutate<any>(query, request));
 
 		this._pullRequestCache.delete(request.pullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
@@ -1894,26 +1895,427 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			filePath: request.filePath
 		});
 
-		return response;
+		const graphResults = await this.fetchUpdatedCommentData(ownerData);
+		this.mapPullRequestModel(graphResults);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: graphResults.repository.pullRequest.updatedAt,
+					pendingReview: graphResults.repository.pullRequest.pendingReview
+				} as any
+			}
+		] as any;
+
+		if (graphResults?.repository?.pullRequest) {
+			const pr = graphResults.repository.pullRequest;
+			if (pr.reviews) {
+				const review = pr.reviews.nodes.find((_: any) => _.id === request.pullRequestReviewId);
+				directives.push({
+					type: "addReview",
+					data: review
+				});
+				directives.push({
+					type: "updateReviewCommentsCount",
+					data: review
+				});
+				if (review) {
+					directives.push({
+						type: "addReviewThreads",
+						data: pr.reviewThreads.edges
+					});
+				}
+			}
+			if (pr.timelineItems) {
+				directives.push({
+					type: "addReviewCommentNodes",
+					data: pr.timelineItems.nodes
+				});
+			}
+		}
+		return {
+			directives: directives
+		};
 	}
 
-	async deletePullRequestReview(request: { pullRequestId: string; pullRequestReviewId: string }) {
-		const query = `mutation DeletePullRequestReview($pullRequestReviewId:ID!) {
+	private async fetchUpdatedCommentData(ownerData: {
+		owner: string;
+		name: string;
+		pullRequestNumber: number;
+	}) {
+		// while this is large, its cost is only 1
+		return this.query<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				viewer {
+				  id
+				  login
+				  avatarUrl
+				}
+				repository(name: $name, owner: $owner) {
+				  id
+				  url
+				  resourcePath
+				  pullRequest(number: $pullRequestNumber) {
+					id
+					updatedAt
+					reviewThreads(last: 4) {
+					  edges {
+						node {
+						  id
+						  isResolved
+						  viewerCanResolve
+						  viewerCanUnresolve
+						  comments(last: 30) {
+							totalCount
+							nodes {
+							  author {
+								login
+								avatarUrl
+							  }
+							  authorAssociation
+							  body
+							  bodyHTML
+							  createdAt
+							  id
+							  includesCreatedEdit
+							  isMinimized
+							  minimizedReason
+							  outdated
+							  replyTo {
+								id
+							  }
+							  resourcePath
+							  reactionGroups {
+								content
+								users(first: 1) {
+								  nodes {
+									login
+								  }
+								}
+							  }
+							  viewerCanUpdate
+							  viewerCanReact
+							  viewerCanDelete
+							}
+						  }
+						}
+					  }
+					}
+					number
+					state
+					reviews(last: 10, states: [PENDING]) {
+					  nodes {
+						id
+						databaseId
+						createdAt
+						comments(last: 1) {
+						  totalCount
+						}
+						author {
+						  login
+						  avatarUrl
+						  ... on User {
+							id
+						  }
+						}
+						authorAssociation
+						state
+						commit {
+						  oid
+						}
+					  }
+					}
+					timelineItems(last: 3, itemTypes: [PULL_REQUEST_REVIEW]) {
+					  totalCount
+					  __typename
+					  nodes {
+						... on PullRequestReview {
+						  __typename
+						  id
+						  author {
+							login
+							avatarUrl
+						  }
+						  authorAssociation
+						  body
+						  bodyText
+						  bodyHTML
+						  createdAt
+						  databaseId
+						  includesCreatedEdit
+						  lastEditedAt
+						  state
+						  viewerDidAuthor
+						  viewerCanUpdate
+						  viewerCanReact
+						  viewerCanDelete
+						  reactionGroups {
+							content
+							users(last: 1) {
+							  nodes {
+								login
+							  }
+							}
+						  }
+						  resourcePath
+						  comments(last: 20) {
+							nodes {
+							  author {
+								login
+								avatarUrl
+							  }
+							  authorAssociation
+							  body
+							  bodyText
+							  bodyHTML
+							  createdAt
+							  databaseId
+							  draftedAt
+							  diffHunk
+							  id
+							  includesCreatedEdit
+							  isMinimized
+							  lastEditedAt
+							  minimizedReason
+							  publishedAt
+							  state
+							  replyTo {
+								diffHunk
+								id
+								body
+								bodyText
+								bodyHTML
+							  }
+							  commit {
+								message
+								messageBody
+								messageHeadline
+								oid
+							  }
+							  editor {
+								login
+								avatarUrl
+							  }
+							  outdated
+							  path
+							  position
+							  pullRequestReview {
+								body
+								bodyText
+								bodyHTML
+							  }
+							  reactionGroups {
+								content
+								users(last: 1) {
+								  nodes {
+									login
+								  }
+								}
+							  }
+							  resourcePath
+							  viewerCanUpdate
+							  viewerCanReact
+							  viewerCanDelete
+							}
+						  }
+						  authorAssociation
+						  bodyHTML
+						}
+					  }
+					}
+				  }
+				}
+			  }						
+			  `,
+			ownerData
+		);
+	}
+
+	private async fetchPendingReviews(ownerData: {
+		owner: string;
+		name: string;
+		pullRequestNumber: number;
+	}) {
+		return this.query<any>(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				viewer {
+					id
+					login
+					avatarUrl
+				}
+				repository(name: $name, owner: $owner) {
+				  pullRequest(number: $pullRequestNumber) {
+					reviews(states: PENDING, last: 50) {
+					  nodes {
+						id
+						databaseId
+						createdAt
+						comments(last: 2) {
+						  totalCount
+						}
+						author {
+						  login
+						  avatarUrl
+						  ... on User {
+							id
+						  }
+						}
+					  }
+					}
+				  }
+				}
+			  }			  
+			  `,
+			ownerData
+		);
+	}
+
+	/**
+	 * Maps the pull request data into a format that is easier for the client to handle
+	 *
+	 * @param {FetchThirdPartyPullRequestResponse} response
+	 * @memberof GitHubProvider
+	 */
+	mapPullRequestModel(response: FetchThirdPartyPullRequestResponse) {
+		// this is sheer insanity... there's no way to get replies to parent comments
+		// as a child object of that comment. all replies are treated as `reviewThreads`
+		// and they live on the parent `pullRequest` object. below, we're stiching together
+		// comments and any replies (as a `replies` object) that might exist for those comments.
+		// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
+
+		if (
+			response.repository.pullRequest.timelineItems.nodes &&
+			response.repository &&
+			response.repository.pullRequest &&
+			response.repository.pullRequest.reviewThreads &&
+			response.repository.pullRequest.reviewThreads.edges
+		) {
+			// find all the PullRequestReview timelineItems as we will attach
+			// additional data to them
+			for (const timelineItem of response.repository.pullRequest.timelineItems.nodes.filter(
+				(_: any) => _.__typename === "PullRequestReview"
+			)) {
+				if (!timelineItem.comments) continue;
+				for (const comment of timelineItem.comments.nodes) {
+					// a parent comment has a null replyTo
+					if (comment.replyTo != null) continue;
+
+					let replies: any = [];
+					let threadId;
+					let isResolved;
+					let viewerCanResolve;
+					let viewerCanUnresolve;
+					for (const reviewThread of response.repository.pullRequest.reviewThreads.edges) {
+						if (reviewThread.node.comments.nodes.length > 1) {
+							for (const reviewThreadComment of reviewThread.node.comments.nodes) {
+								if (reviewThreadComment.id === comment.id) {
+									threadId = reviewThread.node.id;
+									isResolved = reviewThread.node.isResolved;
+									viewerCanResolve = reviewThread.node.viewerCanResolve;
+									viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
+									// find all the comments except the parent
+									replies = replies.concat(
+										reviewThread.node.comments.nodes.filter(
+											(_: any) => _.id !== reviewThreadComment.id
+										)
+									);
+									break;
+								}
+							}
+						} else if (reviewThread.node.comments.nodes.length === 1) {
+							const reviewThreadComment = reviewThread.node.comments.nodes[0];
+							if (reviewThreadComment.id === comment.id) {
+								threadId = reviewThread.node.id;
+								isResolved = reviewThread.node.isResolved;
+								viewerCanResolve = reviewThread.node.viewerCanResolve;
+								viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
+							}
+						}
+					}
+					if (timelineItem.comments.nodes.length) {
+						comment.threadId = threadId;
+						comment.isResolved = isResolved;
+						comment.viewerCanResolve = viewerCanResolve;
+						comment.viewerCanUnresolve = viewerCanUnresolve;
+						if (replies.length) {
+							comment.replies = replies;
+						}
+					}
+				}
+			}
+		}
+
+		// note the graphql for this.. it's the _first_ X not the _last_ X
+		// you'd think last would mean the last as in most recent, but it's actually the opposite
+		if (response.repository.pullRequest.reviews && response.repository.pullRequest.reviews.nodes) {
+			// here we're looking for your last pending review as you can only have 1 pending review
+			// per user per PR
+			const myPendingReview = response.repository.pullRequest.reviews.nodes.find(
+				(_: any) => _.state === "PENDING" && _.author.id === response.viewer.id
+			);
+			if (myPendingReview) {
+				// only returns your pending reviews
+				response.repository.pullRequest.pendingReview = myPendingReview;
+			}
+		}
+		response.repository.pullRequest.viewer = { ...response.viewer };
+	}
+
+	async deletePullRequestReview(request: {
+		pullRequestId: string;
+		pullRequestReviewId: string;
+	}): Promise<Directives> {
+		await this.mutate<any>(
+			`mutation DeletePullRequestReview($pullRequestReviewId:ID!) {
 			deletePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId}){
 			  clientMutationId
 			}
-		  }
-		  `;
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewId: request.pullRequestReviewId
-		});
+		  }`,
+			{
+				pullRequestReviewId: request.pullRequestReviewId
+			}
+		);
 
 		this._pullRequestCache.delete(request.pullRequestId);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId
 		});
 
-		return response;
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
+				}
+			},
+			{
+				type: "removePendingReview",
+				data: null
+			},
+			{
+				type: "removePullRequestReview",
+				data: {
+					id: request.pullRequestReviewId
+				}
+			}
+		] as any;
+
+		return {
+			directives: directives
+		};
 	}
 
 	async getPendingReview(request: {
@@ -3081,7 +3483,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		endLine?: number;
 		// used for old servers
 		position?: number;
-	}) {
+	}): Promise<Directives> {
 		// https://github.community/t/feature-commit-comments-for-a-pull-request/13986/9
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		let payload;
@@ -3125,7 +3527,46 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId
 		});
 
-		return data.body;
+		const graphResults = await this.fetchUpdatedCommentData(ownerData);
+		this.mapPullRequestModel(graphResults);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: graphResults.repository.pullRequest.updatedAt
+				}
+			}
+		] as any;
+
+		if (graphResults?.repository?.pullRequest) {
+			const pr = graphResults.repository.pullRequest;
+			if (pr.reviews) {
+				const review = pr.reviews.nodes.find(
+					(_: any) => _.databaseId === data.body.pull_request_review_id
+				);
+				directives.push({
+					type: "addReview",
+					data: review
+				});
+
+				if (review) {
+					directives.push({
+						type: "addReviewThreads",
+						data: pr.reviewThreads.edges
+					});
+				}
+			}
+			if (pr.timelineItems) {
+				directives.push({
+					type: "addNodes",
+					data: pr.timelineItems.nodes
+				});
+			}
+		}
+		return {
+			directives: directives
+		};
 	}
 
 	async createCommitByPositionComment(request: {
@@ -3357,20 +3798,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			commentId: request.id
 		});
 
-		if (request.type === "ISSUE_COMMENT") {
-			return {
-				directives: [
-					{
-						type: "removeNode",
-						data: {
-							id: request.id
-						}
-					}
-				]
-			};
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const pendingReviews = await this.fetchPendingReviews(ownerData);
+
+		const viewerId = pendingReviews?.viewer?.id;
+		const myPendingReview = pendingReviews?.repository?.pullRequest?.reviews?.nodes.find(
+			(_: any) => _.author.id === viewerId
+		);
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
+				}
+			},
+			{
+				type: "removeComment",
+				data: {
+					id: request.id
+				}
+			}
+		] as any;
+
+		if (!myPendingReview) {
+			directives.push({
+				type: "removePendingReview",
+				data: null
+			});
+		} else {
+			if (request.type === "REVIEW_COMMENT") {
+				directives.push({
+					type: "updateReviewCommentsCount",
+					data: myPendingReview
+				});
+			}
 		}
-		// TODO for other types
-		return undefined;
+
+		return {
+			directives: directives
+		};
 	}
 
 	_pullRequestIdCache: Map<
@@ -3836,6 +4302,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			bodyText
 			bodyHTML
 			createdAt
+			databaseId
 			includesCreatedEdit
 			lastEditedAt
 			state
@@ -4284,6 +4751,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  reviews(first: 50) {
 						nodes {
 						  id
+						  databaseId
 						  createdAt
 						  comments(first:100) {
 							totalCount
@@ -4389,90 +4857,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			// this is sheer insanity... there's no way to get replies to parent comments
-			// as a child object of that comment. all replies are treated as `reviewThreads`
-			// and they live on the parent `pullRequest` object. below, we're stiching together
-			// comments and any replies (as a `replies` object) that might exist for those comments.
-			// MORE here: https://github.community/t/bug-v4-graphql-api-trouble-retrieving-pull-request-review-comments/13708/2
-
-			if (
-				response?.repository?.pullRequest?.timelineItems?.nodes &&
-				response?.repository?.pullRequest?.reviewThreads?.edges
-			) {
-				// find all the PullRequestReview timelineItems as we will attach
-				// additional data to them
-				for (const timelineItem of response.repository.pullRequest.timelineItems.nodes.filter(
-					(_: any) => _.__typename === "PullRequestReview"
-				)) {
-					if (!timelineItem.comments) continue;
-					for (const comment of timelineItem.comments.nodes) {
-						// a parent comment has a null replyTo
-						if (comment.replyTo != null) continue;
-
-						let replies: any = [];
-						let threadId;
-						let isResolved;
-						let viewerCanResolve;
-						let viewerCanUnresolve;
-						for (const reviewThread of response.repository.pullRequest.reviewThreads.edges) {
-							if (reviewThread.node.comments.nodes.length > 1) {
-								for (const reviewThreadComment of reviewThread.node.comments.nodes) {
-									if (reviewThreadComment.id === comment.id) {
-										threadId = reviewThread.node.id;
-										isResolved = reviewThread.node.isResolved;
-										viewerCanResolve = reviewThread.node.viewerCanResolve;
-										viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
-										// find all the comments except the parent
-										replies = replies.concat(
-											reviewThread.node.comments.nodes.filter(
-												(_: any) => _.id !== reviewThreadComment.id
-											)
-										);
-										break;
-									}
-								}
-							} else if (reviewThread.node.comments.nodes.length === 1) {
-								const reviewThreadComment = reviewThread.node.comments.nodes[0];
-								if (reviewThreadComment.id === comment.id) {
-									threadId = reviewThread.node.id;
-									isResolved = reviewThread.node.isResolved;
-									viewerCanResolve = reviewThread.node.viewerCanResolve;
-									viewerCanUnresolve = reviewThread.node.viewerCanUnresolve;
-								}
-							}
-						}
-						if (timelineItem.comments.nodes.length) {
-							comment.threadId = threadId;
-							comment.isResolved = isResolved;
-							comment.viewerCanResolve = viewerCanResolve;
-							comment.viewerCanUnresolve = viewerCanUnresolve;
-							if (replies.length) {
-								comment.replies = replies;
-							}
-						}
-					}
-				}
-			}
-
-			// note the graphql for this.. it's the _first_ X not the _last_ X
-			// you'd think last would mean the last as in most recent, but it's actually the opposite
-			if (
-				response?.repository?.pullRequest?.reviews &&
-				response?.repository?.pullRequest?.reviews?.nodes
-			) {
-				// here we're looking for your last pending review as you can only have 1 pending review
-				// per user per PR
-				const myPendingReview = response.repository.pullRequest.reviews.nodes.find(
-					(_: any) => _.state === "PENDING" && _.author.id === response.viewer.id
-				);
-				if (myPendingReview) {
-					// only returns your pending reviews
-					response.repository.pullRequest.pendingReview = myPendingReview;
-				}
-			}
-			if (response?.repository?.pullRequest) {
-				response.repository.pullRequest.viewer = { ...response.viewer };
-			}
+			this.mapPullRequestModel(response);
 
 			Logger.debug(
 				`pullRequestTimelineQuery rateLimit=${JSON.stringify(response.rateLimit)} cursor=${cursor}`

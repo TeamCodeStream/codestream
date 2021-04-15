@@ -187,26 +187,6 @@ const Header = styled.div`
 	}
 `;
 
-const RoundImg = styled.span`
-	img {
-		border-radius: 50%;
-		padding-left: 2px;
-		vertical-align: middle;
-		height: 25px;
-	}
-`;
-
-const Role = styled.span`
-	border-radius: 15px;
-	color: #666;
-	border: 1px solid #cfcfcf;
-	padding: 0px 10px 0px 10px;
-`;
-
-const Reply = styled.div`
-	background: red;
-`;
-
 export const OutlineBox = styled.div`
 	border-radius: 5px;
 	border: 1px solid var(--base-border-color);

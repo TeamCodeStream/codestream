@@ -143,10 +143,12 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepo: getProviderPullRequestRepo(state)
+			currentRepo: getProviderPullRequestRepo(state),
+			pr: currentPullRequest?.conversations?.repository?.pullRequest
 		};
 	});
 
+	const pr = derivedState.pr;
 	useEffect(() => {
 		if (!derivedState.currentPullRequestCommentId) return;
 
@@ -164,7 +166,6 @@ export const PullRequest = () => {
 	const [isLoadingMessage, setIsLoadingMessage] = useState("");
 	const [generalError, setGeneralError] = useState("");
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
-	const [pr, setPr] = useState<FetchThirdPartyPullRequestPullRequest | undefined>();
 	const [openRepos, setOpenRepos] = useState<ReposScmPlusName[]>(EMPTY_ARRAY);
 	const [editingTitle, setEditingTitle] = useState(false);
 	const [savingTitle, setSavingTitle] = useState(false);
@@ -217,7 +218,6 @@ export const PullRequest = () => {
 		if (!pr || !pr.repository) return;
 		console.warn("_assignState src", src);
 		setGhRepo(pr.repository);
-		setPr(pr.repository.pullRequest);
 		setTitle(pr.repository.pullRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
@@ -265,23 +265,6 @@ export const PullRequest = () => {
 			_assignState(response, "initialFetch");
 			return response;
 		}
-	};
-
-	/**
-	 * Called after an action that requires us to re-fetch from the provider
-	 * @param message
-	 */
-	const fetch = async (message?: string) => {
-		if (message) setIsLoadingMessage(message);
-		setIsLoadingPR(true);
-
-		const response = (await dispatch(
-			getPullRequestConversationsFromProvider(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as any;
-		_assignState(response, "fetch");
 	};
 
 	/**
@@ -464,7 +447,7 @@ export const PullRequest = () => {
 			return count + accumulator;
 		};
 		return pr.timelineItems.nodes.reduce(reducer, 0);
-	}, [pr]);
+	}, [pr, pr?.updatedAt]);
 
 	useDidMount(() => {
 		if (!derivedState.reviewsState.bootstrapped) {

@@ -6,7 +6,11 @@ import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { CSRepository } from "@codestream/protocols/api";
 import { ContextActionsType, ContextState } from "../context/types";
-import { DiscussionNode, GitLabMergeRequest } from "@codestream/protocols/agent";
+import {
+	DiscussionNode,
+	FetchThirdPartyPullRequestPullRequest,
+	GitLabMergeRequest
+} from "@codestream/protocols/agent";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -363,7 +367,8 @@ export function reduceProviderPullRequests(
 						}
 					}
 				} else if (providerId === "github*com" || providerId === "github/enterprise") {
-					const pr = newState[providerId][id].conversations.repository.pullRequest;
+					const pr = newState[providerId][id].conversations.repository
+						.pullRequest as FetchThirdPartyPullRequestPullRequest;
 					for (const directive of action.payload.data) {
 						if (directive.type === "addReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
@@ -395,6 +400,19 @@ export function reduceProviderPullRequests(
 										.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
 								}
 							}
+						} else if (directive.type === "removeComment") {
+							for (const node of pr.timelineItems.nodes) {
+								if (node.comments && node.comments.nodes) {
+									node.comments.nodes = node.comments.nodes.filter(_ => _.id !== directive.data.id);
+								}
+							}
+						} else if (directive.type === "removePullRequestReview") {
+							if (directive.data.id) {
+								pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+								pr.timelineItems.nodes = pr.timelineItems.nodes.filter(
+									_ => _.id !== directive.data.id
+								);
+							}
 						} else if (directive.type === "removeNode") {
 							pr.timelineItems.nodes = pr.timelineItems.nodes.filter(
 								_ => _.id !== directive.data.id
@@ -420,6 +438,20 @@ export function reduceProviderPullRequests(
 									pr.timelineItems.nodes.push(newNode);
 								}
 							}
+						} else if (directive.type === "addReviewCommentNodes") {
+							for (const newNode of directive.data) {
+								if (!newNode.id) continue;
+								let node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+								if (node) {
+									for (const c of newNode.comments.nodes) {
+										if (node.comments.nodes.find(_ => _.id === c.id) == null) {
+											node.comments.nodes.push(c);
+										}
+									}
+								} else {
+									pr.timelineItems.nodes.push(newNode);
+								}
+							}
 						} else if (directive.type === "addLegacyCommentReply") {
 							for (const node of pr.timelineItems.nodes) {
 								if (!node.comments) continue;
@@ -429,6 +461,25 @@ export function reduceProviderPullRequests(
 										comment.replies.push(directive.data);
 										break;
 									}
+								}
+							}
+						} else if (directive.type === "removePendingReview") {
+							pr.pendingReview = undefined;
+						} else if (directive.type === "addReview") {
+							if (!directive.data) continue;
+							if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {
+								pr.reviews.nodes.push(directive.data);
+							}
+						} else if (directive.type === "updateReviewCommentsCount") {
+							if (!directive.data) continue;
+							if (pr.pendingReview && pr.pendingReview.comments) {
+								pr.pendingReview.comments.totalCount = directive.data.comments.totalCount;
+							}
+						} else if (directive.type === "addReviewThreads") {
+							if (!directive.data) continue;
+							for (const d of directive.data) {
+								if (pr.reviewThreads.edges.find(_ => _.node.id === d.node.id) == null) {
+									pr.reviewThreads.edges.push(d);
 								}
 							}
 						} else if (directive.type === "updatePullRequestReviewComment") {
