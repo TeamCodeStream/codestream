@@ -1827,8 +1827,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		};
 	}> {
 		const response = await this.mutate<any>(
-			`
-		mutation AddPullRequestReview($pullRequestId:ID!) {
+			`mutation AddPullRequestReview($pullRequestId:ID!) {
 		addPullRequestReview(input: {pullRequestId: $pullRequestId}) {
 			clientMutationId
 			pullRequestReview {
@@ -1896,16 +1895,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		filePath?: string;
 		position?: number;
 	}): Promise<Directives> {
-		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const v = await this.getVersion();
+
 		let query;
-		if (request.pullRequestReviewId) {
-			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $pullRequestReviewId:ID!, $filePath:String, $position:Int) {
-					addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position}) {
-					  clientMutationId
-					}
-				  }
-				  `;
-		} else {
+		if (!request.pullRequestReviewId) {
 			request.pullRequestReviewId = await this.getPullRequestReviewId(request);
 			if (!request.pullRequestReviewId) {
 				const result = await this.addPullRequestReview(request);
@@ -1913,17 +1906,25 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					request.pullRequestReviewId = result.addPullRequestReview.pullRequestReview.id;
 				}
 			}
-			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $filePath:String, $position:Int) {
-					addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
-					  clientMutationId
-					}
-				  }
-				  `;
 		}
-
+		if (v && semver.lt(v.version, "2.21.0")) {
+			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestReviewId:ID!, $filePath:String, $position:Int) {
+				addPullRequestReviewComment(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position}) {
+				  clientMutationId
+				}
+			  }
+			  `;
+		} else {
+			query = `mutation AddPullRequestReviewComment($text:String!, $pullRequestId:ID!, $filePath:String, $position:Int) {
+				addPullRequestReviewComment(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
+				  clientMutationId
+				}
+			  }`;
+		}
 		void (await this.mutate<any>(query, request));
-
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
+
 		this.mapPullRequestModel(graphResults);
 
 		const directives = [
@@ -2419,7 +2420,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		) {
 			throw new Error("Invalid eventType");
 		}
-
+		const v = await this.getVersion();
 		let existingReview = await this.getPendingReview(request);
 		if (!existingReview) {
 			const existingReviewResponse = await this.mutate<any>(
@@ -2440,8 +2441,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		}
 
-		const submitReviewResponse = await this.mutate<any>(
-			`mutation SubmitPullRequestReview($pullRequestId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
+		let submitReviewResponse;
+		if (v && semver.lt(v.version, "2.21.0")) {
+			submitReviewResponse = await this.mutate<any>(
+				`mutation SubmitPullRequestReview($pullRequestReviewId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
+				submitPullRequestReview(input: {event: $eventName, body: $body, pullRequestReviewId: $pullRequestReviewId}) {
+				  clientMutationId
+				  pullRequestReview {
+					id
+					databaseId
+					createdAt
+					comments(first: 1) {
+					  totalCount
+					}
+					author {
+					  login
+					  avatarUrl
+					  ... on User {
+						id
+					  }
+					}
+					authorAssociation
+					state
+					commit {
+					  oid
+					}
+				  }
+				}
+			  }
+			  
+		  `,
+				{
+					pullRequestReviewId: existingReview.pullRequestReviewId,
+					body: request.text,
+					eventName: request.eventType
+				}
+			);
+		} else {
+			submitReviewResponse = await this.mutate<any>(
+				`mutation SubmitPullRequestReview($pullRequestId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
 				submitPullRequestReview(input: {event: $eventName, body: $body, pullRequestId: $pullRequestId}) {
 				  clientMutationId
 				  pullRequestReview {
@@ -2468,12 +2506,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			  
 		  `,
-			{
-				pullRequestId: request.pullRequestId,
-				body: request.text,
-				eventName: request.eventType
-			}
-		);
+				{
+					pullRequestId: request.pullRequestId,
+					body: request.text,
+					eventName: request.eventType
+				}
+			);
+		}
 		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const updatedPullRequest = (await this.query(
 			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
