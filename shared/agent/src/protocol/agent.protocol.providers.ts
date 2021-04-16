@@ -358,6 +358,10 @@ export interface FetchThirdPartyPullRequestRequest {
 	 */
 	force?: boolean;
 	metadata?: any;
+	/**
+	 * for debugging who is calling this
+	 */
+	src?: string;
 }
 
 export interface FetchThirdPartyPullRequestFilesResponse {
