@@ -612,9 +612,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
-		const { scm: scmManager } = SessionContainer.instance();
 		await this.ensureConnected();
-		const version = await this.getVersion();
 
 		if (request.force) {
 			this._pullRequestCache.delete(request.pullRequestId);
@@ -624,6 +622,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				return cached;
 			}
 		}
+
+		const { scm: scmManager } = SessionContainer.instance();
+		const version = await this.getVersion();
 
 		let response = {} as FetchThirdPartyPullRequestResponse;
 		let repoOwner: string | undefined = undefined;
