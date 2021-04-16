@@ -333,12 +333,12 @@ export function reduceProviderPullRequests(
 							for (const key in directive.data) {
 								if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
 									// clear out the array, but keep its reference
-									pr[key].nodes.length = 0;
+									(pr as any)[key].nodes.length = 0;
 									for (const n of directive.data[key].nodes) {
-										pr[key].nodes.push(n);
+										(pr as any)[key].nodes.push(n);
 									}
 								} else {
-									pr[key] = directive.data[key];
+									(pr as any)[key] = directive.data[key];
 								}
 							}
 						} else if (directive.type === "updateReviewers") {
@@ -373,37 +373,46 @@ export function reduceProviderPullRequests(
 						if (directive.type === "addReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
 								pr.reactionGroups
-									.find(_ => _.content === directive.data.reaction.content)
+									.find((_: any) => _.content === directive.data.reaction.content)
 									.users.nodes.push(directive.data.reaction.user);
 							} else {
 								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
 								if (node) {
 									node.reactionGroups
-										.find(_ => _.content === directive.data.reaction.content)
+										.find((_: any) => _.content === directive.data.reaction.content)
 										.users.nodes.push(directive.data.reaction.user);
 								}
 							}
 						} else if (directive.type === "removeReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
 								pr.reactionGroups.find(
-									_ => _.content === directive.data.reaction.content
+									(_: any) => _.content === directive.data.reaction.content
 								).users.nodes = pr.reactionGroups
-									.find(_ => _.content === directive.data.reaction.content)
-									.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+									.find((_: any) => _.content === directive.data.reaction.content)
+									.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
 							} else {
 								const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
 								if (node) {
 									node.reactionGroups.find(
-										_ => _.content === directive.data.reaction.content
+										(_: any) => _.content === directive.data.reaction.content
 									).users.nodes = node.reactionGroups
-										.find(_ => _.content === directive.data.reaction.content)
-										.users.nodes.filter(_ => _.login !== directive.data.reaction.user.login);
+										.find((_: any) => _.content === directive.data.reaction.content)
+										.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
 								}
 							}
 						} else if (directive.type === "removeComment") {
 							for (const node of pr.timelineItems.nodes) {
-								if (node.comments && node.comments.nodes) {
-									node.comments.nodes = node.comments.nodes.filter(_ => _.id !== directive.data.id);
+								if (node.comments?.nodes?.length) {
+									node.comments.nodes = node.comments.nodes.filter(
+										(_: any) => _.id !== directive.data.id
+									);
+									for (const comments of node.comments.nodes) {
+										if (comments.replies) {
+											comments.replies = comments.replies.filter(
+												(_: any) => _.id !== directive.data.id
+											);
+										}
+									}
 								}
 							}
 						} else if (directive.type === "removePullRequestReview") {
@@ -444,7 +453,7 @@ export function reduceProviderPullRequests(
 								let node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
 								if (node) {
 									for (const c of newNode.comments.nodes) {
-										if (node.comments.nodes.find(_ => _.id === c.id) == null) {
+										if (node.comments.nodes.find((_: any) => _.id === c.id) == null) {
 											node.comments.nodes.push(c);
 										}
 									}
@@ -490,7 +499,7 @@ export function reduceProviderPullRequests(
 								for (const comment of edge.node.comments.nodes) {
 									if (comment.id === directive.data.id) {
 										for (const key in directive.data) {
-											comment[key] = directive.data[key];
+											(comment as any)[key] = directive.data[key];
 										}
 										done = true;
 									}
@@ -577,7 +586,7 @@ export function reduceProviderPullRequests(
 							);
 							if (nodeWrapper && nodeWrapper.node) {
 								for (const key in directive.data) {
-									nodeWrapper.node[key] = directive.data[key];
+									(nodeWrapper.node as any)[key] = directive.data[key];
 								}
 							}
 

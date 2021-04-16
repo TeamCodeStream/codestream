@@ -60,7 +60,7 @@ import {
 } from "./provider";
 import { toRepoName } from "../git/utils";
 import { performance } from "perf_hooks";
-import { Directives } from "./directives";
+import { Directive, Directives } from "./directives";
 
 interface GitHubRepo {
 	id: string;
@@ -1242,7 +1242,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		| undefined;
 
 	async getLabels(request: { owner: string; repo: string }) {
-		const query = await this.query<any>(
+		const response = await this.query<any>(
 			`query getLabels($owner:String!, $name:String!) {
 				rateLimit {
 					cost
@@ -1267,7 +1267,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				name: request.repo
 			}
 		);
-		return query.repository.labels.nodes;
+		return response.repository.labels.nodes;
 	}
 
 	async getProjects(request: { owner: string; repo: string }) {
@@ -1365,7 +1365,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		isReady: boolean;
 	}): Promise<Directives | undefined> {
 		if (request.isReady) {
-			const query = `mutation MarkPullRequestReadyForReview($pullRequestId:ID!) {
+			const response = await this.mutate<any>(
+				`mutation MarkPullRequestReadyForReview($pullRequestId:ID!) {
 				markPullRequestReadyForReview(input: {pullRequestId: $pullRequestId}) {
 					  clientMutationId
 					  pullRequest{
@@ -1374,16 +1375,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						state
 					  }
 					}
-				  }`;
+				  }`,
+				{
+					pullRequestId: request.pullRequestId
+				}
+			);
 
-			const response = await this.mutate<any>(query, {
-				pullRequestId: request.pullRequestId
-			});
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{ type: "updatePullRequest", data: response.markPullRequestReadyForReview.pullRequest }
 				]
-			};
+			});
 		} else {
 			// const query = `mutation UpdateDraft($pullRequestId:ID!, $isDraft:Boolean!) {
 			// 	updatePullRequest(input: {pullRequestId: $pullRequestId, isDraft:$isDraft}) {
@@ -1464,7 +1466,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			labelIds: request.labelId
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1475,7 +1477,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				},
 				{ type: "addNode", data: response[method].labelable.timelineItems.nodes[0] }
 			]
-		};
+		});
 	}
 
 	async setAssigneeOnPullRequest(request: {
@@ -1545,7 +1547,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			assignableId: request.pullRequestId,
 			assigneeIds: request.assigneeId
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1559,7 +1562,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response[method].assignable.timelineItems.nodes[0]
 				}
 			]
-		};
+		});
 	}
 
 	async setAssigneeOnIssue(request: { issueId: string; assigneeId: string; onOff: boolean }) {
@@ -1580,6 +1583,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async toggleReaction(request: {
+		pullRequestId: string;
 		subjectId: string;
 		content: string;
 		onOff: boolean;
@@ -1633,21 +1637,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			content: request.content
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: request.onOff ? "addReaction" : "removeReaction",
 					data: response[method]
 				}
 			]
-		};
+		});
 	}
 
 	async updatePullRequestSubscription(request: {
 		pullRequestId: string;
 		onOff: boolean;
 	}): Promise<Directives> {
-		const query = `mutation UpdateSubscription($subscribableId:ID!, $state:SubscriptionState!) {
+		const response = await this.mutate<any>(
+			`mutation UpdateSubscription($subscribableId:ID!, $state:SubscriptionState!) {
 			updateSubscription(input: {subscribableId: $subscribableId, state:$state}) {
 				  clientMutationId
 				   subscribable {
@@ -1658,21 +1663,27 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						}
 					}
 				}
-			  }`;
+			  }`,
+			{
+				subscribableId: request.pullRequestId,
+				state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			subscribableId: request.pullRequestId,
-			state: request.onOff ? "SUBSCRIBED" : "UNSUBSCRIBED"
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{ type: "updatePullRequest", data: response.updateSubscription.subscribable.pullRequest }
 			]
-		};
+		});
 	}
 
-	async updateIssueComment(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($id:ID!, $body:String!) {
+	async updateIssueComment(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($id:ID!, $body:String!) {
 			updateIssueComment(input: {id: $id, body:$body}) {
 				clientMutationId
 				issueComment {
@@ -1683,25 +1694,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					bodyText
 					}
 				}
-			  }`;
+			  }`,
+			{
+				id: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			id: request.id,
-			body: request.body
-		});
-
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updateNode",
 					data: response.updateIssueComment.issueComment
 				}
 			]
-		};
+		});
 	}
 
-	async updateReviewComment(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestReviewCommentId: ID!, $body: String!) {
+	async updateReviewComment(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestReviewCommentId: ID!, $body: String!) {
 			updatePullRequestReviewComment(input: {pullRequestReviewCommentId: $pullRequestReviewCommentId, body: $body}) {
 			  clientMutationId
 			  pullRequestReviewComment {
@@ -1716,13 +1732,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }
-		  `;
+		  `,
+			{
+				pullRequestReviewCommentId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewCommentId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequestReviewThreadComment",
@@ -1733,11 +1750,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.updatePullRequestReviewComment.pullRequestReviewComment
 				}
 			]
-		};
+		});
 	}
 
-	async updateReview(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestReviewId:ID!, $body:String!) {
+	async updateReview(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestReviewId:ID!, $body:String!) {
 			updatePullRequestReview(input: {pullRequestReviewId: $pullRequestReviewId, body:$body}) {
 				  clientMutationId
 				     pullRequestReview {
@@ -1748,24 +1770,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						id
 					}
 				}
-			  }`;
+			  }`,
+			{
+				pullRequestReviewId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestReviewId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequestReview",
 					data: response.updatePullRequestReview.pullRequestReview
 				}
 			]
-		};
+		});
 	}
 
-	async updatePullRequestBody(request: { id: string; body: string }): Promise<Directives> {
-		const query = `mutation UpdateComment($pullRequestId:ID!, $body:String!) {
+	async updatePullRequestBody(request: {
+		pullRequestId: string;
+		id: string;
+		body: string;
+	}): Promise<Directives> {
+		const response = await this.mutate<any>(
+			`mutation UpdateComment($pullRequestId:ID!, $body:String!) {
 			updatePullRequest(input: {pullRequestId: $pullRequestId, body:$body}) {
 				  clientMutationId
 				    pullRequest {
@@ -1776,18 +1804,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						updatedAt
 					}
 				}
-			  }`;
+			  }`,
+			{
+				pullRequestId: request.id,
+				body: request.body
+			}
+		);
 
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.id,
-			body: request.body
-		});
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [{ type: "updatePullRequest", data: response.updatePullRequest.pullRequest }]
-		};
+		});
 	}
 
-	async addPullRequestReview(request: {
+	protected async addPullRequestReview(request: {
 		pullRequestId: string;
 	}): Promise<{
 		addPullRequestReview: {
@@ -1796,8 +1825,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		};
 	}> {
-		// TODO add directives
-		const query = `
+		const response = await this.mutate<any>(
+			`
 		mutation AddPullRequestReview($pullRequestId:ID!) {
 		addPullRequestReview(input: {pullRequestId: $pullRequestId}) {
 			clientMutationId
@@ -1805,10 +1834,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  id
 			}
 		  }
-		}`;
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.pullRequestId
-		});
+		}`,
+			{
+				pullRequestId: request.pullRequestId
+			}
+		);
 		return response;
 	}
 
@@ -1818,7 +1848,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	 */
 	async getPullRequestReviewId(request: { pullRequestId: string }) {
 		const metaData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-		const query = `query GetPullRequestReviewId($owner:String!, $name:String!, $pullRequestNumber:Int!) {
+
+		const response = await this.query<any>(
+			`query GetPullRequestReviewId($owner:String!, $name:String!, $pullRequestNumber:Int!) {
 			rateLimit {
 				cost
 				resetAt
@@ -1842,8 +1874,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			  }
 			}
 		  }
-		  `;
-		const response = await this.query<any>(query, metaData);
+		  `,
+			metaData
+		);
 		if (!response) return undefined;
 
 		const user = response.viewer.login;
@@ -1889,12 +1922,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		void (await this.mutate<any>(query, request));
 
-		this._pullRequestCache.delete(request.pullRequestId);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId,
-			filePath: request.filePath
-		});
-
 		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
 		this.mapPullRequestModel(graphResults);
 
@@ -1934,6 +1961,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				});
 			}
 		}
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.filePath
+		});
 		return {
 			directives: directives
 		};
@@ -2290,11 +2325,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		this._pullRequestCache.delete(request.pullRequestId);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId
-		});
-
 		const directives = [
 			{
 				type: "updatePullRequest",
@@ -2312,7 +2342,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					id: request.pullRequestReviewId
 				}
 			}
-		] as any;
+		] as Directive[];
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId
+		});
 
 		return {
 			directives: directives
@@ -2494,7 +2532,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		};
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2528,7 +2566,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				},
 				{ type: "removePendingReview", data: null }
 			]
-		};
+		});
 	}
 
 	/**
@@ -2825,7 +2863,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				issueNumber: issueNumber
 			}
 		);
-		Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
+		// Logger.log("Fired off a query: ", JSON.stringify(issueInfo, null, 4));
 		// const issue = issueInfo.repository.issue;
 		// issue.viewer = issueInfo.viewer;
 		// translate to our card shape
@@ -2897,7 +2935,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			milestoneId: request.onOff ? request.milestoneId : null
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2905,7 +2944,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				},
 				{ type: "addNode", data: response.updatePullRequest.pullRequest.timelineItems.nodes[0] }
 			]
-		};
+		});
 	}
 
 	async toggleProjectOnPullRequest(request: {
@@ -2944,7 +2983,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			projectIds: [...projectIds]
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -2954,7 +2994,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async updatePullRequestTitle(request: {
@@ -2975,14 +3015,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			pullRequestId: request.pullRequestId,
 			title: request.title
 		});
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.updatePullRequest.pullRequest
 				}
 			]
-		};
+		});
 	}
 
 	async mergePullRequest(request: {
@@ -3076,12 +3117,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			updatedAt: response.mergePullRequest.pullRequest.updatedAt
 		};
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{ type: "updatePullRequest", data: pullRequestData },
 				{ type: "addNodes", data: response.mergePullRequest.pullRequest.timelineItems.nodes }
 			]
-		};
+		});
 	}
 
 	async lockPullRequest(request: {
@@ -3108,14 +3149,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.lockLockable.lockedRecord
 				}
 			]
-		};
+		});
 	}
 
 	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
@@ -3137,14 +3178,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
 					data: response.unlockLockable.unlockedRecord
 				}
 			]
-		};
+		});
 	}
 
 	async getReviewersForPullRequest(request: { pullRequestId: string }) {
@@ -3240,7 +3281,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).concat(request.userId)
 			}
 		);
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3255,7 +3297,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.requestReviews.pullRequest.timelineItems.nodes[0]
 				}
 			]
-		};
+		});
 	}
 
 	async removeReviewerFromPullRequest(request: {
@@ -3289,7 +3331,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				userIds: (currentReviewers || []).filter((_: string) => _ !== request.userId)
 			}
 		);
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3300,7 +3343,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.requestReviews.pullRequest.reviewRequests.nodes
 				}
 			]
-		};
+		});
 	}
 
 	async createPullRequestCommentAndClose(request: {
@@ -3308,7 +3351,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 	}): Promise<Directives> {
 		const directives: any = [];
-		const response = { directives: directives };
+
 		if (request.text) {
 			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
@@ -3406,7 +3449,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			data: response2.closePullRequest.pullRequest.timelineItems.nodes
 		});
 
-		return response;
+		return this.handleResponse(request.pullRequestId, {
+			directives: directives
+		});
 	}
 
 	async createPullRequestCommentAndReopen(request: {
@@ -3414,7 +3459,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		text: string;
 	}): Promise<Directives> {
 		const directives: any = [];
-		const response = { directives: directives };
+
 		if (request.text) {
 			const response1 = await this.mutate<any>(
 				`mutation AddCommentToPullRequest($pullRequestId:ID!, $body:String!) {
@@ -3511,10 +3556,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			data: response2.reopenPullRequest.pullRequest.timelineItems.nodes
 		});
 
-		return response;
+		return this.handleResponse(request.pullRequestId, {
+			directives: directives
+		});
 	}
 
-	async resolveReviewThread(request: { threadId: string }): Promise<Directives> {
+	async resolveReviewThread(request: {
+		pullRequestId: string;
+		threadId: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation ResolveReviewThread($threadId:ID!) {
 				resolveReviewThread(input: {threadId:$threadId}) {
@@ -3532,7 +3582,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		const thread = response.resolveReviewThread.thread;
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "resolveReviewThread",
@@ -3544,10 +3595,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
-	async unresolveReviewThread(request: { threadId: string }): Promise<Directives> {
+	async unresolveReviewThread(request: {
+		pullRequestId: string;
+		threadId: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation UnresolveReviewThread($threadId:ID!) {
 				unresolveReviewThread(input: {threadId:$threadId}) {
@@ -3565,7 +3619,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		const thread = response.unresolveReviewThread.thread;
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "unresolveReviewThread",
@@ -3577,10 +3632,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
-	async addComment(request: { subjectId: string; text: string }): Promise<Directives> {
+	async addComment(request: {
+		pullRequestId: string;
+		subjectId: string;
+		text: string;
+	}): Promise<Directives> {
 		const response = await this.mutate<any>(
 			`mutation AddComment($subjectId:ID!,$body:String!) {
 				addComment(input: {subjectId:$subjectId, body:$body}) {
@@ -3625,7 +3684,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3638,7 +3697,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.addComment.timelineEdge.node
 				}
 			]
-		};
+		});
 	}
 
 	@log()
@@ -3691,11 +3750,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			payload
 		);
 
-		this._pullRequestCache.delete(request.pullRequestId);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId
-		});
-
 		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
 		this.mapPullRequestModel(graphResults);
 
@@ -3733,6 +3787,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				});
 			}
 		}
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId
+		});
+
 		return {
 			directives: directives
 		};
@@ -3799,7 +3860,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// below, we're crafting a response that looks like what graphQL would give us
 		const body = data.body;
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3832,7 +3893,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async createPullRequestComment(request: {
@@ -3893,7 +3954,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// NOTE must use the commentEdge to get the PR
 		// and not from the subject, as the subject data is stale
 		// at this point
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -3904,7 +3966,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					data: response.addComment.timelineEdge.node
 				}
 			]
-		};
+		});
 	}
 
 	async createPullRequestInlineComment(request: {
@@ -3961,12 +4023,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			id: request.id
 		});
 
-		this._pullRequestCache.delete(request.pullRequestId);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId,
-			commentId: request.id
-		});
-
 		const directives = [
 			{
 				type: "updatePullRequest",
@@ -4007,6 +4063,14 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			});
 		}
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			commentId: request.id
+		});
 
 		return {
 			directives: directives
@@ -4170,21 +4234,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		return changedFiles;
-
-		// const data = await this.restGet<any>(
-		// 	`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`
-		// );
-		// return data.body;
-
-		// const pullRequestReviewId = await this.getPullRequestReviewId(request);
-		// return {
-		// 	files: data.body,
-		// 	context: {
-		// 		pullRequest: {
-		// 			userCurrentReviewId: pullRequestReviewId
-		// 		}
-		// 	}
-		// };
 	}
 
 	_timelineQueryItemsString!: string;
@@ -5228,6 +5277,255 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	// 	this.trySetThirdPartyProviderInfo(ex);
 	// 	return ex;
 	// }
+
+	private handleResponse(pullRequestId: string, directives: Directives) {
+		this.updateCache(pullRequestId, directives);
+
+		return directives;
+	}
+
+	private updateCache(pullRequestId: string, directives: Directives) {
+		if (!directives?.directives) {
+			Logger.warn(`Attempting to update cache without directives. id=${pullRequestId}`);
+			return;
+		}
+		const prWrapper = this._pullRequestCache.get(pullRequestId);
+		if (!prWrapper) {
+			Logger.warn(`Attempting to update cache without PR. id=${pullRequestId}`);
+			return;
+		}
+		const pr = prWrapper.repository?.pullRequest;
+		if (!pr) {
+			Logger.warn(`Attempting to update cache without PR object. id=${pullRequestId}`);
+			return;
+		}
+
+		for (const directive of directives.directives) {
+			if (directive.type === "addReaction") {
+				if (directive.data.subject.__typename === "PullRequest") {
+					pr.reactionGroups
+						.find((_: any) => _.content === directive.data.reaction.content)
+						.users.nodes.push(directive.data.reaction.user);
+				} else {
+					const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+					if (node) {
+						node.reactionGroups
+							.find((_: any) => _.content === directive.data.reaction.content)
+							.users.nodes.push(directive.data.reaction.user);
+					}
+				}
+			} else if (directive.type === "removeReaction") {
+				if (directive.data.subject.__typename === "PullRequest") {
+					pr.reactionGroups.find(
+						(_: any) => _.content === directive.data.reaction.content
+					).users.nodes = pr.reactionGroups
+						.find((_: any) => _.content === directive.data.reaction.content)
+						.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
+				} else {
+					const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.subject.id);
+					if (node) {
+						node.reactionGroups.find(
+							(_: any) => _.content === directive.data.reaction.content
+						).users.nodes = node.reactionGroups
+							.find((_: any) => _.content === directive.data.reaction.content)
+							.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
+					}
+				}
+			} else if (directive.type === "removeComment") {
+				for (const node of pr.timelineItems.nodes) {
+					if (node.comments?.nodes?.length) {
+						node.comments.nodes = node.comments.nodes.filter(
+							(_: any) => _.id !== directive.data.id
+						);
+						for (const comments of node.comments.nodes) {
+							if (comments.replies) {
+								comments.replies = comments.replies.filter((_: any) => _.id !== directive.data.id);
+							}
+						}
+					}
+				}
+			} else if (directive.type === "removePullRequestReview") {
+				if (directive.data.id) {
+					pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+					pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+				}
+			} else if (directive.type === "removeNode") {
+				pr.timelineItems.nodes = pr.timelineItems.nodes.filter(_ => _.id !== directive.data.id);
+			} else if (directive.type === "updateNode") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (node) {
+					for (const key in directive.data) {
+						node[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "addNode") {
+				if (!directive.data.id) continue;
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (!node) {
+					pr.timelineItems.nodes.push(directive.data);
+				}
+			} else if (directive.type === "addNodes") {
+				for (const newNode of directive.data) {
+					if (!newNode.id) continue;
+					const node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+					if (!node) {
+						pr.timelineItems.nodes.push(newNode);
+					}
+				}
+			} else if (directive.type === "addReviewCommentNodes") {
+				for (const newNode of directive.data) {
+					if (!newNode.id) continue;
+					let node = pr.timelineItems.nodes.find((_: any) => _.id === newNode.id);
+					if (node) {
+						for (const c of newNode.comments.nodes) {
+							if (node.comments.nodes.find((_: any) => _.id === c.id) == null) {
+								node.comments.nodes.push(c);
+							}
+						}
+					} else {
+						pr.timelineItems.nodes.push(newNode);
+					}
+				}
+			} else if (directive.type === "addLegacyCommentReply") {
+				for (const node of pr.timelineItems.nodes) {
+					if (!node.comments) continue;
+					for (const comment of node.comments.nodes) {
+						if (directive.data._inReplyToId === comment.databaseId) {
+							if (!comment.replies) comment.replies = [];
+							comment.replies.push(directive.data);
+							break;
+						}
+					}
+				}
+			} else if (directive.type === "removePendingReview") {
+				pr.pendingReview = undefined;
+			} else if (directive.type === "addReview") {
+				if (!directive.data) continue;
+				if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {
+					pr.reviews.nodes.push(directive.data);
+				}
+			} else if (directive.type === "updateReviewCommentsCount") {
+				if (!directive.data) continue;
+				if (pr.pendingReview && pr.pendingReview.comments) {
+					pr.pendingReview.comments.totalCount = directive.data.comments.totalCount;
+				}
+			} else if (directive.type === "addReviewThreads") {
+				if (!directive.data) continue;
+				for (const d of directive.data) {
+					if (pr.reviewThreads.edges.find(_ => _.node.id === d.node.id) == null) {
+						pr.reviewThreads.edges.push(d);
+					}
+				}
+			} else if (directive.type === "updatePullRequestReviewThreadComment") {
+				let done = false;
+				for (const edge of pr.reviewThreads.edges) {
+					if (!edge.node.comments) continue;
+
+					for (const comment of edge.node.comments.nodes) {
+						if (comment.id === directive.data.id) {
+							for (const key in directive.data) {
+								(comment as any)[key] = directive.data[key];
+							}
+							done = true;
+						}
+						if (done) break;
+					}
+					if (done) break;
+				}
+			} else if (directive.type === "updatePullRequestReviewCommentNode") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);
+				if (node && node.comments) {
+					for (const comment of node.comments.nodes) {
+						if (comment.id !== directive.data.id) continue;
+
+						for (const key in directive.data) {
+							comment[key] = directive.data[key];
+						}
+						break;
+					}
+				}
+			} else if (directive.type === "reviewSubmitted") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);
+				if (node) {
+					node.state = directive.data.state;
+					if (node.comments) {
+						for (const comment of node.comments.nodes) {
+							for (const key in Object.keys(directive.data.comments)) {
+								comment[key] = directive.data.comments[key];
+							}
+							break;
+						}
+					}
+				}
+			} else if (directive.type === "updatePullRequestReview") {
+				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (node) {
+					for (const key in directive.data) {
+						node[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "updatePullRequestReviewers") {
+				pr.reviewRequests.nodes.length = 0;
+				for (const data of directive.data) {
+					pr.reviewRequests.nodes.push(data);
+				}
+			} else if (directive.type === "updatePullRequest") {
+				for (const key in directive.data) {
+					if (directive.data[key] && Array.isArray(directive.data[key].nodes)) {
+						// clear out the array, but keep its reference
+						(pr as any)[key].nodes.length = 0;
+						for (const n of directive.data[key].nodes) {
+							(pr as any)[key].nodes.push(n);
+						}
+					} else {
+						(pr as any)[key] = directive.data[key];
+					}
+				}
+			} else if (directive.type === "updateReview") {
+				if (!pr.reviews?.nodes) {
+					pr.reviews.nodes = [];
+				}
+				if (pr.reviews.nodes) {
+					pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+					pr.reviews.nodes.push(directive.data);
+				}
+			} else if (directive.type === "updateReviewThreads") {
+				if (pr.reviewThreads) {
+					for (const d of directive.data) {
+						const found = pr.reviewThreads.edges.find(_ => _.node.id === d.node.id);
+						if (found) {
+							found.node.viewerCanResolve = d.node.viewerCanResolve;
+						}
+					}
+				}
+			} else if (
+				directive.type === "resolveReviewThread" ||
+				directive.type === "unresolveReviewThread"
+			) {
+				const nodeWrapper = pr.reviewThreads.edges.find(_ => _.node.id === directive.data.threadId);
+				if (nodeWrapper && nodeWrapper.node) {
+					for (const key in directive.data) {
+						(nodeWrapper.node as any)[key] = directive.data[key];
+					}
+				}
+
+				const reviews = pr.timelineItems.nodes.filter(_ => _.__typename === "PullRequestReview");
+				if (reviews) {
+					for (const review of reviews) {
+						for (const comment of review.comments.nodes) {
+							if (comment.threadId !== directive.data.threadId) continue;
+
+							for (const key in directive.data) {
+								comment[key] = directive.data[key];
+							}
+
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 interface GitHubPullRequest {
