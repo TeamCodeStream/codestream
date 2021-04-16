@@ -22,8 +22,11 @@ export interface Directives {
 			| "updatePullRequest"
 			| "updatePullRequestReview"
 			| "updatePullRequestReviewers"
-			| "updatePullRequestReviewComment"
-			| "updatePullRequestReviewCommentNode";
+			| "updatePullRequestReviewThreadComment"
+			| "updatePullRequestReviewCommentNode"
+			| "updateReview"
+			| "updateReviewThreads"
+			| "reviewSubmitted";
 		data: any;
 	}[];
 }

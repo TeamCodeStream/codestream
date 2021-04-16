@@ -1725,7 +1725,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return {
 			directives: [
 				{
-					type: "updatePullRequestReviewComment",
+					type: "updatePullRequestReviewThreadComment",
 					data: response.updatePullRequestReviewComment.pullRequestReviewComment
 				},
 				{
@@ -2366,7 +2366,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		eventType: string;
 		// used with old servers
 		pullRequestReviewId?: string;
-	}) {
+	}): Promise<Directives> {
 		// TODO add directives
 		if (!request.eventType) {
 			request.eventType = "COMMENT";
@@ -2381,31 +2381,154 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			throw new Error("Invalid eventType");
 		}
 
-		const existingReview = await this.getPendingReview(request);
+		let existingReview = await this.getPendingReview(request);
 		if (!existingReview) {
-			void (await this.mutate<any>(
+			const existingReviewResponse = await this.mutate<any>(
 				`mutation AddPullRequestReview($pullRequestId:ID!) {
 					addPullRequestReview(input: {pullRequestId: $pullRequestId, body: ""}) {
 						clientMutationId
+						pullRequestReview {
+      						id
+    					}
 					}
 			  	}`,
 				{
 					pullRequestId: request.pullRequestId
 				}
-			));
+			);
+			existingReview = {
+				pullRequestReviewId: existingReviewResponse.addPullRequestReview.pullRequestReview.id
+			};
 		}
-		const query = `mutation SubmitPullRequestReview($pullRequestId:ID!, $body:String) {
-			submitPullRequestReview(input: {event: ${request.eventType}, body: $body, pullRequestId: $pullRequestId}){
-			  clientMutationId
-			}
-		  }
-		  `;
-		const response = await this.mutate<any>(query, {
-			pullRequestId: request.pullRequestId,
-			body: request.text
-		});
 
-		return response;
+		const submitReviewResponse = await this.mutate<any>(
+			`mutation SubmitPullRequestReview($pullRequestId: ID!, $body: String, $eventName: PullRequestReviewEvent!) {
+				submitPullRequestReview(input: {event: $eventName, body: $body, pullRequestId: $pullRequestId}) {
+				  clientMutationId
+				  pullRequestReview {
+					id
+					databaseId
+					createdAt
+					comments(first: 1) {
+					  totalCount
+					}
+					author {
+					  login
+					  avatarUrl
+					  ... on User {
+						id
+					  }
+					}
+					authorAssociation
+					state
+					commit {
+					  oid
+					}
+				  }
+				}
+			  }
+			  
+		  `,
+			{
+				pullRequestId: request.pullRequestId,
+				body: request.text,
+				eventName: request.eventType
+			}
+		);
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const updatedPullRequest = (await this.query(
+			`query pr($owner: String!, $name: String!, $pullRequestNumber: Int!) {
+				rateLimit {
+				  limit
+				  cost
+				  remaining
+				  resetAt
+				}
+				repository(name: $name, owner: $owner) {
+				  pullRequest(number: $pullRequestNumber) {
+					updatedAt
+					reviewThreads(last: 20) {
+					  edges {
+						node {
+						  id
+						  isResolved
+						  viewerCanResolve
+						  viewerCanUnresolve
+						}
+					  }
+					}
+					state
+					timelineItems(last: 50, itemTypes: [PULL_REQUEST_REVIEW]) {
+					  totalCount
+					  __typename
+					  nodes {
+						... on PullRequestReview {
+						  __typename
+						  id
+						  publishedAt
+						  state
+						  viewerDidAuthor
+						  viewerCanUpdate
+						  viewerCanReact
+						  viewerCanDelete
+						}
+					  }
+					}
+				  }
+				}
+			  }
+		  `,
+			ownerData
+		)) as {
+			repository: {
+				pullRequest: {
+					reviewThreads: {
+						edges: any[];
+					};
+					timelineItems: {
+						totalCount: string;
+						__typename: string;
+						nodes: any[];
+					};
+				};
+			};
+		};
+
+		return {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addNodes",
+					data: updatedPullRequest.repository.pullRequest.timelineItems.nodes
+				},
+				{
+					type: "updateReviewThreads",
+					data: updatedPullRequest.repository.pullRequest.reviewThreads.edges
+				},
+				{
+					type: "updateReview",
+					data: submitReviewResponse.submitPullRequestReview.pullRequestReview
+				},
+				{
+					type: "reviewSubmitted",
+					data: {
+						pullRequestReview: {
+							id: existingReview.pullRequestReviewId
+						},
+						state: "SUBMITTED",
+						comments: {
+							state: "COMMENTED"
+						}
+					}
+				},
+				{ type: "removePendingReview", data: null }
+			]
+		};
 	}
 
 	/**

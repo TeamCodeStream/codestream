@@ -879,7 +879,9 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 						);
 					}
 					default: {
-						console.warn(`timelineItem not found: ${item.__typename} item is: `, item);
+						if (item.__typename) {
+							console.warn(`timelineItem not found: ${item.__typename} item is: `, item);
+						}
 						return null;
 					}
 				}

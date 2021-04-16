@@ -57,6 +57,7 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
+		setSubmittingReview(false);
 	};
 
 	const cancelReview = async (e, id) => {

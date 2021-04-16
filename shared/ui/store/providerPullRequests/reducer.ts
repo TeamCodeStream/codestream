@@ -482,10 +482,11 @@ export function reduceProviderPullRequests(
 									pr.reviewThreads.edges.push(d);
 								}
 							}
-						} else if (directive.type === "updatePullRequestReviewComment") {
+						} else if (directive.type === "updatePullRequestReviewThreadComment") {
 							let done = false;
 							for (const edge of pr.reviewThreads.edges) {
 								if (!edge.node.comments) continue;
+
 								for (const comment of edge.node.comments.nodes) {
 									if (comment.id === directive.data.id) {
 										for (const key in directive.data) {
@@ -504,10 +505,26 @@ export function reduceProviderPullRequests(
 							if (node && node.comments) {
 								for (const comment of node.comments.nodes) {
 									if (comment.id !== directive.data.id) continue;
+
 									for (const key in directive.data) {
 										comment[key] = directive.data[key];
 									}
 									break;
+								}
+							}
+						} else if (directive.type === "reviewSubmitted") {
+							const node = pr.timelineItems.nodes.find(
+								_ => _.id === directive.data.pullRequestReview.id
+							);
+							if (node) {
+								node.state = directive.data.state;
+								if (node.comments) {
+									for (const comment of node.comments.nodes) {
+										for (const key in Object.keys(directive.data.comments)) {
+											comment[key] = directive.data.comments[key];
+										}
+										break;
+									}
 								}
 							}
 						} else if (directive.type === "updatePullRequestReview") {
@@ -532,6 +549,23 @@ export function reduceProviderPullRequests(
 									}
 								} else {
 									pr[key] = directive.data[key];
+								}
+							}
+						} else if (directive.type === "updateReview") {
+							if (!pr.reviews?.nodes) {
+								pr.reviews.nodes = [];
+							}
+							if (pr.reviews.nodes) {
+								pr.reviews.nodes = pr.reviews.nodes.filter(_ => _.id !== directive.data.id);
+								pr.reviews.nodes.push(directive.data);
+							}
+						} else if (directive.type === "updateReviewThreads") {
+							if (pr.reviewThreads) {
+								for (const d of directive.data) {
+									const found = pr.reviewThreads.edges.find(_ => _.node.id === d.node.id);
+									if (found) {
+										found.node.viewerCanResolve = d.node.viewerCanResolve;
+									}
 								}
 							}
 						} else if (
