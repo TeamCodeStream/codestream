@@ -64,6 +64,8 @@ export const PullRequestReactButton = styled((props: Props) => {
 				onOff
 			})
 		);
+
+		props.setIsLoadingMessage("");
 	};
 
 	const isMine = (key: string) => {
@@ -180,6 +182,7 @@ export const PullRequestReactions = (props: ReactionProps) => {
 				onOff
 			})
 		);
+		props.setIsLoadingMessage("");
 	};
 
 	const me = props.pr.viewer.login;

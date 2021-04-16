@@ -85,6 +85,7 @@ export const PullRequestReactButton = styled((props: Props) => {
 				onOff
 			})
 		);
+		props.setIsLoadingMessage("");
 	};
 
 	const filterEmoji = emoji => (emoji.short_names || []).find(id => GITLAB_EMOJI[id]);
@@ -186,6 +187,7 @@ export const PullRequestReactions = (props: ReactionProps) => {
 				id
 			})
 		);
+		props.setIsLoadingMessage("");
 	};
 
 	const me = props.pr.viewer ? props.pr.viewer.login : "";
