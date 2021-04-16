@@ -57,7 +57,7 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
-		setSubmittingReview(false);
+		setIsLoadingMessage("");
 	};
 
 	const cancelReview = async (e, id) => {
@@ -68,6 +68,7 @@ export const PullRequestFinishReview = (props: {
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
+		setIsLoadingMessage("");
 	};
 
 	const pendingCommentCount =
