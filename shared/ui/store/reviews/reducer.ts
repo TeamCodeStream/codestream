@@ -72,6 +72,17 @@ export const getAllReviews = createSelector(getReviews, (reviews: Index<CSReview
 	Object.values(reviews).filter(review => !review.deactivated)
 );
 
+export const getAllReviewLinks = createSelector(getReviews, (reviews: Index<CSReview>) =>
+	Object.values(reviews)
+		.filter(review => !review.deactivated && review.permalink)
+		.map(_ => {
+			return {
+				id: _.id,
+				permalink: _.permalink
+			};
+		})
+);
+
 export const teamHasReviews = createSelector(getReviews, (reviews: Index<CSReview>) => {
 	return Object.keys(reviews).length > 0;
 });

@@ -115,14 +115,12 @@ export const PullRequest = () => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
-		const providerPullRequests = state.providerPullRequests.pullRequests;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
-			providerPullRequests: providerPullRequests,
-			reviewsState: state.reviews,
-			reviews: reviewSelectors.getAllReviews(state),
+			reviewsStateBootstrapped: state.reviews.bootstrapped,
+			reviewLinks: reviewSelectors.getAllReviewLinks(state),
 			currentUser,
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
@@ -143,12 +141,11 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepo: getProviderPullRequestRepo(state),
-			pr: currentPullRequest?.conversations?.repository?.pullRequest
+			currentRepo: getProviderPullRequestRepo(state)
 		};
 	});
 
-	const pr = derivedState.pr;
+	const pr = derivedState.currentPullRequest?.conversations?.repository?.pullRequest;
 	useEffect(() => {
 		if (!derivedState.currentPullRequestCommentId) return;
 
@@ -224,21 +221,6 @@ export const PullRequest = () => {
 		setIsLoadingPR(false);
 		setIsLoadingMessage("");
 	};
-
-	useEffect(() => {
-		const providerPullRequests =
-			derivedState.providerPullRequests[derivedState.currentPullRequestProviderId!];
-		if (providerPullRequests) {
-			let data = providerPullRequests[derivedState.currentPullRequestId!];
-			if (data && data.conversations) {
-				_assignState(data.conversations, "useEffect");
-			}
-		}
-	}, [
-		derivedState.currentPullRequestProviderId,
-		derivedState.currentPullRequestId,
-		derivedState.providerPullRequests
-	]);
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
@@ -408,7 +390,7 @@ export const PullRequest = () => {
 
 	const linkHijacker = (e: any) => {
 		if (e && e.target.tagName === "A" && e.target.text === "Changes reviewed on CodeStream") {
-			const review = Object.values(derivedState.reviews).find(
+			const review = Object.values(derivedState.reviewLinks).find(
 				_ => _.permalink === e.target.href.replace("?src=GitHub", "")
 			);
 			if (review) {
@@ -425,7 +407,7 @@ export const PullRequest = () => {
 		return () => {
 			document.removeEventListener("click", linkHijacker);
 		};
-	}, [derivedState.reviews]);
+	}, [derivedState.reviewLinks]);
 
 	const numComments = useMemo(() => {
 		if (!pr || !pr.timelineItems || !pr.timelineItems.nodes) return 0;
@@ -450,7 +432,7 @@ export const PullRequest = () => {
 	}, [pr, pr?.updatedAt]);
 
 	useDidMount(() => {
-		if (!derivedState.reviewsState.bootstrapped) {
+		if (!derivedState.reviewsStateBootstrapped) {
 			dispatch(bootstrapReviews());
 		}
 		getOpenRepos();
