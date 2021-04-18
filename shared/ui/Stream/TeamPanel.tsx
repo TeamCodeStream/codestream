@@ -40,8 +40,6 @@ import { Dialog } from "../src/components/Dialog";
 import { PaneState } from "../src/components/Pane";
 import { switchToTeam } from "../store/session/actions";
 import { Link } from "./Link";
-import { FlexRow } from "./PullRequests/GitLab/PullRequest";
-import { CodeStreamState } from "../store";
 
 export const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
