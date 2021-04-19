@@ -369,6 +369,11 @@ export function reduceProviderPullRequests(
 				} else if (providerId === "github*com" || providerId === "github/enterprise") {
 					const pr = newState[providerId][id].conversations.repository
 						.pullRequest as FetchThirdPartyPullRequestPullRequest;
+					/**
+					 *
+					 *  KEEP THIS IN SYNC WITH github.ts
+					 *
+					 */
 					for (const directive of action.payload.data) {
 						if (directive.type === "addReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {

@@ -5388,7 +5388,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			Logger.warn(`Attempting to update cache without PR object. id=${pullRequestId}`);
 			return;
 		}
-
+		/**
+		 *
+		 *  KEEP THIS IN SYNC WITH providerPullReqests/reducer.ts
+		 *
+		 */
 		for (const directive of directives.directives) {
 			if (directive.type === "addReaction") {
 				if (directive.data.subject.__typename === "PullRequest") {
