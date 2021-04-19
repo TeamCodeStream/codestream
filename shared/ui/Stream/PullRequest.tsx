@@ -784,7 +784,13 @@ export const PullRequest = () => {
 										title="Reload"
 										trigger={["hover"]}
 										delay={1}
-										onClick={() => reload("Reloading...")}
+										onClick={() => {
+											if (isLoadingPR) {
+												console.warn("reloading pr, cancelling...");
+												return;
+											}
+											reload("Reloading...");
+										}}
 										placement="bottom"
 										className={`${isLoadingPR ? "spin" : ""}`}
 										name="refresh"
