@@ -20,6 +20,7 @@ export interface Directive {
 		| "unresolveReviewThread"
 		| "updateDiscussionNote"
 		| "updateNode"
+		| "updateNodes"
 		| "updatePullRequest"
 		| "updatePullRequestReview"
 		| "updatePullRequestReviewers"

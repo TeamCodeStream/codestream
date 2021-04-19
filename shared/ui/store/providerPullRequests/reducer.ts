@@ -526,13 +526,18 @@ export function reduceProviderPullRequests(
 								_ => _.id === directive.data.pullRequestReview.id
 							);
 							if (node) {
-								node.state = directive.data.state;
+								for (const key of Object.keys(directive.data.updates)) {
+									node[key] = directive.data.updates[key];
+								}
+
 								if (node.comments) {
-									for (const comment of node.comments.nodes) {
-										for (const key in Object.keys(directive.data.comments)) {
-											comment[key] = directive.data.comments[key];
+									for (const comment of directive.data.comments) {
+										const existingComment = node.comments.nodes.find(
+											(_: any) => _.id === comment.id
+										);
+										if (existingComment) {
+											existingComment.state = comment.state;
 										}
-										break;
 									}
 								}
 							}

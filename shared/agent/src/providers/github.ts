@@ -280,56 +280,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {
-		const response = await (await this.client()).request<T>(query, variables);
-		// if (Logger.level === TraceLevel.Debug) {
-		// 	try {
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ =>
-		// 							(_.indexOf("GitHubProvider") > -1 ||
-		// 								_.indexOf("GitHubEnterpriseProvider") > -1) &&
-		// 							_.indexOf(".mutate") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (err) {
-		// 				Logger.warn(err);
-		// 				functionName = "unknown";
-		// 			}
-		// 			if (!this._queryLogger.graphQlApi.rateLimit) {
-		// 				this._queryLogger.graphQlApi.rateLimit = {
-		// 					remaining: -1,
-		// 					resetAt: "",
-		// 					resetInMinutes: -1
-		// 				};
-		// 			}
-		// 			this._queryLogger.graphQlApi.rateLimit.last = {
-		// 				name: functionName,
-		// 				// mutate costs are 1
-		// 				cost: 1
-		// 			};
-		// 			if (!this._queryLogger.graphQlApi.fns[functionName]) {
-		// 				this._queryLogger.graphQlApi.fns[functionName] = {
-		// 					count: 1
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.graphQlApi.fns[functionName];
-		// 				existing.count++;
-
-		// 				this._queryLogger.graphQlApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	} catch (err) {
-		// 		Logger.warn(err);
-		// 	}
-		// }
-		return response;
+		return (await this.client()).request<T>(query, variables);
 	}
 
 	async restPost<T extends object, R extends object>(url: string, variables: any) {
@@ -2536,20 +2487,102 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					  }
 					}
 					state
-					timelineItems(last: 50, itemTypes: [PULL_REQUEST_REVIEW]) {
+					timelineItems(last: 10, itemTypes: [PULL_REQUEST_REVIEW]) {
 					  totalCount
 					  __typename
 					  nodes {
 						... on PullRequestReview {
-						  __typename
-						  id
-						  publishedAt
-						  state
-						  viewerDidAuthor
-						  viewerCanUpdate
-						  viewerCanReact
-						  viewerCanDelete
-						}
+							__typename
+							id
+							author {
+							  login
+							  avatarUrl
+							}
+							authorAssociation
+							body
+							bodyText
+							bodyHTML
+							createdAt
+							databaseId
+							includesCreatedEdit
+							lastEditedAt
+							state
+							viewerDidAuthor
+							viewerCanUpdate
+							viewerCanReact
+							viewerCanDelete
+							reactionGroups {
+							  content
+							  users(last: 1) {
+								nodes {
+								  login
+								}
+							  }
+							}
+							resourcePath
+							comments(last: 20) {
+							  nodes {
+								author {
+								  login
+								  avatarUrl
+								}
+								authorAssociation
+								body
+								bodyText
+								bodyHTML
+								createdAt
+								databaseId
+								draftedAt
+								diffHunk
+								id
+								includesCreatedEdit
+								isMinimized
+								lastEditedAt
+								minimizedReason
+								publishedAt
+								state
+								replyTo {
+								  diffHunk
+								  id
+								  body
+								  bodyText
+								  bodyHTML
+								}
+								commit {
+								  message
+								  messageBody
+								  messageHeadline
+								  oid
+								}
+								editor {
+								  login
+								  avatarUrl
+								}
+								outdated
+								path
+								position
+								pullRequestReview {
+								  body
+								  bodyText
+								  bodyHTML
+								}
+								reactionGroups {
+								  content
+								  users(last: 1) {
+									nodes {
+									  login
+									}
+								  }
+								}
+								resourcePath
+								viewerCanUpdate
+								viewerCanReact
+								viewerCanDelete
+							  }
+							}
+							authorAssociation
+							bodyHTML
+						  }
 					  }
 					}
 				  }
@@ -2572,6 +2605,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 		};
 
+		let reviewTimelineItem =
+			existingReview &&
+			existingReview.pullRequestReviewId &&
+			updatedPullRequest.repository.pullRequest.timelineItems.nodes.find(
+				_ => _.id === existingReview!.pullRequestReviewId
+			);
+		Logger.log(reviewTimelineItem);
 		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
@@ -2598,10 +2638,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						pullRequestReview: {
 							id: existingReview.pullRequestReviewId
 						},
-						state: "SUBMITTED",
-						comments: {
-							state: "COMMENTED"
-						}
+						updates: {
+							body: reviewTimelineItem.body,
+							bodyHTML: reviewTimelineItem.bodyHTML,
+							bodyText: reviewTimelineItem.bodyText,
+							state: reviewTimelineItem.state
+						},
+						comments: reviewTimelineItem?.comments.nodes.map((_: any) => {
+							return {
+								id: _.id,
+								state: _.state
+							};
+						})
 					}
 				},
 				{ type: "removePendingReview", data: null }
@@ -3622,7 +3670,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 		const thread = response.resolveReviewThread.thread;
-
 		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
@@ -5487,13 +5534,16 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			} else if (directive.type === "reviewSubmitted") {
 				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);
 				if (node) {
-					node.state = directive.data.state;
+					for (const key of Object.keys(directive.data.updates)) {
+						node[key] = directive.data.updates[key];
+					}
+
 					if (node.comments) {
-						for (const comment of node.comments.nodes) {
-							for (const key in Object.keys(directive.data.comments)) {
-								comment[key] = directive.data.comments[key];
+						for (const comment of directive.data.comments) {
+							const existingComment = node.comments.nodes.find((_: any) => _.id === comment.id);
+							if (existingComment) {
+								existingComment.state = comment.state;
 							}
-							break;
 						}
 					}
 				}
