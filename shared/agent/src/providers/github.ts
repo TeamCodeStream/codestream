@@ -2280,7 +2280,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		);
 
-		const directives = [
+		const directives: Directive[] = [
 			{
 				type: "updatePullRequest",
 				data: {
@@ -2297,7 +2297,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					id: request.pullRequestReviewId
 				}
 			}
-		] as Directive[];
+		];
 
 		this.updateCache(request.pullRequestId, {
 			directives: directives
