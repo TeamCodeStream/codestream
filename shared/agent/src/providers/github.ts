@@ -245,7 +245,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 											_.indexOf("GitHubEnterpriseProvider") > -1) &&
 										_.indexOf(".query") === -1
 								)![0]
-								.match(/GitHubProvider\.(\w+)/)![1];
+								.match(/GitHub[Enterprise]?Provider\.(\w+)/)![1];
 						} catch (err) {
 							functionName = "unknown";
 							Logger.warn(err);
@@ -268,8 +268,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							this._queryLogger.graphQlApi.fns[functionName] = existing;
 						}
 					}
-
-					Logger.log(JSON.stringify(this._queryLogger, null, 4));
+					if (response.rateLimit.remaining < 200) {
+						Logger.warn(`${this.providerConfig.id} rateLimit low`);
+						Logger.warn(JSON.stringify(this._queryLogger, null, 4));
+					}
 				}
 			} catch (err) {
 				Logger.warn(err);
