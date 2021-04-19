@@ -58,6 +58,17 @@ import {
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
 } from "./provider";
+import { Directive, Directives } from "./directives";
+import { CodeStreamSession } from "../session";
+import { print } from "graphql";
+import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
+import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
+import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
+import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
+import { merge } from "lodash";
+import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
+import { gate } from "../system/decorators/gate";
+import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -68,13 +79,6 @@ interface GitLabProject {
 	path: string;
 	issues_enabled: boolean;
 	forked_from_project?: GitLabProject;
-}
-
-interface GitLabUser {
-	id: number;
-	name: string;
-	username: string;
-	avatar_url: string;
 }
 
 interface GitLabCurrentUser {
@@ -298,11 +302,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			};
 		});
 		return { cards };
-	}
-
-	private async getMemberId() {
-		const userResponse = await this.get<{ id: string; [key: string]: any }>(`/user`);
-		return userResponse.body.id;
 	}
 
 	private nextPage(response: Response): string | undefined {
@@ -538,10 +537,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
-	async getForkedRepos(
-		request: { remote: string },
-		recurseFailsafe?: boolean
-	): Promise<ProviderGetForkedReposResponse> {
+	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
 		try {
 			const { remote } = request;
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
@@ -972,25 +968,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return this._client;
 	}
 
-	_queryLogger: {
-		restApi: {
-			rateLimit?: { remaining: number; limit: number; used: number; reset: number };
-			fns: any;
-		};
-		graphQlApi: {
-			rateLimit?: {
-				remaining: number;
-				resetAt: string;
-				resetInMinutes: number;
-				last?: { name: string; cost: number };
-			};
-			fns: any;
-		};
-	} = {
-		graphQlApi: { fns: {} },
-		restApi: { fns: {} }
-	};
-
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;
@@ -1105,20 +1082,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		accessRawDiffs?: boolean;
 		force?: boolean;
 	}): Promise<GitLabMergeRequestWrapper> {
-		const { projectFullPath, id, iid } = this.parseId(request.pullRequestId);
+		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		void (await this.ensureConnected());
-		const currentUser = await this.getCurrentUser();
-		const providerVersion = await this.getVersion();
 
 		if (request.force) {
-			this._pullRequestCache.delete(id);
+			this._pullRequestCache.delete(request.pullRequestId);
 		} else {
-			const cached = this._pullRequestCache.get(id);
+			const cached = this._pullRequestCache.get(request.pullRequestId);
 			if (cached) {
 				return cached;
 			}
 		}
+
+		const currentUser = await this.getCurrentUser();
+		const providerVersion = await this.getVersion();
 
 		let response = {} as GitLabMergeRequestWrapper;
 		try {
@@ -1214,6 +1192,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				project.body.only_allow_merge_if_all_discussions_are_resolved;
 			response.project.onlyAllowMergeIfPipelineSucceeds =
 				project.body.only_allow_merge_if_pipeline_succeeds;
+
 			const users = await this.getAssignableUsers({ boardId: encodeURIComponent(projectFullPath) });
 
 			// if you are part of the project, you will see the approve box UI
@@ -1339,77 +1318,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			};
 
-			const parsedPatches = new Map<string, ParsedDiffWithMetadata>();
-			// massage into replies
-			response.project.mergeRequest.discussions.nodes.forEach((_: DiscussionNode) => {
-				if (_.notes && _.notes.nodes && _.notes.nodes.length) {
-					_.notes.nodes.forEach((n: any) => {
-						if (n.discussion && n.discussion.id) {
-							// HACK hijack the "databaseId" that github uses
-							n.databaseId = n.discussion.id
-								.replace("gid://gitlab/DiffDiscussion/", "")
-								.replace("gid://gitlab/IndividualNoteDiscussion/", "");
-							n.mergeRequestIdComputed = mergeRequestFullId;
-							this.toAuthorAbsolutePath(n.author);
-						}
-						if (n.position?.diffRefs && n.position?.newPath && filesChanged?.length) {
-							try {
-								let processedPatch = parsedPatches.get(n.position.newPath);
-								if (!processedPatch) {
-									const found = filesChanged.find(_ => _.filename === n.position.newPath);
-									if (found?.patch) {
-										processedPatch = translatePositionToLineNumber(parsePatch(found.patch)[0]);
-										if (processedPatch) {
-											parsedPatches.set(n.position.newPath, processedPatch);
-										}
-									}
-								}
-								if (processedPatch?.hunks && processedPatch.hunks.length > 0) {
-									const lines = processedPatch?.hunks[0].linesWithMetadata
-										.filter(
-											_ =>
-												_.lineNumber &&
-												_.lineNumber <= n.position.newLine &&
-												_.lineNumber >= n.position.newLine - 7
-										)
-										.map(_ => _.line);
-									const length = lines?.length || 1;
-									const start = n.position.newLine + 1 - length;
-									const header = `@@ -${start},${length} +${start},${n.position.newLine} @@`;
-									n.position.patch = header + "\n" + lines?.join("\n");
-								}
-							} catch (ex) {
-								Logger.warn("getMergeRequest diffs", {
-									error: ex
-								});
-							}
-						}
-					});
-					_.notes.nodes[0].replies = _.notes.nodes.filter(
-						(x: any) => x.id != _.notes?.nodes[0].id
-					) as any;
-					// remove all the replies from the parent (they're now on replies)
-					_.notes.nodes.length = 1;
-				}
-			});
+			await this.mapPullRequestModel(
+				response,
+				mergeRequestFullId,
+				filesChanged,
+				new GitLabId(projectFullPath, iid),
+				currentUser
+			);
 
-			// add reviews
-			const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
-			if (pendingReview?.comments?.length) {
-				const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
-					return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
-				});
-				response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
-					commentsAsDiscussionNodes
-				);
-				response.project.mergeRequest.pendingReview = {
-					id: "undefined",
-					author: commentsAsDiscussionNodes[0].notes?.nodes[0].author!,
-					comments: {
-						totalCount: pendingReview.comments.length
-					}
-				};
-			}
 			response.project.mergeRequest.viewerDidAuthor =
 				response.project.mergeRequest.author.login == response.currentUser.login;
 
@@ -1435,7 +1351,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				providerVersion
 			);
 
-			this._pullRequestCache.set(id, response);
+			this._pullRequestCache.set(request.pullRequestId, response);
 		} catch (ex) {
 			Logger.error(ex, "getMergeRequest", {
 				...request
@@ -1448,6 +1364,97 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		return response;
+	}
+
+	private async mapToDiscussionNode(
+		n: any,
+		mergeRequestFullId: string,
+		parsedPatches: Map<string, ParsedDiffWithMetadata>,
+		filesChanged: any[]
+	) {
+		if (n.discussion && n.discussion.id) {
+			// HACK hijack the "databaseId" that github uses
+			n.databaseId = n.discussion.id
+				.replace("gid://gitlab/DiffDiscussion/", "")
+				.replace("gid://gitlab/IndividualNoteDiscussion/", "");
+			n.mergeRequestIdComputed = mergeRequestFullId;
+			this.toAuthorAbsolutePath(n.author);
+		}
+		if (n.position?.diffRefs && n.position?.newPath && filesChanged?.length) {
+			try {
+				let processedPatch = parsedPatches.get(n.position.newPath);
+				if (!processedPatch) {
+					const found = filesChanged.find(_ => _.filename === n.position.newPath);
+					if (found?.patch) {
+						processedPatch = translatePositionToLineNumber(parsePatch(found.patch)[0]);
+						if (processedPatch) {
+							parsedPatches.set(n.position.newPath, processedPatch);
+						}
+					}
+				}
+				if (processedPatch?.hunks && processedPatch.hunks.length > 0) {
+					const lines = processedPatch?.hunks[0].linesWithMetadata
+						.filter(
+							_ =>
+								_.lineNumber &&
+								_.lineNumber <= n.position.newLine &&
+								_.lineNumber >= n.position.newLine - 7
+						)
+						.map(_ => _.line);
+					const length = lines?.length || 1;
+					const start = n.position.newLine + 1 - length;
+					const header = `@@ -${start},${length} +${start},${n.position.newLine} @@`;
+					n.position.patch = header + "\n" + lines?.join("\n");
+				}
+			} catch (ex) {
+				Logger.warn("getMergeRequest diffs", {
+					error: ex
+				});
+			}
+		}
+
+		return n;
+	}
+
+	private async mapPullRequestModel(
+		response: any,
+		mergeRequestFullId: string,
+		filesChanged: any[],
+		glId: GitLabId,
+		currentUser: GitLabCurrentUser
+	) {
+		const parsedPatches = new Map<string, ParsedDiffWithMetadata>();
+		// massage into replies
+		response.project.mergeRequest.discussions.nodes.forEach((_: DiscussionNode) => {
+			if (_.notes && _.notes.nodes && _.notes.nodes.length) {
+				_.notes.nodes.forEach((n: any) => {
+					this.mapToDiscussionNode(n, mergeRequestFullId, parsedPatches, filesChanged);
+				});
+				_.notes.nodes[0].replies = _.notes.nodes.filter(
+					(x: any) => x.id != _.notes?.nodes[0].id
+				) as any;
+				// remove all the replies from the parent (they're now on replies)
+				_.notes.nodes.length = 1;
+			}
+		});
+
+		// add reviews
+		const pendingReview = await this.gitLabReviewStore.get(glId);
+		if (pendingReview?.comments?.length) {
+			const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
+				return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
+			});
+			response.project.mergeRequest.discussions.nodes = response.project.mergeRequest.discussions.nodes.concat(
+				commentsAsDiscussionNodes
+			);
+			response.project.mergeRequest.pendingReview = {
+				id: "undefined",
+				author: commentsAsDiscussionNodes[0].notes?.nodes[0].author!,
+				comments: {
+					totalCount: pendingReview.comments.length
+				}
+			};
+		}
 	}
 
 	@log()
@@ -1501,13 +1508,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		);
 		this.toAuthorAbsolutePath(response.createNote.note.author);
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [{ type: "addReply", data: response.createNote.note }]
-		};
+		});
 	}
 
 	@log()
-	async createPullRequestThread(request: { pullRequestId: string; text: string }) {
+	async createPullRequestThread(request: {
+		pullRequestId: string;
+		text: string;
+	}): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		try {
@@ -1535,17 +1545,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			);
 			if (node) {
 				this.ensureAvatarAbsolutePathRecurse(node);
-				return {
+				return this.handleResponse(request.pullRequestId, {
 					directives: [{ type: "addNode", data: node }]
-				};
+				});
 			} else {
 				// if for some reason the id can't be found, the client can de-dupe
 				this.ensureAvatarAbsolutePathRecurse(response?.project?.mergeRequest?.discussions || {});
-				return {
+				return this.handleResponse(request.pullRequestId, {
 					directives: [
 						{ type: "addNodes", data: response?.project?.mergeRequest?.discussions.nodes || [] }
 					]
-				};
+				});
 			}
 		} catch (ex) {
 			Logger.error(ex, "createPullRequestThread");
@@ -1554,7 +1564,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async getPullRequestReviewId(request: { pullRequestId: string }) {
+	async getPullRequestReviewId(request: { pullRequestId: string }): Promise<boolean | undefined> {
 		const { iid, projectFullPath } = this.parseId(request.pullRequestId);
 		const exists = this.gitLabReviewStore.exists(new GitLabId(projectFullPath, iid));
 		return exists;
@@ -1576,10 +1586,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async addComment(request: { subjectId: string; text: string }): Promise<any> {
-		// // does not require return directives
-		const { id } = this.parseId(request.subjectId);
-		const response = await this.mutate(
+	async addComment(request: {
+		pullRequestId: string;
+		subjectId: string;
+		text: string;
+	}): Promise<Directives> {
+		const { projectFullPath, iid, id } = this.parseId(request.subjectId);
+		await this.mutate(
 			`mutation CreateNote($noteableId:ID!, $body:String!){
 				createNote(input: {noteableId:$noteableId, body:$body}){
 					clientMutationId
@@ -1590,7 +1603,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				body: request.text
 			}
 		);
-		return response;
+
+		return this.handleResponse(request.pullRequestId, {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addNodes",
+					data: await this.getLastDiscussions(projectFullPath, iid)
+				}
+			]
+		});
 	}
 
 	@log()
@@ -1604,7 +1631,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		position?: number;
 		leftSha?: string;
 		sha?: string;
-	}) {
+	}): Promise<Directives> {
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
 		Logger.log(`createPullRequestReviewComment project=${projectFullPath} iid=${iid}`, {
@@ -1616,13 +1643,36 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			createdAt: new Date().toISOString()
 		});
 
-		this._pullRequestCache.delete(id);
+		const directives: Directive[] = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: Dates.toUtcIsoNow()
+				}
+			}
+		];
+		const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
+		if (pendingReview) {
+			const currentUser = await this.getCurrentUser();
+			directives.push({
+				type: "addNodes",
+				data: pendingReview.comments.map(_ => {
+					return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
+				})
+			});
+		}
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id,
 			filePath: request.filePath
 		});
 
-		return true;
+		return {
+			directives: directives
+		};
 	}
 
 	@log()
@@ -1678,7 +1728,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async updatePullRequestSubscription(request: { pullRequestId: string; onOff: boolean }) {
+	async updatePullRequestSubscription(request: {
+		pullRequestId: string;
+		onOff: boolean;
+	}): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		const type = request.onOff ? "subscribe" : "unsubscribe";
@@ -1687,7 +1740,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1696,11 +1749,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	@log()
-	async setReviewersOnPullRequest(request: { ids: string[]; pullRequestId: string }) {
+	async setReviewersOnPullRequest(request: {
+		ids: string[];
+		pullRequestId: string;
+	}): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 		const data = await this.restPut<{ reviewer_ids: number[] }, { reviewers: any[] }>(
 			`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
@@ -1708,12 +1764,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				reviewer_ids: request.ids
 			}
 		);
-		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
-		return {
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "addNodes",
-					data: lastDiscussions
+					data: await this.getLastDiscussions(projectFullPath, iid)
 				},
 				{
 					type: "updateReviewers",
@@ -1722,7 +1778,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					})
 				}
 			]
-		};
+		});
 	}
 
 	@log()
@@ -1751,7 +1807,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}`,
 				requestBody
 			);
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{
 						type: "updatePullRequest",
@@ -1769,24 +1825,12 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					}
 				]
-			};
+			});
 		} catch (err) {
 			Logger.error(err);
 			debugger;
 		}
 		return undefined;
-	}
-
-	parseId(pullRequestId: string) {
-		const parsed = JSON.parse(pullRequestId);
-		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
-		// id - Is unique across all issues and is used for any API call
-		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
-		return {
-			id: parsed.id,
-			projectFullPath: parsed.full.split("!")[0],
-			iid: parsed.full.split("!")[1]
-		};
 	}
 
 	async lockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
@@ -1797,7 +1841,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{ discussion_locked: true }
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1806,7 +1850,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async unlockPullRequest(request: { pullRequestId: string }): Promise<Directives> {
@@ -1817,7 +1861,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{ discussion_locked: false }
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1826,7 +1870,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async remoteBranches(request: { pullRequestId: string }) {
@@ -1891,7 +1935,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				milestone.createdAt = milestone.created_at;
 				milestone.dueDate = milestone.due_date;
 			}
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{
 						type: "updatePullRequest",
@@ -1938,7 +1982,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						data: await this.getMilestoneEvents(projectFullPath, iid)
 					}
 				]
-			};
+			});
 		} catch (ex) {
 			Logger.warn(ex.message);
 		}
@@ -1953,7 +1997,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			{}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1964,14 +2008,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
-	async markToDoDone(request: { id: string }): Promise<Directives> {
-		const id = request.id.toString().replace(/.*Todo\//, "");
-		const data = await this.restPost<{}, { state: string }>(`/todos/${id}/mark_as_done`, {});
+	async markToDoDone(request: { id: string; pullRequestId: string }): Promise<Directives> {
+		const { id } = this.parseId(request.pullRequestId);
 
-		return {
+		const todoId = request.id.toString().replace(/.*Todo\//, "");
+		const data = await this.restPost<{}, { state: string }>(`/todos/${todoId}/mark_as_done`, {});
+
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updatePullRequest",
@@ -1982,7 +2028,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			]
-		};
+		});
 	}
 
 	async getMilestones(request: { pullRequestId: string }) {
@@ -2061,7 +2107,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			});
 		}
 
-		return result;
+		return this.handleResponse(request.pullRequestId, result);
 	}
 
 	async resolveReviewThread(request: {
@@ -2070,6 +2116,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		type: string;
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
+		const { id } = this.parseId(request.pullRequestId);
+
 		const noteId = request.id;
 		const response = await this.mutate<any>(
 			`
@@ -2101,14 +2149,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updateNode",
 					data: response.discussionToggleResolve.discussion
 				}
 			]
-		};
+		});
 	}
 
 	@log()
@@ -2175,13 +2223,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				id: noteId
 			});
 		}
-		this._pullRequestCache.delete(id);
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: id,
-			commentId: noteId
-		});
 
-		return {
+		const directives: Directives = {
 			directives: [
 				{
 					type: "removeNode",
@@ -2191,6 +2234,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+		this.updateCache(request.pullRequestId, directives);
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: id,
+			commentId: noteId
+		});
+
+		return directives;
 	}
 
 	@log()
@@ -2198,7 +2248,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		text: string;
 		startThread: boolean;
-	}) {
+	}): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 		let directives: any = [];
 
@@ -2250,9 +2300,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			data: await this.getStateEvents(projectFullPath, iid)
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: directives
-		};
+		});
 	}
 
 	@log()
@@ -2260,7 +2310,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 		text: string;
 		startThread: boolean;
-	}): Promise<any> {
+	}): Promise<Directives> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
 		let directives: any = [];
@@ -2307,14 +2357,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				closedBy: body.closed_by
 			}
 		});
+
 		directives.push({
 			type: "addNodes",
 			data: await this.getStateEvents(projectFullPath, iid)
 		});
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: directives
-		};
+		});
 	}
 
 	@log()
@@ -2403,7 +2454,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					milestone_id: request.milestoneId
 				}
 			);
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{
 						type: "updatePullRequest",
@@ -2412,7 +2463,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					}
 				]
-			};
+			});
 		} catch (err) {
 			Logger.error(err);
 			debugger;
@@ -2445,7 +2496,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			);
 
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{
 						type: "updatePullRequest",
@@ -2455,7 +2506,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						}
 					}
 				]
-			};
+			});
 		} catch (err) {
 			Logger.error(err);
 			debugger;
@@ -2494,7 +2545,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			);
 
-			return {
+			return this.handleResponse(request.pullRequestId, {
 				directives: [
 					{
 						type: "setLabels",
@@ -2505,7 +2556,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						data: await this.getLabelEvents(projectFullPath, iid)
 					}
 				]
-			};
+			});
 		} catch (err) {
 			Logger.error(err);
 			debugger;
@@ -2534,7 +2585,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				});
 				response.body.user.login = response.body.user.username;
 				response.body.user.avatarUrl = this.avatarUrl(response.body.user.avatar_url);
-				return {
+				return this.handleResponse(request.pullRequestId, {
 					directives: [
 						{
 							// FIXME -- if the subjectId is a note, update the note
@@ -2542,7 +2593,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 							data: response.body
 						}
 					]
-				};
+				});
 			} else {
 				if (!request.id) throw new Error("MissingId");
 
@@ -2552,7 +2603,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				});
 				if (response.body === "") {
 					const currentUser = await this.getCurrentUser();
-					return {
+					return this.handleResponse(request.pullRequestId, {
 						directives: [
 							{
 								// FIXME -- if the subjectId is a note, update the note
@@ -2563,7 +2614,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 								}
 							}
 						]
-					};
+					});
 				}
 			}
 		} catch (err) {
@@ -2643,23 +2694,27 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<Directives | undefined> {
 		const { projectFullPath, iid } = this.parseId(request.pullRequestId);
 
-		const response = await this.restPost<any, any>(
-			`/projects/${encodeURIComponent(
-				projectFullPath
-			)}/merge_requests/${iid}/cancel_merge_when_pipeline_succeeds`,
-			{}
-		);
-		Logger.log(`cancelMergeWhenPipelineSucceeds:${JSON.stringify(response.body)}`);
-		return {
-			directives: [
-				{
-					type: "updatePullRequest",
-					data: {
-						mergeWhenPipelineSucceeds: false
+		try {
+			await this.restPost<any, any>(
+				`/projects/${encodeURIComponent(
+					projectFullPath
+				)}/merge_requests/${iid}/cancel_merge_when_pipeline_succeeds`,
+				{}
+			);
+			return this.handleResponse(request.pullRequestId, {
+				directives: [
+					{
+						type: "updatePullRequest",
+						data: {
+							mergeWhenPipelineSucceeds: false
+						}
 					}
-				}
-			]
-		};
+				]
+			});
+		} catch (ex) {
+			Logger.error(ex);
+		}
+		return undefined;
 	}
 
 	@log()
@@ -2714,7 +2769,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				});
 			}
-			return response;
+			return this.handleResponse(request.pullRequestId, response);
 		} catch (ex) {
 			Logger.warn(ex.message, ex);
 			throw new Error("Failed to accept merge request.");
@@ -2763,7 +2818,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			startLine: number;
 			endLine: number;
 		};
-	}) {
+	}): Promise<Directives> {
 		let projectFullPath, id, iid;
 		try {
 			({ projectFullPath, id, iid } = this.parseId(request.pullRequestId));
@@ -2789,17 +2844,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				payload: payload
 			});
 			// https://docs.gitlab.com/ee/api/discussions.html#create-new-merge-request-thread
-			const data = await this.restPost<any, any>(
+			await this.restPost<any, any>(
 				`/projects/${encodeURIComponent(projectFullPath)}/merge_requests/${iid}/discussions`,
 				payload
 			);
-
-			this._pullRequestCache.delete(id);
+			const directives: Directives = {
+				directives: [
+					{
+						type: "addNodes",
+						data: await this.getLastDiscussions(projectFullPath, iid, 2)
+					}
+				]
+			};
+			this.updateCache(request.pullRequestId, directives);
 			this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 				pullRequestId: id
 			});
 
-			return data.body;
+			return directives;
 		} catch (ex) {
 			// lines that are _slightly_ outside the context of a diff (yet are still in the hunks)
 			// are not allowed and they return a bizzare error message...
@@ -2812,6 +2874,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				const metadata = request.metadata;
 				if (metadata) {
 					return this.addComment({
+						pullRequestId: request.pullRequestId,
 						subjectId: request.pullRequestId,
 						text: `${request.text || ""}\n\n\`\`\`\n${metadata.contents}\n\`\`\`
 						\n${metadata.fileWithUrl} (Line${
@@ -2822,6 +2885,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					});
 				} else {
 					return this.addComment({
+						pullRequestId: request.pullRequestId,
 						subjectId: request.pullRequestId,
 						text: request.text
 					});
@@ -2866,7 +2930,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 
 		const lastDiscussions = await this.getLastDiscussions(projectFullPath, iid);
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "addNodes",
@@ -2887,7 +2951,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						)
 				}
 			]
-		};
+		});
 	}
 
 	@log()
@@ -2899,11 +2963,31 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
 
-		this._pullRequestCache.delete(id);
+		const directives: Directives = {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "removePendingReview",
+					data: null
+				},
+				{
+					type: "removePullRequestReview",
+					data: {
+						id: request.pullRequestReviewId
+					}
+				}
+			]
+		};
+		this.updateCache(request.pullRequestId, directives);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id
 		});
-		return true;
+		return directives;
 	}
 
 	async getPullRequestIdFromUrl(request: { url: string }) {
@@ -2957,6 +3041,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		if (request.id.indexOf("gitlab") === -1) {
 			return this.updateReviewComment(request);
 		}
+		const { id } = this.parseId(request.pullRequestId);
 		const response = await this.mutate<any>(
 			`mutation UpdateNote($id: NoteID!, $body: String!) {
 			updateNote(input: {id: $id, body: $body}) {
@@ -2979,14 +3064,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		);
 
-		return {
+		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{
 					type: "updateDiscussionNote",
 					data: response.updateNote.note
 				}
 			]
-		};
+		});
 	}
 
 	async getPullRequestLastUpdated(request: { pullRequestId: string }) {
@@ -3167,6 +3252,18 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
+	parseId(pullRequestId: string) {
+		const parsed = JSON.parse(pullRequestId);
+		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
+		// id - Is unique across all issues and is used for any API call
+		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
+		return {
+			id: parsed.id,
+			projectFullPath: parsed.full.split("!")[0],
+			iid: parsed.full.split("!")[1]
+		};
+	}
+
 	private async _paginateRestResponse(url: string, map: (data: any[]) => any[]) {
 		let page: string | null = "1";
 		let results: any[] = [];
@@ -3191,6 +3288,13 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 		return results;
 	}
+
+	async handleResponse(pullRequestId: string, directives: Directives) {
+		this.updateCache(pullRequestId, directives);
+		return directives;
+	}
+
+	private updateCache(pullRequestId: string, directives: Directives) {}
 }
 
 interface GitLabReview {

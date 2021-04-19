@@ -28,6 +28,7 @@ export interface Directive {
 		| "updatePullRequestReviewThreadComment"
 		| "updateReview"
 		| "updateReviewCommentsCount"
+		| "updateReviewers"
 		| "updateReviewThreads"
 		| "reviewSubmitted";
 	data: any;
