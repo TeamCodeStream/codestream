@@ -517,25 +517,20 @@ class TeamPanel extends React.Component<Props, State> {
 			teamId,
 			company,
 			serverUrl,
-			teamName,
 			userTeams,
 			currentUserEmail,
 			collisions,
 			xrayEnabled
 		} = this.props;
 		const { modifiedRepos, modifiedReposModifiedAt } = user;
-		let premium = false;
 		let timeDiff = new Date().getTime() - new Date(this.props.company.createdAt).getTime();
 
-		userTeams.forEach(team => {
-			// Check if team is business or enterprise or was created in <= past 2 weeks
-			if (
-				team.name == teamName &&
-				(team.plan == "BUSINESS" || team.plan == "ENTERPRISE" || timeDiff <= 1209600000)
-			) {
-				premium = true;
-			}
-		});
+		// Check if the team is business or enterprise or was created in <= past 2 weeks
+		const premium = userTeams.find(
+			team =>
+				team.id === teamId &&
+				(team.plan === "BUSINESS" || team.plan === "ENTERPRISE" || timeDiff <= 1209600000)
+		);
 
 		if (!xrayEnabled) return null;
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
