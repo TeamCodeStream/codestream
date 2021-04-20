@@ -286,7 +286,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 						pr={pr}
 						mode={props.mode}
 						/* GitLab-specific */
-						parentId={comment.id || comment?.discussion?.id}
+						parentId={comment?.discussion?.id}
 						databaseId={comment.databaseId}
 						isOpen={openComments[comment.databaseId]}
 						__onDidRender={__onDidRender}

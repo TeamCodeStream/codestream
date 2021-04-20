@@ -11,6 +11,7 @@ interface CommentMenuProps {
 	node: any;
 	nodeType: "ISSUE_COMMENT" | "ROOT_COMMENT" | "REVIEW_COMMENT" | "REVIEW";
 	viewerCanDelete?: boolean;
+	parentId?: string;
 	setEdit?: Function;
 	quote?: Function;
 	isPending?: boolean;
@@ -40,7 +41,8 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 						if (props.nodeType === "REVIEW") {
 							await dispatch(
 								api("deletePullRequestReview", {
-									pullRequestReviewId: node.id
+									pullRequestReviewId: node.id,
+									parentId: props.parentId
 								})
 							);
 						} else {
@@ -48,6 +50,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 								api("deletePullRequestComment", {
 									type: props.nodeType,
 									isPending: props.isPending,
+									parentId: props.parentId,
 									id: node.id
 								})
 							);

@@ -367,6 +367,7 @@ export const Timeline = (props: Props) => {
 							pr={pr}
 							setIsLoadingMessage={setIsLoadingMessage}
 							node={note}
+							parentId={note.discussion?.id}
 							nodeType="ROOT_COMMENT"
 							viewerCanDelete={note.state === "PENDING"}
 							setEdit={setEditingComment}

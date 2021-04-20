@@ -286,7 +286,7 @@ export function reduceProviderPullRequests(
 										_ => _ !== "discussion" && _ !== "id"
 									);
 									for (const k of keys) {
-										note[k] = directive.data[k];
+										(note as any)[k] = directive.data[k];
 									}
 								}
 								// typescript is killing me here...
@@ -304,7 +304,7 @@ export function reduceProviderPullRequests(
 											_ => _ !== "discussion" && _ !== "id"
 										);
 										for (const k of keys) {
-											reply[k] = directive.data[k];
+											(reply as any)[k] = directive.data[k];
 										}
 									}
 								}
@@ -319,13 +319,13 @@ export function reduceProviderPullRequests(
 												let existingNote = node.notes.nodes.find(_ => _.id === note.id);
 												if (existingNote) {
 													for (const k in note) {
-														existingNote[k] = note[k];
+														(existingNote as any)[k] = note[k];
 													}
 												}
 											}
 										}
 									} else {
-										node[key] = directive.data[key];
+										(node as any)[key] = directive.data[key];
 									}
 								}
 							}
@@ -341,6 +341,12 @@ export function reduceProviderPullRequests(
 									(pr as any)[key] = directive.data[key];
 								}
 							}
+						} else if (directive.type === "updateReviewCommentsCount") {
+							// ensure no negatives
+							pr.userDiscussionsCount = Math.max(
+								(pr.userDiscussionsCount || 0) + directive.data,
+								0
+							);
 						} else if (directive.type === "updateReviewers") {
 							if (pr.reviewers && pr.reviewers.nodes) {
 								if (pr.reviewers && !pr.reviewers.nodes) {
