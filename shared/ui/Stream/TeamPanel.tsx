@@ -529,7 +529,7 @@ class TeamPanel extends React.Component<Props, State> {
 		const premium = userTeams.find(
 			team =>
 				team.id === teamId &&
-				(team.plan === "BUSINESS" || team.plan === "ENTERPRISE" || timeDiff <= 1209600000)
+				((team.plan !== "FREEPLAN" && team.plan !== "BUSINESS_EXPIRED") || timeDiff <= 1209600000)
 		);
 
 		if (!xrayEnabled) return null;
