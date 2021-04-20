@@ -853,7 +853,7 @@ export const PullRequestConversationTab = (props: {
 						<PRAction>
 							Add more commits by pushing to the <PRBranch>{pr.headRefName}</PRBranch> branch on{" "}
 							<PRBranch>
-								{ghRepo.repoOwner}/{ghRepo.repoName}
+								{pr.headRepositoryOwner.login}/{pr.headRepository.name}
 							</PRBranch>
 							.
 						</PRAction>
