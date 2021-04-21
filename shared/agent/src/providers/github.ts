@@ -628,13 +628,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 			const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
 			do {
-				Logger.warn(`FIND THIS MESSAGE`);
-				Logger.warn(JSON.stringify(request));
-				Logger.warn(request.pullRequestId);
-				Logger.warn(repoOwner);
-				Logger.warn(repoName);
-				// Logger.warn(JSON.stringify(timelineQueryResponse));
-
 				timelineQueryResponse = await this.pullRequestTimelineQuery(
 					repoOwner,
 					repoName,
@@ -4309,8 +4302,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				pullRequestNumber: pullRequestNumber,
 				cursor: cursor
 			})) as FetchThirdPartyPullRequestResponse;
-			Logger.warn(JSON.stringify(response));
-			Logger.warn("RESPONSE ABOVE^^^");
 			if (response.rateLimit) {
 				this._prTimelineQueryRateLimit = {
 					cost: response.rateLimit.cost,
