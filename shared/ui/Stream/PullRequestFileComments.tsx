@@ -124,7 +124,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 			});
 		}
 		return map;
-	}, [pr]);
+	}, [pr, pr?.updatedAt]);
 
 	if (!filename) return null;
 
