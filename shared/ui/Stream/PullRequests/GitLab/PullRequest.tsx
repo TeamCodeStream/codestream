@@ -417,7 +417,13 @@ export const PullRequest = () => {
 					derivedState.currentPullRequest &&
 					derivedState.currentPullRequestLastUpdated &&
 					response &&
-					response.updatedAt !== derivedState.currentPullRequestLastUpdated
+					response.updatedAt &&
+					derivedState.currentPullRequestLastUpdated &&
+					// if more than 5 seconds "off""
+					(Date.parse(response.updatedAt) -
+						Date.parse(derivedState.currentPullRequestLastUpdated)) /
+						1000 >
+						5
 				) {
 					console.warn(
 						"getPullRequestLastUpdated is updating",
