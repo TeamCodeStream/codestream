@@ -3511,7 +3511,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 				let nodeIndex = 0;
 				let nodeRemoveIndex = -1;
-				let pseudoGoto = false;
 				for (const node of pr.discussions.nodes) {
 					if (node.id === directive.data.id) {
 						// is an outer node
@@ -3519,28 +3518,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						break;
 					}
 					if (node.notes && node.notes.nodes.length) {
-						let noteIndex = 0;
-						for (const note of node.notes.nodes) {
-							if (note.id === directive.data.id) {
-								// if this is the first note, nuke all the replies too
-								// by removing the parent node
-								if (noteIndex === 0) {
-									nodeRemoveIndex = nodeIndex;
-									pseudoGoto = true;
-									break;
-								} else {
-									node.notes.nodes.splice(noteIndex, 1);
-									pseudoGoto = true;
-									break;
-								}
+						node.notes.nodes = node.notes.nodes.filter(_ => _.id !== directive.data.id);
+						for (const notesWithReplies of node.notes.nodes) {
+							if (notesWithReplies.replies) {
+								notesWithReplies.replies = notesWithReplies.replies.filter(
+									_ => _.id !== directive.data.id
+								);
 							}
-							noteIndex++;
 						}
 					}
 
-					if (pseudoGoto) {
-						break;
-					}
 					nodeIndex++;
 				}
 				if (nodeRemoveIndex > -1) {
