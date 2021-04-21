@@ -268,8 +268,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							this._queryLogger.graphQlApi.fns[functionName] = existing;
 						}
 					}
-					if (response.rateLimit.remaining < 200) {
-						Logger.warn(`${this.providerConfig.id} rateLimit low`);
+
+					if (response.rateLimit.remaining < 500) {
+						Logger.warn(`${this.providerConfig.id} rateLimit low ${response.rateLimit.remaining}`);
 						Logger.warn(JSON.stringify(this._queryLogger, null, 4));
 					}
 				}
