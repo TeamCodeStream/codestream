@@ -1733,37 +1733,49 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		const existingReviewComments = await this.gitLabReviewStore.get(
 			new GitLabId(projectFullPath, iid)
 		);
+		let directives: Directive[] = [];
 		if (existingReviewComments?.comments?.length) {
 			for (const comment of existingReviewComments.comments) {
 				try {
-					await this.createPullRequestInlineComment({
-						...comment,
-						pullRequestId: request.pullRequestId
+					directives.push({
+						type: "removeNode",
+						data: {
+							id: comment.id
+						}
 					});
+					directives = directives.concat(
+						(
+							await this.createPullRequestInlineComment({
+								...comment,
+								pullRequestId: request.pullRequestId
+							})
+						)?.directives
+					);
 				} catch (ex) {
 					Logger.warn(ex, "Failed to add commit");
 				}
 			}
 			await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
-		}
-
-		if (request.text) {
-			await this.createPullRequestComment({
-				pullRequestId: request.pullRequestId,
-				text: request.text,
-				noteableId: id
+			directives.push({
+				type: "removePendingReview",
+				data: null
 			});
 		}
 
+		if (request.text) {
+			directives = directives.concat(
+				(
+					await this.createPullRequestComment({
+						pullRequestId: request.pullRequestId,
+						text: request.text,
+						noteableId: id
+					})
+				)?.directives
+			);
+		}
+
 		return this.handleResponse(request.pullRequestId, {
-			directives: [
-				{
-					type: "updatePullRequest",
-					data: {
-						updatedAt: Dates.toUtcIsoNow()
-					}
-				}
-			]
+			directives: directives
 		});
 	}
 
