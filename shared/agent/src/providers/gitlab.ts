@@ -38,9 +38,9 @@ import {
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { log, lspProvider, Strings } from "../system";
+import { log, lspProvider, Dates, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
-import { Directives } from "./directives";
+import { Directive, Directives } from "./directives";
 import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
 import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
@@ -58,17 +58,6 @@ import {
 	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase
 } from "./provider";
-import { Directive, Directives } from "./directives";
-import { CodeStreamSession } from "../session";
-import { print } from "graphql";
-import mergeRequest0Query from "./gitlab/mergeRequest0.graphql";
-import mergeRequest1Query from "./gitlab/mergeRequest1.graphql";
-import mergeRequestDiscussionQuery from "./gitlab/mergeRequestDiscussions.graphql";
-import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
-import { merge } from "lodash";
-import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
-import { gate } from "../system/decorators/gate";
-import { parsePatch } from "diff";
 
 interface GitLabProject {
 	path_with_namespace: any;
