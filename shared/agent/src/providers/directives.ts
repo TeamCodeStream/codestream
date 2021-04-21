@@ -4,6 +4,7 @@ export interface Directive {
 		| "addLegacyCommentReply"
 		| "addNode"
 		| "addNodes"
+		| "addPendingReview"
 		| "addReaction"
 		| "addReply"
 		| "addReview"

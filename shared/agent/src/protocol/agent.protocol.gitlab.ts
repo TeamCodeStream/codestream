@@ -310,7 +310,7 @@ export interface GitLabMergeRequest {
 		this is a computed property */
 		webUrl?: string;
 	};
-	pendingReview: {
+	pendingReview?: {
 		id: string;
 		author: {
 			login: string;

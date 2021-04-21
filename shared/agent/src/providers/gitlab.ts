@@ -1592,7 +1592,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getPullRequestReviewId(request: { pullRequestId: string }): Promise<boolean | undefined> {
 		const { iid, projectFullPath } = this.parseId(request.pullRequestId);
-		const exists = this.gitLabReviewStore.exists(new GitLabId(projectFullPath, iid));
+		const exists = await this.gitLabReviewStore.exists(new GitLabId(projectFullPath, iid));
 		return exists;
 	}
 
@@ -1607,8 +1607,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		leftSha?: string;
 		sha?: string;
 	}) {
-		const result = await this.createPullRequestReviewComment(request);
-		return result;
+		return this.createPullRequestReviewComment(request);
 	}
 
 	@log()
@@ -1664,7 +1663,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			request: request
 		});
 
-		this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
+		await this.gitLabReviewStore.add(new GitLabId(projectFullPath, iid), {
 			...request,
 			createdAt: new Date().toISOString()
 		});
@@ -1682,13 +1681,26 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		];
 		const pendingReview = await this.gitLabReviewStore.get(new GitLabId(projectFullPath, iid));
-		if (pendingReview) {
+		if (pendingReview?.comments?.length) {
 			const currentUser = await this.getCurrentUser();
 			directives.push({
 				type: "addNodes",
 				data: pendingReview.comments.map(_ => {
 					return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
 				})
+			});
+			const commentsAsDiscussionNodes = pendingReview.comments.map(_ => {
+				return this.gitLabReviewStore.mapToDiscussionNode(_, currentUser);
+			});
+			directives.push({
+				type: "addPendingReview",
+				data: {
+					id: "undefined",
+					author: commentsAsDiscussionNodes[0].notes?.nodes[0].author!,
+					comments: {
+						totalCount: pendingReview.comments.length
+					}
+				}
 			});
 		}
 
@@ -3061,8 +3073,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}): Promise<any> {
 		const { id, iid, projectFullPath } = this.parseId(request.pullRequestId);
 
-		await this.gitLabReviewStore.deleteReview(new GitLabId(projectFullPath, iid));
-
+		const gid = new GitLabId(projectFullPath, iid);
+		const review = await this.gitLabReviewStore.get(gid);
 		const directives: Directives = {
 			directives: [
 				{
@@ -3083,6 +3095,24 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			]
 		};
+		if (review?.comments) {
+			review.comments.forEach(_ => {
+				directives.directives.push(
+					{
+						type: "removeNode",
+						data: {
+							id: _.id
+						}
+					},
+					{
+						type: "updateReviewCommentsCount",
+						data: -1
+					}
+				);
+			});
+		}
+		await this.gitLabReviewStore.deleteReview(gid);
+
 		this.updateCache(request.pullRequestId, directives);
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: id
@@ -3410,6 +3440,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			return;
 		}
 		for (const directive of directives.directives) {
+			/**
+			 *
+			 *  KEEP THIS IN SYNC WITH providerPullReqests/reducer.ts
+			 *
+			 */
 			if (directive.type === "addApprovedBy") {
 				if (pr.approvedBy) {
 					for (const d of directive.data) {
@@ -3442,6 +3477,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						pr.discussions.nodes.push(d);
 					}
 				}
+			} else if (directive.type === "addPendingReview") {
+				if (!directive.data) continue;
+				pr.pendingReview = directive.data;
+			} else if (directive.type === "removePendingReview") {
+				pr.pendingReview = undefined;
 			} else if (directive.type === "addReaction") {
 				const reaction = pr.reactionGroups.find(_ => _.content === directive.data.name);
 				if (reaction) {
@@ -3456,7 +3496,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				if (discussionNode) {
 					const firstNode = discussionNode?.notes?.nodes[0];
 					if (firstNode) {
-						const replies = firstNode.replies;
 						if (firstNode.replies == null) {
 							firstNode.replies = [directive.data];
 						} else if (!firstNode.replies.find(_ => _.id === directive.data.id)) {
@@ -3571,7 +3610,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					}
 				}
 			} else if (directive.type === "updateReviewCommentsCount") {
-				pr.userDiscussionsCount = (pr.userDiscussionsCount || 0) + directive.data;
+				// ensure no negatives
+				pr.userDiscussionsCount = Math.max((pr.userDiscussionsCount || 0) + directive.data, 0);
 			} else if (directive.type === "updateReviewers") {
 				if (pr.reviewers && pr.reviewers.nodes) {
 					if (pr.reviewers && !pr.reviewers.nodes) {

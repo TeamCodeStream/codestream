@@ -211,6 +211,11 @@ export function reduceProviderPullRequests(
 									pr.discussions.nodes.push(d);
 								}
 							}
+						} else if (directive.type === "addPendingReview") {
+							if (!directive.data) continue;
+							pr.pendingReview = directive.data;
+						} else if (directive.type === "removePendingReview") {
+							pr.pendingReview = undefined;
 						} else if (directive.type === "addReaction") {
 							const reaction = pr.reactionGroups.find(_ => _.content === directive.data.name);
 							if (reaction) {
@@ -225,7 +230,6 @@ export function reduceProviderPullRequests(
 							if (discussionNode) {
 								const firstNode = discussionNode?.notes?.nodes[0];
 								if (firstNode) {
-									const replies = firstNode.replies;
 									if (firstNode.replies == null) {
 										firstNode.replies = [directive.data];
 									} else if (!firstNode.replies.find(_ => _.id === directive.data.id)) {
@@ -485,6 +489,9 @@ export function reduceProviderPullRequests(
 							}
 						} else if (directive.type === "removePendingReview") {
 							pr.pendingReview = undefined;
+						} else if (directive.type === "addPendingReview") {
+							if (!directive.data) continue;
+							pr.pendingReview = directive.data;
 						} else if (directive.type === "addReview") {
 							if (!directive.data) continue;
 							if (pr.reviews.nodes.find(_ => _.id === directive.data.id) == null) {

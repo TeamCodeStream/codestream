@@ -15,7 +15,7 @@ export const PullRequestFinishReview = (props: {
 		| {
 				providerId: string;
 				viewerDidAuthor: boolean;
-				pendingReview: {
+				pendingReview?: {
 					id: string;
 					author: {
 						login: string;
