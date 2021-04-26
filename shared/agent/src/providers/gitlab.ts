@@ -1387,7 +1387,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			);
 
 			response.project.mergeRequest.supports = this.graphqlQueryBuilder.getOrCreateSupportMatrix(
-				"GetPullRequest",
 				providerVersion
 			);
 

@@ -63,47 +63,38 @@ export class GraphqlQueryBuilder {
 	 */
 	constructor(private providerId: string) {}
 
-	private versionMatrix: any = {
-		"0.0.0": {
-			emptyQueryName: {}
-		}
+	private supportMatrix: any = {
+		"0.0.0": {}
 	};
 
-	getOrCreateSupportMatrix(
-		queryKey: "GetPullRequest" | "GetPullRequest1" | "GetMergeRequestDiscussions",
-		providerVersion: ProviderVersion
-	): any {
+	getOrCreateSupportMatrix(providerVersion: ProviderVersion): any {
 		const version = providerVersion.version;
-		if (!version || version === "0.0.0") return {};
-
-		const versionedQuery = this.versionMatrix[version];
-		if (versionedQuery) {
-			const keyedQuery = versionedQuery[queryKey];
-			if (keyedQuery) {
-				Logger.debug(
-					`GraphqlQueryStore.getOrCreateSupportMatrix ${this.providerId} version=${version} cache hit`
-				);
-				return keyedQuery;
-			}
-		}
-
-		let supports = {};
-		if (queryKey === "GetPullRequest") {
-			const isGte1380 = semver.gte(version, "13.8.0");
-			const isGte1364 = semver.gte(version, "13.6.4");
-			supports = {
-				version: providerVersion,
-				reviewers: isGte1380,
-				resolvingNotes: isGte1364,
-				// approvalsRequired: isGte1380,
-				approvals: isGte1364,
-				approvedBy: isGte1364,
-				currentUserTodos: isGte1364
+		if (!version || version === "0.0.0")
+			return {
+				version: providerVersion
 			};
+
+		const versionedQuery = this.supportMatrix[version];
+		if (versionedQuery) {
+			Logger.debug(
+				`GraphqlQueryBuilder.getOrCreateSupportMatrix ${this.providerId} version=${version} cache hit`
+			);
+			return versionedQuery;
 		}
 
-		this.versionMatrix[version] = this.versionMatrix[version] || {};
-		this.versionMatrix[version][queryKey] = supports;
+		const isGte1380 = semver.gte(version, "13.8.0");
+		const isGte1364 = semver.gte(version, "13.6.4");
+
+		const supports = {
+			version: providerVersion,
+			reviewers: isGte1380,
+			resolvingNotes: isGte1364,
+			// approvalsRequired: isGte1380,
+			approvals: isGte1364,
+			approvedBy: isGte1364,
+			currentUserTodos: isGte1364
+		};
+		this.supportMatrix[version] = supports;
 
 		return supports;
 	}
