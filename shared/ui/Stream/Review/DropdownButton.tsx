@@ -9,20 +9,22 @@ import { mapFilter } from "@codestream/webview/utils";
 // [The <Menu/> should appear below the caret button as if they are connected -this part is done now -Pez]
 // The api for consumers could probably be better, but it's only used in the review component for now
 
+export interface DropdownButtonItems {
+	label: any;
+	key?: string;
+	action?: (range?: any) => void;
+	buttonAction?: () => void;
+	noHover?: boolean;
+	disabled?: boolean;
+	submenu?: any[];
+	subtext?: any;
+	icon?: any;
+	checked?: boolean;
+	onSelect?: () => void; // callback for when you select an item with a splitDropdown
+}
+
 export interface DropdownButtonProps extends ButtonProps {
-	items: {
-		label: any;
-		key?: string;
-		action?: (range?: any) => void;
-		buttonAction?: () => void;
-		noHover?: boolean;
-		disabled?: boolean;
-		submenu?: any[];
-		subtext?: any;
-		icon?: any;
-		checked?: boolean;
-		onSelect?: () => void; // callback for when you select an item with a splitDropdown
-	}[];
+	items: DropdownButtonItems[];
 	title?: string;
 	spread?: boolean;
 	splitDropdown?: boolean;
