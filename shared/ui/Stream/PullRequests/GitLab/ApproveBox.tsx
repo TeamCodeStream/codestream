@@ -6,13 +6,12 @@ import { OutlineBox, FlexRow } from "./PullRequest";
 import { api } from "../../../store/providerPullRequests/actions";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import Tooltip from "../../Tooltip";
-import { Link } from "../../Link";
 import { GitLabMergeRequest } from "@codestream/protocols/agent";
 
 export const ApproveBox = (props: { pr: GitLabMergeRequest }) => {
 	const dispatch = useDispatch();
 
-	if (!props.pr.userPermissions?.canApprove) return null;
+	if (!props.pr.userPermissions?.canApprove || !props.pr.supports.approvals) return null;
 
 	const [isLoading, setIsLoading] = useState(false);
 	const onApproveClick = async (e: React.MouseEvent<Element, MouseEvent>, approve: boolean) => {

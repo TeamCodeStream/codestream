@@ -16,7 +16,7 @@ import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
-import { DropdownButton } from "./Review/DropdownButton";
+import { DropdownButton, DropdownButtonItems } from "./Review/DropdownButton";
 import { CodeStreamState } from "../store";
 import { getPRLabel } from "../store/providers/reducer";
 
@@ -111,6 +111,43 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	};
 
 	const [commentType, setCommentType] = useState("comment");
+	const isGitLab = pr.providerId.includes("gitlab");
+	const commentItems: DropdownButtonItems[] = [];
+	if (isGitLab) {
+		commentItems.push({
+			label: "Comment",
+			key: "comment",
+			checked: commentType === "comment",
+			subtext: (
+				<span>
+					Add a general comment
+					<br />
+					to this merge request.
+				</span>
+			),
+			onSelect: () => setCommentType("comment"),
+			action: () => onCommentClick()
+		});
+
+		if (pr.supports?.resolvingNotes) {
+			commentItems.push({ label: "-" });
+			commentItems.push({
+				label: "Start thread",
+				key: "thread",
+				checked: commentType === "thread",
+				subtext: (
+					<span>
+						Discuss a specific suggestion or
+						<br />
+						question that needs to be resolved.
+					</span>
+				),
+				onSelect: () => setCommentType("thread"),
+				action: () => onCommentClick()
+			});
+		}
+	}
+
 	const submitButton = (
 		<Tooltip
 			title={
@@ -125,44 +162,14 @@ export const PullRequestBottomComment = styled((props: Props) => {
 			delay={1}
 			key="submit-tt"
 		>
-			{pr.providerId.includes("gitlab") ? (
+			{isGitLab && commentItems.length > 1 ? (
 				<DropdownButton
 					key="gitlab-dd"
 					isLoading={isLoadingComment}
 					disabled={!text}
 					splitDropdown
 					selectedKey={commentType}
-					items={[
-						{
-							label: "Comment",
-							key: "comment",
-							checked: commentType === "comment",
-							subtext: (
-								<span>
-									Add a general comment
-									<br />
-									to this merge request.
-								</span>
-							),
-							onSelect: () => setCommentType("comment"),
-							action: () => onCommentClick()
-						},
-						{ label: "-" },
-						{
-							label: "Start thread",
-							key: "thread",
-							checked: commentType === "thread",
-							subtext: (
-								<span>
-									Discuss a specific suggestion or
-									<br />
-									question that needs to be resolved.
-								</span>
-							),
-							onSelect: () => setCommentType("thread"),
-							action: () => onCommentClick()
-						}
-					]}
+					items={commentItems}
 				>
 					Comment
 				</DropdownButton>
@@ -225,8 +232,6 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		pr.state.toLowerCase() === "closed"
 			? [reopenButton, spacer, submitButton]
 			: [closeButton, spacer, submitButton];
-
-	const isGitLab = pr.providerId.includes("gitlab");
 
 	return (
 		<PRComment className={props.className}>

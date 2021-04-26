@@ -22,17 +22,9 @@ query GetPullRequest($fullPath: ID!, $iid: String!) {
 					tooltip
 				}
 			}
-			assignees(last: 100) {
-				nodes {
-					id
-					name
-					login: username
-					avatarUrl
-				}
-			}
+
 			participants(last: 100) {
 				nodes {
-					id
 					name
 					login: username
 					avatarUrl

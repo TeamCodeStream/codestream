@@ -351,7 +351,7 @@ export const Timeline = (props: Props) => {
 							node={note}
 							isPending={note.state === "PENDING"}
 						/>
-						{isResolvable && (
+						{isResolvable && pr.supports?.resolvingNotes && (
 							<Icon
 								name={resolvingNote === note.discussion.id ? "sync" : "check-circle"}
 								className={`clickable ${resolvingNote === note.discussion.id ? "spin" : ""} ${
@@ -607,7 +607,8 @@ export const Timeline = (props: Props) => {
 										__onDidRender(functions, note.id);
 									}}
 								/>
-								{note.resolved && (
+
+								{pr.supports?.resolvingNotes && note.resolved && (
 									<Button
 										variant="secondary"
 										onClick={() => resolveNote(note.discussion.id, false)}
@@ -616,7 +617,7 @@ export const Timeline = (props: Props) => {
 										Unresolve<span className="wide-text"> thread</span>
 									</Button>
 								)}
-								{!note.resolved && (
+								{pr.supports?.resolvingNotes && !note.resolved && (
 									<MultiButton>
 										<Button
 											variant="secondary"

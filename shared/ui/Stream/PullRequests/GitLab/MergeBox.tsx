@@ -122,7 +122,7 @@ export const MergeBox = props => {
 				<FlexRow>
 					<Icon name="check-circle" className="bigger green-color" />
 					<div className="pad-left">
-						Merged at <Timestamp time={derivedState.pr.mergedAt} />
+						Merged at <Timestamp time={derivedState.pr.mergedAt!} />
 					</div>
 				</FlexRow>
 			</OutlineBox>
