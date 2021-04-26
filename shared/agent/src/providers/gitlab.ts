@@ -965,23 +965,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 		let response;
 		try {
-			response = await (await this.client()).request<any>(query, variables);
+			response = await (await this.client()).rawRequest<any>(query, variables);
 		} catch (ex) {
-			Logger.warn("GitLab query caught:", ex);
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
+				Logger.warn("GitLab query caught:", ex);
 				if (exType !== ReportSuppressedMessages.NetworkError) {
 					this.trySetThirdPartyProviderInfo(ex, exType);
 				}
 				// this throws the error but won't log to sentry (for ordinary network errors that seem temporary)
 				throw new InternalError(exType, { error: ex });
 			} else {
+				Logger.warn("GitLab query error:", {
+					error: ex
+				});
+
+				if (ex.response?.data) {
+					return ex.response.data as T;
+				}
 				// this is an unexpected error, throw the exception normally
 				throw ex;
 			}
 		}
 
-		return response as T;
+		return response.data as T;
 	}
 
 	async mutate<T>(query: string, variables: any = undefined) {

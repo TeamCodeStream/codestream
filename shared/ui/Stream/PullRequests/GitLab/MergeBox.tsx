@@ -98,7 +98,6 @@ export const MergeBox = props => {
 	};
 
 	const cancelMergeWhenPipelineSucceeds = async (e: any) => {
-		//setIsLoadingMessage("Merging...");
 		dispatch(api("cancelMergeWhenPipelineSucceeds", {}));
 	};
 
@@ -130,10 +129,29 @@ export const MergeBox = props => {
 		);
 	}
 
-	if (
-		derivedState.pr &&
-		(!derivedState.pr.userPermissions || !derivedState.pr.userPermissions.canMerge)
-	) {
+	if (!props.pr.diffRefs || !props.pr.diffRefs.headSha) {
+		return (
+			<OutlineBox>
+				<FlexRow>
+					<Icon name="alert" className="bigger" />
+					<Button className="action-button" variant="secondary" disabled>
+						Merge
+					</Button>
+					<div className="pad-left">
+						Source branch does not exist. Please restore it or use a different source branch{" "}
+						<Tooltip
+							title="If the source branch exists in your local repository, you can merge this merge request manually using the command line"
+							placement="top"
+						>
+							<Icon name="question" placement="top" />
+						</Tooltip>
+					</div>
+				</FlexRow>
+			</OutlineBox>
+		);
+	}
+
+	if (derivedState.pr?.userPermissions?.canMerge === false) {
 		return (
 			<OutlineBox>
 				<FlexRow>
