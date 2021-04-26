@@ -564,7 +564,7 @@ export const PullRequest = () => {
 			);
 		}
 		return false;
-	}, [pr]);
+	}, [pr, pr?.updatedAt]);
 
 	const breakpoints = {
 		auto: "630px",
