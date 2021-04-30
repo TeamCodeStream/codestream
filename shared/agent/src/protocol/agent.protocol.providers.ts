@@ -472,6 +472,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 	headRepository?: {
 		isFork: boolean;
 		name: string;
+		url: string;
 	};
 	headRefOid: string;
 	labels: {

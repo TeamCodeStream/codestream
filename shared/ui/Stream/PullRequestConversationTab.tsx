@@ -857,13 +857,15 @@ export const PullRequestConversationTab = (props: {
 				{!pr.merged && pr.mergeable === "MERGEABLE" && pr.state !== "CLOSED" && (
 					<PRTimelineItem>
 						<PRAction>
-							Add more commits by pushing to the <PRBranch>{pr.headRefName}</PRBranch> branch{" "}
+							Add more commits by pushing to the <Link href={`${pr.headRepository?.url}/tree/${encodeURIComponent(pr.headRefName)}`}><PRBranch>{pr.headRefName}</PRBranch></Link> branch{" "}
 							{pr.headRepositoryOwner?.login && pr.headRepository?.name && (
 								<>
 									on{" "}
+									<Link href={pr.headRepository?.url}>
 									<PRBranch>
 										{pr.headRepositoryOwner.login}/{pr.headRepository.name}
 									</PRBranch>
+									</Link>
 								</>
 							)}
 							.

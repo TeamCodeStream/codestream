@@ -5070,6 +5070,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					headRepository {
 						isFork
 						name
+						url
 					}
 					headRefOid
 					labels(first: 10) {

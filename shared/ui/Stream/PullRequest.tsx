@@ -695,7 +695,7 @@ export const PullRequest = () => {
 										</PRBranch>
 									</Link>
 									{" from "}
-									<Link href={`${pr.repoUrl}/tree/${pr.headRefName}`}>
+									<Link href={`${pr.headRepository?.url}/tree/${encodeURIComponent(pr.headRefName)}`}>
 										<PRBranch>{pr.headRefName}</PRBranch>
 									</Link>{" "}
 									<Icon
