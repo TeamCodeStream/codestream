@@ -17,6 +17,7 @@ import { CodeStreamState } from "../store";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { getPRLabel } from "../store/providers/reducer";
+import { FormattedMessage } from "react-intl";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -67,6 +68,24 @@ export function ConfigurePullRequestQuery(props: Props) {
 	const [providerIdField, setProviderIdField] = React.useState(defaultProviderId);
 	const [nameField, setNameField] = React.useState(query.name);
 	const [queryField, setQueryField] = React.useState(query.query);
+	const [validQueries, setValidQueries] = React.useState(
+		new Set([
+			"user",
+			"org",
+			"repo",
+			"author",
+			"assignee",
+			"mentions",
+			"team",
+			"commenter",
+			"involves",
+			"reviewed-by",
+			"review-requested",
+			"team-review-requested",
+			"project"
+		])
+	);
+	const [validQuery, setValidQuery] = React.useState(true);
 	const [testPRSummaries, setTestPRSummaries] = React.useState<
 		GetMyPullRequestsResponse[] | undefined
 	>(undefined);
@@ -99,23 +118,38 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
+	const isValidQuery = query => {
+		// Verify if valid query
+		const queryStr = query.replace(/:/g, " ").split(/\s+/);
+		for (let word of queryStr) {
+			if (validQueries.has(word)) {
+				setValidQuery(true);
+				return true;
+			}
+		}
+		setValidQuery(false);
+		return false;
+	};
+
 	const fetchTestPRs = async query => {
-		setIsLoading(true);
-		setTestPRSummaries(undefined);
-		try {
-			// FIXME hardcoded github
-			const response: any = await dispatch(
-				getMyPullRequests(providerIdField, [query], props.openReposOnly, { force: true }, true)
-			);
-			if (response && response.length) {
-				setTestPRSummaries(response[0]);
+		if (isValidQuery(query)) {
+			setIsLoading(true);
+			setTestPRSummaries(undefined);
+			try {
+				// FIXME hardcoded github
+				const response: any = await dispatch(
+					getMyPullRequests(providerIdField, [query], props.openReposOnly, { force: true }, true)
+				);
+				if (response && response.length) {
+					setTestPRSummaries(response[0]);
+				}
+			} catch (ex) {
+				if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
+					// show message about re-authing?
+				}
+			} finally {
+				setIsLoading(false);
 			}
-		} catch (ex) {
-			if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
-				// show message about re-authing?
-			}
-		} finally {
-			setIsLoading(false);
 		}
 	};
 
@@ -164,6 +198,16 @@ export function ConfigurePullRequestQuery(props: Props) {
 									}}
 								/>
 								<div style={{ height: "10px" }} />
+								{!validQuery && (
+									<ErrorMessage>
+										<small className="error-message">
+											Missing required qualifier.{" "}
+											<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+												Learn more.
+											</Link>
+										</small>
+									</ErrorMessage>
+								)}
 								<input
 									placeholder="Query"
 									name="query"
@@ -199,7 +243,9 @@ export function ConfigurePullRequestQuery(props: Props) {
 							</Button>
 							<Button
 								disabled={queryField.length === 0}
-								onClick={() => props.save(providerIdField, nameField, queryField)}
+								onClick={() => {
+									if (isValidQuery(queryField)) props.save(providerIdField, nameField, queryField);
+								}}
 							>
 								Save Query
 							</Button>
@@ -246,3 +292,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 		</Modal>
 	);
 }
+
+const ErrorMessage = styled.div`
+	text-align: right;
+`;
