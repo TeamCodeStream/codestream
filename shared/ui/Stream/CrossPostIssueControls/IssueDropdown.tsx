@@ -42,6 +42,7 @@ import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/compone
 import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
 import { Link } from "../Link";
+import { ErrorMessage } from "../ConfigurePullRequestQuery";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -446,6 +447,24 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
 	const [loadingTest, setLoadingTest] = React.useState(false);
 	const [startWorkCard, setStartWorkCard] = React.useState<any>(undefined);
+	const [validQueries, setValidQueries] = React.useState(
+		new Set([
+			"user",
+			"org",
+			"repo",
+			"author",
+			"assignee",
+			"mentions",
+			"team",
+			"commenter",
+			"involves",
+			"reviewed-by",
+			"review-requested",
+			"team-review-requested",
+			"project"
+		])
+	);
+	const [validQuery, setValidQuery] = React.useState(true);
 
 	const getFilterLists = (providerId: string) => {
 		const prefs = derivedState.startWorkPreferences[providerId] || {};
@@ -861,28 +880,45 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		return items;
 	}, [loadedCards, derivedState.startWorkPreferences]);
 
-	const saveCustomFilter = () => {
-		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
-		setPreference(id, "filterCustom", {
-			filters: {
-				[newCustomFilter]: newCustomFilterName || newCustomFilter
-			},
-			selected: newCustomFilter
-		});
-		setLoadedBoards(loadedBoards + 1);
-		setAddingCustomFilterForProvider(undefined);
+	const saveCustomFilter = query => {
+		if (isValidQuery(query)) {
+			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
+			setPreference(id, "filterCustom", {
+				filters: {
+					[newCustomFilter]: newCustomFilterName || newCustomFilter
+				},
+				selected: newCustomFilter
+			});
+			setLoadedBoards(loadedBoards + 1);
+			setAddingCustomFilterForProvider(undefined);
+		}
 	};
 
-	const testCustomFilter = async () => {
-		setTestCards(undefined);
-		setLoadingTest(true);
-		const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
-		const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-			customFilter: newCustomFilter,
-			providerId: id
-		});
-		setLoadingTest(false);
-		setTestCards(response.cards || ([] as any));
+	const isValidQuery = query => {
+		// Verify if valid query
+		const queryStr = query.replace(/:/g, " ").split(/\s+/);
+		for (let word of queryStr) {
+			if (validQueries.has(word)) {
+				setValidQuery(true);
+				return true;
+			}
+		}
+		setValidQuery(false);
+		return false;
+	};
+
+	const testCustomFilter = async query => {
+		if (isValidQuery(query)) {
+			setTestCards(undefined);
+			setLoadingTest(true);
+			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
+			const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+				customFilter: newCustomFilter,
+				providerId: id
+			});
+			setLoadingTest(false);
+			setTestCards(response.cards || ([] as any));
+		}
 	};
 
 	const firstLoad = cards.length == 0 && isLoading;
@@ -896,6 +932,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		);
 
 	const closeCustomFilter = () => {
+		setValidQuery(true);
 		setAddingCustomFilterForProvider(undefined);
 		setNewCustomFilter("");
 		setNewCustomFilterName("");
@@ -909,6 +946,16 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				<Dialog title="Create a Custom Filter" onClose={closeCustomFilter}>
 					<form className="standard-form">
 						<fieldset className="form-body">
+							{!validQuery && (
+								<ErrorMessage>
+									<small className="error-message">
+										Missing required qualifier.{" "}
+										<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+											Learn more.
+										</Link>
+									</small>
+								</ErrorMessage>
+							)}
 							<input
 								type="text"
 								className="input-text control"
@@ -932,11 +979,14 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									disabled={newCustomFilter.length == 0}
 									variant="secondary"
 									isLoading={loadingTest}
-									onClick={testCustomFilter}
+									onClick={() => testCustomFilter(newCustomFilter)}
 								>
 									&nbsp;&nbsp;&nbsp;&nbsp;Test&nbsp;&nbsp;&nbsp;&nbsp;
 								</Button>
-								<Button disabled={newCustomFilter.length == 0} onClick={saveCustomFilter}>
+								<Button
+									disabled={newCustomFilter.length == 0}
+									onClick={() => saveCustomFilter(newCustomFilter)}
+								>
 									&nbsp;&nbsp;&nbsp;&nbsp;Save&nbsp;&nbsp;&nbsp;&nbsp;
 								</Button>
 							</ButtonRow>

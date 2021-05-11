@@ -17,7 +17,6 @@ import { CodeStreamState } from "../store";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { getPRLabel } from "../store/providers/reducer";
-import { FormattedMessage } from "react-intl";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -293,6 +292,6 @@ export function ConfigurePullRequestQuery(props: Props) {
 	);
 }
 
-const ErrorMessage = styled.div`
+export const ErrorMessage = styled.div`
 	text-align: right;
 `;
