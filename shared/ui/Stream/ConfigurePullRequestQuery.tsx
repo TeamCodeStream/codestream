@@ -117,7 +117,11 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
-	const isValidQuery = query => {
+	const isValidQuery = (query, providerName) => {
+		if(!(providerName === "GitHub" || providerName === "GitHub Enterprise")) {
+			setValidQuery(true);
+			return true;
+		}
 		// Verify if valid query
 		const queryStr = query.replace(/:/g, " ").split(/\s+/);
 		for (let word of queryStr) {
@@ -131,7 +135,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 	};
 
 	const fetchTestPRs = async query => {
-		if (isValidQuery(query)) {
+		if (isValidQuery(query, providerDisplayName)) {
 			setIsLoading(true);
 			setTestPRSummaries(undefined);
 			try {
@@ -243,7 +247,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 							<Button
 								disabled={queryField.length === 0}
 								onClick={() => {
-									if (isValidQuery(queryField)) props.save(providerIdField, nameField, queryField);
+									if (isValidQuery(queryField, providerDisplayName)) props.save(providerIdField, nameField, queryField);
 								}}
 							>
 								Save Query

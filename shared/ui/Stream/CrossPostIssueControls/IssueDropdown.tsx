@@ -881,7 +881,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	}, [loadedCards, derivedState.startWorkPreferences]);
 
 	const saveCustomFilter = query => {
-		if (isValidQuery(query)) {
+		if (isValidQuery(query, addingCustomFilterForProvider?.name)) {
 			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
 			setPreference(id, "filterCustom", {
 				filters: {
@@ -894,7 +894,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		}
 	};
 
-	const isValidQuery = query => {
+	const isValidQuery = (query, providerName) => {
+		if(!(providerName === "github" || providerName === "github_enterprise")) {
+			setValidQuery(true);
+			return true;
+		}
 		// Verify if valid query
 		const queryStr = query.replace(/:/g, " ").split(/\s+/);
 		for (let word of queryStr) {
@@ -908,7 +912,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	};
 
 	const testCustomFilter = async query => {
-		if (isValidQuery(query)) {
+		if (isValidQuery(query, addingCustomFilterForProvider?.name)) {
 			setTestCards(undefined);
 			setLoadingTest(true);
 			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
@@ -936,6 +940,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		setAddingCustomFilterForProvider(undefined);
 		setNewCustomFilter("");
 		setNewCustomFilterName("");
+		setTestCards(undefined);
 	};
 
 	const renderCustomFilter = () => {
