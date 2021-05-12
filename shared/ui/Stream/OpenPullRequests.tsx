@@ -378,7 +378,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	useEffect(() => {
 		const disposable = setInterval(() => {
 			fetchPRs(queries, { force: true, alreadyLoading: true }, "interval");
-		}, 120000); // every 2 minutes
+		}, 300000); // every 5 minutes
 
 		return () => {
 			clearInterval(disposable);
