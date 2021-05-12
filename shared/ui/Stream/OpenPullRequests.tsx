@@ -376,6 +376,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [queries]);
 
 	useEffect(() => {
+		const disposable = setInterval(() => {
+			fetchPRs(queries, { force: true, alreadyLoading: true }, "interval");
+		}, 120000); // every 2 minutes
+
+		return () => {
+			clearInterval(disposable);
+		};
+	}, [queries]);
+
+	useEffect(() => {
 		if (!mountedRef.current) return;
 		const newQueries = {
 			...defaultQueries,
