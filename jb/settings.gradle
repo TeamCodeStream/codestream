@@ -5,12 +5,3 @@ buildCache {
         removeUnusedEntriesAfterDays = 7
     }
 }
-
-//sourceControl {
-//    gitRepository("https://github.com/gradle/native-samples-cpp-library.git") {
-//    gitRepository("https://github.com/gtache/intellij-lsp.git") {
-//        producesModule("org.gradle.cpp-samples:utilities")
-//        producesModule("com.github.gtache.lsp:intellij-lsp")
-//        producesModule("com.github.gtache.lsp:intellij-lsp")
-//    }
-//}
