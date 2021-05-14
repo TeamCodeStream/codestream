@@ -1,3 +1,4 @@
+- Has a dependency on PerfView
 - Run Analyze2017.ps1 or Analyze2019.ps1
 - Wait for VS to do something slow
 - press 'Stop collecting' in PerfView
