@@ -431,7 +431,7 @@ export namespace Strings {
 
 	/** converts an absolute file system path to a file uri
 	 * @param  {string} str
-	 * @remarks see https://stackoverflow.com/questions/20619488/how-to-convert-local-file-path-to-a-file-url-safely-in-node-js
+	 * @remarks this code adapted from https://stackoverflow.com/questions/20619488/how-to-convert-local-file-path-to-a-file-url-safely-in-node-js
 	 */
 	export function pathToFileURL(str: string) {
 		/*
