@@ -609,9 +609,8 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		},
 		[loadedBoards, loadedCards]
 	);
-
-	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	
+	const escapeRegExp = (str: string) => str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(query), "gi"), [query]);
 
 	const underlineQ = string => (

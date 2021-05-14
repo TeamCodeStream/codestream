@@ -149,10 +149,9 @@ export default function SearchResult(props: Props) {
 			);
 		}
 	};
-
-	// https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-	function escapeRegExp(string) {
-		return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+	
+	function escapeRegExp(str: string) {
+		return str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	}
 
 	let review: ReviewPlus | undefined = undefined;

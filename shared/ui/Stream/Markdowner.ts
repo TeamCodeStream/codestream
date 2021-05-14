@@ -89,10 +89,7 @@ export const markdownify = (text: string, options?: MarkdownOptions) => {
 	}
 };
 
-//https://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
-const escapeRegExp = (str: string) => {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-};
+const escapeRegExp = (str: string) => str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /*
 	The returned function will markdownify and highlight usernames.
