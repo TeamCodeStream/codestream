@@ -122,7 +122,7 @@ namespace CodeStream.VisualStudio.Services {
 					_eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
 						Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
 						_queueTokenSource?.Cancel();
-						_messageQueue.Clear();
+						_messageQueue.ClearAll();
 						_manualResetEvent.Reset();
 					})
 				};
@@ -147,7 +147,7 @@ namespace CodeStream.VisualStudio.Services {
 									}
 
 									if (_messageQueue.Count > QueueLimit) {
-										_messageQueue.Clear();
+										_messageQueue.ClearAll();
 										_manualResetEvent.Reset();
 #pragma warning disable VSTHRD010
 										ReloadWebView();
