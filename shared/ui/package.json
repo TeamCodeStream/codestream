@@ -6,9 +6,6 @@
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
 		"clean:ci": "git clean -xdf",
-		"test": "jest --verbose",
-		"test-watch": "node --inspect ./node_modules/jest/bin/jest.js --runInBand --verbose --watch",
-		"test-debug": "node --inspect ./node_modules/jest/bin/jest.js --runInBand --verbose",
 		"sb": "start-storybook -p 6006",
 		"build-storybook": "build-storybook"
 	},
@@ -61,7 +58,6 @@
 		"@types/classnames": "2.2.9",
 		"@types/diff": "4.0.2",
 		"@types/emoji-mart": "2.8.4",
-		"@types/jest": "25.2.2",
 		"@types/lodash-es": "4.17.3",
 		"@types/markdown-it": "0.0.8",
 		"@types/node-fetch": "2.3.7",
@@ -80,11 +76,8 @@
 		"@types/uuid": "3.4.5",
 		"babel-loader": "8.0.6",
 		"convert-svg-to-png": "0.5.0",
-		"jest": "26.0.1",
-		"jest-environment-jsdom-fourteen": "1.0.1",
 		"prettier": "1.19.1",
 		"storybook-dark-mode": "^0.1.9",
-		"ts-jest": "25.5.1",
 		"ts-loader": "6.2.0",
 		"typescript": "3.6.4",
 		"yargs": "15.3.1"
