@@ -2,8 +2,7 @@
 param([string] $checkoutDir = $pwd, [string] $assetEnv = "")
 
 # this creates a temporary directory
-# see: https://stackoverflow.com/a/41684596
-$tempDir = (New-TemporaryFile | %{ rm $_; mkdir $_ }).ToString()
+$tempDir = (New-TemporaryFile | ForEach-Object{ Remove-Item $_; mkdir $_ }).ToString()
 Write-Host "Created $($tempDir)"
 $branch = "develop"
 pushd $tempDir
