@@ -25,15 +25,6 @@ const highlightDecorationType = window.createTextEditorDecorationType({
 	backgroundColor: "rgba(127, 127, 127, 0.4)"
 });
 
-declare global {
-	// Workaround for https://stackoverflow.com/questions/56248618/how-to-check-if-an-object-is-a-readonly-array-in-typescript
-	// https://github.com/microsoft/TypeScript/issues/17002
-    interface ArrayConstructor {
-        // eslint-disable-next-line @typescript-eslint/array-type
-        isArray(arg: ReadonlyArray<any> | any): arg is ReadonlyArray<any>;
-    }
-}
-
 export namespace Editor {
 	export function findEditor(uri: Uri, lastActive?: TextEditor): TextEditor | undefined {
 		const normalizedUri = uri.toString(false);
@@ -289,8 +280,8 @@ export namespace Editor {
 	): LspRange | LspRange[] {
 		if (!Array.isArray(ranges)) {
 			return reverse
-				? { start: ranges.end, end: ranges.start }
-				: { start: ranges.start, end: ranges.end };
+				? { start: (ranges as any).end, end: (ranges as any).start }
+				: { start: (ranges as any).start, end: (ranges as any).end };
 		}
 
 		return ranges.map(r =>
