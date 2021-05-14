@@ -11,7 +11,6 @@ import {
 	ReviewPlus
 } from "../protocols/agent/agent.protocol";
 import { Functions } from "../system";
-import { vslsUrlRegex } from "./liveShareController";
 
 type ToastType = "PR" | "Review" | "Codemark";
 
@@ -97,7 +96,7 @@ export class NotificationsController implements Disposable {
 			const followerIds = codemark ? codemark.followerIds : review!.followerIds;
 			const isUserFollowing = (followerIds || []).includes(user.id);
 			if (isUserFollowing && (!isPostStreamVisible || mentioned)) {
-				this.showNotification(post, codemark, review, mentioned);
+				this.showNotification(post, codemark, review);
 			}
 		}
 	}
@@ -135,8 +134,7 @@ export class NotificationsController implements Disposable {
 	async showNotification(
 		post: Post,
 		codemark?: CodemarkPlus,
-		review?: ReviewPlus,
-		mentioned?: boolean
+		review?: ReviewPlus
 	) {
 		const sender = await post.sender();
 
@@ -144,26 +142,6 @@ export class NotificationsController implements Disposable {
 		const colon = emote ? "" : ":";
 		let text = post.text.replace(/^\/me /, "");
 		text = review ? text.replace(/(approved|rejected) this/i, `$1 ${review.title}`) : text;
-		if (mentioned && sender !== undefined) {
-			const match = vslsUrlRegex.exec(text);
-			if (match != null) {
-				const actions: MessageItem[] = [
-					{ title: "Join Live Share" },
-					{ title: "Ignore", isCloseAffordance: true }
-				];
-
-				const result = await window.showInformationMessage(
-					`${sender.name} is inviting you to join a Live Share session`,
-					...actions
-				);
-
-				if (result === actions[0]) {
-					Container.vsls.join({ url: match[0] });
-				}
-
-				return;
-			}
-		}
 
 		// TODO: Need to better deal with formatted text for notifications
 		const actions: MessageItem[] = [{ title: "Open" }];

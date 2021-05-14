@@ -162,7 +162,7 @@ export class CodeStreamSession implements Disposable {
 			codemarkCompare: true,
 			editorTrackVisibleRange: true,
 			services: {
-				vsls: Container.vsls.installed
+				vsls: undefined
 			}
 		};
 

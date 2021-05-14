@@ -6,7 +6,6 @@ import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnec
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
 import { Config, configuration, ConfigurationWillChangeEvent } from "./configuration";
-import { LiveShareController } from "./controllers/liveShareController";
 import { NotificationsController } from "./controllers/notificationsController";
 import { StatusBarController } from "./controllers/statusBarController";
 import { WebviewController } from "./controllers/webviewController";
@@ -43,7 +42,6 @@ export class Container {
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));
-		context.subscriptions.push((this._vsls = new LiveShareController()));
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
@@ -177,11 +175,6 @@ export class Container {
 	private static _versionFormatted: string;
 	static get versionFormatted(): string {
 		return this._versionFormatted;
-	}
-
-	private static _vsls: LiveShareController;
-	static get vsls() {
-		return this._vsls;
 	}
 
 	private static _webview: WebviewController;

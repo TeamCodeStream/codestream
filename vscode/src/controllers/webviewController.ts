@@ -45,9 +45,6 @@ import {
 	IpcRoutes,
 	isIpcRequestMessage,
 	isIpcResponseMessage,
-	LiveShareInviteToSessionRequestType,
-	LiveShareJoinSessionRequestType,
-	LiveShareStartSessionRequestType,
 	LocalFilesCloseDiffRequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
@@ -966,42 +963,6 @@ export class WebviewController implements Disposable {
 						ConfigurationTarget.Global
 					);
 					Container.setServerUrl(params.serverUrl, params.disableStrictSSL ? true : false);
-					return emptyObj;
-				});
-
-				break;
-			}
-			case LiveShareInviteToSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareInviteToSessionRequestType, e, async (_type, params) => {
-					await Container.vsls.processRequest({
-						type: "invite",
-						userId: params.userId,
-						createNewStream: params.createNewStream
-					});
-					return emptyObj;
-				});
-
-				break;
-			}
-			case LiveShareJoinSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareJoinSessionRequestType, e, async (_type, params) => {
-					await Container.vsls.processRequest({
-						type: "join",
-						url: params.url
-					});
-					return emptyObj;
-				});
-
-				break;
-			}
-			case LiveShareStartSessionRequestType.method: {
-				webview.onIpcRequest(LiveShareStartSessionRequestType, e, async (_type, params) => {
-					await Container.vsls.processRequest({
-						type: "start",
-						streamId: params.streamId,
-						threadId: params.threadId,
-						createNewStream: params.createNewStream
-					});
 					return emptyObj;
 				});
 

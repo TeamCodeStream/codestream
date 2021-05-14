@@ -3,8 +3,6 @@ import { commands } from "vscode";
 import { BuiltInCommands } from "./constants";
 
 export enum ContextKeys {
-	LiveShareInstalled = "codestream:liveShareInstalled",
-	LiveShareSessionActive = "codestream:liveShareSessionActive",
 	Status = "codestream:status"
 }
 
