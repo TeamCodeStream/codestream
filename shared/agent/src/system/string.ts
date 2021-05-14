@@ -295,7 +295,7 @@ export namespace Strings {
 			// Ignore combining characters
 			if (code >= 0x300 && code <= 0x36f) continue;
 
-			// https://stackoverflow.com/questions/30757193/find-out-if-character-in-string-is-emoji
+			// code is adapted from https://stackoverflow.com/questions/30757193/find-out-if-character-in-string-is-emoji
 			if (
 				(code >= 0x1f600 && code <= 0x1f64f) || // Emoticons
 				(code >= 0x1f300 && code <= 0x1f5ff) || // Misc Symbols and Pictographs
