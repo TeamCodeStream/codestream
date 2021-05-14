@@ -86,7 +86,7 @@
   <ItemGroup>
     <Compile Include="Annotations\Annotations.cs" />
     <Compile Include="Application.cs" />
-    <Compile Include="Controllers\AuthenticationController.cs" />    
+    <Compile Include="Controllers\AuthenticationController.cs" />
     <Compile Include="CamelCaseStringEnumConverter.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="ContentTypes.cs" />
@@ -95,7 +95,6 @@
     <Compile Include="Logging\CodeStreamSink.cs" />
     <Compile Include="Logging\CustomOutputPaneSink.cs" />
     <Compile Include="Logging\EmptyLogger.cs" />
-    <Compile Include="Logging\Enrichers\CallerEnricher.cs" />
     <Compile Include="Logging\Instrumentation\Metrics.cs" />
     <Compile Include="Logging\LogExtensions.cs" />
     <Compile Include="Logging\LogManager.cs" />
