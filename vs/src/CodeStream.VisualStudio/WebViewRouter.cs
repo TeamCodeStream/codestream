@@ -429,33 +429,8 @@ namespace CodeStream.VisualStudio {
 									case LiveShareStartSessionRequestType.MethodName:
 									case LiveShareInviteToSessionRequestType.MethodName:
 									case LiveShareJoinSessionRequestType.MethodName: {
-											var liveShareController = new LiveShareController(
-												_sessionService,
-												_codeStreamAgent,
-												_eventAggregator,
-												_browserService,
-												_ideService);
-
 											using (_browserService.CreateScope(message)) {
-												switch (message.Method) {
-													case LiveShareStartSessionRequestType.MethodName: {
-															var @params = message.Params.ToObject<LiveShareStartSessionRequest>();
-															await liveShareController.StartAsync(@params.StreamId, @params.ThreadId);
-															break;
-														}
-													case LiveShareInviteToSessionRequestType.MethodName: {
-															await liveShareController.InviteAsync(message.Params.ToObject<LiveShareInviteToSessionRequest>()?.UserId);
-															break;
-														}
-													case LiveShareJoinSessionRequestType.MethodName: {
-															await liveShareController.JoinAsync(message.Params.ToObject<LiveShareJoinSessionRequest>()?.Url);
-															break;
-														}
-													default: {
-															Log.Warning($"Unknown LiveShare method {message.Method}");
-															break;
-														}
-												}
+												Log.Warning($"Unknown LiveShare method {message.Method}");
 											}
 											break;
 										}

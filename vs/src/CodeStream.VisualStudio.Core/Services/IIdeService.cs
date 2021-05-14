@@ -21,8 +21,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		//bool QueryExtensions(string author, params string[] names);
 		bool QueryExtension(ExtensionKind extensionKind);
 		bool TryStartLiveShare();
-		bool TryJoinLiveShare(string url);
-		System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null);
+		bool TryJoinLiveShare(string url);		
 
 		void CompareFiles(string filePath1, string filePath2, ITextBuffer file2Replacement, Microsoft.VisualStudio.Text.Span location, string content, bool isFile1Temp = false, bool isFile2Temp = false);
 		void DiffTextBlocks(string filePath, string left, string right, string title = null, IPathData data = null);

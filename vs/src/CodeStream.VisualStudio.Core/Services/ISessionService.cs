@@ -27,8 +27,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		/// </summary>
 		bool IsReady { get; }
 		bool IsAgentReady { get; }
-		void Logout(SessionSignedOutReason reason);
-		string LiveShareUrl { get; set; }
+		void Logout(SessionSignedOutReason reason);		
 		string StateString { get; }
 		bool? WebViewDidInitialize { get; set; }
 		/// <summary>

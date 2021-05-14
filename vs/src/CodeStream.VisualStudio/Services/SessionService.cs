@@ -86,8 +86,6 @@ namespace CodeStream.VisualStudio.Services {
 		}
 
 		public bool IsReady => _agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
-
-		public string LiveShareUrl { get; set; }
 		public string SolutionName { get; set; }
 
 		public void Dispose() {

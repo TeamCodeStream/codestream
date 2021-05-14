@@ -397,58 +397,6 @@ namespace CodeStream.VisualStudio.Services {
 			return System.Threading.Tasks.Task.CompletedTask;
 		}
 
-		public async System.Threading.Tasks.Task GetClipboardTextValueAsync(int millisecondsTimeout, Action<string> callback, Regex clipboardMatcher = null) {
-			if (callback == null) await System.Threading.Tasks.Task.CompletedTask;
-
-			var workerTask = System.Threading.Tasks.Task.Run(() => {
-				var magicNumber = (int)Math.Round(Math.Sqrt(millisecondsTimeout));
-				Exception threadEx = null;
-				string result = null;
-				System.Threading.Thread staThread = null;
-				staThread = new System.Threading.Thread(
-					  delegate (object state) {
-						  for (var i = 0; i < magicNumber + 1; i++) {
-							  try {
-								  var textString = Clipboard.GetDataObject()?.GetData(DataFormats.Text) as string;
-								  if (millisecondsTimeout > 0) {
-									  if (clipboardMatcher != null) {
-										  if (textString != null && clipboardMatcher.IsMatch(textString)) {
-											  result = textString;
-											  break;
-										  }
-									  }
-									  else {
-										  result = textString;
-										  break;
-									  }
-								  }
-								  else {
-									  result = textString;
-									  break;
-								  }
-
-								  System.Threading.Thread.Sleep(magicNumber);
-							  }
-							  catch (Exception ex) {
-								  threadEx = ex;
-							  }
-						  }
-					  });
-
-				staThread.SetApartmentState(ApartmentState.STA);
-				staThread.Start();
-				staThread.Join();
-				callback?.Invoke(result);
-			});
-
-			try {
-				await workerTask;
-			}
-			catch (OperationCanceledException) {
-				await System.Threading.Tasks.Task.CompletedTask;
-			}
-		}
-
 		////must be "" rather than null...
 		private void ExecuteCommand(string commandName, string commandArgs = "") {
 			ThreadHelper.ThrowIfNotOnUIThread();
@@ -457,33 +405,6 @@ namespace CodeStream.VisualStudio.Services {
 			if (dte == null) throw new ArgumentNullException(nameof(dte));
 			dte.ExecuteCommand(commandName, commandArgs);
 			Log.Debug("ExecuteCommand={CommandName} CommandArgs={commandArgs} Success", commandName, commandArgs);
-		}
-
-		/// <summary>
-		/// https://stackoverflow.com/questions/518701/clipboard-gettext-returns-null-empty-string
-		/// </summary>
-		/// <remarks>Only works when apartmentState is STA</remarks>
-		/// <returns></returns>
-		public string GetClipboardText() {
-			IDataObject idat = null;
-			// ReSharper disable once NotAccessedVariable
-			Exception threadEx = null;
-			object text = "";
-			System.Threading.Thread staThread = new System.Threading.Thread(
-				delegate () {
-					try {
-						idat = Clipboard.GetDataObject();
-						text = idat?.GetData(DataFormats.Text);
-					}
-					catch (Exception ex) {
-						threadEx = ex;
-					}
-				});
-			staThread.SetApartmentState(ApartmentState.STA);
-			staThread.Start();
-			staThread.Join();
-
-			return text as string;
 		}
 
 		private static readonly Encoding VsDefaultEncoding = new UTF8Encoding(true);

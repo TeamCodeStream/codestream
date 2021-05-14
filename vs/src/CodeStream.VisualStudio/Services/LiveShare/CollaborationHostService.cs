@@ -27,16 +27,6 @@ namespace CodeStream.VisualStudio.Services.LiveShare {
 			if (_disposed)
 				return;
 
-			if (disposing) {
-				// slight HACK to clear out the current live share url once the live share has ended
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
-				var sessionService = componentModel?.GetService<ISessionService>();
-
-				if (sessionService != null) {
-					sessionService.LiveShareUrl = null;
-				}
-			}
-
 			_disposed = true;
 		}
 	}
