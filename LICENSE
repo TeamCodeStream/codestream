@@ -1,3 +1,12 @@
 LICENSE.apache (Apache License) applies to all files in this
 repository, except for those in the enterprise directory, which are
-covered by LICENSE.enterprise.
+covered by LICENSE.enterprise (“CodeStream License Terms”). Codestream
+executables incorporate third-party open source software ("OSS"), as
+referenced in the ThirdPartyNotices.txt file located at
+https://github.com/TeamCodeStream/codestream/ (“OSS Notices”). Each
+OSS element is provided under the OSS license applied by its third
+party licensor. To the extent the terms of the OSS licenses applicable
+to OSS prohibit any of the restrictions in the CodeStream License
+Terms, with respect to OSS only, such restrictions will not apply to
+the OSS. Source code or related information for the OSS is available
+as described in the OSS Notices.
