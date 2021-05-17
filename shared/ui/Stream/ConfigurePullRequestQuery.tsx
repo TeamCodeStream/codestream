@@ -191,7 +191,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 								)}
 								<input
 									autoFocus
-									placeholder="Label"
+									placeholder="Name Your Custom Query (optional)"
 									name="query-name"
 									value={nameField}
 									className="input-text control"
