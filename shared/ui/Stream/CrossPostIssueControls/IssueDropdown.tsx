@@ -950,6 +950,16 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				<Dialog title="Create a Custom Filter" onClose={closeCustomFilter}>
 					<div className="standard-form">
 						<fieldset className="form-body">
+						<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
+						<span> {providerDisplay.customFilterExample}</span>
+						<input
+								type="text"
+								className="input-text control"
+								value={newCustomFilterName}
+								onChange={e => setNewCustomFilterName(e.target.value)}
+								placeholder="Name Your Custom Filter (optional)"
+								style={{ margin: "20px 0 10px 0" }}
+							/>
 							{!validQuery && (
 								<ErrorMessage>
 									<small className="error-message">
@@ -967,17 +977,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 								value={newCustomFilter}
 								onChange={e => setNewCustomFilter(e.target.value)}
 								placeholder="Enter Custom Filter"
-							/>
-							<div style={{ margin: "10px 0" }}>{providerDisplay.customFilterExample}</div>
-							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
-							<input
-								type="text"
-								className="input-text control"
-								value={newCustomFilterName}
-								onChange={e => setNewCustomFilterName(e.target.value)}
-								placeholder="Name Your Custom Filter (optional)"
-								style={{ margin: "20px 0 15px 0" }}
-							/>
+							/>							
 							<ButtonRow>
 								<Button
 									disabled={newCustomFilter.length == 0}
