@@ -54,11 +54,20 @@ class AuthenticationService(val project: Project) {
         )
     }
 
+    /**
+     * Attempts to auto-sign in using a token stored in the password safe. Returns false
+     * only if the token login fails or in case of an exception. If the auto-login fails for
+     * other reasons such as an error retrieving the token, it will log the reason but still return true.
+     */
     suspend fun autoSignIn(): Boolean {
-        val settings = project.settingsService ?: return true
-        if (!appSettings.autoSignIn) return true
-        val tokenStr = PasswordSafe.instance.getPassword(appSettings.credentialAttributes) ?: return true
-        val agent = project.agentService?.agent ?: return true
+        val settings = project.settingsService
+            ?: return true.also { logger.warn("Auto sign-in failed: settings service not available") }
+        if (!appSettings.autoSignIn)
+            return true.also { logger.warn("Auto sign-in failed: auto sign-in disabled") }
+        val tokenStr = PasswordSafe.instance.getPassword(appSettings.credentialAttributes)
+            ?: return true.also { logger.warn("Auto sign-in failed: unable to retrieve token from password safe") }
+        val agent = project.agentService?.agent
+            ?: return true.also { logger.warn("Auto sign-in failed: agent service not available") }
 
         try {
             val token = gson.fromJson<JsonObject>(tokenStr)
@@ -75,9 +84,11 @@ class AuthenticationService(val project: Project) {
                 logger.warn(loginResult.error)
                 settings.state.teamId = null
                 saveAccessToken(null)
+                logger.info("Auto sign-in failed: ${loginResult.error}")
                 false
             } else {
                 completeLogin(loginResult)
+                logger.info("Auto sign-in successful")
                 true
             }
         } catch (err: Exception) {
@@ -123,6 +134,12 @@ class AuthenticationService(val project: Project) {
     }
 
     private fun saveAccessToken(accessToken: JsonObject?) {
+        if (accessToken != null) {
+            logger.info("Saving access token to password safe")
+        } else {
+            logger.info("Clearing access token from password safe")
+        }
+
         val credentials = accessToken?.let {
             Credentials(null, it.toString())
         }

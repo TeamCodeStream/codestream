@@ -140,7 +140,7 @@ class AgentService(private val project: Project) : Disposable {
                     project.authenticationService?.let {
                         val success = it.autoSignIn()
                         if (success) {
-                            logger.info("CodeStream LSP agent initialization complete (auto sign-in successful)")
+                            logger.info("CodeStream LSP agent initialization complete")
                             initialization.complete(Unit)
                         } else {
                             logger.info("CodeStream LSP agent restarting (auto sign-in failed)")
