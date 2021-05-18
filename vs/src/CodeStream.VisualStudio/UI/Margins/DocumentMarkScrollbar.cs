@@ -162,6 +162,10 @@ namespace CodeStream.VisualStudio.UI.Margins {
 
 		public void RefreshMargin() => UpdateMatches();
 
+		public void OnZoomChanged(double zoomLevel, Transform transform) {
+			// noop
+		}
+
 		private void OnOptionChanged(object sender, EditorOptionChangedEventArgs e) {
 			var wasMarginEnabled = _isMarginEnabled;
 			_isMarginEnabled = _textView.Options.GetOptionValue(DocumentMarkScrollbarMarkersEnabledOption.OptionKey);
@@ -356,6 +360,8 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+
+		 
 
 		private class BackgroundMarkerPlacement {
 			private static readonly List<SnapshotSpanMarker> EmptyList = new List<SnapshotSpanMarker>(0);

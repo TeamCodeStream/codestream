@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI.Margins
 {
@@ -19,6 +20,7 @@ namespace CodeStream.VisualStudio.UI.Margins
         void OnSessionLogout();
         void OnSessionReady();
         void OnMarkerChanged();
+		void OnZoomChanged(double zoomLevel, Transform transform);
         bool TryHideMargin();
 		bool TryShowMargin();
 		void SetAutoHideMarkers(bool autoHideMarkers);

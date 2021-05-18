@@ -391,6 +391,11 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			SetValue(ZoomProperty, e.NewZoomLevel / 100);
 		}
 
+		public void OnZoomChanged(double zoomLevel, Transform transform) {
+			LayoutTransform = transform;
+			SetValue(ZoomProperty, zoomLevel / 100);
+		}
+
 		/// <summary>
 		///     Checks and throws <see cref="ObjectDisposedException" /> if the object is disposed.
 		/// </summary>

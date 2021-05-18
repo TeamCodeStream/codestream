@@ -29,6 +29,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Threading;
+using System.Windows.Media;
 
 namespace CodeStream.VisualStudio.UI {
 	public class TextViewCreationListenerLogger { }
@@ -324,10 +325,14 @@ namespace CodeStream.VisualStudio.UI {
 							using (var metrics = Log.WithMetrics($"{logPrefix} (UI)")) {
 								wpfTextView.Properties.AddProperty(PropertyNames.AdornmentManager,
 									new HighlightAdornmentManager(wpfTextView));
-								using (metrics.Measure($"{logPrefix} ICodeStreamWpfTextViewMargin.OnSessionReady()")) {
-									if (wpfTextView
+
+								wpfTextView
 										.Properties
-										.TryGetProperty(PropertyNames.TextViewMarginProviders, out List<ICodeStreamWpfTextViewMargin> margins) && margins != null) {
+										.TryGetProperty(PropertyNames.TextViewMarginProviders, out
+								List<ICodeStreamWpfTextViewMargin> margins);
+
+								if (margins != null) {
+									using (metrics.Measure($"{logPrefix} ICodeStreamWpfTextViewMargin.OnSessionReady()")) {
 										margins.OnSessionReady();
 									}
 								}
@@ -341,10 +346,12 @@ namespace CodeStream.VisualStudio.UI {
 
 								ChangeActiveEditor(wpfTextView, metrics);
 								SetZoomLevelCore(wpfTextView.ZoomLevel, metrics);
-								using (metrics.Measure($"{logPrefix} OnMarkerChanged")) {
-									if (wpfTextView
-										.Properties
-										.TryGetProperty(PropertyNames.TextViewMarginProviders, out List<ICodeStreamWpfTextViewMargin> margins) && margins != null) {
+
+								if (margins != null) {
+									using (metrics.Measure($"{logPrefix} OnZoomChanged ZoomLevel=${wpfTextView.ZoomLevel}")) {
+										margins.OnZoomChanged(wpfTextView.ZoomLevel, new ScaleTransform(wpfTextView.ZoomLevel / 100, wpfTextView.ZoomLevel / 100));
+									}
+									using (metrics.Measure($"{logPrefix} OnMarkerChanged")) {
 										margins.OnMarkerChanged();
 									}
 								}

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Windows.Media;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.UI.Margins {
@@ -31,6 +32,13 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			// Avoids lambda creation on each iteration as this is a high-frequency event
 			foreach (var margin in margins) {
 				margin.OnMarkerChanged();
+			}
+		}
+
+		public static void OnZoomChanged(this List<ICodeStreamWpfTextViewMargin> margins, double zoomLevel, Transform transform) {
+			// Avoids lambda creation on each iteration as this is a high-frequency event
+			foreach (var margin in margins) {
+				margin.OnZoomChanged(zoomLevel, transform);
 			}
 		}
 
