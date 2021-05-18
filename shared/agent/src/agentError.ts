@@ -35,7 +35,9 @@ export enum ReportSuppressedMessages {
 	/* OAuth app access restrictions */
 	OAuthAppAccessRestrictionError = "OAuth app access restriction error",
 	/* Some GitLab configurations require users to accept a Terms of Service before they can do anything */
-	GitLabTermsOfService = "Must accept GitLab Terms of Service"
+	GitLabTermsOfService = "Must accept GitLab Terms of Service",
+	/* User is receiving a status 401, no need to report it	 */
+	Unauthorized = "Unauthorized",
 }
 
 /**

@@ -611,6 +611,9 @@ export abstract class ThirdPartyProviderBase<
 		let message = response.statusText;
 		let data;
 		Logger.debug("handleErrorResponse: ", JSON.stringify(response, null, 4));
+		if (response.status === 401) {
+			return new InternalError(ReportSuppressedMessages.Unauthorized);
+		}
 		if (response.status >= 400 && response.status < 500) {
 			try {
 				data = await response.json();
