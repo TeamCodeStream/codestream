@@ -3057,7 +3057,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					start_sha: request.leftSha,
 					position_type: "text",
 					new_path: request.path,
-					new_line: request.startLine
+					new_line: request.endLine ? request.endLine : request.startLine
 				}
 			};
 
