@@ -16,6 +16,8 @@ import com.intellij.diff.editor.SimpleDiffVirtualFile
 import com.intellij.diff.impl.CacheDiffRequestChainProcessor
 import com.intellij.diff.impl.DiffRequestProcessor
 import com.intellij.diff.requests.SimpleDiffRequest
+import com.intellij.diff.tools.simple.SimpleDiffTool
+import com.intellij.diff.util.DiffUserDataKeysEx
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
@@ -74,6 +76,8 @@ class ReviewService(private val project: Project) {
                 chain.index = producers.indexOfFirst {
                     it.repoId == repoId && it.path == path
                 }
+            }.also {
+                it.putUserData(DiffUserDataKeysEx.FORCE_DIFF_TOOL, SimpleDiffTool.INSTANCE)
             }
             diffChain = myDiffChain
 
@@ -199,6 +203,8 @@ class ReviewService(private val project: Project) {
                 chain.index = producers.indexOfFirst {
                     it.filePath == filePath
                 }
+            }.also {
+                it.putUserData(DiffUserDataKeysEx.FORCE_DIFF_TOOL, SimpleDiffTool.INSTANCE)
             }
             diffChain = myDiffChain
 
