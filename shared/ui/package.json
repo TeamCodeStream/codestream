@@ -5,17 +5,16 @@
 	"main": "./dist/codestream-components.cjs.js",
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
-		"clean:ci": "git clean -xdf",
-		"sb": "start-storybook -p 6006",
-		"build-storybook": "build-storybook"
+		"clean:ci": "git clean -xdf"
 	},
-	"author": "akonwi",
+	"author": "CodeStream",
 	"license": "UNLICENSED",
 	"dependencies": {
 		"@formatjs/intl-listformat": "3.0.2",
 		"@primer/octicons": "9.1.1",
 		"classnames": "2.2.6",
 		"code-prettify": "git:github.com/TeamCodeStream/code-prettify.git#62943684566f616b403ac354a1b5a094344c85bc",
+		"copy-to-clipboard": "3.3.1",
 		"emoji-mart": "2.11.1",
 		"ignore": "3.3.10",
 		"lodash-es": "4.17.14",
@@ -30,7 +29,7 @@
 		"react": "16.8.6",
 		"react-contenteditable": "2.1.0",
 		"react-dom": "16.8.6",
-		"react-draggable": "^4.4.3",
+		"react-draggable": "4.4.3",
 		"react-gravatar": "2.6.3",
 		"react-intl": "3.6.0",
 		"react-redux": "7.1.0",
@@ -42,6 +41,7 @@
 		"redux-thunk": "2.3.0",
 		"reselect": "4.0.0",
 		"styled-components": "4.3.2",
+		"url": "0.11.0",
 		"uuid": "3.3.2",
 		"vscode-languageserver-protocol": "3.14.1",
 		"vscode-uri": "3.0.2"
@@ -51,10 +51,6 @@
 		"react-dom": "16.8.6"
 	},
 	"devDependencies": {
-		"@storybook/addon-actions": "6.2.9",
-		"@storybook/addon-links": "6.2.9",
-		"@storybook/addons": "6.2.9",
-		"@storybook/react": "6.2.9",
 		"@types/classnames": "2.2.9",
 		"@types/diff": "4.0.2",
 		"@types/emoji-mart": "2.8.4",
@@ -71,13 +67,11 @@
 		"@types/react-select": "3.0.0",
 		"@types/redux": "3.6.0",
 		"@types/redux-batched-subscribe": "0.1.3",
-		"@types/storybook__react": "5.2.1",
 		"@types/styled-components": "4.1.18",
 		"@types/uuid": "3.4.5",
 		"babel-loader": "8.0.6",
 		"convert-svg-to-png": "0.5.0",
 		"prettier": "1.19.1",
-		"storybook-dark-mode": "1.0.8",
 		"ts-loader": "6.2.0",
 		"typescript": "3.6.4",
 		"yargs": "15.3.1"
