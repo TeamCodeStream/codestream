@@ -1,5 +1,19 @@
 # Change Log
 
+## [11.0.8] - 2021-5-21
+
+### Changed
+
+- Updated the UI for custom filters in the Issues section to be consistent with custom queries in the PRs section
+
+### Fixed
+
+- Addresses [#547](https://github.com/TeamCodeStream/CodeStream/issues/547) &mdash; Reviewing Gitlab MR with a partial commit range shows invalid changesets
+- Addresses [#541](https://github.com/TeamCodeStream/CodeStream/issues/541) &mdash; Suppress html comments in rendering of issues
+- Addresses [#537](https://github.com/TeamCodeStream/CodeStream/issues/537) &mdash; Branch selection in dropdown of Codemarks section should automatically pick up branch change
+- Addresses [#522](https://github.com/TeamCodeStream/CodeStream/issues/522) &mdash; Support multi-line comments in GL MR
+- Fixes on issue with marker positioning if you change your editor zoom and then open a file with codemarks
+
 ## [11.0.7] - 2021-5-13
 
 ### Added

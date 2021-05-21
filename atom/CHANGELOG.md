@@ -8,12 +8,17 @@
 
 ### Changed
 
+- Updated the UI for custom filters in the Issues section to be consistent with custom queries in the PRs section
 - Addresses [#506](https://github.com/TeamCodeStream/CodeStream/issues/506) &mdash; Don't reset scroll position when switching tabs in a PR
 - Custom queries for either GitHub PRs or GitHub issues now requires [at least one qualifier](https://docs.codestream.com/userguide/faq/custom-queries/) that will prevent the query from return results across all of GitHub
 - The banner indicating connectivity issues has been replaced with the blanket that covers the entire CodeStream pane
 
 ### Fixed
 
+- Addresses [#547](https://github.com/TeamCodeStream/CodeStream/issues/547) &mdash; Reviewing Gitlab MR with a partial commit range shows invalid changesets
+- Addresses [#541](https://github.com/TeamCodeStream/CodeStream/issues/541) &mdash; Suppress html comments in rendering of issues
+- Addresses [#537](https://github.com/TeamCodeStream/CodeStream/issues/537) &mdash; Branch selection in dropdown of Codemarks section should automatically pick up branch change
+- Addresses [#522](https://github.com/TeamCodeStream/CodeStream/issues/522) &mdash; Support multi-line comments in GL MR
 - Addresses [#546](https://github.com/TeamCodeStream/CodeStream/issues/546) &mdash; Cannot open GitHub Enterprise 2.22 PRs
 - Addresses [#565](https://github.com/TeamCodeStream/CodeStream/issues/565) &mdash; Toast notifications (and log) replace "this" with feedback request name
 - Fixes an issue where an @mention in a codemark shared to Slack would register twice in the count in the badge on the Activty Feed
