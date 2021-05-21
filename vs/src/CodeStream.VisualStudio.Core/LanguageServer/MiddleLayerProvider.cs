@@ -1,4 +1,5 @@
-﻿using CodeStream.VisualStudio.Core.Models;
+﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public class MiddleLayerProvider {
 		private ILogger Log;
+
 		public MiddleLayerProvider(ILogger log) {
 			Log = log;
 		}
@@ -27,9 +29,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// <returns></returns>
 		public bool CanHandle(string methodName) {
 			var isIgnored = IgnoredMethods.Contains(methodName);
-#if DEBUG
-			Log.Debug($"{nameof(MiddleLayerProvider)} {methodName} Ignored={isIgnored}");
-#endif
+			if (Log.IsVerboseEnabled()) {
+				Log.Verbose($"{nameof(MiddleLayerProvider)} {methodName} Ignored={isIgnored}");
+			}
 			return !isIgnored;
 		}
 
@@ -42,9 +44,9 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					CodeStreamDiffUri.IsTempFile(methodParam["textDocument"]["uri"].Value<string>())) {
 					return Task.CompletedTask;
 				}
-#if DEBUG
-				Log.Verbose(methodName + " " + methodParam.ToString());
-#endif
+				if (Log.IsVerboseEnabled()) {
+					LogHandler(methodName, methodParam);
+				}
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(HandleNotificationAsync));
@@ -54,10 +56,26 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		}
 
 		public Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
-#if DEBUG
-			Log.Verbose(methodName + " " + methodParam.ToString());
-#endif
+			if (Log.IsVerboseEnabled()) {
+				LogHandler(methodName, methodParam);
+			}
 			return sendRequest(methodParam);
+		}
+
+		private void LogHandler(string methodName, JToken methodParam) {
+			string value = "";
+			try {
+				if (methodParam != null) {
+					var textDocument = methodParam.SelectToken("textDocument");
+					if (textDocument != null) {
+						value = textDocument.SelectToken("uri")?.ToString();
+					}
+				}				
+			}
+			catch {
+				// ignore
+			}
+			Log.Verbose("lsp: " + methodName + " = " + value);
 		}
 	}
 }
