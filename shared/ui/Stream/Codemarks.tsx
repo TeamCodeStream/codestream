@@ -200,7 +200,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		renderErrorCallback: ((error: string) => void) | undefined = undefined,
 		checkBranchUpdate = false
 	) {
-		const { textEditorUri, setEditorContext } = this.props;
+		const { textEditorUri, setEditorContext, codemarkDomain } = this.props;
 
 		if (textEditorUri === undefined) {
 			if (isInitialRender) {
@@ -223,7 +223,12 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		}
 
 		let scmInfo = this.props.scmInfo;
-		if (!scmInfo || scmInfo.uri !== textEditorUri || checkBranchUpdate) {
+		if (!scmInfo ||
+			(scmInfo.uri !== textEditorUri &&
+				(codemarkDomain === CodemarkDomainType.File || codemarkDomain === CodemarkDomainType.Directory)
+			) ||
+			checkBranchUpdate
+		) {
 			this.setState({ isLoading: true });
 			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 				uri: textEditorUri
