@@ -497,7 +497,8 @@ export const CreatePullRequestPanel = props => {
 				});
 			} else {
 				HostApi.instance.track("Pull Request Created", {
-					Service: prProviderId
+					Service: prProviderId,
+					"Associated Issue": addressesStatus
 				});
 				success = true;
 				setFormState({ message: "", type: "", url: "", id: "" });
