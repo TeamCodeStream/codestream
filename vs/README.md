@@ -49,7 +49,7 @@ Previously discussed questions and issues that explain important decisions are n
 
 #### Where are messages stored?
 
-Your team’s codemarks, which include the message text and the code snippet, are stored in the cloud on CodeStream’s servers. CodeStream uses best practices when it comes to [security](https://www.codestream.com/security), but if your team has stringent infosec requirements we also offer an [on-prem solution](https://docs.codestream.com/onprem/).
+Your team’s codemarks, which include the message text and the code snippet, are stored in the cloud on CodeStream’s servers. CodeStream uses best practices when it comes to [security](https://www.codestream.com/security).
 
 # Help & Feedback
 
