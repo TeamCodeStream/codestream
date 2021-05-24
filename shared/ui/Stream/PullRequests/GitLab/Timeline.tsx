@@ -405,7 +405,7 @@ export const Timeline = (props: Props) => {
 								text={
 									note.bodyHtml
 										? note.bodyHtml
-												.replace(/\<p /g, '<table class="gitlab-table" ')
+												.replace(/\<table /g, '<table class="gitlab-table" ')
 												.replace(/\<pre.+?\>/g, "<pre>")
 										: note.body
 								}
