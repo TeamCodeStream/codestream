@@ -57,7 +57,8 @@ import {
 	clearPullRequestFiles,
 	getPullRequestConversations,
 	clearPullRequestCommits,
-	api
+	api,
+	updateMyPullRequests
 } from "../store/providerPullRequests/actions";
 import {
 	getCurrentProviderPullRequest,
@@ -117,6 +118,10 @@ export const PullRequest = () => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const currentPullRequest = getCurrentProviderPullRequest(state);
+		console.log("CURRENT PULL REQEUST")
+		console.log(currentPullRequest);
+		console.log(state.context.currentPullRequest);
+		console.log(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
@@ -142,7 +147,8 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepo: getProviderPullRequestRepo(state)
+			currentRepo: getProviderPullRequestRepo(state),
+			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels
 		};
 	});
 
@@ -374,6 +380,14 @@ export const PullRequest = () => {
 		setIsLoadingMessage("Saving Title...");
 		setSavingTitle(true);
 		await dispatch(api("updatePullRequestTitle", { title }));
+		console.log("check hERE");
+		console.log(derivedState.currentPullRequestProviderId!,
+			derivedState.currentPullRequestId!);
+		console.log('------')
+		// call action to update myPullRequests
+		dispatch(updateMyPullRequests(derivedState.currentPullRequestProviderId!,
+			derivedState.currentPullRequestId!, {title: title, labels: derivedState.labels}))
+		console.log("did some titling!!");
 		setSavingTitle(false);
 		setEditingTitle(false);
 		setIsLoadingMessage("");

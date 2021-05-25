@@ -134,6 +134,10 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
+		case ProviderPullRequestActionsTypes.updateMyPullRequests: {
+			// reducer to update state: updates labels and title of the pull requests in `myPullRequests` object
+			return state;
+		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
 			const newState = createNewObject(state, action);
 			newState[action.payload.providerId][id] = {
@@ -692,6 +696,20 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
+		case ProviderPullRequestActionsTypes.updateMyPullRequests: {
+			return state;
+		}
+		// case ProviderPullRequestActionsTypes.ClearPullRequestError: {
+		// 	const newState = createNewObject(state, action);
+		// 	newState[action.payload.providerId][id] = {
+		// 		...newState[action.payload.providerId][id]
+		// 	};
+		// 	newState[action.payload.providerId][id].error = undefined;
+		// 	return {
+		// 		myPullRequests: { ...state.myPullRequests },
+		// 		pullRequests: newState
+		// 	};
+		// }
 		case "RESET":
 			return initialState;
 		default:
