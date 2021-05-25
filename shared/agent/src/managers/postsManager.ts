@@ -1040,7 +1040,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							sha: parsedUri.rightSha,
 							filePath: parsedUri.path,
 							startLine: startLine,
-							position: lineWithMetadata.position
+							endLine: endLine,
+							position: lineWithMetadata.position,
 						}
 					});
 				} else {

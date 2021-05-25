@@ -1729,6 +1729,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		filePath?: string;
 		oldLineNumber?: number | undefined;
 		startLine?: number;
+		endLine?: number;
 		position?: number;
 		leftSha?: string;
 		sha?: string;
@@ -3950,7 +3951,11 @@ class GitLabReviewStore {
 				})
 			)?.contents;
 			const data = JSON.parse(current || "{}") || ({} as GitLabReview);
-			comment = { ...comment, id: new Date().getTime().toString() };
+			comment = {
+				...comment,
+				startLine: comment.endLine ? comment.endLine : comment.startLine,
+				id: new Date().getTime().toString()
+			};
 			if (data && data.comments) {
 				data.comments.push(comment);
 			} else {
