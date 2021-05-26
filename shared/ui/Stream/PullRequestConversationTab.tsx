@@ -58,12 +58,13 @@ import { setUserPreference } from "./actions";
 import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
 import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
-import { api } from "../store/providerPullRequests/actions";
+import { api, updatePullRequestLabels } from "../store/providerPullRequests/actions";
 import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
 import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
 import { useDidMount } from "../utilities/hooks";
+import { ProviderPullRequestActionsTypes } from "../store/providerPullRequests/types";
 
 const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -227,6 +228,9 @@ export const PullRequestConversationTab = (props: {
 				: undefined,
 			blameMap,
 			currentPullRequest: currentPullRequest,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
 			pr:
 				currentPullRequest &&
 				currentPullRequest.conversations &&
@@ -596,6 +600,21 @@ export const PullRequestConversationTab = (props: {
 				onOff
 			})
 		);
+		console.log('FIND MEEEEEE')
+		if (availableLabels && availableLabels.length) {
+			console.log(availableLabels);
+			const label: any = availableLabels.find(elem => elem['id'] === id);
+			console.log(label);
+			dispatch(
+				updatePullRequestLabels(
+					derivedState.currentPullRequestProviderId!,
+					derivedState.currentPullRequestId!,
+					label,
+					onOff
+				)
+			);
+		}
+		
 		setIsLoadingMessage("");
 	};
 

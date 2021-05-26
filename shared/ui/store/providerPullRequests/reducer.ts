@@ -12,6 +12,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest
 } from "@codestream/protocols/agent";
+import { CompletionList } from "vscode-languageserver-types";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -134,8 +135,70 @@ export function reduceProviderPullRequests(
 				pullRequests: newState
 			};
 		}
-		case ProviderPullRequestActionsTypes.updateMyPullRequests: {
-			// reducer to update state: updates labels and title of the pull requests in `myPullRequests` object
+		case ProviderPullRequestActionsTypes.UpdateMyPullRequests: {
+			const newState = {...state.myPullRequests};
+			console.log("reducer called... updating state in here");
+			console.log(newState);
+			console.log(state);
+
+			newState[action.payload.providerId]['data']?.forEach((arr: any, index) => {
+				arr?.forEach((pr, i) => {
+					if (pr.id === action.payload.id) {	
+						newState[action.payload.providerId]['data']![index][i] = {
+							...newState[action.payload.providerId]['data']![index][i],
+							title: action.payload.pullRequestData.title,
+							labels: action.payload.pullRequestData.labels
+						};
+					}
+				})
+			}
+			)
+			return {
+				myPullRequests: newState,
+				pullRequests: {...state.pullRequests}
+			};
+		}
+		case ProviderPullRequestActionsTypes.UpdatePullRequestLabels: {
+			const newState = {...state.myPullRequests};
+			console.log("reducer entered beast mode.");
+			console.log(action);
+			console.log("new state");
+			console.log(newState);
+
+			newState[action.payload.providerId]['data']?.forEach((arr: any, index) => {
+				// arr?.forEach
+				console.log(arr);
+				arr?.forEach((pr, i) => {
+					if (pr.id === action.payload.prId) {
+						if (action.payload.onOff === true) {
+							// add label
+							const labelNodes = newState[action.payload.providerId]['data']![index][i].labels;
+							// console.log("label nodes");
+							// console.log(labelNodes);
+							labelNodes.nodes.push(action.payload.label);
+							// console.log("new label nodes");
+							// console.log(labelNodes);
+							newState[action.payload.providerId]['data']![index][i] = {
+								...newState[action.payload.providerId]['data']![index][i],
+								labels: labelNodes
+							};
+							console.log('updated labels ');
+							console.log(newState);
+						} else {
+							// remove label
+							newState[action.payload.providerId]['data']![index][i].labels.nodes = newState[action.payload.providerId]['data']![index][i].labels.nodes.filter(itm => itm.id !== action.payload.label.id)
+							console.log("label removed")
+							console.log(newState);
+							// pr.labels.nodes = pr.labels.nodes.
+						}
+					}
+					// console.log(pr);
+				})
+			})
+
+			console.log('check this state yo')
+			console.log(newState);
+
 			return state;
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
@@ -695,9 +758,6 @@ export function reduceProviderPullRequests(
 				myPullRequests: { ...state.myPullRequests },
 				pullRequests: newState
 			};
-		}
-		case ProviderPullRequestActionsTypes.updateMyPullRequests: {
-			return state;
 		}
 		// case ProviderPullRequestActionsTypes.ClearPullRequestError: {
 		// 	const newState = createNewObject(state, action);

@@ -12,8 +12,8 @@ export enum ProviderPullRequestActionsTypes {
 	AddPullRequestError = "@providerPullRequests/AddError",
 	ClearPullRequestError = "@providerPullRequests/ClearError",
 	HandleDirectives = "@providerPullRequests/HandleDirectives",
-	updateMyPullRequests = "@providerPullRequests/updateMyPullRequests"
-	// this type is the new action type
+	UpdateMyPullRequests = "@providerPullRequests/UpdateMyPullRequests",
+	UpdatePullRequestLabels = "@providerPullRequests/UpdatePullRequestLabels"
 }
 
 /**

@@ -42,14 +42,20 @@ export const _addPullRequestCollaborators = (providerId: string, id: string, col
 		collaborators
 	});
 
-export const updateMyPullRequests = (providerId: string, id: string, pullRequestData: any) => {
-	// update pull request action creator
-	action(ProviderPullRequestActionsTypes.updateMyPullRequests, {
+export const updateMyPullRequests = (providerId: string, id: string, pullRequestData: any) =>
+	action(ProviderPullRequestActionsTypes.UpdateMyPullRequests, {
 		providerId,
 		id,
 		pullRequestData
-	})
-}
+	});
+
+export const updatePullRequestLabels = (providerId: string, prId: string, label: any, onOff: boolean, ) =>
+	action(ProviderPullRequestActionsTypes.UpdatePullRequestLabels, {
+		providerId,
+		prId,
+		label,
+		onOff
+	});
 
 export const _addPullRequestFiles = (
 	providerId: string,
@@ -571,7 +577,7 @@ export const api = <T = any, R = any>(
 			providerId: providerId,
 			params: params
 		})) as any;
-		console.log('check the reesponse here interestting');
+		console.log("check the reesponse here interestting");
 		console.log(response);
 		if (response && (!options || (options && !options.preventClearError))) {
 			dispatch(clearPullRequestError(providerId, pullRequestId));
