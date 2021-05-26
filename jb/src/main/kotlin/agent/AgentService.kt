@@ -71,6 +71,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Scanner
 import java.util.concurrent.CompletableFuture
@@ -180,9 +181,10 @@ class AgentService(private val project: Project) : Disposable {
     }
 
     private fun createProcess(): Process {
-        val temp = createTempDir("codestream")
-        temp.deleteOnExit()
         val process = if (DEBUG) {
+            val temp = createTempDir("codestream")
+            temp.deleteOnExit()
+
             val agentJs = File(temp, "agent.js")
             val agentJsMap = File(temp, "agent.js.map")
             // val agentLog = File(temp, "agent.log")
@@ -201,23 +203,44 @@ class AgentService(private val project: Project) : Disposable {
                 "--stdio"
             ).withEnvironment("NODE_OPTIONS", "").createProcess()
         } else {
+            val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
+            val agentVersion = settings.environmentVersion
+            val userHomeDir = File(System.getProperty("user.home"))
+            val agentDir = userHomeDir.resolve(".codestream").resolve("agent")
+
+            if (!agentDir.exists()) {
+                agentDir.mkdir()
+            }
+
             val perms = setOf(
                 PosixFilePermission.OWNER_READ,
                 PosixFilePermission.OWNER_WRITE,
                 PosixFilePermission.OWNER_EXECUTE
             )
-            val agentDestFile = getAgentDestFile(temp)
-            FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
-            if (platform == Platform.MAC || platform == Platform.LINUX) {
-                Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
+            val agentDestFile = getAgentDestFile(agentDir, agentVersion)
+            for (file in agentDir.listFiles()) {
+                if (file.name != agentDestFile.name) {
+                    try {
+                        file.delete()
+                    } catch (ex: Exception) {
+                        logger.warn("Could not delete " + file.name, ex)
+                    }
+                }
             }
-            logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
 
-            if (platform == Platform.LINUX) {
-                val xdgOpen = File(temp, "xdg-open")
-                FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/xdg-open"), xdgOpen)
-                Files.setPosixFilePermissions(xdgOpen.toPath(), perms)
-                logger.info("xdg-open extracted to ${xdgOpen.absolutePath}")
+            if (!agentDestFile.exists()) {
+                FileUtils.copyToFile(javaClass.getResourceAsStream(getAgentResourcePath()), agentDestFile)
+                if (platform == Platform.MAC || platform == Platform.LINUX) {
+                    Files.setPosixFilePermissions(agentDestFile.toPath(), perms)
+                }
+                logger.info("CodeStream LSP agent extracted to ${agentDestFile.absolutePath}")
+
+                if (platform == Platform.LINUX) {
+                    val xdgOpen = File(agentDir, "xdg-open")
+                    FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/xdg-open"), xdgOpen)
+                    Files.setPosixFilePermissions(xdgOpen.toPath(), perms)
+                    logger.info("xdg-open extracted to ${xdgOpen.absolutePath}")
+                }
             }
 
             GeneralCommandLine(
@@ -271,12 +294,12 @@ class AgentService(private val project: Project) : Disposable {
         }
     }
 
-    private fun getAgentDestFile(tempFolder: File): File {
+    private fun getAgentDestFile(agentFolder: File, version: String): File {
         return when (platform) {
-            Platform.LINUX -> File(tempFolder, "codestream-agent")
-            Platform.MAC -> File(tempFolder, "codestream-agent")
-            Platform.WIN32 -> File(tempFolder, "codestream-agent.exe")
-            Platform.WIN64 -> File(tempFolder, "codestream-agent.exe")
+            Platform.LINUX -> File(agentFolder, "codestream-agent.$version")
+            Platform.MAC -> File(agentFolder, "codestream-agent.$version")
+            Platform.WIN32 -> File(agentFolder, "codestream-agent.$version.exe")
+            Platform.WIN64 -> File(agentFolder, "codestream-agent.$version.exe")
         }.also {
             it.setExecutable(true)
         }
