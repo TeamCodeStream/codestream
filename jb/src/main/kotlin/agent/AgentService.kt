@@ -71,7 +71,6 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either
 import org.eclipse.lsp4j.launch.LSPLauncher
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 import java.util.Scanner
 import java.util.concurrent.CompletableFuture
@@ -209,7 +208,7 @@ class AgentService(private val project: Project) : Disposable {
             val agentDir = userHomeDir.resolve(".codestream").resolve("agent")
 
             if (!agentDir.exists()) {
-                agentDir.mkdir()
+                Files.createDirectories(agentDir.toPath())
             }
 
             val perms = setOf(
