@@ -395,7 +395,7 @@ export class ScmManager {
 
 		let commits: { sha: string; info: any; localOnly: boolean }[] | undefined;
 		let gitError;
-		let repoPath = "";
+		let repoPath: string | undefined;
 		let repoId;
 		let remotes: { name: string; url: string }[] | undefined;
 		// this could be a file OR a folder (VSC reports workspace folder paths as file:// uris)
@@ -403,7 +403,7 @@ export class ScmManager {
 			const { git } = SessionContainer.instance();
 
 			try {
-				repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
+				repoPath = await git.getRepoRoot(uri.fsPath);
 				if (repoPath && git.isRebasing(repoPath)) {
 					gitError = `Repository ${repoPath} is rebasing.`;
 				} else if (repoPath !== undefined) {
@@ -522,13 +522,9 @@ export class ScmManager {
 						? []
 						: await Promise.all(
 								modifiedFiles.map(f => {
-									return git.getDiffAuthors(
-										repoPath,
-										f.file,
-										includeSaved,
-										includeStaged,
-										startCommit
-									);
+									return repoPath !== undefined
+										? git.getDiffAuthors(repoPath, f.file, includeSaved, includeStaged, startCommit)
+										: [];
 								})
 						  )
 					)
