@@ -171,6 +171,7 @@ interface State {
 	title: string;
 	titleTouched: boolean;
 	text: string;
+	textTouched: boolean;
 	// for amending
 	replyText: string;
 	assignees: { value: any; label: string }[] | { value: any; label: string };
@@ -263,6 +264,7 @@ class ReviewForm extends React.Component<Props, State> {
 			title: "",
 			titleTouched: false,
 			text: "",
+			textTouched: false,
 			replyText: "",
 			assignees: [],
 			assigneesDisabled: false,
@@ -448,9 +450,9 @@ class ReviewForm extends React.Component<Props, State> {
 
 			if (isCreatingReviewOnCommit) {
 				this._dismissAutoFRTimeout = setTimeout(() => {
-					const { titleTouched, text, reviewersTouched } = this.state;
-					if (!titleTouched && !text.length && !reviewersTouched) {
-						this.confirmCancel();
+					const { titleTouched, textTouched, reviewersTouched } = this.state;
+					if (!titleTouched && !textTouched && !reviewersTouched) {
+						this.props.closePanel();
 					}
 				}, 15 * 60 * 1000);
 			}
@@ -1098,7 +1100,7 @@ class ReviewForm extends React.Component<Props, State> {
 	};
 
 	handleChange = text => {
-		this.setState({ text });
+		this.setState({ text, textTouched: true });
 	};
 
 	handleChangeReply = replyText => {
@@ -1296,7 +1298,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	confirmCancel = (callbackOrEventArgs?: Function | Object) => {
-		const { titleTouched, text, reviewersTouched } = this.state;
+		const { titleTouched, textTouched, reviewersTouched } = this.state;
 
 		const finish = () => {
 			const isEditing = this.props.isEditing;
@@ -1308,7 +1310,7 @@ class ReviewForm extends React.Component<Props, State> {
 		};
 
 		// if the user has made any changes in the form, confirm before closing
-		if (titleTouched || text.length || reviewersTouched) {
+		if (titleTouched || textTouched || reviewersTouched) {
 			confirmPopup({
 				title: "Are you sure?",
 				message: "Changes will not be saved.",
