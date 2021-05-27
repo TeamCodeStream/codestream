@@ -151,11 +151,11 @@ export const WorkInProgress = React.memo((props: Props) => {
 		startPolling();
 
 		if (!hasRenderedOnce) {
-			if (derivedState.linesAdded > 0 || derivedState.linesRemoved > 0) {
-				HostApi.instance.track("WIP Rendered", {
-					"Repo Count": derivedState.repoCount
-				});
-			}
+			//if (derivedState.linesAdded > 0 || derivedState.linesRemoved > 0) {
+			//	HostApi.instance.track("WIP Rendered", {
+			//		"Repo Count": derivedState.repoCount
+			//	});
+			//}
 		}
 		return () => {
 			disposable.dispose();

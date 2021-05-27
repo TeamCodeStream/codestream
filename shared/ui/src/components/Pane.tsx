@@ -178,20 +178,20 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 		) {
 			dispatch(setPaneCollapsed(props.id, !derivedState.collapsed));
 
-			HostApi.instance.track("Sidebar Adjusted", {
-				Section: props.id,
-				Adjustment: !derivedState.collapsed ? "Collapsed" : "Expanded"
-			});
+			//HostApi.instance.track("Sidebar Adjusted", {
+			//	Section: props.id,
+			//	Adjustment: !derivedState.collapsed ? "Collapsed" : "Expanded"
+			//});
 		}
 	};
 
 	const maximize = () => {
 		dispatch(setPaneMaximized(props.id, !derivedState.maximized));
 
-		HostApi.instance.track("Sidebar Adjusted", {
-			Section: props.id,
-			Adjustment: !derivedState.maximized ? "Maximized" : "Minimized"
-		});
+		//HostApi.instance.track("Sidebar Adjusted", {
+		//	Section: props.id,
+		//	Adjustment: !derivedState.maximized ? "Maximized" : "Minimized"
+		//});
 	};
 
 	const header = (
