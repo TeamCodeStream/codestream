@@ -279,8 +279,8 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedTags: {},
 			repoName: "",
 			excludedFiles: {},
-			includeSaved: true,
-			includeStaged: true,
+			includeSaved: !props.currentReviewOptions?.includeLatestCommit,
+			includeStaged: !props.currentReviewOptions?.includeLatestCommit,
 			excludeCommit: {},
 			startCommit: "",
 			prevEndCommit: "",
@@ -565,7 +565,8 @@ class ReviewForm extends React.Component<Props, State> {
 					if (
 						e.type === ChangeDataType.Documents &&
 						e.data &&
-						(e.data as DocumentData).reason === "saved"
+						(e.data as DocumentData).reason === "saved" &&
+						(this.state.includeSaved || this.state.includeStaged)
 					) {
 						update = true;
 					} else if (
@@ -573,7 +574,8 @@ class ReviewForm extends React.Component<Props, State> {
 						e.data.repo &&
 						this.state.repoStatus &&
 						this.state.repoStatus.scm &&
-						this.state.repoStatus.scm.repoId === e.data.repo.id
+						this.state.repoStatus.scm.repoId === e.data.repo.id &&
+						!this.props.currentReviewOptions?.includeLatestCommit
 					) {
 						// listen only for changes related to the repo we are looking at
 						update = true;
