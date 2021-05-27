@@ -146,7 +146,7 @@ val Editor.visibleRanges: List<Range>
             }
 
             val previousExpandedOffset = getOffset(collapsed.start) - 1
-            val nextExpandedOffset = getOffset(collapsed.end) + 1
+            val nextExpandedOffset = (getOffset(collapsed.end) + 1).coerceAtMost(document.textLength)
             if (previousExpandedOffset >= 0) {
                 range.end = document.lspPosition(previousExpandedOffset)
                 if (range.start < range.end) {
