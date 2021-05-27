@@ -457,8 +457,7 @@ class ReviewForm extends React.Component<Props, State> {
 				//		"Repo Open": this.state.openRepos && this.state.openRepos.length > 0,
 				//		"Suggested Reviewers": this.state.reviewerEmails && this.state.reviewerEmails.length > 0
 				//	}
-				//}
-				);
+				//});
 			});
 		}
 
