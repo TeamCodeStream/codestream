@@ -255,6 +255,7 @@ class ReviewForm extends React.Component<Props, State> {
 	private _sharingAttributes?: SharingAttributes;
 	private _disposableDidChangeDataNotification: { dispose(): void } | undefined = undefined;
 	private ignoredFiles = ignore();
+	private _dismissAutoFRTimeout?: any;
 
 	constructor(props: Props) {
 		super(props);
@@ -444,6 +445,15 @@ class ReviewForm extends React.Component<Props, State> {
 				isAutoFREnabled &&
 				(isCreatingReviewOnCommit || !createReviewOnCommit);
 			this.setState({ showCreateReviewOnCommitToggle: showCreateReviewOnCommitToggle });
+
+			if (isCreatingReviewOnCommit) {
+				this._dismissAutoFRTimeout = setTimeout(() => {
+					const { titleTouched, text, reviewersTouched } = this.state;
+					if (!titleTouched && !text.length && !reviewersTouched) {
+						this.confirmCancel();
+					}
+				}, 15 * 60 * 1000);
+			}
 		}
 
 		if (isAmending) this.getScmInfoForRepo();
@@ -473,6 +483,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentWillUnmount = () => {
+		clearTimeout(this._dismissAutoFRTimeout);
 		this._disposableDidChangeDataNotification &&
 			this._disposableDidChangeDataNotification.dispose();
 	};
