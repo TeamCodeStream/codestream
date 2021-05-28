@@ -1,6 +1,6 @@
 # Change Log
 
-## [11.0.7] - 2021-5-13
+## [11.0.7] - 2021-6-1
 
 ### Added
 
@@ -8,6 +8,9 @@
 
 ### Changed
 
+- You can now reply to any top-level comment in a merge request, regardless of whether or not it was started as a thread
+- Form that automatically pops up to request feedback when you commit is now dismissed after 15 minutes of inactivity
+- Changing branches while you have the feedback request form open no longer updates the form
 - Updated the UI for custom filters in the Issues section to be consistent with custom queries in the PRs section
 - Addresses [#506](https://github.com/TeamCodeStream/CodeStream/issues/506) &mdash; Don't reset scroll position when switching tabs in a PR
 - Custom queries for either GitHub PRs or GitHub issues now requires [at least one qualifier](https://docs.codestream.com/userguide/faq/custom-queries/) that will prevent the query from return results across all of GitHub
@@ -15,6 +18,11 @@
 
 ### Fixed
 
+- Addresses [#590](https://github.com/TeamCodeStream/CodeStream/issues/590) &mdash; Commit selection is reset for a Gitlab MR after posting a comment
+- Addresses [#522](https://github.com/TeamCodeStream/CodeStream/issues/522) &mdash; Support multi-line comments in GL MR
+- Addresses [#400](https://github.com/TeamCodeStream/CodeStream/issues/400) &mdash; Agent is detected as a new process by Intego NetBarrier every time IntelliJ starts
+- Fixes an issue with quote replies in a merge request where the reply text would get included in the quote
+- Fixes an issue where resolving a codemark or feedback request marks it as unread in the Codemarks/Feedback Requests section of the CodeStream pane
 - Addresses [#547](https://github.com/TeamCodeStream/CodeStream/issues/547) &mdash; Reviewing Gitlab MR with a partial commit range shows invalid changesets
 - Addresses [#541](https://github.com/TeamCodeStream/CodeStream/issues/541) &mdash; Suppress html comments in rendering of issues
 - Addresses [#537](https://github.com/TeamCodeStream/CodeStream/issues/537) &mdash; Branch selection in dropdown of Codemarks section should automatically pick up branch change

@@ -1,3 +1,19 @@
+<h4 id="11_0_8">11.0.8</h4>
+<h5>Changed</h5>
+<ul>
+    <li>You can now reply to any top-level comment in a merge request, regardless of whether or not it was started as a thread</li>
+    <li>Form that automatically pops up to request feedback when you commit is now dismissed after 15 minutes of inactivity</li>
+    <li>Changing branches while you have the feedback request form open no longer updates the form</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/590">#590</a> - Commit selection is reset for a Gitlab MR after posting a comment
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/522">#522</a> - Support multi-line comments in GL MR
+    <li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/400">#400</a> - Agent is detected as a new process by Intego NetBarrier every time IntelliJ starts
+    <li>Fixes an issue with quote replies in a merge request where the reply text would get included in the quote</li>
+    <li>Fixes an unhandled exception when tail of file is collapsed</li>
+    <li>Fixes an issue where resolving a codemark or feedback request marks it as unread in the Codemarks/Feedback Requests section of the CodeStream pane</li>
+</ul>
 <h4 id="11_0_7">11.0.7</h4>
 <h5>Changed</h5>
 <ul>
