@@ -118,6 +118,7 @@ export interface Note {
 	resolved: boolean;
 	discussion: {
 		id?: string;
+		replyId?: string;
 	};
 	resolvable: boolean;
 	reactionGroups?: {
@@ -173,6 +174,7 @@ export interface DiscussionNode {
 	};
 	resolved: boolean;
 	resolvable: boolean;
+	replyId?: string;
 }
 
 export interface GitLabUser {
