@@ -40,9 +40,11 @@ interface DropdownItem {
 export const PullRequestFilesChangedTab = (props: {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	setIsLoadingMessage: Function;
+	setPrCommitsRange: Function;
+	prCommitsRange: string[];
 	initialScrollPosition?: number;
 }) => {
-	const { pr } = props;
+	const { prCommitsRange, setPrCommitsRange, pr } = props;
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -58,7 +60,6 @@ export const PullRequestFilesChangedTab = (props: {
 	const [isLoading, setIsLoading] = useState(true);
 	const [filesChanged, setFilesChanged] = useState<any[]>([]);
 	const [prCommits, setPrCommits] = useState<FetchThirdPartyPullRequestCommitsResponse[]>([]);
-	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
 	const [accessRawDiffs, setAccessRawDiffs] = useState(false);
 	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
@@ -87,29 +88,7 @@ export const PullRequestFilesChangedTab = (props: {
 	useEffect(() => {
 		// re-render if providerPullRequests changes
 		(async () => {
-			if (prCommitsRange.length > 0 && derivedState.currentRepo) {
-				const data = await dispatch(
-					getPullRequestFiles(
-						pr.providerId,
-						derivedState.currentPullRequestId!,
-						prCommitsRange,
-						derivedState.currentRepo.id,
-						accessRawDiffs
-					)
-				);
-				_mapData(data);
-			} else {
-				const data = await dispatch(
-					getPullRequestFiles(
-						pr.providerId,
-						derivedState.currentPullRequestId!,
-						undefined,
-						undefined,
-						accessRawDiffs
-					)
-				);
-				_mapData(data);
-			}
+			await getPRFiles();
 		})();
 	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange, accessRawDiffs]);
 
@@ -121,10 +100,7 @@ export const PullRequestFilesChangedTab = (props: {
 				getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!)
 			);
 			_mapCommitsData(prCommitsData);
-			const data = await dispatch(
-				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
-			);
-			_mapData(data);
+			await getPRFiles();
 
 			disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
@@ -140,6 +116,32 @@ export const PullRequestFilesChangedTab = (props: {
 			disposable?.dispose();
 		};
 	});
+
+	const getPRFiles = async () => {
+		if (prCommitsRange.length > 0 && derivedState.currentRepo) {
+			const data = await dispatch(
+				getPullRequestFiles(
+					pr.providerId,
+					derivedState.currentPullRequestId!,
+					prCommitsRange,
+					derivedState.currentRepo.id,
+					accessRawDiffs
+				)
+			);
+			_mapData(data);
+		} else {
+			const data = await dispatch(
+				getPullRequestFiles(
+					pr.providerId,
+					derivedState.currentPullRequestId!,
+					undefined,
+					undefined,
+					accessRawDiffs
+				)
+			);
+			_mapData(data);
+		}
+	}
 
 	const commitBased = useMemo(() => prCommitsRange.length > 0, [prCommitsRange]);
 	const baseRef = useMemo(() => {

@@ -180,6 +180,7 @@ export const PullRequest = () => {
 	const [autoCheckedMergeability, setAutoCheckedMergeability] = useState<
 		autoCheckedMergeabilityStatus
 	>("UNCHECKED");
+	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
 
 	const switchActiveTab = tab => {
 		// remember the scroll position of the tab we just left
@@ -935,6 +936,8 @@ export const PullRequest = () => {
 										pr={pr}
 										initialScrollPosition={scrollPosition[4]}
 										setIsLoadingMessage={setIsLoadingMessage}
+										prCommitsRange={prCommitsRange}
+										setPrCommitsRange={setPrCommitsRange}
 									/>
 								)}
 							</div>

@@ -333,6 +333,7 @@ export const PullRequest = () => {
 	const [title, setTitle] = useState("");
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 	const [dynamicKey, setDynamicKey] = useState("");
+	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
 
 	const breakpoints = {
 		auto: "630px",
@@ -936,6 +937,8 @@ export const PullRequest = () => {
 									key={"files-changed-" + dynamicKey}
 									pr={pr as any}
 									setIsLoadingMessage={setIsLoadingMessage}
+									prCommitsRange={prCommitsRange}
+									setPrCommitsRange={setPrCommitsRange}
 								/>
 							)}
 						</>
