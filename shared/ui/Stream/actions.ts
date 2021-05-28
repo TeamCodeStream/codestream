@@ -859,7 +859,7 @@ export const setCodemarkStatus = (
 				`/me ${describeIssueStatusChange(status)} this codemark ${extraText || ""}`
 			)
 		);
-		await markItemRead(response.codemark.id, response.codemark.numReplies + 1);
+		dispatch(markItemRead(response.codemark.id, response.codemark.numReplies + 1));
 
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
