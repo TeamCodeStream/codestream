@@ -859,6 +859,7 @@ export const setCodemarkStatus = (
 				`/me ${describeIssueStatusChange(status)} this codemark ${extraText || ""}`
 			)
 		);
+		await markItemRead(response.codemark.id, response.codemark.numReplies + 1);
 
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
@@ -946,6 +947,7 @@ export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => asy
 		} catch (err) {
 			logError(`failed to track review status change: ${err}`, { reviewId, status });
 		}
+		dispatch(markItemRead(response.review.id, response.review.numReplies + 1));
 
 		const message = `_${describeStatusChange(status)} this feedback request_`;
 
