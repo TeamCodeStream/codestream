@@ -3752,13 +3752,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					directive.data.discussion.id.indexOf("gitlab/Discussion") > -1
 				) {
 					const discussionId = directive.data.discussion.id.split("/").slice(-1)[0];
-					const nodeToUpdate = pr.discussions.nodes.find(
-						(_: DiscussionNode) => {
-							const discussionNodeId = _.id.split("/").slice(-1)[0];
-							return _.id.indexOf("gitlab/IndividualNoteDiscussion") > -1 &&
-								discussionId === discussionNodeId;
-						}
-					);
+					const nodeToUpdate = pr.discussions.nodes.find((_: DiscussionNode) => {
+						const idAsString = _.id + "";
+						const discussionNodeId = idAsString.split("/").slice(-1)[0];
+						return (
+							idAsString.indexOf("gitlab/IndividualNoteDiscussion") > -1 &&
+							discussionId === discussionNodeId
+						);
+					});
 
 					if (nodeToUpdate) {
 						nodeToUpdate.id = directive.data.discussion.id;
