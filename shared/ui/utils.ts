@@ -498,40 +498,34 @@ export function arrayDiff(
 	return results;
 }
 
-// from https://awik.io/determine-color-bright-dark-using-javascript/
+function cssColorToRGB(color): { r: number; g: number; b: number } {
+	const matched = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+	if (matched) {
+		return {
+			r: matched[1],
+			g: matched[2],
+			b: matched[3]
+		};
+	}
+
+	const hexAsRgb = +("0x" + color.slice(1).replace(color.length < 5 && /./g, "$&$&"));
+	return {
+		r: hexAsRgb >> 16,
+		g: (hexAsRgb >> 8) & 255,
+		b: hexAsRgb & 255
+	};
+}
+
 export function lightOrDark(color) {
-	// Variables for red, green, blue values
-	var r, g, b, hsp;
+	const { r, g, b } = cssColorToRGB(color);
 
-	// Check the format of the color, HEX or RGB?
-	if (color.match(/^rgb/)) {
-		// If RGB --> store the red, green, blue values in separate variables
-		color = color.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+(?:\.\d+)?))?\)$/);
+	const colors = [r / 255, g / 255, b / 255].map(_ => {
+		if (_ <= 0.03928) return _ / 12.92;
 
-		r = color[1];
-		g = color[2];
-		b = color[3];
-	} else {
-		// If hex --> Convert it to RGB: http://gist.github.com/983661
-		color = +("0x" + color.slice(1).replace(color.length < 5 && /./g, "$&$&"));
+		return Math.pow((_ + 0.055) / 1.055, 2.4);
+	});
 
-		r = color >> 16;
-		g = (color >> 8) & 255;
-		b = color & 255;
-	}
-
-	// HSP (Highly Sensitive Poo) equation. Portions adapted from C code http://alienryderflex.com/hsp.html
-	hsp = Math.sqrt(0.299 * (r * r) + 0.587 * (g * g) + 0.114 * (b * b));
-
-	// Using the HSP value, determine whether the color is light or dark
-	// we use this to determine when to switch to a black fg on tags, so we
-	// want to make sure the bg is sufficiently light before switching
-	// if (hsp > 127.5) {
-	if (hsp > 170) {
-		return "light";
-	} else {
-		return "dark";
-	}
+	return 0.2126 * colors[0] + 0.7152 * colors[1] + 0.0722 * colors[2] <= 0.179 ? "dark" : "light";
 }
 
 // https://stackoverflow.com/questions/40929260/find-last-index-of-element-inside-array-by-certain-condition
