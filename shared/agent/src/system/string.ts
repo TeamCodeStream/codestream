@@ -29,6 +29,7 @@ import { createHash, HexBase64Latin1Encoding } from "crypto";
 import { applyPatch, ParsedDiff } from "diff";
 import * as eol from "eol";
 import * as path from "path";
+import { URL } from "url";
 import { isWindows } from "../git/shell";
 
 export namespace Strings {
@@ -455,24 +456,7 @@ export namespace Strings {
 		return patchedContents;
 	}
 
-	/** converts an absolute file system path to a file uri
-	 * @param  {string} str
-	 * @remarks Portions adapted from https://stackoverflow.com/questions/20619488/how-to-convert-local-file-path-to-a-file-url-safely-in-node-js
-	 */
 	export function pathToFileURL(str: string) {
-		/*
-		once we're using node v10.12.0 we can use this
-		const url = require('url');
-		url.pathToFileURL(path)
-		*/
-
-		let pathName = path.resolve(str).replace(/\\/g, "/");
-
-		// Windows drive letter must be prefixed with a slash
-		if (pathName[0] !== "/") {
-			pathName = `/${pathName}`;
-		}
-
-		return encodeURI(`file://${pathName}`);
+		return encodeURI(new URL(`file:///${path.resolve(str)}`).href);
 	}
 }
