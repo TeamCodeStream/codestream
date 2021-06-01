@@ -17,6 +17,7 @@ import {
 	StatusCallback
 } from "./broadcaster";
 import { PubnubHistory } from "./pubnubHistory";
+import { inspect } from "util";
 
 interface PubnubMessage {
 	timetoken: string;
@@ -210,7 +211,7 @@ export class PubnubConnection implements BroadcasterConnection {
 				status.operation === Pubnub.OPERATIONS.PNSubscribeOperation)
 		) {
 			// a network error of some kind, make sure we are truly connected
-			this._debug(`PubNub network error: ${JSON.stringify(status.error)}`);
+			this._debug(`PubNub network error: ${inspect(status)}`);
 			this.netHiccup();
 		}
 	}
