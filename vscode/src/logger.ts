@@ -1,6 +1,6 @@
 "use strict";
 /**
-adapted from https://github.com/eamodio/vscode-gitlens
+Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/d2ce17503cf4516843335e149df665f1cfc17ff9/src/logger.ts which carries this notice:
 
 The MIT License (MIT)
 

@@ -16,16 +16,14 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.WindowsAPICodePack.Dialogs;
+using System.Windows.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Windows;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
 
@@ -152,15 +150,10 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
-		public CommonFileDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false) {
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			return new CommonOpenFileDialog() {
-				InitialDirectory = initialDirectory ?? Environment.ExpandEnvironmentVariables("%HOMEDRIVE%%HOMEPATH%"),
-				IsFolderPicker = true,
-				Multiselect = multiSelect,
-				Title = message ?? "Please select a folder"
-			};
+		public FolderBrowserDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false) {
+			ThreadHelper.ThrowIfNotOnUIThread();		 
+		 
+			return new FolderBrowserDialog() { };
 		}
 
 		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {
@@ -388,14 +381,15 @@ namespace CodeStream.VisualStudio.Services {
 			System.Diagnostics.Process.Start(url);
 		}
 
-		public System.Threading.Tasks.Task SetClipboardAsync(string text) {
-			var thread = new System.Threading.Thread(() => Clipboard.SetText(text));
+public System.Threading.Tasks.Task SetClipboardAsync(string text) {
+			var thread = new System.Threading.Thread(() => System.Windows.Clipboard.SetText(text));
 			thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
 			thread.Start();
 			thread.Join();
 
 			return System.Threading.Tasks.Task.CompletedTask;
 		}
+		 
 
 		////must be "" rather than null...
 		private void ExecuteCommand(string commandName, string commandArgs = "") {

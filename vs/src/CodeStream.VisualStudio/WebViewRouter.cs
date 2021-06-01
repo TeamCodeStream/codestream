@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Windows.Forms;
 using System.Windows.Threading;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Controllers;
@@ -15,7 +16,6 @@ using CodeStream.VisualStudio.Services;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json.Linq;
 using Serilog;
 
@@ -107,11 +107,10 @@ namespace CodeStream.VisualStudio {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var request = message.Params.ToObject<ShellPromptFolderRequest>();
 													var dialog = _ideService.FolderPrompt(request?.Message);
-
-													if (dialog.ShowDialog() == CommonFileDialogResult.Ok) {
-														if (!dialog.FileName.IsNullOrWhiteSpace()) {
+													if (dialog.ShowDialog() == DialogResult.OK) {														 
+														if (!dialog.SelectedPath.IsNullOrWhiteSpace()) {
 															response = new ShellPromptFolderResponse {
-																Path = dialog.FileName
+																Path = dialog.SelectedPath
 															};
 														}
 													}

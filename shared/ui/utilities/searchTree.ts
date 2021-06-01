@@ -2,7 +2,7 @@
 // import { Iterables } from "./iterable";
 
 /**
-adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352
+Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
 
 MIT License
 

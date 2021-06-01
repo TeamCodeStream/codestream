@@ -4670,12 +4670,11 @@ System.Security.Cryptography.X509Certificates@4.3.0 - license: http://go.microso
 System.Threading.Tasks.Extensions@4.3.0 - license: http://go.microsoft.com/fwlink/?LinkId=329770
 System.Threading.Tasks.Extensions@4.5.2 - license: https://github.com/dotnet/corefx/blob/master/LICENSE.TXT
 System.ValueTuple@4.5.0 - license: https://github.com/dotnet/corefx/blob/master/LICENSE.TXT
-WindowsAPICodePack-Core@1.1.1 - license: http://code.msdn.microsoft.com/WindowsAPICodePack/Project/License.aspx
-WindowsAPICodePack-Shell@1.1.1 - license: http://code.msdn.microsoft.com/WindowsAPICodePack/Project/License.aspx
 
 
-// adapted from https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
-// adapted from https://github.com/atom/one-dark-ui/blob/bd51756c1605c21a380be88980736f4f20baf947/styles/progress.less
+
+// Portions adapted from https://github.com/atom/atom-dark-ui/blob/master/styles/ui-variables.less
+// Portions adapted from https://github.com/atom/one-dark-ui/blob/bd51756c1605c21a380be88980736f4f20baf947/styles/progress.less which carries this notice:
 // MIT License
 
 // Copyright (c) 2014 GitHub Inc.
@@ -4688,7 +4687,7 @@ WindowsAPICodePack-Shell@1.1.1 - license: http://code.msdn.microsoft.com/Windows
 
 
 /**
- adapted from https://github.com/kpdecker/jsdiff/blob/master/src/patch/parse.js
+ Portions adapted from https://github.com/kpdecker/jsdiff/blob/532bcf9315a39518a772e47d912fb0d22b1aa701/src/patch/parse.js which carries this notice:
   
  Software License Agreement (BSD License)
 
@@ -4725,7 +4724,7 @@ OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
  /** 
-adapted from https://github.com/date-fns/date-fns/blob/601bc8e5708cbaebee5389bdaf51c2b4b33b73c4/src/locale/en/build_distance_in_words_locale/index.js
+Portions adapted from https://github.com/date-fns/date-fns/blob/601bc8e5708cbaebee5389bdaf51c2b4b33b73c4/src/locale/en/build_distance_in_words_locale/index.js which carries this notice:
 
 The MIT License (MIT)
 
@@ -4739,8 +4738,35 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 */
 
 /**
-adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352
-adapted from https://github.com/microsoft/vscode-pull-request-github/blob/df0b143714b6a17d74f8e22dddb0863d7e71fdb8/src/authentication/keychain.ts
+Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
+
+MIT License
+
+Copyright (c) 2015 - present Microsoft Corporation
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/**
+Portions adapted from https://github.com/microsoft/vscode-pull-request-github/blob/df0b143714b6a17d74f8e22dddb0863d7e71fdb8/src/authentication/keychain.ts which carries this notice:
 
 MIT License
 
@@ -4768,7 +4794,8 @@ SOFTWARE.
 */
 
 
-# adapted from https://github.com/doblak/ps-clean/blob/master/DeleteObjBinFolders.ps1
+
+# Portions adapted from https://github.com/doblak/ps-clean/blob/aee1da1f396bd2c50b3658cebaf026ce2b1c3a3c/DeleteObjBinFolders.ps1 which carries this notice:
 
 # The MIT License (MIT)
 
@@ -4793,7 +4820,36 @@ SOFTWARE.
 
 
 /**
-adapted from https://github.com/eamodio/vscode-gitlens
+Portions adapted from
+https://github.com/eamodio/vscode-gitlens/blob/042f703791c21d22d1c7f7f791769287d6c5995c/src/system/decorators/gate.ts  
+https://github.com/eamodio/vscode-gitlens/blob/042f703791c21d22d1c7f7f791769287d6c5995c/src/system/decorators/log.ts  
+https://github.com/eamodio/vscode-gitlens/blob/042f703791c21d22d1c7f7f791769287d6c5995c/src/system/decorators/memoize.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/git/git.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/git/gitService.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/git/models/remote.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/git/parsers/remoteParser.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/logger.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/array.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/date.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/iterable.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/object.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/string.ts  
+https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/version.ts  
+https://github.com/eamodio/vscode-gitlens/blob/6b341c5ae6bea67f9aefc573d89bbe3e3f1d0776/src/constants.ts  
+https://github.com/eamodio/vscode-gitlens/blob/6b341c5ae6bea67f9aefc573d89bbe3e3f1d0776/src/system.ts  
+https://github.com/eamodio/vscode-gitlens/blob/6b341c5ae6bea67f9aefc573d89bbe3e3f1d0776/src/system/function.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/configuration.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/array.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/function.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/iterable.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/object.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/string.ts  
+https://github.com/eamodio/vscode-gitlens/blob/88e0a1b45a9b6f53b6865798e745037207f8c2da/src/system/version.ts  
+https://github.com/eamodio/vscode-gitlens/blob/91df7e7756bc061b3306eee03ea4505df240f12f/src/git/locator.ts  
+https://github.com/eamodio/vscode-gitlens/blob/d2ce17503cf4516843335e149df665f1cfc17ff9/src/logger.ts  
+https://github.com/eamodio/vscode-gitlens/blob/d9ee25158b1fa9941ed5044289108e3f38aab9c0/src/git/parsers/logParser.ts  
+https://github.com/eamodio/vscode-gitlens/blob/e2a6ae1317ce348985314e18c3d5ed257f0ef357/src/git/models/repository.ts#L133  which carries this notice:
 
 The MIT License (MIT)
 

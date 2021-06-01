@@ -1,5 +1,5 @@
 /*
-adapted from https://github.com/microsoft/vscode-pull-request-github/blob/df0b143714b6a17d74f8e22dddb0863d7e71fdb8/src/authentication/keychain.ts
+Portions adapted from https://github.com/microsoft/vscode-pull-request-github/blob/df0b143714b6a17d74f8e22dddb0863d7e71fdb8/src/authentication/keychain.ts which carries this notice:
 
 MIT License
 
