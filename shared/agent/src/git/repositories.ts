@@ -472,7 +472,7 @@ export class GitRepositories {
 
 			try {
 				/**
-				 *  adapted from https://github.com/eamodio/vscode-gitlens/blob/master/src/git/models/repository.ts#L133
+				 *  Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/e2a6ae1317ce348985314e18c3d5ed257f0ef357/src/git/models/repository.ts#L133 which carries this notice:
 				 * 	The MIT License (MIT)
 
 					Copyright (c) 2016-2021 Eric Amodio

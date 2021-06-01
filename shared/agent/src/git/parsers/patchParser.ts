@@ -1,5 +1,5 @@
 /**
- adapted from https://github.com/kpdecker/jsdiff/blob/master/src/patch/parse.js
+ Portions adapted from https://github.com/kpdecker/jsdiff/blob/532bcf9315a39518a772e47d912fb0d22b1aa701/src/patch/parse.js which carries this notice:
   
  Software License Agreement (BSD License)
 

@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Windows.Documents;
+using System.Windows.Forms;
 using CodeStream.VisualStudio.Core.Models;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace CodeStream.VisualStudio.Core.Services {
 	public interface IIdeService {
@@ -14,7 +12,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		/// </summary>
 		/// <param name="url">an absolute url</param>
 		void Navigate(string url);
-		System.Threading.Tasks.Task SetClipboardAsync(string text);
+		System.Threading.Tasks.Task SetClipboardAsync(string text);		
 		void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false);
 		System.Threading.Tasks.Task<OpenEditorResult> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false);
 		System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false);
@@ -29,7 +27,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 		//	string CreateDiffTempFile(string originalFile, string content, Range range);
 		void RemoveTempFileSafe(string fileName);
 		CurrentTextViews GetCurrentTextViews();
-		CommonFileDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);		
+		FolderBrowserDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);		
 		void TryCloseDiffs();
 	}
 

@@ -1,7 +1,7 @@
 "use strict";
 
 /**
-adapted from https://github.com/eamodio/vscode-gitlens
+Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/iterable.ts which carries this notice:
 
 The MIT License (MIT)
 

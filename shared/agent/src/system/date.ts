@@ -6,7 +6,7 @@ const MillisecondsPerMinute = 60000; // 60 * 1000
 const MillisecondsPerDay = 86400000; // 24 * 60 * 60 * 1000
 
 /** 
-adapted from https://github.com/date-fns/date-fns/blob/601bc8e5708cbaebee5389bdaf51c2b4b33b73c4/src/locale/en/build_distance_in_words_locale/index.js
+Portions adapted from https://github.com/date-fns/date-fns/blob/601bc8e5708cbaebee5389bdaf51c2b4b33b73c4/src/locale/en/build_distance_in_words_locale/index.js which carries this notice:
 
 The MIT License (MIT)
 
@@ -128,7 +128,7 @@ patch.distanceInWords = buildDistanceInWordsLocale();
 const formatterOptions = { addSuffix: true, locale: patch };
 
 /**
-adapted from https://github.com/eamodio/vscode-gitlens
+Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/date.ts which carries this notice:
 
 The MIT License (MIT)
 
