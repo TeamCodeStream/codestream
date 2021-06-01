@@ -4275,19 +4275,7 @@ Manifest Project URL: https://github.com/google/guava/
 
 POM License: The Apache Software License, Version 2.0 - http://www.apache.org/licenses/LICENSE-2.0.txt
 
-5. Group: com.teamdev.jxbrowser Name: jxbrowser Version: 7.7.1
-
-6. Group: com.teamdev.jxbrowser Name: jxbrowser-linux64 Version: 7.7.1
-
-7. Group: com.teamdev.jxbrowser Name: jxbrowser-mac Version: 7.7.1
-
-8. Group: com.teamdev.jxbrowser Name: jxbrowser-swing Version: 7.7.1
-
-9. Group: com.teamdev.jxbrowser Name: jxbrowser-win32 Version: 7.7.1
-
-10. Group: com.teamdev.jxbrowser Name: jxbrowser-win64 Version: 7.7.1
-
-11. Group: commons-io Name: commons-io Version: 2.6
+5. Group: commons-io Name: commons-io Version: 2.6
 
 Project URL: http://commons.apache.org/proper/commons-io/
 
