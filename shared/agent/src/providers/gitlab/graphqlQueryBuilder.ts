@@ -321,7 +321,7 @@ export class GraphqlQueryBuilder {
 				queryAsString = print(document);
 				this.store[version] = {};
 				this.store[version][queryKey] = queryAsString;
-				Logger.debug(`GraphqlQueryStore.build ${this.providerId} version=${version} no config`);
+				Logger.log(`GraphqlQueryStore.build ${this.providerId} version=${version} no config`);
 				return queryAsString;
 			}
 
@@ -329,12 +329,13 @@ export class GraphqlQueryBuilder {
 			// want to modifiy it for all uses
 			const documentClone = JSON.parse(JSON.stringify(document)) as DocumentNode;
 			if (configurations?.length) {
+				Logger.log(
+					`GraphqlQueryStore.build ${this.providerId} version=${version} ${configurations.length} configurations`
+				);
 				for (const config of configurations) {
 					if (!config.selector(version)) continue;
 
-					Logger.debug(
-						`GraphqlQueryStore.build ${this.providerId} version=${version} found config`
-					);
+					Logger.log(`GraphqlQueryStore.build ${this.providerId} version=${version} found config`);
 					const debugging: any[] = [];
 					const headData = config.query.head;
 
@@ -409,18 +410,21 @@ export class GraphqlQueryBuilder {
 						lastSelectionSet = currentSelectionSet;
 						head = head.next as Leaf;
 					}
-					Logger.log(
-						`GraphqlQueryStore.build ${this.providerId} version=${version} saving query for ${queryKey}`
-					);
 				}
+				Logger.log(
+					`GraphqlQueryStore.build ${this.providerId} version=${version} saving modified query for ${queryKey}`
+				);
 			} else {
-				Logger.debug(
+				Logger.log(
 					`GraphqlQueryStore.build ${this.providerId} version=${version} saving default query for ${queryKey}`
 				);
 			}
 			queryAsString = print(documentClone);
 			this.store[version] = {};
 			this.store[version][queryKey] = queryAsString;
+			Logger.log(
+				`GraphqlQueryStore.build ${this.providerId} version=${version} saved query for ${queryKey}`
+			);
 			return queryAsString;
 		} catch (ex) {
 			Logger.warn(`GraphqlQueryStore.build ${this.providerId} error`, {

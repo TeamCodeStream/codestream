@@ -931,7 +931,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			});
 		} catch (ex) {
-			Logger.warn(ex, "getVersion");
+			Logger.warn(`${this.providerConfig.id} getVersion`, {
+				error: ex
+			});
 			version = this.DEFAULT_VERSION;
 		}
 
