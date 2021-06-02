@@ -495,6 +495,9 @@ export class GitRepositories {
 					OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 					SOFTWARE.
 				 */
+				/**
+				 * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
+				 */
 				// FETCH_HEAD can also be modified with other git commands, creating an infinite loop, watch out!
 
 				/**

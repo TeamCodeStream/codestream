@@ -23,8 +23,11 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
 */
+
+/**
+ * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
+ */
 import { createHash, HexBase64Latin1Encoding } from "crypto";
 import { applyPatch, ParsedDiff } from "diff";
 import * as eol from "eol";
@@ -322,7 +325,6 @@ export namespace Strings {
 			// Ignore combining characters
 			if (code >= 0x300 && code <= 0x36f) continue;
 
-			// Portions adapted from https://stackoverflow.com/questions/30757193/find-out-if-character-in-string-is-emoji
 			if (
 				(code >= 0x1f600 && code <= 0x1f64f) || // Emoticons
 				(code >= 0x1f300 && code <= 0x1f5ff) || // Misc Symbols and Pictographs
