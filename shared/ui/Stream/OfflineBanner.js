@@ -10,13 +10,22 @@ class OfflineBanner extends PureComponent {
 					? `Error code: ${this.props.offlineCode}`
 					: null;
 			return (
-				<div className="banner">
-					<div className="error-banner">
+				<div className="banner full-banner">
+					<div className="error-banner full-error-banner">
 						<div className="content">
 							<FormattedMessage
 								id="offlineBanner.offline.main"
 								defaultMessage="We’re having problems connecting to CodeStream. Hold tight, we’ll keep trying..."
 							/>
+							{this.props.isOnPrem && (
+								<>
+									<br/>
+									<FormattedMessage
+										id="offlineBanner.offline.isOnPrem"
+										defaultMessage="If your CodeStream server is behind a firewall, make sure you're connected to your VPN."
+									/>
+								</>
+							)}
 						</div>
 						{errorMsg && (
 							<div className="content">
@@ -31,10 +40,11 @@ class OfflineBanner extends PureComponent {
 	}
 }
 
-const mapStateToProps = ({ connectivity }) => {
+const mapStateToProps = ({ connectivity, configs }) => {
 	return {
 		isOffline: connectivity.offline,
-		offlineCode: connectivity.code
+		offlineCode: connectivity.code,
+		isOnPrem: configs.isOnPrem
 	};
 };
 export default connect(mapStateToProps)(OfflineBanner);
