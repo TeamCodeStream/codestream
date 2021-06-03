@@ -5,7 +5,7 @@ import {
 	getPullRequestCommitsFromProvider
 } from "@codestream/webview/store/providerPullRequests/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
@@ -13,7 +13,7 @@ import Tooltip from "./Tooltip";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
 import copy from "copy-to-clipboard";
-import { groupBy } from "lodash-es";
+import { groupBy, orderBy } from "lodash-es";
 import { Link } from "./Link";
 import { HostApi } from "../webview-api";
 import { ChangeDataType, DidChangeDataNotificationType } from "@codestream/protocols/agent";
@@ -136,9 +136,11 @@ export const PullRequestCommitsTab = props => {
 
 	const _mapData = data => {
 		const commitsByDay = groupBy(data, _ => {
+			// need this to be all numbers so we can sort on them
+			// before changing them to a human readable format
 			return new Intl.DateTimeFormat("en", {
 				day: "numeric",
-				month: "short",
+				month: "numeric",
 				year: "numeric"
 			}).format(new Date(_.authoredDate).getTime());
 		});
@@ -189,27 +191,24 @@ export const PullRequestCommitsTab = props => {
 			</div>
 		);
 
-	// if (!commits || !commits.length) return null;
-
-	// const byDay = groupBy(pr.commits.nodes, _ => {
-	// 	return new Intl.DateTimeFormat("en", {
-	// 		day: "numeric",
-	// 		month: "short",
-	// 		year: "numeric"
-	// 	}).format(new Date(_.commit.authoredDate).getTime());
-	// });
+	const order = derivedState.providerName === "GitLab" ? "desc" : "asc";
 
 	return (
 		<PRCommitContent>
-			{Object.keys(commits).map((day, index) => {
+			{orderBy(Object.keys(commits), _ => _, order).map((day, index) => {
 				return (
 					<div key={index}>
 						<PRCommitDay>
 							<Icon name="git-commit" />
-							Commits on {day}
+							Commits on{" "}
+							{new Intl.DateTimeFormat("en", {
+								day: "numeric",
+								month: "short",
+								year: "numeric"
+							}).format(new Date(day.toString()))}
 						</PRCommitDay>
 						<div>
-							{commits[day].map((commit, index) => {
+							{orderBy(commits[day], "authoredDate", order).map((commit, index) => {
 								const { author, committer } = commit;
 								return (
 									<PRCommitCard key={index}>
@@ -223,7 +222,7 @@ export const PullRequestCommitsTab = props => {
 										)}
 										<PRHeadshotName className="no-padding" person={committer} />
 										<span className="subtle"> committed</span>
-										<Timestamp time={commit.authoredDate} relative />
+										<Timestamp time={commit.authoredDate} relative showTooltip />
 										<PRCommitButtons>
 											<Tooltip
 												title={"View commit on " + derivedState.providerName}
