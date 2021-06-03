@@ -139,9 +139,9 @@ export const PullRequestCommitsTab = props => {
 			// need this to be all numbers so we can sort on them
 			// before changing them to a human readable format
 			return new Intl.DateTimeFormat("en", {
-				day: "numeric",
-				month: "numeric",
-				year: "numeric"
+				day: "2-digit",
+				month: "2-digit",
+				year: "2-digit"
 			}).format(new Date(_.authoredDate).getTime());
 		});
 
