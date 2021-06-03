@@ -225,8 +225,8 @@ class GetReviewContentsResult(
     val repoRoot: String?,
     val leftPath: String,
     val rightPath: String,
-    val left: String,
-    val right: String
+    val left: String?,
+    val right: String?
 )
 
 class TextDocumentFromKeyParams(val key: Int)

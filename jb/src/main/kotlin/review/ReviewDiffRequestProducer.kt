@@ -37,7 +37,7 @@ class ReviewDiffRequestProducer(
                 repoId,
                 ReviewDiffSide.LEFT,
                 path, // response.leftPath,
-                response.left
+                response.left ?: ""
             )
             val rightContent = createReviewDiffContent(
                 project,
@@ -47,7 +47,7 @@ class ReviewDiffRequestProducer(
                 repoId,
                 ReviewDiffSide.RIGHT,
                 path, // response.rightPath,
-                response.right
+                response.right ?: ""
             )
             request =
                 SimpleDiffRequest(review.title, leftContent, rightContent, response.leftPath, response.rightPath).also {
