@@ -1,6 +1,6 @@
 # Change Log
 
-## [11.0.9] - 2021-6-1
+## [11.0.9] - 2021-6-3
 
 ### Changed
 
@@ -10,11 +10,13 @@
 
 ### Fixed
 
+- Addresses [#595](https://github.com/TeamCodeStream/CodeStream/issues/595) &mdash; Connectivity Issues Makes CodeStream Unusable
 - Addresses [#590](https://github.com/TeamCodeStream/CodeStream/issues/590) &mdash; Commit selection is reset for a Gitlab MR after posting a comment
 - Addresses [#522](https://github.com/TeamCodeStream/CodeStream/issues/522) &mdash; Support multi-line comments in GL MR
 - Addresses [#400](https://github.com/TeamCodeStream/CodeStream/issues/400) &mdash; Agent is detected as a new process by Intego NetBarrier every time IntelliJ starts
 - Fixes an issue with quote replies in a merge request where the reply text would get included in the quote
 - Fixes an issue where resolving a codemark or feedback request marks it as unread in the Codemarks/Feedback Requests section of the CodeStream pane
+- Fixes an issue with the Commits tab in a pull/merge request showing commits in the wrong order
 
 ## [11.0.8] - 2021-5-21
 

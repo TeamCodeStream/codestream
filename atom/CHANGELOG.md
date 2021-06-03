@@ -1,6 +1,6 @@
 # Change Log
 
-## [11.0.7] - 2021-6-1
+## [11.0.7] - 2021-6-3
 
 ### Added
 
@@ -23,6 +23,8 @@
 - Addresses [#400](https://github.com/TeamCodeStream/CodeStream/issues/400) &mdash; Agent is detected as a new process by Intego NetBarrier every time IntelliJ starts
 - Fixes an issue with quote replies in a merge request where the reply text would get included in the quote
 - Fixes an issue where resolving a codemark or feedback request marks it as unread in the Codemarks/Feedback Requests section of the CodeStream pane
+- Fixes an issue with the Commits tab in a pull/merge request showing commits in the wrong order
+- Addresses [#595](https://github.com/TeamCodeStream/CodeStream/issues/595) &mdash; Connectivity Issues Makes CodeStream Unusable
 - Addresses [#547](https://github.com/TeamCodeStream/CodeStream/issues/547) &mdash; Reviewing Gitlab MR with a partial commit range shows invalid changesets
 - Addresses [#541](https://github.com/TeamCodeStream/CodeStream/issues/541) &mdash; Suppress html comments in rendering of issues
 - Addresses [#537](https://github.com/TeamCodeStream/CodeStream/issues/537) &mdash; Branch selection in dropdown of Codemarks section should automatically pick up branch change
