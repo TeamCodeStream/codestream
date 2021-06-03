@@ -44,7 +44,7 @@ if not build:
 if args.action == 'prep':
 	build.prep()                              # set teamcity variables / parameters
 elif args.action == 'build':
-	build.getJxBrowserLicense()
+	# build.getJxBrowserLicense()
 	build.build()                             # complete build so services can be started
 elif args.action == 'citest':
 	# build.citest()                            # run the continuous integration test suite
