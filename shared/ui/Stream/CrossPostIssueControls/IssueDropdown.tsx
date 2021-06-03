@@ -609,7 +609,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		},
 		[loadedBoards, loadedCards]
 	);
-	
+
 	const escapeRegExp = (str: string) => str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(query), "gi"), [query]);
 
@@ -893,8 +893,13 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		}
 	};
 
-	const isValidQuery = (query) => {
-		if(!(addingCustomFilterForProvider?.id === "github*com" || addingCustomFilterForProvider?.id === "github/enterprise")) {
+	const isValidQuery = query => {
+		if (
+			!(
+				addingCustomFilterForProvider?.id === "github*com" ||
+				addingCustomFilterForProvider?.id === "github/enterprise"
+			)
+		) {
 			setValidQuery(true);
 			return true;
 		}
@@ -950,9 +955,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				<Dialog title="Create a Custom Filter" onClose={closeCustomFilter}>
 					<div className="standard-form">
 						<fieldset className="form-body">
-						<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
-						<span> {providerDisplay.customFilterExample}</span>
-						<input
+							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
+							<span> {providerDisplay.customFilterExample}</span>
+							<input
 								type="text"
 								className="input-text control"
 								value={newCustomFilterName}
@@ -977,7 +982,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 								value={newCustomFilter}
 								onChange={e => setNewCustomFilter(e.target.value)}
 								placeholder="Enter Custom Filter"
-							/>							
+							/>
 							<ButtonRow>
 								<Button
 									disabled={newCustomFilter.length == 0}
@@ -1157,6 +1162,18 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 						</>
 					)}
 					{firstLoad && <LoadingMessage align="left">Loading...</LoadingMessage>}
+					{cards.length == 0 &&
+					selectedLabel !== "issues assigned to you" &&
+					!props.loadingMessage &&
+					(props.providers.length > 0 || derivedState.skipConnect) ? (
+						<FilterMissing>The selected filter(s) did not return any issues.</FilterMissing>
+					) : (
+						!props.loadingMessage &&
+						(props.providers.length > 0 || derivedState.skipConnect) &&
+						cards.length == 0 && (
+							<FilterMissing>There are no open issues assigned to you.</FilterMissing>
+						)
+					)}
 					{cards.map(card => (
 						<Row
 							key={card.key}
@@ -1374,4 +1391,11 @@ const IssueMissing = styled.div`
 	text-align: center;
 	padding: 0px 20px 0px 20px;
 	margin-top: -20px;
+`;
+
+const FilterMissing = styled.div`
+	text-align: left;
+	padding: 10px 20px 0px 20px;
+	color: @text-color-subtle;
+	font-size: 12px;
 `;
