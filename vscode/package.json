@@ -2,7 +2,7 @@
 	"name": "codestream",
 	"displayName": "CodeStream: GitHub, GitLab, Bitbucket PRs and Code Review",
 	"description": "GitHub pull requests, GitLab merge requests, and code reviews in your IDE. Eliminate context-switching between tools. Also integrates with Bitbucket, Slack, MS Teams, Jira, Trello and more.",
-	"version": "11.0.9",
+	"version": "11.0.10",
 	"author": "CodeStream",
 	"publisher": "CodeStream",
 	"license": "UNLICENSED",
