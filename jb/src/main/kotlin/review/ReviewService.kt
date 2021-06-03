@@ -10,11 +10,10 @@ import com.codestream.webViewService
 import com.intellij.diff.DiffDialogHints
 import com.intellij.diff.DiffManagerEx
 import com.intellij.diff.chains.DiffRequestChain
+import com.intellij.diff.editor.ChainDiffVirtualFile
 import com.intellij.diff.editor.DiffRequestProcessorEditor
-import com.intellij.diff.editor.DiffVirtualFile
 import com.intellij.diff.editor.SimpleDiffVirtualFile
 import com.intellij.diff.impl.CacheDiffRequestChainProcessor
-import com.intellij.diff.impl.DiffRequestProcessor
 import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.diff.tools.simple.SimpleDiffTool
 import com.intellij.diff.util.DiffUserDataKeysEx
@@ -82,10 +81,7 @@ class ReviewService(private val project: Project) {
             diffChain = myDiffChain
 
             ApplicationManager.getApplication().invokeLater {
-                val diffFile = object : DiffVirtualFile() {
-                    override fun createProcessor(project: Project): DiffRequestProcessor = CacheDiffRequestChainProcessor(project, myDiffChain)
-                    override fun getName(): String = "Feedback Request"
-                }
+                val diffFile = ChainDiffVirtualFile(myDiffChain, "Feedback Request")
                 FileEditorManager.getInstance(project).openFile(diffFile, true)
             }
         }

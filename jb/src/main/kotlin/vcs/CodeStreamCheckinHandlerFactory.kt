@@ -5,6 +5,7 @@ import com.codestream.settings.ApplicationSettingsService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.vcs.CheckinProjectPanel
+import com.intellij.openapi.vcs.changes.CommitContext
 import com.intellij.openapi.vcs.checkin.CheckinHandler
 import com.intellij.openapi.vcs.checkin.VcsCheckinHandlerFactory
 import com.intellij.openapi.vcs.ui.RefreshableOnComponent
@@ -15,7 +16,7 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 
 class CodeStreamCheckinHandlerFactory : VcsCheckinHandlerFactory(GitVcs.getKey()) {
-    override fun createVcsHandler(panel: CheckinProjectPanel?): CheckinHandler {
+    override fun createVcsHandler(panel: CheckinProjectPanel, commitContext: CommitContext): CheckinHandler {
         return object : CheckinHandler() {
             val applicationSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
             override fun getAfterCheckinConfigurationPanel(parentDisposable: Disposable?): RefreshableOnComponent {
@@ -43,7 +44,7 @@ class CodeStreamCheckinHandlerFactory : VcsCheckinHandlerFactory(GitVcs.getKey()
             }
 
             override fun checkinSuccessful() {
-                val project = panel?.project ?: return
+                val project = panel.project ?: return
                 if (!applicationSettings.state.createReviewOnCommit) return
                 project.reviewService?.createReviewFromInternalCommit()
             }

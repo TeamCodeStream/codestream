@@ -13,12 +13,7 @@ sourceCompatibility = 1.8
 repositories {
     jcenter()
     mavenCentral()
-    maven { url = "https://europe-maven.pkg.dev/jxbrowser/releases" }
     maven { url = "https://www.jetbrains.com/intellij-repository/snapshots" }
-}
-
-ext {
-    jxBrowserVersion = "7.7.1"
 }
 
 dependencies {
@@ -26,13 +21,6 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:1.3.72"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.0"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.0"
-
-//    implementation "com.teamdev.jxbrowser:jxbrowser-cross-platform:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-win32:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-win64:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-mac:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-linux64:${jxBrowserVersion}"
-    implementation "com.teamdev.jxbrowser:jxbrowser-swing:${jxBrowserVersion}"
 
     implementation group: "org.eclipse.lsp4j", name: "org.eclipse.lsp4j", version: "0.8.0"
     implementation "com.github.salomonbrys.kotson:kotson:2.5.0"
@@ -68,8 +56,8 @@ idea {
 intellij {
     type "IC"
     // the version parameter dictates which jars will be used at compilation time
-    version "2019.2.2" // earliest version we support
-    //  version "201.5616-EAP-CANDIDATE-SNAPSHOT"
+    version "2020.2" // earliest version we support
+    // version "201.5616-EAP-CANDIDATE-SNAPSHOT"
     // version "2019.2.3"
     // version "2019.3"
     // version "IC-2019.2.2"

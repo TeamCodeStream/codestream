@@ -13,7 +13,6 @@
         <statusBarWidgetProvider implementation="com.codestream.widgets.CodeStreamStatusBarWidgetProvider"/>
 
         <applicationService serviceImplementation="com.codestream.settings.ApplicationSettingsService"/>
-        <applicationService serviceImplementation="com.codestream.webview.BrowserEngineService"/>
 
         <projectService serviceImplementation="com.codestream.agent.AgentService"/>
         <projectService serviceImplementation="com.codestream.authentication.AuthenticationService"/>
@@ -69,6 +68,7 @@
     <actions>
         <action id="CodeStream.SignOut" class="com.codestream.actions.SignOut" text="CodeStream: Sign out"/>
         <action id="CodeStream.ReloadWebview" class="com.codestream.actions.ReloadWebview" text="CodeStream: Reload webview"/>
+        <action id="CodeStream.OpenDevTools" class="com.codestream.actions.OpenDevTools" text="CodeStream: Open webview dev tools"/>
 
         <group id="com.codestream.Actions" popup="true" text="CodeStream" icon="/images/codestream-color.svg" class="com.codestream.actions.CodeStreamActionGroup">
             <add-to-group group-id="EditorPopupMenu" anchor="after" relative-to-action="EditorPopupMenu2"/>
@@ -153,5 +153,5 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>Git4Idea</depends>
-    <idea-version since-build="192.4488" until-build="202.6396" />
+    <idea-version since-build="202.6397" />
 </idea-plugin>

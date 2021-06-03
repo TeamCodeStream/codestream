@@ -25,14 +25,16 @@ class CodeStreamToolWindowFactory : ToolWindowFactory, DumbAware {
         project.agentService?.onDidStart {
             logger.info("Scheduling webview attachment to tool window")
             val webViewService = project.webViewService ?: return@onDidStart
-            ApplicationManager.getApplication().invokeLater {
-                try {
-                    logger.info("Attaching webview to tool window")
-                    csPanel.remove(loadingLabel)
-                    csPanel.add(webViewService.webView)
-                    logger.info("Webview attached to tool window")
-                } catch (e: Exception) {
-                    logger.error(e)
+            webViewService.onDidCreateWebview {
+                ApplicationManager.getApplication().invokeLater {
+                    try {
+                        logger.info("Attaching webview to tool window")
+                        csPanel.remove(loadingLabel)
+                        csPanel.add(webViewService.webView.component)
+                        logger.info("Webview attached to tool window")
+                    } catch (e: Exception) {
+                        logger.error(e)
+                    }
                 }
             }
         } ?: logger.info("Unable to schedule webview attachment - project is disposed")
