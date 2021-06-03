@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="codestream-vs" Version="11.0.9.0" Language="en-US" Publisher="CodeStream" />
+    <Identity Id="codestream-vs" Version="11.0.10.0" Language="en-US" Publisher="CodeStream" />
     <DisplayName>CodeStream - GitHub &amp; GitLab PRs and Code Review</DisplayName>
     <Description xml:space="preserve">GitHub pull requests, GitLab merge requests, and code reviews in your IDE. Eliminate context-switching between tools. Also integrates with Bitbucket, Slack, Teams, Jira, Trello and more.</Description>
     <MoreInfo>https://codestream.com/</MoreInfo>
