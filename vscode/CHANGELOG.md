@@ -1,5 +1,11 @@
 # Change Log
 
+## [11.0.10] - 2021-6-4
+
+### Changed
+
+- Updated terms-of-service acceptance flow
+
 ## [11.0.9] - 2021-6-3
 
 ### Changed

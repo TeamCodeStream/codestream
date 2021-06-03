@@ -8,6 +8,7 @@
 
 ### Changed
 
+- Updated terms-of-service acceptance flow
 - You can now reply to any top-level comment in a merge request, regardless of whether or not it was started as a thread
 - Form that automatically pops up to request feedback when you commit is now dismissed after 15 minutes of inactivity
 - Changing branches while you have the feedback request form open no longer updates the form
