@@ -148,6 +148,7 @@ export interface SessionState {
 	otc?: string;
 	userId?: string;
 	inMaintenanceMode?: boolean;
+	acceptedTOS?: boolean;
 	machineId?: string;
 }
 

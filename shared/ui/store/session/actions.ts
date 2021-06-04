@@ -2,8 +2,9 @@ import { action } from "../common";
 import { SessionActionType, SessionState } from "./types";
 import { HostApi } from "../../webview-api";
 import { reset } from "../actions";
-import { LogoutRequestType } from "@codestream/protocols/webview";
+import { LogoutRequestType, AcceptTOSRequestType } from "@codestream/protocols/webview";
 import { setBootstrapped } from "../bootstrapped/actions";
+import { setUserPreference } from "../../Stream/actions";
 import {
 	TokenLoginRequestType,
 	GetAccessTokenRequestType,
@@ -20,6 +21,18 @@ export { reset };
 
 export const setSession = (session: Partial<SessionState>) =>
 	action(SessionActionType.Set, session);
+
+export const setTOS = (value: boolean) => action(SessionActionType.SetTOS, value);
+
+export const acceptTOS = () => async (dispatch, getState: () => CodeStreamState) => {
+	const { session } = getState();
+
+	if (session.userId) {
+		await dispatch(setUserPreference(["acceptedTOS"], true));
+	}
+
+	dispatch(setTOS(true));
+};
 
 export const setMaintenanceMode = (
 	value: boolean,

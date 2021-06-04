@@ -22,6 +22,7 @@ import { useDidMount } from "../utilities/hooks";
 import { Loading } from "../Container/Loading";
 import { supportsSSOSignIn } from "../store/configs/reducer";
 import { Server } from "../webview-api";
+import { PresentTOS } from "./PresentTOS";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -61,7 +62,8 @@ export const Signup = (props: Props) => {
 			supportsSSOSignIn: supportsSSOSignIn(state.configs),
 			oktaEnabled: state.configs.isOnPrem,
 			isInVSCode: state.ide.name === "VSC",
-			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin
+			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin,
+			acceptedTOS: state.session.acceptedTOS
 		};
 	});
 	const [email, setEmail] = useState(props.email || "");
@@ -332,6 +334,8 @@ export const Signup = (props: Props) => {
 		authenticationProviders["gitlab*com"] ||
 		authenticationProviders["bitbucket*org"];
 
+	if (!derivedState.acceptedTOS) return <PresentTOS />;
+
 	return (
 		<div className="onboarding-page">
 			{derivedState.supportsSSOSignIn && showOauth && (
@@ -505,7 +509,7 @@ export const Signup = (props: Props) => {
 					)}
 					<div id="controls">
 						<div className="footer">
-							<small className="fine-print">
+							<small className="fine-print" style={{ display: "none" }}>
 								<FormattedMessage id="signUp.legal.start" />{" "}
 								<FormattedMessage id="signUp.legal.terms">
 									{text => <Link href="https://codestream.com/terms">{text}</Link>}

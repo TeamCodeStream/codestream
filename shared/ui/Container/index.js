@@ -20,9 +20,11 @@ import { ThemeProvider } from "styled-components";
 import { darkTheme, createTheme } from "../src/themes";
 import { closeAllPanels } from "../store/context/actions";
 import { WebviewErrorRequestType } from "@codestream/protocols/agent";
+import { PresentTOS } from "../Authentication/PresentTOS";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
+
 	return {
 		bootstrapped: state.bootstrapped,
 		connectivityError: state.connectivity.error,
@@ -33,7 +35,9 @@ const mapStateToProps = state => {
 		apiVersioning: state.apiVersioning,
 		ide: state.ide && state.ide.name ? state.ide.name : undefined,
 		serverUrl: state.configs.serverUrl,
-		isOnPrem: state.configs.isOnPrem
+		isOnPrem: state.configs.isOnPrem,
+		offline: state.connectivity.offline,
+		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS
 	};
 };
 
@@ -142,6 +146,7 @@ const Root = connect(mapStateToProps)(props => {
 				</p>
 			</RoadBlock>
 		);
+	// if (!props.acceptedTOS) return <PresentTOS />;
 	if (!props.loggedIn) return <UnauthenticatedRoutes />;
 	if (props.company && props.company.plan === "TRIALEXPIRED") {
 		const upgradeLink = `${props.serverUrl}/web/subscription/upgrade/${props.company.id}`;

@@ -72,6 +72,18 @@ export const LogoutRequestType = new RequestType<LogoutRequest, LogoutResponse, 
 	`${IpcRoutes.Host}/logout`
 );
 
+export interface AcceptTOSRequest {
+	reason?: LogoutReason;
+}
+
+export interface AcceptTOSResponse {}
+export const AcceptTOSRequestType = new RequestType<
+	AcceptTOSRequest,
+	AcceptTOSResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/acceptTOS`);
+
 export const ReloadWebviewRequestType = new RequestType<void, void, void, void>(
 	`${IpcRoutes.Host}/webview/reload`
 );

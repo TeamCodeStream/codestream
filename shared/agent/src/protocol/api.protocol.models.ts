@@ -679,6 +679,9 @@ export interface CSMePreferences {
 	pullRequestSquashCommits?: boolean;
 	pullRequestDeleteSourceBranch?: boolean;
 
+	// whether the user accepted our terms of service
+	acceptedTOS?: boolean;
+
 	[key: string]: any;
 }
 

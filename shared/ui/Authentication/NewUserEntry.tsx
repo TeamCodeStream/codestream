@@ -19,6 +19,7 @@ import {
 	GetWorkspaceAutoJoinInfoRequestType,
 	GetWorkspaceAutoJoinInfoResponse
 } from "@codestream/protocols/agent";
+import { PresentTOS } from "./PresentTOS";
 
 const JoinTitle = styled.div`
 	font-size: 14px;
@@ -38,6 +39,7 @@ interface ConnectedProps {
 	pluginVersion: string;
 	whichServer: string;
 	isOnPrem: boolean;
+	acceptedTOS: boolean;
 }
 
 interface Props extends ConnectedProps, DispatchProp {}
@@ -201,13 +203,6 @@ export const NewUserEntry = (connect(mapStateToProps) as any)((props: Props) => 
 											CodeStream Version {props.pluginVersion}
 											<br />
 											Connected to {props.whichServer}.
-										</p>
-										<p style={{ opacity: 1, fontSize: ".9em", textAlign: "center" }}>
-											{!props.isOnPrem && (
-												<a href="https://docs.codestream.com/userguide/faq/on-prem/">
-													Looking for on-prem?
-												</a>
-											)}
 										</p>
 									</div>
 								</div>

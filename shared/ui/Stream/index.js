@@ -88,6 +88,7 @@ import { GlobalNav } from "./GlobalNav";
 import { CheckEmailVsGit } from "./CheckEmailVsGit";
 import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
 import { getTestGroup } from "../store/context/reducer";
+import { PresentTOS } from "../Authentication/PresentTOS";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -233,8 +234,10 @@ export class SimpleStream extends PureComponent {
 
 	render() {
 		const { showHeadshots, isFirstPageview } = this.props;
-		let { activePanel, activeModal } = this.props;
+		let { activePanel, activeModal, acceptedTOS } = this.props;
 		const { q } = this.state;
+
+		if (!acceptedTOS) return <PresentTOS />;
 
 		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
 
@@ -668,7 +671,7 @@ export class SimpleStream extends PureComponent {
  * @param {Object} state.teams
  **/
 const mapStateToProps = state => {
-	const { configs, context, session, streams, companies } = state;
+	const { configs, context, session, streams, companies, preferences } = state;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -696,7 +699,8 @@ const mapStateToProps = state => {
 		postStreamId: postStream.id,
 		composeCodemarkActive: context.composeCodemarkActive,
 		isFirstPageview: context.isFirstPageview,
-		onboardingTestGroup: getTestGroup(state, "onboard-edu")
+		onboardingTestGroup: getTestGroup(state, "onboard-edu"),
+		acceptedTOS: preferences.acceptedTOS
 	};
 };
 
