@@ -1,6 +1,6 @@
 # Change Log
 
-## [11.0.10] - 2021-6-4
+## [11.0.10] - 2021-6-7
 
 ### Changed
 
@@ -96,7 +96,7 @@
 - Fixes an issue where trying to view a pull request via list/tree view results in an error
 - Addresses [#429](https://github.com/TeamCodeStream/CodeStream/issues/429) &mdash; Incorrect user/repo listed at bottom of a PR
 - Fixes an issue where hitting Esc to close the comment form in a pull request exits you out of the pull request completely
-- Fixes an issue where some loading/saving messages in pull requests don't go away after completion 
+- Fixes an issue where some loading/saving messages in pull requests don't go away after completion
 - Fixes an issue where merge requests created with unpushed branches lead to GraphQL error
 - Fixes an issue with the display of images in merge request descriptions
 - Fixes an issue replying to an existing comment in a merge request while there is a pending review
@@ -280,7 +280,7 @@
 - Addresses [#388](https://github.com/TeamCodeStream/CodeStream/issues/388) &mdash; Codemark issue with filenames containing "+" char
 - Fixes an unexpected error when clicking on a pull request
 - Fixes an issue with the count in the heading of the Coedmarks section being incorrect when filter isn't set to the current file
-- Fixes an issue commenting in a pull request in a file in a folder that doesn't exist in your current branch 
+- Fixes an issue commenting in a pull request in a file in a folder that doesn't exist in your current branch
 - Fixes an issue with the Slack integration not appearing as a green tile on the Integrations page immediately after connecting
 - Fixes an issue with the Locate button not working in a feedback request when you don't have the given repo open
 - Fixes an issue with commenting on code in files that are symlinks
@@ -315,7 +315,7 @@
 
 ### Fixed
 
-- Addresses [#392](https://github.com/TeamCodeStream/CodeStream/issues/392) &mdash; Codemark not showing code block when created from Windows 
+- Addresses [#392](https://github.com/TeamCodeStream/CodeStream/issues/392) &mdash; Codemark not showing code block when created from Windows
 
 ## [10.4.2] - 2021-1-29
 
@@ -351,7 +351,7 @@
 
 ### Fixed
 
-- Addresses [#380](https://github.com/TeamCodeStream/CodeStream/issues/380) &mdash; Viewing a PR with status checks on GitHub Enterprise generates an error 
+- Addresses [#380](https://github.com/TeamCodeStream/CodeStream/issues/380) &mdash; Viewing a PR with status checks on GitHub Enterprise generates an error
 - Addresses [#376](https://github.com/TeamCodeStream/CodeStream/issues/376) &mdash; Can't exit preview mode when creating a feedback request
 - Fixes an issue where you'd end up in an infinite "Fetching repo..." loop trying to create an issue on Bitbucket
 - Fixes an issue creating a permalink when in a WSL environment
@@ -395,16 +395,16 @@
 
 ### Added
 
-- Split the Feedback Requests section of the sidebar into sections for Open, Approved and Needs Work 
+- Split the Feedback Requests section of the sidebar into sections for Open, Approved and Needs Work
 - When selecting a ticket to start work, added an option to pull latest if base branch is behind origin
-- Added the ability to set a default base branch per repo when creating a feature branch  
+- Added the ability to set a default base branch per repo when creating a feature branch
 
 ## [10.2.1] - 2020-12-23
 
 ### Added
 
 - Adds a new onboarding flow for some users that guides them through the setup of integrations and creating their first code comment
-- Adds support for remotes using SSH aliases 
+- Adds support for remotes using SSH aliases
 
 ### Changed
 
