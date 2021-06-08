@@ -1,11 +1,12 @@
-import React, { useState, useReducer, useCallback, useMemo, FunctionComponent } from "react";
+import React, { useState, useReducer, useCallback, useMemo, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "../store";
 import { Button } from "../src/components/Button";
-import { CSMe } from "@codestream/protocols/api";
+import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
+import { getMyPullRequests, updatePullRequestGroups } from "../store/providerPullRequests/actions";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
@@ -65,6 +66,8 @@ import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
 import { useDidMount } from "../utilities/hooks";
 import { ProviderPullRequestActionsTypes } from "../store/providerPullRequests/types";
+import { PullRequestInlineMenu } from "../src/components/controls/PullRequestInlineMenu";
+import * as providerSelectors from "../store/providers/reducer";
 
 const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -220,6 +223,8 @@ export const PullRequestConversationTab = (props: {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const { preferences, ide } = state;
 
+		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
+
 		return {
 			defaultMergeMethod: preferences.lastPRMergeMethod || "SQUASH",
 			currentUser,
@@ -239,7 +244,14 @@ export const PullRequestConversationTab = (props: {
 			team,
 			skipGitEmailCheck,
 			addBlameMapEnabled,
-			isInVscode: ide.name === "VSC"
+			isInVscode: ide.name === "VSC",
+			pullRequestQueries: state.preferences.pullRequestQueries,
+			PRConnectedProviders: prConnectedProviders,
+			GitLabConnectedProviders: providerSelectors.getConnectedGitLabHosts(state),
+			allRepos:
+				preferences.pullRequestQueryShowAllRepos == null
+					? true
+					: preferences.pullRequestQueryShowAllRepos
 		};
 	});
 	const { pr } = derivedState;
@@ -257,12 +269,37 @@ export const PullRequestConversationTab = (props: {
 	const [clInstructionsIsOpen, toggleClInstructions] = useReducer((open: boolean) => !open, false);
 	const [cloneURLType, setCloneURLType] = useState("https");
 	const [cloneURL, setCloneURL] = useState(pr && pr.repository ? `${pr.repository.url}.git` : "");
+	const [queries, setQueries] = React.useState<PullRequestQuery[] | undefined>(undefined);
 
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
 		insertNewline = functions.insertNewlineAtCursor;
 		focusOnMessageInput = functions.focus;
 	};
+
+	useEffect(() => {
+		// Loop through providers and aggregate queries into proper format
+		// const newQueries = {};
+		// const providers = derivedState.PRConnectedProviders;
+
+		// console.log("CONNECTED PROVIDERS");
+		// console.log(providers);
+
+		// providers.forEach(provider => {
+		// 	console.log("provider");
+		// 	console.log(provider);
+		// 	if ("queries" in provider) {
+		// 		console.log("query present!");
+		// 		newQueries[provider.id] = provider.queries;
+		// 	}
+		// });
+
+
+		console.log("newQueries!!!!!!!!!!!!!!!!!!");
+		console.log(derivedState.pullRequestQueries);
+
+		setQueries(derivedState.pullRequestQueries);
+	}, [derivedState.pullRequestQueries]);
 
 	useDidMount(() => {
 		if (props.initialScrollPosition) {
@@ -594,27 +631,62 @@ export const PullRequestConversationTab = (props: {
 
 	const setLabel = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
-		await dispatch(
+		const response = await dispatch(
 			api("setLabelOnPullRequest", {
 				labelId: id,
 				onOff
 			})
 		);
-		console.log('FIND MEEEEEE')
-		if (availableLabels && availableLabels.length) {
-			console.log(availableLabels);
-			const label: any = availableLabels.find(elem => elem['id'] === id);
-			console.log(label);
-			dispatch(
-				updatePullRequestLabels(
-					derivedState.currentPullRequestProviderId!,
-					derivedState.currentPullRequestId!,
-					label,
-					onOff
-				)
-			);
-		}
 		
+		// need way to continue only when resp is valid (promise is fulfilled)
+			if (response) {
+				// refresh PRs
+				console.log("----------");
+				console.log("FIRING getMyPullRequests ");
+				console.log("----------");
+				console.log(queries);
+				console.log(derivedState);
+	
+				try {
+					// fetchPRs()
+					const newGroups = {};
+					for (const connectedProvider of derivedState.PRConnectedProviders) {
+						try {
+							if (queries) {
+								const options = { force: true, alreadyLoading: false };
+								const providerQuery: PullRequestQuery[] = queries[connectedProvider.id];
+								const queryStrings = Object.values(providerQuery).map(_ => _.query);
+		
+								// We need to delay this api request as we are making a request to make a change (e.g. adding a label)
+								// then refreshing the new data and the data isn't being returned quick enough
+								const response: any = await dispatch(
+									getMyPullRequests(
+										connectedProvider.id,
+										queryStrings,
+										!derivedState.allRepos,
+										options,
+										true
+									)
+								);
+								console.log(response);
+								if (response && response.length) {
+									console.log("RESPONSE");
+									console.log(response);
+		
+									newGroups[connectedProvider.id] = response;
+								}
+							}
+						} catch (error) {
+							console.error(error);
+						}
+					}
+					console.log('SETTING NEW GROUPS');
+					console.log(newGroups);
+					dispatch(updatePullRequestGroups(newGroups));
+				} catch (error) {
+					console.error(error);
+				}
+			}
 		setIsLoadingMessage("");
 	};
 

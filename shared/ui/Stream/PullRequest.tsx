@@ -58,7 +58,8 @@ import {
 	getPullRequestConversations,
 	clearPullRequestCommits,
 	api,
-	updateMyPullRequests
+	updatePullRequestTitle,
+	setProviderError
 } from "../store/providerPullRequests/actions";
 import {
 	getCurrentProviderPullRequest,
@@ -118,10 +119,6 @@ export const PullRequest = () => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const currentPullRequest = getCurrentProviderPullRequest(state);
-		// console.log("CURRENT PULL REQEUST")
-		// console.log(currentPullRequest);
-		// console.log(state.context.currentPullRequest);
-		// console.log(state);
 		const providerPullRequestLastUpdated = getCurrentProviderPullRequestLastUpdated(state);
 		return {
 			viewPreference: getPreferences(state).pullRequestView || "auto",
@@ -377,19 +374,28 @@ export const PullRequest = () => {
 	}, [pr, openRepos, currentRepoChanged]);
 
 	const saveTitle = async () => {
-		setIsLoadingMessage("Saving Title...");
-		setSavingTitle(true);
-		await dispatch(api("updatePullRequestTitle", { title }));
-		dispatch(
-			updateMyPullRequests(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!,
-				{ title: title, labels: derivedState.labels }
-			)
-		);
-		setSavingTitle(false);
-		setEditingTitle(false);
-		setIsLoadingMessage("");
+		try {
+			setIsLoadingMessage("Saving Title...");
+			setSavingTitle(true);
+			const response = await dispatch(api("updatePullRequestTitle", { title }));
+			if (response !== undefined) {
+				dispatch(
+					updatePullRequestTitle(
+						derivedState.currentPullRequestProviderId!,
+						derivedState.currentPullRequestId!,
+						{ title: title }
+					)
+				);
+			}
+		} catch (er) {
+			dispatch(setProviderError(derivedState.currentPullRequestProviderId!, derivedState.currentPullRequestId!, {
+				message: "Error saving title"
+			}));
+		} finally {
+			setSavingTitle(false);
+			setEditingTitle(false);
+			setIsLoadingMessage("");
+		}
 	};
 
 	const getOpenRepos = async () => {

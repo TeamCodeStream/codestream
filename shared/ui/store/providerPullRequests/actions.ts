@@ -15,7 +15,8 @@ import {
 	FetchAssignableUsersRequestType,
 	FetchAssignableUsersResponse,
 	GetCommitsFilesRequestType,
-	GetCommitsFilesResponse
+	GetCommitsFilesResponse,
+	PullRequestGroups
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "..";
 import { RequestType } from "vscode-languageserver-protocol";
@@ -42,8 +43,17 @@ export const _addPullRequestCollaborators = (providerId: string, id: string, col
 		collaborators
 	});
 
-export const updateMyPullRequests = (providerId: string, id: string, pullRequestData: any) =>
-	action(ProviderPullRequestActionsTypes.UpdateMyPullRequests, {
+export const updatePullRequestGroups = (newGroups: PullRequestGroups) => {
+	return (
+		{
+			type: ProviderPullRequestActionsTypes.UpdatePullRequestGroups,
+			payload: newGroups
+		}
+	)
+};
+
+export const updatePullRequestTitle = (providerId: string, id: string, pullRequestData: any) =>
+	action(ProviderPullRequestActionsTypes.UpdatePullRequestTitle, {
 		providerId,
 		id,
 		pullRequestData
@@ -543,13 +553,10 @@ export const api = <T = any, R = any>(
 		preventErrorReporting?: boolean;
 	}
 ) => async (dispatch, getState: () => CodeStreamState) => {
-	console.log("in api function");
 	let providerId;
 	let pullRequestId;
 	try {
 		const state = getState();
-		console.log("current state");
-		console.log(state);
 		const currentPullRequest = state.context.currentPullRequest;
 		if (!currentPullRequest) {
 			dispatch(
@@ -560,25 +567,18 @@ export const api = <T = any, R = any>(
 			return;
 		}
 		({ providerId, id: pullRequestId } = currentPullRequest);
-		console.log("at the params line");
 		params = params || {};
 		if (!params.pullRequestId) params.pullRequestId = pullRequestId;
 		if (currentPullRequest.metadata) {
 			params = { ...params, ...currentPullRequest.metadata };
 			params.metadata = currentPullRequest.metadata;
 		}
-		console.log("executing 3rd party sending ??");
-		console.log(method);
-		console.log(providerId);
-		console.log(params);
 
 		const response = (await HostApi.instance.send(new ExecuteThirdPartyTypedType<T, R>(), {
 			method: method,
 			providerId: providerId,
 			params: params
 		})) as any;
-		console.log("check the reesponse here interestting");
-		console.log(response);
 		if (response && (!options || (options && !options.preventClearError))) {
 			dispatch(clearPullRequestError(providerId, pullRequestId));
 		}
@@ -589,8 +589,6 @@ export const api = <T = any, R = any>(
 				handled: true
 			};
 		}
-		console.log("response:");
-		console.log(response);
 		return response as R;
 	} catch (error) {
 		let errorString = typeof error === "string" ? error : error.message;

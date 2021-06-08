@@ -74,7 +74,9 @@ export function InlineMenu(props: InlineMenuProps) {
 	};
 
 	const maybeToggleMenu = action => {
-		if (action !== "noop") toggleMenu(action);
+		if (action !== "noop") {
+			toggleMenu(action);
+		}
 		if (props.onChange) props.onChange(action);
 	};
 

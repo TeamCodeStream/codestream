@@ -1,5 +1,5 @@
 import { Index } from "../common";
-import { GetMyPullRequestsResponse } from "@codestream/protocols/agent";
+import { GetMyPullRequestsResponse, PullRequestGroups } from "@codestream/protocols/agent";
 
 export enum ProviderPullRequestActionsTypes {
 	AddPullRequestConversations = "@providerPullRequests/AddConversations",
@@ -12,8 +12,9 @@ export enum ProviderPullRequestActionsTypes {
 	AddPullRequestError = "@providerPullRequests/AddError",
 	ClearPullRequestError = "@providerPullRequests/ClearError",
 	HandleDirectives = "@providerPullRequests/HandleDirectives",
-	UpdateMyPullRequests = "@providerPullRequests/UpdateMyPullRequests",
-	UpdatePullRequestLabels = "@providerPullRequests/UpdatePullRequestLabels"
+	UpdatePullRequestTitle = "@providerPullRequests/UpdatePullRequestTitle",
+	UpdatePullRequestLabels = "@providerPullRequests/UpdatePullRequestLabels",
+	UpdatePullRequestGroups = "@providerPullRequests/UpdatePullRequestGroups"
 }
 
 /**
@@ -50,4 +51,5 @@ export type ProviderPullRequestsState = {
 			accessRawDiffs?: boolean;
 		}>
 	>;
+	pullRequestGroups: PullRequestGroups;
 };
