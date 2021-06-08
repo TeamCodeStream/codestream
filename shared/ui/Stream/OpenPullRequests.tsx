@@ -25,7 +25,7 @@ import {
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
-import { getMyPullRequests, openPullRequestByUrl } from "../store/providerPullRequests/actions";
+import { getMyPullRequests, openPullRequestByUrl, updatePullRequestGroups } from "../store/providerPullRequests/actions";
 import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
@@ -190,6 +190,7 @@ const EMPTY_HASH_2 = {} as any;
 
 let hasRenderedOnce = false;
 const e: ThirdPartyProviderConfig[] = [];
+
 export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useDispatch();
 	const mountedRef = useRef(false);
@@ -210,6 +211,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
 		const prConnectedProvidersLength = prConnectedProviders.length;
 		const myPullRequests = getMyPullRequestsSelector(state);
+		const pullRequestGroups = state.providerPullRequests.pullRequestGroups;
 
 		return {
 			repos,
@@ -232,7 +234,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			hideLabels: preferences.pullRequestQueryHideLabels,
 			hideDescriptions: preferences.pullRequestQueryHideDescriptions,
 			prLabel: getPRLabel(state),
-			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
+			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2,
+			pullRequestGroups
 		};
 	}, shallowEqual);
 
@@ -329,6 +332,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				}
 				// console.warn("SETTING TO: ", newGroups);
 				setPullRequestGroups(newGroups);
+				dispatch(updatePullRequestGroups(newGroups));
 			} catch (ex) {
 				console.error(ex);
 				setPrError(typeof ex === "string" ? ex : ex.message);
@@ -386,6 +390,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [queries]);
 
 	useEffect(() => {
+		setPullRequestGroups(derivedState.pullRequestGroups);
+		console.log("CHECK EM PR GROUPS");
+		console.log(derivedState);
+}, [derivedState.pullRequestGroups])
+
+	useEffect(() => {
 		if (!mountedRef.current) return;
 		const newQueries = {
 			...defaultQueries,
@@ -394,6 +404,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		// need to check if it was new/editing pullRequestQueries or just updating other preferences
 		if (!isEqual(queries, newQueries)) {
 			setQueries(newQueries);
+			// update store
 		}
 	}, [derivedState.pullRequestQueries]);
 
@@ -466,6 +477,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				const newGroups = { ...pullRequestGroups };
 				newGroups[providerId][index] = response[0];
 				setPullRequestGroups(newGroups);
+				dispatch(updatePullRequestGroups(newGroups));
 			}
 		} catch (ex) {
 			console.error(ex);
@@ -494,6 +506,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						const newGroups = [...pullRequestGroups[providerId]];
 						newGroups.splice(index, 1);
 						setPullRequestGroups({ ...pullRequestGroups, providerId: newGroups });
+						dispatch(updatePullRequestGroups({ ...pullRequestGroups, providerId: newGroups }));
 					}
 				}
 			]

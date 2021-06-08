@@ -475,14 +475,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		url: string;
 	};
 	headRefOid: string;
-	labels: {
-		nodes: {
-			id: string;
-			color: string;
-			description: string;
-			name: string;
-		}[];
-	};
+	labels: Labels;
 	number: number;
 	state: string;
 	isDraft?: boolean;
@@ -769,6 +762,10 @@ export interface GetMyPullRequestsRequest {
 	isOpen?: boolean;
 }
 
+export interface Labels { 
+	nodes: { color: string; description: string; name: string; id: string }[] 
+}
+
 export interface GetMyPullRequestsResponse {
 	id: string;
 	providerId: string;
@@ -792,7 +789,11 @@ export interface GetMyPullRequestsResponse {
 	isDraft?: boolean;
 	updatedAt: string;
 	lastEditedAt: string;
-	labels: { nodes: { color: string; description: string; name: string; id: string }[] };
+	labels: Labels;
+}
+
+export interface PullRequestGroups {
+	[key: string]: GetMyPullRequestsResponse[][];
 }
 
 export type MergeMethod = "MERGE" | "SQUASH" | "REBASE";

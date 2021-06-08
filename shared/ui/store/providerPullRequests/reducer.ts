@@ -12,14 +12,13 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest
 } from "@codestream/protocols/agent";
-import { CompletionList } from "vscode-languageserver-types";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
 	| ActionType<typeof setCurrentPullRequest>
 	| ActionType<typeof clearCurrentPullRequest>;
 
-const initialState: ProviderPullRequestsState = { pullRequests: {}, myPullRequests: {} };
+const initialState: ProviderPullRequestsState = { pullRequests: {}, myPullRequests: {}, pullRequestGroups: {} };
 
 const createNewObject = (state, action) => {
 	const newState = { ...state.pullRequests };
@@ -51,7 +50,8 @@ export function reduceProviderPullRequests(
 				newState[action.payload.providerId][id].error = undefined;
 				return {
 					myPullRequests: { ...state.myPullRequests },
-					pullRequests: newState
+					pullRequests: newState,
+					pullRequestGroups: {...state.pullRequestGroups}
 				};
 			} else if (action.payload) {
 				const newState = { ...state };
@@ -72,7 +72,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: newState,
-				pullRequests: { ...state.pullRequests }
+				pullRequests: { ...state.pullRequests },
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestFiles: {
@@ -88,7 +89,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestFiles: {
@@ -99,7 +101,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCommits: {
@@ -110,7 +113,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestCommits: {
@@ -121,7 +125,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCollaborators: {
@@ -132,10 +137,25 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
-		case ProviderPullRequestActionsTypes.UpdateMyPullRequests: {
+		case ProviderPullRequestActionsTypes.UpdatePullRequestGroups: {
+			// const newState = {...state.pullRequestGroups};
+
+			console.log('NEW GROUPS RECEIBVED');
+			// console.log(newState);
+			console.log(action);
+			// newState
+
+			return {
+				myPullRequests: {...state.myPullRequests},
+				pullRequests: { ...state.pullRequests },
+				pullRequestGroups: action.payload
+			}
+		}
+		case ProviderPullRequestActionsTypes.UpdatePullRequestTitle: {
 			const newState = {...state.myPullRequests};
 			console.log("reducer called... updating state in here");
 			console.log(newState);
@@ -146,8 +166,7 @@ export function reduceProviderPullRequests(
 					if (pr.id === action.payload.id) {	
 						newState[action.payload.providerId]['data']![index][i] = {
 							...newState[action.payload.providerId]['data']![index][i],
-							title: action.payload.pullRequestData.title,
-							labels: action.payload.pullRequestData.labels
+							title: action.payload.pullRequestData.title
 						};
 					}
 				})
@@ -155,7 +174,8 @@ export function reduceProviderPullRequests(
 			)
 			return {
 				myPullRequests: newState,
-				pullRequests: {...state.pullRequests}
+				pullRequests: {...state.pullRequests},
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.UpdatePullRequestLabels: {
@@ -167,7 +187,6 @@ export function reduceProviderPullRequests(
 
 			newState[action.payload.providerId]['data']?.forEach((arr: any, index) => {
 				// arr?.forEach
-				console.log(arr);
 				arr?.forEach((pr, i) => {
 					if (pr.id === action.payload.prId) {
 						if (action.payload.onOff === true) {
@@ -196,9 +215,6 @@ export function reduceProviderPullRequests(
 				})
 			})
 
-			console.log('check this state yo')
-			console.log(newState);
-
 			return state;
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
@@ -210,7 +226,8 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestError: {
@@ -221,7 +238,8 @@ export function reduceProviderPullRequests(
 			newState[action.payload.providerId][id].error = undefined;
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestError: {
@@ -232,7 +250,8 @@ export function reduceProviderPullRequests(
 			newState[action.payload.providerId][id].error = action.payload.error;
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		case ProviderPullRequestActionsTypes.HandleDirectives: {
@@ -756,7 +775,8 @@ export function reduceProviderPullRequests(
 			}
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState
+				pullRequests: newState,
+				pullRequestGroups: {...state.pullRequestGroups}
 			};
 		}
 		// case ProviderPullRequestActionsTypes.ClearPullRequestError: {
