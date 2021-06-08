@@ -9,6 +9,7 @@ import Tooltip from "./Tooltip";
 import { api } from "../store/providerPullRequests/actions";
 import { replaceHtml } from "../utils";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import { confirmPopup } from "./Confirm";
 
 export const PullRequestFinishReview = (props: {
 	pr:
@@ -146,8 +147,29 @@ export const PullRequestFinishReview = (props: {
 						Submit<span className="wide-text"> review</span>
 					</Button>
 					{pendingCommentCount > 0 && (
-						<Button variant="secondary" onClick={e => cancelReview(e, pr.pendingReview?.id)}>
-							Cancel review
+						<Button
+							variant="secondary"
+							onClick={e => {
+								confirmPopup({
+									title: "Are you sure?",
+									message: "Pending review comments will be lost.",
+									centered: true,
+									buttons: [
+										{ label: "Go Back", className: "control-button" },
+										{
+											label: "Cancel Review ",
+											className: "delete",
+											wait: true,
+											action: () => {
+												console.log("taken!");
+												cancelReview(e, pr.pendingReview?.id);
+											}
+										}
+									]
+								});
+							}}
+						>
+							Cancel fish
 						</Button>
 					)}
 					<div className="subtle" style={{ margin: "10px 0 0 10px" }}>
