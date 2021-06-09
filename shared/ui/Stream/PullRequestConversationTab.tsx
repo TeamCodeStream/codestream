@@ -65,6 +65,9 @@ import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
 import { useDidMount } from "../utilities/hooks";
 
+const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
+const emojiRegex = /:([-+_a-z0-9]+):/g;
+
 export const Circle = styled.div`
 	width: 12px;
 	height: 12px;
@@ -569,7 +572,7 @@ export const PullRequestConversationTab = (props: {
 					label: (
 						<>
 							<Circle style={{ backgroundColor: `#${_.color}` }} />
-							{_.name}
+							{_.name.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s)}
 						</>
 					),
 					searchLabel: _.name,
@@ -1334,9 +1337,20 @@ export const PullRequestConversationTab = (props: {
 						</InlineMenu>
 					</h1>
 					{pr.labels && pr.labels.nodes.length > 0
-						? pr.labels.nodes.map((_, index) => (
-								<Tag key={index} tag={{ label: _.name, color: `#${_.color}` }} />
-						  ))
+						? pr.labels.nodes.map((_, index) => {
+								return (
+									<Tag
+										key={index}
+										tag={{
+											label: _.name.replace(
+												emojiRegex,
+												(s: string, code: string) => emojiMap[code] || s
+											),
+											color: `#${_.color}`
+										}}
+									/>
+								);
+						  })
 						: "None yet"}
 				</PRSection>
 				<PRSection>
