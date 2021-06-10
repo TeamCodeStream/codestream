@@ -517,20 +517,11 @@ class TeamPanel extends React.Component<Props, State> {
 			teamId,
 			company,
 			serverUrl,
-			userTeams,
 			currentUserEmail,
 			collisions,
 			xrayEnabled
 		} = this.props;
 		const { modifiedRepos, modifiedReposModifiedAt } = user;
-		let timeDiff = new Date().getTime() - new Date(this.props.company.createdAt).getTime();
-
-		// Check if the team is business or enterprise or was created in <= past 2 weeks
-		const premium = userTeams.find(
-			team =>
-				team.id === teamId &&
-				((team.plan !== "FREEPLAN" && team.plan !== "BUSINESS_EXPIRED") || timeDiff <= 1209600000)
-		);
 
 		if (!xrayEnabled) return null;
 		if (!modifiedRepos || !modifiedRepos[teamId] || !modifiedRepos[teamId].length) return null;
@@ -547,61 +538,35 @@ class TeamPanel extends React.Component<Props, State> {
 					: (authors || []).find(a => a.email === currentUserEmail && a.stomped > 0);
 			const title = (
 				<div style={{ maxWidth: "60vw" }}>
-					{premium ? (
-						<>
-							<div className="related-label">Local Changes</div>
-							{modifiedFiles.map(f => {
-								const className = collisions.userRepoFiles[
-									user.id + ":" + repo.repoId + ":" + f.file
-								]
-									? "file-has-conflict"
-									: "";
-								return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
-							})}
-							{stomp && (
-								<div style={{ paddingTop: "5px" }}>
-									<span className="stomped" style={{ paddingLeft: 0 }}>
-										@{stomp.stomped}
-									</span>{" "}
-									= includes {stomp.stomped} change
-									{stomp.stomped > 1 ? "s" : ""} to code you wrote
-								</div>
-							)}
-							{collisions.userRepos[user.id + ":" + repo.repoId] && (
-								<div style={{ paddingTop: "5px" }}>
-									<Icon name="alert" className="conflict" /> = possible merge conflict
-								</div>
-							)}
-							{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
-								<div style={{ paddingTop: "5px", color: "var(--text-color-subtle)" }}>
-									Updated
-									<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
-								</div>
-							)}
-						</>
-					) : (
-						<>
-							{collisions.userRepos[user.id + ":" + repo.repoId] && (
-								<div style={{ paddingTop: "1px" }}>
-									<Icon name="alert" className="conflict" /> = possible merge conflict
-								</div>
-							)}
-							<p>
-								See exactly what {user.username} and the rest of the team are working on with{" "}
-								<b>Team Live View.</b>
-								<br />
-								<br />
-								Increased transparency means increased productivity.
-							</p>
-							<LocalChanges>
-								<Link href={`${serverUrl}/web/subscription/upgrade/${company.id}`}>Upgrade</Link>
-								<p> </p>
-								<Link href="https://docs.codestream.com/userguide/features/myteam-section/#live-view">
-									Learn More
-								</Link>
-							</LocalChanges>
-						</>
-					)}
+					<>
+						<div className="related-label">Local Changes</div>
+						{modifiedFiles.map(f => {
+							const className = collisions.userRepoFiles[user.id + ":" + repo.repoId + ":" + f.file]
+								? "file-has-conflict"
+								: "";
+							return <ChangesetFile className={className} noHover={true} key={f.file} {...f} />;
+						})}
+						{stomp && (
+							<div style={{ paddingTop: "5px" }}>
+								<span className="stomped" style={{ paddingLeft: 0 }}>
+									@{stomp.stomped}
+								</span>{" "}
+								= includes {stomp.stomped} change
+								{stomp.stomped > 1 ? "s" : ""} to code you wrote
+							</div>
+						)}
+						{collisions.userRepos[user.id + ":" + repo.repoId] && (
+							<div style={{ paddingTop: "5px" }}>
+								<Icon name="alert" className="conflict" /> = possible merge conflict
+							</div>
+						)}
+						{modifiedReposModifiedAt && modifiedReposModifiedAt[teamId] && (
+							<div style={{ paddingTop: "5px", color: "var(--text-color-subtle)" }}>
+								Updated
+								<Timestamp relative time={modifiedReposModifiedAt[teamId]} />
+							</div>
+						)}
+					</>
 				</div>
 			);
 			return (
