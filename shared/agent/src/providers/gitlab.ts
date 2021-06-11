@@ -21,8 +21,12 @@ import {
 	DidChangePullRequestCommentsNotificationType,
 	DiscussionNode,
 	DocumentMarker,
+	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
+	FetchThirdPartyCardWorkflowRequest,
+	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
@@ -34,6 +38,8 @@ import {
 	GitLabLabel,
 	GitLabMergeRequest,
 	GitLabMergeRequestWrapper,
+	MoveThirdPartyCardRequest,
+	MoveThirdPartyCardResponse,
 	Note,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -57,7 +63,8 @@ import {
 	ProviderVersion,
 	PullRequestComment,
 	REFRESH_TIMEOUT,
-	ThirdPartyIssueProviderBase
+	ThirdPartyIssueProviderBase,
+	ThirdPartyProviderSupportsIssues
 } from "./provider";
 
 interface GitLabProject {
@@ -83,7 +90,8 @@ interface GitLabBranch {
 }
 
 @lspProvider("gitlab")
-export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo> {
+export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo>
+	implements ThirdPartyProviderSupportsIssues {
 	/** version used when a query to get the version fails */
 	private static defaultUnknownVersion = "0.0.0";
 
@@ -163,7 +171,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	@log()
-	async getBoards(): Promise<FetchThirdPartyBoardsResponse> {
+	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		await this.ensureConnected();
 		const openProjects = await this.getOpenProjectsByRemotePath();
 
@@ -269,29 +277,44 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	// FIXME
 	@log()
-	async moveCard() {}
+	async moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse> {
+		// may want to implement this later, but for now just returns false
+		return { success: false };
+	}
+
+	// FIXME
+	async getCardWorkflow(
+		request: FetchThirdPartyCardWorkflowRequest
+	): Promise<FetchThirdPartyCardWorkflowResponse> {
+		// may want to come back and implement
+		return { workflow: [] };
+	}
 
 	@log()
-	async getCards(): Promise<FetchThirdPartyCardsResponse> {
+	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		await this.ensureConnected();
 
-		const { body } = await this.get<any[]>(
-			`/issues?${qs.stringify({
-				state: "opened",
-				scope: "assigned_to_me"
-			})}`
-		);
-		const cards = body.map(card => {
+		const url = request.customFilter ? "/issues?" + request.customFilter : "/issues";
+
+		try {
+			const response = await this.get<any[]>(url);
+			const cards = response.body.map(card => {
+				return {
+					id: card.id,
+					url: card.web_url,
+					title: card.title,
+					modifiedAt: new Date(card.updated_at).getTime(),
+					tokenId: card.iid,
+					body: card.description
+				};
+			});
+			return { cards };
+		} catch (ex) {
 			return {
-				id: card.id,
-				url: card.web_url,
-				title: card.title,
-				modifiedAt: new Date(card.updated_at).getTime(),
-				tokenId: card.iid,
-				body: card.description
+				cards: [],
+				badRequest: true
 			};
-		});
-		return { cards };
+		}
 	}
 
 	private nextPage(response: Response): string | undefined {

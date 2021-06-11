@@ -146,6 +146,7 @@ export interface FetchThirdPartyCardsRequest {
 
 export interface FetchThirdPartyCardsResponse {
 	cards: ThirdPartyProviderCard[];
+	badRequest?: boolean;
 }
 
 export const FetchThirdPartyCardsRequestType = new RequestType<
