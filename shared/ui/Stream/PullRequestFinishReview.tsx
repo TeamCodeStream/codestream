@@ -161,7 +161,6 @@ export const PullRequestFinishReview = (props: {
 											className: "delete",
 											wait: true,
 											action: () => {
-												console.log("taken!");
 												cancelReview(e, pr.pendingReview?.id);
 											}
 										}
@@ -169,7 +168,7 @@ export const PullRequestFinishReview = (props: {
 								});
 							}}
 						>
-							Cancel fish
+							Cancel review
 						</Button>
 					)}
 					<div className="subtle" style={{ margin: "10px 0 0 10px" }}>
