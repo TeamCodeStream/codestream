@@ -312,7 +312,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		} catch (ex) {
 			return {
 				cards: [],
-				badRequest: true
+				error: ex
 			};
 		}
 	}
