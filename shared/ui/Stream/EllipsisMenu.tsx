@@ -11,14 +11,12 @@ import { sortBy as _sortBy } from "lodash-es";
 import { logout, switchToTeam } from "../store/session/actions";
 import { EMPTY_STATUS } from "./StartWork";
 import { MarkdownText } from "./MarkdownText";
-import { HeadshotName } from "../src/components/HeadshotName";
 import { setProfileUser, openModal } from "../store/context/actions";
 import { confirmPopup } from "./Confirm";
-import { DeleteUserRequestType, UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
+import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { setUserPreference } from "./actions";
 import { AVAILABLE_PANES } from "./Sidebar";
-import { Link } from "../Stream/Link";
 
 interface EllipsisMenuProps {
 	menuTarget: any;
@@ -98,90 +96,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 
 	const openUrl = url => {
 		HostApi.instance.send(OpenUrlRequestType, { url });
-	};
-
-	const goUpgrade = () => {
-		const upgradeLink = `${derivedState.serverUrl}/web/subscription/upgrade/${derivedState.company.id}`;
-		openUrl(upgradeLink);
-	};
-
-	const buildUpgradeTeamMenuItem = () => {
-		const { plan = "" } = derivedState.company;
-
-		const planDetails = {
-			BUSINESS: {
-				label: "Your organization is on CodeStream's Business Plan.",
-				upgrade: true
-			},
-			ENTERPRISE: {
-				label: "Your organization is on CodeStream's Enterprise Plan.",
-				upgrade: true
-			},
-			SALES: {
-				label: "Your organization is pending expiration.",
-				upgrade: true
-			},
-			EDUCATION: {
-				label: "Your organization is on CodeStream's free Educational Use Plan."
-			},
-			OPENSOURCE: {
-				label: "Your organization is on CodeStream's free Open Source Plan."
-			},
-			FREEPLAN: {
-				label: "Your organization is on CodeStream's Free Plan.",
-				upgrade: true
-			},
-			UNEXPIRED: {
-				label: "Your organization is on CodeStream's Free Plan.",
-				upgrade: true
-			},
-			"14DAYTRIAL": {
-				label: "Your organization is currently in a free trial period.",
-				upgrade: true
-			},
-			"30DAYTRIAL": {
-				label: "Your organization is currently in a free trial period.",
-				upgrade: true
-			},
-			FREEBETA: {
-				label: "Your organization is currently being comp'd. Lucky you."
-			},
-			BUSDEV: {
-				label: "Your organization is currently in a free trial period.",
-				upgrade: true
-			},
-			TRIALEXPIRED: {
-				label: "Your trial has expired.",
-				upgrade: true
-			}
-		};
-
-		const details = planDetails[plan];
-		if (!details) return null;
-		const upgradeCloud = details.upgrade && !derivedState.isOnPrem;
-		const upgradeOnPrem = details.upgrade && derivedState.isOnPrem;
-		return {
-			label: (
-				<div
-					style={{
-						fontSize: "smaller",
-						maxWidth: "240px",
-						whiteSpace: "normal"
-					}}
-				>
-					{details.label + " "}
-					{upgradeCloud && <a href="">Upgrade.</a>}
-					{upgradeOnPrem && (
-						<>
-							To upgrade, contact{" "}
-							<Link href="mailto:sales@codestream.com">sales@codestream.com</Link>.
-						</>
-					)}
-				</div>
-			),
-			noHover: !upgradeCloud,
-			action: upgradeCloud ? goUpgrade : () => {}
-		};
 	};
 
 	const changeXray = async value => {
@@ -344,7 +258,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				noHover: true,
 				disabled: true
 			},
-			buildUpgradeTeamMenuItem(),
 			// {
 			// 	label: `Invite people to ${derivedState.team.name}`,
 			// 	action: () => dispatch(openModal(WebviewModals.Invite))
