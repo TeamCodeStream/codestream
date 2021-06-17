@@ -6,22 +6,31 @@ async function generate() {
     let map = Object.create(null);
 
     // Get emoji data from https://github.com/milesj/emojibase
-    // https://github.com/milesj/emojibase/blob/master/packages/data/en/raw.json
-    await download('https://raw.githubusercontent.com/milesj/emojibase/master/packages/data/en/raw.json', 'raw.json');
+    // https://github.com/milesj/emojibase/blob/master/packages/data/en/data.raw.json
+    await download('https://raw.githubusercontent.com/milesj/emojibase/master/packages/data/en/data.raw.json', 'data.raw.json');
 
-    const emojis = require(path.join(process.cwd(), 'raw.json'));
+		// https://github.com/milesj/emojibase/blob/master/packages/data/en/shortcodes/github.raw.json
+		await download('https://raw.githubusercontent.com/milesj/emojibase/master/packages/data/en/shortcodes/github.raw.json', 'github.raw.json');
+
+    const emojis = require(path.join(process.cwd(), 'data.raw.json'));
+		const shortcodes = require(path.join(process.cwd(), 'github.raw.json'));
+
     for (const emoji of emojis) {
-        if (emoji.shortcodes == null || emoji.shortcodes.length === 0) continue;
+        if (emoji.hexcode == null || emoji.hexcode.length === 0) continue;
+				const code = emoji.hexcode;
+				const short = shortcodes[code];
 
-        for (const code of emoji.shortcodes) {
-            if (map[code] !== undefined) {
-                console.warn(code);
-            }
-            map[code] = emoji.emoji;
-        }
+				if (short !== undefined && !(typeof short !== 'string')) {
+					map[short] = emoji.emoji;
+				} else if (short !== undefined && typeof Array.isArray(short)) {
+					for (const shortString of short) {
+						map[shortString] = emoji.emoji;
+					}
+				}
     }
 
-    fs.unlink('raw.json', () => {});
+    fs.unlink('data.raw.json', () => {});
+		fs.unlink('github.raw.json', () => {});
 
     // Get gitmoji data from https://github.com/carloscuesta/gitmoji
     // https://github.com/carloscuesta/gitmoji/blob/master/src/data/gitmojis.json
