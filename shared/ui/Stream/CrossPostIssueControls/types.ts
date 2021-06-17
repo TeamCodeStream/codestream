@@ -116,7 +116,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		hasCustomFilters: true,
 		customFilterExample: "Example: state=opened&labels=bug,duplicate ",
 		customFilterHelp:
-			'See <a href="https://docs.gitlab.com/ee/api/issues.html">Searching issues</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in query, as shown in the <a href="https://docs.gitlab.com/ee/api/issues.html">Searching issues</a> documentation.',
+			'See <a href="https://docs.gitlab.com/ee/api/issues.html">this article</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in the query.',
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true,
@@ -134,7 +134,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		hasCustomFilters: true,
 		customFilterExample: "Example: state=opened&labels=bug,duplicate ",
 		customFilterHelp:
-			'See <a href="https://docs.gitlab.com/ee/api/issues.html">Searching issues</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in query, as shown in the <a href="https://docs.gitlab.com/ee/api/issues.html">Searching issues</a> documentation.',
+			'See <a href="https://docs.gitlab.com/ee/api/issues.html">this article</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in the query.',
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true,

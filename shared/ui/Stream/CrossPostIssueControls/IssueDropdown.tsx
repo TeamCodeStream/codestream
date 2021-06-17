@@ -932,8 +932,20 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				setErrorQuery(false);
 			}
 
-			setLoadingTest(false);
-			setTestCards(response.cards || ([] as any));
+			if (id !== "") {
+				const provider = props.providers.find(_ => _.id === id);
+				const cardsWithProvider = response.cards.map(card => {
+					return {
+						...card,
+						provider
+					}
+				});
+				setLoadingTest(false);
+				setTestCards(cardsWithProvider || ([] as any));
+			} else {
+				setLoadingTest(false);
+				setTestCards(response.cards || ([] as any));
+			}
 		}
 	};
 
