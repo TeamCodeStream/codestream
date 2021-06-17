@@ -928,7 +928,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 			if (response.error) {
 				setErrorQuery(true);
-			}  else {
+			} else {
 				setErrorQuery(false);
 			}
 
@@ -938,7 +938,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					return {
 						...card,
 						provider
-					}
+					};
 				});
 				setLoadingTest(false);
 				setTestCards(cardsWithProvider || ([] as any));
@@ -1000,14 +1000,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									<ErrorMessage>
 										<small className="error-message">
 											Invalid query.{" "}
-											<Link href="https://docs.gitlab.com/ee/api/issues.html">
-												Learn more.
-											</Link>
+											<Link href="https://docs.gitlab.com/ee/api/issues.html">Learn more.</Link>
 										</small>
 									</ErrorMessage>
 								)
 							)}
-							
+
 							<input
 								type="text"
 								className="input-text control"
