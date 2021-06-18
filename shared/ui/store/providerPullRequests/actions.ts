@@ -43,28 +43,11 @@ export const _addPullRequestCollaborators = (providerId: string, id: string, col
 		collaborators
 	});
 
-export const updatePullRequestGroups = (newGroups: PullRequestGroups) => {
-	return (
-		{
-			type: ProviderPullRequestActionsTypes.UpdatePullRequestGroups,
-			payload: newGroups
-		}
-	)
-};
-
 export const updatePullRequestTitle = (providerId: string, id: string, pullRequestData: any) =>
 	action(ProviderPullRequestActionsTypes.UpdatePullRequestTitle, {
 		providerId,
 		id,
 		pullRequestData
-	});
-
-export const updatePullRequestLabels = (providerId: string, prId: string, label: any, onOff: boolean, ) =>
-	action(ProviderPullRequestActionsTypes.UpdatePullRequestLabels, {
-		providerId,
-		prId,
-		label,
-		onOff
 	});
 
 export const _addPullRequestFiles = (

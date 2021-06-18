@@ -6,7 +6,7 @@ import { Button } from "../src/components/Button";
 import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
-import { getMyPullRequests, updatePullRequestGroups } from "../store/providerPullRequests/actions";
+import { getMyPullRequests } from "../store/providerPullRequests/actions";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
@@ -59,14 +59,12 @@ import { setUserPreference } from "./actions";
 import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
 import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
-import { api, updatePullRequestLabels } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/actions";
 import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
 import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
 import { useDidMount } from "../utilities/hooks";
-import { ProviderPullRequestActionsTypes } from "../store/providerPullRequests/types";
-import { PullRequestInlineMenu } from "../src/components/controls/PullRequestInlineMenu";
 import * as providerSelectors from "../store/providers/reducer";
 
 const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
@@ -278,26 +276,6 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	useEffect(() => {
-		// Loop through providers and aggregate queries into proper format
-		// const newQueries = {};
-		// const providers = derivedState.PRConnectedProviders;
-
-		// console.log("CONNECTED PROVIDERS");
-		// console.log(providers);
-
-		// providers.forEach(provider => {
-		// 	console.log("provider");
-		// 	console.log(provider);
-		// 	if ("queries" in provider) {
-		// 		console.log("query present!");
-		// 		newQueries[provider.id] = provider.queries;
-		// 	}
-		// });
-
-
-		console.log("newQueries!!!!!!!!!!!!!!!!!!");
-		console.log(derivedState.pullRequestQueries);
-
 		setQueries(derivedState.pullRequestQueries);
 	}, [derivedState.pullRequestQueries]);
 
@@ -631,63 +609,49 @@ export const PullRequestConversationTab = (props: {
 
 	const setLabel = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
-		const response = await dispatch(
+
+		await dispatch(
 			api("setLabelOnPullRequest", {
 				labelId: id,
 				onOff
 			})
 		);
-		
-		// need way to continue only when resp is valid (promise is fulfilled)
-			if (response) {
-				// refresh PRs
-				console.log("----------");
-				console.log("FIRING getMyPullRequests ");
-				console.log("----------");
-				console.log(queries);
-				console.log(derivedState);
-	
-				try {
-					// fetchPRs()
-					const newGroups = {};
-					for (const connectedProvider of derivedState.PRConnectedProviders) {
-						try {
-							if (queries) {
-								const options = { force: true, alreadyLoading: false };
-								const providerQuery: PullRequestQuery[] = queries[connectedProvider.id];
-								const queryStrings = Object.values(providerQuery).map(_ => _.query);
-		
-								// We need to delay this api request as we are making a request to make a change (e.g. adding a label)
-								// then refreshing the new data and the data isn't being returned quick enough
-								const response: any = await dispatch(
-									getMyPullRequests(
-										connectedProvider.id,
-										queryStrings,
-										!derivedState.allRepos,
-										options,
-										true
-									)
-								);
-								console.log(response);
-								if (response && response.length) {
-									console.log("RESPONSE");
-									console.log(response);
-		
-									newGroups[connectedProvider.id] = response;
-								}
-							}
-						} catch (error) {
-							console.error(error);
-						}
-					}
-					console.log('SETTING NEW GROUPS');
-					console.log(newGroups);
-					dispatch(updatePullRequestGroups(newGroups));
-				} catch (error) {
-					console.error(error);
-				}
-			}
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		console.log("starting...");
+
+		// We need to delay these api requests as we are making a request to make a change (e.g. adding a label)
+		// then refreshing the new data and it takes some time for the back-end to do this
+		for (const connectedProvider of derivedState.PRConnectedProviders) {
+			try {
+				if (queries) {
+					const options = { force: true, alreadyLoading: false };
+					const providerQuery: PullRequestQuery[] = queries[connectedProvider.id];
+					const queryStrings = Object.values(providerQuery).map(_ => _.query);
+
+					console.log("queryStrings", queryStrings);
+
+					const resp: any = await dispatch(
+						getMyPullRequests(
+							connectedProvider.id,
+							queryStrings,
+							!derivedState.allRepos,
+							options,
+							true
+						)
+					);
+
+					if (resp && resp.length) {
+						console.warn("conversationed some pulls: ", resp);
+					}
+				}
+			} catch (error) {
+				console.error(error);
+			}
+		}
 	};
 
 	const fetchAvailableProjects = async (e?) => {
