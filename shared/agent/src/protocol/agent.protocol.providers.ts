@@ -792,10 +792,6 @@ export interface GetMyPullRequestsResponse {
 	labels: Labels;
 }
 
-export interface PullRequestGroups {
-	[key: string]: GetMyPullRequestsResponse[][];
-}
-
 export type MergeMethod = "MERGE" | "SQUASH" | "REBASE";
 
 export interface MergePullRequestRequest {

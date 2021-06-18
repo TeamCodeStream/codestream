@@ -25,7 +25,7 @@ import {
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
-import { getMyPullRequests, openPullRequestByUrl, updatePullRequestGroups } from "../store/providerPullRequests/actions";
+import { getMyPullRequests, openPullRequestByUrl } from "../store/providerPullRequests/actions";
 import { PRBranch } from "./PullRequestComponents";
 import { PRHeadshotName } from "../src/components/HeadshotName";
 import styled from "styled-components";
@@ -211,7 +211,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
 		const prConnectedProvidersLength = prConnectedProviders.length;
 		const myPullRequests = getMyPullRequestsSelector(state);
-		const pullRequestGroups = state.providerPullRequests.pullRequestGroups;
 
 		return {
 			repos,
@@ -234,8 +233,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			hideLabels: preferences.pullRequestQueryHideLabels,
 			hideDescriptions: preferences.pullRequestQueryHideDescriptions,
 			prLabel: getPRLabel(state),
-			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2,
-			pullRequestGroups
+			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2
 		};
 	}, shallowEqual);
 
@@ -330,9 +328,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						console.error(ex);
 					}
 				}
-				// console.warn("SETTING TO: ", newGroups);
 				setPullRequestGroups(newGroups);
-				dispatch(updatePullRequestGroups(newGroups));
 			} catch (ex) {
 				console.error(ex);
 				setPrError(typeof ex === "string" ? ex : ex.message);
@@ -390,10 +386,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [queries]);
 
 	useEffect(() => {
-		setPullRequestGroups(derivedState.pullRequestGroups);
-		console.log("CHECK EM PR GROUPS");
-		console.log(derivedState);
-}, [derivedState.pullRequestGroups])
+		const newGroups = {};
+		for (const connectedProvider of PRConnectedProviders) {
+			if (derivedState.myPullRequests && derivedState.myPullRequests[connectedProvider.id]) {
+				newGroups[connectedProvider.id] = derivedState.myPullRequests[connectedProvider.id].data;
+			}
+		}
+		setPullRequestGroups(newGroups);
+	}, [derivedState.myPullRequests]);
 
 	useEffect(() => {
 		if (!mountedRef.current) return;
@@ -477,7 +477,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				const newGroups = { ...pullRequestGroups };
 				newGroups[providerId][index] = response[0];
 				setPullRequestGroups(newGroups);
-				dispatch(updatePullRequestGroups(newGroups));
 			}
 		} catch (ex) {
 			console.error(ex);
@@ -506,7 +505,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						const newGroups = [...pullRequestGroups[providerId]];
 						newGroups.splice(index, 1);
 						setPullRequestGroups({ ...pullRequestGroups, providerId: newGroups });
-						dispatch(updatePullRequestGroups({ ...pullRequestGroups, providerId: newGroups }));
 					}
 				}
 			]
