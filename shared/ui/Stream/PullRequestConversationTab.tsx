@@ -634,7 +634,7 @@ export const PullRequestConversationTab = (props: {
 		setIsLoadingMessage("");
 
 		await new Promise(resolve => {
-			setTimeout(resolve, 5000);
+			setTimeout(resolve, 2000);
 		});
 		fetchPRs();
 	};
