@@ -69,8 +69,6 @@ export function reduceProviderPullRequests(
 			newState[action.payload.providerId] = {
 				data: action.payload.data
 			};
-			console.log('REDUCER CHANGED PRS');
-			console.log(newState);
 			return {
 				myPullRequests: newState,
 				pullRequests: { ...state.pullRequests },
@@ -138,10 +136,6 @@ export function reduceProviderPullRequests(
 		}
 		case ProviderPullRequestActionsTypes.UpdatePullRequestTitle: {
 			const newState = {...state.myPullRequests};
-			console.log("reducer called... updating state in here");
-			console.log(newState);
-			console.log(state);
-
 			newState[action.payload.providerId]['data']?.forEach((arr: any, index) => {
 				arr?.forEach((pr, i) => {
 					if (pr.id === action.payload.id) {	

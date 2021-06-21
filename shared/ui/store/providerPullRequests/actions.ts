@@ -15,8 +15,7 @@ import {
 	FetchAssignableUsersRequestType,
 	FetchAssignableUsersResponse,
 	GetCommitsFilesRequestType,
-	GetCommitsFilesResponse,
-	PullRequestGroups
+	GetCommitsFilesResponse
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "..";
 import { RequestType } from "vscode-languageserver-protocol";

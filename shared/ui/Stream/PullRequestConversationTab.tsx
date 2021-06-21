@@ -496,6 +496,11 @@ export const PullRequestConversationTab = (props: {
 		);
 
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
@@ -506,6 +511,11 @@ export const PullRequestConversationTab = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableAssignees = async (e?) => {
@@ -566,6 +576,11 @@ export const PullRequestConversationTab = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -616,10 +631,12 @@ export const PullRequestConversationTab = (props: {
 		setIsLoadingMessage("");
 
 		await new Promise(resolve => {
-			setTimeout(resolve, 2000);
+			setTimeout(resolve, 5000);
 		});
-		console.log("starting...");
+		fetchPRs();
+	};
 
+	const fetchPRs = async () => {
 		// We need to delay these api requests as we are making a request to make a change (e.g. adding a label)
 		// then refreshing the new data and it takes some time for the back-end to do this
 		for (const connectedProvider of derivedState.PRConnectedProviders) {
@@ -628,8 +645,6 @@ export const PullRequestConversationTab = (props: {
 					const options = { force: true, alreadyLoading: false };
 					const providerQuery: PullRequestQuery[] = queries[connectedProvider.id];
 					const queryStrings = Object.values(providerQuery).map(_ => _.query);
-
-					console.log("queryStrings", queryStrings);
 
 					const resp: any = await dispatch(
 						getMyPullRequests(
@@ -649,7 +664,7 @@ export const PullRequestConversationTab = (props: {
 				console.error(error);
 			}
 		}
-	};
+	}
 
 	const fetchAvailableProjects = async (e?) => {
 		const projects = (await dispatch(
@@ -695,6 +710,11 @@ export const PullRequestConversationTab = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -746,6 +766,11 @@ export const PullRequestConversationTab = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	// const fetchAvailableIssues = async (e?) => {
