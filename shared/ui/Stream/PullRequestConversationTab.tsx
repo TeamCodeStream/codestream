@@ -658,16 +658,12 @@ export const PullRequestConversationTab = (props: {
 							true
 						)
 					);
-
-					if (resp && resp.length) {
-						console.warn("conversationed some pulls: ", resp);
-					}
 				}
 			} catch (error) {
 				console.error(error);
 			}
 		}
-	}
+	};
 
 	const fetchAvailableProjects = async (e?) => {
 		const projects = (await dispatch(
