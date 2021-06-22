@@ -2454,40 +2454,31 @@ class CodemarkForm extends React.Component<Props, State> {
 										: "Submit"}
 								</Button>
 							</Tooltip>
-							{console.log("pr context:", this.props.textEditorUriHasPullRequestContext)}
-							{console.log("isInsidePrChangeSet:", this.state.isInsidePrChangeSet)}
-
 							{this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet && (
-								<>
-									{/* {console.log("hi", hasError)}
-								{console.log(this.props.textEditorUriHasPullRequestContext)}
-								{console.log(hasExistingPullRequestReview)} */}
-
-									<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
-										<Button
-											key="submit-review"
-											loading={this.state.isReviewLoading}
-											disabled={hasError}
-											onClick={e => {
-												this.setState({ isProviderReview: true }, () => {
-													this.handleClickSubmit(e);
-												});
-											}}
-											style={{
-												paddingLeft: "10px",
-												paddingRight: "10px",
-												// fixed width to handle the isReviewLoading case
-												width: "auto",
-												marginRight: 0
-											}}
-											className="control-button"
-											type="submit"
-										>
-											{hasExistingPullRequestReview && <>Add to review</>}
-											{!hasExistingPullRequestReview && <>Start a review</>}
-										</Button>
-									</Tooltip>
-								</>
+								<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
+									<Button
+										key="submit-review"
+										loading={this.state.isReviewLoading}
+										disabled={hasError}
+										onClick={e => {
+											this.setState({ isProviderReview: true }, () => {
+												this.handleClickSubmit(e);
+											});
+										}}
+										style={{
+											paddingLeft: "10px",
+											paddingRight: "10px",
+											// fixed width to handle the isReviewLoading case
+											width: "auto",
+											marginRight: 0
+										}}
+										className="control-button"
+										type="submit"
+									>
+										{hasExistingPullRequestReview && <>Add to review</>}
+										{!hasExistingPullRequestReview && <>Start a review</>}
+									</Button>
+								</Tooltip>
 							)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>
