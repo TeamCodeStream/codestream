@@ -549,11 +549,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 					let prRange;
 					switch (codeBlock.scm.branch) {
-						case textEditorUriContext.baseBranch:
-							prRange = changedPrLine.baseLinesChanged;
-							break;
 						case textEditorUriContext.headBranch:
 							prRange = changedPrLine.headLinesChanged;
+							break;
+						case textEditorUriContext.baseBranch:
+							prRange = changedPrLine.baseLinesChanged;
 							break;
 						default:
 							return false;
@@ -570,6 +570,8 @@ class CodemarkForm extends React.Component<Props, State> {
 					);
 				});
 			});
+			console.log("isInsidePR was judged here:", isInsidePrChangeSet);
+
 
 			this.setState({ isInsidePrChangeSet });
 		}
@@ -2454,7 +2456,15 @@ class CodemarkForm extends React.Component<Props, State> {
 										: "Submit"}
 								</Button>
 							</Tooltip>
+							{console.log("pr context:", this.props.textEditorUriHasPullRequestContext)}
+							{console.log("isInsidePrChangeSet:", this.state.isInsidePrChangeSet)}
+
 							{this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet && (
+								<>
+								{/* {console.log("hi", hasError)}
+								{console.log(this.props.textEditorUriHasPullRequestContext)}
+								{console.log(hasExistingPullRequestReview)} */}
+
 								<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
 									<Button
 										key="submit-review"
@@ -2479,6 +2489,7 @@ class CodemarkForm extends React.Component<Props, State> {
 										{!hasExistingPullRequestReview && <>Start a review</>}
 									</Button>
 								</Tooltip>
+								</>
 							)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>
