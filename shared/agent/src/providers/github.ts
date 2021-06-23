@@ -2888,6 +2888,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 
 		const queries = request.queries;
+		const queriesSafe: string[] = [];
+
+		request.queries.forEach((query) => {
+			queriesSafe.push(query.replace(/["']/g, "\\\""));
+		})
 
 		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
 		// has started or completed the review.
@@ -2902,7 +2907,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const providerId = this.providerConfig?.id;
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
 		const items = await Promise.all(
-			queries.map(_query => {
+			queriesSafe.map(_query => {
 				let query = _query;
 				let limit = 100;
 				// recent is kind of a magic string, where we just look
