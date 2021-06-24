@@ -27,7 +27,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { api } from "../../../store/providerPullRequests/actions";
 import Tag from "../../Tag";
-import { useMarkdownifyToHtml } from "../../Markdowner";
 
 const ActionBox = styled.div`
 	margin: 0 20px 15px 20px;
@@ -405,13 +404,14 @@ export const Timeline = (props: Props) => {
 							<MarkdownText
 								text={
 									note.bodyHtml
-										? note.bodyHtml.includes("<img") ? (note.bodyHtml
-												.replace(/\<table /g, '<table class="gitlab-table" ')
-												.replace(/\<pre.+?\>/g, "<pre>"))
-												.replace('href="', `href=\"${pr.baseWebUrl}`)
-												: (note.bodyHtml
+										? note.bodyHtml.includes("<img")
+											? note.bodyHtml
 													.replace(/\<table /g, '<table class="gitlab-table" ')
-													.replace(/\<pre.+?\>/g, "<pre>"))
+													.replace(/\<pre.+?\>/g, "<pre>")
+													.replace('href="', `href=\"${pr.baseWebUrl}`)
+											: note.bodyHtml
+													.replace(/\<table /g, '<table class="gitlab-table" ')
+													.replace(/\<pre.+?\>/g, "<pre>")
 										: note.body
 								}
 								isHtml={note.bodyHtml != null}
