@@ -66,6 +66,7 @@ import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
 import { useDidMount } from "../utilities/hooks";
 import * as providerSelectors from "../store/providers/reducer";
+import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
 
 const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -267,7 +268,7 @@ export const PullRequestConversationTab = (props: {
 	const [clInstructionsIsOpen, toggleClInstructions] = useReducer((open: boolean) => !open, false);
 	const [cloneURLType, setCloneURLType] = useState("https");
 	const [cloneURL, setCloneURL] = useState(pr && pr.repository ? `${pr.repository.url}.git` : "");
-	const [queries, setQueries] = React.useState<PullRequestQuery[] | undefined>(undefined);
+	const [defaultQueries, setDefaultQueries] = React.useState({});
 
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
@@ -275,15 +276,23 @@ export const PullRequestConversationTab = (props: {
 		focusOnMessageInput = functions.focus;
 	};
 
-	useEffect(() => {
-		setQueries(derivedState.pullRequestQueries);
-	}, [derivedState.pullRequestQueries]);
-
 	useDidMount(() => {
 		if (props.initialScrollPosition) {
 			const container = document.getElementById("pr-scroll-container");
 			if (container) container.scrollTo({ top: props.initialScrollPosition });
 		}
+	});
+
+	useDidMount(() => {
+		(async () => {
+			const defaultQueriesResponse: any = (await HostApi.instance.send(
+				FetchProviderDefaultPullRequestsType,
+				{}
+			)) as any;
+			if (defaultQueriesResponse) {
+				setDefaultQueries(defaultQueriesResponse);
+			}
+		})();
 	});
 
 	const quote = text => {
@@ -644,9 +653,12 @@ export const PullRequestConversationTab = (props: {
 		// then refreshing the new data and it takes some time for the back-end to do this
 		for (const connectedProvider of derivedState.PRConnectedProviders) {
 			try {
-				if (queries) {
+				if (derivedState.pullRequestQueries || defaultQueries[connectedProvider.id]) {
 					const options = { force: true, alreadyLoading: false };
-					const providerQuery: PullRequestQuery[] = queries[connectedProvider.id];
+
+					const providerQuery: PullRequestQuery[] = derivedState.pullRequestQueries
+						? derivedState.pullRequestQueries[connectedProvider.id]
+						: defaultQueries[connectedProvider.id];
 					const queryStrings = Object.values(providerQuery).map(_ => _.query);
 
 					const resp: any = await dispatch(

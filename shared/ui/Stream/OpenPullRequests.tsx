@@ -404,7 +404,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		// need to check if it was new/editing pullRequestQueries or just updating other preferences
 		if (!isEqual(queries, newQueries)) {
 			setQueries(newQueries);
-			// update store
 		}
 	}, [derivedState.pullRequestQueries]);
 

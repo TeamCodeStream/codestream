@@ -50,7 +50,7 @@ export function reduceProviderPullRequests(
 				newState[action.payload.providerId][id].error = undefined;
 				return {
 					myPullRequests: { ...state.myPullRequests },
-					pullRequests: newState,
+					pullRequests: newState
 				};
 			} else if (action.payload) {
 				const newState = { ...state };
@@ -71,7 +71,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: newState,
-				pullRequests: { ...state.pullRequests },
+				pullRequests: { ...state.pullRequests }
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestFiles: {
@@ -87,7 +87,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestFiles: {
@@ -98,7 +98,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCommits: {
@@ -109,7 +109,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestCommits: {
@@ -120,7 +120,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestCollaborators: {
@@ -131,25 +131,24 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.UpdatePullRequestTitle: {
-			const newState = {...state.myPullRequests};
-			newState[action.payload.providerId]['data']?.forEach((arr: any, index) => {
+			const newState = { ...state.myPullRequests };
+			newState[action.payload.providerId]["data"]?.forEach((arr: any, index) => {
 				arr?.forEach((pr, i) => {
-					if (pr.id === action.payload.id) {	
-						newState[action.payload.providerId]['data']![index][i] = {
-							...newState[action.payload.providerId]['data']![index][i],
+					if (pr.id === action.payload.id) {
+						newState[action.payload.providerId]["data"]![index][i] = {
+							...newState[action.payload.providerId]["data"]![index][i],
 							title: action.payload.pullRequestData.title
 						};
 					}
-				})
-			}
-			)
+				});
+			});
 			return {
 				myPullRequests: newState,
-				pullRequests: {...state.pullRequests},
+				pullRequests: { ...state.pullRequests }
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestConversations: {
@@ -161,7 +160,7 @@ export function reduceProviderPullRequests(
 			};
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.ClearPullRequestError: {
@@ -172,7 +171,7 @@ export function reduceProviderPullRequests(
 			newState[action.payload.providerId][id].error = undefined;
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.AddPullRequestError: {
@@ -183,7 +182,7 @@ export function reduceProviderPullRequests(
 			newState[action.payload.providerId][id].error = action.payload.error;
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
 		case ProviderPullRequestActionsTypes.HandleDirectives: {
@@ -707,20 +706,9 @@ export function reduceProviderPullRequests(
 			}
 			return {
 				myPullRequests: { ...state.myPullRequests },
-				pullRequests: newState,
+				pullRequests: newState
 			};
 		}
-		// case ProviderPullRequestActionsTypes.ClearPullRequestError: {
-		// 	const newState = createNewObject(state, action);
-		// 	newState[action.payload.providerId][id] = {
-		// 		...newState[action.payload.providerId][id]
-		// 	};
-		// 	newState[action.payload.providerId][id].error = undefined;
-		// 	return {
-		// 		myPullRequests: { ...state.myPullRequests },
-		// 		pullRequests: newState
-		// 	};
-		// }
 		case "RESET":
 			return initialState;
 		default:
