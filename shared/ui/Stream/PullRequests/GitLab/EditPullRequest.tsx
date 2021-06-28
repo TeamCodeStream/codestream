@@ -5,10 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
+import { PullRequestQuery } from "@codestream/protocols/api";
 import { Link } from "../../Link";
 import { replaceHtml } from "../../../utils";
 import { PRBranch, PRError } from "../../PullRequestComponents";
-import { api } from "../../../store/providerPullRequests/actions";
+import { api, getMyPullRequests } from "../../../store/providerPullRequests/actions";
 import MessageInput from "../../MessageInput";
 import { TextInput } from "@codestream/webview/Authentication/TextInput";
 import { Modal } from "../../Modal";
@@ -27,6 +28,8 @@ import { Circle } from "../../PullRequestConversationTab";
 import { HostApi } from "@codestream/webview/index";
 import { OpenUrlRequestType } from "../../../ipc/host.protocol";
 import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
+import * as providerSelectors from "../../../store/providers/reducer";
+import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
 
 const Label = styled.div`
 	margin-top: 20px;
@@ -105,11 +108,24 @@ export const EditPullRequest = props => {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
+		const { preferences } = state;
+
+		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
+
 		return {
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
 			supportsMultipleAssignees: teamSettings.gitLabMultipleAssignees,
-			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees
+			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
+			pullRequestQueries: state.preferences.pullRequestQueries,
+			PRConnectedProviders: prConnectedProviders,
+			allRepos:
+				preferences.pullRequestQueryShowAllRepos == null
+					? true
+					: preferences.pullRequestQueryShowAllRepos
 		};
 	});
 
@@ -121,6 +137,19 @@ export const EditPullRequest = props => {
 	const [deleteSourceBranch, setDeleteSourceBranch] = useState(pr.forceRemoveSourceBranch);
 	const [squashCommits, setSquashCommits] = useState(pr.squashOnMerge);
 	const [targetBranch, setTargetBranch] = useState(pr.targetBranch);
+	const [defaultQueries, setDefaultQueries] = React.useState({});
+
+	useDidMount(() => {
+		(async () => {
+			const defaultQueriesResponse: any = (await HostApi.instance.send(
+				FetchProviderDefaultPullRequestsType,
+				{}
+			)) as any;
+			if (defaultQueriesResponse) {
+				setDefaultQueries(defaultQueriesResponse);
+			}
+		})();
+	});
 
 	const save = async () => {
 		setIsLoading(true);
@@ -148,8 +177,42 @@ export const EditPullRequest = props => {
 				squashCommits
 			})
 		);
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 		cancel();
 	};
+
+	const fetchPRs = async () => {
+		for (const connectedProvider of derivedState.PRConnectedProviders) {
+			if (connectedProvider.id === derivedState.currentPullRequestProviderId) {
+				try {
+					if (derivedState.pullRequestQueries || defaultQueries[connectedProvider.id]) {
+						const options = { force: true, alreadyLoading: false };
+
+						const providerQuery: PullRequestQuery[] = derivedState.pullRequestQueries
+							? derivedState.pullRequestQueries[connectedProvider.id]
+							: defaultQueries[connectedProvider.id];
+						const queryStrings = Object.values(providerQuery).map(_ => _.query);
+
+						await dispatch(
+							getMyPullRequests(
+								connectedProvider.id,
+								queryStrings,
+								!derivedState.allRepos,
+								options,
+								true
+							)
+						);
+					}
+				} catch (error) {
+					console.error(error);
+				}
+			}
+		}
+	};
+
 	const deletePR = () => {
 		confirmPopup({
 			title: "Are you sure?",

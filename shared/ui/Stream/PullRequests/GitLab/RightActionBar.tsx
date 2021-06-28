@@ -9,11 +9,11 @@ import { HostApi } from "../../../webview-api";
 import { LocalFilesCloseDiffRequestType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { closeAllModals } from "@codestream/webview/store/context/actions";
 import { Switch } from "@codestream/webview/src/components/controls/Switch";
-import { api } from "../../../store/providerPullRequests/actions";
+import { api, getMyPullRequests } from "../../../store/providerPullRequests/actions";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { PRError } from "../../PullRequestComponents";
-import { CSMe } from "@codestream/protocols/api";
+import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
@@ -28,6 +28,9 @@ import Tooltip from "../../Tooltip";
 import { GitLabMergeRequest } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { pluralize } from "@codestream/webview/utilities/strings";
+import * as providerSelectors from "../../../store/providers/reducer";
+import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 
 const Right = styled.div`
 	width: 48px;
@@ -197,6 +200,7 @@ export const RightActionBar = (props: {
 		const addBlameMapEnabled = isFeatureEnabled(state, "addBlameMap");
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const { preferences, ide } = state;
+		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
 
 		return {
 			defaultMergeMethod: preferences.lastPRMergeMethod || "SQUASH",
@@ -214,7 +218,16 @@ export const RightActionBar = (props: {
 			supportsReviewers:
 				currentPullRequest?.conversations?.project?.mergeRequest?.supports?.reviewers,
 			supportsMultipleAssignees: teamSettings.gitLabMultipleAssignees,
-			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees
+			supportsMultipleReviewers: teamSettings.gitLabMultipleAssignees,
+			currentPullRequestProviderId: state.context.currentPullRequest
+				? state.context.currentPullRequest.providerId
+				: undefined,
+			pullRequestQueries: state.preferences.pullRequestQueries,
+			PRConnectedProviders: prConnectedProviders,
+			allRepos:
+				preferences.pullRequestQueryShowAllRepos == null
+					? true
+					: preferences.pullRequestQueryShowAllRepos
 		};
 	});
 
@@ -223,10 +236,52 @@ export const RightActionBar = (props: {
 
 	const [availableAssignees, setAvailableAssignees] = useState(EMPTY_ARRAY_3);
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
+	const [defaultQueries, setDefaultQueries] = React.useState({});
+
+	useDidMount(() => {
+		(async () => {
+			const defaultQueriesResponse: any = (await HostApi.instance.send(
+				FetchProviderDefaultPullRequestsType,
+				{}
+			)) as any;
+			if (defaultQueriesResponse) {
+				setDefaultQueries(defaultQueriesResponse);
+			}
+		})();
+	});
 
 	const close = () => {
 		HostApi.instance.send(LocalFilesCloseDiffRequestType, {});
 		dispatch(closeAllModals());
+	};
+
+	const fetchPRs = async () => {
+		for (const connectedProvider of derivedState.PRConnectedProviders) {
+			if (connectedProvider.id === derivedState.currentPullRequestProviderId) {
+				try {
+					if (derivedState.pullRequestQueries || defaultQueries[connectedProvider.id]) {
+						const options = { force: true, alreadyLoading: false };
+
+						const providerQuery: PullRequestQuery[] = derivedState.pullRequestQueries
+							? derivedState.pullRequestQueries[connectedProvider.id]
+							: defaultQueries[connectedProvider.id];
+						const queryStrings = Object.values(providerQuery).map(_ => _.query);
+
+						await dispatch(
+							getMyPullRequests(
+								connectedProvider.id,
+								queryStrings,
+								!derivedState.allRepos,
+								options,
+								true
+							)
+						);
+					}
+				} catch (error) {
+					console.error(error);
+				}
+			}
+		}
 	};
 
 	const fetchAvailableAssignees = async (e?) => {
@@ -299,6 +354,10 @@ export const RightActionBar = (props: {
 		setIsLoadingMessage("Setting Assignee...");
 		await dispatch(api("setAssigneeOnPullRequest", { ids }));
 		setIsLoadingMessage("");
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableReviewers = async (e?) => {
@@ -369,6 +428,10 @@ export const RightActionBar = (props: {
 		setIsLoadingMessage("Updating Reviewer...");
 		await dispatch(api("setReviewersOnPullRequest", { ids }));
 		setIsLoadingMessage("");
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
@@ -422,6 +485,10 @@ export const RightActionBar = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const fetchAvailableLabels = async (e?) => {
@@ -480,6 +547,10 @@ export const RightActionBar = (props: {
 			})
 		);
 		setIsLoadingMessage("");
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -514,6 +585,10 @@ export const RightActionBar = (props: {
 							setIsLoadingMessage("Unlocking...");
 							await dispatch(api("unlockPullRequest", {}));
 							setIsLoadingMessage("");
+							await new Promise(resolve => {
+								setTimeout(resolve, 2000);
+							});
+							fetchPRs();
 						}
 					}
 				]
@@ -534,6 +609,10 @@ export const RightActionBar = (props: {
 							setIsLoadingMessage("Locking...");
 							await dispatch(api("lockPullRequest", {}));
 							setIsLoadingMessage("");
+							await new Promise(resolve => {
+								setTimeout(resolve, 2000);
+							});
+							fetchPRs();
 						}
 					}
 				]
@@ -553,6 +632,10 @@ export const RightActionBar = (props: {
 		else await dispatch(api("createToDo", {}));
 		setIsLoadingToDo(false);
 		setIsLoadingMessage("");
+		await new Promise(resolve => {
+			setTimeout(resolve, 2000);
+		});
+		fetchPRs();
 	};
 
 	const reference = pr.url;
