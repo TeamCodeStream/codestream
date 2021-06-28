@@ -404,14 +404,10 @@ export const Timeline = (props: Props) => {
 							<MarkdownText
 								text={
 									note.bodyHtml
-										? note.bodyHtml.includes("<img")
-											? note.bodyHtml
-													.replace(/\<table /g, '<table class="gitlab-table" ')
-													.replace(/\<pre.+?\>/g, "<pre>")
-													.replace('href="', `href=\"${pr.baseWebUrl}`)
-											: note.bodyHtml
-													.replace(/\<table /g, '<table class="gitlab-table" ')
-													.replace(/\<pre.+?\>/g, "<pre>")
+										? note.bodyHtml
+												.replace(/\<table /g, '<table class="gitlab-table" ')
+												.replace(/\<pre.+?\>/g, "<pre>")
+												.replace(/(?=((?!<\/a).)*<img.+?<\/a>)href="/g, `href=\"${pr.baseWebUrl}`)
 										: note.body
 								}
 								isHtml={note.bodyHtml != null}
