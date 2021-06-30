@@ -448,6 +448,58 @@ export class GitService implements IGitService, Disposable {
 		return patches[0];
 	}
 
+	async getDiffBetweenCommitsAndFiles(
+		initialCommitHash: string,
+		finalCommitHash: string,
+		repositoryPath: string,
+		filePath1: string,
+		filePath2: string,
+		fetchIfCommitNotFound: boolean = false,
+		contextLines: number = 3
+	): Promise<ParsedDiff | undefined> {
+		const repoAndRelativePath = await this._getRepoAndRelativePath(repositoryPath);
+		if (!repoAndRelativePath) return undefined;
+		const { repoPath, relativePath } = repoAndRelativePath;
+		let data;
+		try {
+			data = await git(
+				{ cwd: repoPath },
+				"diff",
+				"--no-ext-diff",
+				`-U${contextLines}`,
+				`${initialCommitHash}:${filePath1}`,
+				`${finalCommitHash}:${filePath2}`
+			);
+		} catch (err) {
+			if (fetchIfCommitNotFound) {
+				Logger.log("Commit not found - fetching all remotes");
+				const didFetch = await this.fetchAllRemotes(repoPath);
+				if (didFetch) {
+					return this.getDiffBetweenCommitsAndFiles(
+						initialCommitHash,
+						finalCommitHash,
+						repositoryPath,
+						filePath1,
+						filePath2,
+						false
+					);
+				}
+			}
+
+			Logger.error(err);
+			Logger.warn(
+				`Error getting diff from ${initialCommitHash}:${filePath1} to ${finalCommitHash}:${filePath2}for ${relativePath}`
+			);
+			return;
+		}
+
+		const patches = parsePatch(data);
+		if (patches.length > 1) {
+			Logger.warn("Parsed diff generated multiple patches");
+		}
+		return patches[0];
+	}
+
 	async getDiffs(
 		repoPath: string,
 		opts: {

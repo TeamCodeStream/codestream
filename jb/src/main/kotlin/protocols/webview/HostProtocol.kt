@@ -153,6 +153,7 @@ class OpenUrlRequest(
 class CompareLocalFilesRequest(
     val repoId: String,
     val filePath: String,
+    val previousFilePath: String?,
     val headSha: String,
     val headBranch: String,
     val baseSha: String,

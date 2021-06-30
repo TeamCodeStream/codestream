@@ -398,6 +398,8 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												};
 
 												try {
+													// There isn't a great way to get the previousFilePath here which is needed for
+													// viewing diffs of renamed files
 													await HostApi.instance.send(CompareLocalFilesRequestType, request);
 												} catch (err) {}
 											};

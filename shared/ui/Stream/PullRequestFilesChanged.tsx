@@ -203,6 +203,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					headBranch: props.headRefName,
 					headSha: props.headRef,
 					filePath: f.file,
+					previousFilePath: f.previousFilename,
 					repoId: pr ? derivedState.currentRepo!.id! : props.repoId!,
 					context: pr
 						? {

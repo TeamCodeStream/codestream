@@ -370,6 +370,7 @@ export interface FetchThirdPartyPullRequestRequest {
 export interface FetchThirdPartyPullRequestFilesResponse {
 	sha: string;
 	filename: string;
+	previousFilename?: string;
 	status: string;
 	additions: number;
 	changes: number;
@@ -765,8 +766,8 @@ export interface GetMyPullRequestsRequest {
 	isOpen?: boolean;
 }
 
-export interface Labels { 
-	nodes: { color: string; description: string; name: string; id: string }[] 
+export interface Labels {
+	nodes: { color: string; description: string; name: string; id: string }[];
 }
 
 export interface GetMyPullRequestsResponse {

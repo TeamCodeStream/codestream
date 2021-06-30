@@ -71,7 +71,8 @@ export const PullRequestFilesChangedTab = (props: {
 				linesRemoved: _.deletions,
 				file: _.filename,
 				sha: _.sha,
-				status: STATUS_MAP[_.status]
+				status: STATUS_MAP[_.status],
+				previousFilename: _.previous_filename
 			};
 		});
 		filesChanged.sort((a, b) => a.file.localeCompare(b.file));
@@ -80,9 +81,9 @@ export const PullRequestFilesChangedTab = (props: {
 	};
 
 	const _mapCommitsData = data => {
-		setPrCommits(data.sort(
-			(a,b) => (new Date(a.authoredDate).getTime()) - (new Date(b.authoredDate).getTime())
-		));
+		setPrCommits(
+			data.sort((a, b) => new Date(a.authoredDate).getTime() - new Date(b.authoredDate).getTime())
+		);
 	};
 
 	useEffect(() => {
@@ -141,7 +142,7 @@ export const PullRequestFilesChangedTab = (props: {
 			);
 			_mapData(data);
 		}
-	}
+	};
 
 	const commitBased = useMemo(() => prCommitsRange.length > 0, [prCommitsRange]);
 	const baseRef = useMemo(() => {

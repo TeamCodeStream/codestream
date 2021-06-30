@@ -274,6 +274,8 @@ export interface CodeStreamDiffUriData {
 	headBranch: string;
 	leftSha: string;
 	rightSha: string;
+	/** Set this to the old file path if it was renamed */
+	previousFilePath?: string;
 	/** values are `left` or `right` */
 	side: string;
 	context?: {

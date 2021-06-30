@@ -255,6 +255,7 @@ export class Commands implements Disposable {
 	async showLocalDiff(args: {
 		repoId: string;
 		filePath: string;
+		previousFilePath?: string;
 		baseSha: string;
 		baseBranch: string;
 		headSha: string;
@@ -267,7 +268,7 @@ export class Commands implements Disposable {
 		};
 	}): Promise<boolean> {
 		const leftData = {
-			path: args.filePath,
+			path: args.previousFilePath || args.filePath,
 			repoId: args.repoId,
 			baseBranch: args.baseBranch,
 			headBranch: args.headBranch,
@@ -279,6 +280,7 @@ export class Commands implements Disposable {
 
 		const rightData = {
 			path: args.filePath,
+			previousFilePath: args.previousFilePath,
 			repoId: args.repoId,
 			baseBranch: args.baseBranch,
 			headBranch: args.headBranch,
@@ -291,7 +293,7 @@ export class Commands implements Disposable {
 		const viewColumn = await this.getViewColumn();
 		await commands.executeCommand(
 			BuiltInCommands.Diff,
-			csUri.Uris.toCodeStreamDiffUri(leftData, args.filePath),
+			csUri.Uris.toCodeStreamDiffUri(leftData, leftData.path),
 			csUri.Uris.toCodeStreamDiffUri(rightData, args.filePath),
 			`${Strings.truncate(paths.basename(args.filePath), 40)} (${Strings.truncate(
 				args.baseSha,
@@ -476,14 +478,14 @@ export class Commands implements Disposable {
 	async openPullRequest(args: OpenPullRequestCommandArgs): Promise<void> {
 		if (args === undefined) return;
 
-		const trackParams: {[k: string]: any} = {
+		const trackParams: { [k: string]: any } = {
 			Host: args.providerId
 		};
 		const editor = window.activeTextEditor;
-		if (editor && editor.document.uri.scheme === "file"){
+		if (editor && editor.document.uri.scheme === "file") {
 			trackParams["Comment Location"] = "Source Gutter";
 		}
-		if (editor && editor.document.uri.scheme === "codestream-diff"){
+		if (editor && editor.document.uri.scheme === "codestream-diff") {
 			trackParams["Comment Location"] = "Diff Gutter";
 		}
 
