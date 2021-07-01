@@ -447,7 +447,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
 	const [loadingTest, setLoadingTest] = React.useState(false);
 	const [startWorkCard, setStartWorkCard] = React.useState<any>(undefined);
-	const [validQueries, setValidQueries] = React.useState(
+	const [validGHQueries, setvalidGHQueries] = React.useState(
 		new Set([
 			"user",
 			"org",
@@ -462,6 +462,20 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			"review-requested",
 			"team-review-requested",
 			"project"
+		])
+	);
+	const [validGLQueries, setvalidGLQueries] = React.useState(
+		new Set([
+			"project_id",
+			"group_id",
+			"assignee_username",
+			"assignee_id",
+			"author_username",
+			"iids",
+			"iteration_id",
+			"created_by_me",
+			"my_reaction_emoji",
+			"assigned_to_me"
 		])
 	);
 	const [validQuery, setValidQuery] = React.useState(true);
@@ -896,24 +910,36 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 	const isValidQuery = query => {
 		if (
-			!(
-				addingCustomFilterForProvider?.id === "github*com" ||
-				addingCustomFilterForProvider?.id === "github/enterprise"
-			)
+			addingCustomFilterForProvider?.id === "github*com" ||
+			addingCustomFilterForProvider?.id === "github/enterprise"
 		) {
-			setValidQuery(true);
-			return true;
-		}
-		// Verify if valid query
-		const queryStr = query.replace(/:/g, " ").split(/\s+/);
-		for (let word of queryStr) {
-			if (validQueries.has(word)) {
-				setValidQuery(true);
-				return true;
+			// Verify if valid query for Github
+			const queryStr = query.replace(/:/g, " ").split(/\s+/);
+			for (let word of queryStr) {
+				if (validGHQueries.has(word)) {
+					setValidQuery(true);
+					return true;
+				}
 			}
+			setValidQuery(false);
+			return false;
+		} else if (
+			addingCustomFilterForProvider?.id === "gitlab*com" ||
+			addingCustomFilterForProvider?.id === "gitlab/enterprise"
+		) {
+			// Verify if valid query for Gitlab
+			const queryStr = query.replace(/[=&]/g, " ").split(/\s+/);
+			for (let word of queryStr) {
+				if (validGLQueries.has(word)) {
+					setValidQuery(true);
+					return true;
+				}
+			}
+			setValidQuery(false);
+			return false;
 		}
-		setValidQuery(false);
-		return false;
+		setValidQuery(true);
+		return true;
 	};
 
 	const testCustomFilter = async query => {

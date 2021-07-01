@@ -8,6 +8,7 @@ import { Response } from "node-fetch";
 import * as paths from "path";
 import * as qs from "querystring";
 import semver from "semver";
+import { requests } from "sinon";
 import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -293,8 +294,63 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		await this.ensureConnected();
+		let filter = request.customFilter ? request.customFilter : undefined;
 
-		const url = request.customFilter ? "/issues?" + request.customFilter : "/issues?state=opened&scope=assigned_to_me";
+		// TO DO: add ! here
+		if (request.customFilter && !(request.customFilter.includes("project_id") || request.customFilter.includes("group_id")) && !(request.customFilter.includes("scope"))) {
+			// Replace scope to be all unless overriden
+			filter += "&scope=all";
+		}
+		if (filter?.includes("project_id")) {	
+			const index = filter.indexOf("project_id") +  11;
+			let projectId = "";
+			for (let i = index; i != filter.length; ++i) {
+				if (isNaN(Number(filter[i]))) {
+					break;
+				}
+				projectId += filter[i];
+			}
+
+
+			if (index - 11 === 0) {
+				// projectId at begining of query
+				filter = filter.replace(`group_id=${projectId}&`, '');
+			} else if (index + projectId.length === filter.length) {
+				// projectId at end of query
+				filter = filter.replace(`&group_id=${projectId}`, '');
+			} else {
+				// projectId at middle of query
+				filter = filter.replace(`&group_id=${projectId}`, '');
+			}
+
+			filter = filter.replace(`&project_id=${projectId}`, '').replace(`project_id=${projectId}`, '');
+
+			var url = `/projects/${projectId}/issues?${filter}`;
+		} else if (filter?.includes("group_id")) {
+
+			const index = filter.indexOf("group_id") +  9;
+			let groupId = "";
+			for (let i = index; i != filter.length; ++i) {
+				if (isNaN(Number(filter[i]))) {
+					break;
+				}
+				groupId += filter[i];
+			}
+
+			if (index - 9 === 0) {
+				// groupId at begining of query
+				filter = filter.replace(`group_id=${groupId}&`, '');
+			} else if (index + groupId.length === filter.length) {
+				// groupId at end of query
+				filter = filter.replace(`&group_id=${groupId}`, '');
+			} else {
+				// groupId at middle of query
+				filter = filter.replace(`&group_id=${groupId}`, '');
+			}
+			var url = `/groups/${groupId}/issues?${filter}`;
+		} else {
+			var url = request.customFilter ? "/issues?" + filter : "/issues?state=opened&scope=assigned_to_me";
+		}
 
 		try {
 			const response = await this.get<any[]>(url);
