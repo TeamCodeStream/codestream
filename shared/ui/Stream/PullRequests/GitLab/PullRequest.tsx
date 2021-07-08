@@ -251,7 +251,7 @@ export const FlexRow = styled.div`
 	.action-button-wrapper {
 		align-items: center;
 		display: flex;
-		flex-wrap: no-wrap;	
+		flex-wrap: no-wrap;
 		@media only screen and (max-width: 350px) {
 			flex-wrap: wrap;
 			justify-content: center;
@@ -269,6 +269,11 @@ const Description = styled.div`
 const TabActions = styled.div`
 	margin-top: -5px;
 	margin-left: auto;
+`;
+
+const InlineIcon = styled.div`
+	display: inline-block;
+	white-space: nowrap;
 `;
 
 const stateMap = {
@@ -808,23 +813,28 @@ export const PullRequest = () => {
 					>
 						<Tabs style={{ margin: "0 20px 10px 20px" }}>
 							<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
-								<Icon className="narrow-text" name="comment" />
-								<span className="wide-text">Overview</span>
-								<PRBadge>{pr.userDiscussionsCount}</PRBadge>
+								<InlineIcon>
+									<Icon className="narrow-text" name="comment" />
+									<span className="wide-text">Overview</span>
+									<PRBadge>{pr.userDiscussionsCount}</PRBadge>
+								</InlineIcon>
 							</Tab>
 							<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
-								<Icon className="narrow-text" name="git-commit" />
-								<span className="wide-text">Commits</span>
-								<PRBadge>{(pr && pr.commitCount) || 0}</PRBadge>
+								<InlineIcon>
+									<Icon className="narrow-text" name="git-commit" />
+									<span className="wide-text">Commits</span>
+									<PRBadge>{(pr && pr.commitCount) || 0}</PRBadge>
+								</InlineIcon>
 							</Tab>
-
 							<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
-								<Icon className="narrow-text" name="plus-minus" />
-								<span className="wide-text">Changes</span>
-								<PRBadge>
-									{(pr && pr.changesCount) || 0}
-									{pr && pr.overflow ? "+" : ""}
-								</PRBadge>
+								<InlineIcon>
+									<Icon className="narrow-text" name="plus-minus" />
+									<span className="wide-text">Changes</span>
+									<PRBadge>
+										{(pr && pr.changesCount) || 0}
+										{pr && pr.overflow ? "+" : ""}
+									</PRBadge>
+								</InlineIcon>
 							</Tab>
 							{pr.pendingReview ? (
 								<PRSubmitReviewButton>
