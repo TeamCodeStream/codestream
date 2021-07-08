@@ -304,16 +304,17 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		) {
 			filter["scope"] = "all";
 		}
+		let url;
 		if (filter?.hasOwnProperty("project_id")) {
 			const projectId = filter["project_id"];
 			delete filter["project_id"];
-			var url = `/projects/${projectId}/issues?${qs.stringify(filter)}`;
+			url = `/projects/${projectId}/issues?${qs.stringify(filter)}`;
 		} else if (filter?.hasOwnProperty("group_id")) {
 			const groupId = filter["group_id"];
 			delete filter["group_id"];
-			var url = `/groups/${groupId}/issues?${qs.stringify(filter)}`;
+			url = `/groups/${groupId}/issues?${qs.stringify(filter)}`;
 		} else {
-			var url = filter
+			url = filter
 				? "/issues?" + qs.stringify(filter)
 				: "/issues?state=opened&scope=assigned_to_me";
 		}
