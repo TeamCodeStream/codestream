@@ -271,7 +271,8 @@ class WebViewRouter(val project: Project) {
         with(request) {
             reviewService.showRevisionsDiff(
                 repoId,
-                previousFilePath ?: filePath,
+                filePath,
+                previousFilePath,
                 headSha,
                 headBranch,
                 baseSha,

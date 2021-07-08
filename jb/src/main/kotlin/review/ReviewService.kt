@@ -165,6 +165,7 @@ class ReviewService(private val project: Project) {
     suspend fun showRevisionsDiff(
         repoId: String,
         filePath: String,
+        previousFilePath: String?,
         headSha: String,
         headBranch: String,
         baseSha: String,
@@ -176,18 +177,18 @@ class ReviewService(private val project: Project) {
 
         if (reviewDiffEditor == null || diffChain == null || key != currentKey) {
             closeDiff()
-            val filesPath: List<String>
+            val filesPath: List<Pair<String, String?>> // filename / previous filename (optional)
             if (context?.pullRequest != null) {
                 val prFiles = agent.getPullRequestFiles(context.pullRequest.id, context.pullRequest.providerId)
-                filesPath = prFiles.map { it.filename }
+                filesPath = prFiles.map { Pair(it.filename, it.previous_filename) }
             } else {
-                filesPath = listOf(filePath)
+                filesPath = listOf(Pair(filePath, previousFilePath))
             }
 
             currentKey = key
 
             val producers = filesPath.map {
-                PullRequestProducer(project, repoId, it, headSha, headBranch, baseSha, baseBranch, context)
+                PullRequestProducer(project, repoId, it.first, it.second, headSha, headBranch, baseSha, baseBranch, context)
             }
 
             val myDiffChain = PullRequestChain(producers).also { chain ->

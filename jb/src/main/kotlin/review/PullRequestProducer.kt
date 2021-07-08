@@ -15,6 +15,7 @@ class PullRequestProducer(
     val project: Project,
     val repoId: String,
     val filePath: String,
+    val previousFilePath: String?,
     val headSha: String,
     val headBranch: String,
     val baseSha: String,
@@ -41,7 +42,7 @@ class PullRequestProducer(
             val baseContents = agent.getFileContentsAtRevision(
                 GetFileContentsAtRevisionParams(
                     repoId,
-                    path = filePath,
+                    path = previousFilePath ?: filePath,
                     sha = baseSha
                 )
             )

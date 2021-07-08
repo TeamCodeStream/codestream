@@ -364,6 +364,7 @@ class getPullRequestFilesParams(
 
 class PullRequestFile (
     val sha: String,
+    val previous_filename: String?,
     val filename: String,
     val status: String,
     val additions: Int,
