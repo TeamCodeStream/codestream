@@ -3,9 +3,9 @@
 # This script is a hook called via the dt-install-sandbox-software command.
 # Do not run it directly.
 
- -z "$1" ] && echo "Run dt-install-sandbox-software to call this script" && exit 1
+[ -z "$1" ] && echo "Run dt-install-sandbox-software to call this script" && exit 1
 
-f [ "$1" != "--env-loaded" ]; then
+if [ "$1" != "--env-loaded" ]; then
 	# THIS IS DEPRACATED. To eliminate:  echo 2 >CSFE_TOP/sandbox/sandbox-version
 	[ -z "$2" ] && echo "Run dt-install-sandbox-software (version 1) to call this script" && exit 1
 	export CSFE_SANDBOX=$1  # root of the sandbox

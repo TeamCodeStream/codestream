@@ -22,6 +22,7 @@ import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import git4idea.GitUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.ConfigurationParams
@@ -146,6 +147,13 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.notificationComponent?.didDetectUnreviewedCommits(notification.message, notification.sequence, notification.openReviewId)
     }
 
+    @JsonNotification("codestream/didChangeBranch")
+    fun didChangeBranch(notification: DidChangeBranchNotification) {
+        GitUtil.getRepositoryManager(project).repositories.forEach {
+            it.update()
+        }
+    }
+
     @JsonNotification("codestream/restartRequired")
     fun restartRequired(json: JsonElement) = GlobalScope.launch {
         project.agentService?.restart()
@@ -251,6 +259,8 @@ enum class LogoutReason {
 class UserDidCommitNotification(val sha: String)
 
 class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int, val openReviewId: String?)
+
+class DidChangeBranchNotification(val repoPath: String, val branch: String)
 
 class DidChangeApiVersionCompatibilityNotification(
     val compatibility: ApiVersionCompatibility,

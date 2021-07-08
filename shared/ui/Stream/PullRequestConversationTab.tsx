@@ -649,30 +649,30 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const fetchPRs = async () => {
-		// We need to delay these api requests as we are making a request to make a change (e.g. adding a label)
-		// then refreshing the new data and it takes some time for the back-end to do this
 		for (const connectedProvider of derivedState.PRConnectedProviders) {
-			try {
-				if (derivedState.pullRequestQueries || defaultQueries[connectedProvider.id]) {
-					const options = { force: true, alreadyLoading: false };
+			if (connectedProvider.id === derivedState.currentPullRequestProviderId) {
+				try {
+					if (derivedState.pullRequestQueries || defaultQueries[connectedProvider.id]) {
+						const options = { force: true, alreadyLoading: false };
 
-					const providerQuery: PullRequestQuery[] = derivedState.pullRequestQueries
-						? derivedState.pullRequestQueries[connectedProvider.id]
-						: defaultQueries[connectedProvider.id];
-					const queryStrings = Object.values(providerQuery).map(_ => _.query);
+						const providerQuery: PullRequestQuery[] = derivedState.pullRequestQueries
+							? derivedState.pullRequestQueries[connectedProvider.id]
+							: defaultQueries[connectedProvider.id];
+						const queryStrings = Object.values(providerQuery).map(_ => _.query);
 
-					const resp: any = await dispatch(
-						getMyPullRequests(
-							connectedProvider.id,
-							queryStrings,
-							!derivedState.allRepos,
-							options,
-							true
-						)
-					);
+						await dispatch(
+							getMyPullRequests(
+								connectedProvider.id,
+								queryStrings,
+								!derivedState.allRepos,
+								options,
+								true
+							)
+						);
+					}
+				} catch (error) {
+					console.error(error);
 				}
-			} catch (error) {
-				console.error(error);
 			}
 		}
 	};

@@ -123,7 +123,7 @@ class SessionServiceContainer {
 	constructor(public readonly session: CodeStreamSession) {
 		const cinstance = Container.instance();
 		this._git = new GitService(session, cinstance.repositoryLocator, cinstance.gitServiceLite);
-		this._scm = new ScmManager();
+		this._scm = new ScmManager(session);
 		this._files = new FilesManager(session);
 		this._markerLocations = new MarkerLocationManager(session);
 		this._codemarks = new CodemarksManager(session);

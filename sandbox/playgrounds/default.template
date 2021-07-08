@@ -1,0 +1,14 @@
+
+#desc# codestream client mono-repo playground
+
+#playgroundName# csfe
+#sandboxTypes# cs_client
+#sandboxes# {{SBNAME_cs_client}}
+#environment# {{CSFE_ENV}}
+
+dt_load {{SBNAME_cs_client}}
+cd $CSFE_TOP
+
+# uncomment these if you use iterm2 and want to colorize your tabs
+# . $DT_TOP/lib/iterm2-utils.sh
+# it2_tab_rgb {{SBNAME_cs_client}} 200 88 45

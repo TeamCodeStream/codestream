@@ -804,7 +804,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		void (await this.ensureConnected());
 		const currentUser = await this.getCurrentUser();
 		const currentVersion = await this.getVersion();
-		if (!currentVersion.isDefault && semver.lt(currentVersion.version, "12.0.0")) {
+		if (!currentVersion.isDefault && semver.lt(currentVersion.version, "12.10.0")) {
 			// InternalErrors don't get sent to sentry
 			throw new InternalError(`${this.displayName} ${currentVersion.version} is not yet supported`);
 		}

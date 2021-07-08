@@ -352,3 +352,13 @@ export const DidSetEnvironmentNotificationType = new NotificationType<
 	CodeStreamEnvironmentInfo,
 	void
 >("codestream/didSetEnvironment");
+
+export interface DidChangeBranchNotification {
+	repoPath: string;
+	branch: string;
+}
+
+export const DidChangeBranchNotificationType = new NotificationType<
+	DidChangeBranchNotification,
+	void
+>("codestream/didChangeBranch");

@@ -18,6 +18,7 @@ import {
 	CreateBranchRequest,
 	CreateBranchRequestType,
 	CreateBranchResponse,
+	DidChangeBranchNotificationType,
 	DiffBranchesRequest,
 	DiffBranchesRequestType,
 	DiffBranchesResponse,
@@ -79,6 +80,7 @@ import {
 	SwitchBranchResponse
 } from "../protocol/agent.protocol";
 import { CSMe, FileStatus } from "../protocol/api.protocol.models";
+import { CodeStreamSession } from "../session";
 import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
@@ -87,6 +89,8 @@ import { ReviewsManager } from "./reviewsManager";
 
 @lsp
 export class ScmManager {
+	constructor(public readonly session: CodeStreamSession) {}
+
 	@lspHandler(GetCommitScmInfoRequestType)
 	@log()
 	async getCommitInfo({
@@ -301,6 +305,10 @@ export class ScmManager {
 			repoPath = (await git.getRepoRoot(uri.fsPath)) || "";
 			if (repoPath !== undefined) {
 				await git.createBranch(repoPath, branch, fromBranch);
+				this.session.agent.sendNotification(DidChangeBranchNotificationType, {
+					repoPath,
+					branch
+				});
 			}
 		} catch (ex) {
 			gitError = ex.toString();
@@ -338,6 +346,10 @@ export class ScmManager {
 
 			if (repoPath !== undefined) {
 				await git.switchBranch(repoPath, branch);
+				this.session.agent.sendNotification(DidChangeBranchNotificationType, {
+					repoPath,
+					branch
+				});
 			}
 		} catch (ex) {
 			gitError = ex.toString();

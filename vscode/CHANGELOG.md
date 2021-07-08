@@ -1,5 +1,19 @@
 # Change Log
 
+## [11.0.12] - 2021-6-30
+
+### Changed
+
+- Changes to a pull requests's title and labels are immediately reflected in the Pull/Merge Request section after saving the changes
+- Fall back to using first intial for a headshot when headshots in pull requests aren't accessible
+- Clicking on images in pull requests now open the full-size image on the web
+
+### Fixed
+
+- Fixes a "Cannot read property 'full' of undefined" error in the Merge Requests section
+- Fixes an issue with double quotes needing to be escaped when creating a custom PR filter for GitHub
+- Fixes an issue where you can't start a PR review when the commit selection is anything other than "Changes from all commits"
+
 ## [11.0.11] - 2021-6-22
 
 ### Added
