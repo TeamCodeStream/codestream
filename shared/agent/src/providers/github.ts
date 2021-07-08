@@ -4428,8 +4428,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				| string
 				| undefined = `/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/files`;
 			do {
-				const apiResponse = await this.restGet<FetchThirdPartyPullRequestFilesResponse[]>(url);
-				changedFiles.push(...apiResponse.body);
+				const apiResponse = await this.restGet<
+					{
+						sha: string;
+						filename: string;
+						previous_filename?: string;
+						status: string;
+						additions: number;
+						changes: number;
+						deletions: number;
+						patch?: string;
+					}[]
+				>(url);
+				changedFiles.push(
+					...apiResponse.body.map(_ => {
+						let previousFilename = _.previous_filename;
+						delete _.previous_filename;
+						return {
+							..._,
+							previousFilename: previousFilename
+						};
+					})
+				);
 				url = this.nextPage(apiResponse.response);
 			} while (url);
 		} catch (err) {

@@ -180,7 +180,7 @@ class ReviewService(private val project: Project) {
             val filesPath: List<Pair<String, String?>> // filename / previous filename (optional)
             if (context?.pullRequest != null) {
                 val prFiles = agent.getPullRequestFiles(context.pullRequest.id, context.pullRequest.providerId)
-                filesPath = prFiles.map { Pair(it.filename, it.previous_filename) }
+                filesPath = prFiles.map { Pair(it.filename, it.previousFilename) }
             } else {
                 filesPath = listOf(Pair(filePath, previousFilePath))
             }

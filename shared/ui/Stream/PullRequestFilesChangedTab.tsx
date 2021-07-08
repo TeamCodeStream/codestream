@@ -70,9 +70,7 @@ export const PullRequestFilesChangedTab = (props: {
 				linesAdded: _.additions,
 				linesRemoved: _.deletions,
 				file: _.filename,
-				sha: _.sha,
-				status: STATUS_MAP[_.status],
-				previousFilename: _.previous_filename
+				status: STATUS_MAP[_.status]
 			};
 		});
 		filesChanged.sort((a, b) => a.file.localeCompare(b.file));
