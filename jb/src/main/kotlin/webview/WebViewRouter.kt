@@ -190,8 +190,9 @@ class WebViewRouter(val project: Project) {
 
     private suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {
         val request = gson.fromJson<EditorRangeSelectRequest>(message.params!!)
-        val success = project.editorService?.select(sanitizeURI(request.uri)!!, request.selection, request.preserveFocus ?: false)
-            ?: false
+        val success =
+            project.editorService?.select(sanitizeURI(request.uri)!!, request.selection, request.preserveFocus ?: false)
+                ?: false
         return EditorRangeSelectResponse(success)
     }
 
@@ -267,7 +268,17 @@ class WebViewRouter(val project: Project) {
         val request = gson.fromJson<CompareLocalFilesRequest>(message.params!!)
         val reviewService = project.reviewService ?: return
 
-        reviewService.showRevisionsDiff(request.repoId, request.filePath, request.headSha, request.headBranch, request.baseSha, request.baseBranch, request.context )
+        with(request) {
+            reviewService.showRevisionsDiff(
+                repoId,
+                previousFilePath ?: filePath,
+                headSha,
+                headBranch,
+                baseSha,
+                baseBranch,
+                context
+            )
+        }
     }
 
     private fun localFilesDiffClose(message: WebViewMessage) {
