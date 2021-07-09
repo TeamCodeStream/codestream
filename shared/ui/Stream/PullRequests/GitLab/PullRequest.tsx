@@ -811,7 +811,7 @@ export const PullRequest = () => {
 							paddingTop: "10px"
 						}}
 					>
-						<Tabs style={{ margin: "0 20px 10px 20px" }}>
+						<Tabs style={{ margin: "0 20px 10px 20px", display: "flex", flexWrap: "wrap-reverse" }}>
 							<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
 								<InlineIcon>
 									<Icon className="narrow-text" name="comment" />
@@ -837,7 +837,7 @@ export const PullRequest = () => {
 								</InlineIcon>
 							</Tab>
 							{pr.pendingReview ? (
-								<PRSubmitReviewButton>
+								<PRSubmitReviewButton style={{ margin: "-10px 0 7px auto" }}>
 									<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
 										Finish<span className="wide-text"> review</span>
 										<PRBadge>
@@ -855,7 +855,7 @@ export const PullRequest = () => {
 									)}
 								</PRSubmitReviewButton>
 							) : unresolvedThreads > 0 ? (
-								<TabActions>
+								<TabActions style={{ margin: "-10px 0 7px auto" }}>
 									<PRSelectorButtons>
 										<Tooltip placement="top" title={`${unresolvedThreads} unresolved threads`}>
 											<span className="label">
@@ -894,7 +894,7 @@ export const PullRequest = () => {
 									</PRSelectorButtons>
 								</TabActions>
 							) : resolvedThreads > 0 ? (
-								<TabActions>
+								<TabActions style={{ margin: "-10px 0 7px auto" }}>
 									<PRSelectorButtons>
 										<span className="label">
 											<Icon name="check-circle" className="green-color margin-right" />
