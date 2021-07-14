@@ -471,8 +471,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			"assignee_username",
 			"assignee_id",
 			"author_username",
-			"iids",
-			"iteration_id",
+			"author_id",
 			"created_by_me",
 			"my_reaction_emoji",
 			"assigned_to_me"
@@ -1003,7 +1002,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					<div className="standard-form">
 						<fieldset className="form-body">
 							<span dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterHelp || "" }} />
-							<span> {providerDisplay.customFilterExample}</span>
+							<span
+								dangerouslySetInnerHTML={{ __html: providerDisplay.customFilterExample || "" }}
+							/>
 							<input
 								type="text"
 								className="input-text control"

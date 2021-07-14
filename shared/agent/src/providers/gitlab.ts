@@ -293,9 +293,29 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	@log()
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		await this.ensureConnected();
+		const currentUser = await this.getCurrentUser();
+
 		let filter = request.customFilter
 			? JSON.parse(JSON.stringify(qs.parse(request.customFilter)))
 			: undefined;
+
+		// Replace @me
+		if (
+			filter.hasOwnProperty("assignee_username") &&
+			filter["assignee_username"] === "@me" &&
+			currentUser
+		)
+			filter["assignee_username"] = currentUser.login;
+		if (
+			filter.hasOwnProperty("author_username") &&
+			filter["author_username"] === "@me" &&
+			currentUser
+		)
+			filter["author_username"] = currentUser.login;
+		if (filter.hasOwnProperty("assignee_id") && filter["assignee_id"] === "@me" && currentUser)
+			filter["assignee_id"] = currentUser.id;
+		if (filter.hasOwnProperty("author_id") && filter["author_id"] === "@me" && currentUser)
+			filter["author_id"] = currentUser.id;
 
 		if (
 			filter &&

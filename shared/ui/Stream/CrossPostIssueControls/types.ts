@@ -114,9 +114,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "type",
 		cardLabel: "issue",
 		hasCustomFilters: true,
-		customFilterExample: "Example: state=opened&labels=bug,duplicate ",
+		customFilterExample:
+			"Example: <code>scope=created_by_me&labels=bug,duplicate&project_id=22</code> ",
 		customFilterHelp:
-			'See <a href="https://docs.gitlab.com/ee/api/issues.html">this article</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in the query.',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. By default, filters return all issues using <code>scope=all</code>. To overwrite this behavior, use the <code>scope=X</code> parameter. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query.',
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true,
@@ -132,9 +133,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "type",
 		cardLabel: "issue",
 		hasCustomFilters: true,
-		customFilterExample: "Example: state=opened&labels=bug,duplicate ",
+		customFilterExample:
+			"Example: <code>scope=created_by_me&labels=bug,duplicate&project_id=22</code> ",
 		customFilterHelp:
-			'See <a href="https://docs.gitlab.com/ee/api/issues.html">this article</a> for a detailed list of qualifiers. By default, filters only return issues created by the current user (you). To get all issues, use parameter <code>scope=all</code>. Use an & between parameters in the query.',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. By default, filters return all issues using <code>scope=all</code>. To overwrite this behavior, use the <code>scope=X</code> parameter. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query.',
 		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
 		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
 		supportsStartWork: true,
