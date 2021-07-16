@@ -996,6 +996,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	const renderCustomFilter = () => {
 		if (!addingCustomFilterForProvider) return null;
 		const providerDisplay = PROVIDER_MAPPINGS[addingCustomFilterForProvider.name];
+
 		return (
 			<Modal translucent>
 				<Dialog title="Create a Custom Filter" onClose={closeCustomFilter}>
@@ -1016,10 +1017,17 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							{!validQuery ? (
 								<ErrorMessage>
 									<small className="error-message">
-										Missing required qualifier.{" "}
-										<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
-											Learn more.
-										</Link>
+										Missing required qualifier.
+										{addingCustomFilterForProvider.id === "github*com" ||
+										addingCustomFilterForProvider.id === "github/enterprise" ? (
+											<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+												Learn more.
+											</Link>
+										) : (
+											<Link href="https://docs.codestream.com/userguide/faq/custom-queries-gl/">
+												Learn more.
+											</Link>
+										)}
 									</small>
 								</ErrorMessage>
 							) : (
@@ -1027,7 +1035,16 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									<ErrorMessage>
 										<small className="error-message">
 											Invalid query.{" "}
-											<Link href="https://docs.gitlab.com/ee/api/issues.html">Learn more.</Link>
+											{addingCustomFilterForProvider.id === "github*com" ||
+											addingCustomFilterForProvider.id === "github/enterprise" ? (
+												<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+													Learn more.
+												</Link>
+											) : (
+												<Link href="https://docs.codestream.com/userguide/faq/custom-queries-gl/">
+													Learn more.
+												</Link>
+											)}
 										</small>
 									</ErrorMessage>
 								)

@@ -67,7 +67,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 	const [providerIdField, setProviderIdField] = React.useState(defaultProviderId);
 	const [nameField, setNameField] = React.useState(query.name);
 	const [queryField, setQueryField] = React.useState(query.query);
-	const [validQueries, setValidQueries] = React.useState(
+	const [validGHQueries, setvalidGHQueries] = React.useState(
 		new Set([
 			"user",
 			"org",
@@ -84,7 +84,23 @@ export function ConfigurePullRequestQuery(props: Props) {
 			"project"
 		])
 	);
+	const [validGLQueries, setvalidGLQueries] = React.useState(
+		new Set([
+			"project_id",
+			"group_id",
+			"assignee_username",
+			"assignee_id",
+			"author_username",
+			"author_id",
+			"reviewer_username",
+			"reviewer_id",
+			"created_by_me",
+			"my_reaction_emoji",
+			"assigned_to_me"
+		])
+	);
 	const [validQuery, setValidQuery] = React.useState(true);
+	const [errorQuery, setErrorQuery] = React.useState(false);
 	const [testPRSummaries, setTestPRSummaries] = React.useState<
 		GetMyPullRequestsResponse[] | undefined
 	>(undefined);
@@ -117,21 +133,32 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
-	const isValidQuery = (query) => {
-		if(!(providerIdField === "github*com" || providerIdField === "github/enterprise")) {
-			setValidQuery(true);
-			return true;
-		}
-		// Verify if valid query
-		const queryStr = query.replace(/:/g, " ").split(/\s+/);
-		for (let word of queryStr) {
-			if (validQueries.has(word)) {
-				setValidQuery(true);
-				return true;
+	const isValidQuery = query => {
+		if (providerIdField === "github*com" || providerIdField === "github/enterprise") {
+			// Verify if valid query for Github
+			const queryStr = query.replace(/:/g, " ").split(/\s+/);
+			for (let word of queryStr) {
+				if (validGHQueries.has(word)) {
+					setValidQuery(true);
+					return true;
+				}
 			}
+			setValidQuery(false);
+			return false;
+		} else if (providerIdField === "gitlab*com" || providerIdField === "gitlab/enterprise") {
+			// Verify if valid query for Gitlab
+			const queryStr = query.replace(/[=&]/g, " ").split(/\s+/);
+			for (let word of queryStr) {
+				if (validGLQueries.has(word)) {
+					setValidQuery(true);
+					return true;
+				}
+			}
+			setValidQuery(false);
+			return false;
 		}
-		setValidQuery(false);
-		return false;
+		setValidQuery(true);
+		return true;
 	};
 
 	const fetchTestPRs = async query => {
@@ -141,15 +168,24 @@ export function ConfigurePullRequestQuery(props: Props) {
 			try {
 				// FIXME hardcoded github
 				const response: any = await dispatch(
-					getMyPullRequests(providerIdField, [query], props.openReposOnly, { force: true }, true)
+					getMyPullRequests(
+						providerIdField,
+						[query],
+						props.openReposOnly,
+						{ force: true },
+						true,
+						true
+					)
 				);
 				if (response && response.length) {
+					setErrorQuery(false);
 					setTestPRSummaries(response[0]);
 				}
 			} catch (ex) {
 				if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
 					// show message about re-authing?
 				}
+				setErrorQuery(true);
 			} finally {
 				setIsLoading(false);
 			}
@@ -161,14 +197,18 @@ export function ConfigurePullRequestQuery(props: Props) {
 		: `New ${derivedState.prLabel.PullRequest} Query`;
 	return (
 		<Modal translucent>
-			<Dialog title={title} narrow onClose={() => props.onClose()}>
+			<Dialog
+				title={title}
+				narrow
+				onClose={() => {
+					setValidQuery(true);
+					setErrorQuery(false);
+					props.onClose();
+				}}
+			>
 				<div className="standard-form">
 					<fieldset className="form-body">
-						{customPullRequestFilterExample}
-						{customPullRequestFilterHelpLink && (
-							<Link href={customPullRequestFilterHelpLink}>Search syntax</Link>
-						)}
-						.
+						<span dangerouslySetInnerHTML={{ __html: customPullRequestFilterExample || "" }} />
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
 								{!query.providerId && props.prConnectedProviders.length > 1 && (
@@ -201,15 +241,40 @@ export function ConfigurePullRequestQuery(props: Props) {
 									}}
 								/>
 								<div style={{ height: "10px" }} />
-								{!validQuery && (
+								{!validQuery ? (
 									<ErrorMessage>
 										<small className="error-message">
 											Missing required qualifier.{" "}
-											<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
-												Learn more.
-											</Link>
+											{providerIdField === "github*com" ||
+											providerIdField === "github/enterprise" ? (
+												<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+													Learn more.
+												</Link>
+											) : (
+												<Link href="https://docs.codestream.com/userguide/faq/custom-queries-gl/">
+													Learn more.
+												</Link>
+											)}
 										</small>
 									</ErrorMessage>
+								) : (
+									errorQuery && (
+										<ErrorMessage>
+											<small className="error-message">
+												Invalid query.{" "}
+												{providerIdField === "github*com" ||
+												providerIdField === "github/enterprise" ? (
+													<Link href="https://docs.codestream.com/userguide/faq/custom-queries/">
+														Learn more.
+													</Link>
+												) : (
+													<Link href="https://docs.codestream.com/userguide/faq/custom-queries-gl/">
+														Learn more.
+													</Link>
+												)}
+											</small>
+										</ErrorMessage>
+									)
 								)}
 								<input
 									placeholder="Query"

@@ -77,13 +77,14 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		cardLabel: "issue",
 		// hasFilters: true,
 		hasCustomFilters: true,
-		customFilterExample: "Example: is:open milestone:jan assignee:@me",
+		customFilterExample: "Example: <code>is:open milestone:jan assignee:@me</code>",
 		customFilterHelp:
-			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers. ',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries/">custom queries</a> for a detailed list of qualifiers. ',
 		customPullRequestFilterHelpLink:
-			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
+			//https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-issues-and-pull-requests
+			"https://docs.codestream.com/userguide/faq/custom-queries/",
 		customPullRequestFilterExample:
-			"The variable @me can be used to specify the logged in user within a search. ",
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries/">custom queries</a> for a detailed list of qualifiers. ',
 		supportsStartWork: true,
 		supportsPRManagement: true
 	},
@@ -97,13 +98,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "type",
 		cardLabel: "issue",
 		hasCustomFilters: true,
-		customFilterExample: "Example: is:open milestone:jan assignee:@me",
+		customFilterExample: "Example: <code>is:open milestone:jan assignee:@me</code>",
 		customFilterHelp:
-			'See <a href="https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests">Searching issues</a> for a detailed list of qualifiers. ',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries/">custom queries</a> for a detailed list of qualifiers. ',
 		customPullRequestFilterExample:
-			"The variable @me can be used to specify the logged in user within a search. ",
-		customPullRequestFilterHelpLink:
-			"https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests",
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries/">custom queries</a> for a detailed list of qualifiers. ',
+		customPullRequestFilterHelpLink: "https://docs.codestream.com/userguide/faq/custom-queries/",
 		supportsStartWork: true,
 		supportsPRManagement: true
 	},
@@ -117,8 +117,9 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: <code>scope=assigned_to_me&project_id=22</code> ",
 		customFilterHelp:
 			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
-		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
-		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
+		customPullRequestFilterExample:
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+		customPullRequestFilterHelpLink: "https://docs.codestream.com/userguide/faq/custom-queries-gl/",
 		supportsStartWork: true,
 		supportsPRManagement: true
 	},
@@ -135,8 +136,9 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: <code>scope=assigned_to_me&project_id=22</code> ",
 		customFilterHelp:
 			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
-		customPullRequestFilterExample: 'Example: "state:opened scope:created_by_me" ',
-		customPullRequestFilterHelpLink: "https://docs.gitlab.com/ee/api/merge_requests.html",
+		customPullRequestFilterExample:
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+		customPullRequestFilterHelpLink: "https://docs.codestream.com/userguide/faq/custom-queries-gl/",
 		supportsStartWork: true,
 		supportsPRManagement: true,
 		versionMinimum: "12.10"

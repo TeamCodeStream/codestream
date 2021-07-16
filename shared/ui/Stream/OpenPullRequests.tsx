@@ -211,7 +211,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
 		const prConnectedProvidersLength = prConnectedProviders.length;
 		const myPullRequests = getMyPullRequestsSelector(state);
-
 		return {
 			repos,
 			teamSettings,
@@ -285,6 +284,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setIsLoadingPRs(true);
 			}
 			console.log(`fetchPRs src=${src}`);
+			console.log("FETCHING HERE");
+			console.log(theQueries);
+
 			let count: number | undefined = undefined;
 			let activePrListedCount = 0;
 			let activePrListedIndex: number | undefined = undefined;
@@ -405,6 +407,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (!isEqual(queries, newQueries)) {
 			setQueries(newQueries);
 		}
+		// console.log('useEffect queries:')
+		// console.log(derivedState.pullRequestQueries);
+		// console.log(newQueries);
 	}, [derivedState.pullRequestQueries]);
 
 	useDidMount(() => {
@@ -414,10 +419,31 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				{}
 			)) as any;
 			if (defaultQueriesResponse) {
+				// console.log('fishhhhh start');
+				// console.log(defaultQueriesResponse);
+				// console.log(derivedState.pullRequestQueries);
+				// console.log({...defaultQueriesResponse});
+				// console.log({...defaultQueriesResponse, ...derivedState.pullRequestQueries});
+
+				// console.log(...(derivedState.pullRequestQueries || {}));
+
 				const queries = {
-					...defaultQueriesResponse,
-					...(derivedState.pullRequestQueries || {})
+					...defaultQueriesResponse
+					// ...(derivedState.pullRequestQueries || {})
 				};
+				// TODO: Need to update default queries for users in a non-destructive way
+				// if (derivedState.pullRequestQueries) {
+				// 	Object.keys(derivedState.pullRequestQueries).forEach(provider => {
+				// 		console.log('----')
+				// 		console.log(provider);
+				// 		console.log(derivedState.pullRequestQueries![provider])
+				// 		derivedState.pullRequestQueries![provider].forEach((query, index) => {
+				// 			console.log(query);
+				// 			if (query.name === defaultQueriesResponse[provider][index])
+				// 		})
+				// 		console.log('----')
+				// 	})
+				// }
 				let results = {};
 				// massage the data for any old data formats
 				Object.keys(queries || {}).forEach(p => {
@@ -427,6 +453,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					});
 				});
 				setQueries(queries);
+				// console.log('setting queries normally fish');
+				// console.log(queries);
+				// console.log("DEFAULT QUERIES: ");
+				// console.log(defaultQueriesResponse);
 				setDefaultQueries(defaultQueriesResponse);
 				fetchPRs(queries, undefined, "useDidMount").then(_ => {
 					mountedRef.current = true;

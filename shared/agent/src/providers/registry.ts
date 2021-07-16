@@ -102,21 +102,21 @@ const PR_QUERIES: {
 	gitlab: [
 		{
 			name: "is waiting on your review",
-			query: `state:opened reviewer_username:@me scope:all`
+			query: `state=opened&reviewer_username=@me&scope=all`
 		},
 		{
 			name: "was assigned to you",
-			query: `state:opened scope:assigned_to_me`
+			query: `state=opened&scope=assigned_to_me`
 		}
 	],
 	gitlab_enterprise: [
 		{
 			name: "is waiting on your review",
-			query: `state:opened reviewer_username:@me scope:all`
+			query: `state=opened&reviewer_username=@me&scope=all`
 		},
 		{
 			name: "was assigned to you",
-			query: `state:opened scope:assigned_to_me`
+			query: `state=opened&scope=assigned_to_me`
 		}
 	],
 	github: [
@@ -746,20 +746,20 @@ export class ThirdPartyProviderRegistry {
 			"gitlab*com": [
 				{
 					providerId: "gitlab*com",
-					name: "Waiting on my Review",
-					query: `state:opened reviewer_username:@me scope:all`,
+					name: "Waiting on my fish",
+					query: `state=opened&reviewer_username=@me&scope=all`,
 					hidden: false
 				},
 				{
 					providerId: "gitlab*com",
 					name: "Assigned to Me",
-					query: `state:opened scope:assigned_to_me`,
+					query: `state=opened&scope=assigned_to_me`,
 					hidden: false
 				},
 				{
 					providerId: "gitlab*com",
 					name: "Created by Me",
-					query: `state:opened scope:created_by_me`,
+					query: `state=opened&scope=created_by_me`,
 					hidden: false
 				},
 				{
@@ -773,19 +773,19 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "gitlab/enterprise",
 					name: "Waiting on my Review",
-					query: `state:opened reviewer_username:@me scope:all`,
+					query: `state=opened&reviewer_username=@me&scope=all`,
 					hidden: false
 				},
 				{
 					providerId: "gitlab/enterprise",
 					name: "Assigned to Me",
-					query: `state:opened scope:assigned_to_me`,
+					query: `state=opened&scope=assigned_to_me`,
 					hidden: false
 				},
 				{
 					providerId: "gitlab/enterprise",
 					name: "Created by Me",
-					query: `state:opened scope:created_by_me`,
+					query: `state=opened&scope=created_by_me`,
 					hidden: false
 				},
 				{

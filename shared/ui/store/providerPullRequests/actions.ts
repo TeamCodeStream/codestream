@@ -295,7 +295,8 @@ export const getMyPullRequests = (
 	queries: string[],
 	openReposOnly: boolean,
 	options?: { force?: boolean },
-	throwOnError?: boolean
+	throwOnError?: boolean,
+	test?: boolean
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		let force = false;
@@ -325,8 +326,8 @@ export const getMyPullRequests = (
 				force: force || (options && options.force)
 			}
 		});
+		if (!test) dispatch(_addMyPullRequests(providerId, response));
 
-		dispatch(_addMyPullRequests(providerId, response));
 		return response;
 	} catch (error) {
 		if (throwOnError) {
