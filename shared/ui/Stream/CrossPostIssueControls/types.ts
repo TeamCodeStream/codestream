@@ -116,10 +116,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		hasCustomFilters: true,
 		customFilterExample: "Example: <code>scope=assigned_to_me&project_id=22</code> ",
 		customFilterHelp:
-			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-issues">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
 		customPullRequestFilterExample:
-			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
-		customPullRequestFilterHelpLink: "https://docs.codestream.com/userguide/faq/custom-queries-gl/",
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-merge-requests">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+		customPullRequestFilterHelpLink:
+			"https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-merge-requests",
 		supportsStartWork: true,
 		supportsPRManagement: true
 	},
@@ -135,10 +136,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		hasCustomFilters: true,
 		customFilterExample: "Example: <code>scope=assigned_to_me&project_id=22</code> ",
 		customFilterHelp:
-			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-issues">this article</a> for search syntax and the available parameters. To search issues for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
 		customPullRequestFilterExample:
-			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
-		customPullRequestFilterHelpLink: "https://docs.codestream.com/userguide/faq/custom-queries-gl/",
+			'See <a href="https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-merge-requests">this article</a> for search syntax and the available parameters. To search merge requests for a project, use parameter <code>project_id=X</code>. Use an <code>&</code> between parameters in the query. ',
+		customPullRequestFilterHelpLink:
+			"https://docs.codestream.com/userguide/faq/custom-queries-gl/#searching-merge-requests",
 		supportsStartWork: true,
 		supportsPRManagement: true,
 		versionMinimum: "12.10"
