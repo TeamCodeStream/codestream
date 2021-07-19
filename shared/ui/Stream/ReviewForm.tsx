@@ -627,7 +627,7 @@ class ReviewForm extends React.Component<Props, State> {
 
 			if (statusInfo.scm) {
 				const authorsBlameData = {};
-				statusInfo.scm.authors.map(author => {
+				statusInfo.scm.authors.filter(_ => !_.email.match(/noreply/)).map(author => {
 					const mappedId = blameMap[author.email.replace(/\./g, "*")];
 					const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
 					if (mappedPerson) {
@@ -662,7 +662,6 @@ class ReviewForm extends React.Component<Props, State> {
 								(authorsBlameData[a].commits * 10 + authorsBlameData[a].stomped)
 						)
 						.filter(Boolean);
-
 					switch (this.props.reviewAssignment) {
 						case CSReviewAssignmentSetting.Authorship1:
 							reviewerEmails = reviewerEmails.slice(0, 1);
@@ -2363,8 +2362,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		  getStreamForTeam(state.streams, context.currentTeamId)
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
-	const teamMates = getTeamMates(state);
-	const teamMembers = getTeamMembers(state);
+	const teamMates = getTeamMates(state).filter(_ => !_.email.match(/noreply/));
+	const teamMembers = getTeamMembers(state).filter(_ => !_.email.match(/noreply/));
 	const teamTagsArray = getTeamTagsArray(state);
 
 	let unsavedFiles: string[] = [];

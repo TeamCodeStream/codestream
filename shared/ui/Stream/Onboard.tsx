@@ -1037,6 +1037,13 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 		const { teamMembers, dontSuggestInvitees } = derivedState;
 		const suggested: any[] = [];
 		Object.keys(committers).forEach(email => {
+			if (email.match(/noreply/)) return;
+			// If whitespace, invalid email
+			if (email.match(/\s/)) return;
+			// If contains @ and ends in .local is invalid email
+			if (email.match(/.*(@.*\.local)$/)) return;
+			// Basic check for valid emails
+			if (!email.match(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/)) return;
 			if (teamMembers.find(user => user.email === email)) return;
 			if (dontSuggestInvitees[email.replace(/\./g, "*")]) return;
 			suggested.push({ email, fullName: committers[email] || email });

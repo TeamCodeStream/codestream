@@ -59,7 +59,7 @@ class SelectPeople extends React.Component<Props, State> {
 
 	render() {
 		const { value, title, children, teamMembers, onChange } = this.props;
-		const items = teamMembers.map(person => {
+		const items = teamMembers.filter(_ => !_.email.match(/noreply/)).map(person => {
 			const selected = value.find(v => {
 				if (typeof v === "string") return v === person.email;
 				else return v.id === person.id;

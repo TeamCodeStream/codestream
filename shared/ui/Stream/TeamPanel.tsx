@@ -233,6 +233,13 @@ class TeamPanel extends React.Component<Props, State> {
 		const { members, invited, dontSuggestInvitees } = this.props;
 		const suggested: any[] = [];
 		Object.keys(committers).forEach(email => {
+			if (email.match(/noreply/)) return;
+			// If whitespace, invalid email
+			if (email.match(/\s/)) return;
+			// If contains @ and ends in .local is invalid email
+			if (email.match(/.*(@.*\.local)$/)) return;
+			// Basic check for valid emails
+			if (!email.match(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/)) return;
 			if (members.find(user => user.email === email)) return;
 			if (invited.find(user => user.email === email)) return;
 			if (dontSuggestInvitees[email.replace(/\./g, "*")]) return;
@@ -645,7 +652,7 @@ class TeamPanel extends React.Component<Props, State> {
 		const { currentUserId, teamId, userTeams, blameMap, collisions, xraySetting } = this.props;
 		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 
-		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]);
+		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]).filter(_ => !_.email.match(/noreply/));
 		const mappedBlame = keyFilter(blameMap);
 
 		const teamMenuItems = userTeams.map(team => {

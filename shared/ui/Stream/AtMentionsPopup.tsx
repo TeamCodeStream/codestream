@@ -125,26 +125,51 @@ export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupPr
 										)}
 									</div>
 									<ul className="compact at-mentions-list">
-										{props.items.map((item: Mention) => {
-											let className = item.id == props.selected ? "hover" : "none";
-											// the handleClickPerson event needs to fire onMouseDown
-											// rather than onclick because there is a handleblur
-											// event on the parent element that will un-render
-											// this component
-											return (
-												<li
-													className={className}
-													key={item.id}
-													onMouseEnter={() => props.handleHoverAtMention(item.id)}
-													onMouseDown={() => props.handleSelectAtMention(item.id)}
-												>
-													{item.headshot && <Headshot size={18} person={item.headshot} />}
-													<span className="username">{item.identifier}</span>{" "}
-													{item.description && <span className="name">{item.description}</span>}
-													{item.help && <span className="help">{item.help}</span>}
-												</li>
-											);
-										})}
+										{props.on === "at-mentions"
+											? props.items
+													.filter(_ => !_.headshot?.email?.match(/noreply/))
+													.map((item: Mention) => {
+														let className = item.id == props.selected ? "hover" : "none";
+														// the handleClickPerson event needs to fire onMouseDown
+														// rather than onclick because there is a handleblur
+														// event on the parent element that will un-render
+														// this component
+														return (
+															<li
+																className={className}
+																key={item.id}
+																onMouseEnter={() => props.handleHoverAtMention(item.id)}
+																onMouseDown={() => props.handleSelectAtMention(item.id)}
+															>
+																{item.headshot && <Headshot size={18} person={item.headshot} />}
+																<span className="username">{item.identifier}</span>{" "}
+																{item.description && (
+																	<span className="name">{item.description}</span>
+																)}
+																{item.help && <span className="help">{item.help}</span>}
+															</li>
+														);
+													})
+											: props.items.map((item: Mention) => {
+													let className = item.id == props.selected ? "hover" : "none";
+													// the handleClickPerson event needs to fire onMouseDown
+													// rather than onclick because there is a handleblur
+													// event on the parent element that will un-render
+													// this component
+													return (
+														<li
+															className={className}
+															key={item.id}
+															onMouseEnter={() => props.handleHoverAtMention(item.id)}
+															onMouseDown={() => props.handleSelectAtMention(item.id)}
+														>
+															{item.headshot && <Headshot size={18} person={item.headshot} />}
+															<span className="username">{item.identifier}</span>{" "}
+															{item.description && <span className="name">{item.description}</span>}
+															{item.help && <span className="help">{item.help}</span>}
+														</li>
+													);
+											  })}
 									</ul>
 									<div className="instructions">
 										<div>&uarr; or &darr; to navigate</div>
