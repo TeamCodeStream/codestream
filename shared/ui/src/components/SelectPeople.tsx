@@ -59,29 +59,31 @@ class SelectPeople extends React.Component<Props, State> {
 
 	render() {
 		const { value, title, children, teamMembers, onChange } = this.props;
-		const items = teamMembers.filter(_ => !_.email.match(/noreply/)).map(person => {
-			const selected = value.find(v => {
-				if (typeof v === "string") return v === person.email;
-				else return v.id === person.id;
-			})
-				? true
-				: false;
-			const { fullName = "", username = "", email = "" } = person;
-			return {
-				label: fullName ? username : email,
-				subtle: fullName || username,
-				searchLabel: [fullName, username, email].join(":"),
-				checked: this.props.multiSelect ? selected : undefined,
-				value: person.username,
-				key: person.id,
-				icon: (
-					<span style={{ paddingLeft: "5px" }}>
-						<Headshot size={20} display="inline-block" person={person} />
-					</span>
-				),
-				action: () => onChange(person)
-			};
-		}) as any;
+		const items = teamMembers
+			.filter(_ => !_.email.match(/noreply/))
+			.map(person => {
+				const selected = value.find(v => {
+					if (typeof v === "string") return v === person.email;
+					else return v.id === person.id;
+				})
+					? true
+					: false;
+				const { fullName = "", username = "", email = "" } = person;
+				return {
+					label: fullName ? username : email,
+					subtle: fullName || username,
+					searchLabel: [fullName, username, email].join(":"),
+					checked: this.props.multiSelect ? selected : undefined,
+					value: person.username,
+					key: person.id,
+					icon: (
+						<span style={{ paddingLeft: "5px" }}>
+							<Headshot size={20} display="inline-block" person={person} />
+						</span>
+					),
+					action: () => onChange(person)
+				};
+			}) as any;
 		if (items.length >= 5) {
 			items.unshift({ label: "-" });
 			items.unshift({ type: "search", placeholder: "Search...", action: "search" });

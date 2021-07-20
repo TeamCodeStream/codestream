@@ -654,7 +654,9 @@ class TeamPanel extends React.Component<Props, State> {
 		const { currentUserId, teamId, userTeams, blameMap, collisions, xraySetting } = this.props;
 		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 
-		const suggested = this.state.suggested.filter(u => !invitingEmails[u.email]).filter(_ => !_.email.match(/noreply/));
+		const suggested = this.state.suggested
+			.filter(u => !invitingEmails[u.email])
+			.filter(_ => !_.email.match(/noreply/));
 		const mappedBlame = keyFilter(blameMap);
 
 		const teamMenuItems = userTeams.map(team => {

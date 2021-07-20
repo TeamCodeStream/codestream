@@ -627,15 +627,17 @@ class ReviewForm extends React.Component<Props, State> {
 
 			if (statusInfo.scm) {
 				const authorsBlameData = {};
-				statusInfo.scm.authors.filter(_ => !_.email.match(/noreply/)).map(author => {
-					const mappedId = blameMap[author.email.replace(/\./g, "*")];
-					const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
-					if (mappedPerson) {
-						authorsBlameData[mappedPerson.email] = author;
-					} else {
-						authorsBlameData[author.email] = author;
-					}
-				});
+				statusInfo.scm.authors
+					.filter(_ => !_.email.match(/noreply/))
+					.map(author => {
+						const mappedId = blameMap[author.email.replace(/\./g, "*")];
+						const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
+						if (mappedPerson) {
+							authorsBlameData[mappedPerson.email] = author;
+						} else {
+							authorsBlameData[author.email] = author;
+						}
+					});
 				this.setState({ authorsBlameData });
 
 				if (!isEditing && !this.state.reviewersTouched) {
