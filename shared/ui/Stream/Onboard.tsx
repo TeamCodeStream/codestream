@@ -1038,12 +1038,14 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 		const suggested: any[] = [];
 		Object.keys(committers).forEach(email => {
 			if (email.match(/noreply/)) return;
-			// If whitespace, invalid email
-			if (email.match(/\s/)) return;
+			// If whitespace in domain, invalid email
+			if (email.match(/.*(@.* .+)/)) return;
 			// If contains @ and ends in .local is invalid email
 			if (email.match(/.*(@.*\.local)$/)) return;
-			// Basic check for valid emails
-			if (!email.match(/[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/)) return;
+			// Will check for spaces not surrounded by quotes. Will still
+			// allow some emails through that shouldn't be through, but
+			// won't block any that shouldn't be
+			if (email.match(/(?<!"") (?!"")(?=((?:[^"]*"){2})*[^"]*$)/)) return;
 			if (teamMembers.find(user => user.email === email)) return;
 			if (dontSuggestInvitees[email.replace(/\./g, "*")]) return;
 			suggested.push({ email, fullName: committers[email] || email });
