@@ -10,7 +10,6 @@ import * as qs from "querystring";
 import semver from "semver";
 import * as nodeUrl from "url";
 import { URI } from "vscode-uri";
-import { ContextReplacementPlugin } from "webpack";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { Container, SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
@@ -292,17 +291,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 	}
 
 	replaceMe(filter: any, currentUser: GitLabCurrentUser) {
-		if (filter?.hasOwnProperty("assignee_username") && filter["assignee_username"] === "@me")
+		if (filter?.assignee_username && filter["assignee_username"] === "@me")
 			filter["assignee_username"] = currentUser.login;
-		if (filter?.hasOwnProperty("assignee_id") && filter["assignee_id"] === "@me")
+		if (filter?.assignee_id && filter["assignee_id"] === "@me")
 			filter["assignee_id"] = currentUser.id;
-		if (filter?.hasOwnProperty("author_username") && filter["author_username"] === "@me")
+		if (filter?.author_username && filter["author_username"] === "@me")
 			filter["author_username"] = currentUser.login;
-		if (filter?.hasOwnProperty("author_id") && filter["author_id"] === "@me")
-			filter["author_id"] = currentUser.id;
-		if (filter?.hasOwnProperty("reviewer_username") && filter["reviewer_username"] === "@me")
+		if (filter?.author_id && filter["author_id"] === "@me") filter["author_id"] = currentUser.id;
+		if (filter?.reviewer_username && filter["reviewer_username"] === "@me")
 			filter["reviewer_username"] = currentUser.login;
-		if (filter?.hasOwnProperty("reviewer_id") && filter["reviewer_id"] === "@me")
+		if (filter?.reviewer_id && filter["reviewer_id"] === "@me")
 			filter["reviewer_id"] = currentUser.id;
 	}
 
@@ -318,19 +316,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// Replace @me
 		if (filter && currentUser) this.replaceMe(filter, currentUser);
 
-		if (
-			filter &&
-			!(filter.hasOwnProperty("project_id") || filter.hasOwnProperty("group_id")) &&
-			!filter.hasOwnProperty("scope")
-		) {
+		if (!filter.scope) {
 			filter["scope"] = "all";
 		}
 		let url;
-		if (filter?.hasOwnProperty("project_id")) {
+		if (filter?.project_id) {
 			const projectId = filter["project_id"];
 			delete filter["project_id"];
 			url = `/projects/${projectId}/issues?${qs.stringify(filter)}`;
-		} else if (filter?.hasOwnProperty("group_id")) {
+		} else if (filter?.group_id) {
 			const groupId = filter["group_id"];
 			delete filter["group_id"];
 			url = `/groups/${groupId}/issues?${qs.stringify(filter)}`;
@@ -842,10 +836,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				Logger.warn(ex);
 			}
 		}
-
-		// console.log("-------");
-		// console.log(request.queries);
-
 		const queries = request.queries.map(query =>
 			query === "recent" ? "scope=created_by_me&per_page=5" : query
 		);
@@ -859,25 +849,15 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				.map(kvp => this.toKeyValuePair(kvp, currentUser))
 				.join("&");
 
-		// console.log(repos);
-		// console.log("-------");
-
 		if (repos.length) {
-			console.log("repos has length!");
-			console.log(repos);
 			// https://docs.gitlab.com/ee/api/merge_requests.html
 			const buildUrl = (repo: string, query: string) => {
 				return `/projects/${encodeURIComponent(repo)}/merge_requests?${createQueryString(
 					query
 				)}&with_labels_details=true`;
 			};
-			console.log("QUERIES FOR REPOS");
-			console.log(queries);
 			for (const query of queries) {
-				console.log(query);
 				const splits = query.split(",");
-				console.log(splits);
-
 				if (splits.length > 1) {
 					let results: any = { body: {} };
 					const splitPromises = [];
@@ -899,47 +879,30 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			}
 		} else {
-			console.log("buliding in else");
-			console.log("queries: ");
-			console.log(queries);
-
 			const buildUrl = (query: string) => {
 				let filter = JSON.parse(JSON.stringify(qs.parse(query)));
 				if (filter && currentUser) {
 					this.replaceMe(filter, currentUser);
 				}
-				console.log("building url", filter);
-
-				if (
-					filter &&
-					!(filter.hasOwnProperty("project_id") || filter.hasOwnProperty("group_id")) &&
-					!filter.hasOwnProperty("scope")
-				) {
+				if (!filter.scope) {
 					filter["scope"] = "all";
 				}
 				let url;
-				if (filter?.hasOwnProperty("project_id")) {
+				if (filter?.project_id) {
 					const projectId = filter["project_id"];
 					delete filter["project_id"];
 					url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
-				} else if (filter?.hasOwnProperty("group_id")) {
+				} else if (filter?.group_id) {
 					const groupId = filter["group_id"];
 					delete filter["group_id"];
 					url = `/groups/${groupId}/merge_requests?${qs.stringify(filter)}`;
 				} else {
-					console.log("else mr:");
-					console.log(qs.stringify(filter));
 					url = `/merge_requests?${qs.stringify(filter)}&with_labels_details=true`;
 				}
-				console.log("url ", url);
 				return url;
-				// return `/merge_requests?${createQueryString(query)}&with_labels_details=true`;
 			};
-
 			for (const query of queries) {
-				console.log("query:", query);
 				const splits = query.split(",");
-				// console.log("splits", splits);
 				if (splits.length > 1) {
 					let results: any = { body: {} };
 					const splitPromises = [];
