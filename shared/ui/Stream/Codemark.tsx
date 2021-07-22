@@ -1638,7 +1638,9 @@ export class Codemark extends React.Component<Props, State> {
 										<div className="description-body" style={{ display: "flex" }}>
 											<Icon name="description" />
 											<div className="description-text" style={{ paddingLeft: "5px" }}>
-												{description}
+												{codemark.type === "issue"
+													? this.renderTextReplaceCodeBlocks(description.props.text)
+													: description}
 											</div>
 										</div>
 									</div>
