@@ -420,44 +420,44 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				// Update default queries for users in a non-destructive way
 				if (derivedState.pullRequestQueries) {
 					Object.keys(derivedState.pullRequestQueries).forEach(provider => {
+						// Little shimmy to update old gitlab default filters to our new syntax
+						let shouldUpdate = false;
 						derivedState.pullRequestQueries![provider].forEach((query, index) => {
-							if (
-								provider === "gitlab*com" &&
-								query.name === "Waiting on my Review" &&
-								query.query === "state:opened reviewer_username:@me"
-							) {
-								derivedState.pullRequestQueries![provider][index].query =
-									"state=opened&reviewer_username=@me";
-								saveQueries(provider, derivedState.pullRequestQueries![provider]);
-							}
-							if (
-								provider === "gitlab*com" &&
-								query.name === "Assigned to Me" &&
-								query.query === "state:opened scope:assigned_to_me"
-							) {
-								derivedState.pullRequestQueries![provider][index].query =
-									"state=opened&reviewer_username=@me";
-								saveQueries(provider, derivedState.pullRequestQueries![provider]);
-							}
-							if (
-								provider === "gitlab*com" &&
-								query.name === "Created by Me" &&
-								query.query === "state:opened scope:created_by_me"
-							) {
-								derivedState.pullRequestQueries![provider][index].query =
-									"state=opened&reviewer_username=@me";
-								saveQueries(provider, derivedState.pullRequestQueries![provider]);
-							}
-							if (
-								provider === "gitlab*com" &&
-								query.name === "Recent" &&
-								query.query === "recent"
-							) {
-								derivedState.pullRequestQueries![provider][index].query =
-									"state=opened&reviewer_username=@me";
-								saveQueries(provider, derivedState.pullRequestQueries![provider]);
+							if (provider === "gitlab*com" || provider === "gitlab/enterprise") {
+								if (
+									query.name === "Waiting on my Review" &&
+									query.query === "state:opened reviewer_username:@me"
+								) {
+									derivedState.pullRequestQueries![provider][index].query =
+										"state=opened&reviewer_username=@me&scope=all";
+									shouldUpdate = true;
+								}
+								if (
+									query.name === "Assigned to Me" &&
+									query.query === "state:opened scope:assigned_to_me"
+								) {
+									derivedState.pullRequestQueries![provider][index].query =
+										"state=opened&scope=assigned_to_me";
+									shouldUpdate = true;
+								}
+								if (
+									query.name === "Created by Me" &&
+									query.query === "state:opened scope:created_by_me"
+								) {
+									derivedState.pullRequestQueries![provider][index].query =
+										"state=opened&scope=created_by_me";
+									shouldUpdate = true;
+								}
+								if (query.name === "Recent" && query.query === "recent") {
+									derivedState.pullRequestQueries![provider][index].query =
+										"scope=created_by_me&per_page=5";
+									shouldUpdate = true;
+								}
 							}
 						});
+						if (shouldUpdate) {
+							saveQueries(provider, derivedState.pullRequestQueries![provider]);
+						}
 					});
 				}
 
