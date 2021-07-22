@@ -147,7 +147,10 @@ export function ConfigurePullRequestQuery(props: Props) {
 			return false;
 		} else if (providerIdField === "gitlab*com" || providerIdField === "gitlab/enterprise") {
 			// Verify if valid query for Gitlab
-			const queryStr = query.replace(/[=&]/g, " ").split(/\s+/);
+			const queryStr = query
+				.replace(/[=&]/g, " ")
+				.replace(/[:]/g, " ")
+				.split(/\s+/);
 			for (let word of queryStr) {
 				if (validGLQueries.has(word)) {
 					setValidQuery(true);

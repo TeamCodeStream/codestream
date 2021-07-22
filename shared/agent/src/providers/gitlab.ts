@@ -316,7 +316,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		// Replace @me
 		if (filter && currentUser) this.replaceMe(filter, currentUser);
 
-		if (!filter.scope) {
+		if (filter && filter.scope) {
 			filter["scope"] = "all";
 		}
 		let url;
@@ -880,26 +880,34 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 		} else {
 			const buildUrl = (query: string) => {
-				let filter = JSON.parse(JSON.stringify(qs.parse(query)));
-				if (filter && currentUser) {
-					this.replaceMe(filter, currentUser);
-				}
-				if (!filter.scope) {
-					filter["scope"] = "all";
-				}
-				let url;
-				if (filter?.project_id) {
-					const projectId = filter["project_id"];
-					delete filter["project_id"];
-					url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
-				} else if (filter?.group_id) {
-					const groupId = filter["group_id"];
-					delete filter["group_id"];
-					url = `/groups/${groupId}/merge_requests?${qs.stringify(filter)}`;
+				if (query.match(/=/)) {
+					// New format of queries
+					let filter = JSON.parse(JSON.stringify(qs.parse(query)));
+					if (filter && currentUser) {
+						this.replaceMe(filter, currentUser);
+					}
+					if (!filter.scope) {
+						filter["scope"] = "all";
+					}
+					let url;
+					if (filter?.project_id) {
+						const projectId = filter["project_id"];
+						delete filter["project_id"];
+						url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
+					} else if (filter?.group_id) {
+						const groupId = filter["group_id"];
+						delete filter["group_id"];
+						url = `/groups/${groupId}/merge_requests?${qs.stringify(filter)}`;
+					} else {
+						url = `/merge_requests?${qs.stringify(filter)}&with_labels_details=true`;
+					}
+					return url;
 				} else {
-					url = `/merge_requests?${qs.stringify(filter)}&with_labels_details=true`;
+					// Old format of queries
+					return `/merge_requests?${createQueryString(query)}&with_labels_details=true`;
 				}
-				return url;
+
+				
 			};
 			for (const query of queries) {
 				const splits = query.split(",");

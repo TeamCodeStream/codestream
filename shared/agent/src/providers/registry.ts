@@ -746,7 +746,7 @@ export class ThirdPartyProviderRegistry {
 			"gitlab*com": [
 				{
 					providerId: "gitlab*com",
-					name: "Waiting on my fish",
+					name: "Waiting on my Review",
 					query: `state=opened&reviewer_username=@me&scope=all`,
 					hidden: false
 				},
@@ -765,7 +765,7 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "gitlab*com",
 					name: "Recent",
-					query: `recent`,
+					query: `scope=created_by_me&per_page=5`,
 					hidden: false
 				}
 			],
@@ -791,7 +791,7 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "gitlab/enterprise",
 					name: "Recent",
-					query: `recent`,
+					query: `scope=created_by_me&per_page=5`,
 					hidden: false
 				}
 			]
