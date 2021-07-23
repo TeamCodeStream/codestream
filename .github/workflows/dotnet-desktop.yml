@@ -1,0 +1,610 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow will build, test, sign and package a WPF or Windows Forms desktop application
+# built on .NET Core.
+# To learn how to migrate your existing application to .NET Core,
+# refer to https://docs.microsoft.com/en-us/dotnet/desktop-wpf/migration/convert-project-from-net-framework
+#
+# To configure this workflow:
+#
+# 1. Configure environment variables
+# GitHub sets default environment variables for every workflow run.
+# Replace the variables relative to your project in the "env" section below.
+#
+# 2. Signing
+# Generate a signing certificate in the Windows Application
+# Packaging Project or add an existing signing certificate to the project.
+# Next, use PowerShell to encode the .pfx file using Base64 encoding
+# by running the following Powershell script to generate the output string:
+#
+# $pfx_cert = Get-Content '.\SigningCertificate.pfx' -Encoding Byte
+# [System.Convert]::ToBase64String($pfx_cert) | Out-File 'SigningCertificate_Encoded.txt'
+#
+# Open the output file, SigningCertificate_Encoded.txt, and copy the
+# string inside. Then, add the string to the repo as a GitHub secret
+# and name it "Base64_Encoded_Pfx."
+# For more information on how to configure your signing certificate for
+# this workflow, refer to https://github.com/microsoft/github-actions-for-desktop-apps#signing
+#
+# Finally, add the signing certificate password to the repo as a secret and name it "Pfx_Key".
+# See "Build the Windows Application Packaging project" below to see how the secret is used.
+#
+# For more information on GitHub Actions, refer to https://github.com/features/actions
+# For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
+# refer to https://github.com/microsoft/github-actions-for-desktop-apps
+
+name: .NET Core Desktop - Publish PyPI
+        '*' 'Publish PyPI
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  wheel-build:
+    name: Build and Publish Release Artifacts
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: pip install -U twine wheel
+    - name: Build and publish
+      run: |
+        python setup.py sdist
+      shell: bash
+    - uses: actions/upload-artifact@v2
+      with:
+        path: ./dist/qiskit*
+    - name: Publish to PyPi
+      env:
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        TWINE_USERNAME: qiskit
+      run: twine upload dist/qiskit*
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop ]
+name: Tests
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+jobs:
+  tests:
+    name: tests-python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: ["ubuntu-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Deps
+        run: python -m pip install -U tox setuptools virtualenv wheel
+      - name: Install and Run Tests
+        run: tox -e py
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install Deps
+        run: python -m pip install -U tox
+      - name: Run lint
+        run: tox -elint
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install ubuntu Deps
+        run: sudo apt-get install -y pandoc graphviz
+      - name: Install python Deps
+        run: |
+          python -m pip install -U tox
+          python -m pip install -r requirements-dev.txt
+      - name: Build Docs
+        run: tox -edocs -- -j auto
+      - name: Compress Artifacts
+        run: |
+          mkdir artifacts
+          tar -zcvf html_docs.tar.gz docs/_build/html
+          mv html_docs.tar.gz artifacts/.
+      - uses: actions/upload-artifact@v2
+        with:
+          name: html_docs
+          path: artifacts
+  tutorials:
+    name: tutorials
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+      - name: Install python Deps
+        run: python -m pip install -U tox
+      - name: Setup tutorials
+        run: |
+          set -e
+          git clone https://github.com/Qiskit/qiskit-tutorials
+          pip install -c constraints.txt -U jupyter sphinx nbsphinx networkx sphinx_rtd_theme 'matplotlib<3.3.0' qiskit-terra[visualization] cvxpy 'pyscf<1.7.4'
+          pip install -c constraints.txt -U .
+          sudo apt-get install -y pandoc graphviz
+      - name: Run tutorials
+        run: |
+          set -e
+          cd qiskit-tutorials
+          sphinx-build -b html . _build/html
+        env:
+          QISKIT_CELL_TIMEOUT: 300
+      - name: Compress Artifacts
+        run: |
+          mkdir artifacts
+          tar -zcvf tutorial_docs.tar.gz qiskit-tutorials/_build/html
+          mv tutorial_docs.tar.gz artifacts/.
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tutorial_docs
+          path: artifacts 
+          name: Stable Docs Publish
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -U virtualenv setuptools wheel tox
+        sudo apt-get install graphviz pandoc
+    - name: Build and publish
+      env:
+        encrypted_rclone_key: ${{ secrets.encrypted_rclone_key }}
+        encrypted_rclone_iv: ${{ secrets.encrypted_rclone_iv }}
+        QISKIT_DOCS_BUILD_TUTORIALS: 'always'
+      run: |
+        tools/deploy_documentation_tag.sh 
+        # -*- coding: utf-8 -*-
+
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2019.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# pylint: disable=no-member,invalid-name,missing-docstring,no-name-in-module
+# pylint: disable=attribute-defined-outside-init,unsubscriptable-object
+
+from qiskit.compiler import assemble
+from qiskit.assembler import disassemble
+
+from .utils import random_circuit
+
+
+class AssemblerBenchmarks:
+    params = ([1, 2, 5, 8],
+              [8, 128, 1024, 2048, 4096],
+              [1, 5, 10, 50, 100])
+    param_names = ['n_qubits', 'depth', 'number of circuits']
+    timeout = 600
+    version = 2
+
+    def setup(self, n_qubits, depth, number_of_circuits):
+        seed = 42
+        self.circuit = random_circuit(n_qubits, depth, measure=True,
+                                      conditional=True, seed=seed)
+        self.circuits = [self.circuit] * number_of_circuits
+
+    def time_assemble_circuit(self, _, __, ___):
+        assemble(self.circuits)
+
+
+class DisassemblerBenchmarks:
+    params = ([1, 2, 5, 8],
+              [8, 128, 1024, 2048, 4096],
+              [1, 5, 10, 50, 100])
+    param_names = ['n_qubits', 'depth', 'number of circuits']
+    timeout = 600
+
+    def setup(self, n_qubits, depth, number_of_circuits):
+        seed = 424242
+        self.circuit = random_circuit(n_qubits, depth, measure=True,
+                                      conditional=True, seed=seed)
+        self.circuits = [self.circuit] * number_of_circuits
+        self.qobj = assemble(self.circuits)
+
+    def time_disassemble_circuit(self, _, __, ___):
+        disassemble(self.qobj) 
+        # -*- coding: utf-8 -*-
+
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2018.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+# pylint: disable=missing-raises-doc
+
+"""Base functionality for Qiskit tests."""
+
+from unittest import TestCase
+from unittest.util import safe_repr
+
+
+class QiskitTestCase(TestCase):
+    """TestCase subclass with a custom assertion."""
+
+    def assertDictAlmostEqual(self, dict1, dict2, delta=None, msg=None,
+                              places=None, default_value=0):
+        """Assert two dictionaries with numeric values are almost equal
+
+        Fail if the two dictionaries are unequal as determined by
+        comparing that the difference between values with the same key are
+        not greater than delta (default 1e-8), or that difference rounded
+        to the given number of decimal places is not zero. If a key in one
+        dictionary is not in the other the default_value keyword argument
+        will be used for the missing value (default 0). If the two objects
+        compare equal then they will automatically compare almost equal.
+
+        Args:
+            dict1 (dict): a dictionary.
+            dict2 (dict): a dictionary.
+            delta (number): threshold for comparison (defaults to 1e-8).
+            msg (str): return a custom message on failure.
+            places (int): number of decimal places for comparison.
+            default_value (number): default value for missing keys.
+
+        Raises:
+            TypeError: raises TestCase failureException if the test fails.
+        """
+        if dict1 == dict2:
+            # Shortcut
+            return
+        if delta is not None and places is not None:
+            raise TypeError("specify delta or places not both")
+
+        if places is not None:
+            success = True
+            standard_msg = ''
+            # check value for keys in target
+            keys1 = set(dict1.keys())
+            for key in keys1:
+                val1 = dict1.get(key, default_value)
+                val2 = dict2.get(key, default_value)
+                if round(abs(val1 - val2), places) != 0:
+                    success = False
+                    standard_msg += '(%s: %s != %s), ' % (safe_repr(key),
+                                                          safe_repr(val1),
+                                                          safe_repr(val2))
+            # check values for keys in counts, not in target
+            keys2 = set(dict2.keys()) - keys1
+            for key in keys2:
+                val1 = dict1.get(key, default_value)
+                val2 = dict2.get(key, default_value)
+                if round(abs(val1 - val2), places) != 0:
+                    success = False
+                    standard_msg += '(%s: %s != %s), ' % (safe_repr(key),
+                                                          safe_repr(val1),
+                                                          safe_repr(val2))
+            if success is True:
+                return
+            standard_msg = standard_msg[:-2] + ' within %s places' % places
+
+        else:
+            if delta is None:
+                delta = 1e-8  # default delta value
+            success = True
+            standard_msg = ''
+            # check value for keys in target
+            keys1 = set(dict1.keys())
+            for key in keys1:
+                val1 = dict1.get(key, default_value)
+                val2 = dict2.get(key, default_value)
+                if abs(val1 - val2) > delta:
+                    success = False
+                    standard_msg += '(%s: %s != %s), ' % (safe_repr(key),
+                                                          safe_repr(val1),
+                                                          safe_repr(val2))
+            # check values for keys in counts, not in target
+            keys2 = set(dict2.keys()) - keys1
+            for key in keys2:
+                val1 = dict1.get(key, default_value)
+                val2 = dict2.get(key, default_value)
+                if abs(val1 - val2) > delta:
+                    success = False
+                    standard_msg += '(%s: %s != %s), ' % (safe_repr(key),
+                                                          safe_repr(val1),
+                                                          safe_repr(val2))
+            if success is True:
+                return
+            standard_msg = standard_msg[:-2] + ' within %s delta' % delta
+
+        msg = self._formatMessage(msg, standard_msg)
+        raise self.failureException(msg) 
+        
+jobs:IBMQ.get_provider(hub='ibm-q', 
+
+group='open', p
+roject='main') 
+# -*- coding: utf-8 -*-
+
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2018.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+import os
+
+from setuptools import setup
+
+
+README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                           'README.md')
+with open(README_PATH) as readme_file:
+    README = readme_file.read()
+
+# NOTE: The lists below require each requirement on a separate line,
+# putting multiple requirements on the same line will prevent qiskit-bot
+# from correctly updating the versions for the qiskit packages.
+requirements = [
+    "qiskit-terra==0.17.4",
+    "qiskit-aer==0.8.2",
+    "qiskit-ibmq-provider==0.14.0",
+    "qiskit-ignis==0.6.0",
+    "qiskit-aqua==0.9.2",
+]
+
+
+optimization_extra = [
+    "qiskit-optimization==0.1.0",
+]
+
+
+finance_extra = [
+    "qiskit-finance==0.1.0",
+]
+
+
+machine_learning_extra = [
+    "qiskit-machine-learning==0.1.0",
+]
+
+
+nature_extra = [
+    "qiskit-nature==0.1.3",
+]
+
+visualization_extra = [
+    'matplotlib>=2.1',
+    'ipywidgets>=7.3.0',
+    'pydot',
+    "pillow>=4.2.1",
+    "pylatexenc>=1.4",
+    "seaborn>=0.9.0",
+    "pygments>=2.4"
+]
+
+
+setup(
+    name="qiskit",
+    version="0.27.0",
+    description="Software for developing quantum computing programs",
+    long_description=README,
+    long_description_content_type='text/markdown',
+    url="https://github.com/Qiskit/qiskit",
+    author="Qiskit Development Team",
+    author_email="hello@qiskit.org",
+    license="Apache 2.0",
+    classifiers=[
+        "Environment :: Console",
+        "License :: OSI Approved :: Apache Software License",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Topic :: Scientific/Engineering",
+    ],
+    keywords="qiskit sdk quantum",
+    install_requires=requirements,
+    project_urls={
+        "Bug Tracker": "https://github.com/Qiskit/qiskit/issues",
+        "Documentation": "https://qiskit.org/documentation/",
+        "Source Code": "https://github.com/Qiskit/qiskit",
+    },
+    include_package_data=True,
+    python_requires=">=3.6",
+    extras_require={
+        'visualization': visualization_extra,
+        'all': optimization_extra
+        + finance_extra + machine_learning_extra
+        + nature_extra + visualization_extra,
+        'optimization': optimization_extra,
+        'finance': finance_extra,
+        'machine-learning': machine_learning_extra,
+        'nature': nature_extra,
+    }
+)
+# -*- coding: utf-8 -*-
+
+# Copyright 2018 IBM RESEARCH. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# =============================================================================
+
+# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=attribute-defined-outside-init
+
+"""Module for estimating quantum volume.
+See arXiv:1811.12926 [quant-ph]"""
+
+import numpy as np
+
+from qiskit.compiler import transpile
+
+from .utils import build_qv_model_circuit
+
+
+class QuantumVolumeBenchmark:
+    params = ([1, 2, 3, 5, 8, 14, 20, 27], ['translator', 'synthesis'])
+    param_names = ['Number of Qubits', 'Basis Translation Method']
+    version = 3
+
+    def setup(self, width, _):
+        random_seed = np.random.seed(10)
+        self.circuit = build_qv_model_circuit(width, width, random_seed)
+        self.coupling_map = [
+            [0, 1], [1, 0], [1, 2], [1, 4], [2, 1], [2, 3], [3, 2], [3, 5],
+            [4, 1], [4, 7], [5, 3], [5, 8], [6, 7], [7, 4], [7, 6], [7, 10],
+            [8, 5], [8, 9], [8, 11], [9, 8], [10, 7], [10, 12], [11, 8],
+            [11, 14], [12, 10], [12, 13], [12, 15], [13, 12], [13, 14],
+            [14, 11], [14, 13], [14, 16], [15, 12], [15, 18], [16, 14],
+            [16, 19], [17, 18], [18, 15], [18, 17], [18, 21], [19, 16],
+            [19, 20], [19, 22], [20, 19], [21, 18], [21, 23], [22, 19],
+            [22, 25], [23, 21], [23, 24], [24, 23], [24, 25], [25, 22],
+            [25, 24], [25, 26], [26, 25]]
+        self.basis = ['id', 'rz', 'sx', 'x', 'cx', 'reset']
+
+    def time_ibmq_backend_transpile(self, _, translation):
+        transpile(self.circuit,
+                  basis_gates=self.basis,
+                  coupling_map=self.coupling_map,
+                  translation_method=translation)
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest  # For a list of available runner types, refer to
+                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
+    env:
+      Solution_Name: your-solution-name                         # Replace with your solution name, i.e. MyWpfApp.sln.
+      Test_Project_Path: your-test-project-path                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+      Wap_Project_Directory: your-wap-project-directory-name    # Replace with the Wap project directory relative to the solution, i.e. MyWpfApp.Package.
+      Wap_Project_Path: your-wap-project-path                   # Replace with the path to your Wap project, i.e. MyWpf.App.Package\MyWpfApp.Package.wapproj.
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.x
+
+    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+
+    # Execute all unit tests in the solution
+    - name: Execute unit tests
+      run: dotnet test
+
+    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+
+    # Decode the base 64 encoded pfx and save the Signing_Certificate
+    - name: Decode the pfx
+      run: |
+        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.Base64_Encoded_Pfx }}")
+        $certificatePath = Join-Path -Path $env:Wap_Project_Directory -ChildPath GitHubActionsWorkflow.pfx
+        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
+
+    # Create the app package by building and packaging the Windows Application Packaging project
+    - name: Create the app package
+      run: msbuild $env:Wap_Project_Path /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:PackageCertificatePassword=${{ secrets.Pfx_Key }}
+      env:
+        Appx_Bundle: Always
+        Appx_Bundle_Platforms: x86|x64
+        Appx_Package_Build_Mode: StoreUpload
+        Configuration: ${{ matrix.configuration }}
+
+    # Remove the pfx
+    - name: Remove the pfx
+      run: Remove-Item -path $env:Wap_Project_Directory\$env:Signing_Certificate
+
+    # Upload the MSIX package: https://github.com/marketplace/actions/upload-artifact
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: MSIX Package
+        path: ${{ env.Wap_Project_Directory }}\AppPackages
