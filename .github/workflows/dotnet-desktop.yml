@@ -35,7 +35,7 @@
 # For more information on GitHub Actions, refer to https://github.com/features/actions
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
-
+[![CodeFactor](https://www.codefactor.io/repository/bitbucket/buckobit/bigguy573.github.io/badge)](https://www.codefactor.io/repository/bitbucket/buckobit/bigguy573.github.io)
 name: .NET Core Desktop - Publish PyPI
         '*' 'Publish PyPI
 on:
