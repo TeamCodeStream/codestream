@@ -35,7 +35,10 @@
 # For more information on GitHub Actions, refer to https://github.com/features/actions
 # For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
 # refer to https://github.com/microsoft/github-actions-for-desktop-apps
-
+*INFO create '*workflow 
+pull from: 
+bucksbitties/.github/workflows/name:Bucksbitties-CI-bitbucket-pipelines-main1.yml
+nodejs.yml
 name: .NET Core Desktop - Publish PyPI
         '*' 'Publish PyPI
 on:
