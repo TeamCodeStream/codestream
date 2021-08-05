@@ -248,6 +248,37 @@ export const AgentOpenUrlRequestType = new RequestType<AgentOpenUrlRequest, void
 	"codestream/url/open"
 );
 
+export interface SaveProviderConfigRequest {
+	key: string;
+	value: string;
+}
+
+export interface SaveProviderConfigResponse {
+	success: boolean;
+}
+
+export const SaveProviderConfigRequestType = new RequestType<
+	SaveProviderConfigRequest,
+	SaveProviderConfigResponse,
+	void,
+	void
+>("codestream/providerConfig/save");
+
+export interface GetProviderConfigRequest {
+	key: string;
+}
+
+export interface GetProviderConfigResponse {
+	value?: string;
+}
+
+export const GetProviderConfigRequestType = new RequestType<
+	GetProviderConfigRequest,
+	GetProviderConfigResponse,
+	void,
+	void
+>("codestream/providerConfig/get");
+
 export interface UIStateRequest {
 	context?: {
 		panelStack?: string[];

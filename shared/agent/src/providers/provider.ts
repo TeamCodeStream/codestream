@@ -154,6 +154,7 @@ export interface ThirdPartyProvider {
 	readonly name: string;
 	readonly displayName: string;
 	readonly icon: string;
+	readonly accessToken?: string;
 	hasTokenError?: boolean;
 	connect(): Promise<void>;
 	configure(data: { [key: string]: any }): Promise<void>;
@@ -332,6 +333,11 @@ export abstract class ThirdPartyProviderBase<
 			});
 		});
 
+		await this.configure({
+			token: this.accessToken,
+			data: this._providerInfo.data
+		});
+
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
 		this.resetReady();
@@ -373,7 +379,16 @@ export abstract class ThirdPartyProviderBase<
 		}
 	}
 
-	async configure(data: { [key: string]: any }) {}
+	async configure(data: { [key: string]: any }) {
+		if (data.token) {
+			await this.session.api.setThirdPartyProviderToken({
+				providerId: this.providerConfig.id,
+				token: data.token,
+				data: data.data
+			});
+			this.session.updateProviders();
+		}
+	}
 
 	protected async onConfigured() {}
 

@@ -27,7 +27,9 @@ import {
 	ReportingMessageType,
 	RepoScmStatus,
 	UpdateInvisibleRequest,
-	UpdatePostSharingDataRequest
+	UpdatePostSharingDataRequest,
+	SaveProviderConfigRequestType,
+	ThirdPartyProviderUnsetTokenRequest
 } from "../../protocol/agent.protocol";
 import {
 	AccessToken,
@@ -1891,11 +1893,27 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
+			const NA = "n/a";
+
+			let key =
+				"1$" + provider.name + "|" + Strings.md5(`${this.baseUrl}|${this.teamId}|${this.userId}`);
+			await SessionContainer.instance().session.agent.sendRequest(SaveProviderConfigRequestType, {
+				key: key,
+				value: request.token
+			});
+
+			if (request.data) {
+				Object.keys(request.data).forEach(key => {
+					if (request.data && request.data[key] === request.token) {
+						request.data[key] = NA;
+					}
+				});
+			}
 
 			const params: ThirdPartyProviderSetTokenRequestData = {
 				teamId: this.teamId,
 				host: request.host,
-				token: request.token,
+				token: NA,
 				data: request.data
 			};
 
@@ -1913,6 +1931,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 				type: MessageType.Users,
 				data: [response.user]
 			})) as CSUser[];
+
+			const me = users.find(_ => _.id == this._userId) as CSMe;
+			if (me && me.providerInfo) {
+				me.providerInfo[this.teamId][provider.name]!.accessToken = request.token;
+			}
 			Container.instance().agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Users,
 				data: users
@@ -1923,6 +1946,24 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
+	async unsetThirdPartyProviderToken(
+		request: ThirdPartyProviderUnsetTokenRequest
+	): Promise<boolean> {
+		const providerName = request.providerName;
+		if (!providerName) throw new Error(`provider ${providerName} not found`);
+
+		const params: ThirdPartyProviderSetTokenRequestData = {
+			teamId: this.teamId,
+			token: request.token
+		};
+
+		const response = await this.put<ThirdPartyProviderSetTokenRequestData, { user: any }>(
+			`/provider-set-token/${providerName}`,
+			params,
+			this._token
+		);
+		return response != null;
+	}
 	@log()
 	async setThirdPartyProviderInfo(request: {
 		providerId: string;

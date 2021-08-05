@@ -61,6 +61,7 @@ import {
 	GetAccessTokenRequestType,
 	GetInviteInfoRequest,
 	GetInviteInfoRequestType,
+	GetProviderConfigRequestType,
 	isLoginFailResponse,
 	LoginResponse,
 	LogoutReason,
@@ -71,6 +72,7 @@ import {
 	RegisterUserRequest,
 	RegisterUserRequestType,
 	ReportingMessageType,
+	SaveProviderConfigRequestType,
 	SetServerUrlRequest,
 	SetServerUrlRequestType,
 	ThirdPartyProviders,
@@ -99,7 +101,7 @@ import {
 	CSUser,
 	LoginResult
 } from "./protocol/api.protocol";
-import { log, memoize, registerDecoratedHandlers, registerProviders } from "./system";
+import { log, memoize, registerDecoratedHandlers, registerProviders, Strings } from "./system";
 import { testGroups } from "./testGroups";
 
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost|(\w+))\.codestream\.(?:us|com)(?::\d+$)?/i;
@@ -756,6 +758,10 @@ export class CodeStreamSession {
 		};
 	}
 
+	get serverUrl(): Readonly<string> {
+		return this._options.serverUrl;
+	}
+
 	get workspace() {
 		return this._connection.workspace;
 	}
@@ -936,6 +942,69 @@ export class CodeStreamSession {
 		const cc = Logger.getCorrelationContext();
 
 		SessionContainer.initialize(this);
+
+		if (response.user.providerInfo) {
+			const teamProviders = response.user.providerInfo[this.teamId];
+			if (teamProviders) {
+				const serverUrl = Container.instance().serverUrl;
+				for (const providerName of Object.keys(teamProviders)) {
+					try {
+						const key =
+							"1$" +
+							providerName +
+							"|" +
+							Strings.md5(`${serverUrl}|${this.teamId}|${this._codestreamUserId}}`);
+						if (
+							response.user.providerInfo[this.teamId] &&
+							response.user.providerInfo[this.teamId][providerName]?.accessToken != "n/a"
+						) {
+							// migration
+							try {
+								const value = await Container.instance().agent.sendRequest(
+									SaveProviderConfigRequestType,
+									{
+										key: key,
+										value: response.user.providerInfo[this.teamId][providerName]?.accessToken!
+									}
+								);
+								if (value.success) {
+									await SessionContainer.instance().session.api.unsetThirdPartyProviderToken({
+										providerName: providerName,
+										token: "n/a"
+									});
+									Logger.log("migrated");
+								} else {
+									Logger.warn("could not migrate");
+								}
+							} catch (ex) {
+								Logger.warn(ex, cc);
+							}
+						}
+
+						const value = await Container.instance().agent.sendRequest(
+							GetProviderConfigRequestType,
+							{
+								key: key
+							}
+						);
+						if (value && value.value) {
+							if (
+								response.user.providerInfo[this.teamId] &&
+								response.user.providerInfo[this.teamId][providerName]
+							) {
+								const provider = response.user.providerInfo[this.teamId][providerName];
+								if (provider) {
+									provider.accessToken = value.value;
+								}
+							}
+						}
+					} catch (ex) {
+						Logger.warn(ex);
+					}
+				}
+			}
+		}
+
 		try {
 			// after initializing, wait for the initial search of git repositories to complete,
 			// otherwise newly matched repos might be returned to the webview before the bootstrap

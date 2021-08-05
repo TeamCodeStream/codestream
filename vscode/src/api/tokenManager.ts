@@ -68,6 +68,36 @@ export namespace TokenManager {
 	// 	await Container.context.globalState.update(GlobalState.AccessTokens, undefined);
 	// }
 
+	export async function getGeneric(key: string): Promise<any | undefined> {
+		if (!key) return undefined;
+
+		if (keychain !== undefined) {
+			try {
+				const tokenJson = await keychain.getPassword(CredentialService, key);
+				if (tokenJson != null) {
+					return tokenJson;
+				}
+			} catch (ex) {
+				Logger.warn(ex);
+			}
+		}
+		return undefined;
+	}
+
+	export async function setGeneric(key: string, value: string): Promise<boolean | undefined> {
+		if (!key) return false;
+
+		if (keychain !== undefined) {
+			try {
+				await keychain.setPassword(CredentialService, key, value);
+				return true;
+			} catch (ex) {
+				Logger.warn(ex);
+			}
+		}
+		return false;
+	}
+
 	export async function get(url: string, email: string): Promise<AccessToken | undefined> {
 		if (!url || !email) return undefined;
 

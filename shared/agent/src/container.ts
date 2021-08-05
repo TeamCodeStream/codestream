@@ -156,6 +156,10 @@ class ServiceContainer {
 		this._urls = new UrlManager();
 	}
 
+	get serverUrl() {
+		return this.session.serverUrl;
+	}
+
 	private readonly _gitServiceLite: GitServiceLite;
 	get gitServiceLite() {
 		return this._gitServiceLite;

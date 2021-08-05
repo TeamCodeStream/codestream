@@ -18,7 +18,10 @@ import com.github.salomonbrys.kotson.jsonObject
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
+import com.intellij.credentialStore.CredentialAttributes
+import com.intellij.credentialStore.Credentials
 import com.intellij.ide.BrowserUtil
+import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
@@ -171,6 +174,23 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         project.sessionService?.environmentInfo = environmentInfo
     }
 
+    @JsonRequest("codestream/providerConfig/get")
+    fun getProviderConfig(json: JsonElement): CompletableFuture<GetProviderConfigResponse> {
+        val request = gson.fromJson<GetProviderConfigRequest>(json[0])
+        val value = PasswordSafe.instance.getPassword(CredentialAttributes("CodeStream", request.key))
+        return CompletableFuture.completedFuture(GetProviderConfigResponse(value))
+    }
+
+    @JsonRequest("codestream/providerConfig/save")
+    fun saveProviderConfig(json: JsonElement): CompletableFuture<SaveProviderConfigResponse> {
+        val request = gson.fromJson<SaveProviderConfigRequest>(json[0])
+        val attributes = CredentialAttributes("CodeStream", request.key)
+        PasswordSafe.instance.set(attributes, Credentials(null, request.value))
+        val savedValue = PasswordSafe.instance.getPassword(attributes)
+        val success = savedValue == request.value
+        return CompletableFuture.completedFuture(SaveProviderConfigResponse(success))
+    }
+
     override fun workspaceFolders(): CompletableFuture<MutableList<WorkspaceFolder>> {
         val folders = project.workspaceFolders.toMutableList()
         logger.info("Workspace folders: ${folders.joinToString()}")
@@ -268,6 +288,14 @@ class DidChangeApiVersionCompatibilityNotification(
 )
 
 class OpenUrlRequest(val url: String)
+
+class GetProviderConfigRequest(val key: String)
+
+class GetProviderConfigResponse(val value: String?)
+
+class SaveProviderConfigRequest(val key: String, val value: String)
+
+class SaveProviderConfigResponse(val success: Boolean)
 
 enum class ApiVersionCompatibility {
     @SerializedName("apiCompatible")
