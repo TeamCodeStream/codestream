@@ -828,7 +828,15 @@ export class GitService implements IGitService, Disposable {
 	async getBranches(
 		repoPath: string,
 		remote?: boolean
-	): Promise<{ current: string; branches: string[] } | undefined> {
+	): Promise<
+		| {
+				current: string;
+				branches: string[];
+				branchesMeta: { remote?: string; branch: string }[];
+				remotesLength?: number;
+		  }
+		| undefined
+	> {
 		try {
 			const remotesData = await git({ cwd: repoPath }, "remote", "show");
 			const remotes = remotesData.split("\n").filter(r => !!r);
@@ -842,9 +850,34 @@ export class GitService implements IGitService, Disposable {
 				.map(b => b.substr(2).trim())
 				.filter(b => b.length > 0)
 				.filter(b => !b.startsWith("HEAD ->"))
-				.map(b => (remote && remotes.length === 1 ? b.replace(/^origin\//, "") : b));
+				.map(b => {
+					if (remote && remotes.length === 1) {
+						return { remote: "origin", branch: b.replace(/^origin\//, "") };
+					} else {
+						let remoteName: string | undefined;
+						let branchName;
+						if (remote) {
+							const split = b.split("/");
+							remoteName = split[0];
+							split.shift();
+							branchName = split.join("/");
+						} else {
+							branchName = b;
+						}
+						return {
+							remote: remoteName,
+							branch: branchName
+						};
+					}
+				});
+
 			const current = data.split("\n").find(b => b.startsWith("* "));
-			return { branches, current: current ? current.substr(2).trim() : "" };
+			return {
+				branches: branches.map(_ => _.branch),
+				branchesMeta: branches,
+				remotesLength: remote ? remotes.length : undefined,
+				current: current ? current.substr(2).trim() : ""
+			};
 		} catch (ex) {
 			Logger.warn(ex);
 			return undefined;

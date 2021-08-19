@@ -180,7 +180,7 @@ export const CreatePullRequestPanel = props => {
 
 	const [reviewBranch, setReviewBranch] = useState("");
 	const [branches, setBranches] = useState([] as string[]);
-	const [remoteBranches, setRemoteBranches] = useState([] as string[]);
+	const [remoteBranches, setRemoteBranches] = useState([] as { remote?: string; branch: string }[]);
 	const [requiresUpstream, setRequiresUpstream] = useState(false);
 	const [origins, setOrigins] = useState([] as string[]);
 	const [latestCommit, setLatestCommit] = useState("");
@@ -713,15 +713,26 @@ export const CreatePullRequestPanel = props => {
 	const renderBaseBranchesDropdown = () => {
 		if (acrossForks) return renderBaseBranchesAcrossForksDropdown();
 		if (!remoteBranches || !remoteBranches.length) return undefined;
+
+		var uniqueRemoteNamesCount = Object.keys(
+			remoteBranches.reduce((map, obj: { remote?: string }) => {
+				if (obj.remote) {
+					map[obj.remote] = true;
+				}
+				return map;
+			}, {})
+		).length;
+
 		const items = remoteBranches!.map(_ => {
-			const branchName = _.replace("origin/", "");
+			const label =
+				uniqueRemoteNamesCount === 1 || !_.remote ? _.branch : `${_.remote}/${_.branch}`;
 			return {
-				label: _,
-				searchLabel: _,
-				key: _,
+				label: label,
+				searchLabel: label,
+				key: label,
 				action: async () => {
-					setPrBranch(branchName);
-					checkPullRequestBranchPreconditions(branchName, reviewBranch);
+					setPrBranch(_.branch);
+					checkPullRequestBranchPreconditions(_.branch, reviewBranch);
 				}
 			};
 		}) as any;

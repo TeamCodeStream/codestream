@@ -350,7 +350,7 @@ export interface CheckPullRequestPreconditionsResponse {
 	pullRequestProvider?: { defaultBranch?: string; isConnected: boolean };
 	branch?: string;
 	branches?: string[];
-	remoteBranches?: string[];
+	remoteBranches?: { remote?: string; branch: string }[];
 	pullRequestTemplate?: string;
 	pullRequestTemplateNames?: string[];
 	pullRequestTemplatePath?: string;
