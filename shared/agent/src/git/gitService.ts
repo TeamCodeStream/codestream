@@ -827,13 +827,12 @@ export class GitService implements IGitService, Disposable {
 
 	async getBranches(
 		repoPath: string,
-		remote?: boolean
+		includeRemotes?: boolean
 	): Promise<
 		| {
 				current: string;
 				branches: string[];
 				branchesMeta: { remote?: string; branch: string }[];
-				remotesLength?: number;
 		  }
 		| undefined
 	> {
@@ -842,7 +841,7 @@ export class GitService implements IGitService, Disposable {
 			const remotes = remotesData.split("\n").filter(r => !!r);
 
 			const options = ["branch"];
-			if (remote) options.push("-r");
+			if (includeRemotes) options.push("-r");
 			const data = await git({ cwd: repoPath }, ...options);
 			if (!data) return undefined;
 			const branches = data
@@ -851,22 +850,20 @@ export class GitService implements IGitService, Disposable {
 				.filter(b => b.length > 0)
 				.filter(b => !b.startsWith("HEAD ->"))
 				.map(b => {
-					if (remote && remotes.length === 1) {
-						return { remote: "origin", branch: b.replace(/^origin\//, "") };
-					} else {
-						let remoteName: string | undefined;
-						let branchName;
-						if (remote) {
-							const split = b.split("/");
-							remoteName = split[0];
-							split.shift();
-							branchName = split.join("/");
+					if (includeRemotes) {
+						if (remotes.length === 1) {
+							return { remote: "origin", branch: b.replace(/^origin\//, "") };
 						} else {
-							branchName = b;
+							const split = b.split("/");
+							const remoteName = split[0];
+							// remove the first part (it's the remote)
+							split.shift();
+							const branchName = split.join("/");
+							return { remote: remoteName, branch: branchName };
 						}
+					} else {
 						return {
-							remote: remoteName,
-							branch: branchName
+							branch: b
 						};
 					}
 				});
@@ -875,7 +872,6 @@ export class GitService implements IGitService, Disposable {
 			return {
 				branches: branches.map(_ => _.branch),
 				branchesMeta: branches,
-				remotesLength: remote ? remotes.length : undefined,
 				current: current ? current.substr(2).trim() : ""
 			};
 		} catch (ex) {
