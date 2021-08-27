@@ -298,14 +298,15 @@ class Login extends React.Component<Props, State> {
 									loading={this.state.loading}
 								>
 									<Icon name="codestream" />
-									<div className="copy">Sign In with CodeStream</div>
+									<div className="copy"><FormattedMessage id="login.submitButton" /></div>
 									<Icon name="chevron-right" />
 								</Button>
 							</div>
 						</div>
 						<div className="footer">
 							<p>
-								Don't have an account? <a onClick={this.handleClickSignup}>Sign Up</a>
+								<FormattedMessage id="login.footer.noAccount" />
+								<a onClick={this.handleClickSignup}><FormattedMessage id="login.footer.signUp" /></a>
 							</p>
 						</div>
 					</fieldset>
