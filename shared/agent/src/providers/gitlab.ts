@@ -1,4 +1,5 @@
 "use strict";
+import { Console } from "console";
 import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
@@ -852,9 +853,32 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		if (repos.length) {
 			// https://docs.gitlab.com/ee/api/merge_requests.html
 			const buildUrl = (repo: string, query: string) => {
-				return `/projects/${encodeURIComponent(repo)}/merge_requests?${createQueryString(
-					query
-				)}&with_labels_details=true`;
+				if (query.match(/=/)) {
+					// New format of queries
+					let filter = JSON.parse(JSON.stringify(qs.parse(query)));
+					if (filter && currentUser) {
+						this.replaceMe(filter, currentUser);
+					}
+					if (!filter.scope) {
+						filter["scope"] = "all";
+					}
+					let url;
+					if (filter?.project_id) {
+						delete filter["project_id"];
+						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}`;						
+					} else if (filter?.group_id) {
+						delete filter["group_id"];
+						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}`;
+					} else {
+						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}&with_labels_details=true`;
+					}
+					return url;
+				} else {
+					// Old format of queries
+					return `/projects/${encodeURIComponent(repo)}/merge_requests?${createQueryString(
+						query
+					)}&with_labels_details=true`;
+				}
 			};
 			for (const query of queries) {
 				const splits = query.split(",");
@@ -894,6 +918,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						const projectId = filter["project_id"];
 						delete filter["project_id"];
 						url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
+						console.log(url);
+						console.log(qs.stringify(filter));
+						
 					} else if (filter?.group_id) {
 						const groupId = filter["group_id"];
 						delete filter["group_id"];

@@ -426,7 +426,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							if (provider === "gitlab*com" || provider === "gitlab/enterprise") {
 								if (
 									query.name === "Waiting on my Review" &&
-									query.query === "state:opened reviewer_username:@me"
+									query.query === "state:opened reviewer_username:@me scope:all"
 								) {
 									derivedState.pullRequestQueries![provider][index].query =
 										"state=opened&reviewer_username=@me&scope=all";
