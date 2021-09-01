@@ -919,8 +919,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						const projectId = filter["project_id"];
 						delete filter["project_id"];
 						url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
-						console.log(url);
-						console.log(qs.stringify(filter));
 					} else if (filter?.group_id) {
 						const groupId = filter["group_id"];
 						delete filter["group_id"];
