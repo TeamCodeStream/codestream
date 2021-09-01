@@ -1,5 +1,4 @@
 "use strict";
-import { Console } from "console";
 import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
@@ -865,12 +864,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					let url;
 					if (filter?.project_id) {
 						delete filter["project_id"];
-						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}`;						
+						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}`;
 					} else if (filter?.group_id) {
 						delete filter["group_id"];
 						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}`;
 					} else {
-						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(filter)}&with_labels_details=true`;
+						url = `/projects/${encodeURIComponent(repo)}/merge_requests?${qs.stringify(
+							filter
+						)}&with_labels_details=true`;
 					}
 					return url;
 				} else {
@@ -920,7 +921,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 						url = `/projects/${projectId}/merge_requests?${qs.stringify(filter)}`;
 						console.log(url);
 						console.log(qs.stringify(filter));
-						
 					} else if (filter?.group_id) {
 						const groupId = filter["group_id"];
 						delete filter["group_id"];
@@ -933,8 +933,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 					// Old format of queries
 					return `/merge_requests?${createQueryString(query)}&with_labels_details=true`;
 				}
-
-				
 			};
 			for (const query of queries) {
 				const splits = query.split(",");
