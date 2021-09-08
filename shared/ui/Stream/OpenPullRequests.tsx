@@ -517,7 +517,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		try {
 			const q = queries[providerId][index];
 			const response: any = await dispatch(
-				getMyPullRequests(providerId, [q.query], !derivedState.allRepos, { force: true }, true)
+				getMyPullRequests(
+					providerId,
+					[q.query],
+					!derivedState.allRepos,
+					{ force: true },
+					true,
+					false,
+					index
+				)
 			);
 			if (response && response.length) {
 				const newGroups = { ...pullRequestGroups };

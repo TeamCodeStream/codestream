@@ -74,6 +74,16 @@ export function reduceProviderPullRequests(
 				pullRequests: { ...state.pullRequests }
 			};
 		}
+		case ProviderPullRequestActionsTypes.UpdatePullRequestFilter: {
+			const newState = { ...state.myPullRequests };
+			if (newState[action.payload.providerId].data) {
+				newState[action.payload.providerId].data![action.payload.index] = action.payload.data;
+			}
+			return {
+				myPullRequests: newState,
+				pullRequests: { ...state.pullRequests }
+			};
+		}
 		case ProviderPullRequestActionsTypes.AddPullRequestFiles: {
 			const newState = createNewObject(state, action);
 			const files = {

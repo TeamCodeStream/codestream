@@ -49,6 +49,13 @@ export const updatePullRequestTitle = (providerId: string, id: string, pullReque
 		pullRequestData
 	});
 
+export const _updatePullRequestFilter = (providerId: string, data: any, index: any) =>
+	action(ProviderPullRequestActionsTypes.UpdatePullRequestFilter, {
+		providerId,
+		data,
+		index
+	});
+
 export const _addPullRequestFiles = (
 	providerId: string,
 	id: string,
@@ -296,7 +303,8 @@ export const getMyPullRequests = (
 	openReposOnly: boolean,
 	options?: { force?: boolean },
 	throwOnError?: boolean,
-	test?: boolean
+	test?: boolean,
+	index?: Number
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	try {
 		let force = false;
@@ -326,7 +334,9 @@ export const getMyPullRequests = (
 				force: force || (options && options.force)
 			}
 		});
-		if (!test) dispatch(_addMyPullRequests(providerId, response));
+		if (index !== undefined) {
+			dispatch(_updatePullRequestFilter(providerId, response, index));
+		} else if (!test) dispatch(_addMyPullRequests(providerId, response));
 
 		return response;
 	} catch (error) {
