@@ -258,7 +258,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			return (
 				<NoContent>
 					<p>
-						Open a source file to to start discussing code with your teammates{" "}
+						Open a source file to start discussing code with your teammates{" "}
 						<a href="https://docs.codestream.com/userguide/workflow/discuss-code/">Learn more.</a>
 					</p>
 				</NoContent>
