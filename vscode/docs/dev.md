@@ -7,6 +7,10 @@ New to VSCode/Codestream? Look for a novice debugging examples at the end of thi
 ```
 git clone https://github.com/TeamCodeStream/codestream.git
 ```
+or by the new [github cli](https://cli.github.com)
+```
+gh repo clone TeamCodeStream/codestream
+```
 
 Versions
 
