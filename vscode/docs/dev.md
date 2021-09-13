@@ -4,10 +4,11 @@ New to VSCode/Codestream? Look for a novice debugging examples at the end of thi
 
 ### Getting the code
 
+By git bash:
 ```
 git clone https://github.com/TeamCodeStream/codestream.git
 ```
-or by the new [github cli](https://cli.github.com)
+or by the new [github cli](https://cli.github.com):
 ```
 gh repo clone TeamCodeStream/codestream
 ```
