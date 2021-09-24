@@ -393,44 +393,47 @@ export const MergeBox = props => {
 								Delete source branch
 							</Checkbox>
 						</div>
-						{derivedState.prRoot && derivedState.prRoot.project.squashOption === "always" ? (
-							<div className="pad-left">
-								<Checkbox
-									checked={true}
-									name="squash"
-									noMargin
-									onChange={() => {}}
-									disabled=" "
-									disabledEmpty={true}
-								>
-									Squash commits
-								</Checkbox>
-							</div>
-						) : (
-							derivedState.prRoot &&
-							derivedState.prRoot.project.squashOption !== "never" && (
-								<div className="pad-left">
-									<Checkbox
-										checked={squashChecked}
-										name="squash"
-										noMargin
-										onChange={() => {
-											setSquashChecked(!squashChecked);
-										}}
-									>
-										Squash commits
-									</Checkbox>
-								</div>
-							)
-						)}
-						{derivedState.prRoot && derivedState.prRoot.project.squashOption !== "never" && (
-							<div className="pl5">
-								<Link
-									href={`${derivedState.pr.baseWebUrl}/help/user/project/merge_requests/squash_and_merge`}
-								>
-									<Icon name="question" title="What is squashing?" placement="top" />
-								</Link>
-							</div>
+						{derivedState.prRoot && (
+							<>
+								{derivedState.prRoot.project.squashOption === "always" ? (
+									<div className="pad-left">
+										<Checkbox
+											checked={true}
+											name="squash"
+											noMargin
+											onChange={() => {}}
+											disabled=" "
+											disabledEmpty={true}
+										>
+											Squash commits
+										</Checkbox>
+									</div>
+								) : (
+									derivedState.prRoot.project.squashOption !== "never" && (
+										<div className="pad-left">
+											<Checkbox
+												checked={squashChecked}
+												name="squash"
+												noMargin
+												onChange={() => {
+													setSquashChecked(!squashChecked);
+												}}
+											>
+												Squash commits
+											</Checkbox>
+										</div>
+									)
+								)}
+								{derivedState.prRoot.project.squashOption !== "never" && (
+									<div className="pl5">
+										<Link
+											href={`${derivedState.pr.baseWebUrl}/help/user/project/merge_requests/squash_and_merge`}
+										>
+											<Icon name="question" title="What is squashing?" placement="top" />
+										</Link>
+									</div>
+								)}
+							</>
 						)}
 					</>
 				)}

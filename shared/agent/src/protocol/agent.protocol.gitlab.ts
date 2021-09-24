@@ -61,7 +61,7 @@ export interface GitLabMergeRequestWrapper {
 		onlyAllowMergeIfPipelineSucceeds: boolean;
 		allowMergeOnSkippedPipeline: boolean;
 		onlyAllowMergeIfAllDiscussionsAreResolved: boolean;
-		squashOption: string;
+		squashOption: "never" | "always" | "default_on" | "default_off";
 		/*
 		merge:
 		Merge commit

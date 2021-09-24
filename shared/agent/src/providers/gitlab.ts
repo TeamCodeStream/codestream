@@ -1331,7 +1331,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				only_allow_merge_if_all_discussions_are_resolved: boolean;
 				only_allow_merge_if_pipeline_succeeds: boolean;
 				allow_merge_on_skipped_pipeline: boolean;
-				squash_option: string;
+				squash_option: "never" | "always" | "default_on" | "default_off";
 			}>(`/projects/${encodeURIComponent(projectFullPath)}`);
 
 			response.project.mergeMethod = project.body.merge_method!;
