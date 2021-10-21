@@ -2030,6 +2030,112 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		};
 	}
 
+	async createPullRequestReviewThread(request: {
+		pullRequestId: string;
+		pullRequestReviewId?: string;
+		text: string;
+		filePath?: string;
+		position?: number;
+		startLine?: number;
+		endLine?: number;
+		side?: string;
+	}): Promise<Directives> {
+		const v = await this.getVersion();
+
+		let query;
+
+		if (!request.pullRequestReviewId) {
+			request.pullRequestReviewId = await this.getPullRequestReviewId(request);
+			if (!request.pullRequestReviewId) {
+				const result = await this.addPullRequestReview(request);
+				if (result?.addPullRequestReview?.pullRequestReview?.id) {
+					request.pullRequestReviewId = result.addPullRequestReview.pullRequestReview.id;
+				}
+			}
+		}
+		query = `mutation AddPullRequestReviewThread($text:String!, $pullRequestReviewId:ID!, $filePath:String, $startLine:Int, $endLine:Int, $side:String) {
+			addPullRequestReviewThread(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, startLine:$startLine, line:$endLine, side:$side}) {
+				clientMutationId
+			}
+			}
+			`;
+
+		// if (v && semver.lt(v.version, "2.21.0")) {
+		// 	query = `mutation AddPullRequestReviewThread {
+		// 		addPullRequestReviewThread(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position, line:$endLine, side:$side}) {
+		// 		  clientMutationId
+		// 		}
+		// 	  }
+		// 	  `;
+		// } else {
+		// 	query = `mutation AddPullRequestReviewThread {
+		// 		addPullRequestReviewThread(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
+		// 		  clientMutationId
+		// 		}
+		// 	  }`;
+		// }
+
+		Logger.log(`commenting:addPullRequestReviewThread`, {
+			query: query,
+			request: request
+		});
+
+		void (await this.mutate<any>(query, request));
+
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const graphResults = await this.fetchUpdatedReviewCommentData(ownerData);
+
+		this.mapPullRequestModel(graphResults);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: graphResults.repository.pullRequest.updatedAt,
+					pendingReview: graphResults.repository.pullRequest.pendingReview
+				} as any
+			}
+		] as any;
+
+		if (graphResults?.repository?.pullRequest) {
+			const pr = graphResults.repository.pullRequest;
+			if (pr.reviews) {
+				const review = pr.reviews.nodes.find((_: any) => _.id === request.pullRequestReviewId);
+				directives.push({
+					type: "addReview",
+					data: review
+				});
+				directives.push({
+					type: "updateReviewCommentsCount",
+					data: review
+				});
+				if (review) {
+					directives.push({
+						type: "addReviewThreads",
+						data: pr.reviewThreads.edges
+					});
+				}
+			}
+			if (pr.timelineItems) {
+				directives.push({
+					type: "addReviewCommentNodes",
+					data: pr.timelineItems.nodes
+				});
+			}
+		}
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.filePath
+		});
+		return {
+			directives: directives
+		};
+	}
+
 	private async fetchUpdatedReviewCommentData(ownerData: {
 		owner: string;
 		name: string;

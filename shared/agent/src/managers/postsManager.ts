@@ -1119,21 +1119,44 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 			if (request.isProviderReview) {
 				if (lineWithMetadata) {
-					result = await providerRegistry.executeMethod({
-						method: "createPullRequestReviewComment",
-						providerId: parsedUri.context.pullRequest.providerId,
-						params: {
-							pullRequestId: parsedUri.context.pullRequest.id,
-							// pullRequestReviewId will be looked up
-							text: request.attributes.text || "",
-							leftSha: parsedUri.leftSha,
-							sha: parsedUri.rightSha,
-							filePath: parsedUri.path,
-							startLine: startLine,
-							endLine: endLine,
-							position: lineWithMetadata.position
-						}
-					});
+					if (
+						parsedUri.context.pullRequest.providerId &&
+						(parsedUri.context.pullRequest.providerId == "github*com" ||
+							parsedUri.context.pullRequest.providerId == "github/enterprise")
+					) {
+						result = await providerRegistry.executeMethod({
+							method: "createPullRequestReviewThread",
+							providerId: parsedUri.context.pullRequest.providerId,
+							params: {
+								pullRequestId: parsedUri.context.pullRequest.id,
+								// pullRequestReviewId will be looked up
+								text: request.attributes.text || "",
+								leftSha: parsedUri.leftSha,
+								sha: parsedUri.rightSha,
+								filePath: parsedUri.path,
+								startLine: startLine,
+								endLine: endLine,
+								position: lineWithMetadata.position,
+								side: parsedUri.side
+							}
+						});
+					} else {
+						result = await providerRegistry.executeMethod({
+							method: "createPullRequestReviewComment",
+							providerId: parsedUri.context.pullRequest.providerId,
+							params: {
+								pullRequestId: parsedUri.context.pullRequest.id,
+								// pullRequestReviewId will be looked up
+								text: request.attributes.text || "",
+								leftSha: parsedUri.leftSha,
+								sha: parsedUri.rightSha,
+								filePath: parsedUri.path,
+								startLine: startLine,
+								endLine: endLine,
+								position: lineWithMetadata.position
+							}
+						});
+					}
 				} else {
 					throw new Error("Failed to create review comment");
 				}
