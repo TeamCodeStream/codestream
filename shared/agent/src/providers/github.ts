@@ -2053,27 +2053,21 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			}
 		}
-		query = `mutation AddPullRequestReviewThread($text:String!, $pullRequestReviewId:ID!, $filePath:String, $startLine:Int, $endLine:Int, $side:String) {
-			addPullRequestReviewThread(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, startLine:$startLine, line:$endLine, side:$side}) {
-				clientMutationId
-			}
-			}
-			`;
-
-		// if (v && semver.lt(v.version, "2.21.0")) {
-		// 	query = `mutation AddPullRequestReviewThread {
-		// 		addPullRequestReviewThread(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, position:$position, line:$endLine, side:$side}) {
-		// 		  clientMutationId
-		// 		}
-		// 	  }
-		// 	  `;
-		// } else {
-		// 	query = `mutation AddPullRequestReviewThread {
-		// 		addPullRequestReviewThread(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, position:$position}) {
-		// 		  clientMutationId
-		// 		}
-		// 	  }`;
-		// }
+		
+		if (v && semver.lt(v.version, "2.21.0")) {
+			query = `mutation AddPullRequestReviewThread($text:String!, $pullRequestReviewId:ID!, $filePath:String, $startLine:Int, $endLine:Int, $side:String) {
+				addPullRequestReviewThread(input: {body:$text, pullRequestReviewId:$pullRequestReviewId, path:$filePath, startLine:$startLine, line:$endLine, side:$side}) {
+				  clientMutationId
+				}
+			  }
+			  `;
+		} else {
+			query = `mutation AddPullRequestReviewThread($text:String!, $pullRequestId:ID!, $filePath:String, $startLine:Int, $endLine:Int, $side:String) {
+				addPullRequestReviewThread(input: {body:$text, pullRequestId:$pullRequestId, path:$filePath, startLine:$startLine, line:$endLine, side:$side}) {
+				  clientMutationId
+				}
+			  }`;
+		}
 
 		Logger.log(`commenting:addPullRequestReviewThread`, {
 			query: query,
