@@ -42,6 +42,7 @@ import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
 import { Link } from "../Link";
 import { ErrorMessage } from "../ConfigurePullRequestQuery";
+import { EMPTY_STATUS } from "../StartWork";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
@@ -66,7 +67,6 @@ interface Props extends ConnectedProps {
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
 	isEditing?: boolean;
-	selectedCardId?: string;
 	paneState?: PaneState;
 }
 
@@ -192,7 +192,6 @@ class IssueDropdown extends React.Component<Props, State> {
 				<IssueList
 					providers={activeProviders}
 					knownIssueProviderOptions={knownIssueProviderOptions}
-					selectedCardId={this.props.selectedCardId}
 					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
 					paneState={this.props.paneState}
 				></IssueList>
@@ -398,7 +397,6 @@ export function Issue(props) {
 interface IssueListProps {
 	providers: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
-	selectedCardId?: string;
 	loadingMessage?: React.ReactNode;
 	paneState?: PaneState;
 }
@@ -416,20 +414,31 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		const providerIds = props.providers.map(provider => provider.id).join(":");
 		const skipConnect = preferences.skipConnectIssueProviders;
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
+		const teamId = state.context.currentTeamId;
+		const status =
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
+		const selectedCardId = status.ticketId || '';
+		const invisible =
+			(currentUser.status && currentUser.status[teamId] && currentUser.status[teamId].invisible) ||
+			false;
 
 		return {
-			currentUser,
-			startWorkPreferences,
-			providerIds,
 			csIssues,
+			currentUser,
+			invisible,
+			providerIds,
+			startWorkCard: state.context.startWorkCard,
+			startWorkPreferences,
+			selectedCardId,
 			skipConnect,
-			startWorkCard: state.context.startWorkCard
+			teamId
 		};
 	});
 
 	const clearAndSave = () => {
-		console.log('X button pressed');
-		// dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
+		dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
 	};
 
 	const [isLoading, setIsLoading] = React.useState(false);
@@ -837,7 +846,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
 
 		return { cards: items, canFilter, cardLabel, selectedLabel };
-	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues, props.selectedCardId]);
+	}, [loadedCards, derivedState.startWorkPreferences, derivedState.csIssues, derivedState.selectedCardId]);
 
 	const menuItems = React.useMemo(() => {
 		// if (props.provider.canFilterByAssignees) {
@@ -1088,7 +1097,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 										<Row
 											key={card.key}
 											onClick={() => selectCard(card)}
-											className={card.id === props.selectedCardId ? "selected" : ""}
+											className={card.id === derivedState.selectedCardId ? "selected" : ""}
 										>
 											<div>
 												{card.parentId && (
@@ -1116,7 +1125,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			</Modal>
 		);
 	};
-console.log(cards);
+
 	return (
 		<>
 			{startWorkCard && (
@@ -1259,13 +1268,13 @@ console.log(cards);
 									"Opened Via": "Selected Ticket"
 								});
 							}}
-							className={card.id === props.selectedCardId ? "selected" : ""}
+							className={card.id === derivedState.selectedCardId ? "selected" : ""}
 						>
 							<div>
 								{card.parentId && (
 									<span style={{ display: "inline-block", width: "20px" }}>&nbsp;</span>
 								)}
-								{card.id === props.selectedCardId && (
+								{card.id === derivedState.selectedCardId && (
 									<Icon name="arrow-right" className="selected-icon" />
 								)}
 								{card.id === isLoadingCard ? (
@@ -1282,15 +1291,19 @@ console.log(cards);
 							</div>
 							<div className="icons">
 								{card.listName && <span className="status">{card.listName}</span>}
-								{card.id === props.selectedCardId && (
+								{card.id === derivedState.selectedCardId && (
 									<Icon
-										title="Clear work item"
-										placement="bottomLeft"
+										title={`Clear work item`}
 										delay={1}
-										onClick={() => clearAndSave()}
-										className="clickable"
+										placement="bottomRight"
 										name="x-circle"
-									/>
+										className="clickable"
+										onClick={e => {
+											e.stopPropagation();
+											e.preventDefault();
+											clearAndSave()
+										}}
+								/>
 								)}
 								{card.url && (
 									<Icon
