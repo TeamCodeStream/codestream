@@ -23,7 +23,6 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { setUserPreference } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
-import { EMPTY_STATUS } from "../StartWork";
 import styled from "styled-components";
 import Filter from "../Filter";
 import { SmartFormattedList } from "../SmartFormattedList";
@@ -416,13 +415,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
 		const providerIds = props.providers.map(provider => provider.id).join(":");
 		const skipConnect = preferences.skipConnectIssueProviders;
-
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
-		let status =
-			currentUser.status && "label" in currentUser.status ? currentUser.status : EMPTY_STATUS;
 
 		return {
-			status,
 			currentUser,
 			startWorkPreferences,
 			providerIds,
@@ -1116,6 +1111,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			</Modal>
 		);
 	};
+console.log(cards);
 	return (
 		<>
 			{startWorkCard && (

@@ -23,6 +23,8 @@ import { getConnectedSupportedPullRequestHosts } from "../store/providers/reduce
 import { getPreferences } from "../store/users/reducer";
 import { getRepos } from "../store/repos/reducer";
 import { Observability } from "./Observability";
+import { CSMe } from "@codestream/protocols/api";
+import { EMPTY_STATUS } from "./StartWork";
 
 const PADDING_TOP = 25;
 
@@ -90,6 +92,13 @@ export const Sidebar = React.memo(function Sidebar() {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const preferences = getPreferences(state);
 		const repos = getRepos(state);
+		const currentUser = state.users[state.session.userId!] as CSMe;
+		const teamId = state.context.currentTeamId;
+		const status =
+			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
+				? currentUser.status[teamId]
+				: EMPTY_STATUS;
+		const selectedCardId = status.ticketId;
 
 		// get the preferences, or use the default
 		let sidebarPaneOrder = preferences.sidebarPaneOrder || AVAILABLE_PANES;
@@ -104,13 +113,14 @@ export const Sidebar = React.memo(function Sidebar() {
 
 		return {
 			repos,
+			selectedCardId,
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder,
 			currentUserId: state.session.userId!,
 			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0
 		};
 	}, shallowEqual);
-	const { sidebarPanes } = derivedState;
+	const { sidebarPanes, selectedCardId } = derivedState;
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>(EMPTY_ARRAY);
 	const [dragCombinedHeight, setDragCombinedHeight] = useState<number | undefined>(undefined);
 	// const [previousSizes, setPreviousSizes] = useState(EMPTY_HASH);
@@ -364,7 +374,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			case WebviewPanels.WorkInProgress:
 				return <WorkInProgress openRepos={openRepos} paneState={paneState} />;
 			case WebviewPanels.Tasks:
-				return <IssueDropdown paneState={paneState} />;
+				return <IssueDropdown paneState={paneState} selectedCardId={selectedCardId} />;
 			case WebviewPanels.CodemarksForFile:
 				return <Codemarks paneState={paneState} />;
 			case WebviewPanels.Observability:
