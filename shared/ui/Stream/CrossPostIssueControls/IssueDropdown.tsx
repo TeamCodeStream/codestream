@@ -20,7 +20,7 @@ import { CSMe } from "@codestream/protocols/api";
 import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
 import { CodeStreamState } from "@codestream/webview/store";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
-import { setUserPreference } from "../actions";
+import { setUserPreference, setUserStatus } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
 import styled from "styled-components";
@@ -426,6 +426,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			startWorkCard: state.context.startWorkCard
 		};
 	});
+
+	const clearAndSave = () => {
+		console.log('X button pressed');
+		// dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
+	};
 
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isLoadingCard, setIsLoadingCard] = React.useState("");
@@ -1279,13 +1284,12 @@ console.log(cards);
 								{card.listName && <span className="status">{card.listName}</span>}
 								{card.id === props.selectedCardId && (
 									<Icon
-										name="x-circle"
+										title="Clear work item"
+										placement="bottomLeft"
+										delay={1}
+										onClick={() => clearAndSave()}
 										className="clickable"
-										onClick={e => {
-											e.stopPropagation();
-											e.preventDefault();
-											selectCard();
-										}}
+										name="x-circle"
 									/>
 								)}
 								{card.url && (
