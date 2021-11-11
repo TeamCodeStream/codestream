@@ -23,6 +23,7 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { setUserPreference, setUserStatus } from "../actions";
 import { HostApi } from "../..";
 import { keyFilter } from "@codestream/webview/utils";
+import { EMPTY_STATUS } from "../StartWork";
 import styled from "styled-components";
 import Filter from "../Filter";
 import { SmartFormattedList } from "../SmartFormattedList";
@@ -42,7 +43,6 @@ import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
 import { Link } from "../Link";
 import { ErrorMessage } from "../ConfigurePullRequestQuery";
-import { EMPTY_STATUS } from "../StartWork";
 
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
