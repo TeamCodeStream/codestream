@@ -399,7 +399,6 @@ export const StartWork = (props: Props) => {
 			currentUser.status && currentUser.status[teamId] && "label" in currentUser.status[teamId]
 				? currentUser.status[teamId]
 				: EMPTY_STATUS;
-		console.log('status2', status);
 		// const now = new Date().getTime();
 		// if (status.expires && status.expires < now) status = EMPTY_STATUS;
 		const team = state.teams[teamId];
