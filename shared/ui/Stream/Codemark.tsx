@@ -1637,7 +1637,7 @@ export class Codemark extends React.Component<Props, State> {
 								)}
 								{this.props.codeError != null && (
 									<div className="related">
-										<div className="related-label">Stacktrace</div>
+										<div className="related-label">Error Group</div>
 										<div className="description-body">
 											<Link
 												className="external-link"
