@@ -29,7 +29,8 @@ import {
 	CSMe,
 	CSPost,
 	CSReview,
-	CodemarkStatus
+	CodemarkStatus,
+	CSCodeError
 } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { FollowCodemarkRequestType } from "@codestream/protocols/agent";
@@ -67,7 +68,8 @@ import {
 	setCurrentCodemark,
 	repositionCodemark,
 	setCurrentReview,
-	setCurrentPullRequest
+	setCurrentPullRequest,
+	setCurrentCodeError
 } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
@@ -75,6 +77,7 @@ import { Link } from "./Link";
 import { getDocumentFromMarker } from "./api-functions";
 import { SharingModal } from "./SharingModal";
 import { getReview } from "../store/reviews/reducer";
+import { getCodeError } from "../store/codeErrors/reducer";
 import { DropdownButton } from "./DropdownButton";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { HeadshotName } from "../src/components/HeadshotName";
@@ -111,6 +114,7 @@ interface DispatchProps {
 	addCodemarks: typeof addCodemarks;
 	setCurrentReview: typeof setCurrentReview;
 	setCurrentPullRequest: typeof setCurrentPullRequest;
+	setCurrentCodeError: typeof setCurrentCodeError;
 }
 
 interface ConnectedProps {
@@ -134,6 +138,7 @@ interface ConnectedProps {
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
 	review?: CSReview;
+	codeError?: CSCodeError
 	post?: CSPost;
 	moveMarkersEnabled: boolean;
 	unread: boolean;
@@ -1630,6 +1635,23 @@ export class Codemark extends React.Component<Props, State> {
 										</div>
 									</div>
 								)}
+								{this.props.codeError != null && (
+									<div className="related">
+										<div className="related-label">Stacktrace</div>
+										<div className="description-body">
+											<Link
+												className="external-link"
+												onClick={() => {
+													this.props.setCurrentCodemark();
+													this.props.setCurrentCodeError(this.props.codeError!.id);
+												}}
+											>
+												<Icon name="review" />
+												{this.props.codeError.title}
+											</Link>
+										</div>
+									</div>
+								)}
 								{this.renderTagsAndAssigneesSelected(codemark)}
 								{this.props.post && <Attachments post={this.props.post} />}
 								{description && (
@@ -2125,10 +2147,16 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 			? getReview(state.reviews, codemark.reviewId)
 			: undefined;
 
+	const codeError =
+		codemark != null && codemark.codeErrorId != null
+			? getCodeError(state.codeErrors, codemark.codeErrorId)
+			: undefined;
+
 	const unread = isUnread(state, codemark!);
 	return {
 		post,
 		review,
+		codeError,
 		capabilities: capabilities,
 		editorHasFocus: context.hasFocus,
 		jumpToMarkerId: context.currentMarkerId,
@@ -2170,7 +2198,8 @@ export default connect(
 		addCodemarks,
 		createPost,
 		setCurrentReview,
-		setCurrentPullRequest
+		setCurrentPullRequest,
+		setCurrentCodeError
 	}
 	// @ts-ignore
 )(Codemark);
