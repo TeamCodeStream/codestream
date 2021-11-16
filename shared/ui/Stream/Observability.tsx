@@ -34,7 +34,7 @@ import {
 	DidChangeObservabilityDataNotificationType
 } from "@codestream/protocols/agent";
 
-import { keyBy as _keyBy } from "lodash-es";
+import { isNil as _isNil, keyBy as _keyBy } from "lodash-es";
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { EntityAssociator } from "./EntityAssociator";
 import { Link } from "./Link";
@@ -158,6 +158,7 @@ const ErrorRow = (props: {
 };
 
 const EMPTY_ARRAY = [];
+let hasRenderedOnce = false;
 
 export const Observability = React.memo((props: Props) => {
 	const dispatch = useDispatch();
@@ -470,6 +471,30 @@ export const Observability = React.memo((props: Props) => {
 			</>
 		);
 	};
+
+	/*
+	 *	When all parts of the observability panel are done loading,
+	 *  and a user is connected to NR, fire off a tracking event
+	 */
+	useEffect(() => {
+		if (
+			!_isNil(loadingErrors) &&
+			// Checks if any value in loadingErrors object is false
+			Object.keys(loadingErrors).some(k => !loadingErrors[k]) &&
+			!loadingAssigments &&
+			derivedState.newRelicIsConnected &&
+			hasRenderedOnce === false
+		) {
+			console.log(observabilityErrors, observabilityAssignments, observabilityRepos)
+			HostApi.instance.track("NR Error List Rendered", {
+				"Errors Listed": false,
+				"Assigned Errors": false,
+				"Repo Errors": false,
+				"Unassociated Repos": false,
+			});
+			hasRenderedOnce = true;
+		}
+	}, [loadingErrors, loadingAssigments]);
 
 	const { hiddenPaneNodes } = derivedState;
 	return (
