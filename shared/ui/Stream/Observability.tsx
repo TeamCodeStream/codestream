@@ -34,10 +34,11 @@ import {
 	DidChangeObservabilityDataNotificationType
 } from "@codestream/protocols/agent";
 
-import { isNil as _isNil, keyBy as _keyBy } from "lodash-es";
+import { forEach as _forEach, isEmpty as _isEmpty, isNil as _isNil, keyBy as _keyBy } from "lodash-es";
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { EntityAssociator } from "./EntityAssociator";
 import { Link } from "./Link";
+import { ErrorMessage } from "../src/components/ErrorMessage";
 
 interface Props {
 	paneState: PaneState;
@@ -473,7 +474,7 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	/*
-	 *	When all parts of the observability panel are done loading,
+	 *	When all parts of the observability panel are done loading
 	 *  and a user is connected to NR, fire off a tracking event
 	 */
 	useEffect(() => {
@@ -485,14 +486,24 @@ export const Observability = React.memo((props: Props) => {
 			derivedState.newRelicIsConnected &&
 			hasRenderedOnce === false
 		) {
-			console.log(observabilityErrors, observabilityAssignments, observabilityRepos)
-			HostApi.instance.track("NR Error List Rendered", {
-				"Errors Listed": false,
-				"Assigned Errors": false,
-				"Repo Errors": false,
-				"Unassociated Repos": false,
-			});
 			hasRenderedOnce = true;
+
+			const hasErrors = 
+				!_isEmpty(observabilityErrors) ||
+				!_isEmpty(observabilityAssignments);
+			
+			// Count all errors for each element of observabilityErrors
+			let errorCount = 0;
+			_forEach(observabilityErrors, oe => {
+				errorCount += oe.errors.length;
+			});
+				
+			HostApi.instance.track("NR Error List Rendered", {
+				"Errors Listed": hasErrors, 
+				"Assigned Errors": observabilityAssignments.length, 
+				"Repo Errors": errorCount, 
+				"Unassociated Repos": observabilityRepos.length, 
+			});
 		}
 	}, [loadingErrors, loadingAssigments]);
 
