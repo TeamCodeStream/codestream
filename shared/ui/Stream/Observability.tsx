@@ -33,8 +33,12 @@ import {
 	ObservabilityRepoError,
 	DidChangeObservabilityDataNotificationType
 } from "@codestream/protocols/agent";
-
-import { forEach as _forEach, isEmpty as _isEmpty, isNil as _isNil, keyBy as _keyBy } from "lodash-es";
+import { 
+	forEach as _forEach, 
+	isEmpty as _isEmpty, 
+	isNil as _isNil,
+	keyBy as _keyBy 
+} from "lodash-es";
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { EntityAssociator } from "./EntityAssociator";
 import { Link } from "./Link";
@@ -158,7 +162,7 @@ const ErrorRow = (props: {
 };
 
 const EMPTY_ARRAY = [];
-let hasRenderedOnce = false;
+let hasLoadedOnce = false;
 
 export const Observability = React.memo((props: Props) => {
 	const dispatch = useDispatch();
@@ -483,9 +487,9 @@ export const Observability = React.memo((props: Props) => {
 			Object.keys(loadingErrors).some(k => !loadingErrors[k]) &&
 			!loadingAssigments &&
 			derivedState.newRelicIsConnected &&
-			hasRenderedOnce === false
+			hasLoadedOnce === false
 		) {
-			hasRenderedOnce = true;
+			hasLoadedOnce = true;
 
 			const hasErrors = 
 				!_isEmpty(observabilityErrors) ||
