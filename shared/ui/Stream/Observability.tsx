@@ -38,7 +38,6 @@ import { forEach as _forEach, isEmpty as _isEmpty, isNil as _isNil, keyBy as _ke
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { EntityAssociator } from "./EntityAssociator";
 import { Link } from "./Link";
-import { ErrorMessage } from "../src/components/ErrorMessage";
 
 interface Props {
 	paneState: PaneState;
