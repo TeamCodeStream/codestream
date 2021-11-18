@@ -501,8 +501,8 @@ export const Observability = React.memo((props: Props) => {
 			_forEach(observabilityErrors, oe => {
 				errorCount += oe.errors.length;
 			});
-			_forEach(observabilityRepos, or => {
-				if (or.hasRepoAssociation) {
+			_forEach(observabilityRepos, ore => {
+				if (ore.hasRepoAssociation) {
 					unassociatedRepoCount++;
 				}
 			});
