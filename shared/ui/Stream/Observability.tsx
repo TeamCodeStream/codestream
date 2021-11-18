@@ -496,16 +496,22 @@ export const Observability = React.memo((props: Props) => {
 				!_isEmpty(observabilityAssignments);
 			
 			// Count all errors for each element of observabilityErrors
-			let errorCount = 0;
+			let errorCount = 0,
+				unassociatedRepoCount = 0;
 			_forEach(observabilityErrors, oe => {
 				errorCount += oe.errors.length;
 			});
-				
+			_forEach(observabilityRepos, or => {
+				if (or.hasRepoAssociation) {
+					unassociatedRepoCount++;
+				}
+			});
+
 			HostApi.instance.track("NR Error List Rendered", {
 				"Errors Listed": hasErrors, 
 				"Assigned Errors": observabilityAssignments.length, 
 				"Repo Errors": errorCount, 
-				"Unassociated Repos": observabilityRepos.length, 
+				"Unassociated Repos": unassociatedRepoCount, 
 			});
 		}
 	}, [loadingErrors, loadingAssigments]);
