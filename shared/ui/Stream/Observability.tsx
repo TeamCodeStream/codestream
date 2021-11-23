@@ -33,11 +33,11 @@ import {
 	ObservabilityRepoError,
 	DidChangeObservabilityDataNotificationType
 } from "@codestream/protocols/agent";
-import { 
-	forEach as _forEach, 
-	isEmpty as _isEmpty, 
+import {
+	forEach as _forEach,
+	isEmpty as _isEmpty,
 	isNil as _isNil,
-	keyBy as _keyBy 
+	keyBy as _keyBy
 } from "lodash-es";
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { EntityAssociator } from "./EntityAssociator";
@@ -491,16 +491,19 @@ export const Observability = React.memo((props: Props) => {
 		) {
 			hasLoadedOnce = true;
 
-			const hasErrors = 
-				!_isEmpty(observabilityErrors) ||
-				!_isEmpty(observabilityAssignments);
-			
-			// Count all errors for each element of observabilityErrors
 			let errorCount = 0,
-				unassociatedRepoCount = 0;
+				unassociatedRepoCount = 0,
+				hasObservabilityErrors = false;
+
+			// Count all errors for each element of observabilityErrors
+			// Also set to hasObservability errors to true if nested errors array is populated
 			_forEach(observabilityErrors, oe => {
-				errorCount += oe.errors.length;
+				if (oe.errors.length) {
+					errorCount += oe.errors.length;
+					hasObservabilityErrors = true;
+				}
 			});
+
 			_forEach(observabilityRepos, ore => {
 				if (!ore.hasRepoAssociation) {
 					unassociatedRepoCount++;
@@ -508,10 +511,10 @@ export const Observability = React.memo((props: Props) => {
 			});
 
 			HostApi.instance.track("NR Error List Rendered", {
-				"Errors Listed": hasErrors, 
-				"Assigned Errors": observabilityAssignments.length, 
-				"Repo Errors": errorCount, 
-				"Unassociated Repos": unassociatedRepoCount, 
+				"Errors Listed": !_isEmpty(observabilityAssignments) || hasObservabilityErrors,
+				"Assigned Errors": observabilityAssignments.length,
+				"Repo Errors": errorCount,
+				"Unassociated Repos": unassociatedRepoCount
 			});
 		}
 	}, [loadingErrors, loadingAssigments]);
