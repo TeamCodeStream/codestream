@@ -58,6 +58,7 @@ import Timestamp from "../Timestamp";
 import { Button } from "@codestream/webview/src/components/Button";
 import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { SharingModal } from "../SharingModal";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { NewRelicErrorGroup } from "@codestream/protocols/agent";
@@ -96,6 +97,8 @@ export interface BaseCodeErrorProps extends CardProps {
 	setIsEditing: Function;
 	onRequiresCheckPreconditions?: Function;
 	stackFrameClickDisabled?: boolean;
+	stackTraceTip?: any;
+	resolutionTip?: any;
 }
 
 export interface BaseCodeErrorHeaderProps {
@@ -106,6 +109,7 @@ export interface BaseCodeErrorHeaderProps {
 	isFollowing?: boolean;
 	assignees?: CSUser[];
 	setIsEditing: Function;
+	resolutionTip?: any;
 }
 
 export interface BaseCodeErrorMenuProps {
@@ -141,6 +145,12 @@ const ClickLines = styled.div`
 	&:focus {
 		border: none;
 		outline: none;
+	}
+	,
+	&.pulse {
+		opacity: 1;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		background: var(--app-background-color-hover);
 	}
 `;
 
@@ -245,7 +255,8 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			isCurrentUserInternal: isCurrentUserInternal(state),
 			ideName: encodeURIComponent(state.ide.name || ""),
 			teamMembers: getTeamMembers(state),
-			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : ""
+			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : "",
+			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions
 		};
 	});
 
@@ -544,6 +555,17 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		</>
 	));
 
+	const resolutionDropdownOptionsWrapperOpacity = () => {
+		if (
+			(!derivedState.hideCodeErrorInstructions && props.resolutionTip) ||
+			derivedState.hideCodeErrorInstructions
+		) {
+			return "1";
+		}
+
+		return ".25";
+	};
+
 	return (
 		<>
 			{openConnectionModal && (
@@ -620,7 +642,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 						<ApmServiceTitle>
 							<Tooltip title="Open Entity on New Relic" placement="bottom" delay={1}>
-								<span>
+								<span style={{ opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25" }}>
 									<ConditionalNewRelic
 										connected={
 											<>
@@ -672,75 +694,89 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								size="compact"
 								noChevronDown={true}
 							>
-								<ConditionalNewRelic
-									connected={
-										<>
-											{props.errorGroup && (
-												<>
-													{isAssigneeChanging ? (
-														<Icon name="sync" className="spin" />
-													) : (
-														<>
-															{/* no assignee */}
-															{!props.errorGroup.assignee ||
-															(!props.errorGroup.assignee.email &&
-																!props.errorGroup.assignee.id) ? (
-																<Icon name="person" />
-															) : (
-																<Headshot
-																	size={16}
-																	display="inline-block"
-																	className="no-right-margin"
-																	person={{
-																		fullName: props.errorGroup.assignee.name,
-																		email: props.errorGroup.assignee.email
-																	}}
-																/>
-															)}
-														</>
-													)}
-												</>
-											)}
-										</>
-									}
-									disconnected={
-										<Icon
-											style={{ cursor: "pointer" }}
-											name="person"
-											onClick={e => {
-												setOpenConnectionModal(true);
-											}}
-										/>
-									}
-								/>
+								<div
+									style={{
+										display: "inline-block",
+										opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25"
+									}}
+								>
+									<ConditionalNewRelic
+										connected={
+											<>
+												{props.errorGroup && (
+													<>
+														{isAssigneeChanging ? (
+															<Icon name="sync" className="spin" />
+														) : (
+															<>
+																{/* no assignee */}
+																{!props.errorGroup.assignee ||
+																(!props.errorGroup.assignee.email &&
+																	!props.errorGroup.assignee.id) ? (
+																	<Icon name="person" />
+																) : (
+																	<Headshot
+																		size={16}
+																		display="inline-block"
+																		className="no-right-margin"
+																		person={{
+																			fullName: props.errorGroup.assignee.name,
+																			email: props.errorGroup.assignee.email
+																		}}
+																	/>
+																)}
+															</>
+														)}
+													</>
+												)}
+											</>
+										}
+										disconnected={
+											<Icon
+												style={{ cursor: "pointer" }}
+												name="person"
+												onClick={e => {
+													setOpenConnectionModal(true);
+												}}
+											/>
+										}
+									/>
+								</div>
 							</DropdownButton>
 						</>
 
 						{states && (
 							<>
 								<div style={{ display: "inline-block", width: "5px" }} />
-
-								<DropdownButton
-									items={states}
-									selectedKey={props.errorGroup?.state || "UNKNOWN"}
-									isLoading={isStateChanging}
-									variant="secondary"
-									size="compact"
-									preventStopPropagation={!derivedState.isConnectedToNewRelic}
-									onButtonClicked={
-										derivedState.isConnectedToNewRelic
-											? undefined
-											: e => {
-													e.preventDefault();
-													e.stopPropagation();
-
-													setOpenConnectionModal(true);
-											  }
-									}
-									wrap
-								>
-									{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
-								</DropdownButton>
+								<TourTip title={props.resolutionTip} placement="bottomLeft">
+									<DropdownButton
+										items={states}
+										selectedKey={props.errorGroup?.state || "UNKNOWN"}
+										isLoading={isStateChanging}
+										variant="secondary"
+										size="compact"
+										preventStopPropagation={!derivedState.isConnectedToNewRelic}
+										onButtonClicked={
+											derivedState.isConnectedToNewRelic
+												? undefined
+												: e => {
+														e.preventDefault();
+														e.stopPropagation();
+														setOpenConnectionModal(true);
+												  }
+										}
+										wrap
+									>
+										<div
+											style={{
+												display: "inline-block",
+												opacity: resolutionDropdownOptionsWrapperOpacity()
+											}}
+										>
+											{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
+										</div>
+									</DropdownButton>
+								</TourTip>
 							</>
 						)}
 
@@ -750,12 +786,19 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								(codeError && (
 									<>
 										<div style={{ display: "inline-block", width: "5px" }} />
-										<BaseCodeErrorMenu
-											codeError={codeError}
-											errorGroup={props.errorGroup}
-											collapsed={collapsed}
-											setIsEditing={props.setIsEditing}
-										/>
+										<div
+											style={{
+												display: "inline-block",
+												opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25"
+											}}
+										>
+											<BaseCodeErrorMenu
+												codeError={codeError}
+												errorGroup={props.errorGroup}
+												collapsed={collapsed}
+												setIsEditing={props.setIsEditing}
+											/>
+										</div>
 									</>
 								))}
 						</>
@@ -827,7 +870,6 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 
 export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const { codeError, collapsed } = props;
-
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const post =
@@ -1012,7 +1054,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			codeError,
 			errorGroup: props.errorGroup,
 			errorGroupIsLoading: (state.codeErrors.errorGroups[codeError.objectId] as any)?.isLoading,
-			currentCodeErrorData: state.context.currentCodeErrorData
+			currentCodeErrorData: state.context.currentCodeErrorData,
+			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions
 		};
 	});
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1111,41 +1154,47 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		if (stackTrace?.length) {
 			return (
 				<MetaSection>
-					<Meta>
+					<Meta id="stack-trace" className={props.stackTraceTip ? "pulse" : ""}>
 						<MetaLabel>Stack Trace</MetaLabel>
-						<ClickLines id="stack-trace" className="code" tabIndex={0} onKeyDown={handleKeyDown}>
-							{(stackTrace || []).map((line, i) => {
-								if (!line || !line.fileFullPath) return null;
+						<TourTip title={props.stackTraceTip} placement="bottom">
+							<ClickLines tabIndex={0} onKeyDown={handleKeyDown} className="code">
+								{(stackTrace || []).map((line, i) => {
+									if (!line || !line.fileFullPath) return null;
 
-								const className = i === currentSelectedLine ? "monospace li-active" : "monospace";
-								const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
-								return props.stackFrameClickDisabled || props.collapsed || line.error ? (
-									<Tooltip key={"tooltipline-" + i} title={line.error} placement="bottom" delay={1}>
-										<DisabledClickLine key={"disabled-line" + i} className="monospace">
+									const className = i === currentSelectedLine ? "monospace li-active" : "monospace";
+									const mline = line.fileFullPath.replace(/\s\s\s\s+/g, "     ");
+									return props.stackFrameClickDisabled || props.collapsed || line.error ? (
+										<Tooltip
+											key={"tooltipline-" + i}
+											title={line.error}
+											placement="bottom"
+											delay={1}
+										>
+											<DisabledClickLine key={"disabled-line" + i} className="monospace">
+												<span>
+													<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
+													<strong>{line.line}</strong>
+													{line.column ? `:${line.column}` : null})
+												</span>
+											</DisabledClickLine>
+										</Tooltip>
+									) : (
+										<ClickLine
+											key={"click-line" + i}
+											className={className}
+											onClick={e => onClickStackLine(e, i)}
+										>
 											<span>
 												<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
 												<strong>{line.line}</strong>
 												{line.column ? `:${line.column}` : null})
 											</span>
-										</DisabledClickLine>
-									</Tooltip>
-								) : (
-									<ClickLine
-										key={"click-line" + i}
-										className={className}
-										onClick={e => onClickStackLine(e, i)}
-									>
-										<span>
-											<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
-											<strong>{line.line}</strong>
-											{line.column ? `:${line.column}` : null})
-										</span>
-									</ClickLine>
-								);
-							})}
-						</ClickLines>
+										</ClickLine>
+									);
+								})}
+							</ClickLines>
+						</TourTip>
 					</Meta>
-
 					{props.post && (
 						<div style={{ marginBottom: "10px" }}>
 							<Reactions className="reactions no-pad-left" post={props.post} />
@@ -1159,21 +1208,22 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		if (stackTraceText) {
 			return (
 				<MetaSection>
-					<Meta>
+					<Meta id="stack-trace">
 						<MetaLabel>Stack Trace</MetaLabel>
-						<ClickLines id="stack-trace" className="code" tabIndex={0}>
-							{stackTraceText.split("\n").map((line: string, i) => {
-								if (!line) return null;
-								const mline = line.replace(/\s\s\s\s+/g, "     ");
-								return (
-									<DisabledClickLine key={"disabled-line" + i} className="monospace">
-										<span style={{ opacity: ".75" }}>{mline}</span>
-									</DisabledClickLine>
-								);
-							})}
-						</ClickLines>
+						<TourTip title={props.stackTraceTip} placement="bottom">
+							<ClickLines id="stack-trace" className="code" tabIndex={0}>
+								{stackTraceText.split("\n").map((line: string, i) => {
+									if (!line) return null;
+									const mline = line.replace(/\s\s\s\s+/g, "     ");
+									return (
+										<DisabledClickLine key={"disabled-line" + i} className="monospace">
+											<span style={{ opacity: ".75" }}>{mline}</span>
+										</DisabledClickLine>
+									);
+								})}
+							</ClickLines>
+						</TourTip>
 					</Meta>
-
 					{props.post && (
 						<div style={{ marginBottom: "10px" }}>
 							<Reactions className="reactions no-pad-left" post={props.post} />
@@ -1185,6 +1235,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 		return null;
 	};
+
 	return (
 		<MinimumWidthCard {...getCardProps(props)} noCard={!props.collapsed}>
 			{props.collapsed && (
@@ -1194,6 +1245,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					post={props.post}
 					collapsed={props.collapsed}
 					setIsEditing={props.setIsEditing}
+					resolutionTip={props.resolutionTip}
 				/>
 			)}
 			{props.headerError && props.headerError.message && (
@@ -1203,20 +1255,30 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 						display: "flex",
 						padding: "10px 0",
 						whiteSpace: "normal",
-						alignItems: "flex-start"
+						alignItems: "flex-start",
+						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25"
 					}}
 				>
 					<Icon name="alert" />
 					<div style={{ paddingLeft: "10px" }}>{props.headerError.message}</div>
 				</div>
 			)}
-			{codeError?.text && <Message>{codeError.text}</Message>}
+			{codeError?.text && (
+				<Message
+					style={{
+						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25"
+					}}
+				>
+					{codeError.text}
+				</Message>
+			)}
 
 			{/* assuming 3 items (58px) */}
 			{!props.collapsed && (
 				<div
 					style={{
-						minHeight: derivedState.errorGroupIsLoading || errorGroup ? "18px" : "initial"
+						minHeight: derivedState.errorGroupIsLoading || errorGroup ? "18px" : "initial",
+						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25"
 					}}
 				>
 					{errorGroup &&
@@ -1381,7 +1443,14 @@ const ReplyInput = (props: { codeError: CSCodeError }) => {
 
 type FromBaseCodeErrorProps = Pick<
 	BaseCodeErrorProps,
-	"collapsed" | "hoverEffect" | "onClick" | "className" | "renderFooter" | "stackFrameClickDisabled"
+	| "collapsed"
+	| "hoverEffect"
+	| "onClick"
+	| "className"
+	| "renderFooter"
+	| "stackFrameClickDisabled"
+	| "stackTraceTip"
+	| "resolutionTip"
 >;
 
 interface PropsWithId extends FromBaseCodeErrorProps {

@@ -73,7 +73,7 @@ const Nav = styled.div`
 		}
 	}
 `;
-const ClearModal = styled.div`
+export const ClearModal = styled.div`
 	position: absolute;
 	z-index: 51;
 	width: 100%;
@@ -129,7 +129,7 @@ const Root = styled.div`
 	}
 `;
 
-const Subtext = styled.div`
+export const Subtext = styled.div`
 	padding-top: 5px;
 	font-size: smaller;
 	color: var(--text-color-subtle);
@@ -155,7 +155,7 @@ export const ComposeArea = styled.div<{ side: "right" | "left" }>`
 
 export const StyledReview = styled.div``;
 
-const Tip = styled.div`
+export const Tip = styled.div`
 	display: flex;
 	button {
 		margin-top: 10px;

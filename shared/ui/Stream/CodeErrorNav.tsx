@@ -23,6 +23,7 @@ import { CodeError, BaseCodeErrorHeader, ExpandedAuthor, Description, Message } 
 import ScrollBox from "./ScrollBox";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { setUserPreference } from "./actions";
 import Icon from "./Icon";
 import { isConnected } from "../store/providers/reducer";
 import { ConfigureNewRelic } from "./ConfigureNewRelic";
@@ -30,6 +31,9 @@ import Dismissable from "./Dismissable";
 import { bootstrapCodeErrors } from "@codestream/webview/store/codeErrors/actions";
 import { DelayedRender } from "../Container/DelayedRender";
 import { LoadingMessage } from "../src/components/LoadingMessage";
+import { Button } from "../src/components/Button";
+import { TourTip } from "../src/components/TourTip";
+import { ComposeArea, ClearModal, Subtext, Step, Tip } from "./ReviewNav";
 import {
 	GetNewRelicErrorGroupRequestType,
 	ResolveStackTraceResponse,
@@ -43,10 +47,10 @@ import {
 } from "@codestream/protocols/agent";
 import { HostApi } from "..";
 import { CSCodeError } from "@codestream/protocols/api";
-
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { logWarning } from "../logger";
 import { Link } from "./Link";
+import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -64,6 +68,8 @@ const NavHeader = styled.div`
 	}
 `;
 
+export const StyledCodeError = styled.div``;
+
 const Root = styled.div`
 	max-height: 100%;
 	display: flex;
@@ -77,10 +83,20 @@ const Root = styled.div`
 			opacity: 0.25;
 		}
 	}
-	#changed-files {
+	#stack-trace {
 		transition: opacity 0.2s;
 	}
-	.pulse #changed-files {
+	.pulse #stack-trace {
+		opacity: 1;
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+		background: var(--app-background-color-hover);
+	}
+
+	#resolution {
+		transition: opacity 0.2s;
+	}
+
+	.pulse #resolution {
 		opacity: 1;
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		background: var(--app-background-color-hover);
@@ -130,7 +146,13 @@ export const CodeErrorErrorBox = styled.div`
 	}
 `;
 
-export const StyledCodeError = styled.div``;
+const ShowInstructionsContainer = styled.div`
+	margin-top: 50px;
+	float: right;
+	cursor: pointer;
+	font-size: smaller;
+	opacity: 0.5;
+`;
 
 export type Props = React.PropsWithChildren<{ codeErrorId: string; composeOpen: boolean }>;
 
@@ -155,12 +177,13 @@ export function CodeErrorNav(props: Props) {
 			currentCodeErrorId: state.context.currentCodeErrorId,
 			currentCodeErrorData: state.context.currentCodeErrorData,
 			sessionStart: state.context.sessionStart,
-
+			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			codeError: codeError,
 			currentCodemarkId: state.context.currentCodemarkId,
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
 			errorGroup: errorGroup,
-			repos: state.repos
+			repos: state.repos,
+			sidebarLocation: getSidebarLocation(state)
 		};
 		return result;
 	});
@@ -187,6 +210,9 @@ export function CodeErrorNav(props: Props) {
 	const [parsedStack, setParsedStack] = React.useState<ResolveStackTraceResponse | undefined>(
 		undefined
 	);
+	const [hoverButton, setHoverButton] = React.useState(
+		derivedState.hideCodeErrorInstructions ? "" : "stacktrace"
+	);
 
 	// TODO rename these "pending" properties -- they might _always_ be pending creation
 	const pendingErrorGroupGuid = derivedState.currentCodeErrorData?.pendingErrorGroupGuid;
@@ -195,6 +221,7 @@ export function CodeErrorNav(props: Props) {
 	const remote = derivedState.currentCodeErrorData?.remote;
 	const commit = derivedState.currentCodeErrorData?.commit;
 	const multipleRepos = derivedState.currentCodeErrorData?.multipleRepos;
+	const sidebarLocation = derivedState.sidebarLocation;
 
 	const previousIsConnectedToNewRelic = usePrevious(derivedState.isConnectedToNewRelic);
 
@@ -627,6 +654,67 @@ export function CodeErrorNav(props: Props) {
 		};
 	});
 
+	const toggleInstructions = () => {
+		dispatch(
+			setUserPreference(["hideCodeErrorInstructions"], !derivedState.hideCodeErrorInstructions)
+		);
+	};
+
+	const tourDone = () => {
+		setHoverButton("");
+		toggleInstructions();
+	};
+
+	const stackTraceTip =
+		hoverButton === "stacktrace" ? (
+			<Tip>
+				<Step>1</Step>
+				<div>
+					Investigate the stack trace
+					<Subtext>By clicking on each frame to go to the specific file and line number</Subtext>
+					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
+				</div>
+			</Tip>
+		) : (
+			undefined
+		);
+
+	const commentTip =
+		hoverButton === "comment" ? (
+			<Tip>
+				<Step>2</Step>
+				<div>
+					Comment by selecting code in the editor
+					<Subtext>CodeStream will automatically mention the code author</Subtext>
+					<Button
+						onClick={() => {
+							const el = document.getElementById("code-error-nav-header");
+							if (el) el.scrollIntoView(true);
+							setHoverButton("resolution");
+						}}
+					>
+						Next &gt;
+					</Button>
+				</div>
+			</Tip>
+		) : (
+			undefined
+		);
+
+	const resolutionTip =
+		hoverButton === "resolution" ? (
+			<Tip>
+				<Step>3</Step>
+				<div>
+					Resolve or ignore the error
+					<Subtext>Once the investigation is complete</Subtext>
+					<Button onClick={tourDone}>Done</Button>
+				</div>
+			</Tip>
+		) : (
+			undefined
+		);
+
 	// if for some reason we have a codemark, don't render anything
 	if (derivedState.currentCodemarkId) return null;
 
@@ -802,7 +890,11 @@ export function CodeErrorNav(props: Props) {
 	if (derivedState.codeError == null) return null;
 
 	return (
-		<Root>
+		<Root
+			id="code-error-nav-header"
+			className={derivedState.hideCodeErrorInstructions ? "" : "tour-on"}
+		>
+			{!derivedState.hideCodeErrorInstructions && <ClearModal onClick={() => tourDone()} />}
 			<div
 				style={{
 					display: "flex",
@@ -831,43 +923,60 @@ export function CodeErrorNav(props: Props) {
 					/>
 				</div>
 			</div>
+			<NavHeader id="nav-header">
+				<BaseCodeErrorHeader
+					codeError={derivedState.codeError!}
+					errorGroup={errorGroup}
+					collapsed={false}
+					setIsEditing={setIsEditing}
+					resolutionTip={resolutionTip}
+				></BaseCodeErrorHeader>
+			</NavHeader>
+			{props.composeOpen ? null : (
+				<div className="scroll-container">
+					<ScrollBox>
+						<div
+							className="vscroll"
+							id="code-error-container"
+							style={{
+								padding: "0 20px 60px 40px",
+								width: "100%"
+							}}
+						>
+							{/* TODO perhaps consolidate these? */}
+							{tryBuildWarningsOrErrors()}
 
-			<>
-				<NavHeader id="nav-header">
-					<BaseCodeErrorHeader
-						codeError={derivedState.codeError!}
-						errorGroup={errorGroup}
-						collapsed={false}
-						setIsEditing={setIsEditing}
-					></BaseCodeErrorHeader>
-				</NavHeader>
-				{props.composeOpen ? null : (
-					<div className="scroll-container">
-						<ScrollBox>
-							<div
-								className="vscroll"
-								id="code-error-container"
-								style={{
-									padding: "0 20px 60px 40px",
-									width: "100%"
-								}}
-							>
-								{/* TODO perhaps consolidate these? */}
-								{tryBuildWarningsOrErrors()}
-
-								<StyledCodeError className="pulse">
-									<CodeError
-										parsedStack={parsedStack}
-										codeError={derivedState.codeError!}
-										errorGroup={errorGroup}
-										stackFrameClickDisabled={!!repoError}
-									/>
-								</StyledCodeError>
-							</div>
-						</ScrollBox>
-					</div>
-				)}
-			</>
+							<StyledCodeError className={hoverButton == "stacktrace" ? "pulse" : ""}>
+								<CodeError
+									parsedStack={parsedStack}
+									codeError={derivedState.codeError!}
+									errorGroup={errorGroup}
+									stackFrameClickDisabled={!!repoError}
+									stackTraceTip={stackTraceTip}
+								/>
+							</StyledCodeError>
+							{derivedState.hideCodeErrorInstructions && (
+								<ShowInstructionsContainer>
+									<span
+										onClick={() => {
+											setHoverButton("stacktrace");
+											toggleInstructions();
+										}}
+									>
+										Show Instructions
+									</span>
+								</ShowInstructionsContainer>
+							)}
+						</div>
+					</ScrollBox>
+				</div>
+			)}
+			<TourTip title={commentTip} placement={sidebarLocation === "right" ? "right" : "left"}>
+				<ComposeArea
+					side={sidebarLocation === "right" ? "right" : "left"}
+					className={hoverButton == "comment" ? "pulse" : ""}
+				/>
+			</TourTip>
 		</Root>
 	);
 }

@@ -200,6 +200,17 @@ export const ProfilePanel = () => {
 			{isMe && <RowIcon name="pencil" title="Edit Name" onClick={editFullName} />}
 		</Row>
 	);
+
+	const toggleDemoMode = () => {
+		dispatch(setUserPreference(["demoMode"], !derivedState.demoMode));
+
+		// When toggling demo mode on, reset preference values that show tours
+		if (derivedState.demoMode) {
+			dispatch(setUserPreference(["hideCodeErrorInstructions"], false));
+			dispatch(setUserPreference(["hideReviewInstructions"], false));
+		}
+	};
+
 	return (
 		<Dialog wide noPadding onClose={() => dispatch(closeModal())}>
 			<Root>
@@ -273,13 +284,7 @@ export const ProfilePanel = () => {
 										? `Demo Mode: ${derivedState.demoMode ? "ON" : "OFF"}`
 										: ""
 								}
-								onClick={
-									derivedState.isInternalUser
-										? e => {
-												dispatch(setUserPreference(["demoMode"], !derivedState.demoMode));
-										  }
-										: undefined
-								}
+								onClick={derivedState.isInternalUser ? () => toggleDemoMode() : undefined}
 							>
 								Last Login
 							</MetaLabel>
