@@ -912,6 +912,9 @@ export class CodeStreamSession {
 
 			// api.login() will throw a failed response object if it needs to send some extra data back
 			if (isLoginFailResponse(ex)) {
+				if (ex.extra.isRegistered) {
+					this.setSuperPropsAndCallTelemetry(ex.extra.user);
+				}
 				return ex;
 			}
 
@@ -1012,7 +1015,7 @@ export class CodeStreamSession {
 		}
 
 		// Initialize tracking
-		this.initializeTelemetry(response.user, currentTeam, response.companies);
+		this.setSuperPropsAndCallTelemetry(response.user, currentTeam, response.companies);
 
 		const loginResponse = {
 			loginResponse: { ...response },
@@ -1031,7 +1034,9 @@ export class CodeStreamSession {
 		};
 
 		setImmediate(() => {
-			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse });
+			this.agent.sendNotification(DidLoginNotificationType, {
+				data: loginResponse
+			});
 		});
 
 		if (!response.user.timeZone) {
@@ -1063,14 +1068,19 @@ export class CodeStreamSession {
 				}
 
 				this._teamId = response.teams.find(_ => _.isEveryoneTeam)!.id;
-				return { status: LoginResult.AlreadyConfirmed, token: response.accessToken };
+				return {
+					status: LoginResult.AlreadyConfirmed,
+					token: response.accessToken
+				};
 			} else {
 				return { status: LoginResult.Success };
 			}
 		} catch (error) {
 			if (error instanceof ServerError) {
 				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
-					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
+					return {
+						status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown
+					};
 				}
 			}
 
@@ -1090,6 +1100,9 @@ export class CodeStreamSession {
 	async confirmRegistration(request: ConfirmRegistrationRequest) {
 		try {
 			const response = await (this._api as CodeStreamApiProvider).confirmRegistration(request);
+
+			this.setSuperPropsAndCallTelemetry(response.user);
+
 			const result: ConfirmRegistrationResponse = {
 				user: {
 					id: response.user.id
@@ -1143,7 +1156,9 @@ export class CodeStreamSession {
 		} catch (error) {
 			if (error instanceof ServerError) {
 				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
-					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
+					return {
+						status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown
+					};
 				}
 			}
 
@@ -1162,7 +1177,9 @@ export class CodeStreamSession {
 	@log()
 	logout(reason: LogoutReason) {
 		this.setStatus(SessionStatus.SignedOut);
-		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
+		return this.agent.sendNotification(DidLogoutNotificationType, {
+			reason: reason
+		});
 	}
 
 	async ready() {
@@ -1224,7 +1241,11 @@ export class CodeStreamSession {
 		if (env) {
 			// a match of the form <env>-api.codestream.us, like PD and QA
 			env = env.toLowerCase();
-			return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
+			return {
+				environment: env.toLowerCase(),
+				isOnPrem: false,
+				isProductionCloud: false
+			};
 		} else if (subdomain) {
 			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
 			subdomain = subdomain.toLowerCase();
@@ -1237,7 +1258,11 @@ export class CodeStreamSession {
 			} else {
 				// the need for this goes away when delivered from the server
 				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
-				return { environment: subdomain.toLowerCase(), isOnPrem, isProductionCloud: false };
+				return {
+					environment: subdomain.toLowerCase(),
+					isOnPrem,
+					isProductionCloud: false
+				};
 			}
 		} else {
 			return {
@@ -1248,7 +1273,7 @@ export class CodeStreamSession {
 		}
 	}
 
-	private async initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
+	public async setSuperPropsAndCallTelemetry(user: CSMe, team?: CSTeam, companies?: CSCompany[]) {
 		// Set super props
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
@@ -1266,7 +1291,7 @@ export class CodeStreamSession {
 			Country: user.countryCode
 		};
 
-		if (team != null) {
+		if (team != null && companies != null) {
 			const company = companies.find(c => c.id === team.companyId);
 			props["Company ID"] = team.companyId;
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
@@ -1477,7 +1502,10 @@ export class CodeStreamSession {
 		try {
 			for (const path of paths) {
 				const fileSearchResponse = (
-					await this.agent.sendRequest(AgentFileSearchRequestType, { basePath, path })
+					await this.agent.sendRequest(AgentFileSearchRequestType, {
+						basePath,
+						path
+					})
 				).files;
 				if (!fileSearchResponse.length) {
 					// once there are no more results, just stop

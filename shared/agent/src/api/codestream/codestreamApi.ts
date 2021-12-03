@@ -292,7 +292,7 @@ import {
 	TriggerMsTeamsProactiveMessageResponse
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
-import { VersionInfo } from "../../session";
+import { CodeStreamSession, VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import {
 	ApiProvider,
@@ -351,7 +351,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 		public baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | HttpAgent | undefined,
-		private readonly _strictSSL: boolean
+		private readonly _strictSSL: boolean,
+		public readonly session?: CodeStreamSession
 	) {
 		this._debouncedSetModifiedReposUpdate = debounce(
 			request => {
@@ -479,7 +480,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 					email: response.user.email,
 					userId: response.user.id,
 					eligibleJoinCompanies: response.eligibleJoinCompanies,
-					accountIsConnected: response.accountIsConnected
+					accountIsConnected: response.accountIsConnected,
+					// isRegistered and user object passed for early segment identify call
+					isRegistered: response.user.isRegistered,
+					user: response.user
 				}
 			} as LoginFailResponse;
 		}
