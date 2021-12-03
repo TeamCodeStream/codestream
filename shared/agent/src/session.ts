@@ -1014,7 +1014,8 @@ export class CodeStreamSession {
 			}
 		}
 
-		// Initialize tracking
+		// initialze tracking call with full user data (ie team/company info)
+		// this is the second time identify() is called in signup flow, first in signin flow
 		this.setSuperPropsAndCallTelemetry(response.user, currentTeam, response.companies);
 
 		const loginResponse = {

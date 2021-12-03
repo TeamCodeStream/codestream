@@ -292,7 +292,7 @@ import {
 	TriggerMsTeamsProactiveMessageResponse
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
-import { CodeStreamSession, VersionInfo } from "../../session";
+import { VersionInfo } from "../../session";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import {
 	ApiProvider,
@@ -351,8 +351,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		public baseUrl: string,
 		private readonly _version: VersionInfo,
 		private readonly _httpsAgent: HttpsAgent | HttpsProxyAgent | HttpAgent | undefined,
-		private readonly _strictSSL: boolean,
-		public readonly session?: CodeStreamSession
+		private readonly _strictSSL: boolean
 	) {
 		this._debouncedSetModifiedReposUpdate = debounce(
 			request => {
