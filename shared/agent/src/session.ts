@@ -1231,16 +1231,16 @@ export class CodeStreamSession {
 		if (env) {
 			// a match of the form <env>-api.codestream.us, like PD and QA
 			env = env.toLowerCase();
-			return {
-				environment: env.toLowerCase(),
-				isOnPrem: false,
-				isProductionCloud: false
-			};
+			return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
 		} else if (subdomain) {
 			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
 			subdomain = subdomain.toLowerCase();
 			if (subdomain === "api") {
-				return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
+				return {
+					environment: CodeStreamEnvironment.Production,
+					isOnPrem: false,
+					isProductionCloud: true
+				};
 			} else {
 				// the need for this goes away when delivered from the server
 				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
