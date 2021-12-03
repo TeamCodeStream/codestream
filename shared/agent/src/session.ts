@@ -1035,9 +1035,7 @@ export class CodeStreamSession {
 		};
 
 		setImmediate(() => {
-			this.agent.sendNotification(DidLoginNotificationType, {
-				data: loginResponse
-			});
+			this.agent.sendNotification(DidLoginNotificationType, { data: loginResponse });
 		});
 
 		if (!response.user.timeZone) {
@@ -1069,19 +1067,14 @@ export class CodeStreamSession {
 				}
 
 				this._teamId = response.teams.find(_ => _.isEveryoneTeam)!.id;
-				return {
-					status: LoginResult.AlreadyConfirmed,
-					token: response.accessToken
-				};
+				return { status: LoginResult.AlreadyConfirmed, token: response.accessToken };
 			} else {
 				return { status: LoginResult.Success };
 			}
 		} catch (error) {
 			if (error instanceof ServerError) {
 				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
-					return {
-						status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown
-					};
+					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
 				}
 			}
 
@@ -1157,9 +1150,7 @@ export class CodeStreamSession {
 		} catch (error) {
 			if (error instanceof ServerError) {
 				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
-					return {
-						status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown
-					};
+					return { status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown };
 				}
 			}
 
@@ -1178,9 +1169,7 @@ export class CodeStreamSession {
 	@log()
 	logout(reason: LogoutReason) {
 		this.setStatus(SessionStatus.SignedOut);
-		return this.agent.sendNotification(DidLogoutNotificationType, {
-			reason: reason
-		});
+		return this.agent.sendNotification(DidLogoutNotificationType, { reason: reason });
 	}
 
 	async ready() {
@@ -1251,19 +1240,11 @@ export class CodeStreamSession {
 			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
 			subdomain = subdomain.toLowerCase();
 			if (subdomain === "api") {
-				return {
-					environment: CodeStreamEnvironment.Production,
-					isOnPrem: false,
-					isProductionCloud: true
-				};
+				return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
 			} else {
 				// the need for this goes away when delivered from the server
 				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
-				return {
-					environment: subdomain.toLowerCase(),
-					isOnPrem,
-					isProductionCloud: false
-				};
+				return { environment: subdomain.toLowerCase(), isOnPrem, isProductionCloud: false };
 			}
 		} else {
 			return {
@@ -1503,10 +1484,7 @@ export class CodeStreamSession {
 		try {
 			for (const path of paths) {
 				const fileSearchResponse = (
-					await this.agent.sendRequest(AgentFileSearchRequestType, {
-						basePath,
-						path
-					})
+					await this.agent.sendRequest(AgentFileSearchRequestType, { basePath, path })
 				).files;
 				if (!fileSearchResponse.length) {
 					// once there are no more results, just stop
