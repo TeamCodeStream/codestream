@@ -544,10 +544,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 					}
 				}
 
+				// Check the lastTeamId preference and use that, if available.
 				// If we still can't find a team, then just pick the first one
 				if (options.teamId == null) {
+					if (response.user.preferences?.lastTeamId) {
+						options.teamId = response.user.preferences.lastTeamId;
+						pickedTeamReason = " because the team was the last saved team";
+					}
+
 					// Pick the oldest (first) Slack team if there is one
-					if (User.isSlack(response.user)) {
+					if (options.teamId == null && User.isSlack(response.user)) {
 						const team = teams.find(t => Team.isSlack(t));
 						if (team) {
 							options.teamId = team.id;

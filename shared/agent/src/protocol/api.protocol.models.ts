@@ -771,6 +771,7 @@ export interface CSMePreferences {
 	/** teamId to settings */
 	activityFilter?: { [key: string]: ActivityFilter | undefined };
 	demoMode?: boolean;
+	lastTeamId?: string;
 	observabilityRepoEntities?: any;
 }
 
