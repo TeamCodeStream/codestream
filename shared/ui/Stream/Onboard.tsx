@@ -432,7 +432,8 @@ export const OnboardFull = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS"
+			isInJetBrains: state.ide.name === "JETBRAINS",
+			webviewFocused: state.context.hasFocus
 		};
 	}, shallowEqual);
 
@@ -470,6 +471,8 @@ export const OnboardFull = React.memo(function Onboard() {
 	const [showNextMessagingStep, setShowNextMessagingStep] = useState(false);
 
 	useDidMount(() => {
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		setTimeout(() => positionDots(), 250);
 	});
 
@@ -1071,6 +1074,8 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 
+		console.warn("eric 2", team ? state.companies[team.companyId]?.name : "your organization");
+
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
@@ -1214,7 +1219,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 	const component = () => {
 		const { domain } = derivedState;
-
 		return (
 			<div className="body">
 				<h3>Invite your teammates</h3>

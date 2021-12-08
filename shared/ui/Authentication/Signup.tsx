@@ -188,6 +188,8 @@ export const Signup = (props: Props) => {
 				});
 			};
 
+			console.warn("eric 3", status);
+
 			switch (status) {
 				case LoginResult.WebMail: {
 					setIsSubmitting(false);
@@ -225,6 +227,7 @@ export const Signup = (props: Props) => {
 				}
 				case LoginResult.NotInCompany: {
 					sendTelemetry();
+					console.warn("eric 7");
 					dispatch(goToCompanyCreation({ token, email: attributes.email }));
 					break;
 				}

@@ -187,7 +187,7 @@ export function CompanyCreation(props: {
 			dispatch(goToLogin());
 		}
 	};
-
+	console.warn(props);
 	return (
 		<div id="organization-page" className="onboarding-page">
 			<div className="standard-form">
