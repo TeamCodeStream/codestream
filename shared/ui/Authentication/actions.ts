@@ -173,13 +173,14 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 		if (getState().session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
 			dispatch(setMaintenanceMode(false));
 		}
-
+		console.warn("eric 4");
 		switch (response.error) {
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true, params));
 			case LoginResult.MustSetPassword:
 				return dispatch(goToSetPassword({ email: (params as PasswordLoginParams).email }));
 			case LoginResult.NotInCompany:
+				console.warn("eric 5");
 				return dispatch(
 					goToCompanyCreation({
 						loggedIn: true,
@@ -310,7 +311,7 @@ export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => asyn
 		if (session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
 			dispatch(setMaintenanceMode(false));
 		}
-
+		console.warn("eric 11", session, response);
 		switch (response.error) {
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true));

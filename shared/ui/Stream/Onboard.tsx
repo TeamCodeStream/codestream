@@ -424,7 +424,8 @@ export const OnboardFull = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS"
+			isInJetBrains: state.ide.name === "JETBRAINS",
+			webviewFocused: state.context.hasFocus
 		};
 	}, shallowEqual);
 
@@ -462,6 +463,8 @@ export const OnboardFull = React.memo(function Onboard() {
 	const [showNextMessagingStep, setShowNextMessagingStep] = useState(false);
 
 	useDidMount(() => {
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		setTimeout(() => positionDots(), 250);
 	});
 
@@ -1053,6 +1056,8 @@ const ConnectMessagingProvider = (props: {
 export const InviteTeammates = (props: { className: string; skip: Function; unwrap?: boolean }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const user = state.users[state.session.userId!];
+
 		const team =
 			state.teams && state.context.currentTeamId
 				? state.teams[state.context.currentTeamId]
@@ -1060,11 +1065,14 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 
+		console.warn("eric 2", team ? state.companies[team.companyId]?.name : "your organization");
+
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
 			companyName: team ? state.companies[team.companyId]?.name : "your organization",
-			teamMembers: team ? getTeamMembers(state) : []
+			teamMembers: team ? getTeamMembers(state) : [],
+			domain: user.email?.split("@")[1].toLowerCase()
 		};
 	}, shallowEqual);
 
@@ -1104,23 +1112,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		});
 		setSuggestedInvitees(suggested);
 		if (suggested.length === 0) setNumInviteFields(3);
-	};
-
-	const confirmSkip = () => {
-		confirmPopup({
-			title: "Skip this step?",
-			message:
-				"CodeStream is more powerful when you collaborate. You can invite team members at any time, but don’t hoard all the fun.",
-			centered: false,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Skip Step",
-					action: () => props.skip(),
-					className: "secondary"
-				}
-			]
-		});
 	};
 
 	const addInvite = () => {
@@ -1176,9 +1167,10 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	};
 
 	const component = () => {
+		const { domain } = derivedState;
 		return (
 			<div className="body">
-				<h3>Invite teammates to {derivedState.companyName}</h3>
+				<h3>Invite your teammates</h3>
 				{suggestedInvitees.length === 0 && (
 					<p className="explainer">We recommend exploring CodeStream with your team</p>
 				)}
@@ -1232,12 +1224,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 					</LinkRow>
 					<div>
 						<Legacy.default className="row-button" loading={sendingInvites} onClick={sendInvites}>
-							<div className="copy">Send invites</div>
+							<div className="copy">Get Started</div>
 							<Icon name="chevron-right" />
 						</Legacy.default>
 					</div>
 				</div>
-				<SkipLink onClick={confirmSkip}>I'll do this later</SkipLink>
 			</div>
 		);
 	};
@@ -1346,7 +1337,8 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 								if (connected) return;
 								if (provider.id == "login*microsoftonline*com") {
 									HostApi.instance.send(OpenUrlRequestType, {
-										url: "https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
+										url:
+											"https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
 									});
 									HostApi.instance.send(TelemetryRequestType, {
 										eventName: "Messaging Service Connected",

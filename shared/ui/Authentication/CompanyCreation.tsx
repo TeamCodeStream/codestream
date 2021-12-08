@@ -144,6 +144,46 @@ export function CompanyCreation(props: {
 
 	const onClickCreateOrganization = async event => {
 		event.preventDefault();
+		createOrganization();
+		// if (
+		// 	organizationSettings.companyName != null &&
+		// 	organizationSettings.companyName !== "" &&
+		// 	teamNameValidity
+		// ) {
+		// 	setIsLoading(true);
+		// 	try {
+		// 		const { team, company } = await HostApi.instance.send(CreateCompanyRequestType, {
+		// 			name: organizationSettings.companyName!,
+		// 			domainJoining: props.isWebmail
+		// 				? undefined
+		// 				: organizationSettings.allowDomainJoining == true && domain
+		// 				? [domain]
+		// 				: undefined
+		// 		});
+		// 		HostApi.instance.track("New Organization Created", {
+		// 			"Domain Joining": props.isWebmail
+		// 				? "Not Available"
+		// 				: organizationSettings?.allowDomainJoining
+		// 				? "On"
+		// 				: "Off",
+		// 			"Auth Provider": providerName
+		// 			// "Code Host Joining": ""
+		// 		});
+
+		// 		dispatch(
+		// 			completeSignup(props.email!, props.token!, team.id, {
+		// 				createdTeam: true,
+		// 				provider: props.provider
+		// 			})
+		// 		);
+		// 	} catch (error) {
+		// 		// TODO: communicate error
+		// 		dispatch(goToLogin());
+		// 	}
+		// }
+	};
+
+	const createOrganization = async () => {
 		if (
 			organizationSettings.companyName != null &&
 			organizationSettings.companyName !== "" &&
@@ -151,6 +191,35 @@ export function CompanyCreation(props: {
 		) {
 			setIsLoading(true);
 			try {
+				let domainJoiningTest;
+				if (props.isWebmail) {
+					domainJoiningTest = undefined;
+				} else {
+					if (organizationSettings.allowDomainJoining && domain) {
+						domainJoiningTest = domain;
+					} else {
+						domainJoiningTest = undefined;
+					}
+				}
+
+				// FOR GITHUB/ETC LOGINS where its GMAIL (webmail)
+				// clicking next this value is gmail.com if box is checked (broken, goes back to first screen)
+				// undefined if unchecked.  only works if undefined.
+				// no webmail prop here curiously btw
+
+				// For non webmail (newrelic.com)
+				// checked box = newrelic.com
+				// uncheckbox = undefined
+				console.log("eric 3", domainJoiningTest);
+
+				// let domainJoiningTwo;
+				// if (props.isWebmail){
+				// 	domainJoiningTwo = undefined;
+				// }
+				// if (!props.isWebmail) {
+
+				// }
+
 				const { team, company } = await HostApi.instance.send(CreateCompanyRequestType, {
 					name: organizationSettings.companyName!,
 					domainJoining: props.isWebmail
@@ -206,7 +275,7 @@ export function CompanyCreation(props: {
 			dispatch(goToLogin());
 		}
 	};
-
+	console.warn(props);
 	return (
 		<div id="organization-page" className="onboarding-page">
 			{step === 0 && (
