@@ -1102,7 +1102,9 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 		const { teamMembers, dontSuggestInvitees } = derivedState;
 		const suggested: any[] = [];
-		Object.keys(committers).forEach(email => {
+		Object.keys(committers).forEach((email, index) => {
+			// only show 15, list is too long for onboarding otherwise
+			if (index > 14) return;
 			if (email.match(/noreply/)) return;
 			// If whitespace in domain, invalid email
 			if (email.match(/.*(@.* .+)/)) return;
