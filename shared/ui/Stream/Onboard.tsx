@@ -1217,6 +1217,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 	const component = () => {
 		const { domain } = derivedState;
+
 		return (
 			<div className="body">
 				<h3>Invite your teammates</h3>
@@ -1304,28 +1305,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		return component();
 	}
 	return <Step className={props.className}>{component()}</Step>;
-
-	// {domain && !props.isWebmail && (
-	// 	<CheckboxRow>
-	// 		<Checkbox
-	// 			name="allowDomainBaseJoining"
-	// 			checked={organizationSettings.allowDomainJoining}
-	// 			onChange={(value: boolean) => {
-	// 				setOrganizationSettings({
-	// 					...organizationSettings,
-	// 					allowDomainJoining: value
-	// 				});
-	// 			}}
-	// 		>
-	// 			Let anyone with the <b>{domain}</b> email address join this organization
-	// 		</Checkbox>
-	// 	</CheckboxRow>
-	// )}
-	// {/* <CheckboxRow>
-	// 	<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
-	// 		Let anyone in the following GitHub organization join
-	// 	</Checkbox>
-	// </CheckboxRow> */}
 };
 
 const CreateCodemark = (props: { className: string; skip: Function }) => {

@@ -227,7 +227,6 @@ export const Signup = (props: Props) => {
 				}
 				case LoginResult.NotInCompany: {
 					sendTelemetry();
-					console.warn("eric 7");
 					dispatch(goToCompanyCreation({ token, email: attributes.email }));
 					break;
 				}
