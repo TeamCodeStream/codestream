@@ -309,7 +309,7 @@ export const ExpandingText = styled.div`
 `;
 
 export const CheckboxRow = styled.div`
-	padding: 10px 0 0 0;
+	padding: 20px 0 0 0;
 `;
 const EMPTY_ARRAY = [];
 
@@ -1059,6 +1059,7 @@ const ConnectMessagingProvider = (props: {
 
 export const InviteTeammates = (props: { className: string; skip: Function; unwrap?: boolean }) => {
 	const dispatch = useDispatch();
+
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const user = state.users[state.session.userId!];
 
@@ -1075,7 +1076,8 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			companyName: team ? state.companies[team.companyId]?.name : "your organization",
 			companyId: team ? state.companies[team.companyId]?.id : null,
 			teamMembers: team ? getTeamMembers(state) : [],
-			domain: user.email?.split("@")[1].toLowerCase()
+			domain: user.email?.split("@")[1].toLowerCase(),
+			isWebmail: state.configs?.isWebmail
 		};
 	}, shallowEqual);
 
@@ -1189,8 +1191,15 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		}
 	};
 
+	const displayDomainJoinCheckbox = () => {
+		const { domain, isWebmail } = derivedState;
+
+		return domain && isWebmail === false;
+	};
+
 	const component = () => {
 		const { domain } = derivedState;
+
 		return (
 			<div className="body">
 				<h3>Invite your teammates</h3>
@@ -1246,11 +1255,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 						<Link onClick={addInvite}>+ Add another</Link>
 					</LinkRow>
 
-					{domain && (
+					{displayDomainJoinCheckbox() && (
 						<CheckboxRow>
 							<Checkbox
-								name="allowDomainBaseJoining"
-								checked={true}
+								name="allow-domain-based-joining"
+								checked={allowDomainBasedJoining}
 								onChange={(value: boolean) => {
 									setAllowDomainBasedJoining(!allowDomainBasedJoining);
 								}}
@@ -1274,28 +1283,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		return component();
 	}
 	return <Step className={props.className}>{component()}</Step>;
-
-	// {domain && !props.isWebmail && (
-	// 	<CheckboxRow>
-	// 		<Checkbox
-	// 			name="allowDomainBaseJoining"
-	// 			checked={organizationSettings.allowDomainJoining}
-	// 			onChange={(value: boolean) => {
-	// 				setOrganizationSettings({
-	// 					...organizationSettings,
-	// 					allowDomainJoining: value
-	// 				});
-	// 			}}
-	// 		>
-	// 			Let anyone with the <b>{domain}</b> email address join this organization
-	// 		</Checkbox>
-	// 	</CheckboxRow>
-	// )}
-	// {/* <CheckboxRow>
-	// 	<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
-	// 		Let anyone in the following GitHub organization join
-	// 	</Checkbox>
-	// </CheckboxRow> */}
 };
 
 const CreateCodemark = (props: { className: string; skip: Function }) => {

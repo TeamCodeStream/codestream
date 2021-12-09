@@ -3,6 +3,7 @@ import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import { FormattedMessage } from "react-intl";
 import { goToLogin } from "../store/context/actions";
+import { updateConfigs } from "../store/configs/actions";
 import { useDispatch } from "react-redux";
 import Icon from "../Stream/Icon";
 import { useDidMount } from "../utilities/hooks";
@@ -44,7 +45,7 @@ export function CompanyCreation(props: {
 	token?: string;
 	domain?: string;
 	provider?: string;
-	isWebmail?: string;
+	isWebmail?: boolean;
 	onComplete?: Function;
 	companies?: CSCompany[];
 	eligibleJoinCompanies?: CSEligibleJoinCompany[];
@@ -87,6 +88,10 @@ export function CompanyCreation(props: {
 	const [requiresHelpText, setRequiresHelpText] = useState(false);
 
 	useDidMount(() => {
+		if (!_isUndefined(props.isWebmail)) {
+			dispatch(updateConfigs({ isWebmail: props.isWebmail }));
+		}
+
 		let companiesToJoin: EnhancedCSCompany[] | undefined = undefined;
 		if (props.eligibleJoinCompanies || props.companies) {
 			setIsLoading(true);

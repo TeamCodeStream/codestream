@@ -230,6 +230,7 @@ export interface WebviewConfigs {
 	environment: string;
 	isOnPrem: boolean;
 	isProductionCloud: boolean;
+	isWebmail?: boolean;
 }
 
 export interface IpcHost {

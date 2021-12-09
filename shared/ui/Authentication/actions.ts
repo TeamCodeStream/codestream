@@ -333,6 +333,7 @@ export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => asyn
 						userId: response.extra && response.extra.userId,
 						eligibleJoinCompanies: response.extra && response.extra.eligibleJoinCompanies,
 						accountIsConnected: response.extra && response.extra.accountIsConnected,
+						isWebmail: response.extra.isWebmail,
 						provider
 					})
 				);
