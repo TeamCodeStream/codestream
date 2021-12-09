@@ -9,7 +9,8 @@ import { closePanel, invite, openPanel } from "./actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
-	ReposScm
+	ReposScm,
+	UpdateCompanyRequestType
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -307,6 +308,9 @@ export const ExpandingText = styled.div`
 	}
 `;
 
+export const CheckboxRow = styled.div`
+	padding: 10px 0 0 0;
+`;
 const EMPTY_ARRAY = [];
 
 const positionDots = () => {
@@ -1065,12 +1069,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 
-		console.warn("eric 2", team ? state.companies[team.companyId]?.name : "your organization");
-
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
 			companyName: team ? state.companies[team.companyId]?.name : "your organization",
+			companyId: team ? state.companies[team.companyId]?.id : null,
 			teamMembers: team ? getTeamMembers(state) : [],
 			domain: user.email?.split("@")[1].toLowerCase()
 		};
@@ -1081,6 +1084,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(false);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
@@ -1162,8 +1166,27 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			index++;
 		}
 
+		updateCompanyRequestType();
+
 		setSendingInvites(false);
 		props.skip();
+	};
+
+	const updateCompanyRequestType = async () => {
+		const { domain, companyId } = derivedState;
+
+		if (domain && companyId) {
+			try {
+				await HostApi.instance.send(UpdateCompanyRequestType, {
+					companyId,
+					domainJoining: allowDomainBasedJoining ? [domain] : []
+				});
+				HostApi.instance.track("Domain Joining Updated");
+			} catch (ex) {
+				console.error(ex);
+				return;
+			}
+		}
 	};
 
 	const component = () => {
@@ -1222,6 +1245,21 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 					<LinkRow style={{ minWidth: "180px" }}>
 						<Link onClick={addInvite}>+ Add another</Link>
 					</LinkRow>
+
+					{domain && (
+						<CheckboxRow>
+							<Checkbox
+								name="allowDomainBaseJoining"
+								checked={true}
+								onChange={(value: boolean) => {
+									setAllowDomainBasedJoining(!allowDomainBasedJoining);
+								}}
+							>
+								Let anyone with the <b>{domain}</b> email address join this organization
+							</Checkbox>
+						</CheckboxRow>
+					)}
+
 					<div>
 						<Legacy.default className="row-button" loading={sendingInvites} onClick={sendInvites}>
 							<div className="copy">Get Started</div>
@@ -1236,6 +1274,28 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		return component();
 	}
 	return <Step className={props.className}>{component()}</Step>;
+
+	// {domain && !props.isWebmail && (
+	// 	<CheckboxRow>
+	// 		<Checkbox
+	// 			name="allowDomainBaseJoining"
+	// 			checked={organizationSettings.allowDomainJoining}
+	// 			onChange={(value: boolean) => {
+	// 				setOrganizationSettings({
+	// 					...organizationSettings,
+	// 					allowDomainJoining: value
+	// 				});
+	// 			}}
+	// 		>
+	// 			Let anyone with the <b>{domain}</b> email address join this organization
+	// 		</Checkbox>
+	// 	</CheckboxRow>
+	// )}
+	// {/* <CheckboxRow>
+	// 	<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
+	// 		Let anyone in the following GitHub organization join
+	// 	</Checkbox>
+	// </CheckboxRow> */}
 };
 
 const CreateCodemark = (props: { className: string; skip: Function }) => {

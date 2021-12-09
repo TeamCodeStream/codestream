@@ -4,14 +4,11 @@ import { Link } from "../Stream/Link";
 import { FormattedMessage } from "react-intl";
 import { goToLogin } from "../store/context/actions";
 import { useDispatch } from "react-redux";
-import { Separator } from "./Separator";
 import Icon from "../Stream/Icon";
 import { useDidMount } from "../utilities/hooks";
 import styled from "styled-components";
-import { TextInput } from "./TextInput";
 import { HostApi } from "..";
 import { completeSignup, ProviderNames } from "./actions";
-import { Checkbox } from "../src/components/Checkbox";
 import {
 	CreateCompanyRequestType,
 	JoinCompanyRequestType,
@@ -266,90 +263,3 @@ export function CompanyCreation(props: {
 		</div>
 	);
 }
-
-// Referencing now, deleting later
-//
-// {step === 1 && (
-// 	<>
-// 		<div className="standard-form">
-// 			<fieldset className="form-body">
-// 				<div id="controls">
-// 					<div className="border-bottom-box">
-// 						<h3>
-// 							<FormattedMessage
-// 								id="signUp.nameOrganization"
-// 								defaultMessage="Name your CodeStream organization"
-// 							/>
-// 						</h3>
-// 						{requiresHelpText && (
-// 							<p>
-// 								<FormattedMessage
-// 									id="signUp.createOrganizationHelp"
-// 									defaultMessage="An organization on CodeStream is a place where all of the developers in your company can discuss and review code."
-// 								/>
-// 							</p>
-// 						)}
-// 						<br />
-// 						<TextInput
-// 							name="company"
-// 							value={organizationSettings.companyName || ""}
-// 							onValidityChanged={onValidityChanged}
-// 							validate={isTeamNameValid}
-// 							onChange={(value: string) => {
-// 								setOrganizationSettings({
-// 									...organizationSettings,
-// 									companyName: value
-// 								});
-// 							}}
-// 							placeholder="Ex: your company name"
-// 						/>
-// 						{!teamNameValidity && <small className="explainer error-message">Required</small>}
-
-// 						<br />
-// 						<br />
-// 						{domain && !props.isWebmail && (
-// 							<CheckboxRow>
-// 								<Checkbox
-// 									name="allowDomainBaseJoining"
-// 									checked={organizationSettings.allowDomainJoining}
-// 									onChange={(value: boolean) => {
-// 										setOrganizationSettings({
-// 											...organizationSettings,
-// 											allowDomainJoining: value
-// 										});
-// 									}}
-// 								>
-// 									Let anyone with the <b>{domain}</b> email address join this organization
-// 								</Checkbox>
-// 							</CheckboxRow>
-// 						)}
-
-// 						{/* <CheckboxRow>
-// 							<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
-// 								Let anyone in the following GitHub organization join
-// 							</Checkbox>
-// 						</CheckboxRow> */}
-// 						<Button
-// 							className="row-button"
-// 							onClick={onClickCreateOrganization}
-// 							loading={isLoading}
-// 						>
-// 							<div className="copy">Next</div>
-// 							<Icon name="chevron-right" />
-// 						</Button>
-// 					</div>
-// 				</div>
-// 				<div className="footer">
-// 					<Link
-// 						onClick={e => {
-// 							e.preventDefault();
-// 							setStep(0);
-// 						}}
-// 					>
-// 						<p>{"< Back"}</p>
-// 					</Link>
-// 				</div>
-// 			</fieldset>
-// 		</div>
-// 	</>
-// )}
