@@ -1074,8 +1074,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 
-		console.warn("eric 2", team ? state.companies[team.companyId]?.name : "your organization");
-
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
@@ -1306,6 +1304,28 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		return component();
 	}
 	return <Step className={props.className}>{component()}</Step>;
+
+	// {domain && !props.isWebmail && (
+	// 	<CheckboxRow>
+	// 		<Checkbox
+	// 			name="allowDomainBaseJoining"
+	// 			checked={organizationSettings.allowDomainJoining}
+	// 			onChange={(value: boolean) => {
+	// 				setOrganizationSettings({
+	// 					...organizationSettings,
+	// 					allowDomainJoining: value
+	// 				});
+	// 			}}
+	// 		>
+	// 			Let anyone with the <b>{domain}</b> email address join this organization
+	// 		</Checkbox>
+	// 	</CheckboxRow>
+	// )}
+	// {/* <CheckboxRow>
+	// 	<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
+	// 		Let anyone in the following GitHub organization join
+	// 	</Checkbox>
+	// </CheckboxRow> */}
 };
 
 const CreateCodemark = (props: { className: string; skip: Function }) => {
