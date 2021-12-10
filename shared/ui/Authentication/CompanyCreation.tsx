@@ -28,7 +28,7 @@ const JoinHeader = styled.h3`
 `;
 
 const CreateOrgWrapper = styled.div`
-	margin: 5px 0 5px 0;
+	margin: 10px 0 5px 0;
 `;
 const isTeamNameValid = (name: string) => name.length > 0;
 

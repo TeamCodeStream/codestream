@@ -21,7 +21,6 @@ import { ChangeTeamName } from "./ChangeTeamName";
 import { ChangeCompanyName } from "./ChangeCompanyName";
 import { BlameMap } from "./BlameMap";
 import { Team } from "./Team";
-
 import { TeamSetup } from "./TeamSetup";
 import { Invite } from "./Invite";
 import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
@@ -74,7 +73,9 @@ import {
 	SetCodemarkPinnedRequestType,
 	TelemetryRequestType,
 	GetRangeScmInfoRequestType,
-	DeleteUserRequestType
+	DeleteUserRequestType,
+	GetUserInfoRequestType,
+	AddBlameMapRequestType
 } from "@codestream/protocols/agent";
 import { getFileScmError } from "../store/editorContext/reducer";
 import { CodemarkView } from "./CodemarkView";
@@ -97,10 +98,9 @@ import {
 import { last as _last, findLastIndex } from "lodash-es";
 import { Keybindings } from "./Keybindings";
 import { FlowPanel, VideoLink } from "./Flow";
- import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
+import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { GlobalNav } from "./GlobalNav";
-import { CheckEmailVsGit } from "./CheckEmailVsGit";
 import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
 import { getTestGroup } from "../store/context/reducer";
 import { PresentTOS } from "../Authentication/PresentTOS";
@@ -114,10 +114,15 @@ const EMAIL_MATCH_REGEX = new RegExp(
 	"g"
 );
 
+// Hacky but componentDidUpdate() is ineffective in its current
+// state for using a local state variable to do this check.
+let emailHasBeenCheckedForMismatch = false;
+
 export class SimpleStream extends PureComponent {
 	disposables = [];
 	state = {
-		composeBoxProps: {}
+		composeBoxProps: {},
+		skipGitEmailCheckState: false
 	};
 	updateEmitter = new ComponentUpdateEmitter();
 
@@ -202,7 +207,6 @@ export class SimpleStream extends PureComponent {
 		this.props.openPanel(WebviewPanels.NewPullRequest);
 	}
 
-
 	handlePixieDynamicLoggingType(e) {
 		this.props.clearDynamicLogging();
 		this.props.setCurrentPixieDynamicLoggingOptions(e);
@@ -263,6 +267,45 @@ export class SimpleStream extends PureComponent {
 		return getPost(posts, this.props.postStreamId, id);
 	}
 
+	addBlameMapForGitEmailMismatch = async () => {
+		const {
+			setUserPreference,
+			blameMap,
+			addBlameMapEnabled,
+			skipGitEmailCheck,
+			currentUser
+		} = this.props;
+
+		if (!emailHasBeenCheckedForMismatch) {
+			const response = await HostApi.instance.send(GetUserInfoRequestType, {});
+			if (response.email === currentUser.email) {
+				setUserPreference(["skipGitEmailCheck"], true);
+				emailHasBeenCheckedForMismatch = true;
+			} else {
+				const scmEmail = response.email;
+				const mappedMe = blameMap[scmEmail.replace(/\./g, "*")];
+				if (addBlameMapEnabled && scmEmail && !mappedMe && !skipGitEmailCheck) {
+					this.addBlameMap(scmEmail, currentUser.id);
+					HostApi.instance.track("Git Email Mismatch", { Mapped: true });
+
+					setUserPreference(["skipGitEmailCheck"], true);
+				}
+				emailHasBeenCheckedForMismatch = true;
+			}
+		}
+	};
+
+	addBlameMap = async (email, userId) => {
+		const { teamId } = this.props;
+
+		console.warn("eric blame map");
+		await HostApi.instance.send(AddBlameMapRequestType, {
+			teamId,
+			userId,
+			email
+		});
+	};
+
 	render() {
 		const { showHeadshots, isFirstPageview } = this.props;
 		let { activePanel, activeModal, acceptedPrereleaseTOS } = this.props;
@@ -275,6 +318,10 @@ export class SimpleStream extends PureComponent {
 		// if (!acceptedPrereleaseTOS) return <PresentPrereleaseTOS />;
 
 		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
+
+		if (activePanel === WebviewPanels.Sidebar) {
+			this.addBlameMapForGitEmailMismatch();
+		}
 
 		if (isFirstPageview && !this.props.pendingProtocolHandlerUrl) return null;
 
@@ -353,8 +400,6 @@ export class SimpleStream extends PureComponent {
 				<OfflineBanner />
 				<PRProviderErrorBanner />
 				<ModalRoot />
-				{/* don't want to show the check email if you're onboarding */}
-				{activePanel === WebviewPanels.Sidebar && <CheckEmailVsGit />}
 				{/*<EnjoyingCodeStream />*/}
 				{this.state.propsForPrePRProviderInfoModal && (
 					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
@@ -469,7 +514,7 @@ export class SimpleStream extends PureComponent {
 									</DelayedRender>
 								</>
 							)}
- 							{activePanel === WebviewPanels.Flow && <FlowPanel />}
+							{activePanel === WebviewPanels.Flow && <FlowPanel />}
 							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
@@ -731,7 +776,7 @@ export class SimpleStream extends PureComponent {
  * @param {Object} state.teams
  **/
 const mapStateToProps = state => {
-	const { configs, context, streams, preferences } = state;
+	const { configs, context, streams, preferences, users, teams, session } = state;
 
 	// FIXME -- eventually we'll allow the user to switch to other streams, like DMs and channels
 	const teamStream = getStreamForTeam(streams, context.currentTeamId) || {};
@@ -748,6 +793,11 @@ const mapStateToProps = state => {
 
 	// console.warn("COMP: ", companies);
 	return {
+		addBlameMapEnabled: isFeatureEnabled(state, "addBlameMap"),
+		blameMap: team.settings ? team.settings.blameMap : {},
+		currentUser: users[session.userId],
+		skipGitEmailCheck: preferences.skipGitEmailCheck,
+		teamId: team.id,
 		currentCodemarkId: context.currentCodemarkId,
 		currentMarkerId: context.currentMarkerId,
 		currentReviewId: context.currentReviewId,

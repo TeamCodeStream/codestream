@@ -428,8 +428,7 @@ export const OnboardFull = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS",
-			webviewFocused: state.context.hasFocus
+			isInJetBrains: state.ide.name === "JETBRAINS"
 		};
 	}, shallowEqual);
 
@@ -467,8 +466,6 @@ export const OnboardFull = React.memo(function Onboard() {
 	const [showNextMessagingStep, setShowNextMessagingStep] = useState(false);
 
 	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		setTimeout(() => positionDots(), 250);
 	});
 
@@ -1077,7 +1074,8 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			companyId: team ? state.companies[team.companyId]?.id : null,
 			teamMembers: team ? getTeamMembers(state) : [],
 			domain: user.email?.split("@")[1].toLowerCase(),
-			isWebmail: state.configs?.isWebmail
+			isWebmail: state.configs?.isWebmail,
+			webviewFocused: state.context.hasFocus
 		};
 	}, shallowEqual);
 
@@ -1086,12 +1084,14 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
-	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(false);
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(true);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
 
 	useDidMount(() => {
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		getSuggestedInvitees();
 	});
 
@@ -1152,7 +1152,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		}
 	};
 
-	const sendInvites = async () => {
+	const handleGetStarted = async () => {
 		setSendingInvites(true);
 
 		let index = 0;
@@ -1170,7 +1170,9 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			index++;
 		}
 
-		updateCompanyRequestType();
+		if (allowDomainBasedJoining) {
+			updateCompanyRequestType();
+		}
 
 		setSendingInvites(false);
 		props.skip();
@@ -1185,7 +1187,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 					companyId,
 					domainJoining: allowDomainBasedJoining ? [domain] : []
 				});
-				HostApi.instance.track("Domain Joining Updated");
+				HostApi.instance.track("Domain Joining Enabled");
 			} catch (ex) {
 				console.error(ex);
 				return;
@@ -1272,7 +1274,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 					)}
 
 					<div>
-						<Legacy.default className="row-button" loading={sendingInvites} onClick={sendInvites}>
+						<Legacy.default
+							className="row-button"
+							loading={sendingInvites}
+							onClick={handleGetStarted}
+						>
 							<div className="copy">Get Started</div>
 							<Icon name="chevron-right" />
 						</Legacy.default>

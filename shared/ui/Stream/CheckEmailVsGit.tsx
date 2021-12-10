@@ -12,6 +12,8 @@ import { useDidMount } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
+// TODO: This file is depreciated - keeping for now in case we decide
+// 		 to add back in this dialog later, but its a candidate for deletion
 export const ButtonRow = styled.div`
 	text-align: center;
 	margin-top: 20px;
