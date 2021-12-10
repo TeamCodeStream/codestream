@@ -876,6 +876,7 @@ export function CodeErrorNav(props: Props) {
 					<ConfigureNewRelic
 						headerChildren={
 							<>
+								{/* ERIC NOTE: its this one for sign up flow */}
 								<div className="panel-header" style={{ background: "none" }}>
 									<span className="panel-title">Connect to New Relic</span>
 								</div>

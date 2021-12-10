@@ -432,8 +432,7 @@ export const OnboardFull = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS",
-			webviewFocused: state.context.hasFocus
+			isInJetBrains: state.ide.name === "JETBRAINS"
 		};
 	}, shallowEqual);
 
@@ -471,8 +470,6 @@ export const OnboardFull = React.memo(function Onboard() {
 	const [showNextMessagingStep, setShowNextMessagingStep] = useState(false);
 
 	useDidMount(() => {
-		if (derivedState.webviewFocused)
-			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		setTimeout(() => positionDots(), 250);
 	});
 
@@ -1092,7 +1089,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
-	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(false);
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(true);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
@@ -1162,6 +1159,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 	const handleGetStarted = async () => {
 		const { pendingProtocolHandlerUrl } = derivedState;
+
 		setSendingInvites(true);
 
 		let index = 0;
