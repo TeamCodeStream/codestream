@@ -31,7 +31,11 @@ import { FormattedMessage } from "react-intl";
 import { isEmailValid } from "../Authentication/Signup";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
-import { setOnboardStep, setShowFeedbackSmiley } from "../store/context/actions";
+import {
+	setOnboardStep,
+	handlePendingProtocolHandlerUrl,
+	clearPendingProtocolHandlerUrl
+} from "../store/context/actions";
 
 export const Step = styled.div`
 	margin: 0 auto;
@@ -1075,7 +1079,8 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			teamMembers: team ? getTeamMembers(state) : [],
 			domain: user.email?.split("@")[1].toLowerCase(),
 			isWebmail: state.configs?.isWebmail,
-			webviewFocused: state.context.hasFocus
+			webviewFocused: state.context.hasFocus,
+			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl
 		};
 	}, shallowEqual);
 
@@ -1153,6 +1158,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	};
 
 	const handleGetStarted = async () => {
+		const { pendingProtocolHandlerUrl } = derivedState;
 		setSendingInvites(true);
 
 		let index = 0;
@@ -1172,6 +1178,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 		if (allowDomainBasedJoining) {
 			updateCompanyRequestType();
+		}
+
+		if (pendingProtocolHandlerUrl) {
+			await dispatch(handlePendingProtocolHandlerUrl(pendingProtocolHandlerUrl));
+			dispatch(clearPendingProtocolHandlerUrl());
 		}
 
 		setSendingInvites(false);
