@@ -572,6 +572,7 @@ function listenForEvents(store) {
 						}
 						const state = store.getState();
 
+						// hits this after joining/creating
 						store.dispatch(
 							openErrorGroup(definedQuery.query.errorGroupGuid, definedQuery.query.occurrenceId, {
 								...definedQuery.query,
