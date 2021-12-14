@@ -392,7 +392,7 @@ export class SimpleStream extends PureComponent {
 			  )
 			: null;
 
-		console.warn("ACTIVE: ", activePanel);
+		// console.warn("ACTIVE: ", activePanel);
 		// status and teams panels have been deprecated
 		return (
 			<div id="stream-root" className={streamClass}>

@@ -188,8 +188,6 @@ export const Signup = (props: Props) => {
 				});
 			};
 
-			console.warn("eric 3", status);
-
 			switch (status) {
 				case LoginResult.WebMail: {
 					setIsSubmitting(false);
