@@ -1089,7 +1089,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
-	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(true);
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(false);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
