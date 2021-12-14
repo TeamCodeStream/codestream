@@ -297,7 +297,6 @@ export class SimpleStream extends PureComponent {
 	addBlameMap = async (email, userId) => {
 		const { teamId } = this.props;
 
-		console.warn("eric blame map");
 		await HostApi.instance.send(AddBlameMapRequestType, {
 			teamId,
 			userId,
