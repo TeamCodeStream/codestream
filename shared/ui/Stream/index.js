@@ -134,10 +134,9 @@ export class SimpleStream extends PureComponent {
 		const { isFirstPageview } = this.props;
 
 		if (isFirstPageview) {
-			if (!this.props.pendingProtocolHandlerUrl) {
-				this.props.openPanel(WebviewPanels.Onboard);
-			}
+			this.props.openPanel(WebviewPanels.Onboard);
 		}
+
 		this.props.setIsFirstPageview(false);
 
 		if (this.props.activePanel === "main" && this.props.postStreamId != undefined) {
