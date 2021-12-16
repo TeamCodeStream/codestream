@@ -1063,13 +1063,14 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const user = state.users[state.session.userId!];
-
 		const team =
 			state.teams && state.context.currentTeamId
 				? state.teams[state.context.currentTeamId]
 				: undefined;
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
+		const currentUserIsAdmin = (team?.adminIds || []).includes(user.id);
+		const domain = user.email?.split("@")[1].toLowerCase();
 
 		return {
 			providers: state.providers,
@@ -1077,10 +1078,11 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			companyName: team ? state.companies[team.companyId]?.name : "your organization",
 			companyId: team ? state.companies[team.companyId]?.id : null,
 			teamMembers: team ? getTeamMembers(state) : [],
-			domain: user.email?.split("@")[1].toLowerCase(),
+			domain,
 			isWebmail: state.configs?.isWebmail,
 			webviewFocused: state.context.hasFocus,
-			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl
+			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl,
+			currentUserIsAdmin
 		};
 	}, shallowEqual);
 
@@ -1089,7 +1091,10 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
-	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(false);
+	// Checkbox should be checked unless its a newrelic domain, for now
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(
+		derivedState.domain !== "newrelic.com"
+	);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
@@ -1208,9 +1213,9 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	};
 
 	const displayDomainJoinCheckbox = () => {
-		const { domain, isWebmail } = derivedState;
+		const { domain, isWebmail, currentUserIsAdmin } = derivedState;
 
-		return domain && isWebmail === false;
+		return currentUserIsAdmin && domain && isWebmail === false;
 	};
 
 	const component = () => {
