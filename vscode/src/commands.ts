@@ -89,6 +89,13 @@ export interface OpenStreamCommandArgs {
 	streamThread: StreamThread;
 }
 
+export interface ViewMethodLevelTelemetryCommandArgs {
+	range: Range;
+	methodName: string;
+	newRelicAccountId?: number;
+	newRelicEntityGuid?: string;
+}
+
 export class Commands implements Disposable {
 	private readonly _disposable: Disposable;
 
@@ -582,6 +589,18 @@ export class Commands implements Disposable {
 				"VSC SCM",
 				true
 			);
+		} catch (ex) {
+			Logger.error(ex);
+		}
+	}
+
+	@command("viewMethodLevelTelemetry", {
+		showErrorMessage: "Unable to view method level telemetry"
+	})
+	async viewMethodLevelTelemetry(args: string) {
+		try {
+			const parsedArgs = JSON.parse(args) as ViewMethodLevelTelemetryCommandArgs;
+			await Container.webview.viewMethodLevelTelemetry(parsedArgs);
 		} catch (ex) {
 			Logger.error(ex);
 		}

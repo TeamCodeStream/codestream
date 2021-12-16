@@ -23,7 +23,8 @@ import {
 	HostDidChangeVisibleEditorsNotificationType,
 	ShowPullRequestNotificationType,
 	HostDidChangeLayoutNotificationType,
-	RouteWithQuery
+	RouteWithQuery,
+	ViewMethodLevelTelemetryNotificationType
 } from "./ipc/webview.protocol";
 import { createCodeStreamStore } from "./store";
 import { HostApi } from "./webview-api";
@@ -749,6 +750,11 @@ function listenForEvents(store) {
 
 	api.on(DidResolveStackTraceLineNotificationType, async e => {
 		store.dispatch(resolveStackTraceLine(e));
+	});
+
+	api.on(ViewMethodLevelTelemetryNotificationType, async e => {
+		// TODO
+		console.log(e);
 	});
 }
 

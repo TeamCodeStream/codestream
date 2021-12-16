@@ -81,7 +81,8 @@ import {
 	WebviewPanels,
 	SidebarLocation,
 	HostDidChangeLayoutNotificationType,
-	NewPullRequestBranch
+	NewPullRequestBranch,
+	ViewMethodLevelTelemetryNotificationType
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -481,6 +482,21 @@ export class WebviewController implements Disposable {
 			url: url,
 			source: source
 		});
+	}
+
+	@log()
+	async viewMethodLevelTelemetry(args: any): Promise<void> {
+		if (this.visible) {
+			await this._webview!.show();
+		} else {
+			await this.show();
+		}
+
+		if (!this._webview) {
+			// it's possible that the webview is closing...
+			return;
+		}
+		this._webview!.notify(ViewMethodLevelTelemetryNotificationType, args);
 	}
 
 	@log()

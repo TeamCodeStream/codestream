@@ -137,7 +137,6 @@ export const ShowPreviousChangedFileNotificationType = new NotificationType<
 	void
 >(`${IpcRoutes.Webview}/showChangedFile/previous`);
 
- 
 export interface PixieDynamicLogging {
 	functionName: string;
 	functionParameters: PixieDynamicLoggingFunctionParameter[];
@@ -148,3 +147,15 @@ export interface PixieDynamicLogging {
 export const PixieDynamicLoggingType = new NotificationType<PixieDynamicLogging, void>(
 	`${IpcRoutes.Webview}/pixie/dynamicLogging`
 );
+
+export interface ViewMethodLevelTelemetryNotification {
+	range?: Range;
+	methodName: string;
+	newRelicAccountId?: number;
+	newRelicEntityGuid?: string;
+}
+
+export const ViewMethodLevelTelemetryNotificationType = new NotificationType<
+	ViewMethodLevelTelemetryNotification,
+	void
+>(`${IpcRoutes.Webview}/mlt/view`);

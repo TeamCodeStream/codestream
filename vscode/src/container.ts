@@ -2,7 +2,7 @@
 import { ReviewDiffContentProvider } from "providers/diffContentProvider";
 import { ExtensionContext, languages, workspace } from "vscode";
 import { WebviewLike } from "webviews/webviewLike";
-import { InstrumentationDecorationProvider } from "providers/instrumentationDecorationProvider";
+import { InstrumentationCodeLensProvider } from "providers/instrumentationCodeLensProvider";
 import { GitContentProvider } from "providers/gitContentProvider";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
@@ -45,8 +45,8 @@ export class Container {
 
 		context.subscriptions.push((this._notifications = new NotificationsController()));
 
-		const codelensProvider = new InstrumentationDecorationProvider();
-		languages.registerCodeLensProvider("*", codelensProvider);
+		const codelensProvider = new InstrumentationCodeLensProvider();
+		languages.registerCodeLensProvider([{ language: "python" }], codelensProvider);
 
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
@@ -154,7 +154,7 @@ export class Container {
 		return this._markerDecorations;
 	}
 
-	private static _instrumentationDecorationProvider: InstrumentationDecorationProvider;
+	private static _instrumentationDecorationProvider: InstrumentationCodeLensProvider;
 	static get instrumentationDecorationProvider() {
 		return this._instrumentationDecorationProvider;
 	}

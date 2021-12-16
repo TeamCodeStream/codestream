@@ -287,6 +287,10 @@
 					"light": "assets/images/light/pull-request.svg",
 					"dark": "assets/images/dark/pull-request.svg"
 				}
+			},
+			{
+				"command": "codestream.viewMethodLevelTelemetry",
+				"title": "View Method Level Telemetry"			 
 			}
 		],
 		"keybindings": [

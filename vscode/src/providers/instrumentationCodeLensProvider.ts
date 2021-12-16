@@ -1,6 +1,5 @@
 "use strict";
 
-import * as fs from "fs";
 import {
 	CancellationToken,
 	ConfigurationChangeEvent,
@@ -16,6 +15,7 @@ import {
 	CodeStreamDiffUriData,
 	MethodLevelTelemetryRequestOptions
 } from "@codestream/protocols/agent";
+import { ViewMethodLevelTelemetryCommandArgs } from "commands";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { Strings } from "../system";
 import { configuration } from "../configuration";
@@ -23,57 +23,9 @@ import * as csUri from "../system/uri";
 import { Container } from "../container";
 import { Logger } from "../logger";
 
-const positionStyleMap: { [key: string]: string } = {
-	inline: "display: inline-block; margin: 0 0.5em 0 0; vertical-align: middle;",
-	overlay:
-		"display: inline-block; left: 0; position: absolute; top: 50%; transform: translateY(-50%)"
-};
-
-const buildDecoration = (position: string) => {
-	const pngPath = Container.context.asAbsolutePath("assets/images/eye.png");
-	try {
-		const pngBase64 = fs.readFileSync(pngPath, { encoding: "base64" });
-		const pngInlineUrl = `data:image/png;base64,${pngBase64}`;
-
-		return {
-			contentText: "",
-			height: "16px",
-			width: "16px",
-
-			textDecoration: `none; background-image: url(${pngInlineUrl}); background-position: center; background-repeat: no-repeat; background-size: contain; ${positionStyleMap[position]}`
-		};
-	} catch (e) {
-		return;
-	}
-};
-
-const MarkerPositions = ["inline", "overlay"];
-const MarkerTypes = ["comment"];
-const MarkerColors = ["blue", "green", "yellow", "orange", "red", "purple", "aqua", "gray"];
-
 const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
-const tokenSanitizeRegex = /\$\{(?:'.*?[^\\]'|\W*)?(\w*?)(?:'.*?[^\\]'|[\W\d]*)\}/g;
-const tokenSanitizeReplacement = "$${$1=this.$1,($1 == null ? '' : $1)}";
 
-const interpolationMap = new Map<string, Function>();
-
-export function interpolate(template: string, context: object | undefined): string {
-	if (template == null || template.length === 0) return template;
-	if (context == null) return template.replace(tokenSanitizeRegex, "");
-
-	let fn = interpolationMap.get(template);
-	if (fn == null) {
-		// eslint-disable-next-line @typescript-eslint/no-implied-eval
-		fn = new Function(
-			`return \`${template.replace(tokenSanitizeRegex, tokenSanitizeReplacement)}\`;`
-		);
-		interpolationMap.set(template, fn);
-	}
-
-	return fn.call(context);
-}
-
-export class InstrumentationDecorationProvider
+export class InstrumentationCodeLensProvider
 	implements
 		// HoverProvider,
 		vscode.Disposable,
@@ -381,7 +333,7 @@ export class InstrumentationDecorationProvider
 
 		// TODO move to settings?
 		const template =
-			"avg duration: ${averageDuration}ms | throughput: ${throughput}rpm | error rate: ${errorsPerMinute}% - since ${since}";
+			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}";
 
 		const options: MethodLevelTelemetryRequestOptions = {
 			includeAverageDuration: template.indexOf("${averageDuration}") > -1,
@@ -411,7 +363,7 @@ export class InstrumentationDecorationProvider
 			methodLevelTelemetryResponse.newRelicEntityName
 				? `entity: ${methodLevelTelemetryResponse.newRelicEntityName}`
 				: ""
-		} - ${date ? `since ${date}` : ""}`;
+		} - ${date ? `since ${date}` : ""}\nClick for more.`;
 
 		const lenses = instrumentableSymbols.map(_ => {
 			// "avg duration: 40.8ms | throughput: 360rpm | error rate: 0.3% - Nov 29, 2021 7:12",
@@ -434,25 +386,33 @@ export class InstrumentationDecorationProvider
 				return undefined;
 			}
 
+			const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
+				range: _.symbol.range,
+				methodName: _.symbol.name,
+				newRelicAccountId: methodLevelTelemetryResponse.newRelicAccountId,
+				newRelicEntityGuid: methodLevelTelemetryResponse.newRelicEntityGuid
+			};
+
 			return new vscode.CodeLens(
 				_.symbol.range,
 				new InstrumentableSymbolCommand(
 					Strings.interpolate(template, {
-						throughput: throughputForFunction
-							? throughputForFunction.requestsPerMinute.toFixed(2)
-							: "n/a",
 						averageDuration: averageDurationForFunction
-							? averageDurationForFunction.averageDuration.toFixed(2) || "0.00"
+							? `${averageDurationForFunction.averageDuration.toFixed(2) || "0.00"}ms`
 							: "n/a",
+						throughput: throughputForFunction
+							? `${throughputForFunction.requestsPerMinute.toFixed(2)}rpm`
+							: "n/a",
+
 						errorsPerMinute: errorRateForFunction
-							? errorRateForFunction.errorsPerMinute.toFixed(2) || "0"
+							? `${errorRateForFunction.errorsPerMinute.toFixed(2) || "0"}epm`
 							: "n/a",
 						since: methodLevelTelemetryResponse.sinceDateFormatted,
 						date: date
 					}),
-					"anyCommand",
+					"codestream.viewMethodLevelTelemetry",
 					tooltip,
-					["argument1"]
+					[JSON.stringify(viewCommandArgs)]
 				)
 			);
 		});
