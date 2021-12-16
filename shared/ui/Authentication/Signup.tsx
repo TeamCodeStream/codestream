@@ -369,7 +369,7 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
-								<h3>Try CodeStream for free</h3>
+								<h3>Create a CodeStream account, for free</h3>
 								{(!limitAuthentication || authenticationProviders["github*com"]) && (
 									<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
 										<Icon name="mark-github" />
@@ -412,7 +412,6 @@ export const Signup = (props: Props) => {
 				<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 					{(!limitAuthentication || authenticationProviders["email"]) && (
 						<div className="border-bottom-box">
-							<h3>Create an Account</h3>
 							{wasInvited && (
 								<p className="explainer">
 									Create an account to join the <strong>{props.teamName}</strong> team.

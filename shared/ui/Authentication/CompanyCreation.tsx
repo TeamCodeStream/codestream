@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import Icon from "../Stream/Icon";
 import { useDidMount } from "../utilities/hooks";
 import styled from "styled-components";
+import { Loading } from "../Container/Loading";
 import { HostApi } from "..";
 import { completeSignup, ProviderNames } from "./actions";
 import {
@@ -69,6 +70,7 @@ export function CompanyCreation(props: {
 
 	const [organizations, setOrganizations] = React.useState<EnhancedCSCompany[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [initialLoad, setInitialLoad] = React.useState(true);
 	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState(false);
 	const initialCompanyName =
 		props.email && !props.isWebmail && !_isUndefined(props.isWebmail)
@@ -112,6 +114,7 @@ export function CompanyCreation(props: {
 			setOrganizations(companiesToJoin);
 
 			setIsLoading(false);
+			setInitialLoad(false);
 		}
 
 		if (!companiesToJoin || !companiesToJoin.length) {
@@ -188,6 +191,8 @@ export function CompanyCreation(props: {
 		}
 	};
 
+	if (initialLoad) return <Loading />;
+
 	return (
 		<div id="organization-page" className="onboarding-page">
 			<div className="standard-form">
@@ -212,7 +217,7 @@ export function CompanyCreation(props: {
 								</div>
 							)}
 							<div>
-								{!isLoading && (
+								{isLoading && (
 									<>
 										{organizations.map(_ => {
 											return (
@@ -268,3 +273,9 @@ export function CompanyCreation(props: {
 		</div>
 	);
 }
+
+// {isLoading && (
+// 	<div>
+// 		<Icon name="sync" loading={true} /> Loading organizations...
+// 	</div>
+// )}
