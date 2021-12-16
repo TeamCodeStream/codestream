@@ -1,9 +1,9 @@
 "use strict";
 import { ReviewDiffContentProvider } from "providers/diffContentProvider";
-import { ExtensionContext, languages, workspace } from "vscode";
+import { ExtensionContext, workspace } from "vscode";
 import { WebviewLike } from "webviews/webviewLike";
-import { InstrumentationCodeLensProvider } from "providers/instrumentationCodeLensProvider";
 import { GitContentProvider } from "providers/gitContentProvider";
+import { InstrumentableCodeLensController } from "controllers/instrumentableCodeLensController";
 import { BaseAgentOptions, CodeStreamAgentConnection } from "./agent/agentConnection";
 import { CodeStreamSession } from "./api/session";
 import { Commands } from "./commands";
@@ -42,19 +42,16 @@ export class Container {
 		});
 
 		context.subscriptions.push((this._session = new CodeStreamSession(config.serverUrl)));
-
 		context.subscriptions.push((this._notifications = new NotificationsController()));
-
-		const codelensProvider = new InstrumentationCodeLensProvider();
-		languages.registerCodeLensProvider([{ language: "python" }], codelensProvider);
-
 		context.subscriptions.push((this._commands = new Commands()));
 		context.subscriptions.push((this._codeActions = new CodeStreamCodeActionProvider()));
 		context.subscriptions.push((this._codeLens = new CodemarkCodeLensProvider()));
 		context.subscriptions.push((this._diffContents = new ReviewDiffContentProvider()));
 		context.subscriptions.push((this._gitContents = new GitContentProvider()));
 		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
-		context.subscriptions.push((this._instrumentationDecorationProvider = codelensProvider));
+		context.subscriptions.push(
+			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
+		);
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._selectionDecoration = new SelectionDecorationProvider()));
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
@@ -154,9 +151,9 @@ export class Container {
 		return this._markerDecorations;
 	}
 
-	private static _instrumentationDecorationProvider: InstrumentationCodeLensProvider;
-	static get instrumentationDecorationProvider() {
-		return this._instrumentationDecorationProvider;
+	private static _instrumentableCodeLensController: InstrumentableCodeLensController;
+	static get instrumentableCodeLensController() {
+		return this._instrumentableCodeLensController;
 	}
 
 	private static _notifications: NotificationsController;

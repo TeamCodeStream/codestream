@@ -173,6 +173,18 @@
 					],
 					"description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
 					"scope": "window"
+				},
+				"codestream.showMethodLevelTelemetryCodeLens": {
+					"type": "boolean",
+					"default": true,
+					"description": "Specifies whether to show CodeStream code lenses",
+					"scope": "window"
+				},
+				"codestream.methodLevelTelemetryCodeLensFormat": {
+					"type": "string",
+					"default": "avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}",
+					"description": "Specifies how to format the CodeStream code lenses",
+					"scope": "window"
 				}
 			}
 		},

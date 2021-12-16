@@ -19,7 +19,9 @@ export interface Config {
 	showInStatusBar: "left" | "right" | false;
 	showMarkerCodeLens: boolean;
 	showMarkerGlyphs: boolean;
+	showMethodLevelTelemetryCodeLens: boolean;
 	showShortcutTipOnSelection: boolean;
 	traceLevel: TraceLevel;
 	showInstrumentationGlyphs?: boolean;
+	methodLevelTelemetryCodeLensFormat?: string;
 }
