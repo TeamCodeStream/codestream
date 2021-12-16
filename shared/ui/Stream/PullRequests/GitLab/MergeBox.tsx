@@ -324,7 +324,15 @@ export const MergeBox = props => {
 
 	if (derivedState.pr.divergedCommitsCount > 0) {
 		if (derivedState.prRoot.project.mergeMethod === "merge") {
-			setStandardMergeOptions();
+			if (
+				derivedState.prRoot.project.mergeRequest?.conflicts &&
+				derivedState.prRoot.project.mergeRequest.conflicts === true
+			) {
+				mergeDisabled = true;
+				headerLabel = <>Merge blocked: merge conflicts must be resolved.</>;
+			} else {
+				setStandardMergeOptions();
+			}
 		} else {
 			mergeDisabled = true;
 			verb = "Rebase";
