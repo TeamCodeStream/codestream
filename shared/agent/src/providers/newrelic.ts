@@ -1507,7 +1507,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	async getMethodErrorRate(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Errors%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		const innerQuery = `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Errors/WebTransaction/Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
 
 		const query = `query GetMethodErrorRate($accountId:Int!) {
 			actor {
