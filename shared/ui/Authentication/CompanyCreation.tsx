@@ -77,7 +77,7 @@ export function CompanyCreation(props: {
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isCreatingOrg, setIsCreatingOrg] = React.useState(false);
 	const [initialLoad, setInitialLoad] = React.useState(true);
-	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState(false);
+	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState<string | undefined>(undefined);
 	const initialCompanyName =
 		props.email && !props.isWebmail && !_isUndefined(props.isWebmail)
 			? props.email.split("@")[1].split(".")[0]
@@ -173,7 +173,7 @@ export function CompanyCreation(props: {
 	};
 
 	const onClickJoinOrganization = async (organization: EnhancedCSCompany) => {
-		setIsLoadingJoinTeam(true);
+		setIsLoadingJoinTeam(organization.id);
 
 		try {
 			const result = (await HostApi.instance.send(JoinCompanyRequestType, {
@@ -250,7 +250,7 @@ export function CompanyCreation(props: {
 																<Button
 																	onClick={e => onClickJoinOrganization(_)}
 																	className="control-button"
-																	loading={isLoadingJoinTeam}
+																	loading={isLoadingJoinTeam === _.id}
 																>
 																	<div className="copy">
 																		<b>Join</b>
