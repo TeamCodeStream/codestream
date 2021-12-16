@@ -1,4 +1,5 @@
 "use strict";
+import fs from "fs";
 import { GraphQLClient } from "graphql-request";
 import {
 	flatten as _flatten,
@@ -8,6 +9,7 @@ import {
 	uniq as _uniq,
 	uniqBy as _uniqBy
 } from "lodash-es";
+import { sep } from "path";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -57,11 +59,14 @@ import {
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
-	CrashOrException
+	CrashOrException,
+	GetMethodLevelTelemetryRequestType,
+	GetMethodLevelTelemetryRequest,
+	GetMethodLevelTelemetryResponse
 } from "../protocol/agent.protocol";
 import { CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { log, lspHandler, lspProvider } from "../system";
+import { Dates, log, lspHandler, lspProvider } from "../system";
 import { Strings } from "../system/string";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
@@ -1439,6 +1444,245 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 			throw ex;
 		}
+	}
+
+	async getMethodThroughput(request: GetMethodLevelTelemetryRequest) {
+		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+
+		const query = `query GetMethodThroughput($accountId:Int!) {
+	actor {
+		account(id: $accountId) {
+			nrql(query: "${innerQuery}") { 						
+				results
+				metadata {
+					timeWindow {
+						begin
+						end					   
+					}
+				}					
+			}
+		}
+	}
+}`;
+
+		try {
+			return this.query(query, {
+				accountId: request.newRelicAccountId!
+			});
+		} catch (ex) {
+			Logger.error(ex, "getMethodThroughput", {
+				request
+			});
+		}
+		return undefined;
+	}
+
+	async getMethodAverageDuration(request: GetMethodLevelTelemetryRequest) {
+		const innerQuery = `SELECT average(apm.service.transaction.duration) AS 'averageDuration' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE '%Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		const query = `query GetMethodAverageDuration($accountId:Int!) {
+	actor {
+		account(id: $accountId) {
+			nrql(query: "${innerQuery}") { 						
+				results
+				metadata {
+					timeWindow {
+						begin
+						end					   
+					}
+				}					
+			}
+		}
+	}
+}`;
+		try {
+			return this.query(query, {
+				accountId: request.newRelicAccountId!
+			});
+		} catch (ex) {
+			Logger.error(ex, "getMethodAverageDuration", {
+				request
+			});
+		}
+		return undefined;
+	}
+
+	async getMethodErrorRate(request: GetMethodLevelTelemetryRequest) {
+		const innerQuery = `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Errors%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+
+		const query = `query GetMethodErrorRate($accountId:Int!) {
+			actor {
+				account(id: $accountId) {
+					nrql(query: "${innerQuery}") { 						
+						results
+						metadata {
+							timeWindow {
+								begin
+								end					   
+							}
+						}					
+					}
+				}
+			}
+	  }`;
+		try {
+			return this.query(query, {
+				accountId: request.newRelicAccountId!
+			});
+		} catch (ex) {
+			Logger.error(ex, "getMethodErrorRate", { request });
+		}
+		return undefined;
+	}
+
+	getPythonNamespacePackage(filePath: string) {
+		try {
+			const splitPath = filePath.split(sep);
+			if (!splitPath.length || !splitPath[splitPath.length - 1].endsWith(".py")) {
+				return "";
+			}
+
+			const fileName = splitPath.pop()!;
+			const pythonPath =
+				fileName !== "__init__.py" ? [fileName.substring(0, fileName.lastIndexOf("."))] : [];
+
+			while (splitPath.length > 0 && fs.existsSync([...splitPath, ["__init__.py"]].join(sep))) {
+				pythonPath.unshift(splitPath.pop()!);
+				break;
+			}
+
+			return pythonPath.join(".");
+		} catch (ex) {
+			Logger.warn("Could not get python namespace", { filePath });
+			return undefined;
+		}
+	}
+
+	private _languageSupport = new Set<string>(["python"]);
+
+	@lspHandler(GetMethodLevelTelemetryRequestType)
+	@log()
+	async getMethodLevelTelemetry(
+		request: GetMethodLevelTelemetryRequest
+	): Promise<GetMethodLevelTelemetryResponse | undefined> {
+		if (!request.filePath || !request.languageId) {
+			return undefined;
+		}
+
+		if (!this._languageSupport.has(request.languageId)) return undefined;
+
+		const { git } = SessionContainer.instance();
+		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
+		if (!repoForFile?.id) return undefined;
+
+		const observabilityRepos = await this.getObservabilityRepos({
+			filters: [{ repoId: repoForFile.id }]
+		});
+		if (!observabilityRepos?.repos?.length) return undefined;
+
+		const repo = observabilityRepos.repos.find(_ => _.repoId === repoForFile.id);
+		if (!repo) return undefined;
+
+		if (!repo.hasRepoAssociation) {
+			Logger.warn("Missing repo association", {
+				repo: repo
+			});
+			return undefined;
+		}
+
+		const entityLength = repo.entityAccounts.length;
+
+		if (!entityLength) {
+			Logger.warn("Missing entities", {
+				repo: repo
+			});
+			return undefined;
+		}
+		let entity;
+		if (entityLength > 1) {
+			Logger.warn("More than one NR entity, selecting first", {
+				entity: repo.entityAccounts[0]
+			});
+		}
+
+		entity = repo.entityAccounts[0];
+
+		if (request.languageId === "python") {
+			request.codeNamespace = this.getPythonNamespacePackage(request.filePath);
+			if (!request.codeNamespace) {
+				return undefined;
+			}
+		}
+		request.newRelicAccountId = entity.accountId;
+		request.newRelicEntityGuid = entity.entityGuid;
+		let entityName = entity.entityName;
+
+		try {
+			request.options = request.options || {};
+			let [throughputResponse, averageDurationResponse, errorRateResponse] = await Promise.all([
+				request.options.includeThroughput ? this.getMethodThroughput(request) : undefined,
+				request.options.includeAverageDuration ? this.getMethodAverageDuration(request) : undefined,
+				request.options.includeErrorRate ? this.getMethodErrorRate(request) : undefined
+			]);
+
+			const addFunctionName = (arr: { metricTimesliceName: string }[]) => {
+				return arr.map((_: any) => {
+					const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
+					return {
+						..._,
+						function: indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined
+					};
+				});
+			};
+
+			if (throughputResponse) {
+				throughputResponse.actor.account.nrql.results = addFunctionName(
+					throughputResponse.actor.account.nrql.results
+				);
+			}
+
+			if (averageDurationResponse) {
+				averageDurationResponse.actor.account.nrql.results = addFunctionName(
+					averageDurationResponse.actor.account.nrql.results
+				);
+			}
+
+			if (errorRateResponse) {
+				errorRateResponse.actor.account.nrql.results = addFunctionName(
+					errorRateResponse.actor.account.nrql.results
+				);
+			}
+
+			const begin =
+				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
+				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
+				errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
+
+			return {
+				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
+				averageDuration: averageDurationResponse
+					? averageDurationResponse.actor.account.nrql.results
+					: [],
+				errorRate: errorRateResponse.actor.account.nrql.results || [],
+				sinceDateFormatted: begin ? Dates.toFormatter(new Date(begin)).fromNow() : "",
+				lastUpdateDate:
+					errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
+					averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
+					throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end,
+				hasAnyData:
+					throughputResponse?.actor?.account?.nrql?.results.length ||
+					averageDurationResponse?.actor?.account?.nrql?.results.length ||
+					errorRateResponse?.actor?.account?.nrql?.results.length,
+				newRelicAccountId: request.newRelicAccountId,
+				newRelicEntityGuid: request.newRelicEntityGuid,
+				newRelicEntityName: entityName
+			};
+		} catch (ex) {
+			Logger.error(ex, "getMethodLevelTelemetry", {
+				request
+			});
+		}
+
+		return undefined;
 	}
 
 	@log()

@@ -104,7 +104,9 @@ import {
 	DidChangeProcessBufferNotificationType,
 	AgentFileSearchRequestType,
 	DidResolveStackTraceLineNotificationType,
-	DidResolveStackTraceLineNotification
+	DidResolveStackTraceLineNotification,
+	MethodLevelTelemetryRequestOptions,
+	GetMethodLevelTelemetryRequestType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -913,6 +915,25 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		preferences() {
 			return this._connection.sendRequest(GetPreferencesRequestType, undefined);
+		}
+	})(this);
+
+	get observability() {
+		return this._observability;
+	}
+	private readonly _observability = new (class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		getMethodLevelTelemetry(
+			filePath: string,
+			languageId: string,
+			options?: MethodLevelTelemetryRequestOptions
+		) {
+			return this._connection.sendRequest(GetMethodLevelTelemetryRequestType, {
+				filePath,
+				languageId,
+				options
+			});
 		}
 	})(this);
 

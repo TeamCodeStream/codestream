@@ -141,6 +141,9 @@ export class GitRemoteParser {
 				results.push({ type: "https", value: `https://${parsed[1]}/${parsed[2]}` });
 			} else if (httpOrSshEndpoint.indexOf("http") === 0) {
 				results.push({ type: "https", value: httpOrSshEndpoint });
+				if (httpOrSshEndpoint.indexOf(".git") > -1) {
+					results.push({ type: "https", value: httpOrSshEndpoint.replace(".git", "") });
+				}
 				results.push({ type: "ssh", value: `git@${parsed[1]}:${parsed[2]}.git` });
 				results.push({ type: "ssh", value: `ssh://git@${parsed[1]}:${parsed[2]}.git` });
 			}

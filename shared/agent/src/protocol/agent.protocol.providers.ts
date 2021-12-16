@@ -1078,6 +1078,40 @@ export const GetObservabilityErrorGroupMetadataRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorGroup/metadata");
 
+export interface MethodLevelTelemetryRequestOptions {
+	includeThroughput?: boolean;
+	includeAverageDuration?: boolean;
+	includeErrorRate?: boolean;
+}
+
+export interface GetMethodLevelTelemetryRequest {
+	filePath: string;
+	languageId: string;
+	codeNamespace?: string;
+	newRelicAccountId?: number;
+	newRelicEntityGuid?: string;
+	options?: MethodLevelTelemetryRequestOptions;
+}
+
+export interface GetMethodLevelTelemetryResponse {
+	throughput?: { requestsPerMinute: any; function: string }[];
+	averageDuration?: { averageDuration: any; function: string }[];
+	errorRate?: { errorsPerMinute: any; function: string }[];
+	lastUpdateDate?: number;
+	hasAnyData?: boolean;
+	sinceDateFormatted?: string;
+	newRelicAccountId?: number;
+	newRelicEntityGuid?: string;
+	newRelicEntityName?: string;
+}
+
+export const GetMethodLevelTelemetryRequestType = new RequestType<
+	GetMethodLevelTelemetryRequest,
+	GetMethodLevelTelemetryResponse,
+	void,
+	void
+>("codestream/newrelic/methodLevelTelemetry");
+
 export interface CrashOrException {
 	message?: string;
 	stackTrace: StackTrace;
