@@ -31,6 +31,11 @@ const JoinHeader = styled.h3`
 const CreateOrgWrapper = styled.div`
 	margin: 10px 0 5px 0;
 `;
+
+const InlineLoadingWrapper = styled.div`
+	margin: 20px 0 0 0;
+`;
+
 const isTeamNameValid = (name: string) => name.length > 0;
 
 interface EnhancedCSCompany {
@@ -70,6 +75,7 @@ export function CompanyCreation(props: {
 
 	const [organizations, setOrganizations] = React.useState<EnhancedCSCompany[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
+	const [isCreatingOrg, setIsCreatingOrg] = React.useState(false);
 	const [initialLoad, setInitialLoad] = React.useState(true);
 	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState(false);
 	const initialCompanyName =
@@ -143,7 +149,7 @@ export function CompanyCreation(props: {
 			organizationSettings.companyName !== "" &&
 			teamNameValidity
 		) {
-			setIsLoading(true);
+			setIsCreatingOrg(true);
 			try {
 				const { team } = await HostApi.instance.send(CreateCompanyRequestType, {
 					name: organizationSettings.companyName!
@@ -191,6 +197,10 @@ export function CompanyCreation(props: {
 		}
 	};
 
+	const orgCallIsLoading = () => {
+		return isLoading || isCreatingOrg;
+	};
+
 	return (
 		<div id="organization-page" className="onboarding-page">
 			<div className="standard-form">
@@ -217,12 +227,17 @@ export function CompanyCreation(props: {
 										/>
 									</div>
 									{isLoading && (
-										<div>
+										<InlineLoadingWrapper>
 											<Icon name="sync" loading={true} /> Loading organizations...
-										</div>
+										</InlineLoadingWrapper>
+									)}
+									{isCreatingOrg && (
+										<InlineLoadingWrapper>
+											<Icon name="sync" loading={true} /> Creating organization...
+										</InlineLoadingWrapper>
 									)}
 									<div>
-										{!isLoading && (
+										{!orgCallIsLoading() && (
 											<>
 												{organizations.map(_ => {
 													return (
