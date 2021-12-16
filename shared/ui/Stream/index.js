@@ -114,11 +114,10 @@ const EMAIL_MATCH_REGEX = new RegExp(
 	"g"
 );
 
-// Hacky but componentDidUpdate() is ineffective in its current
-// state for using a local state variable to do this check.
-let emailHasBeenCheckedForMismatch = false;
-
 export class SimpleStream extends PureComponent {
+	// Hacky but componentDidUpdate() is ineffective in its current
+	// condition for using a local state variable to do this check.
+	emailHasBeenCheckedForMismatch = false;
 	disposables = [];
 	state = {
 		composeBoxProps: {},
@@ -154,6 +153,8 @@ export class SimpleStream extends PureComponent {
 		this.disposables.push(
 			HostApi.instance.on(PixieDynamicLoggingType, this.handlePixieDynamicLoggingType, this)
 		);
+
+		this.emailHasBeenCheckedForMismatch = false;
 	}
 
 	componentWillUnmount = () => {
@@ -275,11 +276,11 @@ export class SimpleStream extends PureComponent {
 			currentUser
 		} = this.props;
 
-		if (!emailHasBeenCheckedForMismatch) {
+		if (!this.emailHasBeenCheckedForMismatch) {
 			const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 			if (response.email === currentUser.email) {
 				setUserPreference(["skipGitEmailCheck"], true);
-				emailHasBeenCheckedForMismatch = true;
+				this.emailHasBeenCheckedForMismatch = true;
 			} else {
 				const scmEmail = response.email;
 				const mappedMe = blameMap[scmEmail.replace(/\./g, "*")];
@@ -289,7 +290,7 @@ export class SimpleStream extends PureComponent {
 
 					setUserPreference(["skipGitEmailCheck"], true);
 				}
-				emailHasBeenCheckedForMismatch = true;
+				this.emailHasBeenCheckedForMismatch = true;
 			}
 		}
 	};
