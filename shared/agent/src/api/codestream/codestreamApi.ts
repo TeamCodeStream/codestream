@@ -167,7 +167,10 @@ import {
 	UpdateUserRequest,
 	UploadFileRequest,
 	UploadFileRequestType,
-	VerifyConnectivityResponse
+	VerifyConnectivityResponse,
+	DeleteCompanyRequest,
+	DeleteCompanyResponse,
+	DeleteCompanyRequestType
 } from "../../protocol/agent.protocol";
 import {
 	CSAddMarkersRequest,
@@ -1917,6 +1920,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	@log()
 	async updateCompany(request: UpdateCompanyRequest): Promise<UpdateCompanyResponse> {
 		return this.put(`/companies/${request.companyId}`, request, this._token);
+	}
+
+	@lspHandler(DeleteCompanyRequestType)
+	@log()
+	deleteCompany(request: DeleteCompanyRequest): Promise<DeleteCompanyResponse> {
+		return this.delete<DeleteCompanyResponse>(`/companies/${request.companyId}`, this._token);
 	}
 
 	async setCompanyTestGroups(

@@ -84,3 +84,18 @@ export const UpdateCompanyRequestType = new RequestType<
 	void,
 	void
 >("codestream/company/update");
+
+export interface DeleteCompanyRequest {
+	companyId: string;
+}
+
+export interface DeleteCompanyResponse {
+	company: CSCompany;
+}
+
+export const DeleteCompanyRequestType = new RequestType<
+	DeleteCompanyRequest,
+	DeleteCompanyResponse,
+	void,
+	void
+>("codestream/company/delete");

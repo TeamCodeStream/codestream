@@ -35,6 +35,8 @@ import {
 	DeleteCodeErrorResponse,
 	DeleteCodemarkRequest,
 	DeleteCodemarkResponse,
+	DeleteCompanyRequest,
+	DeleteCompanyResponse,
 	DeleteMarkerRequest,
 	DeleteMarkerResponse,
 	DeletePostRequest,
@@ -483,6 +485,7 @@ export interface ApiProvider {
 
 	fetchCompanies(request: FetchCompaniesRequest): Promise<FetchCompaniesResponse>;
 	getCompany(request: GetCompanyRequest): Promise<GetCompanyResponse>;
+	deleteCompany(request: DeleteCompanyRequest): Promise<DeleteCompanyResponse>;
 	setCompanyTestGroups(companyId: string, request: { [key: string]: string }): Promise<CSCompany>;
 	addCompanyNewRelicInfo(
 		companyId: string,

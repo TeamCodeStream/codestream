@@ -12,8 +12,11 @@ import { logout, switchToTeam } from "../store/session/actions";
 import { EMPTY_STATUS } from "./StartWork";
 import { MarkdownText } from "./MarkdownText";
 import { setProfileUser, openModal } from "../store/context/actions";
-import { confirmPopup } from "./Confirm";
-import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
+import { multiStageConfirmPopup } from "./MultiStageConfirm";
+import {
+	DeleteCompanyRequestType,
+	UpdateTeamSettingsRequestType
+} from "@codestream/protocols/agent";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { setUserPreference } from "./actions";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
@@ -118,23 +121,44 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		});
 	};
 
-	// const deleteTeam = () => {
-	// 	confirmPopup({
-	// 		title: "Delete Team",
-	// 		message:
-	// 			"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
-	// 		centered: false,
-	// 		buttons: [{ label: "OK", className: "control-button" }]
-	// 	});
-	// };
+	const deleteOrganization = () => {
+		const { currentCompanyId } = derivedState;
 
-	const deleteOrganizaiton = () => {
-		confirmPopup({
-			title: "Delete Organizaiton",
-			message:
-				"Organizaiton deletion is handled by customer service. Please send an email to support@codestream.com.",
-			centered: false,
-			buttons: [{ label: "OK", className: "control-button" }]
+		multiStageConfirmPopup({
+			centered: true,
+			stages: [
+				{
+					title: "Confirm Deletion",
+					message: "All of your organization’s codemarks and feedback requests will be deleted.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							advance: true
+						}
+					]
+				},
+				{
+					title: "Are you sure?",
+					message:
+						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							wait: true,
+							action: async () => {
+								await HostApi.instance.send(DeleteCompanyRequestType, {
+									companyId: currentCompanyId
+								});
+								dispatch(logout());
+							}
+						}
+					]
+				}
+			]
 		});
 	};
 
@@ -195,7 +219,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "-" },
 				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
 				{ label: "-" },
-				{ label: "Delete Organization", action: deleteOrganizaiton }
+				{ label: "Delete Organization", action: deleteOrganization }
 			];
 			return {
 				label: "Organization Admin",

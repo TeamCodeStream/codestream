@@ -13,6 +13,10 @@ import { CodeStreamState } from "../store";
 import { keyFilter } from "../utils";
 import { confirmPopup } from "./Confirm";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { multiStageConfirmPopup } from "./MultiStageConfirm";
+import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
+import { HostApi } from "../webview-api";
+import { logout } from "../store/session/actions";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -30,9 +34,12 @@ export function TeamMenu(props: TeamMenuProps) {
 		const isCurrentUserAdmin = adminIds.includes(state.session.userId!);
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const mappedBlame = keyFilter(blameMap || EMPTY_HASH);
+		const currentCompanyId = team.companyId;
 		return {
 			isCurrentUserAdmin,
 			mappedBlame,
+			team,
+			currentCompanyId,
 			autoJoinSupported: isFeatureEnabled(state, "autoJoin")
 		};
 	});
@@ -51,13 +58,44 @@ export function TeamMenu(props: TeamMenuProps) {
 		dispatch(openPanel(panel));
 	};
 
-	const deleteTeam = () => {
-		confirmPopup({
-			title: "Delete Team",
-			message:
-				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
-			centered: false,
-			buttons: [{ label: "OK", className: "control-button" }]
+	const deleteOrganization = () => {
+		const { currentCompanyId } = derivedState;
+
+		multiStageConfirmPopup({
+			centered: true,
+			stages: [
+				{
+					title: "Confirm Deletion",
+					message: "All of your organization’s codemarks and feedback requests will be deleted.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							advance: true
+						}
+					]
+				},
+				{
+					title: "Are you sure?",
+					message:
+						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							wait: true,
+							action: async () => {
+								await HostApi.instance.send(DeleteCompanyRequestType, {
+									companyId: currentCompanyId
+								});
+								dispatch(logout());
+							}
+						}
+					]
+				}
+			]
 		});
 	};
 
@@ -124,7 +162,7 @@ export function TeamMenu(props: TeamMenuProps) {
 				icon: <Icon name="no-entry" />,
 				label: "Delete Organization",
 				key: "delete",
-				action: () => deleteTeam()
+				action: () => deleteOrganization()
 			}
 		);
 	}
