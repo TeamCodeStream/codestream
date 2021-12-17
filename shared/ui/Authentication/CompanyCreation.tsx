@@ -120,7 +120,6 @@ export function CompanyCreation(props: {
 			setOrganizations(companiesToJoin);
 
 			setIsLoading(false);
-			setInitialLoad(false);
 		}
 
 		if (!companiesToJoin || !companiesToJoin.length) {
@@ -131,6 +130,7 @@ export function CompanyCreation(props: {
 					props.eligibleJoinCompanies && props.eligibleJoinCompanies.length ? true : false,
 				"Auth Provider": providerName
 			});
+			setInitialLoad(false);
 		}
 	});
 
@@ -150,6 +150,7 @@ export function CompanyCreation(props: {
 			teamNameValidity
 		) {
 			setIsCreatingOrg(true);
+			setInitialLoad(false);
 			try {
 				const { team } = await HostApi.instance.send(CreateCompanyRequestType, {
 					name: organizationSettings.companyName!
@@ -207,12 +208,17 @@ export function CompanyCreation(props: {
 				<fieldset className="form-body">
 					<div id="controls">
 						<div className="border-bottom-box">
-							{initialLoad && (
+							{!isCreatingOrg && initialLoad && (
 								<div>
 									<Icon name="sync" loading={true} /> Looking for possible organizations to join...
 								</div>
 							)}
-							{!initialLoad && (
+							{isCreatingOrg && !initialLoad && (
+								<div>
+									<Icon name="sync" loading={true} /> Creating organization...
+								</div>
+							)}
+							{!isCreatingOrg && !initialLoad && (
 								<>
 									<JoinHeader>
 										<FormattedMessage
@@ -286,7 +292,7 @@ export function CompanyCreation(props: {
 									</div>
 								</>
 							)}
-							{!initialLoad && (
+							{!initialLoad && !isCreatingOrg && (
 								<CreateOrgWrapper>
 									Or, you{" "}
 									<Link onClick={onClickCreateOrganization}>can create your own organization.</Link>
