@@ -2,7 +2,7 @@
 const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
-const CleanPlugin = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
@@ -16,9 +16,13 @@ module.exports = function(env, argv) {
 	env.production = env.analyzeBundle || Boolean(env.production);
 	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
+	const mode = env.production ? "production" : "development";
+
+	console.log(JSON.stringify({ mode, ...env }, null, 4));
 
 	let protocolPath = path.resolve(__dirname, "src/protocols");
 	if (!fs.existsSync(protocolPath)) {
+		console.warn("Creating protocol folder...");
 		fs.mkdirSync(protocolPath);
 	}
 
@@ -51,11 +55,14 @@ module.exports = function(env, argv) {
 	const context = path.resolve(__dirname, "webview");
 
 	const plugins = [
-		new CleanPlugin(["src/main/resources/webview"]),
+		new CleanWebpackPlugin({
+			cleanOnceBeforeBuildPatterns: ["**/*"],
+			verbose: true
+		}),
 		new webpack.DefinePlugin(
 			Object.assign(
 				{ "global.atom": false },
-				env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
+				mode === "production" ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
 			)
 		),
 		new MiniCssExtractPlugin({
@@ -65,17 +72,18 @@ module.exports = function(env, argv) {
 			template: "index.html",
 			filename: "webview.html",
 			inject: true,
-			minify: env.production
-				? {
-						removeComments: true,
-						collapseWhitespace: true,
-						removeRedundantAttributes: true,
-						useShortDoctype: true,
-						removeEmptyAttributes: true,
-						removeStyleLinkTypeAttributes: true,
-						keepClosingSlash: true
-				  }
-				: false
+			minify:
+				mode === "production"
+					? {
+							removeComments: true,
+							collapseWhitespace: true,
+							removeRedundantAttributes: true,
+							useShortDoctype: true,
+							removeEmptyAttributes: true,
+							removeStyleLinkTypeAttributes: true,
+							keepClosingSlash: true
+					  }
+					: false
 		}),
 		new ForkTsCheckerPlugin({
 			async: false,
@@ -87,7 +95,7 @@ module.exports = function(env, argv) {
 		plugins.push(new BundleAnalyzerPlugin());
 	}
 
-	if (env.production) {
+	if (mode === "production") {
 		plugins.push(
 			new TerserPlugin({
 				cache: true,
@@ -151,7 +159,12 @@ module.exports = function(env, argv) {
 				},
 				{
 					test: /\.(js|ts)x?$/,
-					use: "babel-loader",
+					use: {
+						loader: "babel-loader",
+						options: {
+							plugins: ["babel-plugin-styled-components"]
+						}
+					},
 					exclude: /node_modules/
 				},
 				{
@@ -223,7 +236,7 @@ module.exports = function(env, argv) {
 
 function createFolderSymlinkSync(source, target, env) {
 	if (env.reset) {
-		console.log("Unlinking symlink...");
+		console.log("Unlinking symlink... (env.reset)");
 		try {
 			fs.unlinkSync(target);
 		} catch (ex) {}
@@ -231,15 +244,18 @@ function createFolderSymlinkSync(source, target, env) {
 		return;
 	}
 
-	console.log("Creating symlink...");
+	console.log("Creating symlink...", source, target);
 	try {
 		fs.symlinkSync(source, target, "dir");
 	} catch (ex) {
+		console.log(`Symlink creation failed; ${ex}`);
 		try {
 			fs.unlinkSync(target);
 			fs.symlinkSync(source, target, "dir");
 		} catch (ex) {
 			console.log(`Symlink creation failed; ${ex}`);
+			console.warn("Are you running this as an adminstrator?");
 		}
 	}
+	console.log("\n");
 }

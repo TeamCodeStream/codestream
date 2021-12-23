@@ -9,6 +9,8 @@ module.exports = function(env, argv) {
 	env = env || {};
 	env.production = Boolean(env.production);
 
+	console.log(`mode production=${env.production}`);
+
 	const onEnd = [
 		{
 			copy: [
@@ -57,12 +59,12 @@ module.exports = function(env, argv) {
 	 * @type any[]
 	 */
 	const plugins = [
-		new CleanPlugin(),
+		new CleanPlugin({ cleanOnceBeforeBuildPatterns: ["**/*"], verbose: true }),
 		new FileManagerPlugin({ onEnd: onEnd }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		// Ignores optional worker_threads require by the write-file-atomic package
-		new webpack.IgnorePlugin(/^worker_threads$/)
+		new webpack.IgnorePlugin({ resourceRegExp: /^worker_threads$/ })
 	];
 
 	return {
@@ -77,6 +79,7 @@ module.exports = function(env, argv) {
 		},
 		devtool: "source-map",
 		output: {
+			path: path.resolve(process.cwd(), "dist"),
 			filename: "[name].js"
 		},
 		optimization: {
@@ -132,7 +135,12 @@ module.exports = function(env, argv) {
 			exprContextCritical: false
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"]
+			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			alias: {
+				// https://github.com/auth0/node-auth0/issues/657
+				"coffee-script": false,
+				vm2: false
+			}
 		},
 		plugins: plugins,
 		stats: {

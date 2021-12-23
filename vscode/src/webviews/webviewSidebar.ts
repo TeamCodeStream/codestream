@@ -117,7 +117,14 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 				if (err) {
 					reject(err);
 				} else {
-					resolve(data);
+					resolve(
+						data.replace(
+							/{{root}}/g,
+							Uri.file(Container.context.asAbsolutePath("."))
+								.with({ scheme: "vscode-resource" })
+								.toString()
+						)
+					);
 				}
 			});
 		});

@@ -2,7 +2,7 @@
 const webpack = require("webpack");
 const fs = require("fs");
 const path = require("path");
-const CleanPlugin = require("clean-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const FileManagerPlugin = require("filemanager-webpack-plugin");
 const ForkTsCheckerPlugin = require("fork-ts-checker-webpack-plugin");
 const HtmlPlugin = require("html-webpack-plugin");
@@ -11,7 +11,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const CircularDependencyPlugin = require("circular-dependency-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
-const HtmlWebpackInlineSourcePlugin = require("html-webpack-inline-source-plugin");
+const HtmlWebpackInlineSourcePlugin = require("@effortlessmotion/html-webpack-inline-source-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
 
 module.exports = function(env, argv) {
@@ -22,6 +22,9 @@ module.exports = function(env, argv) {
 	env.production = env.analyzeBundle || env.analyzeBundleWebview || Boolean(env.production);
 	env.reset = Boolean(env.reset);
 	env.watch = Boolean(argv.watch || argv.w);
+	const mode = env.production ? "production" : "development";
+
+	console.log(JSON.stringify({ mode, ...env }, null, 4));
 
 	let protocolPath = path.resolve(__dirname, "src/protocols");
 	if (!fs.existsSync(protocolPath)) {
@@ -54,15 +57,18 @@ module.exports = function(env, argv) {
 		env
 	);
 
-	return [getExtensionConfig(env), getWebviewConfig(env)];
+	return [getExtensionConfig(mode, env), getWebviewConfig(mode, env)];
 };
 
-function getExtensionConfig(env) {
+function getExtensionConfig(mode, env) {
 	/**
 	 * @type any[]
 	 */
 	const plugins = [
-		new CleanPlugin(["dist/agent*", "dist/extension*"], { verbose: false }),
+		new CleanWebpackPlugin({
+			cleanOnceBeforeBuildPatterns: ["agent*", "extension*", "xdg-open"],
+			verbose: true
+		}),
 		new FileManagerPlugin({
 			onEnd: [
 				{
@@ -98,6 +104,7 @@ function getExtensionConfig(env) {
 	}
 
 	if (env.analyzeBundle) {
+		console.log("adding BundleAnalyzerPlugin");
 		plugins.push(new BundleAnalyzerPlugin());
 	}
 
@@ -112,7 +119,8 @@ function getExtensionConfig(env) {
 		devtool: "source-map",
 		output: {
 			libraryTarget: "commonjs2",
-			filename: "extension.js"
+			filename: "extension.js",
+			path: path.resolve(process.cwd(), "dist")
 		},
 		optimization: {
 			minimizer: [
@@ -170,18 +178,25 @@ function getExtensionConfig(env) {
 	};
 }
 
-function getWebviewConfig(env) {
+function getWebviewConfig(mode, env) {
 	const context = path.resolve(__dirname, "src/webviews/app");
 
 	/**
 	 * @type any[]
 	 */
 	const plugins = [
-		new CleanPlugin(["dist/webview", "webview.html"]),
+		new CleanWebpackPlugin({
+			cleanOnceBeforeBuildPatterns: [
+				"webview/*",
+				"webview.html",
+				path.join(process.cwd(), "webview.html")
+			],
+			verbose: true
+		}),
 		new webpack.DefinePlugin(
 			Object.assign(
 				{ "global.atom": false },
-				env.production ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
+				mode === "production" ? { "process.env.NODE_ENV": JSON.stringify("production") } : {}
 			)
 		),
 		new MiniCssExtractPlugin({
@@ -192,17 +207,18 @@ function getWebviewConfig(env) {
 			filename: path.resolve(__dirname, "webview.html"),
 			inlineSource: ".(js|css)$",
 			inject: true,
-			minify: env.production
-				? {
-						removeComments: true,
-						collapseWhitespace: true,
-						removeRedundantAttributes: true,
-						useShortDoctype: true,
-						removeEmptyAttributes: true,
-						removeStyleLinkTypeAttributes: true,
-						keepClosingSlash: true
-				  }
-				: false
+			minify:
+				mode === "production"
+					? {
+							removeComments: true,
+							collapseWhitespace: true,
+							removeRedundantAttributes: true,
+							useShortDoctype: true,
+							removeEmptyAttributes: true,
+							removeStyleLinkTypeAttributes: true,
+							keepClosingSlash: true
+					  }
+					: false
 		}),
 		new HtmlWebpackInlineSourcePlugin(),
 		new ForkTsCheckerPlugin({
@@ -212,9 +228,10 @@ function getWebviewConfig(env) {
 	];
 
 	if (env.analyzeBundleWebview) {
+		console.log("adding BundleAnalyzerPlugin");
 		plugins.push(new BundleAnalyzerPlugin());
 	}
-	if (env.production) {
+	if (mode === "production") {
 		plugins.push(
 			new TerserPlugin({
 				cache: true,
@@ -356,7 +373,7 @@ function getWebviewConfig(env) {
 
 function createFolderSymlinkSync(source, target, env) {
 	if (env.reset) {
-		console.log("Unlinking symlink...");
+		console.log("Unlinking symlink... (env.reset)");
 		try {
 			fs.unlinkSync(target);
 		} catch (ex) {}
@@ -364,10 +381,11 @@ function createFolderSymlinkSync(source, target, env) {
 		return;
 	}
 
-	console.log("Creating symlink...");
+	console.log("Creating symlink...", source, target);
 	try {
 		fs.symlinkSync(source, target, "dir");
 	} catch (ex) {
+		console.log(`Symlink creation failed; ${ex}`);
 		try {
 			fs.unlinkSync(target);
 			fs.symlinkSync(source, target, "dir");
@@ -375,4 +393,5 @@ function createFolderSymlinkSync(source, target, env) {
 			console.log(`Symlink creation failed; ${ex}`);
 		}
 	}
+	console.log("\n");
 }
