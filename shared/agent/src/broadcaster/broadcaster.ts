@@ -140,6 +140,7 @@ export class Broadcaster {
 	private _messagesReceived: { [key: string]: number } = {};
 	private _initializationStartedAt: number = 0;
 	private _partialMessages: { [fullMessageId: string]: PartialMessage[] } = {};
+	private _connectionLostAt: number | undefined;
 
 	// call to receive status updates
 	get onDidStatusChange(): Event<BroadcasterStatus> {
@@ -492,6 +493,12 @@ export class Broadcaster {
 			this.subscribed();
 			return;
 		}
+		if (this._connectionLostAt && Date.now() - this._connectionLostAt < 60000) {
+			delete this._connectionLostAt;
+			this._debug("Connection was lost less than 60 seconds ago, not doing history catch up");
+			this.subscribed();
+			return;
+		}
 
 		// catch up since the last message received, or, if we are caught in a loop
 		// of trying to catch up already, continue to catch up from that point
@@ -617,7 +624,8 @@ export class Broadcaster {
 			// let the client know we're experiencing difficulty, and attempt to resubscribe to
 			// the channels in question
 			this._debug("Failed to confirm all subscriptions, resubscribing...");
-			this.emitTrouble(troubleChannels);
+			this._connectionLostAt = Date.now();
+			//this.emitTrouble(troubleChannels);
 			this.resubscribe(troubleChannels);
 		} else {
 			if (this._testMode) {
