@@ -166,6 +166,7 @@ export const CreatePullRequestPanel = props => {
 	const { userStatus, reviewId, prLabel } = derivedState;
 
 	const [loading, setLoading] = useState(true);
+	const [loadingForkInfo, setLoadingForkInfo] = useState(false);
 	const [loadingBranchInfo, setLoadingBranchInfo] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [pullSubmitting, setPullSubmitting] = useState(false);
@@ -576,7 +577,9 @@ export const CreatePullRequestPanel = props => {
 			return;
 		}
 
-		setLoadingBranchInfo(true);
+		if (!loadingForkInfo) {
+			setLoadingBranchInfo(true);
+		}
 
 		let repoId: string = "";
 		if (!derivedState.reviewId) {
@@ -653,7 +656,7 @@ export const CreatePullRequestPanel = props => {
 
 	const fetchRepositoryForks = async () => {
 		if (!prProviderId || !prRemoteUrl) return;
-
+		setLoadingForkInfo(true);
 		try {
 			const response = (await HostApi.instance.send(ExecuteThirdPartyRequestUntypedType, {
 				method: "getForkedRepos",
@@ -666,8 +669,10 @@ export const CreatePullRequestPanel = props => {
 				setParentRepo(response.parent);
 				setBaseForkedRepo(response.parent);
 				setHeadForkedRepo(response.parent);
+				setLoadingForkInfo(false);
 			}
 		} catch (ex) {
+			setLoadingForkInfo(false);
 			console.warn("getForkedRepos", ex);
 		}
 	};
@@ -1394,13 +1399,14 @@ export const CreatePullRequestPanel = props => {
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
-				{!reviewId && (
+				{!reviewId && !loadingForkInfo && (
 					<>
 						{" "}
 						If you need to, you can also{" "}
 						<a onClick={() => setAcrossForks(!acrossForks)}>compare across forks</a>.
 					</>
 				)}
+				{!reviewId && (loadingForkInfo || loading) && <Icon className="spin smaller" name="sync" />}
 			</PanelHeader>
 			<CancelButton onClick={props.closePanel} />
 			<span className="plane-container">
