@@ -1016,7 +1016,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						   }
 						}
 					    forks(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
-							totalCount
 							pageInfo {
 								startCursor
 								endCursor
