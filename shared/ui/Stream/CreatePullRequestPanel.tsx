@@ -577,9 +577,11 @@ export const CreatePullRequestPanel = props => {
 			return;
 		}
 
-		if (!loadingForkInfo) {
-			setLoadingBranchInfo(true);
-		}
+		// User has no access to "accross forks" screen until fork branch info
+		// is done loading.  That screen does load branch info though, so this conditional
+		// prevents showing an out of place loading spinner when fork branch info is being loaded
+		// and the user is on the default non-accross forks pr create screen.
+		if (!loadingForkInfo) setLoadingBranchInfo(true);
 
 		let repoId: string = "";
 		if (!derivedState.reviewId) {
@@ -669,8 +671,8 @@ export const CreatePullRequestPanel = props => {
 				setParentRepo(response.parent);
 				setBaseForkedRepo(response.parent);
 				setHeadForkedRepo(response.parent);
-				setLoadingForkInfo(false);
 			}
+			setLoadingForkInfo(false);
 		} catch (ex) {
 			setLoadingForkInfo(false);
 			console.warn("getForkedRepos", ex);
@@ -1399,6 +1401,7 @@ export const CreatePullRequestPanel = props => {
 		<Root className="full-height-codemark-form">
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
+				{!reviewId && (loadingForkInfo || loading) && <Icon className="spin smaller" name="sync" />}
 				{!reviewId && !loadingForkInfo && (
 					<>
 						{" "}
@@ -1406,7 +1409,6 @@ export const CreatePullRequestPanel = props => {
 						<a onClick={() => setAcrossForks(!acrossForks)}>compare across forks</a>.
 					</>
 				)}
-				{!reviewId && (loadingForkInfo || loading) && <Icon className="spin smaller" name="sync" />}
 			</PanelHeader>
 			<CancelButton onClick={props.closePanel} />
 			<span className="plane-container">
