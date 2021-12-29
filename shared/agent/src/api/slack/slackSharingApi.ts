@@ -120,6 +120,9 @@ export class SlackSharingApiProvider {
 			logger: {
 				setLevel() {},
 				setName() {},
+				getLevel() {
+					return Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO;
+				},
 				debug(...msgs) {
 					Logger.debug("SLACK", ...msgs);
 				},
