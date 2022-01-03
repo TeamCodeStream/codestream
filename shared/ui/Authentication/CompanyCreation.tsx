@@ -172,7 +172,6 @@ export function CompanyCreation(props: {
 				logError(`Unexpected error during company creation: ${errorMessage}`, {
 					companyName: organizationSettings.companyName
 				});
-				setIsLoadingJoinTeam(undefined);
 				dispatch(goToLogin());
 			}
 		}
