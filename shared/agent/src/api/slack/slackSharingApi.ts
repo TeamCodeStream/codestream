@@ -10,7 +10,8 @@ import {
 } from "@slack/web-api";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { uniq } from "lodash-es";
+import { orderBy, take, uniq } from "lodash-es";
+import asyncPool from "tiny-async-pool";
 import { Container, SessionContainer } from "../../container";
 import { LogCorrelationContext, Logger, TraceLevel } from "../../logger";
 import {
@@ -30,7 +31,6 @@ import {
 	CSObjectStream,
 	CSRepository,
 	CSSlackProviderInfo,
-	CSTeam,
 	CSUser,
 	ProviderType,
 	StreamType
@@ -83,7 +83,7 @@ export class SlackSharingApiProvider {
 	private readonly _slackToken: string;
 	private readonly _slackUserId: string;
 
-	private _userMaps: UserMaps | undefined;
+	private _userMaps: Promise<UserMaps> | undefined = undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: false,
@@ -113,7 +113,7 @@ export class SlackSharingApiProvider {
 		this._slackUserId = providerInfo.userId!;
 	}
 
-	protected newWebClient() {
+	private newWebClient() {
 		return new WebClient(this._slackToken, {
 			agent: this._proxyAgent,
 			logLevel: Logger.level === TraceLevel.Debug ? LogLevel.DEBUG : LogLevel.INFO,
@@ -173,43 +173,114 @@ export class SlackSharingApiProvider {
 		return this._slackUserId;
 	}
 
-	private async ensureUserMaps(): Promise<UserMaps> {
-		if (this._userMaps === undefined) {
-			const slackUsers = (await this.fetchUsers()).users;
-
-			const userMaps = {
-				slackUsernamesById: new Map(),
-				slackUserIdsByUsername: new Map(),
-				slackUserIdsByEmail: new Map(),
-				codeStreamUsersByUsername: new Map(),
-				codeStreamUsersByUserId: new Map()
-			};
-
-			for (const user of slackUsers) {
-				if (user.username) {
-					userMaps.slackUsernamesById.set(user.id, user.username);
-					userMaps.slackUserIdsByUsername.set(user.username.toLowerCase(), user.id);
-				}
-				// exclude users without emails or are these weird cs-.*@unknown.com ones
-				if (!user.email) continue;
-
-				const email = user.email.toLowerCase();
-				if (email.indexOf("cs-") === 0 && email.endsWith("@unknown.com")) continue;
-
-				userMaps.slackUserIdsByEmail.set(email, user.id);
-			}
-
-			const codeStreamUsers = (await SessionContainer.instance().users.get()).users;
-			for (const user of codeStreamUsers) {
-				userMaps.codeStreamUsersByUserId.set(user.id, user);
-				// username must exist for CS users, right?
-				if (user.username) {
-					userMaps.codeStreamUsersByUsername.set(user.username.toLowerCase(), user);
-				}
-			}
-			this._userMaps = userMaps;
+	private async ensureUserMaps(conversations?: any[]): Promise<UserMaps> {
+		if (this._userMaps != null) {
+			Logger.log("Slack ensureUserMaps awaiting existing");
+			await this._userMaps;
+			Logger.log("Slack ensureUserMaps awaiting complete");
+		} else {
+			Logger.log("Slack ensureUserMaps starting");
+			this._userMaps = this.ensureUserMapsCore(conversations);
+			await this._userMaps;
+			Logger.log("Slack ensureUserMaps complete");
 		}
-		return this._userMaps;
+
+		return this._userMaps as Promise<UserMaps>;
+	}
+
+	private async ensureUserMapsCore(
+		conversations?: {
+			user: string;
+			priority: number;
+			is_archived: boolean;
+			is_user_deleted: boolean;
+		}[]
+	): Promise<UserMaps> {
+		return new Promise(async (resolve, reject) => {
+			try {
+				const cc = Logger.getCorrelationContext();
+
+				let slackUsers: CSUser[] = [];
+				if (conversations == null) {
+					conversations = this.filterConversationsByIm(await this.fetchConversations(cc));
+				}
+
+				if (conversations?.length) {
+					const start = process.hrtime();
+					const poolSize = 10;
+					// make X concurrent requests using a promise pool to reduce the time needed to make
+					// `conversations.length` number of requests. users.info has a Tier 4 rate limit
+					// (100+ / minute = Enjoy a large request quota for Tier 4 methods, including generous burst behavior.)
+					slackUsers = (
+						await asyncPool(poolSize, conversations, (_: { user: string }) => {
+							return new Promise((res, rej) => {
+								this.slackApiCall("users.info", {
+									// user is the user id from Slack
+									user: _.user
+								})
+									.then(response => {
+										const { ok, user } = response as WebAPICallResult & { user: any };
+										if (ok) {
+											res(fromSlackUser(user, this._codestreamTeamId));
+										} else {
+											rej(undefined);
+										}
+									})
+									.catch(ex => {
+										Logger.warn("Slack user error", {
+											error: ex,
+											user: _.user
+										});
+										rej(undefined);
+									});
+							});
+						})
+					).filter(_ => _) as CSUser[];
+
+					Logger.log(
+						`Fetched Slack users (${
+							conversations.length
+						}) in \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+					);
+				}
+
+				const userMaps = {
+					slackUsernamesById: new Map(),
+					slackUserIdsByUsername: new Map(),
+					slackUserIdsByEmail: new Map(),
+					codeStreamUsersByUsername: new Map(),
+					codeStreamUsersByUserId: new Map()
+				};
+
+				for (const user of slackUsers) {
+					if (user.username) {
+						userMaps.slackUsernamesById.set(user.id, user.username);
+						userMaps.slackUserIdsByUsername.set(user.username.toLowerCase(), user.id);
+					}
+					// exclude users without emails or are these weird cs-.*@unknown.com ones
+					if (!user.email) continue;
+
+					const email = user.email.toLowerCase();
+					if (email.indexOf("cs-") === 0 && email.endsWith("@unknown.com")) continue;
+
+					userMaps.slackUserIdsByEmail.set(email, user.id);
+				}
+
+				const codeStreamUsers = (await SessionContainer.instance().users.get()).users;
+				for (const user of codeStreamUsers) {
+					userMaps.codeStreamUsersByUserId.set(user.id, user);
+					// username must exist for CS users, right?
+					if (user.username) {
+						userMaps.codeStreamUsersByUsername.set(user.username.toLowerCase(), user);
+					}
+				}
+
+				resolve(userMaps);
+			} catch (ex) {
+				Logger.error(ex, "ensureUserMapsCore failed");
+				reject(undefined);
+			}
+		});
 	}
 
 	@log({
@@ -397,6 +468,33 @@ export class SlackSharingApiProvider {
 		}
 	}
 
+	private async fetchConversations(cc?: LogCorrelationContext | undefined) {
+		const start = process.hrtime();
+		Logger.log(cc, "Fetching pages...");
+		const responses = await this.slackApiCallPaginated("users.conversations", {
+			exclude_archived: true,
+			types: "public_channel,private_channel,mpim,im",
+			limit: 1000
+		});
+		const conversations = [];
+		for await (const response of responses) {
+			const { ok, error, channels: data } = response as WebAPICallResult & {
+				channels: any[];
+			};
+			if (!ok) throw new Error(error);
+
+			this.logPaginatedResponse(cc, response);
+
+			conversations.push(...data);
+		}
+		Logger.log(
+			cc,
+			`Fetched user.conversations \u2022 ${Strings.getDurationMilliseconds(start)} ms`
+		);
+
+		return conversations;
+	}
+
 	@log({
 		exit: (r: FetchStreamsResponse) =>
 			`\n${r.streams
@@ -413,30 +511,9 @@ export class SlackSharingApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const responses = await this.slackApiCallPaginated("users.conversations", {
-				exclude_archived: true,
-				types: "public_channel,private_channel,mpim,im",
-				limit: 1000
-			});
-
-			const start = process.hrtime();
-			Logger.log(cc, "Fetching pages...");
-
-			const conversations = [];
-			for await (const response of responses) {
-				const { ok, error, channels: data } = response as WebAPICallResult & {
-					channels: any[];
-				};
-				if (!ok) throw new Error(error);
-
-				this.logPaginatedResponse(cc, response);
-
-				conversations.push(...data);
-			}
-
-			Logger.log(cc, `Fetched pages \u2022 ${Strings.getDurationMilliseconds(start)} ms`);
-
-			const userMaps = await this.ensureUserMaps();
+			const conversations = await this.fetchConversations(cc);
+			const imConversations = this.filterConversationsByIm(conversations);
+			const userMaps = await this.ensureUserMaps(imConversations);
 
 			const pendingRequestsQueue: DeferredStreamRequest<
 				CSChannelStream | CSDirectStream | CSObjectStream
@@ -456,12 +533,8 @@ export class SlackSharingApiProvider {
 					undefined,
 					pendingRequestsQueue
 				),
-				this.fetchIMs(
-					conversations.filter(c => c.is_im),
-					userMaps.slackUsernamesById,
-					undefined,
-					pendingRequestsQueue
-				)
+				// only going to take the top N im conversations as dictated by filterConversationsByIm
+				this.fetchIMs(imConversations, userMaps.slackUsernamesById, undefined, pendingRequestsQueue)
 			]);
 
 			const streams = channels.concat(...groups, ...ims);
@@ -1085,14 +1158,14 @@ export class SlackSharingApiProvider {
 
 	private logPaginatedResponse(cc: LogCorrelationContext | undefined, response: WebAPICallResult) {
 		try {
-			const typeofResponse_metadata =
+			const typeofResponseMetadata =
 				response && response.response_metadata ? typeof response.response_metadata : "";
 
 			Logger.log(cc, `Fetched page;`, {
 				hasResponse: response != null,
-				typeofResponse_metadata: typeofResponse_metadata,
+				typeofResponse_metadata: typeofResponseMetadata,
 				cursor:
-					response && response.response_metadata && typeofResponse_metadata === "object"
+					response && response.response_metadata && typeofResponseMetadata === "object"
 						? response.response_metadata.next_cursor
 						: ""
 			});
@@ -1102,6 +1175,47 @@ export class SlackSharingApiProvider {
 				error: ex
 			});
 		}
+	}
+	/**
+	 * Returns a list of recent user conversations ordered by priority with a limit
+	 *
+	 * @private
+	 * @param {{
+	 * 			user: string;
+	 * 			priority: number;
+	 * 			is_im: boolean;
+	 * 			is_archived: boolean;
+	 * 			is_user_deleted: boolean;
+	 * 		}[]} conversations
+	 * @param {number} [limit=50]
+	 * @return {*}
+	 * @memberof SlackSharingApiProvider
+	 */
+	private filterConversationsByIm(
+		conversations: {
+			// this is the user id
+			user: string;
+			priority: number;
+			is_im: boolean;
+			is_archived: boolean;
+			is_user_deleted: boolean;
+		}[],
+		limit: number = 50
+	) {
+		conversations = conversations || [];
+		const originalLength = conversations.length;
+		conversations = take(
+			orderBy(
+				conversations.filter(_ => _.is_im && !_.is_archived && !_.is_user_deleted),
+				"priority",
+				"desc"
+			),
+			limit
+		);
+		Logger.log(
+			`Fetching Slack users (${originalLength} original) filtered to ${conversations.length}...`
+		);
+		return conversations;
 	}
 }
 
