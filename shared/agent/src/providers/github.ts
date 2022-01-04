@@ -1041,8 +1041,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			);
 
-			console.warn("hi!", owner, name);
-
 			// if this is a fork, get the forks of the parent
 			if (response.repository.parent && !recurseFailsafe) {
 				Logger.log("Getting parent forked repos");
