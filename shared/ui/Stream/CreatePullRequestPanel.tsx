@@ -1402,7 +1402,7 @@ export const CreatePullRequestPanel = props => {
 			<PanelHeader title={`Open a ${prLabel.PullRequest}`}>
 				{reviewId ? "" : `Choose two branches to start a new ${prLabel.pullrequest}.`}
 				{!reviewId && (loadingForkInfo || loading) && <Icon className="spin smaller" name="sync" />}
-				{!reviewId && !loadingForkInfo && (
+				{!reviewId && !loadingForkInfo && forkedRepos.length > 0 && (
 					<>
 						{" "}
 						If you need to, you can also{" "}

@@ -1007,12 +1007,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						refs(first: 100, refPrefix: "refs/heads/") {
 						   nodes {
 							 name
-							 target {
-							   ... on Commit {
-								 oid
-								 committedDate
-							   }
-							 }
 						   }
 						}
 					    forks(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
@@ -1034,12 +1028,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								refs(first: 100, refPrefix: "refs/heads/") {
 									nodes {
 									  name
-									  target {
-										... on Commit {
-										  oid
-										  committedDate
-										}
-									  }
 									}
 								}
 							}
@@ -1052,6 +1040,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					name: name
 				}
 			);
+
+			console.warn("hi!", owner, name);
 
 			// if this is a fork, get the forks of the parent
 			if (response.repository.parent && !recurseFailsafe) {
