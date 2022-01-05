@@ -846,59 +846,115 @@ export const getProviderPullRequestRepo = createSelector(
 	getRepos,
 	getCurrentProviderPullRequest,
 	getPullRequestProviderId,
-	(repos, currentPr, providerId) => {
-		let currentRepo: CSRepository | undefined = undefined;
-
-		try {
-			if (!currentPr || !currentPr.conversations) {
-				return undefined;
-			}
-			let repoName;
-			let repoUrl;
-			if (providerId && providerId.indexOf("github") > -1) {
-				// this is the github case
-				repoName = currentPr.conversations.repository.repoName.toLowerCase();
-				repoUrl = currentPr.conversations.repository.url.toLowerCase();
-			} else if (providerId && providerId.indexOf("gitlab") > -1) {
-				if (!currentPr.conversations.project) {
-					console.error("Missing project name for: ", currentPr);
-				}
-				// this is for gitlab
-				repoName = currentPr.conversations.project?.name?.toLowerCase();
-				repoUrl = currentPr.conversations.project.mergeRequest.webUrl.toLowerCase();
-			}
-			let matchingRepos = repos.filter(_ =>
-				_.remotes.some(
-					r =>
-						r.normalizedUrl &&
-						r.normalizedUrl.length > 2 &&
-						r.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-						repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1
-				)
-			);
-			if (matchingRepos.length === 1) {
-				currentRepo = matchingRepos[0];
-			} else {
-				let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
-				if (matchingRepos2.length != 1) {
-					matchingRepos2 = repos.filter(_ =>
-						_.remotes.some(r => repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
-					);
-					if (matchingRepos2.length === 1) {
-						currentRepo = matchingRepos2[0];
-					} else {
-						console.error(`Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`);
-					}
-				} else {
-					currentRepo = matchingRepos2[0];
-				}
-			}
-		} catch (error) {
-			console.error(error);
-		}
-		return currentRepo;
+	(repos: CSRepository[], currentPr, providerId?: string) => {
+		const result = getProviderPullRequestRepoObjectCore(repos, currentPr, providerId);
+		return result?.currentRepo;
 	}
 );
+
+/**
+ *  Attempts to get a CS repo for the current PR
+ */
+export const getProviderPullRequestRepoObject = createSelector(
+	getRepos,
+	getCurrentProviderPullRequest,
+	getPullRequestProviderId,
+	(repos: CSRepository[], currentPr, providerId?: string) => {
+		return getProviderPullRequestRepoObjectCore(repos, currentPr, providerId);
+	}
+);
+
+const getProviderPullRequestRepoObjectCore = (
+	repos: CSRepository[],
+	currentPr: {
+		conversations: {
+			// github
+			repository?: {
+				repoName: string;
+				url: string;
+			};
+			// gitlab
+			project?: {
+				name: string;
+				repoName: string;
+				mergeRequest: {
+					webUrl: string;
+				};
+			};
+		};
+	},
+	providerId?: string
+) => {
+	const result: {
+		error?: string;
+		currentRepo?: CSRepository;
+		repos?: CSRepository[];
+		repoName?: string;
+		repoUrl?: string;
+	} = {};
+
+	try {
+		if (!currentPr || !currentPr.conversations) {
+			return {
+				error: "missing current pr or conversations"
+			};
+		}
+		let repoName;
+		let repoUrl;
+		if (
+			providerId &&
+			providerId.indexOf("github") > -1 &&
+			currentPr.conversations &&
+			currentPr.conversations.repository
+		) {
+			// this is the github case
+			repoName = currentPr.conversations.repository.repoName.toLowerCase();
+			repoUrl = currentPr.conversations.repository.url.toLowerCase();
+		} else if (providerId && providerId.indexOf("gitlab") > -1) {
+			if (!currentPr.conversations.project) {
+				result.error = "Missing project name for: " + currentPr;
+			}
+			// this is for gitlab
+			repoName = currentPr.conversations.project?.name?.toLowerCase();
+			repoUrl = currentPr.conversations.project!.mergeRequest.webUrl.toLowerCase();
+		}
+		result.repoName = repoName;
+		result.repoUrl = repoUrl;
+		result.repos = repos;
+
+		const matchingRepos = repos.filter(_ =>
+			_.remotes.some(
+				r =>
+					r.normalizedUrl &&
+					r.normalizedUrl.length > 2 &&
+					r.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
+					repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1
+			)
+		);
+
+		if (matchingRepos.length === 1) {
+			result.currentRepo = matchingRepos[0];
+		} else {
+			let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
+			if (matchingRepos2.length != 1) {
+				matchingRepos2 = repos.filter(_ =>
+					_.remotes.some(r => repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
+				);
+				if (matchingRepos2.length === 1) {
+					result.currentRepo = matchingRepos2[0];
+				} else {
+					result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
+				}
+			} else {
+				result.currentRepo = matchingRepos2[0];
+			}
+		}
+	} catch (ex) {
+		result.error = typeof ex === "string" ? ex : ex.message;
+		console.error(ex);
+	}
+	return result;
+};
 
 export const getProviderPullRequestCollaborators = createSelector(
 	getCurrentProviderPullRequest,

@@ -138,6 +138,13 @@ export class TelemetryService {
 		this._superProps = props;
 	}
 
+	addSuperProps(props: { [key: string]: string | number | boolean }) {
+		this._superProps = {
+			...this._superProps,
+			...props
+		};
+	}
+
 	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
 		this._firstSessionStartedAt = firstSessionStartedAt;
 		this._firstSessionTimesOutAfter = firstSessionTimesOutAfter;

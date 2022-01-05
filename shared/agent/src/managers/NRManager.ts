@@ -80,6 +80,8 @@ const StackTraceParsers: { [key: string]: Parser } = {
 const MISSING_REF_MESSAGE =
 	"Your version of the code may not match the environment that triggered the error. Fetch the following reference to better investigate the error.\n${ref}";
 const MISSING_REF_HELP_URL =
+	"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring/#sha";
+const CONFIGURE_ERROR_REF_HELP_URL =
 	"http://docs.newrelic.com/docs/codestream/start-here/codestream-new-relic/#apm";
 
 @lsp
@@ -177,23 +179,18 @@ export class NRManager {
 			if (!firstWarning) firstWarning = warning;
 		};
 		if (!matchingRepoPath) {
-			const mappedRepo = await repositoryMappings.getByRepoId(repoId);
-			if (mappedRepo) {
-				matchingRepoPath = mappedRepo;
-			} else {
-				const repo = await repos.getById(repoId);
-				setWarning({
-					message: `Repo (${
-						repo ? repo.name : repoId
-					}) not found in your editor. Open it in order to navigate the stack trace.`
-				});
-			}
+			const repo = await repos.getById(repoId);
+			setWarning({
+				message: `Repo (${
+					repo ? repo.name : repoId
+				}) not found in your editor. Open it in order to navigate the stack trace.`
+			});
 		}
 
 		if (!ref) {
 			setWarning({
-				message: `No git reference associated with this error. Your version of the code may not match the environment that triggered the error.`,
-				helpUrl: MISSING_REF_HELP_URL
+				message: `[Associate a build sha or release tag with your errors] so that CodeStream can help make sure you’re looking at the right version of the code.`,
+				helpUrl: CONFIGURE_ERROR_REF_HELP_URL
 			});
 		} else if (matchingRepoPath) {
 			try {
@@ -301,15 +298,9 @@ export class NRManager {
 		const { git, repositoryMappings } = SessionContainer.instance();
 
 		const matchingRepo = await git.getRepositoryById(repoId);
-		let repoPath = matchingRepo?.path;
-
+		const repoPath = matchingRepo?.path;
 		if (!repoPath) {
-			const mappedRepo = await repositoryMappings.getByRepoId(repoId);
-			if (mappedRepo) {
-				repoPath = mappedRepo;
-			} else {
-				return { error: "Unable to find repo " + repoId };
-			}
+			return { error: "Unable to find repo " + repoId };
 		}
 
 		const fullPath = path.join(repoPath, filePath);

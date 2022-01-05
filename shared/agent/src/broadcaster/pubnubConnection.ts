@@ -15,7 +15,8 @@ import {
 	BroadcasterStatusType,
 	MessageCallback,
 	MessageEvent,
-	StatusCallback
+	StatusCallback,
+	HistoryFetchCallback
 } from "./broadcaster";
 import { PubnubHistory } from "./pubnubHistory";
 
@@ -45,6 +46,7 @@ export interface PubnubInitializer {
 	httpsAgent?: HttpsAgent | HttpsProxyAgent;
 	onMessage: MessageCallback;
 	onStatus: StatusCallback;
+	onFetchHistory?: HistoryFetchCallback;
 }
 
 // internal, maintains map of channels and whether they are yet successfully subscribed
@@ -62,6 +64,7 @@ export class PubnubConnection implements BroadcasterConnection {
 	private _logger: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;
+	private _historyFetchCallback: HistoryFetchCallback | undefined;
 	private _subscriptionMap: SubscriptionMap = {};
 
 	// initialize PubnubConnection and optionally subscribe to channels
@@ -85,6 +88,7 @@ export class PubnubConnection implements BroadcasterConnection {
 
 		this._messageCallback = options.onMessage;
 		this._statusCallback = options.onStatus;
+		this._historyFetchCallback = options.onFetchHistory;
 		this.addListener();
 		this.startPinging();
 
@@ -261,6 +265,7 @@ export class PubnubConnection implements BroadcasterConnection {
 	fetchHistory(options: BroadcasterHistoryInput): Promise<BroadcasterHistoryOutput> {
 		return new PubnubHistory().fetchHistory({
 			pubnub: this._pubnub!,
+			historyFetchCallback: this._historyFetchCallback,
 			...options
 		});
 	}

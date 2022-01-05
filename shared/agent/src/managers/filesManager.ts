@@ -119,6 +119,7 @@ export class FilesManager extends EntityManagerBase<CSFileStream> {
 	private async fetchByRepoId(criteria: KeyValue<CSFileStream>[]): Promise<CSFileStream[]> {
 		const [repoId] = getValues(criteria);
 		const response = await this.session.api.fetchFileStreams({ repoId: repoId });
+		this.cacheResponse(response);
 		return response.streams as CSFileStream[];
 	}
 

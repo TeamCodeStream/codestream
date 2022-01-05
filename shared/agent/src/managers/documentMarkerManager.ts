@@ -691,7 +691,7 @@ export class DocumentMarkerManager {
 							const line = await findBestMatchingLine(
 								contents,
 								marker.code,
-								marker.locationWhenCreated[0]
+								marker.locationWhenCreated ? marker.locationWhenCreated[0] : 0
 							);
 							if (line > 0) {
 								locations[marker.id] = {
@@ -861,15 +861,8 @@ export class DocumentMarkerManager {
 		}
 
 		const repo = await git.getRepositoryById(repoId);
-		let repoPath;
-		if (repo === undefined) {
-			const mappedRepoPath = await repositoryMappings.getByRepoId(repoId);
-			if (!mappedRepoPath) return undefined;
-
-			repoPath = mappedRepoPath;
-		} else {
-			repoPath = repo.path;
-		}
+		const repoPath = repo?.path;
+		if (!repoPath) return undefined;
 
 		const filePath = path.join(repoPath, file);
 		const documentUri = URI.file(filePath).toString();

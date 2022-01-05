@@ -233,6 +233,7 @@ export interface GitLabMergeRequest {
 	/* this might not exist in all editions*/
 	commitCount?: number;
 	createdAt: string;
+	conflicts?: boolean;
 	/* this might not exist in all editions*/
 	currentUserTodos?: {
 		nodes: {

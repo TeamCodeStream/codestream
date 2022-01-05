@@ -525,7 +525,7 @@ export const StartWork = (props: Props) => {
 		if (card && card.body) {
 			description = card.body.replace(/\[Open in IDE\].*/, "");
 			if (card.provider.id === "github*com" || card.provider.id === "github/enterprise") {
-				description = description.replace(/<!--[\s\S]*?-->/, "")
+				description = description.replace(/<!--[\s\S]*?-->/, "");
 			}
 		}
 		return description;
@@ -731,9 +731,12 @@ export const StartWork = (props: Props) => {
 					uri,
 					fromBranch: fromBranch || currentBranch
 				});
-				// FIXME handle error
+
 				if (result.error) {
-					console.warn("ERROR FROM SET BRANCH: ", result.error);
+					logError(result.error, {
+						branch: branch,
+						uri: uri
+					});
 					setScmError(result.error);
 					setLoading(false);
 					return;
@@ -902,7 +905,9 @@ export const StartWork = (props: Props) => {
 					{
 						label: "Contact Support",
 						action: () => {
-							HostApi.instance.send(OpenUrlRequestType, { url: "https://docs.newrelic.com/docs/codestream/" });
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: "https://docs.newrelic.com/docs/codestream/"
+							});
 						}
 					}
 				]

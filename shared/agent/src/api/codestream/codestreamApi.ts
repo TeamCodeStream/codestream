@@ -309,6 +309,7 @@ import {
 } from "../apiProvider";
 import { CodeStreamPreferences } from "../preferences";
 import { BroadcasterEvents } from "./events";
+import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
 import { CodeStreamUnreads } from "./unreads";
 
 @lsp
@@ -452,7 +453,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		Logger.log(
 			`CodeStream user '${response.user.username}' (${
 				response.user.id
-			}) is logging into ${provider || "uknown"}${
+			}) is logging into ${provider || "unknown"}${
 				response.providerAccess ? `:${response.providerAccess}` : ""
 			} and belongs to ${response.teams.length} team(s)\n${response.teams
 				.map(t => `\t${t.name} (${t.id})`)
@@ -482,7 +483,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 					email: response.user.email,
 					userId: response.user.id,
 					eligibleJoinCompanies: response.eligibleJoinCompanies,
-					accountIsConnected: response.accountIsConnected
+					accountIsConnected: response.accountIsConnected,
+					isWebmail: response.isWebmail,
+					// isRegistered and user object passed for early segment identify call
+					isRegistered: response.user.isRegistered,
+					user: response.user
 				}
 			} as LoginFailResponse;
 		}
@@ -547,10 +552,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 					}
 				}
 
+				// Check the lastTeamId preference and use that, if available.
 				// If we still can't find a team, then just pick the first one
 				if (options.teamId == null) {
+					if (response.user.preferences?.lastTeamId) {
+						options.teamId = response.user.preferences.lastTeamId;
+						pickedTeamReason = " because the team was the last saved team";
+					}
+
 					// Pick the oldest (first) Slack team if there is one
-					if (User.isSlack(response.user)) {
+					if (options.teamId == null && User.isSlack(response.user)) {
 						const team = teams.find(t => Team.isSlack(t));
 						if (team) {
 							options.teamId = team.id;
@@ -2476,6 +2487,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request,
 			this._token
 		);
+	}
+
+	announceHistoryFetch(info: HistoryFetchInfo): void {
+		const session = SessionContainer.instance().session;
+		if (session.announceHistoryFetches()) {
+			this.get<{}>("/history-fetch?" + qs.stringify(info));
+		}
 	}
 
 	async delete<R extends object>(url: string, token?: string): Promise<R> {

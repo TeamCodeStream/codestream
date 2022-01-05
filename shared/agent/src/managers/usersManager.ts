@@ -62,7 +62,9 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 		response.users.forEach(user => {
 			this.resolveModifiedRepos(user);
 		});
-		this.cache.reset(response.users);
+		const { users, ...rest } = response;
+		this.cache.reset(users);
+		this.cacheResponse(rest);
 	}
 
 	async getByEmails(

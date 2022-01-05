@@ -30,6 +30,10 @@ export class TelemetryManager {
 		this._telemetry.setSuperProps(props);
 	}
 
+	addSuperProps(props: { [key: string]: string | number | boolean }) {
+		this._telemetry.addSuperProps(props);
+	}
+
 	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
 		this._telemetry.setFirstSessionProps(firstSessionStartedAt, firstSessionTimesOutAfter);
 	}

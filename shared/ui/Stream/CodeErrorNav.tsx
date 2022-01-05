@@ -11,6 +11,7 @@ import {
 	api,
 	fetchCodeError,
 	fetchErrorGroup,
+	openErrorGroup,
 	PENDING_CODE_ERROR_ID_PREFIX,
 	resolveStackTrace,
 	setErrorGroup
@@ -223,6 +224,7 @@ export function CodeErrorNav(props: Props) {
 	const ref = derivedState.currentCodeErrorData?.commit || derivedState.currentCodeErrorData?.tag;
 	const multipleRepos = derivedState.currentCodeErrorData?.multipleRepos;
 	const sidebarLocation = derivedState.sidebarLocation;
+	const claimWhenConnected = derivedState.currentCodeErrorData?.claimWhenConnected;
 
 	const previousIsConnectedToNewRelic = usePrevious(derivedState.isConnectedToNewRelic);
 
@@ -336,7 +338,12 @@ export function CodeErrorNav(props: Props) {
 		let refToUse: string | undefined;
 		let entityIdToUse: string | undefined;
 
-		if (pendingErrorGroupGuid) {
+		if (claimWhenConnected) {
+			// we get here if the code error is not yet claimed by the current team,
+			// in which case we need to circle back and "reopen" it again
+			dispatch(closeAllPanels());
+			return dispatch(openErrorGroup(pendingErrorGroupGuid!, occurrenceId));
+		} else if (pendingErrorGroupGuid) {
 			errorGroupGuidToUse = pendingErrorGroupGuid;
 			occurrenceIdToUse = occurrenceId;
 			refToUse = ref;
@@ -426,10 +433,8 @@ export function CodeErrorNav(props: Props) {
 				if (!targetRemote) {
 					if (derivedState.isConnectedToNewRelic) {
 						setRepoAssociationError({
-							title: "Missing Repository Info",
-							description: `In order to view this stack trace, please select a repository to associate with ${
-								errorGroup ? errorGroup.entityName + " " : ""
-							}on New Relic. If the repo that was used to build this service doesn't appear in the dropdown, open it in your IDE.`
+							title: "Which Repository?",
+							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`
 						});
 						return;
 					}
@@ -618,18 +623,31 @@ export function CodeErrorNav(props: Props) {
 						const split = _.message.split("\n");
 
 						return split.map((item, index) => {
-							return (
-								<div key={"warningOrError_" + index}>
-									{item}
-									{_.helpUrl && split.length - 1 === index && (
-										<>
-											{" "}
-											<Link href={_.helpUrl!}>Learn more</Link>
-										</>
-									)}
-									<br />
-								</div>
-							);
+							const templateRe = /(.*)\[(.+)\](.*)/g;
+							const match = templateRe.exec(item);
+							if (match != null) {
+								const [, pre, linkText, post] = match;
+								return (
+									<div key={"warningOrError_" + index}>
+										{pre}
+										<Link href={_.helpUrl!}>{linkText}</Link>
+										{post}
+									</div>
+								);
+							} else {
+								return (
+									<div key={"warningOrError_" + index}>
+										{item}
+										{_.helpUrl && split.length - 1 === index && (
+											<>
+												{" "}
+												<Link href={_.helpUrl!}>Learn more</Link>
+											</>
+										)}
+										<br />
+									</div>
+								);
+							}
 						});
 					})}
 				</div>

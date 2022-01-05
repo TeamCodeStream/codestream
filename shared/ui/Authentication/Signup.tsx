@@ -76,7 +76,8 @@ export const Signup = (props: Props) => {
 			oktaEnabled: state.configs.isOnPrem,
 			isInVSCode: state.ide.name === "VSC",
 			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin,
-			acceptedTOS: state.session.acceptedTOS
+			acceptedTOS: state.session.acceptedTOS,
+			webviewFocused: state.context.hasFocus
 		};
 	});
 	const [email, setEmail] = useState(props.email || "");
@@ -125,6 +126,8 @@ export const Signup = (props: Props) => {
 
 	useDidMount(() => {
 		getUserInfo();
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Create Account" });
 		if (props.teamId) getTeamAuthInfo(props.teamId);
 	});
 
@@ -366,6 +369,7 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
+								<h3>Create a CodeStream account, for free</h3>
 								{(!limitAuthentication || authenticationProviders["github*com"]) && (
 									<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
 										<Icon name="mark-github" />
@@ -408,7 +412,6 @@ export const Signup = (props: Props) => {
 				<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 					{(!limitAuthentication || authenticationProviders["email"]) && (
 						<div className="border-bottom-box">
-							<h3>Create an Account</h3>
 							{wasInvited && (
 								<p className="explainer">
 									Create an account to join the <strong>{props.teamName}</strong> team.
@@ -423,7 +426,9 @@ export const Signup = (props: Props) => {
 											defaultMessage="Something went wrong! Please try again, or "
 										/>
 										<FormattedMessage id="contactSupport" defaultMessage="contact support">
-											{text => <Link href="https://docs.newrelic.com/docs/codestream/">{text}</Link>}
+											{text => (
+												<Link href="https://docs.newrelic.com/docs/codestream/">{text}</Link>
+											)}
 										</FormattedMessage>
 										.
 									</div>

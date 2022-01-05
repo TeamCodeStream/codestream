@@ -38,6 +38,12 @@ export interface BroadcasterHistoryOutput {
 
 export type MessageCallback = (message: any) => void;
 export type StatusCallback = (status: BroadcasterStatus) => void;
+export interface HistoryFetchInfo {
+	channels: string;
+	before: string;
+	after: string;
+}
+export type HistoryFetchCallback = (info: HistoryFetchInfo) => void;
 
 // use this interface to initialize the Broadcaster class
 export interface BroadcasterInitializer {
@@ -181,6 +187,7 @@ export class Broadcaster {
 				httpsAgent: this._httpsAgent,
 				onMessage: this.onMessage.bind(this),
 				onStatus: this.onStatus.bind(this),
+				onFetchHistory: this.onFetchHistory.bind(this),
 				debug: this._debug
 			});
 			this._broadcasterConnection = pubnubConnection;
@@ -375,6 +382,10 @@ export class Broadcaster {
 			default:
 				this._statusEmitter.fire(status);
 		}
+	}
+
+	onFetchHistory(info: HistoryFetchInfo) {
+		this._api.announceHistoryFetch(info);
 	}
 
 	// for testing purposes, simulate a network error

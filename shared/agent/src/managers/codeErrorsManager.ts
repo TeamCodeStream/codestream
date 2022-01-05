@@ -71,7 +71,9 @@ export class CodeErrorsManager extends CachedEntityManagerBase<CSCodeError> {
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchCodeErrors({});
-		this.cache.reset(response.codeErrors);
+		const { codeErrors, ...rest } = response;
+		this.cache.reset(codeErrors);
+		this.cacheResponse(rest);
 	}
 
 	async getById(id: Id): Promise<CSCodeError> {

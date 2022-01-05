@@ -1,5 +1,8 @@
 "use strict";
-import { RawRTMessage } from "../api/apiProvider";
+import { MessageType, RawRTMessage } from "../api/apiProvider";
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
+import { CSEntity, CSMarkerLocations } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { debug, log } from "../system";
 import { IndexParams } from "./cache";
@@ -119,6 +122,32 @@ export abstract class ManagerBase<T> {
 		);
 
 		return resolved.filter(Boolean) as T[];
+	}
+
+	cacheResponse(response: any) {
+		const container = SessionContainer.instance();
+		this.cacheResponseEntities(container.codemarks, [response.codemark]);
+		this.cacheResponseEntities(container.codemarks, response.codemarks);
+		this.cacheResponseEntities(container.codeErrors, response.codeErrors);
+		this.cacheResponseEntities(container.companies, response.companies);
+		this.cacheResponseEntities(container.markers, response.markers);
+		this.cacheResponseEntities(container.markerLocations, response.markerLocations);
+		this.cacheResponseEntities(container.posts, response.posts);
+		this.cacheResponseEntities(container.repos, response.repos);
+		this.cacheResponseEntities(container.streams, response.streams);
+		this.cacheResponseEntities(container.users, response.users);
+	}
+
+	private cacheResponseEntities<T extends CSEntity | CSMarkerLocations>(
+		manager: ManagerBase<T>,
+		entities: T[] | undefined
+	) {
+		if (!entities) return;
+		try {
+			manager.cache.set(entities);
+		} catch (ex) {
+			Logger.warn("Error caching response entities: " + ex.message);
+		}
 	}
 
 	cacheGet(criteria: KeyValue<T>[]): Promise<T | undefined> {

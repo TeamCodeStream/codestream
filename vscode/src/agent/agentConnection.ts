@@ -1157,6 +1157,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onRequest(AgentFileSearchRequestType, async e => {
 			try {
 				const files = await workspace.findFiles(`**/${e.path}`);
+				Logger.log(
+					`AgentFileSearchRequestType: workspace search for **/${e.path} found ${files.length} matches`
+				);
 				return {
 					files: files.map(_ => _.fsPath)
 				};

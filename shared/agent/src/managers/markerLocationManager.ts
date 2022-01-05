@@ -111,6 +111,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			streamId,
 			commitHash
 		});
+		this.cacheResponse(response);
 		return response.markerLocations;
 	}
 
@@ -252,37 +253,38 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 
 		if (Object.keys(futureReferences).length) {
 			Logger.log(`MARKERS: calculating current location for future references`);
-			if (currentCommitText === undefined) {
-				throw new Error(`Could not retrieve contents for ${filePath}@${fileCurrentCommitHash}`);
-			}
 			for (const id in futureReferences) {
-				const referenceLocation = futureReferences[id];
-				const referenceText =
-					referenceLocation.flags?.diff != undefined
-						? applyPatch(currentCommitText, referenceLocation.flags.diff)
-						: currentCommitText;
+				try {
+					const referenceLocation = futureReferences[id];
+					const referenceText =
+						referenceLocation.flags?.diff != undefined
+							? applyPatch(currentCommitText || "", referenceLocation.flags.diff)
+							: currentCommitText || "";
 
-				const diff = structuredPatch(
-					filePath,
-					filePath,
-					Strings.normalizeFileContents(referenceText),
-					Strings.normalizeFileContents(currentBufferText),
-					"",
-					""
-				);
+					const diff = structuredPatch(
+						filePath,
+						filePath,
+						Strings.normalizeFileContents(referenceText),
+						Strings.normalizeFileContents(currentBufferText),
+						"",
+						""
+					);
 
-				const currLoc =
-					(await calculateLocation(
-						MarkerLocation.fromArray(referenceLocation.location, id),
-						diff
-					)) || {};
-				result.locations[id] = currLoc;
+					const currLoc =
+						(await calculateLocation(
+							MarkerLocation.fromArray(referenceLocation.location, id),
+							diff
+						)) || {};
+					result.locations[id] = currLoc;
 
-				const refLoc = MarkerLocation.fromArray(referenceLocation.location, id) || {};
+					const refLoc = MarkerLocation.fromArray(referenceLocation.location, id) || {};
 
-				Logger.log(
-					`MARKERS: ${id} [${refLoc.lineStart}, ${refLoc.colStart}, ${refLoc.lineEnd}, ${refLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
-				);
+					Logger.log(
+						`MARKERS: ${id} [${refLoc.lineStart}, ${refLoc.colStart}, ${refLoc.lineEnd}, ${refLoc.colEnd}] => [${currLoc.lineStart}, ${currLoc.colStart}, ${currLoc.lineEnd}, ${currLoc.colEnd}]`
+					);
+				} catch (e) {
+					Logger.warn(e.message || e);
+				}
 			}
 		}
 

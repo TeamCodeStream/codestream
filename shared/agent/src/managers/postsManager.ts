@@ -752,17 +752,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 	private async fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse> {
 		const response = await this.session.api.fetchPosts(request);
-		const container = SessionContainer.instance();
-		if (response.codemarks) {
-			for (const codemark of response.codemarks) {
-				container.codemarks.cacheSet(codemark);
-			}
-		}
-		if (response.markers) {
-			for (const marker of response.markers) {
-				container.markers.cacheSet(marker);
-			}
-		}
+		const { posts, ...rest } = response;
+		this.cacheResponse(rest);
 		return response;
 	}
 
@@ -772,6 +763,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			streamId,
 			postId: parentPostId
 		});
+		this.cacheResponse(response);
 		return response.posts;
 	}
 
@@ -856,6 +848,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 							postId: object.postId,
 							streamId: object.streamId
 						});
+						await this.cacheResponse(threadResponse);
 						posts.push(...threadResponse.posts);
 					} catch (error) {
 						debugger;
@@ -1306,7 +1299,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			request.textDocuments,
 			codemark.id
 		);
-		await resolveCreatePostResponse(response!);
+		this.cacheResponse(response!);
 		return {
 			stream,
 			markerLocations: response.markerLocations,
@@ -1426,7 +1419,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			request.entryPoint,
 			request.addedUsers
 		);
-		await resolveCreatePostResponse(response!);
+		this.cacheResponse(response!);
 		return {
 			stream,
 			post: await this.enrichPost(response!.post),
@@ -1460,7 +1453,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		codeError = response.codeError!;
 
 		trackCodeErrorPostCreation(codeError, request.entryPoint, request.addedUsers);
-		await resolveCreatePostResponse(response!);
+		this.cacheResponse(response!);
 
 		let replyPostResponse: CreatePostResponse | undefined = undefined;
 		if (request.replyPost) {
@@ -1887,7 +1880,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		}
 
 		trackPostCreation(request, textDocuments, codemarkId);
-		await resolveCreatePostResponse(response!);
+		this.cacheResponse(response!);
 		return {
 			...response!,
 			post: await this.enrichPost(response!.post)
@@ -2364,38 +2357,4 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			return undefined;
 		}
 	};
-}
-
-export async function resolveCreatePostResponse(response: CreatePostResponse) {
-	const container = SessionContainer.instance();
-	if (response.streams) {
-		await container.streams.resolve({
-			type: MessageType.Streams,
-			data: response.streams
-		});
-	}
-	if (response.codemark) {
-		await container.codemarks.resolve({
-			type: MessageType.Codemarks,
-			data: [response.codemark]
-		});
-	}
-	if (response.markers) {
-		await container.markers.resolve({
-			type: MessageType.Markers,
-			data: response.markers
-		});
-	}
-	if (response.markerLocations) {
-		await container.markerLocations.resolve({
-			type: MessageType.MarkerLocations,
-			data: response.markerLocations
-		});
-	}
-	if (response.repos) {
-		await container.repos.resolve({
-			type: MessageType.Repositories,
-			data: response.repos
-		});
-	}
 }

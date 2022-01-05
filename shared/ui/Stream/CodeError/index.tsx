@@ -424,7 +424,9 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 	const buildAssignees = async () => {
 		if (collapsed) return;
 
-		let assigneeItems: DropdownButtonItems[] = [{ type: "search", label: "", key: "search" }];
+		let assigneeItems: DropdownButtonItems[] = [
+			{ type: "search", label: "", placeholder: "Search...", key: "search" }
+		];
 
 		let assigneeEmail;
 		if (props.errorGroup && props.errorGroup.assignee) {
@@ -567,6 +569,14 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		return ".25";
 	};
 
+	const errorGroupHasNoAssignee = () => {
+		return (
+			props.errorGroup &&
+			(!props.errorGroup.assignee ||
+				(!props.errorGroup.assignee.email && !props.errorGroup.assignee.id))
+		);
+	};
+
 	return (
 		<>
 			{openConnectionModal && (
@@ -686,6 +696,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 					<div style={{ marginLeft: "auto", alignItems: "center", whiteSpace: "nowrap" }}>
 						<>
 							<DropdownButton
+								title="Assignee"
 								items={items}
 								preventStopPropagation={!derivedState.isConnectedToNewRelic}
 								// onChevronClick={e =>
@@ -693,7 +704,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 								// }
 								variant="secondary"
 								size="compact"
-								noChevronDown={true}
+								noChevronDown={!errorGroupHasNoAssignee()}
 							>
 								<div
 									style={{
@@ -710,10 +721,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 															<Icon name="sync" className="spin" />
 														) : (
 															<>
-																{/* no assignee */}
-																{!props.errorGroup.assignee ||
-																(!props.errorGroup.assignee.email &&
-																	!props.errorGroup.assignee.id) ? (
+																{errorGroupHasNoAssignee() ? (
 																	<Icon name="person" />
 																) : (
 																	<Headshot
@@ -721,8 +729,8 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 																		display="inline-block"
 																		className="no-right-margin"
 																		person={{
-																			fullName: props.errorGroup.assignee.name,
-																			email: props.errorGroup.assignee.email
+																			fullName: props.errorGroup.assignee?.name,
+																			email: props.errorGroup.assignee?.email
 																		}}
 																	/>
 																)}

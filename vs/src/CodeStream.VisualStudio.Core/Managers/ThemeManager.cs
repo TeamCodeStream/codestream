@@ -103,13 +103,20 @@ namespace CodeStream.VisualStudio.Core.Managers {
 
 					new ThemeColorMetadata { Key = "text-focus-border-color", Color = GetThemedColor(shell, EnvironmentColors.StartPageTextControlLinkSelectedColorKey), DarkModifier = c => c.Darken(0.1f).Opacity(60), LightModifier = c => c.Opacity(60) },
 
+					new ThemeColorMetadata { Key = "button-foreground-color", Color = backgroundIsDark ? textColor : GetThemedColor(shell, EnvironmentColors.ToolWindowButtonDownColorKey), LightModifier = c => c.Darken(0.1f) },
 					new ThemeColorMetadata { Key = "button-background-color", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), LightModifier = c => c.Darken(0.3f) },
 					new ThemeColorMetadata { Key = "button-background-color-hover", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.2f) },
 
 					new ThemeColorMetadata { Key = "line-numbers-foreground-color", Color = textColor, DarkModifier = c => c.Opacity(40), LightModifier = c => c.Opacity(40) },
 
 					new ThemeColorMetadata { Key = "scrollbar-color", Color = GetThemedColor(shell, EnvironmentColors.SystemScrollBarColorKey) },
-					new ThemeColorMetadata { Key = "scrollbar-color-hover", Color = GetThemedColor(shell, EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey) }
+					new ThemeColorMetadata { Key = "scrollbar-color-hover", Color = GetThemedColor(shell, EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey) },
+
+					new ThemeColorMetadata { Key = "list-active-background", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.2f) },
+					new ThemeColorMetadata { Key = "list-active-foreground", Color = textColor, DarkModifier = c => c.Opacity(80), LightModifier = c => c.Opacity(80) },
+					new ThemeColorMetadata { Key = "list-active-outline", Color = GetThemedColor(shell, backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), LightModifier = c => c.Darken(0.3f) },
+					new ThemeColorMetadata { Key = "list-inactive-background", Color = backgroundColor, DarkModifier = c => c.Lighten(0.04f), LightModifier = c => c.Darken(0.03f) },
+					new ThemeColorMetadata { Key = "list-inactive-foreground", Color = textColor, DarkModifier = c => c.Opacity(80), LightModifier = c => c.Opacity(80) }
 				};
 
 				if (Log.IsDebugEnabled()) {

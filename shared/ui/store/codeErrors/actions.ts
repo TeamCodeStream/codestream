@@ -423,17 +423,27 @@ export const openErrorGroup = (
 		objectId: errorGroupGuid,
 		objectType: "errorGroup"
 	});
+	console.warn("COLIN: CLAIM RESPONSE:", response);
+
 	if (response.unauthorized) {
+		let message;
+		if (response.unauthorizedAccount) {
+			message = "You do not have access to this New Relic account.";
+		} else if (response.unauthorizedErrorGroup) {
+			message = "You do not have access to this error group.";
+		} else {
+			const orgDesc = response.ownedBy
+				? `the ${response.ownedBy} organization`
+				: "another organization";
+			message = `This error can't be displayed because it's owned by ${orgDesc} on CodeStream.`;
+		}
 		HostApi.instance.track("Error Roadblocked", {
 			"Error Group ID": errorGroupGuid,
 			"NR Account ID": response.accountId
 		});
-		const orgDesc = response.ownedBy
-			? `the ${response.ownedBy} organization`
-			: "another organization";
 		confirmPopup({
 			title: "Error Can't Be Opened",
-			message: `This error can't be displayed because it's owned by ${orgDesc} on CodeStream.`,
+			message,
 			centered: true,
 			buttons: [
 				{
@@ -450,6 +460,12 @@ export const openErrorGroup = (
 	dispatch(findErrorGroupByObjectId(errorGroupGuid, occurrenceId)).then(codeError => {
 		// if we found an existing codeError, it exists in the data store
 		const pendingId = codeError ? codeError.id : PENDING_CODE_ERROR_ID_FORMAT(errorGroupGuid);
+
+		// this signals that when the user provides an API key (which they don't have yet),
+		// we will circle back to this action to try to claim the code error again
+		if (response.needNRToken) {
+			data.claimWhenConnected = true;
+		}
 
 		// NOTE don't really like this "PENDING" business, but it's something to say we need to CREATE a codeError
 		// rationalie is: instead of creating _another_ codeError router-like UI,

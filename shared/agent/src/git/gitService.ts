@@ -33,6 +33,7 @@ import { createPatch, ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
 import { memoize } from "lodash-es";
 import * as path from "path";
+import { SessionContainer } from "../container";
 import { CommitsChangedData, WorkspaceChangedData } from "../protocol/agent.protocol";
 import { Disposable, Event, Range } from "vscode-languageserver";
 import { URI } from "vscode-uri";
@@ -1401,8 +1402,23 @@ export class GitService implements IGitService, Disposable {
 		return this._repositories.get();
 	}
 
-	getRepositoryById(id: string): Promise<GitRepository | undefined> {
-		return this._repositories.getById(id);
+	async getRepositoryById(id: string): Promise<GitRepository | undefined> {
+		const { repositoryMappings } = SessionContainer.instance();
+		let repo = await this._repositories.getById(id);
+		if (!repo) {
+			const loadedRepos = Array.from(await this.getRepositories());
+			const reposString = loadedRepos.map(_ => `${_.id}=${_.path}`).join(", ");
+			Logger.log(
+				`Repo ${id} not loaded - falling back to mappings. Currently loaded repos: ${reposString}`
+			);
+			const mappedPath = await repositoryMappings.getByRepoId(id);
+			if (mappedPath) {
+				repo = await this.getRepositoryByFilePath(mappedPath);
+			} else {
+				Logger.log(`No mapping found for repo ${id}`);
+			}
+		}
+		return repo;
 	}
 
 	/**

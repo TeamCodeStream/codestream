@@ -2,13 +2,14 @@
 
 "use strict";
 import * as Pubnub from "pubnub";
-import { BroadcasterHistoryOutput } from "./broadcaster";
+import { BroadcasterHistoryOutput, HistoryFetchCallback } from "./broadcaster";
 
 export interface PubnubHistoryInput {
 	pubnub: Pubnub;
 	channels: string[];
 	since: number;
 	debug?(msg: string, info?: any): void; // for debug messages
+	historyFetchCallback?: HistoryFetchCallback;
 }
 
 export class PubnubHistory {
@@ -16,6 +17,7 @@ export class PubnubHistory {
 	private _mostRecentMessage: number = 0;
 	private _allMessages: any[] = [];
 	private _debug: (msg: string, info?: any) => void = () => {};
+	private _historyFetchCallback: HistoryFetchCallback | undefined;
 
 	// Fetch the history of messages that have come through the specified channels since the specified timestamp
 	// We do a batch fetch (https://www.pubnub.com/docs/nodejs-javascript/api-reference-storage-and-playback#batch-history)
@@ -33,6 +35,7 @@ export class PubnubHistory {
 	//
 	async fetchHistory(options: PubnubHistoryInput): Promise<BroadcasterHistoryOutput> {
 		this._pubnub = options.pubnub;
+		this._historyFetchCallback = options.historyFetchCallback;
 		if (options.debug) {
 			this._debug = options.debug;
 		}
@@ -100,6 +103,9 @@ export class PubnubHistory {
 	// retrieve historical messages in batch
 	private async retrieveBatchHistory(channels: string[], timetoken: string) {
 		this._debug(`Calling Pubnub.fetchMessages from ${timetoken} for ${channels.join(",")}`);
+		if (this._historyFetchCallback) {
+			this._historyFetchCallback({ channels: channels.join(","), before: "", after: timetoken });
+		}
 		const response: any = await (this._pubnub! as any).fetchMessages({
 			channels,
 			end: timetoken,
@@ -155,6 +161,9 @@ export class PubnubHistory {
 			throw new Error("RESET");
 		}
 		this._debug(`Calling Pubnub.history from ${after} to ${before} for ${channel}`);
+		if (this._historyFetchCallback) {
+			this._historyFetchCallback({ channels: channel, before: before.toString(), after });
+		}
 		const response: any = await (this._pubnub! as any).history({
 			channel,
 			start: before.toString(),

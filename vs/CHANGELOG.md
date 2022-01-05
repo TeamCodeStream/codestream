@@ -1,5 +1,45 @@
 # Change Log
 
+## [12.6.0] - 2022-1-4
+
+### Changed
+
+- Improved UI for unassigned errors
+
+### Fixed
+
+- Addresses [#796](https://github.com/TeamCodeStream/CodeStream/issues/796) &mdash; Theme issues in VS
+- Addresses [#734](https://github.com/TeamCodeStream/CodeStream/issues/734) &mdash; Merge Request view is not showing if there is merge conflict
+- Fixes an issue with creating a PR across forks when there are a large number of forks for the repo
+- Fixes an issue with creating a codemark in an uncommitted file
+
+## [12.5.0] - 2021-12-21
+
+### Changed
+
+- Simplified signup flow
+- Generalize caching of related objects returned with each fetch
+
+### Fixed
+
+- Fixes an issue preventing you from recreating the "recent" query in the Pull Requests section
+- Fixes an issue with a `resolveStackTrace failed` error when opening error in IDE
+
+## [12.4.0] - 2021-12-14
+
+### Changed
+
+- CodeStream now remembers the last organization you had selected when you sign in
+
+### Fixed
+
+- Fixes a race condition that could make error stack traces not clickable
+- Fixes an issue parsing stack traces with Windows paths
+- Fixes an issue that caused an exception `Assert: must be called on EDT` when opening an error
+- Addresses [#778](https://github.com/TeamCodeStream/CodeStream/issues/778) &mdash; VSCODE PR fails if forked-repo branch has same name as the (base) repo branch
+- Fixes an issue with the first codemark in a feedback request in a new session taking a long time to submit
+- Fixes an issue that resulted in an error associating a repo with a NR1 entity
+
 ## [12.3.1] - 2021-11-23
 
 ### Fixed

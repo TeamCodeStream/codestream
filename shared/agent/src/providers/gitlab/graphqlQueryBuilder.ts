@@ -219,7 +219,8 @@ export class GraphqlQueryBuilder {
 										"commitCount",
 										"currentUserTodos",
 										"mergedAt",
-										"userDiscussionsCount"
+										"userDiscussionsCount",
+										"conflicts"
 									]
 								},
 								next: {

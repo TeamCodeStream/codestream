@@ -102,7 +102,9 @@ export class StreamsManager extends CachedEntityManagerBase<
 
 	protected async loadCache() {
 		const response = await this.session.api.fetchStreams({});
-		this.cache.reset(response.streams);
+		const { streams, ...rest } = response;
+		this.cache.reset(streams);
+		this.cacheResponse(rest);
 	}
 
 	async getSubscribable(teamId: string) {
@@ -115,8 +117,10 @@ export class StreamsManager extends CachedEntityManagerBase<
 	}
 
 	@lspHandler(FetchUnreadStreamsRequestType)
-	getUnread(request?: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
-		return this.session.api.fetchUnreadStreams(request || {});
+	async getUnread(request?: FetchUnreadStreamsRequest): Promise<FetchUnreadStreamsResponse> {
+		const response = this.session.api.fetchUnreadStreams(request || {});
+		this.cacheResponse(response);
+		return response;
 	}
 
 	protected async fetchById(id: Id): Promise<CSChannelStream | CSDirectStream> {

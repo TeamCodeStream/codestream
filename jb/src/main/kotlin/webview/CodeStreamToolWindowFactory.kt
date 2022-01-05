@@ -32,6 +32,7 @@ class CodeStreamToolWindowFactory : ToolWindowFactory, DumbAware {
                         csPanel.remove(loadingLabel)
                         csPanel.add(webViewService.webView.component)
                         logger.info("Webview attached to tool window")
+                        csPanel.repaint()
                     } catch (e: Exception) {
                         logger.error(e)
                     }

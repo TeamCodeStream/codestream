@@ -407,15 +407,9 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 
 	protected async loadCache(): Promise<void> {
 		const response = await this.session.api.fetchCodemarks({});
-
-		if (response.markers) {
-			const { markers } = SessionContainer.instance();
-			for (const marker of response.markers) {
-				markers.cacheSet(marker);
-			}
-		}
-
-		this.cache.reset(response.codemarks);
+		const { codemarks, ...rest } = response;
+		this.cache.reset(codemarks);
+		this.cacheResponse(rest);
 	}
 
 	protected getEntityName(): string {

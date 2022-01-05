@@ -86,6 +86,8 @@ export const switchToTeam = (
 		return dispatch(setBootstrapped(true));
 	}
 
+	dispatch(setUserPreference(['lastTeamId'], teamId));
+
 	return dispatch(onLogin(response));
 };
 

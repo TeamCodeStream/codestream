@@ -3,15 +3,15 @@ import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import { FormattedMessage } from "react-intl";
 import { goToLogin } from "../store/context/actions";
+import { updateConfigs } from "../store/configs/actions";
+import { logError } from "../logger";
 import { useDispatch } from "react-redux";
-import { Separator } from "./Separator";
 import Icon from "../Stream/Icon";
 import { useDidMount } from "../utilities/hooks";
 import styled from "styled-components";
-import { TextInput } from "./TextInput";
+import { Loading } from "../Container/Loading";
 import { HostApi } from "..";
 import { completeSignup, ProviderNames } from "./actions";
-import { Checkbox } from "../src/components/Checkbox";
 import {
 	CreateCompanyRequestType,
 	JoinCompanyRequestType,
@@ -19,9 +19,22 @@ import {
 } from "@codestream/protocols/agent";
 import { changeRegistrationEmail } from "../store/session/actions";
 import { CSCompany, CSEligibleJoinCompany } from "@codestream/protocols/api";
+import { isUndefined as _isUndefined } from "lodash-es";
 
 export const CheckboxRow = styled.div`
 	padding: 5px 0 5px 0;
+`;
+
+const JoinHeader = styled.h3`
+	margin: 0 0 5px 0;
+`;
+
+const CreateOrgWrapper = styled.div`
+	margin: 10px 0 5px 0;
+`;
+
+const InlineLoadingWrapper = styled.div`
+	margin: 20px 0 0 0;
 `;
 
 const isTeamNameValid = (name: string) => name.length > 0;
@@ -39,7 +52,7 @@ export function CompanyCreation(props: {
 	token?: string;
 	domain?: string;
 	provider?: string;
-	isWebmail?: string;
+	isWebmail?: boolean;
 	onComplete?: Function;
 	companies?: CSCompany[];
 	eligibleJoinCompanies?: CSEligibleJoinCompany[];
@@ -63,15 +76,19 @@ export function CompanyCreation(props: {
 
 	const [organizations, setOrganizations] = React.useState<EnhancedCSCompany[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
-	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState(false);
-	const [step, setStep] = React.useState<number>(0);
+	const [isCreatingOrg, setIsCreatingOrg] = React.useState(false);
+	const [initialLoad, setInitialLoad] = React.useState(true);
+	const [isLoadingJoinTeam, setIsLoadingJoinTeam] = React.useState<string | undefined>(undefined);
 	const initialCompanyName =
-		props.email && !props.isWebmail ? props.email.split("@")[1].split(".")[0] : "";
+		props.email && !props.isWebmail && !_isUndefined(props.isWebmail)
+			? props.email.split("@")[1].split(".")[0]
+			: "My Organization";
+	const initialAllowDomainJoining = _isUndefined(props.isWebmail) ? false : true;
 	const [organizationSettings, setOrganizationSettings] = React.useState<{
 		companyName?: string;
 		allowDomainJoining?: boolean;
 	}>({
-		allowDomainJoining: props.isWebmail ? false : true,
+		allowDomainJoining: initialAllowDomainJoining,
 		companyName: initialCompanyName
 			? initialCompanyName.charAt(0).toUpperCase() + initialCompanyName.slice(1)
 			: ""
@@ -79,26 +96,11 @@ export function CompanyCreation(props: {
 	const [teamNameValidity, setTeamNameValidity] = useState(true);
 	const [requiresHelpText, setRequiresHelpText] = useState(false);
 
-	const onValidityChanged = useCallback((field: string, validity: boolean) => {
-		switch (field) {
-			case "company": {
-				setTeamNameValidity(validity);
-				break;
-			}
-			default: {
-			}
-		}
-	}, []);
-
-	const onClickBeginCreateOrganization = () => {
-		HostApi.instance.track("New Organization Initiated", {
-			"Available Organizations": organizations?.length > 0,
-			"Auth Provider": providerName
-		});
-		setStep(1);
-	};
-
 	useDidMount(() => {
+		if (!_isUndefined(props.isWebmail)) {
+			dispatch(updateConfigs({ isWebmail: props.isWebmail }));
+		}
+
 		let companiesToJoin: EnhancedCSCompany[] | undefined = undefined;
 		if (props.eligibleJoinCompanies || props.companies) {
 			setIsLoading(true);
@@ -122,19 +124,14 @@ export function CompanyCreation(props: {
 		}
 
 		if (!companiesToJoin || !companiesToJoin.length) {
-			// anyone who doesn't have an org to join, we go straight to the create new org step.
-			setRequiresHelpText(true);
-			HostApi.instance.track("Organization Options Skipped", {
-				"Auth Provider": providerName,
-				"Webmail": props.isWebmail || false
-			});
-			setStep(1);
+			createOrganization();
 		} else {
 			HostApi.instance.track("Organization Options Presented", {
 				"Domain Orgs":
 					props.eligibleJoinCompanies && props.eligibleJoinCompanies.length ? true : false,
 				"Auth Provider": providerName
 			});
+			setInitialLoad(false);
 		}
 	});
 
@@ -144,29 +141,24 @@ export function CompanyCreation(props: {
 
 	const onClickCreateOrganization = async event => {
 		event.preventDefault();
+		createOrganization();
+	};
+
+	const createOrganization = async () => {
 		if (
 			organizationSettings.companyName != null &&
 			organizationSettings.companyName !== "" &&
 			teamNameValidity
 		) {
-			setIsLoading(true);
+			setIsCreatingOrg(true);
+			setInitialLoad(false);
 			try {
-				const { team, company } = await HostApi.instance.send(CreateCompanyRequestType, {
-					name: organizationSettings.companyName!,
-					domainJoining: props.isWebmail
-						? undefined
-						: organizationSettings.allowDomainJoining == true && domain
-						? [domain]
-						: undefined
+				const { team } = await HostApi.instance.send(CreateCompanyRequestType, {
+					name: organizationSettings.companyName!
 				});
 				HostApi.instance.track("New Organization Created", {
-					"Domain Joining": props.isWebmail
-						? "Not Available"
-						: organizationSettings?.allowDomainJoining
-						? "On"
-						: "Off",
+					"Domain Joining": props.isWebmail ? "Not Available" : "Off",
 					"Auth Provider": providerName
-					// "Code Host Joining": ""
 				});
 
 				dispatch(
@@ -176,14 +168,17 @@ export function CompanyCreation(props: {
 					})
 				);
 			} catch (error) {
-				// TODO: communicate error
+				const errorMessage = typeof error === "string" ? error : error.message;
+				logError(`Unexpected error during company creation: ${errorMessage}`, {
+					companyName: organizationSettings.companyName
+				});
 				dispatch(goToLogin());
 			}
 		}
 	};
 
 	const onClickJoinOrganization = async (organization: EnhancedCSCompany) => {
-		setIsLoadingJoinTeam(true);
+		setIsLoadingJoinTeam(organization.id);
 
 		try {
 			const result = (await HostApi.instance.send(JoinCompanyRequestType, {
@@ -196,64 +191,67 @@ export function CompanyCreation(props: {
 			});
 			dispatch(
 				completeSignup(props.email!, props.token!, result.team.id, {
-					createdTeam: true,
-					provider: props.provider
+					createdTeam: false,
+					provider: props.provider,
+					byDomain: true
 				})
 			);
-		} catch (ex) {
-			// TODO: communicate error
+		} catch (error) {
+			const errorMessage = typeof error === "string" ? error : error.message;
+			logError(`Unexpected error during company join: ${errorMessage}`, {
+				companyId: organization.id
+			});
+			setIsLoadingJoinTeam(undefined);
 			dispatch(goToLogin());
 		}
 	};
 
+	const orgCallIsLoading = () => {
+		return isLoading || isCreatingOrg;
+	};
+
 	return (
 		<div id="organization-page" className="onboarding-page">
-			{step === 0 && (
-				<>
-					<div className="standard-form">
-						<fieldset className="form-body">
-							<div id="controls">
-								<div className="border-bottom-box">
-									<h3>
-										<FormattedMessage
-											id="signUp.createOrganization"
-											defaultMessage="Create a new CodeStream organization"
-										/>
-									</h3>
-									<p>
-										<FormattedMessage
-											id="signUp.createOrganizationHelp"
-											defaultMessage="An organization on CodeStream is a place where all of the developers in your company can discuss and review code."
-										/>
-									</p>
-
-									<Button className="row-button" onClick={onClickBeginCreateOrganization}>
-										<div className="copy">Create Organization</div>
-										<Icon name="chevron-right" />
-									</Button>
-									<Separator />
+			<div className="standard-form">
+				<fieldset className="form-body">
+					<div id="controls">
+						<div className="border-bottom-box">
+							{!isCreatingOrg && initialLoad && (
+								<div>
+									<Icon name="sync" loading={true} /> Looking for possible organizations to join...
 								</div>
-							</div>
-						</fieldset>
-					</div>
-					<div className="standard-form">
-						<fieldset className="form-body">
-							<div id="controls">
-								<div className="border-bottom-box">
-									<h3>
+							)}
+							{isCreatingOrg && !initialLoad && (
+								<div>
+									<Icon name="sync" loading={true} /> Creating organization...
+								</div>
+							)}
+							{!isCreatingOrg && !initialLoad && (
+								<>
+									<JoinHeader>
 										<FormattedMessage
 											id="signUp.joinOrganization"
-											defaultMessage="Join an existing organization"
+											defaultMessage="Join your teammates on CodeStream"
 										/>
-									</h3>
-									<br />
+									</JoinHeader>
+									<div>
+										<FormattedMessage
+											id="signUp.joinOrganizationHelp"
+											defaultMessage="These organizations are available based on your email domain."
+										/>
+									</div>
 									{isLoading && (
-										<div>
+										<InlineLoadingWrapper>
 											<Icon name="sync" loading={true} /> Loading organizations...
-										</div>
+										</InlineLoadingWrapper>
+									)}
+									{isCreatingOrg && (
+										<InlineLoadingWrapper>
+											<Icon name="sync" loading={true} /> Creating organization...
+										</InlineLoadingWrapper>
 									)}
 									<div>
-										{!isLoading && (
+										{!orgCallIsLoading() && (
 											<>
 												{organizations.map(_ => {
 													return (
@@ -266,7 +264,7 @@ export function CompanyCreation(props: {
 																<Button
 																	onClick={e => onClickJoinOrganization(_)}
 																	className="control-button"
-																	loading={isLoadingJoinTeam}
+																	loading={isLoadingJoinTeam === _.id}
 																>
 																	<div className="copy">
 																		<b>Join</b>
@@ -300,96 +298,18 @@ export function CompanyCreation(props: {
 											</>
 										)}
 									</div>
-								</div>
-							</div>
-						</fieldset>
+								</>
+							)}
+							{!initialLoad && !isCreatingOrg && (
+								<CreateOrgWrapper>
+									Or, you{" "}
+									<Link onClick={onClickCreateOrganization}>can create your own organization.</Link>
+								</CreateOrgWrapper>
+							)}
+						</div>
 					</div>
-				</>
-			)}
-			{step === 1 && (
-				<>
-					<div className="standard-form">
-						<fieldset className="form-body">
-							<div id="controls">
-								<div className="border-bottom-box">
-									<h3>
-										<FormattedMessage
-											id="signUp.nameOrganization"
-											defaultMessage="Name your CodeStream organization"
-										/>
-									</h3>
-									{requiresHelpText && (
-										<p>
-											<FormattedMessage
-												id="signUp.createOrganizationHelp"
-												defaultMessage="An organization on CodeStream is a place where all of the developers in your company can discuss and review code."
-											/>
-										</p>
-									)}
-									<br />
-									<TextInput
-										name="company"
-										value={organizationSettings.companyName || ""}
-										onValidityChanged={onValidityChanged}
-										validate={isTeamNameValid}
-										onChange={(value: string) => {
-											setOrganizationSettings({
-												...organizationSettings,
-												companyName: value
-											});
-										}}
-										placeholder="Ex: your company name"
-									/>
-									{!teamNameValidity && <small className="explainer error-message">Required</small>}
-
-									<br />
-									<br />
-									{domain && !props.isWebmail && (
-										<CheckboxRow>
-											<Checkbox
-												name="allowDomainBaseJoining"
-												checked={organizationSettings.allowDomainJoining}
-												onChange={(value: boolean) => {
-													setOrganizationSettings({
-														...organizationSettings,
-														allowDomainJoining: value
-													});
-												}}
-											>
-												Let anyone with the <b>{domain}</b> email address join this organization
-											</Checkbox>
-										</CheckboxRow>
-									)}
-
-									{/* <CheckboxRow>
-										<Checkbox name="somethingElse" onChange={(value: boolean) => {}}>
-											Let anyone in the following GitHub organization join
-										</Checkbox>
-									</CheckboxRow> */}
-									<Button
-										className="row-button"
-										onClick={onClickCreateOrganization}
-										loading={isLoading}
-									>
-										<div className="copy">Next</div>
-										<Icon name="chevron-right" />
-									</Button>
-								</div>
-							</div>
-							<div className="footer">
-								<Link
-									onClick={e => {
-										e.preventDefault();
-										setStep(0);
-									}}
-								>
-									<p>{"< Back"}</p>
-								</Link>
-							</div>
-						</fieldset>
-					</div>
-				</>
-			)}
+				</fieldset>
+			</div>
 		</div>
 	);
 }

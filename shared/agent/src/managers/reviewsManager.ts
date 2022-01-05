@@ -74,7 +74,7 @@ import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
-import { resolveCreatePostResponse, trackReviewPostCreation } from "./postsManager";
+import { trackReviewPostCreation } from "./postsManager";
 import Timer = NodeJS.Timer;
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
@@ -521,12 +521,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const repoRoots: { [repoId: string]: string } = {};
 		for (const repoId in diffsByRepo) {
 			const repo = await git.getRepositoryById(repoId);
-			let repoPath;
-			if (repo === undefined) {
-				repoPath = await repositoryMappings.getByRepoId(repoId);
-			} else {
-				repoPath = repo.path;
-			}
+			let repoPath = repo?.path;
 			if (repoPath == null) {
 				Logger.log(`Cannot perform review ${request.reviewId}: REPO_NOT_FOUND`);
 				return {
@@ -1374,7 +1369,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const review = response.review!;
 
 		trackReviewPostCreation(review, 0, 0, entryPoint, addedUsers);
-		await resolveCreatePostResponse(response);
+		this.cacheResponse(response);
 
 		return review;
 	}
@@ -1382,19 +1377,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 	protected async loadCache() {
 		const response = await this.session.api.fetchReviews({});
 		response.reviews.forEach(this.polyfillCheckpoints);
-		this.cache.reset(response.reviews);
-		if (response.posts) {
-			await SessionContainer.instance().posts.resolve({
-				type: MessageType.Posts,
-				data: response.posts
-			});
-		}
-		if (response.markers) {
-			await SessionContainer.instance().posts.resolve({
-				type: MessageType.Markers,
-				data: response.markers
-			});
-		}
+		const { reviews, ...rest } = response;
+		this.cache.reset(reviews);
+		this.cacheResponse(rest);
 	}
 
 	async getById(id: Id): Promise<CSReview> {

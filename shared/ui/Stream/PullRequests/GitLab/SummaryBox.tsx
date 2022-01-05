@@ -12,10 +12,11 @@ import copy from "copy-to-clipboard";
 import Tooltip from "../../Tooltip";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HostApi } from "../../../webview-api";
-import { SwitchBranchRequestType } from "@codestream/protocols/agent";
+import { GitLabMergeRequest, SwitchBranchRequestType } from "@codestream/protocols/agent";
 import { confirmPopup } from "../../Confirm";
-import { getProviderPullRequestRepo } from "@codestream/webview/store/providerPullRequests/reducer";
+import { getProviderPullRequestRepoObject } from "@codestream/webview/store/providerPullRequests/reducer";
 import { pluralize } from "@codestream/webview/utilities/strings";
+import { logError } from "@codestream/webview/logger";
 
 export const Root = styled.div`
 	margin: 0 20px 10px 20px;
@@ -28,15 +29,19 @@ export const Root = styled.div`
 		height: 35px;
 	}
 `;
-export const SummaryBox = props => {
-	const { pr, openRepos, getOpenRepos, setIsLoadingMessage } = props;
+export const SummaryBox = (props: {
+	pr: GitLabMergeRequest;
+	openRepos: { name: string; currentBranch: string }[];
+	getOpenRepos: Function;
+}) => {
+	const { pr, openRepos, getOpenRepos } = props;
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
 			filter: preferences.pullRequestTimelineFilter || "all",
-			currentRepo: getProviderPullRequestRepo(state)
+			currentRepoObject: getProviderPullRequestRepoObject(state)
 		};
 	});
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
@@ -60,13 +65,24 @@ export const SummaryBox = props => {
 
 	const checkout = async () => {
 		if (!pr) return;
+
 		setIsLoadingBranch(true);
+		const repoId =
+			derivedState.currentRepoObject && derivedState.currentRepoObject.currentRepo
+				? derivedState.currentRepoObject.currentRepo.id
+				: "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
+			repoId: repoId
 		});
 		if (result.error) {
-			console.warn("ERROR FROM SET BRANCH: ", result.error);
+			logError(result.error, {
+				...(derivedState.currentRepoObject || {}),
+				branch: pr.headRefName,
+				repoId: repoId,
+				prRepository: pr!.repository
+			});
+
 			confirmPopup({
 				title: "Git Error",
 				className: "wide",
@@ -79,13 +95,10 @@ export const SummaryBox = props => {
 				buttons: [{ label: "OK", className: "control-button" }]
 			});
 			setIsLoadingBranch(false);
-			return;
 		} else {
 			setIsLoadingBranch(false);
 			getOpenRepos();
 		}
-		// i don't think we need to reload here, do we?
-		// fetch("Reloading...");
 	};
 
 	return (

@@ -98,6 +98,12 @@ class WebViewTheme(val name: String, val stylesheet: String) {
                 JBColor.namedColor("Borders.ContrastBorderColor", baseBorderColor))
             val treeBackground = JBColor.namedColor("Tree.background", baseBgColor)
 
+            val listActiveBackground = UIUtil.getListSelectionBackground(true)
+            val listActiveForeground = UIUtil.getListSelectionForeground(true)
+            val listActiveOutline = UIUtil.getListSelectionBackground(true)
+            val listInactiveBackground = UIUtil.getListSelectionBackground(false)
+            val listInactiveForeground = UIUtil.getListSelectionForeground(false)
+
             val name = if (isDarkTheme()) "vscode-dark" else "vscode-light"
             val stylesheet = """
 body {
@@ -142,6 +148,12 @@ body {
     --sidebar-header-background: ${toolWindowHeaderInactiveBackground.rgba};
     --sidebar-header-foreground: ${panelSectionHeaderFgColor.rgba};
     --sidebar-header-border: ${toolWindowHeaderBorder.rgba};    
+    
+    --list-active-background: ${listActiveBackground.rgba};
+    --list-active-foreground: ${listActiveForeground.rgba};
+    --list-active-outline: ${listActiveOutline.rgba};
+    --list-inactive-background: ${listInactiveBackground.rgba};
+    --list-inactive-foreground: ${listInactiveForeground.rgba};
 
     --scrollbar-thumb: ${scrollBarBg.rgba};
     --scrollbar-thumb-hover: ${scrollBarFg.rgba};

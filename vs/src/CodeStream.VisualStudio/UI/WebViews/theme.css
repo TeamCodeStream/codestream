@@ -29,12 +29,18 @@
 
 	--line-numbers-foreground-color: --cs--line-numbers-foreground-color--;
 
-	--button-foreground-color: --cs--text-color--;
+	--button-foreground-color: --cs--button-foreground-color--;
 	--button-background-color: --cs--button-background-color--;
 	--button-background-color-hover: --cs--button-background-color-hover--;
 
 	--scrollbar-thumb: --cs--scrollbar-color--;
 	--scrollbar-thumb-hover: --cs--scrollbar-color-hover--;
+
+	--list-active-background: --cs--list-active-background--;
+    --list-active-foreground: --cs--list-active-foreground--;
+    --list-active-outline: --cs--list-active-outline--;
+    --list-inactive-background: --cs--list-inactive-background--;
+    --list-inactive-foreground: --cs--list-inactive-foreground--;
 }
 
 /* style overrides & polyfills */

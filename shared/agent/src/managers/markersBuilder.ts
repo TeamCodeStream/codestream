@@ -1,6 +1,6 @@
 "use strict";
 
-import { ParsedDiff, structuredPatch } from "diff";
+import { createPatch, ParsedDiff, parsePatch } from "diff";
 import { decompressFromBase64 } from "lz-string";
 import * as path from "path";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
@@ -11,7 +11,7 @@ import { Logger } from "../logger";
 import { calculateLocation } from "../markerLocation/calculator";
 import { CreateMarkerRequest } from "../protocol/agent.protocol.codemarks";
 import { CodeBlockSource } from "../protocol/agent.protocol.posts";
-import { CSLocationArray, CSReviewCheckpoint } from "../protocol/api.protocol";
+import { CSReviewCheckpoint } from "../protocol/api.protocol";
 import { CSMarkerLocation, CSReferenceLocation } from "../protocol/api.protocol.models";
 import { Strings } from "../system";
 import { xfs } from "../xfs";
@@ -198,14 +198,14 @@ class DefaultMarkersBuilder extends MarkersBuilder {
 		if (repoHead == null) throw new Error(`Cannot determine HEAD revision for ${repoPath}`);
 
 		const fileContents = await this.getFileContents();
-		const diff = structuredPatch(
-			this.getFilePath(repoPath),
+		const patch = createPatch(
 			this.getFilePath(repoPath),
 			Strings.normalizeFileContents(""),
 			Strings.normalizeFileContents(fileContents),
 			"",
 			""
 		);
+		const diff = parsePatch(patch)[0];
 
 		return {
 			referenceLocations: [

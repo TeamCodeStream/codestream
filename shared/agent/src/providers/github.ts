@@ -101,6 +101,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	private _knownRepos = new Map<string, GitHubRepo>();
 	_pullRequestCache: Map<string, FetchThirdPartyPullRequestResponse> = new Map();
+	_reviewersCache: Map<
+		{ owner: string; repo: string },
+		{ avatarUrl: string; id: string; login: string; name?: string }[]
+	> = new Map();
 
 	get displayName() {
 		return "GitHub";
@@ -758,6 +762,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			} as any;
 		}
+
+		Logger.log("getPullRequest returning", {
+			id: request.pullRequestId,
+			repository: response.repository.pullRequest.repository
+		});
 		return response;
 	}
 
@@ -998,16 +1007,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						refs(first: 100, refPrefix: "refs/heads/") {
 						   nodes {
 							 name
-							 target {
-							   ... on Commit {
-								 oid
-								 committedDate
-							   }
-							 }
 						   }
 						}
 					    forks(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
-							totalCount
 							pageInfo {
 								startCursor
 								endCursor
@@ -1026,12 +1028,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								refs(first: 100, refPrefix: "refs/heads/") {
 									nodes {
 									  name
-									  target {
-										... on Commit {
-										  oid
-										  committedDate
-										}
-									  }
 									}
 								}
 							}
@@ -1378,8 +1374,30 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	async getReviewers(request: { owner: string; repo: string }) {
+		const cached = this._reviewersCache.get(request);
+		if (cached) {
+			return cached;
+		}
+		let queryResponse;
+		let allReviewers: any = [];
+		do {
+			queryResponse = await this.getReviewersQuery(
+				request,
+				queryResponse && queryResponse?.repository?.collaborators?.pageInfo.endCursor
+			);
+			if (queryResponse === undefined) break;
+			if (queryResponse?.repository?.collaborators?.nodes) {
+				allReviewers = allReviewers.concat(queryResponse.repository.collaborators.nodes);
+			}
+		} while (queryResponse?.repository?.collaborators?.pageInfo?.hasNextPage === true);
+		this._reviewersCache.set(request, allReviewers);
+
+		return allReviewers;
+	}
+
+	async getReviewersQuery(request: { owner: string; repo: string }, cursor?: string) {
 		const query = await this.query<any>(
-			`query FindReviewers($owner:String!, $name:String!)  {
+			`query FindReviewers($owner:String!, $name:String!${cursor ? ", $cursor:String" : ""})  {
 				rateLimit {
 					cost
 					resetAt
@@ -1388,23 +1406,28 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 				repository(owner:$owner, name:$name) {
 				  id
-				  collaborators(first: 50) {
+				  collaborators(first: 100 ${cursor ? "after:$cursor" : ""}) {
 					nodes {
 					  avatarUrl
 					  id
 					  name
 					  login
 					}
+					pageInfo {
+						endCursor
+						hasNextPage
+					}
 				  }
 				}
 			  }`,
 			{
 				owner: request.owner,
-				name: request.repo
+				name: request.repo,
+				cursor: cursor
 			}
 		);
 
-		return query.repository.collaborators.nodes;
+		return query;
 	}
 
 	async markPullRequestReadyForReview(request: {

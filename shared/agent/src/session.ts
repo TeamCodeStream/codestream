@@ -323,8 +323,10 @@ export class CodeStreamSession {
 			this._httpAgent = new HttpAgent();
 		}
 
+		Logger.log(`API Server URL: >${_options.serverUrl}<`);
+		Logger.log(`Reject unauthorized: ${this.rejectUnauthorized}`);
 		this._api = new CodeStreamApiProvider(
-			_options.serverUrl,
+			_options.serverUrl?.trim(),
 			this.versionInfo,
 			this._httpAgent || this._httpsAgent,
 			this.rejectUnauthorized
@@ -913,6 +915,9 @@ export class CodeStreamSession {
 
 			// api.login() will throw a failed response object if it needs to send some extra data back
 			if (isLoginFailResponse(ex)) {
+				if (ex.extra.isRegistered) {
+					this.setSuperPropsAndCallTelemetry(ex.extra.user);
+				}
 				return ex;
 			}
 
@@ -1012,8 +1017,9 @@ export class CodeStreamSession {
 			}
 		}
 
-		// Initialize tracking
-		this.initializeTelemetry(response.user, currentTeam, response.companies);
+		// initialze tracking call with full user data (ie team/company info)
+		// this is the second time identify() is called in signup flow, first in signin flow
+		this.setSuperPropsAndCallTelemetry(response.user, currentTeam, response.companies);
 
 		const loginResponse = {
 			loginResponse: { ...response },
@@ -1091,6 +1097,9 @@ export class CodeStreamSession {
 	async confirmRegistration(request: ConfirmRegistrationRequest) {
 		try {
 			const response = await (this._api as CodeStreamApiProvider).confirmRegistration(request);
+
+			this.setSuperPropsAndCallTelemetry(response.user);
+
 			const result: ConfirmRegistrationResponse = {
 				user: {
 					id: response.user.id
@@ -1249,7 +1258,7 @@ export class CodeStreamSession {
 		}
 	}
 
-	private async initializeTelemetry(user: CSMe, team: CSTeam, companies: CSCompany[]) {
+	private async setSuperPropsAndCallTelemetry(user: CSMe, team?: CSTeam, companies?: CSCompany[]) {
 		// Set super props
 		this._telemetryData.hasCreatedPost = user.totalPosts > 0;
 
@@ -1267,7 +1276,7 @@ export class CodeStreamSession {
 			Country: user.countryCode
 		};
 
-		if (team != null) {
+		if (team != null && companies != null) {
 			const company = companies.find(c => c.id === team.companyId);
 			props["Company ID"] = team.companyId;
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
@@ -1322,9 +1331,11 @@ export class CodeStreamSession {
 			}
 		}
 
+		let userId = this._codestreamUserId || user.id;
+
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
-		telemetry.identify(this._codestreamUserId!, props);
+		telemetry.identify(userId, props);
 		telemetry.setSuperProps(props);
 		if (user.firstSessionStartedAt !== undefined) {
 			telemetry.setFirstSessionProps(user.firstSessionStartedAt, FIRST_SESSION_TIMEOUT);
@@ -1332,15 +1343,15 @@ export class CodeStreamSession {
 	}
 
 	@log()
-	async updateSuperProps(props: { [key: string]: any }) {
+	async addSuperProps(props: { [key: string]: any }) {
 		const { telemetry } = Container.instance();
 		await telemetry.ready();
 		telemetry.identify(this._codestreamUserId!, props);
-		telemetry.setSuperProps(props);
+		telemetry.addSuperProps(props);
 	}
 
-	async updateNewRelicSuperProps(userId: number, orgId: number) {
-		return this.updateSuperProps({
+	async addNewRelicSuperProps(userId: number, orgId: number) {
+		return this.addSuperProps({
 			"NR User ID": userId,
 			"NR Organization ID": orgId,
 			"NR Connected Org": true
@@ -1435,6 +1446,10 @@ export class CodeStreamSession {
 		);
 	}
 
+	announceHistoryFetches() {
+		return this._activeServerAlerts.includes("announceHistoryFetches");
+	}
+
 	listenForEchoes() {
 		this._echoTimer = setTimeout(this.echoTimeout.bind(this), 10000);
 	}
@@ -1472,11 +1487,16 @@ export class CodeStreamSession {
 	async onFileSearch(basePath: string, path: string) {
 		if (!path) return { files: [] };
 
+		// Normalize path of errors originated from Windows
+		path = path.replace(/\\/g, "/");
+
 		// reverse to start with the shortest path (aka least specific)
 		const paths = Strings.asPartialPaths(path).reverse();
 		let files: string[] = [];
 		try {
+			Logger.log(`onFileSearch: Searching for ${path}`);
 			for (const path of paths) {
+				Logger.log(`onFileSearch: Requesting IDE file search for ${path} in ${basePath}`);
 				const fileSearchResponse = (
 					await this.agent.sendRequest(AgentFileSearchRequestType, { basePath, path })
 				).files;
@@ -1486,8 +1506,10 @@ export class CodeStreamSession {
 				}
 				files = files.concat(fileSearchResponse);
 			}
+			Logger.log(`onFileSearch: IDE found ${files.length} possible matches for ${path}`);
 			if (!files.length) {
 				for (const path of paths) {
+					Logger.log(`onFileSearch: Searching filesystem for ${path} in ${basePath}`);
 					const globSearchResults = await glob(basePath + "/**/" + path);
 					if (!globSearchResults.length) {
 						// once there are no more results, just stop
@@ -1495,6 +1517,7 @@ export class CodeStreamSession {
 					}
 					files = files.concat(globSearchResults);
 				}
+				Logger.log(`onFileSearch: filesystem found ${files.length} possible matches for ${path}`);
 			}
 			// put the most specific files found first (aka greatest number of separators)
 			files = uniq(files).reverse();

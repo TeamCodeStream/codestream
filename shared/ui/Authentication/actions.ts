@@ -212,10 +212,11 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 	return dispatch(onLogin(response));
 };
 
-export const onLogin = (response: LoginSuccessResponse, isFirstPageview?: boolean) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const onLogin = (
+	response: LoginSuccessResponse,
+	isFirstPageview?: boolean,
+	teamCreated?: boolean
+) => async (dispatch, getState: () => CodeStreamState) => {
 	const api = HostApi.instance;
 
 	const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
@@ -258,7 +259,7 @@ export const onLogin = (response: LoginSuccessResponse, isFirstPageview?: boolea
 	}
 
 	const { context } = getState();
-	if (context.pendingProtocolHandlerUrl) {
+	if (context.pendingProtocolHandlerUrl && !teamCreated) {
 		await dispatch(handlePendingProtocolHandlerUrl(context.pendingProtocolHandlerUrl));
 		dispatch(clearPendingProtocolHandlerUrl());
 	}
@@ -268,7 +269,7 @@ export const completeSignup = (
 	email: string,
 	token: string,
 	teamId: string,
-	extra: { createdTeam: boolean; provider?: string }
+	extra: { createdTeam: boolean; provider?: string; byDomain?: boolean }
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const response = await HostApi.instance.send(TokenLoginRequestType, {
 		token: {
@@ -281,6 +282,7 @@ export const completeSignup = (
 
 	if (isLoginFailResponse(response)) {
 		logError("There was an error completing signup", response);
+		dispatch(goToLogin());
 		throw response.error;
 	}
 
@@ -288,10 +290,10 @@ export const completeSignup = (
 		? ProviderNames[extra.provider.toLowerCase()] || extra.provider
 		: "CodeStream";
 	HostApi.instance.track("Signup Completed", {
-		"Signup Type": extra.createdTeam ? "Organic" : "Viral",
+		"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
 		"Auth Provider": providerName
 	});
-	dispatch(onLogin(response, true));
+	dispatch(onLogin(response, true, extra.createdTeam));
 };
 
 export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => async (
@@ -310,7 +312,6 @@ export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => asyn
 		if (session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
 			dispatch(setMaintenanceMode(false));
 		}
-
 		switch (response.error) {
 			case LoginResult.MaintenanceMode:
 				return dispatch(setMaintenanceMode(true));
@@ -334,6 +335,7 @@ export const validateSignup = (provider: string, authInfo?: SSOAuthInfo) => asyn
 						userId: response.extra && response.extra.userId,
 						eligibleJoinCompanies: response.extra && response.extra.eligibleJoinCompanies,
 						accountIsConnected: response.extra && response.extra.accountIsConnected,
+						isWebmail: response.extra.isWebmail,
 						provider
 					})
 				);

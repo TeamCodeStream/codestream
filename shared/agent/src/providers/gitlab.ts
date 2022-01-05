@@ -1521,6 +1521,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			);
 
 			this._pullRequestCache.set(request.pullRequestId, response);
+			response.project.mergeRequest.repository;
 		} catch (ex) {
 			Logger.error(ex, "getMergeRequest", {
 				...request
@@ -1531,6 +1532,10 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			} as any;
 		}
+		Logger.log("getPullRequest returning", {
+			id: request.pullRequestId,
+			repository: response.project.mergeRequest.repository
+		});
 		return response;
 	}
 

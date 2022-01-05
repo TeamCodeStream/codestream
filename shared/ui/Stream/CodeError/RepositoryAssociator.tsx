@@ -209,7 +209,7 @@ export function RepositoryAssociator(props: {
 					size="compact"
 					wrap
 				>
-					{selected ? selected.name : "select a repo"}
+					{selected ? selected.name : "select a repository"}
 				</DropdownButton>
 			</Ellipsize>
 		</Dismissable>

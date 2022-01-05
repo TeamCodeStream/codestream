@@ -9,7 +9,8 @@ import { closePanel, invite, openPanel } from "./actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
-	ReposScm
+	ReposScm,
+	UpdateCompanyRequestType
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -30,7 +31,11 @@ import { FormattedMessage } from "react-intl";
 import { isEmailValid } from "../Authentication/Signup";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
-import { setOnboardStep, setShowFeedbackSmiley } from "../store/context/actions";
+import {
+	setOnboardStep,
+	handlePendingProtocolHandlerUrl,
+	clearPendingProtocolHandlerUrl
+} from "../store/context/actions";
 
 export const Step = styled.div`
 	margin: 0 auto;
@@ -307,6 +312,9 @@ export const ExpandingText = styled.div`
 	}
 `;
 
+export const CheckboxRow = styled.div`
+	padding: 20px 0 0 0;
+`;
 const EMPTY_ARRAY = [];
 
 const positionDots = () => {
@@ -1052,19 +1060,29 @@ const ConnectMessagingProvider = (props: {
 
 export const InviteTeammates = (props: { className: string; skip: Function; unwrap?: boolean }) => {
 	const dispatch = useDispatch();
+
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const user = state.users[state.session.userId!];
 		const team =
 			state.teams && state.context.currentTeamId
 				? state.teams[state.context.currentTeamId]
 				: undefined;
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
+		const currentUserIsAdmin = (team?.adminIds || []).includes(user.id);
+		const domain = user.email?.split("@")[1].toLowerCase();
 
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
 			companyName: team ? state.companies[team.companyId]?.name : "your organization",
-			teamMembers: team ? getTeamMembers(state) : []
+			companyId: team ? state.companies[team.companyId]?.id : null,
+			teamMembers: team ? getTeamMembers(state) : [],
+			domain,
+			isWebmail: state.configs?.isWebmail,
+			webviewFocused: state.context.hasFocus,
+			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl,
+			currentUserIsAdmin
 		};
 	}, shallowEqual);
 
@@ -1073,11 +1091,17 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [inviteEmailValidity, setInviteEmailValidity] = useState<boolean[]>(
 		new Array(50).fill(true)
 	);
+	// Checkbox should be checked unless its a newrelic domain, for now
+	const [allowDomainBasedJoining, setAllowDomainBasedJoining] = useState(
+		derivedState.domain !== "newrelic.com"
+	);
 	const [sendingInvites, setSendingInvites] = useState(false);
 	const [addSuggestedField, setAddSuggestedField] = useState<{ [email: string]: boolean }>({});
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
 
 	useDidMount(() => {
+		if (derivedState.webviewFocused)
+			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		getSuggestedInvitees();
 	});
 
@@ -1088,7 +1112,9 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 		const { teamMembers, dontSuggestInvitees } = derivedState;
 		const suggested: any[] = [];
-		Object.keys(committers).forEach(email => {
+		Object.keys(committers).forEach((email, index) => {
+			// only show 15, list is too long for onboarding otherwise
+			if (index > 14) return;
 			if (email.match(/noreply/)) return;
 			// If whitespace in domain, invalid email
 			if (email.match(/.*(@.* .+)/)) return;
@@ -1104,23 +1130,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		});
 		setSuggestedInvitees(suggested);
 		if (suggested.length === 0) setNumInviteFields(3);
-	};
-
-	const confirmSkip = () => {
-		confirmPopup({
-			title: "Skip this step?",
-			message:
-				"CodeStream is more powerful when you collaborate. You can invite team members at any time, but don’t hoard all the fun.",
-			centered: false,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Skip Step",
-					action: () => props.skip(),
-					className: "secondary"
-				}
-			]
-		});
 	};
 
 	const addInvite = () => {
@@ -1153,7 +1162,9 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		}
 	};
 
-	const sendInvites = async () => {
+	const handleGetStarted = async () => {
+		const { pendingProtocolHandlerUrl } = derivedState;
+
 		setSendingInvites(true);
 
 		let index = 0;
@@ -1171,21 +1182,55 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			index++;
 		}
 
+		if (allowDomainBasedJoining) {
+			updateCompanyRequestType();
+		}
+
+		if (pendingProtocolHandlerUrl) {
+			await dispatch(handlePendingProtocolHandlerUrl(pendingProtocolHandlerUrl));
+			dispatch(clearPendingProtocolHandlerUrl());
+		}
+
 		setSendingInvites(false);
 		props.skip();
 	};
 
+	const updateCompanyRequestType = async () => {
+		const { domain, companyId } = derivedState;
+
+		if (domain && companyId) {
+			try {
+				await HostApi.instance.send(UpdateCompanyRequestType, {
+					companyId,
+					domainJoining: allowDomainBasedJoining ? [domain] : []
+				});
+				HostApi.instance.track("Domain Joining Enabled");
+			} catch (ex) {
+				console.error(ex);
+				return;
+			}
+		}
+	};
+
+	const displayDomainJoinCheckbox = () => {
+		const { domain, isWebmail, currentUserIsAdmin } = derivedState;
+
+		return currentUserIsAdmin && domain && isWebmail === false;
+	};
+
 	const component = () => {
+		const { domain } = derivedState;
+
 		return (
 			<div className="body">
-				<h3>Invite teammates to {derivedState.companyName}</h3>
+				<h3>Invite your teammates</h3>
 				{suggestedInvitees.length === 0 && (
 					<p className="explainer">We recommend exploring CodeStream with your team</p>
 				)}
 				<div>
 					{suggestedInvitees.length > 0 && (
 						<>
-							<p className="explainer left">Here are some suggestions based on your git history</p>
+							<p className="explainer left">Discuss code and investigate errors with your teammates. Here are some suggestions based on your git history.</p>
 							{suggestedInvitees.map(user => {
 								return (
 									<Checkbox
@@ -1230,14 +1275,32 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 					<LinkRow style={{ minWidth: "180px" }}>
 						<Link onClick={addInvite}>+ Add another</Link>
 					</LinkRow>
+
+					{displayDomainJoinCheckbox() && (
+						<CheckboxRow>
+							<Checkbox
+								name="allow-domain-based-joining"
+								checked={allowDomainBasedJoining}
+								onChange={(value: boolean) => {
+									setAllowDomainBasedJoining(!allowDomainBasedJoining);
+								}}
+							>
+								Let anyone with the <b>{domain}</b> email address join this organization
+							</Checkbox>
+						</CheckboxRow>
+					)}
+
 					<div>
-						<Legacy.default className="row-button" loading={sendingInvites} onClick={sendInvites}>
-							<div className="copy">Send invites</div>
+						<Legacy.default
+							className="row-button"
+							loading={sendingInvites}
+							onClick={handleGetStarted}
+						>
+							<div className="copy">Get Started</div>
 							<Icon name="chevron-right" />
 						</Legacy.default>
 					</div>
 				</div>
-				<SkipLink onClick={confirmSkip}>I'll do this later</SkipLink>
 			</div>
 		);
 	};
@@ -1346,7 +1409,8 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 								if (connected) return;
 								if (provider.id == "login*microsoftonline*com") {
 									HostApi.instance.send(OpenUrlRequestType, {
-										url: "https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
+										url:
+											"https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
 									});
 									HostApi.instance.send(TelemetryRequestType, {
 										eventName: "Messaging Service Connected",

@@ -64,7 +64,7 @@ import {
 import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
-	getProviderPullRequestRepo
+	getProviderPullRequestRepoObject
 } from "../store/providerPullRequests/reducer";
 import { confirmPopup } from "./Confirm";
 import { PullRequestFileComments } from "./PullRequestFileComments";
@@ -72,6 +72,7 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPreferences } from "../store/users/reducer";
 import { setUserPreference } from "./actions";
 import { GHOST } from "./PullRequestTimelineItems";
+import { logError } from "../logger";
 
 const Root = styled.div`
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
@@ -144,7 +145,7 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepo: getProviderPullRequestRepo(state),
+			currentRepoObject: getProviderPullRequestRepoObject(state),
 			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels
 		};
 	});
@@ -296,13 +297,22 @@ export const PullRequest = () => {
 
 	const checkout = async () => {
 		if (!pr) return;
+
 		setIsLoadingBranch(true);
+
+		const repoId = derivedState.currentRepoObject?.currentRepo?.id || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: derivedState.currentRepo ? derivedState.currentRepo.id : ""
+			repoId: repoId
 		});
 		if (result.error) {
-			console.warn("ERROR FROM SET BRANCH: ", result.error);
+			logError(result.error, {
+				...(derivedState.currentRepoObject || {}),
+				branch: pr.headRefName,
+				repoId: repoId,
+				prRepository: pr!.repository
+			});
+
 			confirmPopup({
 				title: "Git Error",
 				className: "wide",
@@ -315,13 +325,10 @@ export const PullRequest = () => {
 				buttons: [{ label: "OK", className: "control-button" }]
 			});
 			setIsLoadingBranch(false);
-			return;
 		} else {
 			setIsLoadingBranch(false);
 			getOpenRepos();
 		}
-		// i don't think we need to reload here, do we?
-		// fetch("Reloading...");
 	};
 
 	useEffect(() => {
@@ -388,9 +395,15 @@ export const PullRequest = () => {
 				);
 			}
 		} catch (er) {
-			dispatch(setProviderError(derivedState.currentPullRequestProviderId!, derivedState.currentPullRequestId!, {
-				message: "Error saving title"
-			}));
+			dispatch(
+				setProviderError(
+					derivedState.currentPullRequestProviderId!,
+					derivedState.currentPullRequestId!,
+					{
+						message: "Error saving title"
+					}
+				)
+			);
 		} finally {
 			setSavingTitle(false);
 			setEditingTitle(false);

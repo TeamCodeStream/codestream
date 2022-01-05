@@ -138,6 +138,7 @@ export interface CodeErrorData {
 	timestamp?: number;
 	openType?: "Open in IDE Flow" | "Observability Section" | "Activity Feed";
 	multipleRepos?: boolean;
+	claimWhenConnected?: boolean;
 }
 
 export interface WebviewContext {
@@ -229,6 +230,7 @@ export interface WebviewConfigs {
 	environment: string;
 	isOnPrem: boolean;
 	isProductionCloud: boolean;
+	isWebmail?: boolean;
 }
 
 export interface IpcHost {

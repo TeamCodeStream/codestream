@@ -1,29 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
-import {
-	PaneHeader,
-	PaneBody,
-	PaneState,
-	PaneNode,
-	PaneNodeName,
-	NoContent
-} from "../src/components/Pane";
+import { NoContent } from "../src/components/Pane";
 
 import { Button } from "../src/components/Button";
 
 import { HostApi } from "../webview-api";
 
 import { useDidMount } from "../utilities/hooks";
-import {
-	EntityAccount,
-	ObservabilityErrorCore,
-	GetObservabilityErrorAssignmentsRequestType,
-	GetObservabilityErrorAssignmentsResponse,
-	GetObservabilityEntitiesRequestType
-} from "@codestream/protocols/agent";
+import { GetObservabilityEntitiesRequestType } from "@codestream/protocols/agent";
 
 import { keyBy as _keyBy } from "lodash-es";
-import { api, openErrorGroup } from "../store/codeErrors/actions";
+import { api } from "../store/codeErrors/actions";
 import { DropdownButton } from "./DropdownButton";
 
 interface EntityAssociatorProps {

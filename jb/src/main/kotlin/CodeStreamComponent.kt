@@ -190,9 +190,11 @@ class CodeStreamComponent(val project: Project) : Disposable {
     }
 
     fun show(afterShow: (() -> Unit)? = null) {
-        toolWindow?.show {
-            project.webViewService?.webView?.focus()
-            afterShow?.invoke()
+        ApplicationManager.getApplication().invokeLater {
+            toolWindow?.show {
+                project.webViewService?.webView?.focus()
+                afterShow?.invoke()
+            }
         }
     }
 

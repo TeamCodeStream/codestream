@@ -134,6 +134,11 @@ export function ConfigurePullRequestQuery(props: Props) {
 	}, [providerIdField]);
 
 	const isValidQuery = query => {
+		// "recent" is a special query string that we handle specifically
+		if (query === "recent") {
+			setValidQuery(true);
+			return true;
+		}
 		if (providerIdField === "github*com" || providerIdField === "github/enterprise") {
 			// Verify if valid query for Github
 			const queryStr = query.replace(/:/g, " ").split(/\s+/);
