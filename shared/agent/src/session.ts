@@ -1415,7 +1415,16 @@ export class CodeStreamSession {
 		markerLocations.flushUncommittedLocations(repo);
 
 		const me = await users.getMe();
-		if (me.user.preferences?.reviewCreateOnDetectUnreviewedCommits !== false) {
+		// disable FROP for new users by default
+		let createReviewOnDetectUnreviewedCommits;
+		if (me.user.createdAt > 1641405000000) {
+			createReviewOnDetectUnreviewedCommits =
+				me.user.preferences?.reviewCreateOnDetectUnreviewedCommits === true ? true : false;
+		} else {
+			createReviewOnDetectUnreviewedCommits =
+				me.user.preferences?.reviewCreateOnDetectUnreviewedCommits === false ? false : true;
+		}
+		if (createReviewOnDetectUnreviewedCommits) {
 			reviews.checkUnreviewedCommits(repo).then(unreviewedCommitCount => {
 				Logger.log(`Detected ${unreviewedCommitCount} unreviewed commits`);
 			});

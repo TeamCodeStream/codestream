@@ -20,13 +20,24 @@ export const Notifications = props => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
 		const emailSupported = isFeatureEnabled(state, "emailSupport");
+
+		// disable FROP for new users by default
+		const me = state.users[state.session.userId!];
+		let createReviewOnDetectUnreviewedCommits;
+		if (me.createdAt > 1641405000000) {
+			createReviewOnDetectUnreviewedCommits =
+				state.preferences.reviewCreateOnDetectUnreviewedCommits === true ? true : false;
+		} else {
+			createReviewOnDetectUnreviewedCommits =
+				state.preferences.reviewCreateOnDetectUnreviewedCommits === false ? false : true;
+		}
+
 		return {
 			notificationPreference: state.preferences.notifications || CSNotificationPreference.InvolveMe,
 			notificationDeliveryPreference:
 				state.preferences.notificationDelivery || CSNotificationDeliveryPreference.All,
 			reviewReminderDelivery: state.preferences.reviewReminderDelivery === false ? false : true,
-			createReviewOnDetectUnreviewedCommits:
-				state.preferences.reviewCreateOnDetectUnreviewedCommits === false ? false : true,
+			createReviewOnDetectUnreviewedCommits: createReviewOnDetectUnreviewedCommits,
 			weeklyEmailDelivery: state.preferences.weeklyEmailDelivery === false ? false : true,
 			hasDesktopNotifications,
 			notificationDeliverySupported,
