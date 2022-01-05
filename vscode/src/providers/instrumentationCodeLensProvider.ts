@@ -100,14 +100,15 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 		if (token.isCancellationRequested) return [];
 
+		const methodLevelTelemetryRequestOptions = {
+			includeAverageDuration: this.template.indexOf("${averageDuration}") > -1,
+			includeThroughput: this.template.indexOf("${throughput}") > -1,
+			includeErrorRate: this.template.indexOf("${errorsPerMinute}") > -1
+		};
 		const methodLevelTelemetryResponse = await Container.agent.observability.getMethodLevelTelemetry(
 			document.fileName,
 			document.languageId,
-			{
-				includeAverageDuration: this.template.indexOf("${averageDuration}") > -1,
-				includeThroughput: this.template.indexOf("${throughput}") > -1,
-				includeErrorRate: this.template.indexOf("${errorsPerMinute}") > -1
-			}
+			methodLevelTelemetryRequestOptions
 		);
 
 		if (methodLevelTelemetryResponse == null || !methodLevelTelemetryResponse.hasAnyData) {
@@ -145,10 +146,13 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
+				filePath: document.fileName,
+				languageId: document.languageId,
 				range: _.symbol.range,
 				methodName: _.symbol.name,
 				newRelicAccountId: methodLevelTelemetryResponse.newRelicAccountId,
-				newRelicEntityGuid: methodLevelTelemetryResponse.newRelicEntityGuid
+				newRelicEntityGuid: methodLevelTelemetryResponse.newRelicEntityGuid,
+				methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions
 			};
 
 			return new vscode.CodeLens(

@@ -3,6 +3,7 @@ import { CodemarkType, CSMarkerIdentifier, CSReviewCheckpoint } from "@codestrea
 import { Editor } from "extensions/editor";
 import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } from "vscode";
 import { openUrl } from "urlHandler";
+import { MethodLevelTelemetryRequestOptions } from "protocols/agent/agent.protocol.providers";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import { TokenManager } from "./api/tokenManager";
 import { WorkspaceState } from "./common";
@@ -90,10 +91,13 @@ export interface OpenStreamCommandArgs {
 }
 
 export interface ViewMethodLevelTelemetryCommandArgs {
+	filePath: string;
+	languageId: string;
 	range: Range;
 	methodName: string;
 	newRelicAccountId?: number;
 	newRelicEntityGuid?: string;
+	methodLevelTelemetryRequestOptions?: MethodLevelTelemetryRequestOptions;
 }
 
 export class Commands implements Disposable {
