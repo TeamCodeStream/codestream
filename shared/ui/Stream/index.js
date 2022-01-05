@@ -99,6 +99,7 @@ import { last as _last, findLastIndex } from "lodash-es";
 import { Keybindings } from "./Keybindings";
 import { FlowPanel, VideoLink } from "./Flow";
 import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
+import { MethodLevelTelemetryPanel } from "./MethodLevelTelemetry/MethodLevelTelemetryPanel";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { GlobalNav } from "./GlobalNav";
 import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
@@ -515,6 +516,7 @@ export class SimpleStream extends PureComponent {
 							{activePanel === WebviewPanels.Flow && <FlowPanel />}
 							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
+							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
 							{activePanel === WebviewPanels.NewPullRequest && (
@@ -552,11 +554,11 @@ export class SimpleStream extends PureComponent {
 						<CodemarkView />
 					</Modal>
 				)}
-				{false && this.props.currentCodeErrorId && (
+				{/* {false && this.props.currentCodeErrorId && (
 					<Modal onClose={() => this.props.setCurrentCodeError()}>
 						<CodeErrorView />
 					</Modal>
-				)}
+				)} */}
 			</div>
 		);
 	}

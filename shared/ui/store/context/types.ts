@@ -51,7 +51,8 @@ export enum ContextActionsType {
 	SetOnboardStep = "@context/SetOnboardStep",
 	SetIsFirstPageview = "@context/SetIsFirstPageview",
 	SetPendingProtocolHandlerUrl = "@context/SetPendingProtocolHandlerUrl",
-	SetWantNewRelicOptions = "@context/SetWantNewRelicOptions"
+	SetWantNewRelicOptions = "@context/SetWantNewRelicOptions",
+	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry"
 }
 
 /**
@@ -109,6 +110,7 @@ export interface ContextState extends WebviewContext {
 	errorsInboxOptions?: { stack?: string; customAttributes?: string; url?: string };
 
 	wantNewRelicOptions?: { repoId?: string; path?: string; projectType?: any };
+	currentMethodLevelTelemetry?: any;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";

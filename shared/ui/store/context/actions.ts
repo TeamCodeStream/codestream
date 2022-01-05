@@ -48,6 +48,7 @@ export const closeAllPanels = () => dispatch => {
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
 	dispatch(clearWantNewRelicOptions());
+	dispatch(setCurrentMethodLevelTelemetry(undefined));
 };
 
 export const closeAllModals = () => dispatch => {
@@ -59,6 +60,7 @@ export const closeAllModals = () => dispatch => {
 	dispatch(clearCurrentErrorsInboxOptions());
 	dispatch(clearCurrentInstrumentationOptions());
 	dispatch(clearWantNewRelicOptions());
+	dispatch(setCurrentMethodLevelTelemetry(undefined));
 };
 
 export const focus = () => action(ContextActionsType.SetFocusState, true);
@@ -112,6 +114,9 @@ export const setCodemarksWrapComments = (enabled: boolean) =>
 
 export const setCurrentCodemark = (codemarkId?: string, markerId?: string) =>
 	action(ContextActionsType.SetCurrentCodemark, { codemarkId, markerId });
+
+export const setCurrentMethodLevelTelemetry = (data: any) =>
+	action(ContextActionsType.SetCurrentMethodLevelTelemetry, { data });
 
 export const setComposeCodemarkActive = (type: CodemarkType | undefined) =>
 	action(ContextActionsType.SetComposeCodemarkActive, { type });

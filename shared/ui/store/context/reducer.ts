@@ -236,6 +236,13 @@ export function reduceContext(
 				pendingProtocolHandlerQuery: action.payload.query
 			};
 
+		case ContextActionsType.SetCurrentMethodLevelTelemetry: {
+			return {
+				...state,
+				currentMethodLevelTelemetry: action.payload.data
+			};
+		}
+
 		case "RESET":
 			return {
 				...initialState,

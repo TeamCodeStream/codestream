@@ -85,7 +85,8 @@ import {
 	closeAllPanels,
 	clearCurrentPullRequest,
 	setPendingProtocolHandlerUrl,
-	goToNewRelicSignup
+	goToNewRelicSignup,
+	setCurrentMethodLevelTelemetry
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/api-functions";
@@ -753,8 +754,9 @@ function listenForEvents(store) {
 	});
 
 	api.on(ViewMethodLevelTelemetryNotificationType, async e => {
-		// TODO
-		console.log(e);
+		store.dispatch(closeAllPanels());
+		store.dispatch(setCurrentMethodLevelTelemetry(e));
+		store.dispatch(openPanel(WebviewPanels.MethodLevelTelemetry));
 	});
 }
 
