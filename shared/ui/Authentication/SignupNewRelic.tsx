@@ -59,10 +59,17 @@ export const SignupNewRelic = () => {
 		let data = { apiKey, apiRegion };
 
 		try {
-			const { teamId, token, status, email, notInviteRelated } = await HostApi.instance.send(
-				RegisterNrUserRequestType,
-				data
-			);
+			// const response = await HostApi.instance.send(
+			const {
+				teamId,
+				token,
+				status,
+				email,
+				notInviteRelated,
+				eligibleJoinCompanies,
+				isWebmail,
+				accountIsConnected
+			} = await HostApi.instance.send(RegisterNrUserRequestType, data);
 			HostApi.instance.track("NR Connected", {
 				"Connection Location": "Onboard"
 			});
@@ -75,7 +82,15 @@ export const SignupNewRelic = () => {
 				case LoginResult.NotInCompany:
 				case LoginResult.NotOnTeam: {
 					if (email && token) {
-						dispatch(goToCompanyCreation({ token, email }));
+						dispatch(
+							goToCompanyCreation({
+								token,
+								email,
+								eligibleJoinCompanies,
+								isWebmail,
+								accountIsConnected
+							})
+						);
 					}
 					break;
 				}
@@ -104,57 +119,6 @@ export const SignupNewRelic = () => {
 		} catch (error) {
 			logError(`Unexpected error during nr registration request: ${error}`);
 		}
-
-		// try {
-		// 	switch (status) {
-		// 		case LoginResult.Success: {
-		// 			sendTelemetry();
-		// 			dispatch(
-		// 				goToEmailConfirmation({
-		// 					email: attributes.email,
-		// 					teamId: props.teamId,
-		// 					registrationParams: attributes
-		// 				})
-		// 			);
-		// 			break;
-		// 		}
-		// 		case LoginResult.NotInCompany: {
-		// 			sendTelemetry();
-		// 			dispatch(goToCompanyCreation({ token, email: attributes.email }));
-		// 			break;
-		// 		}
-		// 		case LoginResult.NotOnTeam: {
-		// 			sendTelemetry();
-		// 			dispatch(goToTeamCreation({ token, email: attributes.email }));
-		// 			break;
-		// 		}
-		// 		case LoginResult.AlreadyConfirmed: {
-		// 			// because user was invited
-		// 			sendTelemetry();
-		// 			dispatch(
-		// 				completeSignup(attributes.email, token!, props.teamId!, {
-		// 					createdTeam: false
-		// 				})
-		// 			);
-		// 			break;
-		// 		}
-		// 		case LoginResult.InviteConflict: {
-		// 			setInviteConflict(true);
-		// 			setIsSubmitting(false);
-		// 			break;
-		// 		}
-		// 		default:
-		// 			throw status;
-		// 	}
-		// } catch (error) {
-		// 	logError(`Unexpected error during registration request: ${error}`, {
-		// 		email,
-		// 		inviteCode: props.inviteCode
-		//
-		// 	});
-		// 	setUnexpectedError(true);
-		// 	setIsSubmitting(false);
-		// }
 	};
 
 	const handleGetApiKeyClick = async () => {

@@ -1122,59 +1122,51 @@ export class CodeStreamSession {
 		singleLine: true
 	})
 	async registerNr(request: RegisterNrUserRequest) {
-		console.warn("eric a");
+		console.warn("ERIC RESPONSE");
 		function isCSNRLoginResponse(r: CSNRRegisterResponse | CSLoginResponse): r is CSLoginResponse {
-			console.warn("eric b");
 			return (r as any).accessToken !== undefined;
 		}
 
 		try {
-			console.warn("eric c");
 			const response = await (this._api as CodeStreamApiProvider).registerNr(request);
-			console.warn("eric response", response);
-			//@TODO: the conditional logic here is hard to read, could use a tuneup
+			console.warn("ERIC RESPONSE", response);
 			if (isCSNRLoginResponse(response)) {
-				console.warn("eric d");
 				if (response.companies.length === 0) {
-					console.warn("eric e");
 					return {
 						status: LoginResult.NotOnTeam,
 						token: response.accessToken,
-						email: response.user?.email
+						email: response.user?.email,
+						eligibleJoinCompanies: response.eligibleJoinCompanies,
+						isWebmail: response.isWebmail,
+						accountIsConnected: response.accountIsConnected
 					};
 				}
-				console.warn("eric f");
-
 				this._teamId = response.teams.find(_ => _.isEveryoneTeam)!.id;
-				console.warn("eric g");
 				return {
 					status: LoginResult.AlreadyConfirmed,
 					token: response.accessToken,
 					email: response.user?.email,
-					teamId: this._teamId
+					teamId: this._teamId,
+					companies: response.companies,
+					eligibleJoinCompanies: response.eligibleJoinCompanies,
+					isWebmail: response.isWebmail,
+					accountIsConnected: response.accountIsConnected
 				};
 			} else {
-				console.warn("eric h");
+				//@TODO is this needed
 				return { status: LoginResult.Success };
 			}
-
-			// return response;
 		} catch (error) {
-			console.warn("eric i", error);
-			if (
-				error instanceof ServerError &&
-				error.statusCode !== undefined &&
-				error.statusCode >= 400 &&
-				error.statusCode < 500
-			) {
-				console.warn("eric j");
-				return {
-					status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown,
-					email: error.info.info,
-					notInviteRelated: true
-				};
+			if (error instanceof ServerError) {
+				if (error.statusCode !== undefined && error.statusCode >= 400 && error.statusCode < 500) {
+					return {
+						status: loginApiErrorMappings[error.info.code] || LoginResult.Unknown,
+						email: error.info.info,
+						notInviteRelated: true
+					};
+				}
 			}
-			console.warn("eric k");
+
 			Container.instance().errorReporter.reportMessage({
 				type: ReportingMessageType.Error,
 				message: "Unexpected error during registration",
@@ -1183,7 +1175,7 @@ export class CodeStreamSession {
 					...error
 				}
 			});
-			throw AgentError.wrap(error, `Registration failed:\n${error.message}`);
+			return error;
 		}
 	}
 

@@ -639,10 +639,11 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async registerNr(request: CSNRRegisterRequest) {
 		const response = await this.post<CSNRRegisterRequest, CSNRRegisterResponse>(
 			"/no-auth/nr-register",
-
 			request
 		);
-
+		if ((response as CSLoginResponse).accessToken) {
+			this._token = (response as CSLoginResponse).accessToken;
+		}
 		return response;
 	}
 
