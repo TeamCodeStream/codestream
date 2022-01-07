@@ -637,12 +637,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async registerNr(request: CSNRRegisterRequest) {
-		console.warn("api request", request);
 		const response = await this.post<CSNRRegisterRequest, CSNRRegisterResponse>(
 			"/no-auth/nr-register",
+
 			request
 		);
-		console.warn("registerNr response", response);
+
 		return response;
 	}
 

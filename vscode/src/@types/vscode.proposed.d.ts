@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
@@ -15,7 +15,7 @@
  */
 
 declare module "vscode" {
-	//#region https://github.com/microsoft/vscode/issues/46585
+	// #region https://github.com/microsoft/vscode/issues/46585
 
 	/**
 	 * A webview based view.
@@ -157,5 +157,5 @@ declare module "vscode" {
 			}
 		): Disposable;
 	}
-	//#endregion
+	// #endregion
 }

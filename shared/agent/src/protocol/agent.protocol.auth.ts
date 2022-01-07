@@ -93,8 +93,12 @@ export interface RegisterNrUserResponse {
 	token?: string;
 	email?: string;
 	info?: {
-		message: string;
+		message?: string;
+		email?: string;
 	};
+	status?: string;
+	notInviteRelated?: boolean;
+	teamId: string;
 }
 
 export const RegisterNrUserRequestType = new RequestType<

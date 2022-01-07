@@ -3,21 +3,20 @@ import {
 	GetNewRelicSignupJwtTokenRequestType
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import React, { Component } from "react";
+import React from "react";
 import { HostApi } from "../webview-api";
-import Button from "./Button";
-import Icon from "./Icon";
-import { Link } from "./Link";
+import Icon from "../Stream/Icon";
+import Button from "../Stream/Button";
+import { Link } from "../Stream/Link";
 import styled from "styled-components";
 import { useDidMount } from "../utilities/hooks";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
-import { goToLogin, goToNewUserEntry } from "../store/context/actions";
-import { configureProvider } from "../store/providers/actions";
-import { ThunkDispatch } from "redux-thunk";
 import { logError } from "../logger";
-import { Action } from "redux";
 import { CodeStreamState } from "@codestream/webview/store";
+import { LoginResult } from "@codestream/protocols/api";
+import { goToNewUserEntry, goToCompanyCreation, goToLogin } from "../store/context/actions";
+import { completeSignup } from "./actions";
 
 const FooterWrapper = styled.div`
 	text-align: center;
@@ -33,9 +32,10 @@ export const SignupNewRelic = () => {
 	const [existingEmail, setExistingEmail] = React.useState("");
 	const [loading, setLoading] = React.useState(false);
 	const [apiKey, setApiKey] = React.useState("");
+	const [inviteConflict, setInviteConflict] = React.useState(false);
 
 	//Redux declarations
-	const dispatch = useDispatch<ThunkDispatch<any, any, Action>>();
+	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		console.log(state);
 		return {
@@ -51,33 +51,58 @@ export const SignupNewRelic = () => {
 		}
 	});
 
-	const buildApiUrl = () => {
-		return derivedState.isProductionCloud
-			? "https://api.newrelic.com"
-			: "https://staging-api.newrelic.com";
-	};
-
 	const onSubmit = async (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		setLoading(true);
+		//@TODO: add eu support
 		const apiRegion = derivedState.isProductionCloud ? "" : "staging";
 		let data = { apiKey, apiRegion };
-		let providerId = "newrelic*com";
-		let apiUrl = buildApiUrl();
 
 		try {
-			const response = await HostApi.instance.send(RegisterNrUserRequestType, data);
-			setLoading(false);
-			if (response?.info?.message === "This user is already registered and confirmed") {
-				setShowErrorMessage(true);
-				setExistingEmail("bob@builder.com");
-			}
+			const { teamId, token, status, email, notInviteRelated } = await HostApi.instance.send(
+				RegisterNrUserRequestType,
+				data
+			);
 			HostApi.instance.track("NR Connected", {
 				"Connection Location": "Onboard"
 			});
-		} catch (error) {
 			setLoading(false);
-			logError(`Error configuring NR: ${error}`);
+
+			switch (status) {
+				case LoginResult.Success: {
+					break;
+				}
+				case LoginResult.NotInCompany:
+				case LoginResult.NotOnTeam: {
+					if (email && token) {
+						dispatch(goToCompanyCreation({ token, email }));
+					}
+					break;
+				}
+				case LoginResult.AlreadyConfirmed: {
+					// already has an account
+					if (notInviteRelated && email) {
+						setShowErrorMessage(true);
+						setExistingEmail(email);
+					}
+					// invited @TODO: this could be handled better instead of having teamId
+					// + AlreadyConfirmed being how we determine invite
+					if (email && token && teamId) {
+						completeSignup(email, token!, teamId!, {
+							createdTeam: false
+						});
+					}
+					break;
+				}
+				case LoginResult.InviteConflict: {
+					setInviteConflict(true);
+					break;
+				}
+				default:
+					throw status;
+			}
+		} catch (error) {
+			logError(`Unexpected error during nr registration request: ${error}`);
 		}
 
 		// try {
@@ -156,28 +181,37 @@ export const SignupNewRelic = () => {
 							{showErrorMessage && (
 								<ErrorMessageWrapper>
 									<div className="error-message">
-										An account already exists for {existingEmail}.
+										An account already exists for {existingEmail}.{" "}
 										<Link
 											onClick={e => {
 												e.preventDefault();
 												dispatch(goToLogin());
 											}}
 										>
-											{" "}
 											Sign In
 										</Link>
 									</div>
 								</ErrorMessageWrapper>
 							)}
+							{inviteConflict && (
+								<ErrorMessageWrapper>
+									<div className="error-message">
+										Invitation conflict.{" "}
+										<FormattedMessage id="contactSupport" defaultMessage="Contact support">
+											{text => <Link href="mailto:support@codestream.com">{text}</Link>}
+										</FormattedMessage>
+										.
+									</div>
+								</ErrorMessageWrapper>
+							)}
 							<label>
-								Enter your New Relic user API key.
+								Enter your New Relic user API key.{" "}
 								<Link
 									onClick={e => {
 										e.preventDefault();
 										handleGetApiKeyClick();
 									}}
 								>
-									{" "}
 									Get your API key.
 								</Link>
 							</label>

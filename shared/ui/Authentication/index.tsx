@@ -12,7 +12,7 @@ import { ForgotPassword } from "./ForgotPassword";
 import { MustSetPassword } from "./MustSetPassword";
 import { OktaConfig } from "./OktaConfig";
 import { CompanyCreation } from "./CompanyCreation";
-import { SignupNewRelic } from "../Stream/SignUpNewRelic";
+import { SignupNewRelic } from "./SignupNewRelic";
 
 export const UnauthenticatedRoutes = () => {
 	const props = useSelector((state: CodeStreamState) => state.context.route);
