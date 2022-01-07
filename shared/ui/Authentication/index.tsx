@@ -12,6 +12,7 @@ import { ForgotPassword } from "./ForgotPassword";
 import { MustSetPassword } from "./MustSetPassword";
 import { OktaConfig } from "./OktaConfig";
 import { CompanyCreation } from "./CompanyCreation";
+import { SignupNewRelic } from "../Stream/SignUpNewRelic";
 
 export const UnauthenticatedRoutes = () => {
 	const props = useSelector((state: CodeStreamState) => state.context.route);
@@ -20,6 +21,8 @@ export const UnauthenticatedRoutes = () => {
 		case Route.Signup:
 		case Route.NewUser:
 			return <Signup {...props.params} />;
+		case Route.NewRelicSignup:
+			return <SignupNewRelic {...props.params} />;
 		case Route.ProviderAuth:
 			return <ProviderAuth {...props.params} />;
 		case Route.CompanyCreation:

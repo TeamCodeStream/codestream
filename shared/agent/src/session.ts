@@ -4,7 +4,7 @@ import glob from "glob-promise";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { isEqual, uniq } from "lodash-es";
+import { isEqual, uniq, omit } from "lodash-es";
 import * as path from "path";
 import * as url from "url";
 import {
@@ -73,6 +73,8 @@ import {
 	PasswordLoginRequestType,
 	RegisterUserRequest,
 	RegisterUserRequestType,
+	RegisterNrUserRequest,
+	RegisterNrUserRequestType,
 	ReportingMessageType,
 	SetServerUrlRequest,
 	SetServerUrlRequestType,
@@ -108,6 +110,16 @@ import { testGroups } from "./testGroups";
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost|(\w+))\.codestream\.(?:us|com)(?::\d+$)?/i;
 
 const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
+
+const PROVIDERS_TO_REGISTER_BEFORE_SIGNIN = {
+	[`newrelic*com`]: {
+		host: "newrelic.com",
+		id: "newrelic*com",
+		isEnterprise: false,
+		name: "newrelic",
+		needsConfigure: true
+	}
+};
 
 export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"USRC-1001": LoginResult.InvalidCredentials,
@@ -267,6 +279,9 @@ export class CodeStreamSession {
 		);
 
 		Container.initialize(agent, this);
+
+		registerProviders(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN, this);
+
 		this.logNodeEnvVariables();
 
 		const redactProxyPasswdRegex = /(http:\/\/.*:)(.*)(@.*)/gi;
@@ -421,6 +436,9 @@ export class CodeStreamSession {
 		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
 		this.agent.registerHandler(OtcLoginRequestType, e => this.otcLogin(e));
 		this.agent.registerHandler(RegisterUserRequestType, e => this.register(e));
+
+		this.agent.registerHandler(RegisterNrUserRequestType, e => this.registerNr(e));
+
 		this.agent.registerHandler(ConfirmRegistrationRequestType, e => this.confirmRegistration(e));
 		this.agent.registerHandler(GetInviteInfoRequestType, e => this.getInviteInfo(e));
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
@@ -454,6 +472,7 @@ export class CodeStreamSession {
 					usersResponse,
 					preferencesResponse
 				] = await promise;
+
 				return {
 					companies: companiesResponse.companies,
 					preferences: preferencesResponse.preferences,
@@ -950,7 +969,12 @@ export class CodeStreamSession {
 			}
 		}
 
-		this._providers = currentTeam.providerHosts || {};
+		// this._providers = currentTeam.providerHosts || {};
+		this._providers = currentTeam.providerHosts
+			? omit(currentTeam.providerHosts, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
+			: {};
+
+		//@TODO: exclude nr provider here, call it earlier near initialze()
 		registerProviders(this._providers, this);
 
 		const cc = Logger.getCorrelationContext();
@@ -1090,6 +1114,21 @@ export class CodeStreamSession {
 				}
 			});
 			throw AgentError.wrap(error, `Registration failed:\n${error.message}`);
+		}
+	}
+
+	@log({
+		singleLine: true
+	})
+	async registerNr(request: RegisterNrUserRequest) {
+		try {
+			console.warn("request Nr call api", request);
+			const response = await (this._api as CodeStreamApiProvider).registerNr(request);
+			console.warn("register Nr call api", response);
+			return response;
+		} catch (error) {
+			console.warn("register Nr error", error);
+			return error;
 		}
 	}
 

@@ -152,9 +152,12 @@ export class ThirdPartyProviderRegistry {
 	private _lastProvidersPRs: ProviderPullRequests[] | undefined;
 	private _queriedPRsAgeLimit?: { providerName: string; ageLimit: number[] }[] | undefined;
 	private _pollingInterval: NodeJS.Timer | undefined;
+	private session: CodeStreamSession | undefined = undefined;
 
-	constructor(public readonly session: CodeStreamSession) {
+	initialize(session: CodeStreamSession) {
+		this.session = session;
 		this._pollingInterval = setInterval(this.pullRequestsStateHandler.bind(this), 900000); // every 15 minutes
+		return this;
 	}
 
 	private async pullRequestsStateHandler() {

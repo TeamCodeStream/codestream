@@ -127,6 +127,15 @@ export interface CSRegisterResponse {
 	user?: CSUser; // No user means they are already registered. for security, that message is emailed to them rather than displayed in the client
 }
 
+export interface CSNRRegisterRequest {
+	apiRegion: string;
+	apiKey: string;
+}
+
+export interface CSNRRegisterResponse {
+	email?: CSUser;
+}
+
 export interface CSConfirmRegistrationRequest {
 	email: string;
 	confirmationCode: string;

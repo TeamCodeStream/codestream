@@ -264,6 +264,9 @@ export const goToSSOAuth = (
 	}
 };
 
+export const goToNewRelicSignup = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.NewRelicSignup, params });
+
 export const goToSignup = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.Signup, params });
 

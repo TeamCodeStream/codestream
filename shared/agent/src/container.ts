@@ -33,6 +33,8 @@ import { ThirdPartyProviderRegistry } from "./providers/registry";
 import { CodeStreamSession } from "./session";
 import { GitServiceLite } from "./git/gitServiceLite";
 
+let providerRegistry: ThirdPartyProviderRegistry | undefined = undefined;
+
 class SessionServiceContainer {
 	private readonly _git: GitService;
 	get git() {
@@ -158,7 +160,7 @@ class SessionServiceContainer {
 		this._teams = new TeamsManager(session);
 		this._users = new UsersManager(session);
 		this._documentMarkers = new DocumentMarkerManager(session);
-		this._providerRegistry = new ThirdPartyProviderRegistry(session);
+		this._providerRegistry = providerRegistry!.initialize(session);
 		this._repositoryMappings = new RepositoryMappingManager(session);
 		this._companies = new CompaniesManager(session);
 		this._ignoreFiles = new IgnoreFilesManager(session);
@@ -182,6 +184,7 @@ class ServiceContainer {
 		this._errorReporter = new ErrorReporter(session);
 		this._telemetry = new TelemetryManager(session);
 		this._urls = new UrlManager();
+		providerRegistry = new ThirdPartyProviderRegistry();
 	}
 
 	private readonly _gitServiceLite: GitServiceLite;

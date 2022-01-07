@@ -262,6 +262,8 @@ import {
 	CSRefreshableProviderInfos,
 	CSRegisterRequest,
 	CSRegisterResponse,
+	CSNRRegisterRequest,
+	CSNRRegisterResponse,
 	CSRemoveProviderHostResponse,
 	CSSetCodemarkPinnedRequest,
 	CSSetCodemarkPinnedResponse,
@@ -631,6 +633,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if ((response as CSLoginResponse).accessToken) {
 			this._token = (response as CSLoginResponse).accessToken;
 		}
+		return response;
+	}
+
+	async registerNr(request: CSNRRegisterRequest) {
+		console.warn("api request", request);
+		const response = await this.post<CSNRRegisterRequest, CSNRRegisterResponse>(
+			"/no-auth/nr-register",
+			request
+		);
+		console.warn("registerNr response", response);
 		return response;
 	}
 
