@@ -88,32 +88,12 @@ module.exports = function(env, argv) {
 					: false
 		}),
 		new ForkTsCheckerPlugin({
-			async: false,
-			useTypescriptIncrementalApi: false
+			async: false
 		})
 	];
 
 	if (env.analyzeBundle) {
 		plugins.push(new BundleAnalyzerPlugin());
-	}
-
-	if (mode === "production") {
-		plugins.push(
-			new TerserPlugin({
-				cache: true,
-				parallel: true,
-				sourceMap: true,
-				terserOptions: {
-					ecma: 8,
-					// Keep the class names otherwise @log won't provide a useful name
-					keep_classnames: true,
-					module: true,
-					compress: {
-						pure_funcs: ["console.warn"]
-					}
-				}
-			})
-		);
 	}
 
 	return {
@@ -133,11 +113,15 @@ module.exports = function(env, argv) {
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
-					cache: true,
 					parallel: true,
-					sourceMap: true,
 					terserOptions: {
-						ecma: 8
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						keep_classnames: true,
+						module: true,
+						compress: {
+							pure_funcs: ["console.warn"]
+						}
 					}
 				})
 			],

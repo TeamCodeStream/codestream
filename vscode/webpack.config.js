@@ -12,7 +12,7 @@ const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const CircularDependencyPlugin = require("circular-dependency-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 const HtmlWebpackInlineSourcePlugin = require("@effortlessmotion/html-webpack-inline-source-plugin");
-const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = function(env, argv) {
 	env = env || {};
@@ -70,21 +70,23 @@ function getExtensionConfig(mode, env) {
 			verbose: true
 		}),
 		new FileManagerPlugin({
-			onEnd: [
-				{
-					copy: [
-						{
-							// TODO: Use environment variable if exists
-							source: path.resolve(__dirname, "../shared/agent/dist/*"),
-							destination: "dist/"
-						},
-						{
-							source: path.resolve(__dirname, "codestream-*.info"),
-							destination: "dist/"
-						}
-					]
-				}
-			]
+			events: {
+				onEnd: [
+					{
+						copy: [
+							{
+								// TODO: Use environment variable if exists
+								source: path.resolve(__dirname, "../shared/agent/dist/*"),
+								destination: "dist/"
+							},
+							{
+								source: path.resolve(__dirname, "codestream-*.info"),
+								destination: "dist/"
+							}
+						]
+					}
+				]
+			}
 		})
 	];
 
@@ -125,9 +127,7 @@ function getExtensionConfig(mode, env) {
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
-					cache: true,
 					parallel: true,
-					sourceMap: true,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
@@ -222,32 +222,13 @@ function getWebviewConfig(mode, env) {
 		}),
 		new HtmlWebpackInlineSourcePlugin(),
 		new ForkTsCheckerPlugin({
-			async: false,
-			useTypescriptIncrementalApi: false
+			async: false
 		})
 	];
 
 	if (env.analyzeBundleWebview) {
 		console.log("adding BundleAnalyzerPlugin");
 		plugins.push(new BundleAnalyzerPlugin());
-	}
-	if (mode === "production") {
-		plugins.push(
-			new TerserPlugin({
-				cache: true,
-				parallel: true,
-				sourceMap: true,
-				terserOptions: {
-					ecma: 8,
-					// Keep the class names otherwise @log won't provide a useful name
-					keep_classnames: true,
-					module: true,
-					compress: {
-						pure_funcs: ["console.warn"]
-					}
-				}
-			})
-		);
 	}
 
 	return {
@@ -267,14 +248,18 @@ function getWebviewConfig(mode, env) {
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
-					cache: true,
 					parallel: true,
-					sourceMap: true,
 					terserOptions: {
-						ecma: 8
+						ecma: 8,
+						// Keep the class names otherwise @log won't provide a useful name
+						keep_classnames: true,
+						module: true,
+						compress: {
+							pure_funcs: ["console.warn"]
+						}
 					}
 				}),
-				new OptimizeCSSAssetsPlugin({})
+				new CssMinimizerPlugin()
 			],
 			splitChunks: {
 				cacheGroups: {

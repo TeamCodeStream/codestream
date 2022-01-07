@@ -60,7 +60,7 @@ module.exports = function(env, argv) {
 	 */
 	const plugins = [
 		new CleanPlugin({ cleanOnceBeforeBuildPatterns: ["**/*"], verbose: true }),
-		new FileManagerPlugin({ onEnd: onEnd }),
+		new FileManagerPlugin({ events: { onEnd: onEnd } }),
 		// Added because of https://github.com/felixge/node-formidable/issues/337
 		new webpack.DefinePlugin({ "global.GENTLY": false }),
 		// Ignores optional worker_threads require by the write-file-atomic package
@@ -85,9 +85,7 @@ module.exports = function(env, argv) {
 		optimization: {
 			minimizer: [
 				new TerserPlugin({
-					cache: true,
 					parallel: true,
-					sourceMap: !env.production,
 					terserOptions: {
 						ecma: 8,
 						// Keep the class names otherwise @log won't provide a useful name
