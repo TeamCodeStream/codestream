@@ -1123,6 +1123,7 @@ export class CodeStreamSession {
 
 		try {
 			const response = await (this._api as CodeStreamApiProvider).registerNr(request);
+			// @TODO: this logic could be cleaner and easier to read
 			if (isCSNRLoginResponse(response)) {
 				if (response.companies.length === 0) {
 					return {
@@ -1146,6 +1147,7 @@ export class CodeStreamSession {
 					accountIsConnected: response.accountIsConnected
 				};
 			} else {
+				// @TODO: This specific logical path could use some QA
 				return {
 					status: LoginResult.Success,
 					token: response.token,
