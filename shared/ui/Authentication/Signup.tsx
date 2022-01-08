@@ -307,7 +307,6 @@ export const Signup = (props: Props) => {
 			HostApi.instance.track("Provider Auth Selected", {
 				Provider: "New Relic"
 			});
-			console.warn("clicked sign up new relic");
 			dispatch(goToNewRelicSignup({}));
 		},
 		[props.type]

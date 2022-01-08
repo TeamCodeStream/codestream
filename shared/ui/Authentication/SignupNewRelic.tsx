@@ -59,7 +59,6 @@ export const SignupNewRelic = () => {
 		let data = { apiKey, apiRegion };
 
 		try {
-			// const response = await HostApi.instance.send(
 			const {
 				teamId,
 				token,
@@ -100,8 +99,7 @@ export const SignupNewRelic = () => {
 						setShowErrorMessage(true);
 						setExistingEmail(email);
 					}
-					// invited @TODO: this could be handled better instead of having teamId
-					// + AlreadyConfirmed being how we determine invite
+					// invited @TODO: this could be handled cleaner
 					if (email && token && teamId) {
 						completeSignup(email, token!, teamId!, {
 							createdTeam: false

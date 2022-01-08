@@ -93,7 +93,6 @@ export interface RegisterNrUserResponse {
 	token?: string;
 	email?: string;
 	status?: string;
-
 	notInviteRelated?: boolean;
 	teamId: string;
 	eligibleJoinCompanies: CSEligibleJoinCompany[];

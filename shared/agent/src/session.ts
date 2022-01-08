@@ -970,12 +970,9 @@ export class CodeStreamSession {
 			}
 		}
 
-		// this._providers = currentTeam.providerHosts || {};
 		this._providers = currentTeam.providerHosts
 			? omit(currentTeam.providerHosts, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
 			: {};
-
-		//@TODO: exclude nr provider here, call it earlier near initialze()
 		registerProviders(this._providers, this);
 
 		const cc = Logger.getCorrelationContext();
@@ -1122,14 +1119,12 @@ export class CodeStreamSession {
 		singleLine: true
 	})
 	async registerNr(request: RegisterNrUserRequest) {
-		console.warn("ERIC RESPONSE");
 		function isCSNRLoginResponse(r: CSNRRegisterResponse | CSLoginResponse): r is CSLoginResponse {
 			return (r as any).accessToken !== undefined;
 		}
 
 		try {
 			const response = await (this._api as CodeStreamApiProvider).registerNr(request);
-			console.warn("ERIC RESPONSE", response);
 			if (isCSNRLoginResponse(response)) {
 				if (response.companies.length === 0) {
 					return {
