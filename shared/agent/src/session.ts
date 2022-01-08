@@ -437,9 +437,7 @@ export class CodeStreamSession {
 		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
 		this.agent.registerHandler(OtcLoginRequestType, e => this.otcLogin(e));
 		this.agent.registerHandler(RegisterUserRequestType, e => this.register(e));
-
 		this.agent.registerHandler(RegisterNrUserRequestType, e => this.registerNr(e));
-
 		this.agent.registerHandler(ConfirmRegistrationRequestType, e => this.confirmRegistration(e));
 		this.agent.registerHandler(GetInviteInfoRequestType, e => this.getInviteInfo(e));
 		this.agent.registerHandler(ApiRequestType, (e, cancellationToken: CancellationToken) =>
@@ -1148,8 +1146,16 @@ export class CodeStreamSession {
 					accountIsConnected: response.accountIsConnected
 				};
 			} else {
-				//@TODO is this needed
-				return { status: LoginResult.Success };
+				return {
+					status: LoginResult.Success,
+					token: response.token,
+					email: response.email,
+					teamId: this._teamId,
+					companies: response.companies,
+					eligibleJoinCompanies: response.eligibleJoinCompanies,
+					isWebmail: response.isWebmail,
+					accountIsConnected: response.accountIsConnected
+				};
 			}
 		} catch (error) {
 			if (error instanceof ServerError) {

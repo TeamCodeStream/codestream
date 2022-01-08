@@ -133,7 +133,14 @@ export interface CSNRRegisterRequest {
 }
 
 export interface CSNRRegisterResponse {
-	email?: CSUser;
+	email?: string;
+	token?: string;
+	accessToken?: string;
+	teamId?: string;
+	companies?: CSCompany[];
+	eligibleJoinCompanies?: CSEligibleJoinCompany[];
+	isWebmail?: boolean;
+	accountIsConnected?: boolean;
 }
 
 export interface CSConfirmRegistrationRequest {

@@ -75,9 +75,8 @@ export const SignupNewRelic = () => {
 			setLoading(false);
 
 			switch (status) {
-				case LoginResult.Success: {
-					break;
-				}
+				// CompanyCreation should handle routing on success
+				case LoginResult.Success:
 				case LoginResult.NotInCompany:
 				case LoginResult.NotOnTeam: {
 					if (email && token) {
