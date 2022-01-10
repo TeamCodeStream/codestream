@@ -145,6 +145,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return this.apiUrl;
 	}
 
+	get coreUrl() {
+		return this.apiUrl.replace("api.", "one.");
+	}
+
 	get graphQlBaseUrl() {
 		return `${this.baseUrl}/graphql`;
 	}
@@ -1570,6 +1574,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		if (!this._languageSupport.has(request.languageId)) return undefined;
 
+		if (request.languageId === "python") {
+			request.codeNamespace = this.getPythonNamespacePackage(request.filePath);
+			if (!request.codeNamespace) {
+				return undefined;
+			}
+		}
+
 		const { git } = SessionContainer.instance();
 		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
 		if (!repoForFile?.id) return undefined;
@@ -1606,12 +1617,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		entity = repo.entityAccounts[0];
 
-		if (request.languageId === "python") {
-			request.codeNamespace = this.getPythonNamespacePackage(request.filePath);
-			if (!request.codeNamespace) {
-				return undefined;
-			}
-		}
 		request.newRelicAccountId = entity.accountId;
 		request.newRelicEntityGuid = entity.entityGuid;
 		let entityName = entity.entityName;
@@ -1624,39 +1629,54 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				request.options.includeErrorRate ? this.getMethodErrorRate(request) : undefined
 			]);
 
-			const addFunctionName = (arr: { metricTimesliceName: string }[]) => {
+			const addMethodName = (arr: { metricTimesliceName: string }[]) => {
 				return arr.map((_: any) => {
 					const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
 					return {
 						..._,
-						function: indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined
+						functionName:
+							indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined
 					};
 				});
 			};
 
-			if (throughputResponse) {
-				throughputResponse.actor.account.nrql.results = addFunctionName(
-					throughputResponse.actor.account.nrql.results
-				);
-			}
+			// if (throughputResponse) {
+			// 	throughputResponse.actor.account.nrql.results = addMethodName(
+			// 		throughputResponse.actor.account.nrql.results
+			// 	);
+			// }
 
-			if (averageDurationResponse) {
-				averageDurationResponse.actor.account.nrql.results = addFunctionName(
-					averageDurationResponse.actor.account.nrql.results
-				);
-			}
+			// if (averageDurationResponse) {
+			// 	averageDurationResponse.actor.account.nrql.results = addMethodName(
+			// 		averageDurationResponse.actor.account.nrql.results
+			// 	);
+			// }
 
-			if (errorRateResponse) {
-				errorRateResponse.actor.account.nrql.results = addFunctionName(
-					errorRateResponse.actor.account.nrql.results
-				);
-			}
+			// if (errorRateResponse) {
+			// 	errorRateResponse.actor.account.nrql.results = addMethodName(
+			// 		errorRateResponse.actor.account.nrql.results
+			// 	);
+			// }
+
+			[throughputResponse, averageDurationResponse, errorRateResponse].forEach(_ => {
+				if (_) {
+					_.actor.account.nrql.results = addMethodName(_.actor.account.nrql.results);
+
+					if (request.functionName) {
+						_.actor.account.nrql.results = _.actor.account.nrql.results.filter(
+							(r: any) => r.functionName === request.functionName
+						);
+					}
+				}
+			});
 
 			const begin =
 				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
 
+			// TODO
+			let transactionId = "";
 			return {
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
 				averageDuration: averageDurationResponse
@@ -1674,7 +1694,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					errorRateResponse?.actor?.account?.nrql?.results.length,
 				newRelicAccountId: request.newRelicAccountId,
 				newRelicEntityGuid: request.newRelicEntityGuid,
-				newRelicEntityName: entityName
+				newRelicEntityName: entityName,
+				repo: {
+					id: repoForFile.id,
+					name: this.getRepoName(repoForFile.folder)
+				},
+				newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getMethodLevelTelemetry", {

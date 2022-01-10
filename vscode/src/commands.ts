@@ -94,7 +94,7 @@ export interface ViewMethodLevelTelemetryCommandArgs {
 	filePath: string;
 	languageId: string;
 	range: Range;
-	methodName: string;
+	functionName: string;
 	newRelicAccountId?: number;
 	newRelicEntityGuid?: string;
 	methodLevelTelemetryRequestOptions?: MethodLevelTelemetryRequestOptions;

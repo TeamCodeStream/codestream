@@ -482,17 +482,17 @@ class MethodLevelTelemetryParams(
 
 class MethodLevelTelemetryThroughput(
     val requestsPerMinute: Float,
-    val function: String
+    val functionName: String
 )
 
 class MethodLevelTelemetryAverageDuration(
     val averageDuration: Float,
-    val function: String
+    val functionName: String
 )
 
 class MethodLevelTelemetryErrorRate(
     val errorsPerMinute: Float,
-    val function: String
+    val functionName: String
 )
 
 class MethodLevelTelemetryResult(

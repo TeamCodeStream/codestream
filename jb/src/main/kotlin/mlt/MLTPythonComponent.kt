@@ -76,15 +76,15 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                         )
 
                         result?.errorRate?.forEach { errorRate ->
-                            val hints = hintTextsByFunction.getOrPut(errorRate.function) { mutableListOf<String>() }
+                            val hints = hintTextsByFunction.getOrPut(errorRate.functionName) { mutableListOf<String>() }
                             hints.add("Errors per minute: ${errorRate.errorsPerMinute}")
                         }
                         result?.averageDuration?.forEach { averageDuration ->
-                            val hints = hintTextsByFunction.getOrPut(averageDuration.function) { mutableListOf<String>() }
+                            val hints = hintTextsByFunction.getOrPut(averageDuration.functionName) { mutableListOf<String>() }
                             hints.add("Average duration: ${averageDuration.averageDuration}")
                         }
                         result?.throughput?.forEach { throughput ->
-                            val hints = hintTextsByFunction.getOrPut(throughput.function) { mutableListOf<String>() }
+                            val hints = hintTextsByFunction.getOrPut(throughput.functionName) { mutableListOf<String>() }
                             hints.add("Requests per minute: ${throughput.requestsPerMinute}")
                         }
 

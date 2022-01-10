@@ -129,15 +129,15 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 		const lenses = instrumentableSymbols.map(_ => {
 			const throughputForFunction = methodLevelTelemetryResponse.throughput
-				? methodLevelTelemetryResponse.throughput.find(i => i.function === _.symbol.name)
+				? methodLevelTelemetryResponse.throughput.find(i => i.functionName === _.symbol.name)
 				: undefined;
 
 			const averageDurationForFunction = methodLevelTelemetryResponse.averageDuration
-				? methodLevelTelemetryResponse.averageDuration.find(i => i.function === _.symbol.name)
+				? methodLevelTelemetryResponse.averageDuration.find(i => i.functionName === _.symbol.name)
 				: undefined;
 
 			const errorRateForFunction = methodLevelTelemetryResponse.errorRate
-				? methodLevelTelemetryResponse.errorRate.find(i => i.function === _.symbol.name)
+				? methodLevelTelemetryResponse.errorRate.find(i => i.functionName === _.symbol.name)
 				: undefined;
 
 			if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
@@ -149,7 +149,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				filePath: document.fileName,
 				languageId: document.languageId,
 				range: _.symbol.range,
-				methodName: _.symbol.name,
+				functionName: _.symbol.name,
 				newRelicAccountId: methodLevelTelemetryResponse.newRelicAccountId,
 				newRelicEntityGuid: methodLevelTelemetryResponse.newRelicEntityGuid,
 				methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions

@@ -1088,21 +1088,27 @@ export interface GetMethodLevelTelemetryRequest {
 	filePath: string;
 	languageId: string;
 	codeNamespace?: string;
+	functionName?: string;
 	newRelicAccountId?: number;
 	newRelicEntityGuid?: string;
 	options?: MethodLevelTelemetryRequestOptions;
 }
 
 export interface GetMethodLevelTelemetryResponse {
-	throughput?: { requestsPerMinute: any; function: string }[];
-	averageDuration?: { averageDuration: any; function: string }[];
-	errorRate?: { errorsPerMinute: any; function: string }[];
+	repo: {
+		id: string;
+		name: string;
+	};
+	throughput?: { requestsPerMinute: any; functionName: string }[];
+	averageDuration?: { averageDuration: any; functionName: string }[];
+	errorRate?: { errorsPerMinute: any; functionName: string }[];
 	lastUpdateDate?: number;
 	hasAnyData?: boolean;
 	sinceDateFormatted?: string;
 	newRelicAccountId?: number;
 	newRelicEntityGuid?: string;
 	newRelicEntityName?: string;
+	newRelicUrl?: string;
 }
 
 export const GetMethodLevelTelemetryRequestType = new RequestType<
