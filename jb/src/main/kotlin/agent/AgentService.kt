@@ -28,6 +28,8 @@ import com.codestream.protocols.agent.GetStreamParams
 import com.codestream.protocols.agent.GetUserParams
 import com.codestream.protocols.agent.Ide
 import com.codestream.protocols.agent.InitializationOptions
+import com.codestream.protocols.agent.MethodLevelTelemetryParams
+import com.codestream.protocols.agent.MethodLevelTelemetryResult
 import com.codestream.protocols.agent.PixieDynamicLoggingParams
 import com.codestream.protocols.agent.PixieDynamicLoggingResult
 import com.codestream.protocols.agent.Post
@@ -493,6 +495,13 @@ class AgentService(private val project: Project) : Disposable {
             .request("codestream/pixie/dynamicLogging", params)
             .await() as JsonObject
         return gson.fromJson(json)
+    }
+
+    suspend fun methodLevelTelemetry(params: MethodLevelTelemetryParams): MethodLevelTelemetryResult {
+        val json = remoteEndpoint
+            .request("codestream/newrelic/methodLevelTelemetry", params)
+            .await() as JsonObject?
+        return gson.fromJson(json!!)
     }
 
     private val _restartObservers = mutableListOf<() -> Unit>()

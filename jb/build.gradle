@@ -79,7 +79,7 @@ intellij {
     // Run on a locally installed IDE, different from the build dependency specified via type/version
     // intellij.alternativeIdePath = idePath
 
-    plugins = ['git4idea', 'org.jetbrains.plugins.go:211.7142.36']
+    plugins = ['git4idea', 'org.jetbrains.plugins.go:211.7142.36', 'Pythonid:203.6682.179']
 }
 
 runIde {
@@ -88,8 +88,8 @@ runIde {
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 //    jvmArgs '-Dkotlinx.coroutines.debug=on'
 //    jvmArgs '-Dcom.codestream.recordRequests=true'
-//    jvmArgs '-Dcom.codestream.webview=/Users/mfarias/Code/codestream/jb/src/main/resources/webview'
-//    jvmArgs '-Dcom.codestream.agent=/Users/mfarias/Code/codestream/shared/agent/dist'
+    jvmArgs '-Dcom.codestream.webview=/Users/mfarias/Code/codestream/jb/src/main/resources/webview'
+    jvmArgs '-Dcom.codestream.agent=/Users/mfarias/Code/codestream/shared/agent/dist'
     jvmArgs '-Xmx2048m'
     jvmArgs '-Xms128m'
 }

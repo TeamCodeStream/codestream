@@ -465,3 +465,45 @@ class PixieDynamicLoggingEvent(
     val done: Boolean
 )
 
+class MethodLevelTelemetryOptions(
+    val includeThroughput: Boolean?,
+    val includeAverageDuration: Boolean?,
+    val includeErrorRate: Boolean?
+)
+
+class MethodLevelTelemetryParams(
+    val filePath: String,
+    val languageId: String,
+    val codeNamespace: String?,
+    val newRelicAccountId: Int?,
+    val newRelicEntityGuid: String?,
+    val options: MethodLevelTelemetryOptions?
+)
+
+class MethodLevelTelemetryThroughput(
+    val requestsPerMinute: Float,
+    val function: String
+)
+
+class MethodLevelTelemetryAverageDuration(
+    val averageDuration: Float,
+    val function: String
+)
+
+class MethodLevelTelemetryErrorRate(
+    val errorsPerMinute: Float,
+    val function: String
+)
+
+class MethodLevelTelemetryResult(
+    val throughput: List<MethodLevelTelemetryThroughput>?,
+    val averageDuration: List<MethodLevelTelemetryAverageDuration>?,
+    val errorRate: List<MethodLevelTelemetryErrorRate>?,
+    val lastUpdateDate: Int?,
+    val hasAnyData: Int?,
+    val sinceDateFormatted: String?,
+    val newRelicAccountId: Int?,
+    val newRelicEntityGuid: String?,
+    val newRelicEntityName: String?
+)
+

@@ -9,6 +9,7 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withGo.xml">org.jetbrains.plugins.go</depends>
+    <depends optional="true" config-file="com.codestream.jetbrains-codestream-withPython.xml">Pythonid</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="right" factoryClass="com.codestream.webview.CodeStreamToolWindowFactory"/>

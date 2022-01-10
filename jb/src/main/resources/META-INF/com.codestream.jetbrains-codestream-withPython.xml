@@ -1,0 +1,7 @@
+<idea-plugin>
+    <project-components>
+        <component>
+            <implementation-class>com.codestream.mlt.MLTPythonComponent</implementation-class>
+        </component>
+    </project-components>
+</idea-plugin>
