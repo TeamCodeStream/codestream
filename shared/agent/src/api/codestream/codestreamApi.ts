@@ -170,7 +170,8 @@ import {
 	VerifyConnectivityResponse,
 	DeleteCompanyRequest,
 	DeleteCompanyResponse,
-	DeleteCompanyRequestType
+	DeleteCompanyRequestType,
+	GenerateLoginCodeRequest
 } from "../../protocol/agent.protocol";
 import {
 	CSAddMarkersRequest,
@@ -294,7 +295,8 @@ import {
 	ProviderType,
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
-	TriggerMsTeamsProactiveMessageResponse
+	TriggerMsTeamsProactiveMessageResponse,
+	CSCodeLoginRequest
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
 import { VersionInfo } from "../../session";
@@ -444,6 +446,14 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.provider = options.token.provider;
 				response.providerAccess = options.token.providerAccess;
 				response.teamId = options.token.teamId;
+
+				break;
+
+			case "loginCode":
+				response = await this.put<CSCodeLoginRequest, CSLoginResponse>("/no-auth/login-by-code", {
+					email: options.email,
+					loginCode: options.code
+				});
 
 				break;
 			default:
@@ -620,6 +630,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		};
 
 		return { ...response, token: token };
+	}
+
+	async generateLoginCode(request: GenerateLoginCodeRequest): Promise<void> {
+		await this.post<GenerateLoginCodeRequest, {}>("/no-auth/generate-login-code", request);
 	}
 
 	async register(request: CSRegisterRequest) {

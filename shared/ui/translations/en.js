@@ -32,6 +32,7 @@ export default {
 	"signup.complete.button": "CONTINUE",
 	"confirmation.invalid": "Invalid code.",
 	"confirmation.expired": "Sorry, that code has expired.",
+	"confirmation.tooManyAttempts": "Code expired: Too many attempts.",
 	"confirmation.emailSent": "Email Sent!",
 	"confirmation.header": "You're almost there!",
 	"confirmation.instructions":

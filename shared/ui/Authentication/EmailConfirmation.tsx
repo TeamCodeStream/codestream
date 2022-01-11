@@ -16,20 +16,26 @@ import { HostApi } from "../webview-api";
 import {
 	ConfirmRegistrationRequestType,
 	RegisterUserRequestType,
-	RegisterUserRequest
+	RegisterUserRequest,
+	ConfirmLoginCodeRequestType,
+	GenerateLoginCodeRequestType
 } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
-import { completeSignup } from "./actions";
+import { authenticate, completeSignup } from "./actions";
 import Icon from "../Stream/Icon";
 
 const errorToMessageId = {
 	[LoginResult.InvalidToken]: "confirmation.invalid",
 	[LoginResult.ExpiredToken]: "confirmation.expired",
 	[LoginResult.AlreadyConfirmed]: "login.alreadyConfirmed",
+	[LoginResult.ExpiredCode]: "confirmation.expired",
+	[LoginResult.TooManyAttempts]: "confirmation.tooManyAttempts",
+	[LoginResult.InvalidCode]: "confirmation.invalid",
 	[LoginResult.Unknown]: "unexpectedError"
 };
 
 interface InheritedProps {
+	confirmationType: "signup" | "login";
 	email: string;
 	teamId: string;
 	registrationParams: RegisterUserRequest;
@@ -59,7 +65,11 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 		async (event: React.MouseEvent) => {
 			event.preventDefault();
 			setEmailSent(false);
-			await HostApi.instance.send(RegisterUserRequestType, props.registrationParams);
+			if (props.confirmationType === "signup") {
+				await HostApi.instance.send(RegisterUserRequestType, props.registrationParams);
+			} else {
+				await HostApi.instance.send(GenerateLoginCodeRequestType, { email: props.email });
+			}
 			setEmailSent(true);
 		},
 		[props.email]
@@ -91,58 +101,76 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 			return;
 		}
 
-		const result = await HostApi.instance.send(ConfirmRegistrationRequestType, {
-			email: props.email,
-			errorGroupGuid: derivedState.errorGroupGuid,
-			confirmationCode: code
-		});
-
-		switch (result.status) {
-			case LoginResult.NotInCompany: {
-				HostApi.instance.track("Email Confirmed");
-				props.dispatch(
-					goToCompanyCreation({
-						...result,
-						userId: result.user?.id,
-						email: props.email
-					})
-				);
-				break;
-			}
-			case LoginResult.NotOnTeam: {
-				HostApi.instance.track("Email Confirmed");
-				props.dispatch(goToTeamCreation({ token: result.token, email: props.email }));
-
-				break;
-			}
-			case LoginResult.Success: {
-				HostApi.instance.track("Email Confirmed");
-				try {
-					props.dispatch(
-						completeSignup(props.email, result.token!, props.teamId, { createdTeam: false })
-					);
-				} catch (error) {
-					// TODO?: communicate confirmation was successful
-					// TODO: communicate error logging in
-					props.dispatch(goToLogin());
-				}
-				break;
-			}
-			default: {
-				setError(result.status);
+		if (props.confirmationType === "login") {
+			try {
+				await props.dispatch(authenticate({ code, email: props.email }));
+			} catch (error) {
+				setError(error);
 				setIsLoading(false);
+			}
+		} else {
+			const result = await HostApi.instance.send(ConfirmRegistrationRequestType, {
+				email: props.email,
+				errorGroupGuid: derivedState.errorGroupGuid,
+				confirmationCode: code
+			});
+
+			switch (result.status) {
+				case LoginResult.NotInCompany: {
+					HostApi.instance.track("Email Confirmed");
+					props.dispatch(
+						goToCompanyCreation({
+							...result,
+							userId: result.user?.id,
+							email: props.email
+						})
+					);
+					break;
+				}
+				case LoginResult.NotOnTeam: {
+					HostApi.instance.track("Email Confirmed");
+					props.dispatch(goToTeamCreation({ token: result.token, email: props.email }));
+
+					break;
+				}
+				case LoginResult.Success: {
+					HostApi.instance.track("Email Confirmed");
+					try {
+						props.dispatch(
+							completeSignup(props.email, result.token!, props.teamId, { createdTeam: false })
+						);
+					} catch (error) {
+						// TODO?: communicate confirmation was successful
+						// TODO: communicate error logging in
+						props.dispatch(goToLogin());
+					}
+					break;
+				}
+				default: {
+					setError(result.status);
+					setIsLoading(false);
+				}
 			}
 		}
 	};
 
 	const onClickChangeIt = (event: React.SyntheticEvent) => {
 		event.preventDefault();
-		props.dispatch(goToSignup());
+		if (props.confirmationType === "signup") {
+			props.dispatch(goToSignup());
+		} else {
+			props.dispatch(goToLogin());
+		}
 	};
 
 	const onClickGoToLogin = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		props.dispatch(goToLogin());
+	};
+
+	const onClickGoToSignUp = (event: React.SyntheticEvent) => {
+		event.preventDefault();
+		props.dispatch(goToSignup());
 	};
 
 	const nativeProps = {
@@ -245,9 +273,16 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 					<div id="controls">
 						<div className="footer">
 							<div>
-								<p>
-									Already have an account? <Link onClick={onClickGoToLogin}>Sign In</Link>
-								</p>
+								{props.confirmationType === "signup" && (
+									<p>
+										Already have an account? <Link onClick={onClickGoToLogin}>Sign In</Link>
+									</p>
+								)}
+								{props.confirmationType === "login" && (
+									<p>
+										Don’t have an account? <Link onClick={onClickGoToSignUp}>Sign Up</Link>
+									</p>
+								)}
 							</div>
 						</div>
 					</div>

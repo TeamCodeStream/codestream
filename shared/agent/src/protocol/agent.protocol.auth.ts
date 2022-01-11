@@ -68,6 +68,35 @@ export const OtcLoginRequestType = new RequestType<OtcLoginRequest, LoginRespons
 	"codestream/login/otc"
 );
 
+export interface GenerateLoginCodeRequest {
+	email: string;
+}
+
+export interface GenerateLoginCodeResponse {
+	status: LoginResult;
+}
+
+export const GenerateLoginCodeRequestType = new RequestType<
+	GenerateLoginCodeRequest,
+	GenerateLoginCodeResponse,
+	void,
+	void
+>("codestream/login/generate-code");
+
+export interface ConfirmLoginCodeRequest {
+	email: string;
+	code: string;
+	teamId?: string;
+	team?: string;
+}
+
+export const ConfirmLoginCodeRequestType = new RequestType<
+	ConfirmLoginCodeRequest,
+	LoginResponse,
+	void,
+	void
+>("codestream/login/confirm");
+
 export interface RegisterUserRequest extends CSRegisterRequest {
 	checkForWebmail?: boolean;
 }

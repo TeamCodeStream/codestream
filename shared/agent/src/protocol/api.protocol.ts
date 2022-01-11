@@ -68,7 +68,10 @@ export enum LoginResult {
 	SignInRequired = "SIGNIN_REQUIRED",
 	MaintenanceMode = "MAINTENANCE_MODE",
 	MustSetPassword = "MUST_SET_PASSWORD",
-	Timeout = "TIMEOUT"
+	Timeout = "TIMEOUT",
+	ExpiredCode = "CODE_EXPIRED",
+	TooManyAttempts = "TOO_MANY_ATTEMPTS",
+	InvalidCode = "CODE_INVALID"
 }
 
 export interface CSCompleteSignupRequest {
@@ -80,6 +83,11 @@ export interface CSLoginRequest {
 	email: string;
 	password?: string;
 	token?: string;
+}
+
+export interface CSCodeLoginRequest {
+	email: string;
+	loginCode: string;
 }
 
 export interface CSEligibleJoinCompany {

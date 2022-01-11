@@ -277,6 +277,7 @@ export const goToJoinTeam = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.JoinTeam, params });
 
 export const goToEmailConfirmation = (params: {
+	confirmationType: "signup" | "login";
 	email: string;
 	teamId?: string;
 	registrationParams: RegisterUserRequest;

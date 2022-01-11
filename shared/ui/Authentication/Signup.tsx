@@ -217,6 +217,7 @@ export const Signup = (props: Props) => {
 					sendTelemetry();
 					dispatch(
 						goToEmailConfirmation({
+							confirmationType: "signup",
 							email: attributes.email,
 							teamId: props.teamId,
 							registrationParams: attributes

@@ -10,7 +10,8 @@ import {
 	GetAccessTokenRequestType,
 	isLoginFailResponse,
 	TokenLoginRequest,
-	DeleteMeUserRequestType
+	DeleteMeUserRequestType,
+	ConfirmLoginCodeRequest
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../index";
 import { CSMe } from "@codestream/protocols/api";
@@ -38,7 +39,7 @@ export const acceptTOS = () => async (dispatch, getState: () => CodeStreamState)
 
 export const setMaintenanceMode = (
 	value: boolean,
-	meta?: PasswordLoginParams | TokenLoginRequest
+	meta?: PasswordLoginParams | TokenLoginRequest | ConfirmLoginCodeRequest
 ) => action(SessionActionType.SetMaintenanceMode, value, meta);
 
 export const logout = () => async (dispatch, getState: () => CodeStreamState) => {
@@ -86,7 +87,7 @@ export const switchToTeam = (
 		return dispatch(setBootstrapped(true));
 	}
 
-	dispatch(setUserPreference(['lastTeamId'], teamId));
+	dispatch(setUserPreference(["lastTeamId"], teamId));
 
 	return dispatch(onLogin(response));
 };

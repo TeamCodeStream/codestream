@@ -8,7 +8,10 @@ import {
 	OtcLoginRequestType,
 	TokenLoginRequest,
 	ProviderTokenRequest,
-	ProviderTokenRequestType
+	ProviderTokenRequestType,
+	GenerateLoginCodeRequestType,
+	ConfirmLoginCodeRequest,
+	ConfirmLoginCodeRequestType
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
@@ -26,7 +29,8 @@ import {
 	goToCompanyCreation,
 	setCurrentCodeError,
 	handlePendingProtocolHandlerUrl,
-	clearPendingProtocolHandlerUrl
+	clearPendingProtocolHandlerUrl,
+	goToEmailConfirmation
 } from "../store/context/actions";
 import { fetchCodemarks } from "../Stream/actions";
 import { getCodemark } from "../store/codemarks/reducer";
@@ -156,18 +160,27 @@ export const startIDESignin = (provider: SupportedSSOProvider, info?: SSOAuthInf
 
 export type PasswordLoginParams = Pick<PasswordLoginRequest, "email" | "password">;
 
-export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) => async (
-	dispatch,
-	getState: () => CodeStreamState
-) => {
+export const authenticate = (
+	params: PasswordLoginParams | TokenLoginRequest | ConfirmLoginCodeRequest
+) => async (dispatch, getState: () => CodeStreamState) => {
 	const api = HostApi.instance;
-	const response = await api.send(
-		(params as any).password ? PasswordLoginRequestType : TokenLoginRequestType,
-		{
-			...params,
+	let response;
+	if ((params as any).password) {
+		response = await api.send(PasswordLoginRequestType, {
+			...(params as PasswordLoginParams),
 			team: getState().configs.team
-		}
-	);
+		});
+	} else if ((params as any).code) {
+		response = await api.send(ConfirmLoginCodeRequestType, {
+			...(params as ConfirmLoginCodeRequest),
+			team: getState().configs.team
+		});
+	} else {
+		response = await api.send(TokenLoginRequestType, {
+			...(params as TokenLoginRequest),
+			team: getState().configs.team
+		});
+	}
 
 	if (isLoginFailResponse(response)) {
 		if (getState().session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
@@ -210,6 +223,29 @@ export const authenticate = (params: PasswordLoginParams | TokenLoginRequest) =>
 	api.track("Signed In", { "Auth Type": "CodeStream" });
 
 	return dispatch(onLogin(response));
+};
+
+export const generateLoginCode = (email: string) => async (
+	dispatch,
+	getState: () => CodeStreamState
+) => {
+	const api = HostApi.instance;
+	const response = await api.send(GenerateLoginCodeRequestType, { email });
+	if (response.status === LoginResult.Success) {
+		dispatch(
+			goToEmailConfirmation({
+				confirmationType: "login",
+				email: email,
+				registrationParams: {
+					email: email,
+					username: "",
+					password: ""
+				}
+			})
+		);
+	} else {
+		throw response.status;
+	}
 };
 
 export const onLogin = (

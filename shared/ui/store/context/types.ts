@@ -121,6 +121,7 @@ export enum Route {
 	NewRelicSignup = "newRelicSignup",
 	JoinTeam = "joinTeam",
 	EmailConfirmation = "emailConfirmation",
+	LoginCodeConfirmation = "loginCodeConfirmation",
 	TeamCreation = "teamCreation",
 	CompanyCreation = "companyCreation",
 	ForgotPassword = "forgotPassword",

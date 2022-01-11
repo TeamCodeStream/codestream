@@ -85,6 +85,7 @@ import {
 	FollowCodemarkResponse,
 	FollowReviewRequest,
 	FollowReviewResponse,
+	GenerateLoginCodeRequest,
 	GetCodeErrorRequest,
 	GetCodeErrorResponse,
 	GetCodemarkRequest,
@@ -232,7 +233,17 @@ export interface TokenLoginOptions extends BasicLoginOptions {
 	token: AccessToken;
 }
 
-export type LoginOptions = CredentialsLoginOptions | OneTimeCodeLoginOptions | TokenLoginOptions;
+export interface LoginCodeLoginOptions extends BasicLoginOptions {
+	type: "loginCode";
+	email: string;
+	code: string;
+}
+
+export type LoginOptions =
+	| CredentialsLoginOptions
+	| OneTimeCodeLoginOptions
+	| TokenLoginOptions
+	| LoginCodeLoginOptions;
 
 export enum MessageType {
 	Connection = "connection",
@@ -367,6 +378,7 @@ export interface ApiProvider {
 	dispose(): Promise<void>;
 
 	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
+	generateLoginCode(request: GenerateLoginCodeRequest): Promise<void>;
 	subscribe(types?: MessageType[]): Promise<void>;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;

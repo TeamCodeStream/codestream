@@ -317,6 +317,14 @@ export const DidFailLoginNotificationType = new NotificationType<void, void>(
 	"codestream/didFailLogin"
 );
 
+export const DidStartLoginCodeGenerationNotificationType = new NotificationType<void, void>(
+	"codestream/didStartLoginCodeGeneration"
+);
+
+export const DidFailLoginCodeGenerationNotificationType = new NotificationType<void, void>(
+	"codestream/didFailLoginCodeGeneration"
+);
+
 export type DidEncounterMaintenanceModeNotification = TokenLoginRequest;
 
 export const DidEncounterMaintenanceModeNotificationType = new NotificationType<

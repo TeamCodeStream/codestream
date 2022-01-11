@@ -3,7 +3,7 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
-import { authenticate, startSSOSignin, startIDESignin } from "./actions";
+import { authenticate, generateLoginCode, startSSOSignin, startIDESignin } from "./actions";
 import { CodeStreamState } from "../store";
 import { goToNewUserEntry, goToForgotPassword, goToOktaConfig } from "../store/context/actions";
 import { supportsSSOSignIn } from "../store/configs/reducer";
@@ -28,6 +28,9 @@ interface DispatchProps {
 	authenticate: (
 		...args: Parameters<typeof authenticate>
 	) => ReturnType<ReturnType<typeof authenticate>>;
+	generateLoginCode: (
+		...args: Parameters<typeof generateLoginCode>
+	) => ReturnType<ReturnType<typeof generateLoginCode>>;
 	goToNewUserEntry: typeof goToNewUserEntry;
 	startSSOSignin: (
 		...args: Parameters<typeof startSSOSignin>
@@ -46,6 +49,7 @@ interface State {
 	emailTouched: boolean;
 	loading: boolean;
 	error: string | undefined;
+	activeLoginMode: "code" | "password";
 }
 
 class Login extends React.Component<Props, State> {
@@ -57,7 +61,8 @@ class Login extends React.Component<Props, State> {
 			passwordTouched: false,
 			emailTouched: false,
 			loading: false,
-			error: undefined
+			error: undefined,
+			activeLoginMode: "code"
 		};
 	}
 
@@ -163,6 +168,22 @@ class Login extends React.Component<Props, State> {
 		}
 	};
 
+	submitGenerateCode = async event => {
+		event.preventDefault();
+		const { email } = this.state;
+		if (isEmailInvalid(email)) {
+			if (!this.state.emailTouched) this.setState({ emailTouched: true });
+			return;
+		}
+		this.setState({ loading: true });
+		try {
+			await this.props.generateLoginCode(email);
+		} catch (error) {
+			this.setState({ loading: false });
+			this.setState({ error });
+		}
+	};
+
 	handleClickSignup = event => {
 		event.preventDefault();
 		this.props.goToNewUserEntry();
@@ -190,6 +211,16 @@ class Login extends React.Component<Props, State> {
 	handleClickOktaLogin = event => {
 		event.preventDefault();
 		this.props.goToOktaConfig({});
+	};
+
+	handleClickSwitchToCodeMode = event => {
+		event.preventDefault();
+		this.setState({ activeLoginMode: "code" });
+	};
+
+	handleClickSwitchToPasswordMode = event => {
+		event.preventDefault();
+		this.setState({ activeLoginMode: "password" });
 	};
 
 	onClickForgotPassword = (event: React.SyntheticEvent) => {
@@ -269,38 +300,65 @@ class Login extends React.Component<Props, State> {
 									/>
 									{this.renderEmailError()}
 								</div>
-								<div id="password-controls" className="control-group">
-									<label>
-										<FormattedMessage id="login.password.label" />
-									</label>
-									<input
-										id="login-input-password"
-										className="input-text"
-										type="password"
-										name="password"
-										value={this.state.password}
-										onChange={e => this.setState({ password: e.target.value })}
-										onBlur={this.onBlurPassword}
-										required={this.state.passwordTouched}
-									/>
-									{this.renderPasswordHelp()}
-									{
-										<div className="help-link">
-											<a onClick={this.onClickForgotPassword}>
-												<FormattedMessage id="login.forgotPassword" />
-											</a>
+								{this.state.activeLoginMode === "password" && (
+									<>
+										<div id="password-controls" className="control-group">
+											<label>
+												<FormattedMessage id="login.password.label" />
+											</label>
+											<input
+												id="login-input-password"
+												className="input-text"
+												type="password"
+												name="password"
+												value={this.state.password}
+												onChange={e => this.setState({ password: e.target.value })}
+												onBlur={this.onBlurPassword}
+												required={this.state.passwordTouched}
+											/>
+											{this.renderPasswordHelp()}
+											{
+												<div className="help-link">
+													<a onClick={this.onClickForgotPassword}>
+														<FormattedMessage id="login.forgotPassword" />
+													</a>
+												</div>
+											}
 										</div>
-									}
-								</div>
-								<Button
-									className="row-button"
-									onClick={this.submitCredentials}
-									loading={this.state.loading}
-								>
-									<Icon name="codestream" />
-									<div className="copy">Sign In with CodeStream</div>
-									<Icon name="chevron-right" />
-								</Button>
+										<Button
+											className="row-button"
+											onClick={this.submitCredentials}
+											loading={this.state.loading}
+										>
+											<Icon name="codestream" />
+											<div className="copy">Sign in with Email</div>
+											<Icon name="chevron-right" />
+										</Button>
+										<p>
+											No password?{" "}
+											<a onClick={this.handleClickSwitchToCodeMode}>Sign in with a code instead.</a>
+										</p>
+									</>
+								)}
+								{this.state.activeLoginMode === "code" && (
+									<>
+										<Button
+											className="row-button"
+											onClick={this.submitGenerateCode}
+											loading={this.state.loading}
+										>
+											<Icon name="codestream" />
+											<div className="copy">Sign in with Email</div>
+											<Icon name="chevron-right" />
+										</Button>
+										<p>
+											We’ll email you a code so you can sign in without a password. Or,{" "}
+											<a onClick={this.handleClickSwitchToPasswordMode}>
+												you can sign in manually.
+											</a>
+										</p>
+									</>
+								)}
 							</div>
 						</div>
 						<div className="footer">
@@ -327,6 +385,7 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 	},
 	{
 		authenticate,
+		generateLoginCode,
 		goToNewUserEntry,
 		startSSOSignin,
 		startIDESignin,

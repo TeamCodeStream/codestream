@@ -85,7 +85,13 @@ import {
 	UserDidCommitNotificationType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
-	VersionCompatibility
+	VersionCompatibility,
+	GenerateLoginCodeRequest,
+	DidStartLoginCodeGenerationNotificationType,
+	DidFailLoginCodeGenerationNotificationType,
+	GenerateLoginCodeRequestType,
+	ConfirmLoginCodeRequest,
+	ConfirmLoginCodeRequestType
 } from "./protocol/agent.protocol";
 import {
 	CSApiCapabilities,
@@ -140,6 +146,9 @@ export const loginApiErrorMappings: { [k: string]: LoginResult } = {
 	"USRC-1023": LoginResult.MaintenanceMode,
 	"USRC-1024": LoginResult.MustSetPassword,
 	"USRC-1022": LoginResult.ProviderConnectFailed,
+	"USRC-1028": LoginResult.ExpiredCode,
+	"USRC-1029": LoginResult.TooManyAttempts,
+	"USRC-1030": LoginResult.InvalidCode,
 	"USRC-1015": LoginResult.MultipleWorkspaces, // deprecated in favor of below...
 	"PRVD-1002": LoginResult.MultipleWorkspaces,
 	"PRVD-1005": LoginResult.SignupRequired,
@@ -436,6 +445,8 @@ export class CodeStreamSession {
 		this.agent.registerHandler(PasswordLoginRequestType, e => this.passwordLogin(e));
 		this.agent.registerHandler(TokenLoginRequestType, e => this.tokenLogin(e));
 		this.agent.registerHandler(OtcLoginRequestType, e => this.otcLogin(e));
+		this.agent.registerHandler(ConfirmLoginCodeRequestType, e => this.codeLogin(e));
+		this.agent.registerHandler(GenerateLoginCodeRequestType, e => this.generateLoginCode(e));
 		this.agent.registerHandler(RegisterUserRequestType, e => this.register(e));
 		this.agent.registerHandler(RegisterNrUserRequestType, e => this.registerNr(e));
 		this.agent.registerHandler(ConfirmRegistrationRequestType, e => this.confirmRegistration(e));
@@ -885,6 +896,63 @@ export class CodeStreamSession {
 			debugger;
 			throw new Error();
 		}
+	}
+
+	@log({ singleLine: true })
+	async codeLogin(request: ConfirmLoginCodeRequest) {
+		const cc = Logger.getCorrelationContext();
+		Logger.log(cc, `Logging into Codestream (@ ${this._options.serverUrl}) via login code...`);
+
+		return this.login({
+			type: "loginCode",
+			...request
+		});
+	}
+
+	@log({ singleLine: true })
+	async generateLoginCode(request: GenerateLoginCodeRequest) {
+		if (this.status === SessionStatus.SignedIn) {
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Warning,
+				source: "agent",
+				message: "There was a redundant attempt to login while already logged in.",
+				extra: {
+					loginType: "loginCode"
+				}
+			});
+			return { status: LoginResult.AlreadySignedIn };
+		}
+
+		this.agent.sendNotification(DidStartLoginCodeGenerationNotificationType, undefined);
+
+		try {
+			await this.api.generateLoginCode(request);
+		} catch (ex) {
+			this.agent.sendNotification(DidFailLoginCodeGenerationNotificationType, undefined);
+			if (ex instanceof ServerError) {
+				if (ex.statusCode !== undefined && ex.statusCode >= 400 && ex.statusCode < 500) {
+					let error = loginApiErrorMappings[ex.info.code] || LoginResult.Unknown;
+					return {
+						status: error,
+						extra: ex.info
+					};
+				}
+			}
+
+			Container.instance().errorReporter.reportMessage({
+				type: ReportingMessageType.Error,
+				message: "Unexpected error generating login code",
+				source: "agent",
+				extra: {
+					...ex
+				}
+			});
+			throw AgentError.wrap(ex, `Login failed:\n${ex.message}`);
+		}
+
+		return {
+			status: LoginResult.Success
+		};
 	}
 
 	@log({
