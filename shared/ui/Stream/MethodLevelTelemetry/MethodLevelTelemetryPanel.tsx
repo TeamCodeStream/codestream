@@ -9,7 +9,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { PanelHeader } from "../../src/components/PanelHeader";
-import { closePanel } from "../actions";
+import { closePanel, setUserPreference } from "../actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import CancelButton from "../CancelButton";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -18,6 +18,7 @@ import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import { DropdownButton } from "../DropdownButton";
 
 const Root = styled.div``;
 
@@ -26,7 +27,10 @@ export const MethodLevelTelemetryPanel = () => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
-			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry
+			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry,
+			methodLevelTelemetryRepoEntities:
+				(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities ||
+				{}
 		};
 	});
 
@@ -73,7 +77,7 @@ export const MethodLevelTelemetryPanel = () => {
 			<CancelButton onClick={() => dispatch(closePanel())} />
 
 			<span className="plane-container">
-				<div className="codemark-form-container">
+				<div className="codemark-form-container" style={{ paddingTop: "7px" }}>
 					<div className="standard-form vscroll">
 						{warningOrErrors ? (
 							<WarningBox items={warningOrErrors} />
@@ -90,7 +94,32 @@ export const MethodLevelTelemetryPanel = () => {
 								) : (
 									<div>
 										<div>
-											<b>Entity:</b> {telemetryResponse?.newRelicEntityName}
+											<b>Entity:</b>{" "}
+											{telemetryResponse && (
+												<DropdownButton
+													items={telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
+														return {
+															label: item.entityName,
+															key: item.entityGuid + "-" + i,
+															action: () => {
+																let newPref = {};
+																newPref[telemetryResponse.repo.id] = item.entityGuid;
+																dispatch(
+																	setUserPreference(["methodLevelTelemetryRepoEntities"], {
+																		...derivedState.methodLevelTelemetryRepoEntities,
+																		...newPref
+																	})
+																);
+															}
+														};
+													})}
+													splitDropdown
+													splitDropdownInstantAction
+													disabled={telemetryResponse.newRelicEntityAccounts!.length === 1}
+												>
+													{telemetryResponse.newRelicEntityName}
+												</DropdownButton>
+											)}
 										</div>
 										<div>
 											<b>Repo:</b> {telemetryResponse?.repo?.name}

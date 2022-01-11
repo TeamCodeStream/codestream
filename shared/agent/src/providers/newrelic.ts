@@ -164,7 +164,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const { users } = SessionContainer.instance();
 			await users.updatePreferences({
 				preferences: {
-					observabilityRepoEntities: []
+					observabilityRepoEntities: [],
+					methodLevelTelemetryRepoEntities: []
 				}
 			});
 		} catch (ex) {
@@ -1588,34 +1589,63 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const observabilityRepos = await this.getObservabilityRepos({
 			filters: [{ repoId: repoForFile.id }]
 		});
-		if (!observabilityRepos?.repos?.length) return undefined;
+		if (!observabilityRepos?.repos?.length) {
+			ContextLogger.warn("observabilityRepos.repos empty", {
+				repoId: repoForFile.id
+			});
+			return undefined;
+		}
 
 		const repo = observabilityRepos.repos.find(_ => _.repoId === repoForFile.id);
-		if (!repo) return undefined;
+		if (!repo) {
+			ContextLogger.warn("observabilityRepos.repos unmatched for repo", {
+				repoId: repoForFile.id
+			});
+			return undefined;
+		}
 
 		if (!repo.hasRepoAssociation) {
-			Logger.warn("Missing repo association", {
+			ContextLogger.warn("Missing repo association", {
 				repo: repo
 			});
+
 			return undefined;
 		}
 
 		const entityLength = repo.entityAccounts.length;
-
 		if (!entityLength) {
-			Logger.warn("Missing entities", {
+			ContextLogger.warn("Missing entities", {
 				repo: repo
 			});
 			return undefined;
 		}
-		let entity;
-		if (entityLength > 1) {
-			Logger.warn("More than one NR entity, selecting first", {
-				entity: repo.entityAccounts[0]
-			});
-		}
 
-		entity = repo.entityAccounts[0];
+		let entity: EntityAccount | undefined;
+		if (entityLength > 1) {
+			const { users } = SessionContainer.instance();
+			try {
+				let meUser = await users.getMe();
+				const methodLevelTelemetryRepoEntities =
+					meUser.user.preferences?.methodLevelTelemetryRepoEntities || {};
+				const methodLevelTelemetryRepoEntity = methodLevelTelemetryRepoEntities[repo.repoId];
+				if (methodLevelTelemetryRepoEntity) {
+					const foundEntity = repo.entityAccounts.find(
+						_ => _.entityGuid === methodLevelTelemetryRepoEntity
+					);
+					if (foundEntity) {
+						entity = foundEntity;
+					}
+				}
+			} catch {}
+			if (!entity) {
+				Logger.warn("More than one NR entity, selecting first", {
+					entity: repo.entityAccounts[0]
+				});
+				entity = repo.entityAccounts[0];
+			}
+		} else {
+			entity = repo.entityAccounts[0];
+		}
 
 		request.newRelicAccountId = entity.accountId;
 		request.newRelicEntityGuid = entity.entityGuid;
@@ -1639,24 +1669,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					};
 				});
 			};
-
-			// if (throughputResponse) {
-			// 	throughputResponse.actor.account.nrql.results = addMethodName(
-			// 		throughputResponse.actor.account.nrql.results
-			// 	);
-			// }
-
-			// if (averageDurationResponse) {
-			// 	averageDurationResponse.actor.account.nrql.results = addMethodName(
-			// 		averageDurationResponse.actor.account.nrql.results
-			// 	);
-			// }
-
-			// if (errorRateResponse) {
-			// 	errorRateResponse.actor.account.nrql.results = addMethodName(
-			// 		errorRateResponse.actor.account.nrql.results
-			// 	);
-			// }
 
 			[throughputResponse, averageDurationResponse, errorRateResponse].forEach(_ => {
 				if (_) {
@@ -1695,6 +1707,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				newRelicAccountId: request.newRelicAccountId,
 				newRelicEntityGuid: request.newRelicEntityGuid,
 				newRelicEntityName: entityName,
+				newRelicEntityAccounts: repo.entityAccounts,
 				repo: {
 					id: repoForFile.id,
 					name: this.getRepoName(repoForFile.folder)
