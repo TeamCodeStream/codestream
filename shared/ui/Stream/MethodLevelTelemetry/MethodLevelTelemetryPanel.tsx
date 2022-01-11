@@ -1,7 +1,8 @@
 import {
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
-	TelemetryRequestType
+	TelemetryRequestType,
+	WarningOrError
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useState } from "react";
@@ -14,6 +15,9 @@ import CancelButton from "../CancelButton";
 import { CodeStreamState } from "@codestream/webview/store";
 import Icon from "../Icon";
 import { Link } from "../Link";
+import { WarningBox } from "../WarningBox";
+import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 
 const Root = styled.div``;
 
@@ -30,6 +34,7 @@ export const MethodLevelTelemetryPanel = () => {
 		GetMethodLevelTelemetryResponse | undefined
 	>(undefined);
 	const [loading, setLoading] = useState<boolean>(false);
+	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 
 	useDidMount(() => {
 		HostApi.instance.send(TelemetryRequestType, {
@@ -51,9 +56,9 @@ export const MethodLevelTelemetryPanel = () => {
 				});
 
 				setTelemetryResponse(response);
-				console.log(response);
+				console.warn(response);
 			} catch (ex) {
-				console.warn(ex);
+				setWarningOrErrors([{ message: ex.toString() }]);
 			} finally {
 				setLoading(false);
 			}
@@ -69,44 +74,54 @@ export const MethodLevelTelemetryPanel = () => {
 
 			<span className="plane-container">
 				<div className="codemark-form-container">
-					<div className="codemark-form standard-form vscroll" id="code-comment-form">
-						{loading ? (
-							<>
-								<Icon name="sync" loading={true} />
-							</>
+					<div className="standard-form vscroll">
+						{warningOrErrors ? (
+							<WarningBox items={warningOrErrors} />
 						) : (
-							<div>
-								<div>
-									<b>Entity:</b> {telemetryResponse?.newRelicEntityName}
-								</div>
-								<div>
-									<b>Repo:</b> {telemetryResponse?.repo?.name}
-								</div>
-								<div>
-									<b>File:</b> {derivedState?.currentMethodLevelTelemetry.filePath}
-								</div>
-								<div>
-									<br />
+							<>
+								{loading ? (
+									<>
+										<DelayedRender>
+											<div style={{ display: "flex", alignItems: "center" }}>
+												<LoadingMessage>Loading Telemetry...</LoadingMessage>
+											</div>
+										</DelayedRender>
+									</>
+								) : (
 									<div>
-										<img src="https://via.placeholder.com/500x300" />
-									</div>
-									<div>
-										<img src="https://via.placeholder.com/500x300" />
-									</div>
-									<div>
-										<img src="https://via.placeholder.com/500x300" />
-									</div>
-									<br />
-								</div>
-								{telemetryResponse && (
-									<div>
-										<br />
-										<Link className="external-link" href={telemetryResponse.newRelicUrl}>
-											View service summary on New Relic One <Icon name="link-external" />
-										</Link>
+										<div>
+											<b>Entity:</b> {telemetryResponse?.newRelicEntityName}
+										</div>
+										<div>
+											<b>Repo:</b> {telemetryResponse?.repo?.name}
+										</div>
+										<div>
+											<b>File:</b> {derivedState?.currentMethodLevelTelemetry.filePath}
+										</div>
+										<div>
+											<br />
+											<div>
+												<img src="https://via.placeholder.com/500x300" />
+											</div>
+											<div>
+												<img src="https://via.placeholder.com/500x300" />
+											</div>
+											<div>
+												<img src="https://via.placeholder.com/500x300" />
+											</div>
+											<br />
+										</div>
+										{telemetryResponse && (
+											<div>
+												<br />
+												<Link className="external-link" href={telemetryResponse.newRelicUrl}>
+													View service summary on New Relic One <Icon name="link-external" />
+												</Link>
+											</div>
+										)}
 									</div>
 								)}
-							</div>
+							</>
 						)}
 					</div>
 				</div>

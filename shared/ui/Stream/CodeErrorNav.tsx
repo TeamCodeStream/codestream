@@ -53,6 +53,7 @@ import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { logError, logWarning } from "../logger";
 import { Link } from "./Link";
 import { getSidebarLocation } from "../store/editorContext/reducer";
+import { WarningBox } from "./WarningBox";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -129,24 +130,6 @@ const Root = styled.div`
 		}
 	}
 
-`;
-
-export const CodeErrorErrorBox = styled.div`
-	margin: 10px 10px 20px 0;
-	border: 1px solid rgba(249, 197, 19, 0.6);
-	background: rgba(255, 223, 0, 0.1);
-	border-radius: 5px;
-	padding: 10px;
-	display: flex;
-	align-items: center;
-	.icon.alert {
-		display: inline-block;
-		transform: scale(1.5);
-		margin: 0 10px;
-	}
-	.message {
-		margin-left: 10px;
-	}
 `;
 
 const ShowInstructionsContainer = styled.div`
@@ -670,44 +653,7 @@ export function CodeErrorNav(props: Props) {
 
 		if (!items.length) return null;
 
-		return (
-			<CodeErrorErrorBox>
-				<Icon name="alert" className="alert" />
-				<div className="message">
-					{items.map(_ => {
-						const split = _.message.split("\n");
-
-						return split.map((item, index) => {
-							const templateRe = /(.*)\[(.+)\](.*)/g;
-							const match = templateRe.exec(item);
-							if (match != null) {
-								const [, pre, linkText, post] = match;
-								return (
-									<div key={"warningOrError_" + index}>
-										{pre}
-										<Link href={_.helpUrl!}>{linkText}</Link>
-										{post}
-									</div>
-								);
-							} else {
-								return (
-									<div key={"warningOrError_" + index}>
-										{item}
-										{_.helpUrl && split.length - 1 === index && (
-											<>
-												{" "}
-												<Link href={_.helpUrl!}>Learn more</Link>
-											</>
-										)}
-										<br />
-									</div>
-								);
-							}
-						});
-					})}
-				</div>
-			</CodeErrorErrorBox>
-		);
+		return <WarningBox items={items} />;
 	};
 
 	useDidMount(() => {
