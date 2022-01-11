@@ -6,7 +6,6 @@ const val VERSION = "7.18"
 
 enum class JxBrowserJarName(private val value: String) {
     SHARED("jxbrowser-${VERSION}.jar"),
-    WIN32("jxbrowser-win32-${VERSION}.jar"),
     WIN64("jxbrowser-win64-${VERSION}.jar"),
     MAC("jxbrowser-mac-${VERSION}.jar"),
     MAC_ARM64("jxbrowser-mac-arm-${VERSION}.jar"),
@@ -25,10 +24,7 @@ enum class JxBrowserJarName(private val value: String) {
         fun list(): List<JxBrowserJarName> {
             val result = mutableListOf<JxBrowserJarName>(SHARED)
             if (Environment.isWindows()) {
-                if (Environment.isWindows64()) {
-                    result.add(WIN64)
-                }
-                result.add(WIN32)
+                result.add(WIN64)
             }
             if (Environment.isMac()) {
                 if (Environment.isArm()) {

@@ -306,7 +306,6 @@ class AgentService(private val project: Project) : Disposable {
         return when (platform) {
             Platform.LINUX -> "/agent/agent-linux-x64"
             Platform.MAC -> "/agent/agent-macos-x64"
-            Platform.WIN32 -> "/agent/agent-win-x86.exe"
             Platform.WIN64 -> "/agent/agent-win-x64.exe"
         }
     }
@@ -315,7 +314,6 @@ class AgentService(private val project: Project) : Disposable {
         return when (platform) {
             Platform.LINUX -> File(agentFolder, "codestream-agent.$version")
             Platform.MAC -> File(agentFolder, "codestream-agent.$version")
-            Platform.WIN32 -> File(agentFolder, "codestream-agent.$version.exe")
             Platform.WIN64 -> File(agentFolder, "codestream-agent.$version.exe")
         }.also {
             it.setExecutable(true)
