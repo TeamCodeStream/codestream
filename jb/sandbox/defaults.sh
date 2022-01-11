@@ -39,7 +39,7 @@ fi
 # Uncomment and setup if node is required. Available versions can be seen
 # with the command:
 #   ssh $DT_CLOUD_SERVER ls /home/web/SandboxRepos/software/node-$DT_OS_TYPE-*
-[ -z "$JB_NODE_VER" ] && export JB_NODE_VER=10.15.3
+[ -z "$JB_NODE_VER" ] && export JB_NODE_VER=16.13.2
 export PATH=$JB_SANDBOX/node/bin:$JB_TOP/node_modules/.bin:$PATH
 #
 #
