@@ -18,7 +18,7 @@ import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
-import { DropdownButton } from "../DropdownButton";
+import { Dropdown } from "../Dropdown";
 
 const Root = styled.div``;
 
@@ -96,11 +96,17 @@ export const MethodLevelTelemetryPanel = () => {
 										<div>
 											<b>Entity:</b>{" "}
 											{telemetryResponse && (
-												<DropdownButton
+												<Dropdown
+													selectedValue={telemetryResponse.newRelicEntityName!}
 													items={telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
 														return {
 															label: item.entityName,
 															key: item.entityGuid + "-" + i,
+															checked:
+																item.entityGuid ===
+																derivedState.methodLevelTelemetryRepoEntities[
+																	telemetryResponse.repo.id
+																],
 															action: () => {
 																let newPref = {};
 																newPref[telemetryResponse.repo.id] = item.entityGuid;
@@ -113,12 +119,7 @@ export const MethodLevelTelemetryPanel = () => {
 															}
 														};
 													})}
-													splitDropdown
-													splitDropdownInstantAction
-													disabled={telemetryResponse.newRelicEntityAccounts!.length === 1}
-												>
-													{telemetryResponse.newRelicEntityName}
-												</DropdownButton>
+												/>
 											)}
 										</div>
 										<div>
