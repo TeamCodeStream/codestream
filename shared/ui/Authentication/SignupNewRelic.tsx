@@ -51,6 +51,10 @@ export const SignupNewRelic = () => {
 		}
 	});
 
+	const getApiKeyUrl = derivedState.isProductionCloud
+		? "https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher"
+		: "https://staging-one.newrelic.com/launcher/api-keys-ui.api-keys-launcher";
+
 	const onSubmit = async (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		setLoading(true);
@@ -118,20 +122,6 @@ export const SignupNewRelic = () => {
 		}
 	};
 
-	const handleGetApiKeyClick = async () => {
-		const { token, baseLandingUrl } = await HostApi.instance.send(
-			GetNewRelicSignupJwtTokenRequestType,
-			{}
-		);
-		const url =
-			`${baseLandingUrl}/codestream/signup` +
-			`?token=${token}` +
-			`&utm_source=codestream` +
-			`&utm_medium=${derivedState.ide.name}` +
-			`&utm_campaign=nr_getapikey`;
-		void HostApi.instance.send(OpenUrlRequestType, { url });
-	};
-
 	return (
 		<div className="standard-form vscroll">
 			<fieldset className="form-body">
@@ -167,14 +157,7 @@ export const SignupNewRelic = () => {
 							)}
 							<label>
 								Enter your New Relic user API key.{" "}
-								<Link
-									onClick={e => {
-										e.preventDefault();
-										handleGetApiKeyClick();
-									}}
-								>
-									Get your API key.
-								</Link>
+								<Link href={getApiKeyUrl}>Get your API key.</Link>
 							</label>
 							<div
 								style={{
