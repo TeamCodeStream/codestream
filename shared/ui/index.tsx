@@ -83,7 +83,8 @@ import {
 	setStartWorkCard,
 	closeAllPanels,
 	clearCurrentPullRequest,
-	setPendingProtocolHandlerUrl
+	setPendingProtocolHandlerUrl,
+	goToNewRelicSignup
 } from "./store/context/actions";
 import { URI } from "vscode-uri";
 import { moveCursorToLine } from "./Stream/api-functions";
@@ -557,6 +558,7 @@ function listenForEvents(store) {
 									anonymousId: route.query["anonymousId"]
 								});
 							}
+							store.dispatch(goToNewRelicSignup({}));
 							break;
 						}
 
