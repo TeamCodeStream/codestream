@@ -150,3 +150,14 @@ object PixieNotifications {
         override fun getMethod(): String = "webview/pixie/dynamicLogging"
     }
 }
+
+object MethodLevelTelemetryNotifications {
+    class View(
+        val range: Range?,
+        val methodName: String,
+        val newRelicAccountId: Int?,
+        val newRelicEntityGuid: String?
+    ) : WebViewNotification {
+        override fun getMethod(): String = "webview/mlt/view"
+    }
+}

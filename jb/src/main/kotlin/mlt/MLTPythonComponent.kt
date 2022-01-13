@@ -1,10 +1,17 @@
 package com.codestream.mlt
 
 import com.codestream.agentService
+import com.codestream.codeStream
 import com.codestream.extensions.file
+import com.codestream.extensions.lspPosition
 import com.codestream.protocols.agent.MethodLevelTelemetryOptions
 import com.codestream.protocols.agent.MethodLevelTelemetryParams
-import com.intellij.codeInsight.daemon.impl.HintRenderer
+import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
+import com.codestream.webViewService
+import com.intellij.codeInsight.hints.InlayPresentationFactory.ClickListener
+import com.intellij.codeInsight.hints.presentation.InlayPresentation
+import com.intellij.codeInsight.hints.presentation.PresentationFactory
+import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
@@ -15,12 +22,16 @@ import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.event.EditorFactoryEvent
 import com.intellij.openapi.editor.event.EditorFactoryListener
+import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.refactoring.suggested.startOffset
 import com.jetbrains.python.psi.PyFile
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.eclipse.lsp4j.Range
+import java.awt.Point
+import java.awt.event.MouseEvent
 
 class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposable {
 
@@ -46,10 +57,10 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
 }
 
 class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
-    val path = editor.document.file?.path
-    val project = editor.project
-    val inlays = mutableSetOf<Inlay<HintRenderer>>()
-    val hintsByFunction = mutableMapOf<String, HintRenderer>()
+    private val path = editor.document.file?.path
+    private val project = editor.project
+    private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
+    private val presentationsByFunction = mutableMapOf<String, InlayPresentation>()
 
     init {
         loadInlays()
@@ -57,10 +68,13 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
 
     private fun loadInlays() {
         if (path == null) return
+        if (editor !is EditorImpl) return
+
         project?.agentService?.onDidStart {
             ApplicationManager.getApplication().invokeLater {
-                val hintTextsByFunction = mutableMapOf<String, MutableList<String>>()
+                val mltTextsByFunction = mutableMapOf<String, MutableList<String>>()
                 val docListener = this
+                val presentationFactory = PresentationFactory(editor)
 
                 GlobalScope.launch {
                     try {
@@ -76,25 +90,25 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                         )
 
                         result?.errorRate?.forEach { errorRate ->
-                            val hints = hintTextsByFunction.getOrPut(errorRate.functionName) { mutableListOf<String>() }
-                            hints.add("Errors per minute: ${errorRate.errorsPerMinute}")
+                            val texts = mltTextsByFunction.getOrPut(errorRate.functionName) { mutableListOf<String>() }
+                            texts.add("Errors per minute: ${errorRate.errorsPerMinute}")
                         }
                         result?.averageDuration?.forEach { averageDuration ->
-                            val hints = hintTextsByFunction.getOrPut(averageDuration.functionName) { mutableListOf<String>() }
-                            hints.add("Average duration: ${averageDuration.averageDuration}")
+                            val texts = mltTextsByFunction.getOrPut(averageDuration.functionName) { mutableListOf<String>() }
+                            texts.add("Average duration: ${averageDuration.averageDuration}")
                         }
                         result?.throughput?.forEach { throughput ->
-                            val hints = hintTextsByFunction.getOrPut(throughput.functionName) { mutableListOf<String>() }
-                            hints.add("Requests per minute: ${throughput.requestsPerMinute}")
+                            val texts = mltTextsByFunction.getOrPut(throughput.functionName) { mutableListOf<String>() }
+                            texts.add("Requests per minute: ${throughput.requestsPerMinute}")
                         }
 
-                        hintTextsByFunction.forEach { (function, hints) ->
-                            val hintText = hints.joinToString()
-                            val hint = HintRenderer(hintText)
-                            hintsByFunction[function] = hint
+                        mltTextsByFunction.forEach { (function, mltTexts) ->
+                            val mltText = mltTexts.joinToString()
+                            val textPresentation = presentationFactory.text(mltText)
+                            presentationsByFunction[function] = textPresentation
                         }
 
-                        if (hintsByFunction.isNotEmpty()) {
+                        if (presentationsByFunction.isNotEmpty()) {
                             updateInlays()
                             editor.document.addDocumentListener(docListener)
                         }
@@ -118,13 +132,27 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
             }
             inlays.clear()
 
+            if (editor !is EditorImpl) return@invokeLater
+
             val project = editor.project ?: return@invokeLater
             val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
             val pyFile = psiFile as? PyFile ?: return@invokeLater
-            hintsByFunction.forEach { (function, hint) ->
+            val presentationFactory = PresentationFactory(editor)
+            presentationsByFunction.forEach { (function, presentation) ->
                 val pyFunction = pyFile.findTopLevelFunction(function) ?: return@forEach
-                val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, hint)
-                inlay?.let {
+                val referenceOnHoverPresentation = presentationFactory.referenceOnHover(presentation, object : ClickListener {
+                    override fun onClick(event: MouseEvent, translated: Point) {
+                        val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
+                        val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
+                        val range = Range(start, end)
+                        project.codeStream?.show {
+                            project.webViewService?.postNotification(MethodLevelTelemetryNotifications.View(range, function, null, null))
+                        }
+                    }
+                })
+                val renderer = PresentationRenderer(referenceOnHoverPresentation)
+                val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
+                inlay.let {
                     inlays.add(it)
                 }
             }
