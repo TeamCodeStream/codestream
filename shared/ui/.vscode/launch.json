@@ -2,15 +2,17 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"name": "Debug CRA Tests",
 			"type": "node",
 			"request": "launch",
-			"runtimeExecutable": "node",
-			"name": "Run UnitTests for file",
-			"program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
-			"args": ["--runInBand", "--verbose", "--findRelatedTests", "${file}"],
-			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "${workspaceRoot}/node_modules/.bin/react-scripts",
+			"args": ["test", "--runInBand", "--no-cache", "--watchAll=false"],
+			"cwd": "${workspaceRoot}",
+			"protocol": "inspector",
 			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen"
+			"internalConsoleOptions": "neverOpen",
+			"env": { "CI": "true" },
+			"disableOptimisticBPs": true
 		}
 	]
 }

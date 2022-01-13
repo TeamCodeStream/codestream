@@ -570,6 +570,9 @@
 		"build": "webpack --env development=true",
 		"bundle": "npm install --no-save && npm run agent:bundle && webpack --env production=true",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
+		"cistart": "echo 'starting tests'",
+		"citest": "npm run webview:test",
+		"cistop": "echo 'starting tests'",
 		"clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
 		"clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
 		"lint": "eslint --fix --ext .ts \"src/{**!(webviews)/*,*}\"",
@@ -588,6 +591,7 @@
 		"webview:analyze": "webpack --env analyzeBundleWebview=true",
 		"webview:build": "webpack --config-name webview --env development=true",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
+		"webview:test": "pushd \"../shared/ui\" && npm run ci:test && popd",
 		"webview:watch": "webpack --watch --config-name webview --env development=true",
 		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd"
 	},

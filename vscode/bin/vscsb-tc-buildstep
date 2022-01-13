@@ -47,8 +47,8 @@ elif args.action == 'build':
 	# build.build()                             # complete build so services can be started
 	build.execCmd("npm run bundle:ci")
 elif args.action == 'citest':
-	# build.citest()                            # run the continuous integration test suite
-	print("there are no tests for this project")
+	build.citest()                            # run the continuous integration test suite
+	# print("there are no tests for this project")
 elif args.action == 'pack':
 	# build.pack()                              # create asset info file and package assets
 	buildName = build.getDisplayVersion("name-version")          # codestream-1.2.3

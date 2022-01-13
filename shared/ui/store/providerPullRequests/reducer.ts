@@ -950,18 +950,18 @@ export const getProviderPullRequestRepoObjectCore = (
 					const bucket: { repo: CSRepository; points: number }[] = [];
 					const splitRepoUrl = repoUrl.split("/");
 					for (const repo of repos) {
+						let points = 0;
 						for (const remote of repo.remotes) {
 							const split = remote.normalizedUrl.split("/");
 							if (split.length) {
-								let points = 0;
 								for (const s of split) {
 									if (s && splitRepoUrl.includes(s)) {
 										points++;
 									}
 								}
-								bucket.push({ repo: repo, points: points });
 							}
 						}
+						bucket.push({ repo: repo, points: points });
 					}
 					if (bucket.length) {
 						bucket.sort((a, b) => b.points - a.points);

@@ -29,5 +29,6 @@
 		"strict": true,
 		"target": "es2017",
 		"types": ["styled-components", "jest"]
-	}
+	},
+	"exclude": ["src/__tests__/**/*.test.ts"]
 }

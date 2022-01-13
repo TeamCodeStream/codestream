@@ -5,7 +5,9 @@
 	"main": "./dist/codestream-components.cjs.js",
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
-		"clean:ci": "git clean -xdf"
+		"clean:ci": "git clean -xdf",
+		"test": "react-scripts test",
+		"ci:test": "CI=true react-scripts test"
 	},
 	"author": "CodeStream",
 	"license": "UNLICENSED",
@@ -51,9 +53,13 @@
 		"react-dom": "16.8.6"
 	},
 	"devDependencies": {
+		"@testing-library/jest-dom": "5.16.1",
+		"@testing-library/react": "12.1.2",
+		"@testing-library/user-event": "13.5.0",
 		"@types/classnames": "2.2.9",
 		"@types/diff": "4.0.2",
 		"@types/emoji-mart": "2.8.4",
+		"@types/jest": "27.4.0",
 		"@types/lodash-es": "4.17.3",
 		"@types/markdown-it": "0.0.8",
 		"@types/node-fetch": "2.3.7",
@@ -71,9 +77,31 @@
 		"@types/uuid": "3.4.5",
 		"babel-loader": "8.0.6",
 		"convert-svg-to-png": "0.5.0",
+		"jest": "27.4.7",
+		"jest-watch-typeahead": "0.6.5",
 		"prettier": "1.19.1",
+		"react-scripts": "5.0.0",
+		"ts-jest": "27.1.2",
 		"ts-loader": "9.2.6",
-		"typescript": "3.6.4",
+		"typescript": "4.5.4",
 		"yargs": "15.3.1"
+	},
+	"jest": {
+		"testMatch": [
+			"<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
+			"<rootDir>/src/**/*.{spec,test}.{js,jsx,ts,tsx}"
+		],
+		"moduleNameMapper": {
+			"^react-native$": "react-native-web",
+			"^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy",
+			"^lodash-es$": "lodash",
+			"@codestream/webview/Stream/Markdowner": "<rootDir>/Stream/Markdowner.ts",
+			"@codestream/webview/logger": [
+				"<rootDir>/logger.ts"
+			],
+			"@codestream/webview/utils": "<rootDir>/utils.ts",
+			"@codestream/protocols/agent": "<rootDir>/protocols/agent/agent.protocol.ts",
+			"@codestream/protocols/api": "<rootDir>/protocols/agent/api.protocol.ts"
+		}
 	}
 }

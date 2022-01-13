@@ -1,6 +1,5 @@
 node_modules
 dist
 protocols
-.vscode
 .DS_Store
 *~

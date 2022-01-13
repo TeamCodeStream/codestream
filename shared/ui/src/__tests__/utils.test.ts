@@ -72,41 +72,41 @@ describe("utils", () => {
 		expect(replaceHtml(a)).toBe(expected);
 	});
 
-	test.each([
-		["", ""],
-		["\n\n", "\n\n"],
-		[" \n \n", " \n \n"],
-		["just text", "just text"],
-		[`just\ntext`, `just\ntext`],
-		["012345", "012345"],
-		["true", "true"],
-		["<div>foo</div>", "<div>foo</div>"],
-		["1<br>2<br/>3", "1<br>2<br/>3"],
-		["1\n2\n3", "1\n2\n3"],
-		[" 1\n 2\n 3", "``` 1\n 2\n 3```"],
-		["  1\n  2\n  3", "```  1\n  2\n  3```"],
-		["	1\n	2\n	3", "```	1\n	2\n	3```"],
-		["	1\n2\n	3", "	1\n2\n	3"]
-	])(".asPastedText(%s)", (a, expected) => {
-		expect(asPastedText(a)).toBe(expected);
-	});
+	// test.each([
+	// 	["", ""],
+	// 	["\n\n", "\n\n"],
+	// 	[" \n \n", " \n \n"],
+	// 	["just text", "just text"],
+	// 	[`just\ntext`, `just\ntext`],
+	// 	["012345", "012345"],
+	// 	["true", "true"],
+	// 	["<div>foo</div>", "<div>foo</div>"],
+	// 	["1<br>2<br/>3", "1<br>2<br/>3"],
+	// 	["1\n2\n3", "1\n2\n3"],
+	// 	[" 1\n 2\n 3", "``` 1\n 2\n 3```"],
+	// 	["  1\n  2\n  3", "```  1\n  2\n  3```"],
+	// 	["	1\n	2\n	3", "```	1\n	2\n	3```"],
+	// 	["	1\n2\n	3", "	1\n2\n	3"]
+	// ])(".asPastedText(%s)", (a, expected) => {
+	// 	expect(asPastedText(a)).toBe(expected);
+	// });
 
-	test.each([
-		[
-			["one", "two", "three"],
-			["one", "two", "three", "four"],
-			{
-				added: ["four"]
-			}
-		],
-		[
-			["one", "two", "three"],
-			["one", "two"],
-			{
-				removed: ["three"]
-			}
-		]
-	])(".arrayDiff(%j, %j)", (a, b, expected) => {
-		expect(arrayDiff(a, b)).toStrictEqual(expected);
-	});
+	// test.each([
+	// 	[
+	// 		["one", "two", "three"],
+	// 		["one", "two", "three", "four"],
+	// 		{
+	// 			added: ["four"]
+	// 		}
+	// 	],
+	// 	[
+	// 		["one", "two", "three"],
+	// 		["one", "two"],
+	// 		{
+	// 			removed: ["three"]
+	// 		}
+	// 	]
+	// ])(".arrayDiff(%j, %j)", (a, b, expected) => {
+	// 	expect(arrayDiff(a, b)).toStrictEqual(expected);
+	// });
 });

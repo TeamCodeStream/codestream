@@ -46,7 +46,6 @@ describe("markdownify with code fences", () => {
 		]
 	])(".markdownify(%j, %j)", (a, expected) => {
 		const actual = markdownify(a, { inline: true, excludeOnlyEmoji: false });
-		console.log(actual);
 		expect(actual).toStrictEqual(expected);
 	});
 	test.each([["```testing```", "<p><code>testing</code></p>"]])(
