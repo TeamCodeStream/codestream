@@ -176,8 +176,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 						repoId: derivedState.currentRepo!.id!,
 						baseSha: props.pr.baseRefOid,
 						headSha: props.pr.headRefOid,
-						// TODO check ref format for GitLab and Bitbucket
-						ref: props.pr && `refs/pull/${props.pr.number}/head`
+						ref: getRef
 					});
 					handleForkPointResponse(forkPointResponse);
 				} catch (err) {

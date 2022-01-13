@@ -1,5 +1,4 @@
-import { first } from "lodash-es";
-import { ActionType, Index } from "../common";
+import { ActionType } from "../common";
 import * as actions from "./actions";
 import { clearCurrentPullRequest, setCurrentPullRequest } from "../context/actions";
 import { ProviderPullRequestActionsTypes, ProviderPullRequestsState } from "./types";
@@ -12,6 +11,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest
 } from "@codestream/protocols/agent";
+import { logError } from "@codestream/webview/logger";
 
 type ProviderPullRequestActions =
 	| ActionType<typeof actions>
@@ -864,7 +864,7 @@ export const getProviderPullRequestRepoObject = createSelector(
 	}
 );
 
-const getProviderPullRequestRepoObjectCore = (
+export const getProviderPullRequestRepoObjectCore = (
 	repos: CSRepository[],
 	currentPr: {
 		conversations: {
@@ -891,6 +891,7 @@ const getProviderPullRequestRepoObjectCore = (
 		repos?: CSRepository[];
 		repoName?: string;
 		repoUrl?: string;
+		reason?: "remote" | "repoName" | "matchedOnProviderUrl" | "closestMatch";
 	} = {};
 
 	try {
@@ -934,6 +935,7 @@ const getProviderPullRequestRepoObjectCore = (
 
 		if (matchingRepos.length === 1) {
 			result.currentRepo = matchingRepos[0];
+			result.reason = "remote";
 		} else {
 			let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
 			if (matchingRepos2.length != 1) {
@@ -942,16 +944,46 @@ const getProviderPullRequestRepoObjectCore = (
 				);
 				if (matchingRepos2.length === 1) {
 					result.currentRepo = matchingRepos2[0];
+					result.reason = "matchedOnProviderUrl";
 				} else {
-					result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
+					// try to match on the best/closet repo
+					const bucket: { repo: CSRepository; points: number }[] = [];
+					const splitRepoUrl = repoUrl.split("/");
+					for (const repo of repos) {
+						for (const remote of repo.remotes) {
+							const split = remote.normalizedUrl.split("/");
+							if (split.length) {
+								let points = 0;
+								for (const s of split) {
+									if (s && splitRepoUrl.includes(s)) {
+										points++;
+									}
+								}
+								bucket.push({ repo: repo, points: points });
+							}
+						}
+					}
+					if (bucket.length) {
+						bucket.sort((a, b) => b.points - a.points);
+						result.currentRepo = bucket[0].repo;
+						result.reason = "closestMatch";
+					} else {
+						result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
+					}
 				}
 			} else {
 				result.currentRepo = matchingRepos2[0];
+				result.reason = "repoName";
 			}
 		}
 	} catch (ex) {
 		result.error = typeof ex === "string" ? ex : ex.message;
 		console.error(ex);
+	}
+	if (result.error || !result.currentRepo) {
+		logError(result.error || "Could not find currentRepo", {
+			result
+		});
 	}
 	return result;
 };

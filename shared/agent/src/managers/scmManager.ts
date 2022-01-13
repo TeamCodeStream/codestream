@@ -1554,12 +1554,13 @@ export class ScmManager {
 		request: FetchForkPointRequest
 	): Promise<FetchForkPointResponse | undefined> {
 		const cc = Logger.getCorrelationContext();
-		const { git, repositoryMappings } = SessionContainer.instance();
+		const { git } = SessionContainer.instance();
 
 		const repo = await git.getRepositoryById(request.repoId);
 		const repoPath = repo?.path;
 
 		if (!repoPath) {
+			Logger.warn("getForkPointRequestType: no repoPath");
 			return {
 				sha: "",
 				error: {
@@ -1568,6 +1569,7 @@ export class ScmManager {
 			};
 		}
 		if (!request.baseSha) {
+			Logger.warn("getForkPointRequestType: no baseSha");
 			return {
 				sha: "",
 				error: {
@@ -1577,6 +1579,7 @@ export class ScmManager {
 			};
 		}
 		if (!request.headSha) {
+			Logger.warn("getForkPointRequestType: no headSha");
 			return {
 				sha: "",
 				error: {
