@@ -20,7 +20,7 @@
 		"emoji-mart": "2.11.1",
 		"ignore": "3.3.10",
 		"lodash-es": "4.17.14",
-		"markdown-it": "9.0.0",
+		"markdown-it": "12.3.2",
 		"markdown-it-emoji-mart": "0.1.1",
 		"markdown-it-slack": "1.2.0",
 		"path-browserify": "1.0.0",
