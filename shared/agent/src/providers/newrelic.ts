@@ -1275,6 +1275,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const response = await this.mutate<{
 				referenceEntityCreateOrUpdateRepository: {
 					created: string[];
+					updated: string[];
 					failures: {
 						guid: string;
 						message: string;
@@ -1285,6 +1286,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				`mutation ReferenceEntityCreateOrUpdateRepository($accountId: Int!, $name: String!, $url: String!) {
 					referenceEntityCreateOrUpdateRepository(repositories: [{accountId: $accountId, name: $name, url: $url}]) {
 					  created
+					  updated
 					  failures {
 						guid
 						message
@@ -1319,7 +1321,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				throw new Error(failures);
 			}
 
-			const repoEntityId = response.referenceEntityCreateOrUpdateRepository.created[0];
+			const repoEntityId =
+				response.referenceEntityCreateOrUpdateRepository.updated[0] ||
+				response.referenceEntityCreateOrUpdateRepository.created[0];
 			const entityId =
 				request.entityId || (await this.fetchErrorGroupById(request.errorGroupGuid!))?.entityGuid;
 			if (entityId) {
