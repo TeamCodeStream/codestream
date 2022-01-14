@@ -22,7 +22,7 @@
 # Uncomment and setup if node is required. Available versions can be seen
 # with the command:
 #   ssh $DT_CLOUD_SERVER ls /home/web/SandboxRepos/software/node-$DT_OS_TYPE-*
-export VSCSB_NODE_VER=10.15.3
+export VSCSB_NODE_VER=16.13.2
 export PATH=$VSCSB_SANDBOX/node/bin:node_modules/.bin:$PATH
 
 # Uncomment if you want to short circuit the sandbox hooks (see hooks/git_hooks.sh)
