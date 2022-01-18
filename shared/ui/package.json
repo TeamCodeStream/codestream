@@ -35,6 +35,7 @@
 		"react-redux": "7.1.0",
 		"react-select": "3.0.8",
 		"react-slider": "^1.0.2",
+		"recharts": "2.1.8",
 		"redux": "4.0.4",
 		"redux-batched-subscribe": "0.1.6",
 		"redux-devtools-extension": "2.13.8",

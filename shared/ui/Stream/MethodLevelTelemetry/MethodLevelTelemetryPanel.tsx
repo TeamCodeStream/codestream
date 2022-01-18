@@ -1,24 +1,36 @@
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+	CartesianGrid,
+	Legend,
+	Line,
+	LineChart,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis
+} from "recharts";
+import styled from "styled-components";
+
 import {
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
 	TelemetryRequestType,
 	WarningOrError
 } from "@codestream/protocols/agent";
+import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import { CodeStreamState } from "@codestream/webview/store";
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
+
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { closePanel, setUserPreference } from "../actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
 import CancelButton from "../CancelButton";
-import { CodeStreamState } from "@codestream/webview/store";
+import { Dropdown } from "../Dropdown";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
-import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
-import { Dropdown } from "../Dropdown";
 
 const Root = styled.div``;
 
@@ -130,15 +142,38 @@ export const MethodLevelTelemetryPanel = () => {
 										</div>
 										<div>
 											<br />
-											<div>
-												<img src="https://via.placeholder.com/500x300" />
-											</div>
-											<div>
-												<img src="https://via.placeholder.com/500x300" />
-											</div>
-											<div>
-												<img src="https://via.placeholder.com/500x300" />
-											</div>
+											{telemetryResponse &&
+												telemetryResponse.goldenMetrics &&
+												telemetryResponse.goldenMetrics.map(_ => {
+													return (
+														<div style={{ width: "500px", height: "300px" }}>
+															<LineChart
+																width={500}
+																height={300}
+																data={_.result}
+																margin={{
+																	top: 5,
+																	right: 30,
+																	left: 20,
+																	bottom: 5
+																}}
+															>
+																<CartesianGrid strokeDasharray="3 3" />
+																<XAxis dataKey="endTimeSeconds" />
+																<YAxis dataKey={_.title} />
+																<Tooltip />
+																<Legend />
+																<Line
+																	type="monotone"
+																	dataKey={_.title}
+																	stroke="#8884d8"
+																	activeDot={{ r: 8 }}
+																/>
+															</LineChart>
+														</div>
+													);
+												})}
+
 											<br />
 										</div>
 										{telemetryResponse && (

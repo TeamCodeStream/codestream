@@ -1110,6 +1110,7 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityName?: string;
 	newRelicUrl?: string;
 	newRelicEntityAccounts: EntityAccount[];
+	goldenMetrics?: any;
 }
 
 export const GetMethodLevelTelemetryRequestType = new RequestType<
@@ -1299,4 +1300,16 @@ export interface ProviderGetForkedReposResponse {
 		url?: string;
 	};
 	error?: { message?: string; type: string };
+}
+export interface GoldenMetricsResult {
+	actor: {
+		entity: {
+			goldenMetrics: {
+				metrics: {
+					query: string;
+					title: string;
+				}[];
+			};
+		};
+	};
 }

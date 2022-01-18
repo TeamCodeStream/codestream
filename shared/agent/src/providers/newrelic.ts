@@ -5,6 +5,7 @@ import {
 	flatten as _flatten,
 	groupBy as _groupBy,
 	memoize,
+	result,
 	sortBy as _sortBy,
 	uniq as _uniq,
 	uniqBy as _uniqBy
@@ -62,7 +63,8 @@ import {
 	CrashOrException,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryRequest,
-	GetMethodLevelTelemetryResponse
+	GetMethodLevelTelemetryResponse,
+	GoldenMetricsResult
 } from "../protocol/agent.protocol";
 import { CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -1682,6 +1684,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			});
 
+			const foo = await this.executeGoldenMetricsQueries(request.newRelicEntityGuid);
+
 			const begin =
 				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
@@ -1690,6 +1694,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// TODO
 			let transactionId = "";
 			return {
+				goldenMetrics: foo,
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
 				averageDuration: averageDurationResponse
 					? averageDurationResponse.actor.account.nrql.results
@@ -1720,6 +1725,69 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 		}
 
+		return undefined;
+	}
+
+	private async getGoldenMetricsQueries(entityGuid: string): Promise<GoldenMetricsResult> {
+		return this.query(
+			`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
+		actor {
+			entity(guid: $entityGuid) {
+				goldenMetrics {
+				  metrics {
+					query
+					title
+				  }
+				}
+			  }
+			}
+		}`,
+			{ entityGuid: entityGuid }
+		);
+	}
+
+	private async executeGoldenMetricsQueries(entityGuid: string) {
+		const queries = await this.getGoldenMetricsQueries(entityGuid);
+
+		if (queries?.actor?.entity?.goldenMetrics) {
+			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+
+			const results = await Promise.all(
+				queries.actor.entity.goldenMetrics.metrics.map(_ => {
+					const q = `query getMetric($accountId: Int!) {
+						actor {
+						  account(id: $accountId) {
+							nrql(query: "${_.query}") {
+							  results
+							}
+						  }
+						}
+					  }
+					  `;
+					return this.query(q, {
+						accountId: parsedId.accountId
+					}).catch(ex => {
+						Logger.warn(ex);
+					});
+				})
+			);
+
+			const response = queries.actor.entity.goldenMetrics.metrics.map((_, i) => {
+				if (i === 2) {
+					// fix up the title for this one since the element title != the parent's title
+					_.title = "Error rate";
+					results[i].actor.account.nrql.results.forEach((element: any) => {
+						element["Error rate"] = element["Error %"];
+					});
+				}
+				return {
+					..._,
+					result: results[i].actor.account.nrql.results
+				};
+			});
+
+			return response;
+		}
 		return undefined;
 	}
 
