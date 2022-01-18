@@ -533,6 +533,7 @@ export const Observability = React.memo((props: Props) => {
 			}
 			return {
 				label: ea.entityName,
+				searchLabel: ea.entityName,
 				subtle:
 					ea.accountName && ea.accountName.length > 25
 						? ea.accountName.substr(0, 25) + "..."
