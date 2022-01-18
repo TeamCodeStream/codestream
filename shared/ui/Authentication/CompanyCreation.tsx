@@ -37,6 +37,14 @@ const InlineLoadingWrapper = styled.div`
 	margin: 20px 0 0 0;
 `;
 
+const NrUserButtonCopy = styled.b`
+	font-size: 14px !important;
+`;
+
+const NrUserButtonWrapper = styled.div`
+	margin: 10px 0 20px 0;
+`;
+
 const isTeamNameValid = (name: string) => name.length > 0;
 
 interface EnhancedCSCompany {
@@ -210,6 +218,17 @@ export function CompanyCreation(props: {
 		return isLoading || isCreatingOrg;
 	};
 
+	const isNewRelicStaff = () => {
+		return true;
+		// return props.email && /@newrelic\.com$/.test(props.email);
+	};
+
+	const handleClickSwitchStagingEnviornment = e => {
+		e.preventDefault();
+
+		console.warn("eric handleClickSwitchStagingEnviornment");
+	};
+
 	return (
 		<div id="organization-page" className="onboarding-page">
 			<div className="standard-form">
@@ -228,18 +247,45 @@ export function CompanyCreation(props: {
 							)}
 							{!isCreatingOrg && !initialLoad && (
 								<>
-									<JoinHeader>
-										<FormattedMessage
-											id="signUp.joinOrganization"
-											defaultMessage="Join your teammates on CodeStream"
-										/>
-									</JoinHeader>
-									<div>
-										<FormattedMessage
-											id="signUp.joinOrganizationHelp"
-											defaultMessage="These organizations are available based on your email domain."
-										/>
-									</div>
+									{!isNewRelicStaff() && (
+										<>
+											<JoinHeader>
+												<FormattedMessage
+													id="signUp.joinOrganization"
+													defaultMessage="Join your teammates on CodeStream"
+												/>
+											</JoinHeader>
+											<div>
+												<FormattedMessage
+													id="signUp.joinOrganizationHelp"
+													defaultMessage="These organizations are available based on your email domain."
+												/>
+											</div>
+										</>
+									)}
+
+									{isNewRelicStaff() && (
+										<>
+											<JoinHeader>Relics, are you using the correct enviornment?</JoinHeader>
+											<div>
+												You are signing up in CodeStream's production enviornment, which is great
+												for demos and testing. Join one of the organizations below, or create your
+												own. But if you're a deeloper you should be using the "New Relic Product
+												Org" in CodesTream's staging enviornment
+											</div>
+											<NrUserButtonWrapper>
+												<Button
+													onClick={e => handleClickSwitchStagingEnviornment(e)}
+													className="control-button"
+												>
+													<div className="copy">
+														<NrUserButtonCopy>Switch to the Staging Enviornment</NrUserButtonCopy>
+													</div>
+												</Button>
+											</NrUserButtonWrapper>
+										</>
+									)}
+
 									{isLoading && (
 										<InlineLoadingWrapper>
 											<Icon name="sync" loading={true} /> Loading organizations...
