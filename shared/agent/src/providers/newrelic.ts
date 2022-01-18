@@ -1454,7 +1454,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	async getMethodThroughput(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' 
+		FROM Metric 
+		WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' 
+		AND metricTimesliceName LIKE '${request.codeNamespace}%' 
+		FACET metricTimesliceName 
+		SINCE 5 Days AGO 
+		LIMIT 100`
+			.replace(/\n/g, "")
+			.replace(/\t/g, "");
 
 		const query = `query GetMethodThroughput($accountId:Int!) {
 	actor {
@@ -1485,7 +1493,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	async getMethodAverageDuration(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT average(apm.service.transaction.duration) AS 'averageDuration' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE '%Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		const innerQuery = `SELECT average(apm.service.transaction.duration) AS 'averageDuration' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE '%${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
 		const query = `query GetMethodAverageDuration($accountId:Int!) {
 	actor {
 		account(id: $accountId) {
@@ -1535,6 +1543,28 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return this.query(query, {
 				accountId: request.newRelicAccountId!
 			});
+		} catch (ex) {
+			Logger.error(ex, "getMethodErrorRate", { request });
+		}
+		return undefined;
+	}
+
+	async getSpans(request: GetMethodLevelTelemetryRequest) {
+		const innerQuery = `SELECT * from Span WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND code.namespace like '${request.codeNamespace}%' SINCE 5 Days AGO LIMIT 100`;
+		const query = `query GetSpans($accountId:Int!) {
+			actor {
+				account(id: $accountId) {
+					nrql(query: "${innerQuery}") { 						
+						results						 					
+					}
+				}
+			}
+	  }`;
+		try {
+			const response = await this.query(query, {
+				accountId: request.newRelicAccountId!
+			});
+			return response?.actor.account.nrql.results;
 		} catch (ex) {
 			Logger.error(ex, "getMethodErrorRate", { request });
 		}
@@ -1654,6 +1684,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		let entityName = entity.entityName;
 
 		try {
+			const spans = await this.getSpans(request);
+			const groupedByNamespaceAndMethod = spans ? _groupBy(spans, _ => _.name) : {};
+
 			request.options = request.options || {};
 			let [throughputResponse, averageDurationResponse, errorRateResponse] = await Promise.all([
 				request.options.includeThroughput ? this.getMethodThroughput(request) : undefined,
@@ -1664,8 +1697,23 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const addMethodName = (arr: { metricTimesliceName: string }[]) => {
 				return arr.map((_: any) => {
 					const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
+
+					const additionalMetadata = {} as any;
+					const metadata =
+						groupedByNamespaceAndMethod[
+							_.metricTimesliceName
+								.replace("WebTransaction/", "")
+								.replace("Errors/WebTransaction/", "")
+						];
+					if (metadata) {
+						["code.lineno", "traceId", "transactionId"].forEach(_ => {
+							// TODO this won't work for lambdas
+							additionalMetadata[_] = metadata[0][_];
+						});
+					}
 					return {
 						..._,
+						metadata: additionalMetadata,
 						functionName:
 							indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined
 					};
@@ -1684,7 +1732,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			});
 
-			const foo = await this.executeGoldenMetricsQueries(request.newRelicEntityGuid);
+			const goldenMetrics = await this.executeGoldenMetricsQueries(request.newRelicEntityGuid);
 
 			const begin =
 				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
@@ -1694,12 +1742,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// TODO
 			let transactionId = "";
 			return {
-				goldenMetrics: foo,
+				goldenMetrics: goldenMetrics,
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
 				averageDuration: averageDurationResponse
 					? averageDurationResponse.actor.account.nrql.results
 					: [],
-				errorRate: errorRateResponse.actor.account.nrql.results || [],
+				errorRate: errorRateResponse ? errorRateResponse.actor.account.nrql.results : [],
 				sinceDateFormatted: begin ? Dates.toFormatter(new Date(begin)).fromNow() : "",
 				lastUpdateDate:
 					errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
