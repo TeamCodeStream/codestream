@@ -71,7 +71,8 @@ export interface SSOAuthInfo {
 export const ProviderNames = {
 	github: "GitHub",
 	gitlab: "GitLab",
-	bitbucket: "Bitbucket"
+	bitbucket: "Bitbucket",
+	newrelic: "New Relic"
 };
 
 export const startSSOSignin = (

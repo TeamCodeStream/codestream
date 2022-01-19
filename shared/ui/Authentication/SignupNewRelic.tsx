@@ -28,7 +28,8 @@ const ErrorMessageWrapper = styled.div`
 
 export const SignupNewRelic = () => {
 	//Local state
-	const [showErrorMessage, setShowErrorMessage] = React.useState(false);
+	const [showEmailErrorMessage, setShowEmailErrorMessage] = React.useState(false);
+	const [showGenericErrorMessage, setShowGenericErrorMessage] = React.useState(false);
 	const [existingEmail, setExistingEmail] = React.useState("");
 	const [loading, setLoading] = React.useState(false);
 	const [apiKey, setApiKey] = React.useState("");
@@ -98,7 +99,8 @@ export const SignupNewRelic = () => {
 								email,
 								eligibleJoinCompanies,
 								isWebmail,
-								accountIsConnected
+								accountIsConnected,
+								provider: "newrelic"
 							})
 						);
 					}
@@ -107,7 +109,7 @@ export const SignupNewRelic = () => {
 				case LoginResult.AlreadyConfirmed: {
 					// already has an account
 					if (notInviteRelated && email) {
-						setShowErrorMessage(true);
+						setShowEmailErrorMessage(true);
 						setExistingEmail(email);
 					}
 					// invited @TODO: this could be handled cleaner
@@ -127,6 +129,7 @@ export const SignupNewRelic = () => {
 					throw status;
 			}
 		} catch (error) {
+			setShowGenericErrorMessage(true);
 			logError(`Unexpected error during nr registration request: ${error}`);
 		}
 	};
@@ -138,7 +141,7 @@ export const SignupNewRelic = () => {
 				<div id="controls">
 					<div id="token-controls" className="control-group">
 						<div className="control-group">
-							{showErrorMessage && (
+							{showEmailErrorMessage && (
 								<ErrorMessageWrapper>
 									<div className="error-message">
 										An account already exists for {existingEmail}.{" "}
@@ -151,6 +154,11 @@ export const SignupNewRelic = () => {
 											Sign In
 										</Link>
 									</div>
+								</ErrorMessageWrapper>
+							)}
+							{showGenericErrorMessage && (
+								<ErrorMessageWrapper>
+									<div className="error-message">Invalid API Key</div>
 								</ErrorMessageWrapper>
 							)}
 							{inviteConflict && (
