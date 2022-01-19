@@ -112,6 +112,7 @@ export enum WebviewModals {
 	TeamSetup = "team-setup",
 	Keybindings = "keybindings",
 	Notifications = "notifications",
+	ReloadAllWindows = "reload-all-windows",
 	ReviewSettings = "review-settings",
 	Invite = "invite",
 	BlameMap = "blame-map",

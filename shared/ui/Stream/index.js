@@ -426,7 +426,6 @@ export class SimpleStream extends PureComponent {
 						{activeModal === WebviewModals.ChangePhoneNumber && <ChangePhoneNumber />}
 						{activeModal === WebviewModals.ChangePassword && <ChangePassword />}
 						{activeModal === WebviewModals.ChangeTeamName && <ChangeTeamName />}
-
 						{activeModal === WebviewModals.ChangeCompanyName && <ChangeCompanyName />}
 						{activeModal === WebviewModals.Profile && <ProfilePanel />}
 						{activeModal === WebviewModals.BlameMap && <BlameMap />}
