@@ -1078,30 +1078,58 @@ export const GetObservabilityErrorGroupMetadataRequestType = new RequestType<
 	void
 >("codestream/newrelic/errorGroup/metadata");
 
-export interface MethodLevelTelemetryRequestOptions {
+export interface FileLevelTelemetryRequestOptions {
 	includeThroughput?: boolean;
 	includeAverageDuration?: boolean;
 	includeErrorRate?: boolean;
 }
 
-export interface GetMethodLevelTelemetryRequest {
+export interface GetFileLevelTelemetryRequest {
 	filePath: string;
 	languageId: string;
 	codeNamespace?: string;
 	functionName?: string;
-	newRelicAccountId?: number;
-	newRelicEntityGuid?: string;
-	options?: MethodLevelTelemetryRequestOptions;
+	options?: FileLevelTelemetryRequestOptions;
 }
 
-export interface GetMethodLevelTelemetryResponse {
+export interface GetMethodLevelTelemetryRequest {
+	/**
+	 * CodeStream repoId
+	 */
+	repoId: string;
+	/**
+	 * entity id of the NewRelic entity
+	 */
+	newRelicEntityGuid: string;
+	/**
+	 * contains the specific formatting of a metricTimesliceName for a golden metric type
+	 */
+	metricTimesliceNameMapping: MetricTimesliceNameMapping;
+}
+
+export type MetricTimesliceNameMapping = {
+	/**
+	 * duration
+	 */
+	d: string;
+	/**
+	 * throughput
+	 */
+	t: string;
+	/**
+	 * error
+	 */
+	e: string;
+};
+
+export interface GetFileLevelTelemetryResponse {
 	repo: {
 		id: string;
 		name: string;
 	};
-	throughput?: { requestsPerMinute: any; functionName: string }[];
-	averageDuration?: { averageDuration: any; functionName: string }[];
-	errorRate?: { errorsPerMinute: any; functionName: string }[];
+	throughput?: { requestsPerMinute: any; functionName: string; metricTimesliceName: string }[];
+	averageDuration?: { averageDuration: any; functionName: string; metricTimesliceName: string }[];
+	errorRate?: { errorsPerMinute: any; functionName: string; metricTimesliceName: string }[];
 	lastUpdateDate?: number;
 	hasAnyData?: boolean;
 	sinceDateFormatted?: string;
@@ -1110,15 +1138,31 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityName?: string;
 	newRelicUrl?: string;
 	newRelicEntityAccounts: EntityAccount[];
-	goldenMetrics?: any;
+	codeNamespace: string;
+	relativeFilePath: string;
 }
+
+export interface GetMethodLevelTelemetryResponse {
+	newRelicEntityGuid: string;
+	newRelicUrl?: string;
+	goldenMetrics?: any;
+	newRelicEntityAccounts: EntityAccount[];
+	newRelicEntityName: string;
+}
+
+export const GetFileLevelTelemetryRequestType = new RequestType<
+	GetFileLevelTelemetryRequest,
+	GetFileLevelTelemetryResponse,
+	void,
+	void
+>("codestream/newrelic/fileLevelTelemetry");
 
 export const GetMethodLevelTelemetryRequestType = new RequestType<
 	GetMethodLevelTelemetryRequest,
 	GetMethodLevelTelemetryResponse,
 	void,
 	void
->("codestream/newrelic/methodLevelTelemetry");
+>("codestream/newrelic/methodLevelMethodTelemetry");
 
 export interface CrashOrException {
 	message?: string;

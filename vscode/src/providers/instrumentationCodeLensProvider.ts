@@ -94,91 +94,121 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			return codeLenses;
 		}
 
-		if (!instrumentableSymbols.length) {
-			return codeLenses;
-		}
-
-		if (token.isCancellationRequested) return [];
-
-		const methodLevelTelemetryRequestOptions = {
-			includeAverageDuration: this.template.indexOf("${averageDuration}") > -1,
-			includeThroughput: this.template.indexOf("${throughput}") > -1,
-			includeErrorRate: this.template.indexOf("${errorsPerMinute}") > -1
-		};
-		const methodLevelTelemetryResponse = await Container.agent.observability.getMethodLevelTelemetry(
-			document.fileName,
-			document.languageId,
-			methodLevelTelemetryRequestOptions
-		);
-
-		if (methodLevelTelemetryResponse == null || !methodLevelTelemetryResponse.hasAnyData) {
-			return codeLenses;
-		}
-
-		if (token.isCancellationRequested) return [];
-
-		const date = methodLevelTelemetryResponse.lastUpdateDate
-			? new Date(methodLevelTelemetryResponse.lastUpdateDate).toLocaleString()
-			: "";
-
-		const tooltip = `${
-			methodLevelTelemetryResponse.newRelicEntityName
-				? `entity: ${methodLevelTelemetryResponse.newRelicEntityName}`
-				: ""
-		} - ${date ? `since ${date}` : ""}\nClick for more.`;
-
-		const lenses = instrumentableSymbols.map(_ => {
-			const throughputForFunction = methodLevelTelemetryResponse.throughput
-				? methodLevelTelemetryResponse.throughput.find(i => i.functionName === _.symbol.name)
-				: undefined;
-
-			const averageDurationForFunction = methodLevelTelemetryResponse.averageDuration
-				? methodLevelTelemetryResponse.averageDuration.find(i => i.functionName === _.symbol.name)
-				: undefined;
-
-			const errorRateForFunction = methodLevelTelemetryResponse.errorRate
-				? methodLevelTelemetryResponse.errorRate.find(i => i.functionName === _.symbol.name)
-				: undefined;
-
-			if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
-				// no data at all!
-				return undefined;
+		try {
+			if (!instrumentableSymbols.length) {
+				return codeLenses;
 			}
 
-			const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
-				filePath: document.fileName,
-				languageId: document.languageId,
-				range: _.symbol.range,
-				functionName: _.symbol.name,
-				newRelicAccountId: methodLevelTelemetryResponse.newRelicAccountId,
-				newRelicEntityGuid: methodLevelTelemetryResponse.newRelicEntityGuid,
-				methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions
+			if (token.isCancellationRequested) return [];
+
+			const methodLevelTelemetryRequestOptions = {
+				includeAverageDuration: this.template.indexOf("${averageDuration}") > -1,
+				includeThroughput: this.template.indexOf("${throughput}") > -1,
+				includeErrorRate: this.template.indexOf("${errorsPerMinute}") > -1
 			};
 
-			return new vscode.CodeLens(
-				_.symbol.range,
-				new InstrumentableSymbolCommand(
-					Strings.interpolate(this.template, {
-						averageDuration: averageDurationForFunction
-							? `${averageDurationForFunction.averageDuration.toFixed(2) || "0.00"}ms`
-							: "n/a",
-						throughput: throughputForFunction
-							? `${throughputForFunction.requestsPerMinute.toFixed(2) || "0.00"}rpm`
-							: "n/a",
-						errorsPerMinute: errorRateForFunction
-							? `${errorRateForFunction.errorsPerMinute.toFixed(2) || "0"}epm`
-							: "n/a",
-						since: methodLevelTelemetryResponse.sinceDateFormatted,
-						date: date
-					}),
-					"codestream.viewMethodLevelTelemetry",
-					tooltip,
-					[JSON.stringify(viewCommandArgs)]
-				)
+			const fileLevelTelemetryResponse = await Container.agent.observability.getFileLevelTelemetry(
+				document.fileName,
+				document.languageId,
+				methodLevelTelemetryRequestOptions
 			);
-		});
 
-		codeLenses = lenses.filter(_ => _ != null) as vscode.CodeLens[];
+			if (fileLevelTelemetryResponse == null || !fileLevelTelemetryResponse.hasAnyData) {
+				Logger.log("provideCodeLenses no data", {
+					fileName: document.fileName,
+					languageId: document.languageId,
+					methodLevelTelemetryRequestOptions
+				});
+				return codeLenses;
+			}
+
+			if (!fileLevelTelemetryResponse.repo) {
+				Logger.warn("provideCodeLenses missing repo");
+				return codeLenses;
+			}
+
+			if (token.isCancellationRequested) return [];
+
+			const date = fileLevelTelemetryResponse.lastUpdateDate
+				? new Date(fileLevelTelemetryResponse.lastUpdateDate).toLocaleString()
+				: "";
+
+			const tooltip = `${
+				fileLevelTelemetryResponse.newRelicEntityName
+					? `entity: ${fileLevelTelemetryResponse.newRelicEntityName}`
+					: ""
+			} - ${date ? `since ${date}` : ""}\nClick for more.`;
+
+			const lenses = instrumentableSymbols.map(_ => {
+				const throughputForFunction = fileLevelTelemetryResponse.throughput
+					? fileLevelTelemetryResponse.throughput.find((i: any) => i.functionName === _.symbol.name)
+					: undefined;
+
+				const averageDurationForFunction = fileLevelTelemetryResponse.averageDuration
+					? fileLevelTelemetryResponse.averageDuration.find(
+							(i: any) => i.functionName === _.symbol.name
+					  )
+					: undefined;
+
+				const errorRateForFunction = fileLevelTelemetryResponse.errorRate
+					? fileLevelTelemetryResponse.errorRate.find((i: any) => i.functionName === _.symbol.name)
+					: undefined;
+
+				if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
+					Logger.debug("provideCodeLenses no data");
+					return undefined;
+				}
+
+				const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
+					repoId: fileLevelTelemetryResponse.repo.id,
+					codeNamespace: fileLevelTelemetryResponse.codeNamespace!,
+					metricTimesliceNameMapping: {
+						t: throughputForFunction ? throughputForFunction.metricTimesliceName : "",
+						d: averageDurationForFunction ? averageDurationForFunction.metricTimesliceName : "",
+						e: errorRateForFunction ? errorRateForFunction.metricTimesliceName : ""
+					},
+					filePath: document.fileName,
+					relativeFilePath: fileLevelTelemetryResponse.relativeFilePath,
+					languageId: document.languageId,
+					range: _.symbol.range,
+					functionName: _.symbol.name,
+					newRelicAccountId: fileLevelTelemetryResponse.newRelicAccountId,
+					newRelicEntityGuid: fileLevelTelemetryResponse.newRelicEntityGuid,
+					methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions
+				};
+
+				return new vscode.CodeLens(
+					_.symbol.range,
+					new InstrumentableSymbolCommand(
+						Strings.interpolate(this.template, {
+							averageDuration:
+								averageDurationForFunction && averageDurationForFunction.averageDuration
+									? `${averageDurationForFunction.averageDuration.toFixed(3) || "0.00"}ms`
+									: "n/a",
+							throughput:
+								throughputForFunction && throughputForFunction.requestsPerMinute
+									? `${throughputForFunction.requestsPerMinute.toFixed(3) || "0.00"}rpm`
+									: "n/a",
+							errorsPerMinute:
+								errorRateForFunction && errorRateForFunction.errorsPerMinute
+									? `${errorRateForFunction.errorsPerMinute.toFixed(3) || "0"}epm`
+									: "n/a",
+							since: fileLevelTelemetryResponse.sinceDateFormatted,
+							date: date
+						}),
+						"codestream.viewMethodLevelTelemetry",
+						tooltip,
+						[JSON.stringify(viewCommandArgs)]
+					)
+				);
+			});
+
+			codeLenses = lenses.filter(_ => _ != null) as vscode.CodeLens[];
+		} catch (ex) {
+			Logger.error(ex, "provideCodeLens", {
+				fileName: document.fileName
+			});
+		}
 		return codeLenses;
 	}
 

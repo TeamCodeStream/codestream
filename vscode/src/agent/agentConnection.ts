@@ -1,6 +1,35 @@
 "use strict";
 import {
+	Event,
+	EventEmitter,
+	ExtensionContext,
+	OutputChannel,
+	Uri,
+	window,
+	workspace
+} from "vscode";
+import {
+	CancellationToken,
+	CancellationTokenSource,
+	CloseAction,
+	Disposable,
+	ErrorAction,
+	LanguageClient,
+	LanguageClientOptions,
+	Message,
+	NotificationType,
+	Range,
+	RequestType,
+	RevealOutputChannelOn,
+	ServerOptions,
+	TransportKind
+} from "vscode-languageclient";
+import {
+	AgentFileSearchRequestType,
+	AgentInitializedNotificationType,
 	AgentInitializeResult,
+	AgentOpenUrlRequest,
+	AgentOpenUrlRequestType,
 	ApiRequestType,
 	ArchiveStreamRequestType,
 	BaseAgentOptions,
@@ -19,12 +48,14 @@ import {
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
-	DidChangeServerUrlNotification,
-	DidChangeServerUrlNotificationType,
 	DidChangeDocumentMarkersNotification,
 	DidChangeDocumentMarkersNotificationType,
+	DidChangeProcessBufferNotification,
+	DidChangeProcessBufferNotificationType,
 	DidChangePullRequestCommentsNotification,
 	DidChangePullRequestCommentsNotificationType,
+	DidChangeServerUrlNotification,
+	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
 	DidDetectUnreviewedCommitsNotification,
@@ -36,6 +67,9 @@ import {
 	DidLoginNotificationType,
 	DidLogoutNotification,
 	DidLogoutNotificationType,
+	DidResolveStackTraceLineNotification,
+	DidResolveStackTraceLineNotificationType,
+	DidSetEnvironmentNotificationType,
 	DidStartLoginNotificationType,
 	EditPostRequestType,
 	FetchCodemarksRequestType,
@@ -45,14 +79,19 @@ import {
 	FetchPostRepliesRequestType,
 	FetchPostsRequestType,
 	FetchReposRequestType,
+	FetchReviewsRequestType,
 	FetchStreamsRequestType,
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
+	FileLevelTelemetryRequestOptions,
 	GetDocumentFromKeyBindingRequestType,
 	GetDocumentFromKeyBindingResponse,
 	GetDocumentFromMarkerRequestType,
 	GetDocumentFromMarkerResponse,
+	GetFileContentsAtRevisionRequestType,
+	GetFileContentsAtRevisionResponse,
+	GetFileLevelTelemetryRequestType,
 	GetFileScmInfoRequestType,
 	GetFileStreamRequestType,
 	GetFileStreamResponse,
@@ -60,7 +99,9 @@ import {
 	GetPostRequestType,
 	GetPreferencesRequestType,
 	GetRepoRequestType,
+	GetReviewContentsLocalRequestType,
 	GetReviewContentsRequestType,
+	GetReviewRequestType,
 	GetStreamRequestType,
 	GetTeamRequestType,
 	GetUnreadsRequestType,
@@ -87,26 +128,10 @@ import {
 	UpdatePresenceRequestType,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-	GetReviewRequestType,
-	GetReviewContentsLocalRequestType,
-	AgentOpenUrlRequest,
-	AgentOpenUrlRequestType,
-	FetchReviewsRequestType,
-	GetFileContentsAtRevisionRequestType,
-	GetFileContentsAtRevisionResponse,
-	AgentInitializedNotificationType,
 	UpdateUserRequest,
 	UpdateUserRequestType,
-	UserDidCommitNotificationType,
 	UserDidCommitNotification,
-	DidSetEnvironmentNotificationType,
-	DidChangeProcessBufferNotification,
-	DidChangeProcessBufferNotificationType,
-	AgentFileSearchRequestType,
-	DidResolveStackTraceLineNotificationType,
-	DidResolveStackTraceLineNotification,
-	MethodLevelTelemetryRequestOptions,
-	GetMethodLevelTelemetryRequestType
+	UserDidCommitNotificationType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -114,34 +139,10 @@ import {
 	CSMarkerIdentifier,
 	CSMePreferences,
 	CSPresenceStatus,
-	StreamType,
-	CSReviewCheckpoint
+	CSReviewCheckpoint,
+	StreamType
 } from "@codestream/protocols/api";
-import {
-	Event,
-	EventEmitter,
-	ExtensionContext,
-	OutputChannel,
-	Uri,
-	window,
-	workspace
-} from "vscode";
-import {
-	CancellationToken,
-	CancellationTokenSource,
-	CloseAction,
-	Disposable,
-	ErrorAction,
-	LanguageClient,
-	LanguageClientOptions,
-	Message,
-	NotificationType,
-	Range,
-	RequestType,
-	RevealOutputChannelOn,
-	ServerOptions,
-	TransportKind
-} from "vscode-languageclient";
+
 import { SessionSignedOutReason } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
@@ -924,12 +925,12 @@ export class CodeStreamAgentConnection implements Disposable {
 	private readonly _observability = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
-		getMethodLevelTelemetry(
+		getFileLevelTelemetry(
 			filePath: string,
 			languageId: string,
-			options?: MethodLevelTelemetryRequestOptions
+			options?: FileLevelTelemetryRequestOptions
 		) {
-			return this._connection.sendRequest(GetMethodLevelTelemetryRequestType, {
+			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
 				filePath,
 				languageId,
 				options

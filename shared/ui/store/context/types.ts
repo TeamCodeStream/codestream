@@ -1,4 +1,4 @@
-import { PixieDynamicLoggingFunctionParameter } from "@codestream/protocols/agent";
+import { MetricTimesliceNameMapping } from "@codestream/protocols/agent";
 import {
 	WebviewContext,
 	WebviewPanels,
@@ -110,7 +110,7 @@ export interface ContextState extends WebviewContext {
 	errorsInboxOptions?: { stack?: string; customAttributes?: string; url?: string };
 
 	wantNewRelicOptions?: { repoId?: string; path?: string; projectType?: any };
-	currentMethodLevelTelemetry?: any;
+	currentMethodLevelTelemetry?: CurrentMethodLevelTelemetry;
 }
 
 export type ChatProviderAccess = "strict" | "permissive";
@@ -134,4 +134,14 @@ export enum Route {
 export interface RouteState {
 	name: Route;
 	params: AnyObject;
+}
+
+export interface CurrentMethodLevelTelemetry {
+	repoId: string;
+	newRelicEntityGuid?: string;
+	codeNamespace?: string;
+	functionName?: string;
+	filePath?: string;
+	relativeFilePath?: string;
+	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
 }

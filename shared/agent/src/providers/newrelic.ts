@@ -1,5 +1,6 @@
 "use strict";
 import fs from "fs";
+
 import { GraphQLClient } from "graphql-request";
 import {
 	flatten as _flatten,
@@ -10,7 +11,7 @@ import {
 	uniq as _uniq,
 	uniqBy as _uniqBy
 } from "lodash-es";
-import { sep } from "path";
+import { join, relative, sep } from "path";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -63,8 +64,12 @@ import {
 	CrashOrException,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryRequest,
+	GetFileLevelTelemetryRequestType,
+	GetFileLevelTelemetryRequest,
+	GetFileLevelTelemetryResponse,
+	GoldenMetricsResult,
 	GetMethodLevelTelemetryResponse,
-	GoldenMetricsResult
+	MetricTimesliceNameMapping
 } from "../protocol/agent.protocol";
 import { CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -1453,11 +1458,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
-	async getMethodThroughput(request: GetMethodLevelTelemetryRequest) {
+	async getMethodThroughput(request: MetricQueryRequest) {
 		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' 
 		FROM Metric 
 		WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' 
-		AND metricTimesliceName LIKE '${request.codeNamespace}%' 
+		AND ${
+			request.metricTimesliceNames?.length
+				? `metricTimesliceName in (${request.metricTimesliceNames
+						.map(z => "'" + z + "'")
+						.join(",")})`
+				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
+		} 
 		FACET metricTimesliceName 
 		SINCE 5 Days AGO 
 		LIMIT 100`
@@ -1492,8 +1503,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	async getMethodAverageDuration(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT average(apm.service.transaction.duration) AS 'averageDuration' FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE '%${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+	async getMethodAverageDuration(request: MetricQueryRequest) {
+		const innerQuery = `SELECT average(apm.service.transaction.duration) AS 'averageDuration' FROM Metric WHERE \`entity.guid\` = '${
+			request.newRelicEntityGuid
+		}' AND ${
+			request.metricTimesliceNames?.length
+				? `metricTimesliceName in (${request.metricTimesliceNames
+						.map(z => "'WebTransaction/" + z + "'")
+						.join(",")})`
+				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
+		} FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
 		const query = `query GetMethodAverageDuration($accountId:Int!) {
 	actor {
 		account(id: $accountId) {
@@ -1521,8 +1540,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	async getMethodErrorRate(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND metricTimesliceName LIKE 'Errors/WebTransaction/Function/${request.codeNamespace}%' FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+	async getMethodErrorRate(request: MetricQueryRequest) {
+		const innerQuery = `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${
+			request.newRelicEntityGuid
+		}' AND ${
+			request.metricTimesliceNames?.length
+				? `metricTimesliceName in (${request.metricTimesliceNames
+						.map(z => "'Errors/WebTransaction/" + z + "'")
+						.join(",")})`
+				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
+		} FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
 
 		const query = `query GetMethodErrorRate($accountId:Int!) {
 			actor {
@@ -1549,8 +1576,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	async getSpans(request: GetMethodLevelTelemetryRequest) {
-		const innerQuery = `SELECT * from Span WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' AND code.namespace like '${request.codeNamespace}%' SINCE 5 Days AGO LIMIT 100`;
+	async getSpans(request: MetricQueryRequest) {
+		const innerQuery = `SELECT * from Span WHERE \`entity.guid\` = '${
+			request.newRelicEntityGuid
+		}' AND ${
+			request.codeFilePath
+				? `code.filepath='${request.codeFilePath}'`
+				: `code.namespace like '${request.codeNamespace}%'`
+		}  SINCE 5 Days AGO LIMIT 100`;
 		const query = `query GetSpans($accountId:Int!) {
 			actor {
 				account(id: $accountId) {
@@ -1566,7 +1599,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 			return response?.actor.account.nrql.results;
 		} catch (ex) {
-			Logger.error(ex, "getMethodErrorRate", { request });
+			Logger.error(ex, "getSpans", { request });
 		}
 		return undefined;
 	}
@@ -1596,27 +1629,25 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	private _languageSupport = new Set<string>(["python"]);
 
-	@lspHandler(GetMethodLevelTelemetryRequestType)
+	@lspHandler(GetFileLevelTelemetryRequestType)
 	@log()
-	async getMethodLevelTelemetry(
-		request: GetMethodLevelTelemetryRequest
-	): Promise<GetMethodLevelTelemetryResponse | undefined> {
+	async getFileLevelTelemetry(
+		request: GetFileLevelTelemetryRequest
+	): Promise<GetFileLevelTelemetryResponse | undefined> {
 		if (!request.filePath || !request.languageId) {
 			return undefined;
 		}
 
 		if (!this._languageSupport.has(request.languageId)) return undefined;
 
-		if (request.languageId === "python") {
-			request.codeNamespace = this.getPythonNamespacePackage(request.filePath);
-			if (!request.codeNamespace) {
-				return undefined;
-			}
-		}
-
 		const { git } = SessionContainer.instance();
 		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
 		if (!repoForFile?.id) return undefined;
+
+		let relativeFilePath = relative(repoForFile.path, request.filePath);
+		if (relativeFilePath[0] !== sep) {
+			relativeFilePath = join(sep, relativeFilePath);
+		}
 
 		const observabilityRepos = await this.getObservabilityRepos({
 			filters: [{ repoId: repoForFile.id }]
@@ -1679,19 +1710,43 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			entity = repo.entityAccounts[0];
 		}
 
-		request.newRelicAccountId = entity.accountId;
-		request.newRelicEntityGuid = entity.entityGuid;
+		const newRelicAccountId = entity.accountId;
+		const newRelicEntityGuid = entity.entityGuid;
 		let entityName = entity.entityName;
 
 		try {
-			const spans = await this.getSpans(request);
+			// get a list of file-based method telemetry
+			const spans = await this.getSpans({
+				newRelicAccountId,
+				newRelicEntityGuid,
+				codeFilePath: relativeFilePath
+			});
 			const groupedByNamespaceAndMethod = spans ? _groupBy(spans, _ => _.name) : {};
+			const metricTimesliceNames = Object.keys(groupedByNamespaceAndMethod);
 
 			request.options = request.options || {};
 			let [throughputResponse, averageDurationResponse, errorRateResponse] = await Promise.all([
-				request.options.includeThroughput ? this.getMethodThroughput(request) : undefined,
-				request.options.includeAverageDuration ? this.getMethodAverageDuration(request) : undefined,
-				request.options.includeErrorRate ? this.getMethodErrorRate(request) : undefined
+				request.options.includeThroughput
+					? this.getMethodThroughput({
+							newRelicAccountId,
+							newRelicEntityGuid,
+							metricTimesliceNames
+					  })
+					: undefined,
+				request.options.includeAverageDuration
+					? this.getMethodAverageDuration({
+							newRelicAccountId,
+							newRelicEntityGuid,
+							metricTimesliceNames
+					  })
+					: undefined,
+				request.options.includeErrorRate
+					? this.getMethodErrorRate({
+							newRelicAccountId,
+							newRelicEntityGuid,
+							metricTimesliceNames
+					  })
+					: undefined
 			]);
 
 			const addMethodName = (arr: { metricTimesliceName: string }[]) => {
@@ -1706,7 +1761,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								.replace("Errors/WebTransaction/", "")
 						];
 					if (metadata) {
-						["code.lineno", "traceId", "transactionId"].forEach(_ => {
+						["code.lineno", "traceId", "transactionId", "code.namespace"].forEach(_ => {
 							// TODO this won't work for lambdas
 							additionalMetadata[_] = metadata[0][_];
 						});
@@ -1732,17 +1787,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			});
 
-			const goldenMetrics = await this.executeGoldenMetricsQueries(request.newRelicEntityGuid);
-
 			const begin =
 				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
 
 			// TODO
-			let transactionId = "";
+			// let transactionId = "";
 			return {
-				goldenMetrics: goldenMetrics,
+				codeNamespace: request.codeNamespace!,
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
 				averageDuration: averageDurationResponse
 					? averageDurationResponse.actor.account.nrql.results
@@ -1757,15 +1810,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					throughputResponse?.actor?.account?.nrql?.results.length ||
 					averageDurationResponse?.actor?.account?.nrql?.results.length ||
 					errorRateResponse?.actor?.account?.nrql?.results.length,
-				newRelicAccountId: request.newRelicAccountId,
-				newRelicEntityGuid: request.newRelicEntityGuid,
+				newRelicAccountId: newRelicAccountId,
+				newRelicEntityGuid: newRelicEntityGuid,
 				newRelicEntityName: entityName,
 				newRelicEntityAccounts: repo.entityAccounts,
 				repo: {
 					id: repoForFile.id,
 					name: this.getRepoName(repoForFile.folder)
 				},
-				newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
+				relativeFilePath: relativeFilePath
+				// newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getMethodLevelTelemetry", {
@@ -1776,26 +1830,149 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	private async getGoldenMetricsQueries(entityGuid: string): Promise<GoldenMetricsResult> {
-		return this.query(
-			`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
-		actor {
-			entity(guid: $entityGuid) {
-				goldenMetrics {
-				  metrics {
-					query
-					title
-				  }
+	@lspHandler(GetMethodLevelTelemetryRequestType)
+	@log()
+	async getMethodLevelTelemetry(
+		request: GetMethodLevelTelemetryRequest
+	): Promise<GetMethodLevelTelemetryResponse | undefined> {
+		const observabilityRepos = await this.getObservabilityRepos({
+			filters: [{ repoId: request.repoId }]
+		});
+		if (!observabilityRepos?.repos?.length) {
+			ContextLogger.warn("observabilityRepos.repos empty", {
+				repoId: request.repoId
+			});
+			return undefined;
+		}
+
+		const repo = observabilityRepos.repos.find(_ => _.repoId === request.repoId);
+		if (!repo) {
+			ContextLogger.warn("observabilityRepos.repos unmatched for repo", {
+				repoId: request.repoId
+			});
+			return undefined;
+		}
+
+		if (!repo.hasRepoAssociation) {
+			ContextLogger.warn("Missing repo association", {
+				repo: repo
+			});
+
+			return undefined;
+		}
+
+		const entityLength = repo.entityAccounts.length;
+		if (!entityLength) {
+			ContextLogger.warn("Missing entities", {
+				repo: repo
+			});
+			return undefined;
+		}
+
+		let entity: EntityAccount | undefined;
+		if (entityLength > 1) {
+			const { users } = SessionContainer.instance();
+			try {
+				let meUser = await users.getMe();
+				const methodLevelTelemetryRepoEntities =
+					meUser.user.preferences?.methodLevelTelemetryRepoEntities || {};
+				const methodLevelTelemetryRepoEntity = methodLevelTelemetryRepoEntities[repo.repoId];
+				if (methodLevelTelemetryRepoEntity) {
+					const foundEntity = repo.entityAccounts.find(
+						_ => _.entityGuid === methodLevelTelemetryRepoEntity
+					);
+					if (foundEntity) {
+						entity = foundEntity;
+					}
 				}
-			  }
+			} catch {}
+			if (!entity) {
+				Logger.warn("More than one NR entity, selecting first", {
+					entity: repo.entityAccounts[0]
+				});
+				entity = repo.entityAccounts[0];
 			}
-		}`,
-			{ entityGuid: entityGuid }
-		);
+		} else {
+			entity = repo.entityAccounts[0];
+		}
+
+		try {
+			const goldenMetrics = await this.getGoldenMetrics(
+				request.newRelicEntityGuid!,
+				request.metricTimesliceNameMapping
+			);
+
+			return {
+				goldenMetrics: goldenMetrics,
+				newRelicEntityAccounts: repo.entityAccounts,
+				newRelicEntityName: entity.entityName!,
+				newRelicEntityGuid: entity.entityGuid!
+				// newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
+			};
+		} catch (ex) {
+			Logger.error(ex, "getMethodLevelTelemetry", {
+				request
+			});
+		}
+
+		return undefined;
 	}
 
-	private async executeGoldenMetricsQueries(entityGuid: string) {
-		const queries = await this.getGoldenMetricsQueries(entityGuid);
+	private async getGoldenMetricsQueries(
+		entityGuid: string,
+		metricTimesliceNameMapping: MetricTimesliceNameMapping
+	): Promise<GoldenMetricsResult> {
+		// NOTE: these queries can be queried! we're hard-coding below because
+		// we want golden metrics on a method-level rather than an entity level
+
+		// return this.query(
+		// 	`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
+		// actor {
+		// 	entity(guid: $entityGuid) {
+		// 		goldenMetrics {
+		// 		  metrics {
+		// 			query
+		// 			title
+		// 		  }
+		// 		}
+		// 	  }
+		// 	}
+		// }`,
+		// 	{ entityGuid: entityGuid }
+		// );
+		return {
+			actor: {
+				entity: {
+					goldenMetrics: {
+						metrics: [
+							// duration
+							{
+								query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}'  TIMESERIES`,
+								title: "Response time (ms)"
+							},
+							// throughput
+							{
+								query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
+								title: "Throughput"
+							},
+							// error
+							{
+								query: `SELECT filter(count(newrelic.timeslice.value), where metricTimesliceName = 'Errors/all') / (filter(count(newrelic.timeslice.value), where metricTimesliceName='${metricTimesliceNameMapping["e"]}')) * 100 AS 'Error %' FROM Metric WHERE entity.guid IN ('${entityGuid}') TIMESERIES`,
+								title: "Error rate"
+							}
+						]
+					}
+				}
+			}
+		};
+	}
+
+	private async getGoldenMetrics(
+		entityGuid: string,
+		metricTimesliceNames: MetricTimesliceNameMapping
+	): Promise<any[] | undefined> {
+		// TODO get typings in here
+		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
 
 		if (queries?.actor?.entity?.goldenMetrics) {
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
@@ -1822,15 +1999,30 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const response = queries.actor.entity.goldenMetrics.metrics.map((_, i) => {
 				if (i === 2) {
+					// TODO this isn't great
 					// fix up the title for this one since the element title != the parent's title
 					_.title = "Error rate";
 					results[i].actor.account.nrql.results.forEach((element: any) => {
-						element["Error rate"] = element["Error %"];
+						element["Error rate"] = element["Error %"] ? element["Error %"].toFixed(2) : null;
 					});
 				}
 				return {
 					..._,
-					result: results[i].actor.account.nrql.results
+					result: results[i].actor.account.nrql.results.map((r: any) => {
+						const ms = r.endTimeSeconds * 1000;
+						const date = new Date(ms);
+
+						return {
+							...r,
+							["Response time (ms)"]: r["Response time (ms)"]
+								? r["Response time (ms)"].toFixed(2)
+								: null,
+							endDate: `${date.toLocaleDateString(undefined, {
+								month: "short",
+								day: "numeric"
+							})} ${date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
+						};
+					})
 				};
 			});
 
@@ -2795,6 +2987,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 		return undefined;
 	}
+}
+
+interface MetricQueryRequest {
+	newRelicAccountId: number;
+	newRelicEntityGuid: string;
+	codeFilePath?: string;
+	/**
+	 * Unused
+	 */
+	codeNamespace?: string;
+	/**
+	 * names of the metric timeslices
+	 */
+	metricTimesliceNames?: string[];
 }
 
 class ContextLogger {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
 	CartesianGrid,
@@ -11,7 +11,6 @@ import {
 	YAxis
 } from "recharts";
 import styled from "styled-components";
-
 import {
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
@@ -23,7 +22,6 @@ import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessag
 import { CodeStreamState } from "@codestream/webview/store";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { closePanel, setUserPreference } from "../actions";
 import CancelButton from "../CancelButton";
@@ -31,6 +29,7 @@ import { Dropdown } from "../Dropdown";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
+import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 
 const Root = styled.div``;
 
@@ -38,48 +37,60 @@ export const MethodLevelTelemetryPanel = () => {
 	const dispatch = useDispatch();
 
 	const derivedState = useSelector((state: CodeStreamState) => {
+		const cmlt = (state.context.currentMethodLevelTelemetry || {}) as CurrentMethodLevelTelemetry;
 		return {
-			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry,
+			currentMethodLevelTelemetry: cmlt,
 			methodLevelTelemetryRepoEntities:
 				(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities ||
-				{}
+				{},
+			repo: state.repos[cmlt.repoId] || {}
 		};
 	});
 
 	const [telemetryResponse, setTelemetryResponse] = useState<
 		GetMethodLevelTelemetryResponse | undefined
 	>(undefined);
-	const [loading, setLoading] = useState<boolean>(false);
+	const [loading, setLoading] = useState<boolean>(true);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 
+	const loadData = async () => {
+		setLoading(true);
+		try {
+			if (!derivedState.currentMethodLevelTelemetry.repoId) {
+				setWarningOrErrors([{ message: "Repository missing" }]);
+				return;
+			}
+
+			if (!derivedState.currentMethodLevelTelemetry.metricTimesliceNameMapping) {
+				setWarningOrErrors([{ message: "Repository metric timeslice names" }]);
+				return;
+			}
+			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
+				newRelicEntityGuid: derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!,
+				metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
+					.metricTimesliceNameMapping!,
+				repoId: derivedState.currentMethodLevelTelemetry.repoId
+			});
+
+			setTelemetryResponse(response);
+			console.warn(response);
+		} catch (ex) {
+			setWarningOrErrors([{ message: ex.toString() }]);
+		} finally {
+			setLoading(false);
+		}
+	};
 	useDidMount(() => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Method Level Telemetry Viewed",
 			properties: {}
 		});
-		(async () => {
-			setLoading(true);
-			try {
-				const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
-					languageId: derivedState.currentMethodLevelTelemetry.languageId,
-					filePath: derivedState.currentMethodLevelTelemetry.filePath,
-					functionName: derivedState.currentMethodLevelTelemetry.functionName,
-					options: {
-						includeThroughput: true,
-						includeAverageDuration: true,
-						includeErrorRate: true
-					}
-				});
-
-				setTelemetryResponse(response);
-				console.warn(response);
-			} catch (ex) {
-				setWarningOrErrors([{ message: ex.toString() }]);
-			} finally {
-				setLoading(false);
-			}
-		})();
+		loadData();
 	});
+
+	useEffect(() => {
+		loadData();
+	}, [derivedState.currentMethodLevelTelemetry]);
 
 	return (
 		<Root className="full-height-codemark-form">
@@ -117,11 +128,12 @@ export const MethodLevelTelemetryPanel = () => {
 															checked:
 																item.entityGuid ===
 																derivedState.methodLevelTelemetryRepoEntities[
-																	telemetryResponse.repo.id
+																	derivedState.currentMethodLevelTelemetry.repoId
 																],
 															action: () => {
 																let newPref = {};
-																newPref[telemetryResponse.repo.id] = item.entityGuid;
+																newPref[derivedState.currentMethodLevelTelemetry.repoId] =
+																	item.entityGuid;
 																dispatch(
 																	setUserPreference(["methodLevelTelemetryRepoEntities"], {
 																		...derivedState.methodLevelTelemetryRepoEntities,
@@ -135,10 +147,10 @@ export const MethodLevelTelemetryPanel = () => {
 											)}
 										</div>
 										<div>
-											<b>Repo:</b> {telemetryResponse?.repo?.name}
+											<b>Repo:</b> {derivedState.repo.name}
 										</div>
 										<div>
-											<b>File:</b> {derivedState?.currentMethodLevelTelemetry.filePath}
+											<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
 										</div>
 										<div>
 											<br />
@@ -146,37 +158,39 @@ export const MethodLevelTelemetryPanel = () => {
 												telemetryResponse.goldenMetrics &&
 												telemetryResponse.goldenMetrics.map(_ => {
 													return (
-														<div style={{ width: "500px", height: "300px" }}>
-															<LineChart
-																width={500}
-																height={300}
-																data={_.result}
-																margin={{
-																	top: 5,
-																	right: 30,
-																	left: 20,
-																	bottom: 5
-																}}
-															>
-																<CartesianGrid strokeDasharray="3 3" />
-																<XAxis dataKey="endTimeSeconds" />
-																<YAxis dataKey={_.title} />
-																<Tooltip />
-																<Legend />
-																<Line
-																	type="monotone"
-																	dataKey={_.title}
-																	stroke="#8884d8"
-																	activeDot={{ r: 8 }}
-																/>
-															</LineChart>
+														<div style={{ marginLeft: "-30px" }}>
+															<ResponsiveContainer width="100%" height={300}>
+																<LineChart
+																	width={500}
+																	height={300}
+																	data={_.result}
+																	margin={{
+																		top: 5,
+																		right: 30,
+																		left: 20,
+																		bottom: 5
+																	}}
+																>
+																	<CartesianGrid strokeDasharray="3 3" />
+																	<XAxis dataKey="endDate" />
+																	<YAxis dataKey={_.title} />
+																	<Tooltip />
+																	<Legend />
+																	<Line
+																		type="monotone"
+																		dataKey={_.title}
+																		stroke="#8884d8"
+																		activeDot={{ r: 8 }}
+																	/>
+																</LineChart>
+															</ResponsiveContainer>
 														</div>
 													);
 												})}
 
 											<br />
 										</div>
-										{telemetryResponse && (
+										{telemetryResponse && telemetryResponse.newRelicUrl && (
 											<div>
 												<br />
 												<Link className="external-link" href={telemetryResponse.newRelicUrl}>
