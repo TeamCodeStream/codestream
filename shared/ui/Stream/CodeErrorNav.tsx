@@ -94,14 +94,15 @@ const Root = styled.div`
 		background: var(--app-background-color-hover);
 	}
 
-	#resolution {
+	.resolution {
 		transition: opacity 0.2s;
 	}
 
-	.pulse #resolution {
+	.pulse .resolution {
 		opacity: 1;
 		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		background: var(--app-background-color-hover);
+		padding: 5px;
 	}
 
 	.scroll-container {
@@ -725,8 +726,11 @@ export function CodeErrorNav(props: Props) {
 			<Tip>
 				<Step>3</Step>
 				<div>
-					Resolve or ignore the error
-					<Subtext>Once the investigation is complete</Subtext>
+					Explore CodeStream!
+					<Subtext>
+						Once you're done with the error, close it and see how you can discover other errors,
+						discuss code, and review pull requests from your IDE.
+					</Subtext>
 					<Button onClick={tourDone}>Done</Button>
 				</div>
 			</Tip>
@@ -931,15 +935,20 @@ export function CodeErrorNav(props: Props) {
 						flexGrow: 0
 					}}
 				/> */}
-				<div style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}>
-					<Icon
-						className="clickable"
-						name="x"
-						onClick={exit}
-						title="Close View"
-						placement="bottomRight"
-						delay={1}
-					/>
+				<div
+					className={hoverButton === "resolution" ? "pulse" : ""}
+					style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
+				>
+					<TourTip align={{ offset: [-10, 5] }} title={resolutionTip} placement="bottomLeft">
+						<Icon
+							className="clickable resolution"
+							name="x"
+							onClick={exit}
+							title="Close View"
+							placement="bottomRight"
+							delay={1}
+						/>
+					</TourTip>
 				</div>
 			</div>
 			<NavHeader id="nav-header">
@@ -948,7 +957,6 @@ export function CodeErrorNav(props: Props) {
 					errorGroup={errorGroup}
 					collapsed={false}
 					setIsEditing={setIsEditing}
-					resolutionTip={resolutionTip}
 				></BaseCodeErrorHeader>
 			</NavHeader>
 			{props.composeOpen ? null : (

@@ -757,35 +757,33 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 						{states && (
 							<>
 								<div style={{ display: "inline-block", width: "5px" }} />
-								<TourTip title={props.resolutionTip} placement="bottomLeft">
-									<DropdownButton
-										items={states}
-										selectedKey={props.errorGroup?.state || "UNKNOWN"}
-										isLoading={isStateChanging}
-										variant="secondary"
-										size="compact"
-										preventStopPropagation={!derivedState.isConnectedToNewRelic}
-										onButtonClicked={
-											derivedState.isConnectedToNewRelic
-												? undefined
-												: e => {
-														e.preventDefault();
-														e.stopPropagation();
-														setOpenConnectionModal(true);
-												  }
-										}
-										wrap
+								<DropdownButton
+									items={states}
+									selectedKey={props.errorGroup?.state || "UNKNOWN"}
+									isLoading={isStateChanging}
+									variant="secondary"
+									size="compact"
+									preventStopPropagation={!derivedState.isConnectedToNewRelic}
+									onButtonClicked={
+										derivedState.isConnectedToNewRelic
+											? undefined
+											: e => {
+													e.preventDefault();
+													e.stopPropagation();
+													setOpenConnectionModal(true);
+											  }
+									}
+									wrap
+								>
+									<div
+										style={{
+											display: "inline-block",
+											opacity: resolutionDropdownOptionsWrapperOpacity()
+										}}
 									>
-										<div
-											style={{
-												display: "inline-block",
-												opacity: resolutionDropdownOptionsWrapperOpacity()
-											}}
-										>
-											{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
-										</div>
-									</DropdownButton>
-								</TourTip>
+										{STATES_TO_DISPLAY_STRINGS[props.errorGroup?.state || "UNKNOWN"]}
+									</div>
+								</DropdownButton>
 							</>
 						)}
 
