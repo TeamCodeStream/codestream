@@ -1255,7 +1255,6 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					post={props.post}
 					collapsed={props.collapsed}
 					setIsEditing={props.setIsEditing}
-					resolutionTip={props.resolutionTip}
 				/>
 			)}
 			{props.headerError && props.headerError.message && (
