@@ -49,7 +49,7 @@ export const ReloadAllWindows = (props: PropsWithChildren<ReloadAllWindowsProps>
 		<Modal translucent>
 			<Dialog title="Reload All Windows" onClose={e => handleClose(e)}>
 				<div>
-					Clicking Continue will reload this IDE window and change you to the staging enviornment,
+					Clicking Continue will reload this IDE window and change you to the staging environment,
 					where you'll need to sign up again. If you have other IDE windows open you'll need to
 					reload them manually.
 				</div>

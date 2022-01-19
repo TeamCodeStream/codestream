@@ -228,7 +228,7 @@ export function CompanyCreation(props: {
 		return isLoading || isCreatingOrg;
 	};
 
-	const isNewRelicStaffOnProductionEnviornment = () => {
+	const isNewRelicStaffOnProductionEnvironment = () => {
 		return (
 			props.email &&
 			/@newrelic\.com$/.test(props.email) &&
@@ -236,7 +236,7 @@ export function CompanyCreation(props: {
 		);
 	};
 
-	const handleClickSwitchStagingEnviornment = (event: React.SyntheticEvent) => {
+	const handleClickSwitchStagingEnvironment = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		setShowReloadAllWindows(true);
 	};
@@ -272,7 +272,7 @@ export function CompanyCreation(props: {
 							)}
 							{!isCreatingOrg && !initialLoad && (
 								<>
-									{!isNewRelicStaffOnProductionEnviornment() && (
+									{!isNewRelicStaffOnProductionEnvironment() && (
 										<>
 											<JoinHeader>
 												<FormattedMessage
@@ -289,22 +289,22 @@ export function CompanyCreation(props: {
 										</>
 									)}
 
-									{isNewRelicStaffOnProductionEnviornment() && (
+									{isNewRelicStaffOnProductionEnvironment() && (
 										<>
-											<JoinHeader>Relics, are you using the correct enviornment?</JoinHeader>
+											<JoinHeader>Relics, are you using the correct environment?</JoinHeader>
 											<div>
-												You are signing up in CodeStream's production enviornment, which is great
+												You are signing up in CodeStream's production environment, which is great
 												for demos and testing. Join one of the organizations below, or create your
 												own. But if you're a developer you should be using the "New Relic Product
-												Org" in CodeStream's staging enviornment
+												Org" in CodeStream's staging environment
 											</div>
 											<NrUserButtonWrapper>
 												<Button
-													onClick={e => handleClickSwitchStagingEnviornment(e)}
+													onClick={e => handleClickSwitchStagingEnvironment(e)}
 													className="control-button"
 												>
 													<div className="copy">
-														<NrUserButtonCopy>Switch to the Staging Enviornment</NrUserButtonCopy>
+														<NrUserButtonCopy>Switch to the Staging Environment</NrUserButtonCopy>
 													</div>
 												</Button>
 											</NrUserButtonWrapper>
