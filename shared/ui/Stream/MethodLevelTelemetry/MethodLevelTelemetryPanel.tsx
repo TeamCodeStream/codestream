@@ -99,112 +99,110 @@ export const MethodLevelTelemetryPanel = () => {
 			></PanelHeader>
 			<CancelButton onClick={() => dispatch(closePanel())} />
 
-			<span className="plane-container">
-				<div className="codemark-form-container" style={{ paddingTop: "7px" }}>
-					<div className="standard-form vscroll">
-						{warningOrErrors ? (
-							<WarningBox items={warningOrErrors} />
-						) : (
-							<>
-								{loading ? (
-									<>
-										<DelayedRender>
-											<div style={{ display: "flex", alignItems: "center" }}>
-												<LoadingMessage>Loading Telemetry...</LoadingMessage>
-											</div>
-										</DelayedRender>
-									</>
-								) : (
+			<div className="plane-container" style={{ padding: "10px 20px 0px 10px" }}>
+				<div className="standard-form vscroll">
+					{warningOrErrors ? (
+						<WarningBox items={warningOrErrors} />
+					) : (
+						<>
+							{loading ? (
+								<>
+									<DelayedRender>
+										<div style={{ display: "flex", alignItems: "center" }}>
+											<LoadingMessage>Loading Telemetry...</LoadingMessage>
+										</div>
+									</DelayedRender>
+								</>
+							) : (
+								<div>
 									<div>
-										<div>
-											<b>Entity:</b>{" "}
-											{telemetryResponse && (
-												<Dropdown
-													selectedValue={telemetryResponse.newRelicEntityName!}
-													items={telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
-														return {
-															label: item.entityName,
-															key: item.entityGuid + "-" + i,
-															checked:
-																item.entityGuid ===
-																derivedState.methodLevelTelemetryRepoEntities[
-																	derivedState.currentMethodLevelTelemetry.repoId
-																],
-															action: () => {
-																let newPref = {};
-																newPref[derivedState.currentMethodLevelTelemetry.repoId] =
-																	item.entityGuid;
-																dispatch(
-																	setUserPreference(["methodLevelTelemetryRepoEntities"], {
-																		...derivedState.methodLevelTelemetryRepoEntities,
-																		...newPref
-																	})
-																);
-															}
-														};
-													})}
-												/>
-											)}
-										</div>
-										<div>
-											<b>Repo:</b> {derivedState.repo.name}
-										</div>
-										<div>
-											<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
-										</div>
-										<div>
-											<br />
-											{telemetryResponse &&
-												telemetryResponse.goldenMetrics &&
-												telemetryResponse.goldenMetrics.map(_ => {
-													return (
-														<div style={{ marginLeft: "-30px" }}>
-															<ResponsiveContainer width="100%" height={300}>
-																<LineChart
-																	width={500}
-																	height={300}
-																	data={_.result}
-																	margin={{
-																		top: 5,
-																		right: 30,
-																		left: 20,
-																		bottom: 5
-																	}}
-																>
-																	<CartesianGrid strokeDasharray="3 3" />
-																	<XAxis dataKey="endDate" />
-																	<YAxis dataKey={_.title} />
-																	<Tooltip />
-																	<Legend />
-																	<Line
-																		type="monotone"
-																		dataKey={_.title}
-																		stroke="#8884d8"
-																		activeDot={{ r: 8 }}
-																	/>
-																</LineChart>
-															</ResponsiveContainer>
-														</div>
-													);
+										<b>Entity:</b>{" "}
+										{telemetryResponse && (
+											<Dropdown
+												selectedValue={telemetryResponse.newRelicEntityName!}
+												items={telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
+													return {
+														label: item.entityName,
+														key: item.entityGuid + "-" + i,
+														checked:
+															item.entityGuid ===
+															derivedState.methodLevelTelemetryRepoEntities[
+																derivedState.currentMethodLevelTelemetry.repoId
+															],
+														action: () => {
+															let newPref = {};
+															newPref[derivedState.currentMethodLevelTelemetry.repoId] =
+																item.entityGuid;
+															dispatch(
+																setUserPreference(["methodLevelTelemetryRepoEntities"], {
+																	...derivedState.methodLevelTelemetryRepoEntities,
+																	...newPref
+																})
+															);
+														}
+													};
 												})}
-
-											<br />
-										</div>
-										{telemetryResponse && telemetryResponse.newRelicUrl && (
-											<div>
-												<br />
-												<Link className="external-link" href={telemetryResponse.newRelicUrl}>
-													View service summary on New Relic One <Icon name="link-external" />
-												</Link>
-											</div>
+											/>
 										)}
 									</div>
-								)}
-							</>
-						)}
-					</div>
+									<div>
+										<b>Repo:</b> {derivedState.repo.name}
+									</div>
+									<div>
+										<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
+									</div>
+									<div>
+										<br />
+										{telemetryResponse &&
+											telemetryResponse.goldenMetrics &&
+											telemetryResponse.goldenMetrics.map(_ => {
+												return (
+													<div style={{ marginLeft: "-36px", marginBottom: "15px" }}>
+														<ResponsiveContainer width="90%" height={270}>
+															<LineChart
+																width={500}
+																height={300}
+																data={_.result}
+																margin={{
+																	top: 5,
+																	right: 30,
+																	left: 20,
+																	bottom: 5
+																}}
+															>
+																<CartesianGrid strokeDasharray="3 3" />
+																<XAxis dataKey="endDate" />
+																<YAxis dataKey={_.title} />
+																<Tooltip />
+																<Legend />
+																<Line
+																	type="monotone"
+																	dataKey={_.title}
+																	stroke="#8884d8"
+																	activeDot={{ r: 8 }}
+																/>
+															</LineChart>
+														</ResponsiveContainer>
+													</div>
+												);
+											})}
+
+										<br />
+									</div>
+									{telemetryResponse && telemetryResponse.newRelicUrl && (
+										<div>
+											<br />
+											<Link className="external-link" href={telemetryResponse.newRelicUrl}>
+												View service summary on New Relic One <Icon name="link-external" />
+											</Link>
+										</div>
+									)}
+								</div>
+							)}
+						</>
+					)}
 				</div>
-			</span>
+			</div>
 		</Root>
 	);
 };
