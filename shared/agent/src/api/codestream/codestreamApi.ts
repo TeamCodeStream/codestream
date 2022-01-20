@@ -438,6 +438,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				break;
 
 			case "token":
+				options.token.url.trim();
 				if (options.token.url !== this.baseUrl)
 					throw new Error(
 						`Invalid token, options.token.url="${options.token.url}" this.baseUrl="${this.baseUrl}"`
