@@ -25,9 +25,7 @@ export class InstrumentableCodeLensController implements Disposable {
 	}
 
 	private onAnyChanged() {
-		const cfg = configuration.get<Boolean>(
-			configuration.name("showMethodLevelTelemetryCodeLens").value
-		);
+		const cfg = configuration.get<Boolean>(configuration.name("showGoldenSignalsInEditor").value);
 		if (cfg) {
 			if (this._status === SessionStatus.SignedIn) {
 				this.ensureProvider();
@@ -41,8 +39,8 @@ export class InstrumentableCodeLensController implements Disposable {
 	private onConfigurationChanged(e?: ConfigurationChangeEvent) {
 		if (
 			e &&
-			(configuration.changed(e, "showMethodLevelTelemetryCodeLens") ||
-				configuration.changed(e, "methodLevelTelemetryCodeLensFormat"))
+			(configuration.changed(e, "showGoldenSignalsInEditor") ||
+				configuration.changed(e, "goldenSignalsInEditorFormat"))
 		) {
 			this.onAnyChanged();
 		}
@@ -65,7 +63,7 @@ export class InstrumentableCodeLensController implements Disposable {
 
 	private ensureProvider() {
 		const template = configuration.get<string>(
-			configuration.name("methodLevelTelemetryCodeLensFormat").value
+			configuration.name("goldenSignalsInEditorFormat").value
 		);
 		if (!template) {
 			return;
