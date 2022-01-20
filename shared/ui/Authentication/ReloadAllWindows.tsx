@@ -42,6 +42,7 @@ export const ReloadAllWindows = (props: PropsWithChildren<ReloadAllWindowsProps>
 		await HostApi.instance.send(UpdateServerUrlRequestType, {
 			serverUrl: SERVER_URL_ON_RELOAD
 		});
+		HostApi.instance.track("NR Switched to Staging");
 		HostApi.instance.send(ReloadWebviewRequestType, void undefined);
 	};
 
