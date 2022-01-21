@@ -43,7 +43,6 @@ export const MethodLevelTelemetryPanel = () => {
 		const repo = state.repos[cmlt.repoId] || {};
 		const methodLevelTelemetryRepoEntities =
 			(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities || {};
-		console.warn(methodLevelTelemetryRepoEntities[repo.id]);
 		return {
 			currentMethodLevelTelemetry: cmlt,
 			methodLevelTelemetryRepoEntities,
@@ -78,7 +77,6 @@ export const MethodLevelTelemetryPanel = () => {
 			});
 
 			setTelemetryResponse(response);
-			console.warn(response);
 		} catch (ex) {
 			setWarningOrErrors([{ message: ex.toString() }]);
 		} finally {
@@ -159,7 +157,7 @@ export const MethodLevelTelemetryPanel = () => {
 											telemetryResponse.goldenMetrics &&
 											telemetryResponse.goldenMetrics.map(_ => {
 												return (
-													<div style={{ marginLeft: "-36px", marginBottom: "15px" }}>
+													<div style={{ marginLeft: "-40px", marginBottom: "15px" }}>
 														<ResponsiveContainer width="90%" height={270}>
 															<LineChart
 																width={500}
@@ -168,7 +166,7 @@ export const MethodLevelTelemetryPanel = () => {
 																margin={{
 																	top: 5,
 																	right: 30,
-																	left: 20,
+																	left: 0,
 																	bottom: 5
 																}}
 															>
@@ -188,12 +186,9 @@ export const MethodLevelTelemetryPanel = () => {
 													</div>
 												);
 											})}
-
-										<br />
 									</div>
 									{telemetryResponse && telemetryResponse.newRelicUrl && (
 										<div>
-											<br />
 											<Link className="external-link" href={telemetryResponse.newRelicUrl}>
 												View service summary on New Relic One <Icon name="link-external" />
 											</Link>

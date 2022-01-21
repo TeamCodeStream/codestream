@@ -1818,8 +1818,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					id: repoForFile.id,
 					name: this.getRepoName(repoForFile.folder)
 				},
-				relativeFilePath: relativeFilePath
-				// newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
+				relativeFilePath: relativeFilePath,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${newRelicEntityGuid}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getFileLevelTelemetry", {
@@ -1887,8 +1887,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				goldenMetrics: goldenMetrics,
 				newRelicEntityAccounts: repo.entityAccounts,
 				newRelicEntityName: entity.entityName!,
-				newRelicEntityGuid: entity.entityGuid!
-				// newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
+				newRelicEntityGuid: entity.entityGuid!,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getMethodLevelTelemetry", {
