@@ -29,6 +29,7 @@ import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetObservabilityEntitiesRequestType,
 	ObservabilityRepo,
 	ObservabilityRepoError,
 	DidChangeObservabilityDataNotificationType
@@ -186,6 +187,8 @@ export const Observability = React.memo((props: Props) => {
 		[errorGroupGuid: string]: boolean;
 	}>({});
 	const [loadingAssigments, setLoadingAssigments] = useState<boolean>(false);
+	const [hasEntities, setHasEntities] = useState<boolean>(false);
+	const [loadingEntities, setLoadingEntities] = useState<boolean>(false);
 	const [observabilityAssignments, setObservabilityAssignments] = useState<
 		ObservabilityErrorCore[]
 	>([]);
@@ -263,9 +266,14 @@ export const Observability = React.memo((props: Props) => {
 							filters: buildFilters(repoIds)
 						})
 						.then(response => {
+							setLoadingEntities(true);
 							if (response?.repos) {
 								setObservabilityErrors(response.repos!);
 							}
+							HostApi.instance.send(GetObservabilityEntitiesRequestType, {}).then(_ => {
+								setHasEntities(!_isEmpty(_.entities));
+								setLoadingEntities(false);
+							});
 							loading(repoIds, false);
 						});
 				}
@@ -622,7 +630,7 @@ export const Observability = React.memo((props: Props) => {
 												return (
 													<>
 														<PaneNodeName
-															title={"Recent errors in " + or.repoName}
+															title={or.repoName}
 															id={"newrelic-errors-in-repo-" + or.repoId}
 															subtitle={
 																!or.entityAccounts || or.entityAccounts.length < 2 ? (
