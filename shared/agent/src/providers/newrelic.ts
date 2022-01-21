@@ -1470,7 +1470,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
 		} 
 		FACET metricTimesliceName 
-		SINCE 5 Days AGO 
+		SINCE 1 hour AGO 
 		LIMIT 100`
 			.replace(/\n/g, "")
 			.replace(/\t/g, "");
@@ -1512,7 +1512,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						.map(z => "'WebTransaction/" + z + "'")
 						.join(",")})`
 				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
-		} FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		} FACET metricTimesliceName SINCE 1 hour AGO LIMIT 100`;
 		const query = `query GetMethodAverageDuration($accountId:Int!) {
 	actor {
 		account(id: $accountId) {
@@ -1549,7 +1549,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						.map(z => "'Errors/WebTransaction/" + z + "'")
 						.join(",")})`
 				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
-		} FACET metricTimesliceName SINCE 5 Days AGO LIMIT 100`;
+		} FACET metricTimesliceName SINCE 1 hour AGO LIMIT 100`;
 
 		const query = `query GetMethodErrorRate($accountId:Int!) {
 			actor {
@@ -1577,13 +1577,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	async getSpans(request: MetricQueryRequest) {
-		const innerQuery = `SELECT * from Span WHERE \`entity.guid\` = '${
+		const innerQuery = `SELECT name from Span WHERE \`entity.guid\` = '${
 			request.newRelicEntityGuid
 		}' AND ${
 			request.codeFilePath
 				? `code.filepath='${request.codeFilePath}'`
 				: `code.namespace like '${request.codeNamespace}%'`
-		}  SINCE 5 Days AGO LIMIT 100`;
+		}  SINCE 1 hour AGO LIMIT 100`;
 		const query = `query GetSpans($accountId:Int!) {
 			actor {
 				account(id: $accountId) {
@@ -1822,7 +1822,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				// newRelicUrl: `${this.coreUrl}/nr1-core/apm-nerdlets/transactions/${transactionId}`
 			};
 		} catch (ex) {
-			Logger.error(ex, "getMethodLevelTelemetry", {
+			Logger.error(ex, "getFileLevelTelemetry", {
 				request
 			});
 		}
@@ -1869,36 +1869,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return undefined;
 		}
 
-		let entity: EntityAccount | undefined;
-		if (entityLength > 1) {
-			const { users } = SessionContainer.instance();
-			try {
-				let meUser = await users.getMe();
-				const methodLevelTelemetryRepoEntities =
-					meUser.user.preferences?.methodLevelTelemetryRepoEntities || {};
-				const methodLevelTelemetryRepoEntity = methodLevelTelemetryRepoEntities[repo.repoId];
-				if (methodLevelTelemetryRepoEntity) {
-					const foundEntity = repo.entityAccounts.find(
-						_ => _.entityGuid === methodLevelTelemetryRepoEntity
-					);
-					if (foundEntity) {
-						entity = foundEntity;
-					}
-				}
-			} catch {}
-			if (!entity) {
-				Logger.warn("More than one NR entity, selecting first", {
-					entity: repo.entityAccounts[0]
-				});
-				entity = repo.entityAccounts[0];
-			}
-		} else {
-			entity = repo.entityAccounts[0];
+		const entity = repo.entityAccounts.find(_ => _.entityGuid === request.newRelicEntityGuid);
+		if (!entity) {
+			ContextLogger.warn("Missing entity", {
+				entityId: request.newRelicEntityGuid
+			});
+			return undefined;
 		}
 
 		try {
 			const goldenMetrics = await this.getGoldenMetrics(
-				request.newRelicEntityGuid!,
+				entity.entityGuid!,
 				request.metricTimesliceNameMapping
 			);
 
@@ -1947,7 +1928,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						metrics: [
 							// duration
 							{
-								query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}'  TIMESERIES`,
+								query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
 								title: "Response time (ms)"
 							},
 							// throughput

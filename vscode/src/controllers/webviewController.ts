@@ -82,7 +82,8 @@ import {
 	SidebarLocation,
 	HostDidChangeLayoutNotificationType,
 	NewPullRequestBranch,
-	ViewMethodLevelTelemetryNotificationType
+	ViewMethodLevelTelemetryNotificationType,
+	RefreshEditorsCodeLensRequestType
 } from "@codestream/protocols/webview";
 import { gate } from "system/decorators/gate";
 import {
@@ -1117,6 +1118,15 @@ export class WebviewController implements Disposable {
 					} else {
 						throw new Error(`unsupported IDE provider: ${_params.provider}`);
 					}
+				});
+				break;
+			}
+			case RefreshEditorsCodeLensRequestType.method: {
+				webview.onIpcRequest(RefreshEditorsCodeLensRequestType, e, async (_type, _params) => {
+					await Container.commands.updateEditorCodeLens();
+					return {
+						success: true
+					};
 				});
 				break;
 			}

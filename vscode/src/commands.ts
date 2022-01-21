@@ -617,6 +617,11 @@ export class Commands implements Disposable {
 		}
 	}
 
+	async updateEditorCodeLens(): Promise<boolean> {
+		Container.instrumentableCodeLensController.refresh();
+		return true;
+	}
+
 	private async startWorkRequest() {
 		await Container.webview.startWorkRequest(window.activeTextEditor, "Context Menu");
 	}

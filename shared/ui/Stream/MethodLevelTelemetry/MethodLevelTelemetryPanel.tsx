@@ -23,13 +23,15 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { PanelHeader } from "../../src/components/PanelHeader";
-import { closePanel, setUserPreference } from "../actions";
+import { closePanel, setUserPreferences } from "../actions";
 import CancelButton from "../CancelButton";
 import { Dropdown } from "../Dropdown";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
+import { setCurrentMethodLevelTelemetry } from "@codestream/webview/store/context/actions";
+import { EditorsRefreshCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
 
 const Root = styled.div``;
 
@@ -38,12 +40,15 @@ export const MethodLevelTelemetryPanel = () => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const cmlt = (state.context.currentMethodLevelTelemetry || {}) as CurrentMethodLevelTelemetry;
+		const repo = state.repos[cmlt.repoId] || {};
+		const methodLevelTelemetryRepoEntities =
+			(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities || {};
+		console.warn(methodLevelTelemetryRepoEntities[repo.id]);
 		return {
 			currentMethodLevelTelemetry: cmlt,
-			methodLevelTelemetryRepoEntities:
-				(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities ||
-				{},
-			repo: state.repos[cmlt.repoId] || {}
+			methodLevelTelemetryRepoEntities,
+			repo,
+			methodLevelTelemetryRepoEntitiesForRepo: methodLevelTelemetryRepoEntities[repo.id]
 		};
 	});
 
@@ -53,20 +58,20 @@ export const MethodLevelTelemetryPanel = () => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 
-	const loadData = async () => {
+	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
 		try {
 			if (!derivedState.currentMethodLevelTelemetry.repoId) {
 				setWarningOrErrors([{ message: "Repository missing" }]);
 				return;
 			}
-
 			if (!derivedState.currentMethodLevelTelemetry.metricTimesliceNameMapping) {
 				setWarningOrErrors([{ message: "Repository metric timeslice names" }]);
 				return;
 			}
+
 			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
-				newRelicEntityGuid: derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!,
+				newRelicEntityGuid: newRelicEntityGuid,
 				metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
 					.metricTimesliceNameMapping!,
 				repoId: derivedState.currentMethodLevelTelemetry.repoId
@@ -85,11 +90,11 @@ export const MethodLevelTelemetryPanel = () => {
 			eventName: "Method Level Telemetry Viewed",
 			properties: {}
 		});
-		loadData();
+		loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
 	});
 
 	useEffect(() => {
-		loadData();
+		loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
 	}, [derivedState.currentMethodLevelTelemetry]);
 
 	return (
@@ -124,21 +129,18 @@ export const MethodLevelTelemetryPanel = () => {
 													return {
 														label: item.entityName,
 														key: item.entityGuid + "-" + i,
-														checked:
-															item.entityGuid ===
-															derivedState.methodLevelTelemetryRepoEntities[
-																derivedState.currentMethodLevelTelemetry.repoId
-															],
-														action: () => {
-															let newPref = {};
-															newPref[derivedState.currentMethodLevelTelemetry.repoId] =
-																item.entityGuid;
-															dispatch(
-																setUserPreference(["methodLevelTelemetryRepoEntities"], {
-																	...derivedState.methodLevelTelemetryRepoEntities,
-																	...newPref
+														checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,
+														action: async () => {
+															await dispatch(
+																setUserPreferences({
+																	[`methodLevelTelemetryRepoEntities.${
+																		derivedState.currentMethodLevelTelemetry!.repoId
+																	}`]: item.entityGuid
 																})
 															);
+
+															loadData(item.entityGuid);
+															HostApi.instance.send(EditorsRefreshCodeLensRequestType, {});
 														}
 													};
 												})}

@@ -61,6 +61,10 @@ export class InstrumentableCodeLensController implements Disposable {
 		}
 	}
 
+	refresh() {
+		this.ensureProvider();
+	}
+
 	private ensureProvider() {
 		const template = configuration.get<string>(
 			configuration.name("goldenSignalsInEditorFormat").value

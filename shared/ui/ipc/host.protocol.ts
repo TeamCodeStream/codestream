@@ -245,3 +245,15 @@ export const DisconnectFromIDEProviderRequestType = new RequestType<
 	void,
 	void
 >(`${IpcRoutes.Host}/disconnect/vscode-provider`);
+
+export interface RefreshEditorsCodeLensRequest {}
+export interface RefreshEditorsCodeLensResponse {
+	success: boolean;
+}
+
+export const RefreshEditorsCodeLensRequestType = new RequestType<
+	RefreshEditorsCodeLensRequest,
+	RefreshEditorsCodeLensResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editors/codelens/refresh`);
