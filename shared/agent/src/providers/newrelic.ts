@@ -1649,50 +1649,22 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			relativeFilePath = join(sep, relativeFilePath);
 		}
 
-		const observabilityRepos = await this.getObservabilityRepos({
-			filters: [{ repoId: repoForFile.id }]
-		});
-		if (!observabilityRepos?.repos?.length) {
-			ContextLogger.warn("observabilityRepos.repos empty", {
-				repoId: repoForFile.id
-			});
-			return undefined;
-		}
-
-		const repo = observabilityRepos.repos.find(_ => _.repoId === repoForFile.id);
-		if (!repo) {
-			ContextLogger.warn("observabilityRepos.repos unmatched for repo", {
-				repoId: repoForFile.id
-			});
-			return undefined;
-		}
-
-		if (!repo.hasRepoAssociation) {
-			ContextLogger.warn("Missing repo association", {
-				repo: repo
-			});
-
-			return undefined;
-		}
-
-		const entityLength = repo.entityAccounts.length;
-		if (!entityLength) {
-			ContextLogger.warn("Missing entities", {
-				repo: repo
-			});
+		const observabilityRepo = await this.getObservabilityEntityRepos(repoForFile.id);
+		if (!observabilityRepo || !observabilityRepo.entityAccounts) {
 			return undefined;
 		}
 
 		let entity: EntityAccount | undefined;
-		if (entityLength > 1) {
+		if (observabilityRepo.entityAccounts.length > 1) {
 			const { users } = SessionContainer.instance();
 			try {
 				let meUser = await users.getMe();
 				const methodLevelTelemetryRepoEntities =
 					meUser.user.preferences?.methodLevelTelemetryRepoEntities || {};
-				const methodLevelTelemetryRepoEntity = methodLevelTelemetryRepoEntities[repo.repoId];
+				const methodLevelTelemetryRepoEntity =
+					methodLevelTelemetryRepoEntities[observabilityRepo.repoId];
 				if (methodLevelTelemetryRepoEntity) {
-					const foundEntity = repo.entityAccounts.find(
+					const foundEntity = observabilityRepo.entityAccounts.find(
 						_ => _.entityGuid === methodLevelTelemetryRepoEntity
 					);
 					if (foundEntity) {
@@ -1702,12 +1674,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			} catch {}
 			if (!entity) {
 				Logger.warn("More than one NR entity, selecting first", {
-					entity: repo.entityAccounts[0]
+					entity: observabilityRepo.entityAccounts[0]
 				});
-				entity = repo.entityAccounts[0];
+				entity = observabilityRepo.entityAccounts[0];
 			}
 		} else {
-			entity = repo.entityAccounts[0];
+			entity = observabilityRepo.entityAccounts[0];
 		}
 
 		const newRelicAccountId = entity.accountId;
@@ -1813,7 +1785,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				newRelicAccountId: newRelicAccountId,
 				newRelicEntityGuid: newRelicEntityGuid,
 				newRelicEntityName: entityName,
-				newRelicEntityAccounts: repo.entityAccounts,
+				newRelicEntityAccounts: observabilityRepo.entityAccounts,
 				repo: {
 					id: repoForFile.id,
 					name: this.getRepoName(repoForFile.folder)
@@ -1835,20 +1807,66 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getMethodLevelTelemetry(
 		request: GetMethodLevelTelemetryRequest
 	): Promise<GetMethodLevelTelemetryResponse | undefined> {
-		const observabilityRepos = await this.getObservabilityRepos({
-			filters: [{ repoId: request.repoId }]
-		});
-		if (!observabilityRepos?.repos?.length) {
-			ContextLogger.warn("observabilityRepos.repos empty", {
-				repoId: request.repoId
+		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
+		if (!observabilityRepo || !observabilityRepo.entityAccounts) {
+			return undefined;
+		}
+
+		const entity = observabilityRepo.entityAccounts.find(
+			_ => _.entityGuid === request.newRelicEntityGuid
+		);
+		if (!entity) {
+			ContextLogger.warn("Missing entity", {
+				entityId: request.newRelicEntityGuid
 			});
 			return undefined;
 		}
 
-		const repo = observabilityRepos.repos.find(_ => _.repoId === request.repoId);
+		try {
+			const goldenMetrics = await this.getGoldenMetrics(
+				entity.entityGuid!,
+				request.metricTimesliceNameMapping
+			);
+
+			return {
+				goldenMetrics: goldenMetrics,
+				newRelicEntityAccounts: observabilityRepo.entityAccounts,
+				newRelicEntityName: entity.entityName!,
+				newRelicEntityGuid: entity.entityGuid!,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
+			};
+		} catch (ex) {
+			Logger.error(ex, "getMethodLevelTelemetry", {
+				request
+			});
+		}
+
+		return undefined;
+	}
+	/**
+	 * Given a CodeStream repoId, get a list of NR entities that have this
+	 * git remote attached to it
+	 *
+	 * @private
+	 * @param {string} repoId
+	 * @return {*}
+	 * @memberof NewRelicProvider
+	 */
+	private async getObservabilityEntityRepos(repoId: string) {
+		const observabilityRepos = await this.getObservabilityRepos({
+			filters: [{ repoId: repoId }]
+		});
+		if (!observabilityRepos?.repos?.length) {
+			ContextLogger.warn("observabilityRepos.repos empty", {
+				repoId: repoId
+			});
+			return undefined;
+		}
+
+		const repo = observabilityRepos.repos.find(_ => _.repoId === repoId);
 		if (!repo) {
 			ContextLogger.warn("observabilityRepos.repos unmatched for repo", {
-				repoId: request.repoId
+				repoId: repoId
 			});
 			return undefined;
 		}
@@ -1868,37 +1886,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 			return undefined;
 		}
-
-		const entity = repo.entityAccounts.find(_ => _.entityGuid === request.newRelicEntityGuid);
-		if (!entity) {
-			ContextLogger.warn("Missing entity", {
-				entityId: request.newRelicEntityGuid
-			});
-			return undefined;
-		}
-
-		try {
-			const goldenMetrics = await this.getGoldenMetrics(
-				entity.entityGuid!,
-				request.metricTimesliceNameMapping
-			);
-
-			return {
-				goldenMetrics: goldenMetrics,
-				newRelicEntityAccounts: repo.entityAccounts,
-				newRelicEntityName: entity.entityName!,
-				newRelicEntityGuid: entity.entityGuid!,
-				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
-			};
-		} catch (ex) {
-			Logger.error(ex, "getMethodLevelTelemetry", {
-				request
-			});
-		}
-
-		return undefined;
+		return repo;
 	}
-
 	private async getGoldenMetricsQueries(
 		entityGuid: string,
 		metricTimesliceNameMapping: MetricTimesliceNameMapping
