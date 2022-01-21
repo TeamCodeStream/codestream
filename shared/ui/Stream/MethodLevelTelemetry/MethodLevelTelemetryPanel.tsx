@@ -31,7 +31,7 @@ import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { setCurrentMethodLevelTelemetry } from "@codestream/webview/store/context/actions";
-import { EditorsRefreshCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
+import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
 
 const Root = styled.div``;
 
@@ -140,7 +140,7 @@ export const MethodLevelTelemetryPanel = () => {
 															);
 
 															loadData(item.entityGuid);
-															HostApi.instance.send(EditorsRefreshCodeLensRequestType, {});
+															HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 														}
 													};
 												})}
