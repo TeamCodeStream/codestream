@@ -18,6 +18,7 @@ import {
 import Timestamp from "./Timestamp";
 import styled from "styled-components";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { Button } from "../src/components/Button";
 import { useDidMount, usePrevious } from "../utilities/hooks";
 import {
 	EntityAccount,
@@ -100,6 +101,14 @@ const Root = styled.div`
 			margin-top: 0px;
 		}
 	}
+`;
+
+const NoEntitiesWrapper = styled.div`
+	margin: 5px 20px 5px 20px;
+`;
+
+const NoEntitiesCopy = styled.div`
+	margin: 5px 0 10px 0;
 `;
 
 const ErrorRow = (props: {
@@ -244,6 +253,7 @@ export const Observability = React.memo((props: Props) => {
 	const _useDidMount = () => {
 		if (!derivedState.newRelicIsConnected) return;
 
+		setLoadingEntities(true);
 		loadAssignments();
 
 		HostApi.instance
@@ -266,7 +276,6 @@ export const Observability = React.memo((props: Props) => {
 							filters: buildFilters(repoIds)
 						})
 						.then(response => {
-							setLoadingEntities(true);
 							if (response?.repos) {
 								setObservabilityErrors(response.repos!);
 							}
@@ -570,6 +579,11 @@ export const Observability = React.memo((props: Props) => {
 		return items;
 	};
 
+	const handleSetUpMonitoring = (event: React.SyntheticEvent) => {
+		event.preventDefault();
+		dispatch(openPanel(WebviewPanels.OnboardNewRelic));
+	};
+
 	const { hiddenPaneNodes } = derivedState;
 
 	return (
@@ -607,8 +621,20 @@ export const Observability = React.memo((props: Props) => {
 					{derivedState.newRelicIsConnected ? (
 						<>
 							<PaneNode>
-								{renderAssignments()}
-								{observabilityRepos.length == 0 ? (
+								{loadingEntities && <ErrorRow isLoading={true} title="Loading..."></ErrorRow>}
+								{!loadingEntities && !hasEntities && (
+									<NoEntitiesWrapper>
+										<NoEntitiesCopy>
+											Set up application performance monitoring for your project so that you can
+											discover and investigate errors with CodeStream
+										</NoEntitiesCopy>
+										<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
+											Set Up Monitoring
+										</Button>
+									</NoEntitiesWrapper>
+								)}
+								{hasEntities && renderAssignments()}
+								{observabilityRepos.length == 0 && (
 									<>
 										{loadingErrors && Object.keys(loadingErrors).length > 0 && (
 											<>
@@ -622,7 +648,8 @@ export const Observability = React.memo((props: Props) => {
 											</>
 										)}
 									</>
-								) : (
+								)}
+								{observabilityRepos.length !== 0 && hasEntities && (
 									<>
 										{observabilityRepos
 											.filter(_ => _)
