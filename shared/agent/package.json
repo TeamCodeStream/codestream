@@ -63,7 +63,7 @@
 		"ignore": "3.3.10",
 		"lodash-es": "4.17.15",
 		"lz-string": "1.4.4",
-		"node-fetch": "2.6.1",
+		"node-fetch": "2.6.7",
 		"oauth": "0.9.15",
 		"object-sizeof": "1.5.3",
 		"opn": "5.4.0",
