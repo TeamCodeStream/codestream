@@ -215,7 +215,7 @@ export const Message = styled.div`
 	font-size: 12px;
 `;
 
-const ALERT_SEVERITY_COLORS = {
+export const ALERT_SEVERITY_COLORS = {
 	"": "#9FA5A5",
 	CRITICAL: "#F5554B",
 	NOT_ALERTING: "#01B076",

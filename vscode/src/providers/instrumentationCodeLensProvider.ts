@@ -113,14 +113,23 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				methodLevelTelemetryRequestOptions
 			);
 
-			if (fileLevelTelemetryResponse == null || !fileLevelTelemetryResponse.hasAnyData) {
-				Logger.log("provideCodeLenses no data", {
+			if (fileLevelTelemetryResponse == null) {
+				Logger.log("provideCodeLenses no response", {
 					fileName: document.fileName,
 					languageId: document.languageId,
 					methodLevelTelemetryRequestOptions
 				});
 				return codeLenses;
 			}
+
+			// if (!fileLevelTelemetryResponse.hasAnyData) {
+			// 	Logger.log("provideCodeLenses no data", {
+			// 		fileName: document.fileName,
+			// 		languageId: document.languageId,
+			// 		methodLevelTelemetryRequestOptions
+			// 	});
+			// 	return codeLenses;
+			// }
 
 			if (!fileLevelTelemetryResponse.repo) {
 				Logger.warn("provideCodeLenses missing repo");
@@ -154,10 +163,10 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					? fileLevelTelemetryResponse.errorRate.find((i: any) => i.functionName === _.symbol.name)
 					: undefined;
 
-				if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
-					Logger.debug("provideCodeLenses no data");
-					return undefined;
-				}
+				// if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
+				// 	Logger.debug(`provideCodeLenses no data for ${_.symbol.name}`);
+				// 	return undefined;
+				// }
 
 				const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
 					repoId: fileLevelTelemetryResponse.repo.id,

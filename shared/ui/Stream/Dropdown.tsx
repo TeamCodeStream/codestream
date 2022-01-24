@@ -4,7 +4,15 @@ import Menu from "./Menu";
 
 interface Props {
 	selectedValue: string;
-	items: { label: string; action: Function; key: string; checked: boolean }[];
+	items: {
+		label?: string;
+		action?: Function | string;
+		key?: string;
+		checked?: boolean;
+		type?: string;
+		placeholder?: string;
+		searchLabel?: string;
+	}[];
 }
 
 export const Dropdown = (props: Props) => {

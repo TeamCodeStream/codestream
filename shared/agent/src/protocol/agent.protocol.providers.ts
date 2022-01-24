@@ -1021,6 +1021,7 @@ export interface GetObservabilityReposRequest {
 }
 
 export interface EntityAccount {
+	alertSeverity?: string;
 	accountId: number;
 	accountName: string;
 	entityGuid: string;
@@ -1138,6 +1139,7 @@ export interface GetFileLevelTelemetryResponse {
 	newRelicEntityName?: string;
 	newRelicUrl?: string;
 	newRelicEntityAccounts: EntityAccount[];
+	newRelicAlertSeverity?: string;
 	codeNamespace: string;
 	relativeFilePath: string;
 }
@@ -1146,6 +1148,7 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityGuid: string;
 	newRelicUrl?: string;
 	goldenMetrics?: any;
+	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
 }
@@ -1220,6 +1223,7 @@ export interface Entity {
 		name: string;
 		id: number;
 	};
+	alertSeverity?: string;
 	guid: string;
 	name: string;
 	type?: "APPLICATION" | "REPOSITORY";

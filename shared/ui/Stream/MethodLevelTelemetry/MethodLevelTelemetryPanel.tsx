@@ -6,10 +6,12 @@ import {
 	Line,
 	LineChart,
 	ResponsiveContainer,
-	Tooltip,
+	Tooltip as ReTooltip,
 	XAxis,
 	YAxis
 } from "recharts";
+import Tooltip from "../Tooltip";
+
 import styled from "styled-components";
 import {
 	GetMethodLevelTelemetryRequestType,
@@ -20,7 +22,7 @@ import {
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { closePanel, setUserPreferences } from "../actions";
@@ -30,10 +32,26 @@ import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { setCurrentMethodLevelTelemetry } from "@codestream/webview/store/context/actions";
 import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
+import { ALERT_SEVERITY_COLORS } from "../CodeError";
 
 const Root = styled.div``;
+
+const ApmServiceTitle = styled.span`
+	a {
+		color: var(--text-color-highlight);
+		text-decoration: none;
+	}
+	.open-external {
+		margin-left: 5px;
+		font-size: 12px;
+		visibility: hidden;
+		color: var(--text-color-highlight);
+	}
+	&:hover .open-external {
+		visibility: visible;
+	}
+`;
 
 export const MethodLevelTelemetryPanel = () => {
 	const dispatch = useDispatch();
@@ -56,6 +74,7 @@ export const MethodLevelTelemetryPanel = () => {
 	>(undefined);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
+	const previouscurrentMethodLevelTelemetry = usePrevious(derivedState.currentMethodLevelTelemetry);
 
 	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
@@ -92,17 +111,64 @@ export const MethodLevelTelemetryPanel = () => {
 	});
 
 	useEffect(() => {
+		if (
+			!previouscurrentMethodLevelTelemetry ||
+			JSON.stringify(previouscurrentMethodLevelTelemetry) ===
+				JSON.stringify(derivedState.currentMethodLevelTelemetry)
+		) {
+			return;
+		}
+
 		loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
 	}, [derivedState.currentMethodLevelTelemetry]);
 
 	return (
 		<Root className="full-height-codemark-form">
-			<PanelHeader
-				title={derivedState.currentMethodLevelTelemetry.functionName + " telemetry"}
-			></PanelHeader>
+			{!loading && (
+				<div
+					style={{
+						paddingTop: "2px",
+						whiteSpace: "nowrap",
+						overflow: "hidden",
+						textOverflow: "ellipsis"
+					}}
+				>
+					<div
+						style={{
+							display: "inline-block",
+							width: "10px",
+							height: "10px",
+							border: "0px",
+							backgroundColor:
+								ALERT_SEVERITY_COLORS[
+									(telemetryResponse && telemetryResponse.newRelicAlertSeverity) || "UNKNOWN"
+								],
+							margin: "0 5px 0 6px"
+						}}
+					/>
+
+					{telemetryResponse && telemetryResponse.newRelicUrl && (
+						<Tooltip title="View service summary on New Relic One" placement="bottom" delay={1}>
+							<span style={{ opacity: ".5" }}>
+								<ApmServiceTitle>
+									<Link href={telemetryResponse.newRelicUrl}>
+										<span className="subtle">
+											{(telemetryResponse && telemetryResponse.newRelicEntityName) || "Entity"}
+										</span>
+									</Link>{" "}
+									<Icon name="link-external" className="open-external"></Icon>
+								</ApmServiceTitle>
+							</span>
+						</Tooltip>
+					)}
+					<PanelHeader
+						title={derivedState.currentMethodLevelTelemetry.functionName + " telemetry"}
+					></PanelHeader>
+				</div>
+			)}
 			<CancelButton onClick={() => dispatch(closePanel())} />
 
-			<div className="plane-container" style={{ padding: "10px 20px 0px 10px" }}>
+			<div className="plane-container" style={{ padding: "5px 20px 0px 10px" }}>
 				<div className="standard-form vscroll">
 					{warningOrErrors ? (
 						<WarningBox items={warningOrErrors} />
@@ -123,25 +189,35 @@ export const MethodLevelTelemetryPanel = () => {
 										{telemetryResponse && (
 											<Dropdown
 												selectedValue={telemetryResponse.newRelicEntityName!}
-												items={telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
-													return {
-														label: item.entityName,
-														key: item.entityGuid + "-" + i,
-														checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,
-														action: async () => {
-															await dispatch(
-																setUserPreferences({
-																	[`methodLevelTelemetryRepoEntities.${
-																		derivedState.currentMethodLevelTelemetry!.repoId
-																	}`]: item.entityGuid
-																})
-															);
+												items={([
+													{
+														type: "search",
+														placeholder: "Search...",
+														action: "search",
+														key: "search"
+													}
+												] as any).concat(
+													telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
+														return {
+															label: item.entityName,
+															searchLabel: item.entityName,
+															key: item.entityGuid + "-" + i,
+															checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,
+															action: async () => {
+																await dispatch(
+																	setUserPreferences({
+																		[`methodLevelTelemetryRepoEntities.${
+																			derivedState.currentMethodLevelTelemetry!.repoId
+																		}`]: item.entityGuid
+																	})
+																);
 
-															loadData(item.entityGuid);
-															HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
-														}
-													};
-												})}
+																loadData(item.entityGuid);
+																HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+															}
+														};
+													})
+												)}
 											/>
 										)}
 									</div>
@@ -157,7 +233,7 @@ export const MethodLevelTelemetryPanel = () => {
 											telemetryResponse.goldenMetrics &&
 											telemetryResponse.goldenMetrics.map(_ => {
 												return (
-													<div style={{ marginLeft: "-40px", marginBottom: "15px" }}>
+													<div style={{ marginLeft: "-25px", marginBottom: "15px" }}>
 														<ResponsiveContainer width="90%" height={270}>
 															<LineChart
 																width={500}
@@ -166,14 +242,14 @@ export const MethodLevelTelemetryPanel = () => {
 																margin={{
 																	top: 5,
 																	right: 30,
-																	left: 0,
+																	left: 10,
 																	bottom: 5
 																}}
 															>
 																<CartesianGrid strokeDasharray="3 3" />
 																<XAxis dataKey="endDate" />
 																<YAxis dataKey={_.title} />
-																<Tooltip />
+																<ReTooltip />
 																<Legend />
 																<Line
 																	type="monotone"
@@ -187,13 +263,13 @@ export const MethodLevelTelemetryPanel = () => {
 												);
 											})}
 									</div>
-									{telemetryResponse && telemetryResponse.newRelicUrl && (
+									{/* {telemetryResponse && telemetryResponse.newRelicUrl && (
 										<div>
 											<Link className="external-link" href={telemetryResponse.newRelicUrl}>
 												View service summary on New Relic One <Icon name="link-external" />
 											</Link>
 										</div>
-									)}
+									)} */}
 								</div>
 							)}
 						</>
