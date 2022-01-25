@@ -1469,8 +1469,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	async getMethodThroughput(request: MetricQueryRequest) {
-		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' 
-		FROM Metric 
+		const innerQuery = `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'requestsPerMinute' FROM Metric 
 		WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' 
 		AND ${
 			request.metricTimesliceNames?.length

@@ -329,7 +329,7 @@ describe("rubyStackTraceParser", () => {
 	});
 
 	it("stack2", () => {
-		var lines = [
+		let lines = [
 			"/home/ec2-user/rubytron/custom_apis/purchase_cart_api.rb:156:in `status_check'",
 			"/home/ec2-user/rubytron/custom_apis/purchase_cart_api.rb:46:in `block in registered'",
 			"/home/ec2-user/.gem/ruby/2.4/gems/sinatra-2.0.8.1/lib/sinatra/base.rb:1636:in `call'",
