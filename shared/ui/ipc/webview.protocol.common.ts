@@ -230,6 +230,7 @@ export interface WebviewConfigs {
 	isOnPrem: boolean;
 	isProductionCloud: boolean;
 	isWebmail?: boolean;
+	showGoldenSignalsInEditor?: boolean;
 }
 
 export interface IpcHost {

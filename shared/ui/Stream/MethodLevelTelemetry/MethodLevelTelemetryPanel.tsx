@@ -32,7 +32,10 @@ import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
+import {
+	RefreshEditorsCodeLensRequestType,
+	UpdateConfigurationRequestType
+} from "@codestream/webview/ipc/host.protocol";
 import { ALERT_SEVERITY_COLORS } from "../CodeError";
 import { closeAllPanels } from "@codestream/webview/store/context/actions";
 import { EntityAssociator } from "../EntityAssociator";
@@ -60,6 +63,7 @@ export const MethodLevelTelemetryPanel = () => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
+			showGoldenSignalsInEditor: state.configs.showGoldenSignalsInEditor,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
 			methodLevelTelemetryRepoEntities:
@@ -74,7 +78,9 @@ export const MethodLevelTelemetryPanel = () => {
 	const [loading, setLoading] = useState<boolean>(true);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previouscurrentMethodLevelTelemetry = usePrevious(derivedState.currentMethodLevelTelemetry);
-
+	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
+		derivedState.showGoldenSignalsInEditor || false
+	);
 	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
 		try {
@@ -145,15 +151,35 @@ export const MethodLevelTelemetryPanel = () => {
 
 				<div className="embedded-panel">
 					<EntityAssociator
-						title="Configure Golden Signals"
-						label="Associate this repo with an entity on New Relic in order to see golden signals in your editor"
+						title="Method-Level Telemetry"
+						label="Associate this repository with an entity from New Relic One so that you can see golden signals right in your editor, and errors in the Observability section."
 						onSuccess={async e => {
 							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 							dispatch(closeAllPanels());
 						}}
 						remote={derivedState.currentMethodLevelTelemetry.repo.remote}
 						remoteName={derivedState.currentMethodLevelTelemetry.repo.name}
-					/>
+					>
+						<div>
+							<br />
+							<input
+								id="dontShowGoldenSignalsInEditor"
+								name="dontShowGoldenSignalsInEditor"
+								type="checkbox"
+								checked={!showGoldenSignalsInEditor}
+								onClick={e => {
+									HostApi.instance.send(UpdateConfigurationRequestType, {
+										name: "showGoldenSignalsInEditor",
+										value: !showGoldenSignalsInEditor
+									});
+									setshowGoldenSignalsInEditor(!showGoldenSignalsInEditor);
+								}}
+							/>
+							<label htmlFor="dontShowGoldenSignalsInEditor">
+								Don't show repo association prompts in my editor
+							</label>
+						</div>
+					</EntityAssociator>
 				</div>
 			</Root>
 		);

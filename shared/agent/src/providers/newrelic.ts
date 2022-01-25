@@ -1726,7 +1726,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 
 		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
-		if (!repoForFile?.id) return undefined;
+		if (!repoForFile?.id) {
+			ContextLogger.warn("no repo for file", {
+				request
+			});
+			return undefined;
+		}
+
+		const entityCount = await this.getEntityCount();
+		if (entityCount < 1) {
+			ContextLogger.log("no NR1 entities");
+			return undefined;
+		}
 
 		const remotes = await repoForFile.getRemotes();
 		const remote = remotes.map(_ => _.uri.toString())[0];
@@ -2913,6 +2924,23 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				userId: parseInt(request.userId, 10)
 			}
 		);
+	}
+
+	private async getEntityCount(): Promise<number> {
+		try {
+			const result = await this.query(`{
+			actor {
+			  entitySearch(query: "type='APPLICATION'") {
+				count       
+			  }
+			}
+		  }`);
+
+			return result?.actor?.entitySearch?.count;
+		} catch (ex) {
+			ContextLogger.error(ex, "getEntityCount");
+		}
+		return 0;
 	}
 
 	private findBuiltFrom(relatedEntities: RelatedEntity[]): BuiltFromResult | undefined {
