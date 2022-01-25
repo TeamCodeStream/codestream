@@ -26,7 +26,9 @@ import { Loading } from "../Container/Loading";
 import { supportsSSOSignIn } from "../store/configs/reducer";
 import { Server } from "../webview-api";
 import { PresentTOS } from "./PresentTOS";
+import Tooltip from "../Stream/Tooltip";
 import { confirmPopup } from "../Stream/Confirm";
+import styled from "styled-components";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -40,6 +42,16 @@ export const isUsernameValid = (username: string) =>
 
 const isNotEmpty = s => s.length > 0;
 
+const OnPremTooltipCopy = styled.span`
+	color: var(--text-color-info);
+	cursor: pointer;
+`;
+
+const OnPremWrapper = styled.div`
+	padding: 5px 0 0 0;
+	font-size: smaller;
+	text-align: center;
+`;
 interface TeamAuthSettings {
 	limitAuthentication: boolean;
 	authenticationProviders: {
@@ -418,6 +430,20 @@ export const Signup = (props: Props) => {
 										<Icon name="chevron-right" />
 									</Button>
 								)}
+								<OnPremWrapper id={`on-prem-wrapper`}>
+									Codestream supports on-prem versions as well. {` `}
+									<Tooltip
+										key="on-prem"
+										title={`CodeStream supports both cloud and on-prem versions of GitHub, 
+											GitLab and Bitbucket. However, only the cloud versions are available 
+											to use for CodeStream authentication. If you use an on-prem version of 
+											these services, sign up for CodeStream using a different method and then 
+											connect to your code host from the Integrations page in CodeStream.`}
+										placement="bottom"
+									>
+										<OnPremTooltipCopy>Learn More</OnPremTooltipCopy>
+									</Tooltip>
+								</OnPremWrapper>
 								{showOr && (
 									<div className="separator-label">
 										<span className="or">or</span>
@@ -521,7 +547,9 @@ export const Signup = (props: Props) => {
 								</FormattedMessage>{" "}
 								<FormattedMessage id="and" />{" "}
 								<FormattedMessage id="signUp.legal.privacyPolicy">
-									{text => <Link href="https://newrelic.com/termsandconditions/privacy">{text}</Link>}
+									{text => (
+										<Link href="https://newrelic.com/termsandconditions/privacy">{text}</Link>
+									)}
 								</FormattedMessage>
 							</small>
 
