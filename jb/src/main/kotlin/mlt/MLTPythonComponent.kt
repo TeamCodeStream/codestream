@@ -181,7 +181,8 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                             project.codeStream?.show {
                                 project.webViewService?.postNotification(
                                     MethodLevelTelemetryNotifications.View(
-                                        result.repo.id,
+                                        result.error,
+                                        result.repo,
                                         result.codeNamespace,
                                         path,
                                         result.relativeFilePath,

@@ -729,6 +729,7 @@ export const Observability = React.memo((props: Props) => {
 																			<ErrorRow title="No errors to display" />
 																		) : (
 																			<EntityAssociator
+																				label="Associate this repo with an entity on New Relic in order to see errors"
 																				onSuccess={async e => {
 																					HostApi.instance.track("NR Entity Association", {
 																						"Repo ID": or.repoId

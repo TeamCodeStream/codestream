@@ -137,11 +137,19 @@ export interface RouteState {
 }
 
 export interface CurrentMethodLevelTelemetry {
-	repoId: string;
 	newRelicEntityGuid?: string;
 	codeNamespace?: string;
 	functionName?: string;
 	filePath?: string;
 	relativeFilePath?: string;
 	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
+	error?: {
+		message?: string;
+		type?: string;
+	};
+	repo: {
+		id: string;
+		name: string;
+		remote: string;
+	};
 }

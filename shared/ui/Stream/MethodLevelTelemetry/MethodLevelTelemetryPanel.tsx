@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Dispatch, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
 	CartesianGrid,
@@ -34,6 +34,8 @@ import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
 import { ALERT_SEVERITY_COLORS } from "../CodeError";
+import { closeAllPanels } from "@codestream/webview/store/context/actions";
+import { EntityAssociator } from "../EntityAssociator";
 
 const Root = styled.div``;
 
@@ -54,18 +56,15 @@ const ApmServiceTitle = styled.span`
 `;
 
 export const MethodLevelTelemetryPanel = () => {
-	const dispatch = useDispatch();
+	const dispatch = useDispatch<any>();
 
 	const derivedState = useSelector((state: CodeStreamState) => {
-		const cmlt = (state.context.currentMethodLevelTelemetry || {}) as CurrentMethodLevelTelemetry;
-		const repo = state.repos[cmlt.repoId] || {};
-		const methodLevelTelemetryRepoEntities =
-			(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities || {};
 		return {
-			currentMethodLevelTelemetry: cmlt,
-			methodLevelTelemetryRepoEntities,
-			repo,
-			methodLevelTelemetryRepoEntitiesForRepo: methodLevelTelemetryRepoEntities[repo.id]
+			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
+				{}) as CurrentMethodLevelTelemetry,
+			methodLevelTelemetryRepoEntities:
+				(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities ||
+				{}
 		};
 	});
 
@@ -79,7 +78,7 @@ export const MethodLevelTelemetryPanel = () => {
 	const loadData = async (newRelicEntityGuid: string) => {
 		setLoading(true);
 		try {
-			if (!derivedState.currentMethodLevelTelemetry.repoId) {
+			if (!derivedState.currentMethodLevelTelemetry.repo?.id) {
 				setWarningOrErrors([{ message: "Repository missing" }]);
 				return;
 			}
@@ -92,9 +91,8 @@ export const MethodLevelTelemetryPanel = () => {
 				newRelicEntityGuid: newRelicEntityGuid,
 				metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
 					.metricTimesliceNameMapping!,
-				repoId: derivedState.currentMethodLevelTelemetry.repoId
+				repoId: derivedState.currentMethodLevelTelemetry.repo.id
 			});
-
 			setTelemetryResponse(response);
 		} catch (ex) {
 			setWarningOrErrors([{ message: ex.toString() }]);
@@ -102,12 +100,15 @@ export const MethodLevelTelemetryPanel = () => {
 			setLoading(false);
 		}
 	};
+
 	useDidMount(() => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Method Level Telemetry Viewed",
 			properties: {}
 		});
-		loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
+		if (!derivedState.currentMethodLevelTelemetry.error) {
+			loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
+		}
 	});
 
 	useEffect(() => {
@@ -121,6 +122,42 @@ export const MethodLevelTelemetryPanel = () => {
 
 		loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
 	}, [derivedState.currentMethodLevelTelemetry]);
+
+	if (
+		derivedState.currentMethodLevelTelemetry.error &&
+		derivedState.currentMethodLevelTelemetry.error.type === "NOT_ASSOCIATED"
+	) {
+		return (
+			<Root className="full-height-codemark-form">
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						width: "100%"
+					}}
+				>
+					<div
+						style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
+					>
+						<CancelButton onClick={() => dispatch(closePanel())} />
+					</div>
+				</div>
+
+				<div className="embedded-panel">
+					<EntityAssociator
+						title="Configure Golden Signals"
+						label="Associate this repo with an entity on New Relic in order to see golden signals in your editor"
+						onSuccess={async e => {
+							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+							dispatch(closeAllPanels());
+						}}
+						remote={derivedState.currentMethodLevelTelemetry.repo.remote}
+						remoteName={derivedState.currentMethodLevelTelemetry.repo.name}
+					/>
+				</div>
+			</Root>
+		);
+	}
 
 	return (
 		<Root className="full-height-codemark-form">
@@ -207,7 +244,7 @@ export const MethodLevelTelemetryPanel = () => {
 																await dispatch(
 																	setUserPreferences({
 																		[`methodLevelTelemetryRepoEntities.${
-																			derivedState.currentMethodLevelTelemetry!.repoId
+																			derivedState.currentMethodLevelTelemetry!.repo.id
 																		}`]: item.entityGuid
 																	})
 																);
@@ -222,7 +259,7 @@ export const MethodLevelTelemetryPanel = () => {
 										)}
 									</div>
 									<div>
-										<b>Repo:</b> {derivedState.repo.name}
+										<b>Repo:</b> {derivedState.currentMethodLevelTelemetry.repo.name}
 									</div>
 									<div>
 										<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}

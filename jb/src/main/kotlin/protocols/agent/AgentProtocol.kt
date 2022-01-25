@@ -123,7 +123,8 @@ class CSCompany(
 
 class CSRepo(
     val id: String,
-    val name: String
+    val name: String,
+    val remote: String
 )
 
 class ProviderInfo(
@@ -504,6 +505,7 @@ class MethodLevelTelemetryErrorRate(
 )
 
 class FileLevelTelemetryResult(
+    var error: kotlin.Any,
     val repo: CSRepo,
     val throughput: List<MethodLevelTelemetryThroughput>?,
     val averageDuration: List<MethodLevelTelemetryAverageDuration>?,

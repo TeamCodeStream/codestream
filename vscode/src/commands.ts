@@ -94,7 +94,11 @@ export interface OpenStreamCommandArgs {
 }
 
 export interface ViewMethodLevelTelemetryCommandArgs {
-	repoId: string;
+	repo: {
+		id: string;
+		name: string;
+		remote: string;
+	};
 	codeNamespace: string;
 	filePath: string;
 	relativeFilePath: string;

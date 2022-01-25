@@ -1026,6 +1026,10 @@ export interface EntityAccount {
 	accountName: string;
 	entityGuid: string;
 	entityName: string;
+	tags: {
+		key: string;
+		values: string[];
+	}[];
 }
 
 export interface GetObservabilityReposResponse {
@@ -1127,7 +1131,9 @@ export interface GetFileLevelTelemetryResponse {
 	repo: {
 		id: string;
 		name: string;
+		remote: string;
 	};
+	isConnected?: boolean;
 	throughput?: { requestsPerMinute: any; functionName: string; metricTimesliceName: string }[];
 	averageDuration?: { averageDuration: any; functionName: string; metricTimesliceName: string }[];
 	errorRate?: { errorsPerMinute: any; functionName: string; metricTimesliceName: string }[];
@@ -1142,6 +1148,10 @@ export interface GetFileLevelTelemetryResponse {
 	newRelicAlertSeverity?: string;
 	codeNamespace: string;
 	relativeFilePath: string;
+	error?: {
+		message?: string;
+		type?: "NOT_CONNECTED" | "NOT_ASSOCIATED";
+	};
 }
 
 export interface GetMethodLevelTelemetryResponse {

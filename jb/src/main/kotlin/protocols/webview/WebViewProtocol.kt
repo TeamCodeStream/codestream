@@ -1,6 +1,7 @@
 package com.codestream.protocols.webview
 
 import com.codestream.protocols.CodemarkType
+import com.codestream.protocols.agent.CSRepo
 import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.PixieDynamicLoggingFunctionParameter
 import org.eclipse.lsp4j.Range
@@ -154,7 +155,8 @@ object PixieNotifications {
 
 object MethodLevelTelemetryNotifications {
     class View(
-        val repoId: String,
+        var error: kotlin.Any,
+        val repo: CSRepo,
         val codeNamespace: String?,
         val filePath: String,
         val relativeFilePath: String,

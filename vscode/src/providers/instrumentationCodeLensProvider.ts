@@ -1,18 +1,23 @@
 "use strict";
 
-import { CancellationToken, DocumentSymbol, EventEmitter, TextDocument } from "vscode";
+import { EventEmitter } from "vscode";
 import * as vscode from "vscode";
 import { ViewMethodLevelTelemetryCommandArgs } from "commands";
 import { Event } from "vscode-languageclient";
-import { BuiltInCommands } from "../constants";
 import { Strings } from "../system";
 import { Container } from "../container";
 import { Logger } from "../logger";
+import { InstrumentableSymbol, SymbolLocator } from "./symbolLocator";
 
-const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+const languageSpecificExtensions: any = {
+	python: "ms-python.python"
+};
 
 export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider {
-	constructor(private template: string) {}
+	symbolLocator: SymbolLocator;
+	constructor(private template: string) {
+		this.symbolLocator = new SymbolLocator();
+	}
 
 	private _onDidChangeCodeLenses = new EventEmitter<void>();
 	get onDidChangeCodeLenses(): Event<void> {
@@ -24,68 +29,18 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		this._onDidChangeCodeLenses.fire();
 	}
 
-	async getSymbols(
-		document: TextDocument,
-		token: vscode.CancellationToken
-	): Promise<DocumentSymbol[]> {
-		let symbols: DocumentSymbol[] | undefined = [];
-
-		for (const timeout of [0, 750, 1500, 3000]) {
-			if (token.isCancellationRequested) {
-				return [];
-			}
-			try {
-				symbols = await vscode.commands.executeCommand<DocumentSymbol[]>(
-					BuiltInCommands.ExecuteDocumentSymbolProvider,
-					document.uri
-				);
-				if (!symbols || symbols.length === 0) {
-					await sleep(timeout);
-				} else {
-					Logger.log("getSymbols found", { timeout });
-					return symbols || [];
-				}
-			} catch (ex) {
-				Logger.warn("failed to ExecuteDocumentSymbolProvider", { ex });
-			}
-		}
-
-		return symbols || [];
-	}
-
-	private buildLensCollection(
-		symbols: DocumentSymbol[],
-		token: CancellationToken,
-		collection: InstrumentableSymbol[]
-	) {
-		for (const symbol of symbols) {
-			if (token.isCancellationRequested) {
-				return;
-			}
-
-			if (symbol.children && symbol.children.length) {
-				this.buildLensCollection(symbol.children, token, collection);
-			}
-			if (symbol.kind === vscode.SymbolKind.Function || symbol.kind === vscode.SymbolKind.Method) {
-				collection.push(new InstrumentableSymbol(symbol));
-			}
-		}
-	}
-
 	public async provideCodeLenses(
 		document: vscode.TextDocument,
 		token: vscode.CancellationToken
 	): Promise<vscode.CodeLens[]> {
 		let codeLenses: vscode.CodeLens[] = [];
-		const instrumentableSymbols: InstrumentableSymbol[] = [];
+		let instrumentableSymbols: InstrumentableSymbol[] = [];
 
 		try {
 			if (token.isCancellationRequested) {
 				return [];
 			}
-
-			const symbolResult = await this.getSymbols(document, token);
-			this.buildLensCollection(symbolResult, token, instrumentableSymbols);
+			instrumentableSymbols = await this.symbolLocator.locate(document, token);
 		} catch (ex) {
 			Logger.warn("provideCodeLenses", {
 				error: ex,
@@ -121,6 +76,46 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				});
 				return codeLenses;
 			}
+			if (
+				instrumentableSymbols.length &&
+				fileLevelTelemetryResponse.isConnected &&
+				!fileLevelTelemetryResponse.newRelicEntityGuid
+			) {
+				Logger.warn(
+					`DEVELOPER: to enable method level metrics, you will need a vscode language-specific extension like ${
+						languageSpecificExtensions[document.languageId]
+					}`
+				);
+				return codeLenses;
+			}
+
+			if (!fileLevelTelemetryResponse.repo) {
+				Logger.warn("provideCodeLenses missing repo");
+				return codeLenses;
+			}
+
+			if (fileLevelTelemetryResponse.error) {
+				if (fileLevelTelemetryResponse.error.type === "NOT_ASSOCIATED") {
+					const viewCommandArgs = {
+						error: fileLevelTelemetryResponse.error,
+						newRelicEntityGuid: fileLevelTelemetryResponse.newRelicEntityGuid,
+						repo: fileLevelTelemetryResponse.repo
+					};
+					const nonAssociatedCodeLens: vscode.CodeLens[] = [
+						new vscode.CodeLens(
+							new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1)),
+							new InstrumentableSymbolCommand(
+								"Click to connect to New Relic",
+								"codestream.viewMethodLevelTelemetry",
+								"Click to connect to New Relic",
+								[JSON.stringify(viewCommandArgs)]
+							)
+						)
+					];
+					return nonAssociatedCodeLens;
+				}
+				return codeLenses;
+			}
 
 			// if (!fileLevelTelemetryResponse.hasAnyData) {
 			// 	Logger.log("provideCodeLenses no data", {
@@ -130,11 +125,6 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			// 	});
 			// 	return codeLenses;
 			// }
-
-			if (!fileLevelTelemetryResponse.repo) {
-				Logger.warn("provideCodeLenses missing repo");
-				return codeLenses;
-			}
 
 			if (token.isCancellationRequested) return [];
 
@@ -169,7 +159,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				// }
 
 				const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
-					repoId: fileLevelTelemetryResponse.repo.id,
+					repo: fileLevelTelemetryResponse.repo,
 					codeNamespace: fileLevelTelemetryResponse.codeNamespace!,
 					metricTimesliceNameMapping: {
 						t: throughputForFunction ? throughputForFunction.metricTimesliceName : "",
@@ -224,10 +214,6 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) {
 		return token.isCancellationRequested ? undefined : codeLens;
 	}
-}
-
-class InstrumentableSymbol {
-	constructor(public symbol: vscode.DocumentSymbol) {}
 }
 
 class InstrumentableSymbolCommand implements vscode.Command {
