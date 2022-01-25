@@ -11,6 +11,7 @@ import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
+import com.codestream.sessionService
 import com.codestream.webViewService
 import com.intellij.codeInsight.hints.InlayPresentationFactory.ClickListener
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
@@ -42,6 +43,7 @@ private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposable {
 
     private val logger = Logger.getInstance(MLTPythonComponent::class.java)
+    private val managersByEditor = mutableMapOf<Editor, MLTPythonEditorManager>()
 
     init {
         logger.info("Initializing method-level telemetry for Python")
@@ -49,16 +51,24 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
             EditorFactory.getInstance().addEditorFactoryListener(
                 this, this
             )
+            project.sessionService?.onCodelensChanged {
+                managersByEditor.values.forEach { it.loadInlays() }
+            }
         }
     }
 
     override fun editorCreated(event: EditorFactoryEvent) {
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.editor.document)
         if (psiFile !is PyFile) return
-        MLTPythonEditorManager(event.editor)
+        managersByEditor[event.editor] = MLTPythonEditorManager(event.editor)
+    }
+
+    override fun editorReleased(event: EditorFactoryEvent) {
+        managersByEditor.remove(event.editor)
     }
 
     override fun dispose() {
+        managersByEditor.clear()
     }
 }
 
@@ -102,7 +112,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
         loadInlays()
     }
 
-    private fun loadInlays() {
+    fun loadInlays() {
         if (path == null) return
         if (editor !is EditorImpl) return
 

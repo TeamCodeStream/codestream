@@ -13,6 +13,7 @@ import com.codestream.protocols.webview.EditorRangeRevealResponse
 import com.codestream.protocols.webview.EditorRangeSelectRequest
 import com.codestream.protocols.webview.EditorRangeSelectResponse
 import com.codestream.protocols.webview.EditorScrollToRequest
+import com.codestream.protocols.webview.EditorsCodelensRefreshResponse
 import com.codestream.protocols.webview.MarkerApplyRequest
 import com.codestream.protocols.webview.MarkerCompareRequest
 import com.codestream.protocols.webview.MarkerInsertTextRequest
@@ -23,6 +24,7 @@ import com.codestream.protocols.webview.ShellPromptFolderResponse
 import com.codestream.protocols.webview.UpdateConfigurationRequest
 import com.codestream.protocols.webview.UpdateServerUrlRequest
 import com.codestream.reviewService
+import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.codestream.system.SPACE_ENCODED
@@ -61,7 +63,7 @@ class WebViewRouter(val project: Project) {
         val message = try {
             parse(rawMessage)
         } catch (e: Exception) {
-            logger.error(e);
+            logger.error(e)
             return@launch
         }
 
@@ -120,6 +122,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/range/reveal" -> editorRangeReveal(message)
             "host/editor/range/select" -> editorRangeSelect(message)
             "host/editor/scrollTo" -> editorScrollTo(message)
+            "host/editors/codelens/refresh" -> editorsCodelensRefresh(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
             "host/review/showLocalDiff" -> reviewShowLocalDiff(message)
@@ -210,6 +213,11 @@ class WebViewRouter(val project: Project) {
     private fun editorScrollTo(message: WebViewMessage) {
         val request = gson.fromJson<EditorScrollToRequest>(message.params!!)
         project.editorService?.scroll(sanitizeURI(request.uri)!!, request.position, request.atTop)
+    }
+
+    private fun editorsCodelensRefresh(message: WebViewMessage): EditorsCodelensRefreshResponse {
+        project.sessionService?.didChangeCodelenses()
+        return EditorsCodelensRefreshResponse(true)
     }
 
     private suspend fun shellPromptFolder(message: WebViewMessage): ShellPromptFolderResponse {

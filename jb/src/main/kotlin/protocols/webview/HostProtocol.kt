@@ -106,6 +106,10 @@ class EditorScrollToRequest(
     val atTop: Boolean
 )
 
+class EditorsCodelensRefreshResponse(
+    val success: Boolean
+)
+
 class ReviewShowDiffRequest(
     val reviewId: String,
     val repoId: String,

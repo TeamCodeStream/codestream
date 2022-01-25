@@ -18,6 +18,7 @@ typealias EnvironmentInfoObserver = (EnvironmentInfo) -> Unit
 typealias IntObserver = (Int) -> Unit
 typealias PostsObserver = (List<Post>) -> Unit
 typealias PullRequestsObserver = (List<PullRequestNotification>) -> Unit
+typealias UnitObserver = () -> Unit
 
 class SessionService(val project: Project) {
 
@@ -45,6 +46,7 @@ class SessionService(val project: Project) {
     private val mentionsObservers = mutableListOf<IntObserver>()
     private val postsObservers = mutableListOf<PostsObserver>()
     private val pullRequestsObservers = mutableListOf<PullRequestsObserver>()
+    private val codelensObservers = mutableListOf<UnitObserver>()
 
     private var _userLoggedIn: UserLoggedIn? by Delegates.observable<UserLoggedIn?>(null) { _, _, new ->
         userLoggedInObservers.forEach { it(new) }
@@ -89,6 +91,10 @@ class SessionService(val project: Project) {
         pullRequestsObservers += observer
     }
 
+    fun onCodelensChanged(observer: UnitObserver) {
+        codelensObservers += observer
+    }
+
     fun login(userLoggedIn: UserLoggedIn) {
         _userLoggedIn = userLoggedIn
         ErrorHandler.userLoggedIn = userLoggedIn
@@ -114,6 +120,10 @@ class SessionService(val project: Project) {
 
     fun didChangePullRequests(pullRequestNotifications: List<PullRequestNotification>) {
         pullRequestsObservers.forEach { it(pullRequestNotifications) }
+    }
+
+    fun didChangeCodelenses() {
+        codelensObservers.forEach { it() }
     }
 }
 
