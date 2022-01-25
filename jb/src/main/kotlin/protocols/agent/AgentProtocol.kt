@@ -121,6 +121,11 @@ class CSCompany(
     val name: String
 )
 
+class CSRepo(
+    val id: String,
+    val name: String
+)
+
 class ProviderInfo(
     val slack: JsonObject?
 )
@@ -465,37 +470,41 @@ class PixieDynamicLoggingEvent(
     val done: Boolean
 )
 
-class MethodLevelTelemetryOptions(
+class FileLevelTelemetryOptions(
     val includeThroughput: Boolean?,
     val includeAverageDuration: Boolean?,
     val includeErrorRate: Boolean?
 )
 
-class MethodLevelTelemetryParams(
+class FileLevelTelemetryParams(
     val filePath: String,
     val languageId: String,
     val codeNamespace: String?,
     val newRelicAccountId: Int?,
     val newRelicEntityGuid: String?,
-    val options: MethodLevelTelemetryOptions?
+    val options: FileLevelTelemetryOptions?
 )
 
 class MethodLevelTelemetryThroughput(
     val requestsPerMinute: Float,
-    val functionName: String
+    val functionName: String,
+    val metricTimesliceName: String
 )
 
 class MethodLevelTelemetryAverageDuration(
     val averageDuration: Float,
-    val functionName: String
+    val functionName: String,
+    val metricTimesliceName: String
 )
 
 class MethodLevelTelemetryErrorRate(
     val errorsPerMinute: Float,
-    val functionName: String
+    val functionName: String,
+    val metricTimesliceName: String
 )
 
-class MethodLevelTelemetryResult(
+class FileLevelTelemetryResult(
+    val repo: CSRepo,
     val throughput: List<MethodLevelTelemetryThroughput>?,
     val averageDuration: List<MethodLevelTelemetryAverageDuration>?,
     val errorRate: List<MethodLevelTelemetryErrorRate>?,
@@ -504,6 +513,11 @@ class MethodLevelTelemetryResult(
     val sinceDateFormatted: String?,
     val newRelicAccountId: Int?,
     val newRelicEntityGuid: String?,
-    val newRelicEntityName: String?
+    val newRelicEntityName: String?,
+    val newRelicUrl: String?,
+    // val newRelicEntityAccounts: EntityAccount[];
+    val codeNamespace: String?,
+    val relativeFilePath: String
 )
+
 

@@ -4,12 +4,15 @@ import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
-import com.codestream.protocols.agent.MethodLevelTelemetryOptions
-import com.codestream.protocols.agent.MethodLevelTelemetryParams
+import com.codestream.protocols.agent.FileLevelTelemetryOptions
+import com.codestream.protocols.agent.FileLevelTelemetryParams
+import com.codestream.protocols.agent.FileLevelTelemetryResult
+import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
+import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
+import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
 import com.codestream.webViewService
 import com.intellij.codeInsight.hints.InlayPresentationFactory.ClickListener
-import com.intellij.codeInsight.hints.presentation.InlayPresentation
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
@@ -32,6 +35,9 @@ import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Range
 import java.awt.Point
 import java.awt.event.MouseEvent
+
+private const val LANGUAGE_ID = "python"
+private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 
 class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposable {
 
@@ -56,11 +62,41 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
     }
 }
 
+class MLTMetrics {
+    var errorRate: MethodLevelTelemetryErrorRate? = null
+    var averageDuration: MethodLevelTelemetryAverageDuration? = null
+    var throughput: MethodLevelTelemetryThroughput? = null
+
+    val nameMapping: MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping
+        get() =
+            MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping(
+                averageDuration?.metricTimesliceName,
+                throughput?.metricTimesliceName,
+                errorRate?.metricTimesliceName
+            )
+
+    val text: String
+        get() {
+            val parts = mutableListOf<String>()
+            errorRate?.let {
+                parts += "error rate: ${it.errorsPerMinute}/min"
+            }
+            averageDuration?.let {
+                parts += "avg duration: ${it.averageDuration}"
+            }
+            throughput?.let {
+                parts += "throughput: ${it.requestsPerMinute}/min"
+            }
+            return parts.joinToString()
+        }
+}
+
 class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
     private val path = editor.document.file?.path
     private val project = editor.project
+    private val metricsByFunction = mutableMapOf<String, MLTMetrics>()
     private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
-    private val presentationsByFunction = mutableMapOf<String, InlayPresentation>()
+    private var lastResult: FileLevelTelemetryResult? = null
 
     init {
         loadInlays()
@@ -72,43 +108,36 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
 
         project?.agentService?.onDidStart {
             ApplicationManager.getApplication().invokeLater {
-                val mltTextsByFunction = mutableMapOf<String, MutableList<String>>()
                 val docListener = this
-                val presentationFactory = PresentationFactory(editor)
 
                 GlobalScope.launch {
                     try {
-                        val result = project.agentService?.methodLevelTelemetry(
-                            MethodLevelTelemetryParams(
+                        lastResult = project.agentService?.fileLevelTelemetry(
+                            FileLevelTelemetryParams(
                                 path,
-                                "python",
+                                LANGUAGE_ID,
                                 null,
                                 null,
                                 null,
-                                MethodLevelTelemetryOptions(true, true, true)
+                                OPTIONS
                             )
                         )
 
-                        result?.errorRate?.forEach { errorRate ->
-                            val texts = mltTextsByFunction.getOrPut(errorRate.functionName) { mutableListOf<String>() }
-                            texts.add("Errors per minute: ${errorRate.errorsPerMinute}")
+                        lastResult?.errorRate?.forEach { errorRate ->
+                            val metrics = metricsByFunction.getOrPut(errorRate.functionName) { MLTMetrics() }
+                            metrics.errorRate = errorRate
                         }
-                        result?.averageDuration?.forEach { averageDuration ->
-                            val texts = mltTextsByFunction.getOrPut(averageDuration.functionName) { mutableListOf<String>() }
-                            texts.add("Average duration: ${averageDuration.averageDuration}")
+                        lastResult?.averageDuration?.forEach { averageDuration ->
+                            val metrics =
+                                metricsByFunction.getOrPut(averageDuration.functionName) { MLTMetrics() }
+                            metrics.averageDuration = averageDuration
                         }
-                        result?.throughput?.forEach { throughput ->
-                            val texts = mltTextsByFunction.getOrPut(throughput.functionName) { mutableListOf<String>() }
-                            texts.add("Requests per minute: ${throughput.requestsPerMinute}")
-                        }
-
-                        mltTextsByFunction.forEach { (function, mltTexts) ->
-                            val mltText = mltTexts.joinToString()
-                            val textPresentation = presentationFactory.text(mltText)
-                            presentationsByFunction[function] = textPresentation
+                        lastResult?.throughput?.forEach { throughput ->
+                            val metrics = metricsByFunction.getOrPut(throughput.functionName) { MLTMetrics() }
+                            metrics.throughput = throughput
                         }
 
-                        if (presentationsByFunction.isNotEmpty()) {
+                        if (metricsByFunction.isNotEmpty()) {
                             updateInlays()
                             editor.document.addDocumentListener(docListener)
                         }
@@ -133,23 +162,41 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
             inlays.clear()
 
             if (editor !is EditorImpl) return@invokeLater
+            if (path == null) return@invokeLater
 
+            val result = lastResult ?: return@invokeLater
             val project = editor.project ?: return@invokeLater
             val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
             val pyFile = psiFile as? PyFile ?: return@invokeLater
             val presentationFactory = PresentationFactory(editor)
-            presentationsByFunction.forEach { (function, presentation) ->
-                val pyFunction = pyFile.findTopLevelFunction(function) ?: return@forEach
-                val referenceOnHoverPresentation = presentationFactory.referenceOnHover(presentation, object : ClickListener {
-                    override fun onClick(event: MouseEvent, translated: Point) {
-                        val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
-                        val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
-                        val range = Range(start, end)
-                        project.codeStream?.show {
-                            project.webViewService?.postNotification(MethodLevelTelemetryNotifications.View(range, function, null, null))
+            metricsByFunction.forEach { (functionName, metrics) ->
+                val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
+                var textPresentation = presentationFactory.text(metrics.text)
+                val referenceOnHoverPresentation =
+                    presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
+                        override fun onClick(event: MouseEvent, translated: Point) {
+                            val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
+                            val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
+                            val range = Range(start, end)
+                            project.codeStream?.show {
+                                project.webViewService?.postNotification(
+                                    MethodLevelTelemetryNotifications.View(
+                                        result.repo.id,
+                                        result.codeNamespace,
+                                        path,
+                                        result.relativeFilePath,
+                                        LANGUAGE_ID,
+                                        range,
+                                        functionName,
+                                        result.newRelicAccountId,
+                                        result.newRelicEntityGuid,
+                                        OPTIONS,
+                                        metrics.nameMapping
+                                    )
+                                )
+                            }
                         }
-                    }
-                })
+                    })
                 val renderer = PresentationRenderer(referenceOnHoverPresentation)
                 val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
                 inlay.let {

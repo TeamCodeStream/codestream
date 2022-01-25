@@ -1,6 +1,7 @@
 package com.codestream.protocols.webview
 
 import com.codestream.protocols.CodemarkType
+import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.PixieDynamicLoggingFunctionParameter
 import org.eclipse.lsp4j.Range
 
@@ -153,11 +154,24 @@ object PixieNotifications {
 
 object MethodLevelTelemetryNotifications {
     class View(
+        val repoId: String,
+        val codeNamespace: String?,
+        val filePath: String,
+        val relativeFilePath: String,
+        val languageId: String,
         val range: Range?,
         val methodName: String,
         val newRelicAccountId: Int?,
-        val newRelicEntityGuid: String?
+        val newRelicEntityGuid: String?,
+        val methodLevelTelemetryRequestOptions: FileLevelTelemetryOptions?,
+        val metricTimesliceNameMapping: MetricTimesliceNameMapping?
     ) : WebViewNotification {
         override fun getMethod(): String = "webview/mlt/view"
+
+        class MetricTimesliceNameMapping(
+            val d: String?,
+            val t: String?,
+            val e: String?
+        )
     }
 }

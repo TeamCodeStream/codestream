@@ -28,8 +28,8 @@ import com.codestream.protocols.agent.GetStreamParams
 import com.codestream.protocols.agent.GetUserParams
 import com.codestream.protocols.agent.Ide
 import com.codestream.protocols.agent.InitializationOptions
-import com.codestream.protocols.agent.MethodLevelTelemetryParams
-import com.codestream.protocols.agent.MethodLevelTelemetryResult
+import com.codestream.protocols.agent.FileLevelTelemetryParams
+import com.codestream.protocols.agent.FileLevelTelemetryResult
 import com.codestream.protocols.agent.PixieDynamicLoggingParams
 import com.codestream.protocols.agent.PixieDynamicLoggingResult
 import com.codestream.protocols.agent.Post
@@ -497,9 +497,9 @@ class AgentService(private val project: Project) : Disposable {
         return gson.fromJson(json)
     }
 
-    suspend fun methodLevelTelemetry(params: MethodLevelTelemetryParams): MethodLevelTelemetryResult {
+    suspend fun fileLevelTelemetry(params: FileLevelTelemetryParams): FileLevelTelemetryResult {
         val json = remoteEndpoint
-            .request("codestream/newrelic/methodLevelTelemetry", params)
+            .request("codestream/newrelic/fileLevelTelemetry", params)
             .await() as JsonObject?
         return gson.fromJson(json!!)
     }
