@@ -167,7 +167,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
 		delete this._newRelicUserId;
-		delete this._applicationEntitiesCache;
 		delete this._codeStreamUser;
 
 		try {
@@ -437,6 +436,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getEntities(
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
+		const response = {
+			entities: []
+		} as GetObservabilityEntitiesResponse;
 		try {
 			const key = request.appName
 				? request.appName
@@ -455,8 +457,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			let results: { guid: string; name: string }[] = [];
 			const nextCursor: any = undefined;
-			// let i = 0;
-			// while (true) {
 
 			let statements: string[] = [];
 			if (request.appNames?.length) {
@@ -486,9 +486,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					  entities {
 						account {
 							name
+						  }
 						}
-						guid
-						name
 					  }
 					}
 				  }
@@ -540,16 +539,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					}
 				)
 			);
-			// nextCursor = response.actor.entitySearch.results.nextCursor;
-			// i++;
-			// if (!nextCursor) {
-			// 	break;
-			// } else {
-			// 	ContextLogger.log("query entities ", {
-			// 		i: i
-			// 	});
-			// }
-			// }
 
 			results = [...new Map(results.map(item => [item["guid"], item])).values()];
 
