@@ -44,6 +44,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
             state.proxySupport = gui.proxySupport.selectedItem as ProxySupport
             state.proxyStrictSSL = gui.proxyStrictSSL.isSelected
             state.jcef = gui.jcef.isSelected
+            state.showGoldenSignalsInEditor = gui.showGoldenSignalsInEditor.isSelected
         }
     }
 
@@ -65,6 +66,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
                 proxySupport.selectedItem = it.proxySupport
                 proxyStrictSSL.isSelected = it.proxyStrictSSL
                 jcef.isSelected = it.jcef
+                showGoldenSignalsInEditor.isSelected = it.showGoldenSignalsInEditor
             }
         }
 

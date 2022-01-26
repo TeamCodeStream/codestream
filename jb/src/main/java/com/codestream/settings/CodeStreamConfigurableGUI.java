@@ -18,6 +18,7 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox proxyStrictSSL;
     private JCheckBox jcef;
     private JCheckBox showNewCodemarkGutterIconOnHover;
+    private JCheckBox showGoldenSignalsInEditor;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -65,6 +66,10 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getJcef() {
         return jcef;
+    }
+
+    public JCheckBox getShowGoldenSignalsInEditor() {
+        return showGoldenSignalsInEditor;
     }
 
     private void createUIComponents() {

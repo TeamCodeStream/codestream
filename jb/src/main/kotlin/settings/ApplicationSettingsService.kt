@@ -42,7 +42,8 @@ data class ApplicationSettingsServiceState(
     var proxyStrictSSL: Boolean = true,
     var firstRun: Boolean = true,
     var jcef: Boolean = true,
-    var createReviewOnCommit: Boolean = true
+    var createReviewOnCommit: Boolean = true,
+    var showGoldenSignalsInEditor: Boolean = true
 )
 
 @State(name = "CodeStream", storages = [Storage("codestream.xml")])
@@ -132,6 +133,7 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
             state.email,
             state.avatars,
             isDebugging,
-            state.showFeedbackSmiley
+            state.showFeedbackSmiley,
+            state.showGoldenSignalsInEditor
         )
 }
