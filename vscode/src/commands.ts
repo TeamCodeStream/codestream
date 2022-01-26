@@ -93,20 +93,31 @@ export interface OpenStreamCommandArgs {
 	streamThread: StreamThread;
 }
 
-export interface ViewMethodLevelTelemetryCommandArgs {
+export interface ViewMethodLevelTelemetryBaseCommandArgs {
 	repo: {
 		id: string;
 		name: string;
 		remote: string;
 	};
+	newRelicAccountId?: number;
+	newRelicEntityGuid?: string;
+	error?: {
+		message?: string;
+		type?: string;
+	};
+}
+
+export interface ViewMethodLevelTelemetryErrorCommandArgs
+	extends ViewMethodLevelTelemetryBaseCommandArgs {}
+
+export interface ViewMethodLevelTelemetryCommandArgs
+	extends ViewMethodLevelTelemetryBaseCommandArgs {
 	codeNamespace: string;
 	filePath: string;
 	relativeFilePath: string;
 	languageId: string;
 	range: Range;
 	functionName: string;
-	newRelicAccountId?: number;
-	newRelicEntityGuid?: string;
 	methodLevelTelemetryRequestOptions?: FileLevelTelemetryRequestOptions;
 	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
 }
@@ -613,12 +624,17 @@ export class Commands implements Disposable {
 		showErrorMessage: "Unable to view method level telemetry"
 	})
 	async viewMethodLevelTelemetry(args: string) {
+		let parsedArgs;
 		try {
-			const parsedArgs = JSON.parse(args) as ViewMethodLevelTelemetryCommandArgs;
+			parsedArgs = JSON.parse(args) as ViewMethodLevelTelemetryCommandArgs;
 			await Container.webview.viewMethodLevelTelemetry(parsedArgs);
 		} catch (ex) {
 			Logger.error(ex);
 		}
+		Container.agent.telemetry.track("MLT Codelens Clicked", {
+			"NR Account ID":
+				parsedArgs && parsedArgs.newRelicAccountId ? parsedArgs.newRelicAccountId.toString() : ""
+		});
 	}
 
 	async updateEditorCodeLens(): Promise<boolean> {

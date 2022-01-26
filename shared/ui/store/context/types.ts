@@ -138,6 +138,7 @@ export interface RouteState {
 
 export interface CurrentMethodLevelTelemetry {
 	newRelicEntityGuid?: string;
+	newRelicAccountId?: string;
 	codeNamespace?: string;
 	functionName?: string;
 	filePath?: string;

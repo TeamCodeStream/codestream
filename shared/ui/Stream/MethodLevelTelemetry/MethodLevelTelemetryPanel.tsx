@@ -33,6 +33,7 @@ import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import {
+	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
 	UpdateConfigurationRequestType
 } from "@codestream/webview/ipc/host.protocol";
@@ -154,6 +155,9 @@ export const MethodLevelTelemetryPanel = () => {
 						title="Method-Level Telemetry"
 						label="Associate this repository with an entity from New Relic One so that you can see golden signals right in your editor, and errors in the Observability section."
 						onSuccess={async e => {
+							HostApi.instance.track("MLT Repo Association", {
+								"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""
+							});
 							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 							dispatch(closeAllPanels());
 						}}
@@ -214,7 +218,18 @@ export const MethodLevelTelemetryPanel = () => {
 						<Tooltip title="View service summary on New Relic One" placement="bottom" delay={1}>
 							<span style={{ opacity: ".5" }}>
 								<ApmServiceTitle>
-									<Link href={telemetryResponse.newRelicUrl}>
+									<Link
+										onClick={e => {
+											e.preventDefault();
+											HostApi.instance.track("MLT Open on NR1", {
+												"NR Account ID":
+													derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""
+											});
+											HostApi.instance.send(OpenUrlRequestType, {
+												url: telemetryResponse.newRelicUrl!
+											});
+										}}
+									>
 										<span className="subtle">
 											{(telemetryResponse && telemetryResponse.newRelicEntityName) || "Entity"}
 										</span>

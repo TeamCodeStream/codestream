@@ -9,7 +9,11 @@ export class InstrumentableSymbol {
 	constructor(public symbol: vscode.DocumentSymbol) {}
 }
 
-export class SymbolLocator {
+export interface ISymbolLocator {
+	locate(document: TextDocument, token: vscode.CancellationToken): Promise<InstrumentableSymbol[]>;
+}
+
+export class SymbolLocator implements ISymbolLocator {
 	async locate(
 		document: TextDocument,
 		token: vscode.CancellationToken
@@ -38,7 +42,7 @@ export class SymbolLocator {
 	): Promise<DocumentSymbol[]> {
 		let symbols: DocumentSymbol[] | undefined = [];
 
-		for (const timeout of [0, 750, 1500, 3000]) {
+		for (const timeout of [0, 750, 1000, 1500, 2000]) {
 			if (token.isCancellationRequested) {
 				return [];
 			}
