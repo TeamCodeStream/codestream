@@ -631,10 +631,6 @@ export class Commands implements Disposable {
 		} catch (ex) {
 			Logger.error(ex);
 		}
-		Container.agent.telemetry.track("MLT Codelens Clicked", {
-			"NR Account ID":
-				parsedArgs && parsedArgs.newRelicAccountId ? parsedArgs.newRelicAccountId.toString() : ""
-		});
 	}
 
 	async updateEditorCodeLens(): Promise<boolean> {

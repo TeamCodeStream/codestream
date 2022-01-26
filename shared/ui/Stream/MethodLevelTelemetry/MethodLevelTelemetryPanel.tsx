@@ -109,9 +109,8 @@ export const MethodLevelTelemetryPanel = () => {
 	};
 
 	useDidMount(() => {
-		HostApi.instance.send(TelemetryRequestType, {
-			eventName: "Method Level Telemetry Viewed",
-			properties: {}
+		HostApi.instance.track("MLT Codelens Clicked", {
+			"NR Account ID": derivedState.currentMethodLevelTelemetry?.newRelicAccountId + ""
 		});
 		if (!derivedState.currentMethodLevelTelemetry.error) {
 			loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
