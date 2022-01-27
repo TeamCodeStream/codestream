@@ -9,7 +9,7 @@ suite("SymbolLocator Test Suite", () => {
 			// we require this extension
 			await vscode.commands.executeCommand(
 				"workbench.extensions.installExtension",
-				"ms-python.vscode-pylance"
+				"ms-python.python"
 			);
 
 			const uri = vscode.Uri.parse(`${vscode.workspace.workspaceFolders![0].uri.fsPath}/app.py`);
@@ -26,5 +26,5 @@ suite("SymbolLocator Test Suite", () => {
 			assert.strictEqual(result.length, 9);
 			resolve();
 		});
-	}).timeout(60000);
+	}).timeout(45000);
 });
