@@ -587,7 +587,7 @@
 		"bundle": "npm install --no-save && npm run agent:bundle && webpack --env production=true",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"cistart": "echo 'starting tests'",
-		"citest": "npm run agent:test && npm run webview:test && npm run vscode:test",
+		"citest": "npm run agent:test && npm run webview:test",
 		"cistop": "echo 'starting tests'",
 		"clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
 		"clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
