@@ -39,7 +39,7 @@
 		"test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
 		"test-integration-ci": "npm run test-integration -- --reporter mocha-teamcity-reporter",
 		"test": "npm run test-unit",
-		"test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter" 
+		"test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter"
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "1.3.7",
@@ -72,6 +72,7 @@
 		"socketcluster-client": "16.0.1",
 		"stacktrace-parser": "0.1.10",
 		"string-similarity": "3.0.0",
+		"timed-cache": "1.1.5",
 		"tiny-async-pool": "1.2.0",
 		"tmp": "0.1.0",
 		"uuid": "3.3.2",

@@ -77,6 +77,7 @@ import { CodeStreamSession } from "../session";
 import { Dates, log, lspHandler, lspProvider } from "../system";
 import { Strings } from "../system/string";
 import { ThirdPartyIssueProviderBase } from "./provider";
+const Cache = require("timed-cache");
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
@@ -105,6 +106,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _newRelicUserId: number | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
 	private _codeStreamUser: CSMe | undefined = undefined;
+	private _mltTimedCache: any;
 
 	constructor(session: CodeStreamSession, config: ThirdPartyProviderConfig) {
 		super(session, config);
@@ -112,6 +114,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			this.buildRepoRemoteVariants,
 			(remotes: string[]) => remotes
 		);
+		// default is 60s
+		this._mltTimedCache = new Cache();
 	}
 
 	get displayName() {
@@ -1704,11 +1708,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getFileLevelTelemetry(
 		request: GetFileLevelTelemetryRequest
 	): Promise<GetFileLevelTelemetryResponse | undefined> {
-		if (!request.filePath || !request.languageId) {
+		if (
+			!request.filePath ||
+			!request.languageId ||
+			!this._languageSupport.has(request.languageId)
+		) {
+			Logger.warn("Missing filePath, languageId, or languageId not supported");
 			return undefined;
 		}
 
-		if (!this._languageSupport.has(request.languageId)) return undefined;
+		const cacheKey = [request.filePath, request.languageId].join("-");
+		const cached = this._mltTimedCache.get(cacheKey);
+		if (cached) {
+			return cached;
+		}
 
 		const { users, git } = SessionContainer.instance();
 		if (!this._codeStreamUser) {
@@ -1850,7 +1863,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 				errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
 
-			return {
+			const response = {
 				codeNamespace: request.codeNamespace!,
 				isConnected: isConnected,
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
@@ -1880,6 +1893,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				relativeFilePath: relativeFilePath,
 				newRelicUrl: `${this.productUrl}/redirect/entity/${newRelicEntityGuid}`
 			};
+
+			this._mltTimedCache.put(cacheKey, response);
+			return response;
 		} catch (ex) {
 			Logger.error(ex, "getFileLevelTelemetry", {
 				request
