@@ -16,7 +16,7 @@ import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
 
 const languageSpecificExtensions: any = {
-	python: "ms-python.python"
+	python: ["ms-python.python", "ms-python.vscode-pylance"]
 };
 
 export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider {
@@ -118,9 +118,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				!fileLevelTelemetryResponse.newRelicEntityGuid
 			) {
 				Logger.warn(
-					`DEVELOPER: to enable method level metrics, you will need a vscode language-specific extension like ${
-						languageSpecificExtensions[document.languageId]
-					}`
+					`DEVELOPER: to enable method level metrics, you will need a vscode language-specific extension like ${languageSpecificExtensions[
+						document.languageId
+					].join(" OR ")}`
 				);
 				return [];
 			}

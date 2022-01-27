@@ -28,15 +28,10 @@ SOFTWARE.
 /**
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
  */
-import { debounce as _debounce, uniqBy as _uniqBy } from "lodash-es";
+
+import { debounce as _debounce, uniqBy as _uniqBy } from "lodash";
 import uuidv4 from "uuid/v4";
 import { CancellationToken } from "vscode";
-
-export interface IDeferrable {
-	cancel(): void;
-	flush(...args: any[]): void;
-	pending?(): boolean;
-}
 
 interface IPropOfValue {
 	(): any;
@@ -144,11 +139,7 @@ export namespace Functions {
 
 	type AnyCallback = (...args: any[]) => any;
 
-	export function debounce<T extends AnyCallback>(
-		fn: T,
-		wait?: number,
-		options?: DebounceOptions
-	): T & IDeferrable {
+	export function debounce<T extends AnyCallback>(fn: T, wait?: number, options?: DebounceOptions) {
 		const { track, ...opts } = { track: false, ...(options || ({} as DebounceOptions)) };
 
 		if (track !== true) return _debounce(fn, wait, opts);
@@ -162,12 +153,12 @@ export namespace Functions {
 			} as any) as T,
 			wait,
 			options
-		) as T & IDeferrable;
+		);
 
-		const tracked = (function(this: any, ...args: any[]) {
+		const tracked = function(this: any, ...args: any) {
 			pending = true;
 			return debounced.apply(this, args);
-		} as any) as T & IDeferrable;
+		} as any;
 
 		tracked.pending = function() {
 			return pending;
@@ -175,7 +166,7 @@ export namespace Functions {
 		tracked.cancel = function() {
 			return debounced.cancel.apply(debounced);
 		};
-		tracked.flush = function(...args: any[]) {
+		tracked.flush = function(...args: any) {
 			return debounced.flush.apply(debounced, args);
 		};
 

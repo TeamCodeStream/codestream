@@ -1,4 +1,6 @@
 dist
+out
+.vscode-test
 src/protocols/
 webview.html
 node_modules

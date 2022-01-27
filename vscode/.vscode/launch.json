@@ -64,6 +64,18 @@
 			"smartStep": true,
 			"sourceMaps": true,
 			"preLaunchTask": "watch"
+		},
+		{
+			"name": "Extension Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"${workspaceFolder}/test-projects/python",
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--extensionTestsPath=${workspaceFolder}/out/__test__/suite/index"
+			],
+			"outFiles": ["${workspaceFolder}/out/__test__/**/*.js"]
 		}
 	]
 }

@@ -302,7 +302,7 @@
 			},
 			{
 				"command": "codestream.viewMethodLevelTelemetry",
-				"title": "View Method Level Telemetry"			 
+				"title": "View Method Level Telemetry"
 			}
 		],
 		"keybindings": [
@@ -587,7 +587,7 @@
 		"bundle": "npm install --no-save && npm run agent:bundle && webpack --env production=true",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"cistart": "echo 'starting tests'",
-		"citest": "npm run agent:test && npm run webview:test",
+		"citest": "npm run agent:test && npm run webview:test && npm run vscode:test",
 		"cistop": "echo 'starting tests'",
 		"clean": "git clean -Xdf -e !node_modules -e !node_modules/**/* -e !codestream*.info",
 		"clean:ci": "git clean -xdf && npm run webview:clean:ci && npm run agent:clean:ci",
@@ -595,7 +595,7 @@
 		"pack": "vsce package",
 		"pretty": "prettier --config .prettierrc.js --write \"./src/**/*.ts\" \"./src/**/*.js\" ./package.json ./.prettierrc.js",
 		"rebuild": "npm run clean && npm install --no-save && npm run agent:rebuild && npm run build",
-		"test": "npm run agent:test && npm run webview:test",
+		"test": "npm run agent:test && npm run webview:test && npm run vscode:test",
 		"watch": "webpack --watch --env development=true",
 		"agent:build": "pushd \"../shared/agent\" && npm run build && popd",
 		"agent:bundle": "pushd \"../shared/agent\" && npm run bundle && popd",
@@ -609,12 +609,16 @@
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:test": "pushd \"../shared/ui\" && npm run ci:test && popd",
 		"webview:watch": "webpack --watch --config-name webview --env development=true",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd"
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd",		
+		"vscode:compile-tests": "rm -rf out && tsc -p . --outDir out",
+		"vscode:test": "npm run vscode:compile-tests && node ./out/__test__/runTest.js",				
+		"dev:vscode:watch-tests": "tsc -p . -w --outDir out",
+		"dev:vscode:test": "node ./out/__test__/runTest.js"
 	},
 	"dependencies": {
 		"core-js": "2.6.9",
 		"date-fns": "1.30.1",
-		"lodash-es": "4.17.15",
+		"lodash": "4.17.21",
 		"uuid": "3.3.2",
 		"vscode-languageclient": "5.2.1"
 	},
@@ -633,14 +637,16 @@
 		"@effortlessmotion/html-webpack-inline-source-plugin": "1.0.3",
 		"@types/diff": "4.0.2",
 		"@types/keytar": "4.4.0",
-		"@types/lodash-es": "4.17.3",
-		"@types/node": "10.11.7",
+		"@types/lodash": "4.14.178",
+		"@types/mocha": "9.1.0",
+		"@types/node": "12.20.20",
 		"@types/node-fetch": "2.5.0",
 		"@types/uuid": "3.4.5",
 		"@types/vscode": "1.49.0",
 		"@typescript-eslint/eslint-plugin": "2.18.0",
 		"@typescript-eslint/eslint-plugin-tslint": "2.18.0",
 		"@typescript-eslint/parser": "2.18.0",
+		"@vscode/test-electron": "2.1.1",
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"circular-dependency-plugin": "5.2.2",
@@ -652,11 +658,13 @@
 		"eslint-plugin-import": "2.20.0",
 		"filemanager-webpack-plugin": "5.0.0",
 		"fork-ts-checker-webpack-plugin": "5.2.1",
+		"glob": "7.2.0",
 		"html-loader": "0.5.5",
 		"html-webpack-plugin": "5.5.0",
 		"less": "4.1.2",
 		"less-loader": "10.2.0",
 		"mini-css-extract-plugin": "2.4.5",
+		"mocha": "9.2.0",
 		"prettier": "1.19.1",
 		"terser-webpack-plugin": "5.3.0",
 		"ts-loader": "9.2.6",
