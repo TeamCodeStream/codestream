@@ -2,6 +2,7 @@ import "@formatjs/intl-listformat/polyfill-locales";
 import React from "react";
 import { render } from "react-dom";
 import Container from "./Container";
+import { isNotOnDisk } from "./utils";
 import {
 	EditorRevealRangeRequestType,
 	HostDidChangeActiveEditorNotificationType,
@@ -48,7 +49,8 @@ import {
 	GetNewRelicErrorGroupRequestType,
 	PixieDynamicLoggingResultNotification,
 	DidResolveStackTraceLineNotificationType,
-	TelemetrySetAnonymousIdRequestType
+	TelemetrySetAnonymousIdRequestType,
+	GetFileScmInfoRequestType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
 import translations from "./translations/en";

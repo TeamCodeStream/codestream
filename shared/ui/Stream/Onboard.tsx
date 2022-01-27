@@ -6,11 +6,13 @@ import { getTeamMembers } from "../store/users/reducer";
 import { useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { closePanel, invite, openPanel } from "./actions";
+import { bootstrap } from "../store/actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
 	ReposScm,
-	UpdateCompanyRequestType
+	UpdateCompanyRequestType,
+	BootstrapRequestType
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -1194,6 +1196,34 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 		}
 
 		setSendingInvites(false);
+
+		// ERIC NOTES:
+
+		// could call BootstrapRequestType
+		// this doesnt work, refreshes incorrectly: dispatch(bootstrap() as any);
+
+		// const [bootstrapData, { editorContext }] = await Promise.all([
+		// 	api.send(BootstrapRequestType, {}),
+		// 	api.send(GetActiveEditorContextRequestType, undefined)
+		// ]);
+		// data = { ...bootstrapData, ...bootstrapCore, editorContext };
+
+		// something like:
+		// await HostApi.instance.send(BootstrapRequestType, {});
+		// then set repos value...?
+
+		// check this out to, could call this instead of entire boostrap call
+		// const fetchOpenRepos = async () => {
+		// 	const response = await HostApi.instance.send(GetReposScmRequestType, {
+		// 		inEditorOnly: true,
+		// 		includeCurrentBranches: true,
+		// 		includeProviders: true
+		// 	});
+		// 	if (response && response.repositories) {
+		// 		setOpenRepos(response.repositories);
+		// 	}
+		// };
+
 		props.skip();
 	};
 
@@ -1232,7 +1262,10 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 				<div>
 					{suggestedInvitees.length > 0 && (
 						<>
-							<p className="explainer left">Discuss code and investigate errors with your teammates. Here are some suggestions based on your git history.</p>
+							<p className="explainer left">
+								Discuss code and investigate errors with your teammates. Here are some suggestions
+								based on your git history.
+							</p>
 							{suggestedInvitees.map(user => {
 								return (
 									<Checkbox

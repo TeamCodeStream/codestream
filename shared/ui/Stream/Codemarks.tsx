@@ -258,7 +258,9 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				<NoContent>
 					<p>
 						Open a source file to start discussing code with your teammates{" "}
-						<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">Learn more.</a>
+						<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">
+							Learn more.
+						</a>
 					</p>
 				</NoContent>
 			);
@@ -856,6 +858,10 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			count = `${count} total, ${open.length} open`;
 		}
 	}
+
+	console.warn("eric MOST_RECENT_SCM_INFO", MOST_RECENT_SCM_INFO);
+	console.warn("eric repos", repos);
+	console.warn("eric repoName", repoName);
 
 	return {
 		repos,
