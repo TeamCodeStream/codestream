@@ -25,6 +25,7 @@ import { Dialog } from "../src/components/Dialog";
 import { IntegrationButtons, Provider } from "./IntegrationsPanel";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { configureAndConnectProvider } from "../store/providers/actions";
+import { bootstrapRepos } from "../store/repos/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { getPRLabel, isConnected } from "../store/providers/reducer";
@@ -1195,34 +1196,18 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			dispatch(clearPendingProtocolHandlerUrl());
 		}
 
+		// This fixes the issue where sometimes repos are not properly populated in the
+		// signup flow during non-essential bootstrap call.  In order to remedy this we
+		// add this call here to ensure we have the correct repos.
+		// @TODO: this could eventually be reworked.  The problem is all auth (signup and
+		// login) pass through the same onLogin/bootstrapping methods, so it would require
+		// a non-trivial refactor
+		// const bootstapResponse = await HostApi.instance.send(BootstrapRequestType, {});
+		// if (bootstapResponse.repos) {
+		// 	dispatch(bootstrapRepos(bootstapResponse.repos));
+		// }
+
 		setSendingInvites(false);
-
-		// ERIC NOTES:
-
-		// could call BootstrapRequestType
-		// this doesnt work, refreshes incorrectly: dispatch(bootstrap() as any);
-
-		// const [bootstrapData, { editorContext }] = await Promise.all([
-		// 	api.send(BootstrapRequestType, {}),
-		// 	api.send(GetActiveEditorContextRequestType, undefined)
-		// ]);
-		// data = { ...bootstrapData, ...bootstrapCore, editorContext };
-
-		// something like:
-		// await HostApi.instance.send(BootstrapRequestType, {});
-		// then set repos value...?
-
-		// check this out to, could call this instead of entire boostrap call
-		// const fetchOpenRepos = async () => {
-		// 	const response = await HostApi.instance.send(GetReposScmRequestType, {
-		// 		inEditorOnly: true,
-		// 		includeCurrentBranches: true,
-		// 		includeProviders: true
-		// 	});
-		// 	if (response && response.repositories) {
-		// 		setOpenRepos(response.repositories);
-		// 	}
-		// };
 
 		props.skip();
 	};

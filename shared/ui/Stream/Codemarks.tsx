@@ -12,9 +12,13 @@ import {
 	MarkerNotLocated,
 	CodemarkPlus,
 	DidChangeDataNotificationType,
-	ChangeDataType
+	ChangeDataType,
+	BootstrapRequestType,
+	GetReposScmRequestType
 } from "@codestream/protocols/agent";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
+import { bootstrapRepos } from "../store/repos/actions";
+
 import {
 	ScmError,
 	getFileScmError,
@@ -90,7 +94,6 @@ interface ConnectedProps {
 	codemarkDomain: CodemarkDomainType;
 	codemarkSortType: CodemarkSortType;
 	teamName: string;
-	repoName: string;
 	repos: ReposState;
 	codemarks: CodemarkPlus[];
 	count: string | number;
@@ -108,6 +111,7 @@ interface DispatchProps {
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
+	bootstrapRepos: (...args: Parameters<typeof bootstrapRepos>) => ReturnType<typeof bootstrapRepos>;
 	setUserPreference: any;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 	setNewPostEntry: Function;
@@ -121,6 +125,7 @@ interface State {
 	isLoading: boolean;
 	problem: ScmError | undefined;
 	pendingPRConnection: boolean | undefined;
+	repoName: string | undefined;
 }
 
 export class SimpleCodemarksForFile extends Component<Props, State> {
@@ -140,7 +145,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			showConfiguationModal: false,
 			isLoading: props.documentMarkers ? props.documentMarkers.length === 0 : true,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
-			pendingPRConnection: false
+			pendingPRConnection: false,
+			repoName: ""
 		};
 
 		this.docMarkersByStartLine = {};
@@ -173,7 +179,25 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			})
 		);
 
+		this.initializeRepos();
+
 		this.onFileChanged(true, this.onFileChangedError);
+	}
+
+	async initializeRepos() {
+		// const bootstrapResponse = await HostApi.instance.send(BootstrapRequestType, {});
+		// if (bootstrapResponse.repos) {
+		// 	this.props.bootstrapRepos(bootstrapResponse.repos);
+		// }
+		// const { repoId } = this.props;
+		// const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
+		// 	inEditorOnly: true
+		// });
+		// const currentRepo = reposResponse.repositories?.find(repo => repo.id === repoId);
+		// if (currentRepo) {
+		// 	this.setState({ repoName: currentRepo.folder?.name });
+		// }
+		// console.log("initialzeRepos");
 	}
 
 	onFileChangedError(error: string) {
@@ -224,12 +248,25 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		if (
 			!scmInfo ||
 			(scmInfo.uri !== textEditorUri && codemarkDomain !== CodemarkDomainType.Team) ||
-			checkBranchUpdate
+			checkBranchUpdate ||
+			!this.state.repoName
 		) {
 			this.setState({ isLoading: true });
 			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
 				uri: textEditorUri
 			});
+			const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
+				inEditorOnly: true
+			});
+
+			const currentRepo = reposResponse.repositories?.find(
+				repo => repo.id === scmInfo?.scm?.repoId
+			);
+
+			if (currentRepo) {
+				this.setState({ repoName: currentRepo.folder?.name });
+			}
+
 			setEditorContext({ scmInfo });
 		}
 
@@ -556,7 +593,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				: codemarkDomain === CodemarkDomainType.Branch
 				? this.props.currentBranch || "[branch]"
 				: codemarkDomain === CodemarkDomainType.Repo
-				? this.props.repoName || "[repository]"
+				? this.state.repoName || "[repository]"
 				: this.props.teamName;
 
 		const domainItems = [
@@ -586,7 +623,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			},
 			{
 				label: "Current Repository",
-				subtle: this.props.repoName || "",
+				subtle: this.state.repoName || "",
 				key: "repo",
 				icon: <Icon name="repo" />,
 				action: () => this.switchDomain(CodemarkDomainType.Repo),
@@ -781,15 +818,9 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		"gitlab_enterprise"
 	].some(name => isConnected(state, { name }));
 
-	let repoName = "";
 	const scmInfo = editorContext.scmInfo;
 	if (scmInfo && scmInfo.scm) {
 		MOST_RECENT_SCM_INFO = scmInfo;
-	}
-
-	if (MOST_RECENT_SCM_INFO && MOST_RECENT_SCM_INFO.scm) {
-		const { repoId } = MOST_RECENT_SCM_INFO.scm;
-		if (repoId && repos[repoId]) repoName = repos[repoId].name;
 	}
 
 	const codemarkDomain: CodemarkDomainType = preferences.codemarkDomain || CodemarkDomainType.Repo;
@@ -859,14 +890,9 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		}
 	}
 
-	console.warn("eric MOST_RECENT_SCM_INFO", MOST_RECENT_SCM_INFO);
-	console.warn("eric repos", repos);
-	console.warn("eric repoName", repoName);
-
 	return {
 		repos,
 		teamName,
-		repoName,
 		hasPRProvider,
 		currentStreamId: context.currentStreamId,
 		showHidden: preferences.codemarksShowArchived || false,
