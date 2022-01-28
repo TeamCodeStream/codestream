@@ -119,6 +119,8 @@ export const ActivityPanel = () => {
 	};
 	const [repos, setRepos] = React.useState<ReposScm[]>([]);
 	const [maximized, setMaximized] = React.useState(false);
+	const [lastFetchedActivity, setLastFetchedActivity] = React.useState<string>();
+	const [lastFilteredActivity, setLastFilteredActivity] = React.useState<string>();
 
 	const setActivityPreferences = (
 		data: ActivityFilter,
@@ -273,10 +275,14 @@ export const ActivityPanel = () => {
 		return "my organization";
 	}, [derivedState.activity, repos]);
 
+	const lastFetchedActivityPostId = safe(() => _last(derivedState.activity)!.record.postId);
+	const lastFilteredActivityPostId = safe(() => _last(activity)!.record.postId);
 	const fetchActivity = React.useCallback(async () => {
+		setLastFetchedActivity(lastFetchedActivityPostId);
+		setLastFilteredActivity(lastFilteredActivityPostId);
 		let response = await HostApi.instance.send(FetchActivityRequestType, {
 			limit: 50,
-			before: safe(() => _last(activity)!.record.postId)
+			before: lastFetchedActivityPostId
 		});
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
@@ -288,7 +294,19 @@ export const ActivityPanel = () => {
 				hasMore: Boolean(response.more)
 			})
 		);
-	}, [activity]);
+	}, [lastFetchedActivityPostId]);
+
+	// when we fetch results but all new results get filtered out, we need to
+	// fetch more data (if there is more data to fetch)
+	React.useEffect(() => {
+		if (
+			lastFetchedActivityPostId !== lastFetchedActivity &&
+			derivedState.hasMoreActivity &&
+			(lastFilteredActivityPostId === lastFilteredActivity || activity.length === 0)
+		) {
+			fetchActivity();
+		}
+	});
 
 	const renderFilter = async () => {
 		const repoResponse = await HostApi.instance.send(GetReposScmRequestType, {
