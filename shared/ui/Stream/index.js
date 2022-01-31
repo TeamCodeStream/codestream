@@ -315,7 +315,7 @@ export class SimpleStream extends PureComponent {
 		// if (!acceptedTOS) return <PresentTOS />;
 
 		// FIXME -- remove this before October 19th
-		// if (!acceptedPrereleaseTOS) return <PresentPrereleaseTOS />;
+		if (!acceptedPrereleaseTOS) return <PresentPrereleaseTOS />;
 
 		if (activePanel === WebviewPanels.LandingRedirect) activePanel = WebviewPanels.Sidebar;
 
