@@ -13,11 +13,9 @@ import {
 	CodemarkPlus,
 	DidChangeDataNotificationType,
 	ChangeDataType,
-	BootstrapRequestType,
 	GetReposScmRequestType
 } from "@codestream/protocols/agent";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
-import { bootstrapRepos } from "../store/repos/actions";
 
 import {
 	ScmError,
@@ -111,7 +109,6 @@ interface DispatchProps {
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
-	bootstrapRepos: (...args: Parameters<typeof bootstrapRepos>) => ReturnType<typeof bootstrapRepos>;
 	setUserPreference: any;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 	setNewPostEntry: Function;
@@ -179,26 +176,26 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			})
 		);
 
-		this.initializeRepos();
+		// this.initializeRepos();
 
 		this.onFileChanged(true, this.onFileChangedError);
 	}
 
-	async initializeRepos() {
-		// const bootstrapResponse = await HostApi.instance.send(BootstrapRequestType, {});
-		// if (bootstrapResponse.repos) {
-		// 	this.props.bootstrapRepos(bootstrapResponse.repos);
-		// }
-		// const { repoId } = this.props;
-		// const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
-		// 	inEditorOnly: true
-		// });
-		// const currentRepo = reposResponse.repositories?.find(repo => repo.id === repoId);
-		// if (currentRepo) {
-		// 	this.setState({ repoName: currentRepo.folder?.name });
-		// }
-		// console.log("initialzeRepos");
-	}
+	// async initializeRepos() {
+	// 	// const bootstrapResponse = await HostApi.instance.send(BootstrapRequestType, {});
+	// 	// if (bootstrapResponse.repos) {
+	// 	// 	this.props.bootstrapRepos(bootstrapResponse.repos);
+	// 	// }
+	// 	// const { repoId } = this.props;
+	// 	// const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
+	// 	// 	inEditorOnly: true
+	// 	// });
+	// 	// const currentRepo = reposResponse.repositories?.find(repo => repo.id === repoId);
+	// 	// if (currentRepo) {
+	// 	// 	this.setState({ repoName: currentRepo.folder?.name });
+	// 	// }
+	// 	// console.log("initialzeRepos");
+	// }
 
 	onFileChangedError(error: string) {
 		// unused

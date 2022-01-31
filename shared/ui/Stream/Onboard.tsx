@@ -6,13 +6,11 @@ import { getTeamMembers } from "../store/users/reducer";
 import { useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { closePanel, invite, openPanel } from "./actions";
-import { bootstrap } from "../store/actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
 	ReposScm,
-	UpdateCompanyRequestType,
-	BootstrapRequestType
+	UpdateCompanyRequestType
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -25,7 +23,6 @@ import { Dialog } from "../src/components/Dialog";
 import { IntegrationButtons, Provider } from "./IntegrationsPanel";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { configureAndConnectProvider } from "../store/providers/actions";
-import { bootstrapRepos } from "../store/repos/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { getPRLabel, isConnected } from "../store/providers/reducer";
@@ -1195,17 +1192,6 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			await dispatch(handlePendingProtocolHandlerUrl(pendingProtocolHandlerUrl));
 			dispatch(clearPendingProtocolHandlerUrl());
 		}
-
-		// This fixes the issue where sometimes repos are not properly populated in the
-		// signup flow during non-essential bootstrap call.  In order to remedy this we
-		// add this call here to ensure we have the correct repos.
-		// @TODO: this could eventually be reworked.  The problem is all auth (signup and
-		// login) pass through the same onLogin/bootstrapping methods, so it would require
-		// a non-trivial refactor
-		// const bootstapResponse = await HostApi.instance.send(BootstrapRequestType, {});
-		// if (bootstapResponse.repos) {
-		// 	dispatch(bootstrapRepos(bootstapResponse.repos));
-		// }
 
 		setSendingInvites(false);
 
