@@ -231,9 +231,13 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			!this.state.repoName
 		) {
 			this.setState({ isLoading: true });
-			scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
-				uri: textEditorUri
-			});
+
+			if (textEditorUri) {
+				scmInfo = await HostApi.instance.send(GetFileScmInfoRequestType, {
+					uri: textEditorUri
+				});
+			}
+
 			const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
 				inEditorOnly: true
 			});
