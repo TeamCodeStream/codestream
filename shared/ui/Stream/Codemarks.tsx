@@ -176,26 +176,8 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			})
 		);
 
-		// this.initializeRepos();
-
 		this.onFileChanged(true, this.onFileChangedError);
 	}
-
-	// async initializeRepos() {
-	// 	// const bootstrapResponse = await HostApi.instance.send(BootstrapRequestType, {});
-	// 	// if (bootstrapResponse.repos) {
-	// 	// 	this.props.bootstrapRepos(bootstrapResponse.repos);
-	// 	// }
-	// 	// const { repoId } = this.props;
-	// 	// const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
-	// 	// 	inEditorOnly: true
-	// 	// });
-	// 	// const currentRepo = reposResponse.repositories?.find(repo => repo.id === repoId);
-	// 	// if (currentRepo) {
-	// 	// 	this.setState({ repoName: currentRepo.folder?.name });
-	// 	// }
-	// 	// console.log("initialzeRepos");
-	// }
 
 	onFileChangedError(error: string) {
 		// unused
