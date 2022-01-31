@@ -54,7 +54,7 @@ const ApmServiceTitle = styled.span`
 		visibility: hidden;
 		color: var(--text-color-highlight);
 	}
-	&:hover .open-external {
+	& .open-external {
 		visibility: visible;
 	}
 `;
