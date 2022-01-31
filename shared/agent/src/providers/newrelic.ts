@@ -1871,7 +1871,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					? averageDurationResponse.actor.account.nrql.results
 					: [],
 				errorRate: errorRateResponse ? errorRateResponse.actor.account.nrql.results : [],
-				sinceDateFormatted: begin ? Dates.toFormatter(new Date(begin)).fromNow() : "",
+				sinceDateFormatted: "30 minutes ago", //begin ? Dates.toFormatter(new Date(begin)).fromNow() : "",
 				lastUpdateDate:
 					errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
 					averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
