@@ -253,9 +253,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			setEditorContext({ scmInfo });
 		}
 
-		const scmError = getFileScmError(scmInfo);
-		this.setState({ problem: scmError });
-
+		let scmError;
+		if (scmInfo) {
+			scmError = getFileScmError(scmInfo);
+			this.setState({ problem: scmError });
+		}
 		await this.props.fetchDocumentMarkers(textEditorUri, !this.props.showPRComments);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		if (scmError && renderErrorCallback !== undefined) {
