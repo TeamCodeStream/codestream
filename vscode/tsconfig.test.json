@@ -1,0 +1,15 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "commonjs",
+		"outDir": "out",
+		"paths": {
+			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["protocols/webview/webview.protocol.ts"]
+		},
+		"tsBuildInfoFile": "tsconfig.test.tsbuildinfo"
+	},
+	"include": ["src/**/*"],
+	"exclude": ["node_modules", "src/webviews/app", ".vscode-test"]
+}

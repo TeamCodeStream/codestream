@@ -1,0 +1,10 @@
+{
+	"folders": [
+		{
+			"path": "python"
+		}
+	],
+	"settings": {
+		"codestream.serverUrl": "https://pd-api.codestream.us"
+	}
+}
