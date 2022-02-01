@@ -79,7 +79,7 @@ intellij {
     // Run on a locally installed IDE, different from the build dependency specified via type/version
     // intellij.alternativeIdePath = idePath
 
-    plugins = ['git4idea', 'org.jetbrains.plugins.go:211.7142.36', 'Pythonid:203.6682.179']
+    plugins = ['git4idea', 'org.jetbrains.plugins.go:211.7142.36', 'Pythonid:211.7142.45']
 }
 
 runIde {
