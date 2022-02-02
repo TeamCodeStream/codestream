@@ -155,7 +155,7 @@ object PixieNotifications {
 
 object MethodLevelTelemetryNotifications {
     class View(
-        var error: Any?,
+        val error: Any?,
         val repo: CSRepo,
         val codeNamespace: String?,
         val filePath: String,
