@@ -467,15 +467,9 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				users = users.filter(_ => _.email !== assigneeEmail);
 			}
 
-			// let usersFromGit = users.filter(_ => _.group === "GIT");
-
 			let usersFromGitNotOnTeam = users.filter(ufg => {
 				return !derivedState.teamMembers.some(tm => tm.email === ufg.email) && ufg.group === "GIT";
 			});
-
-			// let usersFromGitNotOnTeam = users.filter(ufg => {
-			// 	return ufg.group === "GIT";
-			// });
 
 			if (usersFromGitNotOnTeam.length) {
 				// take no more than 5
