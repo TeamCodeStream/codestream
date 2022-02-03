@@ -467,10 +467,19 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				users = users.filter(_ => _.email !== assigneeEmail);
 			}
 
-			let usersFromGit = users.filter(_ => _.group === "GIT");
-			if (usersFromGit.length) {
-				// take no more than 100
-				usersFromGit = usersFromGit.slice(0, 100);
+			// let usersFromGit = users.filter(_ => _.group === "GIT");
+
+			let usersFromGitNotOnTeam = users.filter(ufg => {
+				return !derivedState.teamMembers.some(tm => tm.email === ufg.email) && ufg.group === "GIT";
+			});
+
+			// let usersFromGitNotOnTeam = users.filter(ufg => {
+			// 	return ufg.group === "GIT";
+			// });
+
+			if (usersFromGitNotOnTeam.length) {
+				// take no more than 5
+				usersFromGitNotOnTeam = usersFromGitNotOnTeam.slice(0, 5);
 				assigneeItems.push({ label: "-", key: "sep-git" });
 				assigneeItems.push({
 					label: (
@@ -482,7 +491,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 					disabled: true
 				});
 				assigneeItems = assigneeItems.concat(
-					usersFromGit.map(_ => {
+					usersFromGitNotOnTeam.map(_ => {
 						const label = _.displayName || _.email;
 						return {
 							icon: <Headshot size={16} display="inline-block" person={{ email: _.email }} />,
@@ -495,11 +504,8 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 					})
 				);
 			}
-			const usersFromGitByEmail = usersFromGit.map(_ => _.email);
-			// only show users not already shown
-			let usersFromCodeStream = derivedState.teamMembers.filter(
-				_ => !usersFromGitByEmail.includes(_.email)
-			);
+
+			let usersFromCodeStream = derivedState.teamMembers;
 
 			if (assigneeEmail) {
 				// if we have an assignee don't re-include them here
@@ -510,7 +516,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				assigneeItems.push({
 					label: (
 						<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
-							OTHER TEAMMATES
+							MY ORGANIZATION
 						</span>
 					),
 					noHover: true,
