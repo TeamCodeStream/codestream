@@ -1583,7 +1583,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			request.newRelicEntityGuid
 		}' AND ${
 			request.codeFilePath
-				? `code.filepath='${request.codeFilePath}'`
+				? `code.filepath='${request.codeFilePath.replace(/\\/g, "/")}'`
 				: `code.namespace like '${request.codeNamespace}%'`
 		}  SINCE 30 minutes AGO LIMIT 100`;
 		const query = `query GetSpans($accountId:Int!) {
