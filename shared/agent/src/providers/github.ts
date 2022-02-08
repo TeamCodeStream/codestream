@@ -39,6 +39,7 @@ import {
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	ProviderConfigurationData,
+	ProviderGetForkedReposResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
@@ -52,7 +53,6 @@ import {
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
-	ProviderGetForkedReposResponse,
 	ProviderGetRepoInfoResponse,
 	ProviderVersion,
 	PullRequestComment,
@@ -834,6 +834,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined> {
 		try {
+			const repositoryId = request.providerRepositoryId;
+			if (!repositoryId) {
+				throw new Error("providerRepositoryId missing");
+			}
+
 			void (await this.ensureConnected());
 
 			if (!(await this.isPRCreationApiCompatible())) {
@@ -845,19 +850,31 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				};
 			}
 
-			let repositoryId = "";
-			if (request.providerRepositoryId) {
-				repositoryId = request.providerRepositoryId;
-			} else {
-				const repoInfo = await this.getRepoInfo({ remote: request.remote });
-				if (repoInfo && repoInfo.id) {
-					repositoryId = repoInfo.id;
-				} else {
-					return {
-						error: repoInfo.error
-					};
-				}
-			}
+			/**
+			 *
+			 * creating a payload for a forked repo looks like this:
+			 *
+			 * {
+			 *  // id of the parent repo
+			 *	"repositoryId": "MqEwOlJlcG9zaXRrcnkxMjMzOTY2nDI=",
+			 *	"baseRefName": "master",
+			 *	"title": "myTitle",
+			 *  // this is the weird part...
+			 *	"headRefName": "bcanzanella:myBranch",
+			 *	"body": "myBody"
+			 * }
+			 *
+			 * creating a payload for a non-forked repo looks like this:
+			 *
+			 * {
+			 *  // id of the self repo
+			 *	"repositoryId": "aqEwOqJlcG9zaXRrcnkxMjMzOTY2nDI=",
+			 *	"baseRefName": "master",
+			 *	"title": "myTitle",
+			 *	"headRefName": "myBranch",
+			 *	"body": "myBody"
+			 * }
+			 */
 
 			const createPullRequestResponse = await this.mutate<GitHubCreatePullRequestResponse>(
 				`mutation CreatePullRequest($repositoryId:ID!, $baseRefName:String!, $headRefName:String!, $title:String!, $body:String!) {
@@ -875,16 +892,18 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					repositoryId: repositoryId,
 					baseRefName: request.baseRefName,
 					title: request.title,
-					headRefName: request.headRefName,
+					headRefName: request.isFork
+						? `${request.headRefRepoOwner}:${request.headRefName}`
+						: request.headRefName,
 					body: this.createDescription(request)
 				}
 			);
 			const pullRequest = createPullRequestResponse.createPullRequest.pullRequest;
-			const title = `#${pullRequest.number} ${pullRequest.title}`;
+
 			return {
 				url: pullRequest.url,
 				id: pullRequest.id,
-				title: title
+				title: `#${pullRequest.number} ${pullRequest.title}`
 			};
 		} catch (ex) {
 			Logger.error(ex, `${this.displayName}: createPullRequest`, {
@@ -918,34 +937,45 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 					repository(owner:$owner, name:$name) {
 				   		id
+						isFork
 				   		defaultBranchRef {
 							name
 				   		}
-				   pullRequests(first: 25, orderBy: {field: CREATED_AT, direction: DESC}, states: OPEN) {
-					totalCount
-					nodes {
-					  id
-					  url
-					  title
-					  state
-					  createdAt
-					  baseRefName
-					  headRefName
+						nameWithOwner
+						pullRequests(first: 25, orderBy: {field: CREATED_AT, direction: DESC}, states: OPEN) {
+							totalCount
+							nodes {
+								id
+								url
+								title
+								state
+								createdAt
+								baseRefName
+								headRefName
+								headRepository { nameWithOwner }
+							}
+						}
 					}
-				  }
-				}
-			  }
+			  	}
 			  `,
 				{
 					owner: owner,
 					name: name
 				}
 			);
-			return {
+			const result = {
 				id: response.repository.id,
+				isFork: response.repository.isFork,
+				nameWithOwner: response.repository.nameWithOwner,
 				defaultBranch: response.repository.defaultBranchRef.name,
-				pullRequests: response.repository.pullRequests.nodes
+				pullRequests: response.repository.pullRequests.nodes.map((_: any) => ({
+					..._,
+					nameWithOwner: _.headRepository.nameWithOwner
+				})),
+				owner: owner,
+				name: name
 			};
+			return result;
 		} catch (ex) {
 			Logger.error(ex, "GitHub: getRepoInfo", {
 				remote: request.remote
@@ -1033,7 +1063,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				const result = await this.getForkedRepos({ remote: response.repository.parent.url }, true);
 				return {
 					parent: result.parent,
-					forks: result.forks
+					forks: result.forks,
+					self: { ...response.repository, owner: owner }
 				};
 			}
 
@@ -1044,10 +1075,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			});
 			return {
 				parent: response.repository,
-				forks
+				forks: forks.map((_: any) => ({ ..._, owner: _.owner.login })),
+				self: response.repository
 			};
 		} catch (ex) {
-			Logger.error(ex, "GitHub: getRepoInfo", {
+			Logger.error(ex, "GitHub: getForkedRepos", {
 				remote: request.remote
 			});
 			let errorMessage =
@@ -5206,7 +5238,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				  rebaseMergeAllowed
 				  squashMergeAllowed
 				  mergeCommitAllowed
-				  viewerDefaultMergeMethod
+				  ${this._transform(`
+				  [viewerDefaultMergeMethod:>=3.0.0]				  
+				  `)}				   
 				  viewerPermission
 				  branchProtectionRules(first:100) {
 				  	nodes {

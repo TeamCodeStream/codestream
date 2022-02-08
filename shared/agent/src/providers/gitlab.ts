@@ -38,6 +38,7 @@ import {
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	Note,
+	ProviderGetForkedReposResponse,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitLabProviderInfo } from "../protocol/api.protocol";
@@ -55,7 +56,6 @@ import {
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
-	ProviderGetForkedReposResponse,
 	ProviderGetRepoInfoResponse,
 	ProviderVersion,
 	PullRequestComment,
@@ -556,15 +556,20 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			}
 
 			return {
+				owner,
+				name,
+				nameWithOwner: `${owner}/${name}`,
 				id: (projectResponse.body.iid || projectResponse.body.id)!.toString(),
 				defaultBranch: projectResponse.body.default_branch,
+				isFork: projectResponse.body.forked_from_project != null,
 				pullRequests: mergeRequestsResponse.body.map(_ => {
 					return {
 						id: JSON.stringify({ full: _.references.full, id: _.iid.toString() }),
 						iid: _.iid.toString(),
 						url: _.web_url,
 						baseRefName: _.target_branch,
-						headRefName: _.source_branch
+						headRefName: _.source_branch,
+						nameWithOwner: _.references.full.split("!")[0]
 					};
 				})
 			};
@@ -586,7 +591,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
 		try {
-			const { remote } = request;
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
 			const projectResponse = await this.get<GitLabProject>(
@@ -597,10 +601,21 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				: projectResponse.body;
 
 			const branchesByProjectId = new Map<number, GitLabBranch[]>();
+			if (projectResponse.body.forked_from_project) {
+				const branchesResponse = await this.get<GitLabBranch[]>(
+					`/projects/${encodeURIComponent(
+						projectResponse.body.forked_from_project.path_with_namespace
+					)}/repository/branches`
+				);
+				branchesByProjectId.set(projectResponse.body.forked_from_project.id, branchesResponse.body);
+			}
+
 			const branchesResponse = await this.get<GitLabBranch[]>(
-				`/projects/${encodeURIComponent(parentProject.path_with_namespace)}/repository/branches`
+				`/projects/${encodeURIComponent(
+					projectResponse.body.path_with_namespace
+				)}/repository/branches`
 			);
-			branchesByProjectId.set(parentProject.id, branchesResponse.body);
+			branchesByProjectId.set(projectResponse.body.id, branchesResponse.body);
 
 			const forksResponse = await this.get<GitLabProject[]>(
 				`/projects/${encodeURIComponent(parentProject.path_with_namespace)}/forks`
@@ -612,28 +627,37 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				branchesByProjectId.set(project.id, branchesResponse.body);
 			}
 
-			return {
-				parent: {
-					nameWithOwner: parentProject.path_with_namespace,
-					owner: {
-						login: parentProject.namespace.path
-					},
-					id: parentProject.id,
+			const response = {
+				self: {
+					nameWithOwner: projectResponse.body.path_with_namespace,
+					owner: owner,
+					id: projectResponse.body.id,
 					refs: {
-						nodes: branchesByProjectId.get(parentProject.id)!.map(branch => ({ name: branch.name }))
+						nodes: branchesByProjectId
+							.get(projectResponse.body.id)!
+							.map(branch => ({ name: branch.name }))
 					}
 				},
 				forks: forksResponse.body.map(fork => ({
 					nameWithOwner: fork.path_with_namespace,
-					owner: {
-						login: fork.namespace.path
-					},
+					owner: fork.namespace.path,
 					id: fork.id,
 					refs: {
 						nodes: branchesByProjectId.get(fork.id)!.map(branch => ({ name: branch.name }))
 					}
 				}))
-			};
+			} as ProviderGetForkedReposResponse;
+			if (projectResponse.body.forked_from_project) {
+				response.parent = {
+					nameWithOwner: parentProject.path_with_namespace,
+					owner: parentProject.namespace.path,
+					id: parentProject.id,
+					refs: {
+						nodes: branchesByProjectId.get(parentProject.id)!.map(branch => ({ name: branch.name }))
+					}
+				};
+			}
+			return response;
 		} catch (ex) {
 			Logger.error(ex, `${this.providerConfig.id}: getForkedRepos`, {
 				remote: request.remote

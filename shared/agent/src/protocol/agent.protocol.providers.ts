@@ -638,7 +638,7 @@ export interface FetchThirdPartyPullRequestRepository {
 	repoName: string;
 	pullRequest: FetchThirdPartyPullRequestPullRequest;
 	providerId: string;
-	viewerDefaultMergeMethod: "MERGE" | "REBASE" | "SQUASH";
+	viewerDefaultMergeMethod?: "MERGE" | "REBASE" | "SQUASH";
 	viewerPermission: "ADMIN" | "MAINTAIN" | "READ" | "TRIAGE" | "WRITE";
 	branchProtectionRules: BranchProtectionRules;
 }
@@ -1204,4 +1204,58 @@ export interface ErrorGroup {
 			name: string;
 		};
 	};
+}
+
+export interface ProviderGetForkedReposResponse {
+	parent?: {
+		defaultBranchRef?: {
+			name: string;
+		};
+		forks?: any[];
+		id?: any;
+		name?: string;
+		nameWithOwner?: string;
+		owner?: string;
+		parent?: {
+			id?: string;
+			name?: string;
+			nameWithOwner?: string;
+		};
+		refs?: {
+			nodes?: any[];
+		};
+		url?: string;
+	};
+	forks?: {
+		defaultBranchRef?: {
+			name: string;
+		};
+		id?: any;
+		name?: string;
+		nameWithOwner?: string;
+		owner?: string;
+		refs?: {
+			nodes?: any[];
+		};
+	}[];
+	self?: {
+		defaultBranchRef?: {
+			name: string;
+		};
+		forks?: any[];
+		id?: any;
+		name?: string;
+		nameWithOwner?: string;
+		owner?: string;
+		parent?: {
+			id?: string;
+			name?: string;
+			nameWithOwner?: string;
+		};
+		refs?: {
+			nodes?: any[];
+		};
+		url?: string;
+	};
+	error?: { message?: string; type: string };
 }

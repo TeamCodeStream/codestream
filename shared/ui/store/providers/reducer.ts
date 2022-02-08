@@ -49,13 +49,19 @@ export interface LabelHash {
 	PullRequests: string;
 	Pullrequest: string;
 	pullrequest: string;
+	pullrequests: string;
 	PR: string;
 	PRs: string;
 	pr: string;
 	AddSingleComment: string;
+	repoBaseLabel: string;
+	repoBranchBaseLabel;
+	repoHeadLabel: string;
+	repoBranchHeadLabel: string;
+	icon?: string;
 }
 
-const MRLabel = {
+const MRLabel: LabelHash = {
 	PullRequest: "Merge Request",
 	PullRequests: "Merge Requests",
 	Pullrequest: "Merge request",
@@ -64,10 +70,14 @@ const MRLabel = {
 	PR: "MR",
 	PRs: "MRs",
 	pr: "mr",
-	AddSingleComment: "Add comment now"
+	AddSingleComment: "Add comment now",
+	repoBaseLabel: "target",
+	repoBranchBaseLabel: "target",
+	repoHeadLabel: "source",
+	repoBranchHeadLabel: "source"
 };
 
-const PRLabel = {
+const PRLabel: LabelHash = {
 	PullRequest: "Pull Request",
 	PullRequests: "Pull Requests",
 	Pullrequest: "Pull request",
@@ -76,7 +86,27 @@ const PRLabel = {
 	PR: "PR",
 	PRs: "PRs",
 	pr: "pr",
-	AddSingleComment: "Add single comment"
+	AddSingleComment: "Add single comment",
+	repoBaseLabel: "base",
+	repoBranchBaseLabel: "base",
+	repoHeadLabel: "head",
+	repoBranchHeadLabel: "compare"
+};
+
+const BBPRLabel: LabelHash = {
+	PullRequest: "Pull Request",
+	PullRequests: "Pull Requests",
+	Pullrequest: "Pull request",
+	pullrequest: "pull request",
+	pullrequests: "pull requests",
+	PR: "PR",
+	PRs: "PRs",
+	pr: "pr",
+	AddSingleComment: "Add single comment",
+	repoBaseLabel: "base",
+	repoBranchBaseLabel: "destination",
+	repoHeadLabel: "head",
+	repoBranchHeadLabel: "source"
 };
 
 export const getPRLabel = createSelector(
@@ -85,12 +115,20 @@ export const getPRLabel = createSelector(
 		return isConnected(state, { id: "gitlab*com" }) ||
 			isConnected(state, { id: "gitlab/enterprise" })
 			? MRLabel
+			: isConnected(state, { id: "bitbucket*org" }) ||
+			  isConnected(state, { id: "bitbucket/server" })
+			? BBPRLabel
 			: PRLabel;
 	}
 );
 
-export const getPRLabelForProvider = (provider: string): LabelHash => {
-	return provider.toLocaleLowerCase().startsWith("gitlab") ? MRLabel : PRLabel;
+export const getPRLabelForProvider = (providerId: string): LabelHash => {
+	const providerIdNormalized = providerId.toLocaleLowerCase();
+	return providerIdNormalized.startsWith("gitlab")
+		? { ...MRLabel, icon: "" }
+		: providerIdNormalized.startsWith("bitbucket*org")
+		? BBPRLabel
+		: { ...PRLabel, icon: "" };
 };
 
 export const isConnected = (

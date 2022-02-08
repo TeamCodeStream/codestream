@@ -3,13 +3,18 @@ import { GitRemoteLike } from "git/gitService";
 import { URI } from "vscode-uri";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
-import { ProviderConfigurationData } from "../protocol/agent.protocol";
+import {
+	ProviderConfigurationData,
+	ProviderGetForkedReposResponse
+} from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
+
 import {
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
+	ProviderGetRepoInfoResponse,
 	ProviderPullRequestInfo,
 	PullRequestComment,
 	ThirdPartyIssueProviderBase
@@ -49,8 +54,6 @@ interface BitbucketPullRequest {
  */
 @lspProvider("bitbucket_server")
 export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbucketProviderInfo> {
-	private _knownRepos = new Map<string, BitbucketServerRepo>();
-
 	get displayName() {
 		return "Bitbucket Server";
 	}
@@ -110,8 +113,6 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 
 	async onConnected(providerInfo?: CSBitbucketProviderInfo) {
 		super.onConnected(providerInfo);
-		// this._bitbucketUserId = await this.getMemberId();
-		this._knownRepos = new Map<string, BitbucketServerRepo>();
 	}
 
 	getRepoByPath(path: string) {
@@ -185,32 +186,62 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 				};
 			}
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
-			const createPullRequestResponse = await this.post<
-				BitbucketServerCreatePullRequestRequest,
-				BitbucketServerCreatePullRequestResponse
-			>(`/projects/${owner}/repos/${name}/pull-requests`, {
-				fromRef: {
-					id: request.headRefName,
-					repository: {
-						project: {
-							key: repoInfo.project.key
-						},
-						slug: name
-					}
-				},
-				toRef: {
-					id: request.baseRefName,
-					repository: {
-						project: {
-							key: repoInfo.project.key
-						},
-						slug: name
-					}
-				},
-				title: request.title,
-				description: this.createDescription(request)
-			});
 
+			let createPullRequestResponse;
+			if (request.isFork) {
+				const split = request.baseRefRepoNameWithOwner!.split("/");
+				createPullRequestResponse = await this.post<
+					BitbucketServerCreatePullRequestRequest,
+					BitbucketServerCreatePullRequestResponse
+				>(`/projects/${split[0]}/repos/${split[1]}/pull-requests`, {
+					fromRef: {
+						id: request.headRefName,
+						repository: {
+							project: {
+								key: repoInfo.key!
+							},
+							slug: name
+						}
+					},
+					toRef: {
+						id: request.baseRefName,
+						repository: {
+							project: {
+								key: split[0]!
+							},
+							slug: split[1]
+						}
+					},
+					title: request.title,
+					description: this.createDescription(request)
+				});
+			} else {
+				createPullRequestResponse = await this.post<
+					BitbucketServerCreatePullRequestRequest,
+					BitbucketServerCreatePullRequestResponse
+				>(`/projects/${owner}/repos/${name}/pull-requests`, {
+					fromRef: {
+						id: request.headRefName,
+						repository: {
+							project: {
+								key: repoInfo.key!
+							},
+							slug: name
+						}
+					},
+					toRef: {
+						id: request.baseRefName,
+						repository: {
+							project: {
+								key: repoInfo.key!
+							},
+							slug: name
+						}
+					},
+					title: request.title,
+					description: this.createDescription(request)
+				});
+			}
 			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
 			return {
 				url:
@@ -236,7 +267,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		}
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<any> {
+	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const repoResponse = await this.get<BitbucketServerRepo>(`/projects/${owner}/repos/${name}`);
@@ -263,10 +294,11 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 				});
 			}
 			return {
+				owner,
+				name,
 				id: repoResponse.body.id,
-				project: {
-					key: repoResponse.body.project.key
-				},
+				isFork: repoResponse.body.origin != null,
+				key: repoResponse.body.project.key,
 				defaultBranch: defaultBranchName,
 				pullRequests: pullRequests
 			};
@@ -283,17 +315,90 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		}
 	}
 
+	async getForkedRepos(request: { remote: string }): Promise<ProviderGetForkedReposResponse> {
+		try {
+			const { owner, name } = this.getOwnerFromRemote(request.remote);
+
+			const repoResponse = await this.get<BitbucketServerRepo>(`/projects/${owner}/repos/${name}`);
+
+			const parentOrSelfProject = repoResponse.body.origin
+				? repoResponse.body.origin
+				: repoResponse.body;
+
+			const branchesByProjectId = new Map<string, any[]>();
+			if (repoResponse.body.origin) {
+				const branchesResponse = await this.get<any[]>(
+					`/projects/${repoResponse.body.project.key}/repos/${repoResponse.body.slug}/branches`
+				);
+				branchesByProjectId.set(repoResponse.body.origin.uuid, branchesResponse.body.values as any);
+			}
+			const branchesResponse = await this.get<any[]>(`/projects/${owner}/repos/${name}/branches`);
+			branchesByProjectId.set(repoResponse.body.uuid, branchesResponse.body.values as any);
+
+			const forksResponse = await this.get<any>(`/projects/${owner}/repos/${name}/forks`);
+
+			for (const project of forksResponse.body.values) {
+				const branchesResponse = await this.get<any[]>(
+					`/projects/${project.project.key}/repos/${project.project.slug}/branches`
+				);
+				branchesByProjectId.set(project.uuid, branchesResponse.body.values as any);
+			}
+
+			const response = {
+				self: {
+					nameWithOwner: `${owner}/${name}`,
+					owner: owner,
+					id: repoResponse.body.uuid,
+					refs: {
+						nodes: branchesByProjectId
+							.get(repoResponse.body.uuid)!
+							.map(branch => ({ name: branch.displayId }))
+					}
+				},
+				forks: (forksResponse?.body?.values).map((fork: any) => ({
+					nameWithOwner: `${fork.project.key}/${fork.slug}`,
+					owner: fork.slug,
+					id: fork.uuid,
+					refs: {
+						nodes: branchesByProjectId.get(fork.uuid)!.map(branch => ({ name: branch.displayId }))
+					}
+				}))
+			} as ProviderGetForkedReposResponse;
+			if (repoResponse.body.origin) {
+				response.parent = {
+					nameWithOwner: `${parentOrSelfProject.project.key}/${parentOrSelfProject.slug}`,
+					owner: parentOrSelfProject.project.key,
+					id: parentOrSelfProject.uuid,
+					refs: {
+						nodes: branchesByProjectId
+							.get(parentOrSelfProject.uuid)!
+							.map(branch => ({ name: branch.displayId }))
+					}
+				};
+			}
+			return response;
+		} catch (ex) {
+			Logger.error(ex, `${this.providerConfig.id}: getForkedRepos`, {
+				remote: request.remote
+			});
+			let errorMessage =
+				ex.response && ex.response.errors
+					? ex.response.errors[0].message
+					: `Unknown ${this.providerConfig.name} error`;
+			errorMessage = `${this.providerConfig.name}: ${errorMessage}`;
+			return {
+				error: {
+					type: "PROVIDER",
+					message: errorMessage
+				}
+			};
+		}
+	}
+
 	getIsMatchingRemotePredicate() {
 		const baseUrl = this._providerInfo?.data?.baseUrl || this.getConfig().host;
 		const configDomain = baseUrl ? URI.parse(baseUrl).authority : "";
 		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
-	}
-
-	private async _getPullRequestComments(
-		pr: BitbucketPullRequest,
-		filePath: string
-	): Promise<PullRequestComment[]> {
-		return [];
 	}
 }
 
@@ -334,7 +439,9 @@ interface BitbucketServerBranch {
 }
 
 interface BitbucketServerRepo {
+	uuid: string;
 	id: string;
+	slug?: string;
 	project: {
 		key: string;
 	};
@@ -342,4 +449,5 @@ interface BitbucketServerRepo {
 		name?: string;
 		type?: string;
 	};
+	origin?: any;
 }

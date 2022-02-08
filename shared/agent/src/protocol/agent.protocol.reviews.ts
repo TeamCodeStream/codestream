@@ -19,12 +19,7 @@ import {
 	CSUpdateReviewRequest,
 	CSUpdateReviewResponse
 } from "./api.protocol";
-import {
-	CSReviewChangeset,
-	CSReviewDiffs,
-	CSReviewStatus,
-	ReviewChangesetFileInfo
-} from "./api.protocol.models";
+import { CSReviewDiffs } from "./api.protocol.models";
 
 export interface ReviewPlus extends CSReview {}
 
@@ -302,33 +297,6 @@ export const CheckReviewPreconditionsRequestType = new RequestType<
 	void
 >("codestream/review/checkPreconditions");
 
-export interface CheckPullRequestBranchPreconditionsRequest {
-	reviewId?: string; // either a reviewId or repoId need to be passed in
-	repoId?: string;
-	providerId: string;
-	headRefName?: string;
-	baseRefName?: string;
-}
-
-export interface CheckPullRequestBranchPreconditionsResponse {
-	success: boolean;
-	remote?: string;
-	providerId?: string;
-
-	error?: {
-		message?: string;
-		type?: "REPO_NOT_FOUND" | "ALREADY_HAS_PULL_REQUEST" | "UNKNOWN" | "PROVIDER" | string;
-		url?: string;
-	};
-}
-
-export const CheckPullRequestBranchPreconditionsRequestType = new RequestType<
-	CheckPullRequestBranchPreconditionsRequest,
-	CheckPullRequestBranchPreconditionsResponse,
-	void,
-	void
->("codestream/review/pr/branch/checkPreconditions");
-
 export interface CheckPullRequestPreconditionsRequest {
 	reviewId?: string;
 	repoId?: string;
@@ -341,20 +309,54 @@ export interface CheckPullRequestPreconditionsRequest {
 export interface CheckPullRequestPreconditionsResponse {
 	success: boolean;
 	review?: Pick<CSReview, "title" | "text">;
-	repoId?: string;
-	remoteUrl?: string;
-	remoteBranch?: string;
-	providerId?: string;
-	remotes?: any[];
-	origins?: string[];
-	pullRequestProvider?: { defaultBranch?: string; isConnected: boolean };
-	branch?: string;
-	branches?: string[];
-	remoteBranches?: { remote?: string; branch: string }[];
-	pullRequestTemplate?: string;
-	pullRequestTemplateNames?: string[];
-	pullRequestTemplatePath?: string;
-	commitsBehindOriginHeadBranch?: string;
+	/**
+	 * CodeStream repo data
+	 */
+	repo?: {
+		/** CodeStream repo Id */
+		id?: string;
+		/** remote as found in `git remote -v` */
+		remoteUrl?: string;
+		/** current branch */
+		branch?: string;
+		/** current remote branch */
+		remoteBranch?: string;
+		/** list of local branches */
+		branches?: string[];
+		/** list of remote branches */
+		remoteBranches?: { remote?: string; branch: string }[];
+		commitsBehindOriginHeadBranch?: string;
+		/** list of origin names... things like origin, upstream, etc. */
+		origins?: string[];
+	};
+	provider?: {
+		/** CS-specific providerId like github*com */
+		id?: string;
+		/** for github, this would be GitHub */
+		name?: string;
+		/** is this provider connected in CodeStream */
+		isConnected?: boolean;
+		pullRequestTemplate?: string;
+		pullRequestTemplateNames?: string[];
+		pullRequestTemplatePath?: string;
+		pullRequestTemplateLinesCount?: number;
+		/**
+		 * repo information tied to the provider
+		 */
+		repo?: {
+			/** this is the provider-specific repository id */
+			providerRepoId?: string;
+			/** default branch: master, main, something else, etc.... */
+			defaultBranch?: string;
+			/** is this repo a fork? */
+			isFork?: boolean;
+			/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
+			nameWithOwner?: string;
+			/** in github.com/TeamCodeStream/codestream this is TeamCodeStream */
+			owner?: string;
+		};
+	};
+
 	warning?: {
 		message?: string;
 		type?: "ALREADY_HAS_PULL_REQUEST" | string;
@@ -382,17 +384,60 @@ export const CheckPullRequestPreconditionsRequestType = new RequestType<
 	void
 >("codestream/review/pr/checkPreconditions");
 
+export interface CreatePullRequestRequest1 {
+	/** if a reviewId isn't provided, you must provide a repoId */
+	reviewId?: string;
+	/** CodeStream repo id */
+	repoId?: string;
+	providerId: string;
+
+	title: string;
+	description?: string;
+
+	/**
+	 * this is the target branch
+	 */
+	baseRefName: string;
+	/**
+	 * this is the branch under review
+	 */
+	headRefName: string;
+
+	/**
+	 * certain providers require this
+	 */
+	providerRepositoryId?: string;
+	remote: string /* to look up the repo ID on the provider */;
+	remoteName?: string;
+	addresses?: {
+		title: string;
+		url: string;
+	}[];
+	ideName?: string;
+}
+
 export interface CreatePullRequestRequest {
 	/** if a reviewId isn't provided, you must provide a repoId */
 	reviewId?: string;
+
 	repoId?: string;
 	providerId: string;
 	title: string;
 	description?: string;
+
+	isFork?: boolean;
+	baseRefRepoNameWithOwner?: string;
+	baseRefRepoName: string;
 	baseRefName: string;
+
+	headRefRepoOwner?: string;
+	headRefRepoNameWithOwner: string;
 	headRefName: string;
+
 	providerRepositoryId?: string /* for use across forks */;
 	remote: string /* to look up the repo ID on the provider */;
+
+	requiresRemoteBranch?: boolean;
 	remoteName?: string;
 	addresses?: {
 		title: string;

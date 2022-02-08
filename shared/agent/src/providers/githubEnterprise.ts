@@ -120,41 +120,45 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		return this._isPRCreationApiCompatible;
 	}
 
-	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
-		try {
-			const { owner, name } = this.getOwnerFromRemote(request.remote);
-			const repoResponse = await this.get<GitHubEnterpriseRepo>(`/repos/${owner}/${name}`);
-			const pullRequestResponse = await this.get<GitHubEnterprisePullRequest[]>(
-				`/repos/${owner}/${name}/pulls?state=open`
-			);
-			const pullRequests: ProviderPullRequestInfo[] = [];
-			if (pullRequestResponse) {
-				pullRequestResponse.body.map(_ => {
-					return {
-						id: _.id,
-						url: _.html_url,
-						baseRefName: _.base.ref,
-						headRefName: _.head.ref
-					};
-				});
-			}
-			return {
-				id: repoResponse.body.node_id,
-				defaultBranch: repoResponse.body.default_branch,
-				pullRequests: pullRequests
-			};
-		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
-				remote: request.remote
-			});
-			return {
-				error: {
-					type: "PROVIDER",
-					message: `${this.displayName}: ${ex.message}`
-				}
-			};
-		}
-	}
+	// TODO check on this -- base should work...
+
+	// async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
+	// 	try {
+	// 		const { owner, name } = this.getOwnerFromRemote(request.remote);
+	// 		const repoResponse = await this.get<GitHubEnterpriseRepo>(`/repos/${owner}/${name}`);
+	// 		const pullRequestResponse = await this.get<GitHubEnterprisePullRequest[]>(
+	// 			`/repos/${owner}/${name}/pulls?state=open`
+	// 		);
+	// 		const pullRequests: ProviderPullRequestInfo[] = [];
+	// 		if (pullRequestResponse) {
+	// 			pullRequestResponse.body.map(_ => {
+	// 				return {
+	// 					id: _.id,
+	// 					url: _.html_url,
+	// 					baseRefName: _.base.ref,
+	// 					headRefName: _.head.ref
+	// 				};
+	// 			});
+	// 		}
+	// 		return {
+	// 			owner,
+	// 			name,
+	// 			id: repoResponse.body.node_id,
+	// 			defaultBranch: repoResponse.body.default_branch,
+	// 			pullRequests: pullRequests
+	// 		};
+	// 	} catch (ex) {
+	// 		Logger.error(ex, `${this.displayName}: getRepoInfo`, {
+	// 			remote: request.remote
+	// 		});
+	// 		return {
+	// 			error: {
+	// 				type: "PROVIDER",
+	// 				message: `${this.displayName}: ${ex.message}`
+	// 			}
+	// 		};
+	// 	}
+	// }
 
 	@log()
 	async configure(request: ProviderConfigurationData) {

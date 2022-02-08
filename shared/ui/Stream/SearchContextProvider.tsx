@@ -6,7 +6,7 @@ import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { HostDidReceiveRequestNotificationType } from "../ipc/host.protocol.notifications";
-import { parseProtocol } from "..";
+import { parseProtocol } from "../utilities/urls";
 
 export type SearchContextType = {
 	query: string;

@@ -1030,31 +1030,63 @@ export interface ProviderGetRepoInfoRequest {
 export interface ProviderPullRequestInfo {
 	id: string;
 	url: string;
+	nameWithOwner?: string;
 	baseRefName: string;
 	headRefName: string;
 }
 
 export interface ProviderGetRepoInfoResponse {
+	/**
+	 * id of the repository from the provider
+	 */
 	id?: string;
+	/**
+	 * in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream
+	 */
+	nameWithOwner?: string;
+	/**
+	 * in github.com/TeamCodeStream/codestream this is TeamCodeStream
+	 */
+	owner?: string;
+	/**
+	 * in github.com/TeamCodeStream/codestream this is codestream
+	 */
+	name?: string;
+	/**
+	 * is this repo forked
+	 */
+	isFork?: boolean;
+	/**
+	 * defaultBranch: main, master, something else
+	 */
 	defaultBranch?: string;
+	/**
+	 * currently open pull requests
+	 */
 	pullRequests?: ProviderPullRequestInfo[];
-	error?: { message?: string; type: string };
-}
 
-export interface ProviderGetForkedReposResponse {
-	parent?: any;
-	forks?: any[];
 	error?: { message?: string; type: string };
+	// used for some providers
+	key?: string;
 }
 
 export interface ProviderCreatePullRequestRequest {
 	providerId: string;
 	providerRepositoryId?: string /* for use across forks */;
+	isFork?: boolean;
 	remote: string /* to look up the repo ID on the provider */;
 	title: string;
 	description?: string;
+
 	baseRefName: string;
+	baseRefRepoNameWithOwner?: string;
+
 	headRefName: string;
+	/**
+	 * some providers, like GitHub need this for forks
+	 */
+	headRefRepoOwner?: string;
+	headRefRepoNameWithOwner?: string;
 	metadata: {
 		reviewPermalink?: string;
 		reviewers?: { name: string }[];
@@ -1071,12 +1103,10 @@ export interface ProviderCreatePullRequestResponse {
 	error?: { message?: string; type: string };
 }
 
-// export interface ProviderGetPullRequestRequest {
-// 	pullRequestId: string;
-// 	providerId: string;
-// }
-
-// export interface ProviderGetPullRequestResponse {
-// 	pullRequestId: string;
-// 	providerId: string;
-// }
+export interface RepoPullRequestProvider {
+	repo: GitRepository;
+	providerId: string;
+	providerName: string;
+	provider: ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests;
+	remotes: GitRemote[];
+}
