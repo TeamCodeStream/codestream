@@ -324,7 +324,15 @@ export const MethodLevelTelemetryPanel = () => {
 																}}
 															>
 																<CartesianGrid strokeDasharray="3 3" />
-																<XAxis dataKey="endDate" />
+																<XAxis
+																	dataKey="endDate"
+																	tickFormatter={label =>
+																		new Date(label).toLocaleTimeString(undefined, {
+																			hour: "2-digit",
+																			minute: "2-digit"
+																		})
+																	}
+																/>
 																<YAxis dataKey={_.title} />
 																<ReTooltip />
 																<Legend />
