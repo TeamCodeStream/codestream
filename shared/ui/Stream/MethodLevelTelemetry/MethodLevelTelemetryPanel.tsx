@@ -308,9 +308,12 @@ export const MethodLevelTelemetryPanel = () => {
 										<br />
 										{telemetryResponse &&
 											telemetryResponse.goldenMetrics &&
-											telemetryResponse.goldenMetrics.map(_ => {
+											telemetryResponse.goldenMetrics.map((_, index) => {
 												return (
-													<div style={{ marginLeft: "-25px", marginBottom: "15px" }}>
+													<div
+														key={"chart-" + index}
+														style={{ marginLeft: "-25px", marginBottom: "15px" }}
+													>
 														<ResponsiveContainer width="90%" height={270}>
 															<LineChart
 																width={500}
