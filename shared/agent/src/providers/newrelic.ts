@@ -1578,18 +1578,34 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	async getSpans(request: MetricQueryRequest) {
-		const innerQuery = `SELECT name from Span WHERE \`entity.guid\` = '${
+	async getSpans(request: MetricQueryRequest): Promise<Span[] | undefined> {
+		const codeFilePath = request.codeFilePath
+			? request.codeFilePath.replace(/\\/g, "/")
+			: undefined;
+
+		const innerQueryEquals = `SELECT name,code.lineno,code.namepsace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
 			request.newRelicEntityGuid
 		}' AND ${
-			request.codeFilePath
-				? `code.filepath='${request.codeFilePath.replace(/\\/g, "/")}'`
+			codeFilePath
+				? `code.filepath='${codeFilePath}'`
 				: `code.namespace like '${request.codeNamespace}%'`
-		}  SINCE 30 minutes AGO LIMIT 100`;
+		}  SINCE 30 minutes AGO LIMIT 250`;
+
+		const innerQueryLike = `SELECT name,code.lineno,code.namepsace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
+			request.newRelicEntityGuid
+		}' AND ${
+			codeFilePath
+				? `code.filepath like '%${codeFilePath}'`
+				: `code.namespace like '${request.codeNamespace}%'`
+		}  SINCE 30 minutes AGO LIMIT 250`;
+
 		const query = `query GetSpans($accountId:Int!) {
 			actor {
 				account(id: $accountId) {
-					nrql(query: "${innerQuery}") { 						
+					equals:nrql(query: "${innerQueryEquals}") { 						
+						results						 					
+					}
+					like:nrql(query: "${innerQueryLike}") { 						
 						results						 					
 					}
 				}
@@ -1599,7 +1615,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const response = await this.query(query, {
 				accountId: request.newRelicAccountId!
 			});
-			return response?.actor.account.nrql.results;
+
+			if (response?.actor?.account.equals.results.length) {
+				return response.actor.account.equals.results;
+			}
+
+			if (response?.actor?.account.like.results.length) {
+				Logger.warn("getSpans using like", {
+					query: query,
+					accountId: request.newRelicAccountId
+				});
+				return response.actor.account.like.results;
+			}
 		} catch (ex) {
 			Logger.error(ex, "getSpans", { request });
 		}
@@ -1834,7 +1861,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					if (metadata) {
 						["code.lineno", "traceId", "transactionId", "code.namespace"].forEach(_ => {
 							// TODO this won't work for lambdas
-							additionalMetadata[_] = metadata[0][_];
+							additionalMetadata[_] = (metadata[0] as any)[_];
 						});
 					}
 					return {
@@ -1858,10 +1885,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			});
 
-			const begin =
-				throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
-				averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
-				errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
+			// const begin =
+			// 	throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
+			// 	averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
+			// 	errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
 
 			const response = {
 				codeNamespace: request.codeNamespace!,
@@ -1894,7 +1921,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				newRelicUrl: `${this.productUrl}/redirect/entity/${newRelicEntityGuid}`
 			};
 
-			this._mltTimedCache.put(cacheKey, response);
+			if (spans?.length) {
+				this._mltTimedCache.put(cacheKey, response);
+			}
 			return response;
 		} catch (ex) {
 			Logger.error(ex, "getFileLevelTelemetry", {
@@ -3079,6 +3108,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 		return undefined;
 	}
+}
+
+interface Span {
+	"code.namespace": string;
+	"code.lineno": string;
+	name: string;
+	traceId: string;
+	transactionId: string;
 }
 
 interface MetricQueryRequest {
