@@ -35,7 +35,7 @@ import { CodeStreamSession } from "./session";
 
 let providerRegistry: ThirdPartyProviderRegistry | undefined = undefined;
 
-class SessionServiceContainer {
+export class SessionServiceContainer {
 	private readonly _git: GitService;
 	get git() {
 		return this._git;

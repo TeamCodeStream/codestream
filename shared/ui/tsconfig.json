@@ -1,4 +1,5 @@
 {
+	"extends": "./tsconfig.paths.json",
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
@@ -15,13 +16,7 @@
 		"noImplicitReturns": true,
 		"noUnusedLocals": false,
 		"outDir": "dist",
-		"paths": {
-			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
-			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
-			"@codestream/protocols/webview": ["ipc/webview.protocol.ts"],
-			"@codestream/webview/*": ["./*"],
-			"vscode-jsonrpc": ["./vscode-jsonrpc.shim.ts"]
-		},
+
 		"preserveSymlinks": true,
 		"rootDir": ".",
 		"skipLibCheck": true,
