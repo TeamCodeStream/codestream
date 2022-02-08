@@ -1359,7 +1359,8 @@ export interface ProviderGetForkedReposResponse {
 	};
 	error?: { message?: string; type: string };
 }
-export interface GoldenMetricsResult {
+
+export interface GoldenMetricsQueryResult {
 	actor: {
 		entity: {
 			goldenMetrics: {
@@ -1370,4 +1371,18 @@ export interface GoldenMetricsResult {
 			};
 		};
 	};
+}
+
+export interface GoldenMetricsResult {
+	query: string;
+	title: string;
+	result: {
+		beginTimeSeconds: number;
+		endDate: Date;
+		endTimeSeconds: number;
+		"Error %"?: string;
+		"Error rate"?: string;
+		"Response time (ms)": string;
+		Throughput: string;
+	}[];
 }

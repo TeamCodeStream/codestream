@@ -1,6 +1,5 @@
 "use strict";
 import fs from "fs";
-
 import { GraphQLClient } from "graphql-request";
 import {
 	flatten as _flatten,
@@ -14,6 +13,7 @@ import {
 import { join, relative, sep } from "path";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
+
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { SessionContainer } from "../container";
 import { GitRemoteParser } from "../git/parsers/remoteParser";
@@ -31,6 +31,12 @@ import {
 	ErrorGroupResponse,
 	ErrorGroupsResponse,
 	ErrorGroupStateType,
+	GetFileLevelTelemetryRequest,
+	GetFileLevelTelemetryRequestType,
+	GetFileLevelTelemetryResponse,
+	GetMethodLevelTelemetryRequest,
+	GetMethodLevelTelemetryRequestType,
+	GetMethodLevelTelemetryResponse,
 	GetNewRelicAccountsRequestType,
 	GetNewRelicAccountsResponse,
 	GetNewRelicAssigneesRequestType,
@@ -52,31 +58,27 @@ import {
 	GetObservabilityReposRequest,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GoldenMetricsQueryResult,
+	GoldenMetricsResult,
+	MetricTimesliceNameMapping,
 	NewRelicConfigurationData,
 	NewRelicErrorGroup,
 	ObservabilityError,
 	ObservabilityErrorCore,
+	ObservabilityRepo,
 	RelatedEntity,
 	ReposScm,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
-	CrashOrException,
-	GetMethodLevelTelemetryRequestType,
-	GetMethodLevelTelemetryRequest,
-	GetFileLevelTelemetryRequestType,
-	GetFileLevelTelemetryRequest,
-	GetFileLevelTelemetryResponse,
-	GoldenMetricsResult,
-	GetMethodLevelTelemetryResponse,
-	MetricTimesliceNameMapping,
-	ObservabilityRepo
+	CrashOrException
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { Dates, log, lspHandler, lspProvider } from "../system";
+import { log, lspHandler, lspProvider } from "../system";
 import { Strings } from "../system/string";
 import { ThirdPartyIssueProviderBase } from "./provider";
+
 const Cache = require("timed-cache");
 
 export interface Directive {
@@ -2025,7 +2027,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private async getGoldenMetricsQueries(
 		entityGuid: string,
 		metricTimesliceNameMapping: MetricTimesliceNameMapping
-	): Promise<GoldenMetricsResult> {
+	): Promise<GoldenMetricsQueryResult> {
 		// NOTE: these queries can be queried! we're hard-coding below because
 		// we want golden metrics on a method-level rather than an entity level
 
@@ -2074,8 +2076,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private async getGoldenMetrics(
 		entityGuid: string,
 		metricTimesliceNames: MetricTimesliceNameMapping
-	): Promise<any[] | undefined> {
-		// TODO get typings in here
+	): Promise<GoldenMetricsResult[] | undefined> {
 		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
 
 		if (queries?.actor?.entity?.goldenMetrics) {
