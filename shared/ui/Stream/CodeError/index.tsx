@@ -150,7 +150,6 @@ const ClickLines = styled.div`
 	,
 	&.pulse {
 		opacity: 1;
-		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 		background: var(--app-background-color-hover);
 	}
 `;
