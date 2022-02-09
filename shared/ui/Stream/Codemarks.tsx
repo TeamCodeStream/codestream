@@ -246,9 +246,17 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				repo => repo.id === scmInfo?.scm?.repoId
 			);
 
-			if (currentRepo) {
-				this.setState({ repoName: currentRepo.folder?.name });
+			let repoName;
+			if (currentRepo?.folder.name) {
+				repoName = currentRepo.folder.name;
 			}
+			//@TODO: currentRepo.folder.name returning is flaky depending on IDE, specifically JB.
+			//		 this ensures we will have the full repo name for the filter, but is a little hacky.
+			if (!repoName && currentRepo?.path) {
+				repoName = currentRepo.path.substring(currentRepo.path.lastIndexOf("/") + 1);
+			}
+
+			this.setState({ repoName });
 
 			setEditorContext({ scmInfo });
 		}
