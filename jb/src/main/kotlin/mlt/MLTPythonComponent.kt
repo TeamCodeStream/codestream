@@ -10,6 +10,7 @@ import com.codestream.protocols.agent.FileLevelTelemetryResult
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
+import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
 import com.codestream.sessionService
 import com.codestream.webViewService
@@ -107,6 +108,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
     private val metricsByFunction = mutableMapOf<String, MLTMetrics>()
     private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
+    private var analyticsTracked = false
 
     init {
         loadInlays()
@@ -212,6 +214,11 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                 val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
                 inlay.let {
                     inlays.add(it)
+                    if (!analyticsTracked) {
+                        val params = TelemetryParams("MLT Codelenses Rendered", mapOf("NR Account ID" to (result.newRelicAccountId ?: 0)))
+                        project.agentService?.agent?.telemetry(params)
+                        analyticsTracked = true
+                    }
                 }
             }
         }
