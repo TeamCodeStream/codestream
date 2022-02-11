@@ -89,16 +89,13 @@ class MLTMetrics {
     val text: String
         get() {
             val parts = mutableListOf<String>()
-            errorRate?.let {
-                parts += "error rate: ${it.errorsPerMinute}/min"
-            }
-            averageDuration?.let {
-                parts += "avg duration: ${it.averageDuration}"
-            }
-            throughput?.let {
-                parts += "throughput: ${it.requestsPerMinute}/min"
-            }
-            return parts.joinToString()
+            val averageDurationStr = averageDuration?.averageDuration?.let { "%.3f".format(it) + "ms" } ?: "n/a"
+            parts += "avg duration: $averageDurationStr"
+            val throughputStr = throughput?.requestsPerMinute?.let { "%.3f".format(it) + "rpm" } ?: "n/a"
+            parts += "throughput: $throughputStr"
+            val errorRateStr = errorRate?.errorsPerMinute?.let { "%.3f".format(it) + "epm" } ?: "n/a"
+            parts += "error rate: $errorRateStr"
+            return parts.joinToString(" | ")
         }
 }
 
@@ -181,9 +178,11 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
             val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
             val pyFile = psiFile as? PyFile ?: return@invokeLater
             val presentationFactory = PresentationFactory(editor)
+            val since = result.sinceDateFormatted ?: "30 minutes ago"
             metricsByFunction.forEach { (functionName, metrics) ->
                 val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
-                var textPresentation = presentationFactory.text(metrics.text)
+                val text = "${metrics.text} - since $since"
+                val textPresentation = presentationFactory.text(text)
                 val referenceOnHoverPresentation =
                     presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
                         override fun onClick(event: MouseEvent, translated: Point) {
