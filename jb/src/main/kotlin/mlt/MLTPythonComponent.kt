@@ -79,12 +79,9 @@ class MLTMetrics {
     var throughput: MethodLevelTelemetryThroughput? = null
 
     val nameMapping: MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping
-        get() =
-            MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping(
-                averageDuration?.metricTimesliceName,
-                throughput?.metricTimesliceName,
-                errorRate?.metricTimesliceName
-            )
+        get() = MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping(
+            averageDuration?.metricTimesliceName, throughput?.metricTimesliceName, errorRate?.metricTimesliceName
+        )
 
     val text: String
         get() {
@@ -123,12 +120,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                     try {
                         lastResult = project.agentService?.fileLevelTelemetry(
                             FileLevelTelemetryParams(
-                                path,
-                                LANGUAGE_ID,
-                                null,
-                                null,
-                                null,
-                                OPTIONS
+                                path, LANGUAGE_ID, null, null, null, OPTIONS
                             )
                         )
 
@@ -137,8 +129,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                             metrics.errorRate = errorRate
                         }
                         lastResult?.averageDuration?.forEach { averageDuration ->
-                            val metrics =
-                                metricsByFunction.getOrPut(averageDuration.functionName) { MLTMetrics() }
+                            val metrics = metricsByFunction.getOrPut(averageDuration.functionName) { MLTMetrics() }
                             metrics.averageDuration = averageDuration
                         }
                         lastResult?.throughput?.forEach { throughput ->
@@ -146,8 +137,8 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                             metrics.throughput = throughput
                         }
 
-                        if (metricsByFunction.isNotEmpty()) {
-                            updateInlays()
+                        updateInlays()
+                        if (lastResult?.error != null) {
                             editor.document.addDocumentListener(docListener)
                         }
                     } catch (ex: Exception) {
@@ -169,57 +160,107 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                 it.dispose()
             }
             inlays.clear()
-
-            if (editor !is EditorImpl) return@invokeLater
-            if (path == null) return@invokeLater
-
             val result = lastResult ?: return@invokeLater
-            val project = editor.project ?: return@invokeLater
-            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-            val pyFile = psiFile as? PyFile ?: return@invokeLater
-            val presentationFactory = PresentationFactory(editor)
-            val since = result.sinceDateFormatted ?: "30 minutes ago"
-            metricsByFunction.forEach { (functionName, metrics) ->
-                val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
-                val text = "${metrics.text} - since $since"
-                val textPresentation = presentationFactory.text(text)
-                val referenceOnHoverPresentation =
-                    presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
-                        override fun onClick(event: MouseEvent, translated: Point) {
-                            val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
-                            val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
-                            val range = Range(start, end)
-                            project.codeStream?.show {
-                                project.webViewService?.postNotification(
-                                    MethodLevelTelemetryNotifications.View(
-                                        result.error,
-                                        result.repo,
-                                        result.codeNamespace,
-                                        path,
-                                        result.relativeFilePath,
-                                        LANGUAGE_ID,
-                                        range,
-                                        functionName,
-                                        result.newRelicAccountId,
-                                        result.newRelicEntityGuid,
-                                        OPTIONS,
-                                        metrics.nameMapping
-                                    )
+            if (result.error?.type == "NOT_ASSOCIATED") {
+                updateInlayNotAssociated()
+            } else {
+                updateInlaysCore()
+            }
+
+        }
+    }
+
+    private fun updateInlaysCore() {
+        if (editor !is EditorImpl) return
+        val result = lastResult ?: return
+        val project = editor.project ?: return
+        if (path == null) return
+        val presentationFactory = PresentationFactory(editor)
+        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+        val pyFile = psiFile as? PyFile ?: return
+        val since = result.sinceDateFormatted ?: "30 minutes ago"
+        metricsByFunction.forEach { (functionName, metrics) ->
+            val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
+            val text = "${metrics.text} - since $since"
+            val textPresentation = presentationFactory.text(text)
+            val referenceOnHoverPresentation =
+                presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
+                    override fun onClick(event: MouseEvent, translated: Point) {
+                        val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
+                        val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
+                        val range = Range(start, end)
+                        project.codeStream?.show {
+                            project.webViewService?.postNotification(
+                                MethodLevelTelemetryNotifications.View(
+                                    result.error,
+                                    result.repo,
+                                    result.codeNamespace,
+                                    path,
+                                    result.relativeFilePath,
+                                    LANGUAGE_ID,
+                                    range,
+                                    functionName,
+                                    result.newRelicAccountId,
+                                    result.newRelicEntityGuid,
+                                    OPTIONS,
+                                    metrics.nameMapping
                                 )
-                            }
+                            )
                         }
-                    })
-                val renderer = PresentationRenderer(referenceOnHoverPresentation)
-                val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
-                inlay.let {
-                    inlays.add(it)
-                    if (!analyticsTracked) {
-                        val params = TelemetryParams("MLT Codelenses Rendered", mapOf("NR Account ID" to (result.newRelicAccountId ?: 0)))
-                        project.agentService?.agent?.telemetry(params)
-                        analyticsTracked = true
                     }
+                })
+            val renderer = PresentationRenderer(referenceOnHoverPresentation)
+            val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
+            inlay.let {
+                inlays.add(it)
+                if (!analyticsTracked) {
+                    val params = TelemetryParams(
+                        "MLT Codelenses Rendered", mapOf("NR Account ID" to (result.newRelicAccountId ?: 0))
+                    )
+                    project.agentService?.agent?.telemetry(params)
+                    analyticsTracked = true
                 }
             }
         }
+    }
+
+    private fun updateInlayNotAssociated() {
+        if (editor !is EditorImpl) return
+        val result = lastResult ?: return
+        val project = editor.project ?: return
+        if (path == null) return
+        val presentationFactory = PresentationFactory(editor)
+        val text = "Click to configure golden signals from New Relic"
+        val textPresentation = presentationFactory.text(text)
+        val referenceOnHoverPresentation =
+            presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
+                override fun onClick(event: MouseEvent, translated: Point) {
+                    project.codeStream?.show {
+                        project.webViewService?.postNotification(
+                            MethodLevelTelemetryNotifications.View(
+                                result.error,
+                                result.repo,
+                                result.codeNamespace,
+                                path,
+                                result.relativeFilePath,
+                                LANGUAGE_ID,
+                                null,
+                                null,
+                                result.newRelicAccountId,
+                                result.newRelicEntityGuid,
+                                OPTIONS,
+                                null
+                            )
+                        )
+                    }
+                }
+            })
+        val withTooltipPresentation = presentationFactory.withTooltip(
+            "Associate this repository with an entity from New Relic One so that you can see golden signals right in your editor",
+            referenceOnHoverPresentation
+        )
+        val renderer = PresentationRenderer(withTooltipPresentation)
+        val inlay = editor.inlayModel.addBlockElement(0, false, true, 1, renderer)
+        inlays.add(inlay)
     }
 }

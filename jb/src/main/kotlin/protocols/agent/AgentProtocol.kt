@@ -505,7 +505,7 @@ class MethodLevelTelemetryErrorRate(
 )
 
 class FileLevelTelemetryResult(
-    var error: kotlin.Any,
+    var error: FileLevelTelemetryResultError?,
     val repo: CSRepo,
     val throughput: List<MethodLevelTelemetryThroughput>?,
     val averageDuration: List<MethodLevelTelemetryAverageDuration>?,
@@ -519,7 +519,11 @@ class FileLevelTelemetryResult(
     val newRelicUrl: String?,
     // val newRelicEntityAccounts: EntityAccount[];
     val codeNamespace: String?,
-    val relativeFilePath: String
+    val relativeFilePath: String?
+)
+
+class FileLevelTelemetryResultError(
+    val type: String
 )
 
 
