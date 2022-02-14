@@ -91,4 +91,46 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 		assert.strictEqual(codeLenses.length, 1);
 		assert.strictEqual(codeLenses[0].command!.title!.indexOf("3.33") > -1, true);
 	});
+
+	test("NOT_ASSOCIATED", async () => {
+		const observabilityService = {
+			getFileLevelTelemetry: function(
+				filePath: string,
+				languageId: string,
+				options?: FileLevelTelemetryRequestOptions | undefined
+			): Promise<GetFileLevelTelemetryResponse> {
+				return new Promise(resolve => {
+					return resolve({
+						repo: {
+							id: "123",
+							name: "repo",
+							remote: "remote"
+						},
+						relativeFilePath: "/hello/foo.py",
+						newRelicAccountId: 1,
+						newRelicEntityGuid: "123",
+						newRelicEntityAccounts: [] as any,
+						codeNamespace: "fooNamespace",
+						error: {
+							type: "NOT_ASSOCIATED"
+						}
+					} as GetFileLevelTelemetryResponse);
+				});
+			}
+		};
+
+		const provider = new InstrumentationCodeLensProvider(
+			"anythingHere",
+			new MockSymbolLocator(),
+			observabilityService,
+			{ track: function() {} } as any
+		);
+
+		const codeLenses = await provider.provideCodeLenses(
+			documentFactory("app.py", "app.py", "python"),
+			new CancellationTokenSource().token
+		);
+		assert.strictEqual(codeLenses.length, 1);
+		assert.strictEqual(codeLenses[0].command!.title!.indexOf("Click to configure") > -1, true);
+	});
 });
