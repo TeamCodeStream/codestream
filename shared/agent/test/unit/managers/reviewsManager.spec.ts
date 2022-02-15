@@ -120,11 +120,17 @@ describe("ReviewsManager.spec.ts", () => {
 								return {
 									getPullRequestProvider: async function() {
 										return undefined;
+									},
+									getWeightedRemotes: async function() {
+										return [];
 									}
 								};
 							},
 							getCurrentBranch: async function() {
 								return "develop";
+							},
+							getWeightedRemotes: async function() {
+								return [];
 							}
 						},
 						providerRegistry: {
@@ -187,11 +193,17 @@ describe("ReviewsManager.spec.ts", () => {
 												}
 											]
 										};
+									},
+									getWeightedRemotes: async function() {
+										return [];
 									}
 								};
 							},
 							getCurrentBranch: async function() {
 								return "develop";
+							},
+							getWeightedRemotes: async function() {
+								return [];
 							}
 						},
 						providerRegistry: {

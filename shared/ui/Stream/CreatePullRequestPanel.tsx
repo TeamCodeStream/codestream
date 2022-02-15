@@ -233,7 +233,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 
 	const [prRemoteNameCreationRequested, setPrRemoteNameCreationRequested] = useState(true);
 	const [prRemoteName, setPrRemoteName] = useState("");
-	const [originList, setOriginList] = useState([] as string[]);
+	const [prRemoteNames, setPrRemoteNames] = useState([] as string[]);
 
 	// post PR creation values
 	const [prUrl, setPrUrl] = useState("");
@@ -394,8 +394,8 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				} else if (result.warning && result.warning.type) {
 					if (result.warning.type === "REQUIRES_UPSTREAM") {
 						setPrRequiresUpstream(true);
-						setOriginList(result.repo?.origins!);
-						setPrRemoteName(result.repo!.origins![0]);
+						setPrRemoteNames(result.repo?.remotes!);
+						setPrRemoteName(result.repo!.currentRemote!);
 					} else {
 						setPreconditionWarning({
 							type: result.warning.type,
@@ -640,8 +640,8 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 
 				if (result && result.warning && result.warning.type === "REQUIRES_UPSTREAM") {
 					setPrRequiresUpstream(true);
-					setOriginList(result.repo!.origins!);
-					setPrRemoteName(result.repo!.origins![0]);
+					setPrRemoteNames(result.repo!.remotes!);
+					setPrRemoteName(result.repo!.currentRemote!);
 				} else if (result && result.error) {
 					setPreconditionError({
 						type: result.error.type || "UNKNOWN",
@@ -1578,7 +1578,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 													style={{ resize: "vertical" }}
 												/>
 											</div>
-											{prRequiresUpstream && originList && originList.length && (
+											{prRequiresUpstream && prRemoteNames && prRemoteNames.length && (
 												<div className="control-group">
 													<Checkbox
 														name="set-upstream"
@@ -1586,9 +1586,9 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 														onChange={e => {
 															const val = e.valueOf();
 															setPrRemoteNameCreationRequested(val);
-															if (originList && originList.length === 1) {
+															if (prRemoteNames && prRemoteNames.length === 1) {
 																if (val) {
-																	setPrRemoteName(originList[0]);
+																	setPrRemoteName(prRemoteNames[0]);
 																}
 															}
 														}}
@@ -1598,10 +1598,10 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 														>
 															<span className="subtle">
 																Set upstream to{" "}
-																{originList.length > 1 && (
+																{prRemoteNames.length > 1 && (
 																	<DropdownButton
 																		variant="text"
-																		items={originList.map((_: any) => {
+																		items={prRemoteNames.map((_: any) => {
 																			return {
 																				label: `${_}/${pending?.headRefName}`,
 																				key: _,
@@ -1611,12 +1611,12 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 																			};
 																		})}
 																	>
-																		{`${prRemoteName || originList[0]}/${pending?.headRefName}`}
+																		{`${prRemoteName || prRemoteNames[0]}/${pending?.headRefName}`}
 																	</DropdownButton>
 																)}
-																{originList.length === 1 && (
+																{prRemoteNames.length === 1 && (
 																	<span className="highlight">
-																		{originList[0]}/{pending?.headRefName}
+																		{prRemoteNames[0]}/{pending?.headRefName}
 																	</span>
 																)}
 															</span>

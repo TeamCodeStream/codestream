@@ -588,7 +588,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		const { git, providerRegistry, users } = serviceLocator || SessionContainer.instance();
 
 		let warning = undefined;
-		let remotes: GitRemote[] | undefined;
 		let repo: GitRepository | undefined;
 		let review: CSReview | undefined = undefined;
 		let isProviderConnected = false;
@@ -651,6 +650,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			let providerName: string | undefined = undefined;
 			let providerRepoId: string | undefined = undefined;
 			let owner: string | undefined = undefined;
+			let currentRemote: string | undefined = undefined;
+			let remotes: string[] | undefined;
 
 			// given a user, get all of their connected providers
 			const user = await users.getMe();
@@ -663,56 +664,77 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			// these remotes are from the user's local git
 			if (providerRepo?.provider && providerRepo?.remotes?.length > 0) {
-				remoteUrl = providerRepo.remotes[0].webUrl;
-				// get repo info, delegating to the actual provider's api
-				const providerRepoInfo = await providerRegistry.getRepoInfo({
-					providerId: providerRepo.providerId,
-					remote: remoteUrl!
-				});
-				if (providerRepoInfo) {
-					if (providerRepoInfo.error) {
-						return {
-							success: false,
-							error: providerRepoInfo.error
-						};
-					}
+				let weightedRemotes = await repo.getWeightedRemotes(providerRepo.remotes);
+				let lastError;
+				const remotesLength = weightedRemotes.length;
+				for (let i = 0; i < remotesLength; i++) {
+					remoteUrl = weightedRemotes[i].webUrl;
 
-					providerRepoDefaultBranch = providerRepoInfo.defaultBranch;
-					baseRefName = baseRefName || providerRepoDefaultBranch;
-					if (providerRepoInfo.pullRequests?.length) {
-						if (baseRefName && headRefName) {
-							// if there's already an open pull requests for this base/head
-							// and nameWithOwner combo, fail
-							const existingPullRequest = providerRepoInfo.pullRequests.find(
-								(_: any) =>
-									_.baseRefName === baseRefName &&
-									_.headRefName === headRefName &&
-									_.nameWithOwner === providerRepoInfo.nameWithOwner
-							);
-							if (existingPullRequest) {
+					// get repo info, delegating to the actual provider's api
+					const providerRepoInfo = await providerRegistry.getRepoInfo({
+						providerId: providerRepo.providerId,
+						remote: remoteUrl!
+					});
+					if (providerRepoInfo) {
+						lastError = providerRepoInfo.error;
+						if (lastError) {
+							Logger.debug("checkPullRequestPreconditions lastError", {
+								remoteUrl,
+								providerId: providerRepo.providerId,
+								error: lastError
+							});
+							if (i === remotesLength - 1) {
 								return {
 									success: false,
-									error: {
-										type: "ALREADY_HAS_PULL_REQUEST",
-										url: existingPullRequest.url,
-										id: existingPullRequest.id
-									},
-									provider: {
-										id: providerRepo.providerId,
-										name: providerRepo.providerName
-									}
+									error: providerRepoInfo.error
 								};
 							}
+							continue;
 						}
+
+						providerRepoDefaultBranch = providerRepoInfo.defaultBranch;
+						baseRefName = baseRefName || providerRepoDefaultBranch;
+						if (providerRepoInfo.pullRequests?.length) {
+							if (baseRefName && headRefName) {
+								// if there's already an open pull requests for this base/head
+								// and nameWithOwner combo, fail
+								const existingPullRequest = providerRepoInfo.pullRequests.find(
+									(_: any) =>
+										_.baseRefName === baseRefName &&
+										_.headRefName === headRefName &&
+										_.nameWithOwner === providerRepoInfo.nameWithOwner
+								);
+								if (existingPullRequest) {
+									return {
+										success: false,
+										error: {
+											type: "ALREADY_HAS_PULL_REQUEST",
+											url: existingPullRequest.url,
+											id: existingPullRequest.id
+										},
+										provider: {
+											id: providerRepo.providerId,
+											name: providerRepo.providerName
+										}
+									};
+								}
+							}
+						}
+
+						success = true;
+
+						currentRemote = weightedRemotes[i].name;
+
+						providerId = providerRepo.providerId;
+						providerName = providerRepo.providerName;
+						remotes = providerRepo.remotes.map(_ => _.name);
+
+						providerRepoId = providerRepoInfo.id;
+						isFork = providerRepoInfo.isFork;
+						nameWithOwner = providerRepoInfo.nameWithOwner;
+						owner = providerRepoInfo.owner;
+						break;
 					}
-					success = true;
-					providerRepoId = providerRepoInfo.id;
-					providerId = providerRepo.providerId;
-					providerName = providerRepo.providerName;
-					remotes = providerRepo.remotes;
-					isFork = providerRepoInfo.isFork;
-					nameWithOwner = providerRepoInfo.nameWithOwner;
-					owner = providerRepoInfo.owner;
 				}
 			}
 
@@ -738,7 +760,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				};
 			}
 
-			let originNames;
 			let remoteBranch;
 			const branches = await git.getBranches(repo.path);
 			const remoteBranches = await git.getBranches(repo.path, true);
@@ -748,7 +769,6 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				warning = {
 					type: "REQUIRES_UPSTREAM"
 				};
-				originNames = remotes && remotes.length ? remotes.map(_ => _.name) : [];
 			} else {
 				remoteBranch = branchRemote;
 			}
@@ -785,9 +805,10 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				success: success,
 				repo: {
 					id: repo.id,
-					remoteUrl: remoteUrl,
-					origins: originNames,
-					remoteBranch: remoteBranch,
+					remoteUrl,
+					remotes,
+					currentRemote,
+					remoteBranch,
 					branch: headRefName,
 					branches: branches!.branches,
 					remoteBranches: remoteBranches
@@ -799,9 +820,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 					id: providerId,
 					name: providerName,
 					isConnected: isProviderConnected,
-					pullRequestTemplate: pullRequestTemplate,
+					pullRequestTemplate,
 					pullRequestTemplateNames,
-					pullRequestTemplatePath: pullRequestTemplatePath,
+					pullRequestTemplatePath,
 					pullRequestTemplateLinesCount: Math.max(
 						(pullRequestTemplate || "").split("\n").length,
 						8

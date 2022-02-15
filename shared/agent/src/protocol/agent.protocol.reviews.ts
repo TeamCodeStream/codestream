@@ -317,17 +317,19 @@ export interface CheckPullRequestPreconditionsResponse {
 		id?: string;
 		/** remote as found in `git remote -v` */
 		remoteUrl?: string;
-		/** current branch */
+		/** current local branch name */
 		branch?: string;
-		/** current remote branch */
+		/** current remote branch name */
 		remoteBranch?: string;
 		/** list of local branches */
 		branches?: string[];
 		/** list of remote branches */
 		remoteBranches?: { remote?: string; branch: string }[];
 		commitsBehindOriginHeadBranch?: string;
-		/** list of origin names... things like origin, upstream, etc. */
-		origins?: string[];
+		/** list of all remote names... things like origin, upstream, etc. */
+		remotes?: string[];
+		/** current remote name */
+		currentRemote?: string;
 	};
 	provider?: {
 		/** CS-specific providerId like github*com */

@@ -52,8 +52,8 @@ export class GitRepository {
 	 * @return {*}
 	 * @memberof GitRepository
 	 */
-	async getWeightedRemotes() {
-		return sortBy(await this.getRemotes(), _ => [_.remoteWeight]);
+	async getWeightedRemotes(remotes?: GitRemote[]) {
+		return sortBy(remotes || (await this.getRemotes()), _ => [_.remoteWeight]);
 	}
 
 	async getStreams(): Promise<CSFileStream[]> {
