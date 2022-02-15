@@ -267,6 +267,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		}
 	}
 
+	@log()
 	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
@@ -303,15 +304,7 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 				pullRequests: pullRequests
 			};
 		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo`, {
-				remote: request.remote
-			});
-			return {
-				error: {
-					type: "PROVIDER",
-					message: `${this.displayName}: ${ex.message}`
-				}
-			};
+			return this.handleProviderError(ex, request);
 		}
 	}
 

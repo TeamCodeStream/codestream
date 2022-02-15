@@ -923,6 +923,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		}
 	}
 
+	@log()
 	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
@@ -977,18 +978,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			};
 			return result;
 		} catch (ex) {
-			Logger.error(ex, "GitHub: getRepoInfo", {
-				remote: request.remote
-			});
-			let errorMessage =
-				ex.response && ex.response.errors ? ex.response.errors[0].message : "Unknown GitHub error";
-			errorMessage = `GitHub: ${errorMessage}`;
-			return {
-				error: {
-					type: "PROVIDER",
-					message: errorMessage
-				}
-			};
+			return this.handleProviderError(ex, request);
 		}
 	}
 

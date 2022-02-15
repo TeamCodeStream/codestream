@@ -869,6 +869,39 @@ export abstract class ThirdPartyIssueProviderBase<
 		this._version = this.DEFAULT_VERSION;
 		return this._version;
 	}
+
+	protected handleProviderError(ex: any, request: any) {
+		Logger.error(ex, `${this.displayName}: handleProviderError`, {
+			request
+		});
+
+		let errorMessage = undefined;
+		if (ex?.info?.error?.message) {
+			// this is some kind of fetch / network error
+			errorMessage = ex.info.error.message;
+		}
+		if (ex?.response?.errors?.length) {
+			// this is some kind of provider error
+			errorMessage = ex.response.errors[0].message || "Unknown error";
+		}
+		if (!errorMessage) {
+			if (ex?.message) {
+				// generic error
+				errorMessage = ex.message;
+			} else {
+				// some other kind of error
+				errorMessage = ex?.toString();
+			}
+		}
+
+		errorMessage = `${this.displayName}: ${errorMessage || `Unknown error`}`;
+		return {
+			error: {
+				type: "PROVIDER",
+				message: errorMessage
+			}
+		};
+	}
 }
 
 export abstract class ThirdPartyPostProviderBase<

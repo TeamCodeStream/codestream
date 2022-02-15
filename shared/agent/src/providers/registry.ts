@@ -568,6 +568,7 @@ export class ThirdPartyProviderRegistry {
 		) {
 			throw new Error(`Provider(${provider.name}) doesn't support pull requests`);
 		}
+
 		const response = await pullRequestProvider.getRepoInfo(request);
 		return response;
 	}

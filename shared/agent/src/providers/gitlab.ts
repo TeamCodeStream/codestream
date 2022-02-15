@@ -512,6 +512,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		}
 	}
 
+	@log()
 	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		let owner;
 		let name;
@@ -574,18 +575,7 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				})
 			};
 		} catch (ex) {
-			Logger.error(ex, `${this.displayName}: getRepoInfo failed`, {
-				owner: owner,
-				name: name,
-				hasProviderInfo: this._providerInfo != null
-			});
-
-			return {
-				error: {
-					type: "PROVIDER",
-					message: ex.message
-				}
-			};
+			return this.handleProviderError(ex, request);
 		}
 	}
 
