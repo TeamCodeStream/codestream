@@ -1392,6 +1392,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const repoEntityId =
 				response.referenceEntityCreateOrUpdateRepository.updated[0] ||
 				response.referenceEntityCreateOrUpdateRepository.created[0];
+
+			if (!repoEntityId) {
+				ContextLogger.warn(
+					"referenceEntityCreateOrUpdateRepository no repoEntityId [this is not good]",
+					{
+						accountId: accountId,
+						name: name,
+						url: request.url
+					}
+				);
+			}
+
 			const entityId =
 				request.entityId || (await this.fetchErrorGroupById(request.errorGroupGuid!))?.entityGuid;
 			if (entityId) {
