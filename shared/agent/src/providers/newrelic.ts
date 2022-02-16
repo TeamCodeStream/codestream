@@ -784,26 +784,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								application.source.entity.guid
 							);
 							if (response.actor.account.nrql.results) {
-								const groupedByFingerprint = _groupBy(
-									response.actor.account.nrql.results,
-									"fingerprint"
-								);
-								const errorTraces = [];
-								for (const k of Object.keys(groupedByFingerprint)) {
-									const groupedObject = _sortBy(groupedByFingerprint[k], r => -r.timestamp);
-									const lastObject = groupedObject[0];
-									errorTraces.push({
-										fingerPrintId: k,
-										length: groupedObject.length,
-										appName: lastObject.appName,
-										lastOccurrence: lastObject.timestamp,
-										occurrenceId: lastObject.id,
-										errorClass: lastObject["error.class"],
-										message: lastObject.message,
-										entityGuid: lastObject.entityGuid
-									});
-								}
-
+								const errorTraces = response.actor.account.nrql.results;
 								for (const errorTrace of errorTraces) {
 									try {
 										const response = await this.getErrorGroupFromNameMessageEntity(
@@ -1812,13 +1793,35 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
+	/**
+	 * Find a list of error traces grouped by fingerprint
+	 *
+	 * @param accountId the NR1 account id to query against
+	 * @param applicationGuid the entityGuid for the application to query for
+	 * @returns list of most recent error traces for each unique fingerprint
+	 */
 	@log({ timed: true })
 	private async findFingerprintedErrorTraces(accountId: number, applicationGuid: string) {
+		const nrql = [
+			"SELECT",
+			"latest(timestamp) AS 'lastOccurrence',", // first field is used to sort with FACET
+			"latest(id) AS 'occurrenceId',",
+			"latest(appName) AS 'appName',",
+			"latest(error.class) AS 'errorClass',",
+			"latest(message) AS 'message',",
+			"latest(entityGuid) AS 'entityGuid',",
+			"count(id) AS 'length'",
+			"FROM ErrorTrace",
+			`WHERE fingerprint IS NOT NULL and entityGuid='${applicationGuid}'`,
+			"FACET fingerprint AS 'fingerPrintId'", // group the results by fingerprint
+			"SINCE 3 days ago",
+			"LIMIT MAX"
+		].join(" ");
 		return this.query(
-			`query fetchErrorsInboxData($accountId:Int!) {
+			`query fetchErrorsInboxFacetedData($accountId:Int!) {
 				actor {
 				  account(id: $accountId) {
-					nrql(query: "SELECT id, fingerprint, appName, error.class, message, entityGuid FROM ErrorTrace WHERE fingerprint IS NOT NULL and entityGuid='${applicationGuid}'  SINCE 3 days ago LIMIT 500") { nrql results }
+					nrql(query: "${nrql}") { nrql results }
 				  }
 				}
 			  }
