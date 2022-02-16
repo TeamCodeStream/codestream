@@ -142,56 +142,7 @@ it("renders default state 2", async () => {
 					repo: {
 						id: "61fac86ad537c93d8bb9bf8a",
 						remoteUrl: "//github.com/TeamCodeStream/a",
-						remotes: [
-							{
-								repoPath: "/Users/TeamCodeStream/code/a",
-								name: "origin",
-								scheme: "https://",
-								domain: "github.com",
-								path: "TeamCodeStream/a",
-								types: [
-									{
-										url: "https://github.com/TeamCodeStream/a.git",
-										type: "fetch"
-									},
-									{
-										url: "https://github.com/TeamCodeStream/a.git",
-										type: "push"
-									}
-								],
-								uri: {
-									$mid: 1,
-									external: "https://github.com/TeamCodeStream/a.git",
-									path: "/TeamCodeStream/a.git",
-									scheme: "https",
-									authority: "github.com"
-								}
-							},
-							{
-								repoPath: "/Users/TeamCodeStream/code/a",
-								name: "private",
-								scheme: "https://",
-								domain: "github.com",
-								path: "TeamCodeStream/b",
-								types: [
-									{
-										url: "https://github.com/TeamCodeStream/b.git",
-										type: "fetch"
-									},
-									{
-										url: "https://github.com/TeamCodeStream/b.git",
-										type: "push"
-									}
-								],
-								uri: {
-									$mid: 1,
-									external: "https://github.com/TeamCodeStream/b.git",
-									path: "/TeamCodeStream/b.git",
-									scheme: "https",
-									authority: "github.com"
-								}
-							}
-						],
+						remotes: ["origin", "private"],
 						remoteBranch: "origin/foo",
 						branch: "foo",
 						branches: ["foo", "master", "private"],
@@ -460,7 +411,7 @@ it("HAS_LOCAL_MODIFICATIONS", async () => {
 	});
 	await waitFor(() => {
 		expect((container as any).textContent).toBe(
-			"Open a Pull RequestChoose two branches to start a new pull request.A PR can't be created because the compare branch includes uncommitted changes. Commit and push your changes and then try again. "
+			"Open a Pull RequestChoose two branches to start a new pull request.A pull request can't be created because the compare branch includes uncommitted changes. Commit and push your changes and then try again. "
 		);
 	});
 });

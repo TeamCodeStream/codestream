@@ -1036,7 +1036,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 
 			return (
 				<>
-					{(acrossForks || openRepos.length > 1) && !derivedState.reviewId && (
+					{(acrossForks || openRepos.length > 1) && (
 						<PRError>
 							<div className="control-group">
 								<PRCompare>
@@ -1141,7 +1141,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 							"This feedback request"
 						) : (
 							<span>
-								The compare branch <PRBranch>{pending?.headRefName}</PRBranch>
+								The {prLabel.repoBranchHeadLabel} branch <PRBranch>{pending?.headRefName}</PRBranch>
 							</span>
 						)}{" "}
 						includes local commits. Push your changes to include them in your {prLabel.pullrequest}.
@@ -1157,7 +1157,8 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 								"The feedback request"
 							) : (
 								<span>
-									The compare branch <PRBranch>{pending?.headRefName}</PRBranch>
+									The {prLabel.repoBranchHeadLabel} branch{" "}
+									<PRBranch>{pending?.headRefName}</PRBranch>
 								</span>
 							)}{" "}
 							includes uncommitted changes. Commit and push your changes to include them.
@@ -1166,9 +1167,11 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				} else {
 					messageElement = (
 						<span>
-							A PR can't be created because{" "}
-							{derivedState.reviewId ? "the feedback request" : "the compare branch"} includes
-							uncommitted changes. Commit and push your changes and then{" "}
+							A {prLabel.pullrequest} can't be created because{" "}
+							{derivedState.reviewId
+								? "the feedback request"
+								: `the ${prLabel.repoBranchHeadLabel} branch`}{" "}
+							includes uncommitted changes. Commit and push your changes and then{" "}
 							<Link onClick={onClickTryAgain}>try again</Link>.
 						</span>
 					);
@@ -1377,7 +1380,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				{!derivedState.reviewId && (isLoadingForkInfo || isLoading) && (
 					<Icon className="spin smaller" name="sync" />
 				)}
-				{!derivedState.reviewId && !isLoadingForkInfo && forkedRepos.length > 0 && (
+				{!isLoadingForkInfo && forkedRepos.length > 0 && (
 					<>
 						{" "}
 						If you need to, you can also{" "}
@@ -1420,7 +1423,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 											{acrossForks ? (
 												<>
 													<Icon name="git-compare" />
-													{(acrossForks || openRepos.length > 0) && !derivedState.reviewId && (
+													{(acrossForks || openRepos.length > 0) && (
 														<PRDropdown>{renderBaseReposAcrossForksDropdown()}</PRDropdown>
 													)}
 													<PRDropdown>{renderBaseBranchesAcrossForksDropdown()}</PRDropdown>
@@ -1434,6 +1437,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 												</>
 											) : (
 												<>
+													{/* if we're not across forks, and there is a review, dont show this */}
 													{openRepos.length > 0 && !derivedState.reviewId && (
 														<PRDropdown>
 															<Icon name="repo" />

@@ -664,7 +664,14 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 
 			// these remotes are from the user's local git
 			if (providerRepo?.provider && providerRepo?.remotes?.length > 0) {
-				let weightedRemotes = await repo.getWeightedRemotes(providerRepo.remotes);
+				// in a forked-repo model, where there might be multiple remotes, we want
+				// the "origin" one (if exists) to come first, since it will have a parent
+				// that will give the user the option to create a PR to its parent repo or
+				// to itself.
+				const weightedRemotes = await repo.getWeightedRemotesByStrategy(
+					providerRepo.remotes,
+					"prioritizeOrigin"
+				);
 				let lastError;
 				const remotesLength = weightedRemotes.length;
 				for (let i = 0; i < remotesLength; i++) {

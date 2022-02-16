@@ -131,6 +131,9 @@ describe("ReviewsManager.spec.ts", () => {
 							},
 							getWeightedRemotes: async function() {
 								return [];
+							},
+							getWeightedRemotesByStrategy: function() {
+								return [];
 							}
 						},
 						providerRegistry: {
@@ -196,6 +199,9 @@ describe("ReviewsManager.spec.ts", () => {
 									},
 									getWeightedRemotes: async function() {
 										return [];
+									},
+									getWeightedRemotesByStrategy: function() {
+										return ["origin"];
 									}
 								};
 							},

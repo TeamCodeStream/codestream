@@ -64,6 +64,25 @@ export class GitRemote implements GitRemoteLike {
 		return name === "upstream" ? -100 : name === "origin" ? 0 : 100;
 	}
 
+	/**
+	 * Certain remote names are more important, and have more "weight" than others.
+	 * This includes "origin" and "upstream". We prioritize these by assigning them a lower
+	 * number. When sorting, these lower or negative numbers will naturally sort first
+	 *
+	 * @readonly
+	 * @memberof GitRemote
+	 */
+	remoteWeightByStrategy(strategy: "prioritizeOrigin" | "prioritizeUpstream" = "prioritizeOrigin") {
+		const name = this.name.toLowerCase();
+		if (name === "upstream") {
+			return strategy === "prioritizeUpstream" ? -100 : 0;
+		}
+		if (name === "origin") {
+			return strategy === "prioritizeOrigin" ? -100 : 0;
+		}
+		return 100;
+	}
+
 	get normalizedUrl(): string {
 		return `${this.domain}/${this.path}`.toLocaleLowerCase();
 	}

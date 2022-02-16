@@ -47,13 +47,26 @@ export class GitRepository {
 	}
 
 	/**
-	 * Returns a list of remotes ordered by the weight of the origin name
+	 * Returns a list of remotes ordered by the weight of the remote name
 	 *
 	 * @return {*}
 	 * @memberof GitRepository
 	 */
 	async getWeightedRemotes(remotes?: GitRemote[]) {
 		return sortBy(remotes || (await this.getRemotes()), _ => [_.remoteWeight]);
+	}
+
+	/**
+	 * Returns a list of remotes ordered by the weight of the remote name
+	 *
+	 * @return {*}
+	 * @memberof GitRepository
+	 */
+	async getWeightedRemotesByStrategy(
+		remotes?: GitRemote[],
+		strategy: "prioritizeOrigin" | "prioritizeUpstream" = "prioritizeOrigin"
+	) {
+		return sortBy(remotes || (await this.getRemotes()), _ => [_.remoteWeightByStrategy(strategy)]);
 	}
 
 	async getStreams(): Promise<CSFileStream[]> {
