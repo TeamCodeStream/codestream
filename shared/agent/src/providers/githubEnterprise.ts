@@ -57,7 +57,10 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 	protected async getVersion(): Promise<ProviderVersion> {
 		try {
 			if (this._version == null) {
-				const response = await this.get<{ installed_version: string }>("/meta");
+				// this GET call should be very fast, so 5s here should be plenty
+				const response = await this.get<{ installed_version: string }>("/meta", undefined, {
+					timeout: 5000
+				});
 				const installedVersion = response.body.installed_version;
 				this._version = {
 					version: installedVersion,

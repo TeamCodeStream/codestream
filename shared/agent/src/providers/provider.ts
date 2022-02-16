@@ -547,6 +547,9 @@ export abstract class ThirdPartyProviderBase<
 
 			method = (init && init.method) || "GET";
 			absoluteUrl = options.absoluteUrl ? url : `${this.baseUrl}${url}`;
+			if (options.timeout != null) {
+				init.timeout = options.timeout;
+			}
 
 			let json: Promise<R> | undefined;
 			let resp: Response | undefined;

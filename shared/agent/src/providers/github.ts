@@ -368,11 +368,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
-	async get<T extends object>(url: string): Promise<ApiResponse<T>> {
+	async get<T extends object>(
+		url: string,
+		headers: { [key: string]: any } | undefined = undefined,
+		options: { [key: string]: any } | undefined = undefined
+	): Promise<ApiResponse<T>> {
 		// override the base to add additional error handling
 		let response;
 		try {
-			response = await super.get<T>(url);
+			response = await super.get<T>(url, headers, options);
 		} catch (ex) {
 			Logger.warn(`${this.providerConfig.name} query caught:`, ex);
 			const exType = this._isSuppressedException(ex);
