@@ -103,7 +103,6 @@ import { Modal } from "./Modal";
 interface Props {
 	showFeedbackSmiley: boolean;
 	hasPRProvider: boolean;
-	showPRComments: boolean;
 	currentStreamId?: string;
 	team: CSTeam;
 	viewInline: boolean;
@@ -177,7 +176,6 @@ interface State {
 	// newCodemarkAttributes: { type: CodemarkType; viewingInline: boolean } | undefined;
 	multiLocationCodemarkForm: boolean;
 	codemarkFormError?: string;
-	showPRCommentsField: boolean | undefined;
 }
 
 const NEW_CODEMARK_ATTRIBUTES_TO_RESTORE = "spatial-view:restore-codemark-form";
@@ -208,7 +206,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numLinesVisible: props.numLinesVisible,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
 			multiLocationCodemarkForm: false,
-			showPRCommentsField: props.showPRComments
 		};
 
 		this.docMarkersByStartLine = {};
@@ -227,7 +224,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
-					this.props.fetchDocumentMarkers(textDocument.uri, !this.props.showPRComments);
+					this.props.fetchDocumentMarkers(textDocument.uri);
 				}
 			}),
 			{
@@ -280,14 +277,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		);
 		if (didStartLineChange) {
 			this.scrollTo(this.props.metrics.lineHeight!);
-		}
-
-		if (
-			this.props.hasPRProvider &&
-			!prevProps.hasPRProvider &&
-			this._waitingForPRProviderConnection
-		) {
-			this.props.setUserPreference(["codemarksShowPRComments"], true);
 		}
 
 		this.repositionCodemarks();
@@ -457,7 +446,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		const scmError = getFileScmError(scmInfo);
 		this.setState({ problem: scmError });
 
-		await this.props.fetchDocumentMarkers(textEditorUri, !this.props.showPRComments);
+		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		if (scmError && renderErrorCallback !== undefined) {
 			renderErrorCallback(mapFileScmErrorForTelemetry(scmError));
@@ -499,14 +488,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 									if (seenCodemarks[codemark.id]) return null;
 									seenCodemarks[codemark.id] = true;
 								}
-								// const hidden =
-								// 	!showHidden &&
-								// 	((codemark && (!codemark.pinned || codemark.status === "closed")) ||
-								// 		(docMarker.externalContent && !this.props.showPRComments));
 
 								const hidden =
-									(!showHidden && codemark && (!codemark.pinned || codemark.status === "closed")) ||
-									(docMarker.externalContent && !this.props.showPRComments);
+									!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
 								if (hidden) {
 									this.hiddenCodemarks[docMarker.id] = true;
 									return null;
@@ -750,9 +734,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			while (this.docMarkersByStartLine[startLine]) startLine++;
 			this.docMarkersByStartLine[startLine] = docMarker;
 			const hidden =
-				!showHidden &&
-				((codemark && (!codemark.pinned || codemark.status === "closed")) ||
-					(docMarker.externalContent && !this.props.showPRComments));
+				!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
 			if (hidden) {
 				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
@@ -983,7 +965,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			}
 
 			// now get the new document markers
-			await this.props.fetchDocumentMarkers(this.props.textEditorUri!, !this.props.showPRComments);
+			await this.props.fetchDocumentMarkers(this.props.textEditorUri!);
 
 			if (docMarker) {
 				batch(() => {
@@ -1308,20 +1290,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.enableAnimations(() => this.props.setCodemarksShowArchived(!this.props.showHidden));
 	};
 
-	// togglePRComments = () => {
-	// 	const { showPRCommentsField } = this.state;
-	// 	const newShowPRComments = !this.props.showPRComments;
-	// 	if (this.props.hasPRProvider)
-	// 		this.enableAnimations(() => {
-	// 			this.props.setUserPreference(["codemarksShowPRComments"], !!showPRCommentsField);
-	// 			this.props.fetchDocumentMarkers(this.props.textEditorUri!, !newShowPRComments);
-	// 		});
-	// 	else {
-	// 		this._waitingForPRProviderConnection = true;
-	// 		this.setState({ showPRInfoModal: true });
-	// 	}
-	// };
-
 	showAbove = () => {
 		const { firstVisibleLine } = this.props;
 
@@ -1435,7 +1403,6 @@ const mapStateToProps = (state: CodeStreamState) => {
 		viewHeadshots: configs.showHeadshots,
 		showLabelText: false, //configs.showLabelText,
 		showHidden: context.codemarksShowArchived || false,
-		showPRComments: hasPRProvider && !!preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: editorContext.scmInfo,
 		textEditorUri: editorContext.textEditorUri,

@@ -77,7 +77,6 @@ interface InheritedProps {
 interface ConnectedProps {
 	currentStreamId?: string;
 	hasPRProvider?: boolean;
-	showPRComments?: boolean;
 	showHidden: boolean;
 	showResolved: boolean;
 	showReviews: boolean;
@@ -155,7 +154,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 		this.disposables.push(
 			HostApi.instance.on(DidChangeDocumentMarkersNotificationType, ({ textDocument }) => {
 				if (this.props.textEditorUri === textDocument.uri) {
-					this.props.fetchDocumentMarkers(textDocument.uri, !this.props.showPRComments);
+					this.props.fetchDocumentMarkers(textDocument.uri);
 				}
 			}),
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
@@ -266,7 +265,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			scmError = getFileScmError(scmInfo);
 			this.setState({ problem: scmError });
 		}
-		await this.props.fetchDocumentMarkers(textEditorUri, !this.props.showPRComments);
+		await this.props.fetchDocumentMarkers(textEditorUri);
 		this.setState(state => (state.isLoading ? { isLoading: false } : null));
 		if (scmError && renderErrorCallback !== undefined) {
 			renderErrorCallback(mapFileScmErrorForTelemetry(scmError));
@@ -521,10 +520,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 					this.renderedCodemarks[codemark.id] = true;
 				}
 
-				const hidden =
-					(!showHidden && codemark && !codemark.pinned) ||
-					(docMarker.externalContent && !this.props.showPRComments);
-				// if (hidden) return null;
+				const hidden = !showHidden && codemark && !codemark.pinned;
 
 				return (
 					<Codemark
@@ -554,7 +550,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			showHidden,
 			showResolved,
 			showReviews,
-			showPRComments,
 			wrapComments,
 			hideTags,
 			codemarkSortType
@@ -664,26 +659,6 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				key: "show-icons",
 				checked: false,
 				submenu: [
-					{
-						label: "Pull Request comments",
-						key: "show-prs",
-						checked: this.props.hasPRProvider
-							? this.state.pendingPRConnection
-								? true
-								: !!showPRComments
-							: false,
-
-						action: () => {
-							if (!this.props.hasPRProvider) {
-								this.setState({ showPRInfoModal: true });
-								this.setState({ pendingPRConnection: true });
-							} else {
-								this.setState({ pendingPRConnection: false });
-								setUserPreference(["codemarksShowPRComments"], !showPRComments);
-								// this.setState({ showPRCommentsField: !showPRCommentsField });
-							}
-						}
-					},
 					{
 						label: "Feedback Request comments",
 						key: "show-reviews",
@@ -893,7 +868,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		showReviews,
 		wrapComments: preferences.codemarksWrapComments || false,
 		hideTags: preferences.codemarksHideTags || false,
-		showPRComments: hasPRProvider && preferences.codemarksShowPRComments,
 		fileNameToFilterFor: editorContext.activeFile,
 		scmInfo: MOST_RECENT_SCM_INFO,
 		currentBranch,

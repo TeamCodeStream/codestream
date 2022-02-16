@@ -266,7 +266,6 @@ export class DocumentMarkerManager {
 
 		return {
 			excludeArchived: !preferences.codemarksShowArchived,
-			excludePRs: !preferences.codemarksShowPRComments,
 			excludeResolved: !!preferences.codemarksHideResolved,
 			excludeReviews: !!preferences.codemarksHideReviews
 		};
@@ -513,20 +512,7 @@ export class DocumentMarkerManager {
 
 			const { markers, markersNotLocated } = await this.getCodemarkDocumentMarkers(request);
 
-			let prMarkers: DocumentMarker[] = [];
 			const filters = await this.getFilters();
-			if (!filters.excludePRs) {
-				try {
-					const stream = await files.getByPath(filePath);
-					prMarkers = await this.getPullRequestDocumentMarkers({
-						uri: documentUri,
-						streamId: stream?.id
-					});
-				} catch (ex) {
-					Logger.error(ex, cc);
-					debugger;
-				}
-			}
 
 			const filteredMarkers = request.applyFilters
 				? markers.filter(marker => {
@@ -540,7 +526,7 @@ export class DocumentMarkerManager {
 				: markers;
 
 			return {
-				markers: [...filteredMarkers, ...prMarkers],
+				markers: filteredMarkers,
 				markersNotLocated
 			};
 		} catch (ex) {
@@ -764,56 +750,6 @@ export class DocumentMarkerManager {
 			markers: documentMarkers,
 			markersNotLocated
 		};
-	}
-
-	@log()
-	async getPullRequestDocumentMarkers({
-		uri,
-		streamId
-	}: {
-		uri: URI;
-		streamId: string | undefined;
-	}): Promise<DocumentMarker[]> {
-		const { providerRegistry, users } = SessionContainer.instance();
-		const user = await users.getMe();
-		const providers = providerRegistry.getConnectedProviders(
-			user,
-			(p): p is ThirdPartyIssueProvider & ThirdPartyProviderSupportsPullRequests => {
-				const thirdPartyIssueProvider = p as ThirdPartyIssueProvider;
-				return (
-					thirdPartyIssueProvider &&
-					typeof thirdPartyIssueProvider.supportsPullRequests === "function" &&
-					thirdPartyIssueProvider.supportsPullRequests()
-				);
-			}
-		);
-		if (providers.length === 0) return emptyArray;
-
-		const { git } = SessionContainer.instance();
-		const repo = await git.getRepositoryByFilePath(uri.fsPath);
-		if (!repo) {
-			return [];
-		}
-
-		const markers = [];
-		const requests = providers.map(p =>
-			p.getPullRequestDocumentMarkers({
-				uri: uri,
-				repoId: repo!.id,
-				streamId: streamId
-			})
-		);
-
-		for await (const response of requests) {
-			markers.push(...response);
-		}
-
-		// // If we have any markers, notify the webview, so it can request them again
-		// if (markers.length !== 0) {
-		// 	this.fireDidChangeDocumentMarkers(uri.toString(true), "codemarks");
-		// }
-
-		return markers;
 	}
 
 	@log()

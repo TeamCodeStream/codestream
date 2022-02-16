@@ -747,7 +747,6 @@ export interface CSMePreferences {
 	};
 
 	// which icons to show in the editor gutters
-	codemarksShowPRComments?: boolean;
 	codemarksHideReviews?: boolean;
 	codemarksHideResolved?: boolean;
 	codemarksShowArchived?: boolean;

@@ -54,7 +54,7 @@ export const PRInfoModal = (props: { onClose: () => void }) => {
 									dispatch(openPanel(`configure-enterprise-${provider.name}-${provider.id}-true`));
 								} else {
 									await dispatch(connectProvider(provider.id, "PR Toggle"));
-									if (textEditorUri) dispatch(fetchDocumentMarkers(textEditorUri, false));
+									if (textEditorUri) dispatch(fetchDocumentMarkers(textEditorUri));
 									props.onClose();
 								}
 							}}
