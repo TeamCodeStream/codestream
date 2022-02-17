@@ -92,13 +92,6 @@ export interface ThirdPartyProviderSupportsStatus {
 }
 
 export interface ThirdPartyProviderSupportsPullRequests {
-	getPullRequestDocumentMarkers(request: {
-		uri: URI;
-		repoId: string | undefined;
-		streamId: string | undefined;
-	}): Promise<DocumentMarker[]>;
-
-	// TODO fix these types
 	createPullRequest(
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined>;
@@ -131,10 +124,7 @@ export namespace ThirdPartyIssueProvider {
 	export function supportsPullRequests(
 		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
-		return (
-			(provider as any).getPullRequestDocumentMarkers !== undefined ||
-			(provider as any).getMyPullRequests !== undefined
-		);
+		return ((provider as any).getMyPullRequests !== undefined);
 	}
 }
 
@@ -747,199 +737,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		return true;
 	}
 
-	protected async getCommentsForPath(
-		filePath: string,
-		repo: GitRepository
-	): Promise<PullRequestComment[] | undefined> {
-		return undefined;
-	}
-
 	protected getPRExternalContent(
 		comment: PullRequestComment
 	): DocumentMarkerExternalContent | undefined {
 		return undefined;
-	}
-
-	protected getPullRequestDocumentMarkersCore(params: {
-		uri: URI;
-		repoId: string | undefined;
-		streamId: string;
-	}): Promise<DocumentMarker[]> {
-		const { documents } = Container.instance();
-		const uriAsString = params.uri.toString(true);
-		const doc = documents.get(uriAsString);
-		const cached = this._pullRequestDocumentMarkersCache.get(uriAsString);
-
-		if (cached && doc && cached.documentVersion === doc.version) {
-			Logger.log(
-				`${this.displayName}.getPullRequestDocumentMarkers: returning cached document markers for ${uriAsString} v${doc.version}`
-			);
-			return cached.promise;
-		}
-
-		Logger.log(
-			`${this.displayName}.getPullRequestDocumentMarkers: calculating document markers for ${uriAsString} v${doc?.version}`
-		);
-		const promise = this._getPullRequestDocumentMarkersCore(params);
-		if (doc?.version !== undefined) {
-			this._pullRequestDocumentMarkersCache.set(uriAsString, {
-				documentVersion: doc.version,
-				promise
-			});
-		}
-		return promise;
-	}
-
-	protected async _getPullRequestDocumentMarkersCore({
-		uri,
-		repoId,
-		streamId
-	}: {
-		uri: URI;
-		repoId: string | undefined;
-		streamId: string;
-	}): Promise<DocumentMarker[]> {
-		void (await this.ensureConnected());
-
-		const documentMarkers: DocumentMarker[] = [];
-
-		if (!(await this.isPRApiCompatible())) return documentMarkers;
-
-		const { git, session } = SessionContainer.instance();
-
-		const repo = await git.getRepositoryByFilePath(uri.fsPath);
-		if (repo === undefined) return documentMarkers;
-
-		const comments = await this.getCommentsForPath(uri.fsPath, repo);
-		if (comments === undefined) return documentMarkers;
-
-		const commentsById: { [id: string]: PullRequestComment } = Object.create(null);
-		const markersByCommit = new Map<string, Markerish[]>();
-		const trackingBranch = await git.getTrackingBranch(uri);
-
-		for (const c of comments) {
-			Logger.log(`${this.displayName}.getPullRequestDocumentMarkers: processing comment ${c.id}`);
-
-			if (
-				c.pullRequest.isOpen &&
-				c.pullRequest.targetBranch !== trackingBranch?.shortName &&
-				c.pullRequest.sourceBranch !== trackingBranch?.shortName
-			) {
-				continue;
-			}
-
-			let rev;
-			let line;
-			if (c.line !== -1 && (await git.isValidReference(repo.path, c.commit))) {
-				rev = c.commit;
-				line = c.line;
-			} else if (
-				c.originalLine !== -1 &&
-				c.originalCommit &&
-				(await git.isValidReference(repo.path, c.originalCommit))
-			) {
-				rev = c.originalCommit!;
-				line = c.originalLine;
-			}
-
-			if (rev == undefined || line === undefined || line === -1) {
-				Logger.log(
-					`${this.displayName}.getPullRequestDocumentMarkers: could not get position information comment ${c.id} from PR`
-				);
-				Logger.log(
-					`${this.displayName}.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`
-				);
-				rev = await git.getFileCurrentRevision(uri);
-				if (!rev) {
-					Logger.log(
-						`${this.displayName}.getPullRequestDocumentMarkers: could not determine current revision for file ${uri.fsPath}`
-					);
-					continue;
-				}
-
-				Logger.log(
-					`${this.displayName}.getPullRequestDocumentMarkers: attempting to determine current revision for content-based calculation`
-				);
-				const contents = await git.getFileContentForRevision(uri, rev);
-				if (!contents) {
-					Logger.log(
-						`${this.displayName}.getPullRequestDocumentMarkers: could not read contents of ${uri.fsPath}@${rev} from git`
-					);
-					continue;
-				}
-
-				Logger.log(
-					`${this.displayName}.getPullRequestDocumentMarkers: calculating comment line via content analysis`
-				);
-				line = await findBestMatchingLine(contents, c.code, c.line);
-			}
-
-			Logger.log(
-				`${this.displayName}.getPullRequestDocumentMarkers: comment ${c.id} located at line ${line}, commit ${rev}`
-			);
-
-			let markers = markersByCommit.get(rev);
-			if (markers === undefined) {
-				markers = [];
-				markersByCommit.set(rev, markers);
-			}
-
-			commentsById[c.id] = c;
-			if (line !== -1) {
-				const referenceLocation: CSReferenceLocation = {
-					commitHash: rev,
-					location: [line, 1, line, MAX_RANGE_VALUE, undefined],
-					flags: {
-						canonical: true
-					}
-				};
-				markers.push({
-					id: c.id,
-					referenceLocations: [referenceLocation]
-				});
-			} else {
-				Logger.log(
-					`${this.displayName}.getPullRequestDocumentMarkers: could not find current location for comment ${c.url}`
-				);
-			}
-		}
-
-		const locations = await MarkerLocationManager.computeCurrentLocations(uri, markersByCommit);
-
-		const teamId = session.teamId;
-
-		for (const [id, location] of Object.entries(locations.locations)) {
-			const comment = commentsById[id];
-
-			documentMarkers.push({
-				id: id,
-				codemarkId: undefined,
-				fileUri: uri.toString(),
-				fileStreamId: streamId,
-				// postId: undefined!,
-				// postStreamId: undefined!,
-				repoId: repoId!,
-				teamId: teamId,
-				file: uri.fsPath,
-				// commitHashWhenCreated: revision!,
-				// locationWhenCreated: MarkerLocation.toArray(location),
-				modifiedAt: new Date(comment.createdAt).getTime(),
-				code: "",
-
-				createdAt: new Date(comment.createdAt).getTime(),
-				creatorId: comment.author.id,
-				creatorName: comment.author.nickname,
-				externalContent: this.getPRExternalContent(comment)!,
-				range: MarkerLocation.toRange(location),
-				location: location,
-				title: comment.pullRequest.title,
-				summary: comment.text,
-				summaryMarkdown: `\n\n${Strings.escapeMarkdown(comment.text)}`,
-				type: CodemarkType.PRComment
-			});
-		}
-
-		return documentMarkers;
 	}
 
 	protected _isSuppressedException(ex: any): ReportSuppressedMessages | undefined {

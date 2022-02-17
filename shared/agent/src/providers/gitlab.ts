@@ -3,9 +3,8 @@ import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
 import { merge } from "lodash";
-import { flatten, groupBy } from "lodash-es";
+import { groupBy } from "lodash-es";
 import { Response } from "node-fetch";
-import * as paths from "path";
 import * as qs from "querystring";
 import semver from "semver";
 import * as nodeUrl from "url";
@@ -13,14 +12,12 @@ import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { Container, SessionContainer } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
-import { GitRepository } from "../git/models/repository";
 import { ParsedDiffWithMetadata, toRepoName, translatePositionToLineNumber } from "../git/utils";
 import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
 	DiscussionNode,
-	DocumentMarker,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -62,7 +59,6 @@ import {
 	ProviderGetRepoInfoResponse,
 	ProviderVersion,
 	PullRequestComment,
-	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues
 } from "./provider";
@@ -405,19 +401,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return { users };
 	}
 
-	@log()
-	async getPullRequestDocumentMarkers({
-		uri,
-		repoId,
-		streamId
-	}: {
-		uri: URI;
-		repoId: string | undefined;
-		streamId: string;
-	}): Promise<DocumentMarker[]> {
-		return super.getPullRequestDocumentMarkersCore({ uri, repoId, streamId });
-	}
-
 	private _commentsByRepoAndPath = new Map<
 		string,
 		{ expiresAt: number; comments: Promise<PullRequestComment[]> }
@@ -667,163 +650,6 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				}
 			};
 		}
-	}
-
-	@log()
-	protected async getCommentsForPath(
-		filePath: string,
-		repo: GitRepository
-	): Promise<PullRequestComment[] | undefined> {
-		const cc = Logger.getCorrelationContext();
-
-		try {
-			const relativePath = Strings.normalizePath(paths.relative(repo.path, filePath));
-			const cacheKey = `${repo.path}|${relativePath}`;
-
-			const cachedComments = this._commentsByRepoAndPath.get(cacheKey);
-			if (cachedComments !== undefined && cachedComments.expiresAt > new Date().getTime()) {
-				// NOTE: Keep this await here, so any errors are caught here
-				return await cachedComments.comments;
-			}
-			super.invalidatePullRequestDocumentMarkersCache();
-
-			const remotePaths = await getRemotePaths(
-				repo,
-				this.getIsMatchingRemotePredicate(),
-				this._projectsByRemotePath
-			);
-
-			const commentsPromise: Promise<PullRequestComment[]> =
-				remotePaths != null
-					? this._getCommentsForPathCore(filePath, relativePath, remotePaths)
-					: Promise.resolve([]);
-			this._commentsByRepoAndPath.set(cacheKey, {
-				expiresAt: new Date().setMinutes(new Date().getMinutes() + REFRESH_TIMEOUT),
-				comments: commentsPromise
-			});
-
-			// Since we aren't cached, we want to just kick of the request to get the comments (which will fire a notification)
-			// This could probably be enhanced to wait for the commentsPromise for a short period of time (maybe 1s?) to see if it will complete, to avoid the notification roundtrip for fast requests
-			return undefined;
-		} catch (ex) {
-			Logger.error(ex, cc);
-			return undefined;
-		}
-	}
-
-	private async _getCommentsForPathCore(
-		filePath: string,
-		relativePath: string,
-		remotePaths: string[]
-	): Promise<PullRequestComment[]> {
-		const comments = [];
-
-		for (const remotePath of remotePaths) {
-			const prs = await this._getPullRequests(remotePath);
-
-			const prComments = (
-				await Promise.all(prs.map(pr => this._getPullRequestComments(remotePath, pr, relativePath)))
-			).reduce((group, current) => group.concat(current), []);
-
-			comments.push(...prComments);
-		}
-
-		// If we have any comments, fire a notification
-		if (comments.length !== 0) {
-			void SessionContainer.instance().documentMarkers.fireDidChangeDocumentMarkers(
-				URI.file(filePath).toString(),
-				"codemarks"
-			);
-		}
-
-		return comments;
-	}
-
-	private async _getPullRequests(remotePath: string): Promise<GitLabPullRequest[]> {
-		return flatten(
-			await Promise.all([
-				this._getPullRequestsByState(remotePath, "opened"),
-				this._getPullRequestsByState(remotePath, "merged")
-			])
-		);
-	}
-
-	private async _getPullRequestsByState(
-		remotePath: string,
-		state: string
-	): Promise<GitLabPullRequest[]> {
-		const prs: GitLabPullRequest[] = [];
-
-		try {
-			let url: string | undefined = `/projects/${encodeURIComponent(
-				remotePath
-			)}/merge_requests?state=${state}`;
-			do {
-				const apiResponse = await this.get<GitLabPullRequest[]>(url);
-				// Logger.log("Got ack" + JSON.stringify(apiResponse, null, 4));
-				prs.push(...apiResponse.body);
-				url = this.nextPage(apiResponse.response);
-			} while (url);
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
-		prs.forEach(pr => (pr.number = pr.iid));
-		return prs;
-	}
-
-	private async _getPullRequestComments(
-		remotePath: string,
-		pr: GitLabPullRequest,
-		relativePath: string
-	): Promise<PullRequestComment[]> {
-		let gitLabComments: GitLabPullRequestComment[] = [];
-
-		try {
-			let apiResponse = await this.get<GitLabPullRequestComment[]>(
-				`/projects/${encodeURIComponent(remotePath)}/merge_requests/${pr.iid}/notes`
-			);
-			gitLabComments = apiResponse.body;
-
-			let nextPage: string | undefined;
-			while ((nextPage = this.nextPage(apiResponse.response))) {
-				apiResponse = await this.get<GitLabPullRequestComment[]>(nextPage);
-				gitLabComments = gitLabComments.concat(apiResponse.body);
-			}
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
-		return gitLabComments
-			.filter(c => !c.system && c.position != null && c.position.new_path === relativePath)
-			.map(glComment => {
-				return {
-					id: glComment.id.toString(),
-					author: {
-						id: glComment.author.id.toString(),
-						nickname: glComment.author.name,
-						login: glComment.author.name
-					},
-					path: glComment.position.new_path,
-					text: glComment.body,
-					code: "",
-					commit: glComment.position.head_sha,
-					originalCommit: glComment.position.base_sha,
-					line: glComment.position.new_line,
-					originalLine: glComment.position.old_line,
-					url: `${pr.web_url}#note_${glComment.id}`,
-					createdAt: new Date(glComment.created_at).getTime(),
-					pullRequest: {
-						id: pr.iid,
-						externalId: JSON.stringify({ full: pr.references?.full, id: pr.id }),
-						url: pr.web_url,
-						isOpen: pr.state === "opened",
-						targetBranch: pr.target_branch,
-						sourceBranch: pr.source_branch,
-						title: pr.title
-					}
-				};
-			});
 	}
 
 	async getMyPullRequests(
