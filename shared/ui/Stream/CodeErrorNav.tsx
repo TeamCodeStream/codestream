@@ -50,7 +50,7 @@ import {
 import { HostApi } from "..";
 import { CSCodeError } from "@codestream/protocols/api";
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
-import { logWarning } from "../logger";
+import { logError, logWarning } from "../logger";
 import { Link } from "./Link";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 
@@ -275,21 +275,27 @@ export function CodeErrorNav(props: Props) {
 					dispatch(fetchCodeError(derivedState.currentCodeErrorId!))
 						.then(_ => {
 							if (!_ || !_.payload.length) {
+								const title = "Cannot open Code Error";
+								const description =
+									"This code error was not found. Perhaps it was deleted by the author, or you don't have permission to view it.";
 								setError({
-									title: "Cannot open Code Error",
-									description:
-										"This code error was not found. Perhaps it was deleted by the author, or you don't have permission to view it."
+									title,
+									description
 								});
+								logError(`${title}, description: ${description}`);
 							} else {
 								onConnected(_.payload[0]);
 								markRead();
 							}
 						})
 						.catch(ex => {
+							const title = "Error";
+							const description = ex.message ? ex.message : ex.toString();
 							setError({
-								title: "Error",
-								description: ex.message ? ex.message : ex.toString()
+								title,
+								description
 							});
+							logError(`${title}, description: ${description}`);
 						})
 						.finally(() => {
 							setIsLoading(false);
@@ -388,11 +394,14 @@ export function CodeErrorNav(props: Props) {
 				});
 
 				if (!errorGroupResult || errorGroupResult?.error?.message) {
+					const title = "Unexpected Error";
+					const description = errorGroupResult?.error?.message || "unknown error";
 					setError({
-						title: "Unexpected Error",
-						description: errorGroupResult?.error?.message || "unknown error",
+						title,
+						description,
 						details: errorGroupResult?.error?.details
 					});
+					logError(`${title}, description: ${description}`);
 					return;
 				}
 			}
@@ -407,11 +416,14 @@ export function CodeErrorNav(props: Props) {
 				setRepoWarning({ message: "There is no stack trace associated with this error." });
 			} else {
 				if (errorGroupResult?.errorGroup?.entity?.relationship?.error?.message != null) {
+					const title = "Repository Relationship Error";
+					// @ts-ignore
+					const description = errorGroupResult.errorGroup.entity.relationship.error.message!;
 					setError({
-						title: "Repository Relationship Error",
-						// @ts-ignore
-						description: errorGroupResult.errorGroup.entity.relationship.error.message!
+						title,
+						description
 					});
+					logError(`${title}, description: ${description}`);
 					return;
 				}
 
@@ -447,10 +459,13 @@ export function CodeErrorNav(props: Props) {
 						url: targetRemote
 					})) as NormalizeUrlResponse;
 					if (!normalizationResponse || !normalizationResponse.normalizedUrl) {
+						const title = "Error";
+						const description = `Could not find a matching repo for the remote ${targetRemote}`;
 						setError({
 							title: "Error",
 							description: `Could not find a matching repo for the remote ${targetRemote}`
 						});
+						logError(`${title}, description: ${description}`);
 						return;
 					}
 
@@ -464,10 +479,13 @@ export function CodeErrorNav(props: Props) {
 					})) as MatchReposResponse;
 
 					if (reposResponse?.repos?.length === 0) {
+						const title = "Repo Not Found";
+						const description = `Please open the following repository: ${targetRemote}`;
 						setError({
 							title: "Repo Not Found",
 							description: `Please open the following repository: ${targetRemote}`
 						});
+						logError(`${title}, description: ${description}`);
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
@@ -592,10 +610,13 @@ export function CodeErrorNav(props: Props) {
 			HostApi.instance.track("Error Opened", trackingData);
 		} catch (ex) {
 			console.warn(ex);
+			const title = "Unexpected Error";
+			const description = ex.message ? ex.message : ex.toString();
 			setError({
-				title: "Unexpected Error",
-				description: ex.message ? ex.message : ex.toString()
+				title,
+				description
 			});
+			logError(`${title}, description: ${description}`);
 		} finally {
 			setRequiresConnection(false);
 			setIsLoading(false);
