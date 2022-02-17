@@ -1056,11 +1056,6 @@ export async function getRemotePaths<R extends { path: string }>(
 export interface ProviderGetRepoInfoRequest {
 	providerId: string;
 	remote: string;
-	// TODO
-	// remoteIdentifier: {
-	// 	owner: string;
-	// 	name: string;
-	// };
 }
 
 export interface ProviderPullRequestInfo {
@@ -1107,28 +1102,36 @@ export interface ProviderGetRepoInfoResponse {
 }
 
 export interface ProviderCreatePullRequestRequest {
+	/** CodeStream providerId, aka github*com, gitlab*com, etc. */
 	providerId: string;
-	providerRepositoryId?: string /* for use across forks */;
+	/** certain providers require their internal repo Id */
+	providerRepositoryId?: string;
+	/** is the repo a fork? */
 	isFork?: boolean;
-	remote: string /* to look up the repo ID on the provider */;
+	/** to look up the repo ID on the provider  */
+	remote: string;
+	/** PR title */
 	title: string;
+	/** PR description (optional) */
 	description?: string;
-
+	/** base branch name, or the branch that will accept the PR */
 	baseRefName: string;
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
 	baseRefRepoNameWithOwner?: string;
-
+	/** head branch name, or the branch you have been working on and want to merge somewhere */
 	headRefName: string;
-	/**
-	 * some providers, like GitHub need this for forks
-	 */
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream, some providers, like GitHub need this for forks */
 	headRefRepoOwner?: string;
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
 	headRefRepoNameWithOwner?: string;
+	/** additional data */
 	metadata: {
 		reviewPermalink?: string;
 		reviewers?: { name: string }[];
 		approvedAt?: number;
 		addresses?: { title: string; url: string }[];
 	};
+	/**  name of the user's IDE */
 	ideName?: string;
 }
 

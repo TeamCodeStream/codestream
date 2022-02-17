@@ -325,12 +325,14 @@ export interface CheckPullRequestPreconditionsResponse {
 		branches?: string[];
 		/** list of remote branches */
 		remoteBranches?: { remote?: string; branch: string }[];
+		/** number of commits behind (comes from git as a string) */
 		commitsBehindOriginHeadBranch?: string;
 		/** list of all remote names... things like origin, upstream, etc. */
 		remotes?: string[];
 		/** current remote name */
 		currentRemote?: string;
 	};
+	/** CodeStream provider data */
 	provider?: {
 		/** CS-specific providerId like github*com */
 		id?: string;
@@ -338,12 +340,16 @@ export interface CheckPullRequestPreconditionsResponse {
 		name?: string;
 		/** is this provider connected in CodeStream */
 		isConnected?: boolean;
+		/** contents of the template */
 		pullRequestTemplate?: string;
-		pullRequestTemplateNames?: string[];
-		pullRequestTemplatePath?: string;
+		/** lines in the template */
 		pullRequestTemplateLinesCount?: number;
+		/** various template names */
+		pullRequestTemplateNames?: string[];
+		/** path to the template */
+		pullRequestTemplatePath?: string;
 		/**
-		 * repo information tied to the provider
+		 * repo information tied to the provider (not CodeStream)
 		 */
 		repo?: {
 			/** this is the provider-specific repository id */
@@ -386,65 +392,46 @@ export const CheckPullRequestPreconditionsRequestType = new RequestType<
 	void
 >("codestream/review/pr/checkPreconditions");
 
-export interface CreatePullRequestRequest1 {
-	/** if a reviewId isn't provided, you must provide a repoId */
-	reviewId?: string;
-	/** CodeStream repo id */
-	repoId?: string;
-	providerId: string;
-
-	title: string;
-	description?: string;
-
-	/**
-	 * this is the target branch
-	 */
-	baseRefName: string;
-	/**
-	 * this is the branch under review
-	 */
-	headRefName: string;
-
-	/**
-	 * certain providers require this
-	 */
-	providerRepositoryId?: string;
-	remote: string /* to look up the repo ID on the provider */;
-	remoteName?: string;
-	addresses?: {
-		title: string;
-		url: string;
-	}[];
-	ideName?: string;
-}
-
 export interface CreatePullRequestRequest {
 	/** if a reviewId isn't provided, you must provide a repoId */
 	reviewId?: string;
 
+	/** CodeStream repository id */
 	repoId?: string;
+	/** CodeStream providerId aka github*com */
 	providerId: string;
+	/** PR title */
 	title: string;
+	/** PR description (optional) */
 	description?: string;
-
+	/** is this repo a fork? will be needed when creating the PR on the provider */
 	isFork?: boolean;
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
 	baseRefRepoNameWithOwner?: string;
+	/** in github.com/TeamCodeStream/codestream this is codestream */
 	baseRefRepoName: string;
+	/** base branch name, or the branch that will accept the PR */
 	baseRefName: string;
-
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream, some providers, like GitHub need this for forks */
 	headRefRepoOwner?: string;
+	/** in github.com/TeamCodeStream/codestream this is TeamCodeStream/codestream */
 	headRefRepoNameWithOwner: string;
+	/** head branch name, or the branch you have been working on and want to merge somewhere */
 	headRefName: string;
-
-	providerRepositoryId?: string /* for use across forks */;
-	remote: string /* to look up the repo ID on the provider */;
-
+	/** certain providers need an internal id  */
+	providerRepositoryId?: string;
+	/** current repo remote name */
+	remote: string;
+	/** if set, the user wants us to create a remote branch */
 	requiresRemoteBranch?: boolean;
+	/** name of the remote */
 	remoteName?: string;
+	/** used for CodeStream work-in-progress / start-work */
 	addresses?: {
 		title: string;
 		url: string;
 	}[];
+	/**  name of the user's IDE */
 	ideName?: string;
 }
 
