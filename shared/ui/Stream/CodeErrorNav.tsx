@@ -436,7 +436,8 @@ export function CodeErrorNav(props: Props) {
 					logError(`${title}, description: ${description}`, {
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
-						entityGuid: entityIdToUse
+						entityGuid: entityIdToUse,
+						timestamp: derivedState.currentCodeErrorData?.timestamp
 					});
 					return;
 				}
@@ -483,7 +484,8 @@ export function CodeErrorNav(props: Props) {
 							errorGroupGuid: errorGroupGuidToUse,
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
-							targetRemote
+							targetRemote,
+							timestamp: derivedState.currentCodeErrorData?.timestamp
 						});
 						return;
 					}
@@ -508,7 +510,8 @@ export function CodeErrorNav(props: Props) {
 							errorGroupGuid: errorGroupGuidToUse,
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
-							targetRemote
+							targetRemote,
+							timestamp: derivedState.currentCodeErrorData?.timestamp
 						});
 						return;
 					}
