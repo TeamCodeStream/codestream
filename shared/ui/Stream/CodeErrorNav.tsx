@@ -282,7 +282,9 @@ export function CodeErrorNav(props: Props) {
 									title,
 									description
 								});
-								logError(`${title}, description: ${description}`);
+								logError(`${title}, description: ${description}`, {
+									currentCodeErrorId: derivedState.currentCodeErrorId!
+								});
 							} else {
 								onConnected(_.payload[0]);
 								markRead();
@@ -295,7 +297,9 @@ export function CodeErrorNav(props: Props) {
 								title,
 								description
 							});
-							logError(`${title}, description: ${description}`);
+							logError(`${title}, description: ${description}`, {
+								currentCodeErrorId: derivedState.currentCodeErrorId!
+							});
 						})
 						.finally(() => {
 							setIsLoading(false);
@@ -401,7 +405,13 @@ export function CodeErrorNav(props: Props) {
 						description,
 						details: errorGroupResult?.error?.details
 					});
-					logError(`${title}, description: ${description}`);
+					logError(`${title}, description: ${description}`, {
+						currentCodeErrorId: derivedState.currentCodeErrorId!,
+						errorGroupGuid: errorGroupGuidToUse,
+						occurrenceId: occurrenceIdToUse,
+						entityGuid: entityIdToUse,
+						timestamp: derivedState.currentCodeErrorData?.timestamp
+					});
 					return;
 				}
 			}
@@ -423,7 +433,11 @@ export function CodeErrorNav(props: Props) {
 						title,
 						description
 					});
-					logError(`${title}, description: ${description}`);
+					logError(`${title}, description: ${description}`, {
+						errorGroupGuid: errorGroupGuidToUse,
+						occurrenceId: occurrenceIdToUse,
+						entityGuid: entityIdToUse
+					});
 					return;
 				}
 
@@ -465,7 +479,12 @@ export function CodeErrorNav(props: Props) {
 							title: "Error",
 							description: `Could not find a matching repo for the remote ${targetRemote}`
 						});
-						logError(`${title}, description: ${description}`);
+						logError(`${title}, description: ${description}`, {
+							errorGroupGuid: errorGroupGuidToUse,
+							occurrenceId: occurrenceIdToUse,
+							entityGuid: entityIdToUse,
+							targetRemote
+						});
 						return;
 					}
 
@@ -485,7 +504,12 @@ export function CodeErrorNav(props: Props) {
 							title: "Repo Not Found",
 							description: `Please open the following repository: ${targetRemote}`
 						});
-						logError(`${title}, description: ${description}`);
+						logError(`${title}, description: ${description}`, {
+							errorGroupGuid: errorGroupGuidToUse,
+							occurrenceId: occurrenceIdToUse,
+							entityGuid: entityIdToUse,
+							targetRemote
+						});
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
@@ -616,7 +640,11 @@ export function CodeErrorNav(props: Props) {
 				title,
 				description
 			});
-			logError(`${title}, description: ${description}`);
+			logError(`${title}, description: ${description}`, {
+				errorGroupGuid: errorGroupGuidToUse,
+				occurrenceId: occurrenceIdToUse,
+				entityGuid: entityIdToUse
+			});
 		} finally {
 			setRequiresConnection(false);
 			setIsLoading(false);
@@ -858,10 +886,18 @@ export function CodeErrorNav(props: Props) {
 									payload: payload
 								});
 								resolve(true);
-
+								const title = "Failed to associate repository";
+								const description = _?.error;
 								setError({
-									title: "Failed to associate repository",
-									description: _?.error
+									title,
+									description
+								});
+								logError(`${title}, description: ${description}`, {
+									url: r.remote,
+									name: r.name,
+									entityId: pendingEntityId,
+									errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
+									parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!
 								});
 							}
 						});
