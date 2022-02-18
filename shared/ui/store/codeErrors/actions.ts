@@ -73,6 +73,8 @@ export const resolveStackTraceLine = (notification: DidResolveStackTraceLineNoti
 
 	const state = getState();
 	const codeError = state.codeErrors?.codeErrors[codeErrorId];
+	if (!codeError) return;
+
 	let stackTraceIndex = codeError.stackTraces.findIndex(_ => _.occurrenceId === occurrenceId);
 
 	// FIXME occurrenceId mapping is not reliable, so assume it's the only one that exists
@@ -465,6 +467,8 @@ export const openErrorGroup = (
 		// we will circle back to this action to try to claim the code error again
 		if (response.needNRToken) {
 			data.claimWhenConnected = true;
+		} else {
+			data.pendingRequiresConnection = data.claimWhenConnected = false;
 		}
 
 		// NOTE don't really like this "PENDING" business, but it's something to say we need to CREATE a codeError

@@ -353,7 +353,9 @@ export function CodeErrorNav(props: Props) {
 			// we get here if the code error is not yet claimed by the current team,
 			// in which case we need to circle back and "reopen" it again
 			dispatch(closeAllPanels());
-			return dispatch(openErrorGroup(pendingErrorGroupGuid!, occurrenceId));
+			return dispatch(
+				openErrorGroup(pendingErrorGroupGuid!, occurrenceId, derivedState.currentCodeErrorData)
+			);
 		} else if (pendingErrorGroupGuid) {
 			errorGroupGuidToUse = pendingErrorGroupGuid;
 			occurrenceIdToUse = occurrenceId;
