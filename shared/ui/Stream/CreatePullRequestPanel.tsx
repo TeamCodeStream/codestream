@@ -1716,6 +1716,14 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 									commitsBehindOrigin={commitsBehindOrigin}
 									repoId={pending?.repoId}
 									branchName={pending?.baseRefName}
+									onClick={async e => {
+										await fetchBranchCommitsStatus();
+										fetchFilesChanged(
+											pending?.repoId!,
+											pending?.baseRefName!,
+											pending?.headRefName!
+										);
+									}}
 								></PullLatest>
 							</>
 						)}
@@ -1751,6 +1759,7 @@ export const PullLatest = (props: {
 	commitsBehindOrigin: number;
 	repoId?: string;
 	branchName?: string;
+	onClick?: Function;
 }) => {
 	const [unexpectedPullError, setUnexpectedPullError] = useState(false);
 	const [pullSubmitting, setPullSubmitting] = useState(false);
@@ -1766,8 +1775,8 @@ export const PullLatest = (props: {
 				repoId: props.repoId!,
 				branchName: props.branchName!
 			});
+			props.onClick && props.onClick();
 		} catch (error) {
-			logError(error, {});
 			logError(`Unexpected error during branch pulling : ${error}`, {});
 			setUnexpectedPullError(true);
 		} finally {
