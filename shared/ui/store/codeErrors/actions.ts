@@ -452,6 +452,7 @@ export const openErrorGroup = (
 				}
 			]
 		});
+		logError(`Error Can't Be Opened`, { message, errorGroupGuid, occurrenceId, data });
 		return;
 	} else if (response.codeError) {
 		await dispatch(addCodeErrors([response.codeError]));

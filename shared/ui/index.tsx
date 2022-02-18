@@ -107,6 +107,7 @@ import { switchToTeam } from "./store/session/actions";
 import { Range } from "vscode-languageserver-types";
 import * as path from "path-browserify";
 import { appendProcessBuffer } from "./store/editorContext/actions";
+import { logError } from "@codestream/webview/logger";
 
 export { HostApi };
 
@@ -832,9 +833,11 @@ const confirmSwitchToTeam = function(
 			!currentUser ||
 			!(options.codeError.followerIds || []).includes(currentUser.id)
 		) {
+			const title = "No access";
+			const message = `You don't have access to this ${type}`;
 			confirmPopup({
 				title: "No access",
-				message: <span>You don't have access to this {type}.</span>,
+				message: <span>{message}</span>,
 				centered: true,
 				buttons: [
 					{
@@ -843,6 +846,7 @@ const confirmSwitchToTeam = function(
 					}
 				]
 			});
+			logError(title, { message, currentUser, currentTeamId, teamId, companyName });
 			return true;
 		} else {
 			return false;
