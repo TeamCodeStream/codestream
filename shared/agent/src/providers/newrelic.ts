@@ -485,19 +485,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				// unique them
 				statements = [...new Set(statements).values()];
 
-				const query = `query  {
+				const query = `query {
 				actor {
 				  entitySearch(query: "type='APPLICATION' and (${statements.join(" or ")})", sortBy:MOST_RELEVANT) {
 					results {
 					  entities {
+						guid
+						name
 						account {
 							name
 						  }
-						}
+						}						
 					  }
 					}
 				  }
-				}
 			  }`;
 				const response = await this.query<any>(query);
 				if (response) {
