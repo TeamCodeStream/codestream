@@ -279,10 +279,14 @@ export const Observability = React.memo((props: Props) => {
 							if (response?.repos) {
 								setObservabilityErrors(response.repos!);
 							}
-							HostApi.instance.send(GetObservabilityEntitiesRequestType, {}).then(_ => {
-								setHasEntities(!_isEmpty(_.entities));
-								setLoadingEntities(false);
-							});
+							HostApi.instance
+								.send(GetObservabilityEntitiesRequestType, {
+									appNames: response?.repos?.map(r => r.repoName)
+								})
+								.then(_ => {
+									setHasEntities(!_isEmpty(_.entities));
+									setLoadingEntities(false);
+								});
 							loading(repoIds, false);
 						});
 				} else {

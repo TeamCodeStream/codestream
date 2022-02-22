@@ -392,7 +392,22 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	private _applicationEntitiesCache: GetObservabilityEntitiesResponse | undefined = undefined;
+	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
+
+	private generateEntityQueryStatements(appName: string): string[] {
+		let statements = [];
+		statements.push(`name LIKE '${Strings.sanitizeGraphqlValue(appName)}'`);
+		const splitAppName = appName.split(/[\-\_]+/);
+		if (splitAppName.length > 1) {
+			for (let i = 0; i < splitAppName.length; i++) {
+				const val = splitAppName[i];
+				if (val && val.length < 2) continue;
+
+				statements.push(`name LIKE '${Strings.sanitizeGraphqlValue(val)}'`);
+			}
+		}
+		return statements;
+	}
 
 	@lspHandler(GetObservabilityEntitiesRequestType)
 	@log({
@@ -402,9 +417,19 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
 		try {
+			const key = request.appName
+				? request.appName
+				: request.appNames?.length
+				? request.appNames.join("-")
+				: "";
 			if (this._applicationEntitiesCache != null) {
-				ContextLogger.debug("query entities (from cache)");
-				return this._applicationEntitiesCache;
+				const cached = this._applicationEntitiesCache[key];
+				if (cached) {
+					ContextLogger.debug("query entities (from cache)", {
+						key: key
+					});
+					return cached;
+				}
 			}
 
 			let results: { guid: string; name: string }[] = [];
@@ -412,35 +437,56 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// let i = 0;
 			// while (true) {
 
+			let statements: string[] = [];
+			if (request.appNames?.length) {
+				for (const appName of request.appNames) {
+					const appStatements = this.generateEntityQueryStatements(appName);
+					if (appStatements?.length) {
+						statements = statements.concat(appStatements);
+					}
+				}
+			}
+
 			if (request.appName != null) {
-				// try to find the entity based on the app / remote name
-				const response = await this.query<any>(
-					`query  {
+				const appStatements = this.generateEntityQueryStatements(request.appName);
+				if (appStatements?.length) {
+					statements = statements.concat(appStatements);
+				}
+			}
+
+			if (statements.length) {
+				// unique them
+				statements = [...new Set(statements).values()];
+
+				const query = `query  {
 				actor {
-				  entitySearch(query: "type='APPLICATION' and name LIKE '${Strings.sanitizeGraphqlValue(
-						request.appName
-					)}'", sortBy:MOST_RELEVANT) {
+				  entitySearch(query: "type='APPLICATION' and (${statements.join(" or ")})", sortBy:MOST_RELEVANT) {
 					results {
 					  entities {
+						account {
+							name
+						}
 						guid
 						name
 					  }
 					}
 				  }
 				}
-			  }`
-				);
-
-				results = results.concat(
-					response.actor.entitySearch.results.entities.map((_: any) => {
-						return {
-							guid: _.guid,
-							name: _.name
-						};
-					})
-				);
+			  }`;
+				const response = await this.query<any>(query);
+				if (response) {
+					results = results.concat(
+						response.actor.entitySearch.results.entities.map((_: any) => {
+							return {
+								guid: _.guid,
+								name: _.name
+							};
+						})
+					);
+				}
 			}
 
+			// then find any other relevant apps
 			const response = await this.query<any>(
 				`query search($cursor:String) {
 			actor {
@@ -481,12 +527,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			results.sort((a, b) => a.name.localeCompare(b.name));
 
 			results = [...new Map(results.map(item => [item["guid"], item])).values()];
-			this._applicationEntitiesCache = {
-				entities: results
-			};
-			return {
-				entities: results
-			};
+
+			if (results.length) {
+				const cachedResults = {
+					entities: results
+				} as GetObservabilityEntitiesResponse;
+				this._applicationEntitiesCache[key] = cachedResults;
+				return cachedResults;
+			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getEntities");
 		}
@@ -1254,6 +1302,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const accountId = parsedId?.accountId;
 			const name = request.name;
 
+			let url = request.url;
+			if (request.url.indexOf("git@") === 0) {
+				ContextLogger.log(`prepending ssh:// to ${request.url}`);
+				url = `ssh://${url}`;
+			}
+
 			const response = await this.mutate<{
 				referenceEntityCreateOrUpdateRepository: {
 					created: string[];
@@ -1280,13 +1334,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				{
 					accountId: accountId,
 					name: name,
-					url: request.url
+					url: url
 				}
 			);
 			ContextLogger.log("referenceEntityCreateOrUpdateRepository", {
 				accountId: accountId,
 				name: name,
 				url: request.url,
+				urlModified: url,
 				response: response
 			});
 
