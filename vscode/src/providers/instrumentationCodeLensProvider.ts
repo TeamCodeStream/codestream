@@ -65,6 +65,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 		try {
 			if (token.isCancellationRequested) {
+				Logger.log("provideCodeLenses isCancellationRequested0");
 				return [];
 			}
 			instrumentableSymbols = await this.symbolLocator.locate(document, token);
@@ -87,10 +88,21 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			if (!instrumentableSymbols.length) {
+				Logger.log("provideCodeLenses no symbols", {
+					document: document
+				});
 				return [];
+			} else {
+				Logger.log("provideCodeLenses symbols", {
+					count: instrumentableSymbols.length,
+					symbols: instrumentableSymbols.map(_ => _.symbol.name)
+				});
 			}
 
-			if (token.isCancellationRequested) return [];
+			if (token.isCancellationRequested) {
+				Logger.log("provideCodeLenses isCancellationRequested1");
+				return [];
+			}
 
 			const methodLevelTelemetryRequestOptions = {
 				includeAverageDuration: this.codeLensTemplate.indexOf("${averageDuration}") > -1,
@@ -112,18 +124,6 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				});
 				return [];
 			}
-			if (
-				instrumentableSymbols.length &&
-				fileLevelTelemetryResponse.isConnected &&
-				!fileLevelTelemetryResponse.newRelicEntityGuid
-			) {
-				Logger.warn(
-					`DEVELOPER: to enable method level metrics, you will need a vscode language-specific extension like ${languageSpecificExtensions[
-						document.languageId
-					].join(" OR ")}`
-				);
-				return [];
-			}
 
 			if (!fileLevelTelemetryResponse.repo) {
 				Logger.warn("provideCodeLenses missing repo");
@@ -131,6 +131,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			if (fileLevelTelemetryResponse.error) {
+				Logger.warn("provideCodeLenses error", {
+					error: fileLevelTelemetryResponse.error
+				});
 				if (fileLevelTelemetryResponse.error.type === "NOT_ASSOCIATED") {
 					const viewCommandArgs: ViewMethodLevelTelemetryErrorCommandArgs = {
 						error: fileLevelTelemetryResponse.error,
@@ -154,7 +157,10 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				return [];
 			}
 
-			if (token.isCancellationRequested) return [];
+			if (token.isCancellationRequested) {
+				Logger.log("provideCodeLenses isCancellationRequested2");
+				return [];
+			}
 
 			const date = fileLevelTelemetryResponse.lastUpdateDate
 				? new Date(fileLevelTelemetryResponse.lastUpdateDate).toLocaleString()

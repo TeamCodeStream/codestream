@@ -1724,10 +1724,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					}
 				}
 			} catch (ex) {
-				console.warn(ex);
+				Logger.warn("getGoldenSignalsEntity warning", {
+					error: ex
+				});
 			}
 			if (!entity) {
-				Logger.warn("More than one NR entity, selecting first", {
+				Logger.warn("getGoldenSignalsEntity: More than one NR entity, selecting first", {
 					entity: observabilityRepo.entityAccounts[0]
 				});
 				entity = observabilityRepo.entityAccounts[0];
@@ -1735,6 +1737,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		} else {
 			entity = observabilityRepo.entityAccounts[0];
 		}
+
+		Logger.log("getGoldenSignalsEntity entity found?", {
+			entity
+		});
 
 		return entity;
 	}
@@ -1749,13 +1755,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			!request.languageId ||
 			!this._languageSupport.has(request.languageId)
 		) {
-			Logger.warn("Missing filePath, languageId, or languageId not supported");
+			ContextLogger.warn(
+				"getFileLevelTelemetry: Missing filePath, languageId, or languageId not supported"
+			);
 			return undefined;
 		}
 
 		const cacheKey = [request.filePath, request.languageId].join("-");
 		const cached = this._mltTimedCache.get(cacheKey);
 		if (cached) {
+			ContextLogger.log("getFileLevelTelemetry: from cache", {
+				cacheKey
+			});
 			return cached;
 		}
 
@@ -1766,6 +1777,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		const isConnected = super.isConnected(this._codeStreamUser);
 		if (!isConnected) {
+			ContextLogger.warn("getFileLevelTelemetry: not connected", {
+				request
+			});
 			return {
 				isConnected: isConnected,
 				error: {
@@ -1777,7 +1791,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
 		if (!repoForFile?.id) {
-			ContextLogger.warn("no repo for file", {
+			ContextLogger.warn("getFileLevelTelemetry: no repo for file", {
 				request
 			});
 			return undefined;
@@ -1785,7 +1799,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		const entityCount = await this.getEntityCount();
 		if (entityCount < 1) {
-			ContextLogger.log("no NR1 entities");
+			ContextLogger.log("getFileLevelTelemetry: no NR1 entities");
 			return undefined;
 		}
 
@@ -1799,9 +1813,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 		const observabilityRepo = await this.getObservabilityEntityRepos(repoForFile.id);
 		if (!observabilityRepo) {
+			ContextLogger.warn("getFileLevelTelemetry: no observabilityRepo");
 			return undefined;
 		}
 		if (!observabilityRepo.entityAccounts?.length) {
+			ContextLogger.warn("getFileLevelTelemetry: no entityAccounts");
 			return {
 				repo: {
 					id: repoForFile.id,
@@ -1900,6 +1916,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// 	averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
 			// 	errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
 
+			const hasAnyData =
+				throughputResponse?.actor?.account?.nrql?.results.length ||
+				averageDurationResponse?.actor?.account?.nrql?.results.length ||
+				errorRateResponse?.actor?.account?.nrql?.results.length;
 			const response = {
 				codeNamespace: request.codeNamespace!,
 				isConnected: isConnected,
@@ -1913,10 +1933,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
 					averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end ||
 					throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.end,
-				hasAnyData:
-					throughputResponse?.actor?.account?.nrql?.results.length ||
-					averageDurationResponse?.actor?.account?.nrql?.results.length ||
-					errorRateResponse?.actor?.account?.nrql?.results.length,
+				hasAnyData: hasAnyData,
 				newRelicAlertSeverity: entity.alertSeverity,
 				newRelicAccountId: newRelicAccountId,
 				newRelicEntityGuid: newRelicEntityGuid,
@@ -1933,6 +1950,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			if (spans?.length) {
 				this._mltTimedCache.put(cacheKey, response);
+				Logger.log("getFileLevelTelemetry caching success", {
+					spansLength: spans.length,
+					hasAnyData: hasAnyData,
+					newRelicEntityGuid
+				});
+			} else {
+				Logger.log("getFileLevelTelemetry no spans", {
+					hasAnyData,
+					relativeFilePath,
+					newRelicEntityGuid
+				});
 			}
 			return response;
 		} catch (ex) {
@@ -1940,6 +1968,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				request
 			});
 		}
+
+		Logger.log("getFileLevelTelemetry returning undefined", {
+			relativeFilePath,
+			newRelicEntityGuid
+		});
 
 		return undefined;
 	}
@@ -2087,6 +2120,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
 
 		if (queries?.actor?.entity?.goldenMetrics) {
+			Logger.log("getGoldenMetrics has goldenMetrics", {
+				entityGuid
+			});
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
 
 			const results = await Promise.all(
@@ -2134,9 +2170,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					})
 				};
 			});
-
+			Logger.log("getGoldenMetrics has response?", {
+				entityGuid,
+				responseLength: response?.length
+			});
 			return response;
 		}
+		Logger.log("getGoldenMetrics no response", {
+			entityGuid
+		});
 		return undefined;
 	}
 

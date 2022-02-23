@@ -44,6 +44,7 @@ export class SymbolLocator implements ISymbolLocator {
 
 		for (const timeout of [0, 750, 1000, 1500, 2000]) {
 			if (token.isCancellationRequested) {
+				Logger.log("SymbolLocator.locateCore isCancellationRequested", { timeout });
 				return [];
 			}
 			try {
@@ -54,11 +55,12 @@ export class SymbolLocator implements ISymbolLocator {
 				if (!symbols || symbols.length === 0) {
 					await sleep(timeout);
 				} else {
-					Logger.log("locateCore found", { timeout });
-					return symbols || [];
+					const results = symbols || [];
+					Logger.log(`SymbolLocator.locateCore found ${results.length}`, { timeout });
+					return results;
 				}
 			} catch (ex) {
-				Logger.warn("failed to ExecuteDocumentSymbolProvider", { ex });
+				Logger.warn("SymbolLocator.locateCore failed to ExecuteDocumentSymbolProvider", { ex });
 			}
 		}
 
