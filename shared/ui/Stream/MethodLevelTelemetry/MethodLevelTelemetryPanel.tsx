@@ -231,9 +231,9 @@ export const MethodLevelTelemetryPanel = () => {
 									>
 										<span className="subtle">
 											{(telemetryResponse && telemetryResponse.newRelicEntityName) || "Entity"}
-										</span>
-									</Link>{" "}
-									<Icon name="link-external" className="open-external"></Icon>
+										</span>{" "}
+										<Icon name="link-external" className="open-external"></Icon>
+									</Link>
 								</ApmServiceTitle>
 							</span>
 						</Tooltip>
