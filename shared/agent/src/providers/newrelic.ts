@@ -672,7 +672,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				for (const remote of repo.remotes) {
 					if (remote.name === "origin" || remote.remoteWeight === 0) {
 						// this is the origin remote
-						remotes = [remote.uri.toString().replace("ssh://", "")];
+						remotes = [remote.uri.toString()];
 						break;
 					} else {
 						remotes.push(remote.uri.toString());
@@ -1334,12 +1334,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const accountId = parsedId?.accountId;
 			const name = request.name;
 
-			let url = request.url;
-			if (request.url.indexOf("git@") === 0) {
-				ContextLogger.log(`prepending ssh:// to ${request.url}`);
-				url = `ssh://${url}`;
-			}
-
 			const response = await this.mutate<{
 				referenceEntityCreateOrUpdateRepository: {
 					created: string[];
@@ -1366,14 +1360,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				{
 					accountId: accountId,
 					name: name,
-					url: url
+					url: request.url
 				}
 			);
 			ContextLogger.log("referenceEntityCreateOrUpdateRepository", {
 				accountId: accountId,
 				name: name,
 				url: request.url,
-				urlModified: url,
+				urlModified: request.url,
 				response: response
 			});
 

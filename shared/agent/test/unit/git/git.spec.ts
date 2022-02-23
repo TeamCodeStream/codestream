@@ -7,7 +7,7 @@ require("mocha").it;
 
 describe("git", () => {
 	describe("getRepoRemoteVariants", () => {
-		it("ssh", async () => {
+		it("ssh0", async () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
 			);
@@ -27,6 +27,30 @@ describe("git", () => {
 				{
 					type: "https",
 					value: "https://gitlabratory.example.com/myorg/myrepo-sample-java"
+				}
+			]);
+		});
+		it("ssh1", async () => {
+			const results = await GitRemoteParser.getRepoRemoteVariants(
+				"ssh://git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
+			);
+			console.warn(JSON.stringify(results, null, 4));
+			expect(results).to.deep.equal([
+				{
+					type: "ssh",
+					value: "git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
+				},
+				{
+					type: "ssh",
+					value: "ssh://git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
+				},
+				{
+					type: "https",
+					value: "https:///.git"
+				},
+				{
+					type: "https",
+					value: "https:///"
 				}
 			]);
 		});
@@ -72,7 +96,7 @@ describe("git", () => {
 				},
 				{
 					type: "ssh",
-					value: "ssh://git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
+					value: "ssh://git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
 				}
 			]);
 		});
