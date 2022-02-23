@@ -1953,25 +1953,30 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				Logger.log("getFileLevelTelemetry caching success", {
 					spansLength: spans.length,
 					hasAnyData: hasAnyData,
-					newRelicEntityGuid
+					newRelicEntityGuid,
+					newRelicAccountId
 				});
 			} else {
 				Logger.log("getFileLevelTelemetry no spans", {
 					hasAnyData,
 					relativeFilePath,
-					newRelicEntityGuid
+					newRelicEntityGuid,
+					newRelicAccountId
 				});
 			}
 			return response;
 		} catch (ex) {
 			Logger.error(ex, "getFileLevelTelemetry", {
-				request
+				request,
+				newRelicEntityGuid,
+				newRelicAccountId
 			});
 		}
 
 		Logger.log("getFileLevelTelemetry returning undefined", {
 			relativeFilePath,
-			newRelicEntityGuid
+			newRelicEntityGuid,
+			newRelicAccountId
 		});
 
 		return undefined;
