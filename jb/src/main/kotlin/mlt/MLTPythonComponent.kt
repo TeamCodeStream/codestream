@@ -53,7 +53,7 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
                 this, this
             )
             project.sessionService?.onCodelensChanged {
-                managersByEditor.values.forEach { it.loadInlays() }
+                managersByEditor.values.forEach { it.loadInlays(true) }
             }
         }
     }
@@ -105,10 +105,10 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
     private var analyticsTracked = false
 
     init {
-        loadInlays()
+        loadInlays(false)
     }
 
-    fun loadInlays() {
+    fun loadInlays(resetCache: Boolean?) {
         if (path == null) return
         if (editor !is EditorImpl) return
 
@@ -120,7 +120,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                     try {
                         lastResult = project.agentService?.fileLevelTelemetry(
                             FileLevelTelemetryParams(
-                                path, LANGUAGE_ID, null, null, null, OPTIONS
+                                path, LANGUAGE_ID, null, null, null, resetCache, OPTIONS
                             )
                         )
 

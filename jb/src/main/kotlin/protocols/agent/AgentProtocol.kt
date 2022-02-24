@@ -483,6 +483,7 @@ class FileLevelTelemetryParams(
     val codeNamespace: String?,
     val newRelicAccountId: Int?,
     val newRelicEntityGuid: String?,
+    val resetCache: Boolean?,
     val options: FileLevelTelemetryOptions?
 )
 
