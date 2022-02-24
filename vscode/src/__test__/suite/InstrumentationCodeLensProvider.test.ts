@@ -51,6 +51,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			getFileLevelTelemetry: function(
 				filePath: string,
 				languageId: string,
+				resetCache?: boolean,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse> {
 				return new Promise(resolve => {
@@ -97,6 +98,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			getFileLevelTelemetry: function(
 				filePath: string,
 				languageId: string,
+				resetCache?: boolean,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse> {
 				return new Promise(resolve => {

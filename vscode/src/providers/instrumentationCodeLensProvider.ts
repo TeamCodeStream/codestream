@@ -21,6 +21,7 @@ const languageSpecificExtensions: any = {
 
 export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider {
 	private documentManager: any = {};
+	private resetCache: boolean = false;
 
 	constructor(
 		private codeLensTemplate: string,
@@ -29,6 +30,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			getFileLevelTelemetry(
 				filePath: string,
 				languageId: string,
+				resetCache?: boolean,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse>;
 		},
@@ -53,6 +55,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 	update(template: string) {
 		this.codeLensTemplate = template;
+		this.resetCache = true;
 		this._onDidChangeCodeLenses.fire();
 	}
 
@@ -113,8 +116,10 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
 				document.fileName,
 				document.languageId,
+				this.resetCache,
 				methodLevelTelemetryRequestOptions
 			);
+			this.resetCache = false;
 
 			if (fileLevelTelemetryResponse == null) {
 				Logger.log("provideCodeLenses no response", {
@@ -187,10 +192,10 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					? fileLevelTelemetryResponse.errorRate.find((i: any) => i.functionName === _.symbol.name)
 					: undefined;
 
-				// if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
-				// 	Logger.debug(`provideCodeLenses no data for ${_.symbol.name}`);
-				// 	return undefined;
-				// }
+				if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {
+					Logger.debug(`provideCodeLenses no data for ${_.symbol.name}`);
+					return undefined;
+				}
 
 				const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
 					repo: fileLevelTelemetryResponse.repo,

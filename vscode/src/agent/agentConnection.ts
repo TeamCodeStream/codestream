@@ -928,11 +928,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		getFileLevelTelemetry(
 			filePath: string,
 			languageId: string,
+			resetCache: boolean,
 			options?: FileLevelTelemetryRequestOptions
 		) {
 			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
 				filePath,
 				languageId,
+				resetCache,
 				options
 			});
 		}

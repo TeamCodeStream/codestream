@@ -14,6 +14,7 @@ import Tooltip from "../Tooltip";
 
 import styled from "styled-components";
 import {
+	DidChangeObservabilityDataNotificationType,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
 	TelemetryRequestType,
@@ -25,7 +26,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { PanelHeader } from "../../src/components/PanelHeader";
-import { closePanel, setUserPreferences } from "../actions";
+import { closePanel, setUserPreference, setUserPreferences } from "../actions";
 import CancelButton from "../CancelButton";
 import { Dropdown } from "../Dropdown";
 import Icon from "../Icon";
@@ -59,6 +60,7 @@ const ApmServiceTitle = styled.span`
 	}
 `;
 
+const EMPTY_ARRAY = [];
 export const MethodLevelTelemetryPanel = () => {
 	const dispatch = useDispatch<any>();
 
@@ -67,9 +69,9 @@ export const MethodLevelTelemetryPanel = () => {
 			showGoldenSignalsInEditor: state.configs.showGoldenSignalsInEditor,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
-			methodLevelTelemetryRepoEntities:
-				(state.users[state.session.userId!].preferences || {}).methodLevelTelemetryRepoEntities ||
-				{}
+			observabilityRepoEntities:
+				(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
+				EMPTY_ARRAY
 		};
 	});
 
@@ -281,16 +283,32 @@ export const MethodLevelTelemetryPanel = () => {
 															key: item.entityGuid + "-" + i,
 															checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,
 															action: async () => {
-																await dispatch(
-																	setUserPreferences({
-																		[`methodLevelTelemetryRepoEntities.${
-																			derivedState.currentMethodLevelTelemetry!.repo.id
-																		}`]: item.entityGuid
-																	})
+																const repoId = derivedState.currentMethodLevelTelemetry!.repo.id;
+																const newPreferences = derivedState.observabilityRepoEntities.filter(
+																	_ => _.repoId !== repoId
+																);
+																newPreferences.push({
+																	repoId: repoId,
+																	entityGuid: item.entityGuid
+																});
+																dispatch(
+																	setUserPreference(["observabilityRepoEntities"], newPreferences)
 																);
 
-																loadData(item.entityGuid);
+																// update the IDEs
 																HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+																// tell other parts of the webview that we updated this
+																HostApi.instance.emit(
+																	DidChangeObservabilityDataNotificationType.method,
+																	{
+																		type: "Entity",
+																		data: {
+																			entityGuid: item.entityGuid,
+																			repoId: repoId
+																		}
+																	}
+																);
+																loadData(item.entityGuid);
 															}
 														};
 													})

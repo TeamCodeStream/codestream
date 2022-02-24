@@ -180,8 +180,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const { users } = SessionContainer.instance();
 			await users.updatePreferences({
 				preferences: {
-					observabilityRepoEntities: [],
-					methodLevelTelemetryRepoEntities: {}
+					observabilityRepoEntities: []
 				}
 			});
 		} catch (ex) {
@@ -1676,13 +1675,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			try {
 				// first, to get from preferences
 				if (codestreamUser.preferences) {
-					const methodLevelTelemetryRepoEntities =
-						codestreamUser.preferences.methodLevelTelemetryRepoEntities || {};
-					const methodLevelTelemetryRepoEntity =
-						methodLevelTelemetryRepoEntities[observabilityRepo.repoId];
-					if (methodLevelTelemetryRepoEntity) {
+					const observabilityRepoEntities =
+						codestreamUser.preferences.observabilityRepoEntities || [];
+					const methodLevelTelemetryRepoEntity = observabilityRepoEntities.find(
+						_ => _.repoId === observabilityRepo.repoId
+					);
+					if (methodLevelTelemetryRepoEntity?.entityGuid) {
 						const foundEntity = observabilityRepo.entityAccounts.find(
-							_ => _.entityGuid === methodLevelTelemetryRepoEntity
+							_ => _.entityGuid === methodLevelTelemetryRepoEntity.entityGuid
 						);
 						if (foundEntity) {
 							entity = foundEntity;
@@ -1760,16 +1760,25 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			);
 			return undefined;
 		}
-
 		const cacheKey = [request.filePath, request.languageId].join("-");
-		const cached = this._mltTimedCache.get(cacheKey);
-		if (cached) {
-			ContextLogger.log("getFileLevelTelemetry: from cache", {
+
+		if (request.resetCache) {
+			Logger.log("getFileLevelTelemetry: resetting cache", {
 				cacheKey
 			});
-			return cached;
+			this._mltTimedCache = new Cache();
+			Logger.log("getFileLevelTelemetry: reset cache complete", {
+				cacheKey
+			});
+		} else {
+			const cached = this._mltTimedCache.get(cacheKey);
+			if (cached) {
+				Logger.log("getFileLevelTelemetry: from cache", {
+					cacheKey
+				});
+				return cached;
+			}
 		}
-
 		const { users, git } = SessionContainer.instance();
 		if (!this._codeStreamUser) {
 			this._codeStreamUser = await users.getMe();

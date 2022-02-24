@@ -1,55 +1,56 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch, shallowEqual } from "react-redux";
-import { PaneHeader, PaneBody, PaneState, PaneNode, PaneNodeName } from "../src/components/Pane";
-import { WebviewPanels } from "../ipc/webview.protocol.common";
-import { CodeStreamState } from "../store";
-import { isConnected } from "../store/providers/reducer";
-import { Provider } from "./IntegrationsPanel";
-import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
-import Icon from "./Icon";
-import Tooltip from "./Tooltip";
-import { openPanel, setUserPreference } from "./actions";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
-import { HostApi } from "../webview-api";
-import {
-	HostDidChangeWorkspaceFoldersNotificationType,
-	OpenUrlRequestType
-} from "@codestream/protocols/webview";
-import Timestamp from "./Timestamp";
-import styled from "styled-components";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { Button } from "../src/components/Button";
-import { useDidMount, usePrevious } from "../utilities/hooks";
-import {
-	EntityAccount,
-	ObservabilityErrorCore,
-	GetObservabilityErrorAssignmentsRequestType,
-	GetObservabilityErrorAssignmentsResponse,
-	GetObservabilityErrorsRequestType,
-	GetObservabilityErrorGroupMetadataResponse,
-	GetObservabilityErrorGroupMetadataRequestType,
-	GetObservabilityReposRequestType,
-	GetObservabilityReposResponse,
-	GetObservabilityEntitiesRequestType,
-	ObservabilityRepo,
-	ObservabilityRepoError,
-	DidChangeObservabilityDataNotificationType
-} from "@codestream/protocols/agent";
 import {
 	forEach as _forEach,
 	isEmpty as _isEmpty,
 	isNil as _isNil,
 	keyBy as _keyBy
 } from "lodash-es";
+import React, { useEffect, useState } from "react";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+
+import {
+	DidChangeObservabilityDataNotificationType,
+	EntityAccount,
+	GetObservabilityEntitiesRequestType,
+	GetObservabilityErrorAssignmentsRequestType,
+	GetObservabilityErrorAssignmentsResponse,
+	GetObservabilityErrorGroupMetadataRequestType,
+	GetObservabilityErrorGroupMetadataResponse,
+	GetObservabilityErrorsRequestType,
+	GetObservabilityReposRequestType,
+	GetObservabilityReposResponse,
+	ObservabilityErrorCore,
+	ObservabilityRepo,
+	ObservabilityRepoError
+} from "@codestream/protocols/agent";
+import {
+	HostDidChangeWorkspaceFoldersNotificationType,
+	OpenUrlRequestType
+} from "@codestream/protocols/webview";
+import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
+
+import { WebviewPanels } from "../ipc/webview.protocol.common";
+import { Button } from "../src/components/Button";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
+import { CodeStreamState } from "../store";
 import { openErrorGroup } from "../store/codeErrors/actions";
+import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
+import { isConnected } from "../store/providers/reducer";
+import { useDidMount, usePrevious } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { openPanel, setUserPreference } from "./actions";
+import { Row } from "./CrossPostIssueControls/IssueDropdown";
 import { EntityAssociator } from "./EntityAssociator";
+import Icon from "./Icon";
+import { Provider } from "./IntegrationsPanel";
 import { Link } from "./Link";
+import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 interface Props {
 	paneState: PaneState;
 }
-
-const EMPTY_HASH = {};
 
 const Root = styled.div`
 	height: 100%;
@@ -171,6 +172,7 @@ const ErrorRow = (props: {
 	);
 };
 
+const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let hasLoadedOnce = false;
 
@@ -307,6 +309,12 @@ export const Observability = React.memo((props: Props) => {
 				} else if (e.type === "RepositoryAssociation") {
 					setTimeout(() => {
 						_useDidMount();
+					}, 2500);
+				} else if (e.type === "Entity") {
+					if (!e.data) return;
+
+					setTimeout(() => {
+						fetchObservabilityErrors(e.data.entityGuid, e.data.repoId);
 					}, 2500);
 				}
 			}
@@ -542,7 +550,7 @@ export const Observability = React.memo((props: Props) => {
 		let items = or.entityAccounts.map((ea, index) => {
 			let checked = false;
 			// if we dont have a setting for this, we choose the first one
-			if (Object.keys(derivedState.observabilityRepoEntities || {}).length === 0 && index === 0) {
+			if (derivedState.observabilityRepoEntities.length === 0 && index === 0) {
 				checked = true;
 			} else {
 				const setting = derivedState.observabilityRepoEntities.find(
@@ -568,6 +576,8 @@ export const Observability = React.memo((props: Props) => {
 						entityGuid: ea.entityGuid
 					});
 					dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
+					// update the IDEs
+					HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 				},
 				checked: checked
 			};

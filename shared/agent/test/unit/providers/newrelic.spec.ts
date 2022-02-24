@@ -88,9 +88,12 @@ describe("newRelicProvider", async () => {
 		const asdf = newrelic.getGoldenSignalsEntity(
 			{
 				preferences: {
-					methodLevelTelemetryRepoEntities: {
-						"555": "234"
-					}
+					observabilityRepoEntities: [
+						{
+							repoId: "555",
+							entityGuid: "234"
+						}
+					]
 				},
 				lastReads: undefined as any,
 				lastReadItems: [] as any,

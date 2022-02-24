@@ -1092,23 +1092,19 @@ export interface FileLevelTelemetryRequestOptions {
 export interface GetFileLevelTelemetryRequest {
 	filePath: string;
 	languageId: string;
+	/** if true, this request will reset the cache */
+	resetCache?: boolean;
 	codeNamespace?: string;
 	functionName?: string;
 	options?: FileLevelTelemetryRequestOptions;
 }
 
 export interface GetMethodLevelTelemetryRequest {
-	/**
-	 * CodeStream repoId
-	 */
+	/** CodeStream repoId */
 	repoId: string;
-	/**
-	 * entity id of the NewRelic entity
-	 */
+	/** entity id of the NewRelic entity */
 	newRelicEntityGuid: string;
-	/**
-	 * contains the specific formatting of a metricTimesliceName for a golden metric type
-	 */
+	/** contains the specific formatting of a metricTimesliceName for a golden metric type */
 	metricTimesliceNameMapping: MetricTimesliceNameMapping;
 }
 

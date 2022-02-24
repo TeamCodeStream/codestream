@@ -767,8 +767,7 @@ export interface CSMePreferences {
 	activityFilter?: { [key: string]: ActivityFilter | undefined };
 	demoMode?: boolean;
 	lastTeamId?: string;
-	observabilityRepoEntities?: any;
-	methodLevelTelemetryRepoEntities?: { [key: string]: string | undefined };
+	observabilityRepoEntities?: { repoId: string; entityGuid: string }[];
 }
 
 export interface RepoSetting {
