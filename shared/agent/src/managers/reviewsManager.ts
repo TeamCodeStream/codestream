@@ -849,7 +849,9 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				warning: warning
 			};
 		} catch (ex) {
-			console.warn(ex);
+			Logger.error(ex, "checkPullRequestPreconditions", {
+				request
+			});
 			return {
 				success: false,
 				error: {

@@ -499,20 +499,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			}
 			return response;
 		} catch (ex) {
-			Logger.error(ex, `${this.providerConfig.id}: getForkedRepos`, {
-				remote: request.remote
-			});
-			let errorMessage =
-				ex.response && ex.response.errors
-					? ex.response.errors[0].message
-					: `Unknown ${this.providerConfig.name} error`;
-			errorMessage = `${this.providerConfig.name}: ${errorMessage}`;
-			return {
-				error: {
-					type: "PROVIDER",
-					message: errorMessage
-				}
-			};
+			return this.handleProviderError(ex, request);
 		}
 	}
 

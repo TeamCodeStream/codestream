@@ -75,10 +75,10 @@ export class GitRemote implements GitRemoteLike {
 	remoteWeightByStrategy(strategy: "prioritizeOrigin" | "prioritizeUpstream" = "prioritizeOrigin") {
 		const name = this.name.toLowerCase();
 		if (name === "upstream") {
-			return strategy === "prioritizeUpstream" ? -100 : 0;
+			return strategy === "prioritizeUpstream" ? -100 : strategy === "prioritizeOrigin" ? -50 : 0;
 		}
 		if (name === "origin") {
-			return strategy === "prioritizeOrigin" ? -100 : 0;
+			return strategy === "prioritizeOrigin" ? -100 : strategy === "prioritizeUpstream" ? -50 : 0;
 		}
 		return 100;
 	}
