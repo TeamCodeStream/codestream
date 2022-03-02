@@ -75,9 +75,7 @@ export const SignupNewRelic = () => {
 				isWebmail,
 				accountIsConnected
 			} = await HostApi.instance.send(RegisterNrUserRequestType, data);
-			HostApi.instance.track("NR Connected", {
-				"Connection Location": "Onboarding"
-			});
+
 			setLoading(false);
 
 			const sendTelemetry = () => {
@@ -85,6 +83,9 @@ export const SignupNewRelic = () => {
 					email: email,
 					"Auth Provider": "New Relic",
 					Source: derivedState.pendingProtocolHandlerQuerySource
+				});
+				HostApi.instance.track("NR Connected", {
+					"Connection Location": "Onboarding"
 				});
 			};
 

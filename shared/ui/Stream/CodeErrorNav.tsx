@@ -809,6 +809,7 @@ export function CodeErrorNav(props: Props) {
 	}
 	if (repoAssociationError) {
 		// essentially a roadblock
+		HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Association" });
 		return (
 			<RepositoryAssociator
 				error={repoAssociationError}
