@@ -15,7 +15,7 @@ module.exports = {
 	rules: {
 		"@typescript-eslint/adjacent-overload-signatures": "error",
 		"@typescript-eslint/array-type": "error",
-		"@typescript-eslint/class-name-casing": "error",
+		"@typescript-eslint/naming-convention": "warn",
 		"@typescript-eslint/consistent-type-assertions": ["error", { assertionStyle: "as" }],
 		"@typescript-eslint/consistent-type-definitions": ["error", "interface"],
 		"@typescript-eslint/member-delimiter-style": [
@@ -54,7 +54,6 @@ module.exports = {
 		"@typescript-eslint/type-annotation-spacing": "warn",
 		"arrow-body-style": ["warn", "as-needed"],
 		"arrow-parens": ["warn", "as-needed"],
-		camelcase: "warn",
 		curly: ["error", "multi-line"],
 		"eol-last": "error",
 		eqeqeq: ["error", "smart"],
