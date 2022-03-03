@@ -15,9 +15,9 @@ import { Strings } from "../system";
 import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
 
-const languageSpecificExtensions: any = {
-	python: ["ms-python.python", "ms-python.vscode-pylance"]
-};
+// const languageSpecificExtensions: any = {
+// 	python: ["ms-python.python", "ms-python.vscode-pylance"]
+// };
 
 export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider {
 	private documentManager: any = {};

@@ -1,9 +1,9 @@
 import { resolve } from "path";
-import * as cp from "child_process";
+// import * as cp from "child_process";
 
 import {
-	downloadAndUnzipVSCode,
-	resolveCliPathFromVSCodeExecutablePath,
+	// downloadAndUnzipVSCode,
+	// resolveCliPathFromVSCodeExecutablePath,
 	runTests
 } from "@vscode/test-electron";
 
@@ -39,7 +39,7 @@ async function main() {
 			launchArgs: [
 				testWorkspace
 				// we don't want to disable extensions, but this is how we can do it
-				//, "--disable-extensions"
+				// , "--disable-extensions"
 			]
 		});
 		// === python test end
