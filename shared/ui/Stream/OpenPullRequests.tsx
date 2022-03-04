@@ -106,6 +106,11 @@ const Root = styled.div`
 	}
 `;
 
+const PrErrorText = styled.div`
+	color: red;
+	text-align: right;
+`;
+
 export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => {
 	const { pr } = props;
 	const statusIcon =
@@ -615,8 +620,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		if (response && response.error) {
 			setPrError(response.error);
-			const er = document.getElementById("error-row");
-			er && er.scrollIntoView({ behavior: "smooth" });
 		}
 	};
 
@@ -735,11 +738,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							)}
 						</Row>
 						{prError && (
-							<Row id="error-row" key="pr-error" className={"no-hover wrap"}>
-								<div>
-									<Icon name="alert" />
-								</div>
-								<div title={prError}>{prError}</div>
+							<Row
+								style={{
+									display: "block",
+									paddingRight: "5px"
+								}}
+								id="error-row"
+								key="pr-error"
+								className={"no-hover wrap"}
+							>
+								<PrErrorText title={prError}>{prError}</PrErrorText>
 							</Row>
 						)}
 					</>

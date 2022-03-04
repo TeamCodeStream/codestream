@@ -411,6 +411,7 @@ export const openPullRequestByUrl = (
 		checkoutBranch?: any;
 	}
 ) => async (dispatch, getState: () => CodeStreamState) => {
+	const defaultErrorString = "Enter the URL for a specific pull request";
 	let handled = false;
 	let response;
 	let providerInfo;
@@ -452,10 +453,10 @@ export const openPullRequestByUrl = (
 				errorString = errorString.substring(index + targetLength);
 			}
 		}
-		return { error: errorString };
+		return { error: defaultErrorString };
 	}
 	if (!handled) {
-		response = { error: "Unable to view PR" };
+		response = { error: defaultErrorString };
 	}
 	return response;
 };
