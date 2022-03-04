@@ -107,7 +107,6 @@ const Root = styled.div`
 `;
 
 const PrErrorText = styled.div`
-	color: red;
 	text-align: right;
 `;
 
@@ -745,7 +744,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								}}
 								id="error-row"
 								key="pr-error"
-								className={"no-hover wrap"}
+								className={"no-hover wrap error-message"}
 							>
 								<PrErrorText title={prError}>{prError}</PrErrorText>
 							</Row>
