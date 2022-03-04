@@ -25,6 +25,7 @@ import {
 	setCurrentReview
 } from "../context/actions";
 import { getPullRequestExactId, isAnHourOld } from "./reducer";
+import { getPRLabelForProvider } from "../providers/reducer";
 
 export const reset = () => action("RESET");
 
@@ -409,9 +410,11 @@ export const openPullRequestByUrl = (
 	options?: {
 		source?: string;
 		checkoutBranch?: any;
+		providerId?: string;
 	}
 ) => async (dispatch, getState: () => CodeStreamState) => {
-	const defaultErrorString = "Enter the URL for a specific pull request";
+	const prLabel = getPRLabelForProvider(options?.providerId || "");
+	const defaultErrorString = `Enter the URL for a specific ${prLabel.pullrequest}`;
 	let handled = false;
 	let response;
 	let providerInfo;
