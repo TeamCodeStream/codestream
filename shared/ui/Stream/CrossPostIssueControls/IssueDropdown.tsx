@@ -582,48 +582,16 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			setLoadedCards(loadedCards + 1);
 		};
 
-		// kick both these off in parallel, in an attempt to fix https://newrelic.atlassian.net/browse/CDSTRM-1329
-		// note the commented out hook below, which is explicitly dependent on loading projects first
-		// I am making this change under the assumption that the dependency isn't necessary
 		fetchBoards();
-		fetchCards();
+		// don't run duplicate fetch cards call on initial load
+		if (initialLoadComplete) {
+			fetchCards();
+		}
 
 		return () => {
 			isValid = false;
 		};
 	}, [derivedState.providerIds, reload]);
-
-	// see note above fetchBoards() and fetchCards(), above
-	/*
-	React.useEffect(() => {
-		void (async () => {
-			if (!loadedBoards) return;
-
-			setIsLoading(true);
-
-			await Promise.all(
-				props.providers.map(async provider => {
-					const filterCustom = getFilterCustom(provider.id);
-					try {
-						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-							customFilter: filterCustom.selected,
-							providerId: provider.id
-						});
-						updateDataState(provider.id, {
-							cards: response.cards
-						});
-					} catch (error) {
-						console.warn("Error Loading Cards: ", error);
-					} finally {
-					}
-				})
-			);
-
-			setIsLoading(false);
-			setLoadedCards(loadedCards + 1);
-		})();
-	}, [loadedBoards]);
-	*/
 
 	// Fetch initial cards here, api call triggered once initial updateDataState is complete
 	// Without doing this, we run into an issue where cards are fetched too early and nothing
@@ -664,36 +632,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				setLoadedCards(loadedCards + 1);
 			})();
 		}
-
-		// props.providers.forEach(provider => {
-		// 	if (data[provider.id] && _isEmpty(data[provider.id]?.cards)) {
-		// 		console.warn("eric here 2221");
-		// 		void (async () => {
-		// 			setIsLoading(true);
-
-		// 			await Promise.all(
-		// 				props.providers.map(async provider => {
-		// 					const filterCustom = getFilterCustom(provider.id);
-		// 					try {
-		// 						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-		// 							customFilter: filterCustom.selected,
-		// 							providerId: provider.id
-		// 						});
-		// 						updateDataState(provider.id, {
-		// 							cards: response.cards
-		// 						});
-		// 					} catch (error) {
-		// 						console.warn("Error Loading Cards: ", error);
-		// 					} finally {
-		// 					}
-		// 				})
-		// 			);
-
-		// 			setIsLoading(false);
-		// 			setLoadedCards(loadedCards + 1);
-		// 		})();
-		// 	}
-		// });
 	}, [data]);
 
 	const selectCard = React.useCallback(
