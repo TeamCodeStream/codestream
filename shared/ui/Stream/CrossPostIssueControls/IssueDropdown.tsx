@@ -43,7 +43,7 @@ import { StartWork } from "../StartWork";
 import { mapFilter } from "@codestream/webview/utils";
 import { Link } from "../Link";
 import { ErrorMessage } from "../ConfigurePullRequestQuery";
-
+import { isEmpty as _isEmpty } from "lodash-es";
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
 	display: ProviderDisplay;
@@ -441,6 +441,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
 	};
 
+	const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [isLoadingCard, setIsLoadingCard] = React.useState("");
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
@@ -518,6 +519,10 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		if (!codemarkState.bootstrapped) {
 			// dispatch(bootstrapCodemarks());
 		}
+		//setup blank data state for provider cards
+		props.providers.forEach(provider => {
+			updateDataState(provider.id, { cards: [] });
+		});
 	});
 
 	useEffect(() => {
@@ -619,6 +624,77 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		})();
 	}, [loadedBoards]);
 	*/
+
+	// Fetch initial cards here, api call triggered once initial updateDataState is complete
+	// Without doing this, we run into an issue where cards are fetched too early and nothing
+	// is loaded into cards array.  User would have to use reload button to see cards.
+	// See: https://newrelic.atlassian.net/browse/CDSTRM-1329
+	// 		https://newrelic.atlassian.net/browse/CDSTRM-1425
+	React.useEffect(() => {
+		let selectedProvidersHaveBeenInitialized = false;
+		props.providers.forEach(provider => {
+			if (data[provider.id] && _isEmpty(data[provider.id]?.cards)) {
+				selectedProvidersHaveBeenInitialized = true;
+			}
+		});
+
+		if (selectedProvidersHaveBeenInitialized && !initialLoadComplete) {
+			void (async () => {
+				setIsLoading(true);
+				await Promise.all(
+					props.providers.map(async provider => {
+						const filterCustom = getFilterCustom(provider.id);
+						try {
+							const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+								customFilter: filterCustom.selected,
+								providerId: provider.id
+							});
+							updateDataState(provider.id, {
+								cards: response.cards
+							});
+						} catch (error) {
+							console.warn("Error Loading Cards: ", error);
+						} finally {
+						}
+					})
+				);
+
+				setIsLoading(false);
+				setInitialLoadComplete(true);
+				setLoadedCards(loadedCards + 1);
+			})();
+		}
+
+		// props.providers.forEach(provider => {
+		// 	if (data[provider.id] && _isEmpty(data[provider.id]?.cards)) {
+		// 		console.warn("eric here 2221");
+		// 		void (async () => {
+		// 			setIsLoading(true);
+
+		// 			await Promise.all(
+		// 				props.providers.map(async provider => {
+		// 					const filterCustom = getFilterCustom(provider.id);
+		// 					try {
+		// 						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
+		// 							customFilter: filterCustom.selected,
+		// 							providerId: provider.id
+		// 						});
+		// 						updateDataState(provider.id, {
+		// 							cards: response.cards
+		// 						});
+		// 					} catch (error) {
+		// 						console.warn("Error Loading Cards: ", error);
+		// 					} finally {
+		// 					}
+		// 				})
+		// 			);
+
+		// 			setIsLoading(false);
+		// 			setLoadedCards(loadedCards + 1);
+		// 		})();
+		// 	}
+		// });
+	}, [data]);
 
 	const selectCard = React.useCallback(
 		async (card?) => {
