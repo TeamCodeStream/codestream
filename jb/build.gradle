@@ -76,8 +76,6 @@ intellij {
     // version "PC-2018.2"
 
     intellij.updateSinceUntilBuild = false
-    // Run on a locally installed IDE, different from the build dependency specified via type/version
-    // intellij.alternativeIdePath = idePath
 
     plugins = ['git4idea', 'org.jetbrains.plugins.go:211.7142.36', 'Pythonid:211.7142.45']
 }
@@ -88,10 +86,16 @@ runIde {
 //    jvmArgs '-Dsun.java2d.uiScale.enabled=false'
 //    jvmArgs '-Dkotlinx.coroutines.debug=on'
 //    jvmArgs '-Dcom.codestream.recordRequests=true'
-    jvmArgs '-Dcom.codestream.webview=/Users/mfarias/Code/codestream/jb/src/main/resources/webview'
-    jvmArgs '-Dcom.codestream.agent=/Users/mfarias/Code/codestream/shared/agent/dist'
+    jvmArgs "-Dcom.codestream.webview=$projectDir/src/main/resources/webview"
+    jvmArgs "-Dcom.codestream.agent=$projectDir/../shared/agent/dist"
     jvmArgs '-Xmx2048m'
     jvmArgs '-Xms128m'
+    // M1 mac workaround - for now need to run on a locally installed IDE, different from the build dependency
+    // specified via type/version
+    // set ideDir in ~/.gradle/gradle.properties i.e. ideDir=/Applications/IntelliJ IDEA.app/Contents
+    if (project.ideDir && !project.ideDir.isEmpty()) {
+        ideDir.set(file(project.ideDir))
+    }
 }
 
 import org.gradle.internal.os.OperatingSystem
