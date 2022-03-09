@@ -499,6 +499,7 @@ export function CodeErrorNav(props: Props) {
 							targetRemote,
 							timestamp: derivedState.currentCodeErrorData?.timestamp
 						});
+						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Not Open" });
 						return;
 					}
 					repoId = reposResponse.repos[0].id!;
