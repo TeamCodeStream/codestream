@@ -599,11 +599,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	// See: https://newrelic.atlassian.net/browse/CDSTRM-1329
 	// 		https://newrelic.atlassian.net/browse/CDSTRM-1425
 	React.useEffect(() => {
-		let selectedProvidersHaveBeenInitializedTwo = props.providers.some(provider => {
+		let selectedProvidersHaveBeenInitialized = props.providers.some(provider => {
 			return data[provider.id] && _isEmpty(data[provider.id]?.cards);
 		});
 
-		if (selectedProvidersHaveBeenInitializedTwo && !initialLoadComplete) {
+		if (selectedProvidersHaveBeenInitialized && !initialLoadComplete) {
 			void (async () => {
 				setIsLoading(true);
 				await Promise.all(
