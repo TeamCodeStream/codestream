@@ -106,8 +106,9 @@ const Root = styled.div`
 	}
 `;
 
-const PrErrorText = styled.div`
+const PrErrorText = styled.small`
 	text-align: right;
+	display: block;
 `;
 
 export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => {
@@ -612,7 +613,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const goPR = async (url: string, providerId: string) => {
 		setPrError("");
-		const response = (await dispatch(openPullRequestByUrl(url, { providerId }))) as { error?: string };
+		const response = (await dispatch(openPullRequestByUrl(url, { providerId }))) as {
+			error?: string;
+		};
 
 		// fix https://trello.com/c/Gp0lsDub/4874-loading-pr-from-url-leaves-the-url-populated
 		setLoadFromUrlQuery({ ...loadFromUrlQuery, [providerId]: "" });
@@ -740,7 +743,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							<Row
 								style={{
 									display: "block",
-									paddingRight: "5px"
+									paddingRight: "8px"
 								}}
 								id="error-row"
 								key="pr-error"
