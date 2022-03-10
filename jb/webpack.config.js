@@ -70,7 +70,7 @@ module.exports = function(env, argv) {
 		}),
 		new HtmlPlugin({
 			template: "index.html",
-			filename: "webview.html",
+			filename: "webview-template.html",
 			inject: true,
 			minify:
 				mode === "production"
