@@ -449,6 +449,7 @@ export function CodeErrorNav(props: Props) {
 							title: "Which Repository?",
 							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`
 						});
+						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Association" });
 						return;
 					}
 				}
@@ -809,7 +810,6 @@ export function CodeErrorNav(props: Props) {
 	}
 	if (repoAssociationError) {
 		// essentially a roadblock
-		HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Association" });
 		return (
 			<RepositoryAssociator
 				error={repoAssociationError}
