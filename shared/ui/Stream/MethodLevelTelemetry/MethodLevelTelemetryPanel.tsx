@@ -41,6 +41,7 @@ import {
 import { ALERT_SEVERITY_COLORS } from "../CodeError";
 import { closeAllPanels } from "@codestream/webview/store/context/actions";
 import { EntityAssociator } from "../EntityAssociator";
+import { DropdownButton } from "../DropdownButton";
 
 const Root = styled.div``;
 
@@ -58,6 +59,10 @@ const ApmServiceTitle = styled.span`
 	& .open-external {
 		visibility: visible;
 	}
+`;
+
+const EntityDropdownContainer = styled.div`
+	margin: 0 0 4px 0;
 `;
 
 const EMPTY_ARRAY = [];
@@ -266,11 +271,12 @@ export const MethodLevelTelemetryPanel = () => {
 								</>
 							) : (
 								<div>
-									<div>
-										<b>Entity:</b>{" "}
-										{telemetryResponse && (
-											<Dropdown
-												selectedValue={telemetryResponse.newRelicEntityName!}
+									{telemetryResponse && (
+										<EntityDropdownContainer>
+											<div>
+												<b>Entity:</b>
+											</div>
+											<DropdownButton
 												items={([
 													{
 														type: "search",
@@ -316,9 +322,14 @@ export const MethodLevelTelemetryPanel = () => {
 														};
 													})
 												)}
-											/>
-										)}
-									</div>
+												selectedKey={telemetryResponse.newRelicEntityName!}
+												variant={"secondary"}
+												wrap
+											>
+												{telemetryResponse.newRelicEntityName!}
+											</DropdownButton>
+										</EntityDropdownContainer>
+									)}
 									<div>
 										<b>Repo:</b> {derivedState.currentMethodLevelTelemetry.repo.name}
 									</div>
