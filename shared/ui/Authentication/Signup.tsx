@@ -56,6 +56,12 @@ const OnPremWrapper = styled.div`
 	font-size: smaller;
 	text-align: center;
 `;
+
+export const TooltipIconWrapper = styled.span`
+	position: relative;
+	top: 1px;
+`;
+
 interface TeamAuthSettings {
 	limitAuthentication: boolean;
 	authenticationProviders: {
@@ -444,9 +450,9 @@ export const Signup = (props: Props) => {
 											placement={"bottom"}
 											title={`Select the region where your CodeStream organization is located.`}
 										>
-											<span>
+											<TooltipIconWrapper>
 												<Icon name="question" />
-											</span>
+											</TooltipIconWrapper>
 										</Tooltip>
 									</>
 								)}

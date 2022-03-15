@@ -22,6 +22,7 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 // TODO: BRIAN FIX (remove this dependency)...
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
 import Tooltip from "../Stream/Tooltip";
+import { TooltipIconWrapper } from "./Signup";
 
 const FooterWrapper = styled.div`
 	text-align: center;
@@ -226,9 +227,9 @@ export const SignupNewRelic = () => {
 										placement={"bottom"}
 										title={`Select the region where your CodeStream organization is located.`}
 									>
-										<span>
+										<TooltipIconWrapper>
 											<Icon name="question" />
-										</span>
+										</TooltipIconWrapper>
 									</Tooltip>
 								</>
 							)}

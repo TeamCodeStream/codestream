@@ -1,5 +1,6 @@
 import React from "react";
 import { TextInput } from "../Authentication/TextInput";
+import { TooltipIconWrapper } from "../Authentication/Signup";
 import { Button } from "../src/components/Button";
 import { FormattedMessage } from "react-intl";
 import { CodeStreamState } from "../store";
@@ -144,9 +145,12 @@ export function CreateCompanyPage() {
 									<br />
 									Region: <InlineMenu items={regionItems}>{region}</InlineMenu>{" "}
 									<Tooltip
-										title={`Select the region where the CodeStream data for this organization should be stored.`}
+										placement={"bottom"}
+										title={`Select the region where your CodeStream organization is located.`}
 									>
-										<Icon name="question" />
+										<TooltipIconWrapper>
+											<Icon name="question" />
+										</TooltipIconWrapper>
 									</Tooltip>
 								</>
 							)}
