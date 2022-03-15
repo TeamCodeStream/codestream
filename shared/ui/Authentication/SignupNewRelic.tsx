@@ -222,8 +222,13 @@ export const SignupNewRelic = () => {
 							{regionItems && !forceRegionName && (
 								<>
 									Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
-									<Tooltip title={`Select the region where your CodeStream data should be stored.`}>
-										<Icon name="question" />
+									<Tooltip
+										placement={"bottom"}
+										title={`Select the region where your CodeStream organization is located.`}
+									>
+										<span>
+											<Icon name="question" />
+										</span>
 									</Tooltip>
 								</>
 							)}

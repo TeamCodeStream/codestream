@@ -441,9 +441,12 @@ export const Signup = (props: Props) => {
 									<>
 										Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
 										<Tooltip
-											title={`Select the region where your CodeStream data should be stored.`}
+											placement={"bottom"}
+											title={`Select the region where your CodeStream organization is located.`}
 										>
-											<Icon name="question" />
+											<span>
+												<Icon name="question" />
+											</span>
 										</Tooltip>
 									</>
 								)}
