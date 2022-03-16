@@ -59,7 +59,12 @@ export const Dropdown = (props: Props) => {
 			{props.items.length === 1 && <label>{selectedValue}</label>}
 			{/* If more than 1 dropdown item, render dropdown */}
 			{props.items.length > 1 && (
-				<label onClick={toggleEllipsisMenu} style={{ cursor: "pointer" }}>
+				<label
+					tabIndex={0}
+					onBlur={toggleEllipsisMenu}
+					onClick={toggleEllipsisMenu}
+					style={{ cursor: "pointer" }}
+				>
 					{selectedValue}
 					<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
 					{ellipsisMenuOpen && !props.noModal && (
