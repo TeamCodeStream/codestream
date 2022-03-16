@@ -448,10 +448,6 @@ export const Signup = (props: Props) => {
 								<br />
 								{regionItems && !forceRegionName && (
 									<>
-										{/* 
-										Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>
-										*/}
-										Region:{" "}
 										<Dropdown
 											selectedValue={selectedRegionName}
 											items={regionItems}

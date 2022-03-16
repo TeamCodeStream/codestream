@@ -1,6 +1,14 @@
 import React, { useState } from "react";
 import Icon from "./Icon";
 import Menu from "./Menu";
+import styled from "styled-components";
+
+const DropdownItemContainer = styled.div`
+	position: absolute;
+	background: var(--app-background-color);
+	z-index: 9999;
+	padding: 5px;
+`;
 
 interface Props {
 	selectedValue: string;
@@ -51,7 +59,23 @@ export const Dropdown = (props: Props) => {
 							target={ellipsisMenuOpen}
 						/>
 					)}
-					{ellipsisMenuOpen && props.noModal && <div>hi</div>}
+					{ellipsisMenuOpen && props.noModal && (
+						<DropdownItemContainer>
+							{props.items.map((_, index) => (
+								<div
+									key={`dropdown_item_${index}_${_?.label}`}
+									onClick={e => {
+										setSelectedValue(_.label);
+										if (typeof _.action === "function") {
+											_.action();
+										}
+									}}
+								>
+									{_?.label}
+								</div>
+							))}
+						</DropdownItemContainer>
+					)}
 				</label>
 			)}
 		</>
