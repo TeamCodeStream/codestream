@@ -3,11 +3,30 @@ import Icon from "./Icon";
 import Menu from "./Menu";
 import styled from "styled-components";
 
-const DropdownItemContainer = styled.div`
+const DropdownItemsContainer = styled.div`
 	position: absolute;
-	background: var(--app-background-color);
+	background: var(--panel-tool-background-color);
+	margin-top: -20px;
 	z-index: 9999;
-	padding: 5px;
+	border-radius: 5px;
+	box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+	.vscode-dark& {
+		box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+	}
+`;
+
+const DropdownItemContainer = styled.div`
+	margin: 8px 0 8px 0;
+	padding: 0 8px 0 8px;
+	&:hover {
+		background: var(--button-background-color);
+	}
+`;
+
+const CheckboxContainer = styled.span`
+	min-width: 11px;
+	display: inline-block;
+	margin: 0 4px 0 0;
 `;
 
 interface Props {
@@ -21,6 +40,7 @@ interface Props {
 		placeholder?: string;
 		searchLabel?: string;
 	}[];
+	// Render without using <Menu /> aka React portals and modals
 	noModal?: boolean;
 }
 
@@ -29,17 +49,18 @@ export const Dropdown = (props: Props) => {
 	const toggleEllipsisMenu = event => {
 		setEllipsisMenuOpen(ellipsisMenuOpen ? undefined : event.target.closest("label"));
 	};
-
-	const [selectedValue, setSelectedValue] = React.useState<string>();
+	const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
+		props.selectedValue || ""
+	);
 
 	return (
 		<>
 			{/* Just show label if only one dropdown item */}
-			{props.items.length === 1 && <label>{selectedValue || props.selectedValue}</label>}
+			{props.items.length === 1 && <label>{selectedValue}</label>}
 			{/* If more than 1 dropdown item, render dropdown */}
 			{props.items.length > 1 && (
 				<label onClick={toggleEllipsisMenu} style={{ cursor: "pointer" }}>
-					{selectedValue || props.selectedValue}
+					{selectedValue}
 					<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
 					{ellipsisMenuOpen && !props.noModal && (
 						<Menu
@@ -60,9 +81,9 @@ export const Dropdown = (props: Props) => {
 						/>
 					)}
 					{ellipsisMenuOpen && props.noModal && (
-						<DropdownItemContainer>
+						<DropdownItemsContainer>
 							{props.items.map((_, index) => (
-								<div
+								<DropdownItemContainer
 									key={`dropdown_item_${index}_${_?.label}`}
 									onClick={e => {
 										setSelectedValue(_.label);
@@ -71,10 +92,11 @@ export const Dropdown = (props: Props) => {
 										}
 									}}
 								>
+									<CheckboxContainer>{selectedValue === _.label && <>✔</>}</CheckboxContainer>
 									{_?.label}
-								</div>
+								</DropdownItemContainer>
 							))}
-						</DropdownItemContainer>
+						</DropdownItemsContainer>
 					)}
 				</label>
 			)}
