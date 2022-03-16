@@ -531,24 +531,11 @@ export default class Menu extends Component {
 		this.count = 0;
 		let className = this.props.compact ? "menu-popup compact" : "menu-popup";
 		if (this.props.wrap) className += " wrap";
-		/*
-			Using the ModalContext z-index as an override in case this is being rendered from inside a Modal,
-			where it needs a z index equivalent to the modal
-		*/
-		return ReactDOM.createPortal(
-			<ModalContext.Consumer>
-				{({ zIndex }) => (
-					<div
-						style={{ zIndex }}
-						className={className}
-						ref={ref => (this._div = ref)}
-						onKeyDown={this.handleKeyDown}
-					>
-						{this.renderMenu(this.props.items, null)}
-					</div>
-				)}
-			</ModalContext.Consumer>,
-			this.el
+
+		return (
+			<div className={className} ref={ref => (this._div = ref)} onKeyDown={this.handleKeyDown}>
+				{this.renderMenu(this.props.items, null)}
+			</div>
 		);
 	}
 

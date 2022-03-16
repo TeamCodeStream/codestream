@@ -28,7 +28,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { closePanel, setUserPreference, setUserPreferences } from "../actions";
 import CancelButton from "../CancelButton";
-import { Dropdown } from "../Dropdown";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import { WarningBox } from "../WarningBox";

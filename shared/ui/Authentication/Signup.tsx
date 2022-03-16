@@ -31,6 +31,7 @@ import { supportsSSOSignIn } from "../store/configs/reducer";
 import { Server } from "../webview-api";
 import { PresentTOS } from "./PresentTOS";
 import Tooltip from "../Stream/Tooltip";
+import { Dropdown } from "../Stream/Dropdown";
 import { confirmPopup } from "../Stream/Confirm";
 import styled from "styled-components";
 
@@ -432,6 +433,8 @@ export const Signup = (props: Props) => {
 	if (!derivedState.acceptedTOS && props.tosType && props.tosType === "Interstitial")
 		return <PresentTOS />;
 
+	console.warn("eric Signup", regionItems, forceRegionName);
+
 	return (
 		<div className="onboarding-page">
 			<ModalRoot />
@@ -445,7 +448,15 @@ export const Signup = (props: Props) => {
 								<br />
 								{regionItems && !forceRegionName && (
 									<>
-										Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
+										{/* 
+										Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>
+										*/}
+										Region:{" "}
+										<Dropdown
+											selectedValue={selectedRegionName}
+											items={regionItems}
+											noModal={true}
+										/>
 										<Tooltip
 											placement={"bottom"}
 											title={`Select the region where your CodeStream organization is located.`}

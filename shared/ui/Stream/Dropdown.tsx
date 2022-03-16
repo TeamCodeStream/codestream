@@ -13,6 +13,7 @@ interface Props {
 		placeholder?: string;
 		searchLabel?: string;
 	}[];
+	noModal?: boolean;
 }
 
 export const Dropdown = (props: Props) => {
@@ -23,31 +24,36 @@ export const Dropdown = (props: Props) => {
 
 	const [selectedValue, setSelectedValue] = React.useState<string>();
 
-	if (props.items.length === 1) {
-		return <label>{selectedValue || props.selectedValue}</label>;
-	}
 	return (
-		<label onClick={toggleEllipsisMenu} style={{ cursor: "pointer" }}>
-			{selectedValue || props.selectedValue}
-			<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
-			{ellipsisMenuOpen && (
-				<Menu
-					items={props.items.map(_ => {
-						// hijack the action to set the selected label first
-						return {
-							..._,
-							action: () => {
-								setSelectedValue(_.label);
-								if (typeof _.action === "function") {
-									_.action();
-								}
-							}
-						};
-					})}
-					action={() => setEllipsisMenuOpen(undefined)}
-					target={ellipsisMenuOpen}
-				/>
+		<>
+			{/* Just show label if only one dropdown item */}
+			{props.items.length === 1 && <label>{selectedValue || props.selectedValue}</label>}
+			{/* If more than 1 dropdown item, render dropdown */}
+			{props.items.length > 1 && (
+				<label onClick={toggleEllipsisMenu} style={{ cursor: "pointer" }}>
+					{selectedValue || props.selectedValue}
+					<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
+					{ellipsisMenuOpen && !props.noModal && (
+						<Menu
+							items={props.items.map(_ => {
+								// hijack the action to set the selected label first
+								return {
+									..._,
+									action: () => {
+										setSelectedValue(_.label);
+										if (typeof _.action === "function") {
+											_.action();
+										}
+									}
+								};
+							})}
+							action={() => setEllipsisMenuOpen(undefined)}
+							target={ellipsisMenuOpen}
+						/>
+					)}
+					{ellipsisMenuOpen && props.noModal && <div>hi</div>}
+				</label>
 			)}
-		</label>
+		</>
 	);
 };

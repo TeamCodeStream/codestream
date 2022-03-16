@@ -417,7 +417,7 @@ class Login extends React.Component<Props, State> {
 								{regionItems && (
 									<p>
 										Trouble signing in? Make sure you're in the right region:{" "}
-										<InlineMenu items={[]}>Europe</InlineMenu>{" "}
+										<InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
 										<Tooltip
 											placement={"bottom"}
 											title={`Select the region where your CodeStream organization is located.`}
