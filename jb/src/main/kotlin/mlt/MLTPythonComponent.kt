@@ -83,7 +83,7 @@ class MLTMetrics {
     var throughput: MethodLevelTelemetryThroughput? = null
 
     fun format(template: String, since: String): String {
-        val averageDurationStr = averageDuration?.averageDuration?.let { "%.3f".format(it * 1000) + "ms" } ?: "n/a"
+        val averageDurationStr = averageDuration?.averageDuration?.let { "%.3f".format(it) + "ms" } ?: "n/a"
         val throughputStr = throughput?.requestsPerMinute?.let { "%.3f".format(it) + "rpm" } ?: "n/a"
         val errorRateStr = errorRate?.errorsPerMinute?.let { "%.3f".format(it) + "epm" } ?: "n/a"
         return template.replace("\${averageDuration}", averageDurationStr)

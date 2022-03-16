@@ -1568,9 +1568,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 }`;
 		try {
-			return this.query(query, {
+			const response = await this.query(query, {
 				accountId: request.newRelicAccountId!
 			});
+			const results = response?.actor?.account?.nrql?.results;
+			if (Array.isArray(results)) {
+				for (const item of results) {
+					if (item.averageDuration) {
+						item.averageDuration *= 1000;
+					}
+				}
+			}
+			return response;
 		} catch (ex) {
 			Logger.error(ex, "getMethodAverageDuration", {
 				request

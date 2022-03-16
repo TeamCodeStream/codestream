@@ -68,7 +68,6 @@ class ApplicationSettingsService : PersistentStateComponent<ApplicationSettingsS
     }
 
     fun addGoldenSignalsListener(listener: GoldenSignalListener) {
-        logger.info("=== addGoldenSignalsListener")
         goldenSignalListeners.add(listener)
     }
 
