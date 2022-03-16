@@ -13,12 +13,15 @@ import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
 import com.codestream.sessionService
+import com.codestream.settings.ApplicationSettingsService
+import com.codestream.settings.GoldenSignalListener
 import com.codestream.webViewService
 import com.intellij.codeInsight.hints.InlayPresentationFactory.ClickListener
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -65,10 +68,11 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
     }
 
     override fun editorReleased(event: EditorFactoryEvent) {
-        managersByEditor.remove(event.editor)
+        managersByEditor.remove(event.editor).also { it?.dispose() }
     }
 
     override fun dispose() {
+        managersByEditor.values.forEach { it.dispose() }
         managersByEditor.clear()
     }
 }
@@ -78,31 +82,30 @@ class MLTMetrics {
     var averageDuration: MethodLevelTelemetryAverageDuration? = null
     var throughput: MethodLevelTelemetryThroughput? = null
 
+    fun format(template: String, since: String): String {
+        val averageDurationStr = averageDuration?.averageDuration?.let { "%.3f".format(it * 1000) + "ms" } ?: "n/a"
+        val throughputStr = throughput?.requestsPerMinute?.let { "%.3f".format(it) + "rpm" } ?: "n/a"
+        val errorRateStr = errorRate?.errorsPerMinute?.let { "%.3f".format(it) + "epm" } ?: "n/a"
+        return template.replace("\${averageDuration}", averageDurationStr)
+            .replace("\${throughput}", throughputStr)
+            .replace("\${errorsPerMinute}", errorRateStr)
+            .replace("\${since}", since)
+    }
+
     val nameMapping: MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping
         get() = MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping(
             averageDuration?.metricTimesliceName, throughput?.metricTimesliceName, errorRate?.metricTimesliceName
         )
-
-    val text: String
-        get() {
-            val parts = mutableListOf<String>()
-            val averageDurationStr = averageDuration?.averageDuration?.let { "%.3f".format(it) + "ms" } ?: "n/a"
-            parts += "avg duration: $averageDurationStr"
-            val throughputStr = throughput?.requestsPerMinute?.let { "%.3f".format(it) + "rpm" } ?: "n/a"
-            parts += "throughput: $throughputStr"
-            val errorRateStr = errorRate?.errorsPerMinute?.let { "%.3f".format(it) + "epm" } ?: "n/a"
-            parts += "error rate: $errorRateStr"
-            return parts.joinToString(" | ")
-        }
 }
 
-class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
+class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSignalListener, Disposable {
     private val path = editor.document.file?.path
     private val project = editor.project
     private val metricsByFunction = mutableMapOf<String, MLTMetrics>()
     private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
     private var analyticsTracked = false
+    private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
 
     init {
         loadInlays(false)
@@ -112,6 +115,8 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
     fun loadInlays(resetCache: Boolean?) {
         if (path == null) return
         if (editor !is EditorImpl) return
+
+        appSettings.addGoldenSignalsListener(this)
 
         project?.agentService?.onDidStart {
             ApplicationManager.getApplication().invokeLater {
@@ -169,18 +174,31 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
         }
     }
 
+    data class DisplayDeps(
+        val result: FileLevelTelemetryResult,
+        val project: Project,
+        val path: String,
+        val editor: EditorImpl
+    )
+
+    private fun displayDeps(): DisplayDeps? {
+        if (!appSettings.showGoldenSignalsInEditor) return null
+        if (editor !is EditorImpl) return null
+        val result = lastResult ?: return null
+        val project = editor.project ?: return null
+        if (path == null) return null
+        return DisplayDeps(result, project, path, editor)
+    }
+
     private fun updateInlaysCore() {
-        if (editor !is EditorImpl) return
-        val result = lastResult ?: return
-        val project = editor.project ?: return
-        if (path == null) return
+        val (result, project, path, editor) = displayDeps() ?: return
         val presentationFactory = PresentationFactory(editor)
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         val pyFile = psiFile as? PyFile ?: return
         val since = result.sinceDateFormatted ?: "30 minutes ago"
         metricsByFunction.forEach { (functionName, metrics) ->
             val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
-            val text = "${metrics.text} - since $since"
+            val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val textPresentation = presentationFactory.text(text)
             val referenceOnHoverPresentation =
                 presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
@@ -224,10 +242,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
     }
 
     private fun updateInlayNotAssociated() {
-        if (editor !is EditorImpl) return
-        val result = lastResult ?: return
-        val project = editor.project ?: return
-        if (path == null) return
+        val (result, project, path, editor) = displayDeps() ?: return
         val presentationFactory = PresentationFactory(editor)
         val text = "Click to configure golden signals from New Relic"
         val textPresentation = presentationFactory.text(text)
@@ -261,5 +276,17 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
         val renderer = PresentationRenderer(withTooltipPresentation)
         val inlay = editor.inlayModel.addBlockElement(0, false, true, 1, renderer)
         inlays.add(inlay)
+    }
+
+    override fun setEnabled(value: Boolean) {
+        updateInlays()
+    }
+
+    override fun setMLTFormat(value: String) {
+        updateInlays()
+    }
+
+    override fun dispose() {
+        appSettings.removeGoldenSignalsListener(this)
     }
 }

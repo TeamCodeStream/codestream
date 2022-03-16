@@ -14,11 +14,12 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showFeedbackSmiley;
     private JCheckBox autoHideMarkers;
     private JCheckBox showMarkers;
-    private JComboBox proxySupport;
+    private JComboBox<ProxySupport> proxySupport;
     private JCheckBox proxyStrictSSL;
     private JCheckBox jcef;
     private JCheckBox showNewCodemarkGutterIconOnHover;
     private JCheckBox showGoldenSignalsInEditor;
+    private JTextField goldenSignalsInEditorFormat;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -70,6 +71,10 @@ public class CodeStreamConfigurableGUI {
 
     public JCheckBox getShowGoldenSignalsInEditor() {
         return showGoldenSignalsInEditor;
+    }
+
+    public JTextField getGoldenSignalsInEditorFormat() {
+        return goldenSignalsInEditorFormat;
     }
 
     private void createUIComponents() {

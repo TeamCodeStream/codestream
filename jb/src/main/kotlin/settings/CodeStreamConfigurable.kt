@@ -33,18 +33,19 @@ class CodeStreamConfigurable : SearchableConfigurable {
                 ProjectManager.getInstance().openProjects.firstOrNull()?.agentService?.agent?.telemetry(params)
             }
 
-            state.autoSignIn = gui.autoSignIn.isSelected
-            state.serverUrl = if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
-            state.disableStrictSSL = gui.disableStrictSSL.isSelected
-            state.avatars = gui.showAvatars.isSelected
-            state.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
-            state.showMarkers = gui.showMarkers.isSelected
-            state.showNewCodemarkGutterIconOnHover = showNewCodemarkGutterIconOnHover
-            state.autoHideMarkers = gui.autoHideMarkers.isSelected
-            state.proxySupport = gui.proxySupport.selectedItem as ProxySupport
-            state.proxyStrictSSL = gui.proxyStrictSSL.isSelected
-            state.jcef = gui.jcef.isSelected
-            state.showGoldenSignalsInEditor = gui.showGoldenSignalsInEditor.isSelected
+            settingsService.autoSignIn = gui.autoSignIn.isSelected
+            settingsService.serverUrl = if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
+            settingsService.disableStrictSSL = gui.disableStrictSSL.isSelected
+            settingsService.avatars = gui.showAvatars.isSelected
+            settingsService.showFeedbackSmiley = gui.showFeedbackSmiley.isSelected
+            settingsService.showMarkers = gui.showMarkers.isSelected
+            settingsService.showNewCodemarkGutterIconOnHover = showNewCodemarkGutterIconOnHover
+            settingsService.autoHideMarkers = gui.autoHideMarkers.isSelected
+            settingsService.setProxySupport(gui.proxySupport.selectedItem as ProxySupport)
+            settingsService.proxyStrictSSL = gui.proxyStrictSSL.isSelected
+            settingsService.jcef = gui.jcef.isSelected
+            settingsService.showGoldenSignalsInEditor = gui.showGoldenSignalsInEditor.isSelected
+            settingsService.goldenSignalsInEditorFormat = gui.goldenSignalsInEditorFormat.text
         }
     }
 
@@ -67,6 +68,7 @@ class CodeStreamConfigurable : SearchableConfigurable {
                 proxyStrictSSL.isSelected = it.proxyStrictSSL
                 jcef.isSelected = it.jcef
                 showGoldenSignalsInEditor.isSelected = it.showGoldenSignalsInEditor
+                goldenSignalsInEditorFormat.text = it.goldenSignalsInEditorFormat
             }
         }
 
