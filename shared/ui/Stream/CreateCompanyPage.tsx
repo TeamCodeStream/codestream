@@ -11,9 +11,9 @@ import { wait } from "../utils";
 import { Dialog } from "../src/components/Dialog";
 import { closeModal } from "./actions";
 import { createCompany, createForeignCompany } from "../store/companies/actions";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
 import Tooltip from "./Tooltip";
 import Icon from "./Icon";
+import { Dropdown } from "../Stream/Dropdown";
 
 export function CreateCompanyPage() {
 	const dispatch = useDispatch();
@@ -143,7 +143,7 @@ export function CreateCompanyPage() {
 								<>
 									<br />
 									<br />
-									Region: <InlineMenu items={regionItems}>{region}</InlineMenu>{" "}
+									<Dropdown selectedValue={region} items={regionItems} noModal={true} />{" "}
 									<Tooltip
 										placement={"bottom"}
 										title={`Select the region where your CodeStream organization is located.`}
