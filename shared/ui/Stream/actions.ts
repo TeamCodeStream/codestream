@@ -99,6 +99,7 @@ export {
 	setChannelFilter
 };
 export {
+	configureAndConnectProvider,
 	connectProvider,
 	disconnectProvider,
 	removeEnterpriseProvider

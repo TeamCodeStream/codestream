@@ -46,7 +46,7 @@ import { getPRLabelForProvider, isConnected } from "../store/providers/reducer";
 import { useDidMount, useInterval, useTimeout } from "../utilities/hooks";
 import { inMillis } from "../utils";
 import { HostApi } from "../webview-api";
-import { connectProvider } from "./actions";
+import { configureAndConnectProvider } from "./actions";
 import CancelButton from "./CancelButton";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";
@@ -959,14 +959,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 			if (connectedCodeHostProviders[providerId]) return null;
 
 			const provider = providers[providerId];
-			const {
-				name,
-				isEnterprise,
-				host,
-				needsConfigure,
-				needsConfigureForOnPrem,
-				forEnterprise
-			} = provider;
+			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
 			if (!display) return null;
 
@@ -974,6 +967,14 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 			const displayName = isEnterprise
 				? `${display.displayName} - ${displayHost}`
 				: display.displayName;
+			const action = () =>
+				dispatch(configureAndConnectProvider(providerId, "Create Pull Request Panel"));
+
+			/*
+			// Per https://newrelic.atlassian.net/browse/CDSTRM-1591, the need for the "pre-PR" modal
+			// is discontinued ... if we bring it back, suggest we figure out a way not to repeat the
+			// logic below across all our launch integration points - Colin
+
 			let action;
 			if (needsConfigure || (derivedState.isOnPrem && needsConfigureForOnPrem)) {
 				// otherwise, if it's a provider that needs to be pre-configured,
@@ -1012,6 +1013,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 					};
 				}
 			}
+			*/
 
 			return {
 				label: (

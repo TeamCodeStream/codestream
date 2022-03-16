@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { connect, useDispatch, useSelector } from "react-redux";
-import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
+import { configureAndConnectProvider, getUserProviderInfo } from "../../store/providers/actions";
 import {
 	openPanel,
 	setIssueProvider,
@@ -62,7 +62,7 @@ interface ConnectedProps {
 }
 
 interface Props extends ConnectedProps {
-	connectProvider(...args: Parameters<typeof connectProvider>): any;
+	configureAndConnectProvider(...args: Parameters<typeof configureAndConnectProvider>): any;
 	updateForProvider(...args: Parameters<typeof updateForProvider>): any;
 	setIssueProvider(providerId?: string): void;
 	openPanel(...args: Parameters<typeof openPanel>): void;
@@ -259,6 +259,13 @@ class IssueDropdown extends React.Component<Props, State> {
 	};
 
 	async onChangeProvider(providerInfo: ProviderInfo) {
+		await this.props.configureAndConnectProvider(providerInfo.provider.id, "Compose Modal");
+
+		/*
+		// Per https://newrelic.atlassian.net/browse/CDSTRM-1591, the need for the "pre-PR" modal
+		// is discontinued ... if we bring it back, suggest we figure out a way not to repeat the
+		// logic below across all our launch integration points - Colin
+
 		if (
 			(providerInfo.provider.needsConfigure ||
 				(providerInfo.provider.needsConfigureForOnPrem && this.props.isOnPrem)) &&
@@ -271,15 +278,16 @@ class IssueDropdown extends React.Component<Props, State> {
 			!this.providerIsConnected(providerInfo.provider.id)
 		) {
 			const { name, id } = providerInfo.provider;
-			/* if (name === "github_enterprise") {
-				this.setState({
-					propsForPrePRProviderInfoModal: {
-						providerName: name,
-						onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
-						action: () => this.props.openPanel(`configure-enterprise-${name}-${id}`)
-					}
-				});
-			} else */ this.props.openPanel(
+			//if (name === "github_enterprise") {
+			//	this.setState({
+			//		propsForPrePRProviderInfoModal: {
+			//			providerName: name,
+			//			onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
+			//			action: () => this.props.openPanel(`configure-enterprise-${name}-${id}`)
+			//		}
+			//	});
+			//} else
+			this.props.openPanel(
 				`configure-enterprise-${name}-${id}-Issues Section`
 			);
 		} else {
@@ -312,6 +320,7 @@ class IssueDropdown extends React.Component<Props, State> {
 				if (ret && ret.alreadyConnected) this.setState({ isLoading: false });
 			}
 		}
+		*/
 	}
 
 	getProviderInfo(providerId: string): ProviderInfo | undefined {
@@ -377,7 +386,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 };
 
 export default connect(mapStateToProps, {
-	connectProvider,
+	configureAndConnectProvider,
 	setIssueProvider,
 	openPanel,
 	updateForProvider,

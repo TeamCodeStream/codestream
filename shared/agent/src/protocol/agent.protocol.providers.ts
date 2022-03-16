@@ -18,6 +18,7 @@ export interface ThirdPartyProviderConfig {
 	supportsAuth?: boolean;
 	needsConfigure?: boolean;
 	needsConfigureForOnPrem?: boolean;
+	supportsOAuthOrPAT?: boolean;
 	oauthData?: { [key: string]: any };
 	scopes?: string[];
 	canFilterByAssignees?: boolean;

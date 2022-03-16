@@ -38,6 +38,7 @@ import {
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	Note,
+	ProviderConfigurationData,
 	ProviderGetForkedReposResponse,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -137,6 +138,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 
 	async ensureInitialized() {
 		await this.getCurrentUser();
+	}
+
+	@log()
+	async configure(request: ProviderConfigurationData) {
+		await this.session.api.setThirdPartyProviderToken({
+			providerId: this.providerConfig.id,
+			token: request.token,
+			data: request.data
+		});
+		this.session.updateProviders();
 	}
 
 	protected getPRExternalContent(comment: PullRequestComment) {

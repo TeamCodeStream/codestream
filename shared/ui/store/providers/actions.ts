@@ -37,13 +37,22 @@ export const configureAndConnectProvider = (
 ) => async (dispatch, getState) => {
 	const { providers, configs } = getState();
 	const provider = providers[providerId];
-	const { forEnterprise, isEnterprise, name, needsConfigure, needsConfigureForOnPrem } = provider;
+	const {
+		forEnterprise,
+		isEnterprise,
+		name,
+		needsConfigure,
+		needsConfigureForOnPrem,
+		supportsOAuthOrPAT
+	} = provider;
 	const onprem = configs.isOnPrem;
 	connectionLocation = connectionLocation || "Integrations Panel";
 	if (needsConfigure || (onprem && needsConfigureForOnPrem)) {
 		dispatch(openPanel(`configure-provider-${provider.name}-${provider.id}-${connectionLocation}`));
 	} else if ((forEnterprise || isEnterprise) && name !== "jiraserver") {
 		dispatch(openPanel(`configure-enterprise-${name}-${provider.id}-${connectionLocation}`));
+	} else if (supportsOAuthOrPAT) {
+		dispatch(openPanel(`oauthpat-provider-${provider.name}-${provider.id}-${connectionLocation}`));
 	} else {
 		dispatch(connectProvider(provider.id, connectionLocation, force));
 	}

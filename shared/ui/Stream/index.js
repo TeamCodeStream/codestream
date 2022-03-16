@@ -46,6 +46,7 @@ import ConfigureJiraPanel from "./ConfigureJiraPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureJiraServerOAuthPanel from "./ConfigureJiraServerOAuthPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
+import { ConfigureOAuthOrPATPanel } from "./ConfigureOAuthOrPATPanel";
 import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
 import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
@@ -271,7 +272,7 @@ export class SimpleStream extends PureComponent {
 	addBlameMapForGitEmailMismatch = async () => {
 		const {
 			setUserPreference,
-			blameMap,
+			blameMap = {},
 			addBlameMapEnabled,
 			skipGitEmailCheck,
 			currentUser
@@ -326,7 +327,8 @@ export class SimpleStream extends PureComponent {
 		if (isFirstPageview && !this.props.pendingProtocolHandlerUrl) return null;
 
 		const isConfigurationPanel =
-			activePanel && activePanel.match(/^configure\-(provider|enterprise)-/);
+			activePanel && activePanel.match(/^(oauthpat|configure)\-(provider|enterprise)-/);
+
 		// if we're conducting a review, we need the compose functionality of spatial view
 		if (this.props.currentReviewId || this.props.currentCodeErrorId) {
 			activePanel = WebviewPanels.CodemarksForFile;
@@ -370,7 +372,8 @@ export class SimpleStream extends PureComponent {
 			// !this.props.currentReviewId &&
 			// !this.props.currentPullRequestId &&
 			!activePanel.startsWith("configure-provider-") &&
-			!activePanel.startsWith("configure-enterprise-");
+			!activePanel.startsWith("configure-enterprise-") &&
+			!activePanel.startsWith("oauthpat-provider-");
 
 		// if (this.state.floatCompose) renderNav = false;
 		// if (threadId) renderNav = false;
@@ -382,18 +385,19 @@ export class SimpleStream extends PureComponent {
 				: "content vscroll inline";
 		const configureProviderInfo =
 			activePanel.startsWith("configure-provider-") ||
-			activePanel.startsWith("configure-enterprise-")
+			activePanel.startsWith("configure-enterprise-") ||
+			activePanel.startsWith("oauthpat-provider-")
 				? activePanel.split("-")
 				: null;
 		const enterpriseProvider = activePanel.startsWith("configure-enterprise-");
-		const [, , providerName, providerId, origin] = configureProviderInfo || [];
+		const oauthOrPATProvider = activePanel.startsWith("oauthpat-provider-");
+		let [, , providerName, providerId, origin] = configureProviderInfo || [];
 		const customConfigureProvider = providerName
 			? ["azuredevops", "youtrack", "jiraserver", "jiraserverold", "jira", "newrelic"].find(
 					name => name === providerName
 			  )
 			: null;
 
-		// console.warn("ACTIVE: ", activePanel);
 		// status and teams panels have been deprecated
 		return (
 			<div id="stream-root" className={streamClass}>
@@ -523,9 +527,12 @@ export class SimpleStream extends PureComponent {
 								<CreatePullRequestPanel closePanel={this.props.closePanel} />
 							)}
 							{activePanel === WebviewPanels.GettingStarted && <GettingStarted />}
-							{configureProviderInfo && !enterpriseProvider && !customConfigureProvider && (
-								<ConfigureTokenProviderPanel providerId={providerId} originLocation={origin} />
-							)}
+							{configureProviderInfo &&
+								!enterpriseProvider &&
+								!customConfigureProvider &&
+								!oauthOrPATProvider && (
+									<ConfigureTokenProviderPanel providerId={providerId} originLocation={origin} />
+								)}
 							{customConfigureProvider === "jira" && (
 								<ConfigureJiraPanel providerId={providerId} originLocation={origin} />
 							)}
@@ -546,6 +553,13 @@ export class SimpleStream extends PureComponent {
 							)}
 							{enterpriseProvider && (
 								<ConfigureEnterprisePanel providerId={providerId} originLocation={origin} />
+							)}
+							{oauthOrPATProvider && (
+								<ConfigureOAuthOrPATPanel
+									providerId={providerId}
+									originLocation={origin}
+									closePanel={this.props.closePanel}
+								/>
 							)}
 						</Modal>
 					)}
@@ -791,7 +805,6 @@ const mapStateToProps = state => {
 		preferences.acceptedPrereleaseTOS ||
 		(team.settings ? team.settings.acceptedPrereleaseTOS : false);
 
-	// console.warn("COMP: ", companies);
 	return {
 		addBlameMapEnabled: isFeatureEnabled(state, "addBlameMap"),
 		blameMap: team.settings ? team.settings.blameMap : {},

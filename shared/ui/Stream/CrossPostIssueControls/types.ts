@@ -26,6 +26,9 @@ export interface ProviderDisplay {
 
 	supportsPRManagement?: boolean;
 	versionMinimum?: string;
+
+	helpPATUrl?: string;
+	namePAT?: string;
 }
 
 export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
@@ -86,7 +89,9 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customPullRequestFilterExample:
 			'See <a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github">custom queries</a> for a detailed list of qualifiers. ',
 		supportsStartWork: true,
-		supportsPRManagement: true
+		supportsPRManagement: true,
+		helpPATUrl:
+			"https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"
 	},
 	github_enterprise: {
 		displayName: "GitHub Enterprise",
@@ -103,7 +108,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			'See <a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github">custom queries</a> for a detailed list of qualifiers. ',
 		customPullRequestFilterExample:
 			'See <a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github">custom queries</a> for a detailed list of qualifiers. ',
-		customPullRequestFilterHelpLink: "https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github",
+		customPullRequestFilterHelpLink:
+			"https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github",
 		supportsStartWork: true,
 		supportsPRManagement: true
 	},
@@ -122,7 +128,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customPullRequestFilterHelpLink:
 			"https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#gitlab",
 		supportsStartWork: true,
-		supportsPRManagement: true
+		supportsPRManagement: true,
+		helpPATUrl: "https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html"
 	},
 	gitlab_enterprise: {
 		displayName: "GitLab Self-Managed",
