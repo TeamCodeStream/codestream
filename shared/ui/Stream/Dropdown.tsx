@@ -40,10 +40,11 @@ interface Props {
 		placeholder?: string;
 		searchLabel?: string;
 	}[];
-	// Render without using <Menu /> aka React portals and modals
 	noModal?: boolean;
 }
 
+// Simple dropdown with two modes, modal which the full list of <Menu /> options (like search)
+// and noModal, which is just a simplfied dropdown that can work without react portals
 export const Dropdown = (props: Props) => {
 	const [ellipsisMenuOpen, setEllipsisMenuOpen] = React.useState();
 	const toggleEllipsisMenu = event => {
