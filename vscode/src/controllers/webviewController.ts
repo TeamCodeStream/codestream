@@ -2,6 +2,7 @@
 import {
 	ApiVersionCompatibility,
 	BootstrapResponse,
+	ConfigChangeReloadNotificationType,
 	ConnectionStatus,
 	DidChangeApiVersionCompatibilityNotification,
 	DidChangeApiVersionCompatibilityNotificationType,
@@ -1374,5 +1375,10 @@ export class WebviewController implements Disposable {
 		} else {
 			Logger.log("No session for github to disconnect");
 		}
+	}
+
+	@log()
+	async onConfigChangeReload() {
+		this._webview!.notify(ConfigChangeReloadNotificationType, {});
 	}
 }

@@ -49,7 +49,8 @@ import {
 	GetNewRelicErrorGroupRequestType,
 	PixieDynamicLoggingResultNotification,
 	DidResolveStackTraceLineNotificationType,
-	TelemetrySetAnonymousIdRequestType
+	TelemetrySetAnonymousIdRequestType,
+	ConfigChangeReloadNotificationType
 } from "@codestream/protocols/agent";
 import { CSApiCapabilities, CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
 import translations from "./translations/en";
@@ -765,6 +766,10 @@ function listenForEvents(store) {
 		store.dispatch(closeAllPanels());
 		store.dispatch(setCurrentMethodLevelTelemetry(e));
 		store.dispatch(openPanel(WebviewPanels.MethodLevelTelemetry));
+	});
+
+	api.on(ConfigChangeReloadNotificationType, params => {
+		store.dispatch(updateConfigs({ configChangeReloadRequired: true }));
 	});
 }
 

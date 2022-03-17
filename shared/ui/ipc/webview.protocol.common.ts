@@ -240,6 +240,7 @@ export interface WebviewConfigs {
 	showGoldenSignalsInEditor?: boolean;
 	environmentHosts?: EnvironmentHost[];
 	newRelicApiUrl?: string;
+	configChangeReloadRequired?: boolean;
 }
 
 export interface IpcHost {

@@ -400,3 +400,10 @@ export const DidChangeObservabilityDataNotificationType = new NotificationType<
 	DidChangeDataNotification,
 	void
 >("codestream/didChangeObservabilityData");
+
+export interface ConfigChangeReloadRequest {}
+
+export const ConfigChangeReloadNotificationType = new NotificationType<
+	ConfigChangeReloadRequest,
+	void
+>("codestream/configChangeReload");

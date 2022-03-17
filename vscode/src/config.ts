@@ -25,3 +25,5 @@ export interface Config {
 	showInstrumentationGlyphs?: boolean;
 	goldenSignalsInEditorFormat?: string;
 }
+
+export var ConfigSettingsNeedingReload = ["disableStrictSSL", "proxySupport", "serverUrl"];

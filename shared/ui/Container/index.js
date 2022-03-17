@@ -37,7 +37,8 @@ const mapStateToProps = state => {
 		serverUrl: state.configs.serverUrl,
 		isOnPrem: state.configs.isOnPrem,
 		offline: state.connectivity.offline,
-		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS
+		acceptedTOS: state.session.userId ? state.preferences.acceptedTOS : state.session.acceptedTOS,
+		configChangeReloadRequired: state.configs.configChangeReloadRequired
 	};
 };
 
@@ -115,6 +116,17 @@ const Root = connect(mapStateToProps)(props => {
 			</Dismissable>
 		);
 	}
+
+	if (props.configChangeReloadRequired) {
+		HostApi.instance.send(RestartRequestType);
+		return (
+			<RoadBlock title="Reload Required">
+				<p>This configuration change requires your IDE to reload.</p>
+				<p>Please click "Reload" when prompted by your IDE.</p>
+			</RoadBlock>
+		);
+	}
+
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRequired)
 		return (
 			<RoadBlock title="Update Required">
