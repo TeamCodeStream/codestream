@@ -588,6 +588,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		if (initialLoadComplete) {
 			fetchCards();
 		}
+		setIsLoading(false);
 
 		return () => {
 			isValid = false;

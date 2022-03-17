@@ -20,6 +20,12 @@ import {
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { setUserPreference } from "./actions";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
+import styled from "styled-components";
+
+const RegionSubtext = styled.div`
+	font-size: smaller;
+	margin: 0 0 0 21px;
+`;
 
 interface EllipsisMenuProps {
 	menuTarget: any;
@@ -87,12 +93,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: (
 						<>
 							{company.name}
-							{companyRegion && (
-								<>
-									<br />
-									{companyRegion}
-								</>
-							)}{" "}
+							{companyRegion && <RegionSubtext>{companyRegion}</RegionSubtext>}
 						</>
 					),
 					// icon: isCurrentTeam ? <Icon name="check" /> : undefined,
@@ -335,10 +336,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					<>
 						<h3>{derivedState.company.name}</h3>
 						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
-							<>
-								<br />
-								{derivedState.currentHost.name}
-							</>
+							<small>{derivedState.currentHost.name}</small>
 						)}
 					</>
 				),
