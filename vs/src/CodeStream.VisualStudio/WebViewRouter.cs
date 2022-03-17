@@ -107,7 +107,7 @@ namespace CodeStream.VisualStudio {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var request = message.Params.ToObject<ShellPromptFolderRequest>();
 													var dialog = _ideService.FolderPrompt(request?.Message);
-													if (dialog.ShowDialog() == DialogResult.OK) {														 
+													if (dialog.ShowDialog() == DialogResult.OK) {
 														if (!dialog.SelectedPath.IsNullOrWhiteSpace()) {
 															response = new ShellPromptFolderResponse {
 																Path = dialog.SelectedPath
@@ -241,12 +241,12 @@ namespace CodeStream.VisualStudio {
 												if (_authenticationServiceFactory != null) {
 													var authenticationService = _authenticationServiceFactory.Create();
 													if (authenticationService != null) {
-														var logoutRequest = message.Params.ToObject<LogoutRequest>();
-														var reason = logoutRequest != null && logoutRequest.Reason == LogoutReason1.Reauthenticating ?
+														var @params = message.Params.ToObject<LogoutRequest>();
+														var reason = @params?.Reason == LogoutReason1.Reauthenticating ?
 															SessionSignedOutReason.ReAuthenticating
 															: SessionSignedOutReason.UserSignedOutFromWebview;
 
-														await authenticationService.LogoutAsync(reason);
+														await authenticationService.LogoutAsync(reason, @params.NewServerUrl, @params.NewEnvironment, null);
 													}
 												}
 											}
@@ -411,12 +411,13 @@ namespace CodeStream.VisualStudio {
 											using (var scope = _browserService.CreateScope(message)) {
 												try {
 													var @params = message.Params.ToObject<UpdateServerUrlRequest>();
+													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params.ServerUrl}");
 													using (var settingsScope = SettingsScope.Create(_settingsManager, true)) {
 														settingsScope.SettingsManager.ServerUrl = @params.ServerUrl;
 														settingsScope.SettingsManager.DisableStrictSSL = @params.DisableStrictSSL ?? false;
 													}
 
-													await _codeStreamAgent.SetServerUrlAsync(@params.ServerUrl, @params.DisableStrictSSL);
+													await _codeStreamAgent.SetServerUrlAsync(@params.ServerUrl, @params.DisableStrictSSL, @params.Environment);
 												}
 												catch (Exception ex) {
 													Log.Error(ex, nameof(UpdateServerUrlRequestType));

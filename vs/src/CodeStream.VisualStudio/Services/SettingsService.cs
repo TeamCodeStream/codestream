@@ -188,6 +188,10 @@ namespace CodeStream.VisualStudio.Services {
 			switch (envName) {
 				case "pd":
 					return envName.ToUpperInvariant();
+				case "prod":
+				case "us":
+				case "eu":
+					return null;
 				default:
 					return null;
 			}

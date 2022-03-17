@@ -112,23 +112,23 @@ namespace CodeStream.VisualStudio.Services {
 			return SendCoreAsync<T>(name, arguments, cancellationToken);
 		}
 
-		public Task<JToken> ReinitializeAsync() {
+		public Task<JToken> ReinitializeAsync(string newServerUrl = null) {
 			var isAgentReady = _sessionService.IsAgentReady;
 			Log.Debug($"{nameof(ReinitializeAsync)} IsAgentReady={isAgentReady}");
 
 			if (!isAgentReady) return Task.FromResult((JToken)null);
 
-			return InitializeAsync();
+			return InitializeAsync(newServerUrl);
 		}
 
-		private Task<JToken> InitializeAsync() {
+		private Task<JToken> InitializeAsync(string newServerUrl = null) {
 			Log.Debug($"{nameof(InitializeAsync)}");
 
 			var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(CodeStreamAgentService));
 			var extensionInfo = settingsManager.GetExtensionInfo();
 			var ideInfo = settingsManager.GetIdeInfo();
 			return SendCoreAsync<JToken>("codestream/onInitialized", new LoginRequest {
-				ServerUrl = settingsManager.ServerUrl,
+				ServerUrl = newServerUrl ?? settingsManager.ServerUrl,
 				Extension = extensionInfo,
 				Ide = ideInfo,
 				Proxy = settingsManager.Proxy,
@@ -241,9 +241,9 @@ namespace CodeStream.VisualStudio.Services {
 			return SendCoreAsync<JToken>("codestream/login/otc", request);
 		}
 
-		public async Task<JToken> LogoutAsync() {
+		public async Task<JToken> LogoutAsync(string newServerUrl = null) {
 			var response = await SendAsync<JToken>("codestream/logout", new LogoutRequest());
-			await ReinitializeAsync();
+			await ReinitializeAsync(newServerUrl);
 			return response;
 		}
 
@@ -367,8 +367,8 @@ namespace CodeStream.VisualStudio.Services {
 			_disposed = true;
 		}
 
-		public Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL) {
-			return SendCoreAsync<JToken>(SetServerUrlRequestType.MethodName, new SetServerUrlRequest(serverUrl, disableStrictSSL));
+		public Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL, string environment = null) {
+			return SendCoreAsync<JToken>(SetServerUrlRequestType.MethodName, new SetServerUrlRequest(serverUrl, disableStrictSSL, environment));
 		}
 
 		public Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId, string path) {

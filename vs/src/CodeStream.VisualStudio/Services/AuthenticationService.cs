@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio.Services {
 		[Import]
 		public IWebviewUserSettingsService WebviewUserSettingsService { get; set; }
 
-		public async System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason = SessionSignedOutReason.UserSignedOutFromWebview, JToken payload = null) {
+		public async System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason = SessionSignedOutReason.UserSignedOutFromWebview, string newServerUrl = null, string newEnvironment = null, JToken payload = null) {
 			Log.Information($"{nameof(LogoutAsync)} starting");
 			try {
 				try {
@@ -78,7 +78,7 @@ namespace CodeStream.VisualStudio.Services {
 				}
 
 				try {
-					await CodeStreamAgentService.LogoutAsync();
+					await CodeStreamAgentService.LogoutAsync(newServerUrl);
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(LogoutAsync)} - agent");

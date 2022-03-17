@@ -111,13 +111,15 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	public class SetServerUrlRequest {
-		public SetServerUrlRequest(string serverUrl, bool? disableStrictSSL) {
+		public SetServerUrlRequest(string serverUrl, bool? disableStrictSSL, string environment = null) {
 			ServerUrl = serverUrl;
 			DisableStrictSSL = disableStrictSSL;
+			Environment = environment;
 		}
 
 		public string ServerUrl { get; }
 		public bool? DisableStrictSSL { get; }
+		public string Environment { get; }
 	}
 
 	public class SetServerUrlResponse { }

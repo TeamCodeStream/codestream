@@ -248,7 +248,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// Agent message stating we need to react to a user logging out
 		/// </summary>
 		/// <param name="e"></param>
-		/// <returns></returns>
+		/// <returns></returns> 
 		[JsonRpcMethod(DidLogoutNotificationType.MethodName)]
 		public async System.Threading.Tasks.Task OnDidLogoutAsync(JToken e) {
 			try {
@@ -407,7 +407,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Log.Error(nameof(LogoutAsync) + " " + nameof(authService) + " is null");
 					}
 					else {
-						await authService.LogoutAsync(reason, payload);
+						await authService.LogoutAsync(reason, null, null, payload);
 					}
 				}
 			}

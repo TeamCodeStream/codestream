@@ -14,6 +14,8 @@ namespace CodeStream.VisualStudio.Core.Models {
 
 	public class LogoutRequest {
 		public LogoutReason1? Reason { get; set; }
+		public string NewServerUrl { get; set; }
+		public string NewEnvironment { get; set; }
 	}
 
 	public class LogoutResponse { }
@@ -27,7 +29,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public const string MethodName = "host/restart";
 		public override string Method => MethodName;
 	}
-	
+
 	public class ReloadWebviewRequestType : RequestType<EmptyRequestTypeParams> {
 		public const string MethodName = "host/webview/reload";
 		public override string Method => MethodName;
@@ -56,11 +58,12 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class UpdateServerUrlRequest {
 		public string ServerUrl { get; set; }
 		public bool? DisableStrictSSL { get; set; }
+		public string Environment { get; set; }
 	}
 
 	public class UpdateServerUrlResponse { }
 
-	public class UpdateServerUrlRequestType: RequestType<UpdateServerUrlRequest> {
+	public class UpdateServerUrlRequestType : RequestType<UpdateServerUrlRequest> {
 		public const string MethodName = "host/server-url";
 		public override string Method => MethodName;
 	}
