@@ -21,6 +21,7 @@ import { darkTheme, createTheme } from "../src/themes";
 import { closeAllPanels } from "../store/context/actions";
 import { WebviewErrorRequestType } from "@codestream/protocols/agent";
 import { PresentTOS } from "../Authentication/PresentTOS";
+import { Button } from "../src/components/Button";
 
 const mapStateToProps = state => {
 	const team = state.teams[state.context.currentTeamId];
@@ -118,13 +119,30 @@ const Root = connect(mapStateToProps)(props => {
 	}
 
 	if (props.configChangeReloadRequired) {
-		HostApi.instance.send(RestartRequestType);
-		return (
-			<RoadBlock title="Reload Required">
-				<p>This configuration change requires your IDE to reload.</p>
-				<p>Please click "Reload" when prompted by your IDE.</p>
-			</RoadBlock>
-		);
+		if (props.ide === "VSC") {
+			HostApi.instance.send(RestartRequestType);
+			return (
+				<RoadBlock title="Reload Required">
+					<p>This configuration change requires your IDE to reload.</p>
+					<p>Please click "Reload" when prompted by your IDE.</p>
+				</RoadBlock>
+			);
+		} else {
+			return (
+				<RoadBlock title="Reload Required">
+					<p>This configuration change requires your IDE to reload.</p>
+					<p>Your IDE will reload when you click below.</p>
+					<Button
+						onClick={e => {
+							e.preventDefault();
+							HostApi.instance.send(RestartRequestType);
+						}}
+					>
+						OK
+					</Button>
+				</RoadBlock>
+			);
+		}
 	}
 
 	if (props.versioning && props.versioning.type === VersioningActionsType.UpgradeRequired)
