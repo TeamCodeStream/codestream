@@ -27,6 +27,10 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private bool _disableStrictSsl = false;
 		
 		private bool _proxyStrictSsl;
+		private bool _showGoldenSignalsInEditor;
+		private string _goldenSignalsInEditorFormat =
+			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}";
+
 		private ProxySupport _proxySupport;
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -210,6 +214,32 @@ namespace CodeStream.VisualStudio.UI.Settings {
 			set {
 				if (_traceLevel != value) {
 					_traceLevel = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("UI")]
+		[DisplayName("Show Golden Signals In Editor")]
+		[Description("Specifies whether to show CodeStream golden signals in the editor")]
+		public bool ShowGoldenSignalsInEditor {
+			get => _showGoldenSignalsInEditor;
+			set {
+				if (_showGoldenSignalsInEditor != value) {
+					_showGoldenSignalsInEditor = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("UI")]
+		[DisplayName("Golden Signals In Editor Format")]
+		[Description("Specifies how to format the CodeStream golden signals in the editor")]
+		public string GoldenSignalsInEditorFormat {
+			get => _goldenSignalsInEditorFormat;
+			set {
+				if (_goldenSignalsInEditorFormat != value) {
+					_goldenSignalsInEditorFormat = value;
 					NotifyPropertyChanged();
 				}
 			}

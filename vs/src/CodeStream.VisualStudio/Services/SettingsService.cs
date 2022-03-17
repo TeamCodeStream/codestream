@@ -139,6 +139,16 @@ namespace CodeStream.VisualStudio.Services {
 			set => DialogPage.DisableStrictSSL = value;
 		}
 
+		public bool ShowGoldenSignalsInEditor {
+			get => DialogPage.ShowGoldenSignalsInEditor;
+			set => DialogPage.ShowGoldenSignalsInEditor = value;
+		}
+
+		public string GoldenSignalsInEditorFormat {
+			get => DialogPage.GoldenSignalsInEditorFormat;
+			set => DialogPage.GoldenSignalsInEditorFormat = value;
+		}
+
 		public Ide GetIdeInfo() {
 			return new Ide {
 				Name = Application.IdeMoniker,

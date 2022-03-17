@@ -15,6 +15,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 		bool ProxyStrictSsl { get; set; }
 		ProxySupport ProxySupport { get; set; }
 		bool DisableStrictSSL { get; set; }
+
+		bool ShowGoldenSignalsInEditor { get; set; }
+		string GoldenSignalsInEditorFormat { get; set; }
 	}
 
 	public interface IOptionsDialogPage : IOptions, INotifyPropertyChanged {
