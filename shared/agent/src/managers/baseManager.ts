@@ -93,6 +93,8 @@ export abstract class ManagerBase<T> {
 
 		const resolved = await Promise.all(
 			message.data.map(async (data: any) => {
+				if (!data) return undefined;
+
 				const criteria = this.fetchCriteria(data as T);
 				const cached = await this.cacheGet(criteria);
 
