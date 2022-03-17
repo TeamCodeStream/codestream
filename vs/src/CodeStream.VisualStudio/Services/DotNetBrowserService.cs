@@ -752,7 +752,7 @@ namespace CodeStream.VisualStudio.Services {
 			private static readonly List<string> DefaultSwitches = new List<string>
 			{
 #if DEBUG
-				"--remote-debugging-port=9224",
+				"--remote-debugging-port=9222",
 #else
 				"--remote-debugging-port=9223",
 #endif
