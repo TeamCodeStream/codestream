@@ -32,6 +32,10 @@ namespace CodeStream.VisualStudio.UI.Margins {
 			if (color.IsNullOrWhiteSpace() == true) {
 				color = "blue";
 			}
+
+			if (_viewModel.Marker.Type == CodemarkType.Prcomment) {
+				color = "green";
+			}
 			// this.FadeIn(FadeInDefault);
 
 			// WTF I cannot get this to be "prcomment" OR "pull-request", using "comment" instead... going insane here...
