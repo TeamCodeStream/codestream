@@ -547,6 +547,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 	React.useEffect(() => {
 		// if (data.boards && data.boards.length > 0) return;
+		if (props.providers.length === 0) return;
 
 		if (!isLoading) setIsLoading(true);
 
