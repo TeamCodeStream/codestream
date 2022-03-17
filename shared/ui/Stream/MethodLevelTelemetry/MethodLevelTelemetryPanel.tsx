@@ -305,6 +305,18 @@ export const MethodLevelTelemetryPanel = () => {
 
 																// update the IDEs
 																HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+																// tell other parts of the webview that we updated this
+																HostApi.instance.emit(
+																	DidChangeObservabilityDataNotificationType.method,
+																	{
+																		type: "Entity",
+																		data: {
+																			entityGuid: item.entityGuid,
+																			repoId: repoId
+																		}
+																	}
+																);
+																loadData(item.entityGuid);
 															}
 														};
 													})
