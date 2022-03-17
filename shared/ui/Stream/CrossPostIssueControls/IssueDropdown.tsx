@@ -559,7 +559,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			if (!initialLoadComplete) {
 				setIsLoading(false);
 			}
-
 		};
 
 		const fetchCards = async () => {
@@ -633,8 +632,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							});
 						} catch (error) {
 							console.warn("Error Loading Cards: ", error);
-						} finally {
-							setIsLoading(false);
 						}
 					})
 				);
