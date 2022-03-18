@@ -272,9 +272,7 @@ export const MethodLevelTelemetryPanel = () => {
 								<div>
 									{telemetryResponse && (
 										<EntityDropdownContainer>
-											<div>
-												<b>Entity:</b>
-											</div>
+											<b>Entity: </b>
 											<DropdownButton
 												items={([
 													{
@@ -329,7 +327,7 @@ export const MethodLevelTelemetryPanel = () => {
 											</DropdownButton>
 										</EntityDropdownContainer>
 									)}
-									<div>
+									<div style={{ margin: "0 0 11px 0" }}>
 										<b>Repo:</b> {derivedState.currentMethodLevelTelemetry.repo.name}
 									</div>
 									<div>
