@@ -14,23 +14,31 @@ import { createCompany, createForeignCompany } from "../store/companies/actions"
 import Tooltip from "./Tooltip";
 import Icon from "./Icon";
 import { Dropdown } from "../Stream/Dropdown";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 export function CreateCompanyPage() {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { environmentHosts, environment } = state.configs;
 		const { currentTeamId } = state.context;
+		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
+
 		return {
 			environmentHosts,
 			environment,
 			currentCompanyId: state.teams[currentTeamId].companyId,
-			companies: state.companies
+			companies: state.companies,
+			supportsMultiRegion
 		};
 	});
 
 	let regionItems,
 		defaultRegion = "";
-	if (derivedState.environmentHosts && derivedState.environmentHosts.length > 1) {
+	if (
+		derivedState.supportsMultiRegion &&
+		derivedState.environmentHosts &&
+		derivedState.environmentHosts.length > 1
+	) {
 		let usHost = derivedState.environmentHosts.find(host =>
 			host.shortName.match(/(^|[^a-zA-Z\d\s:])us($|[^a-zA-Z\d\s:])/)
 		);

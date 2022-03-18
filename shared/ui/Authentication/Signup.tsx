@@ -34,6 +34,7 @@ import Tooltip from "../Stream/Tooltip";
 import { Dropdown } from "../Stream/Dropdown";
 import { confirmPopup } from "../Stream/Confirm";
 import styled from "styled-components";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const isPasswordValid = (password: string) => password.length >= 6;
 export const isEmailValid = (email: string) => {
@@ -112,6 +113,7 @@ export const Signup = (props: Props) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { serverUrl, isOnPrem, environment, isProductionCloud, environmentHosts } = state.configs;
 		const { selectedRegion, forceRegion } = state.context.__teamless__ || {};
+		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
 		let whichServer = isOnPrem ? serverUrl : "CodeStream's cloud service";
 		if (!isProductionCloud || (environmentHosts || []).length > 1) {
 			whichServer += ` (${environment.toUpperCase()})`;
@@ -130,7 +132,8 @@ export const Signup = (props: Props) => {
 			pendingProtocolHandlerQuerySource: state.context.pendingProtocolHandlerQuery?.src,
 			environmentHosts,
 			selectedRegion,
-			forceRegion
+			forceRegion,
+			supportsMultiRegion
 		};
 	});
 
@@ -153,14 +156,14 @@ export const Signup = (props: Props) => {
 
 	const wasInvited = props.inviteCode !== undefined;
 
-	const { environmentHosts, selectedRegion, forceRegion } = derivedState;
+	const { environmentHosts, selectedRegion, forceRegion, supportsMultiRegion } = derivedState;
 
 	useEffect(() => {
 		dispatch(handleSelectedRegion());
 	}, [environmentHosts, selectedRegion, forceRegion]);
 
 	let regionItems, forceRegionName, selectedRegionName;
-	if (environmentHosts && environmentHosts.length > 1) {
+	if (supportsMultiRegion && environmentHosts && environmentHosts.length > 1) {
 		regionItems = environmentHosts.map(host => ({
 			key: host.shortName,
 			label: host.name,

@@ -44,6 +44,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const currentCompanyId = team.companyId;
 		const { environmentHosts, environment, isProductionCloud } = state.configs;
 		const currentHost = environmentHosts?.find(host => host.shortName === environment);
+		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
 
 		return {
 			sidebarPanePreferences: state.preferences.sidebarPanes || EMPTY_HASH,
@@ -69,7 +70,8 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			currentHost,
 			hasMultipleEnvironments: environmentHosts && environmentHosts.length > 1,
 			environment,
-			isProductionCloud
+			isProductionCloud,
+			supportsMultiRegion
 		};
 	});
 
@@ -79,14 +81,15 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			currentCompanyId,
 			userTeams,
 			currentHost,
-			hasMultipleEnvironments
+			hasMultipleEnvironments,
+			supportsMultiRegion
 		} = derivedState;
 
 		const buildSubmenu = () => {
 			const items = userCompanies.map(company => {
 				const isCurrentCompany = company.id === currentCompanyId;
 				const companyHost = company.host || currentHost;
-				const companyRegion = hasMultipleEnvironments && companyHost?.name;
+				const companyRegion = supportsMultiRegion && hasMultipleEnvironments && companyHost?.name;
 
 				return {
 					key: company.id,

@@ -19,6 +19,7 @@ import { EnvironmentHost } from "../protocols/agent/agent.protocol";
 import { setEnvironment } from "../store/session/actions";
 import { TooltipIconWrapper } from "./Signup";
 import { Dropdown } from "../Stream/Dropdown";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -36,6 +37,7 @@ interface ConnectedProps {
 	supportsVSCodeGithubSignin?: boolean;
 	environmentHosts?: EnvironmentHost[];
 	selectedRegion?: string;
+	supportsMultiRegion?: boolean;
 }
 
 interface DispatchProps {
@@ -257,7 +259,11 @@ class Login extends React.Component<Props, State> {
 	render() {
 		let regionItems,
 			selectedRegionName = "";
-		if (this.props.environmentHosts && this.props.environmentHosts.length > 1) {
+		if (
+			this.props.supportsMultiRegion &&
+			this.props.environmentHosts &&
+			this.props.environmentHosts.length > 1
+		) {
 			let usHost = this.props.environmentHosts.find(host =>
 				host.shortName.match(/(^|[^a-zA-Z\d\s:])us($|[^a-zA-Z\d\s:])/)
 			);
@@ -449,6 +455,7 @@ class Login extends React.Component<Props, State> {
 
 const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 	(state, props) => {
+		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
 		return {
 			initialEmail: props.email !== undefined ? props.email : state.configs.email,
 			supportsSSOSignIn: supportsSSOSignIn(state.configs),
@@ -456,7 +463,8 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 			isInVSCode: state.ide.name === "VSC",
 			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin,
 			environmentHosts: state.configs.environmentHosts,
-			selectedRegion: state.context.__teamless__?.selectedRegion
+			selectedRegion: state.context.__teamless__?.selectedRegion,
+			supportsMultiRegion
 		};
 	},
 	{

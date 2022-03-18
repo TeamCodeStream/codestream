@@ -408,7 +408,6 @@ export class CodeStreamSession {
 		});
 
 		this.verifyConnectivity();
-
 		const versionManager = new VersionMiddlewareManager(this._api);
 		versionManager.onDidChangeCompatibility(this.onVersionCompatibilityChanged, this);
 		versionManager.onDidChangeApiCompatibility(this.onApiVersionCompatibilityChanged, this);
@@ -866,6 +865,7 @@ export class CodeStreamSession {
 	async verifyConnectivity(): Promise<VerifyConnectivityResponse> {
 		if (!this._api) throw new Error("cannot verify connectivity, no API connection established");
 		const response = await this._api.verifyConnectivity();
+		this.registerApiCapabilities(response.capabilities as CSApiCapabilities);
 		this._environmentInfo = {
 			environment: response.environment || "",
 			isOnPrem: response.isOnPrem || false,

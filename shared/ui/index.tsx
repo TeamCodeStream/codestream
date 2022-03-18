@@ -156,6 +156,7 @@ export async function initialize(selector: string) {
 	} else {
 		if (resp.capabilities) {
 			store.dispatch(updateCapabilities(resp.capabilities));
+			store.dispatch(apiCapabilitiesUpdated(resp.capabilities));
 		}
 		if (resp.environment) {
 			store.dispatch(

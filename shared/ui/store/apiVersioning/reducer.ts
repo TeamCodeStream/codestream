@@ -31,5 +31,10 @@ export function reduceApiVersioning(state = initialState, action: ApiVersioningA
 }
 
 export const isFeatureEnabled = (state: CodeStreamState, flag: string) => {
+	// We can turn this on, below, to enable multi-region just for us, when we're ready
+	// then get rid of this code once we're fully in production with it
+	//if (flag === 'multiRegion') {
+	//	return true;
+	//}
 	return state.apiVersioning.apiCapabilities[flag] != null;
 };

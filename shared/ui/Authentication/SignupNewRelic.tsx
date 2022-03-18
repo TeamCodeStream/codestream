@@ -23,6 +23,7 @@ import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this compo
 import Tooltip from "../Stream/Tooltip";
 import { TooltipIconWrapper } from "./Signup";
 import { Dropdown } from "../Stream/Dropdown";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 const FooterWrapper = styled.div`
 	text-align: center;
@@ -46,6 +47,7 @@ export const SignupNewRelic = () => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { environmentHosts } = state.configs;
 		const { selectedRegion, forceRegion } = state.context.__teamless__ || {};
+		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
 
 		return {
 			ide: state.ide,
@@ -54,7 +56,8 @@ export const SignupNewRelic = () => {
 			pendingProtocolHandlerQuerySource: state.context.pendingProtocolHandlerQuery?.src,
 			environmentHosts,
 			selectedRegion,
-			forceRegion
+			forceRegion,
+			supportsMultiRegion
 		};
 	});
 
@@ -68,14 +71,14 @@ export const SignupNewRelic = () => {
 		? "https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher"
 		: "https://staging-one.newrelic.com/launcher/api-keys-ui.api-keys-launcher";
 
-	const { environmentHosts, selectedRegion, forceRegion } = derivedState;
+	const { environmentHosts, selectedRegion, forceRegion, supportsMultiRegion } = derivedState;
 
 	useEffect(() => {
 		dispatch(handleSelectedRegion());
 	}, [environmentHosts, selectedRegion, forceRegion]);
 
 	let regionItems, forceRegionName, selectedRegionName;
-	if (environmentHosts && environmentHosts.length > 1) {
+	if (supportsMultiRegion && environmentHosts && environmentHosts.length > 1) {
 		regionItems = environmentHosts.map(host => ({
 			key: host.shortName,
 			label: host.name,
