@@ -106,6 +106,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
 
     init {
         loadInlays(false)
+        editor.document.addDocumentListener(this)
     }
 
     fun loadInlays(resetCache: Boolean?) {
@@ -123,6 +124,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                                 path, LANGUAGE_ID, null, null, null, resetCache, OPTIONS
                             )
                         )
+                        metricsByFunction.clear()
 
                         lastResult?.errorRate?.forEach { errorRate ->
                             val metrics = metricsByFunction.getOrPut(errorRate.functionName) { MLTMetrics() }
@@ -138,9 +140,6 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener {
                         }
 
                         updateInlays()
-                        if (lastResult?.error != null) {
-                            editor.document.addDocumentListener(docListener)
-                        }
                     } catch (ex: Exception) {
                         ex.printStackTrace()
                     }
