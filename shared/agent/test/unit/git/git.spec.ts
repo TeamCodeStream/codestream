@@ -34,7 +34,6 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"ssh://git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
 			);
-			console.warn(JSON.stringify(results, null, 4));
 			expect(results).to.deep.equal([
 				{
 					type: "ssh",
