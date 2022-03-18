@@ -178,7 +178,7 @@ export const Notifications = props => {
 						</div>
 						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
 							<div>
-								<h3>Toast Notifications</h3>
+								<h3>Desktop Notifications</h3>
 								<div style={{marginTop: "20px"}}>
 									<Checkbox
 										name="createReviewOnDetectUnreviewedCommits"
