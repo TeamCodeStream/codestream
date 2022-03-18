@@ -31,6 +31,7 @@ import { supportsSSOSignIn } from "../store/configs/reducer";
 import { Server } from "../webview-api";
 import { PresentTOS } from "./PresentTOS";
 import Tooltip from "../Stream/Tooltip";
+import { Dropdown } from "../Stream/Dropdown";
 import { confirmPopup } from "../Stream/Confirm";
 import styled from "styled-components";
 
@@ -56,6 +57,36 @@ const OnPremWrapper = styled.div`
 	font-size: smaller;
 	text-align: center;
 `;
+
+// all buttons container
+const SignupButtonsContainer = styled.div`
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	margin: 0 0 10px 0;
+`;
+
+// single button container
+const SignupButtonContainer = styled.div`
+	@media (max-width: 351px) {
+		width: 100%;
+	}
+	@media (min-width: 351px) {
+		width: 49%;
+	}
+	.btn {
+		padding: 5px 10px 5px 10px !important;
+	}
+	.icon:not(.spin) {
+		display: inline-block !important;
+	}
+`;
+
+export const TooltipIconWrapper = styled.span`
+	position: relative;
+	top: 1px;
+`;
+
 interface TeamAuthSettings {
 	limitAuthentication: boolean;
 	authenticationProviders: {
@@ -106,6 +137,7 @@ export const Signup = (props: Props) => {
 	const [email, setEmail] = useState(props.email || "");
 	const [emailValidity, setEmailValidity] = useState(true);
 	const [scmEmail, setScmEmail] = useState("");
+	const [showEmailForm, setShowEmailForm] = useState<boolean>(false);
 
 	const [password, setPassword] = useState("");
 	const [passwordValidity, setPasswordValidity] = useState(true);
@@ -409,6 +441,14 @@ export const Signup = (props: Props) => {
 		[props.type]
 	);
 
+	const onClickEmailSignup = useCallback(
+		(event: React.SyntheticEvent) => {
+			event.preventDefault();
+			setShowEmailForm(true);
+		},
+		[props.type]
+	);
+
 	if (!bootstrapped || isInitializing) return <Loading />;
 
 	const showOr =
@@ -439,50 +479,79 @@ export const Signup = (props: Props) => {
 								<br />
 								{regionItems && !forceRegionName && (
 									<>
-										Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
+										<Dropdown
+											selectedValue={selectedRegionName}
+											items={regionItems}
+											noModal={true}
+										/>
 										<Tooltip
-											title={`Select the region where your CodeStream data should be stored.`}
+											placement={"bottom"}
+											title={`Select the region where your CodeStream organization is located.`}
 										>
-											<Icon name="question" />
+											<TooltipIconWrapper>
+												<Icon name="question" />
+											</TooltipIconWrapper>
 										</Tooltip>
 									</>
 								)}
 								{forceRegionName && <>Region: {forceRegionName}</>}
-								{!limitAuthentication && (
-									<Button className="row-button no-top-margin" onClick={onClickNewRelicSignup}>
-										<Icon name="newrelic" />
-										<div className="copy">Sign Up with New Relic</div>
-										<Icon name="chevron-right" />
-									</Button>
-								)}
-								{(!limitAuthentication || authenticationProviders["github*com"]) && (
-									<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
-										<Icon name="mark-github" />
-										<div className="copy">Sign Up with GitHub</div>
-										<Icon name="chevron-right" />
-									</Button>
-								)}
-								{(!limitAuthentication || authenticationProviders["gitlab*com"]) && (
-									<Button className="row-button no-top-margin" onClick={onClickGitlabSignup}>
-										<Icon name="gitlab" />
-										<div className="copy">Sign Up with GitLab</div>
-										<Icon name="chevron-right" />
-									</Button>
-								)}
-								{(!limitAuthentication || authenticationProviders["bitbucket*org"]) && (
-									<Button className="row-button no-top-margin" onClick={onClickBitbucketSignup}>
-										<Icon name="bitbucket" />
-										<div className="copy">Sign Up with Bitbucket</div>
-										<Icon name="chevron-right" />
-									</Button>
-								)}
-								{derivedState.oktaEnabled && (
-									<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
-										<Icon name="okta" />
-										<div className="copy">Sign Up with Okta</div>
-										<Icon name="chevron-right" />
-									</Button>
-								)}
+								{/* eric bookmark */}
+								<SignupButtonsContainer>
+									{!limitAuthentication && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickNewRelicSignup}>
+												<Icon name="newrelic" />
+												<div className="copy">New Relic</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+									{(!limitAuthentication || authenticationProviders["github*com"]) && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
+												<Icon name="mark-github" />
+												<div className="copy">GitHub</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+									{(!limitAuthentication || authenticationProviders["gitlab*com"]) && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickGitlabSignup}>
+												<Icon name="gitlab" />
+												<div className="copy">GitLab</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+									{(!limitAuthentication || authenticationProviders["bitbucket*org"]) && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickBitbucketSignup}>
+												<Icon name="bitbucket" />
+												<div className="copy">Bitbucket</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+									{derivedState.oktaEnabled && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickOktaSignup}>
+												<Icon name="okta" />
+												<div className="copy">Okta</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+									{(!limitAuthentication || authenticationProviders["email"]) && !showEmailForm && (
+										<SignupButtonContainer>
+											<Button className="row-button no-top-margin" onClick={onClickEmailSignup}>
+												<Icon name="codestream" />
+												<div className="copy">Email</div>
+												<Icon name="chevron-right" />
+											</Button>
+										</SignupButtonContainer>
+									)}
+								</SignupButtonsContainer>
 								<OnPremWrapper id={`on-prem-wrapper`}>
 									Codestream supports on-prem code hosts as well. {` `}
 									<Tooltip
@@ -497,7 +566,7 @@ export const Signup = (props: Props) => {
 										<OnPremTooltipCopy>Learn More</OnPremTooltipCopy>
 									</Tooltip>
 								</OnPremWrapper>
-								{showOr && (
+								{showOr && showEmailForm && (
 									<div className="separator-label">
 										<span className="or">or</span>
 									</div>
@@ -509,7 +578,7 @@ export const Signup = (props: Props) => {
 			)}
 			<form className="standard-form" onSubmit={e => onSubmit(e, checkForWebmail)}>
 				<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
-					{(!limitAuthentication || authenticationProviders["email"]) && (
+					{(!limitAuthentication || authenticationProviders["email"]) && showEmailForm && (
 						<div className="border-bottom-box">
 							{wasInvited && (
 								<p className="explainer">

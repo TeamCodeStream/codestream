@@ -18,10 +18,11 @@ import { LoginResult } from "@codestream/protocols/api";
 import { goToNewUserEntry, goToCompanyCreation, goToLogin } from "../store/context/actions";
 import { handleSelectedRegion, setSelectedRegion } from "../store/session/actions";
 import { completeSignup } from "./actions";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
 // TODO: BRIAN FIX (remove this dependency)...
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
 import Tooltip from "../Stream/Tooltip";
+import { TooltipIconWrapper } from "./Signup";
+import { Dropdown } from "../Stream/Dropdown";
 
 const FooterWrapper = styled.div`
 	text-align: center;
@@ -221,9 +222,14 @@ export const SignupNewRelic = () => {
 							)}
 							{regionItems && !forceRegionName && (
 								<>
-									Region: <InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
-									<Tooltip title={`Select the region where your CodeStream data should be stored.`}>
-										<Icon name="question" />
+									<Dropdown selectedValue={selectedRegionName} items={regionItems} noModal={true} />{" "}
+									<Tooltip
+										placement={"bottom"}
+										title={`Select the region where your CodeStream organization is located.`}
+									>
+										<TooltipIconWrapper>
+											<Icon name="question" />
+										</TooltipIconWrapper>
 									</Tooltip>
 								</>
 							)}

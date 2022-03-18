@@ -17,6 +17,8 @@ import Tooltip from "../Stream/Tooltip";
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
 import { EnvironmentHost } from "../protocols/agent/agent.protocol";
 import { setEnvironment } from "../store/session/actions";
+import { TooltipIconWrapper } from "./Signup";
+import { Dropdown } from "../Stream/Dropdown";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {
@@ -416,9 +418,18 @@ class Login extends React.Component<Props, State> {
 								{regionItems && (
 									<p>
 										Trouble signing in? Make sure you're in the right region:{" "}
-										<InlineMenu items={regionItems}>{selectedRegionName}</InlineMenu>{" "}
-										<Tooltip title={`Select the region where your CodeStream data is stored.`}>
-											<Icon name="question" />
+										<Dropdown
+											selectedValue={selectedRegionName}
+											items={regionItems}
+											noModal={true}
+										/>
+										<Tooltip
+											placement={"bottom"}
+											title={`Select the region where your CodeStream organization is located.`}
+										>
+											<TooltipIconWrapper>
+												<Icon name="question" />
+											</TooltipIconWrapper>
 										</Tooltip>
 									</p>
 								)}
