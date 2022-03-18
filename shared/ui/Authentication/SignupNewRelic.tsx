@@ -222,10 +222,11 @@ export const SignupNewRelic = () => {
 							)}
 							{regionItems && !forceRegionName && (
 								<>
+									Region:{" "}
 									<Dropdown selectedValue={selectedRegionName} items={regionItems} noModal={true} />{" "}
 									<Tooltip
 										placement={"bottom"}
-										title={`Select the region where your CodeStream organization is located.`}
+										title={`Select the region where your CodeStream data should be stored.`}
 									>
 										<TooltipIconWrapper>
 											<Icon name="question" />

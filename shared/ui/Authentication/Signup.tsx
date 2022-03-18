@@ -479,6 +479,7 @@ export const Signup = (props: Props) => {
 								<br />
 								{regionItems && !forceRegionName && (
 									<>
+										Region:{" "}
 										<Dropdown
 											selectedValue={selectedRegionName}
 											items={regionItems}
@@ -486,7 +487,7 @@ export const Signup = (props: Props) => {
 										/>
 										<Tooltip
 											placement={"bottom"}
-											title={`Select the region where your CodeStream organization is located.`}
+											title={`Select the region where your CodeStream data should be stored.`}
 										>
 											<TooltipIconWrapper>
 												<Icon name="question" />
