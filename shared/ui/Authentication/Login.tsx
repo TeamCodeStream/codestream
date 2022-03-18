@@ -417,7 +417,7 @@ class Login extends React.Component<Props, State> {
 								)}
 								{regionItems && (
 									<p>
-										Trouble signing in? Make sure you're in the right region:{" "}
+										Trouble signing in? Make sure you're in the right region:
 										<Dropdown
 											selectedValue={selectedRegionName}
 											items={regionItems}

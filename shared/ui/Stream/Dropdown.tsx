@@ -29,6 +29,12 @@ const CheckboxContainer = styled.span`
 	margin: 0 4px 0 0;
 `;
 
+const DropdownLabel = styled.label`
+	color: var(--text-color-highlight);
+	margin: 0;
+	cursor: pointer;
+`;
+
 interface Props {
 	selectedValue: string;
 	items: {
@@ -46,9 +52,14 @@ interface Props {
 // Simple dropdown with two modes, modal which the full list of <Menu /> options (like search)
 // and noModal, which is just a simplfied dropdown that can work without react portals
 export const Dropdown = (props: Props) => {
-	const [ellipsisMenuOpen, setEllipsisMenuOpen] = React.useState();
-	const toggleEllipsisMenu = event => {
-		setEllipsisMenuOpen(ellipsisMenuOpen ? undefined : event.target.closest("label"));
+	const [menuOpen, setMenuOpen] = React.useState();
+	const handleOnClick = event => {
+		event.stopPropagation();
+		setMenuOpen(menuOpen ? undefined : event.target.closest("label"));
+	};
+	const handleOnBlur = event => {
+		event.stopPropagation();
+		setMenuOpen(undefined);
 	};
 	const [selectedValue, setSelectedValue] = React.useState<string | undefined>(
 		props.selectedValue || ""
@@ -60,15 +71,10 @@ export const Dropdown = (props: Props) => {
 			{props.items.length === 1 && <label>{selectedValue}</label>}
 			{/* If more than 1 dropdown item, render dropdown */}
 			{props.items.length > 1 && (
-				<label
-					tabIndex={0}
-					onBlur={toggleEllipsisMenu}
-					onClick={toggleEllipsisMenu}
-					style={{ cursor: "pointer" }}
-				>
+				<DropdownLabel tabIndex={0} onBlur={handleOnBlur} onClick={handleOnClick}>
 					{selectedValue}
 					<Icon name="chevron-down-thin" className="smaller" style={{ verticalAlign: "-1px" }} />
-					{ellipsisMenuOpen && !props.noModal && (
+					{menuOpen && !props.noModal && (
 						<Menu
 							items={props.items.map(_ => {
 								// hijack the action to set the selected label first
@@ -82,11 +88,11 @@ export const Dropdown = (props: Props) => {
 									}
 								};
 							})}
-							action={() => setEllipsisMenuOpen(undefined)}
-							target={ellipsisMenuOpen}
+							action={() => setMenuOpen(undefined)}
+							target={menuOpen}
 						/>
 					)}
-					{ellipsisMenuOpen && props.noModal && (
+					{menuOpen && props.noModal && (
 						<DropdownItemsContainer>
 							{props.items.map((_, index) => (
 								<DropdownItemContainer
@@ -104,7 +110,7 @@ export const Dropdown = (props: Props) => {
 							))}
 						</DropdownItemsContainer>
 					)}
-				</label>
+				</DropdownLabel>
 			)}
 		</>
 	);
