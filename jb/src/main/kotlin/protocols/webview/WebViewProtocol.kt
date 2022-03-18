@@ -162,7 +162,7 @@ object MethodLevelTelemetryNotifications {
         val relativeFilePath: String?,
         val languageId: String,
         val range: Range?,
-        val methodName: String?,
+        val functionName: String?,
         val newRelicAccountId: Int?,
         val newRelicEntityGuid: String?,
         val methodLevelTelemetryRequestOptions: FileLevelTelemetryOptions?,
