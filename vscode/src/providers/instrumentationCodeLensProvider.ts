@@ -177,19 +177,32 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					: ""
 			} - ${date ? `since ${date}` : ""}\nClick for more.`;
 
+			const symbolMatcherFn = (
+				symbol: InstrumentableSymbol,
+				data: { className?: string; functionName: string }
+			) => {
+				let result: boolean;
+				if (symbol.parent) {
+					result =
+						data.className === symbol.parent.name && data.functionName === symbol.symbol.name;
+				} else {
+					// if no parent (aka class) ensure we find a function that doesn't have a parent
+					result = !symbol.parent && data.functionName === symbol.symbol.name;
+				}
+				return result;
+			};
+
 			const lenses = instrumentableSymbols.map(_ => {
 				const throughputForFunction = fileLevelTelemetryResponse.throughput
-					? fileLevelTelemetryResponse.throughput.find((i: any) => i.functionName === _.symbol.name)
+					? fileLevelTelemetryResponse.throughput.find((i: any) => symbolMatcherFn(_, i))
 					: undefined;
 
 				const averageDurationForFunction = fileLevelTelemetryResponse.averageDuration
-					? fileLevelTelemetryResponse.averageDuration.find(
-							(i: any) => i.functionName === _.symbol.name
-					  )
+					? fileLevelTelemetryResponse.averageDuration.find((i: any) => symbolMatcherFn(_, i))
 					: undefined;
 
 				const errorRateForFunction = fileLevelTelemetryResponse.errorRate
-					? fileLevelTelemetryResponse.errorRate.find((i: any) => i.functionName === _.symbol.name)
+					? fileLevelTelemetryResponse.errorRate.find((i: any) => symbolMatcherFn(_, i))
 					: undefined;
 
 				if (!throughputForFunction && !averageDurationForFunction && !errorRateForFunction) {

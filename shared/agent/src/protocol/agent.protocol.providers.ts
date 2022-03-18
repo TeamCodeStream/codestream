@@ -1131,9 +1131,24 @@ export interface GetFileLevelTelemetryResponse {
 		remote: string;
 	};
 	isConnected?: boolean;
-	throughput?: { requestsPerMinute: any; functionName: string; metricTimesliceName: string }[];
-	averageDuration?: { averageDuration: any; functionName: string; metricTimesliceName: string }[];
-	errorRate?: { errorsPerMinute: any; functionName: string; metricTimesliceName: string }[];
+	throughput?: {
+		requestsPerMinute: any;
+		className?: string;
+		functionName: string;
+		metricTimesliceName: string;
+	}[];
+	averageDuration?: {
+		averageDuration: any;
+		className?: string;
+		functionName: string;
+		metricTimesliceName: string;
+	}[];
+	errorRate?: {
+		errorsPerMinute: any;
+		className?: string;
+		functionName: string;
+		metricTimesliceName: string;
+	}[];
 	lastUpdateDate?: number;
 	hasAnyData?: boolean;
 	sinceDateFormatted?: string;

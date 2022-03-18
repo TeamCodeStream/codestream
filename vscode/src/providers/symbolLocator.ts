@@ -6,7 +6,10 @@ import { Logger } from "../logger";
 const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 export class InstrumentableSymbol {
-	constructor(public symbol: vscode.DocumentSymbol) {}
+	constructor(
+		public symbol: vscode.DocumentSymbol,
+		public parent: vscode.DocumentSymbol | undefined
+	) {}
 }
 
 export interface ISymbolLocator {
@@ -26,7 +29,7 @@ export class SymbolLocator implements ISymbolLocator {
 			}
 
 			const symbolResult = await this.locateCore(document, token);
-			this.buildLensCollection(symbolResult, token, instrumentableSymbols);
+			this.buildLensCollection(undefined, symbolResult, instrumentableSymbols, token);
 		} catch (ex) {
 			Logger.warn("SymbolLocator.locate", {
 				error: ex,
@@ -68,9 +71,10 @@ export class SymbolLocator implements ISymbolLocator {
 	}
 
 	private buildLensCollection(
+		parent: DocumentSymbol | undefined,
 		symbols: DocumentSymbol[],
-		token: CancellationToken,
-		collection: InstrumentableSymbol[]
+		collection: InstrumentableSymbol[],
+		token: CancellationToken
 	) {
 		for (const symbol of symbols) {
 			if (token.isCancellationRequested) {
@@ -78,10 +82,10 @@ export class SymbolLocator implements ISymbolLocator {
 			}
 
 			if (symbol.children && symbol.children.length) {
-				this.buildLensCollection(symbol.children, token, collection);
+				this.buildLensCollection(symbol, symbol.children, collection, token);
 			}
 			if (symbol.kind === vscode.SymbolKind.Function || symbol.kind === vscode.SymbolKind.Method) {
-				collection.push(new InstrumentableSymbol(symbol));
+				collection.push(new InstrumentableSymbol(symbol, parent));
 			}
 		}
 	}

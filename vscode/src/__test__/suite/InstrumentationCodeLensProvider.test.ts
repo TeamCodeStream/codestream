@@ -25,7 +25,8 @@ class MockSymbolLocator implements ISymbolLocator {
 						vscode.SymbolKind.Function,
 						new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1)),
 						new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1))
-					)
+					),
+					undefined
 				)
 			]);
 		});

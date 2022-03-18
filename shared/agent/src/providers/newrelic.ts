@@ -1,6 +1,7 @@
 "use strict";
 import fs from "fs";
 import { GraphQLClient } from "graphql-request";
+import { Dictionary } from "lodash";
 import {
 	flatten as _flatten,
 	groupBy as _groupBy,
@@ -15,7 +16,7 @@ import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
-import { SessionContainer } from "../container";
+import { SessionContainer, SessionServiceContainer } from "../container";
 import { GitRemoteParser } from "../git/parsers/remoteParser";
 import { Logger } from "../logger";
 import {
@@ -140,8 +141,19 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return this.getApiUrlCore(data);
 	}
 
+	private _sessionServiceContainer: SessionServiceContainer | undefined;
+	/**
+	 * set the service container (useful for unit tests)
+	 *
+	 * @memberof NewRelicProvider
+	 */
+	set sessionServiceContainer(value: SessionServiceContainer) {
+		this._sessionServiceContainer = value;
+	}
+
 	private getApiUrlCore(data?: { apiUrl?: string; usingEU?: boolean; [key: string]: any }): string {
-		const newRelicApiUrl = SessionContainer.instance().session.newRelicApiUrl;
+		const newRelicApiUrl = (this._sessionServiceContainer || SessionContainer.instance()).session
+			.newRelicApiUrl;
 		if (data) {
 			if (data.apiUrl) {
 				return Strings.trimEnd(data.apiUrl, "/").toLowerCase();
@@ -1605,7 +1617,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			? request.codeFilePath.replace(/\\/g, "/")
 			: undefined;
 
-		const innerQueryEquals = `SELECT name,code.lineno,code.namepsace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
+		const innerQueryEquals = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
 			request.newRelicEntityGuid
 		}' AND ${
 			codeFilePath
@@ -1613,7 +1625,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				: `code.namespace like '${request.codeNamespace}%'`
 		}  SINCE 30 minutes AGO LIMIT 250`;
 
-		const innerQueryLike = `SELECT name,code.lineno,code.namepsace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
+		const innerQueryLike = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,traceId,transactionId from Span WHERE \`entity.guid\` = '${
 			request.newRelicEntityGuid
 		}' AND ${
 			codeFilePath
@@ -1759,6 +1771,51 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return entity;
 	}
 
+	addMethodName(
+		groupedByTransactionName: Dictionary<Span[]>,
+		arr: { metricTimesliceName: string }[]
+	) {
+		return arr.map((_: any) => {
+			const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
+
+			const additionalMetadata = {} as any;
+			const metadata =
+				groupedByTransactionName[
+					_.metricTimesliceName
+						.replace("Errors/WebTransaction/", "")
+						.replace("WebTransaction/", "")
+						.replace("OtherTransaction/", "")
+				];
+			if (metadata) {
+				["code.lineno", "traceId", "transactionId", "code.namespace"].forEach(_ => {
+					// TODO this won't work for lambdas
+					additionalMetadata[_] = (metadata[0] as any)[_];
+				});
+			}
+
+			let className = undefined;
+			let functionName =
+				indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined;
+			const indexOfDot = functionName ? functionName.indexOf(".") : -1;
+			if (indexOfDot > -1) {
+				// account for a className here
+				const split = functionName.split(".");
+				const fn = split.pop();
+				functionName = fn;
+				if (split.length) {
+					className = split.pop();
+				}
+			}
+
+			return {
+				..._,
+				metadata: additionalMetadata,
+				className: className,
+				functionName: functionName
+			};
+		});
+	}
+
 	@lspHandler(GetFileLevelTelemetryRequestType)
 	@log()
 	async getFileLevelTelemetry(
@@ -1793,12 +1850,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				return cached;
 			}
 		}
-		const { users, git } = SessionContainer.instance();
+		const { users, git } = this._sessionServiceContainer || SessionContainer.instance();
 		if (!this._codeStreamUser) {
 			this._codeStreamUser = await users.getMe();
 		}
 
-		const isConnected = super.isConnected(this._codeStreamUser);
+		const isConnected = this.isConnected(this._codeStreamUser);
 		if (!isConnected) {
 			ContextLogger.warn("getFileLevelTelemetry: not connected", {
 				request
@@ -1868,8 +1925,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				codeFilePath: relativeFilePath
 			});
 
-			const groupedByNamespaceAndMethod = spans ? _groupBy(spans, _ => _.name) : {};
-			const metricTimesliceNames = Object.keys(groupedByNamespaceAndMethod);
+			const groupedByTransactionName = spans ? _groupBy(spans, _ => _.name) : {};
+			const metricTimesliceNames = Object.keys(groupedByTransactionName);
 
 			request.options = request.options || {};
 			let [throughputResponse, averageDurationResponse, errorRateResponse] = await Promise.all([
@@ -1896,35 +1953,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					: undefined
 			]);
 
-			const addMethodName = (arr: { metricTimesliceName: string }[]) => {
-				return arr.map((_: any) => {
-					const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
-
-					const additionalMetadata = {} as any;
-					const metadata =
-						groupedByNamespaceAndMethod[
-							_.metricTimesliceName
-								.replace("WebTransaction/", "")
-								.replace("Errors/WebTransaction/", "")
-						];
-					if (metadata) {
-						["code.lineno", "traceId", "transactionId", "code.namespace"].forEach(_ => {
-							// TODO this won't work for lambdas
-							additionalMetadata[_] = (metadata[0] as any)[_];
-						});
-					}
-					return {
-						..._,
-						metadata: additionalMetadata,
-						functionName:
-							indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined
-					};
-				});
-			};
-
 			[throughputResponse, averageDurationResponse, errorRateResponse].forEach(_ => {
 				if (_) {
-					_.actor.account.nrql.results = addMethodName(_.actor.account.nrql.results);
+					_.actor.account.nrql.results = this.addMethodName(
+						groupedByTransactionName,
+						_.actor.account.nrql.results
+					);
 
 					if (request.functionName) {
 						_.actor.account.nrql.results = _.actor.account.nrql.results.filter(
@@ -1934,15 +1968,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			});
 
-			// const begin =
-			// 	throughputResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
-			// 	averageDurationResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin ||
-			// 	errorRateResponse?.actor?.account?.nrql?.metadata?.timeWindow?.begin;
+			const throughputResponseLength = throughputResponse?.actor?.account?.nrql?.results.length;
+			const averageDurationResponseLength =
+				averageDurationResponse?.actor?.account?.nrql?.results.length;
+			const errorRateResponseLength = errorRateResponse?.actor?.account?.nrql?.results.length;
 
 			const hasAnyData =
-				throughputResponse?.actor?.account?.nrql?.results.length ||
-				averageDurationResponse?.actor?.account?.nrql?.results.length ||
-				errorRateResponse?.actor?.account?.nrql?.results.length;
+				throughputResponseLength || averageDurationResponseLength || errorRateResponseLength;
 			const response = {
 				codeNamespace: request.codeNamespace!,
 				isConnected: isConnected,
@@ -1976,6 +2008,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				Logger.log("getFileLevelTelemetry caching success", {
 					spansLength: spans.length,
 					hasAnyData: hasAnyData,
+					data: {
+						throughputResponseLength,
+						averageDurationResponseLength,
+						errorRateResponseLength
+					},
 					newRelicEntityGuid,
 					newRelicAccountId
 				});
@@ -2056,7 +2093,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	 * @return {*}
 	 * @memberof NewRelicProvider
 	 */
-	private async getObservabilityEntityRepos(repoId: string) {
+	protected async getObservabilityEntityRepos(
+		repoId: string
+	): Promise<ObservabilityRepo | undefined> {
 		const observabilityRepos = await this.getObservabilityRepos({
 			filters: [{ repoId: repoId }]
 		});
@@ -3052,7 +3091,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		);
 	}
 
-	private async getEntityCount(): Promise<number> {
+	protected async getEntityCount(): Promise<number> {
 		try {
 			const result = await this.query(`{
 			actor {
@@ -3198,15 +3237,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 }
 
-interface Span {
-	"code.namespace": string;
-	"code.lineno": string;
-	name: string;
+export interface Span {
+	"code.namespace": string | null;
+	"code.lineno": number | null;
+	"transaction.name": string | null;
+	name?: string;
 	traceId: string;
 	transactionId: string;
+	timestamp?: number;
 }
 
-interface MetricQueryRequest {
+export interface MetricQueryRequest {
 	newRelicAccountId: number;
 	newRelicEntityGuid: string;
 	codeFilePath?: string;
