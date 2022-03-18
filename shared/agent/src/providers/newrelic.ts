@@ -1500,9 +1500,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		WHERE \`entity.guid\` = '${request.newRelicEntityGuid}' 
 		AND ${
 			request.metricTimesliceNames?.length
-				? `metricTimesliceName in (${request.metricTimesliceNames
-						.map(z => "'" + z + "'")
-						.join(",")})`
+				? `(metricTimesliceName in (
+					${request.metricTimesliceNames
+						.map(mtsn => `'${mtsn}'`)
+						.join(",")}) OR metricTimesliceName in (${request.metricTimesliceNames
+						.map(mtsn => `'OtherTransactions/${mtsn}'`)
+						.join(",")}))`
 				: `metricTimesliceName LIKE '${request.codeNamespace}%'`
 		} 
 		FACET metricTimesliceName 

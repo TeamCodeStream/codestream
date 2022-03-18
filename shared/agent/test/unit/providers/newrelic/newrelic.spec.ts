@@ -187,7 +187,7 @@ describe("NewRelicProvider", async () => {
 		const provider = new NewRelicProviderStub({} as any, {} as any);
 		const results = provider.addMethodName(
 			{
-				"Celery/foo_bar.system.tasks.bill_credit_payment_item": [
+				"Carrot/foo_bar.system.tasks.bill_credit_payment_item": [
 					{
 						"code.filepath": "/app/foo_bar/system/tasks.py",
 						"code.function": "bill_credit_payment_item",
@@ -200,7 +200,7 @@ describe("NewRelicProvider", async () => {
 			[
 				{
 					metricTimesliceName:
-						"OtherTransaction/Celery/foo_bar.system.tasks.bill_credit_payment_item"
+						"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item"
 				}
 			]
 		);
@@ -209,7 +209,7 @@ describe("NewRelicProvider", async () => {
 			{
 				className: undefined,
 				metricTimesliceName:
-					"OtherTransaction/Celery/foo_bar.system.tasks.bill_credit_payment_item",
+					"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
 				metadata: {
 					"code.lineno": 27,
 					"code.namespace": "foo_bar.system.tasks",
@@ -271,9 +271,118 @@ describe("NewRelicProvider", async () => {
 		expect(results?.throughput?.length).to.eq(2);
 		expect(results?.throughput?.map(_ => _.functionName)).to.deep.eq(["error", "hello_world"]);
 	});
+
+	it("getFileLevelTelemetry2", async () => {
+		const serviceLocatorStub = {
+			git: {
+				getRepositoryByFilePath: function(path: string) {
+					return {
+						id: "123",
+						path: "whatever",
+						getWeightedRemotesByStrategy: function() {
+							return [
+								{
+									name: "foo",
+									repoPath: "foo/bar",
+									remotes: [
+										{
+											rawUrl: "https://"
+										}
+									]
+								}
+							];
+						}
+					};
+				}
+			},
+			users: {
+				getMe: function() {
+					return {
+						id: "1234"
+					};
+				}
+			},
+			session: {
+				newRelicApiUrl: ""
+			}
+		} as any;
+		const provider = new NewRelicProviderStub2({} as any, {} as any);
+		provider.sessionServiceContainer = serviceLocatorStub;
+
+		const results = await provider.getFileLevelTelemetry({
+			filePath: "/foo2.py",
+			languageId: "python",
+			options: {
+				includeAverageDuration: true,
+				includeErrorRate: true,
+				includeThroughput: true
+			}
+		});
+
+		expect(results?.throughput?.length).to.eq(1);
+		expect(results?.throughput?.map(_ => _.functionName)).to.deep.eq([
+			"create_bill_credit_payment_thing"
+		]);
+	});
 });
 
-class NewRelicProviderStub extends NewRelicProvider {
+class NewRelicProviderStubBase extends NewRelicProvider {
+	isConnected(user: CSMe): boolean {
+		return true;
+	}
+
+	protected async getEntityCount(): Promise<number> {
+		return 1;
+	}
+	protected async getObservabilityEntityRepos(
+		repoId: string
+	): Promise<ObservabilityRepo | undefined> {
+		return {
+			repoId: "123",
+			hasRepoAssociation: true,
+			repoName: "foo",
+			repoRemote: "https://example.com",
+			entityAccounts: [
+				{
+					accountId: 123,
+					accountName: "name",
+					entityGuid: "123",
+					entityName: "entity",
+					tags: [
+						{
+							key: "url",
+							values: ["cheese"]
+						}
+					]
+				}
+			]
+		};
+	}
+	async getMethodAverageDuration(request: MetricQueryRequest): Promise<any> {
+		return {
+			actor: {
+				account: {
+					nrql: {
+						results: []
+					}
+				}
+			}
+		};
+	}
+	async getMethodErrorRate(request: MetricQueryRequest): Promise<any> {
+		return {
+			actor: {
+				account: {
+					nrql: {
+						results: []
+					}
+				}
+			}
+		};
+	}
+}
+
+class NewRelicProviderStub extends NewRelicProviderStubBase {
 	async getSpans(request: MetricQueryRequest): Promise<Span[] | undefined> {
 		return [
 			{
@@ -806,6 +915,40 @@ class NewRelicProviderStub extends NewRelicProvider {
 								facet: "Errors/WebTransaction/Function/routes.app:error",
 								errorsPerMinute: 0.48333333333333334,
 								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error"
+							}
+						]
+					}
+				}
+			}
+		};
+	}
+}
+
+class NewRelicProviderStub2 extends NewRelicProviderStubBase {
+	async getSpans(request: MetricQueryRequest): Promise<Span[] | undefined> {
+		return [
+			{
+				"code.function": "create_bill_credit_payment_thing",
+				name: "Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
+				timestamp: 1647631200451,
+				"transaction.name":
+					"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing"
+			}
+		];
+	}
+
+	async getMethodThroughput(request: MetricQueryRequest) {
+		return {
+			actor: {
+				account: {
+					nrql: {
+						results: [
+							{
+								facet:
+									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
+								metricTimesliceName:
+									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
+								requestsPerMinute: 0.35
 							}
 						]
 					}
