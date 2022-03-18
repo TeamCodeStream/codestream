@@ -148,7 +148,21 @@ class MarkerInsertTextRequest(
 
 class UpdateServerUrlRequest(
     val serverUrl: String,
-    val disableStrictSSL: Boolean = false
+    val disableStrictSSL: Boolean = false,
+    val environment: String
+)
+
+enum class LogoutReason {
+    @SerializedName("unknown")
+    UNKNOWN,
+    @SerializedName("reAuthenticating")
+    RE_AUTHENTICATING
+}
+class LogoutRequest(
+    val reason: LogoutReason?,
+    val newServerUrl: String?,
+    val newEnvironment: String?
+
 )
 
 class OpenUrlRequest(

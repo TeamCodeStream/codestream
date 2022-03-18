@@ -124,7 +124,7 @@ class AgentService(private val project: Project) : Disposable {
         else initialization.thenRun(cb)
     }
 
-    private suspend fun initAgent(autoSignIn: Boolean = true) {
+    private suspend fun initAgent(newServerUrl: String? = null, autoSignIn: Boolean = true) {
         try {
             logger.info("Initializing CodeStream LSP agent")
             val process = createProcess()
@@ -142,7 +142,7 @@ class AgentService(private val project: Project) : Disposable {
 
             if (!project.isDisposed) {
                 logger.info("Initializing language server")
-                this.initializeResult = agent.initialize(getInitializeParams()).await()
+                this.initializeResult = agent.initialize(getInitializeParams(newServerUrl)).await()
                 if (autoSignIn) {
                     project.authenticationService?.let {
                         val success = it.autoSignIn()
@@ -173,7 +173,7 @@ class AgentService(private val project: Project) : Disposable {
         onDidStart { agent.exit() }
     }
 
-    suspend fun restart(autoSignIn: Boolean = false) {
+    suspend fun restart(newServerUrl: String? = null, autoSignIn: Boolean = false) {
         logger.info("Restarting CodeStream LSP agent")
         isRestarting = true
         if (initialization.isDone) {
@@ -181,7 +181,7 @@ class AgentService(private val project: Project) : Disposable {
         }
         try { agent.shutdown().await() } catch (ex: Exception) { logger.warn(ex) }
         try { agent.exit() } catch (ex: Exception) { logger.warn(ex) }
-        initAgent(autoSignIn)
+        initAgent(newServerUrl, autoSignIn)
         isRestarting = false
         _restartObservers.forEach { it() }
     }
@@ -291,7 +291,7 @@ class AgentService(private val project: Project) : Disposable {
             if (!isDisposing && !isRestarting) {
                 logger.info("LSP agent will be restarted")
                 GlobalScope.launch {
-                    restart(true)
+                    restart(null, true)
                     onDidStart {
                         agent.telemetry(TelemetryParams("Agent Restarted", mapOf(
                             "Exit Code" to code,
@@ -322,7 +322,7 @@ class AgentService(private val project: Project) : Disposable {
         }
     }
 
-    private fun getInitializeParams(): InitializeParams {
+    private fun getInitializeParams(newServerUrl: String?): InitializeParams {
         val workspaceClientCapabilities = WorkspaceClientCapabilities()
         workspaceClientCapabilities.configuration = true
         workspaceClientCapabilities.didChangeConfiguration = DidChangeConfigurationCapabilities(false)
@@ -333,12 +333,12 @@ class AgentService(private val project: Project) : Disposable {
 
         val initParams = InitializeParams()
         initParams.capabilities = clientCapabilities
-        initParams.initializationOptions = initializationOptions()
+        initParams.initializationOptions = initializationOptions(newServerUrl)
         initParams.rootUri = project.baseUri
         return initParams
     }
 
-    private fun initializationOptions(): InitializationOptions? {
+    private fun initializationOptions(newServerUrl: String?): InitializationOptions? {
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
         val gitProjectSettings = GitVcsSettings.getInstance(project)
         val gitApplicationSettings = GitVcsApplicationSettings.getInstance()
@@ -355,7 +355,7 @@ class AgentService(private val project: Project) : Disposable {
             DEBUG,
             settings.proxySettings,
             settings.proxySupport,
-            settings.serverUrl,
+            newServerUrl ?: settings.serverUrl,
             settings.disableStrictSSL,
             settings.traceLevel.value,
             gitPath,

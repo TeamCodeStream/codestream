@@ -14,6 +14,7 @@ import com.codestream.protocols.webview.EditorRangeSelectRequest
 import com.codestream.protocols.webview.EditorRangeSelectResponse
 import com.codestream.protocols.webview.EditorScrollToRequest
 import com.codestream.protocols.webview.EditorsCodelensRefreshResponse
+import com.codestream.protocols.webview.LogoutRequest
 import com.codestream.protocols.webview.MarkerApplyRequest
 import com.codestream.protocols.webview.MarkerCompareRequest
 import com.codestream.protocols.webview.MarkerInsertTextRequest
@@ -107,7 +108,7 @@ class WebViewRouter(val project: Project) {
                 _isReady = true
                 initialization.complete(Unit)
             }
-            "host/logout" -> authentication.logout()
+            "host/logout" -> logout(message)
             "host/restart" -> restart(message)
             "host/context/didChange" -> contextDidChange(message)
             "host/webview/reload" -> project.webViewService?.load(true)
@@ -139,6 +140,12 @@ class WebViewRouter(val project: Project) {
             logger.debug("Posting response (host) ${message.id}")
             project.webViewService?.postResponse(message.id, response.orEmptyObject)
         }
+    }
+
+    private suspend fun logout(message: WebViewMessage) {
+        val authentication = project.authenticationService ?: return
+        val request = gson.fromJson<LogoutRequest>(message.params!!)
+        authentication.logout(request.newServerUrl)
     }
 
     private suspend fun restart(message: WebViewMessage) {
@@ -275,7 +282,7 @@ class WebViewRouter(val project: Project) {
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
         settings.serverUrl = request.serverUrl
         settings.disableStrictSSL = request.disableStrictSSL
-        project.agentService?.setServerUrl(SetServerUrlParams(request.serverUrl, request.disableStrictSSL))
+        project.agentService?.setServerUrl(SetServerUrlParams(request.serverUrl, request.disableStrictSSL, request.environment))
     }
 
     private fun openUrl(message: WebViewMessage) {

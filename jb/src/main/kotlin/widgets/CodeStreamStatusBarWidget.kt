@@ -52,7 +52,7 @@ class CodeStreamStatusBarWidget(val project: Project) : StatusBarWidget, StatusB
 
         val prefix = sessionService.environmentInfo.let {
             when(it.environment) {
-                "prod", "unknown" -> "CodeStream: "
+                "prod", "us", "eu", "unknown" -> "CodeStream: "
                 else -> "${it.environment.toUpperCase()}: "
             }
         }

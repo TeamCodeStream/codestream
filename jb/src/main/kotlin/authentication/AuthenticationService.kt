@@ -107,13 +107,13 @@ class AuthenticationService(val project: Project) {
         }
     }
 
-    suspend fun logout() {
+    suspend fun logout(newServerUrl: String? = null) {
         val agent = project.agentService ?: return
         val session = project.sessionService ?: return
         val settings = project.settingsService ?: return
 
         session.logout()
-        agent.restart()
+        agent.restart(newServerUrl)
         settings.state.teamId = null
         saveAccessToken(null)
     }
