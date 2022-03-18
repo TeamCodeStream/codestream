@@ -1773,9 +1773,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	addMethodName(
 		groupedByTransactionName: Dictionary<Span[]>,
-		arr: { metricTimesliceName: string }[]
+		metricTimesliceNames: { metricTimesliceName: string }[]
 	) {
-		return arr.map((_: any) => {
+		return metricTimesliceNames.map((_: any) => {
 			const indexOfColon = _.metricTimesliceName ? _.metricTimesliceName.indexOf(":") : -1;
 
 			const additionalMetadata = {} as any;
@@ -1796,15 +1796,19 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			let className = undefined;
 			let functionName =
 				indexOfColon > -1 ? _.metricTimesliceName.slice(indexOfColon + 1) : undefined;
-			const indexOfDot = functionName ? functionName.indexOf(".") : -1;
-			if (indexOfDot > -1) {
-				// account for a className here
-				const split = functionName.split(".");
-				const fn = split.pop();
-				functionName = fn;
-				if (split.length) {
-					className = split.pop();
+			if (functionName) {
+				const indexOfDot = functionName ? functionName.indexOf(".") : -1;
+				if (indexOfDot > -1) {
+					// account for a className here
+					const split = functionName.split(".");
+					const fn = split.pop();
+					functionName = fn;
+					if (split.length) {
+						className = split.pop();
+					}
 				}
+			} else if (_.metricTimesliceName) {
+				functionName = _.metricTimesliceName.split(".").pop();
 			}
 
 			return {
@@ -3238,12 +3242,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 }
 
 export interface Span {
-	"code.namespace": string | null;
-	"code.lineno": number | null;
-	"transaction.name": string | null;
+	"code.filepath"?: string | null;
+	"code.function"?: string | null;
+	"code.namespace"?: string | null;
+	"code.lineno"?: number | null;
+	"transaction.name"?: string | null;
 	name?: string;
-	traceId: string;
-	transactionId: string;
+	traceId?: string;
+	transactionId?: string;
 	timestamp?: number;
 }
 

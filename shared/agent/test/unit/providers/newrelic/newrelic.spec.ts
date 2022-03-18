@@ -183,6 +183,44 @@ describe("NewRelicProvider", async () => {
 		]);
 	});
 
+	it("addMethodName2", async () => {
+		const provider = new NewRelicProviderStub({} as any, {} as any);
+		const results = provider.addMethodName(
+			{
+				"Celery/foo_bar.system.tasks.bill_credit_payment_item": [
+					{
+						"code.filepath": "/app/foo_bar/system/tasks.py",
+						"code.function": "bill_credit_payment_item",
+						"code.lineno": 27,
+						"code.namespace": "foo_bar.system.tasks",
+						timestamp: 1647628200280
+					}
+				]
+			},
+			[
+				{
+					metricTimesliceName:
+						"OtherTransaction/Celery/foo_bar.system.tasks.bill_credit_payment_item"
+				}
+			]
+		);
+
+		expect(results).to.deep.eq([
+			{
+				className: undefined,
+				metricTimesliceName:
+					"OtherTransaction/Celery/foo_bar.system.tasks.bill_credit_payment_item",
+				metadata: {
+					"code.lineno": 27,
+					"code.namespace": "foo_bar.system.tasks",
+					traceId: undefined,
+					transactionId: undefined
+				},
+				functionName: "bill_credit_payment_item"
+			}
+		]);
+	});
+
 	it("getFileLevelTelemetry", async () => {
 		const serviceLocatorStub = {
 			git: {
