@@ -488,23 +488,56 @@ class FileLevelTelemetryParams(
     val options: FileLevelTelemetryOptions?
 )
 
-class MethodLevelTelemetryThroughput(
-    val requestsPerMinute: Float,
+class MethodLevelTelemetrySymbolIdentifier(
+    val className: String?,
+    val functionName: String
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MethodLevelTelemetrySymbolIdentifier) return false
+
+        if (className != other.className) return false
+        if (functionName != other.functionName) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = className?.hashCode() ?: 0
+        result = 31 * result + functionName.hashCode()
+        return result
+    }
+}
+
+open class MethodLevelTelemetryData(
+    val className: String?,
     val functionName: String,
     val metricTimesliceName: String
-)
+) {
+    val symbolIdentifier: MethodLevelTelemetrySymbolIdentifier
+        get() = MethodLevelTelemetrySymbolIdentifier(className, functionName)
+}
+
+class MethodLevelTelemetryThroughput (
+    className: String?,
+    functionName: String,
+    metricTimesliceName: String,
+    val requestsPerMinute: Float
+) : MethodLevelTelemetryData(className, functionName, metricTimesliceName)
 
 class MethodLevelTelemetryAverageDuration(
-    val averageDuration: Float,
-    val functionName: String,
-    val metricTimesliceName: String
-)
+    className: String?,
+    functionName: String,
+    metricTimesliceName: String,
+    val averageDuration: Float
+) : MethodLevelTelemetryData(className, functionName, metricTimesliceName)
 
 class MethodLevelTelemetryErrorRate(
-    val errorsPerMinute: Float,
-    val functionName: String,
-    val metricTimesliceName: String
-)
+    className: String?,
+    functionName: String,
+    metricTimesliceName: String,
+    val errorsPerMinute: Float
+) : MethodLevelTelemetryData(className, functionName, metricTimesliceName)
 
 class FileLevelTelemetryResult(
     var error: FileLevelTelemetryResultError?,

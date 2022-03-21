@@ -9,6 +9,7 @@ import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
+import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
@@ -101,7 +102,7 @@ class MLTMetrics {
 class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSignalListener, Disposable {
     private val path = editor.document.file?.path
     private val project = editor.project
-    private val metricsByFunction = mutableMapOf<String, MLTMetrics>()
+    private val metricsBySymbol = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, MLTMetrics>()
     private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
     private var analyticsTracked = false
@@ -129,18 +130,18 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSigna
                                 path, LANGUAGE_ID, null, null, null, resetCache, OPTIONS
                             )
                         )
-                        metricsByFunction.clear()
+                        metricsBySymbol.clear()
 
                         lastResult?.errorRate?.forEach { errorRate ->
-                            val metrics = metricsByFunction.getOrPut(errorRate.functionName) { MLTMetrics() }
+                            val metrics = metricsBySymbol.getOrPut(errorRate.symbolIdentifier) { MLTMetrics() }
                             metrics.errorRate = errorRate
                         }
                         lastResult?.averageDuration?.forEach { averageDuration ->
-                            val metrics = metricsByFunction.getOrPut(averageDuration.functionName) { MLTMetrics() }
+                            val metrics = metricsBySymbol.getOrPut(averageDuration.symbolIdentifier) { MLTMetrics() }
                             metrics.averageDuration = averageDuration
                         }
                         lastResult?.throughput?.forEach { throughput ->
-                            val metrics = metricsByFunction.getOrPut(throughput.functionName) { MLTMetrics() }
+                            val metrics = metricsBySymbol.getOrPut(throughput.symbolIdentifier) { MLTMetrics() }
                             metrics.throughput = throughput
                         }
 
@@ -196,15 +197,22 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSigna
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
         val pyFile = psiFile as? PyFile ?: return
         val since = result.sinceDateFormatted ?: "30 minutes ago"
-        metricsByFunction.forEach { (functionName, metrics) ->
-            val pyFunction = pyFile.findTopLevelFunction(functionName) ?: return@forEach
+        metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
+            val symbol = if (symbolIdentifier.className != null) {
+                val clazz = pyFile.findTopLevelClass(symbolIdentifier.className)
+                clazz?.findMethodByName(symbolIdentifier.functionName, false, null)
+            } else {
+                pyFile.findTopLevelFunction(symbolIdentifier.functionName)
+            }
+            if (symbol == null) return@forEach
+
             val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val textPresentation = presentationFactory.text(text)
             val referenceOnHoverPresentation =
                 presentationFactory.referenceOnHover(textPresentation, object : ClickListener {
                     override fun onClick(event: MouseEvent, translated: Point) {
-                        val start = editor.document.lspPosition(pyFunction.textRange.startOffset)
-                        val end = editor.document.lspPosition(pyFunction.textRange.endOffset)
+                        val start = editor.document.lspPosition(symbol.textRange.startOffset)
+                        val end = editor.document.lspPosition(symbol.textRange.endOffset)
                         val range = Range(start, end)
                         project.codeStream?.show {
                             project.webViewService?.postNotification(
@@ -216,7 +224,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSigna
                                     result.relativeFilePath,
                                     LANGUAGE_ID,
                                     range,
-                                    functionName,
+                                    symbolIdentifier.functionName,
                                     result.newRelicAccountId,
                                     result.newRelicEntityGuid,
                                     OPTIONS,
@@ -227,7 +235,7 @@ class MLTPythonEditorManager(val editor: Editor) : DocumentListener, GoldenSigna
                     }
                 })
             val renderer = PresentationRenderer(referenceOnHoverPresentation)
-            val inlay = editor.inlayModel.addBlockElement(pyFunction.startOffset, false, true, 1, renderer)
+            val inlay = editor.inlayModel.addBlockElement(symbol.startOffset, false, true, 1, renderer)
             inlay.let {
                 inlays.add(it)
                 if (!analyticsTracked) {
