@@ -97,7 +97,7 @@ export function CreateCompanyPage() {
 			const currentHost =
 				derivedState.environmentHosts &&
 				derivedState.environmentHosts.find(host => host.shortName === derivedState.environment);
-			if (derivedState.environmentHosts && currentHost && region !== currentHost.name) {
+			if (derivedState.environmentHosts && currentHost && region && region !== currentHost.name) {
 				const selectedHost = derivedState.environmentHosts.find(host => host.name === region);
 				if (selectedHost) {
 					// what's not to love about code like this?
