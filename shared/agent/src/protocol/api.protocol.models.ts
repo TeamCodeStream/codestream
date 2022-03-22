@@ -728,6 +728,7 @@ export interface CSMePreferences {
 	telemetryOptOut?: boolean;
 	notifications?: CSNotificationPreference;
 	notificationDelivery?: CSNotificationDeliveryPreference;
+	toastPrNotify?: boolean;
 	skipWallToWallBanner?: boolean;
 	skipGitEmailCheck?: boolean;
 	skipEmailingAuthors?: boolean;

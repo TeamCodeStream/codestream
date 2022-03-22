@@ -29,6 +29,7 @@ SOFTWARE.
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
  */
 import { debounce as _debounce, memoize as _memoize } from "lodash-es";
+import { setInterval } from "timers";
 import { CancellationToken } from "vscode-jsonrpc";
 
 export interface IDeferrable {
@@ -388,5 +389,19 @@ export namespace Functions {
 		} catch (e) {
 			return;
 		}
+	}
+
+	/**
+	 * Convenience function to call a function with a different initial delay and repeat delay
+	 * @param callback The function to call
+	 * @param initialDelayMs Initial delay for calling the function for the first time
+	 * @param repeatMs Regular interval to call function repeatedly (note initialDelayMs doesn't add to the first repeatMs)
+	 * @param args Optional args to pass to the function
+	 */
+	export function repeatInterval(callback: (...args: any[]) => void,
+								   initialDelayMs: number,
+								   repeatMs: number, ...args: any[]): NodeJS.Timer {
+		setTimeout(callback, initialDelayMs, args);
+		return setInterval(callback, repeatMs, args);
 	}
 }
