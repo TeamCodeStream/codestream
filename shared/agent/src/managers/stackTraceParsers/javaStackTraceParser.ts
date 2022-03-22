@@ -2,11 +2,14 @@
 
 import { CSStackTraceInfo } from "../../protocol/api.protocol.models";
 import { Strings } from "../../system/string";
+import { Logger } from "../../logger";
 
 let regex: RegExp;
 
 export function Parser(stack: string): CSStackTraceInfo {
 	const info: CSStackTraceInfo = { lines: [] };
+
+	Logger.log(`Stacktrace to be parsed by javaStackTraceParser.ts: ${stack}`);
 
 	if (!regex) {
 		// NOTE: there's no great way to have a multiline regex in js (except for this hackery ;)
@@ -16,7 +19,7 @@ export function Parser(stack: string): CSStackTraceInfo {
 			\s*
 			(at)? // at
 			\s+
-			((?:(?:[\d\w\/]*\.)*[\d\w\/]*))\. // package
+			((?:(?:[\d\w\/\@]*\.)*[\d\w\/]*))\. // package
 			([\d\w\$]*)\. // class
 			([\d\w\$]*) // method
 			\(
