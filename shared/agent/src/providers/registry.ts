@@ -157,7 +157,7 @@ export class ThirdPartyProviderRegistry {
 
 	initialize(session: CodeStreamSession) {
 		this.session = session;
-		this._pollingInterval = Functions.repeatInterval(this.pullRequestsStateHandler.bind(this), 2000,  300000); // every 5 minutes
+		this._pollingInterval = Functions.repeatInterval(this.pullRequestsStateHandler.bind(this), 2000,  900000); // every 15 minutes
 		return this;
 	}
 
