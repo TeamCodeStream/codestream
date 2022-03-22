@@ -488,26 +488,10 @@ class FileLevelTelemetryParams(
     val options: FileLevelTelemetryOptions?
 )
 
-class MethodLevelTelemetrySymbolIdentifier(
+data class MethodLevelTelemetrySymbolIdentifier(
     val className: String?,
     val functionName: String
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is MethodLevelTelemetrySymbolIdentifier) return false
-
-        if (className != other.className) return false
-        if (functionName != other.functionName) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = className?.hashCode() ?: 0
-        result = 31 * result + functionName.hashCode()
-        return result
-    }
-}
+)
 
 open class MethodLevelTelemetryData(
     val className: String?,
