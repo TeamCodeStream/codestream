@@ -1,5 +1,25 @@
 # Change Log
 
+## [12.13.0] - 2022-3-22
+
+### Added
+
+- Adds a setting on the Notifications page to control desktop notifications for pull request assignments
+
+### Changed
+
+- Application type is now display for each service in the entity-selection dropdowns in the Observability section
+- All personal access token fields are now treated like masked password fields when connection to various services
+- Improved validation messages when attempting to load a PR from URL
+
+### Fixed
+
+- Fixes an issue where issues wouldn't appear in the Issues section of the CodeStream pane without clicking Refresh
+- Fixes an issue with the parsing of Java filepaths in stack traces for errors 
+- Fixes an issue with broken images in the bot checks section of PRs
+- Addresses [#889](https://github.com/TeamCodeStream/CodeStream/issues/889) &mdash; Comment thread status (Resolved/Unresolved) are incorrect initially or if changed externally
+- Addresses [#898](https://github.com/TeamCodeStream/CodeStream/issues/898) &mdash; "404 Project Not found" when creating new merge request
+
 ## [12.12.0] - 2022-3-1
 
 ### Changed
