@@ -26,6 +26,7 @@ export interface ProviderDisplay {
 
 	supportsPRManagement?: boolean;
 	versionMinimum?: string;
+	invalidHosts?: Array<string>;
 
 	helpPATUrl?: string;
 	namePAT?: string;
@@ -55,7 +56,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "bitbucket",
 		urlPlaceholder: "https://bitbucket.myorg.com",
 		helpUrl:
-			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html"
+			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html",
+		invalidHosts: ['bitbucket.org']
 	},
 	clubhouse: {
 		displayName: "Clubhouse",
@@ -111,7 +113,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customPullRequestFilterHelpLink:
 			"https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#github",
 		supportsStartWork: true,
-		supportsPRManagement: true
+		supportsPRManagement: true,
+		invalidHosts: ["github.com"]
 	},
 	gitlab: {
 		displayName: "GitLab",
@@ -150,7 +153,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			"https://docs.newrelic.com/docs/codestream/how-use-codestream/pull-requests#gitlab",
 		supportsStartWork: true,
 		supportsPRManagement: true,
-		versionMinimum: "12.10"
+		versionMinimum: "12.10",
+		invalidHosts: ["gitlab.com"]
 	},
 	jira: {
 		displayName: "Jira",
@@ -168,7 +172,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	jiraserver: {
 		displayName: "Jira Server",
 		icon: "jira",
-		urlPlaceholder: "https://jira.myorg.com",
+		urlPlaceholder: "https://mycompany.com/jira",
 		boardLabel: "project",
 		listLabel: "type",
 		cardLabel: "ticket",
@@ -177,7 +181,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: assignee=currentuser() AND status!=Closed",
 		customFilterHelp:
 			'See <a href="https://confluence.atlassian.com/jirasoftwareserver/advanced-searching-939938733.html">Jira Advanced Searching</a> for documentation on JQL. ',
-		hasCardBasedWorkflow: true
+		hasCardBasedWorkflow: true,
+		invalidHosts: ["atlassian.net"]
 	},
 	trello: {
 		displayName: "Trello",

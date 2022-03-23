@@ -6,11 +6,19 @@ import { configureProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import UrlInputComponent from "@codestream/webview/Stream/UrlInputComponent";
+import { normalizeUrl } from "@codestream/webview/utilities/urls";
 
 export class ConfigureEnterprisePanel extends Component {
+	constructor(props) {
+		super(props);
+		const { name } = props.provider;
+		this.providerDisplay = PROVIDER_MAPPINGS[name];
+	}
+
 	initialState = {
 		baseUrl: "",
-		baseUrlTouched: false,
+		baseUrlValid: false,
 		token: "",
 		tokenTouched: false,
 		formTouched: false
@@ -29,17 +37,13 @@ export class ConfigureEnterprisePanel extends Component {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		const { baseUrl, token } = this.state;
-
-		let url = baseUrl.trim().toLowerCase();
-		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, "");
+		const { token, baseUrl } = this.state;
 
 		// configuring is as good as connecting, since we are letting the user
 		// set the access token
 		this.props.configureProvider(
 			providerId,
-			{ baseUrl: url, token },
+			{ baseUrl: normalizeUrl(baseUrl), token },
 			true,
 			this.props.originLocation
 		);
@@ -47,17 +51,6 @@ export class ConfigureEnterprisePanel extends Component {
 	};
 
 	renderError = () => {};
-
-	onBlurBaseUrl = () => {
-		this.setState({ baseUrlTouched: true });
-	};
-
-	renderBaseUrlHelp = () => {
-		const { baseUrl, baseUrlTouched, formTouched } = this.state;
-		if (baseUrlTouched || formTouched) {
-			if (baseUrl.length === 0) return <small className="error-message">Required</small>;
-		}
-	};
 
 	onBlurToken = () => {
 		this.setState({ tokenTouched: true });
@@ -73,71 +66,49 @@ export class ConfigureEnterprisePanel extends Component {
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
+		return this.state.baseUrl.length === 0 || this.state.token.length === 0 || !this.state.baseUrlValid
 	};
 
 	render() {
-		const { providerId } = this.props;
 		const inactive = false;
-		const { name, scopes } = this.props.providers[providerId] || {};
-		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const providerShortName = PROVIDER_MAPPINGS[name]
-			? PROVIDER_MAPPINGS[name].shortDisplayName || providerName
-			: "";
-		const placeholder = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].urlPlaceholder : "";
-		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
-		const helpUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].helpUrl : "";
-		const versionMinimum = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].versionMinimum : "";
+		const { scopes } = this.props.provider;
+		const { displayName, urlPlaceholder, getUrl, helpUrl, versionMinimum, invalidHosts } = this.providerDisplay;
+		const providerShortName = this.providerDisplay.shortDisplayName || displayName;
 		return (
 			<div className="panel configure-provider-panel">
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
 					<div className="panel-header">
 						<CancelButton onClick={this.props.closePanel} />
-						<span className="panel-title">Configure {providerName}</span>
+						<span className="panel-title">Configure {displayName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
 						{getUrl && (
 							<p style={{ textAlign: "center" }} className="explainer">
-								Not a {providerName} customer yet? <a href={getUrl}>Get {providerName}</a>
+								Not a {displayName} customer yet? <a href={getUrl}>Get {displayName}</a>
 							</p>
 						)}
 						{versionMinimum && (
 							<p style={{ textAlign: "center" }} className="explainer">
-								Requires {providerName} v12.10 or later.{" "}
+								Requires {displayName} v12.10 or later.{" "}
 								<a href="https://docs.newrelic.com/docs/codestream/troubleshooting/glsm-version/">
 									Check your version
 								</a>
 								.
 							</p>
 						)}
-						<br />
+						<br/>
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-enterprise-controls" className="control-group">
-								<div>
-									<label>
-										<strong>{providerShortName} Base URL</strong>
-									</label>
-									<label>
-										Please provide the Base URL used by your team to access {providerShortName}.
-									</label>
-									<input
-										className="native-key-bindings input-text control"
-										type="text"
-										name="baseUrl"
-										tabIndex={this.tabIndex()}
-										value={this.state.baseUrl}
-										onChange={e => this.setState({ baseUrl: e.target.value })}
-										onBlur={this.onBlurBaseUrl}
-										required={this.state.baseUrlTouched || this.state.formTouched}
-										placeholder={placeholder}
-										required={true}
-										id="configure-provider-initial-input"
-									/>
-									{this.renderBaseUrlHelp()}
-									<br />
-									<br />
-								</div>
+								<UrlInputComponent
+									providerShortName={providerShortName}
+									invalidHosts={invalidHosts}
+									tabIndex={this.tabIndex()}
+									formTouched={this.state.formTouched}
+									value={this.state.baseUrl}
+									onChange={value => this.setState({ baseUrl: value })}
+									onValidChange={valid => this.setState({baseUrlValid: valid})}
+									placeholder={urlPlaceholder}/>
 							</div>
 							<div key="token" id="configure-enterprise-controls-token" className="control-group">
 								<label>
@@ -193,8 +164,9 @@ export class ConfigureEnterprisePanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers, ide }) => {
-	return { providers, isInVscode: ide.name === "VSC" };
+const mapStateToProps = ({ providers, ide }, ownProps) => {
+	const provider = providers[ownProps.providerId];
+	return { provider, isInVscode: ide.name === "VSC" };
 };
 
 export default connect(mapStateToProps, { closePanel, configureProvider, connectProvider })(
