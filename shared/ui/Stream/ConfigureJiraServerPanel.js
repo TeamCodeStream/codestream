@@ -7,11 +7,19 @@ import { setIssueProvider } from "../store/context/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import UrlInputComponent from "@codestream/webview/Stream/UrlInputComponent";
+import { normalizeUrl } from "@codestream/webview/utilities/urls";
 
 export class ConfigureJiraServerPanel extends Component {
+	constructor(props) {
+		super(props);
+		const { name } = props.provider;
+		this.providerDisplay = PROVIDER_MAPPINGS[name];
+	}
+
 	initialState = {
 		baseUrl: "",
-		baseUrlTouched: false,
+		baseUrlValid: false,
 		token: "",
 		tokenTouched: false,
 		formTouched: false
@@ -30,17 +38,13 @@ export class ConfigureJiraServerPanel extends Component {
 		const { providerId } = this.props;
 		const { token, baseUrl } = this.state;
 
-		let url = baseUrl.trim().toLowerCase();
-		url = url.match(/^http/) ? url : `https://${url}`;
-		url = url.replace(/\/*$/g, "");
-
 		// configuring is as good as connecting, since we are letting the user
 		// set the access token ... sending the fourth argument as true here lets the
 		// configureProvider function know that they can mark Kora as connected as soon
 		// as the access token entered by the user has been saved to the server
 		this.props.configureProvider(
 			providerId,
-			{ token, baseUrl: url },
+			{ token, baseUrl: normalizeUrl(baseUrl) },
 			true,
 			this.props.originLocation
 		);
@@ -60,32 +64,10 @@ export class ConfigureJiraServerPanel extends Component {
 			if (token.length === 0) return <small className="error-message">Required</small>;
 	};
 
-	onBlurBaseUrl = () => {
-		this.setState({ baseUrlTouched: true });
-	};
-
-	renderBaseUrlHelp = () => {
-		const { baseUrl, baseUrlTouched, formTouched } = this.state;
-		if (baseUrlTouched || formTouched) {
-			if (baseUrl.length === 0) return <small className="error-message">Required</small>;
-		}
-	};
-
-	onBlurBaseUrl = () => {
-		this.setState({ baseUrlTouched: true });
-	};
-
-	renderBaseUrlHelp = () => {
-		const { baseUrl, baseUrlTouched, formTouched } = this.state;
-		if (baseUrlTouched || formTouched) {
-			if (baseUrl.length === 0) return <small className="error-message">Required</small>;
-		}
-	};
-
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return this.state.baseUrl.length === 0 || this.state.token.length === 0;
+		return this.state.baseUrl.length === 0 || this.state.token.length === 0 || !this.state.baseUrlValid;
 	};
 
 	handleOldJiraServerClick = e => {
@@ -94,18 +76,15 @@ export class ConfigureJiraServerPanel extends Component {
 	};
 
 	render() {
-		const { providerId } = this.props;
 		const inactive = false;
-		const { name } = this.props.providers[providerId] || {};
-		const providerName = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].displayName : "";
-		const placeholder = "https://myteam.atlassian.net";
-		const getUrl = PROVIDER_MAPPINGS[name] ? PROVIDER_MAPPINGS[name].getUrl : "";
+		const { displayName, urlPlaceholder, invalidHosts } = this.providerDisplay;
+		const providerShortName = this.providerDisplay.shortDisplayName || displayName;
 		return (
 			<div className="panel configure-provider-panel">
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
 					<div className="panel-header">
 						<CancelButton onClick={this.props.closePanel} />
-						<span className="panel-title">Configure {providerName}</span>
+						<span className="panel-title">Configure {displayName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
 						<p style={{ textAlign: "center" }} className="explainer">
@@ -116,29 +95,19 @@ export class ConfigureJiraServerPanel extends Component {
 						{this.renderError()}
 						<div id="controls">
 							<div id="configure-jira-controls" className="control-group">
-								<label>
-									<strong>{providerName} Base URL</strong>
-								</label>
-								<label>Please provide the URL used by your team to access Jira Server.</label>
-								<input
-									className="input-text control"
-									type="text"
-									name="baseUrl"
+								<UrlInputComponent
+									providerShortName={providerShortName}
+									invalidHosts={invalidHosts}
 									tabIndex={this.tabIndex()}
-									value={this.state.baseUrl}
-									onChange={e => this.setState({ baseUrl: e.target.value })}
-									onBlur={this.onBlurBaseUrl}
-									required={this.state.baseUrlTouched || this.state.formTouched}
-									placeholder={placeholder}
-									required={true}
-									id="configure-provider-initial-input"
-								/>
-								{this.renderBaseUrlHelp()}
+									formTouched={this.state.formTouched}
+									onChange={value => this.setState({ baseUrl: value })}
+									onValidChange={valid => this.setState({baseUrlValid: valid})}
+									placeholder={urlPlaceholder}/>
 							</div>
 							<br />
 							<div id="token-controls" className="control-group">
 								<label>
-									<strong>{providerName} API token</strong>
+									<strong>{displayName} API token</strong>
 								</label>
 								<label>
 									Please provide an{" "}
@@ -187,9 +156,10 @@ export class ConfigureJiraServerPanel extends Component {
 	}
 }
 
-const mapStateToProps = ({ providers, users, session }) => {
+const mapStateToProps = ({ providers, users, session }, ownProps) => {
 	const currentUser = users[session.userId];
-	return { providers, currentUser };
+	const provider = providers[ownProps.providerId];
+	return { provider, currentUser };
 };
 
 export default connect(mapStateToProps, {

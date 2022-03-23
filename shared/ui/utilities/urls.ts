@@ -66,3 +66,21 @@ export const parseProtocol = function(uriString: string | undefined): Route | un
 		query: parsedQuery
 	};
 };
+
+export const parseHost = function(url: string): string | null {
+    url = url.trim();
+    if (!url) {
+        return null;
+    }
+    if (!url.startsWith("http")) {
+        url = `https://${url}`;
+    }
+    const parsed = URI.parse(url);
+    return parsed.authority ? parsed.authority : null;
+};
+
+export const normalizeUrl = function(url: string): string | null {
+	url = url.trim().toLowerCase();
+	url = url.match(/^http/) ? url : `https://${url}`;
+	return url.replace(/\/*$/g, "");
+}
