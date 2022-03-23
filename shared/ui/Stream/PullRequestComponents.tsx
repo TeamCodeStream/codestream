@@ -674,7 +674,7 @@ export const PRContent = styled.div`
 			${PRComment} ${PRHeadshot}, 
 			${PRComment} ${Headshot}, 
 			${PRStatusHeadshot} {
-				display: none;
+				display: none; // ERIC THIS ONE
 			}
 			${PRActionCommentCard},
 			${PRCommentCard} {

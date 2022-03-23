@@ -120,7 +120,9 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	return (
 		<div>
 			<PRComment style={{ marginTop: "10px" }}>
+				HELLO WORLD 1
 				<PRHeadshot person={pr.author} size={40} />
+				HELLO WORLD 2
 				<PRCommentCard className="dark-header">
 					<PRCommentHeader>
 						<div>

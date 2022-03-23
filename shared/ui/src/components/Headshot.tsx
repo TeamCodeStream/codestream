@@ -237,6 +237,7 @@ export const PRHeadshot = styled((props: PRHeadshotProps) => {
 				hardRightBorder={props.hardRightBorder}
 				onClick={props.onClick}
 				display={props.display}
+				className={props.className}
 			>
 				<Initials hardRightBorder={props.hardRightBorder} size={size} color={Colors[1]}>
 					{initials}

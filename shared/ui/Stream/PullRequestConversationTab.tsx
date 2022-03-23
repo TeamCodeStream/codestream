@@ -1537,8 +1537,8 @@ export const PullRequestConversationTab = (props: {
 							))}
 					</PRHeadshots>
 				</PRSection>
-				<PRSection style={{ borderBottom: "none" }}>
-					{pr.viewerCanUpdate && (
+				{pr.viewerCanUpdate && (
+					<PRSection style={{ borderBottom: "none" }}>
 						<h1 style={{ margin: 0 }}>
 							{pr.locked ? (
 								<a onClick={() => setIsLocking(true)} style={{ display: "flex" }}>
@@ -1552,8 +1552,8 @@ export const PullRequestConversationTab = (props: {
 								</a>
 							)}
 						</h1>
-					)}
-				</PRSection>
+					</PRSection>
+				)}
 			</PRSidebar>
 		</PRContent>
 	);
