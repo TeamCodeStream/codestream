@@ -120,7 +120,7 @@ export class GitRemoteParser {
 		httpOrSshEndpoint: string
 	): Promise<
 		{
-			type: "ssh" | "https" | string;
+			type: "ssh" | "https" | "git";
 			value: string;
 		}[]
 	> {
@@ -139,11 +139,15 @@ export class GitRemoteParser {
 				results.push({ type: "ssh", value: `ssh://${httpOrSshEndpoint}` });
 				results.push({ type: "https", value: `https://${parsed[1]}/${parsed[2]}.git` });
 				results.push({ type: "https", value: `https://${parsed[1]}/${parsed[2]}` });
+				// support for github.repositoryUrl context https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+				results.push({ type: "git", value: `git://${parsed[1]}/${parsed[2]}.git` });
 			} else if (httpOrSshEndpoint.indexOf("http") === 0) {
 				results.push({ type: "https", value: httpOrSshEndpoint });
 				if (httpOrSshEndpoint.indexOf(".git") > -1) {
 					results.push({ type: "https", value: httpOrSshEndpoint.replace(".git", "") });
 				}
+				// support for github.repositoryUrl context https://docs.github.com/en/actions/learn-github-actions/contexts#github-context
+				results.push({ type: "git", value: `git://${parsed[1]}/${parsed[2]}.git` });
 				results.push({ type: "ssh", value: `git@${parsed[1]}:${parsed[2]}.git` });
 				results.push({ type: "ssh", value: `ssh://git@${parsed[1]}/${parsed[2]}.git` });
 			}
