@@ -218,7 +218,7 @@ export class ThirdPartyProviderRegistry {
         const result = (notificationDelivery === CSNotificationDeliveryPreference.ToastOnly ||
             notificationDelivery === CSNotificationDeliveryPreference.All) && toastPrNotify;
 		if (!result) {
-			Logger.warn(`Skipping PR toast notify due to user settings notificationDelivery: ${notificationDelivery}, toastPrNotify: ${toastPrNotify}`);
+			Logger.log(`Skipping PR toast notify due to user settings notificationDelivery: ${notificationDelivery}, toastPrNotify: ${toastPrNotify}`);
 		}
 		return result;
     }
@@ -299,7 +299,7 @@ export class ThirdPartyProviderRegistry {
 				data: prNotificationMessages
 			});
 		} else {
-			Logger.warn("Will not notify of new PRs - no changes detected");
+			Logger.log("Will not notify of new PRs - no changes detected");
 		}
 	}
 
