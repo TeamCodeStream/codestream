@@ -1046,6 +1046,7 @@ export const GetObservabilityReposRequestType = new RequestType<
 export interface GetObservabilityEntitiesRequest {
 	appName?: string;
 	appNames?: string[];
+	resetCache?: boolean;
 }
 export interface GetObservabilityEntitiesResponse {
 	entities: { guid: string; name: string }[];

@@ -252,7 +252,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const _useDidMount = () => {
+	const _useDidMount = (force: boolean = false) => {
 		if (!derivedState.newRelicIsConnected) return;
 
 		setLoadingEntities(true);
@@ -282,7 +282,8 @@ export const Observability = React.memo((props: Props) => {
 						}
 						HostApi.instance
 							.send(GetObservabilityEntitiesRequestType, {
-								appNames: response?.repos?.map(r => r.repoName)
+								appNames: response?.repos?.map(r => r.repoName),
+								resetCache: force
 							})
 							.then(_ => {
 								setHasEntities(!_isEmpty(_.entities));
@@ -610,7 +611,7 @@ export const Observability = React.memo((props: Props) => {
 							placement="bottom"
 							delay={1}
 							onClick={e => {
-								_useDidMount();
+								_useDidMount(true);
 							}}
 						/>
 						<InlineMenu

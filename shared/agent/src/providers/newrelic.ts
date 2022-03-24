@@ -110,6 +110,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _memoizedBuildRepoRemoteVariants: any;
 	private _codeStreamUser: CSMe | undefined = undefined;
 	private _mltTimedCache: any;
+	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
 
 	constructor(session: CodeStreamSession, config: ThirdPartyProviderConfig) {
 		super(session, config);
@@ -430,23 +431,29 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
+	generateEntityQueryStatements(name: string): string[] | undefined {
+		if (!name) return undefined;
 
-	private generateEntityQueryStatements(appName: string): string[] {
-		let statements = [];
-		statements.push(`name LIKE '${Strings.sanitizeGraphqlValue(appName)}'`);
-		const splitAppName = appName.split(/[\-\_]+/);
-		if (splitAppName.length > 1) {
-			for (let i = 0; i < splitAppName.length; i++) {
-				const val = splitAppName[i];
+		const statements = [`name LIKE '%${Strings.sanitizeGraphqlValue(name)}%'`];
+		const splitName = name.split(/[\-\_\\/]+/);
+		if (splitName.length > 1) {
+			for (let i = 0; i < splitName.length; i++) {
+				const val = splitName[i];
 				if (val && val.length < 2) continue;
 
-				statements.push(`name LIKE '${Strings.sanitizeGraphqlValue(val)}'`);
+				statements.push(`name LIKE '%${Strings.sanitizeGraphqlValue(val)}%'`);
 			}
 		}
 		return statements;
 	}
 
+	/**
+	 * Returns a list of entities, using an appName or appNames as query params
+	 * NOTE: we don't get all entities since we're capped at 500 results per, and
+	 * some accounts/orgs have over 20k entities.
+	 * @param request
+	 * @returns GetObservabilityEntitiesResponse
+	 */
 	@lspHandler(GetObservabilityEntitiesRequestType)
 	@log({
 		timed: true
@@ -454,28 +461,31 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getEntities(
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
-		const response = {
-			entities: []
-		} as GetObservabilityEntitiesResponse;
 		try {
 			const key = request.appName
 				? request.appName
 				: request.appNames?.length
 				? request.appNames.join("-")
 				: "";
+
 			if (this._applicationEntitiesCache != null) {
-				const cached = this._applicationEntitiesCache[key];
-				if (cached) {
-					ContextLogger.debug("query entities (from cache)", {
+				if (request.resetCache) {
+					ContextLogger.debug("query entities (resetting cache)", {
 						key: key
 					});
-					return cached;
+					delete this._applicationEntitiesCache[key];
+				} else {
+					const cached = this._applicationEntitiesCache[key];
+					if (cached) {
+						ContextLogger.debug("query entities (from cache)", {
+							key: key
+						});
+						return cached;
+					}
 				}
 			}
 
 			let results: { guid: string; name: string }[] = [];
-			const nextCursor: any = undefined;
-
 			let statements: string[] = [];
 			if (request.appNames?.length) {
 				for (const appName of request.appNames) {
@@ -493,27 +503,53 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			}
 
-			if (statements.length) {
-				// unique them
-				statements = [...new Set(statements).values()];
+			// try to find entities matching our open repos and/or their remote paths
+			const { scm } = SessionContainer.instance();
+			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
+			reposResponse?.repositories?.forEach(repo => {
+				if (repo?.folder?.name) {
+					const appStatements = this.generateEntityQueryStatements(repo.folder.name);
+					if (appStatements?.length) {
+						statements = statements.concat(appStatements);
+					}
+				}
+				repo.remotes?.forEach(remote => {
+					if (remote.path) {
+						const appStatements = this.generateEntityQueryStatements(remote.path);
+						if (appStatements?.length) {
+							statements = statements.concat(appStatements);
+						}
+					}
+				});
+			});
 
-				const query = `query {
+			if (statements.length) {
+				// unique them!
+				statements = [...new Set(statements).values()].sort();
+
+				const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "type='APPLICATION' and (${statements.join(" or ")})", sortBy:MOST_RELEVANT) {
-					results {
+				  entitySearch(query: "type='APPLICATION' and (${statements.join(" or ")})") {
+					count
+					results(cursor:$cursor) {
 					  entities {
 						guid
 						name
 						account {
 							name
 						  }
-						}						
+						}
 					  }
 					}
 				  }
 			  }`;
-				const response = await this.query<any>(query);
-				if (response) {
+
+				let nextCursor: undefined | boolean | string = true;
+				while (nextCursor != null) {
+					const response = (await this.query<EntitySearchResult>(query, {
+						cursor: typeof nextCursor === "string" ? nextCursor : null
+					})) as EntitySearchResult;
+
 					results = results.concat(
 						response.actor.entitySearch.results.entities.map((_: any) => {
 							return {
@@ -522,30 +558,29 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							};
 						})
 					);
+					nextCursor = response.actor.entitySearch.results.nextCursor;
 				}
 			}
 
-			// then find any other relevant apps
-			const response = await this.query<any>(
-				`query search($cursor:String) {
-			actor {
-			  entitySearch(query: "type='APPLICATION'", sortBy:MOST_RELEVANT) {
-				results(cursor:$cursor) {
-				 nextCursor
-				  entities {
-					account {
-						name
-					}
-					guid
-					name
-				  }
-				}
-			  }
-			}
-		  }`,
-				{
-					cursor: nextCursor
-				}
+			// then find any other relevant apps... try looking for MOST_RELEVANT
+			const response = await this.query<EntitySearchResult>(
+				`query search {
+						actor {
+						  entitySearch(query: "type='APPLICATION'", sortBy:MOST_RELEVANT) {
+							results {
+							 nextCursor
+							  entities {
+								account {
+									name
+								}
+								guid
+								name
+							  }
+							}
+						  }
+						}
+					  }`,
+				{}
 			);
 
 			results = results.concat(
@@ -3251,6 +3286,24 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 		return undefined;
 	}
+}
+
+interface EntitySearchResult {
+	actor: {
+		entitySearch: {
+			count: number;
+			results: {
+				nextCursor: string;
+				entities: {
+					account: {
+						name: string;
+					};
+					guid: string;
+					name: string;
+				}[];
+			};
+		};
+	};
 }
 
 export interface Span {

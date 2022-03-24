@@ -324,6 +324,43 @@ describe("NewRelicProvider", async () => {
 			"create_bill_credit_payment_thing"
 		]);
 	});
+
+	it("generateEntityQueryStatements", async () => {
+		const provider = new NewRelicProvider({} as any, {} as any);
+		expect(provider.generateEntityQueryStatements("foo-bar_baz")).to.deep.equal([
+			"name LIKE '%foo-bar_baz%'",
+			"name LIKE '%foo%'",
+			"name LIKE '%bar%'",
+			"name LIKE '%baz%'"
+		]);
+
+		expect(provider.generateEntityQueryStatements("test/foo-bar_baz")).to.deep.equal([
+			"name LIKE '%test/foo-bar_baz%'",
+			"name LIKE '%test%'",
+			"name LIKE '%foo%'",
+			"name LIKE '%bar%'",
+			"name LIKE '%baz%'"
+		]);
+
+		expect(provider.generateEntityQueryStatements("foo\\bar\\baz")).to.deep.equal([
+			"name LIKE '%foo\\bar\\baz%'",
+			"name LIKE '%foo%'",
+			"name LIKE '%bar%'",
+			"name LIKE '%baz%'"
+		]);
+
+		expect(provider.generateEntityQueryStatements("foo/bar")).to.deep.equal([
+			"name LIKE '%foo/bar%'",
+			"name LIKE '%foo%'",
+			"name LIKE '%bar%'"
+		]);
+
+		expect(provider.generateEntityQueryStatements("not~a$separator")).to.deep.equal([
+			"name LIKE '%not~a$separator%'"
+		]);
+
+		expect(provider.generateEntityQueryStatements("")).to.eq(undefined);
+	});
 });
 
 class NewRelicProviderStubBase extends NewRelicProvider {
