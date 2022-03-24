@@ -174,7 +174,7 @@
 					"description": "Specifies how much (if any) output will be sent to the CodeStream output channel",
 					"scope": "window"
 				},
-				"codestream.showGoldenSignalsInEditor": {
+				"codestream.goldenSignalsInEditor": {
 					"type": "boolean",
 					"default": true,
 					"description": "Specifies whether to show CodeStream golden signals in the editor",

@@ -32,7 +32,7 @@ export class InstrumentableCodeLensController implements Disposable {
 	}
 
 	private onAnyChanged() {
-		const cfg = configuration.get<Boolean>(configuration.name("showGoldenSignalsInEditor").value);
+		const cfg = configuration.get<Boolean>(configuration.name("goldenSignalsInEditor").value);
 		if (cfg) {
 			if (this._status === SessionStatus.SignedIn) {
 				this.ensureProvider();
@@ -46,7 +46,7 @@ export class InstrumentableCodeLensController implements Disposable {
 	private onConfigurationChanged(e?: ConfigurationChangeEvent) {
 		if (
 			e &&
-			(configuration.changed(e, "showGoldenSignalsInEditor") ||
+			(configuration.changed(e, "goldenSignalsInEditor") ||
 				configuration.changed(e, "goldenSignalsInEditorFormat"))
 		) {
 			this.onAnyChanged();

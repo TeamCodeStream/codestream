@@ -19,7 +19,7 @@ export interface Config {
 	showInStatusBar: "left" | "right" | false;
 	showMarkerCodeLens: boolean;
 	showMarkerGlyphs: boolean;
-	showGoldenSignalsInEditor: boolean;
+	goldenSignalsInEditor: boolean;
 	showShortcutTipOnSelection: boolean;
 	traceLevel: TraceLevel;
 	showInstrumentationGlyphs?: boolean;
