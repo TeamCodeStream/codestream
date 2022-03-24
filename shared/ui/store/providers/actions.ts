@@ -136,7 +136,7 @@ export const sendIssueProviderConnected = (
 	const { name, host, isEnterprise } = provider;
 	const api = HostApi.instance;
 	api.send(TelemetryRequestType, {
-		eventName: "Issue Service Connected",
+		eventName: "Service Connected",
 		properties: {
 			Service: name,
 			Host: isEnterprise ? host : null,
@@ -154,7 +154,7 @@ export const sendMessagingServiceConnected = (
 	if (!provider) return;
 
 	HostApi.instance.send(TelemetryRequestType, {
-		eventName: "Messaging Service Connected",
+		eventName: "Service Connected",
 		properties: {
 			Service: provider.name,
 			"Connection Location": connectionLocation
@@ -175,14 +175,6 @@ export const configureProvider = (
 	try {
 		const api = HostApi.instance;
 		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, data });
-
-		if (providerId !== "newrelic*com") {
-			api.send(TelemetryRequestType, {
-				eventName: "Issue Service Configured",
-				properties: {
-					Service: provider.name
-				}
-			});
 		}
 
 		// for some providers (YouTrack and enterprise providers with PATs), configuring is as good as connecting,
@@ -213,12 +205,7 @@ export const addEnterpriseProvider = (
 	try {
 		const api = HostApi.instance;
 		const response = await api.send(AddEnterpriseProviderRequestType, { providerId, host, data });
-		api.send(TelemetryRequestType, {
-			eventName: "Issue Service Configured",
-			properties: {
-				Service: provider.name
-			}
-		});
+
 		return response.providerId;
 	} catch (error) {
 		logError(`Failed to add enterprise provider for ${provider.name}: ${error}`);

@@ -1160,7 +1160,7 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 										url: "https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
 									});
 									HostApi.instance.send(TelemetryRequestType, {
-										eventName: "Messaging Service Connected",
+										eventName: "Service Connected",
 										properties: {
 											Service: provider.name,
 											"Connection Location": "Onboard"
