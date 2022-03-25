@@ -132,10 +132,8 @@ class WebViewTheme(val name: String, val stylesheet: String) {
             }
 
             val toolWindowHeaderBackground = JBColor.namedColor("ToolWindow.Header.background", baseBgColor)
-            val toolWindowHeaderInactiveBackground = JBColor.namedColor("ToolWindow.Header.inactiveBackground",
-                baseBgColor)
-            val toolWindowHeaderBorder = JBColor.namedColor("ToolWindow.Header.borderColor",
-                JBColor.namedColor("Borders.ContrastBorderColor", baseBorderColor))
+            val toolWindowHeaderInactiveBackground = Color(0, 0, 0 ,0)
+            val toolWindowHeaderBorder = fg.opacity(20)
             val treeBackground = JBColor.namedColor("Tree.background", baseBgColor)
 
             val listActiveBackground = UIUtil.getListSelectionBackground(true)
