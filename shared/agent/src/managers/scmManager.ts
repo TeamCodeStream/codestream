@@ -166,6 +166,7 @@ export class ScmManager {
 		try {
 			const { git } = SessionContainer.instance();
 			repositories = Array.from(await git.getRepositories());
+			console.warn("eric repositories", repositories);
 			if (request && request.inEditorOnly && repositories) {
 				repositories = repositories.filter(_ => _.isInWorkspace);
 			}
@@ -1591,7 +1592,7 @@ export class ScmManager {
 		try {
 			let fetchReferenceFailed = false;
 			if (repo && request.ref) {
-				fetchReferenceFailed = !await git.fetchReference(repo, request.ref);
+				fetchReferenceFailed = !(await git.fetchReference(repo, request.ref));
 			}
 			const shas = [request.baseSha, request.headSha];
 			const results = await Promise.all(
