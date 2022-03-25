@@ -1591,7 +1591,7 @@ export class ScmManager {
 		try {
 			let fetchReferenceFailed = false;
 			if (repo && request.ref) {
-				fetchReferenceFailed = !await git.fetchReference(repo, request.ref);
+				fetchReferenceFailed = !(await git.fetchReference(repo, request.ref));
 			}
 			const shas = [request.baseSha, request.headSha];
 			const results = await Promise.all(

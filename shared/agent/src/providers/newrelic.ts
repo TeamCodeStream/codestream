@@ -714,7 +714,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					);
 					continue;
 				}
-				const folderName = this.getRepoName(repo);
+				const folderName = this.getRepoName({ path: repo.path });
 
 				if (response.repos.some(_ => _?.repoName === folderName)) {
 					ContextLogger.warn("getObservabilityRepos skipping duplicate repo name", {
@@ -3231,7 +3231,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	private getRepoName(repoLike: { folder: { name?: string; uri: string }; path: string }) {
+	private getRepoName(repoLike: { folder?: { name?: string; uri: string }; path: string }) {
 		try {
 			if (!repoLike) return "repo";
 
