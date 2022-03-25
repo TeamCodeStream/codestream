@@ -462,7 +462,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
 		try {
-			console.warn("eric", request);
 			const key = request.appName
 				? request.appName
 				: request.appNames?.length
@@ -696,7 +695,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		try {
 			const { scm } = SessionContainer.instance();
 			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
-			console.warn("eric reposResponse newrelic.ts", reposResponse);
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {
 				const repoIds = request.filters.map(_ => _.repoId);
@@ -705,7 +703,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			filteredRepos = filteredRepos?.filter(_ => _.id);
 			if (!filteredRepos || !filteredRepos.length) return response;
-			console.warn("eric filteredRepos newrelic.ts", filteredRepos);
 
 			for (const repo of filteredRepos) {
 				if (!repo.id || !repo.remotes || !repo.remotes.length) {
@@ -718,8 +715,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					continue;
 				}
 				const folderName = this.getRepoName({ path: repo.path });
-
-				console.warn("eric folderName", folderName);
 
 				if (response.repos.some(_ => _?.repoName === folderName)) {
 					ContextLogger.warn("getObservabilityRepos skipping duplicate repo name", {
@@ -866,7 +861,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// NOTE: might be able to eliminate some of this if we can get a list of entities
 			const { scm } = SessionContainer.instance();
 			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
-			console.warn("eric reposResponse", reposResponse);
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			let filteredRepoIds: string[] = [];
 			if (request?.filters?.length) {

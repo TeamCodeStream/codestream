@@ -166,7 +166,6 @@ export class ScmManager {
 		try {
 			const { git } = SessionContainer.instance();
 			repositories = Array.from(await git.getRepositories());
-			console.warn("eric repositories", repositories);
 			if (request && request.inEditorOnly && repositories) {
 				repositories = repositories.filter(_ => _.isInWorkspace);
 			}
