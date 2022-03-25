@@ -6,6 +6,7 @@ import { configureProvider, connectProvider } from "../store/providers/actions";
 import CancelButton from "./CancelButton";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { isWordy } from "@codestream/webview/utilities/strings";
 
 export class ConfigureAzureDevOpsPanel extends Component {
 	initialState = {
@@ -25,7 +26,7 @@ export class ConfigureAzureDevOpsPanel extends Component {
 		e.preventDefault();
 		if (this.isFormInvalid()) return;
 		const { providerId } = this.props;
-		const { organization } = this.state;
+		const organization = this.getOrg();
 		this.props.configureProvider(providerId, { organization });
 		this.props.connectProvider(providerId, this.props.originLocation);
 		this.props.closePanel();
@@ -39,15 +40,47 @@ export class ConfigureAzureDevOpsPanel extends Component {
 
 	renderOrganizationHelp = () => {
 		const { organization, organizationTouched, formTouched } = this.state;
-		if (organizationTouched || formTouched)
+		if (organizationTouched || formTouched) {
 			if (organization.length === 0) return <small className="error-message">Required</small>;
+			if (!this.isOrgValid()) return <small className="error-message">Invalid URL</small>;
+		}
 	};
 
 	tabIndex = () => {};
 
 	isFormInvalid = () => {
-		return this.state.organization.length === 0;
+		return this.isOrgEmpty() || !this.isOrgValid();
 	};
+
+	isOrgEmpty = () => {
+		return this.state.organization.trim().length === 0;
+	}
+
+	isOrgValid = () => {
+		return this.getOrg().length > 0;
+	}
+
+	getOrg = () => {
+		if (isWordy(this.state.organization.trim())) return this.state.organization.trim();
+		return this.extractOrgFromUrl();
+	}
+
+	extractOrgFromUrl = () => {
+		try {
+			const url = new URL(this.state.organization.trim());
+			// Replace leading and trailing slash
+			const trimmedUrl = url.pathname.replace(/^\//, "")
+				.replace(/\/$/, "");
+			// Should only have 1 path deep i.e. /myorg OK but not /whatever/myorg
+			if (trimmedUrl.includes("/")) {
+				return "";
+			}
+			return trimmedUrl;
+		} catch (e) {
+			return "";
+		}
+	}
+
 
 	render() {
 		const { providerId } = this.props;
