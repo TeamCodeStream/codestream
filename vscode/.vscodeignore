@@ -21,3 +21,4 @@ webpack.config.js
 out/**
 .vscode-test/**
 test-projects/**
+coverage
