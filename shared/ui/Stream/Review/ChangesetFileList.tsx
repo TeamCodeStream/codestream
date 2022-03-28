@@ -393,7 +393,7 @@ export const ChangesetFileList = (props: {
 		// console.warn("RETURNING: ", filesInOrder);
 		setFilesInOrder(filesInOrder);
 		return [lines];
-	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint, visitedFiles, mode]);
+	}, [review, loading, noOnClick, derivedState.matchFile, latest, checkpoint, visitedFiles, mode, hasLoaded]);
 
 	const goDiff = React.useCallback(
 		async index => {
