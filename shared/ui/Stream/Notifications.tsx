@@ -13,12 +13,15 @@ import {
 import Icon from "./Icon";
 import { Dialog } from "../src/components/Dialog";
 
+const prNotificationProviders = new Set(["github*com", "gitlab/enterprise", "gitlab*com", "gitlab/enterprise"]);
+
 export const Notifications = props => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
 		const emailSupported = isFeatureEnabled(state, "emailSupport");
+		const showPRNotificationSetting = Object.keys(state.activeIntegrations).some(p => prNotificationProviders.has(p));
 
 		// disable FROP for new users by default
 		const me = state.users[state.session.userId!];
@@ -41,7 +44,8 @@ export const Notifications = props => {
 			toastPrNotify: state.preferences.toastPrNotify === false ? false : true,
 			hasDesktopNotifications,
 			notificationDeliverySupported,
-			emailSupported
+			emailSupported,
+			showPRNotificationSetting
 		};
 	});
 	const [loading, setLoading] = useState(false);
@@ -189,16 +193,18 @@ export const Notifications = props => {
 										Notify me about new unreviewed commits from teammates when I pull
 									</Checkbox>
 								</div>
-								<div style={{marginTop: "20px"}}>
-									<Checkbox
-										name="toastPrNotify"
-										checked={derivedState.toastPrNotify}
-										onChange={handleToastPrNotify}
-										loading={loadingToastPrNotify}
-									>
-										Notify me about pull requests assigned to me
-									</Checkbox>
-								</div>
+								{derivedState.showPRNotificationSetting && (
+									<div style={{marginTop: "20px"}}>
+										<Checkbox
+											name="toastPrNotify"
+											checked={derivedState.toastPrNotify}
+											onChange={handleToastPrNotify}
+											loading={loadingToastPrNotify}
+										>
+											Notify me about pull requests assigned to me
+										</Checkbox>
+									</div>
+								)}
 							</div>)}
 						<p>&nbsp;</p>
 					</div>
