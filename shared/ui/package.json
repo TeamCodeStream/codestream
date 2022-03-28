@@ -8,7 +8,7 @@
 		"clean:ci": "git clean -xdf",
 		"coverage": "react-app-rewired test --coverage --watchAll=false",
 		"test": "react-app-rewired test",
-		"ci:test": "CI=true react-app-rewired test --coverage --watchAll=false",
+		"test:ci": "CI=true react-app-rewired test --coverage --watchAll=false",
 		"watch": "react-app-rewired test"
 	},
 	"author": "CodeStream",

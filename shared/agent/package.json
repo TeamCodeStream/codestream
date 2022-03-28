@@ -39,7 +39,7 @@
 		"test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
 		"test-integration-ci": "npm run test-integration -- --reporter mocha-teamcity-reporter",
 		"test": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter",
-		"ci:test": "npm run test-unit-with-coverage",
+		"test:ci": "npm run test-unit-with-coverage",
 		"test-unit-with-coverage": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" nyc --reporter=text --reporter=teamcity ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter"
 	},
 	"dependencies": {
