@@ -138,6 +138,8 @@ export const ChangesetFileList = (props: {
 		});
 	};
 
+	const [hasLoaded, setHasLoaded] = React.useState(false);
+
 	useEffect(() => {
 		(async () => {
 			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
@@ -149,6 +151,7 @@ export const ChangesetFileList = (props: {
 			} catch (ex) {
 				console.warn("Error parsing JSON data: ", response.contents);
 			}
+			setHasLoaded(true);
 		})();
 	}, [review, reviewCheckpointKey]);
 
@@ -201,6 +204,9 @@ export const ChangesetFileList = (props: {
 	}, [visitedFiles, filesInOrder]);
 
 	const [changedFiles] = React.useMemo(() => {
+		if (!hasLoaded) {
+			return [];
+		}
 		const lines: any[] = [];
 		let filesInOrder: any[] = [];
 
