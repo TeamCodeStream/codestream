@@ -10,13 +10,11 @@ import com.codestream.protocols.webview.EditorNotifications
 import com.codestream.protocols.webview.FocusNotifications
 import com.codestream.protocols.webview.Sidebar
 import com.codestream.protocols.webview.SidebarLocation
-import com.codestream.settings.ApplicationSettingsService
 import com.codestream.system.CodeStreamDiffURLStreamHandler
 import com.codestream.workaround.ToolWindowManagerWorkaround
 import com.intellij.ProjectTopics
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
@@ -63,7 +61,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
         initEditorFactoryListener()
         initVirtualFileListener()
         initMessageBusSubscriptions()
-        showToolWindowOnFirstRun()
         ApplicationManager.getApplication().invokeLater {
             initWindowFocusListener()
             initUnreadsListener()
@@ -166,18 +163,6 @@ class CodeStreamComponent(val project: Project) : Disposable {
                 } else {
                     IconLoader.getIcon("/images/codestream.svg")
                 })
-            }
-        }
-    }
-
-    private fun showToolWindowOnFirstRun() {
-        val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
-        if (settings.firstRun) {
-            project.webViewService?.onDidInitialize {
-                ApplicationManager.getApplication().invokeLater {
-                    show()
-                    settings.firstRun = false
-                }
             }
         }
     }
