@@ -602,7 +602,7 @@
 		"agent:bundle:ci": "pushd \"../shared/agent\" && npm run bundle:ci && popd",
 		"agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
 		"agent:rebuild": "pushd \"../shared/agent\" && npm run rebuild && popd",
-		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
+		"agent:test": "pushd \"../shared/agent\" && npm run ci:test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch && popd",
 		"webview:analyze": "webpack --env analyzeBundleWebview=true",
 		"webview:build": "webpack --config-name webview --env development=true",
