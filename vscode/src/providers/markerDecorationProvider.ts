@@ -45,7 +45,11 @@ const positionStyleMap: { [key: string]: string } = {
 };
 
 const buildDecoration = (position: string, type: string, color: string, _status: string) => {
-	const pngPath = Container.context.asAbsolutePath(`assets/images/marker-${type}-${color}.png`);
+	let markercolor = color;
+	if (type === "prcomment") markercolor = "green";
+	const pngPath = Container.context.asAbsolutePath(
+		`assets/images/marker-${type}-${markercolor}.png`
+	);
 	try {
 		const pngBase64 = fs.readFileSync(pngPath, { encoding: "base64" });
 		const pngInlineUrl = `data:image/png;base64,${pngBase64}`;
@@ -289,7 +293,9 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 			}
 		}
 
-		const editors = this.getApplicableVisibleEditors().filter(e => e.document.uri.fsPath === fsPath);
+		const editors = this.getApplicableVisibleEditors().filter(
+			e => e.document.uri.fsPath === fsPath
+		);
 		for (const editor of editors) {
 			this.apply(editor);
 		}
@@ -599,7 +605,8 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	private isApplicableEditor(editor: TextEditor | undefined) {
 		if (!editor || !editor.document) return false;
 
-		if (editor.document.uri.scheme === "file" || editor.document.uri.scheme === "codestream-git") return true;
+		if (editor.document.uri.scheme === "file" || editor.document.uri.scheme === "codestream-git")
+			{return true;}
 
 		// check for review diff
 		const parsedUri = Strings.parseCSReviewDiffUrl(editor.document.uri.toString());
