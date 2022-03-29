@@ -55,6 +55,7 @@ export const ChangeEmail = props => {
 		event.preventDefault();
 		onValidityChanged("email", isEmailValid(email));
 		if (!emailValidity) return;
+		if (pendingChange) return;
 
 		setLoading(true);
 		try {
