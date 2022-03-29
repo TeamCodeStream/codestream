@@ -63,12 +63,14 @@ class MLTPythonComponent(val project: Project) : EditorFactoryListener, Disposab
     }
 
     override fun editorCreated(event: EditorFactoryEvent) {
+        if (event.editor.project != project) return
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.editor.document)
         if (psiFile !is PyFile) return
         managersByEditor[event.editor] = MLTPythonEditorManager(event.editor)
     }
 
     override fun editorReleased(event: EditorFactoryEvent) {
+        if (event.editor.project != project) return
         managersByEditor.remove(event.editor).also { it?.dispose() }
     }
 
