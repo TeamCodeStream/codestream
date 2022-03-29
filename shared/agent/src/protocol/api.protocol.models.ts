@@ -543,6 +543,7 @@ export interface CSProviderInfo {
 	userId?: string;
 	isApiToken?: boolean;
 	hosts?: { [host: string]: CSProviderInfos };
+	orgIds?: number[];
 	data?: {
 		baseUrl?: string;
 		scopes?: string;

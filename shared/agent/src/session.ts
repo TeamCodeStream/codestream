@@ -1538,13 +1538,14 @@ export class CodeStreamSession {
 			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
 
 		if (user.providerInfo) {
-			const data = team && user.providerInfo[team.id]?.newrelic?.data;
+			const data =
+				(team && user.providerInfo[team.id]?.newrelic?.data) || user.providerInfo.newrelic.data;
 			if (data) {
 				if (data.userId) {
 					props["NR User ID"] = data.userId;
 				}
-				if (data.orgIds && data.orgIds.length) {
-					props["NR Organization ID"] = data.orgIds[0];
+				if (data?.orgIds && data.orgIds?.length) {
+					props["NR Organization ID"] = data?.orgIds[0];
 				}
 			}
 		}
