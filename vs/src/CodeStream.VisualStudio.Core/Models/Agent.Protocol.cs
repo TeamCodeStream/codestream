@@ -32,12 +32,99 @@ namespace CodeStream.VisualStudio.Core.Models {
 	}
 
 	[Serializable]
+	public class TeamlessContext {
+		public string SelectedRegion { get; set; }
+		public string ForceRegion { get; set; }
+	}
+
+	[Serializable]
+	public class CurrentRepo {
+		public string Id { get; set; }
+		public string Path { get; set; }
+	}
+
+	[Serializable]
+	public class CurrentReviewOptions {
+		public bool? IncludeLatestCommit { get; set; }
+		public bool? OpenFirstDiff { get; set; }
+	}
+
+	[Serializable]
+	public class CurrentCodeErrorData {
+		public string Remote { get; set; }
+		public string Commit { get; set; }
+		public string Tag { get; set; }
+		public long? SessionStart { get; set; }
+		public bool PendingRequiresConnection { get; set; }
+		public string PendingErrorGroupGuid { get; set; }
+		public string PendingEntityId { get; set; }
+		public string OccurrenceId { get; set; }
+		public int? LineIndex { get; set; }
+		public long? Timestamp { get; set; }
+		public string OpenType { get; set; }
+		public bool? MultipleRepos { get; set; }
+		public bool? ClaimWhenConnected { get; set; }
+	}
+
+	[Serializable]
+	public class RemoteProvider {
+		public string Id { get; set; }
+		public string Name { get; set; }
+		public string Domain { get; set; }
+	}
+
+	[Serializable]
+	public class PullRequestRemote {
+		public string Name { get; set; }
+		public RemoteProvider Provider { get; set; }
+		public string Url { get; set; }
+	}
+
+	[Serializable]
+	public class CreatePullRequestOptions {
+		public string Name { get; set; }
+		public PullRequestRemote Remote { get; set; }
+		public string RepoPath { get; set; }
+	}
+
+	[Serializable]
+	public class CurrentPullRequest {
+		public string ProviderId { get; set; }
+		public string Id { get; set; }
+		public string CommentId { get; set; }
+		public string Source { get; set; }
+		public object Metadata { get; set; }
+	}
+
+	[Serializable]
 	public class WebviewContext {
 		public string CurrentTeamId { get; set; }
+		public long? SessionStart { get; set; }
 		public string CurrentStreamId { get; set; }
 		public string ThreadId { get; set; }
+		public CurrentRepo CurrentRepo { get; set; }
+		public string CurrentCodemarkId { get; set; }
+		public string CurrentReviewId { get; set; }
+		public CurrentReviewOptions CurrentReviewOptions { get; set; }
+		public string CurrentCodeErrorId { get; set; }
+		public CurrentCodeErrorData CurrentCodeErrorData { get; set; }
+		public string CreatePullRequestReviewId { get; set; }
+		public CreatePullRequestOptions CreatePullRequestOptions { get; set; }
+		public CurrentPullRequest CurrentPullRequest { get; set; }
+		public string ProfileUserId { get; set; }
+		public string CurrentMarkerId { get; set; }
+		public bool? IsRepositioning { get; set; }
 		public bool HasFocus { get; set; }
+		// ReSharper disable once IdentifierTypo
+		public bool? IsFirstPageview { get; set; }
 		public List<string> PanelStack { get; set; }
+		public string ForceRegion { get; set; }
+		/// <summary>
+		/// Special property used when user is not authenticated
+		/// </summary>
+		// ReSharper disable once IdentifierTypo
+		// ReSharper disable once InconsistentNaming
+		public TeamlessContext __teamless__ { get; set; }
 	}
 
 	public class EditorContext {

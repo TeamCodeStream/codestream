@@ -253,12 +253,14 @@ namespace CodeStream.VisualStudio.Services {
 
 		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
 			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
-				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;	
+				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
 				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(GetBootstrapAsync));
 				// NOTE: this camelCaseSerializer is important because FromObject doesn't
 				// serialize using the global camelCase resolver
 
-				var capabilities = state?["capabilities"] != null ? state["capabilities"].ToObject<JObject>() : JObject.FromObject(new { });
+				var capabilities = state?["capabilities"] != null
+					? state["capabilities"].ToObject<JObject>()
+					: JObject.FromObject(new { });
 				capabilities.Merge(new Capabilities {
 					CodemarkApply = true,
 					CodemarkCompare = true,
@@ -271,7 +273,36 @@ namespace CodeStream.VisualStudio.Services {
 				// TODO: Need to separate the agent caps from the IDE ones, so that we don't need to keep the model up to date (i.e. support agent passthrough)
 				var capabilitiesObject = capabilities.ToObject<Capabilities>();
 
+				var webViewUserSettingsService = componentModel.GetService<IWebviewUserSettingsService>();
+				WebviewContext webviewContext;
+
 				if (!isAuthenticated) {
+					var userSettings =
+						webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName);
+
+					if (userSettings != null) {
+						webviewContext = userSettings;
+					}
+					else {
+						webviewContext = new WebviewContext {
+							HasFocus = true
+						};
+					}
+
+					if (webviewContext.__teamless__ == null || webviewContext.__teamless__.SelectedRegion.IsNullOrWhiteSpace()) {
+						// not authed, try to find the first selectedRegion (usually US) (somewhat stolen from store/session/actions)
+						webviewContext.__teamless__ = new TeamlessContext() {
+							SelectedRegion = settingsManager.GetCodeStreamEnvironmentInfo?.EnvironmentHosts?
+								.Where(_ => _.ShortName.ToLower().Contains("us")).Select(_ => _.ShortName)
+								.FirstOrDefault()
+						};
+						if (webviewContext.__teamless__.SelectedRegion.IsNullOrWhiteSpace()) {
+							// fallback to first if we can't find a match above
+							webviewContext.__teamless__.SelectedRegion = settingsManager.GetCodeStreamEnvironmentInfo
+								?.EnvironmentHosts?.Select(_ => _.ShortName).FirstOrDefault();
+						}
+					}
+
 					var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
 						Capabilities = capabilitiesObject,
 						Configs = new Configs {
@@ -282,9 +313,7 @@ namespace CodeStream.VisualStudio.Services {
 						},
 						EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
 						Version = settingsManager.GetEnvironmentVersionFormatted(),
-						Context = new WebviewContext {
-							HasFocus = true
-						},
+						Context = webviewContext,
 						Session = new UserSession() { },
 						Ide = new Ide() {
 							Name = Application.IdeMoniker
@@ -295,62 +324,64 @@ namespace CodeStream.VisualStudio.Services {
 #endif
 					return bootstrapAnonymous;
 				}
-
-				if (state == null) throw new ArgumentNullException(nameof(state));
-				var bootstrapAuthenticated = await _rpc.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
-					.ConfigureAwait(false) as JObject;
-
-				var editorService = componentModel?.GetService<IEditorService>();
-				var editorContext = editorService?.GetEditorContext();
-
-				WebviewContext webviewContext;
-				var teamId = state["teamId"].ToString();
-				_sessionService.TeamId = teamId;
-				var webViewUserSettingsService = componentModel.GetService<IWebviewUserSettingsService>();
-				var userSettings = webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
-				if (userSettings != null) {
-					webviewContext = userSettings;
-				}
 				else {
-					webviewContext = new WebviewContext {
-						HasFocus = true
-					};
-				}
 
-				webviewContext.CurrentTeamId = teamId;
-				if (!webviewContext.PanelStack.AnySafe()) {
-					webviewContext.PanelStack = new List<string> { WebviewPanels.CodemarksForFile };
-				}
-				var bootstrapResponse = new BootstrapAuthenticatedResponse {
-					Capabilities = capabilitiesObject,
-					Configs = new Configs {
-						Email = (string)state["email"],
-						ShowAvatars = settings.Options.ShowAvatars,
-						ServerUrl = settings.Options.ServerUrl,
-						TraceLevel = settingsManager.GetAgentTraceLevel()
-					},
-					Context = webviewContext,
-					EditorContext = editorContext,
-					Session = new UserSession {
-						UserId = state["userId"].ToString()
-					},
-					EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
-					Version = settingsManager.GetEnvironmentVersionFormatted(),
-					Ide = new Ide() {
-						Name = Application.IdeMoniker
+					if (state == null) throw new ArgumentNullException(nameof(state));
+					var bootstrapAuthenticated = await _rpc
+						.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
+						.ConfigureAwait(false) as JObject;
+
+					var editorService = componentModel?.GetService<IEditorService>();
+					var editorContext = editorService?.GetEditorContext();
+
+ 					var teamId = state["teamId"].ToString();
+					_sessionService.TeamId = teamId;
+					var userSettings =
+						webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
+					if (userSettings != null) {
+						webviewContext = userSettings;
 					}
-				};
+					else {
+						webviewContext = new WebviewContext {
+							HasFocus = true
+						};
+					}
 
-				var bootstrapResponseJson = bootstrapResponse.ToJToken();
-				bootstrapAuthenticated?.Merge(bootstrapResponseJson);
+					webviewContext.CurrentTeamId = teamId;
+					if (!webviewContext.PanelStack.AnySafe()) {
+						webviewContext.PanelStack = new List<string> {WebviewPanels.CodemarksForFile};
+					}
+					var bootstrapResponse = new BootstrapAuthenticatedResponse {
+						Capabilities = capabilitiesObject,
+						Configs = new Configs {
+							Email = (string)state["email"],
+							ShowAvatars = settings.Options.ShowAvatars,
+							ServerUrl = settings.Options.ServerUrl,
+							TraceLevel = settingsManager.GetAgentTraceLevel()
+						},
+						Context = webviewContext,
+						EditorContext = editorContext,
+						Session = new UserSession {
+							UserId = state["userId"].ToString()
+						},
+						EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
+						Version = settingsManager.GetEnvironmentVersionFormatted(),
+						Ide = new Ide() {
+							Name = Application.IdeMoniker
+						}
+					};
+
+					var bootstrapResponseJson = bootstrapResponse.ToJToken();
+					bootstrapAuthenticated?.Merge(bootstrapResponseJson);
 #if DEBUG
-				// only log the non-user bootstrap data -- it's too verbose
-				if (bootstrapAuthenticated == null) {
-					System.Diagnostics.Debugger.Break();
-				}
-				Log.Debug(bootstrapResponseJson?.ToString());
+					// only log the non-user bootstrap data -- it's too verbose
+					if (bootstrapAuthenticated == null) {
+						System.Diagnostics.Debugger.Break();
+					}
+					Log.Debug(bootstrapResponseJson?.ToString());
 #endif
-				return bootstrapAuthenticated;
+					return bootstrapAuthenticated;
+				}
 			}
 		}
 

@@ -17,28 +17,33 @@ namespace CodeStream.VisualStudio.Services {
 	public class WebviewUserSettingsService : UserSettingsService, IWebviewUserSettingsService {
 		private static readonly ILogger Log = LogManager.ForContext<WebviewUserSettingsService>();
 
+		/// <summary>
+		/// Used in scenarios where we want to save context outside of being authenticated
+		/// </summary>
+		private const string EmptyTeamId = "-";
+
 		[ImportingConstructor]
 		public WebviewUserSettingsService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) : base(serviceProvider) { }
 
-		/// <summary>
-		/// Saves to a structure like:
-		/// codestream
-		///		codestream.{solutionName}.{teamId}
-		///			data: dictionary[string, object]
-		/// </summary>
-		/// <param name="context"></param>
-		/// <returns></returns>
+		///  <summary>
+		///  Saves to a structure like:
+		///  codestream
+		/// 		codestream.{solutionName}.{teamId}
+		/// 			data: dictionary[string, object]
+		///  </summary>
+		///  <param name="solutionName"></param>
+		///  <param name="context"></param>
+		///  <returns></returns>
 		public bool SaveContext(string solutionName, WebviewContext context) {
-			if (context == null || context.CurrentTeamId.IsNullOrWhiteSpace()) return false;
-
-			return Save($"{solutionName}.{context.CurrentTeamId}", UserSettingsKeys.WebviewContext, context);
+			if (context == null) return false;
+			var currentTeamId = context.CurrentTeamId.IsNullOrWhiteSpace() ? EmptyTeamId : context.CurrentTeamId;
+			return Save($"{solutionName}.{currentTeamId}", UserSettingsKeys.WebviewContext, context);
 		}
 
 		public bool TryClearContext(string solutionName, string teamId) {
 			try {
-				if (teamId.IsNullOrWhiteSpace()) return false;
-
-				return Save($"{solutionName}.{teamId}", UserSettingsKeys.WebviewContext, null);
+				var currentTeamId = teamId.IsNullOrWhiteSpace() ? EmptyTeamId : teamId;
+				return Save($"{solutionName}.{currentTeamId}", UserSettingsKeys.WebviewContext, null);
 			}
 			catch (Exception ex) {
 				Log.Warning(ex, nameof(TryClearContext));
@@ -46,17 +51,21 @@ namespace CodeStream.VisualStudio.Services {
 			}
 		}
 
+		public WebviewContext TryGetWebviewContext(string solutionName) {
+			return TryGetWebviewContext(solutionName, EmptyTeamId);
+		}
+
 		public WebviewContext TryGetWebviewContext(string solutionName, string teamId) {
-			if (teamId.IsNullOrWhiteSpace()) {
-				return null;
-			}
-			return  TryGetValue<WebviewContext>($"{solutionName}.{teamId}", UserSettingsKeys.WebviewContext);
+			var currentTeamId = teamId.IsNullOrWhiteSpace() ? EmptyTeamId : teamId;
+
+			return TryGetValue<WebviewContext>($"{solutionName}.{currentTeamId}", UserSettingsKeys.WebviewContext);
 		}
 
 		public bool SaveTeamId(string solutionName, string teamId) {
-			if (teamId.IsNullOrWhiteSpace()) return false;
+			var currentTeamId = teamId.IsNullOrWhiteSpace() ? EmptyTeamId : teamId;
 
-			return Save($"{solutionName}", UserSettingsKeys.TeamId, teamId);
+
+			return Save($"{solutionName}", UserSettingsKeys.TeamId, currentTeamId);
 		}
 
 		public string TryGetTeamId(string solutionName) {
