@@ -70,11 +70,6 @@ export class ConfigureJiraServerPanel extends Component {
 		return this.state.baseUrl.length === 0 || this.state.token.length === 0 || !this.state.baseUrlValid;
 	};
 
-	handleOldJiraServerClick = e => {
-		this.props.closePanel();
-		this.props.openPanel(`configure-provider-jiraserverold-jiraserver/enterprise-JiraServerPanel`);
-	};
-
 	render() {
 		const inactive = false;
 		const { displayName, urlPlaceholder, invalidHosts } = this.providerDisplay;
@@ -84,12 +79,12 @@ export class ConfigureJiraServerPanel extends Component {
 				<form className="standard-form vscroll" onSubmit={this.onSubmit}>
 					<div className="panel-header">
 						<CancelButton onClick={this.props.closePanel} />
-						<span className="panel-title">Configure {displayName}</span>
+						<span className="panel-title">Connect to {displayName}</span>
 					</div>
 					<fieldset className="form-body" disabled={inactive}>
 						<p style={{ textAlign: "center" }} className="explainer">
-							<a onClick={this.handleOldJiraServerClick}>Click here</a> if your organization uses a
-							version of Jira Server older than v8.14.0, which does not support API tokens. <a href="https://docs.newrelic.com/docs/codestream/troubleshooting/jira-server-version/">Check your version.</a>
+							 Requires Jira Server v8.14.0 or later.&nbsp;
+							   <a href="https://docs.newrelic.com/docs/codestream/troubleshooting/jira-server-version/">Check your version.</a>
 						</p>
 						<br />
 						{this.renderError()}

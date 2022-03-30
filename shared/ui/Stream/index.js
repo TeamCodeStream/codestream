@@ -44,7 +44,6 @@ import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
 import ConfigureJiraPanel from "./ConfigureJiraPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
-import ConfigureJiraServerOAuthPanel from "./ConfigureJiraServerOAuthPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
 import { ConfigureOAuthOrPATPanel } from "./ConfigureOAuthOrPATPanel";
 import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
@@ -393,7 +392,7 @@ export class SimpleStream extends PureComponent {
 		const oauthOrPATProvider = activePanel.startsWith("oauthpat-provider-");
 		let [, , providerName, providerId, origin] = configureProviderInfo || [];
 		const customConfigureProvider = providerName
-			? ["azuredevops", "youtrack", "jiraserver", "jiraserverold", "jira", "newrelic"].find(
+			? ["azuredevops", "youtrack", "jiraserver", "jira", "newrelic"].find(
 					name => name === providerName
 			  )
 			: null;
@@ -547,9 +546,6 @@ export class SimpleStream extends PureComponent {
 							)}
 							{customConfigureProvider === "jiraserver" && (
 								<ConfigureJiraServerPanel providerId={providerId} originLocation={origin} />
-							)}
-							{customConfigureProvider === "jiraserverold" && (
-								<ConfigureJiraServerOAuthPanel providerId={providerId} originLocation={origin} />
 							)}
 							{enterpriseProvider && (
 								<ConfigureEnterprisePanel providerId={providerId} originLocation={origin} />
