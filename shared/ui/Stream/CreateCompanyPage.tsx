@@ -151,7 +151,11 @@ export function CreateCompanyPage() {
 								<>
 									<br />
 									<br />
-									<Dropdown selectedValue={region} items={regionItems} noModal={true} />{" "}
+									Region: <Dropdown
+										selectedValue={region}
+										items={regionItems}
+										noModal={true}
+									/>{" "}
 									<Tooltip
 										placement={"bottom"}
 										title={`Select the region where your CodeStream data should be stored.`}
