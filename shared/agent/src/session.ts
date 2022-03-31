@@ -1496,6 +1496,7 @@ export class CodeStreamSession {
 
 		if (team != null && companies != null) {
 			const company = companies.find(c => c.id === team.companyId);
+			console.warn("eric company", company);
 			props["Company ID"] = team.companyId;
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
 			props["Team Name"] = team.name;
@@ -1543,6 +1544,7 @@ export class CodeStreamSession {
 			if (data) {
 				if (data.userId) {
 					props["NR User ID"] = data.userId;
+					props["NR Connected Org"] = true;
 				}
 				if (data?.orgIds && data.orgIds?.length) {
 					props["NR Organization ID"] = data?.orgIds[0];
