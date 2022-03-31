@@ -1496,7 +1496,6 @@ export class CodeStreamSession {
 
 		if (team != null && companies != null) {
 			const company = companies.find(c => c.id === team.companyId);
-			console.warn("eric company", company);
 			props["Company ID"] = team.companyId;
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
 			props["Team Name"] = team.name;
