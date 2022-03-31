@@ -15,7 +15,7 @@ interface Props {
 	originLocation: ViewLocation;
 }
 
-export function ConfigureEnterprisePanel(props: Props) {
+export default function ConfigureEnterprisePanel(props: Props) {
 	const initialInput = useRef<HTMLInputElement>(null);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -48,14 +48,14 @@ export function ConfigureEnterprisePanel(props: Props) {
 
 		// configuring is as good as connecting, since we are letting the user
 		// set the access token
-		dispatch(configureProvider(
+		await dispatch(configureProvider(
 			providerId,
 			{ baseUrl: normalizeUrl(baseUrl), token },
 			true,
 			props.originLocation
 		));
 		setLoading(false);
-		dispatch(closePanel());
+		await dispatch(closePanel());
 	};
 
 	const renderError = () => {
@@ -165,5 +165,3 @@ export function ConfigureEnterprisePanel(props: Props) {
 			</div>
 		);
 	}
-
-export default ConfigureEnterprisePanel;

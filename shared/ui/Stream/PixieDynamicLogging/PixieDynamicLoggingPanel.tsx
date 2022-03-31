@@ -13,7 +13,7 @@ import {
 } from "@codestream/webview/store/dynamicLogging/actions";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import { ConditionalNewRelic } from "@codestream/webview/Stream/CodeError/ConditionalComponent";
-import { ConfigureNewRelic } from "@codestream/webview/Stream/ConfigureNewRelic";
+import ConfigureNewRelic from "@codestream/webview/Stream/ConfigureNewRelic";
 import { Accounts } from "@codestream/webview/Stream/PixieDynamicLogging/Accounts";
 import { Clusters } from "@codestream/webview/Stream/PixieDynamicLogging/Clusters";
 import { Namespaces } from "@codestream/webview/Stream/PixieDynamicLogging/Namespaces";

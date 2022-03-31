@@ -124,7 +124,10 @@ export type ViewLocation =
 	| "Provider Error Banner"
 	| "Onboard"
 	| "PRs Section"
-	| "Observability Section";
+	| "Open in IDE Flow"
+	| "Open in IDE Pixie"
+	| "Observability Section"
+	| "Pixie Logging";
 
 export const sendIssueProviderConnected = (
 	providerId: string,

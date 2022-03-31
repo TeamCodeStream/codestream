@@ -28,7 +28,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { setUserPreference } from "./actions";
 import Icon from "./Icon";
 import { isConnected } from "../store/providers/reducer";
-import { ConfigureNewRelic } from "./ConfigureNewRelic";
+import ConfigureNewRelic from "./ConfigureNewRelic";
 import Dismissable from "./Dismissable";
 import { bootstrapCodeErrors } from "@codestream/webview/store/codeErrors/actions";
 import { DelayedRender } from "../Container/DelayedRender";
