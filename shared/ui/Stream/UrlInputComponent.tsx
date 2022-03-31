@@ -1,14 +1,15 @@
 import { parseHost } from "@codestream/webview/utilities/urls";
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { LegacyRef, MutableRefObject, Ref, useEffect, useState } from "react";
 
 interface Props {
     providerShortName: string
-    tabIndex: number,
+    tabIndex?: number,
     onChange: (value: string) => void,
     onValidChange: (valid: boolean) => void,
-    formTouched: boolean,
-    placeholder: string,
+    inputRef: LegacyRef<HTMLInputElement>;
+    submitAttempted: boolean,
+    placeholder?: string,
     invalidHosts?: string[]
 }
 
@@ -41,8 +42,7 @@ export default function UrlInputComponent(props: Props) {
     }, [validHost]);
 
     const renderBaseUrlHelp = () => {
-        const {formTouched} = props;
-        if (baseUrlTouched || formTouched) {
+        if (baseUrlTouched || props.submitAttempted) {
             if (baseUrl.length === 0) return <small className="error-message">Required</small>;
             if (!validHost) return <small className="error-message">Invalid URL</small>;
         }
@@ -67,6 +67,7 @@ export default function UrlInputComponent(props: Props) {
                 Please provide the Base URL used by your team to access {props.providerShortName}.
             </label>
             <input
+                ref={props.inputRef}
                 className="native-key-bindings input-text control"
                 type="text"
                 name="baseUrl"
@@ -75,7 +76,6 @@ export default function UrlInputComponent(props: Props) {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 placeholder={props.placeholder}
-                required={true}
                 id="configure-provider-initial-input"
             />
             {renderBaseUrlHelp()}
