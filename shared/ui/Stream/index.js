@@ -1,114 +1,100 @@
-import React, { PureComponent } from "react";
+import React, {PureComponent} from "react";
 import PropTypes from "prop-types";
-import { injectIntl } from "react-intl";
-import { connect } from "react-redux";
+import {injectIntl} from "react-intl";
+import {connect} from "react-redux";
 import cx from "classnames";
-import { ActivityPanel } from "./ActivityPanel";
-import { ExportPanel } from "./ExportPanel";
-import { Onboard } from "./Onboard";
-import { OnboardNewRelic } from "./OnboardNewRelic";
-import { Sidebar } from "./Sidebar";
-import { Notifications } from "./Notifications";
-import { ChangeEmail } from "./ChangeEmail";
-import { ChangeUsername } from "./ChangeUsername";
-import { ChangePassword } from "./ChangePassword";
-import { ChangeFullName } from "./ChangeFullName";
-import { ChangeWorksOn } from "./ChangeWorksOn";
-import { ChangePhoneNumber } from "./ChangePhoneNumber";
-import { ChangeAvatar } from "./ChangeAvatar";
-import { ChangeTeamName } from "./ChangeTeamName";
+import {ActivityPanel} from "./ActivityPanel";
+import {ExportPanel} from "./ExportPanel";
+import {Onboard} from "./Onboard";
+import {OnboardNewRelic} from "./OnboardNewRelic";
+import {Sidebar} from "./Sidebar";
+import {Notifications} from "./Notifications";
+import {ChangeEmail} from "./ChangeEmail";
+import {ChangeUsername} from "./ChangeUsername";
+import {ChangePassword} from "./ChangePassword";
+import {ChangeFullName} from "./ChangeFullName";
+import {ChangeWorksOn} from "./ChangeWorksOn";
+import {ChangePhoneNumber} from "./ChangePhoneNumber";
+import {ChangeAvatar} from "./ChangeAvatar";
+import {ChangeTeamName} from "./ChangeTeamName";
 
-import { ChangeCompanyName } from "./ChangeCompanyName";
-import { BlameMap } from "./BlameMap";
-import { Team } from "./Team";
-import { TeamSetup } from "./TeamSetup";
-import { Invite } from "./Invite";
-import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
-import { IntegrationsPanel } from "./IntegrationsPanel";
-import { ProfilePanel } from "./ProfilePanel";
-import { ReviewSettings } from "./ReviewSettings";
-import { GettingStarted } from "./GettingStarted";
-import { CodemarkForm } from "./CodemarkForm";
-import { ReviewForm } from "./ReviewForm";
+import {ChangeCompanyName} from "./ChangeCompanyName";
+import {BlameMap} from "./BlameMap";
+import {Team} from "./Team";
+import {TeamSetup} from "./TeamSetup";
+import {Invite} from "./Invite";
+import {CreatePullRequestPanel} from "./CreatePullRequestPanel";
+import {IntegrationsPanel} from "./IntegrationsPanel";
+import {ProfilePanel} from "./ProfilePanel";
+import {ReviewSettings} from "./ReviewSettings";
+import {GettingStarted} from "./GettingStarted";
+import {CodemarkForm} from "./CodemarkForm";
+import {ReviewForm} from "./ReviewForm";
 import FilterSearchPanel from "./FilterSearchPanel";
 import InlineCodemarks from "./InlineCodemarks";
-import { CreateTeamPage } from "./CreateTeamPage";
-import { CreateCompanyPage } from "./CreateCompanyPage";
-import { Tester } from "./Tester";
-import Icon from "./Icon";
+import {CreateTeamPage} from "./CreateTeamPage";
+import {CreateCompanyPage} from "./CreateCompanyPage";
+import {Tester} from "./Tester";
 import CancelButton from "./CancelButton";
-import Tooltip, { TipTitle, placeArrowTopRight } from "./Tooltip";
 import OfflineBanner from "./OfflineBanner";
-import { PRProviderErrorBanner } from "./PRProviderErrorBanner";
+import {PRProviderErrorBanner} from "./PRProviderErrorBanner";
 import ConfigureAzureDevOpsPanel from "./ConfigureAzureDevOpsPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
-import ConfigureJiraPanel from "./ConfigureJiraPanel";
 import ConfigureJiraServerPanel from "./ConfigureJiraServerPanel";
 import ConfigureEnterprisePanel from "./ConfigureEnterprisePanel";
-import { ConfigureOAuthOrPATPanel } from "./ConfigureOAuthOrPATPanel";
+import {ConfigureOAuthOrPATPanel} from "./ConfigureOAuthOrPATPanel";
 import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
 import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
-import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
+import {PrePRProviderInfoModal} from "./PrePRProviderInfoModal";
 import * as actions from "./actions";
-import { canCreateCodemark, editCodemark } from "../store/codemarks/actions";
-import { ComponentUpdateEmitter, safe, toMapBy, isNotOnDisk, uriToFilePath } from "../utils";
-import { ModalRoot, Modal } from "./Modal";
-import { getPostsForStream, getPost } from "../store/posts/reducer";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
-import { getCodemark } from "../store/codemarks/reducer";
-import { getTeamMembers } from "../store/users/reducer";
-import { HostApi } from "../webview-api";
+import {canCreateCodemark, editCodemark} from "../store/codemarks/actions";
+import {ComponentUpdateEmitter, safe} from "../utils";
+import {Modal, ModalRoot} from "./Modal";
+import {getPost} from "../store/posts/reducer";
+import {isFeatureEnabled} from "../store/apiVersioning/reducer";
+import {getStreamForId, getStreamForTeam} from "../store/streams/reducer";
+import {getCodemark} from "../store/codemarks/reducer";
+import {HostApi} from "../webview-api";
 import {
-	NewCodemarkNotificationType,
-	NewReviewNotificationType,
-	NewPullRequestNotificationType,
 	EditorSelectRangeRequestType,
+	NewCodemarkNotificationType,
+	NewPullRequestNotificationType,
+	NewReviewNotificationType,
 	PixieDynamicLoggingType,
-	StartWorkNotificationType,
-	WebviewPanels,
-	WebviewModals
+	WebviewModals,
+	WebviewPanels
 } from "../ipc/webview.protocol";
 import {
-	SetCodemarkPinnedRequestType,
-	TelemetryRequestType,
+	AddBlameMapRequestType,
 	GetRangeScmInfoRequestType,
-	DeleteUserRequestType,
 	GetUserInfoRequestType,
-	AddBlameMapRequestType
+	SetCodemarkPinnedRequestType
 } from "@codestream/protocols/agent";
-import { getFileScmError } from "../store/editorContext/reducer";
-import { CodemarkView } from "./CodemarkView";
-import { CodeErrorView } from "./CodeErrorView";
-import { Review } from "./Review";
-import { Link } from "./Link";
+import {CodemarkView} from "./CodemarkView";
 import {
-	setCurrentStream,
-	setNewPostEntry,
-	setIsFirstPageview,
+	setCurrentCodeError,
+	setCurrentCodemark,
+	setCurrentInstrumentationOptions,
+	setCurrentPixieDynamicLoggingOptions,
+	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentReviewOptions,
-	setCurrentPullRequest,
-	setNewPullRequestOptions,
-	setCurrentCodemark,
-	setCurrentCodeError,
-	setCurrentInstrumentationOptions,
-	setCurrentPixieDynamicLoggingOptions
+	setCurrentStream,
+	setIsFirstPageview,
+	setNewPostEntry,
+	setNewPullRequestOptions
 } from "../store/context/actions";
-import { last as _last, findLastIndex } from "lodash-es";
-import { Keybindings } from "./Keybindings";
-import { FlowPanel, VideoLink } from "./Flow";
-import { PixieDynamicLoggingPanel } from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
-import { MethodLevelTelemetryPanel } from "./MethodLevelTelemetry/MethodLevelTelemetryPanel";
-import { PRInfoModal } from "./SpatialView/PRInfoModal";
-import { GlobalNav } from "./GlobalNav";
-import { EnjoyingCodeStream } from "./EnjoyingCodeStream";
-import { getTestGroup } from "../store/context/reducer";
-import { PresentTOS } from "../Authentication/PresentTOS";
-import { PresentPrereleaseTOS } from "../Authentication/PresentPrereleaseTOS";
-import { Loading } from "../Container/Loading";
-import { DelayedRender } from "../Container/DelayedRender";
-import { clearDynamicLogging } from "../store/dynamicLogging/actions";
+import {last as _last} from "lodash-es";
+import {Keybindings} from "./Keybindings";
+import {FlowPanel} from "./Flow";
+import {PixieDynamicLoggingPanel} from "./PixieDynamicLogging/PixieDynamicLoggingPanel";
+import {MethodLevelTelemetryPanel} from "./MethodLevelTelemetry/MethodLevelTelemetryPanel";
+import {PRInfoModal} from "./SpatialView/PRInfoModal";
+import {GlobalNav} from "./GlobalNav";
+import {getTestGroup} from "../store/context/reducer";
+import {Loading} from "../Container/Loading";
+import {DelayedRender} from "../Container/DelayedRender";
+import {clearDynamicLogging} from "../store/dynamicLogging/actions";
 
 const EMAIL_MATCH_REGEX = new RegExp(
 	"[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*",
@@ -392,7 +378,7 @@ export class SimpleStream extends PureComponent {
 		const oauthOrPATProvider = activePanel.startsWith("oauthpat-provider-");
 		let [, , providerName, providerId, origin] = configureProviderInfo || [];
 		const customConfigureProvider = providerName
-			? ["azuredevops", "youtrack", "jiraserver", "jira", "newrelic"].find(
+			? ["azuredevops", "youtrack", "jiraserver", "newrelic"].find(
 					name => name === providerName
 			  )
 			: null;
@@ -532,9 +518,9 @@ export class SimpleStream extends PureComponent {
 								!oauthOrPATProvider && (
 									<ConfigureTokenProviderPanel providerId={providerId} originLocation={origin} />
 								)}
-							{customConfigureProvider === "jira" && (
-								<ConfigureJiraPanel providerId={providerId} originLocation={origin} />
-							)}
+							{/*{customConfigureProvider === "jira" && (*/}
+							{/*	<ConfigureJiraPanel providerId={providerId} originLocation={origin} />*/}
+							{/*)}*/}
 							{customConfigureProvider === "youtrack" && (
 								<ConfigureYouTrackPanel providerId={providerId} originLocation={origin} />
 							)}

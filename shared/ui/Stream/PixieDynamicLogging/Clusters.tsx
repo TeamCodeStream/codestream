@@ -4,10 +4,8 @@ import {
 } from "@codestream/protocols/agent";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
 import { CodeStreamState } from "@codestream/webview/store";
-import { ConfigureNewRelic } from "@codestream/webview/Stream/ConfigureNewRelic";
 import { DropdownButton, DropdownButtonItems } from "@codestream/webview/Stream/DropdownButton";
 import { Link } from "@codestream/webview/Stream/Link";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect } from "react";
 import { shallowEqual, useSelector } from "react-redux";

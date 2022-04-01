@@ -65,7 +65,7 @@ import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import { Modal } from "../Modal";
-import { ConfigureNewRelic } from "../ConfigureNewRelic";
+import ConfigureNewRelic from "../ConfigureNewRelic";
 import { ConditionalNewRelic } from "./ConditionalComponent";
 import { invite } from "../actions";
 
