@@ -523,15 +523,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse> {
 		void (await this.ensureConnected());
 
+		const filter = request.customFilter || "archived:false is:issue is:open assignee:@me";
+
 		try {
-			const url = request.customFilter
-				? `/search/issues?${qs.stringify({
-						q: request.customFilter,
-						sort: "updated"
-				  })}`
-				: "/issues";
+			const url = `/search/issues?${qs.stringify({ q: filter, sort: "updated" })}`;
 			const result = await this.restGet<any>(url);
-			const items = request.customFilter ? result.body.items : result.body;
+			const items = result.body.items;
 			const cards: ThirdPartyProviderCard[] = items.map((card: any) => {
 				return {
 					id: card.id,
