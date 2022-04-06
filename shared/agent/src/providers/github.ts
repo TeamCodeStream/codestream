@@ -1,21 +1,19 @@
 "use strict";
-import { GitRemoteLike, GitRepository } from "git/gitService";
+import { GitRemoteLike } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
-import { Response } from "node-fetch";
-import * as paths from "path";
+import { Headers, Response } from "node-fetch";
 import { performance } from "perf_hooks";
 import * as qs from "querystring";
 import semver from "semver";
 import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { toRepoName } from "../git/utils";
-import { Logger } from "../logger";
+import { Logger, TraceLevel } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
-	DocumentMarker,
 	FetchReposResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
@@ -40,12 +38,13 @@ import {
 	MoveThirdPartyCardResponse,
 	ProviderConfigurationData,
 	ProviderGetForkedReposResponse,
+	ReportingMessageType,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
 import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
-import { Arrays, Dates, Functions, log, lspProvider, Strings } from "../system";
+import { Dates, Functions, log, lspProvider } from "../system";
 import { Directive, Directives } from "./directives";
 import {
 	ApiResponse,
@@ -56,7 +55,6 @@ import {
 	ProviderGetRepoInfoResponse,
 	ProviderVersion,
 	PullRequestComment,
-	REFRESH_TIMEOUT,
 	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
@@ -67,6 +65,36 @@ interface GitHubRepo {
 	full_name: string;
 	path: string;
 	has_issues: boolean;
+}
+
+interface RateLimit {
+	rateLimit: number;
+	rateLimitUsed: number;
+	rateLimitRemaining: number;
+	rateLimitResetTime: Date;
+	rateLimitResource: string;
+}
+
+interface CallStats {
+	count: number;
+	cumulativeCost: number;
+	averageCost: number;
+}
+
+interface QueryLogger {
+	restApi: {
+		rateLimits: Record<string, RateLimit>;
+		fns: Record<string, CallStats>;
+	};
+	graphQlApi: {
+		rateLimit?: {
+			remaining: number;
+			resetAt: string;
+			resetInMinutes: number;
+			last?: { name: string; cost: number };
+		};
+		fns: Record<string, CallStats>;
+	};
 }
 
 export function cheese(): Function {
@@ -86,6 +114,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	) {
 		super(session, providerConfig);
 	}
+
+	_queryLogger: QueryLogger = {
+		graphQlApi: { fns: {} },
+		restApi: { rateLimits: {}, fns: {} }
+	};
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any): Promise<string[] | undefined> {
 		// TODO don't need this ensureConnected -- doesn't hit api
@@ -204,25 +237,6 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return this._version;
 	}
 
-	_queryLogger: {
-		restApi: {
-			rateLimit?: { remaining: number; limit: number; used: number; reset: number };
-			fns: any;
-		};
-		graphQlApi: {
-			rateLimit?: {
-				remaining: number;
-				resetAt: string;
-				resetInMinutes: number;
-				last?: { name: string; cost: number };
-			};
-			fns: any;
-		};
-	} = {
-		graphQlApi: { fns: {} },
-		restApi: { fns: {} }
-	};
-
 	async query<T = any>(query: string, variables: any = undefined) {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;
@@ -248,6 +262,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		} finally {
 			try {
 				if (response && response.rateLimit) {
+					Logger.debug("GH rateLimit", response.rateLimit);
 					this._queryLogger.graphQlApi.rateLimit = {
 						remaining: response.rateLimit.remaining,
 						resetAt: response.rateLimit.resetAt,
@@ -313,57 +328,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 	async restPost<T extends object, R extends object>(url: string, variables: any) {
 		const response = await this.post<T, R>(url, variables);
-		// if (
-		// 	response &&
-		// 	response.response &&
-		// 	response.response.headers &&
-		// 	Logger.level === TraceLevel.Debug
-		// ) {
-		// 	try {
-		// 		const rateLimit: any = {};
-		// 		["limit", "remaining", "used", "reset"].forEach(key => {
-		// 			try {
-		// 				rateLimit[key] = parseInt(
-		// 					response.response.headers.get(`x-ratelimit-${key}`) as string,
-		// 					10
-		// 				);
-		// 			} catch (e) {
-		// 				Logger.warn(e);
-		// 			}
-		// 		});
-
-		// 		this._queryLogger.restApi.rateLimit = rateLimit;
-
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ => _.indexOf("GitHubProvider") > -1 && _.indexOf("GitHubProvider.restPost") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (ex) {
-		// 				functionName = "unknown";
-		// 			}
-
-		// 			if (!this._queryLogger.restApi.fns[functionName]) {
-		// 				this._queryLogger.restApi.fns[functionName] = {
-		// 					count: 1
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.restApi.fns[functionName];
-		// 				existing.count++;
-		// 				this._queryLogger.restApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	} catch (err) {
-		// 		console.warn(err);
-		// 	}
-		// }
+		const rateLimitHeaders = this._getRestRateLimitHeaders(response.response.headers);
+		if (rateLimitHeaders) {
+			this._traceRestRateLimits(rateLimitHeaders, "restGet");
+		}
 
 		return response;
 	}
@@ -392,59 +360,94 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return response;
 	}
 
+	_getRestRateLimitHeaders(headers: Headers): RateLimit | null {
+		try {
+			const rateLimit = parseInt(headers.get("x-ratelimit-limit")!, 10);
+			const rateLimitUsed = parseInt(headers.get("x-ratelimit-used")!, 10);
+			const rateLimitRemaining = parseInt(headers.get("x-ratelimit-remaining")!, 10);
+			const rateLimitResetTime = new Date(parseInt(headers.get("x-ratelimit-reset")!, 10) * 1000);
+			const rateLimitResource = headers.get("x-ratelimit-resource")!;
+
+			return {
+				rateLimit,
+				rateLimitUsed,
+				rateLimitRemaining,
+				rateLimitResetTime,
+				rateLimitResource
+			};
+		} catch (e) {
+			Logger.warn("Error getting rate limit stats", e);
+		}
+		return null;
+	}
+
+	_traceRestRateLimits(rateLimitHeaders: RateLimit, httpMethod: "restPost" | "restGet") {
+		const {
+			rateLimitResource,
+			rateLimitResetTime,
+			rateLimitRemaining,
+			rateLimit
+		} = rateLimitHeaders;
+		Logger.log(
+			`${rateLimitResource} limit used ${rateLimitRemaining} of ${rateLimit}, reset at ${rateLimitResetTime}`
+		);
+		try {
+			this._queryLogger.restApi.rateLimits[rateLimitResource] = rateLimitHeaders;
+			const e = new Error();
+			if (e.stack) {
+				let functionName;
+				try {
+					functionName = e.stack
+						.split("\n")
+						.filter(
+							_ =>
+								_.indexOf("GitHubProvider") > -1 &&
+								_.indexOf(`GitHubProvider.${httpMethod}`) === -1 &&
+								_.indexOf("_traceRestRateLimits") === -1
+						)![0]
+						.match(/GitHubProvider\.(\w+)/)![1];
+				} catch (ex) {
+					functionName = "unknown";
+				}
+
+				if (!this._queryLogger.restApi.fns[functionName]) {
+					this._queryLogger.restApi.fns[functionName] = {
+						count: 1,
+						averageCost: 0,
+						cumulativeCost: 0
+					};
+				} else {
+					const existing = this._queryLogger.restApi.fns[functionName];
+					existing.count++;
+					this._queryLogger.restApi.fns[functionName] = existing;
+				}
+			}
+			const remainingPercent =
+				(rateLimitHeaders.rateLimitRemaining / rateLimitHeaders.rateLimit) * 100;
+			if (rateLimitHeaders.rateLimitRemaining === 0) {
+				Container.instance().errorReporter.reportMessage({
+					type: ReportingMessageType.Error,
+					source: "agent",
+					message: "GH rate limit exceeded",
+					extra: {
+						stats: this._queryLogger
+					}
+				});
+			} else if (Logger.level === TraceLevel.Debug || remainingPercent < 15) {
+				Logger.log(JSON.stringify(this._queryLogger, null, 2));
+			}
+		} catch (err) {
+			console.warn(err);
+		}
+	}
+
 	async restGet<T extends object>(url: string) {
 		const response = await this.get<T>(url);
-		// if (
-		// 	response &&
-		// 	response.response &&
-		// 	response.response.headers &&
-		// 	Logger.level === TraceLevel.Debug
-		// ) {
-		// 	try {
-		// 		const rateLimit: any = {};
-		// 		["limit", "remaining", "used", "reset"].forEach(key => {
-		// 			try {
-		// 				rateLimit[key] = parseInt(
-		// 					response.response.headers.get(`x-ratelimit-${key}`) as string,
-		// 					10
-		// 				);
-		// 			} catch (e) {
-		// 				Logger.warn(e);
-		// 			}
-		// 		});
 
-		// 		this._queryLogger.restApi.rateLimit = rateLimit;
-
-		// 		const e = new Error();
-		// 		if (e.stack) {
-		// 			let functionName;
-		// 			try {
-		// 				functionName = e.stack
-		// 					.split("\n")
-		// 					.filter(
-		// 						_ => _.indexOf("GitHubProvider") > -1 && _.indexOf("GitHubProvider.restGet") === -1
-		// 					)![0]
-		// 					.match(/GitHubProvider\.(\w+)/)![1];
-		// 			} catch (ex) {
-		// 				functionName = "unknown";
-		// 			}
-
-		// 			if (!this._queryLogger.restApi.fns[functionName]) {
-		// 				this._queryLogger.restApi.fns[functionName] = {
-		// 					count: 1
-		// 				};
-		// 			} else {
-		// 				const existing = this._queryLogger.restApi.fns[functionName];
-		// 				existing.count++;
-		// 				this._queryLogger.restApi.fns[functionName] = existing;
-		// 			}
-		// 		}
-
-		// 		Logger.log(JSON.stringify(this._queryLogger, null, 4));
-		// 	} catch (err) {
-		// 		console.warn(err);
-		// 	}
-		// }
+		const rateLimitHeaders = this._getRestRateLimitHeaders(response.response.headers);
+		if (rateLimitHeaders) {
+			this._traceRestRateLimits(rateLimitHeaders, "restGet");
+		}
 
 		return response;
 	}
@@ -1087,6 +1090,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	private _isMatchingRemotePredicate = (r: GitRemoteLike) => r.domain === "github.com";
+
 	getIsMatchingRemotePredicate() {
 		return this._isMatchingRemotePredicate;
 	}
@@ -4443,6 +4447,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	_timelineQueryItemsString!: string;
+
 	get getTimelineQueryItemsString() {
 		if (this._timelineQueryItemsString) return this._timelineQueryItemsString;
 
@@ -5241,6 +5246,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				cursor: cursor
 			})) as FetchThirdPartyPullRequestResponse;
 			if (response.rateLimit) {
+				Logger.debug("GH rateLimit", response.rateLimit);
 				this._prTimelineQueryRateLimit = {
 					cost: response.rateLimit.cost,
 					limit: response.rateLimit.limit,

@@ -2,31 +2,23 @@ import { action } from "../common";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { HostApi } from "../../webview-api";
 import {
-	ConnectThirdPartyProviderRequestType,
-	ConfigureThirdPartyProviderRequestType,
 	AddEnterpriseProviderRequestType,
+	ConfigureThirdPartyProviderRequestType,
+	ConnectThirdPartyProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	RemoveEnterpriseProviderRequestType,
 	TelemetryRequestType
 } from "@codestream/protocols/agent";
+import { getUserProviderInfo } from "@codestream/webview/store/providers/utils";
 import {
 	ConnectToIDEProviderRequestType,
 	DisconnectFromIDEProviderRequestType
 } from "../../ipc/host.protocol";
-import { CSMe } from "@codestream/protocols/api";
 import { logError } from "../../logger";
 import { setIssueProvider, openPanel } from "../context/actions";
 import { deleteForProvider } from "../activeIntegrations/actions";
 
 export const reset = () => action("RESET");
-
-export const getUserProviderInfo = (user: CSMe, provider: string, teamId: string) => {
-	const providerInfo = user.providerInfo || {};
-	const userProviderInfo = providerInfo[provider];
-	const teamProviderInfo = providerInfo[teamId] && providerInfo[teamId][provider];
-	if (userProviderInfo && userProviderInfo.accessToken) return userProviderInfo;
-	else return teamProviderInfo;
-};
 
 export const updateProviders = (data: ProvidersState) => action(ProvidersActionsType.Update, data);
 
@@ -67,7 +59,7 @@ export const connectProvider = (
 		if (provider.hasIssues) {
 			dispatch(setIssueProvider(providerId));
 		}
-		return { alreadyConnected: true };
+		return;
 	}
 	try {
 		const api = HostApi.instance;
@@ -81,7 +73,7 @@ export const connectProvider = (
 					connectionLocation
 				)
 			);
-			return {};
+			return;
 		} else {
 			await api.send(ConnectThirdPartyProviderRequestType, { providerId });
 		}
@@ -91,7 +83,7 @@ export const connectProvider = (
 		if (provider.hasIssues) {
 			dispatch(sendIssueProviderConnected(providerId, connectionLocation));
 			dispatch(setIssueProvider(providerId));
-			return {};
+			return;
 		}
 	} catch (error) {
 		const message = error instanceof Error ? error.message : JSON.stringify(error);
@@ -99,7 +91,6 @@ export const connectProvider = (
 			error: error
 		});
 	}
-	return {};
 };
 
 export type ViewLocation =

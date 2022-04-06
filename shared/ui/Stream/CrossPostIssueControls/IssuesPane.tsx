@@ -1,328 +1,107 @@
-import React, { useEffect } from "react";
-import { connect, useDispatch, useSelector } from "react-redux";
-import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
+import {
+	FetchThirdPartyCardsRequestType,
+	ThirdPartyProviderConfig
+} from "@codestream/protocols/agent";
+import { CSMe, CSTeamSettings } from "@codestream/protocols/api";
+import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import { Button } from "@codestream/webview/src/components/Button";
+import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
+import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
+import { CodeStreamState } from "@codestream/webview/store";
+import {
+	fetchBoardsAndCardsAction,
+	updateForProvider
+} from "@codestream/webview/store/activeIntegrations/actions";
+import { getUserProviderInfo } from "@codestream/webview/store/providers/utils";
+import { useDidMount, useInterval, usePrevious } from "@codestream/webview/utilities/hooks";
+import { keyFilter, mapFilter } from "@codestream/webview/utils";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+import { HostApi } from "../..";
+import * as codemarkSelectors from "../../store/codemarks/reducer";
 import {
 	openPanel,
-	setIssueProvider,
 	setCurrentCodemark,
+	setIssueProvider,
 	setNewPostEntry
 } from "../../store/context/actions";
-import Icon from "../Icon";
-import Menu from "../Menu";
-import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
-import {
-	ThirdPartyProviderConfig,
-	ThirdPartyProviders,
-	FetchThirdPartyBoardsRequestType,
-	FetchThirdPartyCardsRequestType
-} from "@codestream/protocols/agent";
-import { CSMe } from "@codestream/protocols/api";
-import { PrePRProviderInfoModalProps, PrePRProviderInfoModal } from "../PrePRProviderInfoModal";
-import { CodeStreamState } from "@codestream/webview/store";
-import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { connectProvider } from "../../store/providers/actions";
 import { setUserPreference, setUserStatus } from "../actions";
-import { HostApi } from "../..";
-import { keyFilter } from "@codestream/webview/utils";
-import { EMPTY_STATUS } from "../StartWork";
-import styled from "styled-components";
-import Filter from "../Filter";
-import { SmartFormattedList } from "../SmartFormattedList";
-import { Provider, IntegrationButtons } from "../IntegrationsPanel";
-import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
-import Tooltip from "../Tooltip";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
-import * as codemarkSelectors from "../../store/codemarks/reducer";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { Modal } from "../Modal";
-import { Button } from "@codestream/webview/src/components/Button";
-import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
-import { ButtonRow } from "@codestream/webview/src/components/Dialog";
-import { Dialog } from "@codestream/webview/src/components/Dialog";
-import { PaneHeader, PaneBody, PaneState } from "@codestream/webview/src/components/Pane";
-import { StartWork } from "../StartWork";
-import { mapFilter } from "@codestream/webview/utils";
-import { Link } from "../Link";
 import { ErrorMessage } from "../ConfigurePullRequestQuery";
-import { isEmpty as _isEmpty } from "lodash-es";
+import Filter from "../Filter";
+import Icon from "../Icon";
+import { IntegrationButtons, Provider } from "../IntegrationsPanel";
+import { Link } from "../Link";
+import Menu from "../Menu";
+import { Modal } from "../Modal";
+import { PrePRProviderInfoModal, PrePRProviderInfoModalProps } from "../PrePRProviderInfoModal";
+import { SmartFormattedList } from "../SmartFormattedList";
+import { EMPTY_STATUS, StartWork } from "../StartWork";
+import Tooltip from "../Tooltip";
+import { PROVIDER_MAPPINGS, ProviderDisplay } from "./types";
+
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
 	display: ProviderDisplay;
 }
 
-interface ConnectedProps {
-	// connectedProviderNames: string[];
-	currentTeamId: string;
-	currentUser: CSMe;
-	issueProviderConfig?: ThirdPartyProviderConfig;
-	providers: ThirdPartyProviders;
-	disabledProviders: { [key: string]: boolean };
-	setUserPreference?: Function;
-	teamSettings: { [key: string]: any };
-	isOnPrem: boolean;
-}
-
-interface Props extends ConnectedProps {
-	connectProvider(...args: Parameters<typeof connectProvider>): any;
-	updateForProvider(...args: Parameters<typeof updateForProvider>): any;
-	setIssueProvider(providerId?: string): void;
-	openPanel(...args: Parameters<typeof openPanel>): void;
+interface Props {
 	isEditing?: boolean;
 	paneState?: PaneState;
 }
 
-interface State {
-	isLoading: boolean;
-	loadingProvider?: ProviderInfo;
-	issueProviderMenuOpen: boolean;
-	issueProviderMenuTarget: any;
-	propsForPrePRProviderInfoModal?: PrePRProviderInfoModalProps;
-}
+export default function IssuesPane(props: Props) {
+	const dispatch = useDispatch();
 
-class IssueDropdown extends React.Component<Props, State> {
-	constructor(props: Props) {
-		super(props);
-		const providerInfo = props.issueProviderConfig
-			? this.getProviderInfo(props.issueProviderConfig.id)
+	const [isLoading, setLoading] = useState(false);
+	const [issueProviderMenuOpen, setIssueProviderMenuOpen] = useState(false);
+	const [issueProviderMenuTarget, setIssueProviderMenuTarget] = useState(undefined);
+	const [propsForPrePRProviderInfoModal, setPropsForPrePRProviderInfoModal] = useState<
+		PrePRProviderInfoModalProps | undefined
+	>(undefined);
+	const [loadingProvider, setLoadingProvider] = useState<ProviderInfo | undefined>(undefined);
+
+	const derivedState = useSelector((state: CodeStreamState) => {
+		const { users, teams, session, context, providers, preferences, configs } = state;
+		const currentIssueProviderConfig = context.issueProvider
+			? providers[context.issueProvider]
 			: undefined;
-		const loadingProvider = providerInfo;
-		this.state = {
-			isLoading: false,
-			loadingProvider,
-			issueProviderMenuOpen: false,
-			issueProviderMenuTarget: undefined
+		const workPreferences = preferences.startWork || EMPTY_HASH;
+		const team = teams[context.currentTeamId];
+		const teamSettings: CSTeamSettings = team.settings || EMPTY_HASH;
+
+		const knownIssueProviders: string[] =
+			!providers || !Object.keys(providers).length
+				? []
+				: Object.keys(providers).filter(providerId => {
+						const provider = providers![providerId];
+						return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
+				  });
+
+		return {
+			currentUser: users[session.userId!] as CSMe,
+			currentTeamId: context.currentTeamId,
+			teamSettings,
+			providers,
+			issueProviderConfig: currentIssueProviderConfig,
+			disabledProviders: workPreferences.disabledProviders || EMPTY_HASH,
+			isOnPrem: configs.isOnPrem,
+			knownIssueProviders
 		};
-	}
+	});
 
-	componentDidMount() {
-		const { issueProviderConfig } = this.props;
-		const providerInfo = issueProviderConfig
-			? this.getProviderInfo(issueProviderConfig.id)
-			: undefined;
-		if (!issueProviderConfig || !providerInfo) {
-			this.props.setIssueProvider(undefined);
-		}
-	}
-
-	componentDidUpdate(prevProps: Props, prevState: State) {
-		const { issueProviderConfig } = this.props;
-		const providerInfo = issueProviderConfig
-			? this.getProviderInfo(issueProviderConfig.id)
-			: undefined;
-		if (
-			providerInfo &&
-			issueProviderConfig &&
-			(!prevProps.issueProviderConfig ||
-				prevProps.issueProviderConfig.id !== issueProviderConfig.id)
-		) {
-			this.setState({ isLoading: false });
-		} else if (!providerInfo && prevProps.issueProviderConfig) {
-			if (this.state.isLoading) {
-				this.setState({ isLoading: false, loadingProvider: undefined });
-			}
-		}
-	}
-
-	renderLoading() {
-		const { isLoading, loadingProvider } = this.state;
-
-		if (!isLoading) return null;
-
-		return (
-			<LoadingMessage align="left">
-				Authenticating with {loadingProvider!.display.displayName}... (check your web browser){" "}
-				<a onClick={this.cancelLoading}>cancel</a>
-			</LoadingMessage>
-		);
-	}
-
-	cancelLoading = () => {
-		this.setState({ isLoading: false });
-		this.props.setIssueProvider(undefined);
-	};
-
-	render() {
-		// console.warn("rendering issues...");
-		const { issueProviderConfig, teamSettings } = this.props;
-		const providerInfo = issueProviderConfig
-			? this.getProviderInfo(issueProviderConfig.id)
-			: undefined;
-
-		if (!this.props.providers || !Object.keys(this.props.providers).length) return null;
-
-		const knownIssueProviders = Object.keys(this.props.providers).filter(providerId => {
-			const provider = this.props.providers![providerId];
-			return provider.hasIssues && !!PROVIDER_MAPPINGS[provider.name];
-		});
-		if (knownIssueProviders.length === 0) {
-			return null;
-		}
-
-		const knownIssueProviderOptions = mapFilter(knownIssueProviders, providerId => {
-			const issueProvider = this.props.providers![providerId];
-			const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-			const displayName = issueProvider.isEnterprise
-				? `${providerDisplay.displayName} - ${issueProvider.host}`
-				: providerDisplay.displayName;
-
-			const checked = this.providerIsConnected(providerId) && !this.providerIsDisabled(providerId);
-			if (!providerDisplay.supportsStartWork) return;
-			if (teamSettings.limitIssues && !teamSettings.issuesProviders[providerId] && !checked) return;
-			return {
-				providerIcon: <Icon name={providerDisplay.icon || "blank"} />,
-				checked: checked,
-				value: providerId,
-				label: displayName,
-				key: providerId,
-				action: () => this.selectIssueProvider(providerId)
-			};
-		}).sort((a, b) => a.label.localeCompare(b.label));
-		// const index = knownIssueProviderOptions.findIndex(i => i.disabled);
-		// @ts-ignore
-		// knownIssueProviderOptions.splice(index, 0, { label: "-" });
-
-		const activeProviders = knownIssueProviders
-			.filter(id => this.providerIsConnected(id) && !this.providerIsDisabled(id))
-			.map(id => this.props.providers![id]);
-
-		return (
-			<>
-				{this.state.propsForPrePRProviderInfoModal && (
-					<PrePRProviderInfoModal {...this.state.propsForPrePRProviderInfoModal} />
-				)}
-				<IssueList
-					providers={activeProviders}
-					knownIssueProviderOptions={knownIssueProviderOptions}
-					loadingMessage={this.state.isLoading ? this.renderLoading() : null}
-					paneState={this.props.paneState}
-				></IssueList>
-			</>
-		);
-	}
-
-	renderProviderOptions = (selectedProvider, knownIssueProviderOptions) => {
-		return (
-			<span className="dropdown-button" onClick={this.switchIssueProvider}>
-				<Icon name="chevron-down" />
-				{this.state.issueProviderMenuOpen && (
-					<Menu
-						align="dropdownRight"
-						target={this.state.issueProviderMenuTarget}
-						items={knownIssueProviderOptions}
-						action={() => {}}
-					/>
-				)}
-			</span>
-		);
-	};
-
-	switchIssueProvider = (event: React.SyntheticEvent) => {
-		if (this.props.isEditing) return;
-
-		event.stopPropagation();
-		const target = event.target;
-		this.setState(state => ({
-			issueProviderMenuOpen: !state.issueProviderMenuOpen,
-			// @ts-ignore
-			issueProviderMenuTarget: target.closest(".dropdown-button")
-		}));
-	};
-
-	providerIsDisabled = providerId => this.props.disabledProviders[providerId];
-
-	selectIssueProvider = providerId => {
-		const { setUserPreference } = this.props;
-		this.setState({ issueProviderMenuOpen: false });
-		if (!providerId) return;
-		if (providerId === "codestream") {
-			this.props.setIssueProvider(undefined);
-			return;
-		}
-
-		// if (setUserPreference) setUserPreference(["skipConnectIssueProviders"], false);
-
-		if (this.providerIsDisabled(providerId)) {
-			// if it's disabled, enable it
-			if (setUserPreference)
-				setUserPreference(["startWork", "disabledProviders", providerId], false);
-		} else if (this.providerIsConnected(providerId)) {
-			// if it's conected and not disabled, disable it
-			if (setUserPreference) {
-				setUserPreference(["startWork", "disabledProviders", providerId], true);
-				// setUserPreference(["skipConnectIssueProviders"], false);
-			}
-		} else {
-			// otherwise we need to connect
-			const issueProvider = this.props.providers![providerId];
-			const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
-			this.onChangeProvider({ provider: issueProvider, display: providerDisplay });
-		}
-	};
-
-	async onChangeProvider(providerInfo: ProviderInfo) {
-		if (
-			(providerInfo.provider.needsConfigure ||
-				(providerInfo.provider.needsConfigureForOnPrem && this.props.isOnPrem)) &&
-			!this.providerIsConnected(providerInfo.provider.id)
-		) {
-			const { name, id } = providerInfo.provider;
-			this.props.openPanel(`configure-provider-${name}-${id}-Compose Modal`);
-		} else if (
-			providerInfo.provider.forEnterprise &&
-			!this.providerIsConnected(providerInfo.provider.id)
-		) {
-			const { name, id } = providerInfo.provider;
-			/* if (name === "github_enterprise") {
-				this.setState({
-					propsForPrePRProviderInfoModal: {
-						providerName: name,
-						onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
-						action: () => this.props.openPanel(`configure-enterprise-${name}-${id}`)
-					}
-				});
-			} else */ this.props.openPanel(
-				`configure-enterprise-${name}-${id}-Issues Section`
-			);
-		} else {
-			const { name } = providerInfo.provider;
-			const { issueProviderConfig } = this.props;
-			const newValueIsNotCurrentProvider =
-				issueProviderConfig == undefined || issueProviderConfig.name !== name;
-			const newValueIsNotAlreadyConnected =
-				!issueProviderConfig || !this.providerIsConnected(issueProviderConfig.id);
-			if (
-				newValueIsNotCurrentProvider &&
-				newValueIsNotAlreadyConnected &&
-				(name === "github" || name === "bitbucket" || name === "gitlab")
-			) {
-				this.setState({
-					propsForPrePRProviderInfoModal: {
-						providerName: name,
-						onClose: () => {
-							this.setState({ propsForPrePRProviderInfoModal: undefined });
-						},
-						action: () => {
-							this.setState({ isLoading: true, loadingProvider: providerInfo });
-							this.props.connectProvider(providerInfo.provider.id, "Issues Section");
-						}
-					}
-				});
-			} else {
-				this.setState({ isLoading: true, loadingProvider: providerInfo });
-				const ret = await this.props.connectProvider(providerInfo.provider.id, "Issues Section");
-				if (ret && ret.alreadyConnected) this.setState({ isLoading: false });
-			}
-		}
-	}
-
-	getProviderInfo(providerId: string): ProviderInfo | undefined {
-		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
+	const getProviderInfo = (providerId: string): ProviderInfo | undefined => {
+		const provider = derivedState.providers ? derivedState.providers[providerId] : undefined;
 		if (!provider) return undefined;
 		const display = provider ? PROVIDER_MAPPINGS[provider.name] : undefined;
 		if (!display) return undefined;
 		let providerInfo = getUserProviderInfo(
-			this.props.currentUser,
+			derivedState.currentUser,
 			provider.name,
-			this.props.currentTeamId
+			derivedState.currentTeamId
 		);
 		if (!providerInfo) return;
 		if (providerInfo.accessToken) return { provider, display };
@@ -331,58 +110,244 @@ class IssueDropdown extends React.Component<Props, State> {
 		providerInfo = providerInfo!.hosts[provider.id];
 		if (!providerInfo) return undefined;
 		return { provider, display };
-	}
+	};
 
-	providerIsConnected(providerId: string): boolean {
-		const provider = this.props.providers ? this.props.providers[providerId] : undefined;
-		const { currentUser } = this.props;
+	useDidMount(() => {
+		const { issueProviderConfig } = derivedState;
+		const providerInfo = issueProviderConfig ? getProviderInfo(issueProviderConfig.id) : undefined;
+		if (!issueProviderConfig || !providerInfo) {
+			dispatch(setIssueProvider(undefined));
+		}
+
+		setLoadingProvider(
+			derivedState.issueProviderConfig
+				? getProviderInfo(derivedState.issueProviderConfig.id)
+				: undefined
+		);
+	});
+
+	const prevState = usePrevious({ issueProviderConfig: derivedState.issueProviderConfig });
+
+	useEffect(() => {
+		const { issueProviderConfig } = derivedState;
+		const providerInfo = issueProviderConfig ? getProviderInfo(issueProviderConfig.id) : undefined;
+		const prevIssueProviderConfig = prevState?.issueProviderConfig;
+		if (
+			providerInfo &&
+			issueProviderConfig &&
+			(!prevIssueProviderConfig || prevIssueProviderConfig.id !== issueProviderConfig.id)
+		) {
+			setLoading(false);
+		} else if (!providerInfo && prevIssueProviderConfig) {
+			if (isLoading) {
+				setLoading(false);
+				setLoadingProvider(undefined);
+			}
+		}
+	}, [derivedState.issueProviderConfig]);
+
+	const renderLoading = () => {
+		if (!isLoading) return null;
+
+		return (
+			<LoadingMessage align="left">
+				Authenticating with {loadingProvider!.display.displayName}... (check your web browser){" "}
+				<a onClick={cancelLoading}>cancel</a>
+			</LoadingMessage>
+		);
+	};
+
+	const cancelLoading = () => {
+		setLoading(false);
+		dispatch(setIssueProvider(undefined));
+	};
+
+	const renderProviderOptions = (selectedProvider, knownIssueProviderOptions) => {
+		return (
+			<span className="dropdown-button" onClick={switchIssueProvider}>
+				<Icon name="chevron-down" />
+				{issueProviderMenuOpen && (
+					<Menu
+						align="dropdownRight"
+						target={issueProviderMenuTarget}
+						items={knownIssueProviderOptions}
+						action={() => {}}
+					/>
+				)}
+			</span>
+		);
+	};
+
+	const switchIssueProvider = (event: React.SyntheticEvent) => {
+		if (props.isEditing) return;
+
+		event.stopPropagation();
+		const target = event.target;
+		setIssueProviderMenuOpen(!issueProviderMenuOpen);
+		// @ts-ignore
+		setIssueProviderMenuTarget(target.closest(".dropdown-button"));
+	};
+
+	const providerIsDisabled = providerId => {
+		return derivedState.disabledProviders[providerId];
+	};
+
+	const providerIsConnected = (providerId: string): boolean => {
+		const provider = derivedState.providers ? derivedState.providers[providerId] : undefined;
+		const { currentUser } = derivedState;
 		if (!provider || currentUser.providerInfo == undefined) return false;
-		let providerInfo = getUserProviderInfo(currentUser, provider.name, this.props.currentTeamId);
+		let providerInfo = getUserProviderInfo(currentUser, provider.name, derivedState.currentTeamId);
 		if (!providerInfo) return false;
 		if (providerInfo.accessToken) return true;
 		if (!provider.isEnterprise) return false;
 		if (!providerInfo.hosts) return false;
 		providerInfo = providerInfo.hosts[provider.id];
 		return providerInfo && providerInfo.accessToken ? true : false;
-	}
-	componentWillReceiveProps(nextProps) {
-		for (const index in nextProps) {
-			if (nextProps[index] !== this.props[index]) {
-				console.warn(index, this.props[index], "-->", nextProps[index]);
+	};
+
+	const selectIssueProvider = providerId => {
+		setIssueProviderMenuOpen(false);
+		if (!providerId) return;
+		if (providerId === "codestream") {
+			dispatch(setIssueProvider(undefined));
+			return;
+		}
+
+		// if (setUserPreference) setUserPreference(["skipConnectIssueProviders"], false);
+
+		if (providerIsDisabled(providerId)) {
+			// if it's disabled, enable it
+			dispatch(setUserPreference(["startWork", "disabledProviders", providerId], false));
+		} else if (providerIsConnected(providerId)) {
+			// if it's conected and not disabled, disable it
+			dispatch(setUserPreference(["startWork", "disabledProviders", providerId], true));
+			// setUserPreference(["skipConnectIssueProviders"], false);
+		} else {
+			// otherwise we need to connect
+			const issueProvider = derivedState.providers![providerId];
+			const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+			onChangeProvider({ provider: issueProvider, display: providerDisplay });
+		}
+	};
+
+	const onChangeProvider = async (providerInfo: ProviderInfo) => {
+		if (
+			(providerInfo.provider.needsConfigure ||
+				(providerInfo.provider.needsConfigureForOnPrem && derivedState.isOnPrem)) &&
+			!providerIsConnected(providerInfo.provider.id)
+		) {
+			const { name, id } = providerInfo.provider;
+			dispatch(openPanel(`configure-provider-${name}-${id}-Compose Modal`));
+		} else if (
+			providerInfo.provider.forEnterprise &&
+			!providerIsConnected(providerInfo.provider.id)
+		) {
+			const { name, id } = providerInfo.provider;
+			/* if (name === "github_enterprise") {
+                this.setState({
+                    propsForPrePRProviderInfoModal: {
+                        providerName: name,
+                        onClose: () => this.setState({ propsForPrePRProviderInfoModal: undefined }),
+                        action: () => this.props.openPanel(`configure-enterprise-${name}-${id}`)
+                    }
+                });
+            } else */
+			dispatch(openPanel(`configure-enterprise-${name}-${id}-Issues Section`));
+		} else {
+			const { name } = providerInfo.provider;
+			const { issueProviderConfig } = derivedState;
+			const newValueIsNotCurrentProvider =
+				issueProviderConfig == undefined || issueProviderConfig.name !== name;
+			const newValueIsNotAlreadyConnected =
+				!issueProviderConfig || !providerIsConnected(issueProviderConfig.id);
+			if (
+				newValueIsNotCurrentProvider &&
+				newValueIsNotAlreadyConnected &&
+				(name === "github" || name === "bitbucket" || name === "gitlab")
+			) {
+				setPropsForPrePRProviderInfoModal({
+					providerName: name,
+					onClose: () => {
+						setPropsForPrePRProviderInfoModal(undefined);
+					},
+					action: () => {
+						setLoading(true);
+						setLoadingProvider(providerInfo);
+						dispatch(connectProvider(providerInfo.provider.id, "Issues Section"));
+					}
+				});
+			} else {
+				setLoading(true);
+				setLoadingProvider(providerInfo);
+				dispatch(connectProvider(providerInfo.provider.id, "Issues Section"));
+				if (providerIsConnected(providerInfo.provider.id)) {
+					setLoading(false);
+				}
 			}
 		}
-	}
-}
-
-const EMPTY_HASH2 = {};
-const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	const { users, teams, session, context, providers, preferences, configs } = state;
-	const currentIssueProviderConfig = context.issueProvider
-		? providers[context.issueProvider]
-		: undefined;
-
-	const workPreferences = preferences.startWork || EMPTY_HASH;
-	const team = teams[context.currentTeamId];
-	const teamSettings = team.settings || EMPTY_HASH2;
-
-	return {
-		currentUser: users[session.userId!] as CSMe,
-		currentTeamId: context.currentTeamId,
-		teamSettings,
-		providers,
-		issueProviderConfig: currentIssueProviderConfig,
-		disabledProviders: workPreferences.disabledProviders || EMPTY_HASH,
-		isOnPrem: configs.isOnPrem
 	};
-};
 
-export default connect(mapStateToProps, {
-	connectProvider,
-	setIssueProvider,
-	openPanel,
-	updateForProvider,
-	setUserPreference
-})(IssueDropdown);
+	const activeProviders = useMemo(() => {
+		const result = derivedState.knownIssueProviders
+			.filter(id => providerIsConnected(id) && !providerIsDisabled(id))
+			.map(id => derivedState.providers![id]);
+		return result;
+	}, [
+		derivedState.knownIssueProviders,
+		derivedState.providers,
+		derivedState.currentUser,
+		derivedState.currentTeamId
+	]);
+
+	// console.warn("rendering issues...");
+	const { issueProviderConfig, teamSettings } = derivedState;
+
+	if (derivedState.knownIssueProviders.length === 0) {
+		return null;
+	}
+
+	const knownIssueProviderOptions = mapFilter(derivedState.knownIssueProviders, providerId => {
+		const issueProvider = derivedState.providers![providerId];
+		const providerDisplay = PROVIDER_MAPPINGS[issueProvider.name];
+		const displayName = issueProvider.isEnterprise
+			? `${providerDisplay.displayName} - ${issueProvider.host}`
+			: providerDisplay.displayName;
+
+		const checked = providerIsConnected(providerId) && !providerIsDisabled(providerId);
+		if (!providerDisplay.supportsStartWork) return;
+		if (
+			teamSettings.limitIssues &&
+			!(teamSettings.issuesProviders && teamSettings.issuesProviders[providerId]) &&
+			!checked
+		)
+			return;
+		return {
+			providerIcon: <Icon name={providerDisplay.icon || "blank"} />,
+			checked: checked,
+			value: providerId,
+			label: displayName,
+			key: providerId,
+			action: () => selectIssueProvider(providerId)
+		};
+	}).sort((a, b) => a.label.localeCompare(b.label));
+	// const index = knownIssueProviderOptions.findIndex(i => i.disabled);
+	// @ts-ignore
+	// knownIssueProviderOptions.splice(index, 0, { label: "-" });
+
+	return (
+		<>
+			{propsForPrePRProviderInfoModal && (
+				<PrePRProviderInfoModal {...propsForPrePRProviderInfoModal} />
+			)}
+			<IssueList
+				activeProviders={activeProviders}
+				knownIssueProviderOptions={knownIssueProviderOptions}
+				loadingMessage={isLoading ? renderLoading() : null}
+				paneState={props.paneState}
+			/>
+		</>
+	);
+}
 
 export function Issue(props) {
 	const { card } = props;
@@ -395,7 +360,7 @@ export function Issue(props) {
 }
 
 interface IssueListProps {
-	providers: ThirdPartyProviderConfig[];
+	activeProviders: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
 	loadingMessage?: React.ReactNode;
 	paneState?: PaneState;
@@ -406,12 +371,11 @@ const EMPTY_CUSTOM_FILTERS = { selected: "", filters: {} };
 
 export const IssueList = React.memo((props: React.PropsWithChildren<IssueListProps>) => {
 	const dispatch = useDispatch();
-	const data = useSelector((state: CodeStreamState) => state.activeIntegrations);
+	const data = useSelector((state: CodeStreamState) => state.activeIntegrations.integrations);
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
-		const providerIds = props.providers.map(provider => provider.id).join(":");
 		const skipConnect = preferences.skipConnectIssueProviders;
 		const csIssues = codemarkSelectors.getMyOpenIssues(state.codemarks, state.session.userId!);
 		const teamId = state.context.currentTeamId;
@@ -424,16 +388,22 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			(currentUser.status && currentUser.status[teamId] && currentUser.status[teamId].invisible) ||
 			false;
 
+		const isLoading = state.activeIntegrations.issuesLoading;
+		const initialLoadComplete = state.activeIntegrations.initialLoadComplete;
+		const activeProviderIds = props.activeProviders.map(provider => provider.id).join(":");
+
 		return {
 			csIssues,
 			currentUser,
 			invisible,
-			providerIds,
 			startWorkCard: state.context.startWorkCard,
 			startWorkPreferences,
 			selectedCardId,
 			skipConnect,
-			teamId
+			teamId,
+			isLoading,
+			initialLoadComplete,
+			activeProviderIds
 		};
 	});
 
@@ -441,8 +411,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		dispatch(setUserStatus("", "", "", "", derivedState.invisible, derivedState.teamId));
 	};
 
-	const [initialLoadComplete, setInitialLoadComplete] = React.useState(false);
-	const [isLoading, setIsLoading] = React.useState(false);
 	const [isLoadingCard, setIsLoadingCard] = React.useState("");
 	const [loadedBoards, setLoadedBoards] = React.useState(0);
 	const [loadedCards, setLoadedCards] = React.useState(0);
@@ -451,7 +419,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	>();
 	const [newCustomFilter, setNewCustomFilter] = React.useState("");
 	const [newCustomFilterName, setNewCustomFilterName] = React.useState("");
-	const [queryOpen, setQueryOpen] = React.useState(false);
 	const [query, setQuery] = React.useState("");
 	const [reload, setReload] = React.useState(1);
 	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
@@ -520,7 +487,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			// dispatch(bootstrapCodemarks());
 		}
 		//setup blank data state for provider cards
-		props.providers.forEach(provider => {
+		props.activeProviders.forEach(provider => {
 			updateDataState(provider.id, { cards: [] });
 		});
 	});
@@ -536,112 +503,28 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		dispatch(setUserPreference(["startWork", providerId, key], value));
 	};
 
-	React.useEffect(() => {
-		// if (data.boards && data.boards.length > 0) return;
-		if (props.providers.length === 0) return;
+	const fetchData = async () => {
+		if (props.activeProviders.length === 0) return;
 
-		if (!isLoading) setIsLoading(true);
-
-		let isValid = true;
-
-		const fetchBoards = async () => {
-			if (!isValid) return;
-
-			await Promise.all(
-				props.providers.map(async provider => {
-					const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
-						providerId: provider.id
-					});
-					updateDataState(provider.id, { boards: response.boards });
-				})
-			);
-			setLoadedBoards(loadedBoards + 1);
-			if (!initialLoadComplete) {
-				setIsLoading(false);
-			}
-		};
-
-		const fetchCards = async () => {
-			setIsLoading(true);
-
-			await Promise.all(
-				props.providers.map(async provider => {
-					const filterCustom = getFilterCustom(provider.id);
-					try {
-						const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-							customFilter: filterCustom.selected,
-							providerId: provider.id
-						});
-						updateDataState(provider.id, {
-							cards: response.cards
-						});
-					} catch (error) {
-						console.warn("Error Loading Cards: ", error);
-					}
-				})
-			);
-			setIsLoading(false);
+		try {
+			dispatch(fetchBoardsAndCardsAction(props.activeProviders));
 			setLoadedCards(loadedCards + 1);
-		};
-
-		fetchBoards();
-		// don't run duplicate fetch cards call on initial load
-		if (initialLoadComplete) {
-			fetchCards();
+			setLoadedBoards(loadedBoards + 1);
+		} catch (e) {
+			console.error(e);
 		}
-
-		return () => {
-			isValid = false;
-		};
-	}, [derivedState.providerIds, reload]);
-
-	const delay = n => {
-		return new Promise(resolve => {
-			setTimeout(resolve, n * 1000);
-		});
 	};
 
-	// Fetch initial cards here, api call triggered once initial updateDataState is complete
-	// Without doing this, we run into an issue where cards are fetched too early and nothing
-	// is loaded into cards array.  User would have to use reload button to see cards.
-	// See: https://newrelic.atlassian.net/browse/CDSTRM-1329
-	// 		https://newrelic.atlassian.net/browse/CDSTRM-1425
 	React.useEffect(() => {
-		let selectedProvidersHaveBeenInitialized = props.providers.some(provider => {
-			return data[provider.id] && _isEmpty(data[provider.id]?.cards);
-		});
+		console.debug("Reloading issues");
+		fetchData();
+	}, [derivedState.activeProviderIds, reload]);
 
-		if (selectedProvidersHaveBeenInitialized && !initialLoadComplete) {
-			void (async () => {
-				setIsLoading(true);
-				// API needs a second to register with third party providers ???
-				// Calling this too early on initial load can cause an issue where
-				// nothing is returned.
-				// @TODO: See if there is further optimization that could be done here.
-				await delay(1);
-				await Promise.all(
-					props.providers.map(async provider => {
-						const filterCustom = getFilterCustom(provider.id);
-						try {
-							const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
-								customFilter: filterCustom.selected,
-								providerId: provider.id
-							});
-							updateDataState(provider.id, {
-								cards: response.cards
-							});
-						} catch (error) {
-							console.warn("Error Loading Cards: ", error);
-						}
-					})
-				);
-
-				setIsLoading(false);
-				setInitialLoadComplete(true);
-				setLoadedCards(loadedCards + 1);
-			})();
+	useInterval(async () => {
+		if (!derivedState.isLoading) {
+			await fetchData();
 		}
-	}, [data]);
+	}, 60000);
 
 	const selectCard = React.useCallback(
 		async (card?) => {
@@ -825,11 +708,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	const { cards, canFilter, cardLabel, selectedLabel } = React.useMemo(() => {
 		const items = [] as any;
 		const lowerQ = (query || "").toLocaleLowerCase();
-		const numConnectedProviders = props.providers.length;
+		const numConnectedProviders = props.activeProviders.length;
 		let canFilter = false;
 		let cardLabel = "issue";
 		let selectedLabel = "issues assigned to you";
-		props.providers.forEach(provider => {
+		props.activeProviders.forEach(provider => {
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 			canFilter =
 				canFilter || providerDisplay.hasFilters || providerDisplay.hasCustomFilters || false;
@@ -845,8 +728,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			if (isFilteringCustom) {
 				// if we have more than one connected provider, we don't want
 				// the label to be misleading in terms of what you're filtering on
-				if (numConnectedProviders > 1) selectedLabel = cardLabel + "s";
-				else if (filterCustom.filters[filterCustom.selected]) {
+				if (numConnectedProviders > 1) {
+					selectedLabel = cardLabel + "s";
+				} else if (filterCustom.filters[filterCustom.selected]) {
 					selectedLabel = `${filterCustom.filters[filterCustom.selected]}`;
 				}
 			} else {
@@ -950,10 +834,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		// );
 
 		const items = { filters: [], services: [] } as any;
-		props.providers.forEach(provider => {
+		props.activeProviders.forEach(provider => {
 			const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-			if (providerDisplay.hasFilters || providerDisplay.hasCustomFilters)
+			if (providerDisplay.hasFilters || providerDisplay.hasCustomFilters) {
 				items.filters.unshift(filterMenuItemsForProvider(provider));
+			}
 		});
 		if (items.filters.length === 1) items.filters = items.filters[0].submenu;
 
@@ -1027,7 +912,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			}
 
 			if (id !== "") {
-				const provider = props.providers.find(_ => _.id === id);
+				const provider = props.activeProviders.find(_ => _.id === id);
 				const cardsWithProvider = response.cards.map(card => {
 					return {
 						...card,
@@ -1043,13 +928,13 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		}
 	};
 
-	const firstLoad = cards.length == 0 && isLoading;
+	const firstLoad = cards.length === 0 && derivedState.isLoading;
 	const providersLabel =
-		props.providers.length === 0 ? (
+		props.activeProviders.length === 0 ? (
 			"CodeStream"
 		) : (
 			<SmartFormattedList
-				value={props.providers.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
+				value={props.activeProviders.map(provider => PROVIDER_MAPPINGS[provider.name].displayName)}
 			/>
 		);
 
@@ -1202,13 +1087,13 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				title="Issues"
 				count={cards.length}
 				id={WebviewPanels.Tasks}
-				isLoading={isLoading}
+				isLoading={derivedState.isLoading}
 			>
 				{!firstLoad && (
 					<Icon
 						title="Refresh"
 						onClick={() => setReload(reload + 1)}
-						className={`fixed ${isLoading ? "spin" : "spinnable"}`}
+						className={`fixed ${derivedState.isLoading ? "spin" : "spinnable"}`}
 						name="refresh"
 						placement="bottom"
 						delay={1}
@@ -1245,7 +1130,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					</div>
 					{props.loadingMessage ? (
 						<div>{props.loadingMessage}</div>
-					) : props.providers.length > 0 || derivedState.skipConnect ? (
+					) : props.activeProviders.length > 0 || derivedState.skipConnect ? (
 						<div className="filters" style={{ padding: "0 20px 5px 20px" }}>
 							Show{" "}
 							{canFilter ? (
@@ -1262,7 +1147,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							)}
 							from{" "}
 							<Filter
-								title={<>{isLoading && <Icon name="sync" className="spin" />}Select Providers</>}
+								title={
+									<>
+										{derivedState.isLoading && <Icon name="sync" className="spin" />}Select
+										Providers
+									</>
+								}
 								selected={"providersLabel"}
 								labels={{ providersLabel }}
 								items={[{ label: "-" }, ...menuItems.services]}
@@ -1310,14 +1200,14 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					{cards.length == 0 &&
 					selectedLabel !== "issues assigned to you" &&
 					!props.loadingMessage &&
-					initialLoadComplete &&
-					(props.providers.length > 0 || derivedState.skipConnect) ? (
+					derivedState.initialLoadComplete &&
+					(props.activeProviders.length > 0 || derivedState.skipConnect) ? (
 						<FilterMissing>The selected filter(s) did not return any issues.</FilterMissing>
 					) : (
 						!props.loadingMessage &&
-						(props.providers.length > 0 || derivedState.skipConnect) &&
+						(props.activeProviders.length > 0 || derivedState.skipConnect) &&
 						cards.length == 0 &&
-						initialLoadComplete && (
+						derivedState.initialLoadComplete && (
 							<FilterMissing>There are no open issues assigned to you.</FilterMissing>
 						)
 					)}

@@ -1,6 +1,6 @@
+import { getUserProviderInfo } from "@codestream/webview/store/providers/utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
-import { getUserProviderInfo } from "./actions";
 import { ProvidersState, ProvidersActionsType } from "./types";
 import { CodeStreamState } from "..";
 import {
@@ -13,7 +13,6 @@ import { mapFilter, safe } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
 import { createSelector } from "reselect";
 import { PROVIDER_MAPPINGS } from "@codestream/webview/Stream/CrossPostIssueControls/types";
-import { ContextState } from "../context/types";
 import { UsersState } from "../users/types";
 import { SessionState } from "../session/types";
 

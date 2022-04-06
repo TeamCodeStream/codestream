@@ -92,9 +92,19 @@ export interface LinearIntegrationData extends ActiveIntegrationData {
 
 export interface NewRelicIntegrationData extends ActiveIntegrationData {}
 
-export interface ActiveIntegrationsState extends Index<ActiveIntegrationData> {}
+export interface LoadingStatus {
+	issuesLoading?: boolean;
+	initialLoadComplete?: boolean;
+}
+
+export interface ActiveIntegrationsState {
+	integrations: Index<ActiveIntegrationData>;
+	issuesLoading: boolean;
+	initialLoadComplete: boolean;
+}
 
 export enum ActiveIntegrationsActionType {
 	UpdateForProvider = "@activeIntegrations/UpdateForProvider",
-	DeleteForProvider = "@activeIntegrations/DeleteForProvider"
+	DeleteForProvider = "@activeIntegrations/DeleteForProvider",
+	SetIssuesLoading = "@activeIntegrations/IssuesLoading"
 }

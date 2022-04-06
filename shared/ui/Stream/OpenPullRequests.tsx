@@ -3,7 +3,7 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { isEqual } from "lodash-es";
 import * as providerSelectors from "../store/providers/reducer";
 import { CodeStreamState } from "../store";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { PRHeadshot } from "../src/components/Headshot";
 import {
@@ -387,7 +387,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	useEffect(() => {
 		const disposable = setInterval(() => {
 			fetchPRs(queries, { force: true, alreadyLoading: true }, "interval");
-		}, 300000); // every 5 minutes
+		}, 60000); // every 1 minute
 
 		return () => {
 			clearInterval(disposable);

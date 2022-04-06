@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { PRHeadshot } from "../src/components/Headshot";
 import Tooltip from "./Tooltip";
 import { GetMyPullRequestsResponse, ThirdPartyProviderConfig } from "@codestream/protocols/agent";

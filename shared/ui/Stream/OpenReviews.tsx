@@ -5,7 +5,7 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import * as reviewSelectors from "../store/reviews/reducer";
 import * as userSelectors from "../store/users/reducer";
 import { CodeStreamState } from "../store";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { Headshot } from "../src/components/Headshot";
 import {

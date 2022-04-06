@@ -10,7 +10,7 @@ import { HostApi } from "..";
 import { ReviewShowLocalDiffRequestType } from "../ipc/host.protocol.review";
 import * as userSelectors from "../store/users/reducer";
 import { FileStatus } from "@codestream/protocols/api";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import { Range } from "vscode-languageserver-types";

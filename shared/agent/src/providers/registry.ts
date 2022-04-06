@@ -60,7 +60,11 @@ import {
 	UpdateThirdPartyStatusRequestType,
 	UpdateThirdPartyStatusResponse
 } from "../protocol/agent.protocol";
-import { CSMe, CSMePreferences, CSNotificationDeliveryPreference } from "../protocol/api.protocol.models";
+import {
+	CSMe,
+	CSMePreferences,
+	CSNotificationDeliveryPreference
+} from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { Functions, getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
 import { GitLabEnterpriseProvider } from "./gitlabEnterprise";
@@ -157,7 +161,11 @@ export class ThirdPartyProviderRegistry {
 
 	initialize(session: CodeStreamSession) {
 		this.session = session;
-		this._pollingInterval = Functions.repeatInterval(this.pullRequestsStateHandler.bind(this), 2000,  900000); // every 15 minutes
+		this._pollingInterval = Functions.repeatInterval(
+			this.pullRequestsStateHandler.bind(this),
+			2000,
+			900000
+		); // every 15 minutes
 		return this;
 	}
 
@@ -212,16 +220,20 @@ export class ThirdPartyProviderRegistry {
 		}
 	}
 
-    private shouldToastNotify = (prefs: CSMePreferences): boolean => {
-        const notificationDelivery = prefs.notificationDelivery || CSNotificationDeliveryPreference.All;
+	private shouldToastNotify = (prefs: CSMePreferences): boolean => {
+		const notificationDelivery = prefs.notificationDelivery || CSNotificationDeliveryPreference.All;
 		const toastPrNotify = prefs.toastPrNotify === false ? false : true;
-        const result = (notificationDelivery === CSNotificationDeliveryPreference.ToastOnly ||
-            notificationDelivery === CSNotificationDeliveryPreference.All) && toastPrNotify;
+		const result =
+			(notificationDelivery === CSNotificationDeliveryPreference.ToastOnly ||
+				notificationDelivery === CSNotificationDeliveryPreference.All) &&
+			toastPrNotify;
 		if (!result) {
-			Logger.log(`Skipping PR toast notify due to user settings notificationDelivery: ${notificationDelivery}, toastPrNotify: ${toastPrNotify}`);
+			Logger.log(
+				`Skipping PR toast notify due to user settings notificationDelivery: ${notificationDelivery}, toastPrNotify: ${toastPrNotify}`
+			);
 		}
 		return result;
-    }
+	};
 
 	private getProvidersPRsDiff = (providersPRs: ProviderPullRequests[]): ProviderPullRequests[] => {
 		const newProvidersPRs: ProviderPullRequests[] = [];
@@ -277,7 +289,7 @@ export class ThirdPartyProviderRegistry {
 		});
 
 		return newProvidersPRs;
-	}
+	};
 
 	private fireNewPRsNotifications(providersPRs: ProviderPullRequests[]) {
 		const prNotificationMessages: PullRequestsChangedData[] = [];
@@ -418,8 +430,11 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		if (issueProvider.getCards) return issueProvider.getCards(request);
-		else return Promise.resolve({ cards: [] });
+		if (issueProvider.getCards) {
+			return issueProvider.getCards(request);
+		} else {
+			return Promise.resolve({ cards: [] });
+		}
 	}
 
 	@log()
@@ -440,8 +455,11 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support issues`);
 		}
 
-		if (issueProvider.getCardWorkflow) return issueProvider.getCardWorkflow(request);
-		else return Promise.resolve({ workflow: [] });
+		if (issueProvider.getCardWorkflow) {
+			return issueProvider.getCardWorkflow(request);
+		} else {
+			return Promise.resolve({ workflow: [] });
+		}
 	}
 
 	@log()

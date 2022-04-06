@@ -1,6 +1,7 @@
+import { getUserProviderInfo } from "@codestream/webview/store/providers/utils";
 import React from "react";
 import { connect } from "react-redux";
-import { connectProvider, getUserProviderInfo } from "../../store/providers/actions";
+import { connectProvider } from "../../store/providers/actions";
 import { openPanel, setIssueProvider } from "../../store/context/actions";
 import Icon from "../Icon";
 import Menu from "../Menu";

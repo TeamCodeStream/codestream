@@ -40,7 +40,7 @@ import { isConnected } from "../store/providers/reducer";
 import { useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
-import { Row } from "./CrossPostIssueControls/IssueDropdown";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 import { Provider } from "./IntegrationsPanel";

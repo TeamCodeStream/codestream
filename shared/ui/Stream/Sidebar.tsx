@@ -9,7 +9,7 @@ import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "..";
 import { OpenPullRequests } from "./OpenPullRequests";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
-import IssueDropdown from "./CrossPostIssueControls/IssueDropdown";
+import IssuesPane from "./CrossPostIssueControls/IssuesPane";
 import Codemarks from "./Codemarks";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { Pane, PaneState } from "../src/components/Pane";
@@ -380,7 +380,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			case WebviewPanels.OpenReviews:
 				return <OpenReviews openRepos={openRepos} paneState={paneState} />;
 			case WebviewPanels.Tasks:
-				return <IssueDropdown paneState={paneState} />;
+				return <IssuesPane paneState={paneState} />;
 			case WebviewPanels.CodemarksForFile:
 				return <Codemarks paneState={paneState} />;
 			case WebviewPanels.Observability:
