@@ -52,7 +52,7 @@ export default function ConfigureYouTrackPanel(props: Props) {
 		await dispatch(
 			configureProvider(
 				providerId,
-				{ baseUrl: normalizeUrl(baseUrl) || "", accessToken: token },
+				{ data: { baseUrl: normalizeUrl(baseUrl) || "" }, accessToken: token },
 				{ setConnectedWhenConfigured: true, connectionLocation: props.originLocation }
 			)
 		);
