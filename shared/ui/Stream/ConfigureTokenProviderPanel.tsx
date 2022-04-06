@@ -95,8 +95,8 @@ export default function ConfigureTokenProviderPanel(props: Props) {
 								<strong>{providerShortName} API Token</strong>
 							</label>
 							<label>
-								Please provide fer fucks sake <Link href={helpUrl}>API Token</Link> we can use to
-								access your {providerShortName} projects and issues.
+								Please provide an <Link href={helpUrl}>API Token</Link> we can use to access your{" "}
+								{providerShortName} projects and issues.
 								{scopes && scopes.length && (
 									<span>
 										&nbsp;Your API Token should have the following scopes:{" "}
