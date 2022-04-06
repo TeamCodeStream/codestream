@@ -912,3 +912,10 @@ export interface TriggerMsTeamsProactiveMessageRequest {
 }
 
 export interface TriggerMsTeamsProactiveMessageResponse {}
+
+export interface CSThirdPartyProviderSetInfoRequestData {
+	teamId: string;
+	host?: string;
+	data: { [key: string]: any };
+	pendingVerification?: boolean;
+}

@@ -67,6 +67,7 @@ import {
 	ObservabilityError,
 	ObservabilityErrorCore,
 	ObservabilityRepo,
+	ProviderConfigurationData,
 	RelatedEntity,
 	ReposScm,
 	StackTraceResponse,
@@ -108,6 +109,7 @@ class AccessTokenError extends Error {
 @lspProvider("newrelic")
 export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProviderInfo> {
 	private _newRelicUserId: number | undefined = undefined;
+	private _accountIds: number[] | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
 	private _codeStreamUser: CSMe | undefined = undefined;
 	private _mltTimedCache: any;
@@ -253,31 +255,33 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return client;
 	}
 
-	@log()
-	async configure(request: NewRelicConfigurationData) {
-		// FIXME - this rather sucks as a way to ensure we have the access token
-		// const userPromise = new Promise<void>(resolve => {
-		// 	this.session.api.onDidReceiveMessage(e => {
-		// 		if (e.type !== MessageType.Users) return;
-		//
-		// 		const me = e.data.find((u: any) => u.id === this.session.userId) as CSMe | null | undefined;
-		// 		if (me == null) return;
-		//
-		// 		const providerInfo = this.getProviderInfo(me);
-		// 		if (providerInfo == null || !providerInfo.accessToken) return;
-		//
-		// 		resolve();
-		// 	});
-		// });
-		const client = this.createClient(
-			this.getApiUrlCore({ apiUrl: request.apiUrl }) + "/graphql",
-			request.apiKey
-		);
-		const { userId, accounts } = await this.validateApiKey(client);
+	canConfigure() {
+		return true;
+	}
+
+	async verifyConnection(config: ProviderConfigurationData): Promise<void> {
+		const newRelicData = (config.data || {}) as NewRelicConfigurationData;
+		await this.createClientAndValidateKey(newRelicData.apiUrl!, config.accessToken!);
+	}
+
+	async createClientAndValidateKey(apiUrl: string, apiKey: string) {
+		if (this._client && this._newRelicUserId && this._accountIds) return;
+		this._client = this.createClient(this.getApiUrlCore({ apiUrl }) + "/graphql", apiKey);
+		const { userId, accounts } = await this.validateApiKey(this._client!);
+		this._newRelicUserId = userId;
 		ContextLogger.log(`Found ${accounts.length} New Relic accounts`);
-		const accountIds = accounts.map(_ => _.id);
+		this._accountIds = accounts.map(_ => _.id);
+	}
+
+	@log()
+	async configure(config: ProviderConfigurationData, verify?: boolean) {
+		if (verify) {
+			await super.configure(config, true);
+		}
+		const newRelicData = (config.data || {}) as NewRelicConfigurationData;
+		await this.createClientAndValidateKey(newRelicData.apiUrl!, config.accessToken!);
 		const accountsToOrgs = await this.session.api.lookupNewRelicOrganizations({
-			accountIds
+			accountIds: this._accountIds!
 		});
 		const orgIdsSet = new Set(accountsToOrgs.map(_ => _.orgId));
 		const uniqueOrgIds = Array.from(orgIdsSet.values());
@@ -296,9 +300,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					);
 					await this.session.api.addCompanyNewRelicInfo(company.id, undefined, uniqueNewOrgIds);
 				}
-			} else if (accounts.length) {
+			} else if (this._accountIds!.length) {
 				const existingAccountIds = company.nrAccountIds || [];
-				const newAccountIds = accountIds.filter(_ => existingAccountIds.indexOf(_) < 0);
+				const newAccountIds = this._accountIds!.filter(_ => existingAccountIds.indexOf(_) < 0);
 				if (newAccountIds.length) {
 					ContextLogger.log(
 						`Associating company ${company.id} with NR accounts ${newAccountIds.join(", ")}`
@@ -308,19 +312,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		}
 
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			token: request.apiKey,
-			data: {
-				userId,
-				accountId: request.accountId,
-				apiUrl: request.apiUrl,
-				orgIds: uniqueOrgIds
-			}
-		});
+		config.data = config.data || {};
+		config.data.userId = this._newRelicUserId;
+		config.data.orgIds = uniqueOrgIds;
+		await super.configure(config);
 
 		// update telemetry super-properties
-		this.session.addNewRelicSuperProps(userId, uniqueOrgIds[0]);
+		this.session.addNewRelicSuperProps(this._newRelicUserId!, uniqueOrgIds[0]);
 	}
 
 	private async validateApiKey(

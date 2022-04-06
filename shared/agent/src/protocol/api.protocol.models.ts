@@ -549,6 +549,7 @@ export interface CSProviderInfo {
 		scopes?: string;
 		[key: string]: any;
 	};
+	pendingVerification?: boolean;
 }
 
 export interface CSAsanaProviderInfo extends CSProviderInfo {

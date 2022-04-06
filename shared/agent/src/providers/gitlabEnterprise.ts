@@ -3,9 +3,9 @@
 import { URI } from "vscode-uri";
 import { GitRemoteLike } from "../git/gitService";
 import { toRepoName } from "../git/utils";
-import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 import { log, lspProvider } from "../system";
 import { GitLabProvider } from "./gitlab";
+import { ProviderConfigurationData } from "../protocol/agent.protocol.providers";
 
 @lspProvider("gitlab_enterprise")
 export class GitLabEnterpriseProvider extends GitLabProvider {
@@ -60,17 +60,8 @@ export class GitLabEnterpriseProvider extends GitLabProvider {
 		await this.getVersion();
 	}
 
-	@log()
-	async configure(request: ProviderConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			host: request.host,
-			token: request.token,
-			data: {
-				baseUrl: request.baseUrl
-			}
-		});
-		this.session.updateProviders();
+	async verifyConnection(config: ProviderConfigurationData): Promise<void> {
+		await this.getCurrentUser();
 	}
 
 	getOwnerFromRemote(remote: string): { owner: string; name: string } {

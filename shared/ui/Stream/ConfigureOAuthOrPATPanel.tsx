@@ -61,7 +61,11 @@ export const ConfigureOAuthOrPATPanel = (props: {
 			return;
 		}
 		dispatch(
-			configureProvider(props.providerId, { token: accessToken }, true, props.originLocation)
+			configureProvider(
+				props.providerId,
+				{ accessToken },
+				{ setConnectedWhenConfigured: true, connectionLocation: props.originLocation }
+			)
 		);
 		props.closePanel(e);
 	};

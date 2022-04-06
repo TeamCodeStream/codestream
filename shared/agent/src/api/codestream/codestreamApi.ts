@@ -146,8 +146,7 @@ import {
 	SetPasswordRequest,
 	SetPasswordRequestType,
 	SetStreamPurposeRequest,
-	ThirdPartyProviderSetTokenRequest,
-	ThirdPartyProviderSetTokenRequestData,
+	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
 	Unreads,
 	UpdateCodeErrorRequest,
@@ -297,7 +296,8 @@ import {
 	ProviderType,
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
-	TriggerMsTeamsProactiveMessageResponse
+	TriggerMsTeamsProactiveMessageResponse,
+	CSThirdPartyProviderSetInfoRequestData
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
 import { VersionInfo } from "../../session";
@@ -2216,25 +2216,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	@log({
 		args: {
-			0: (request: ThirdPartyProviderSetTokenRequest) => `${request.providerId}, ${request.host}`
+			0: (request: ThirdPartyProviderSetInfoRequest) => `${request.providerId}`
 		}
 	})
-	async setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest) {
+	async setThirdPartyProviderInfo(request: ThirdPartyProviderSetInfoRequest) {
 		const cc = Logger.getCorrelationContext();
 		try {
 			const provider = getProvider(request.providerId);
 			if (!provider) throw new Error(`provider ${request.providerId} not found`);
 			const providerConfig = provider.getConfig();
 
-			const params: ThirdPartyProviderSetTokenRequestData = {
-				teamId: this.teamId,
-				host: request.host,
-				token: request.token,
-				data: request.data
+			const params: CSThirdPartyProviderSetInfoRequestData = {
+				data: request.data,
+				teamId: this.teamId
 			};
 
-			const response = await this.put<ThirdPartyProviderSetTokenRequestData, { user: any }>(
-				`/provider-set-token/${providerConfig.name}`,
+			const response = await this.put<CSThirdPartyProviderSetInfoRequestData, { user: any }>(
+				`/provider-info/${providerConfig.name}`,
 				params,
 				this._token
 			);
@@ -2251,35 +2249,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				type: ChangeDataType.Users,
 				data: users
 			});
-		} catch (ex) {
-			Logger.error(ex, cc);
-			throw ex;
-		}
-	}
-
-	@log()
-	async setThirdPartyProviderInfo(request: {
-		providerId: string;
-		host: string;
-		data: { [key: string]: any };
-	}) {
-		const cc = Logger.getCorrelationContext();
-		try {
-			const provider = getProvider(request.providerId);
-			if (!provider) throw new Error(`provider ${request.providerId} not found`);
-			const providerConfig = provider.getConfig();
-
-			const params: { teamId: string; host: string; data: { [key: string]: any } } = {
-				teamId: this.teamId,
-				host: request.host,
-				data: request.data
-			};
-
-			void (await this.put<{ teamId: string; host: string; data: { [key: string]: any } }, {}>(
-				`/provider-info/${providerConfig.name}`,
-				params,
-				this._token
-			));
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

@@ -7,7 +7,8 @@ import {
 	AddEnterpriseProviderRequestType,
 	DisconnectThirdPartyProviderRequestType,
 	RemoveEnterpriseProviderRequestType,
-	TelemetryRequestType
+	TelemetryRequestType,
+	ProviderConfigurationData
 } from "@codestream/protocols/agent";
 import {
 	ConnectToIDEProviderRequestType,
@@ -17,6 +18,8 @@ import { CSMe } from "@codestream/protocols/api";
 import { logError } from "../../logger";
 import { setIssueProvider, openPanel } from "../context/actions";
 import { deleteForProvider } from "../activeIntegrations/actions";
+import { CodeStreamState } from "../../store";
+import { ViewMethodLevelTelemetryNotificationType } from "@codestream/protocols/webview";
 
 export const reset = () => action("RESET");
 
@@ -26,6 +29,13 @@ export const getUserProviderInfo = (user: CSMe, provider: string, teamId: string
 	const teamProviderInfo = providerInfo[teamId] && providerInfo[teamId][provider];
 	if (userProviderInfo && userProviderInfo.accessToken) return userProviderInfo;
 	else return teamProviderInfo;
+};
+
+export const getUserProviderInfoFromState = (provider: string, state: CodeStreamState) => {
+	const { users, session, context } = state;
+	const me = users[session.userId!] as CSMe;
+	const teamId = context.currentTeamId;
+	return getUserProviderInfo(me, provider, teamId);
 };
 
 export const updateProviders = (data: ProvidersState) => action(ProvidersActionsType.Update, data);
@@ -50,7 +60,7 @@ export const configureAndConnectProvider = (
 	connectionLocation = connectionLocation || "Integrations Panel";
 	if (needsConfigure || (onprem && needsConfigureForOnPrem)) {
 		dispatch(openPanel(`configure-provider-${provider.name}-${provider.id}-${connectionLocation}`));
-	} else if ((forEnterprise || isEnterprise) && name !== "jiraserver") {
+	} else if (forEnterprise || isEnterprise) {
 		dispatch(openPanel(`configure-enterprise-${name}-${provider.id}-${connectionLocation}`));
 	} else if (supportsOAuthOrPAT && !isVSCGitHub) {
 		dispatch(openPanel(`oauthpat-provider-${provider.name}-${provider.id}-${connectionLocation}`));
@@ -86,9 +96,8 @@ export const connectProvider = (
 			dispatch(
 				configureProvider(
 					providerId,
-					{ token: result.accessToken, data: { sessionId: result.sessionId } },
-					true,
-					connectionLocation
+					{ accessToken: result.accessToken, data: { sessionId: result.sessionId } },
+					{ setConnectedWhenConfigured: true, connectionLocation }
 				)
 			);
 			return {};
@@ -165,19 +174,25 @@ export const sendMessagingServiceConnected = (
 	});
 };
 
+export interface ConfigureProviderOptions {
+	setConnectedWhenConfigured?: boolean;
+	connectionLocation?: ViewLocation;
+	throwOnError?: boolean;
+	verify?: boolean;
+}
+
 export const configureProvider = (
 	providerId: string,
-	data: { [key: string]: any },
-	setConnectedWhenConfigured = false,
-	connectionLocation?: ViewLocation,
-	throwOnError = false
+	data: ProviderConfigurationData,
+	options: ConfigureProviderOptions = {}
 ) => async (dispatch, getState) => {
+	const { setConnectedWhenConfigured, connectionLocation, throwOnError, verify } = options;
 	const { providers } = getState();
 	const provider = providers[providerId];
 	if (!provider) return;
 	try {
 		const api = HostApi.instance;
-		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, data });
+		await api.send(ConfigureThirdPartyProviderRequestType, { providerId, data, verify });
 
 		// for some providers (YouTrack and enterprise providers with PATs), configuring is as good as connecting,
 		// since we allow the user to set their own access token

@@ -526,7 +526,11 @@ function listenForEvents(store) {
 						} else {
 							if (definedQuery.query.apiKey) {
 								store.dispatch(
-									configureProvider("newrelic*com", { apiKey: definedQuery.query.apiKey }, true)
+									configureProvider(
+										"newrelic*com",
+										{ accessToken: definedQuery.query.apiKey },
+										{ setConnectedWhenConfigured: true }
+									)
 								);
 							} else {
 								store.dispatch(openPanel("configure-provider-newrelic-newrelic*com"));

@@ -57,8 +57,3 @@ export interface AzureDevOpsBoard {
 export interface AzureDevOpsFetchBoardsResponse {
 	boards: AzureDevOpsBoard[];
 }
-
-export interface AzureDevOpsConfigurationData {
-	organization: string;
-	host?: string;
-}

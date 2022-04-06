@@ -12,10 +12,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	JiraBoard,
 	JiraCard,
-	JiraConfigurationData,
 	JiraUser,
 	MoveThirdPartyCardRequest,
-	ProviderConfigurationData,
 	ReportingMessageType,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
@@ -168,17 +166,8 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		this.boards = [];
 	}
 
-	@log()
-	async configure(request: JiraConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			token: request.token,
-			data: {
-				email: request.email,
-				baseUrl: request.baseUrl
-			}
-		});
-		this.session.updateProviders();
+	canConfigure() {
+		return true;
 	}
 
 	@log()

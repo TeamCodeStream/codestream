@@ -3,7 +3,6 @@ import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
 	AzureDevOpsCard,
-	AzureDevOpsConfigurationData,
 	AzureDevOpsCreateCardRequest,
 	AzureDevOpsCreateCardResponse,
 	AzureDevOpsProject,
@@ -229,15 +228,8 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 		return { users };
 	}
 
-	@log()
-	async configure(request: AzureDevOpsConfigurationData) {
-		await this.session.api.setThirdPartyProviderInfo({
-			providerId: this.providerConfig.id,
-			host: request.host,
-			data: {
-				organization: request.organization
-			}
-		});
+	canConfigure() {
+		return true;
 	}
 
 	private async getMe(): Promise<AzureDevOpsProfile> {

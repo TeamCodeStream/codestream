@@ -40,12 +40,8 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 		};
 	}
 
-	@log()
-	async configure(request: ClubhouseConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			token: request.token
-		});
+	canConfigure() {
+		return true;
 	}
 
 	async onConnected(providerInfo?: CSClubhouseProviderInfo) {

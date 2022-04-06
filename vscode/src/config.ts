@@ -26,4 +26,4 @@ export interface Config {
 	goldenSignalsInEditorFormat?: string;
 }
 
-export var ConfigSettingsNeedingReload = ["disableStrictSSL", "proxySupport", "serverUrl"];
+export const ConfigSettingsNeedingReload = ["disableStrictSSL", "proxySupport", "serverUrl"];

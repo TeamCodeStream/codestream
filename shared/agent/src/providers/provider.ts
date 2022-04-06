@@ -40,6 +40,7 @@ import {
 	GetMyPullRequestsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
+	ProviderConfigurationData,
 	RemoveEnterpriseProviderRequest,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
@@ -49,6 +50,7 @@ import {
 import { CodemarkType, CSMe, CSProviderInfos, CSReferenceLocation } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Functions, Strings } from "../system";
+import { log } from "../system";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
@@ -160,13 +162,15 @@ export interface ThirdPartyProvider {
 	readonly icon: string;
 	hasTokenError?: boolean;
 	connect(): Promise<void>;
-	configure(data: { [key: string]: any }): Promise<void>;
+	canConfigure(): boolean;
+	configure(data: ProviderConfigurationData, verify?: boolean): Promise<void>;
 	disconnect(request: ThirdPartyDisconnect): Promise<void>;
 	addEnterpriseHost(request: AddEnterpriseProviderRequest): Promise<AddEnterpriseProviderResponse>;
 	removeEnterpriseHost(request: RemoveEnterpriseProviderRequest): Promise<void>;
 	getConfig(): ThirdPartyProviderConfig;
 	isConnected(me: CSMe): boolean;
 	ensureConnected(request?: { providerTeamId?: string }): Promise<void>;
+	verifyConnection(config: ProviderConfigurationData): Promise<void>;
 
 	/**
 	 * Do any kind of pre-fetching work, like getting an API version number
@@ -380,9 +384,50 @@ export abstract class ThirdPartyProviderBase<
 		}
 	}
 
-	async configure(data: { [key: string]: any }) {}
+	// override to allow configuration without OAuth
+	canConfigure() {
+		return false;
+	}
+
+	@log()
+	async configure(config: ProviderConfigurationData, verify?: boolean) {
+		if (verify) {
+			config.pendingVerification = true;
+		}
+		await this.session.api.setThirdPartyProviderInfo({
+			providerId: this.providerConfig.id,
+			data: config
+		});
+		if (verify) {
+			await this.verifyAndUpdate(config);
+		}
+		this.session.updateProviders();
+	}
+
+	async verifyAndUpdate(config: ProviderConfigurationData) {
+		let tokenError;
+		try {
+			await this.verifyConnection(config);
+		} catch (ex) {
+			tokenError = {
+				error: ex,
+				occurredAt: Date.now(),
+				isConnectionError: true,
+				providerMessage: (ex as Error).message
+			};
+			delete config.accessToken;
+		}
+		config.tokenError = tokenError;
+		config.pendingVerification = false;
+		this.session.api.setThirdPartyProviderInfo({
+			providerId: this.providerConfig.id,
+			data: config
+		});
+	}
 
 	protected async onConfigured() {}
+
+	async verifyConnection(config: ProviderConfigurationData) {}
 
 	async disconnect(request?: ThirdPartyDisconnect) {
 		void (await this.session.api.disconnectThirdPartyProvider({
@@ -824,7 +869,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		}
 	}
 
-	protected trySetThirdPartyProviderInfo(ex: Error, exType?: ReportSuppressedMessages | undefined) {
+	protected trySetThirdPartyProviderInfo(
+		ex: Error,
+		exType?: ReportSuppressedMessages | undefined
+	): void {
 		if (!ex) return;
 
 		exType = exType || this._isSuppressedException(ex);

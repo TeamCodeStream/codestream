@@ -152,7 +152,7 @@ import {
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
-	ThirdPartyProviderSetTokenRequest,
+	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
 	Unreads,
@@ -516,12 +516,7 @@ export interface ApiProvider {
 		providerId: string;
 		sharing?: boolean;
 	}): Promise<{ code: string }>;
-	setThirdPartyProviderToken(request: ThirdPartyProviderSetTokenRequest): Promise<void>;
-	setThirdPartyProviderInfo(request: {
-		providerId: string;
-		host?: string;
-		data: { [key: string]: any };
-	}): Promise<void>;
+	setThirdPartyProviderInfo(request: ThirdPartyProviderSetInfoRequest): Promise<void>;
 	disconnectThirdPartyProvider(request: {
 		providerId: string;
 		providerTeamId?: string;

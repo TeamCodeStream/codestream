@@ -138,30 +138,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		return { users: body.map(u => ({ ...u, displayName: u.fullName })) };
 	}
 
-	@log()
-	async configure(request: YouTrackConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			host: request.host,
-			token: request.token,
-			data: {
-				baseUrl: request.baseUrl
-			}
-		});
-
-		// FIXME - this rather sucks as a way to ensure we have the access token
-		return new Promise<void>(resolve => {
-			this.session.api.onDidReceiveMessage(e => {
-				if (e.type !== MessageType.Users) return;
-
-				const me = e.data.find((u: any) => u.id === this.session.userId) as CSMe | null | undefined;
-				if (me == null) return;
-
-				const providerInfo = this.getProviderInfo(me);
-				if (providerInfo == null || !providerInfo.accessToken) return;
-
-				resolve();
-			});
-		});
+	canConfigure() {
+		return true;
 	}
 }

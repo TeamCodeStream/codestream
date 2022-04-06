@@ -98,21 +98,16 @@ export class BitbucketServerProvider extends ThirdPartyIssueProviderBase<CSBitbu
 		};
 	}
 
-	@log()
-	async configure(request: ProviderConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			host: request.host,
-			token: request.token,
-			data: {
-				baseUrl: request.baseUrl
-			}
-		});
-		this.session.updateProviders();
+	canConfigure() {
+		return true;
 	}
 
 	async onConnected(providerInfo?: CSBitbucketProviderInfo) {
 		super.onConnected(providerInfo);
+	}
+
+	async verifyConnection(config: ProviderConfigurationData): Promise<void> {
+		await this.get<any>("/users?limit=1");
 	}
 
 	getRepoByPath(path: string) {

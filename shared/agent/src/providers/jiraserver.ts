@@ -194,16 +194,12 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		this.boards = [];
 	}
 
-	@log()
-	async configure(request: ProviderConfigurationData) {
-		await this.session.api.setThirdPartyProviderToken({
-			providerId: this.providerConfig.id,
-			token: request.token,
-			data: {
-				baseUrl: request.baseUrl
-			}
-		});
-		this.session.updateProviders();
+	canConfigure() {
+		return true;
+	}
+
+	async verifyConnection(config: ProviderConfigurationData): Promise<void> {
+		await this._getJira("/rest/api/2/permissions");
 	}
 
 	get baseUrl() {

@@ -26,6 +26,7 @@ export interface ProviderDisplay {
 
 	supportsPRManagement?: boolean;
 	versionMinimum?: string;
+	checkVersionUrl?: string;
 	invalidHosts?: Array<string>;
 
 	helpPATUrl?: string;
@@ -57,7 +58,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		urlPlaceholder: "https://bitbucket.myorg.com",
 		helpUrl:
 			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html",
-		invalidHosts: ['bitbucket.org']
+		invalidHosts: ["bitbucket.org"]
 	},
 	clubhouse: {
 		displayName: "Clubhouse",
@@ -97,6 +98,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	},
 	github_enterprise: {
 		displayName: "GitHub Enterprise",
+		shortDisplayName: "GitHub",
 		icon: "mark-github",
 		urlPlaceholder: "https://git.myorg.com",
 		helpUrl:
@@ -154,6 +156,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		supportsStartWork: true,
 		supportsPRManagement: true,
 		versionMinimum: "12.10",
+		checkVersionUrl: "https://docs.newrelic.com/docs/codestream/troubleshooting/glsm-version/",
 		invalidHosts: ["gitlab.com"]
 	},
 	jira: {
@@ -167,7 +170,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterExample: "Example: assignee=currentuser() AND status!=Closed",
 		customFilterHelp:
 			'See <a href="https://confluence.atlassian.com/jirasoftwareserver/advanced-searching-939938733.html">Jira Advanced Searching</a> for documentation on JQL. ',
-		hasCardBasedWorkflow: true
+		hasCardBasedWorkflow: true,
+		namePAT: "API Token"
 	},
 	jiraserver: {
 		displayName: "Jira Server",
@@ -182,7 +186,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		customFilterHelp:
 			'See <a href="https://confluence.atlassian.com/jirasoftwareserver/advanced-searching-939938733.html">Jira Advanced Searching</a> for documentation on JQL. ',
 		hasCardBasedWorkflow: true,
-		invalidHosts: ["atlassian.net"]
+		invalidHosts: ["atlassian.net"],
+		versionMinimum: "8.14.0",
+		checkVersionUrl:
+			"https://docs.newrelic.com/docs/codestream/troubleshooting/jira-server-version/",
+		helpUrl:
+			"https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html"
 	},
 	trello: {
 		displayName: "Trello",
