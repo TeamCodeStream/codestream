@@ -128,6 +128,8 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		delete this._atMe;
+		delete this._isPRApiCompatible;
+		return super.onDisconnected(request);
 	}
 
 	private _atMe: string | undefined;

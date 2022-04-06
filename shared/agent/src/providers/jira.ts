@@ -15,6 +15,7 @@ import {
 	JiraUser,
 	MoveThirdPartyCardRequest,
 	ReportingMessageType,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
@@ -162,8 +163,12 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		Logger.debug(`Jira: api url is ${this._urlAddon}`);
 	}
 
-	async onDisconnected() {
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		this._urlAddon = "";
+		this._webUrl = "";
+		delete this.domain;
 		this.boards = [];
+		return super.onDisconnected(request);
 	}
 
 	canConfigure() {

@@ -20,6 +20,7 @@ import {
 	MoveThirdPartyCardRequest,
 	ProviderConfigurationData,
 	ReportingMessageType,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig
 } from "../protocol/agent.protocol";
@@ -190,8 +191,9 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		}
 	}
 
-	async onDisconnected() {
+	async onDisconnected(request?: ThirdPartyDisconnect) {
 		this.boards = [];
+		return super.onDisconnected(request);
 	}
 
 	canConfigure() {

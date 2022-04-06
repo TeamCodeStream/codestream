@@ -191,6 +191,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		delete this._client;
 		delete this._newRelicUserId;
 		delete this._codeStreamUser;
+		delete this._accountIds;
+		this._mltTimedCache.clear();
+		this._applicationEntitiesCache = {};
 
 		try {
 			// remove these when a user disconnects -- don't want them lingering around
@@ -204,7 +207,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("failed to remove observabilityRepoEntities", ex);
 		}
 
-		super.onDisconnected(request);
+		return super.onDisconnected(request);
 	}
 
 	protected async client(): Promise<GraphQLClient> {

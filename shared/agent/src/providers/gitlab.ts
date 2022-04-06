@@ -1022,8 +1022,14 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		return currentUser;
 	}
 
-	onDissconnected(request: ThirdPartyDisconnect) {
+	onDisconnected(request: ThirdPartyDisconnect) {
 		this._currentGitlabUsers.clear();
+		this._projectsByRemotePath.clear();
+		this._assignableUsersCache.clear();
+		this._pullRequestCache.clear();
+		this._ignoredFeatures.clear();
+		this._pullRequestIdCache.clear();
+		return super.onDisconnected(request);
 	}
 
 	_pullRequestCache: Map<string, GitLabMergeRequestWrapper> = new Map();

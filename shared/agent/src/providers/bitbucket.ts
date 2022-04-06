@@ -25,6 +25,7 @@ import {
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	ProviderGetForkedReposResponse,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
@@ -118,6 +119,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	async onConnected(providerInfo?: CSBitbucketProviderInfo) {
 		super.onConnected(providerInfo);
 		this._knownRepos = new Map<string, BitbucketRepo>();
+	}
+
+	@log()
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		this._knownRepos.clear();
+		this._reposWithIssues = [];
+		return super.onDisconnected(request);
 	}
 
 	@log()

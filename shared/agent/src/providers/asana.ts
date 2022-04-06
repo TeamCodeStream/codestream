@@ -15,6 +15,7 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderBoard
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
@@ -50,6 +51,12 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 	async onConnected(providerInfo?: CSAsanaProviderInfo) {
 		super.onConnected(providerInfo);
 		this._asanaUser = await this.getMe();
+	}
+
+	@log()
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		delete this._asanaUser;
+		return super.onDisconnected(request);
 	}
 
 	@log()

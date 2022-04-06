@@ -41,8 +41,6 @@ interface AzureDevOpsWorkItem {
 
 @lspProvider("azuredevops")
 export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevOpsProviderInfo> {
-	private _user: AzureDevOpsProfile | undefined;
-
 	get displayName() {
 		return "Azure DevOps";
 	}

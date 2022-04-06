@@ -9,6 +9,7 @@ import {
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
+	ThirdPartyDisconnect,
 	TrelloBoard,
 	TrelloCard,
 	TrelloCreateCardRequest,
@@ -43,6 +44,13 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 	async onConnected(providerInfo?: CSTrelloProviderInfo) {
 		super.onConnected(providerInfo);
 		this._trelloUserId = await this.getMemberId();
+	}
+
+	@log()
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		delete this._trelloUserId;
+		this._listNames = {};
+		return super.onDisconnected(request);
 	}
 
 	@log()

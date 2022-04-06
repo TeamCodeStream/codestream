@@ -177,7 +177,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
-		super.onDisconnected(request);
+		this._knownRepos.clear();
+		this._pullRequestCache.clear();
+		this._reviewersCache.clear();
+		return super.onDisconnected(request);
 	}
 
 	async ensureInitialized() {}

@@ -50,7 +50,9 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
-		super.onDisconnected(request);
+		delete this._linearUserInfo;
+		delete this._linearTeams;
+		return super.onDisconnected(request);
 	}
 
 	get graphQlBaseUrl() {

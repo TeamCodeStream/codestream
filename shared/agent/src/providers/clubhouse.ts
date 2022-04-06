@@ -15,6 +15,7 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
+	ThirdPartyDisconnect,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
 import { CSClubhouseProviderInfo } from "../protocol/api.protocol";
@@ -47,6 +48,12 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 	async onConnected(providerInfo?: CSClubhouseProviderInfo) {
 		super.onConnected(providerInfo);
 		this._clubhouseUserInfo = await this.getMemberInfo();
+	}
+
+	@log()
+	async onDisconnected(request?: ThirdPartyDisconnect) {
+		delete this._clubhouseUserInfo;
+		return super.onDisconnected(request);
 	}
 
 	@log()
