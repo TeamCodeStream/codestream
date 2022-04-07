@@ -656,6 +656,22 @@ export class CodeStreamSession {
 		}
 	}
 
+	// resolve user changes and notify the webview of the change
+	// this is strongly recommended over JUST resolving user changes, since the resolution may
+	// actually result in a user object being fetched, and can lead to race conditions if the
+	// fetched user object isn't propagated to the webview
+	async resolveUserAndNotify(user: CSUser): Promise<CSUser> {
+		const data = (await SessionContainer.instance().users.resolve({
+			type: MessageType.Users,
+			data: [user]
+		})) as CSMe[];
+		this.agent.sendNotification(DidChangeDataNotificationType, {
+			type: ChangeDataType.Users,
+			data
+		});
+		return data[0];
+	}
+
 	@log()
 	private onVersionCompatibilityChanged(e: VersionCompatibilityChangedEvent) {
 		this.agent.sendNotification(DidChangeVersionCompatibilityNotificationType, e);

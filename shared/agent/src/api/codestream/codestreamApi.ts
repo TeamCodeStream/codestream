@@ -972,10 +972,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 			request.preferences,
 			this._token
 		);
-		const [user] = (await SessionContainer.instance().users.resolve({
-			type: MessageType.Users,
-			data: [update.user]
-		})) as CSMe[];
+
+		const user = await SessionContainer.instance().session.resolveUserAndNotify(update.user);
 
 		if (this._preferences) {
 			this._preferences.update(user.preferences!);
@@ -1002,10 +1000,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 			},
 			this._token
 		);
-		const [user] = (await SessionContainer.instance().users.resolve({
-			type: MessageType.Users,
-			data: [update.user]
-		})) as CSMe[];
+
+		const user = await SessionContainer.instance().session.resolveUserAndNotify(update.user);
+
 		return { user };
 	}
 
@@ -1016,10 +1013,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 			{ status: { invisible: request.invisible } },
 			this._token
 		);
-		const [user] = (await SessionContainer.instance().users.resolve({
-			type: MessageType.Users,
-			data: [update.user]
-		})) as CSMe[];
+
+		const user = await SessionContainer.instance().session.resolveUserAndNotify(update.user);
 		return { user };
 	}
 
@@ -2349,11 +2344,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const url = `/provider-refresh/${providerConfig.name}?${team}&${token}${host}${sharing}${subId}`;
 			const response = await this.get<{ user: any }>(url, this._token);
 
-			const [user] = await SessionContainer.instance().users.resolve({
-				type: MessageType.Users,
-				data: [response.user]
-			});
-
+			const user = await SessionContainer.instance().session.resolveUserAndNotify(response.user);
 			return user as CSMe;
 		} catch (ex) {
 			Logger.error(ex, cc);
