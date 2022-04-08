@@ -249,21 +249,6 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 		}
 	}
 
-	/*
-	This is the start of an idea based on this link:
-	https://confluence.atlassian.com/jiracore/createmeta-rest-endpoint-to-be-removed-975040986.html
-	which suggests that the createmeta endpoint is problematic and going away
-	Indeed, it is very slow, but so far I have not been able to get their suggested replacement to work,
-	so am leaving this alternate method commented out for now, perhaps to be revisited later - Colin
-	*/
-	private async isCompatibleProject(project: JiraProject): Promise<JiraBoard | undefined> {
-		const response = await this.get<JiraProjectsMetaResponse>(
-			`/rest/api/2/issue/createmeta/${project.id}/issuetypes`
-		);
-		// TODO: do something with this response, like what filterBoards does, below
-		return undefined;
-	}
-
 	private async filterBoards(projects: JiraProject[]): Promise<JiraBoard[]> {
 		Logger.debug("Jira: Filtering for compatible projects");
 		try {

@@ -28,6 +28,18 @@ import { CSJiraServerProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, log, lspProvider } from "../system";
 import { makeCardFromJira } from "./jira";
+import {
+	CardSearchResponse,
+	CreateJiraIssueResponse,
+	IssueType,
+	IssueTypeDescriptor,
+	IssueTypeDetails,
+	IssueTypeFields,
+	JiraPaginateValues,
+	JiraProject,
+	JiraProjectsMetaResponse,
+	JiraServerOauthParams
+} from "./jiraserver.types";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
 export type jsonCallback = (
@@ -101,44 +113,6 @@ class OAuthExtended extends OAuth {
 		const httpModel = sslEnabled ? Https : Http;
 		return httpModel.request(options);
 	}
-}
-
-interface JiraServerOauthParams {
-	consumerKey: string;
-	privateKey: string;
-}
-
-interface JiraProject {
-	id: string;
-	name: string;
-	key: string;
-}
-
-interface IssueTypeDescriptor {
-	name: string;
-	iconUrl: string;
-	fields: { [name: string]: { required: boolean; hasDefaultValue: boolean } };
-}
-
-interface JiraProjectMeta extends JiraProject {
-	issuetypes: IssueTypeDescriptor[];
-}
-
-interface JiraProjectsMetaResponse {
-	projects: JiraProjectMeta[];
-}
-
-interface CreateJiraIssueResponse {
-	id: string;
-	key: string;
-	self: string;
-}
-
-interface CardSearchResponse {
-	issues: JiraCard[];
-	nextPage?: string;
-	isLast: boolean;
-	total: number;
 }
 
 @lspProvider("jiraserver")
@@ -228,11 +202,38 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 				this._providerInfo!.accessToken,
 				this._providerInfo!.oauthTokenSecret,
 				(error, result) => {
-					if (error) reject(error);
-					else resolve(result);
+					if (error) {
+						reject(error);
+					} else {
+						resolve(result);
+					}
 				}
 			);
 		});
+	}
+
+	async _getJiraPaged<R extends object>(path: string): Promise<R[]> {
+		const basePath = path.includes("?") ? path.split("?")[0] : path;
+		let nextPage: string | undefined = path;
+		const values: R[] = [];
+		while (nextPage !== undefined) {
+			const response: JiraPaginateValues<R> = await this._getJira<R>(nextPage);
+			if (response.values && response.values.length > 0) {
+				values.push(...response.values);
+			}
+			Logger.debug(`Jira server paged: is last page? ${response.isLast}`);
+			if (!response.isLast) {
+				const existingParams = path.includes("?") ? qs.parse(path.split("?")[1]) : {};
+				nextPage = `${basePath}?${qs.stringify({
+					...existingParams,
+					startAt: (response.startAt + response.maxResults).toString(10)
+				})}`;
+			} else {
+				Logger.debug("Jira: there are no more pages");
+				nextPage = undefined;
+			}
+		}
+		return values;
 	}
 
 	async _getJira<R extends object>(path: string): Promise<any> {
@@ -261,6 +262,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			this.boards = [];
 			const response: JiraProject[] = await this._getJira<JiraProject[]>("/rest/api/2/project");
 			this.boards.push(...(await this.filterBoards(response)));
+			Logger.debug(`Jira Server: got ${this.boards.length} projects`);
 			return { boards: this.boards };
 		} catch (error) {
 			debugger;
@@ -275,16 +277,39 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 		}
 	}
 
+	private async gatherProjectMetadata(projects: JiraProject[]): Promise<JiraProjectsMetaResponse> {
+		const jiraProjectsFieldDetails: JiraProjectsMetaResponse = { projects: [] };
+		for (const project of projects) {
+			const issueTypesResponse: IssueType[] = await this._getJiraPaged(
+				`/rest/api/2/issue/createmeta/${project.id}/issuetypes`
+			);
+
+			const issuetypes: IssueTypeDescriptor[] = [];
+
+			jiraProjectsFieldDetails.projects.push({
+				...project,
+				issuetypes
+			});
+
+			for (const issueType of issueTypesResponse) {
+				const issueTypeDetails: IssueTypeDetails[] = await this._getJiraPaged(
+					`/rest/api/2/issue/createmeta/${project.id}/issuetypes/${issueType.id}`
+				);
+				const fields: IssueTypeFields = {};
+				for (const field of issueTypeDetails) {
+					fields[field.name] = { ...field };
+				}
+
+				issuetypes.push({ ...issueType, fields });
+			}
+		}
+		return jiraProjectsFieldDetails;
+	}
+
 	private async filterBoards(projects: JiraProject[]): Promise<JiraBoard[]> {
 		Logger.debug("Jira Server: Filtering for compatible projects");
 		try {
-			const response = await this._getJira(
-				`/rest/api/2/issue/createmeta?${qs.stringify({
-					projectIds: projects.map(p => p.id).join(","),
-					expand: "projects.issuetypes.fields"
-				})}`
-			);
-			return this.getCompatibleBoards(response);
+			return this.getCompatibleBoards(await this.gatherProjectMetadata(projects));
 		} catch (error) {
 			Container.instance().errorReporter.reportMessage({
 				type: ReportingMessageType.Error,
