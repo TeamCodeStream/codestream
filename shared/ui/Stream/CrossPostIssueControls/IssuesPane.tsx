@@ -195,7 +195,7 @@ export default function IssuesPane(props: Props) {
 	const providerIsConnected = (providerId: string): boolean => {
 		const provider = derivedState.providers ? derivedState.providers[providerId] : undefined;
 		const { currentUser } = derivedState;
-		if (!provider || currentUser.providerInfo == undefined) return false;
+		if (!provider || currentUser.providerInfo == null) return false;
 		let providerInfo = getUserProviderInfo(currentUser, provider.name, derivedState.currentTeamId);
 		if (!providerInfo) return false;
 		if (providerInfo.accessToken) return true;

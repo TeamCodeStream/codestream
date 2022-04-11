@@ -97,12 +97,6 @@ interface QueryLogger {
 	};
 }
 
-export function cheese(): Function {
-	return (target: Function) => {
-		return target;
-	};
-}
-
 const diffHunkRegex = /^@@ -([\d]+)(?:,([\d]+))? \+([\d]+)(?:,([\d]+))? @@/;
 
 @lspProvider("github")
