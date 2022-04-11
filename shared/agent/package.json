@@ -33,14 +33,14 @@
 		"rebuild": "npm run clean && npm install --no-save && npm run build",
 		"update:emoji": "pushd emoji && node ./shortcodeToEmoji.js && popd",
 		"watch": "webpack --watch --env development=true",
-		"test:ci": "npm run test-unit",
+		"test:ci": "npm run test-unit-with-coverage",
 		"test-acceptance": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha -r ts-node/register -r esm --recursive \"test/acceptance/**/*.spec.ts\"",
 		"test-acceptance-ci": "npm run test-acceptance -- --reporter mocha-teamcity-reporter",
 		"test-apiserver": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha -r ts-node/register -r esm --recursive \"test/api_server/**/*.spec.ts\"",
 		"test-integration": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" mocha --require ts-node/register --recursive \"test/integration/**/*.spec.ts\"",
 		"test-integration-ci": "npm run test-integration -- --reporter mocha-teamcity-reporter",		
 		"test-unit": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter",
-		"test-unit-with-coverage": "cross-env TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" nyc --reporter=text --reporter=teamcity ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter"
+		"test-unit-with-coverage": "cross-env NODE_OPTIONS=\"--max-old-space-size=4096\" TS_NODE_COMPILER_OPTIONS=\"{ \\\"module\\\": \\\"commonjs\\\", \\\"types\\\": [\\\"node\\\"] }\" nyc --reporter=text --reporter=teamcity ./node_modules/.bin/mochapack 'test/unit/**/*.spec.ts' -- --reporter mocha-teamcity-reporter"
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "1.3.7",
