@@ -95,7 +95,7 @@ import {
 	FileStatus,
 	isCSCodeError,
 	isCSReview,
-    ModifiedFile,
+	ModifiedFile,
 	ProviderType,
 	StreamType
 } from "../protocol/api.protocol";
@@ -1486,11 +1486,31 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		// FIXME the logic for amendments became significantly different, so it should be a separate method
 		//  or a builder class similar to MarkersBuilder
 		const { scm, includeSaved, includeStaged, excludedFiles, newFiles } = repoChange;
-		if (!scm) throw new ResponseError(ERROR_REVIEW_SCM_NOT_FOUND, "Unable to create review: SCM info not found");
-		if (!scm.remotes?.length) throw new ResponseError(ERROR_REVIEW_NO_REMOTES, "Unable to create review: git repository has no remotes");
-		if (!scm.repoId) throw new ResponseError(ERROR_REVIEW_REPO_NOT_FOUND, "Unable to create review: git repository not found");
-		if (!scm.branch) throw new ResponseError(ERROR_REVIEW_BRANCH_NOT_FOUND, "Unable to create review: branch not found");
-		if (!scm.commits) throw new ResponseError(ERROR_REVIEW_COMMITS_NOT_FOUND, "Unable to create review: commit history not found");
+		if (!scm)
+			throw new ResponseError(
+				ERROR_REVIEW_SCM_NOT_FOUND,
+				"Unable to create review: SCM info not found"
+			);
+		if (!scm.remotes?.length)
+			throw new ResponseError(
+				ERROR_REVIEW_NO_REMOTES,
+				"Unable to create review: git repository has no remotes"
+			);
+		if (!scm.repoId)
+			throw new ResponseError(
+				ERROR_REVIEW_REPO_NOT_FOUND,
+				"Unable to create review: git repository not found"
+			);
+		if (!scm.branch)
+			throw new ResponseError(
+				ERROR_REVIEW_BRANCH_NOT_FOUND,
+				"Unable to create review: branch not found"
+			);
+		if (!scm.commits)
+			throw new ResponseError(
+				ERROR_REVIEW_COMMITS_NOT_FOUND,
+				"Unable to create review: commit history not found"
+			);
 		const { git, reviews, scm: scmManager } = SessionContainer.instance();
 
 		let checkpoint = 0;
@@ -1500,7 +1520,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		const modifiedFilesInCheckpoint = scm.modifiedFiles.filter(
 			f => !excludedFiles.includes(f.file)
 		);
-        let modifiedFiles: ModifiedFile[];
+		let modifiedFiles: ModifiedFile[];
 		let startCommit = repoChange.startCommit;
 		let leftBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
 		let rightBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
@@ -1727,7 +1747,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		rightDiffs.push(...newFileDiffs);
 		rightReverseDiffs.push(...newFileReverseDiffs);
 
-        let rightToLatestCommitDiffs = (
+		let rightToLatestCommitDiffs = (
 			await git.getDiffs(
 				scm.repoPath,
 				{ includeSaved, includeStaged, reverse: true },
@@ -1736,7 +1756,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		).filter(removeExcluded);
 		rightToLatestCommitDiffs.push(...newFileReverseDiffs);
 
-        let latestCommitToRightDiffs =
+		let latestCommitToRightDiffs =
 			includeSaved || includeStaged
 				? (
 						await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
@@ -1744,13 +1764,15 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				: [];
 		latestCommitToRightDiffs.push(...newFileDiffs);
 
-        const modifiedFilesContains = (fileName?: string) => (fileName != null) && modifiedFiles.find(_ => _.file === fileName || _.oldFile === fileName);
-        const excludeUnnecesaryDiffs = (diff: ParsedDiff) => modifiedFilesContains(diff.newFileName) || modifiedFilesContains(diff.oldFileName);
-        leftDiffs = leftDiffs.filter(excludeUnnecesaryDiffs);
-        rightDiffs = rightDiffs.filter(excludeUnnecesaryDiffs);
-        rightReverseDiffs = rightReverseDiffs.filter(excludeUnnecesaryDiffs);
-        rightToLatestCommitDiffs = rightToLatestCommitDiffs.filter(excludeUnnecesaryDiffs);
-        latestCommitToRightDiffs = latestCommitToRightDiffs.filter(excludeUnnecesaryDiffs);
+		const modifiedFilesContains = (fileName?: string) =>
+			fileName != null && modifiedFiles.find(_ => _.file === fileName || _.oldFile === fileName);
+		const excludeUnnecesaryDiffs = (diff: ParsedDiff) =>
+			modifiedFilesContains(diff.newFileName) || modifiedFilesContains(diff.oldFileName);
+		leftDiffs = leftDiffs.filter(excludeUnnecesaryDiffs);
+		rightDiffs = rightDiffs.filter(excludeUnnecesaryDiffs);
+		rightReverseDiffs = rightReverseDiffs.filter(excludeUnnecesaryDiffs);
+		rightToLatestCommitDiffs = rightToLatestCommitDiffs.filter(excludeUnnecesaryDiffs);
+		latestCommitToRightDiffs = latestCommitToRightDiffs.filter(excludeUnnecesaryDiffs);
 
 		return {
 			repoId: scm.repoId,
@@ -2331,11 +2353,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					break;
 				}
 
-				case "clubhouse": {
+				case "shortcut": {
 					response = await providerRegistry.createCard({
 						providerId: attributes.issueProvider.id,
 						data: {
-							description: `${description}\n\n <sup>Created ${createdFrom} using [CodeStream](${codeStreamLink}clubhouse)</sup>`,
+							description: `${description}\n\n <sup>Created ${createdFrom} using [CodeStream](${codeStreamLink}shortcut)</sup>`,
 							name: providerCardRequest.codemark.title,
 							projectId: attributes.projectId,
 							assignees: attributes.assignees

@@ -60,10 +60,10 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			"https://confluence.atlassian.com/bitbucketserver/personal-access-tokens-939515499.html",
 		invalidHosts: ["bitbucket.org"]
 	},
-	clubhouse: {
-		displayName: "Clubhouse",
-		icon: "clubhouse",
-		helpUrl: "https://help.clubhouse.io/hc/en-us/articles/205701199-Clubhouse-API-Tokens",
+	shortcut: {
+		displayName: "Shortcut",
+		icon: "shortcut",
+		helpUrl: "https://help.shortcut.com/hc/en-us/articles/205701199-Clubhouse-API-Tokens",
 		supportsStartWork: true
 	},
 	linear: {

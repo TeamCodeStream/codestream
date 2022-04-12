@@ -14,7 +14,7 @@ import { SlackCardControls } from "./SlackCardControls";
 import { TrelloCardControls } from "./TrelloCardControls";
 import { YouTrackCardControls } from "./YouTrackCardControls";
 import { AzureDevOpsCardControls } from "./AzureDevOpsCardControls";
-import { ClubhouseCardControls } from "./ClubhouseCardControls";
+import { ShortcutCardControls } from "./ShortcutCardControls";
 import { LinearCardControls } from "./LinearCardControls";
 import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
 import { ThirdPartyProviderConfig, ThirdPartyProviders } from "@codestream/protocols/agent";
@@ -193,11 +193,11 @@ class CrossPostIssueControls extends React.Component<Props, State> {
 				);
 			}
 
-			case "clubhouse": {
+			case "shortcut": {
 				return (
-					<ClubhouseCardControls provider={providerInfo.provider}>
+					<ShortcutCardControls provider={providerInfo.provider}>
 						{providerOptions}
-					</ClubhouseCardControls>
+					</ShortcutCardControls>
 				);
 			}
 

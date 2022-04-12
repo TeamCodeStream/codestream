@@ -6,7 +6,7 @@ import Menu from "../Menu";
 import {
 	ThirdPartyProviderConfig,
 	FetchThirdPartyBoardsRequestType,
-	ClubhouseProject,
+	ShortcutProject,
 	FetchAssignableUsersRequestType
 } from "@codestream/protocols/agent";
 import { useSelector, useDispatch } from "react-redux";
@@ -15,7 +15,7 @@ import { getIntegrationData } from "@codestream/webview/store/activeIntegrations
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
 import { emptyArray, mapFilter, keyFilter } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import { ClubhouseIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
+import { ShortcutIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
@@ -24,14 +24,14 @@ interface Props {
 	provider: ThirdPartyProviderConfig;
 }
 
-export function ClubhouseCardControls(props: React.PropsWithChildren<Props>) {
+export function ShortcutCardControls(props: React.PropsWithChildren<Props>) {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) =>
-		getIntegrationData<ClubhouseIntegrationData>(state.activeIntegrations, props.provider.id)
+		getIntegrationData<ShortcutIntegrationData>(state.activeIntegrations, props.provider.id)
 	);
 	const updateDataState = React.useCallback(
-		(data: Partial<ClubhouseIntegrationData>) => {
-			dispatch(updateForProvider<ClubhouseIntegrationData>(props.provider.id, data));
+		(data: Partial<ShortcutIntegrationData>) => {
+			dispatch(updateForProvider<ShortcutIntegrationData>(props.provider.id, data));
 		},
 		[props.provider.id]
 	);
@@ -60,12 +60,11 @@ export function ClubhouseCardControls(props: React.PropsWithChildren<Props>) {
 			// make sure to persist current project selection if possible
 			const newCurrentProject = (data.currentProject
 				? response.boards.find(b => b.id === data.currentProject!.id)
-				: response.boards[0]) as ClubhouseProject;
-
+				: response.boards[0]) as ShortcutProject;
 
 			updateDataState({
 				isLoading: false,
-				projects: response.boards as ClubhouseProject[],
+				projects: response.boards as ShortcutProject[],
 				currentProject: newCurrentProject
 			});
 
@@ -99,7 +98,7 @@ export function ClubhouseCardControls(props: React.PropsWithChildren<Props>) {
 		}));
 	}, []);
 
-	const selectProject = React.useCallback((project?: ClubhouseProject) => {
+	const selectProject = React.useCallback((project?: ShortcutProject) => {
 		setProjectMenuState({ open: false });
 		if (project) {
 			crossPostIssueContext.setValues({

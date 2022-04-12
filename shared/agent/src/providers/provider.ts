@@ -68,7 +68,7 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["slack", "Slack"],
 	["msteams", "Microsoft Teams"],
 	["okta", "Okta"],
-	["clubhouse", "Clubhouse"],
+	["shortcut", "Shortcut"],
 	["linear", "Linear"],
 	["newrelic", "New Relic"]
 ]);

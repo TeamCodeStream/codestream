@@ -1,32 +1,32 @@
 "use strict";
 
-export interface ClubhouseCreateCardRequest {
+export interface ShortcutCreateCardRequest {
 	projectId: string;
 	name: string;
 	description: string;
 	assignees?: [{ id: string }];
 }
 
-export interface ClubhouseCreateCardResponse {
+export interface ShortcutCreateCardResponse {
 	id: string;
 	app_url: string;
 }
 
-export interface ClubhouseFetchBoardsRequest {
+export interface ShortcutFetchBoardsRequest {
 	organizationId?: string;
 }
 
-export interface ClubhouseProject {
+export interface ShortcutProject {
 	id: string;
 	name: string;
 	description: string;
 }
 
-export interface ClubhouseFetchListsRequest {
+export interface ShortcutFetchListsRequest {
 	boardId: string;
 }
 
-export interface ClubhouseList {
+export interface ShortcutList {
 	id: string;
 	name: string;
 	closed: boolean;
@@ -35,7 +35,7 @@ export interface ClubhouseList {
 	subscribed: boolean;
 }
 
-export interface ClubhouseStory {
+export interface ShortcutStory {
 	id: string;
 	name: string;
 	description: string;
@@ -43,29 +43,29 @@ export interface ClubhouseStory {
 	updated_at: number;
 }
 
-export interface CLubhouseFetchListsResponse {
-	lists: ClubhouseList[];
+export interface ShortcutFetchListsResponse {
+	lists: ShortcutList[];
 }
 
-export interface ClubhouseSelf {
+export interface ShortcutSelf {
 	id: string;
 	mention_name: string;
 	name: string;
 	email?: string;
 }
 
-export interface ClubhouseProfile {
+export interface ShortcutProfile {
 	deactivated: boolean;
 	mention_name: string;
 	name: string;
 	email_address?: string;
 }
 
-export interface ClubhouseMember {
+export interface ShortcutMember {
 	id: string;
-	profile: ClubhouseProfile;
+	profile: ShortcutProfile;
 }
 
-export interface ClubhouseConfigurationData {
+export interface ShortcutConfigurationData {
 	token: string;
 }

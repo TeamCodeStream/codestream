@@ -95,7 +95,7 @@ export * from "./azuredevops";
 export * from "./slack";
 export * from "./msteams";
 export * from "./okta";
-export * from "./clubhouse";
+export * from "./shortcut";
 export * from "./linear";
 export * from "./newrelic";
 

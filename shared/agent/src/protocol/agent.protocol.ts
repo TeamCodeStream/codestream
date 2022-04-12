@@ -36,7 +36,7 @@ export * from "./agent.protocol.trello";
 export * from "./agent.protocol.youtrack";
 export * from "./agent.protocol.azuredevops";
 export * from "./agent.protocol.okta";
-export * from "./agent.protocol.clubhouse";
+export * from "./agent.protocol.shortcut";
 export * from "./agent.protocol.linear";
 export * from "./agent.protocol.newrelic";
 

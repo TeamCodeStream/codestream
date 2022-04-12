@@ -2,7 +2,7 @@ import { Index } from "../common";
 import {
 	TrelloList,
 	TrelloBoard,
-	ClubhouseProject,
+	ShortcutProject,
 	LinearProject,
 	LinearTeam,
 	JiraBoard,
@@ -78,9 +78,9 @@ export interface YouTrackIntegrationData extends ActiveIntegrationData {
 	currentProject?: YouTrackBoard;
 }
 
-export interface ClubhouseIntegrationData extends ActiveIntegrationData {
-	projects?: ClubhouseProject[];
-	currentProject?: ClubhouseProject;
+export interface ShortcutIntegrationData extends ActiveIntegrationData {
+	projects?: ShortcutProject[];
+	currentProject?: ShortcutProject;
 }
 
 export interface LinearIntegrationData extends ActiveIntegrationData {

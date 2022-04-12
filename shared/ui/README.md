@@ -23,4 +23,4 @@ On Windows (uses current directory as the output)
 
 Convert a single icon
 
-`codestream\shared\ui\utilities> node .\build-png-icons.ts -c "#898F9E" -o ".\" -n "clubhouse"`
+`codestream\shared\ui\utilities> node .\build-png-icons.ts -c "#898F9E" -o ".\" -n "shortcut"`

@@ -2,42 +2,42 @@
 import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
-	ClubhouseConfigurationData,
-	ClubhouseCreateCardRequest,
-	ClubhouseCreateCardResponse,
-	ClubhouseMember,
-	ClubhouseProject,
-	ClubhouseSelf,
-	ClubhouseStory,
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
+	ShortcutConfigurationData,
+	ShortcutCreateCardRequest,
+	ShortcutCreateCardResponse,
+	ShortcutMember,
+	ShortcutProject,
+	ShortcutSelf,
+	ShortcutStory,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard
 } from "../protocol/agent.protocol";
-import { CSClubhouseProviderInfo } from "../protocol/api.protocol";
+import { CSShortcutProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
-@lspProvider("clubhouse")
-export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhouseProviderInfo> {
-	private _clubhouseUserInfo: ClubhouseSelf | undefined;
+@lspProvider("shortcut")
+export class ShortcutProvider extends ThirdPartyIssueProviderBase<CSShortcutProviderInfo> {
+	private _shortcutUserInfo: Promise<ShortcutSelf> | undefined;
 
 	get displayName() {
-		return "Clubhouse";
+		return "Shortcut";
 	}
 
 	get name() {
-		return "clubhouse";
+		return "shortcut";
 	}
 
 	get headers() {
 		return {
 			"Content-Type": "application/json",
-			"Clubhouse-Token": this.accessToken!
+			"Shortcut-Token": this.accessToken!
 		};
 	}
 
@@ -45,14 +45,14 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 		return true;
 	}
 
-	async onConnected(providerInfo?: CSClubhouseProviderInfo) {
+	async onConnected(providerInfo?: CSShortcutProviderInfo) {
 		super.onConnected(providerInfo);
-		this._clubhouseUserInfo = await this.getMemberInfo();
+		this._shortcutUserInfo = this.getMemberInfo();
 	}
 
 	@log()
 	async onDisconnected(request?: ThirdPartyDisconnect) {
-		delete this._clubhouseUserInfo;
+		delete this._shortcutUserInfo;
 		return super.onDisconnected(request);
 	}
 
@@ -60,7 +60,7 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 	async getBoards(request: FetchThirdPartyBoardsRequest): Promise<FetchThirdPartyBoardsResponse> {
 		await this.ensureConnected();
 
-		const response = await this.get<ClubhouseProject[]>("/projects");
+		const response = await this.get<ShortcutProject[]>("/projects");
 		return { boards: response.body };
 	}
 
@@ -70,12 +70,13 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 
 		try {
 			if (!request.customFilter) {
-				request.customFilter = `is:story owner:${this._clubhouseUserInfo!.mention_name} !is:done`;
+				const shortcutUserInfo = await this._shortcutUserInfo;
+				request.customFilter = `is:story owner:${shortcutUserInfo!.mention_name} !is:done`;
 			}
 			const url = `/search?${qs.stringify({ query: request.customFilter })}`;
 			const result = await this.get<any>(url);
 			const stories = result.body.stories.data;
-			const cards: ThirdPartyProviderCard[] = stories.map((story: ClubhouseStory) => {
+			const cards: ThirdPartyProviderCard[] = stories.map((story: ShortcutStory) => {
 				return {
 					id: story.id,
 					url: story.app_url,
@@ -91,7 +92,7 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 			});
 			return { cards };
 		} catch (e) {
-			Logger.log("Error from Clubhouse: ", JSON.stringify(e, null, 4));
+			Logger.log("Error from Shortcut: ", JSON.stringify(e, null, 4));
 			return { cards: [] };
 		}
 	}
@@ -100,7 +101,7 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 	async createCard(request: CreateThirdPartyCardRequest) {
 		await this.ensureConnected();
 
-		const data = request.data as ClubhouseCreateCardRequest;
+		const data = request.data as ShortcutCreateCardRequest;
 		const body = {
 			project_id: data.projectId,
 			name: data.name,
@@ -108,7 +109,7 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 			owner_ids: (data.assignees! || []).map(a => a.id),
 			story_type: "bug"
 		};
-		const response = await this.post<{}, ClubhouseCreateCardResponse>(`/stories`, body);
+		const response = await this.post<{}, ShortcutCreateCardResponse>(`/stories`, body);
 		return { ...response.body, url: response.body.app_url };
 	}
 
@@ -120,13 +121,13 @@ export class ClubhouseProvider extends ThirdPartyIssueProviderBase<CSClubhousePr
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		await this.ensureConnected();
-		const { body } = await this.get<ClubhouseMember[]>("/members");
+		const { body } = await this.get<ShortcutMember[]>("/members");
 		const users = body.filter(u => !u.profile.deactivated);
 		return { users: users.map(u => ({ ...u, displayName: u.profile.name })) };
 	}
 
-	private async getMemberInfo(): Promise<ClubhouseSelf> {
-		const response = await this.get<ClubhouseSelf>("/member");
+	private async getMemberInfo(): Promise<ShortcutSelf> {
+		const response = await this.get<ShortcutSelf>("/member");
 		return response.body;
 	}
 }

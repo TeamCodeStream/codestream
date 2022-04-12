@@ -610,7 +610,7 @@ export interface CSAzureDevOpsProviderInfo extends CSProviderInfo {
 
 export interface CSOktaProviderInfo extends CSProviderInfo {}
 
-export interface CSClubhouseProviderInfo extends CSProviderInfo {}
+export interface CSShortcutProviderInfo extends CSProviderInfo {}
 
 export interface CSLinearProviderInfo extends CSProviderInfo {}
 
@@ -629,7 +629,7 @@ export type CSProviderInfos =
 	| CSYouTrackProviderInfo
 	| CSAzureDevOpsProviderInfo
 	| CSOktaProviderInfo
-	| CSClubhouseProviderInfo
+	| CSShortcutProviderInfo
 	| CSLinearProviderInfo
 	| CSNewRelicProviderInfo;
 
