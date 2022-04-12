@@ -136,6 +136,7 @@ export interface BaseAgentOptions {
 	recordRequests?: boolean;
 	workspaceFolders?: WorkspaceFolder[];
 	machineId?: string;
+	newRelicTelemetryEnabled?: boolean;
 }
 
 export interface AgentOptions extends BaseAgentOptions {

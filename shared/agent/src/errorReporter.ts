@@ -1,9 +1,9 @@
-import * as os from "os";
 import * as Sentry from "@sentry/node";
+import { Severity } from "@sentry/node";
+import * as os from "os";
 import { ReportSuppressedMessages } from "./agentError";
 import { Team } from "./api/extensions";
 import { SessionContainer } from "./container";
-import { Logger } from "./logger";
 import {
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
@@ -14,12 +14,52 @@ import {
 } from "./protocol/agent.protocol";
 import { CodeStreamSession, SessionStatus } from "./session";
 import { lsp, lspHandler } from "./system";
+import { Logger } from "./logger";
+import * as NewRelic from "newrelic";
+
+interface IErrorReporterProvider {
+	reportMessage(request: ReportMessageRequest): void;
+	reportBreadcrumb(request: ReportBreadcrumbRequest): void;
+	webviewError(request: WebviewErrorRequest): void;
+}
+
+abstract class ErrorReporterProviderBase {
+	protected _errorCache = new Set<string>();
+	constructor(protected session: CodeStreamSession) {}
+}
 
 @lsp
 export class ErrorReporter {
-	private _errorCache = new Set<string>();
+	private readonly _errorProviders: IErrorReporterProvider[];
 
 	constructor(session: CodeStreamSession) {
+		// use both error providers for now
+		this._errorProviders = [
+			new SentryErrorReporterProvider(session),
+			new NewRelicErrorReporterProvider(session)
+		];
+	}
+
+	@lspHandler(ReportMessageRequestType)
+	reportMessage(request: ReportMessageRequest) {
+		this._errorProviders.forEach(_ => _.reportMessage(request));
+	}
+
+	@lspHandler(ReportBreadcrumbRequestType)
+	reportBreadcrumb(request: ReportBreadcrumbRequest) {
+		this._errorProviders.forEach(_ => _.reportBreadcrumb(request));
+	}
+
+	@lspHandler(WebviewErrorRequestType)
+	webviewError(request: WebviewErrorRequest) {
+		this._errorProviders.forEach(_ => _.webviewError(request));
+	}
+}
+
+class SentryErrorReporterProvider extends ErrorReporterProviderBase
+	implements IErrorReporterProvider {
+	constructor(session: CodeStreamSession) {
+		super(session);
 		if (session.isProductionCloud) {
 			Logger.log("Initializing Sentry...");
 			Sentry.init({
@@ -94,7 +134,10 @@ export class ErrorReporter {
 		}
 	}
 
-	@lspHandler(ReportMessageRequestType)
+	webviewError(request: WebviewErrorRequest): void {
+		Logger.log(`Webview error: ${request.error.message}\n${request.error.stack}`);
+	}
+
 	reportMessage(request: ReportMessageRequest) {
 		const key = `${request.message}`;
 		if (this._errorCache.has(key)) {
@@ -106,7 +149,7 @@ export class ErrorReporter {
 
 		this._errorCache.add(key);
 		Sentry.captureEvent({
-			level: Sentry.Severity.fromString(request.type),
+			level: Severity.fromString(request.type),
 			timestamp: Date.now(),
 			message: request.message,
 			extra: request.extra,
@@ -115,19 +158,61 @@ export class ErrorReporter {
 			}
 		});
 	}
-
-	@lspHandler(ReportBreadcrumbRequestType)
 	reportBreadcrumb(request: ReportBreadcrumbRequest) {
 		Sentry.addBreadcrumb({
 			message: request.message,
 			data: request.data,
-			level: request.level ? Sentry.Severity.fromString(request.level) : undefined,
+			level: request.level ? Severity.fromString(request.level) : undefined,
 			category: request.category
 		});
 	}
+}
 
-	@lspHandler(WebviewErrorRequestType)
-	webviewError(request: WebviewErrorRequest) {
+class NewRelicErrorReporterProvider extends ErrorReporterProviderBase
+	implements IErrorReporterProvider {
+	private customAttributes: any;
+	constructor(session: CodeStreamSession) {
+		super(session);
+		this.customAttributes = {
+			platform: os.platform(),
+			ide: session.versionInfo.ide.name,
+			ideDetail: session.versionInfo.ide.detail,
+			ideVersion: session.versionInfo.ide.version,
+			source: "agent"
+		};
+	}
+
+	reportMessage(request: ReportMessageRequest) {
+		const key = `${request.message}`;
+		if (this._errorCache.has(key)) {
+			Logger.warn("Ignoring duplicate error", {
+				key: key
+			});
+			return;
+		}
+
+		this._errorCache.add(key);
+		NewRelic.noticeError(new Error(request.message), {
+			...this.customAttributes,
+			type: request.type,
+			source: request.source
+		});
+	}
+
+	webviewError(request: WebviewErrorRequest): void {
+		// try {
+		// 	NewRelic.noticeError(new Error(request.error.message), {
+		// 		...this.customAttributes,
+		// 		stack: request.error.stack
+		// 	});
+		// } catch (e) {
+		// 	Logger.warn(e);
+		// }
+
 		Logger.log(`Webview error: ${request.error.message}\n${request.error.stack}`);
+	}
+
+	reportBreadcrumb(request: ReportBreadcrumbRequest) {
+		// noop
 	}
 }

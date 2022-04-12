@@ -207,7 +207,7 @@ module.exports = function(env, argv) {
 			exprContextCritical: false
 		},
 		resolve: {
-			extensions: [".ts", ".tsx", ".js", ".jsx"],
+			extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
 			alias: {
 				// https://github.com/auth0/node-auth0/issues/657
 				"coffee-script": false,

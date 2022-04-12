@@ -44,6 +44,8 @@ interface BuildInfoMetadata {
 	assetEnvironment: string;
 }
 
+export const IDE_NAME = "VS Code";
+
 export async function activate(context: ExtensionContext) {
 	const start = process.hrtime();
 	Configuration.configure(context);
@@ -106,7 +108,7 @@ export async function activate(context: ExtensionContext) {
 			},
 			gitPath: git,
 			ide: {
-				name: "VS Code",
+				name: IDE_NAME,
 				version: vscodeVersion,
 				// Visual Studio Code or Visual Studio Code - Insiders
 				detail: edition

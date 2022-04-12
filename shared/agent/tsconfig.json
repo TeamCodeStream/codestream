@@ -20,7 +20,8 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
-		"useUnknownInCatchVariables": false
+		"useUnknownInCatchVariables": false,
+		"resolveJsonModule": true
 	},
 	"exclude": ["node_modules"]
 }

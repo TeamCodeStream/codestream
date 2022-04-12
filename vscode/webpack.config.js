@@ -16,9 +16,9 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 class CompileStatsPlugin {
 	constructor(name, env) {
-		this.name = name
+		this.name = name;
 		this.enabled = !env.production;
-		this.filename = `./stats-webpack-${this.name}.json`
+		this.filename = `./stats-webpack-${this.name}.json`;
 	}
 	total = 0;
 	count = 0;

@@ -1,5 +1,9 @@
 "use strict";
+// keep this as the first import
+import * as NewRelic from "newrelic";
+
 import * as fs from "fs";
+import * as os from "os";
 import {
 	CancellationToken,
 	ClientCapabilities,
@@ -21,6 +25,7 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind
 } from "vscode-languageserver";
+
 import { DocumentManager } from "./documentManager";
 import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
@@ -47,6 +52,7 @@ export class CodeStreamAgent implements Disposable {
 	rootUri: string | undefined;
 
 	private _clientCapabilities: ClientCapabilities | undefined;
+	private _agentOptions: BaseAgentOptions | undefined = undefined;
 	private _disposable: Disposable | undefined;
 	private readonly _logger: LspLogger;
 	private _session: CodeStreamSession | undefined;
@@ -119,6 +125,7 @@ export class CodeStreamAgent implements Disposable {
 			this.rootUri = e.rootUri == null ? undefined : e.rootUri;
 
 			const agentOptions = e.initializationOptions! as BaseAgentOptions;
+			this._agentOptions = agentOptions;
 			Logger.level = agentOptions.traceLevel;
 
 			await setGitPath(agentOptions.gitPath);
@@ -234,7 +241,27 @@ export class CodeStreamAgent implements Disposable {
 				return result;
 			});
 		} else {
-			return this._connection.onRequest(type, handler);
+			if (this._agentOptions?.newRelicTelemetryEnabled) {
+				const that = this;
+				return this._connection.onRequest(type, function() {
+					const args = arguments;
+					let addition = "";
+					if (type?.method === "codestream/provider/generic") {
+						const arg = args[0] || {};
+						addition = `/${arg.providerId?.replace(/\*/g, "-")}/${arg.method}`;
+					}
+
+					return NewRelic.startWebTransaction(type.method + addition, () => {
+						NewRelic.addCustomAttributes({
+							...(that.createNewRelicCustomAttributes() as any),
+							messageType: "request"
+						});
+						return handler.apply(null, args);
+					});
+				});
+			} else {
+				return this._connection.onRequest(type, handler);
+			}
 		}
 	}
 
@@ -249,7 +276,18 @@ export class CodeStreamAgent implements Disposable {
 		type: NT,
 		params: NotificationParamsOf<NT>
 	): void {
-		return this._connection.sendNotification(type, params);
+		if (this._agentOptions?.newRelicTelemetryEnabled) {
+			const that = this;
+			return NewRelic.startWebTransaction(type.method, function() {
+				NewRelic.addCustomAttributes({
+					...(that.createNewRelicCustomAttributes() as any),
+					messageType: "notification"
+				});
+				return that._connection.sendNotification(type, params);
+			});
+		} else {
+			return this._connection.sendNotification(type, params);
+		}
 	}
 
 	@log({
@@ -267,7 +305,45 @@ export class CodeStreamAgent implements Disposable {
 		params: RequestParamsOf<RT>,
 		token?: CancellationToken
 	): Thenable<RequestResponseOf<RT>> {
-		return this._connection.sendRequest(type, params, token);
+		if (this._agentOptions?.newRelicTelemetryEnabled) {
+			const that = this;
+			return NewRelic.startWebTransaction(type.method, function() {
+				NewRelic.addCustomAttributes({
+					...(that.createNewRelicCustomAttributes() as any),
+					messageType: "request"
+				});
+				return that._connection.sendRequest(type, params, token);
+			});
+		} else {
+			return this._connection.sendRequest(type, params, token);
+		}
+	}
+
+	private createNewRelicCustomAttributes() {
+		const that = this;
+		try {
+			const session = that._session || { teamId: "", userId: "", email: "", environment: "" };
+			return {
+				csEnvironment: session.environment,
+				email: session?.email,
+
+				extensionBuildEnv: that._agentOptions?.extension?.buildEnv,
+				extensionVersion: that._agentOptions?.extension?.version,
+
+				ideDetail: that._agentOptions?.ide?.detail,
+				ideName: that._agentOptions?.ide?.name,
+				ideVersion: that._agentOptions?.ide?.version,
+
+				platform: os.platform(),
+				proxySupport: that._agentOptions?.proxySupport,
+				serverUrl: that._agentOptions?.serverUrl,
+				teamId: session.teamId || "",
+				userId: session.userId || ""
+			};
+		} catch (ex) {
+			Logger.warn(`createNewRelicCustomAttributes error - ${ex.message}`);
+		}
+		return {};
 	}
 
 	error(exception: Error): void;
