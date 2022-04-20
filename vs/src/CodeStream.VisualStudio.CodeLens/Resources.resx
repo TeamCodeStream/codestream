@@ -117,16 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CodeHealthCodeLensProvider" xml:space="preserve">
-    <value>Code Health Indicator Provider</value>
-  </data>
-  <data name="FakeReferencesCodeLensProvider" xml:space="preserve">
-    <value>Fake References Provider</value>
-  </data>
-  <data name="FaultHitCounts" xml:space="preserve">
-    <value>{0} fault hit counts</value>
-  </data>
-  <data name="GitCommitCodeLensProvider" xml:space="preserve">
-    <value>Remote Git Commit Provider</value>
+  <data name="CodeStreamCodeLevelMetrics" xml:space="preserve">
+    <value>CodeStream Code Level Metrics</value>
   </data>
 </root>

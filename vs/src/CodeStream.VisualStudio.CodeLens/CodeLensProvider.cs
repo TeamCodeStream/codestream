@@ -7,18 +7,19 @@ using System.ComponentModel.Composition;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace CodeLensOopProvider {
+namespace CodeStream.VisualStudio.CodeLens {
 	[Export(typeof(IAsyncCodeLensDataPointProvider))]
 	[Name(Id)]
+	// TODO only allow python
 	[ContentType("code")]
-    // TODO change this name
 	[LocalizedName(typeof(Resources), "GitCommitCodeLensProvider")]
-	[Priority(200)]
-	internal class GitCommitDataPointProvider : IAsyncCodeLensDataPointProvider {
-        // TODO change this Id
-		internal const string Id = "GitCommit";
+	[Priority(210)]
+	internal class CodeLensProvider : IAsyncCodeLensDataPointProvider {
+        
+		internal const string Id = "CodeStreamCodeLevelMetrics";
 
 		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
+			// TODO logged in logic here
 			return Task.FromResult<bool>(true);
 		}
 
@@ -27,31 +28,30 @@ namespace CodeLensOopProvider {
 		}
 
 		private class GitCommitDataPoint : IAsyncCodeLensDataPoint {
-			private readonly CodeLensDescriptor descriptor;
-
-			private readonly string gitRepoRootPath;
+			private readonly CodeLensDescriptor _descriptor;
 
 			public GitCommitDataPoint(CodeLensDescriptor descriptor) {
-				this.descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
+				this._descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
 			}
 
 			public event AsyncEventHandler InvalidatedAsync;
 
-			public CodeLensDescriptor Descriptor => this.descriptor;
+			public CodeLensDescriptor Descriptor => this._descriptor;
 
 			public Task<CodeLensDataPointDescriptor> GetDataAsync(CodeLensDescriptorContext context, CancellationToken token) {
-
-				CodeLensDataPointDescriptor response = new CodeLensDataPointDescriptor() {
+				return Task.FromResult(new CodeLensDataPointDescriptor {
+					// TODO fill these out from CS agent
 					Description = "avg duration: 3ms | throughput: 100rpm | error rate: 4epm - since 30min ago",
+					// TODO
 					TooltipText = $"",
-					IntValue = null,    // no int value
-										//  ImageId = GetCommitTypeIcon(commit),
-				};
-
-				return Task.FromResult(response);
+					// no int value
+					IntValue = null,
+					//  ImageId = GetCommitTypeIcon(commit),
+				});
 			}
 
 			public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token) {
+				// TODO figure out how to open the webview
 				return Task.FromResult<CodeLensDetailsDescriptor>(null);
 			}
 

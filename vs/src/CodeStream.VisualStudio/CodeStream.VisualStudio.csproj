@@ -603,9 +603,9 @@
     <Content Include="UI\WebViews\index.ts" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CodeLensOopProvider\CodeLensOopProvider.csproj">
+    <ProjectReference Include="..\CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj">
       <Project>{31eb1b96-34e8-4e37-872d-4ed7363c95d9}</Project>
-      <Name>CodeLensOopProvider</Name>
+      <Name>CodeStream.VisualStudio.CodeLens</Name>
       <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">

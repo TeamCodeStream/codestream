@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CodeLensOopProvider {
+namespace CodeStream.VisualStudio.CodeLens {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace CodeLensOopProvider {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CodeLensOopProvider.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CodeStream.VisualStudio.CodeLens.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,38 +61,11 @@ namespace CodeLensOopProvider {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Code Health Indicator Provider.
+        ///   Looks up a localized string similar to CodeStream Code Level Metrics.
         /// </summary>
-        internal static string CodeHealthCodeLensProvider {
+        internal static string CodeStreamCodeLevelMetrics {
             get {
-                return ResourceManager.GetString("CodeHealthCodeLensProvider", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Fake References Provider.
-        /// </summary>
-        internal static string FakeReferencesCodeLensProvider {
-            get {
-                return ResourceManager.GetString("FakeReferencesCodeLensProvider", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} fault hit counts.
-        /// </summary>
-        internal static string FaultHitCounts {
-            get {
-                return ResourceManager.GetString("FaultHitCounts", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Remote Git Commit Provider.
-        /// </summary>
-        internal static string GitCommitCodeLensProvider {
-            get {
-                return ResourceManager.GetString("GitCommitCodeLensProvider", resourceCulture);
+                return ResourceManager.GetString("CodeStreamCodeLevelMetrics", resourceCulture);
             }
         }
     }

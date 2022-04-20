@@ -7,8 +7,8 @@
     <ProjectGuid>{31EB1B96-34E8-4E37-872D-4ED7363C95D9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CodeLensOopProvider</RootNamespace>
-    <AssemblyName>CodeLensOopProvider</AssemblyName>
+    <RootNamespace>CodeStream.VisualStudio.CodeLens</RootNamespace>
+    <AssemblyName>CodeStream.VisualStudio.CodeLens</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -140,7 +140,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GitCommitDataPointProvider.cs" />
+    <Compile Include="CodeLensProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
