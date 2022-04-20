@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 	[Name(Id)]
 	// TODO only allow python
 	[ContentType("code")]
-	[LocalizedName(typeof(Resources), "GitCommitCodeLensProvider")]
+	[LocalizedName(typeof(Resources), "CodeStreamCodeLevelMetrics")]
 	[Priority(210)]
 	internal class CodeLensProvider : IAsyncCodeLensDataPointProvider {
         
