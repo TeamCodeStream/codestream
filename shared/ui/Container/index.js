@@ -63,9 +63,9 @@ const getIdeInstallationInstructions = props => {
 		} else if (props.ide === "VS") {
 			specifics = (
 				<p>
-					Go to Extensions > Manage Extensions in VS 2019 (or Tools > Extensions and Updates in
-					2017) and then select Updates in the left pane. Select CodeStream in the middle pane, and
-					then click Update.
+					Go to Extensions &gt; Manage Extensions in VS 2019 (or Tools &gt; Extensions and Updates
+					in 2017) and then select Updates in the left pane. Select CodeStream in the middle pane,
+					and then click Update.
 				</p>
 			);
 		} else if (props.ide === "ATOM") {

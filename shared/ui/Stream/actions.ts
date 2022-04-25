@@ -84,7 +84,6 @@ import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
 import { middlewareInjector } from "../store/middleware-injector";
 import { PostsActionsType } from "../store/posts/types";
-import { getPost } from "../store/posts/reducer";
 
 export {
 	openPanel,

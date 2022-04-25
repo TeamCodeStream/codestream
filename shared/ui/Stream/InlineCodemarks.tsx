@@ -66,7 +66,7 @@ import ContainerAtEditorLine from "./SpatialView/ContainerAtEditorLine";
 import { CodemarkForm } from "./CodemarkForm";
 import { middlewareInjector } from "../store/middleware-injector";
 import { DocumentMarkersActionsType } from "../store/documentMarkers/types";
-import { createPostAndCodemark } from "./actions";
+import { createPostAndCodemark, setUserPreference } from "./actions";
 import Codemark from "./Codemark";
 import { PostEntryPoint } from "../store/context/types";
 import { localStore } from "../utilities/storage";
@@ -128,7 +128,7 @@ interface Props {
 	currentPullRequestId?: string;
 	currentPullRequestProviderId?: string;
 	lightningCodeReviewsEnabled: boolean;
-	activePanel: WebviewPanels;
+	activePanel: WebviewPanels | string;
 
 	setEditorContext: (
 		...args: Parameters<typeof setEditorContext>
@@ -136,7 +136,7 @@ interface Props {
 	fetchDocumentMarkers: (
 		...args: Parameters<typeof fetchDocumentMarkers>
 	) => ReturnType<ReturnType<typeof fetchDocumentMarkers>>;
-	postAction(): void;
+	postAction(...args: any[]): any;
 	setCodemarksFileViewStyle: (
 		...args: Parameters<typeof setCodemarksFileViewStyle>
 	) => ReturnType<typeof setCodemarksFileViewStyle>;
@@ -205,7 +205,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			numBelow: 0,
 			numLinesVisible: props.numLinesVisible,
 			problem: props.scmInfo && getFileScmError(props.scmInfo),
-			multiLocationCodemarkForm: false,
+			multiLocationCodemarkForm: false
 		};
 
 		this.docMarkersByStartLine = {};
@@ -535,7 +535,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<h3>No file open.</h3>
 						<p>
 							Open a source file to start discussing code with your teammates!{" "}
-							<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">Learn more.</a>
+							<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">
+								Learn more.
+							</a>
 						</p>
 					</div>
 				</div>
@@ -612,7 +614,9 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 						<h3>No codemarks in this file.</h3>
 						<p>
 							Discuss code by selecting a range and clicking an icon{" "}
-							<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">show me how</a>
+							<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/discuss-code/">
+								show me how
+							</a>
 						</p>
 					</div>
 				</div>
@@ -733,8 +737,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			// if there is already a codemark on this line, keep skipping to the next one
 			while (this.docMarkersByStartLine[startLine]) startLine++;
 			this.docMarkersByStartLine[startLine] = docMarker;
-			const hidden =
-				!showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
+			const hidden = !showHidden && codemark && (!codemark.pinned || codemark.status === "closed");
 			if (hidden) {
 				this.hiddenCodemarks[docMarker.id] = true;
 			} else {
@@ -1096,8 +1099,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	renderHeader() {
 		const { fileNameToFilterFor = "", scmInfo } = this.props;
 		return (
-			<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed">
-			</PanelHeader>
+			<PanelHeader title={fs.pathBasename(fileNameToFilterFor)} position="fixed"></PanelHeader>
 		);
 	}
 
@@ -1424,6 +1426,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 };
 
 export default connect(mapStateToProps, {
+	setUserPreference,
 	fetchDocumentMarkers,
 	setCodemarksFileViewStyle,
 	setComposeCodemarkActive,

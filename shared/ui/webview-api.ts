@@ -1,31 +1,24 @@
+import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { NotificationType, RequestType } from "vscode-jsonrpc";
 import { URI } from "vscode-uri";
 import {
 	findHost,
-	IpcHost,
-	WebviewIpcMessage,
-	isIpcResponseMessage,
-	isIpcRequestMessage,
-	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeActiveEditorNotification,
-	HostDidChangeEditorSelectionNotificationType,
-	HostDidChangeEditorVisibleRangesNotificationType,
-	NewCodemarkNotificationType,
+	HostDidChangeActiveEditorNotificationType,
 	HostDidChangeEditorSelectionNotification,
+	HostDidChangeEditorSelectionNotificationType,
 	HostDidChangeEditorVisibleRangesNotification,
+	HostDidChangeEditorVisibleRangesNotificationType,
+	IpcHost,
+	isIpcRequestMessage,
+	isIpcResponseMessage,
 	NewCodemarkNotification,
+	NewCodemarkNotificationType,
+	NewReviewNotification,
 	NewReviewNotificationType,
-	NewReviewNotification
+	WebviewIpcMessage
 } from "./ipc/webview.protocol";
-import { shortUuid, AnyObject } from "./utils";
-import {
-	CodeStreamApiDeleteRequestType,
-	CodeStreamApiGetRequestType,
-	CodeStreamApiPostRequestType,
-	CodeStreamApiPutRequestType,
-	TelemetryRequestType
-} from "@codestream/protocols/agent";
-import * as qs from "querystring";
+import { AnyObject, Disposable, shortUuid } from "./utils";
 
 type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
 type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
@@ -89,7 +82,11 @@ function normalizeListener<NT extends NotificationType<any, any>>(
 class EventEmitter {
 	private listenersByEvent = new Map<string, Listener[]>();
 
-	on<NT extends NotificationType<any, any>>(eventType: NT, listener: Listener<NT>, thisArgs?: any) {
+	on<NT extends NotificationType<any, any>>(
+		eventType: NT,
+		listener: Listener<NT>,
+		thisArgs?: any
+	): Disposable {
 		// Because we can't trust the uri format from the host, we need to normalize the uris in all notifications originating from the host
 		listener = normalizeListener(
 			eventType,

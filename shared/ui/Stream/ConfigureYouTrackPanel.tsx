@@ -14,7 +14,7 @@ import { CSProviderInfo } from "@codestream/protocols/api";
 
 interface Props {
 	providerId: string;
-	originLocation: ViewLocation;
+	originLocation: ViewLocation | string;
 }
 
 export default function ConfigureYouTrackPanel(props: Props) {

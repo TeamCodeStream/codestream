@@ -14,7 +14,6 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { CSText } from "../src/components/CSText";
 import { Dialog } from "../src/components/Dialog";
-import { PaneState } from "../src/components/Pane";
 import { UserStatus } from "../src/components/UserStatus";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { closeModal, openModal, openPanel } from "../store/context/actions";
@@ -117,9 +116,7 @@ const H3 = styled.h3`
 	margin-left: 20px;
 `;
 
-interface Props extends ConnectedProps {
-	paneState: PaneState;
-}
+interface Props extends ConnectedProps {}
 
 interface ConnectedProps {
 	teamId: string;

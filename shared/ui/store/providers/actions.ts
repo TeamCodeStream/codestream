@@ -54,7 +54,7 @@ export const configureAndConnectProvider = (
 
 export const connectProvider = (
 	providerId: string,
-	connectionLocation: ViewLocation,
+	connectionLocation: ViewLocation | string,
 	force?: boolean
 ) => async (dispatch, getState) => {
 	const { context, users, session, providers, ide, capabilities } = getState();
@@ -122,7 +122,7 @@ export type ViewLocation =
 
 export const sendIssueProviderConnected = (
 	providerId: string,
-	connectionLocation: ViewLocation = "Compose Modal"
+	connectionLocation: ViewLocation | string = "Compose Modal"
 ) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
@@ -141,7 +141,7 @@ export const sendIssueProviderConnected = (
 
 export const sendMessagingServiceConnected = (
 	providerId: string,
-	connectionLocation: ViewLocation = "Onboard"
+	connectionLocation: string | ViewLocation = "Onboard"
 ) => async (dispatch, getState) => {
 	const { providers } = getState();
 	const provider = providers[providerId];
@@ -158,7 +158,7 @@ export const sendMessagingServiceConnected = (
 
 export interface ConfigureProviderOptions {
 	setConnectedWhenConfigured?: boolean;
-	connectionLocation?: ViewLocation;
+	connectionLocation?: ViewLocation | string;
 	throwOnError?: boolean;
 	verify?: boolean;
 }
@@ -227,7 +227,7 @@ export const removeEnterpriseProvider = (providerId: string) => async (dispatch,
 
 export const disconnectProvider = (
 	providerId: string,
-	connectionLocation: ViewLocation,
+	connectionLocation: ViewLocation | string,
 	providerTeamId?: string
 ) => async (dispatch, getState) => {
 	try {

@@ -33,7 +33,7 @@ const Provider = styled(Button)`
 
 export const ConfigureOAuthOrPATPanel = (props: {
 	providerId: string;
-	originLocation: ViewLocation;
+	originLocation: ViewLocation | string;
 }) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {

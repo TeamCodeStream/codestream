@@ -553,7 +553,8 @@ class ReviewForm extends React.Component<Props, State> {
 					isLoadingScm: false,
 					isReloadingScm: false,
 					scmError: true,
-					scmErrorMessage: "This repository has no remotes.\n" +
+					scmErrorMessage:
+						"This repository has no remotes.\n" +
 						"Please configure a remote URL for this repository before creating a review."
 				});
 				return;
@@ -2031,15 +2032,15 @@ class ReviewForm extends React.Component<Props, State> {
 		const repoMenuItems =
 			openRepos && !isAmending
 				? openRepos
-					.filter(repo => repo.remotes?.length > 0)
-					.map(repo => {
-						const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
-						return {
-							label: repoName || repo.folder.uri,
-							key: repo.id,
-							action: () => this.setRepo(repo)
-						};
-				  })
+						.filter(repo => repo.remotes && repo.remotes?.length > 0)
+						.map(repo => {
+							const repoName = repo.id && repos[repo.id] && repos[repo.id].name;
+							return {
+								label: repoName || repo.folder.uri,
+								key: repo.id,
+								action: () => this.setRepo(repo)
+							};
+						})
 				: [];
 
 		let branchError: JSX.Element | null = null;
@@ -2327,7 +2328,7 @@ class ReviewForm extends React.Component<Props, State> {
 										loading={isReloadingScm || this.state.isLoading}
 										onClick={this.handleClickSubmit}
 									>
-										{isAmending ? "Amend" : "Submit"}
+										{isAmending === true ? "Amend" : "Submit"}
 									</Button>
 								</Tooltip>
 							)}

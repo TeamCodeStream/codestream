@@ -981,7 +981,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	}
 }
 
-const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
+const mapStateToProps = (state: CodeStreamState, _props): ConnectedProps => {
 	const { context, session, users, repos } = state;
 
 	const usernameMap = userSelectors.getUsernamesByIdLowerCase(state);

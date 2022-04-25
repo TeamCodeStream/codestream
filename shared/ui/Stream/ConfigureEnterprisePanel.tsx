@@ -16,7 +16,7 @@ import { Link } from "./Link";
 
 interface Props {
 	providerId: string;
-	originLocation: ViewLocation;
+	originLocation: ViewLocation | string;
 }
 
 export default function ConfigureEnterprisePanel(props: Props) {

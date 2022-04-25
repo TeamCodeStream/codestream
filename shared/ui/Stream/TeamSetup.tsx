@@ -34,13 +34,9 @@ const HR = styled.div`
 	margin: 20px -20px;
 `;
 
-interface Props {
-	onClose: Function;
-}
+interface Props {}
 
-const isNotEmpty = s => s.length > 0;
-
-export function TeamSetup(props: Props) {
+export const TeamSetup = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { providers } = state;
@@ -84,7 +80,7 @@ export function TeamSetup(props: Props) {
 					.replace(/(?:\r\n|\r|\n)/g, "")
 					.split(",")
 					.filter(Boolean);
-				if (domainsArray?.length) {
+				if (domainsArray && domainsArray.length) {
 					for (const d of domainsArray) {
 						if (d.indexOf(".") === -1) {
 							throw new Error(`${d} is an invalid domain`);
@@ -111,49 +107,51 @@ export function TeamSetup(props: Props) {
 		setIsLoading(false);
 	};
 
-	return [
-		<Dialog title="">
-			<Form className="standard-form">
-				<fieldset className="form-body">
-					<div id="controls">
-						<h3>Joining this Organization</h3>
-						<p className="explainer">
-							Allow people with emails from the following domains to join automatically:
-						</p>
+	return (
+		<>
+			<Dialog title="">
+				<Form className="standard-form">
+					<fieldset className="form-body">
+						<div id="controls">
+							<h3>Joining this Organization</h3>
+							<p className="explainer">
+								Allow people with emails from the following domains to join automatically:
+							</p>
 
-						<textarea
-							style={{ width: "100%", height: "100px" }}
-							name="domains"
-							value={domains}
-							onChange={event => setDomainsText(event.target.value)}
-						/>
-						<small>If you want to add more than one domain, separate each one with a comma</small>
-						{domainError && (
-							<>
-								<br />
-								<small className="explainer error-message">{domainError}</small>
-							</>
-						)}
-					</div>
+							<textarea
+								style={{ width: "100%", height: "100px" }}
+								name="domains"
+								value={domains}
+								onChange={event => setDomainsText(event.target.value)}
+							/>
+							<small>If you want to add more than one domain, separate each one with a comma</small>
+							{domainError && (
+								<>
+									<br />
+									<small className="explainer error-message">{domainError}</small>
+								</>
+							)}
+						</div>
 
-					<HR style={{ marginBottom: 0 }} />
-					<ButtonRow>
-						<Button
-							variant="secondary"
-							onClick={event => {
-								event.preventDefault();
-								dispatch(closeModal());
-							}}
-						>
-							Cancel
-						</Button>
-						<Button onClick={save} isLoading={isLoading}>
-							Save Onboarding Settings
-						</Button>
-					</ButtonRow>
-				</fieldset>
-			</Form>
-		</Dialog>,
-		<div style={{ height: "40px" }}></div>
-	];
-}
+						<HR style={{ marginBottom: 0 }} />
+						<ButtonRow>
+							<Button
+								variant="secondary"
+								onClick={event => {
+									event.preventDefault();
+									dispatch(closeModal());
+								}}
+							>
+								Cancel
+							</Button>
+							<Button onClick={save} isLoading={isLoading}>
+								Save Onboarding Settings
+							</Button>
+						</ButtonRow>
+					</fieldset>
+				</Form>
+			</Dialog>
+			,<div style={{ height: "40px" }}></div>
+		</>
+	);
+};

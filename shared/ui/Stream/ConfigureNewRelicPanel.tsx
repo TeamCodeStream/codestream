@@ -9,7 +9,7 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 
 interface Props {
 	providerId: string;
-	originLocation: ViewLocation;
+	originLocation: ViewLocation | string;
 }
 
 export default function ConfigureNewRelicPanel(props: Props) {

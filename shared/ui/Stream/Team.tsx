@@ -37,7 +37,6 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PaneHeader, Pane, PaneBody, PaneNode, PaneNodeName } from "../src/components/Pane";
 import { Modal } from "./Modal";
 import { Dialog } from "../src/components/Dialog";
-import { PaneState } from "../src/components/Pane";
 import { switchToTeam } from "../store/session/actions";
 import { Link } from "./Link";
 import { ButtonRow } from "./ChangeUsername";
@@ -128,9 +127,7 @@ const H3 = styled.h3`
 	margin-left: 20px;
 `;
 
-interface Props extends ConnectedProps {
-	paneState: PaneState;
-}
+interface Props extends ConnectedProps {}
 
 interface ConnectedProps {
 	teamId: string;
@@ -156,7 +153,7 @@ interface ConnectedProps {
 	switchToTeam: Function;
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
-	collisions: any;
+	collisions?: any;
 	dontSuggestInvitees: any;
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;

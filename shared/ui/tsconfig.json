@@ -23,7 +23,8 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
-		"types": ["styled-components", "jest"]
+		"types": ["styled-components", "jest"],
+		"useUnknownInCatchVariables": false
 	},
 	"exclude": ["src/__tests__/**/*.test.ts"]
 }

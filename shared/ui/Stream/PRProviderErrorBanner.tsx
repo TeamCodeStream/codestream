@@ -161,6 +161,6 @@ export const PRProviderErrorBanner = () => {
 			</Root>
 		);
 	} else {
-		return "";
+		return null;
 	}
 };

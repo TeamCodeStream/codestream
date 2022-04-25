@@ -24,7 +24,7 @@ interface Props {
 	showSignupUrl: boolean;
 	disablePostConnectOnboarding?: boolean;
 	providerId: string;
-	originLocation?: ViewLocation;
+	originLocation?: ViewLocation | string;
 	headerChildren?: any;
 	onClose?: Function;
 	onSubmited?: Function;
