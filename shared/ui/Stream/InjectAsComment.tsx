@@ -12,7 +12,7 @@ import { TelemetryRequestType } from "@codestream/protocols/agent";
 import { InsertTextRequestType } from "@codestream/protocols/webview";
 import { getPostsForStream } from "../store/posts/reducer";
 import { fetchThread } from "./actions";
-import CancelButton from './CancelButton';
+import CancelButton from "./CancelButton";
 
 const noop = () => Promise.resolve();
 
@@ -30,7 +30,7 @@ const mapStateToProps = (state, props) => {
 	const { users, context } = state;
 	const { codemark } = props;
 
-	let posts = getPostsForStream(state, codemark.streamId).filter(
+	let posts = getPostsForStream(codemark.streamId).filter(
 		post => post.parentPostId === codemark.postId
 	);
 
@@ -58,13 +58,15 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 		const [includeReplies, setIncludeReplies] = useState(true);
 		const [includeTimestamps, setIncludeTimestamps] = useState(true);
 		const [menuOpen, setMenuOpen] = useState(false);
-		const [menuTarget, setMenuTarget] = useState();
+		const [menuTarget, setMenuTarget] = useState<EventTarget>();
 		const [selectedCommentStyle, setSelectedCommentStyle] = useState("//");
 		const [hasPosts, setHasPosts] = useState(false);
 
 		const inject = () => {
-			const marker: CSMarker = props.codemark.markers!.find(marker => marker.id === props.markerId)!;
-			
+			const marker: CSMarker = props.codemark.markers!.find(
+				marker => marker.id === props.markerId
+			)!;
+
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "InjectAsComment",
 				properties: { "Author?": false }
@@ -239,10 +241,7 @@ export const InjectAsComment = (connect(mapStateToProps, { fetchThread }) as any
 							marginRight: 0
 						}}
 					>
-						<CancelButton 							
-							onClick={props.cancel}
- 							mode="button"
-						/>						 
+						<CancelButton onClick={props.cancel} mode="button" />
 						<Button
 							key="submit"
 							style={{

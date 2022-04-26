@@ -117,7 +117,7 @@ export function useRect<T extends HTMLElement>(
 		// @ts-ignore
 		if (typeof ResizeObserver === "function") {
 			// @ts-ignore
-			let resizeObserver = new ResizeObserver(() => handleResize());
+			let resizeObserver: ResizeObserver | null = new ResizeObserver(() => handleResize());
 			resizeObserver.observe(element);
 			return () => {
 				if (!resizeObserver) return;

@@ -131,7 +131,7 @@ export const PRProviderErrorBanner = () => {
 								onClick={onClickReauthorize}
 								loading={isLoading}
 								style={{
-									"background-color": "#b55e08",
+									backgroundColor: "#b55e08",
 									width: "10em",
 									margin: "5px 10px 5px 10px"
 								}}
@@ -143,7 +143,7 @@ export const PRProviderErrorBanner = () => {
 								type="button"
 								onClick={onClickIgnore}
 								style={{
-									"background-color": "#b55e08",
+									backgroundColor: "#b55e08",
 									width: "10em",
 									margin: "5px 10px 5px 10px"
 								}}

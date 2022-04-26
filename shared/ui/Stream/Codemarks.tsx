@@ -23,7 +23,6 @@ import {
 	mapFileScmErrorForTelemetry
 } from "../store/editorContext/reducer";
 import { setCurrentCodemark, openPanel } from "../store/context/actions";
-import { sortBy as _sortBy } from "lodash-es";
 import { setNewPostEntry } from "@codestream/webview/store/context/actions";
 import { setEditorContext } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";

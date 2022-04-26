@@ -5,7 +5,6 @@
 		"baseUrl": ".",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
-		"forceConsistentCasingInFileNames": true,
 		"jsx": "react",
 		"lib": ["es2017", "dom", "dom.iterable"],
 		"module": "esnext",
@@ -29,10 +28,11 @@
 			"@codestream/webview/*": ["../../shared/ui/*"],
 			"vscode-jsonrpc": ["../../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
-		"rootDir": ".",
+		"skipDefaultLibCheck": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017"
+		"target": "es2017",
+		"useUnknownInCatchVariables": false
 	}
 }

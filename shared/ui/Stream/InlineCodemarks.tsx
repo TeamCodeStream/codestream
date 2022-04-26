@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, SyntheticEvent } from "react";
 import PropTypes from "prop-types";
 import { connect, batch } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
@@ -882,7 +882,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 		this.setState({ multiLocationCodemarkForm: value });
 	};
 
-	closeCodemarkForm = (e?: Event) => {
+	closeCodemarkForm = (e?: SyntheticEvent) => {
 		this.setState({
 			multiLocationCodemarkForm: false,
 			codemarkFormError: undefined

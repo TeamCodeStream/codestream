@@ -16,29 +16,31 @@ export const getCardProps = (props: CardProps & { [k: string]: any }): CardProps
 	noCard: props.noCard
 });
 
-const Root = styled.div((props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
-	const { theme, noCard } = props;
+const Root = styled.div<{ noCard?: boolean }>(
+	(props: Omit<PropsWithTheme<CardProps>, "hoverEffect">) => {
+		const { theme, noCard } = props;
 
-	if (noCard)
-		return `
+		if (noCard)
+			return `
 			cursor: ${props.onClick != undefined ? "pointer" : "default"};
 			display: flex;
 			margin: -10px;
 			border: 1px solid transparent;
 		`;
 
-	const boxShadow = isDarkTheme(theme)
-		? "0 5px 10px rgba(0, 0, 0, 0.2)"
-		: "0 2px 5px rgba(0, 0, 0, 0.08)";
+		const boxShadow = isDarkTheme(theme)
+			? "0 5px 10px rgba(0, 0, 0, 0.2)"
+			: "0 2px 5px rgba(0, 0, 0, 0.08)";
 
-	return `
+		return `
 		cursor: ${props.onClick != undefined ? "pointer" : "default"};
 		display: flex;
 		box-shadow: ${boxShadow};
 		background: ${theme.colors.appBackground};
 		border: 1px solid ${theme.colors.baseBorder};
  	 `;
-});
+	}
+);
 
 export const CardBanner = styled.div`
 	margin-top: -10px;

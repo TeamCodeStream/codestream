@@ -432,7 +432,7 @@ class Team extends React.Component<Props, State> {
 							type="submit"
 							loading={this.state.loading}
 						>
-							<FormattedMessage id={inviteButtonId} defaultMessage="Invite" />
+							<FormattedMessage id={inviteButtonId} defaultMessage={"Invite"} />
 						</Button>
 					</div>
 				</div>

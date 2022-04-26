@@ -1,32 +1,31 @@
-import React from "react";
-import Icon from "./Icon";
 import createClassString from "classnames";
+import React, { PropsWithChildren } from "react";
+import Icon from "./Icon";
 
-Button.defaultProps = {
-	className: "",
-	disabled: false,
-	loading: false,
-	isSecondary: false
-};
+interface Props extends PropsWithChildren<{}>, React.ButtonHTMLAttributes<HTMLButtonElement> {
+	className?: string;
+	disabled?: boolean;
+	loading?: boolean;
+	isSecondary?: boolean;
+}
 
 export default function Button({
-	children = undefined,
-	className,
+	isSecondary = false,
 	disabled = false,
 	loading = false,
-	isSecondary = false,
-	...extras
-}) {
-	const { dispatch, ...extraProps } = extras; // remove non-html attributes
+	className = "",
+	children,
+	...props
+}: Props) {
 	return (
 		<button
+			{...props}
 			className={createClassString("btn inline-block-tight", className, {
 				"btn-primary": !isSecondary,
 				"btn-secondary": isSecondary,
 				disabled: disabled
 			})}
 			disabled={loading || disabled}
-			{...extraProps}
 		>
 			{loading ? <Icon name="sync" className="spin" /> : children}
 		</button>

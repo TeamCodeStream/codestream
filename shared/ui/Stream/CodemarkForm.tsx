@@ -24,7 +24,7 @@ import {
 } from "@codestream/protocols/api";
 import cx from "classnames";
 import * as paths from "path-browserify";
-import React from "react";
+import React, { SyntheticEvent } from "react";
 import { connect } from "react-redux";
 import Select from "react-select";
 import {
@@ -111,7 +111,7 @@ interface Props extends ConnectedProps {
 	streamId: string;
 	collapseForm?: Function;
 	onSubmit: (attributes: NewCodemarkAttributes, event?: React.SyntheticEvent) => any;
-	onClickClose(e?: Event): any;
+	onClickClose(e?: SyntheticEvent): any;
 	openCodemarkForm?(type: string): any;
 	slackInfo?: {};
 	codeBlock?: GetRangeScmInfoResponse;
@@ -396,7 +396,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				} else {
 					const range = isEmpty ? forceAsLine(textEditorSelection) : textEditorSelection;
 					if (isEmpty) this.selectRangeInEditor(textEditorUri, range);
-					this.getScmInfoForSelection(textEditorUri, textEditorGitSha, range, () => {
+					this.getScmInfoForSelection(textEditorUri, range, textEditorGitSha, () => {
 						// if (multiLocation) this.setState({ addingLocation: true, liveLocation: 1 });
 						this.focus();
 					});
@@ -451,8 +451,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		) {
 			this.getScmInfoForSelection(
 				textEditorUri!,
-				textEditorGitSha,
-				forceAsLine(textEditorSelection!)
+				forceAsLine(textEditorSelection!),
+				textEditorGitSha
 			);
 			this.props.onDidChangeSelection && this.props.onDidChangeSelection(textEditorSelection!);
 			// this.setState({ addingLocation: false });
@@ -490,8 +490,8 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	private async getScmInfoForSelection(
 		uri: string,
-		gitSha?: string,
 		range: Range,
+		gitSha?: string,
 		callback?: Function
 	) {
 		const scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
@@ -557,8 +557,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (textEditorSelection) {
 			this.getScmInfoForSelection(
 				textEditorUri!,
-				textEditorGitSha,
-				forceAsLine(textEditorSelection)
+				forceAsLine(textEditorSelection),
+				textEditorGitSha
 			);
 		}
 	};
@@ -2031,7 +2031,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		};
 	}
 
-	cancelCompose = (e?: Event) => {
+	cancelCompose = (e?: React.SyntheticEvent) => {
 		this.props.onClickClose && this.props.onClickClose(e);
 	};
 

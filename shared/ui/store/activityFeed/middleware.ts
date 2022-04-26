@@ -1,17 +1,19 @@
-import { MiddlewareAPI } from "redux";
-import { Dispatch } from "../common";
+import { GetPostRequestType, PostPlus } from "@codestream/protocols/agent";
+import { AnyAction, Middleware } from "redux";
+import { ThunkDispatch } from "redux-thunk";
 import { CodeStreamState } from "..";
-import { PostsActionsType } from "../posts/types";
+import { HostApi } from "../..";
+import { saveCodemarks } from "../codemarks/actions";
 import { addPosts, savePosts } from "../posts/actions";
 import { getPost } from "../posts/reducer";
-import { HostApi } from "../..";
-import { GetPostRequestType, PostPlus } from "@codestream/protocols/agent";
-import { saveCodemarks } from "../codemarks/actions";
+import { PostsActionsType } from "../posts/types";
 import { addNewActivity } from "./actions";
 
-export const activityFeedMiddleware = (
-	store: MiddlewareAPI<Dispatch, CodeStreamState>
-) => next => (action: { type: string }) => {
+export const activityFeedMiddleware: Middleware<
+	{},
+	CodeStreamState,
+	ThunkDispatch<CodeStreamState, unknown, AnyAction>
+> = store => next => async action => {
 	const { bootstrapped } = store.getState();
 
 	if (bootstrapped && action.type === PostsActionsType.Add) {
@@ -39,7 +41,7 @@ export const activityFeedMiddleware = (
 };
 
 const fetchPostForActivity = (postId: string, streamId: string) => async (
-	dispatch: Dispatch,
+	dispatch: ThunkDispatch<CodeStreamState, unknown, AnyAction>,
 	getState: () => CodeStreamState
 ) => {
 	let post: PostPlus | undefined = getPost(getState().posts, streamId, postId);
@@ -56,8 +58,9 @@ const fetchPostForActivity = (postId: string, streamId: string) => async (
 		}
 	}
 
-	if (post.parentPostId != null)
+	if (post.parentPostId != null) {
 		return dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
+	}
 
 	if (post.codemark) dispatch(addNewActivity("codemark", [post.codemark]));
 	if (post.review) dispatch(addNewActivity("review", [post.review]));

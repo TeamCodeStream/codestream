@@ -541,7 +541,6 @@ export const ActivityPanel = () => {
 									codemark={codemark}
 									post={post}
 									hoverEffect
-									isUnread={isUnread}
 									onClick={e => {
 										const target = e.target;
 										if (
