@@ -29,10 +29,10 @@
 			"@codestream/webview/*": ["../../../../../shared/ui/*"],
 			"vscode-jsonrpc": ["../../../../../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
-		"rootDir": ".",
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017"
+		"target": "es2017",
+		"useUnknownInCatchVariables": false
 	}
 }
