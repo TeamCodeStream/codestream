@@ -13,3 +13,4 @@ codestream-*.info
 .LSOverride
 *~
 stats*.json
+stats-*.json

@@ -254,7 +254,7 @@ function getExtensionConfig(mode, env) {
 }
 
 function getWebviewConfig(mode, env) {
-	const context = path.resolve(__dirname, "src/webviews/app");
+	const context = path.resolve(__dirname);
 
 	/**
 	 * @type any[]
@@ -278,7 +278,7 @@ function getWebviewConfig(mode, env) {
 			filename: "webview.css"
 		}),
 		new HtmlPlugin({
-			template: "index.html",
+			template: "./src/webviews/app/index.html",
 			filename: path.resolve(__dirname, "webview.html"),
 			inlineSource: ".(js|css)$",
 			inject: true,
@@ -311,7 +311,7 @@ function getWebviewConfig(mode, env) {
 		name: "webview",
 		context: context,
 		entry: {
-			webview: ["./index.ts", "./styles/webview.less"]
+			webview: ["./src/webviews/app/index.ts", "./src/webviews/app/styles/webview.less"]
 		},
 		mode: env.production ? "production" : "development",
 		node: false,
