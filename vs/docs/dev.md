@@ -10,15 +10,24 @@ Prerequisites
 
 - Windows 10
 - [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/)
+   - Various workloads including:
+      - Visual Studio extension development
+      - .NET Framework 4.8
 - [Git](https://git-scm.com/), 2.32.0
 - [NodeJS](https://nodejs.org/en/), 16.13.2
 - [npm](https://npmjs.com/), 8.1.2
 
-- License for [https://www.teamdev.com/dotnetbrowser](DotNetBrowser) (it must put into the git-ignored folder `\licenses\{Configuration}` where `{Configuration}` is Debug (dev license) or Release (runtime license)). It will be picked up by msbuild and put into the correct location. These licenses should _not_ be commited to source control
+- [DotNetBrowser](https://www.teamdev.com/dotnetbrowser) license. (it must be put into the git-ignored folder `\licenses\{Configuration}` where `{Configuration}` is Debug (dev license) or Release (runtime license)). It will be picked up by msbuild and put into the correct location at build time. These licenses should _not_ be commited to source control.
 
 ### Build (local)
 
-1. From a terminal, where you have cloned the `codestream` repository, cd to `shared/agent` and execute the following command to re-build the agent from scratch:
+The webview (shared/ui) and the agent (shared/agent) are js/node dependencies that must be built before running CodeStream for Visual Studio.
+
+>NOTE: you will need an elevated prompt the first time you run the following commands to create various symlinks.
+
+>NOTE: running `rebuild` will delete the `node_modules` directory and run `npm install` again. Unless it's the first time you're building, or you want a clean "start from scratch", use the `build` command instead.
+
+1. From a terminal, where you have cloned the `codestream` repository, cd to `shared/agent` and execute the following command to rebuild the agent from scratch:
 
    ```
    npm run rebuild
@@ -30,6 +39,17 @@ Prerequisites
    npm run build
    ```
 
+2. From a terminal, where you have cloned the `codestream` repository, cd to `vs` and execute the following command to rebuild the webview from scratch:
+
+   ```
+   npm run rebuild
+   ```
+
+   Or to just run a quick build, use:
+
+   ```
+   npm run build
+   ```
 ### Watch (Agent only)
 
 During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the `codestream` repository, cd to `shared/agent` execute the following command:
@@ -38,19 +58,29 @@ During development you can use a watcher to make builds on changes quick and eas
 npm run watch
 ```
 
-It will do an initial full build and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
+### Watch (Webview only)
+
+During development you can use a watcher to make builds on changes quick and easy. From a terminal, where you have cloned the `codestream` repository, cd to `vs` execute the following command:
+
+```
+npm run watch
+```
+
+It will do an initial full build of the webview and then watch for file changes, compiling those changes incrementally, enabling a fast, iterative coding experience.
 
 ### Debugging
 
 #### Using Visual Studio
 
-1. Ensure that the agent has been build or that the watcher is running (see the _Watch_ section above)
-1. Open the solution (`vs/src/CodeStream.VisualStudio.sln`),
+1. Ensure that the agent and webview have been built or that the watcher is running for both (see the sections above)
+1. Open the Visual Studio solution (`vs/src/CodeStream.VisualStudio.sln`),
 1. Press `F5` to build and run the solution. This will open a new "experimental" version of Visual Studio.
 
-NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the store first)
+>NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the marketplace first)
 
 ### Build (CI)
+
+Visual Studio builds are attached to an internal Team City build process. 
 
 ```
 cd build
@@ -101,4 +131,10 @@ Menus are attached to the VisualStudio shell with a `.vsct` file. Here, they are
 
 ### Tools
 
-Highly recommend installing: https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ExtensibilityTools (Clearing MEF cache, VSCT support)
+Scripts:
+
+- `vs/tools/log-watcher-agent.ps1` and `vs/tools/log-watcher-extension.ps1` can be run to tail the two logs.
+
+Extensions: 
+
+- https://marketplace.visualstudio.com/items?itemName=MadsKristensen.ExtensibilityTools (Clearing MEF cache, VSCT support)
