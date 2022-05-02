@@ -43,6 +43,10 @@
     --list-inactive-foreground: --cs--list-inactive-foreground--;
 }
 
+.codestream #app .stream nav.inline {
+	padding-top: 6px;
+}
+
 /* style overrides & polyfills */
 .floating-loading-message {
 	background-color: var(--app-background-color-darker);

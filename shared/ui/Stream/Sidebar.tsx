@@ -25,7 +25,6 @@ import { getPreferences } from "../store/users/reducer";
 import { getRepos } from "../store/repos/reducer";
 import { Observability } from "./Observability";
 
-const PADDING_TOP = 25;
 
 const Root = styled.div`
 	height: 100%;
@@ -34,8 +33,7 @@ const Root = styled.div`
 `;
 
 const Panels = styled.div`
-	padding-top: ${PADDING_TOP}px;
-	height: 100%;
+    height: 100%;
 `;
 
 export const ExtensionTitle = styled.h2`
@@ -124,7 +122,8 @@ export const Sidebar = React.memo(function Sidebar() {
 			sidebarPanes: preferences.sidebarPanes || EMPTY_HASH,
 			sidebarPaneOrder,
 			currentUserId: state.session.userId!,
-			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0
+			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0,
+			ideName: state.ide.name
 		};
 	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
@@ -138,6 +137,10 @@ export const Sidebar = React.memo(function Sidebar() {
 	const [windowSize, setWindowSize] = useState(EMPTY_SIZE);
 	const [headerDragY, setHeaderDragY] = useState(0);
 	const [initialRender, setInitialRender] = useState(true);
+
+	const TOP_PADDING = useMemo(() => {
+		return derivedState.ideName === "VS" ? 31 : 25;
+	}, [derivedState.ideName]);
 
 	const fetchOpenRepos = async () => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
@@ -245,8 +248,8 @@ export const Sidebar = React.memo(function Sidebar() {
 	})();
 
 	const positions = (() => {
-		const availableHeight = windowSize.height - PADDING_TOP - COLLAPSED_SIZE * numCollapsed;
-		let accumulator = PADDING_TOP;
+		const availableHeight = windowSize.height - TOP_PADDING - COLLAPSED_SIZE * numCollapsed;
+		let accumulator = TOP_PADDING;
 		return panes.map(p => {
 			const size = sizes[p.id] || p.size || 1;
 			const height = p.removed
@@ -272,8 +275,8 @@ export const Sidebar = React.memo(function Sidebar() {
 		// don't worry about using the dynamic version of collapsed because
 		// if one pane is maximized, you can't drag. subtract PADDING_TOP for the header padding,
 		// and COLLAPSED_SIZE for each collapsed pane
-		const availableHeight = windowSize.height - PADDING_TOP - COLLAPSED_SIZE * numCollapsed;
-		let accumulator = PADDING_TOP;
+		const availableHeight = windowSize.height - TOP_PADDING - COLLAPSED_SIZE * numCollapsed;
+		let accumulator = TOP_PADDING;
 		const firstExpanded = panes.findIndex(p => !p.collapsed);
 		const lastExpanded = findLastIndex(panes, p => !p.collapsed);
 		return panes.map((p, index) => {
@@ -394,7 +397,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		<Root className={dragging || initialRender ? "" : "animate-height"}>
 			<CreateCodemarkIcons />
 			{/*<ExtensionTitle>CodeStream</ExtensionTitle>*/}
-			<Panels>
+			<Panels style={{ paddingTop: `${TOP_PADDING}px` }}>
 				{panes.map((pane, index) => {
 					const position = dragPositions[index];
 					if (!position || pane.removed) return null;
