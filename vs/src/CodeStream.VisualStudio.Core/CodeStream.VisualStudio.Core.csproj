@@ -102,6 +102,7 @@
     <Compile Include="Models\Host.Protocol.Review.cs" />
     <Compile Include="Models\IOptions.cs" />
     <Compile Include="Models\IVirtualTextDocument.cs" />
+    <Compile Include="Models\NREnvironmentSettings.cs" />
     <Compile Include="Models\OpenEditorResult.cs" />
     <Compile Include="Models\Placement.cs" />
     <Compile Include="Models\Position.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Process\ProcessExtensions.cs" />
     <Compile Include="RegularExpressions.cs" />
     <Compile Include="Retry.cs" />
+    <Compile Include="Services\IHttpClientService.cs" />
     <Compile Include="Services\ISolutionEventsListener.cs" />
     <Compile Include="Services\IWebviewUserSettingsService.cs" />
     <Compile Include="TelemetryEventNames.cs" />

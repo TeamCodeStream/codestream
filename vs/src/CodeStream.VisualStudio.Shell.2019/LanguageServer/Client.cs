@@ -60,8 +60,9 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			ISessionService sessionService,
 			IEventAggregator eventAggregator,
 			IBrowserServiceFactory browserServiceFactory,
-			ISettingsServiceFactory settingsServiceFactory)
-			: base(serviceProvider, sessionService, eventAggregator, browserServiceFactory, settingsServiceFactory, Log) {
+			ISettingsServiceFactory settingsServiceFactory,
+			IHttpClientService httpClientService)
+			: base(serviceProvider, sessionService, eventAggregator, browserServiceFactory, settingsServiceFactory, httpClientService, Log) {
 		}
 
 		public string Name => Application.Name;
@@ -107,7 +108,7 @@ namespace CodeStream.VisualStudio.Shell._2019.LanguageServer {
 			Connection connection = null;
 			try {
 				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(Client));
-				var process = LanguageServerProcess.Create(settingsManager);
+				var process = await LanguageServerProcess.CreateAsync(settingsManager, HttpClientService);
 
 				using (Log.CriticalOperation($"Started language server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 					if (process.Start()) {
