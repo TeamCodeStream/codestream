@@ -146,13 +146,12 @@ import {
 	CSReviewCheckpoint,
 	StreamType
 } from "@codestream/protocols/api";
-import fetch, { RequestInit } from "node-fetch";
 
 import { SessionSignedOutReason } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
-import { IDE_NAME } from "../extension";
+import { getInitializationOptions } from "../extension";
 
 export { BaseAgentOptions };
 
@@ -1114,34 +1113,21 @@ export class CodeStreamAgentConnection implements Disposable {
 		);
 		this._clientOptions.revealOutputChannelOn = RevealOutputChannelOn.Never;
 
-		const initializationOptions = this.getInitializationOptions();
+		const initializationOptions = getInitializationOptions({
+			...this._clientOptions.initializationOptions
+		});
 
 		try {
-			const proxyAgent = this.getHttpsProxyAgent(initializationOptions);
-			const requestInit: RequestInit | undefined = {
-				agent: proxyAgent,
-				headers: {
-					"X-CS-Plugin-IDE": IDE_NAME
-				}
-			};
-			const response = await fetch(
-				`${this._clientOptions.initializationOptions.serverUrl.trim()}/no-auth/nr-ingest-key`,
-				requestInit
-			);
-			const responseJson = (await response.json()) as {
-				error?: string;
-				telemetryEndpoint?: string;
-				licenseIngestKey?: string;
-			};
-			if (responseJson) {
-				if (responseJson.error) {
-					Logger.warn("no NewRelic telemetry", { error: responseJson.error });
-				} else if (responseJson.telemetryEndpoint && responseJson.licenseIngestKey) {
+			const telemetryOptions = Container.telemetryOptions;
+			if (telemetryOptions) {
+				if (telemetryOptions.error) {
+					Logger.warn("no NewRelic telemetry", { error: telemetryOptions.error });
+				} else if (telemetryOptions.telemetryEndpoint && telemetryOptions.licenseIngestKey) {
 					const newRelicEnvironmentVariables = {
-						NEW_RELIC_HOST: responseJson.telemetryEndpoint,
+						NEW_RELIC_HOST: telemetryOptions.telemetryEndpoint,
 						NEW_RELIC_LOG_LEVEL: "info",
 						NEW_RELIC_APP_NAME: "lsp-agent",
-						NEW_RELIC_LICENSE_KEY: responseJson.licenseIngestKey
+						NEW_RELIC_LICENSE_KEY: telemetryOptions.licenseIngestKey
 					} as NewRelicEnvironmentVariables;
 
 					(this._serverOptions as any).run.options = (this._serverOptions as any).run.options || {};
