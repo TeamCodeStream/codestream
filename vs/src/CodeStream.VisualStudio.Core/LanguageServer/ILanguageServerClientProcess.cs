@@ -1,7 +1,7 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+﻿using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Core.LanguageServer {
 	public interface ILanguageServerClientProcess {
-		System.Diagnostics.Process Create(TraceLevel? traceLevel);
+		System.Diagnostics.Process Create(ISettingsManager settingsManager);
 	}
 }

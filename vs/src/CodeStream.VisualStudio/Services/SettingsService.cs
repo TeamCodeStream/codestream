@@ -139,6 +139,11 @@ namespace CodeStream.VisualStudio.Services {
 			set => DialogPage.DisableStrictSSL = value;
 		}
 
+		public string ExtraCertificates {
+			get => DialogPage.ExtraCertificates;
+			set => DialogPage.ExtraCertificates = value;
+		}
+
 		public bool ShowGoldenSignalsInEditor {
 			get => DialogPage.ShowGoldenSignalsInEditor;
 			set => DialogPage.ShowGoldenSignalsInEditor = value;

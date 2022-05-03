@@ -82,7 +82,8 @@ namespace CodeStream.VisualStudio.Packages {
 			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxySupport) ||
-					 args.PropertyName == nameof(_settingsManager.DisableStrictSSL)) {
+					 args.PropertyName == nameof(_settingsManager.DisableStrictSSL) ||
+					 args.PropertyName == nameof(_settingsManager.ExtraCertificates)) {
 
 				try {
 					var sessionService = _componentModel.GetService<ISessionService>();

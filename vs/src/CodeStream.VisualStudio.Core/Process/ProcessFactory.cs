@@ -1,6 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using Serilog;
 using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
 
 namespace CodeStream.VisualStudio.Core.Process {
@@ -13,7 +14,7 @@ namespace CodeStream.VisualStudio.Core.Process {
 		/// <param name="fileName"></param>
 		/// <param name="arguments"></param>
 		/// <returns></returns>
-		public static System.Diagnostics.Process Create(string fileName, string arguments, bool useNodeOptions = true) {
+		public static System.Diagnostics.Process Create(string fileName, string arguments, StringDictionary additionalEnv = null) {
 			var info = new ProcessStartInfo {
 				FileName = fileName,
 				Arguments = arguments,
@@ -23,12 +24,16 @@ namespace CodeStream.VisualStudio.Core.Process {
 				CreateNoWindow = true
 			};
 
-			if (!useNodeOptions) {
-				try {
-					info.EnvironmentVariables.Remove("NODE_OPTIONS");
-				}
-				catch (Exception ex) {
-					Log.Error(ex, "Could not remove NODE_OPTIONS");
+			try {
+				info.EnvironmentVariables.Remove("NODE_OPTIONS");
+			}
+			catch (Exception ex) {
+				Log.Error(ex, "Could not remove NODE_OPTIONS");
+			}
+
+			if (additionalEnv != null) {
+				foreach (string key in additionalEnv.Keys) {
+					info.EnvironmentVariables.Add(key, additionalEnv[key]);
 				}
 			}
 

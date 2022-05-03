@@ -25,8 +25,9 @@ namespace CodeStream.VisualStudio.UI.Settings {
         private string _serverUrl = "https://api.codestream.com";
 #endif
 		private bool _disableStrictSsl = false;
-		
 		private bool _proxyStrictSsl;
+		private string _extraCertificates;
+
 		private bool _showGoldenSignalsInEditor;
 		private string _goldenSignalsInEditorFormat =
 			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}";
@@ -149,6 +150,20 @@ namespace CodeStream.VisualStudio.UI.Settings {
 				if (_disableStrictSsl != value) {
 					_disableStrictSsl = value;
 					 
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("Connectivity")]
+		[DisplayName("Extra Certificates")]
+		[Description("Specify path to file containing any certificate(s) you wish CodeStream connections to trust")]
+		public string ExtraCertificates {
+			get => _extraCertificates;
+			set {
+				if (_extraCertificates != value) {
+					_extraCertificates = value;
+
 					NotifyPropertyChanged();
 				}
 			}
