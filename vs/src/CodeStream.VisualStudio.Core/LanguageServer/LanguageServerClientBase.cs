@@ -21,6 +21,8 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		protected readonly IServiceProvider ServiceProvider;
 		protected readonly ISettingsServiceFactory SettingsServiceFactory;
 		protected readonly ILanguageServerClientProcess LanguageServerProcess;
+		protected readonly IHttpClientService HttpClientService;
+
 		protected bool isReloading { get; set; }
 		protected LanguageServerClientBase(
 			IServiceProvider serviceProvider,
@@ -28,13 +30,16 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			IEventAggregator eventAggregator,
 			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory,
+			IHttpClientService httpClientService,
 			ILogger logger) {
+
 			Log = logger;
 			try {
 				ServiceProvider = serviceProvider;
 				SessionService = sessionService;
 				EventAggregator = eventAggregator;
 				SettingsServiceFactory = settingsServiceFactory;
+				HttpClientService = httpClientService;
 
 				LanguageServerProcess = new LanguageServerClientProcess();
 				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserServiceFactory, SettingsServiceFactory);
