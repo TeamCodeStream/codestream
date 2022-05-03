@@ -28,7 +28,7 @@ namespace CodeStream.VisualStudio.Services {
 				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(HttpClientService));
 				var handler = new HttpClientHandler();
 
-				if (settingsManager.ProxySupport == ProxySupport.Off) {
+				if (settingsManager.ProxySupport == ProxySupport.Off || settingsManager.Proxy == null) {
 					handler.UseProxy = false;
 				}
 				else {
@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Services {
 				var client = HttpClientFactory.Create(handler);
 				client.DefaultRequestHeaders.Add("X-CS-Plugin-IDE", settingsManager.GetIdeInfo().Name);
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
-				var response = await client.GetStringAsync("/no-auth/nr-injest-key");
+				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
 
 				return JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
 			}
