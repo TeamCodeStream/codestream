@@ -117,14 +117,39 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 				if (err) {
 					reject(err);
 				} else {
-					resolve(
-						data.replace(
-							/{{root}}/g,
-							Uri.file(Container.context.asAbsolutePath("."))
-								.with({ scheme: "vscode-resource" })
-								.toString()
-						)
+					let html = data.replace(
+						/{{root}}/g,
+						Uri.file(Container.context.asAbsolutePath("."))
+							.with({ scheme: "vscode-resource" })
+							.toString()
 					);
+					if (
+						Container.telemetryOptions &&
+						Container.telemetryOptions.browserIngestKey &&
+						Container.telemetryOptions.accountId &&
+						Container.telemetryOptions.webviewAppId &&
+						Container.telemetryOptions.webviewAgentId
+					) {
+						try {
+							const browserScript = Container.context.asAbsolutePath("dist/newrelic-browser.js");
+							if (browserScript) {
+								const browser = fs
+									.readFileSync(browserScript)
+									.toString()
+									.replace(/{{accountID}}/g, Container.telemetryOptions.accountId!)
+									.replace(/{{applicationID}}/g, Container.telemetryOptions.webviewAppId!)
+									.replace(/{{agentID}}/g, Container.telemetryOptions.webviewAgentId!)
+									.replace(/{{licenseKey}}/g, Container.telemetryOptions.browserIngestKey);
+								html = html.replace(
+									"<head>",
+									`<head><script type="text/javascript">${browser}</script>`
+								);
+							}
+						} catch (ex) {
+							Logger.log("NewRelic telemetry", { error: ex });
+						}
+					}
+					resolve(html);
 				}
 			});
 		});
