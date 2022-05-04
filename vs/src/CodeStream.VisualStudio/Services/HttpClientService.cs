@@ -17,6 +17,7 @@ namespace CodeStream.VisualStudio.Services {
 		private static readonly ILogger Log = LogManager.ForContext<HttpClientService>();
 
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
+		private NREnvironmentSettings _nrEnvironmentSettings;
 
 		[ImportingConstructor]
 		public HttpClientService(ISettingsServiceFactory settingsServiceFactory) {
@@ -27,6 +28,10 @@ namespace CodeStream.VisualStudio.Services {
 		/// Gets the settings from the API for enabling telemetry in the agent
 		/// </summary>
 		public async Task<NREnvironmentSettings> GetNREnvironmentSettingsAsync() {
+			if (_nrEnvironmentSettings != null) {
+				return _nrEnvironmentSettings;
+			}
+
 			try {
 				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(HttpClientService));
 				var handler = new HttpClientHandler();
@@ -46,13 +51,16 @@ namespace CodeStream.VisualStudio.Services {
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
 				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
 
-				return JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
+				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
 			}
 			catch (Exception ex) {
+				// if we get this far and have failed, just instantiate the settings so the next calls
+				// to this method get a default / telemetry "off" state.
+				_nrEnvironmentSettings = new NREnvironmentSettings(); 
 				Log.Error(ex, "Unable to obtain settings for New Relic telemetry.");
 			}
 
-			return await Task.FromResult(new NREnvironmentSettings());
+			return _nrEnvironmentSettings;
 		}
 	}
 }
