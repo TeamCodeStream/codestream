@@ -31,12 +31,15 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 
 			StringDictionary additionalEnv = new StringDictionary {
 				{ "NODE_EXTRA_CA_CERTS", settingsManager.ExtraCertificates },
-				{ "NODE_TLS_REJECT_UNAUTHORIZED", settingsManager.DisableStrictSSL ? "0" : "1" },
-				{ "NEW_RELIC_HOST", nrSettings.Host },
-				{ "NEW_RELIC_LOG_LEVEL", nrSettings.LogLevel },
-				{ "NEW_RELIC_APP_NAME", nrSettings.AppName },
-				{ "NEW_RELIC_LICENSE_KEY", nrSettings.LicenseKey }
+				{ "NODE_TLS_REJECT_UNAUTHORIZED", settingsManager.DisableStrictSSL ? "0" : "1" }
 			};
+
+			if (nrSettings.HasValidSettings) {
+				additionalEnv.Add("NEW_RELIC_HOST", nrSettings.Host);
+				additionalEnv.Add("NEW_RELIC_LOG_LEVEL", nrSettings.LogLevel);
+				additionalEnv.Add("NEW_RELIC_APP_NAME", nrSettings.AppName);
+				additionalEnv.Add("NEW_RELIC_LICENSE_KEY", nrSettings.LicenseKey);
+			}
 
 			return ProcessFactory.Create(exe, arguments, additionalEnv);
 		}
