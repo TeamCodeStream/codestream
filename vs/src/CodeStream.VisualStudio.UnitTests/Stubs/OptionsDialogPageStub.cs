@@ -35,6 +35,7 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
         public string ProxyUrl { get; set; }
         public ProxySupport ProxySupport { get; set; }
         public bool DisableStrictSSL { get; set; }
+        public string ExtraCertificates { get; set; }
         public Proxy Proxy { get; }
 		public bool ShowGoldenSignalsInEditor { get; set;  }
 		public string GoldenSignalsInEditorFormat { get; set; }
