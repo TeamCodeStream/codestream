@@ -84,6 +84,7 @@
     <Compile Include="CamelCaseStringEnumConverter.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="ContentTypes.cs" />
+    <Compile Include="Exceptions\NRApiErrorException.cs" />
     <Compile Include="LanguageServer\ILanguageServerClientManager.cs" />
     <Compile Include="LanguageServer\MiddleLayerProvider.cs" />
     <Compile Include="Logging\CodeStreamSink.cs" />

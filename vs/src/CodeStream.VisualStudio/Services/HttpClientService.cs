@@ -8,6 +8,7 @@ using System.ComponentModel.Composition;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Exceptions;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -49,9 +50,18 @@ namespace CodeStream.VisualStudio.Services {
 				var client = HttpClientFactory.Create(handler);
 				client.DefaultRequestHeaders.Add("X-CS-Plugin-IDE", settingsManager.GetIdeInfo().Name);
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
-				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
 
-				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
+				Log.Information("Calling API for Ingest Keys");
+				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
+				Log.Information($"Ingest Key Response: {response}");
+
+				var settings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
+
+				if (!string.IsNullOrEmpty(settings.Error)) {
+					throw new NRApiErrorException(settings.Error);
+				}
+				
+				_nrEnvironmentSettings = settings;
 			}
 			catch (Exception ex) {
 				// if we get this far and have failed, just instantiate the settings so the next calls
