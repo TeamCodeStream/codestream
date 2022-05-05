@@ -53,15 +53,13 @@ namespace CodeStream.VisualStudio.Services {
 
 				Log.Information("Calling API for Ingest Keys");
 				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
-				Log.Information($"Ingest Key Response: {response}");
+				Log.Information("Ingest Key Response: OK");
 
-				var settings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
+				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
 
-				if (!string.IsNullOrEmpty(settings.Error)) {
-					throw new NRApiErrorException(settings.Error);
+				if (!string.IsNullOrEmpty(_nrEnvironmentSettings.Error)) {
+					throw new NRApiErrorException(_nrEnvironmentSettings.Error);
 				}
-				
-				_nrEnvironmentSettings = settings;
 			}
 			catch (Exception ex) {
 				// if we get this far and have failed, just instantiate the settings so the next calls
