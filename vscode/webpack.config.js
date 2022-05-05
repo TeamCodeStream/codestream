@@ -156,6 +156,10 @@ function getExtensionConfig(mode, env) {
 							{
 								source: path.resolve(__dirname, "codestream-*.info"),
 								destination: "dist/"
+							},
+							{
+								source: path.resolve(__dirname, "../shared/ui/newrelic-browser.js"),
+								destination: "dist/"
 							}
 						]
 					}
