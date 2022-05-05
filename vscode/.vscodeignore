@@ -22,4 +22,3 @@ out/**
 .vscode-test/**
 test-projects/**
 coverage
-newrelic-browser.js

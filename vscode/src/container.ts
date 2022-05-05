@@ -26,18 +26,14 @@ import { SetServerUrlRequestType } from "./protocols/agent/agent.protocol";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
-	static telemetryOptions?: TelemetryOptions;
-
 	static async initialize(
 		context: ExtensionContext,
 		config: Config,
 		agentOptions: BaseAgentOptions,
-		webviewLike?: WebviewLike,
-		telemetryOptions?: TelemetryOptions
+		webviewLike?: WebviewLike
 	) {
 		this._context = context;
 		this._config = config;
-		Container.telemetryOptions = telemetryOptions;
 
 		this._version = agentOptions.extension.version;
 		this._versionBuild = agentOptions.extension.build;
@@ -228,13 +224,4 @@ export class Container {
 	static setPendingServerUrl(url: string) {
 		this._pendingServerUrl = url;
 	}
-}
-
-interface TelemetryOptions {
-	error?: string;
-	telemetryEndpoint?: string;
-	browserIngestKey?: string;
-	licenseIngestKey?: string;
-	accountId?: string;
-	applicationId?: string;
 }
