@@ -108,7 +108,7 @@ namespace CodeStream.VisualStudio.Shell._2017.LanguageServer {
 			Connection connection = null;
 			try {
 				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(Client));
-				var process = await LanguageServerProcess.CreateAsync(settingsManager, HttpClientService);
+				var process = LanguageServerProcess.Create(settingsManager, HttpClientService);
 
 				using (Log.CriticalOperation($"Started language server process. FileName={process.StartInfo.FileName} Arguments={process.StartInfo.Arguments}", Serilog.Events.LogEventLevel.Information)) {
 					if (process.Start()) {

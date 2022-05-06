@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 using StreamJsonRpc;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -64,9 +65,13 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		public object InitializationOptionsBase {
 			get {
 				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(LanguageServerClientBase));
+
 				if (settingsManager == null) {
 					Log.Fatal($"{nameof(settingsManager)} is null");
 				}
+
+				var nrSettings = HttpClientService.GetNREnvironmentSettings();
+
 				var initializationOptions = new InitializationOptions {
 					ServerUrl = settingsManager.ServerUrl,
 					Extension = settingsManager.GetExtensionInfo(),
@@ -79,7 +84,8 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 #endif
 					Proxy = settingsManager.Proxy,
 					ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),
-					DisableStrictSSL = settingsManager.DisableStrictSSL
+					DisableStrictSSL = settingsManager.DisableStrictSSL,
+					NewRelicTelemetryEnabled = nrSettings.HasValidSettings
 				};
 
 				if (Log.IsDebugEnabled()) {
@@ -91,6 +97,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 						Proxy = initializationOptions.Proxy != null
 					});
 				}
+
 				return initializationOptions;
 			}
 		}

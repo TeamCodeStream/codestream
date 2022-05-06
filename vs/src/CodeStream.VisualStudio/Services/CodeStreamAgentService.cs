@@ -31,15 +31,18 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly ISessionService _sessionService;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
+		private readonly IHttpClientService _httpClientService;
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
 			IEventAggregator eventAggregator,
 			ISessionService sessionService,
-			ISettingsServiceFactory settingsServiceFactory) {
+			ISettingsServiceFactory settingsServiceFactory,
+			IHttpClientService httpClientService) {
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
+			_httpClientService = httpClientService;
 			try {
 				if (_eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
 					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
@@ -127,6 +130,8 @@ namespace CodeStream.VisualStudio.Services {
 			var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(CodeStreamAgentService));
 			var extensionInfo = settingsManager.GetExtensionInfo();
 			var ideInfo = settingsManager.GetIdeInfo();
+			var nrSettings = _httpClientService.GetNREnvironmentSettings();
+
 			return SendCoreAsync<JToken>("codestream/onInitialized", new LoginRequest {
 				ServerUrl = newServerUrl ?? settingsManager.ServerUrl,
 				Extension = extensionInfo,
@@ -134,12 +139,14 @@ namespace CodeStream.VisualStudio.Services {
 				Proxy = settingsManager.Proxy,
 				ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),
 				DisableStrictSSL = settingsManager.DisableStrictSSL,
+				NewRelicTelemetryEnabled = nrSettings.HasValidSettings,
 #if DEBUG
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
                 TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue()
 #endif
+
 			});
 		}
 

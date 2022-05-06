@@ -399,6 +399,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 		[JsonProperty("disableStrictSSL")]
 		// ReSharper disable once InconsistentNaming
 		public bool DisableStrictSSL { get; set; }
+
+		[JsonProperty("newRelicTelemetryEnabled")]
+		public bool NewRelicTelemetryEnabled { get; set; }
 	}
 
 	public class CreatePostResponse {
@@ -519,6 +522,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string ProxySupport { get; set; }
 		[JsonProperty("proxy")]
 		public Proxy Proxy { get; set; }
+
+		[JsonProperty("newRelicTelemetryEnabled")]
+		public bool NewRelicTelemetryEnabled { get; set; }
 	}
 
 	public class LoginRequest : LoginRequestBase<string> { }

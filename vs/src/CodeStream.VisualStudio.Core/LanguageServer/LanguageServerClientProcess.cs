@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 		/// Creates the lsp server process object
 		/// </summary>
 		/// <returns></returns>
-		public async Task<System.Diagnostics.Process> CreateAsync(ISettingsManager settingsManager, IHttpClientService httpClient) {
+		public System.Diagnostics.Process Create(ISettingsManager settingsManager, IHttpClientService httpClient) {
 			var assembly = Assembly.GetAssembly(typeof(LanguageServerClientProcess));
 			string arguments = null;
 			var exe = @"node.exe";
@@ -27,7 +27,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 			arguments = $@"--stdio --nolazy --log={logPath}";
 #endif
 
-			var nrSettings = await httpClient.GetNREnvironmentSettingsAsync();
+			var nrSettings = httpClient.GetNREnvironmentSettings();
 
 			StringDictionary additionalEnv = new StringDictionary {
 				{ "NODE_EXTRA_CA_CERTS", settingsManager.ExtraCertificates },

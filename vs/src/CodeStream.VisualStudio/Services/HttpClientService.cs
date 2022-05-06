@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
 using Newtonsoft.Json;
@@ -7,7 +7,6 @@ using System;
 using System.ComponentModel.Composition;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Exceptions;
 
 namespace CodeStream.VisualStudio.Services {
@@ -52,7 +51,7 @@ namespace CodeStream.VisualStudio.Services {
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
 
 				Log.Information("Calling API for Ingest Keys");
-				var response = await client.GetStringAsync("no-auth/nr-ingest-key");
+				var response = client.GetStringAsync("no-auth/nr-ingest-key").GetAwaiter().GetResult();
 				Log.Information("Ingest Key Response: OK");
 
 				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
