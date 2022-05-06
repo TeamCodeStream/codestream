@@ -27,7 +27,7 @@ namespace CodeStream.VisualStudio.Services {
 		/// <summary>
 		/// Gets the settings from the API for enabling telemetry in the agent
 		/// </summary>
-		public async Task<NREnvironmentSettings> GetNREnvironmentSettingsAsync() {
+		public NREnvironmentSettings GetNREnvironmentSettings() {
 			if (_nrEnvironmentSettings != null) {
 				return _nrEnvironmentSettings;
 			}
