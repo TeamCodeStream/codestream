@@ -151,6 +151,10 @@
     <Compile Include="WebViewRouter.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="dist\webview\newrelic-browser.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\Assets\codestream.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>

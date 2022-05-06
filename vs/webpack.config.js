@@ -9,6 +9,8 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 const TsconfigPathsPlugin = require("tsconfig-paths-webpack-plugin");
 const BundleAnalyzerPlugin = require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+const CopyPlugin = require("copy-webpack-plugin");
+const { resolve } = require("core-js/fn/promise");
 
 class CompileStatsPlugin {
 	constructor(env) {
@@ -158,6 +160,14 @@ module.exports = function(env, argv) {
 							keepClosingSlash: true
 					  }
 					: false
+		}),
+		new CopyPlugin({
+			patterns: [
+				{ 
+					from: path.resolve(__dirname, "../shared/ui/newrelic-browser.js"), 
+					to: path.resolve(__dirname, "src/CodeStream.VisualStudio/dist/webview")
+				}
+			]
 		}),
 		new ForkTsCheckerPlugin({
 			async: false

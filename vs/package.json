@@ -52,6 +52,7 @@
 		"babel-plugin-styled-components": "2.0.2",
 		"circular-dependency-plugin": "5.0.2",
 		"clean-webpack-plugin": "4.0.0",
+		"copy-webpack-plugin": "^10.2.4",
 		"css-loader": "6.5.1",
 		"fork-ts-checker-webpack-plugin": "5.2.1",
 		"html-loader": "0.5.5",

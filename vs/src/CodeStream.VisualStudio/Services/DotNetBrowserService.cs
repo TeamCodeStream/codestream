@@ -25,10 +25,12 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using CodeStream.VisualStudio.Core.LanguageServer;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
+using File = CodeStream.VisualStudio.Core.Models.File;
 
 namespace CodeStream.VisualStudio.Services {
 	/// <summary>
@@ -94,15 +96,19 @@ namespace CodeStream.VisualStudio.Services {
 
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
+		private readonly IHttpClientService _httpClientService;
+
 		private readonly List<IDisposable> _disposables;
 		private IDisposable _disposable;
 
 		[ImportingConstructor]
 		public DotNetBrowserService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
-				IEventAggregator eventAggregator) {
+				IEventAggregator eventAggregator,
+				IHttpClientService httpClientService) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
+			_httpClientService = httpClientService;
 
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
@@ -616,6 +622,7 @@ namespace CodeStream.VisualStudio.Services {
 				// ReSharper disable once ResourceItemNotResolved
 				var styleSheet = resourceManager.GetString("theme");
 
+
 				var theme = ThemeManager.Generate();
 				var isDebuggingEnabled = Log.IsDebugEnabled();
 
@@ -643,8 +650,24 @@ namespace CodeStream.VisualStudio.Services {
 						}
 					}
 				}
-
+				
 				harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
+
+				//NR telemetry injection
+				var nrSettings = _httpClientService.GetNREnvironmentSettings();
+				if (nrSettings.HasValidSettings) {
+					var file = System.IO.File.ReadAllText("./dist/webview/newrelic-browser.js");
+					file = file.Replace("{{accountID}}", "");
+					file = file.Replace("{{agentID}}", "");
+					file = file.Replace("{{licenseKey}}", nrSettings.BrowserKey);
+					file = file.Replace("{{applicationID}}", nrSettings.AppName);
+					System.IO.File.WriteAllText("./dist/webview/newrelic-browser.js", file);
+
+					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", @"<script id=""newrelic-browser"" src=""./dist/webview/newrelic-browser.js""></script>");
+				}
+				else {
+					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", "<!-- No Telemetry -->");
+				}
 
 #if !DEBUG
 			if (isDebuggingEnabled)
