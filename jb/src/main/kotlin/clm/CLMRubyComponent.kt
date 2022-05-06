@@ -8,6 +8,7 @@ import com.intellij.psi.PsiFile
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.RFileImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.classes.RClassImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.methods.RMethodImpl
+import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.modules.RModuleImpl
 
 class CLMRubyComponent(project: Project) :
     CLMLanguageComponent<CLMRubyEditorManager>(project, RFileImpl::class.java, ::CLMRubyEditorManager) {
@@ -27,11 +28,20 @@ class CLMRubyEditorManager(editor: Editor) : CLMEditorManager(editor, "ruby", fa
 
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
+        namespace: String?,
         className: String,
         functionName: String
     ): NavigatablePsiElement? {
         if (psiFile !is RFileImpl) return null
-        val clazz = psiFile.structureElements.find { it is RClassImpl && it.name == className }
+        val module: RModuleImpl? = if (namespace != null) {
+            psiFile.structureElements.find { it is RModuleImpl && it.name == namespace } as RModuleImpl?
+        } else {
+            null
+        }
+
+        val searchElements = module?.structureElements ?: psiFile.structureElements
+
+        val clazz =  searchElements.find { it is RClassImpl && it.name == className }
             ?: return null
         val rClazz = clazz as RClassImpl
         return rClazz.findMethodByName(functionName)

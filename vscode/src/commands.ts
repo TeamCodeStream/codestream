@@ -625,7 +625,7 @@ export class Commands implements Disposable {
 	}
 
 	@command("viewMethodLevelTelemetry", {
-		showErrorMessage: "Unable to view method level telemetry"
+		showErrorMessage: "Unable to view code-level metrics"
 	})
 	async viewMethodLevelTelemetry(args: string) {
 		let parsedArgs;

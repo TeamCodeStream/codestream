@@ -179,15 +179,18 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 			const symbolMatcherFn = (
 				symbol: InstrumentableSymbol,
-				data: { className?: string; functionName: string }
+				data: { namespace?: string; className?: string; functionName: string }
 			) => {
 				let result: boolean;
+				// TODO In future if Ruby agent adds "self." to class functions inside modules this isn't needed.
+				const symbolFunctionName = symbol.symbol.name.startsWith("self.") ? symbol.symbol.name.replace("self.", "") : symbol.symbol.name;
 				if (symbol.parent) {
 					result =
-						data.className === symbol.parent.name && data.functionName === symbol.symbol.name;
+						(data.className === symbol.parent.name && data.functionName === symbolFunctionName) ||
+						(data.namespace === symbol.parent.name && data.functionName === symbolFunctionName);
 				} else {
 					// if no parent (aka class) ensure we find a function that doesn't have a parent
-					result = !symbol.parent && data.functionName === symbol.symbol.name;
+					result = !symbol.parent && data.functionName === symbolFunctionName;
 				}
 				return result;
 			};

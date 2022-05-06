@@ -22,7 +22,6 @@ import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -169,6 +168,7 @@ abstract class CLMEditorManager(
 
     abstract fun findClassFunctionFromFile(
         psiFile: PsiFile,
+        namespace: String?,
         className: String,
         functionName: String
     ): NavigatablePsiElement?
@@ -182,7 +182,7 @@ abstract class CLMEditorManager(
         val since = result.sinceDateFormatted ?: "30 minutes ago"
         metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
             val symbol = if (symbolIdentifier.className != null) {
-                findClassFunctionFromFile(psiFile, symbolIdentifier.className, symbolIdentifier.functionName)
+                findClassFunctionFromFile(psiFile, symbolIdentifier.namespace, symbolIdentifier.className, symbolIdentifier.functionName)
             } else {
                 findTopLevelFunction(psiFile, symbolIdentifier.functionName)
             }

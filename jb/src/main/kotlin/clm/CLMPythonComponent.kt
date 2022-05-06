@@ -25,6 +25,7 @@ class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python"
 
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
+        namespace: String?,
         className: String,
         functionName: String
     ): NavigatablePsiElement? {

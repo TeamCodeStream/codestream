@@ -1138,18 +1138,21 @@ export interface GetFileLevelTelemetryResponse {
 	isConnected?: boolean;
 	throughput?: {
 		requestsPerMinute: any;
+		namespace?: string;
 		className?: string;
 		functionName: string;
 		metricTimesliceName: string;
 	}[];
 	averageDuration?: {
 		averageDuration: any;
+		namespace?: string;
 		className?: string;
 		functionName: string;
 		metricTimesliceName: string;
 	}[];
 	errorRate?: {
 		errorsPerMinute: any;
+		namespace?: string;
 		className?: string;
 		functionName: string;
 		metricTimesliceName: string;

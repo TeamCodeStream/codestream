@@ -58,13 +58,20 @@ It will do an initial full build of the webview and then watch for file changes,
 
 ### Debugging
 
-#### Using Visual Studio
+#### Visual Studio
 
 1. Ensure that the agent and webview have been built or that the watcher is running for both (see the sections above)
 1. Open the Visual Studio solution (`vs/src/CodeStream.VisualStudio.sln`),
 1. Press `F5` to build and run the solution. This will open a new "experimental" version of Visual Studio.
 
 >NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the marketplace first)
+
+#### CodeStream LSP Agent
+
+To debug the CodeStream LSP agent you will need both Visual Studio and VS Code. 
+- Ensure your shared/agent artifact is recently built. 
+- Once you have started debugging CodeStream in Visual Studio, leave it running, and in VS Code with the `codestream` repo open, choose `Attach to Agent (VS/JB) (agent)` from the launcher dropdown. This is allow you to attach to the running shared/agent process that Visual Studio spawned. 
+- From there, you can add breakpoints to the shared/agent code in VS Code. As requests and notifications to the agent happen, your breakpoints will be triggered. 
 
 ### Build (CI)
 

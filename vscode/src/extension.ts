@@ -32,7 +32,6 @@ import { extensionQualifiedId } from "./constants";
 import { Container } from "./container";
 import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings, Versions } from "./system";
-import { RubyDocumentSymbolProvider } from "./providers/ruby/rubySymbolProvider";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
@@ -132,16 +131,6 @@ export async function activate(context: ExtensionContext) {
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 	context.subscriptions.push(new ProtocolHandler());
-
-	context.subscriptions.push(
-		languages.registerDocumentSymbolProvider(
-			{
-				language: "ruby",
-				scheme: "file"
-			},
-			new RubyDocumentSymbolProvider()
-		)
-	);
 
 	const previousVersion = context.globalState.get<string>(GlobalState.Version);
 	showStartupUpgradeMessage(extensionVersion, previousVersion);
