@@ -656,14 +656,14 @@ namespace CodeStream.VisualStudio.Services {
 				//NR telemetry injection
 				var nrSettings = _httpClientService.GetNREnvironmentSettings();
 				if (nrSettings.HasValidSettings) {
-					var file = System.IO.File.ReadAllText("./dist/webview/newrelic-browser.js");
-					file = file.Replace("{{accountID}}", "");
-					file = file.Replace("{{agentID}}", "");
-					file = file.Replace("{{licenseKey}}", nrSettings.BrowserKey);
-					file = file.Replace("{{applicationID}}", nrSettings.AppName);
-					System.IO.File.WriteAllText("./dist/webview/newrelic-browser.js", file);
+					var newRelicTelemetryJs = System.IO.File.ReadAllText("./dist/webview/newrelic-browser.js");
+					newRelicTelemetryJs = newRelicTelemetryJs
+						.Replace("{{accountID}}", "")
+						.Replace("{{agentID}}", "")
+						.Replace("{{licenseKey}}", nrSettings.BrowserKey)
+						.Replace("{{applicationID}}", nrSettings.AppName);
 
-					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", @"<script id=""newrelic-browser"" src=""./dist/webview/newrelic-browser.js""></script>");
+					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", $@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>");
 				}
 				else {
 					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", "<!-- No Telemetry -->");
