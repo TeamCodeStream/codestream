@@ -658,10 +658,10 @@ namespace CodeStream.VisualStudio.Services {
 				if (nrSettings.HasValidSettings) {
 					var newRelicTelemetryJs = System.IO.File.ReadAllText("./dist/webview/newrelic-browser.js");
 					newRelicTelemetryJs = newRelicTelemetryJs
-						.Replace("{{accountID}}", "")
-						.Replace("{{agentID}}", "")
-						.Replace("{{licenseKey}}", nrSettings.BrowserKey)
-						.Replace("{{applicationID}}", nrSettings.AppName);
+						.Replace("{{accountID}}", nrSettings.AccountId)
+						.Replace("{{agentID}}", nrSettings.AgentId)
+						.Replace("{{licenseKey}}", nrSettings.BrowserLicenseKey)
+						.Replace("{{applicationID}}", nrSettings.ApplicationId);
 
 					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", $@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>");
 				}
