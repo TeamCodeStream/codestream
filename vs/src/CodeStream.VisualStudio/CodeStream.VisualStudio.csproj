@@ -67,7 +67,6 @@
     <StartArguments>/rootsuffix Exp</StartArguments>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="CodeLevelMetricsConnectionHandler.cs" />
     <Compile Include="CodeStreamPackageVSCT.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

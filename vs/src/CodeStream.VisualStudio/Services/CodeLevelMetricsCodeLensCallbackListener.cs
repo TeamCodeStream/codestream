@@ -10,6 +10,6 @@ namespace CodeStream.VisualStudio.Services {
 	[Export(typeof(ICodeLensCallbackListener))]
 	[ContentType("CSharp")]
 	public class CodeLevelMetricsCodeLensCallbackListener : ICodeLensCallbackListener, ICodeLevelMetricsListener {
-		public int GetVisualStudioPid => Process.GetCurrentProcess().Id;
+		public int GetVisualStudioPid() => Process.GetCurrentProcess().Id;
 	}
 }

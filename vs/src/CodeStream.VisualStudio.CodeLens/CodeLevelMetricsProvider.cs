@@ -3,8 +3,10 @@ using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Shared;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	[Export(typeof(IAsyncCodeLensDataPointProvider))]
@@ -26,7 +28,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 		}
 
 		public async Task<IAsyncCodeLensDataPoint> CreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
-			var vsPid = 223; // await _callbackService.Value.InvokeAsync<int>(this, nameof(ICodeLevelMetricsListener.GetVisualStudioPid), cancellationToken: token).ConfigureAwait(false);
+			var vsPid = await _callbackService.Value.InvokeAsync<int>(this, nameof(ICodeLevelMetricsListener.GetVisualStudioPid), cancellationToken: token).ConfigureAwait(false);
 
 			return await Task.FromResult<IAsyncCodeLensDataPoint>(new CodeLevelMetricDataPoint(descriptor, vsPid));
 		}
