@@ -1126,7 +1126,9 @@ export class CodeStreamAgentConnection implements Disposable {
 				} else if (telemetryOptions.telemetryEndpoint && telemetryOptions.licenseIngestKey) {
 					const newRelicEnvironmentVariables = {
 						NEW_RELIC_HOST: telemetryOptions.telemetryEndpoint,
-						NEW_RELIC_LOG_LEVEL: "info",
+						// do not want to release with NEW_RELIC_LOG_ENABLED=true
+						NEW_RELIC_LOG_ENABLED: false,
+						// NEW_RELIC_LOG_LEVEL: "info",
 						NEW_RELIC_APP_NAME: "lsp-agent",
 						NEW_RELIC_LICENSE_KEY: telemetryOptions.licenseIngestKey
 					} as NewRelicEnvironmentVariables;
@@ -1139,6 +1141,7 @@ export class CodeStreamAgentConnection implements Disposable {
 					(this._serverOptions as any).debug.options.env = newRelicEnvironmentVariables;
 
 					initializationOptions.newRelicTelemetryEnabled = true;
+					Logger.log(`NewRelic telemetry enabled=${initializationOptions.newRelicTelemetryEnabled}`);
 				} else {
 					Logger.warn("no NewRelic telemetry");
 				}
@@ -1349,7 +1352,8 @@ function started(target: CodeStreamAgentConnection, propertyName: string, descri
 
 interface NewRelicEnvironmentVariables {
 	NEW_RELIC_HOST: string;
-	NEW_RELIC_LOG_LEVEL: "info";
+	NEW_RELIC_LOG_ENABLED?: boolean;
+	NEW_RELIC_LOG_LEVEL?: "info";
 	NEW_RELIC_APP_NAME: "lsp-agent";
 	NEW_RELIC_LICENSE_KEY: string;
 }
