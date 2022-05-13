@@ -91,7 +91,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\AuthenticationService.cs" />
     <Compile Include="Services\AuthenticationServiceFactory.cs" />
-    <Compile Include="Services\CodeLevelMetricsCodeLensCallbackListener.cs" />
+    <Compile Include="Services\CodeLensClmCallbackListener.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
