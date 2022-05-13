@@ -66,6 +66,11 @@ It will do an initial full build of the webview and then watch for file changes,
 
 >NOTE: you cannot have the CodeStream for VS extension installed from the marketplace AND run an experimental debugging instance of VS (you have to uninstall the version from the marketplace first)
 
+The `CodeStream.VisualStudio.CodeLens `project runs out of process from the main extension, and must be debugged slightly differently.
+
+1. This project will run under the guise of a `ServiceHub` executable, and figuring out exactly which one is difficult. The easiest path (right now) is to add a `Debugger.Launch();` into the codebase for local development until we can instrument a better solution.
+1. The `ServiceHub` / `CodeLens` project will write its own log file to `%HOME%\AppData\Local\Temp\servicehub\logs` with `CodeLens` in the filename. Very useful for debugging.
+
 #### CodeStream LSP Agent
 
 To debug the CodeStream LSP agent you will need both Visual Studio and VS Code. 
