@@ -9,16 +9,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5BFDF0EC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Etc", "Etc", "{DFA25193-0839-46E6-A714-513A4656FC74}"
-	ProjectSection(SolutionItems) = preProject
-		..\publish\overview.md = ..\publish\overview.md
-		..\package-lock.json = ..\package-lock.json
-		..\package.json = ..\package.json
-		..\publish\publishManifest.json = ..\publish\publishManifest.json
-		..\README.dev.md = ..\README.dev.md
-		..\webpack.config.js = ..\webpack.config.js
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Shell.2017", "CodeStream.VisualStudio.Shell.2017\CodeStream.VisualStudio.Shell.2017.csproj", "{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Shell.2019", "CodeStream.VisualStudio.Shell.2019\CodeStream.VisualStudio.Shell.2019.csproj", "{E45E73E2-3442-464F-A54F-A5B8A8E48084}"
@@ -28,6 +18,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9478D8FC-611C-4663-9953-2284BAE2545F}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		..\docs\dev.md = ..\docs\dev.md
+		..\publish\overview.md = ..\publish\overview.md
+		..\package.json = ..\package.json
+		..\publish\publishManifest.json = ..\publish\publishManifest.json
+		..\webpack.config.js = ..\webpack.config.js
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.CodeLens", "CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj", "{31EB1B96-34E8-4E37-872D-4ED7363C95D9}"
