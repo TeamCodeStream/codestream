@@ -608,6 +608,7 @@
     <ProjectReference Include="..\CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj">
       <Project>{31eb1b96-34e8-4e37-872d-4ed7363c95d9}</Project>
       <Name>CodeStream.VisualStudio.CodeLens</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
     </ProjectReference>
     <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">
       <Project>{1a29b558-c55a-4769-ad37-69f903ed6eb3}</Project>
