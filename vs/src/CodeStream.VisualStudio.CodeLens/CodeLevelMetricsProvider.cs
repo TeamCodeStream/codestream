@@ -16,12 +16,10 @@ namespace CodeStream.VisualStudio.CodeLens {
 		internal const string Id = "CodeStreamCodeLevelMetrics";
 		private readonly Lazy<ICodeLensCallbackService> _callbackService;
 
-		//[ImportingConstructor]
-  //      public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
-		//	Debugger.Launch();
-
-		//	_callbackService = callbackService;
-  //      }
+		[ImportingConstructor]
+		public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
+			_callbackService = callbackService;
+        }
 		
 		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
 			return Task.FromResult<bool>(true);
