@@ -42,6 +42,8 @@ namespace CodeStream.VisualStudio.Packages {
 			try {
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
+				//_ = CodeLevelMetricsConnectionHandler.AcceptCodeLensConnectionsAsync();
+
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
 
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
