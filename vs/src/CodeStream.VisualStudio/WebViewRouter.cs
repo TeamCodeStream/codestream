@@ -5,7 +5,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Controllers;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.LanguageServer;

@@ -2,7 +2,6 @@
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Services;
 using Serilog;
 
 namespace CodeStream.VisualStudio.Controllers {

@@ -1,12 +1,10 @@
-﻿using CodeStream.VisualStudio.Commands;
-using CodeStream.VisualStudio.Core;
+﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Managers;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.UI.Wpf;
 using DotNetBrowser;
 using DotNetBrowser.Events;
 using DotNetBrowser.WPF;
@@ -24,13 +22,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using CodeStream.VisualStudio.Core.LanguageServer;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
-using File = CodeStream.VisualStudio.Core.Models.File;
 
 namespace CodeStream.VisualStudio.Services {
 	/// <summary>

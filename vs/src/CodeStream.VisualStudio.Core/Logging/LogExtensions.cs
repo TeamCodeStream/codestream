@@ -1,16 +1,11 @@
 ﻿using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging.Instrumentation;
 using Serilog;
-using Serilog.Configuration;
-using Serilog.Core;
 using Serilog.Events;
-using Serilog.Formatting;
-using Serilog.Sinks.File;
 using SerilogTimings.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace CodeStream.VisualStudio.Core.Logging {
 	public static class LogExtensions {

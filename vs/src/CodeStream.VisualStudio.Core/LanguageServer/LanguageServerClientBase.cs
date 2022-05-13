@@ -8,7 +8,6 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Serilog;
 using StreamJsonRpc;
 using System;
-using System.Net;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;

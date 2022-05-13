@@ -1,9 +1,6 @@
 ﻿using Microsoft.VisualStudio.LiveShare;
-using Microsoft.VisualStudio.Shell;
 using System;
 using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Services;
-using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace CodeStream.VisualStudio.Services.LiveShare {
 	/// <summary>

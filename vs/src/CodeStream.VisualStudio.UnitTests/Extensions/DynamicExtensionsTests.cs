@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using CodeStream.VisualStudio.Core.Extensions;
+﻿using CodeStream.VisualStudio.Core.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions

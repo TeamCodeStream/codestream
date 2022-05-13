@@ -11,7 +11,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using CodeStream.VisualStudio.Controllers;
 using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.LanguageServer;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;

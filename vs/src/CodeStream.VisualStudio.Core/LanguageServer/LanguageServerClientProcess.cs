@@ -1,7 +1,6 @@
 ﻿using System.Collections.Specialized;
 using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Process;
 using CodeStream.VisualStudio.Core.Services;
 

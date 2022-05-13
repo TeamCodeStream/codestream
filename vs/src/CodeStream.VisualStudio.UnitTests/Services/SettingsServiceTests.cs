@@ -1,6 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
-using CodeStream.VisualStudio.UnitTests.Stubs;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CodeStream.VisualStudio.UnitTests.Services
 {

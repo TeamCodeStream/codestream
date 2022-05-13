@@ -1,6 +1,4 @@
-﻿using CodeStream.VisualStudio.Core.Models;
-
-namespace CodeStream.VisualStudio.Core.Models {
+﻿namespace CodeStream.VisualStudio.Core.Models {
 	public class ShellPromptFolderRequest {
 		public string Message { get; set; }
 	}
