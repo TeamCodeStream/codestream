@@ -97,7 +97,6 @@
     <Compile Include="Services\CodeStreamService.cs" />
     <Compile Include="Services\CredentialsService.cs" />
     <Compile Include="Services\CredentialsServiceBase.cs" />
-    <Compile Include="Services\DiffViewerService.cs" />
     <Compile Include="Services\DotNetBrowserService.cs" />
     <Compile Include="Services\EditorService.cs" />
     <Compile Include="Services\EventAggregator.cs" />
@@ -115,7 +114,6 @@
     <Compile Include="Services\UserSettingsService.cs" />
     <Compile Include="Services\WebviewUserSettingsService.cs" />
     <Compile Include="Services\WpfTextViewCache.cs" />
-    <Compile Include="UI\DiffViewCreationListener.cs" />
     <Compile Include="UI\DocumentMarkerManager.cs" />
     <Compile Include="UI\Extensions\AnimationExtensions.cs" />
     <Compile Include="UI\Glyphs\DocumentMarkGlyphFactory.cs" />
@@ -631,9 +629,7 @@
       <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Page Include="UI\Margins\DocumentMark.xaml">
       <Generator>MSBuild:Compile</Generator>

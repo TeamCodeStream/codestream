@@ -383,9 +383,7 @@
   <ItemGroup>
     <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Commands\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Analyzer Include="..\packages\Microsoft.VisualStudio.Threading.Analyzers.15.8.192\analyzers\cs\Microsoft.VisualStudio.Threading.Analyzers.dll" />
   </ItemGroup>
