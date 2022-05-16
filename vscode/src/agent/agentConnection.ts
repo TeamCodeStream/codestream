@@ -1140,13 +1140,13 @@ export class CodeStreamAgentConnection implements Disposable {
 					this._serverOptions.run.options = this._serverOptions.run.options || process.env;
 					this._serverOptions.run.options.env = {
 						...this._serverOptions.run.options.env,
-						newRelicEnvironmentVariables
+						...newRelicEnvironmentVariables
 					};
 
 					this._serverOptions.debug.options = this._serverOptions.debug.options || process.env;
 					this._serverOptions.debug.options.env = {
 						...this._serverOptions.debug.options.env,
-						newRelicEnvironmentVariables
+						...newRelicEnvironmentVariables
 					};
 
 					initializationOptions.newRelicTelemetryEnabled = true;
