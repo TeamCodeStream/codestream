@@ -76,6 +76,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="VisualStudioConnectionHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config">

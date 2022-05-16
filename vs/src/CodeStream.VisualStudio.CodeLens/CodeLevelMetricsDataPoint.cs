@@ -7,22 +7,25 @@ using Microsoft.VisualStudio.Threading;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	public class CodeLevelMetricDataPoint : IAsyncCodeLensDataPoint {
-		public CodeLevelMetricDataPoint(CodeLensDescriptor descriptor, int vsPid) {
+		private readonly ICodeLensCallbackService _callbackService;
+		private VisualStudioConnectionHandler _visualStudioConnection;
+
+		public readonly Guid DataPointId = Guid.NewGuid();
+
+		public CodeLevelMetricDataPoint(ICodeLensCallbackService callbackService, CodeLensDescriptor descriptor) {
+			_callbackService = callbackService;
 			Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-			VsPid = vsPid;
 		}
 
 		public event AsyncEventHandler InvalidatedAsync;
-
 		public CodeLensDescriptor Descriptor { get; }
-		public int VsPid { get; }
 
 		public Task<CodeLensDataPointDescriptor> GetDataAsync(CodeLensDescriptorContext context, CancellationToken token) {
 			return Task.FromResult(new CodeLensDataPointDescriptor {
 				// TODO fill these out from CS agent
 				Description = "avg duration: 3ms | throughput: 100rpm | error rate: 4epm - since 30min ago",
 				// TODO
-				TooltipText = $"The Visual Studio Process ID is '{VsPid}'",
+				TooltipText = $"",
 				// no int value
 				IntValue = null,
 				//  ImageId = GetCommitTypeIcon(commit),
@@ -33,15 +36,9 @@ namespace CodeStream.VisualStudio.CodeLens {
 			return Task.FromResult<CodeLensDetailsDescriptor>(null);
 		}
 
-		/// <summary>
-		/// Raises <see cref="IAsyncCodeLensDataPoint.InvalidatedAsync"/> event.
-		/// </summary>
-		/// <remarks>
-		///  This is not part of the IAsyncCodeLensDataPoint interface.
-		///  The data point source can call this method to notify the client proxy that data for this data point has changed.
-		/// </remarks>
-		public void Invalidate() {
-			InvalidatedAsync?.Invoke(this, EventArgs.Empty).ConfigureAwait(false);
-		}
+		public async Task ConnectToVisualStudioAsync(int vsPid) =>
+			_visualStudioConnection = await VisualStudioConnectionHandler.CreateAsync(owner: this, vsPid).ConfigureAwait(false);
+
+		public void Refresh() => _ = InvalidatedAsync?.InvokeAsync(this, EventArgs.Empty).ConfigureAwait(false);
 	}
 }

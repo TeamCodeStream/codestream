@@ -646,7 +646,7 @@ namespace CodeStream.VisualStudio.Services {
 					}
 				}
 				
-				harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
+				harness = harness.Replace(@"<style DataPointId=""theme""></style>", $@"<style DataPointId=""theme"">{styleSheet}</style>");
 
 				//NR telemetry injection
 				var nrSettings = _httpClientService.GetNREnvironmentSettings();
@@ -658,10 +658,10 @@ namespace CodeStream.VisualStudio.Services {
 						.Replace("{{licenseKey}}", nrSettings.BrowserLicenseKey)
 						.Replace("{{applicationID}}", nrSettings.ApplicationId);
 
-					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", $@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>");
+					harness = harness.Replace(@"<script DataPointId=""newrelic-browser""></script>", $@"<script DataPointId=""newrelic-browser"">{newRelicTelemetryJs}</script>");
 				}
 				else {
-					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", "<!-- No Telemetry -->");
+					harness = harness.Replace(@"<script DataPointId=""newrelic-browser""></script>", "<!-- No Telemetry -->");
 				}
 
 #if !DEBUG

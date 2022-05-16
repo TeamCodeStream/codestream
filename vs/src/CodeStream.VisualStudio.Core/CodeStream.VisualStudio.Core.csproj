@@ -109,6 +109,7 @@
     <Compile Include="Models\Position.cs" />
     <Compile Include="Models\SessionSignedOutReason.cs" />
     <Compile Include="Models\VirtualTextDocument.cs" />
+    <Compile Include="Models\Webview.Protocol.CodeLens.cs" />
     <Compile Include="Models\Webview.Protocol.Shell.cs" />
     <Compile Include="Packages\ToolWindowProvider.cs" />
     <Compile Include="Process\Node.cs" />

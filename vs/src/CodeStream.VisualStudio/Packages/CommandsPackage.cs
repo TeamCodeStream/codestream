@@ -17,6 +17,7 @@ using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Services;
 using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
@@ -40,8 +41,10 @@ namespace CodeStream.VisualStudio.Packages {
 
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
+				_ = CodeLensConnectionHandler.AcceptCodeLensConnectionsAsync();
+
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-				
+
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
 
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;

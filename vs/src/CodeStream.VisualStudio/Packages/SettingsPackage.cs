@@ -78,6 +78,10 @@ namespace CodeStream.VisualStudio.Packages {
 						break;
 				}
 			}
+			else if (args.PropertyName == nameof(_settingsManager.ShowGoldenSignalsInEditor) ||
+				     args.PropertyName == nameof(_settingsManager.GoldenSignalsInEditorFormat)) {
+				_ = CodeLensConnectionHandler.RefreshAllCodeLensDataPointsAsync();
+			}
 			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxySupport) ||

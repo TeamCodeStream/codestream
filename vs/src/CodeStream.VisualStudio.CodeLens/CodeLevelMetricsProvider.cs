@@ -3,9 +3,11 @@ using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Shared;
+using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	[Export(typeof(IAsyncCodeLensDataPointProvider))]
@@ -22,14 +24,29 @@ namespace CodeStream.VisualStudio.CodeLens {
 			_callbackService = callbackService;
         }
 		
-		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
-			return Task.FromResult<bool>(true);
+		public async Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
+			Debugger.Launch();
+
+			var methodsOnly = descriptor.Kind == CodeElementKinds.Method;
+
+			// bail early so we don't have the cost associated with RPC calls.
+			if (!methodsOnly) {
+				return false;
+			}
+
+			var isClmReady = await _callbackService.Value.InvokeAsync<bool>(this, nameof(ICodeLevelMetricsListener.IsClmReady), cancellationToken: token).ConfigureAwait(false);
+			return isClmReady;
 		}
 
 		public async Task<IAsyncCodeLensDataPoint> CreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
-			var vsPid = await _callbackService.Value.InvokeAsync<int>(this, nameof(ICodeLevelMetricsListener.GetVisualStudioPid), cancellationToken: token).ConfigureAwait(false);
+			var dataPoint = new CodeLevelMetricDataPoint(_callbackService.Value, descriptor);
 
-			return await Task.FromResult<IAsyncCodeLensDataPoint>(new CodeLevelMetricDataPoint(descriptor, vsPid));
+			var vsPid = await _callbackService.Value
+				.InvokeAsync<int>(this, nameof(ICodeLevelMetricsListener.GetVisualStudioPid), cancellationToken: token).ConfigureAwait(false);
+
+			await dataPoint.ConnectToVisualStudioAsync(vsPid).ConfigureAwait(false);
+
+			return dataPoint;
 		}
 	}
 }
