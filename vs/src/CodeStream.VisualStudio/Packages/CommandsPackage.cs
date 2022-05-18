@@ -41,8 +41,6 @@ namespace CodeStream.VisualStudio.Packages {
 
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
-				_ = CodeLensConnectionHandler.AcceptCodeLensConnectionsAsync();
-
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);

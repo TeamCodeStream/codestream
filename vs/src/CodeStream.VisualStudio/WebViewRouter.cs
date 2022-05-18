@@ -101,7 +101,7 @@ namespace CodeStream.VisualStudio {
 									case RefreshEditorsCodeLensRequestType.MethodName: {
 										using (var scope = _browserService.CreateScope(message)) {
 
-											await CodeLensConnectionHandler.RefreshAllCodeLensDataPointsAsync();
+											await CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
 
 											var response = new RefreshEditorsCodeLensResponse {
 												Success = true

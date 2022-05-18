@@ -62,9 +62,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ICodeLevelMetricsListener.cs" />
+    <Compile Include="ICodeLevelMetricsCallbackService.cs" />
     <Compile Include="IRemoteCodeLens.cs" />
-    <Compile Include="IRemoteVisualStudio.cs" />
     <Compile Include="PipeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

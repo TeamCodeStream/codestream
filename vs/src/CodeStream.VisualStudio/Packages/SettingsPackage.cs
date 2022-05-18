@@ -80,7 +80,7 @@ namespace CodeStream.VisualStudio.Packages {
 			}
 			else if (args.PropertyName == nameof(_settingsManager.ShowGoldenSignalsInEditor) ||
 				     args.PropertyName == nameof(_settingsManager.GoldenSignalsInEditorFormat)) {
-				_ = CodeLensConnectionHandler.RefreshAllCodeLensDataPointsAsync();
+				_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
 			}
 			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
 					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||

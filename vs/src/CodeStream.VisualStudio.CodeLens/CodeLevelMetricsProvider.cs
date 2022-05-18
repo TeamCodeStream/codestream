@@ -4,6 +4,7 @@ using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Shared;
@@ -22,29 +23,41 @@ namespace CodeStream.VisualStudio.CodeLens {
 		[ImportingConstructor]
 		public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
 			_callbackService = callbackService;
+			Debugger.Launch();
         }
 		
-		public async Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
-			Debugger.Launch();
-
+		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
 			var methodsOnly = descriptor.Kind == CodeElementKinds.Method;
 
-			// bail early so we don't have the cost associated with RPC calls.
-			if (!methodsOnly) {
-				return false;
-			}
-
-			var isClmReady = await _callbackService.Value.InvokeAsync<bool>(this, nameof(ICodeLevelMetricsListener.IsClmReady), cancellationToken: token).ConfigureAwait(false);
-			return isClmReady;
+			return Task.FromResult(methodsOnly);
 		}
 
 		public async Task<IAsyncCodeLensDataPoint> CreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
-			var dataPoint = new CodeLevelMetricDataPoint(_callbackService.Value, descriptor);
+			var dataPoint = new CodeLevelMetricDataPoint(descriptor, _callbackService.Value);
 
 			var vsPid = await _callbackService.Value
-				.InvokeAsync<int>(this, nameof(ICodeLevelMetricsListener.GetVisualStudioPid), cancellationToken: token).ConfigureAwait(false);
+				.InvokeAsync<int>(this,
+					nameof(ICodeLevelMetricsCallbackService.GetVisualStudioPid),
+					cancellationToken: token)
+				.ConfigureAwait(false);
 
-			await dataPoint.ConnectToVisualStudioAsync(vsPid).ConfigureAwait(false);
+			
+
+			_ = _callbackService.Value
+				.InvokeAsync(this, nameof(ICodeLevelMetricsCallbackService.InitializeRpcAsync),
+					new[] { dataPoint.DataPointId }, token)
+				.ConfigureAwait(false);
+
+			var stream = new NamedPipeClientStream(
+				serverName: ".",
+				PipeName.Get(vsPid),
+				PipeDirection.InOut,
+				PipeOptions.Asynchronous);
+
+			var connection = new VisualStudioConnection(dataPoint, stream);
+			await connection.ConnectAsync(token);
+
+			dataPoint.VsConnection = connection;
 
 			return dataPoint;
 		}
