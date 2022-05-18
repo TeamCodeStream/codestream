@@ -132,7 +132,7 @@ export async function activate(context: ExtensionContext) {
 	// languages.registerCodeLensProvider("*", codelensProvider);
 
 	context.subscriptions.push(
-		commands.registerCommand("samples.quickInput", async () => {
+		commands.registerCommand("cs.quickInput", async () => {
 			const options: { [key: string]: (context: ExtensionContext) => Promise<void> } = {
 				showQuickPick,
 				showInputBox,
