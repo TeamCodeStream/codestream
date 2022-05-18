@@ -5,13 +5,15 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.CodeLens;
+using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Shared;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Utilities;
 using Serilog;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -31,16 +33,35 @@ namespace CodeStream.VisualStudio.Services {
 		public CodeLevelMetricsCallbackService(
 			ICodeStreamAgentService codeStreamAgentService,
 			ISessionService sessionService,
-			ISettingsServiceFactory settingsServiceFactory) {
+			ISettingsServiceFactory settingsServiceFactory,
+			IEventAggregator eventAggregator) {
 			_codeStreamAgentService = codeStreamAgentService;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
+
+			eventAggregator.GetEvent<SessionReadyEvent>()
+				.ObserveOn(Scheduler.Default)
+				.Subscribe(e => {
+					_ = RefreshAllCodeLensDataPointsAsync();
+				});
+
+			eventAggregator.GetEvent<SessionLogoutEvent>()
+				.ObserveOn(Scheduler.Default)
+				.Subscribe(e => {
+					_ = RefreshAllCodeLensDataPointsAsync();
+				});
 		}
 
 		public bool IsClmReady() {
 			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
 
 			return settings.ShowGoldenSignalsInEditor && _sessionService.IsReady;
+		}
+
+		public string GetClmFormatSetting() {
+			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
+
+			return settings.GoldenSignalsInEditorFormat;
 		}
 
 		public int GetVisualStudioPid() => Process.GetCurrentProcess().Id;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -28,11 +29,19 @@ namespace CodeStream.VisualStudio.CodeLens {
 				.ConfigureAwait(false);
 
 			if (!isClmReady) {
-				return new CodeLensDataPointDescriptor();
+				// TODO - this kinda sucks, because it leaves a gap in the CodeLens where this would be placed. The overall
+				// initialization has already taken place, so we can't just turn it off.
+				return new CodeLensDataPointDescriptor {
+					Description = "Code Level Metrics Loading..."
+				};
 			}
+			
+			var formatString = await _callbackService
+				.InvokeAsync<string>(this, nameof(ICodeLevelMetricsCallbackService.GetClmFormatSetting), cancellationToken: token)
+				.ConfigureAwait(false);
 
 			return new CodeLensDataPointDescriptor {
-				Description = $"{DataPointId}",
+				Description = formatString,
 				TooltipText = $"{context.ToJson()}" // "avg duration: 3ms | throughput: 100rpm | error rate: 4epm - since 30min ago"
 			};
 		}

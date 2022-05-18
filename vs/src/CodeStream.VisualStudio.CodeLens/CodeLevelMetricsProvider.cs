@@ -40,8 +40,6 @@ namespace CodeStream.VisualStudio.CodeLens {
 					cancellationToken: token)
 				.ConfigureAwait(false);
 
-			
-
 			_ = _callbackService.Value
 				.InvokeAsync(this, nameof(ICodeLevelMetricsCallbackService.InitializeRpcAsync),
 					new[] { dataPoint.DataPointId }, token)
