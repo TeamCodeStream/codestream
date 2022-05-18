@@ -8,6 +8,7 @@ import { ProtocolHandler } from "protocolHandler";
 import { ScmTreeDataProvider } from "views/scmTreeDataProvider";
 import { AbortController } from "node-abort-controller";
 import {
+	commands,
 	Disposable,
 	env,
 	ExtensionContext,
@@ -126,6 +127,26 @@ export async function activate(context: ExtensionContext) {
 	// const codelensProvider = new CodelensProvider();
 
 	// languages.registerCodeLensProvider("*", codelensProvider);
+
+	context.subscriptions.push(
+		commands.registerCommand("samples.quickInput", async () => {
+			const options: { [key: string]: (context: ExtensionContext) => Promise<void> } = {
+				showQuickPick,
+				showInputBox,
+				multiStepInput,
+				quickOpen
+			};
+			const quickPick = window.createQuickPick();
+			quickPick.items = Object.keys(options).map(label => ({ label }));
+			quickPick.onDidChangeSelection(selection => {
+				if (selection[0]) {
+					options[selection[0].label](context).catch(console.error);
+				}
+			});
+			quickPick.onDidHide(() => quickPick.dispose());
+			quickPick.show();
+		})
+	);
 
 	await Container.initialize(
 		context,
