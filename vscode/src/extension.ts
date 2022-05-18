@@ -38,6 +38,9 @@ import { extensionQualifiedId } from "./constants";
 import { Container, TelemetryOptions } from "./container";
 import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings, Versions } from "./system";
+import { showInputBox, showQuickPick } from "quickPicks/basicInput";
+import { multiStepInput } from "quickPicks/multiStepInput";
+import { quickOpen } from "quickPicks/quickOpen";
 
 const extension = extensions.getExtension(extensionQualifiedId)!;
 export const extensionVersion = extension.packageJSON.version;
