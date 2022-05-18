@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
@@ -23,7 +23,6 @@ namespace CodeStream.VisualStudio.CodeLens {
 		[ImportingConstructor]
 		public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
 			_callbackService = callbackService;
-			Debugger.Launch();
         }
 		
 		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
