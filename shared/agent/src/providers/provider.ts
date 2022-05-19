@@ -437,7 +437,7 @@ export abstract class ThirdPartyProviderBase<
 			providerId: this.providerConfig.id,
 			providerTeamId: request && request.providerTeamId
 		}));
-		this._readyPromise = this._providerInfo = undefined;
+		this._readyPromise = this._providerInfo = this._ensuringConnection = undefined;
 		await this.onDisconnected(request);
 	}
 
@@ -450,12 +450,11 @@ export abstract class ThirdPartyProviderBase<
 
 		if (this._providerInfo !== undefined) {
 			await this.refreshToken(request);
-			return;
 		}
 		if (this._ensuringConnection === undefined) {
 			this._ensuringConnection = this.ensureConnectedCore(request);
 		}
-		void (await this._ensuringConnection);
+		await this._ensuringConnection;
 	}
 
 	async refreshToken(request?: { providerTeamId?: string }) {
@@ -489,7 +488,6 @@ export abstract class ThirdPartyProviderBase<
 		await this.refreshToken(request);
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
-		this._ensuringConnection = undefined;
 	}
 
 	protected async delete<R extends object>(
@@ -515,9 +513,12 @@ export abstract class ThirdPartyProviderBase<
 	protected async get<R extends object>(
 		url: string,
 		headers: { [key: string]: string } = {},
-		options: { [key: string]: any } = {}
+		options: { [key: string]: any } = {},
+		ensureConnected = true
 	): Promise<ApiResponse<R>> {
-		await this.ensureConnected();
+		if (ensureConnected) {
+			await this.ensureConnected();
+		}
 		return this.fetch<R>(
 			url,
 			{

@@ -137,14 +137,22 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 	}
 
 	async onConnected(providerInfo?: CSJiraProviderInfo) {
-		super.onConnected(providerInfo);
-		this._urlAddon = "";
+		await super.onConnected(providerInfo);
 		if (this._providerInfo?.isApiToken) {
 			this._webUrl = this._providerInfo?.data?.baseUrl || "";
+			Logger.log("jira using api token with webUrl", this._webUrl);
 			return;
 		}
+		if (this._urlAddon?.length > 0) {
+			return;
+		}
+
+		// Infinite loop if get also does ensureConnected() so pass flag to disable check
 		const response = await this.get<AccessibleResourcesResponse>(
-			"/oauth/token/accessible-resources"
+			"/oauth/token/accessible-resources",
+			undefined,
+			undefined,
+			false
 		);
 
 		Logger.debug("Jira: Accessible Resources are", response.body);
