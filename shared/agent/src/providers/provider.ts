@@ -346,7 +346,6 @@ export abstract class ThirdPartyProviderBase<
 
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
-		this.resetReady();
 	}
 
 	protected async onConnected(providerInfo?: TProviderInfo) {
@@ -445,7 +444,9 @@ export abstract class ThirdPartyProviderBase<
 	protected async onDisconnected(request?: ThirdPartyDisconnect) {}
 
 	async ensureConnected(request?: { providerTeamId?: string }) {
-		if (this._readyPromise !== undefined) return this._readyPromise;
+		if (this._readyPromise !== undefined) {
+			await this._readyPromise;
+		}
 
 		if (this._providerInfo !== undefined) {
 			await this.refreshToken(request);
@@ -488,7 +489,6 @@ export abstract class ThirdPartyProviderBase<
 		await this.refreshToken(request);
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
-		this.resetReady();
 		this._ensuringConnection = undefined;
 	}
 
