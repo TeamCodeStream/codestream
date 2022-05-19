@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeLevelMetricStatus.cs" />
     <Compile Include="ICodeLevelMetricsCallbackService.cs" />
     <Compile Include="IRemoteCodeLens.cs" />
     <Compile Include="PipeName.cs" />

@@ -4,7 +4,6 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
-using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
@@ -14,6 +13,12 @@ using Microsoft.VisualStudio.Utilities;
 using Serilog;
 using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using CodeStream.VisualStudio.Core.Models;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using Task = System.Threading.Tasks.Task;
+using System.Threading.Tasks;
+using Microsoft;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -28,13 +33,15 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
 		public static readonly ConcurrentDictionary<string, CodeLensConnection> Connections = new ConcurrentDictionary<string, CodeLensConnection>();
+		private readonly IVsSolution _vsSolution;
 
 		[ImportingConstructor]
 		public CodeLevelMetricsCallbackService(
 			ICodeStreamAgentService codeStreamAgentService,
 			ISessionService sessionService,
 			ISettingsServiceFactory settingsServiceFactory,
-			IEventAggregator eventAggregator) {
+			IEventAggregator eventAggregator,
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
 			_codeStreamAgentService = codeStreamAgentService;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
@@ -50,12 +57,31 @@ namespace CodeStream.VisualStudio.Services {
 				.Subscribe(e => {
 					_ = RefreshAllCodeLensDataPointsAsync();
 				});
+
+			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 		}
 
-		public bool IsClmReady() {
+		public async Task<string> CurrentSolutionPath() {
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+			return _vsSolution.GetSolutionFile();
+		}
+
+		public CodeLevelMetricStatus GetClmStatus() {
 			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
 
-			return settings.ShowGoldenSignalsInEditor && _sessionService.IsReady;
+			if (!_sessionService.IsAgentReady || _sessionService.SessionState == SessionState.UserSigningIn) {
+				return CodeLevelMetricStatus.Loading;
+			}
+
+			if (_sessionService.SessionState != SessionState.UserSignedIn) {
+				return CodeLevelMetricStatus.SignInRequired;
+			}
+
+			if (!settings.ShowGoldenSignalsInEditor) {
+				return CodeLevelMetricStatus.Disabled;
+			}
+
+			return CodeLevelMetricStatus.Ready;
 		}
 
 		public string GetClmFormatSetting() {
@@ -77,10 +103,8 @@ namespace CodeStream.VisualStudio.Services {
 
 				await stream.WaitForConnectionAsync().ConfigureAwait(false);
 
-				//stream.BeginWaitForConnection(ar => {
-					var connection = new CodeLensConnection(stream);
-					Connections[dataPointId] = connection;
-				//}, dataPointId);
+				var connection = new CodeLensConnection(stream);
+				Connections[dataPointId] = connection;
 			}
 			catch (Exception ex) {
 				Log.Error(ex, "Unable to bind CallbackService and RPC");

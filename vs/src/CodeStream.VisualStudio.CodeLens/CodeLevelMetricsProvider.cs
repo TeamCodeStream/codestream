@@ -3,8 +3,6 @@ using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Shared;
@@ -45,15 +43,8 @@ namespace CodeStream.VisualStudio.CodeLens {
 					new[] { dataPoint.DataPointId }, token)
 				.ConfigureAwait(false);
 
-			var stream = new NamedPipeClientStream(
-				serverName: ".",
-				PipeName.Get(vsPid),
-				PipeDirection.InOut,
-				PipeOptions.Asynchronous);
-
-			var connection = new VisualStudioConnection(dataPoint, stream);
+			var connection = new VisualStudioConnection(dataPoint, vsPid);
 			await connection.ConnectAsync(token);
-
 			dataPoint.VsConnection = connection;
 
 			return dataPoint;

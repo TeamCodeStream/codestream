@@ -13,9 +13,13 @@ namespace CodeStream.VisualStudio.CodeLens {
 		private readonly CodeLevelMetricDataPoint _owner;
 		public JsonRpc Rpc;
 
-		public VisualStudioConnection(CodeLevelMetricDataPoint owner, NamedPipeClientStream stream) {
+		public VisualStudioConnection(CodeLevelMetricDataPoint owner, int vsPid) {
 			_owner = owner;
-			_stream = stream;
+			_stream = new NamedPipeClientStream(
+				serverName: ".",
+				PipeName.Get(vsPid),
+				PipeDirection.InOut,
+				PipeOptions.Asynchronous);
 		}
 
 		public async Task ConnectAsync(CancellationToken cancellationToken) {
