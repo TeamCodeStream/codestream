@@ -46,33 +46,33 @@ namespace CodeStream.VisualStudio.CodeLens {
 				.InvokeAsync<string>(this, nameof(ICodeLevelMetricsCallbackService.CurrentSolutionPath), cancellationToken: token)
 				.ConfigureAwait(false);
 
-			Debugger.Launch();
+			//Debugger.Launch();
 
-			// hack to get the project by matching the output file name - i.e., CodeStream.VisualStudio.CodeLens.dll"
-			// because for some reason, the OutputFilePath on one includes /x86/ in the path, and the other doesn't.
-			MSBuildWorkspace workspace = MSBuildWorkspace.Create();
-			var solution = await workspace.OpenSolutionAsync(solutionFile, cancellationToken: token);
-			var project = solution.Projects.SingleOrDefault(x =>
-				Path.GetFileName(x.OutputFilePath)
-					.Equals(Path.GetFileName(context.Properties["OutputFilePath"].ToString())));
+			//// hack to get the project by matching the output file name - i.e., CodeStream.VisualStudio.CodeLens.dll"
+			//// because for some reason, the OutputFilePath on one includes /x86/ in the path, and the other doesn't.
+			//MSBuildWorkspace workspace = MSBuildWorkspace.Create();
+			//var solution = await workspace.OpenSolutionAsync(solutionFile, cancellationToken: token);
+			//var project = solution.Projects.SingleOrDefault(x =>
+			//	Path.GetFileName(x.OutputFilePath)
+			//		.Equals(Path.GetFileName(context.Properties["OutputFilePath"].ToString())));
 
-			// hackity hack (for now)
-			// as long as your debugging session opens to *THIS FILE*, it will also be the first in the list.
-			var document = project.Documents.First();
+			//// hackity hack (for now)
+			//// as long as your debugging session opens to *THIS FILE*, it will also be the first in the list.
+			//var document = project.Documents.First();
 
-			var tree = await document.GetSyntaxTreeAsync(token);
-			var compilation = CSharpCompilation.Create("Test", new []{ tree });
+			//var tree = await document.GetSyntaxTreeAsync(token);
+			//var compilation = CSharpCompilation.Create("Test", new []{ tree });
 
-			// matches nothing - symbol name isn't the fully qualified name - but we could parse and match
-			var symbol = compilation.GetSymbolsWithName(s => s.Equals(context.Properties["FullyQualifiedName"].ToString()));
+			//// matches nothing - symbol name isn't the fully qualified name - but we could parse and match
+			//var symbol = compilation.GetSymbolsWithName(s => s.Equals(context.Properties["FullyQualifiedName"].ToString()));
 
-			//works, but not sure what I'm trying to find yet.
-			var model = compilation.GetSemanticModel(tree);
-			var root = await tree.GetRootAsync(token);
+			////works, but not sure what I'm trying to find yet.
+			//var model = compilation.GetSemanticModel(tree);
+			//var root = await tree.GetRootAsync(token);
 
 			return new CodeLensDataPointDescriptor {
 				Description = formatString,
-				TooltipText = solution.FilePath
+				TooltipText = solutionFile
 			};
 		}
 
