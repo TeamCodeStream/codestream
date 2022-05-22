@@ -24,6 +24,7 @@ interface RadioProps {
 	children: React.ReactNode;
 	disabled?: boolean;
 	className?: string;
+	"data-testid"?: string;
 }
 
 const RadioDiv = styled.div`
@@ -94,10 +95,11 @@ export function Radio(props: PropsWithChildren<RadioProps>) {
 		<RadioDiv className={className}>
 			<div>
 				{showSpinner ? (
-					<Icon className="spin" name="sync" />
+					<Icon className="spin" name="sync" data-testid={props["data-testid"] + "-loading"} />
 				) : (
 					<input
 						type="radio"
+						data-testid={props["data-testid"]}
 						className={disabled ? "disabled" : ""}
 						name={name}
 						value={props.value}

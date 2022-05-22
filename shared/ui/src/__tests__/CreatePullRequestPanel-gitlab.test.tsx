@@ -1,10 +1,12 @@
+/**
+ * @jest-environment jsdom
+ */
+import { waitFor } from "@testing-library/react";
 import React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 import { act } from "react-dom/test-utils";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
-
-import { waitFor } from "@testing-library/react";
 
 import { setupCommunication } from "../../index";
 import { CreatePullRequestPanel } from "../../Stream/CreatePullRequestPanel";

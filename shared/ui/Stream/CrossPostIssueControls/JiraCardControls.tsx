@@ -10,6 +10,7 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { getIntegrationData } from "@codestream/webview/store/activeIntegrations/reducer";
 import { JiraIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
+import { disconnectProvider } from "@codestream/webview/store/providers/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { emptyArray } from "@codestream/webview/utils";
 import React from "react";
@@ -17,7 +18,6 @@ import ReactDOM from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncSelect from "react-select/async";
 import { HostApi } from "../..";
-import { disconnectProvider } from "../actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import Icon from "../Icon";
 import Menu from "../Menu";

@@ -1,18 +1,19 @@
-import styled from "styled-components";
-import { useDispatch, useSelector } from "react-redux";
-import React from "react";
-import { Modal } from "../Modal";
-import { Button } from "../../src/components/Button";
-import { ButtonGroup } from "../../src/components/ButtonGroup";
-import { connectProvider, openPanel } from "../actions";
-import Icon from "../Icon";
-import { CodeStreamState } from "@codestream/webview/store";
-import { mapFilter } from "@codestream/webview/utils";
 import { ThirdPartyProviderConfig } from "@codestream/protocols/agent";
-import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { BoxedContent } from "@codestream/webview/src/components/BoxedContent";
 import { CSText } from "@codestream/webview/src/components/CSText";
+import { CodeStreamState } from "@codestream/webview/store";
 import { fetchDocumentMarkers } from "@codestream/webview/store/documentMarkers/actions";
+import { connectProvider } from "@codestream/webview/store/providers/actions";
+import { mapFilter } from "@codestream/webview/utils";
+import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+import { Button } from "../../src/components/Button";
+import { ButtonGroup } from "../../src/components/ButtonGroup";
+import { openPanel } from "../actions";
+import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
+import Icon from "../Icon";
+import { Modal } from "../Modal";
 
 const VerticallyCentered = styled.div`
 	height: inherit;

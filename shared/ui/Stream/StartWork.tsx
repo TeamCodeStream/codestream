@@ -14,6 +14,7 @@ import {
 import { CSMe } from "@codestream/protocols/api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { logError } from "@codestream/webview/logger";
+import { connectProvider } from "@codestream/webview/store/providers/actions";
 import React, { useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +34,7 @@ import {
 import { useDidMount } from "../utilities/hooks";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { HostApi } from "../webview-api";
-import { connectProvider, setUserPreference, setUserStatus } from "./actions";
+import { setUserPreference, setUserStatus } from "./actions";
 import { ConfigureBranchNames } from "./ConfigureBranchNames";
 import { confirmPopup } from "./Confirm";
 import { BranchCurve, BranchLineAcross, BranchLineDown, GitBranch, GitTimeline } from "./Flow";

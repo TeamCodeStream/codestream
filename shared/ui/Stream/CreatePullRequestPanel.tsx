@@ -1,3 +1,4 @@
+import { configureAndConnectProvider } from "@codestream/webview/store/providers/actions";
 import cx from "classnames";
 import React, { MouseEventHandler, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -46,7 +47,6 @@ import { getPRLabelForProvider, isConnected } from "../store/providers/reducer";
 import { useDidMount, useInterval, useTimeout } from "../utilities/hooks";
 import { inMillis } from "../utils";
 import { HostApi } from "../webview-api";
-import { configureAndConnectProvider } from "./actions";
 import CancelButton from "./CancelButton";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";

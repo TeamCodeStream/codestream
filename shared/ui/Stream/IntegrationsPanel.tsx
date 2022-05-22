@@ -1,3 +1,8 @@
+import {
+	configureAndConnectProvider,
+	disconnectProvider,
+	removeEnterpriseProvider
+} from "@codestream/webview/store/providers/actions";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ScrollBox from "./ScrollBox";
@@ -9,12 +14,7 @@ import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { isConnected, getConnectedSharingTargets } from "../store/providers/reducer";
-import {
-	disconnectProvider,
-	configureAndConnectProvider,
-	closePanel,
-	removeEnterpriseProvider
-} from "./actions";
+import { closePanel } from "./actions";
 import Icon from "./Icon";
 import { Button } from "../src/components/Button";
 import { DropdownButton } from "./DropdownButton";

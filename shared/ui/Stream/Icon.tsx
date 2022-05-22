@@ -25,9 +25,10 @@ interface Props {
 	trigger?: Trigger[];
 	tabIndex?: number;
 	src?: string;
+	"data-testid"?: string;
 }
 
-const Icon = React.forwardRef<any, Props>((props, ref) => {
+export const Icon = React.forwardRef<any, Props>((props, ref) => {
 	const name = props.loading ? "sync" : props.name ? props.name : "";
 	const icon = Icons8[name] || octicons[name];
 	// const icon = octicons[props.name]; why is this commented out?
@@ -41,6 +42,7 @@ const Icon = React.forwardRef<any, Props>((props, ref) => {
 				clickable: props.clickable,
 				muted: props.muted
 			})}
+			data-testid={props["data-testid"]}
 			onClick={props.onClick}
 			onMouseDown={props.onMouseDown}
 			style={props.style}
