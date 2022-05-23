@@ -29,13 +29,34 @@ namespace CodeStream.VisualStudio.Core.Services {
 		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 		Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL, string environment = null);
-		Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId, string path);
+
+		Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId,
+			string path);
+
 		Task<GetReviewContentsLocalResponse> GetReviewContentsLocalAsync(
 			string repoId,
 			string path,
 			string editingReviewId,
 			string baseSha,
 			string rightVersion);
+
 		Task<GetReviewResponse> GetReviewAsync(string reviewId);
+
+		Task<GetFileLevelTelemetryResponse> GetFileLevelTelemetryAsync(
+			string filePath,
+			string languageId,
+			bool resetCache,
+			string codeNamespace,
+			string functionName,
+			bool includeThroughput,
+			bool includeAverageDuration,
+			bool includeErrorRate);
+
+		Task<GetMethodLevelTelemetryResponse> GetMethodLevelTelemetryAsync(
+			string repoId,
+			string newRelicEntityGuid,
+			string duration,
+			string throughput,
+			string errorRate);
 	}
 }

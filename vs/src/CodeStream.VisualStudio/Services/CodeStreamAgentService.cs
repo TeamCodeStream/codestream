@@ -439,5 +439,50 @@ namespace CodeStream.VisualStudio.Services {
 				ReviewId = reviewId
 			});
 		}
+
+		public Task<GetFileLevelTelemetryResponse> GetFileLevelTelemetryAsync(
+			string filePath,
+			string languageId,
+			bool resetCache,
+			string codeNamespace,
+			string functionName,
+			bool includeThroughput,
+			bool includeAverageDuration,
+			bool includeErrorRate) {
+
+			return SendCoreAsync<GetFileLevelTelemetryResponse>(GetFileLevelTelemetryRequestType.MethodName,
+				new GetFileLevelTelemetryRequest {
+					FilePath = filePath,
+					LanguageId = languageId,
+					ResetCache = resetCache,
+					CodeNamespace = codeNamespace,
+					FunctionName = functionName,
+					Options = new FileLevelTelemetryRequestOptions {
+						IncludeAverageDuration = includeAverageDuration,
+						IncludeErrorRate = includeErrorRate,
+						IncludeThroughput = includeThroughput
+					}
+				});
+		}
+
+
+		public Task<GetMethodLevelTelemetryResponse> GetMethodLevelTelemetryAsync(
+			string repoId,
+			string newRelicEntityGuid,
+			string duration,
+			string throughput,
+			string errorRate) {
+
+			return SendCoreAsync<GetMethodLevelTelemetryResponse>(GetMethodLevelTelemetryRequestType.MethodName,
+				new GetMethodLevelTelemetryRequest {
+					RepoId = repoId,
+					NewRelicEntityGuid = newRelicEntityGuid,
+					MetricTimesliceNameMapping = new MetricTimesliceNameMapping {
+						Duration = duration,
+						Throughput = throughput,
+						Error = errorRate
+					}
+				});
+		}
 	}
 }
