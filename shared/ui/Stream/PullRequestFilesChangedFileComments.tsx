@@ -122,13 +122,13 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	});
 	const { currentPullRequest } = derivedState;
 	const currentPr = isGitLab
-		? currentPullRequest?.conversations?.mergeRequest
+		? currentPullRequest?.conversations?.mergeRequest ||
+		  currentPullRequest?.conversations?.project?.mergeRequest
 		: currentPullRequest?.conversations?.repository?.pullRequest;
-	// version greater than 3.0.0, if can't find version set to 999.999.999
-	const supportsViewerViewedState = semver.gt(
-		currentPr?.supports?.version?.version || "999.999.999",
-		"3.0.0"
-	);
+	// For GHE, can only check files in version greater than 3.0.0
+	const supportsViewerViewedState = semver.gt(currentPr?.supports?.version?.version, "3.0.0");
+
+	console.warn(currentPr, currentPullRequest);
 
 	useEffect(() => {
 		syncCheckedStatusWithPr();
