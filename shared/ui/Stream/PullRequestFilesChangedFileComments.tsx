@@ -124,7 +124,11 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const currentPr = isGitLab
 		? currentPullRequest?.conversations?.mergeRequest
 		: currentPullRequest?.conversations?.repository?.pullRequest;
-	const supportsViewerViewedState = semver.gt(currentPr?.supports?.version?.version, "3.0.0");
+	// version greater than 3.0.0, if can't find version set to 999.999.999
+	const supportsViewerViewedState = semver.gt(
+		currentPr?.supports?.version?.version || "999.999.999",
+		"3.0.0"
+	);
 
 	useEffect(() => {
 		syncCheckedStatusWithPr();
@@ -338,6 +342,8 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									name={displayIcon}
 									style={{ color: "var(--text-color-subtle)" }}
 									className={"clickable"}
+									delay={1}
+									title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
 								/>
 							</span>
 						)
@@ -428,6 +434,8 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 												name={displayIcon}
 												style={{ color: "var(--text-color-subtle)" }}
 												className={"clickable"}
+												delay={1}
+												title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
 											/>
 										</span>
 									)}

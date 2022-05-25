@@ -1,7 +1,6 @@
 import {
 	PRActionIcons,
 	PRButtonRow,
-	PRBranch,
 	PRCodeCommentBody,
 	PRCodeCommentWrapper,
 	PRThreadedCommentHeader
@@ -43,7 +42,6 @@ import {
 import { EditorScrollToNotificationType } from "../ipc/webview.protocol";
 import { Range, Position } from "vscode-languageserver-types";
 import { useDidMount } from "../utilities/hooks";
-import { isEmpty } from "lodash-es";
 
 const PRBranchContainer = styled.div`
 	display: inline-block;

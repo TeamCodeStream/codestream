@@ -550,7 +550,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					});
 				}
 
-				const queriesObject = {
+				const queries = {
 					...defaultQueriesResponse,
 					...(derivedState.pullRequestQueries || {})
 				};
@@ -562,9 +562,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				// 		results[p].push(_);
 				// 	});
 				// });
-				setQueries(queriesObject);
+				setQueries(queries);
 				setDefaultQueries(defaultQueriesResponse);
-				fetchPRs(queriesObject, undefined, "useDidMount").then(_ => {
+				fetchPRs(queries, undefined, "useDidMount").then(_ => {
 					mountedRef.current = true;
 				});
 				getOpenRepos();
