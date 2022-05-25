@@ -344,6 +344,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									className={"clickable"}
 									delay={1}
 									title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
+									placement="bottom"
 								/>
 							</span>
 						)
@@ -436,6 +437,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 												className={"clickable"}
 												delay={1}
 												title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
+												placement="bottom"
 											/>
 										</span>
 									)}
