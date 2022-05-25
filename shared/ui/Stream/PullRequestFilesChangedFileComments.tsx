@@ -128,8 +128,6 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	// For GHE, can only check files in version greater than 3.0.0
 	const supportsViewerViewedState = semver.gt(currentPr?.supports?.version?.version, "3.0.0");
 
-	console.warn(currentPr, currentPullRequest);
-
 	useEffect(() => {
 		syncCheckedStatusWithPr();
 	}, [currentPr, prCommitsRange]);
