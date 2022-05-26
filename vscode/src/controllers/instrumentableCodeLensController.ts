@@ -95,7 +95,11 @@ export class InstrumentableCodeLensController implements Disposable {
 		);
 		this._providerDisposable = Disposable.from(
 			languages.registerCodeLensProvider(
-				[{ language: "python" }, { language: "ruby" }],
+				[
+					{ language: "python" },
+					{ language: "ruby" },
+					{ language: "csharp" },
+				],
 				this._provider
 			)
 		);

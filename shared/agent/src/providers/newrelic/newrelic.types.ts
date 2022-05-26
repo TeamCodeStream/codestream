@@ -1,3 +1,5 @@
+import { FunctionLocator } from "../../protocol/agent.protocol.providers";
+
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
 	data: any;
@@ -61,8 +63,9 @@ export interface MetricQueryRequest {
 export interface SpanRequest {
 	newRelicAccountId: number;
 	newRelicEntityGuid: string;
+	resolutionMethod: ResolutionMethod;
 	codeFilePath?: string;
-	codeNamespace?: string;
+	locator?: FunctionLocator;
 }
 
 export interface EntitySearchResult {
@@ -88,3 +91,5 @@ export interface FunctionInfo {
 	className?: string;
 	functionName?: string;
 }
+
+export type ResolutionMethod = "filePath" | "locator";

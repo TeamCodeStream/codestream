@@ -8,6 +8,7 @@ import { InstrumentableSymbol, ISymbolLocator, SymbolLocator } from "../../provi
 import { CancellationTokenSource } from "vscode-languageclient";
 import {
 	FileLevelTelemetryRequestOptions,
+	FunctionLocator,
 	GetFileLevelTelemetryResponse
 } from "@codestream/protocols/agent";
 
@@ -53,6 +54,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
+				locator?: FunctionLocator,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse> {
 				return new Promise(resolve => {
@@ -100,6 +102,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
+				locator?: FunctionLocator,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse> {
 				return new Promise(resolve => {
@@ -147,6 +150,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
+				locator?: FunctionLocator,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse> {
 				return new Promise(resolve => {

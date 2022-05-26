@@ -90,6 +90,7 @@ import {
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
 	FileLevelTelemetryRequestOptions,
+	FunctionLocator,
 	GetDocumentFromKeyBindingRequestType,
 	GetDocumentFromKeyBindingResponse,
 	GetDocumentFromMarkerRequestType,
@@ -951,12 +952,14 @@ export class CodeStreamAgentConnection implements Disposable {
 			filePath: string,
 			languageId: string,
 			resetCache: boolean,
+			locator?: FunctionLocator,
 			options?: FileLevelTelemetryRequestOptions
 		) {
 			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
 				filePath,
 				languageId,
 				resetCache,
+				locator,
 				options
 			});
 		}

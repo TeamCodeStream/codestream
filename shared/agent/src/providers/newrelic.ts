@@ -85,6 +85,7 @@ import {
 	MetricQueryRequest,
 	MetricTimeslice,
 	NewRelicId,
+	ResolutionMethod,
 	Span,
 	SpanRequest
 } from "./newrelic/newrelic.types";
@@ -93,7 +94,7 @@ import { ThirdPartyIssueProviderBase } from "./provider";
 
 const Cache = require("timed-cache");
 
-const supportedLanguages = ["python", "ruby"] as const;
+const supportedLanguages = ["python", "ruby", "csharp"] as const;
 export type LanguageId = typeof supportedLanguages[number];
 
 // Use type guard so that list of languages can be defined once and shared with union type LanguageId
@@ -1604,26 +1605,27 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		if (!request.codeFilePath) return undefined;
 		const query = generateSpanQuery(
 			request.newRelicEntityGuid,
+			request.resolutionMethod,
 			request.codeFilePath,
-			request.codeNamespace
+			request.locator
 		);
 		try {
 			const response = await this.query(query, {
 				accountId: request.newRelicAccountId!
 			});
 
-			if (response?.actor?.account.equals.results.length) {
+			if (response?.actor?.account?.equals.results.length) {
 				return response.actor.account.equals.results;
 			}
 
-			if (response?.actor?.account.like.results.length) {
+			if (response?.actor?.account?.like.results.length) {
 				Logger.warn("getSpans using like", {
 					query: query,
 					accountId: request.newRelicAccountId
 				});
 				return response.actor.account.like.results;
 			}
-			if (response?.actor?.account.fuzzy.results.length) {
+			if (response?.actor?.account?.fuzzy.results.length) {
 				Logger.warn("getSpans using fuzzy", {
 					query: query,
 					accountId: request.newRelicAccountId
@@ -1874,6 +1876,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		});
 	}
 
+	getResolutionMethod(languageId: LanguageId): ResolutionMethod {
+		switch (languageId) {
+			case "csharp":
+				return "locator";
+			default:
+				return "filePath";
+		}
+	}
+
 	@lspHandler(GetFileLevelTelemetryRequestType)
 	@log()
 	async getFileLevelTelemetry(
@@ -1882,13 +1893,21 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const languageId: LanguageId | undefined = isSupportedLanguage(request.languageId)
 			? request.languageId
 			: undefined;
-		if (!request.filePath || !languageId) {
-			ContextLogger.warn(
-				"getFileLevelTelemetry: Missing filePath, languageId, or languageId not supported"
-			);
+		if (!languageId) {
+			ContextLogger.warn("getFileLevelTelemetry: languageId not supported");
 			return undefined;
 		}
-		const cacheKey = [request.filePath, request.languageId].join("-");
+
+		if (!request.filePath && !request.locator) {
+			ContextLogger.warn("getFileLevelTelemetry: Missing filePath, or method locator");
+			return undefined;
+		}
+
+		const resolutionMethod = this.getResolutionMethod(languageId);
+		const cacheKey =
+			resolutionMethod === "filePath"
+				? [request.filePath, request.languageId].join("-")
+				: [Object.values(request.locator!).join("-"), request.languageId];
 
 		if (request.resetCache) {
 			Logger.log("getFileLevelTelemetry: resetting cache", {
@@ -1948,6 +1967,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			relativeFilePath = join(sep, relativeFilePath);
 		}
 
+		// See if the git repo is associated with NR1
 		const observabilityRepo = await this.getObservabilityEntityRepos(repoForFile.id);
 		if (!observabilityRepo) {
 			ContextLogger.warn("getFileLevelTelemetry: no observabilityRepo");
@@ -1980,7 +2000,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				(await this.getSpans({
 					newRelicAccountId,
 					newRelicEntityGuid,
-					codeFilePath: relativeFilePath
+					codeFilePath: relativeFilePath,
+					locator: request.locator,
+					resolutionMethod
 				})) || [];
 
 			const spans = this.applyLanguageFilter(spanResponse, languageId);
@@ -2016,9 +2038,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						languageId
 					).filter(_ => _.functionName);
 
-					if (request.functionName) {
+					if (request?.locator?.functionName) {
 						_.actor.account.nrql.results = _.actor.account.nrql.results.filter(
-							(r: any) => r.functionName === request.functionName
+							(r: any) => r.functionName === request?.locator?.functionName
 						);
 					}
 				}
@@ -2032,7 +2054,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const hasAnyData =
 				throughputResponseLength || averageDurationResponseLength || errorRateResponseLength;
 			const response = {
-				codeNamespace: request.codeNamespace!,
+				codeNamespace: request?.locator?.namespace,
 				isConnected: isConnected,
 				throughput: throughputResponse ? throughputResponse.actor.account.nrql.results : [],
 				averageDuration: averageDurationResponse

@@ -1095,13 +1095,19 @@ export interface FileLevelTelemetryRequestOptions {
 	includeErrorRate?: boolean;
 }
 
+export interface FunctionLocator {
+	// example CodeStream.VisualStudio.CodeLens.VisualStudioConnection.Refresh
+	namespace?: string; // CodeStream.VisualStudio.CodeLens
+	// className?: string; // VisualStudioConnection
+	functionName?: string; // Refresh
+}
+
 export interface GetFileLevelTelemetryRequest {
 	filePath: string;
 	languageId: string;
 	/** if true, this request will reset the cache */
 	resetCache?: boolean;
-	codeNamespace?: string;
-	functionName?: string;
+	locator?: FunctionLocator;
 	options?: FileLevelTelemetryRequestOptions;
 }
 
@@ -1166,7 +1172,7 @@ export interface GetFileLevelTelemetryResponse {
 	newRelicUrl?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicAlertSeverity?: string;
-	codeNamespace: string;
+	codeNamespace?: string;
 	relativeFilePath: string;
 	error?: {
 		message?: string;

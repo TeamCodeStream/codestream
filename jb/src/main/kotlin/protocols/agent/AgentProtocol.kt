@@ -524,10 +524,15 @@ class FileLevelTelemetryOptions(
     val includeErrorRate: Boolean?
 )
 
+class FunctionLocator(
+    val namespace: String?,
+    val functionName: String?
+)
+
 class FileLevelTelemetryParams(
-    val filePath: String,
+    val filePath: String?,
     val languageId: String,
-    val codeNamespace: String?,
+    val locator: FunctionLocator,
     val newRelicAccountId: Int?,
     val newRelicEntityGuid: String?,
     val resetCache: Boolean?,

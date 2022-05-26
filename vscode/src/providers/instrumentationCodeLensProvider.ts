@@ -6,9 +6,10 @@ import {
 	ViewMethodLevelTelemetryCommandArgs,
 	ViewMethodLevelTelemetryErrorCommandArgs
 } from "commands";
-import { Event } from "vscode-languageclient";
+import { Event, SymbolKind } from "vscode-languageclient";
 import {
 	FileLevelTelemetryRequestOptions,
+	FunctionLocator,
 	GetFileLevelTelemetryResponse
 } from "@codestream/protocols/agent";
 import { Strings } from "../system";
@@ -27,6 +28,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
+				locator?: FunctionLocator,
 				options?: FileLevelTelemetryRequestOptions | undefined
 			): Promise<GetFileLevelTelemetryResponse>;
 		},
@@ -141,10 +143,19 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				includeErrorRate: this.codeLensTemplate.indexOf("${errorsPerMinute}") > -1
 			};
 
+			let functionLocator: FunctionLocator | undefined = undefined;
+			if (document.languageId === "csharp") {
+				const thePackage = instrumentableSymbols.find(_ => _.parent?.kind === SymbolKind.Package);
+				if (thePackage) {
+					functionLocator = {namespace: thePackage?.parent?.name};
+				}
+			}
+
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
 				document.fileName,
 				document.languageId,
 				this.resetCache,
+				functionLocator,
 				methodLevelTelemetryRequestOptions
 			);
 			this.resetCache = false;
