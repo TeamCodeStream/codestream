@@ -475,7 +475,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		return () => {
 			clearInterval(disposable);
 		};
-	}, [queries]);
+	}, [queries, fetchPRs]);
 
 	useEffect(() => {
 		const newGroups = {};
