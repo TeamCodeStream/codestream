@@ -8,16 +8,24 @@ function mapRubyTimesliceName(name: string): string {
 	}
 }
 
+function mapTimeslice(languageId: LanguageId, name: string): string {
+	switch (languageId) {
+		case "ruby":
+			return mapRubyTimesliceName(name);
+		case "python":
+			return `WebTransaction/${name}`;
+		default:
+			return name;
+	}
+}
+
 export function generateMethodAverageDurationQuery(
 	languageId: LanguageId,
 	newRelicEntityGuid: string,
 	metricTimesliceNames?: string[],
 	codeNamespace?: string
 ) {
-	const mappedTimesliceNames =
-		languageId === "ruby"
-			? metricTimesliceNames?.map(mapRubyTimesliceName)
-			: metricTimesliceNames?.map(metric => `WebTransaction/${metric}`);
+	const mappedTimesliceNames = metricTimesliceNames?.map(_ => mapTimeslice(languageId, _));
 
 	const lookup = mappedTimesliceNames?.length
 		? `metricTimesliceName in (${mappedTimesliceNames.map(metric => `'${metric}'`).join(",")})`

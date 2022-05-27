@@ -60,9 +60,6 @@ describe("clm query generation", () => {
 			expect(response).includes(
 				"like:nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' SINCE 30 minutes AGO LIMIT 250\")"
 			);
-			expect(response).includes(
-				"fuzzy:nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like '%blah%' SINCE 30 minutes AGO LIMIT 250\")"
-			);
 		});
 
 		it("generates namespace and function locator query", () => {
@@ -76,9 +73,6 @@ describe("clm query generation", () => {
 			);
 			expect(response).includes(
 				"like:nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' AND code.function like 'foo%' SINCE 30 minutes AGO LIMIT 250\")"
-			);
-			expect(response).includes(
-				"fuzzy:nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like '%blah%' AND code.function like '%foo%' SINCE 30 minutes AGO LIMIT 250\")"
 			);
 		});
 	});

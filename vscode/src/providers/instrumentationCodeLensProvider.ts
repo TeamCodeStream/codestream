@@ -222,17 +222,19 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				data: { namespace?: string; className?: string; functionName: string }
 			) => {
 				let result: boolean;
+				// Strip off any trailing () for function (csharp)
+				const simpleSymbolName = symbol.symbol.name.replace(/\(\)$/, "");
 				if (symbol.parent) {
 					result =
-						(data.className === symbol.parent.name && data.functionName === symbol.symbol.name) ||
-						(data.namespace === symbol.parent.name && data.functionName === symbol.symbol.name);
+						(data.className === symbol.parent.name && data.functionName === simpleSymbolName) ||
+						(data.namespace === symbol.parent.name && data.functionName === simpleSymbolName);
 				} else {
 					// if no parent (aka class) ensure we find a function that doesn't have a parent
-					result = !symbol.parent && data.functionName === symbol.symbol.name;
+					result = !symbol.parent && data.functionName === simpleSymbolName;
 				}
 				if (!result) {
 					// Since nothing matched, relax criteria and base just on function name
-					result = data.functionName === symbol.symbol.name;
+					result = data.functionName === simpleSymbolName;
 				}
 				return result;
 			};

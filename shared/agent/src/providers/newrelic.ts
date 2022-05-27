@@ -1740,6 +1740,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return entity;
 	}
 
+	parseCSharpFunctionCoordinates(namespace: string, functionName: string): FunctionInfo {
+		const split = namespace.split(".");
+		const className = split[split.length - 1];
+		const theNamespace = split.slice(0, split.length - 1).join(".");
+		return {
+			className,
+			namespace: theNamespace,
+			functionName: functionName
+		};
+	}
+
 	parsePythonFunctionCoordinates(coord: string): FunctionInfo {
 		const indexOfColon = coord.indexOf(":");
 		let functionName = indexOfColon > -1 ? coord.slice(indexOfColon + 1) : undefined;
@@ -1819,7 +1830,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	timesliceNameMap(languageId: LanguageId, timesliceName: string): string {
-		if (languageId === "python") {
+		if (languageId === "python" || languageId == "csharp") {
 			return timesliceName
 				.replace("Errors/WebTransaction/", "")
 				.replace("WebTransaction/", "")
@@ -1849,13 +1860,26 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				);
 			}
 
-			let { className, functionName, namespace } =
-				languageId === "ruby"
-					? this.parseRubyFunctionCoordinates(
-							_.metricTimesliceName,
-							additionalMetadata["code.namespace"]
-					  )
-					: this.parsePythonFunctionCoordinates(_.metricTimesliceName);
+			let functionInfo: FunctionInfo;
+			switch (languageId) {
+				case "ruby":
+					functionInfo = this.parseRubyFunctionCoordinates(
+						_.metricTimesliceName,
+						additionalMetadata["code.namespace"]
+					);
+					break;
+				case "python":
+					functionInfo = this.parsePythonFunctionCoordinates(_.metricTimesliceName);
+					break;
+				case "csharp":
+					functionInfo = this.parseCSharpFunctionCoordinates(
+						additionalMetadata["code.namespace"]!,
+						additionalMetadata["code.function"]!
+					);
+					break;
+			}
+
+			let { className, functionName, namespace } = functionInfo;
 
 			// Use Agent provided function name if available
 			if (additionalMetadata["code.function"] && additionalMetadata["code.function"]?.length > 0) {
@@ -1907,7 +1931,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const cacheKey =
 			resolutionMethod === "filePath"
 				? [request.filePath, request.languageId].join("-")
-				: [Object.values(request.locator!).join("-"), request.languageId];
+				: [Object.values(request.locator!).join("-"), request.languageId].join("-");
 
 		if (request.resetCache) {
 			Logger.log("getFileLevelTelemetry: resetting cache", {
