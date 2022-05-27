@@ -126,7 +126,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		  currentPullRequest?.conversations?.project?.mergeRequest
 		: currentPullRequest?.conversations?.repository?.pullRequest;
 	// For GHE, can only check files in version greater than 3.0.0
-	const supportsViewerViewedState = semver.gt(currentPr?.supports?.version?.version, "3.0.0");
+	const supportsViewerViewedState = currentPr
+		? semver.gt(currentPr?.supports?.version?.version, "3.0.0")
+		: false;
 
 	useEffect(() => {
 		syncCheckedStatusWithPr();
