@@ -193,12 +193,6 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 	};
 
 	const handleDiffClick = async () => {
-		// if (!derivedState.textEditorUri?.startsWith("codestream-diff://")) {
-		// 	HostApi.instance.track("PR Diff Viewed", {
-		// 		Host: pr && pr.providerId
-		// 	});
-		// }
-
 		const request = {
 			baseBranch: pr.baseRefName,
 			baseSha: pr.baseRefOid,
