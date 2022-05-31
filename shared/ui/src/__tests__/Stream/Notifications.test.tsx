@@ -13,12 +13,17 @@ import React from "react";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
+import * as providerSelectors from "@codestream/webview/store/providers/reducer";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
+jest.mock("@codestream/webview/store/providers/reducer");
 
 const mockIsFeatureEnabled = jest.mocked(isFeatureEnabled);
 mockIsFeatureEnabled.mockReturnValue(true);
+
+const mockProviderSelectors = jest.mocked(providerSelectors);
+
 const spySetUserPreference = jest.spyOn(storeActions, "setUserPreference");
 
 const middlewares = [thunk];
@@ -54,21 +59,21 @@ const baseState: Partial<CodeStreamState> = {
 	},
 	ide: {
 		name: "JETBRAINS"
-	},
-	activeIntegrations: {
-		issuesLoading: false,
-		initialLoadComplete: true,
-		integrations: {
-			"github*com": {
-				isLoading: false
-			}
-		}
 	}
 };
 
 describe("Notifications UI", () => {
 	it("Should show PR notification settings for supported providers", async () => {
 		const mockStore = configureStore();
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "github*com",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
+			}
+		]);
 		render(
 			<Provider store={mockStore(baseState)}>
 				<Notifications />
@@ -82,21 +87,18 @@ describe("Notifications UI", () => {
 	});
 
 	it("Should not show PR notification settings for unsupported providers", async () => {
-		const store: Partial<CodeStreamState> = {
-			...baseState,
-			activeIntegrations: {
-				issuesLoading: false,
-				initialLoadComplete: true,
-				integrations: {
-					bitbucket: {
-						isLoading: false
-					}
-				}
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "bitbucket",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
 			}
-		};
+		]);
 		const mockStore = configureStore();
 		render(
-			<Provider store={mockStore(store)}>
+			<Provider store={mockStore(baseState)}>
 				<Notifications />
 			</Provider>
 		);
@@ -111,6 +113,15 @@ describe("Notifications UI", () => {
 
 	it("Should not show PR notification settings for unsupported IDE", async () => {
 		const state = { ...baseState, ide: "VS" };
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "github*com",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
+			}
+		]);
 		const mockStore = configureStore();
 		render(
 			<Provider store={mockStore(state)}>
@@ -128,6 +139,15 @@ describe("Notifications UI", () => {
 
 	it("shows desktop and email explainer when hasDesktopNotifications", async () => {
 		const mockStore = configureStore();
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "github*com",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
+			}
+		]);
 		render(
 			<Provider store={mockStore(baseState)}>
 				<Notifications />
@@ -142,6 +162,15 @@ describe("Notifications UI", () => {
 
 	it("shows only email explainer when not hasDesktopNotifications", async () => {
 		const state = { ...baseState, ide: "VS" };
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "github*com",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
+			}
+		]);
 		const mockStore = configureStore();
 		render(
 			<Provider store={mockStore(state)}>
@@ -155,6 +184,15 @@ describe("Notifications UI", () => {
 
 	it("selects correct radio button for notificationDeliveryPreference", async () => {
 		const mockStore = configureStore(middlewares);
+		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
+			{
+				id: "github*com",
+				isConnected: true,
+				name: "name",
+				host: "host",
+				hasAccessTokenError: false
+			}
+		]);
 		let state = baseState;
 		const store = mockStore(() => state);
 		render(

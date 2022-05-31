@@ -12,6 +12,7 @@ import {
 } from "@codestream/protocols/api";
 import Icon from "./Icon";
 import { Dialog } from "../src/components/Dialog";
+import * as providerSelectors from "../store/providers/reducer";
 
 const prNotificationProviders = new Set([
 	"github*com",
@@ -26,7 +27,10 @@ export const Notifications = props => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
 		const emailSupported = isFeatureEnabled(state, "emailSupport");
-		const showPRNotificationSetting = Object.keys(state.activeIntegrations.integrations).some(p =>
+		const prConnectedProviderIds = providerSelectors
+			.getConnectedSupportedPullRequestHosts(state)
+			.map(it => it.id);
+		const showPRNotificationSetting = prConnectedProviderIds.some(p =>
 			prNotificationProviders.has(p)
 		);
 
