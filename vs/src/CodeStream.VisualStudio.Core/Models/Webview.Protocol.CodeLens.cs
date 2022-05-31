@@ -21,9 +21,13 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string FilePath { get; set; }
 		public string LanguageId { get; set; }
 		public bool ResetCache { get; set; }
-		public string CodeNamespace { get; set; }
-		public string FunctionName { get; set; }
+		public FileLevelTelemetryFunctionLocator Locator { get; set; }
 		public FileLevelTelemetryRequestOptions Options { get; set; }
+	}
+
+	public class FileLevelTelemetryFunctionLocator {
+		public string Namespace { get; set; }
+		public string FunctionName { get; set; }
 	}
 
 	public class FileLevelTelemetryRequestOptions {
@@ -38,7 +42,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public IList<ThroughputResponse> Throughput { get; set; }
 		public IList<AverageDurationResponse> AverageDuration { get; set; }
 		public IList<ErrorRateResponse> ErrorRate { get; set; }
-		public DateTime? LastUpdateDate { get; set; }
+		public long? LastUpdateDate { get; set; }
 		public bool HasAnyData { get; set; }
 		public string SinceDateFormatted { get; set; }
 		public long NewRelicAccountId { get; set; }

@@ -20,6 +20,13 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 			str?.EndsWith(value, true, CultureInfo.InvariantCulture) == true;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string ToFixed(this string input, int significantDigits) {
+			var decimalLocation = input.LastIndexOf('.');
+
+			return input.Substring(0, decimalLocation + significantDigits + 1);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool AsBool(this string s) => s != null && Convert.ToBoolean(s);		
 
 		/// <summary>

@@ -455,8 +455,10 @@ namespace CodeStream.VisualStudio.Services {
 					FilePath = filePath,
 					LanguageId = languageId,
 					ResetCache = resetCache,
-					CodeNamespace = codeNamespace,
-					FunctionName = functionName,
+					Locator = new FileLevelTelemetryFunctionLocator {
+						FunctionName = functionName,
+						Namespace = codeNamespace
+					},
 					Options = new FileLevelTelemetryRequestOptions {
 						IncludeAverageDuration = includeAverageDuration,
 						IncludeErrorRate = includeErrorRate,

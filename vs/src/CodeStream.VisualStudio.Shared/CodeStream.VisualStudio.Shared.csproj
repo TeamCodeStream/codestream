@@ -69,5 +69,11 @@
     <Compile Include="PipeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">
+      <Project>{1A29B558-C55A-4769-AD37-69F903ED6EB3}</Project>
+      <Name>CodeStream.VisualStudio.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

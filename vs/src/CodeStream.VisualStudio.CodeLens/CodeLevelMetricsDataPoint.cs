@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Shared;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.MSBuild;
-using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
@@ -37,48 +31,29 @@ namespace CodeStream.VisualStudio.CodeLens {
 					Description = GetStatusText(clmStatus)
 				};
 			}
+
+			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
+			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
+			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
+			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
+
+			var metrics = await _callbackService
+				.InvokeAsync<string>(
+					this,
+					nameof(ICodeLevelMetricsCallbackService.GetTelemetryAsync),
+					new object[] { codeNamespace, functionName},
+					cancellationToken: token)
+				.ConfigureAwait(false);
 			
-			var formatString = await _callbackService
-				.InvokeAsync<string>(this, nameof(ICodeLevelMetricsCallbackService.GetClmFormatSetting), cancellationToken: token)
-				.ConfigureAwait(false);
-
-			var solutionFile = await _callbackService
-				.InvokeAsync<string>(this, nameof(ICodeLevelMetricsCallbackService.CurrentSolutionPath), cancellationToken: token)
-				.ConfigureAwait(false);
-
-			//Debugger.Launch();
-
-			//// hack to get the project by matching the output file name - i.e., CodeStream.VisualStudio.CodeLens.dll"
-			//// because for some reason, the OutputFilePath on one includes /x86/ in the path, and the other doesn't.
-			//MSBuildWorkspace workspace = MSBuildWorkspace.Create();
-			//var solution = await workspace.OpenSolutionAsync(solutionFile, cancellationToken: token);
-			//var project = solution.Projects.SingleOrDefault(x =>
-			//	Path.GetFileName(x.OutputFilePath)
-			//		.Equals(Path.GetFileName(context.Properties["OutputFilePath"].ToString())));
-
-			//// hackity hack (for now)
-			//// as long as your debugging session opens to *THIS FILE*, it will also be the first in the list.
-			//var document = project.Documents.First();
-
-			//var tree = await document.GetSyntaxTreeAsync(token);
-			//var compilation = CSharpCompilation.Create("Test", new []{ tree });
-
-			//// matches nothing - symbol name isn't the fully qualified name - but we could parse and match
-			//var symbol = compilation.GetSymbolsWithName(s => s.Equals(context.Properties["FullyQualifiedName"].ToString()));
-
-			////works, but not sure what I'm trying to find yet.
-			//var model = compilation.GetSemanticModel(tree);
-			//var root = await tree.GetRootAsync(token);
-
 			return new CodeLensDataPointDescriptor {
-				Description = formatString,
-				TooltipText = solutionFile
+				Description = metrics,
+				TooltipText = ""
 			};
 		}
 
 		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token) {
 			var descriptor = new CodeLensDetailsDescriptor();
-			
+
 			var headers = new List<CodeLensDetailHeaderDescriptor> {
 				new CodeLensDetailHeaderDescriptor {
 					UniqueName = "header1",

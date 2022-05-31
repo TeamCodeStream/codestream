@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Extensions;
 using Microsoft;
 
 namespace CodeStream.VisualStudio.Services {
@@ -61,9 +62,45 @@ namespace CodeStream.VisualStudio.Services {
 			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 		}
 
-		public async Task<string> CurrentSolutionPath() {
+		public async Task<string> GetTelemetryAsync(string codeNamespace, string functionName) {
+			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-			return _vsSolution.GetSolutionFile();
+			var solution = _vsSolution.GetSolutionFile();
+
+			//example: "avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}"
+			var formatString = settings.GoldenSignalsInEditorFormat.ToLower();
+			var includeThroughput = formatString.Contains("${throughput}");
+			var includeAverageDuration = formatString.Contains("${averageduration}");
+			var includeErrorRate = formatString.Contains("${errorsperminute}");
+
+			try {
+				var metrics = await _codeStreamAgentService.GetFileLevelTelemetryAsync(
+					solution,
+					"csharp",
+					false,
+					codeNamespace,
+					functionName,
+					includeThroughput,
+					includeAverageDuration,
+					includeErrorRate
+				);
+
+				var throughput = metrics.Throughput.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.RequestsPerMinute;
+				var errors = metrics.ErrorRate.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.ErrorsPerMinute;
+				var avgDuration = metrics.AverageDuration.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.AverageDuration;
+
+				var formatted = formatString
+					.Replace("${throughput}", throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm")
+					.Replace("${averageduration}", avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms")
+					.Replace("${errorsperminute}", errors is null ? "n/a" : $"{errors.ToFixed(3)}epm")
+					.Replace("${since}", metrics.SinceDateFormatted);
+
+				return formatted;
+			}
+			catch (Exception ex) {
+				Log.Error(ex, "Something happened");
+				return ex.Message;
+			}
 		}
 
 		public CodeLevelMetricStatus GetClmStatus() {
@@ -82,12 +119,6 @@ namespace CodeStream.VisualStudio.Services {
 			}
 
 			return CodeLevelMetricStatus.Ready;
-		}
-
-		public string GetClmFormatSetting() {
-			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
-
-			return settings.GoldenSignalsInEditorFormat;
 		}
 
 		public int GetVisualStudioPid() => Process.GetCurrentProcess().Id;
