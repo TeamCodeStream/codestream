@@ -305,6 +305,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 				range: Range.create(0, 0, 0, 0)
 			});
 		}
+
+		HostApi.instance.track("PR Jump To Local File from Tree", {
+			Host: pullRequest && pullRequest.providerId
+		});
 	};
 
 	let commentsSortedByLineNumber;
@@ -375,6 +379,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							: async e => {
 									e.preventDefault();
 									goDiff(index);
+									HostApi.instance.track("PR File Clicked", {
+										Host: pullRequest && pullRequest.providerId
+									});
 							  }
 					}
 					key={index + ":" + fileObject.file}
@@ -462,6 +469,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 								: async e => {
 										e.preventDefault();
 										goDiff(index);
+										HostApi.instance.track("PR File Clicked", {
+											Host: pullRequest && pullRequest.providerId
+										});
 								  }
 						}
 						key={index + ":" + fileObject.file}

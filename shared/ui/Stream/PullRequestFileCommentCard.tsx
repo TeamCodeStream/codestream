@@ -193,6 +193,12 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 	};
 
 	const handleDiffClick = async () => {
+		// if (!derivedState.textEditorUri?.startsWith("codestream-diff://")) {
+		// 	HostApi.instance.track("PR Diff Viewed", {
+		// 		Host: pr && pr.providerId
+		// 	});
+		// }
+
 		const request = {
 			baseBranch: pr.baseRefName,
 			baseSha: pr.baseRefOid,
@@ -253,6 +259,10 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 				range: Range.create(_lineNumber, 0, _lineNumber, 9999)
 			});
 		}
+
+		HostApi.instance.track("PR Jump to Local File", {
+			Host: pr && pr.providerId
+		});
 	};
 
 	const handleResolve = async (e, threadId) => {
@@ -435,7 +445,12 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 											<div style={{ marginLeft: "auto" }}>
 												<span
 													style={{ color: "var(--text-color-subtle)" }}
-													onClick={handleDiffClick}
+													onClick={e => {
+														handleDiffClick();
+														HostApi.instance.track("PR Jump to Diff", {
+															Host: pr && pr.providerId
+														});
+													}}
 												>
 													<Icon
 														name="diff"

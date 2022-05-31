@@ -417,11 +417,6 @@ export const PullRequest = () => {
 		let _didChangeDataNotification;
 		getOpenRepos();
 		initialFetch().then((_: GitLabMergeRequestWrapper | undefined) => {
-			HostApi.instance.track("PR Details Viewed", {
-				Host: derivedState.currentPullRequestProviderId,
-				"Host Version": _?.project?.mergeRequest?.supports?.version?.version || "0.0.0"
-			});
-
 			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
 					reload("Updating...");

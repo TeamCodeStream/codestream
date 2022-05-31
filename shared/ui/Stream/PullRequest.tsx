@@ -504,13 +504,7 @@ export const PullRequest = () => {
 		}
 
 		getOpenRepos();
-		initialFetch().then((_: any) => {
-			HostApi.instance.track("PR Details Viewed", {
-				Host: derivedState.currentPullRequestProviderId,
-				Source: derivedState.currentPullRequestSource,
-				"Host Version": _?.repository?.pullRequest?.supports?.version?.version || "0.0.0"
-			});
-		});
+		initialFetch().then((_: any) => {});
 	});
 
 	const _checkMergeabilityStatus = async () => {

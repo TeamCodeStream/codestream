@@ -10,6 +10,7 @@ import { getPreferences } from "../store/users/reducer";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "../ipc/webview.protocol.common";
+import { HostApi } from "../webview-api";
 
 export const ReviewButton = styled.div`
 	color: white;
@@ -41,7 +42,15 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 
 	const handleRowClick = e => {
 		e.stopPropagation();
-		const { pullRequest } = props;
+		const { pullRequest, thirdPartyPrObject } = props;
+
+		if (thirdPartyPrObject) {
+			HostApi.instance.track("PR Conversation View", {
+				Host: thirdPartyPrObject?.providerId,
+				"Host Version": thirdPartyPrObject?.supports?.version?.version || "0.0.0"
+			});
+		}
+
 		dispatch(setCurrentPullRequest(pullRequest.providerId, pullRequest.id, "", "", "details"));
 	};
 
