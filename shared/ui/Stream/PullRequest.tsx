@@ -504,7 +504,7 @@ export const PullRequest = () => {
 		}
 
 		getOpenRepos();
-		initialFetch().then((_: any) => {});
+		initialFetch();
 	});
 
 	const _checkMergeabilityStatus = async () => {
