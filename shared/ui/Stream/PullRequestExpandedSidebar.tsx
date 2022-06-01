@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import styled from "styled-components";
@@ -11,6 +11,7 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "../ipc/webview.protocol.common";
 import { HostApi } from "../webview-api";
+import { api } from "../store/providerPullRequests/actions";
 
 export const ReviewButton = styled.div`
 	color: white;
@@ -34,11 +35,7 @@ interface PullRequestExpandedSidebarProps {
 
 export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProps) => {
 	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		return {
-			viewPreference: getPreferences(state).pullRequestView || "auto"
-		};
-	});
+	const [submittingReview, setSubmittingReview] = useState(false);
 
 	const handleRowClick = e => {
 		e.stopPropagation();
@@ -63,6 +60,22 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		return props.thirdPartyPrObject?.pendingReview?.comments?.totalCount;
 	}, [props.thirdPartyPrObject?.pendingReview?.comments?.totalCount]);
 
+	const handleSubmitReview = async e => {
+		e.preventDefault();
+		e.stopPropagation();
+		setSubmittingReview(true);
+		HostApi.instance.track("PR Review Finished", {
+			Host: props?.thirdPartyPrObject?.providerId,
+			"Review Type": "APPROVE"
+		});
+		await dispatch(
+			api("submitReview", {
+				eventType: "APPROVE"
+			})
+		);
+		setSubmittingReview(false);
+	};
+
 	return (
 		<>
 			<Row onClick={e => handleRowClick(e)} style={{ padding: "0 0 0 45px" }}>
@@ -71,12 +84,42 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 					PR Details
 				</div>
 				<div>
-					<ReviewButton
-						style={{ width: reviewCount ? "70px" : "50px" }}
-						onClick={e => handleReviewClick(e)}
-					>
-						<span className="wide-text">Review {reviewCount > 0 && <> ({reviewCount})</>}</span>
-					</ReviewButton>
+					{props?.thirdPartyPrObject && (
+						<>
+							{props?.thirdPartyPrObject?.providerId === "gitlab*com" ||
+							props?.thirdPartyPrObject?.providerId === "gitlab/enterprise" ? (
+								<>
+									{reviewCount > 0 && !submittingReview && (
+										<ReviewButton style={{ width: "120px" }} onClick={e => handleSubmitReview(e)}>
+											<span className="wide-text">Submit Review ({reviewCount})</span>
+										</ReviewButton>
+									)}
+									{submittingReview && (
+										<ReviewButton
+											onClick={e => {
+												e.preventDefault();
+												e.stopPropagation();
+											}}
+											style={{ width: "120px" }}
+										>
+											<span className="wide-text">
+												<Icon style={{ top: "-1px" }} className="spin" name="sync" />
+											</span>
+										</ReviewButton>
+									)}
+								</>
+							) : (
+								<ReviewButton
+									style={{ width: reviewCount ? "70px" : "50px" }}
+									onClick={e => handleReviewClick(e)}
+								>
+									<span className="wide-text">
+										Review {reviewCount > 0 && <> ({reviewCount})</>}
+									</span>
+								</ReviewButton>
+							)}
+						</>
+					)}
 				</div>
 			</Row>
 			{props.loadingThirdPartyPrObject && !props.thirdPartyPrObject && (

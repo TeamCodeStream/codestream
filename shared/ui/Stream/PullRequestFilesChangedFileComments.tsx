@@ -47,9 +47,9 @@ export const PendingCircle = styled.div`
 	border-radius: 50%;
 	border: 1px solid #bf8700;
 	width: 17px;
-	height: 16px;
+	height: 17px;
 	text-align: center;
-	margin-right: 13px;
+	margin-right: 10px;
 	font-size: 10px;
 `;
 
@@ -266,7 +266,14 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const handlePendingClick = event => {
 		event.preventDefault();
 		event.stopPropagation();
-		dispatch(openModal(WebviewModals.FinishReview));
+		if (
+			pullRequest?.providerId === "gitlab*com" ||
+			pullRequest?.providerId === "gitlab/enterprise"
+		) {
+			return;
+		} else {
+			dispatch(openModal(WebviewModals.FinishReview));
+		}
 	};
 
 	const handleMouseEnter = event => {
