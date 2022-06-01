@@ -213,6 +213,12 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const lineNumber = commentObject => {
 		// With git, the "line number" is actually 2 numbers, left and right
 		// For now, we are going to base it off of the right number, subject to change.
+		// The basic formula is:
+		// 		Right line number taken from top of diff hunk
+		//    + Length of the diff hunk (in new lines)
+		//    - Number of negative or removed lines from diff hunk
+		//    -----------------------------------------------------
+		//      Line Number
 		let rightLine = 0;
 
 		if (!commentObject?.comment || !commentObject?.review) {
