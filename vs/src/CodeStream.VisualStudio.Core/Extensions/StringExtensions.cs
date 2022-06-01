@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 		public static string ToFixed(this string input, int significantDigits) {
 			var decimalLocation = input.LastIndexOf('.');
 
-			return input.Substring(0, decimalLocation + significantDigits + 1);
+			return input.Substring(0, Math.Min(decimalLocation + significantDigits + 1, input.Length));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

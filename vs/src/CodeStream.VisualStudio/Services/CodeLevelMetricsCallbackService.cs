@@ -18,8 +18,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Core.Extensions;
-using Microsoft;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -62,19 +60,23 @@ namespace CodeStream.VisualStudio.Services {
 			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
 		}
 
-		public async Task<string> GetTelemetryAsync(string codeNamespace, string functionName) {
+		public string GetEditorFormat() {
 			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
+			return settings.GoldenSignalsInEditorFormat;
+		}
+
+		public async Task<GetFileLevelTelemetryResponse> GetTelemetryAsync(string codeNamespace, string functionName) {
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solution = _vsSolution.GetSolutionFile();
 
 			//example: "avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}"
-			var formatString = settings.GoldenSignalsInEditorFormat.ToLower();
-			var includeThroughput = formatString.Contains("${throughput}");
-			var includeAverageDuration = formatString.Contains("${averageduration}");
-			var includeErrorRate = formatString.Contains("${errorsperminute}");
+			var formatString = GetEditorFormat().ToLower();
+			var includeThroughput = formatString.Contains(CodeLevelMetricConstants.Tokens.Throughput);
+			var includeAverageDuration = formatString.Contains(CodeLevelMetricConstants.Tokens.AverageDuration);
+			var includeErrorRate = formatString.Contains(CodeLevelMetricConstants.Tokens.ErrorsPerMinute);
 
 			try {
-				var metrics = await _codeStreamAgentService.GetFileLevelTelemetryAsync(
+				return await _codeStreamAgentService.GetFileLevelTelemetryAsync(
 					solution,
 					"csharp",
 					false,
@@ -84,22 +86,10 @@ namespace CodeStream.VisualStudio.Services {
 					includeAverageDuration,
 					includeErrorRate
 				);
-
-				var throughput = metrics.Throughput.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.RequestsPerMinute;
-				var errors = metrics.ErrorRate.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.ErrorsPerMinute;
-				var avgDuration = metrics.AverageDuration.FirstOrDefault(x => $"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase($"{codeNamespace}.{functionName}"))?.AverageDuration;
-
-				var formatted = formatString
-					.Replace("${throughput}", throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm")
-					.Replace("${averageduration}", avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms")
-					.Replace("${errorsperminute}", errors is null ? "n/a" : $"{errors.ToFixed(3)}epm")
-					.Replace("${since}", metrics.SinceDateFormatted);
-
-				return formatted;
 			}
 			catch (Exception ex) {
-				Log.Error(ex, "Something happened");
-				return ex.Message;
+				Log.Error(ex, $"Unable to obtain CLM for {codeNamespace}.{functionName}");
+				return new GetFileLevelTelemetryResponse();
 			}
 		}
 

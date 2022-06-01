@@ -39,9 +39,9 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public class GetFileLevelTelemetryResponse {
 		public RepoInfo Repo { get; set; }
 		public bool IsConnected { get; set; }
-		public IList<ThroughputResponse> Throughput { get; set; }
-		public IList<AverageDurationResponse> AverageDuration { get; set; }
-		public IList<ErrorRateResponse> ErrorRate { get; set; }
+		public IList<ThroughputResponse> Throughput { get; set; } = new List<ThroughputResponse>();
+		public IList<AverageDurationResponse> AverageDuration { get; set; } = new List<AverageDurationResponse>();
+		public IList<ErrorRateResponse> ErrorRate { get; set; } = new List<ErrorRateResponse>();
 		public long? LastUpdateDate { get; set; }
 		public bool HasAnyData { get; set; }
 		public string SinceDateFormatted { get; set; }
@@ -49,7 +49,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string NewRelicEntityGuid { get; set; }
 		public string NewRelicEntityName { get; set; }
 		public string NewRelicUrl { get; set; }
-		public IList<EntityAccount> NewRelicEntityAccounts { get; set; }
+		public IList<EntityAccount> NewRelicEntityAccounts { get; set; } = new List<EntityAccount>();
 		public string NewRelicAlertSeverity { get; set; }
 		public string CodeNamespace { get; set; }
 		public string RelativeFilePath { get; set; }
@@ -114,7 +114,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string GoldenMetrics { get; set; }
 		public string NewRelicAlertSeverity { get; set; }
 		public string NewRelicEntityName { get; set; }
-		public IList<EntityAccount> NewRelicEntityAccounts { get; set; }
+		public IList<EntityAccount> NewRelicEntityAccounts { get; set; } = new List<EntityAccount>();
 	}
 
 	public class EntityAccount {
@@ -123,6 +123,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string AccountName { get; set; }
 		public string EntityGuid { get; set; }
 		public string EntityName { get; set; }
-		public IDictionary<string, string[]> Tags { get; set; }
+		public IDictionary<string, string[]> Tags { get; set; } = new Dictionary<string, string[]>();
 	} 
 }

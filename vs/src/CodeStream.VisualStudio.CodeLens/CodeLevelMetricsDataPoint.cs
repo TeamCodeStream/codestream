@@ -1,15 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
+using Serilog;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	public class CodeLevelMetricDataPoint : IAsyncCodeLensDataPoint {
+		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricDataPoint>();
 		private readonly ICodeLensCallbackService _callbackService;
+		private GetFileLevelTelemetryResponse _metrics;
+		private string _editorFormatString;
+
 		public readonly string DataPointId = Guid.NewGuid().ToString();
 
 		public VisualStudioConnection VsConnection;
@@ -22,79 +32,76 @@ namespace CodeStream.VisualStudio.CodeLens {
 		}
 
 		public async Task<CodeLensDataPointDescriptor> GetDataAsync(CodeLensDescriptorContext context, CancellationToken token) {
-			var clmStatus = await _callbackService
-				.InvokeAsync<CodeLevelMetricStatus>(this, nameof(ICodeLevelMetricsCallbackService.GetClmStatus), cancellationToken: token)
-				.ConfigureAwait(false);
-
-			if (clmStatus != CodeLevelMetricStatus.Ready) {
-				return new CodeLensDataPointDescriptor {
-					Description = GetStatusText(clmStatus)
-				};
-			}
-
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
 			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
 
-			var metrics = await _callbackService
-				.InvokeAsync<string>(
-					this,
-					nameof(ICodeLevelMetricsCallbackService.GetTelemetryAsync),
-					new object[] { codeNamespace, functionName},
-					cancellationToken: token)
-				.ConfigureAwait(false);
-			
-			return new CodeLensDataPointDescriptor {
-				Description = metrics,
-				TooltipText = ""
-			};
+			try {
+				var clmStatus = await _callbackService
+					.InvokeAsync<CodeLevelMetricStatus>(this, nameof(ICodeLevelMetricsCallbackService.GetClmStatus),
+						cancellationToken: token)
+					.ConfigureAwait(false);
+
+				if (clmStatus != CodeLevelMetricStatus.Ready) {
+					return new CodeLensDataPointDescriptor {
+						Description = GetStatusText(clmStatus)
+					};
+				}
+
+				_editorFormatString = await _callbackService
+					.InvokeAsync<string>(
+						this,
+						nameof(ICodeLevelMetricsCallbackService.GetEditorFormat),
+						cancellationToken: token)
+					.ConfigureAwait(false);
+
+				_metrics = await _callbackService
+					.InvokeAsync<GetFileLevelTelemetryResponse>(
+						this,
+						nameof(ICodeLevelMetricsCallbackService.GetTelemetryAsync),
+						new object[] { codeNamespace, functionName },
+						cancellationToken: token)
+					.ConfigureAwait(false);
+
+				_metrics = _metrics ?? new GetFileLevelTelemetryResponse();
+
+				var throughput = _metrics.Throughput?.FirstOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							$"{codeNamespace}.{functionName}"))
+					?.RequestsPerMinute;
+				var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							$"{codeNamespace}.{functionName}"))
+					?.ErrorsPerMinute;
+				var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							$"{codeNamespace}.{functionName}"))
+					?.AverageDuration;
+
+				
+				// TODO - Probably gonna need a better case-insensitive string replace here
+				var formatted = Regex.Replace(_editorFormatString,
+					Regex.Escape(CodeLevelMetricConstants.Tokens.Throughput), throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.ErrorsPerMinute), errors is null ? "n/a" : $"{errors.ToFixed(3)}epm", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.Since), _metrics.SinceDateFormatted, RegexOptions.IgnoreCase);
+
+				return new CodeLensDataPointDescriptor {
+					Description = formatted,
+					TooltipText = formatted
+				};
+			}
+			catch (Exception ex) {
+				Log.Error(ex, $"Unable to render Code Level Metrics for {fullyQualifiedName}");
+				return new CodeLensDataPointDescriptor {
+					Description = "Sorry, we were unable to render Code Level Metrics for this method!"
+				};
+			}
 		}
 
 		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token) {
-			var descriptor = new CodeLensDetailsDescriptor();
-
-			var headers = new List<CodeLensDetailHeaderDescriptor> {
-				new CodeLensDetailHeaderDescriptor {
-					UniqueName = "header1",
-					Width = .33,
-					DisplayName = "Average Duration",
-					IsVisible = true
-				},
-				new CodeLensDetailHeaderDescriptor {
-					UniqueName = "header2",
-					Width = .33,
-					DisplayName = "Throughput",
-					IsVisible = true
-				},
-				new CodeLensDetailHeaderDescriptor {
-					UniqueName = "header3",
-					Width = .33,
-					DisplayName = "Error Rate",
-					IsVisible = true
-				}
-			};
-
-			descriptor.Headers = headers;
-			
-			var details = new List<CodeLensDetailEntryDescriptor> {
-				new CodeLensDetailEntryDescriptor {
-					Fields = new List<CodeLensDetailEntryField> {
-						new CodeLensDetailEntryField {
-							Text = "3ms"
-						},
-						new CodeLensDetailEntryField {
-							Text = "100rpm"
-						},
-						new CodeLensDetailEntryField {
-							Text = "4epm - since 30m ago"
-						}
-					}
-				}
-			};
-			descriptor.Entries = details;
-
-			return Task.FromResult(descriptor);
+			return Task.FromResult<CodeLensDetailsDescriptor>(null);
 		}
 
 		public void Refresh() => _ = InvalidatedAsync?.InvokeAsync(this, EventArgs.Empty).ConfigureAwait(false);
@@ -102,7 +109,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 		private static string GetStatusText(CodeLevelMetricStatus currentStatus) {
 			switch (currentStatus) {
 				case CodeLevelMetricStatus.Loading:
-					return "CodeStream Code Level Metrics Loading...";
+					return "Code Level Metrics Loading...";
 				case CodeLevelMetricStatus.SignInRequired:
 					return "Please sign-in to CodeStream for Code Level Metrics";
 				case CodeLevelMetricStatus.Disabled:

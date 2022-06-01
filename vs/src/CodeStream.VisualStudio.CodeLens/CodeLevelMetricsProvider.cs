@@ -6,8 +6,10 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Serilog;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	[Export(typeof(IAsyncCodeLensDataPointProvider))]
@@ -18,11 +20,13 @@ namespace CodeStream.VisualStudio.CodeLens {
 	public class CodeLevelMetricsProvider : IAsyncCodeLensDataPointProvider {
 		internal const string Id = "CodeStreamCodeLevelMetrics";
 		private readonly Lazy<ICodeLensCallbackService> _callbackService;
+		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricsProvider>();
 
 		[ImportingConstructor]
 		public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
 			_callbackService = callbackService;
-        }
+			//Debugger.Launch();
+		}
 		
 		public Task<bool> CanCreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
 			var methodsOnly = descriptor.Kind == CodeElementKinds.Method;
