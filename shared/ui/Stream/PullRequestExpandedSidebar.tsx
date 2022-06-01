@@ -45,7 +45,7 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		const { pullRequest, thirdPartyPrObject } = props;
 
 		if (thirdPartyPrObject) {
-			HostApi.instance.track("PR Conversation View", {
+			HostApi.instance.track("PR Details Viewed", {
 				Host: thirdPartyPrObject?.providerId,
 				"Host Version": thirdPartyPrObject?.supports?.version?.version || "0.0.0"
 			});

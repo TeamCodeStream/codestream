@@ -779,9 +779,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setCurrentGroupIndex(groupIndex);
 				fetchOnePR(pr.providerId, prId);
 
+
+				const nonCustomQueries = ["Waiting on my Review", "Assigned to Me", "Created by Me", "Recent", "From URL"];
+				let telemetryQueryName = queryName;
+				if (!nonCustomQueries.includes(queryName)) {
+					telemetryQueryName = "Custom";
+				}
+
 				HostApi.instance.track("PR Clicked", {
 					Host: pr.providerId,
-					Section: queryName || ""
+					Section: telemetryQueryName || ""
 				});
 			}
 		}

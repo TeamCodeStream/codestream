@@ -257,6 +257,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 				"details"
 			)
 		);
+
+		HostApi.instance.track("PR Conversation View", {
+			Host: pullRequest?.providerId
+		});
 	};
 
 	const handlePendingClick = event => {
