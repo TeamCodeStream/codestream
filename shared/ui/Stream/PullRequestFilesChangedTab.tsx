@@ -118,11 +118,26 @@ export const PullRequestFilesChangedTab = (props: {
 	}, [derivedState.currentPullRequest]);
 
 	useEffect(() => {
-		// re-render if providerPullRequests changes
 		(async () => {
 			await getPRFiles();
 		})();
-	}, [pr.providerId, derivedState.currentPullRequestId, prCommitsRange, accessRawDiffs]);
+	}, [
+		pr.providerId,
+		pr?.updatedAt,
+		derivedState.currentPullRequestId,
+		prCommitsRange,
+		accessRawDiffs
+	]);
+
+	useEffect(() => {
+		(async () => {
+			setIsLoading(true);
+			const data = await dispatch(
+				getPullRequestFilesFromProvider(pr.providerId, derivedState.currentPullRequestId!)
+			);
+			_mapData(data);
+		})();
+	}, [pr?.files?.totalCount]);
 
 	useDidMount(() => {
 		setIsLoading(true);
