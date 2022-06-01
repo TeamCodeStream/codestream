@@ -152,7 +152,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		if (
 			derivedState.documentMarkers.length > 0 &&
 			// all files in array will have same file value
-			derivedState.documentMarkers[0].file === fileInfo.filename
+			derivedState.documentMarkers[0]?.file === fileInfo?.filename
 		) {
 			let _docMarkers = derivedState.documentMarkers;
 			//@ts-ignore
@@ -198,7 +198,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			baseSha: pr.baseRefOid,
 			headBranch: pr.headRefName,
 			headSha: pr.headRefOid,
-			filePath: fileInfo.filename,
+			filePath: fileInfo?.filename,
 			previousFilePath: fileInfo?.previousFilename,
 			repoId: derivedState.currentRepo!.id!,
 			context: pr
