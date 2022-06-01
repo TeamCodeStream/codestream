@@ -113,7 +113,7 @@ export const PullRequestReplyComment = styled((props: Props) => {
 					{open && (
 						<>
 							<Button
-								style={oneRow ? { marginLeft: "auto" } : ""}
+								style={{ marginLeft: oneRow ? "auto" : 0 }}
 								variant="secondary"
 								onClick={handleCancelComment}
 							>
