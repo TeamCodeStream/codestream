@@ -49,7 +49,7 @@ export const PendingCircle = styled.div`
 	width: 17px;
 	height: 17px;
 	text-align: center;
-	margin-right: 10px;
+	margin-right: 13px;
 	font-size: 10px;
 `;
 
@@ -213,7 +213,6 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const lineNumber = commentObject => {
 		// With git, the "line number" is actually 2 numbers, left and right
 		// For now, we are going to base it off of the right number, subject to change.
-		// let leftLine = 0;
 		let rightLine = 0;
 
 		if (!commentObject?.comment || !commentObject?.review) {
@@ -226,17 +225,21 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			commentObject?.comment?.position?.patch ||
 			"";
 		let diffHunkNewLineLength = diffHunk.split("\n").length - 1;
+		let negativeLineCount = 1;
 
 		diffHunk.split("\n").map(d => {
-			const matches = d.match(/@@ \-(\d+).*? \+(\d+)/);
-			if (matches) {
-				// leftLine = parseInt(matches[1], 10) - 1;
-				rightLine = parseInt(matches[2]);
+			const topLineMatch = d.match(/@@ \-(\d+).*? \+(\d+)/);
+			const negativeLineMatch = d.match(/^\-.*/);
+			if (topLineMatch) {
+				rightLine = parseInt(topLineMatch[2]);
+			}
+			if (negativeLineMatch) {
+				negativeLineCount++;
 			}
 		});
 
 		if (rightLine) {
-			return rightLine + diffHunkNewLineLength;
+			return rightLine + diffHunkNewLineLength - negativeLineCount;
 		} else {
 			return "";
 		}
