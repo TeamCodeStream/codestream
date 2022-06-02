@@ -2,7 +2,6 @@
 	public enum CodeLevelMetricStatus {
 		Loading,
 		SignInRequired,
-		Disabled,
 		Ready
 	}
 }

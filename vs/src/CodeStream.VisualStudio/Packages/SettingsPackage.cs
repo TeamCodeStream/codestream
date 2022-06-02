@@ -78,8 +78,7 @@ namespace CodeStream.VisualStudio.Packages {
 						break;
 				}
 			}
-			else if (args.PropertyName == nameof(_settingsManager.ShowGoldenSignalsInEditor) ||
-				     args.PropertyName == nameof(_settingsManager.GoldenSignalsInEditorFormat)) {
+			else if (args.PropertyName == nameof(_settingsManager.GoldenSignalsInEditorFormat)) {
 				_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
 			}
 			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||

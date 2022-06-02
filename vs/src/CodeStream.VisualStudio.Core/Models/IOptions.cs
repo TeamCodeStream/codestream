@@ -17,7 +17,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 		bool DisableStrictSSL { get; set; }
 		string ExtraCertificates { get; set; }
 
-		bool ShowGoldenSignalsInEditor { get; set; }
 		string GoldenSignalsInEditorFormat { get; set; }
 	}
 

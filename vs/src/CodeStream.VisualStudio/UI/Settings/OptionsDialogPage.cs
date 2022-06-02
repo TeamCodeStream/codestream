@@ -235,19 +235,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		}
 
 		[Category("UI")]
-		[DisplayName("Golden Signals In Editor")]
-		[Description("Specifies whether to show CodeStream golden signals in the editor")]
-		public bool ShowGoldenSignalsInEditor {
-			get => _showGoldenSignalsInEditor;
-			set {
-				if (_showGoldenSignalsInEditor != value) {
-					_showGoldenSignalsInEditor = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("UI")]
 		[DisplayName("Golden Signals Format")]
 		[Description("Specifies how to format the CodeStream golden signals in the editor")]
 		public string GoldenSignalsInEditorFormat {

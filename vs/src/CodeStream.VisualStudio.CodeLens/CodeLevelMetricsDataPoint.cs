@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -112,8 +112,6 @@ namespace CodeStream.VisualStudio.CodeLens {
 					return "Code Level Metrics Loading...";
 				case CodeLevelMetricStatus.SignInRequired:
 					return "Please sign-in to CodeStream for Code Level Metrics";
-				case CodeLevelMetricStatus.Disabled:
-					return "CodeLens is enabled, but Code Level Metrics are disabled";
 				case CodeLevelMetricStatus.Ready:
 				default:
 					return "";

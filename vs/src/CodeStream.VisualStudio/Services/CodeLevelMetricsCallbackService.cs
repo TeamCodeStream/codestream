@@ -104,10 +104,6 @@ namespace CodeStream.VisualStudio.Services {
 				return CodeLevelMetricStatus.SignInRequired;
 			}
 
-			if (!settings.ShowGoldenSignalsInEditor) {
-				return CodeLevelMetricStatus.Disabled;
-			}
-
 			return CodeLevelMetricStatus.Ready;
 		}
 
