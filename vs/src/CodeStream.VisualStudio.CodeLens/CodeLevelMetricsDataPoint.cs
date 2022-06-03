@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -8,6 +8,7 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared;
+using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
@@ -36,6 +37,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
 			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
+			var namespaceFunction = $"{codeNamespace}.{functionName}";	// this is how we store data in NR1
 
 			try {
 				var clmStatus = await _callbackService
@@ -67,19 +69,13 @@ namespace CodeStream.VisualStudio.CodeLens {
 				_metrics = _metrics ?? new GetFileLevelTelemetryResponse();
 
 				var throughput = _metrics.Throughput?.FirstOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
-							$"{codeNamespace}.{functionName}"))
-					?.RequestsPerMinute;
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.RequestsPerMinute;
 				var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
-							$"{codeNamespace}.{functionName}"))
-					?.ErrorsPerMinute;
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.ErrorsPerMinute;
 				var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
-							$"{codeNamespace}.{functionName}"))
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))
 					?.AverageDuration;
 
-				
 				// TODO - Probably gonna need a better case-insensitive string replace here
 				var formatted = Regex.Replace(_editorFormatString,
 					Regex.Escape(CodeLevelMetricConstants.Tokens.Throughput), throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm", RegexOptions.IgnoreCase);
@@ -101,7 +97,61 @@ namespace CodeStream.VisualStudio.CodeLens {
 		}
 
 		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token) {
-			return Task.FromResult<CodeLensDetailsDescriptor>(null);
+			var formatString = _editorFormatString.ToLower();
+			var throughputPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
+			var averageDurationPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
+			var errorRatePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.ErrorsPerMinute, StringComparison.OrdinalIgnoreCase);
+			var sincePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Since, StringComparison.OrdinalIgnoreCase);
+
+			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
+			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
+			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
+			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
+			var namespaceFunction = $"{codeNamespace}.{functionName}";
+
+			var throughput = _metrics.Throughput?.FirstOrDefault(x =>
+				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+			var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
+				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+			var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
+				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+
+			var configuredPositions = new List<Tuple<int, string, string>> {
+				new Tuple<int, string, string>(throughputPosition, "Throughput", throughput is null ? "n/a" : $"{throughput.RequestsPerMinute.ToFixed(3)}rpm"),
+				new Tuple<int, string, string>(averageDurationPosition, "Avg. Duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
+				new Tuple<int, string, string>(errorRatePosition, "Errors per Minute", errors is null ? "n/a" : $"{errors.ErrorsPerMinute.ToFixed(3)}epm"),
+				new Tuple<int, string, string>(sincePosition, "Since", _metrics.SinceDateFormatted)
+			};
+
+			var descriptor = new CodeLensDetailsDescriptor();
+			var data = new CodeLevelMetricsData {
+				Repo = _metrics.Repo,
+				FunctionName = functionName,
+				NewRelicEntityGuid = _metrics.NewRelicEntityGuid,
+				MetricTimeSliceNameMapping = new MetricTimesliceNameMapping {
+					D = avgDuration?.MetricTimesliceName ?? "",
+					T = throughput?.MetricTimesliceName ?? "",
+					E = errors?.MetricTimesliceName ?? ""
+				}
+			};
+
+			foreach (var entry in configuredPositions.OrderBy(x => x.Item1)) {
+				if (entry.Item1 < 0) {
+					continue;
+				}
+
+				data.Details.Add(new CodeLevelMetricsDetail {
+					Order = entry.Item1,
+					Header = entry.Item2,
+					Value = entry.Item3
+				});
+			}
+
+			descriptor.Headers = new List<CodeLensDetailHeaderDescriptor>();
+			descriptor.CustomData = new List<CodeLevelMetricsData> { data };
+			descriptor.Entries = new List<CodeLensDetailEntryDescriptor>();
+
+			return Task.FromResult(descriptor);
 		}
 
 		public void Refresh() => _ = InvalidatedAsync?.InvokeAsync(this, EventArgs.Empty).ConfigureAwait(false);

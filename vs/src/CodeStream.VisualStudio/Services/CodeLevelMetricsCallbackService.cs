@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
 using CodeStream.VisualStudio.Core.Events;
@@ -18,6 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
+using Process = System.Diagnostics.Process;
 
 namespace CodeStream.VisualStudio.Services {
 
@@ -127,7 +127,7 @@ namespace CodeStream.VisualStudio.Services {
 				Log.Error(ex, "Unable to bind CallbackService and RPC");
 			}
 		}
-
+		
 		public static async Task RefreshCodeLensDataPointAsync(string dataPointId) {
 			if (!Connections.TryGetValue(dataPointId, out var connectionHandler)) {
 				throw new InvalidOperationException($"CodeLens data point {dataPointId} was not registered.");

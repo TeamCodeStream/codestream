@@ -91,32 +91,24 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string Type { get; set; }
 	}
 
-	public class GetMethodLevelTelemetryRequestType : RequestType<GetMethodLevelTelemetryRequest> {
-		public const string MethodName = "codestream/newrelic/methodLevelMethodTelemetry";
+	public class ViewMethodLevelTelemetryNotificationType : NotificationType<ViewMethodLevelTelemetryNotification> {
+		public const string MethodName = "webview/mlt/view";
 		public override string Method => MethodName;
 	}
 
-	public class GetMethodLevelTelemetryRequest {
-		public string RepoId { get; set; }
+	public class ViewMethodLevelTelemetryNotification {
+		public RepoInfo Repo { get; set; }
+		public string FunctionName { get; set; }
 		public string NewRelicEntityGuid { get; set; }
 		public MetricTimesliceNameMapping MetricTimesliceNameMapping { get; set; }
 	}
 
 	public class MetricTimesliceNameMapping {
-		public string Duration { get; set; }
-		public string Throughput { get; set; }
-		public string Error { get; set; }
+		public string D { get; set; }
+		public string T { get; set; }
+		public string E { get; set; }
 	}
-
-	public class GetMethodLevelTelemetryResponse {
-		public string NewRelicEntityGuid { get; set; }
-		public string NewRelicUrl { get; set; }
-		public string GoldenMetrics { get; set; }
-		public string NewRelicAlertSeverity { get; set; }
-		public string NewRelicEntityName { get; set; }
-		public IList<EntityAccount> NewRelicEntityAccounts { get; set; } = new List<EntityAccount>();
-	}
-
+	
 	public class EntityAccount {
 		public string AlertSeverity { get; set; }
 		public long AccountId { get; set; }

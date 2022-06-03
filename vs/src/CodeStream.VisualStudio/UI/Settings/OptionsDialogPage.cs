@@ -28,7 +28,6 @@ namespace CodeStream.VisualStudio.UI.Settings {
 		private bool _proxyStrictSsl;
 		private string _extraCertificates;
 
-		private bool _showGoldenSignalsInEditor;
 		private string _goldenSignalsInEditorFormat =
 			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}";
 

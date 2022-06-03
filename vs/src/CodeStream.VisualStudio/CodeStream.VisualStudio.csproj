@@ -143,6 +143,10 @@
     <Compile Include="UI\Taggers\DocumentMarkTagger.cs" />
     <Compile Include="UI\Taggers\DocumentMarkTaggerProvider.cs" />
     <Compile Include="UI\TextViewCreationListener.cs" />
+    <Compile Include="UI\ToolWindows\CodeLevelMetricsDetails.xaml.cs">
+      <DependentUpon>CodeLevelMetricsDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UI\ToolWindows\CodeLevelMetricsDetailsViewFactory.cs" />
     <Compile Include="UI\ToolWindows\WebViewControl.xaml.cs">
       <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
@@ -635,6 +639,10 @@
     <Page Include="UI\Margins\DocumentMark.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="UI\ToolWindows\CodeLevelMetricsDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UI\ToolWindows\WebViewControl.xaml">
       <Generator>MSBuild:Compile</Generator>

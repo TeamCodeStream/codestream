@@ -51,12 +51,5 @@ namespace CodeStream.VisualStudio.Core.Services {
 			bool includeThroughput,
 			bool includeAverageDuration,
 			bool includeErrorRate);
-
-		Task<GetMethodLevelTelemetryResponse> GetMethodLevelTelemetryAsync(
-			string repoId,
-			string newRelicEntityGuid,
-			string duration,
-			string throughput,
-			string errorRate);
 	}
 }

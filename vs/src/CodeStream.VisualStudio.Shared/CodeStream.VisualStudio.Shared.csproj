@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CodeLevelMetricConstants.cs" />
+    <Compile Include="CodeLevelMetricsData.cs" />
     <Compile Include="CodeLevelMetricStatus.cs" />
     <Compile Include="ICodeLevelMetricsCallbackService.cs" />
     <Compile Include="IRemoteCodeLens.cs" />

@@ -31,5 +31,6 @@ namespace CodeStream.VisualStudio.Core.Services {
 		IBrowserService BrowserService { get; }
 		bool IsReady { get; }
 		Task ConfigChangeReloadNotificationAsync();
+		Task ViewMethodLevelTelemetryNotificationAsync(RepoInfo repo, string functionName, string newRelicEntityGuid, MetricTimesliceNameMapping metricTimeSliceNameMapping);
 	}
 }

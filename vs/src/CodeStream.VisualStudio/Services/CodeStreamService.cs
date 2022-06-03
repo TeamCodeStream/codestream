@@ -250,10 +250,34 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task ConfigChangeReloadNotificationAsync() {
 			if (IsReady) {
 				try {
-					_ = _browserService.NotifyAsync(new ConfigChangeReloadNotificationType());
+					_ = BrowserService.NotifyAsync(new ConfigChangeReloadNotificationType());
 				}
 				catch (Exception ex) {
 					Log.Error(ex, nameof(ConfigChangeReloadNotificationAsync));
+				}
+			}
+			await Task.CompletedTask;
+		}
+
+		public async Task ViewMethodLevelTelemetryNotificationAsync(
+			RepoInfo repo,
+			string functionName,
+			string newRelicEntityGuid,
+			MetricTimesliceNameMapping metricTimeSliceNameMapping){
+
+			if (IsReady) {
+				try {
+					_ = BrowserService.NotifyAsync(new ViewMethodLevelTelemetryNotificationType {
+						Params = new ViewMethodLevelTelemetryNotification() {
+							Repo = repo,
+							FunctionName = functionName,
+							NewRelicEntityGuid = newRelicEntityGuid,
+							MetricTimesliceNameMapping = metricTimeSliceNameMapping
+						}
+					});
+				}
+				catch (Exception ex) {
+					Log.Error(ex, nameof(ViewMethodLevelTelemetryNotificationAsync));
 				}
 			}
 			await Task.CompletedTask;

@@ -466,25 +466,5 @@ namespace CodeStream.VisualStudio.Services {
 					}
 				});
 		}
-
-
-		public Task<GetMethodLevelTelemetryResponse> GetMethodLevelTelemetryAsync(
-			string repoId,
-			string newRelicEntityGuid,
-			string duration,
-			string throughput,
-			string errorRate) {
-
-			return SendCoreAsync<GetMethodLevelTelemetryResponse>(GetMethodLevelTelemetryRequestType.MethodName,
-				new GetMethodLevelTelemetryRequest {
-					RepoId = repoId,
-					NewRelicEntityGuid = newRelicEntityGuid,
-					MetricTimesliceNameMapping = new MetricTimesliceNameMapping {
-						Duration = duration,
-						Throughput = throughput,
-						Error = errorRate
-					}
-				});
-		}
 	}
 }
