@@ -361,9 +361,11 @@ export const MethodLevelTelemetryPanel = () => {
 									<div style={{ margin: "0 0 11px 0" }}>
 										<b>Repo:</b> {derivedState.currentMethodLevelTelemetry.repo?.name}
 									</div>
-									<div>
-										<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
-									</div>
+									{derivedState?.currentMethodLevelTelemetry.relativeFilePath && (
+                                        <div>
+                                            <b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
+                                        </div>
+                                    )}
 									<div>
 										<br />
 										{telemetryResponse &&
