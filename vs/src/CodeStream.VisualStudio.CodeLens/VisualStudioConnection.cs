@@ -7,6 +7,10 @@ using CodeStream.VisualStudio.Shared;
 using StreamJsonRpc;
 
 namespace CodeStream.VisualStudio.CodeLens {
+
+	/// <summary>
+	/// Sets up RPC communication between the CodeLens provider and Visual Studio
+	/// </summary>
 	public class VisualStudioConnection : IRemoteCodeLens {
 
 		private readonly NamedPipeClientStream _stream;

@@ -21,6 +21,10 @@ using Process = System.Diagnostics.Process;
 
 namespace CodeStream.VisualStudio.Services {
 
+	/// <summary>
+	/// Service gets injected into the CodeLensProvider in the OOP service and allows the CodeLens datapoints to communicate
+	/// back to Visual Studio.
+	/// </summary>
 	[Export(typeof(ICodeLensCallbackListener))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	[ContentType("CSharp")]
@@ -127,7 +131,10 @@ namespace CodeStream.VisualStudio.Services {
 				Log.Error(ex, "Unable to bind CallbackService and RPC");
 			}
 		}
-		
+
+		/// <summary>
+		/// Refresh a SPECIFIC CodeLens datapoint through RPC
+		/// </summary>
 		public static async Task RefreshCodeLensDataPointAsync(string dataPointId) {
 			if (!Connections.TryGetValue(dataPointId, out var connectionHandler)) {
 				throw new InvalidOperationException($"CodeLens data point {dataPointId} was not registered.");
@@ -136,6 +143,10 @@ namespace CodeStream.VisualStudio.Services {
 			await connectionHandler.Rpc.InvokeAsync(nameof(IRemoteCodeLens.Refresh)).ConfigureAwait(false);
 		}
 
+		/// <summary>
+		/// All RPC connections to the CodeLens datapoints are tracked, therefore
+		/// we can trigger them ALL to refresh using this.
+		/// </summary>
 		public static async Task RefreshAllCodeLensDataPointsAsync()
 			=> await Task
 				.WhenAll(Connections.Keys.Select(RefreshCodeLensDataPointAsync))

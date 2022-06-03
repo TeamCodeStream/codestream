@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 
 			var dataContext = DataContext as CodeLevelMetricsData;
 
+			// Initiate the webview logic - but if the CodeStream dialog isn't shown, show it first.
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 

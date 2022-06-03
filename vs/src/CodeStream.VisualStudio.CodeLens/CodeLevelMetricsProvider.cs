@@ -25,6 +25,8 @@ namespace CodeStream.VisualStudio.CodeLens {
 		[ImportingConstructor]
 		public CodeLevelMetricsProvider(Lazy<ICodeLensCallbackService> callbackService) {
 			_callbackService = callbackService;
+
+			//Uncomment this if you want to debug any code in this project, since it runs OOP.
 			//Debugger.Launch();
 		}
 		
@@ -33,6 +35,9 @@ namespace CodeStream.VisualStudio.CodeLens {
 			return Task.FromResult(methodsOnly);
 		}
 
+		/// <summary>
+		/// Responsible for creating the actual datapoint and setting up two-way communication over RPC back to the in-process extension
+		/// </summary>
 		public async Task<IAsyncCodeLensDataPoint> CreateDataPointAsync(CodeLensDescriptor descriptor, CodeLensDescriptorContext context, CancellationToken token) {
 			var dataPoint = new CodeLevelMetricDataPoint(descriptor, _callbackService.Value);
 

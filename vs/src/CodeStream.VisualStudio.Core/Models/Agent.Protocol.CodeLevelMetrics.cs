@@ -1,17 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace CodeStream.VisualStudio.Core.Models {
-	public class RefreshEditorsCodeLensRequestType : RequestType<EmptyRequestTypeParams> {
-		public const string MethodName = "host/editors/codelens/refresh";
-		public override string Method => MethodName;
-	}
-
-	public class RefreshEditorsCodeLensResponse {
-		public bool Success { get; set; }
-	}
-
-
+namespace CodeStream.VisualStudio.Core.Models
+{
 	public class GetFileLevelTelemetryRequestType : RequestType<GetFileLevelTelemetryRequest> {
 		public const string MethodName = "codestream/newrelic/fileLevelTelemetry";
 		public override string Method => MethodName;
@@ -56,12 +46,6 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public Error Error { get; set; }
 	}
 
-	public class RepoInfo {
-		public string Id { get; set; }
-		public string Name { get; set; }
-		public string Remote { get; set; }
-	}
-
 	public class ThroughputResponse {
 		public string RequestsPerMinute { get; set; }
 		public string Namespace { get; set; }
@@ -90,31 +74,4 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public string Message { get; set; }
 		public string Type { get; set; }
 	}
-
-	public class ViewMethodLevelTelemetryNotificationType : NotificationType<ViewMethodLevelTelemetryNotification> {
-		public const string MethodName = "webview/mlt/view";
-		public override string Method => MethodName;
-	}
-
-	public class ViewMethodLevelTelemetryNotification {
-		public RepoInfo Repo { get; set; }
-		public string FunctionName { get; set; }
-		public string NewRelicEntityGuid { get; set; }
-		public MetricTimesliceNameMapping MetricTimesliceNameMapping { get; set; }
-	}
-
-	public class MetricTimesliceNameMapping {
-		public string D { get; set; }
-		public string T { get; set; }
-		public string E { get; set; }
-	}
-	
-	public class EntityAccount {
-		public string AlertSeverity { get; set; }
-		public long AccountId { get; set; }
-		public string AccountName { get; set; }
-		public string EntityGuid { get; set; }
-		public string EntityName { get; set; }
-		public IDictionary<string, string[]> Tags { get; set; } = new Dictionary<string, string[]>();
-	} 
 }

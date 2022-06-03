@@ -8,7 +8,6 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared;
-using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
@@ -32,6 +31,12 @@ namespace CodeStream.VisualStudio.CodeLens {
 			Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
 		}
 
+		/// <summary>
+		/// Populates the actual "CodeLens" entry using the CallbackService. 
+		/// </summary>
+		/// <remarks>
+		/// There is some duplication between this method and <see cref="GetDetailsAsync" />, but with slight variations.
+		/// </remarks>
 		public async Task<CodeLensDataPointDescriptor> GetDataAsync(CodeLensDescriptorContext context, CancellationToken token) {
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
@@ -96,13 +101,14 @@ namespace CodeStream.VisualStudio.CodeLens {
 			}
 		}
 
+		/// <summary>
+		/// Populates the data to pass to the WPF view <seealso cref="VisualStudio.UI.ToolWindows.CodeLevelMetricsDetails.ViewMore_OnMouseDown" />
+		/// when a user "clicks" the CodeLens description populated from <see cref="GetDataAsync"/>
+		/// </summary>
+		/// <remarks>
+		/// There is some duplication between this method and <see cref="GetDataAsync" />, but with slight variations.
+		/// </remarks>
 		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token) {
-			var formatString = _editorFormatString.ToLower();
-			var throughputPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
-			var averageDurationPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
-			var errorRatePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.ErrorsPerMinute, StringComparison.OrdinalIgnoreCase);
-			var sincePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Since, StringComparison.OrdinalIgnoreCase);
-
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
 			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
@@ -115,6 +121,14 @@ namespace CodeStream.VisualStudio.CodeLens {
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
 			var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+
+			//Using string positions of the tokens, figure out an "order" of the tokens. Since IndexOf is a positive integer if its there,
+			//we're assuming that will be sufficient
+			var formatString = _editorFormatString.ToLower();
+			var throughputPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
+			var averageDurationPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
+			var errorRatePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.ErrorsPerMinute, StringComparison.OrdinalIgnoreCase);
+			var sincePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Since, StringComparison.OrdinalIgnoreCase);
 
 			var configuredPositions = new List<Tuple<int, string, string>> {
 				new Tuple<int, string, string>(throughputPosition, "Throughput", throughput is null ? "n/a" : $"{throughput.RequestsPerMinute.ToFixed(3)}rpm"),
@@ -136,7 +150,9 @@ namespace CodeStream.VisualStudio.CodeLens {
 			};
 
 			foreach (var entry in configuredPositions.OrderBy(x => x.Item1)) {
-				if (entry.Item1 < 0) {
+
+				//this was the position in the string of the token - if the token isn't there, we won't add that item to the payload for the XAML view
+				if (entry.Item1 < 1) {
 					continue;
 				}
 

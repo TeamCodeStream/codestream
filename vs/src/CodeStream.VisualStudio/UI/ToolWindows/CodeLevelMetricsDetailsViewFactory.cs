@@ -8,6 +8,11 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
 namespace CodeStream.VisualStudio.UI.ToolWindows {
+
+	/// <summary>
+	/// Responsible for standing up the datamodel / data conversions for creating the actual WPF view when
+	/// triggered from the CodeLens entry
+	/// </summary>
 	[Export(typeof(IViewElementFactory))]
 	[Name("Git commit details UI factory")]
 	[TypeConversion(from: typeof(CodeLevelMetricsData), to: typeof(FrameworkElement))]
