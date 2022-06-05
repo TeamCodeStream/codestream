@@ -64,13 +64,13 @@ namespace CodeStream.VisualStudio.UI.ToolWindows {
 								d?.Dispose();
 							}
 							catch (Exception ex) {
-								Log.Error(ex, $"{nameof(AddCodemarkCommandBase)} event");
+								Log.Error(ex, $"{nameof(ViewMore_OnMouseDown)} event");
 							}
 						});
 					}
 				}
 				catch (Exception ex) {
-					Log.Error(ex, nameof(RequestCodeReviewCommand));
+					Log.Error(ex, nameof(ViewMore_OnMouseDown));
 				}
 			});
 

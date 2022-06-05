@@ -56,7 +56,7 @@ namespace CodeStream.VisualStudio.Commands {
 									d.Dispose();
 								}
 								catch (Exception ex) {
-									Log.Error(ex, $"{nameof(AddCodemarkCommandBase)} event");
+									Log.Error(ex, $"{nameof(RequestCodeReviewCommand)} event");
 								}
 							});
 						}
