@@ -33,7 +33,12 @@ namespace CodeStream.VisualStudio.Core.Process {
 
 			if (additionalEnv != null) {
 				foreach (string key in additionalEnv.Keys) {
-					info.EnvironmentVariables.Add(key, additionalEnv[key]);
+					try {
+						info.EnvironmentVariables[key] = additionalEnv[key];
+					}
+					catch (Exception ex) {
+						Log.Error(ex, $"Error setting environment variable: {key}");
+					}
 				}
 			}
 
