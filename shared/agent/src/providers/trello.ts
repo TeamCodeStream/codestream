@@ -43,8 +43,8 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 	}
 
 	async onConnected(providerInfo?: CSTrelloProviderInfo) {
-		super.onConnected(providerInfo);
-		this._trelloUserId = await this.getMemberId();
+		await super.onConnected(providerInfo);
+		this._trelloUserId = await this.getMemberId(true);
 	}
 
 	@log()
@@ -226,11 +226,13 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 		return { users: body.map(u => ({ ...u, displayName: u.fullName })) };
 	}
 
-	private async getMemberId() {
+	private async getMemberId(dontEnsureConnected: boolean = false) {
 		const tokenResponse = await this.get<{ idMember: string; [key: string]: any }>(
-			`/token/${this.accessToken}?${qs.stringify({ key: this.apiKey, token: this.accessToken })}`
+			`/token/${this.accessToken}?${qs.stringify({ key: this.apiKey, token: this.accessToken })}`,
+			{},
+			{},
+			!dontEnsureConnected
 		);
-
 		return tokenResponse.body.idMember;
 	}
 }

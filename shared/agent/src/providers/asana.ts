@@ -51,8 +51,8 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 	}
 
 	async onConnected(providerInfo?: CSAsanaProviderInfo) {
-		super.onConnected(providerInfo);
-		this._asanaUser = await this.getMe();
+		await super.onConnected(providerInfo);
+		this._asanaUser = await this.getMe(true);
 	}
 
 	@log()
@@ -251,8 +251,13 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 	@log()
 	async moveCard(request: MoveThirdPartyCardRequest) {}
 
-	private async getMe(): Promise<AsanaUser> {
-		const userResponse = await this.get<{ data: AsanaUser }>(`/api/1.0/users/me`);
+	private async getMe(dontEnsureConnected: boolean = false): Promise<AsanaUser> {
+		const userResponse = await this.get<{ data: AsanaUser }>(
+			`/api/1.0/users/me`,
+			{},
+			{},
+			!dontEnsureConnected
+		);
 		return userResponse.body.data;
 	}
 
