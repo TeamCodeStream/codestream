@@ -16,7 +16,7 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 	public class AuthenticationController {
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationController>();
 
-		private readonly ISettingsManager _settingsManager;
+		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
@@ -24,13 +24,13 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 
 		public AuthenticationController(
-			ISettingsManager settingManager,
+			ICodeStreamSettingsManager codeStreamSettingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService,
 			IWebviewUserSettingsService webviewUserSettingsService) {
-			_settingsManager = settingManager;
+			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
@@ -39,12 +39,12 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 		}
 
 		public AuthenticationController(
-			ISettingsManager settingManager,
+			ICodeStreamSettingsManager codeStreamSettingManager,
 			ISessionService sessionService,
 			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService,
 			IWebviewUserSettingsService IWebviewUserSettingsService) {
-			_settingsManager = settingManager;
+			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_eventAggregator = eventAggregator;
 			_credentialsService = credentialsService;
@@ -55,12 +55,12 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			try {
 				ProcessLoginResponse processResponse = null;
 
-				if (!_settingsManager.AutoSignIn || _settingsManager.Email.IsNullOrWhiteSpace()) {
+				if (!_codeStreamSettingsManager.AutoSignIn || _codeStreamSettingsManager.Email.IsNullOrWhiteSpace()) {
 					Log.Debug("no AutoSignIn or Email is missing");
 					return false;
 				}
 
-				var token = await _credentialsService.LoadJsonAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+				var token = await _credentialsService.LoadJsonAsync(_codeStreamSettingsManager.ServerUrl.ToUri(), _codeStreamSettingsManager.Email);
 				if (token != null) {
 					Log.Debug("Attempting to AutoSignIn");
 					try {
@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 						if (!processResponse.Success) {
 							if (!processResponse.ErrorMessage.IsNullOrWhiteSpace() &&
 								Enum.TryParse(processResponse.ErrorMessage, out LoginResult loginResult) && loginResult != LoginResult.VERSION_UNSUPPORTED) {
-								await _credentialsService.DeleteAsync(_settingsManager.ServerUrl.ToUri(), _settingsManager.Email);
+								await _credentialsService.DeleteAsync(_codeStreamSettingsManager.ServerUrl.ToUri(), _codeStreamSettingsManager.Email);
 							}
 							return false;
 						}
@@ -122,8 +122,8 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 			_eventAggregator.Publish(new SessionReadyEvent());
 
 			if (!email.IsNullOrWhiteSpace()) {
-				if (_settingsManager.AutoSignIn) {
-					_credentialsService.SaveJson(_settingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse));
+				if (_codeStreamSettingsManager.AutoSignIn) {
+					_credentialsService.SaveJson(_codeStreamSettingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse));
 				}
 
 				_webviewUserSettingsService.SaveTeamId(_sessionService.SolutionName, GetTeamId(loginResponse));
@@ -133,8 +133,8 @@ namespace CodeStream.VisualStudio.Core.Controllers {
 					Log.Debug("ThreadHelper.JoinableTaskFactory.Run... About to SwitchToMainThreadAsync...");					
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 					Log.Debug("SwitchedToMainThreadAsync");
-					using (var scope = SettingsScope.Create(_settingsManager)) {
-						scope.SettingsManager.Email = email;
+					using (var scope = SettingsScope.Create(_codeStreamSettingsManager)) {
+						scope.CodeStreamSettingsManager.Email = email;
 					}
 				});
 			}			

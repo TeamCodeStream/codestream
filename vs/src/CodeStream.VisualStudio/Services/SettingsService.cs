@@ -16,32 +16,32 @@ namespace CodeStream.VisualStudio.Services {
 	public class SettingsServiceFactory : ISettingsServiceFactory {
 		private static readonly ILogger Log = LogManager.ForContext<SettingsServiceFactory>();
 
-		private volatile ISettingsManager _settingsManager;
+		private volatile ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private static readonly object Locker = new object();
 
 		/// <summary>
 		/// DO NOT call this in another constructor -- it is possible that SOptionsDialogPageAccessor has not been registered yet
 		/// </summary>
 		/// <returns></returns>
-		public ISettingsManager GetOrCreate(string source = null) {
+		public ICodeStreamSettingsManager GetOrCreate(string source = null) {
 			try {
-				if (_settingsManager == null) {
+				if (_codeStreamSettingsManager == null) {
 					lock (Locker) {
-						if (_settingsManager == null) {
+						if (_codeStreamSettingsManager == null) {
 							ThreadHelper.ThrowIfNotOnUIThread();
 							using (Log.CriticalOperation($"{nameof(SettingsServiceFactory)} {nameof(GetOrCreate)}d by source={source}", LogEventLevel.Information)) {
 								var accessor = Package.GetGlobalService(typeof(SSettingsManagerAccessor)) as
 										ISettingsManagerAccessor;
 								Microsoft.Assumes.Present(accessor);
-								_settingsManager = accessor?.GetSettingsManager();
-								return _settingsManager;
+								_codeStreamSettingsManager = accessor?.GetSettingsManager();
+								return _codeStreamSettingsManager;
 							}
 						}
 					}
 				}
 
 				Log.Verbose($"Already {nameof(GetOrCreate)}d (source={source})");
-				return _settingsManager;
+				return _codeStreamSettingsManager;
 			}
 			catch (Exception ex) {
 				Log.Fatal(ex, nameof(GetOrCreate));
@@ -50,7 +50,7 @@ namespace CodeStream.VisualStudio.Services {
 		}
 	}
 
-	public class SettingsManager : ISettingsManager, IOptions {
+	public class CodeStreamSettingsManager : ICodeStreamSettingsManager, IOptions {
 		// once we don't support VS 2017, we'll be able to use something like...
 		// the _lazy.GetValue() method only exists on the v16.0 version of MS.VS.Threading assembly
 
@@ -66,7 +66,7 @@ namespace CodeStream.VisualStudio.Services {
 		//}
 
 		private CodeStreamEnvironmentInfo _environmentInfo;
-		public SettingsManager(IOptionsDialogPage dialogPage) {
+		public CodeStreamSettingsManager(IOptionsDialogPage dialogPage) {
 			DialogPage = dialogPage;
 			DialogPage.LoadSettingsFromStorage();
 		}

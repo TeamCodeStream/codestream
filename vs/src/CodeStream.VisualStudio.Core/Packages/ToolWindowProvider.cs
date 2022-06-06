@@ -12,16 +12,16 @@ namespace CodeStream.VisualStudio.Core.Packages {
 
 	public interface SSettingsManagerAccessor { }
 	public interface ISettingsManagerAccessor {
-		ISettingsManager GetSettingsManager();
+		ICodeStreamSettingsManager GetSettingsManager();
 	}
 
 	public class SettingsManagerAccessor : ISettingsManagerAccessor, SSettingsManagerAccessor {
-		private readonly ISettingsManager _settingsManager;
-		public SettingsManagerAccessor(ISettingsManager settingsManager) {
-			_settingsManager = settingsManager;
+		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
+		public SettingsManagerAccessor(ICodeStreamSettingsManager codeStreamSettingsManager) {
+			_codeStreamSettingsManager = codeStreamSettingsManager;
 		}
-		public ISettingsManager GetSettingsManager() {
-			return _settingsManager;
+		public ICodeStreamSettingsManager GetSettingsManager() {
+			return _codeStreamSettingsManager;
 		}
 	}
 }

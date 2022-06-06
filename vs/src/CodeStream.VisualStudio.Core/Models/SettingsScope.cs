@@ -3,11 +3,11 @@ using CodeStream.VisualStudio.Core.Services;
 
 namespace CodeStream.VisualStudio.Core.Models {
 	public class SettingsScope : IDisposable {
-		public ISettingsManager SettingsManager { get; }
+		public ICodeStreamSettingsManager CodeStreamSettingsManager { get; }
 
 		private readonly bool _pauseNotifyPropertyChanged;
-		private SettingsScope(ISettingsManager settingsManager, bool pauseNotifyPropertyChanged) {
-			SettingsManager = settingsManager;
+		private SettingsScope(ICodeStreamSettingsManager codeStreamSettingsManager, bool pauseNotifyPropertyChanged) {
+			CodeStreamSettingsManager = codeStreamSettingsManager;
 			_pauseNotifyPropertyChanged = pauseNotifyPropertyChanged;
 		}
 
@@ -23,12 +23,12 @@ namespace CodeStream.VisualStudio.Core.Models {
 			if (disposing) {
 				try {
 					// attempt to save the settings to storage
-					SettingsManager?.SaveSettingsToStorage();
+					CodeStreamSettingsManager?.SaveSettingsToStorage();
 				}
 				finally {
 					// if we're paused, attempt to un-pause
 					if (_pauseNotifyPropertyChanged) {
-						SettingsManager?.ResumeNotifications();
+						CodeStreamSettingsManager?.ResumeNotifications();
 					}
 				}
 			}
@@ -36,11 +36,11 @@ namespace CodeStream.VisualStudio.Core.Models {
 			_disposed = true;
 		}
 
-		public static SettingsScope Create(ISettingsManager settingsManager, bool pauseNotifyPropertyChanged = false) {
+		public static SettingsScope Create(ICodeStreamSettingsManager codeStreamSettingsManager, bool pauseNotifyPropertyChanged = false) {
 			if (pauseNotifyPropertyChanged) {
-				settingsManager.PauseNotifications();
+				codeStreamSettingsManager.PauseNotifications();
 			}
-			return new SettingsScope(settingsManager, pauseNotifyPropertyChanged);
+			return new SettingsScope(codeStreamSettingsManager, pauseNotifyPropertyChanged);
 		}
 	}
 }

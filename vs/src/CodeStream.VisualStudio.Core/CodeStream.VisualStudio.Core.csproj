@@ -207,7 +207,7 @@
     <Compile Include="Services\IEditorService.cs" />
     <Compile Include="Services\IIdeService.cs" />
     <Compile Include="Services\ISessionService.cs" />
-    <Compile Include="Services\ISettingsManager.cs" />
+    <Compile Include="Services\ICodeStreamSettingsManager.cs" />
     <Compile Include="Services\ISettingsServiceFactory.cs" />
     <Compile Include="Services\IWpfTextViewCache.cs" />
     <Compile Include="Services\UserSettingsKeys.cs" />

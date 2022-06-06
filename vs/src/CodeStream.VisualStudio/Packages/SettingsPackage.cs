@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Packages {
 	public sealed class SettingsPackage : AsyncPackage, IServiceContainer {
 		private IComponentModel _componentModel;
 		private IOptionsDialogPage _optionsDialogPage;
-		private ISettingsManager _settingsManager;
+		private ICodeStreamSettingsManager _codeStreamSettingsManager;
 
 		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
@@ -35,32 +35,32 @@ namespace CodeStream.VisualStudio.Packages {
 			await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 			// can only get a dialog page from a package
 			_optionsDialogPage = (IOptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
-			_settingsManager = new SettingsManager(_optionsDialogPage);
+			_codeStreamSettingsManager = new CodeStreamSettingsManager(_optionsDialogPage);
 			((IServiceContainer)this).AddService(typeof(SSettingsManagerAccessor), CreateService, true);
 
-			AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
+			AsyncPackageHelper.InitializeLogging(_codeStreamSettingsManager.GetExtensionTraceLevel());
 			AsyncPackageHelper.InitializePackage(GetType().Name);
-			if (_settingsManager?.DialogPage != null) {
-				_settingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
+			if (_codeStreamSettingsManager?.DialogPage != null) {
+				_codeStreamSettingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
 			await base.InitializeAsync(cancellationToken, progress);
 		}
 
 		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
-			if (_settingsManager == null) return;
+			if (_codeStreamSettingsManager == null) return;
 
-			if (args.PropertyName == nameof(_settingsManager.TraceLevel)) {
-				LogManager.SetTraceLevel(_settingsManager.GetExtensionTraceLevel());
+			if (args.PropertyName == nameof(_codeStreamSettingsManager.TraceLevel)) {
+				LogManager.SetTraceLevel(_codeStreamSettingsManager.GetExtensionTraceLevel());
 			}
-			else if (args.PropertyName == nameof(_settingsManager.AutoHideMarkers)) {
+			else if (args.PropertyName == nameof(_codeStreamSettingsManager.AutoHideMarkers)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
 				var eventAggregator = _componentModel.GetService<IEventAggregator>();
 				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
 			}
-			else if (args.PropertyName == nameof(_settingsManager.ShowAvatars) ||
-				args.PropertyName == nameof(_settingsManager.ShowMarkerGlyphs)) {
+			else if (args.PropertyName == nameof(_codeStreamSettingsManager.ShowAvatars) ||
+				args.PropertyName == nameof(_codeStreamSettingsManager.ShowMarkerGlyphs)) {
 				var odp = sender as OptionsDialogPage;
 				if (odp == null) return;
 
@@ -70,22 +70,22 @@ namespace CodeStream.VisualStudio.Packages {
 				);
 
 				switch (args.PropertyName) {
-					case nameof(_settingsManager.ShowAvatars):
+					case nameof(_codeStreamSettingsManager.ShowAvatars):
 						configurationController.ToggleShowAvatars(odp.ShowAvatars);
 						break;
-					case nameof(_settingsManager.ShowMarkerGlyphs):
+					case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
 						configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
 						break;
 				}
 			}
-			else if (args.PropertyName == nameof(_settingsManager.GoldenSignalsInEditorFormat)) {
+			else if (args.PropertyName == nameof(_codeStreamSettingsManager.GoldenSignalsInEditorFormat)) {
 				_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
 			}
-			else if (args.PropertyName == nameof(_settingsManager.ServerUrl) ||
-					 args.PropertyName == nameof(_settingsManager.ProxyStrictSsl) ||
-					 args.PropertyName == nameof(_settingsManager.ProxySupport) ||
-					 args.PropertyName == nameof(_settingsManager.DisableStrictSSL) ||
-					 args.PropertyName == nameof(_settingsManager.ExtraCertificates)) {
+			else if (args.PropertyName == nameof(_codeStreamSettingsManager.ServerUrl) ||
+					 args.PropertyName == nameof(_codeStreamSettingsManager.ProxyStrictSsl) ||
+					 args.PropertyName == nameof(_codeStreamSettingsManager.ProxySupport) ||
+					 args.PropertyName == nameof(_codeStreamSettingsManager.DisableStrictSSL) ||
+					 args.PropertyName == nameof(_codeStreamSettingsManager.ExtraCertificates)) {
 
 				try {
 					var sessionService = _componentModel.GetService<ISessionService>();
@@ -100,7 +100,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private object CreateService(IServiceContainer container, Type serviceType) {
 			if (typeof(SSettingsManagerAccessor) == serviceType)
-				return new SettingsManagerAccessor(_settingsManager);
+				return new SettingsManagerAccessor(_codeStreamSettingsManager);
 
 			return null;
 		}
@@ -112,8 +112,8 @@ namespace CodeStream.VisualStudio.Packages {
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
 
-					if (_settingsManager != null && _settingsManager.DialogPage != null) {
-						_settingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+					if (_codeStreamSettingsManager != null && _codeStreamSettingsManager.DialogPage != null) {
+						_codeStreamSettingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
 					}
 				}
 				catch (Exception) {

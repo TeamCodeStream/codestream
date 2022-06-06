@@ -14,13 +14,13 @@ namespace CodeStream.VisualStudio.Commands {
 
 		private const string DefaultText = "Sign In...";
 		private readonly ISessionService _sessionService;
-		private readonly ISettingsManager _settingsManager;
+		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 
 		private static bool DefaultVisibility = false;
 
-		public UserCommand(ISessionService sessionService, ISettingsManager settingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
+		public UserCommand(ISessionService sessionService, ICodeStreamSettingsManager codeStreamSettingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
 			_sessionService = sessionService;
-			_settingsManager = settingManager;
+			_codeStreamSettingsManager = codeStreamSettingManager;
 
 #if DEBUG
 			// make this visible in DEUBG so we can see the Developer tools command
@@ -92,7 +92,7 @@ namespace CodeStream.VisualStudio.Commands {
 							}
 						case SessionState.UserSignedIn: {
 								var user = _sessionService.User;
-								var env = _settingsManager?.GetUsefulEnvironmentName();
+								var env = _codeStreamSettingsManager?.GetUsefulEnvironmentName();
 								var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
 
 								Visible = true;

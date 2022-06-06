@@ -35,7 +35,7 @@ namespace CodeStream.VisualStudio.Packages {
 
 		private IComponentModel _componentModel;
 		private ISessionService _sessionService;
-		private ISettingsManager _settingsManager;
+		private ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private List<IDisposable> _disposables;
 		private List<VsCommandBase> _commands;
 
@@ -49,9 +49,9 @@ namespace CodeStream.VisualStudio.Packages {
 				_sessionService = _componentModel.GetService<ISessionService>();
 
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsServiceFactory.GetOrCreate(nameof(CommandsPackage));
+				_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(CommandsPackage));
 
-				AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
+				AsyncPackageHelper.InitializeLogging(_codeStreamSettingsManager.GetExtensionTraceLevel());
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
@@ -67,7 +67,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private async Task InitializeCommandsAsync() {
 			try {
 				using (Log.WithMetrics(nameof(InitializeCommandsAsync))) {
-					var userCommand = new UserCommand(_sessionService, _settingsManager);
+					var userCommand = new UserCommand(_sessionService, _codeStreamSettingsManager);
 
 					_commands = new List<VsCommandBase> {
 #if DEBUG

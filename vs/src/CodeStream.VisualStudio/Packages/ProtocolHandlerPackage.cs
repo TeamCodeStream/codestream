@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio.Packages {
 		private IComponentModel _componentModel;
 		private bool _processed;
 		private List<IDisposable> _disposables;
-		private ISettingsManager _settingsManager;
+		private ICodeStreamSettingsManager _codeStreamSettingsManager;
 
 
 		/// <summary>
@@ -46,12 +46,12 @@ namespace CodeStream.VisualStudio.Packages {
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
 				var settingsFactory = _componentModel.GetService<ISettingsServiceFactory>();
-				_settingsManager = settingsFactory.GetOrCreate(nameof(ProtocolPackage));
+				_codeStreamSettingsManager = settingsFactory.GetOrCreate(nameof(ProtocolPackage));
 				var sessionService = _componentModel.GetService<ISessionService>();
 
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-				AsyncPackageHelper.InitializeLogging(_settingsManager.GetExtensionTraceLevel());
+				AsyncPackageHelper.InitializeLogging(_codeStreamSettingsManager.GetExtensionTraceLevel());
 
 				//ensure the ToolWindow is visible
 				var toolWindowProvider = GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
@@ -60,7 +60,7 @@ namespace CodeStream.VisualStudio.Packages {
 				await AsyncPackageHelper.TryTriggerLspActivationAsync(Log);
 				await InfoBarProvider.InitializeAsync(this);
 
-				if (_settingsManager?.AutoSignIn != true) {
+				if (_codeStreamSettingsManager?.AutoSignIn != true) {
 					InfoBarProvider.Instance.ShowInfoBar($"Please enable {Application.Name}'s AutoSignin feature (Tools > Options > CodeStream > Settings) to open this file");
 					return;
 				}

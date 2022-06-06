@@ -32,7 +32,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
 		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
 		private readonly ISessionService _sessionService;
-		private readonly ISettingsManager _settingsManager;
+		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 
 		private readonly ITagAggregator<IGlyphTag> _tagAggregator;
 		private readonly IWpfTextViewHost _wpfTextViewHost;
@@ -51,20 +51,20 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		/// <param name="glyphFactoryProviders"></param>
 		/// <param name="wpfTextViewHost"></param>
 		/// <param name="sessionService"></param>
-		/// <param name="settingsManager"></param>
+		/// <param name="codeStreamSettingsManager"></param>
 		public DocumentMarkMargin(
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
 			IWpfTextViewHost wpfTextViewHost,
 			ISessionService sessionService,
-			ISettingsManager settingsManager) {
+			ICodeStreamSettingsManager codeStreamSettingsManager) {
 			_glyphFactoryProviders = glyphFactoryProviders;
 			_wpfTextViewHost = wpfTextViewHost;
 			_sessionService = sessionService;
-			_settingsManager = settingsManager;
+			_codeStreamSettingsManager = codeStreamSettingsManager;
 			try {
 				Assumes.Present(_sessionService);
-				Assumes.Present(_settingsManager);
+				Assumes.Present(_codeStreamSettingsManager);
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(DocumentMarkMargin));
@@ -129,7 +129,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
 
 						InitializeMargin();
-						if (_sessionService.AreMarkerGlyphsVisible || !_settingsManager.AutoHideMarkers) {
+						if (_sessionService.AreMarkerGlyphsVisible || !_codeStreamSettingsManager.AutoHideMarkers) {
 							TryShowMargin();
 							RefreshMargin();
 						}
@@ -163,7 +163,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 			
-			if (_settingsManager.AutoHideMarkers) return;
+			if (_codeStreamSettingsManager.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
@@ -181,7 +181,7 @@ namespace CodeStream.VisualStudio.UI.Margins {
 		public bool TryShowMargin() => this.TryShow();
 
 		public bool TryHideMargin() {
-			if (!_settingsManager.AutoHideMarkers) return false;
+			if (!_codeStreamSettingsManager.AutoHideMarkers) return false;
 
 			return this.TryHide();
 		}

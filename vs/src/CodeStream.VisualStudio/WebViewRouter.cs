@@ -27,7 +27,7 @@ namespace CodeStream.VisualStudio {
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
-		private readonly ISettingsManager _settingsManager;
+		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
 		private readonly IIdeService _ideService;
@@ -51,7 +51,7 @@ namespace CodeStream.VisualStudio {
 			_webviewUserSettingsService = webviewUserSettingsService;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
-			_settingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewRouter));
+			_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(WebViewRouter));
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
 			_ideService = ideService;
@@ -231,7 +231,7 @@ namespace CodeStream.VisualStudio {
 
 											using (var scope = _browserService.CreateScope(message)) {
 												try {
-													@params = await _codeStreamAgent.GetBootstrapAsync(_settingsManager.GetSettings(), _sessionService.State, _sessionService.IsReady);
+													@params = await _codeStreamAgent.GetBootstrapAsync(_codeStreamSettingsManager.GetSettings(), _sessionService.State, _sessionService.IsReady);
 												}
 												catch (Exception ex) {
 													Log.Debug(ex, nameof(BootstrapInHostRequestType));
@@ -407,7 +407,7 @@ namespace CodeStream.VisualStudio {
 #if DEBUG
 												Log.LocalWarning(message.ToJson());
 #endif
-												//using (var scope = SettingsScope.Create(_settingsManager))
+												//using (var scope = SettingsScope.Create(_codeStreamSettingsManager))
 												//{
 												//    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
 												//    if (@params.Name == "showMarkerGlyphs")
@@ -424,9 +424,9 @@ namespace CodeStream.VisualStudio {
 												try {
 													var @params = message.Params.ToObject<UpdateServerUrlRequest>();
 													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params.ServerUrl}");
-													using (var settingsScope = SettingsScope.Create(_settingsManager, true)) {
-														settingsScope.SettingsManager.ServerUrl = @params.ServerUrl;
-														settingsScope.SettingsManager.DisableStrictSSL = @params.DisableStrictSSL ?? false;
+													using (var settingsScope = SettingsScope.Create(_codeStreamSettingsManager, true)) {
+														settingsScope.CodeStreamSettingsManager.ServerUrl = @params.ServerUrl;
+														settingsScope.CodeStreamSettingsManager.DisableStrictSSL = @params.DisableStrictSSL ?? false;
 													}
 
 													await _codeStreamAgent.SetServerUrlAsync(@params.ServerUrl, @params.DisableStrictSSL, @params.Environment);
