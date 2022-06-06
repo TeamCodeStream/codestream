@@ -79,7 +79,7 @@ namespace CodeStream.VisualStudio.Core.LanguageServer {
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = codeStreamSettingsManager.GetAgentTraceLevel().ToJsonValue(),
+                    TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
 #endif
 					Proxy = settingsManager.Proxy,
 					ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),

@@ -144,7 +144,7 @@ namespace CodeStream.VisualStudio.Services {
 				TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 				IsDebugging = true
 #else
-                TraceLevel = codeStreamSettingsManager.GetAgentTraceLevel().ToJsonValue()
+                TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue()
 #endif
 
 			});
