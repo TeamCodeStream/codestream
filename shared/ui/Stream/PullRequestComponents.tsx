@@ -1184,6 +1184,27 @@ export const PRCodeCommentWrapper = styled.div`
 			display: none;
 		}
 	}
+	${PRReactions} {
+		border: none;
+		margin: -5px 0 15px 35px;
+		.mine {
+			background: rgba(90, 127, 255, 0.08);
+		}
+	}
+	${PRReaction} {
+		padding: 1px 8px;
+		margin: 0 5px 5px;
+		border: 1px solid var(--base-border-color);
+		border-radius: 5px;
+		.mine {
+			background: rgba(90, 127, 255, 0.08);
+		}
+	}
+	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+		${PRReactions} {
+			margin-left: -5px;
+		}
+	}
 `;
 
 export const PRKebabIcon = styled.span`

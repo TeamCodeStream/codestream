@@ -66,6 +66,10 @@ export const PRReaction = styled.div`
 			color: var(--text-color-highlight);
 		}
 	}
+	&.mine {
+		background: rgba(90, 127, 255, 0.08);
+		border: 1px solid rgba(90, 127, 255, 0.18);
+	}
 `;
 
 export const PullRequestReactButton = styled((props: Props) => {
