@@ -1633,11 +1633,13 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				}
 			  }`;
 
+		console.warn("eric a");
 		const response = await this.mutate<any>(query, {
 			subjectId: request.subjectId,
 			content: request.content
 		});
 
+		console.warn("eric b", response);
 		return this.handleResponse(request.pullRequestId, {
 			directives: [
 				{

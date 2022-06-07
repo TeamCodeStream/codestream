@@ -472,6 +472,39 @@ export function reduceProviderPullRequests(
 										.find((_: any) => _.content === directive.data.reaction.content)
 										.users.nodes.push(directive.data.reaction.user);
 								}
+								// adding reactions to comments or replies
+								if (!node) {
+									// comments node array
+									let comments = pr.timelineItems.nodes.find(
+										_ => _.__typename === "PullRequestReview"
+									)?.comments?.nodes;
+
+									for (let i = 0; i < comments.length; i++) {
+										// If found id match on comment, update pr reactionGroup user for comment
+										if (comments[i]?.id === directive.data.subject.id) {
+											pr.timelineItems.nodes
+												.find(_ => _.__typename === "PullRequestReview")
+												?.comments?.nodes[i].reactionGroups.find(
+													(_: any) => _.content === directive.data.reaction.content
+												)
+												.users.nodes.push(directive.data.reaction.user);
+											// No id match on comment, so try deeper search on replies associated with comment
+										} else {
+											let replies = comments[i]?.replies;
+											for (let j = 0; j < replies.length; j++) {
+												// If found id match on reply, update pr reactionGroup user for reply
+												if (replies[j]?.id === directive.data.subject.id) {
+													pr.timelineItems.nodes
+														.find(_ => _.__typename === "PullRequestReview")
+														?.comments?.nodes[i].replies[j].reactionGroups.find(
+															(_: any) => _.content === directive.data.reaction.content
+														)
+														.users.nodes.push(directive.data.reaction.user);
+												}
+											}
+										}
+									}
+								}
 							}
 						} else if (directive.type === "removeReaction") {
 							if (directive.data.subject.__typename === "PullRequest") {
@@ -488,6 +521,56 @@ export function reduceProviderPullRequests(
 									).users.nodes = node.reactionGroups
 										.find((_: any) => _.content === directive.data.reaction.content)
 										.users.nodes.filter((_: any) => _.login !== directive.data.reaction.user.login);
+								}
+								// remove reactions to comments or replies
+								if (!node) {
+									// comments node array
+									let comments = pr.timelineItems.nodes.find(
+										_ => _.__typename === "PullRequestReview"
+									)?.comments?.nodes;
+
+									for (let i = 0; i < comments.length; i++) {
+										// If found id match on comment, remove user from reactionGroup
+										if (comments[i]?.id === directive.data.subject.id) {
+											const reactionGroupIndex = pr.timelineItems.nodes
+												.find(_ => _.__typename === "PullRequestReview")
+												?.comments?.nodes[i]?.reactionGroups.find(
+													(_: any) => _.content === directive.data.reaction.content
+												)
+												.users.nodes.findIndex(
+													(_: any) => _.login === directive.data.reaction.user.login
+												);
+											pr.timelineItems.nodes
+												.find(_ => _.__typename === "PullRequestReview")
+												?.comments?.nodes[i]?.reactionGroups.find(
+													(_: any) => _.content === directive.data.reaction.content
+												)
+												.users.nodes.splice(reactionGroupIndex, 1);
+											// No id match on comment, so try deeper search on replies associated with comment
+										} else {
+											let replies = comments[i]?.replies;
+											for (let j = 0; j < replies.length; j++) {
+												// If found id match on reply, remove user from reactionGroup
+												if (replies[j]?.id === directive.data.subject.id) {
+													const reactionGroupIndex = pr.timelineItems.nodes
+														.find(_ => _.__typename === "PullRequestReview")
+														?.comments?.nodes[i].replies[j].reactionGroups.find(
+															(_: any) => _.content === directive.data.reaction.content
+														)
+														.users.nodes.findIndex(
+															(_: any) => _.login === directive.data.reaction.user.login
+														);
+
+													pr.timelineItems.nodes
+														.find(_ => _.__typename === "PullRequestReview")
+														?.comments?.nodes[i].replies[j].reactionGroups.find(
+															(_: any) => _.content === directive.data.reaction.content
+														)
+														.users.nodes.splice(reactionGroupIndex, 1);
+												}
+											}
+										}
+									}
 								}
 							}
 						} else if (directive.type === "removeComment") {

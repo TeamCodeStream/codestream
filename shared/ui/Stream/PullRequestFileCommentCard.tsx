@@ -385,7 +385,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 					) : (
 						<>
 							<PRThreadedCommentHeader>
-								<b>{author.login}</b>
+								<b>{(comment.author || GHOST).login}</b>
 								<Timestamp time={comment.createdAt} relative />
 								<PRActionIcons>
 									<PRAuthorBadges pr={pr} node={comment} isPending={review.state === "PENDING"} />
