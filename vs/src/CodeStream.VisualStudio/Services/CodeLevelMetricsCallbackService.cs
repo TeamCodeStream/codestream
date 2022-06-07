@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.Settings;
 using Process = System.Diagnostics.Process;
 
 namespace CodeStream.VisualStudio.Services {
@@ -62,6 +63,9 @@ namespace CodeStream.VisualStudio.Services {
 				});
 
 			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+			var roamingSettingsManager = serviceProvider.GetService(typeof(SVsSettingsPersistenceManager)) as ISettingsManager;
+
+			roamingSettingsManager.TryGetValue("TextEditorGlobalOptions.IsCodeLensEnabled", out bool IsItEnabledOrNot);
 		}
 
 		public string GetEditorFormat() {

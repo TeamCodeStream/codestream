@@ -68,6 +68,7 @@
     <Compile Include="CodeLevelMetricStatus.cs" />
     <Compile Include="ICodeLevelMetricsCallbackService.cs" />
     <Compile Include="IRemoteCodeLens.cs" />
+    <Compile Include="IVisualStudioSettingsManager.cs" />
     <Compile Include="PipeName.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
