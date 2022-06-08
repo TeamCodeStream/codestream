@@ -75,8 +75,6 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		);
 		setSubmittingReview(false);
 	};
-	console.warn("eric props.pullRequest", props.pullRequest);
-	console.warn("eric props.thirdPartyPrObject", props.thirdPartyPrObject);
 
 	return (
 		<>
@@ -135,10 +133,7 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 						key="files-changed"
 						pr={props.thirdPartyPrObject as FetchThirdPartyPullRequestPullRequest}
 						fetch={() => {
-							props.fetchOnePR(
-								props.thirdPartyPrObject.providerId || props.pullRequest?.providerId,
-								props.thirdPartyPrObject.id || props.pullRequest?.id
-							);
+							props.fetchOnePR(props.thirdPartyPrObject.providerId, props.thirdPartyPrObject.id);
 						}}
 						setIsLoadingMessage={() => {}}
 						sidebarView={true}
