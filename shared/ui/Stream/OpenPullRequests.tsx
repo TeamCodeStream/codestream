@@ -1566,17 +1566,11 @@ export const OpenPullRequests = React.memo((props: Props) => {
 												count={0}
 												isLoading={isLoadingPRs || index === isLoadingPRGroup}
 											></PaneNodeName>
-											{!collapsed && provider?.id && renderQueryGroup(provider.id)}
+											{!collapsed && renderQueryGroup(provider.id)}
 										</PaneNode>
 									);
 							  })
-							: PRConnectedProviders.map(provider => {
-									if (provider?.id) {
-										return renderQueryGroup(provider.id);
-									} else {
-										return null;
-									}
-							  })}
+							: PRConnectedProviders.map(provider => renderQueryGroup(provider.id))}
 					</PaneBody>
 				)}
 			</>
