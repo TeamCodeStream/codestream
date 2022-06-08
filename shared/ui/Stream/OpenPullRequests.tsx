@@ -760,6 +760,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (!derivedState.maximized) {
 			dispatch(setPaneMaximized("open-pull-requests", !derivedState.maximized));
 		}
+
 		// if we have an expanded PR diffs in the sidebar, collapse it
 		if (pr.id === derivedState.expandedPullRequestId) {
 			dispatch(clearCurrentPullRequest());
@@ -779,8 +780,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setCurrentGroupIndex(groupIndex);
 				fetchOnePR(pr.providerId, prId);
 
-
-				const nonCustomQueries = ["Waiting on my Review", "Assigned to Me", "Created by Me", "Recent", "From URL"];
+				const nonCustomQueries = [
+					"Waiting on my Review",
+					"Assigned to Me",
+					"Created by Me",
+					"Recent",
+					"From URL"
+				];
 				let telemetryQueryName = queryName;
 				if (!nonCustomQueries.includes(queryName)) {
 					telemetryQueryName = "Custom";
@@ -1215,7 +1221,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			if (data) {
 				return;
 			}
-		} else {
+		}
+
+		if (
+			!providerPullRequests &&
+			derivedState.currentPullRequestProviderId! &&
+			derivedState.currentPullRequestId
+		) {
 			fetchOnePR(derivedState.currentPullRequestProviderId!, derivedState.currentPullRequestId);
 			console.warn(`could not find match for idExact=${derivedState.currentPullRequestIdExact}`);
 		}
@@ -1430,7 +1442,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							{!query.hidden &&
 								prGroup &&
 								prGroup.map((pr: any, index) => {
-									return renderPrGroup(providerId, pr, index, groupIndex, query?.name);
+									return renderPrGroup(
+										providerId || query?.providerId,
+										pr,
+										index,
+										groupIndex,
+										query?.name
+									);
 								})}
 						</PaneNode>
 					);
@@ -1548,11 +1566,17 @@ export const OpenPullRequests = React.memo((props: Props) => {
 												count={0}
 												isLoading={isLoadingPRs || index === isLoadingPRGroup}
 											></PaneNodeName>
-											{!collapsed && renderQueryGroup(provider.id)}
+											{!collapsed && provider?.id && renderQueryGroup(provider.id)}
 										</PaneNode>
 									);
 							  })
-							: PRConnectedProviders.map(provider => renderQueryGroup(provider.id))}
+							: PRConnectedProviders.map(provider => {
+									if (provider?.id) {
+										return renderQueryGroup(provider.id);
+									} else {
+										return null;
+									}
+							  })}
 					</PaneBody>
 				)}
 			</>
