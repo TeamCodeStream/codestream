@@ -61,7 +61,7 @@ namespace CodeStream.VisualStudio.CodeLens {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CodeStream Code Level Metrics.
+        ///   Looks up a localized string similar to CodeStream Code-Level Metrics.
         /// </summary>
         internal static string CodeStreamCodeLevelMetrics {
             get {
