@@ -8,6 +8,9 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared;
+using CodeStream.VisualStudio.Shared.Enums;
+using CodeStream.VisualStudio.Shared.Interfaces;
+using CodeStream.VisualStudio.Shared.Models;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
@@ -83,10 +86,10 @@ namespace CodeStream.VisualStudio.CodeLens {
 
 				// TODO - Probably gonna need a better case-insensitive string replace here
 				var formatted = Regex.Replace(_editorFormatString,
-					Regex.Escape(CodeLevelMetricConstants.Tokens.Throughput), throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.ErrorsPerMinute), errors is null ? "n/a" : $"{errors.ToFixed(3)}epm", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(CodeLevelMetricConstants.Tokens.Since), _metrics.SinceDateFormatted, RegexOptions.IgnoreCase);
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.Throughput), throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorsPerMinute), errors is null ? "n/a" : $"{errors.ToFixed(3)}epm", RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.SinceDateFormatted, RegexOptions.IgnoreCase);
 
 				return new CodeLensDataPointDescriptor {
 					Description = formatted,
@@ -125,10 +128,10 @@ namespace CodeStream.VisualStudio.CodeLens {
 			//Using string positions of the tokens, figure out an "order" of the tokens. Since IndexOf is a positive integer if its there,
 			//we're assuming that will be sufficient
 			var formatString = _editorFormatString.ToLower();
-			var throughputPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
-			var averageDurationPosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
-			var errorRatePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.ErrorsPerMinute, StringComparison.OrdinalIgnoreCase);
-			var sincePosition = formatString.IndexOf(CodeLevelMetricConstants.Tokens.Since, StringComparison.OrdinalIgnoreCase);
+			var throughputPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
+			var averageDurationPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
+			var errorRatePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.ErrorsPerMinute, StringComparison.OrdinalIgnoreCase);
+			var sincePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Since, StringComparison.OrdinalIgnoreCase);
 
 			var configuredPositions = new List<Tuple<int, string, string>> {
 				new Tuple<int, string, string>(throughputPosition, "Throughput", throughput is null ? "n/a" : $"{throughput.RequestsPerMinute.ToFixed(3)}rpm"),

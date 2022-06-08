@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using CodeStream.VisualStudio.Core.Models;
 
-namespace CodeStream.VisualStudio.Shared {
+namespace CodeStream.VisualStudio.Shared.Models {
 	/// <summary>
 	/// Model that represents the necessary data coming from the telemetry, plus our special detail
 	/// model which represents which tokens to render (and in what order) for the XAML view.
@@ -16,11 +16,5 @@ namespace CodeStream.VisualStudio.Shared {
 		public IList<CodeLevelMetricsDetail> Details { get; set; } = new List<CodeLevelMetricsDetail>();
 		public string NewRelicEntityGuid { get; set; }
 		public MetricTimesliceNameMapping MetricTimeSliceNameMapping { get; set; }
-	}
-
-	public class CodeLevelMetricsDetail {
-		public int Order { get; set; }
-		public string Header { get; set; }
-		public string Value { get; set; }
 	}
 }

@@ -92,7 +92,6 @@
     <Compile Include="Services\AuthenticationService.cs" />
     <Compile Include="Services\AuthenticationServiceFactory.cs" />
     <Compile Include="Services\CodeLevelMetricsCallbackService.cs" />
-    <Compile Include="Services\CodeLensConnection.cs" />
     <Compile Include="Services\CodeStreamAgentService.cs" />
     <Compile Include="Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="Services\CodeStreamService.cs" />
@@ -616,6 +615,12 @@
     <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">
       <Project>{1a29b558-c55a-4769-ad37-69f903ed6eb3}</Project>
       <Name>CodeStream.VisualStudio.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Services\CodeStream.VisualStudio.Services.csproj">
+      <Project>{31BD46B5-C00E-4C79-9F9D-03768DAB918D}</Project>
+      <Name>CodeStream.VisualStudio.Services</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+      <IncludeOutputGroupsInVSIXLocalOnly>DebugSymbolsProjectOutputGroup%3b</IncludeOutputGroupsInVSIXLocalOnly>
     </ProjectReference>
     <ProjectReference Include="..\CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.csproj">
       <Project>{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}</Project>

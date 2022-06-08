@@ -17,7 +17,10 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.Settings;
+using CodeStream.VisualStudio.Shared.Enums;
+using CodeStream.VisualStudio.Shared.Interfaces;
+using CodeStream.VisualStudio.Shared.Models;
+using Constants = CodeStream.VisualStudio.Shared.Constants;
 using Process = System.Diagnostics.Process;
 
 namespace CodeStream.VisualStudio.Services {
@@ -63,9 +66,6 @@ namespace CodeStream.VisualStudio.Services {
 				});
 
 			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-			var roamingSettingsManager = serviceProvider.GetService(typeof(SVsSettingsPersistenceManager)) as ISettingsManager;
-
-			roamingSettingsManager.TryGetValue("TextEditorGlobalOptions.IsCodeLensEnabled", out bool IsItEnabledOrNot);
 		}
 
 		public string GetEditorFormat() {
@@ -79,9 +79,9 @@ namespace CodeStream.VisualStudio.Services {
 
 			//example: "avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}"
 			var formatString = GetEditorFormat().ToLower();
-			var includeThroughput = formatString.Contains(CodeLevelMetricConstants.Tokens.Throughput);
-			var includeAverageDuration = formatString.Contains(CodeLevelMetricConstants.Tokens.AverageDuration);
-			var includeErrorRate = formatString.Contains(CodeLevelMetricConstants.Tokens.ErrorsPerMinute);
+			var includeThroughput = formatString.Contains(Constants.CodeLevelMetrics.Tokens.Throughput);
+			var includeAverageDuration = formatString.Contains(Constants.CodeLevelMetrics.Tokens.AverageDuration);
+			var includeErrorRate = formatString.Contains(Constants.CodeLevelMetrics.Tokens.ErrorsPerMinute);
 
 			try {
 				return await _codeStreamAgentService.GetFileLevelTelemetryAsync(
@@ -120,7 +120,7 @@ namespace CodeStream.VisualStudio.Services {
 		public async Task InitializeRpcAsync(string dataPointId) {
 			try {
 				var stream = new NamedPipeServerStream(
-					PipeName.Get(Process.GetCurrentProcess().Id),
+					RpcPipeNames.ForCodeLens(Process.GetCurrentProcess().Id),
 					PipeDirection.InOut,
 					NamedPipeServerStream.MaxAllowedServerInstances,
 					PipeTransmissionMode.Byte,

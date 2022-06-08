@@ -3,22 +3,21 @@ using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared;
+using CodeStream.VisualStudio.Shared.Interfaces;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Serilog;
 
 namespace CodeStream.VisualStudio.CodeLens {
 	[Export(typeof(IAsyncCodeLensDataPointProvider))]
-	[Name(Id)]
+	[Name(Constants.CodeLevelMetrics.Provider.Id)]
 	[ContentType("CSharp")]
-	[LocalizedName(typeof(Resources), Id)]
+	[LocalizedName(typeof(Resources), Constants.CodeLevelMetrics.Provider.Id)]
 	[Priority(210)]
 	public class CodeLevelMetricsProvider : IAsyncCodeLensDataPointProvider {
-		internal const string Id = "CodeStreamCodeLevelMetrics";
 		private readonly Lazy<ICodeLensCallbackService> _callbackService;
 		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricsProvider>();
 

@@ -1,4 +1,4 @@
-﻿namespace CodeStream.VisualStudio.Shared {
+﻿namespace CodeStream.VisualStudio.Shared.Interfaces {
 	public interface IRemoteCodeLens {
 		void Refresh();
 	}

@@ -1,8 +1,7 @@
-﻿using System.IO;
-using System.IO.Pipes;
+﻿using System.IO.Pipes;
 using StreamJsonRpc;
 
-namespace CodeStream.VisualStudio.Services {
+namespace CodeStream.VisualStudio.Shared.Models {
 
 	/// <summary>
 	/// Responsible for handling the connections from Visual Studio down to the CodeLens provider
