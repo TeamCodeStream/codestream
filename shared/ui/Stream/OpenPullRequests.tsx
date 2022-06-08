@@ -801,13 +801,15 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	};
 
 	const fetchOnePR = async (providerId: string, pullRequestId: string, message?: string) => {
-		//GL ids can be a stringified object, order of parameters can fluctuate.  So a
-		//simple string comparison is not sufficent, we have to convert to an object if possible
-		//and extract the id param.  For everything else that is not GL, we just use the standard pr.id
-		let prId = expandedPrIdObject(pullRequestId);
-		setIndividualLoadingPR(prId);
-		(await dispatch(getPullRequestConversationsFromProvider(providerId, pullRequestId))) as any;
-		setIndividualLoadingPR("");
+		if (providerId && pullRequestId) {
+			//GL ids can be a stringified object, order of parameters can fluctuate.  So a
+			//simple string comparison is not sufficent, we have to convert to an object if possible
+			//and extract the id param.  For everything else that is not GL, we just use the standard pr.id
+			let prId = expandedPrIdObject(pullRequestId);
+			setIndividualLoadingPR(prId);
+			(await dispatch(getPullRequestConversationsFromProvider(providerId, pullRequestId))) as any;
+			setIndividualLoadingPR("");
+		}
 	};
 
 	const checkout = async (event, prToCheckout, cantCheckoutReason) => {
@@ -1442,13 +1444,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							{!query.hidden &&
 								prGroup &&
 								prGroup.map((pr: any, index) => {
-									return renderPrGroup(
-										providerId || query?.providerId,
-										pr,
-										index,
-										groupIndex,
-										query?.name
-									);
+									return renderPrGroup(providerId, pr, index, groupIndex, query?.name);
 								})}
 						</PaneNode>
 					);
