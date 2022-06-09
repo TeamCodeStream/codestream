@@ -48,9 +48,12 @@ namespace CodeStream.VisualStudio.Packages {
 				_codeStreamSettingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
-			_vsSettingsManager = await GetServiceAsync(typeof(IVisualStudioSettingsManager)) as IVisualStudioSettingsManager;
+			_vsSettingsManager = _componentModel.GetService<IVisualStudioSettingsManager>();
 			if (_vsSettingsManager != null) {
-				_vsSettingsManager.CodeLevelMetricsSettingChangedAsync += OnCodeLensSettingsChangedAsync;
+				_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.IsCodeLensEnabled).SettingChangedAsync +=
+					OnCodeLensSettingsChangedAsync;
+				_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.CodeLensDisabledProviders).SettingChangedAsync +=
+					OnCodeLensSettingsChangedAsync;
 			}
 			
 			await base.InitializeAsync(cancellationToken, progress);
@@ -139,11 +142,15 @@ namespace CodeStream.VisualStudio.Packages {
 					}
 
 					if (_vsSettingsManager != null) {
-						_vsSettingsManager.CodeLevelMetricsSettingChangedAsync -= OnCodeLensSettingsChangedAsync;
+						_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.IsCodeLensEnabled)
+								.SettingChangedAsync -=
+							OnCodeLensSettingsChangedAsync;
+						_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.CodeLensDisabledProviders)
+								.SettingChangedAsync -=
+							OnCodeLensSettingsChangedAsync;
 					}
 				}
 				catch (Exception) {
-
 				}
 			}
 

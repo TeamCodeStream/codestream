@@ -6,6 +6,6 @@ namespace CodeStream.VisualStudio.Shared.Interfaces {
 		bool IsCodeLevelMetricsEnabled();
 		bool IsCodeLensEnabled();
 
-		event PropertyChangedAsyncEventHandler CodeLevelMetricsSettingChangedAsync;
+		ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting);
 	}
 }

@@ -25,11 +25,12 @@ export const WarningBoxRoot = styled.div`
 interface Props {
 	items: WarningOrError[];
 	dismissCallback?: (event: React.SyntheticEvent<Element, Event>) => any;
+	style?: any;
 }
 
 export const WarningBox = (props: Props) => {
 	return (
-		<WarningBoxRoot>
+		<WarningBoxRoot style={props.style}>
 			<Icon name="alert" className="alert" />
 			<div className="message">
 				{props.items.map(_ => {

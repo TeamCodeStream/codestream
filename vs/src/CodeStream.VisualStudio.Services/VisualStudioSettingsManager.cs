@@ -23,17 +23,9 @@ namespace CodeStream.VisualStudio.Services {
 		[Guid("9B164E40-C3A2-4363-9BC5-EB4039DEF653")]
 		private class SVsSettingsPersistenceManager { }
 
-		public event PropertyChangedAsyncEventHandler CodeLevelMetricsSettingChangedAsync;
-
 		[ImportingConstructor]
 		public VisualStudioSettingsManager([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
 			_roamingSettingsManager = serviceProvider.GetService(typeof(SVsSettingsPersistenceManager)) as ISettingsManager;
-
-			GetPropertyToMonitor(VisualStudioSetting.CodeLensDisabledProviders).SettingChangedAsync +=
-				CodeLevelMetricsSettingChangedAsync;
-			GetPropertyToMonitor(VisualStudioSetting.IsCodeLensEnabled).SettingChangedAsync +=
-				CodeLevelMetricsSettingChangedAsync;
-
 		}
 
 		private T GetSetting<T>(VisualStudioSetting setting) {
@@ -50,7 +42,7 @@ namespace CodeStream.VisualStudio.Services {
 			return value;
 		}
 
-		private ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting) {
+		public ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting) {
 			var attribute = setting.GetAttribute();
 
 			return _roamingSettingsManager.GetSubset(attribute.Path);

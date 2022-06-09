@@ -712,7 +712,7 @@ export const Observability = React.memo((props: Props) => {
 										{!derivedState.hideCodeLevelMetricsInstructions &&
 											!derivedState.showGoldenSignalsInEditor &&
 											derivedState.isVS && (
-												<WarningBox
+												<WarningBox style={{ margin: "20px" }}
 													items={[
 														{
 															message: `Enable CodeLenses to see code-level metrics. 
