@@ -315,6 +315,7 @@ namespace CodeStream.VisualStudio.Services {
 						Configs = new Configs {
 							Email = settingsManager.Email,
 							ShowAvatars = settingsManager.ShowAvatars,
+							ShowGoldenSignalsInEditor = true, // figure out how to get it, 
 							ServerUrl = settingsManager.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},
@@ -363,6 +364,7 @@ namespace CodeStream.VisualStudio.Services {
 						Configs = new Configs {
 							Email = (string)state["email"],
 							ShowAvatars = settings.Options.ShowAvatars,
+							ShowGoldenSignalsInEditor = true, // figure out how to get it, 
 							ServerUrl = settings.Options.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},

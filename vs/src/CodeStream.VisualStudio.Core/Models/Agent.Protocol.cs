@@ -174,6 +174,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public bool AutoHideMarkers { get; set; }
 		public bool ShowMarkerGlyphs { get; set; }
 		public TraceLevel TraceLevel { get; set; }
+		public bool ShowGoldenSignalsInEditor { get; set; }
 	}
 
 	public class BootstrapPartialRequest { }

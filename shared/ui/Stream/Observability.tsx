@@ -48,6 +48,7 @@ import { Provider } from "./IntegrationsPanel";
 import { Link } from "./Link";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { WarningBox } from "./WarningBox";
 
 interface Props {
 	paneState: PaneState;
@@ -188,9 +189,18 @@ export const Observability = React.memo((props: Props) => {
 			sessionStart: state.context.sessionStart,
 			newRelicIsConnected,
 			hiddenPaneNodes,
-			observabilityRepoEntities: preferences.observabilityRepoEntities || EMPTY_ARRAY
+			observabilityRepoEntities: preferences.observabilityRepoEntities || EMPTY_ARRAY,
+			showGoldenSignalsInEditor: state.configs.showGoldenSignalsInEditor,
+			isVS: state.ide.name === "VS",
+			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions
 		};
 	}, shallowEqual);
+
+	// 	setTimeout(() => {
+	// 	this._webview!.notify(HostDidChangeConfigNotificationType, {
+	// 		showGoldenSignalsInEditor: false
+	// 	});
+	// }, 20000);
 
 	const [noAccess, setNoAccess] = useState<boolean>(false);
 	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
@@ -699,6 +709,23 @@ export const Observability = React.memo((props: Props) => {
 												</Button>
 											</NoEntitiesWrapper>
 										)}
+										{!derivedState.hideCodeLevelMetricsInstructions &&
+											!derivedState.showGoldenSignalsInEditor &&
+											derivedState.isVS && (
+												<WarningBox
+													items={[
+														{
+															message: `Enable CodeLenses to see code-level metrics. 
+														Go to Tools > Options > Text Editor > All Languages > CodeLens or [learn more about code-level metrics]`,
+															helpUrl:
+																"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+														}
+													]}
+													dismissCallback={e => {
+														dispatch(setUserPreference(["hideCodeLevelMetricsInstructions"], true));
+													}}
+												/>
+											)}
 										{hasEntities && renderAssignments()}
 										{observabilityRepos.length == 0 && (
 											<>

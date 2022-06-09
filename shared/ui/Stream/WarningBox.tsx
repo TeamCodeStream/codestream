@@ -1,4 +1,4 @@
-import React from "react";
+import React, { SyntheticEvent } from "react";
 import styled from "styled-components";
 import { WarningOrError } from "../protocols/agent/agent.protocol.nr";
 import Icon from "./Icon";
@@ -24,6 +24,7 @@ export const WarningBoxRoot = styled.div`
 
 interface Props {
 	items: WarningOrError[];
+	dismissCallback?: (event: React.SyntheticEvent<Element, Event>) => any;
 }
 
 export const WarningBox = (props: Props) => {
@@ -63,6 +64,7 @@ export const WarningBox = (props: Props) => {
 					});
 				})}
 			</div>
+			{props.dismissCallback && <Icon name="x" onClick={props.dismissCallback} />}
 		</WarningBoxRoot>
 	);
 };
