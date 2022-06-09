@@ -14,8 +14,11 @@ using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.Shared.Enums;
+using CodeStream.VisualStudio.Shared.Interfaces;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Packages {
 	[ProvideService(typeof(SSettingsManagerAccessor))]
@@ -27,8 +30,9 @@ namespace CodeStream.VisualStudio.Packages {
 		private IComponentModel _componentModel;
 		private IOptionsDialogPage _optionsDialogPage;
 		private ICodeStreamSettingsManager _codeStreamSettingsManager;
+		private IVisualStudioSettingsManager _vsSettingsManager;
 
-		protected override async System.Threading.Tasks.Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 			Assumes.Present(_componentModel);
 
@@ -44,7 +48,25 @@ namespace CodeStream.VisualStudio.Packages {
 				_codeStreamSettingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
+			_vsSettingsManager = await GetServiceAsync(typeof(IVisualStudioSettingsManager)) as IVisualStudioSettingsManager;
+			if (_vsSettingsManager != null) {
+				_vsSettingsManager.CodeLevelMetricsSettingChangedAsync += OnCodeLensSettingsChangedAsync;
+			}
+			
 			await base.InitializeAsync(cancellationToken, progress);
+		}
+
+		private Task OnCodeLensSettingsChangedAsync(object sender, PropertyChangedEventArgs args) {
+			var currentCodeLensSetting = _vsSettingsManager.IsCodeLevelMetricsEnabled();
+
+			var configurationController = new ConfigurationController(
+				_componentModel.GetService<IEventAggregator>(),
+				_componentModel.GetService<IBrowserService>()
+			);
+
+			configurationController.ToggleCodeLens(currentCodeLensSetting);
+
+			return Task.CompletedTask;
 		}
 
 		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
@@ -112,8 +134,12 @@ namespace CodeStream.VisualStudio.Packages {
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
 
-					if (_codeStreamSettingsManager != null && _codeStreamSettingsManager.DialogPage != null) {
+					if (_codeStreamSettingsManager?.DialogPage != null) {
 						_codeStreamSettingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
+					}
+
+					if (_vsSettingsManager != null) {
+						_vsSettingsManager.CodeLevelMetricsSettingChangedAsync -= OnCodeLensSettingsChangedAsync;
 					}
 				}
 				catch (Exception) {

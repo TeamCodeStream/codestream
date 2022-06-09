@@ -17,6 +17,7 @@ using Task = System.Threading.Tasks.Task;
 using TextDocumentIdentifier = CodeStream.VisualStudio.Core.Models.TextDocumentIdentifier;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Shared.Interfaces;
 #if DEBUG
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 #endif
@@ -32,17 +33,22 @@ namespace CodeStream.VisualStudio.Services {
 		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 		private readonly IHttpClientService _httpClientService;
+		private readonly IVisualStudioSettingsManager _vsSettingsManager;
 
 		[ImportingConstructor]
 		public CodeStreamAgentService(
 			IEventAggregator eventAggregator,
 			ISessionService sessionService,
 			ISettingsServiceFactory settingsServiceFactory,
-			IHttpClientService httpClientService) {
+			IHttpClientService httpClientService,
+			IVisualStudioSettingsManager vsSettingsManager) {
+
 			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
 			_httpClientService = httpClientService;
+			_vsSettingsManager = vsSettingsManager;
+
 			try {
 				if (_eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
 					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
@@ -315,7 +321,7 @@ namespace CodeStream.VisualStudio.Services {
 						Configs = new Configs {
 							Email = settingsManager.Email,
 							ShowAvatars = settingsManager.ShowAvatars,
-							ShowGoldenSignalsInEditor = true, // figure out how to get it, 
+							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
 							ServerUrl = settingsManager.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},
@@ -364,7 +370,7 @@ namespace CodeStream.VisualStudio.Services {
 						Configs = new Configs {
 							Email = (string)state["email"],
 							ShowAvatars = settings.Options.ShowAvatars,
-							ShowGoldenSignalsInEditor = true, // figure out how to get it, 
+							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
 							ServerUrl = settings.Options.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
 						},

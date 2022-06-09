@@ -37,5 +37,15 @@ namespace CodeStream.VisualStudio.Controllers {
 				}
 			});
 		}
+
+		public void ToggleCodeLens(bool value) {
+			Log.Debug($"{nameof(ToggleCodeLens)} Value={value}");
+
+			_browserService.Notify(new HostDidChangeConfigNotificationType {
+				Params = new HostDidChangeConfigNotification {
+					ShowGoldenSignalsInEditor = value
+				}
+			});
+		}
 	}
 }

@@ -23,9 +23,17 @@ namespace CodeStream.VisualStudio.Services {
 		[Guid("9B164E40-C3A2-4363-9BC5-EB4039DEF653")]
 		private class SVsSettingsPersistenceManager { }
 
+		public event PropertyChangedAsyncEventHandler CodeLevelMetricsSettingChangedAsync;
+
 		[ImportingConstructor]
 		public VisualStudioSettingsManager([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
 			_roamingSettingsManager = serviceProvider.GetService(typeof(SVsSettingsPersistenceManager)) as ISettingsManager;
+
+			GetPropertyToMonitor(VisualStudioSetting.CodeLensDisabledProviders).SettingChangedAsync +=
+				CodeLevelMetricsSettingChangedAsync;
+			GetPropertyToMonitor(VisualStudioSetting.IsCodeLensEnabled).SettingChangedAsync +=
+				CodeLevelMetricsSettingChangedAsync;
+
 		}
 
 		private T GetSetting<T>(VisualStudioSetting setting) {
@@ -42,15 +50,23 @@ namespace CodeStream.VisualStudio.Services {
 			return value;
 		}
 
-		public bool IsCodeLevelMetricsEnabled() {
-			var isCodeLevelMetricsDisabled = GetSetting<string[]>(VisualStudioSetting.CodeLensDisabledProviders)
-				.Any(x => x.Equals(Constants.CodeLevelMetrics.Provider.Id));
+		private ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting) {
+			var attribute = setting.GetAttribute();
 
-			return IsCodeLensEnabled() && !isCodeLevelMetricsDisabled;
+			return _roamingSettingsManager.GetSubset(attribute.Path);
+		}
+
+		public bool IsCodeLevelMetricsEnabled() {
+			return IsCodeLensEnabled() && !IsCodeLevelMetricsDisabled();
 		}
 
 		public bool IsCodeLensEnabled() {
 			return GetSetting<bool>(VisualStudioSetting.IsCodeLensEnabled);
+		}
+
+		private bool IsCodeLevelMetricsDisabled() {
+			return GetSetting<string[]>(VisualStudioSetting.CodeLensDisabledProviders)
+				.Any(x => x.Equals(Constants.CodeLevelMetrics.Provider.Id));
 		}
 	}
 }

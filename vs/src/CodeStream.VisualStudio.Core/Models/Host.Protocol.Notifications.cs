@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 		public bool Debug { get; set; }
 		public string Email { get; set; }
 		public string ServerUrl { get; set; }
+		public bool ShowGoldenSignalsInEditor { get; set; }
 	}
 
 	public class HostDidChangeConfigNotificationType : NotificationType<HostDidChangeConfigNotification> {
