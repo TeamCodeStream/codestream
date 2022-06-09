@@ -196,12 +196,6 @@ export const Observability = React.memo((props: Props) => {
 		};
 	}, shallowEqual);
 
-	// 	setTimeout(() => {
-	// 	this._webview!.notify(HostDidChangeConfigNotificationType, {
-	// 		showGoldenSignalsInEditor: false
-	// 	});
-	// }, 20000);
-
 	const [noAccess, setNoAccess] = useState<boolean>(false);
 	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
 		undefined
