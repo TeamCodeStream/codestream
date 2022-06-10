@@ -89,7 +89,7 @@ import {
 	Span,
 	SpanRequest
 } from "./newrelic/newrelic.types";
-import { generateSpanQuery } from "./newrelic/spanQuery";
+import { generateClmSpanDataExistsQuery, generateSpanQuery } from "./newrelic/spanQuery";
 import { ThirdPartyIssueProviderBase } from "./provider";
 
 const Cache = require("timed-cache");
@@ -803,6 +803,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 
 				const uniqueEntities: Entity[] = [];
+				let hasCodeLevelMetricSpanData = undefined;
 				if (applicationAssociations && applicationAssociations.length) {
 					for (const entity of applicationAssociations) {
 						if (!entity.relatedEntities?.results) continue;
@@ -826,11 +827,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						}
 					}
 				}
+				if (hasRepoAssociation && uniqueEntities.length) {
+					// is there any NR CLM span data for any entity tied to this repo?
+					const respositoryEntitySpanDataExistsResponse = await this.findClmSpanDataExists(
+						uniqueEntities?.map(_ => _.guid)
+					);
+					hasCodeLevelMetricSpanData =
+						respositoryEntitySpanDataExistsResponse?.find(_ => _["entity.guid"] != null) != null;
+				}
 				response.repos.push({
 					repoId: repo.id!,
 					repoName: folderName,
 					repoRemote: remote,
 					hasRepoAssociation: hasRepoAssociation,
+					hasCodeLevelMetricSpanData: hasCodeLevelMetricSpanData,
 					// @ts-ignore
 					entityAccounts: uniqueEntities
 						.map(entity => {
@@ -2842,6 +2852,32 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				error: ex
 			});
 			return undefined;
+		}
+	}
+
+	protected async findClmSpanDataExists(
+		newRelicGuids: string[]
+	): Promise<
+		{
+			name: string;
+			"code.function": string;
+			"entity.guid": string;
+		}[]
+	> {
+		try {
+			const results = await Promise.all(
+				newRelicGuids.map(async _ => {
+					const response = await this.query(generateClmSpanDataExistsQuery(_), {
+						accountId: NewRelicProvider.parseId(_)?.accountId
+					});
+					return response?.actor?.account?.nrql?.results[0];
+				})
+			);
+
+			return results;
+		} catch (ex) {
+			Logger.error(ex);
+			return [];
 		}
 	}
 

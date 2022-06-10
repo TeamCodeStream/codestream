@@ -698,11 +698,13 @@ export class WebviewController implements Disposable {
 	private onConfigurationChanged(webview: WebviewLike, e: ConfigurationChangeEvent) {
 		if (
 			configuration.changed(e, configuration.name("traceLevel").value) ||
-			configuration.changed(e, configuration.name("showAvatars").value)
+			configuration.changed(e, configuration.name("showAvatars").value) ||
+			configuration.changed(e, configuration.name("goldenSignalsInEditor").value)
 		) {
 			webview.notify(HostDidChangeConfigNotificationType, {
 				debug: Logger.isDebugging,
-				showHeadshots: Container.config.showAvatars
+				showHeadshots: Container.config.showAvatars,
+				showGoldenSignalsInEditor: Container.config.goldenSignalsInEditor
 			});
 		}
 	}

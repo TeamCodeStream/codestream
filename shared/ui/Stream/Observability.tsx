@@ -703,10 +703,13 @@ export const Observability = React.memo((props: Props) => {
 												</Button>
 											</NoEntitiesWrapper>
 										)}
-										{!derivedState.hideCodeLevelMetricsInstructions &&
+										{!loadingEntities &&
+											!derivedState.hideCodeLevelMetricsInstructions &&
 											!derivedState.showGoldenSignalsInEditor &&
-											derivedState.isVS && (
-												<WarningBox style={{ margin: "20px" }}
+											derivedState.isVS &&
+											observabilityRepos?.find(_ => _.hasCodeLevelMetricSpanData) && (
+												<WarningBox
+													style={{ margin: "20px" }}
 													items={[
 														{
 															message: `Enable CodeLenses to see code-level metrics. 

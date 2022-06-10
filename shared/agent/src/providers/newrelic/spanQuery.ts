@@ -92,3 +92,16 @@ export function generateSpanQuery(
 			}
 	  }`;
 }
+
+export function generateClmSpanDataExistsQuery(newRelicEntityGuid: string) {
+	const query = `query GetSpans($accountId:Int!) {
+			actor {
+				account(id: $accountId) {
+					nrql(query: "SELECT name,code.function,\`entity.guid\` from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND code.function is not NULL SINCE 30 minutes AGO LIMIT 1") {
+						results
+					}				 
+				}
+			}
+	  }`;
+	return query;
+}
