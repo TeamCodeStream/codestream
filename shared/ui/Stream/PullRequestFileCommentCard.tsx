@@ -116,8 +116,6 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 	const [pendingLineNavigationAndUriChange, setPendingLineNavigationAndUriChange] = useState(false);
 	const [commentRange, setCommentRange] = useState({});
 
-	console.warn("eric textEditorUri", derivedState.textEditorUri);
-
 	useDidMount(() => {
 		if (clickedComment) {
 			handleDiffClick();
@@ -141,6 +139,11 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		}
 	}, [derivedState.documentMarkers]);
 
+	//This hook and the one below it are similar.  This one handles
+	//navigating to a new line after a diff click if the uri is already
+	//open/doesn't change in the IDE.  Will not hit the navigate-to-line endpoint
+	//unless all conditionals are met, and sets pendingLineNavigation to false
+	//regardless.
 	useEffect(() => {
 		async function navigateToLineNumber() {
 			const { textEditorUri } = derivedState;
@@ -161,6 +164,9 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		}
 	}, [pendingLineNavigation]);
 
+	//This hook and the one above it are similar.  This one handles
+	//navigating to a new line after a diff click if the uri is not open/changes
+	//from a different one in the IDE
 	useEffect(() => {
 		async function navigateToLineNumber() {
 			const { textEditorUri } = derivedState;
