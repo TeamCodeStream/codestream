@@ -42,6 +42,7 @@ import {
 import { EditorScrollToNotificationType } from "../ipc/webview.protocol";
 import { Range, Position } from "vscode-languageserver-types";
 import { useDidMount } from "../utilities/hooks";
+import { isEmpty } from "lodash-es";
 
 const PRBranchContainer = styled.div`
 	display: inline-block;
@@ -112,7 +113,10 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 	const [isResolving, setIsResolving] = useState(false);
 	const [currentRepoRoot, setCurrentRepoRoot] = useState("");
 	const [pendingLineNavigation, setPendingLineNavigation] = useState(false);
+	const [pendingLineNavigationAndUriChange, setPendingLineNavigationAndUriChange] = useState(false);
 	const [commentRange, setCommentRange] = useState({});
+
+	console.warn("eric textEditorUri", derivedState.textEditorUri);
 
 	useDidMount(() => {
 		if (clickedComment) {
@@ -121,32 +125,6 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			myRef?.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 		}
 	});
-
-	useEffect(() => {
-		async function navigateToLineNumber() {
-			const { textEditorUri } = derivedState;
-			const isDiff = textEditorUri?.startsWith("codestream-diff://");
-			if (textEditorUri && isDiff && commentRange) {
-				// await HostApi.instance.send(EditorHighlightRangeRequestType, {
-				// 	uri: textEditorUri,
-				// 	//@ts-ignore
-				// 	range: commentRange,
-				// 	highlight: true
-				// });
-
-				await HostApi.instance.notify(EditorScrollToNotificationType, {
-					uri: textEditorUri,
-					//@ts-ignore
-					position: Position.create(commentRange?.start?.line, 0)
-				});
-			}
-			setPendingLineNavigation(false);
-		}
-
-		if (pendingLineNavigation) {
-			navigateToLineNumber();
-		}
-	}, [pendingLineNavigation]);
 
 	useEffect(() => {
 		if (
@@ -163,34 +141,44 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		}
 	}, [derivedState.documentMarkers]);
 
-	const doneEditingComment = id => {
-		setEditingComments({ ...editingComments, [id]: false });
-	};
+	useEffect(() => {
+		async function navigateToLineNumber() {
+			const { textEditorUri } = derivedState;
+			const isDiff = textEditorUri?.startsWith("codestream-diff://");
+			if (textEditorUri && isDiff && !isEmpty(commentRange)) {
+				await HostApi.instance.notify(EditorScrollToNotificationType, {
+					uri: textEditorUri,
+					//@ts-ignore
+					position: Position.create(commentRange?.start?.line, 0)
+				});
+				setPendingLineNavigationAndUriChange(false);
+			}
+			setPendingLineNavigation(false);
+		}
 
-	const handleTextInputFocus = async (databaseCommentId: number) => {
-		setOpenComments({
-			...openComments,
-			[databaseCommentId]: true
-		});
-	};
+		if (pendingLineNavigation) {
+			navigateToLineNumber();
+		}
+	}, [pendingLineNavigation]);
 
-	const setEditingComment = (comment, value) => {
-		setEditingComments({
-			...editingComments,
-			[comment.id]: value
-		});
-		setPendingComments({
-			...pendingComments,
-			[comment.id]: value ? comment.body : ""
-		});
-	};
+	useEffect(() => {
+		async function navigateToLineNumber() {
+			const { textEditorUri } = derivedState;
+			const isDiff = textEditorUri?.startsWith("codestream-diff://");
+			if (textEditorUri && isDiff && !isEmpty(commentRange)) {
+				await HostApi.instance.notify(EditorScrollToNotificationType, {
+					uri: textEditorUri,
+					//@ts-ignore
+					position: Position.create(commentRange?.start?.line, 0)
+				});
+				setPendingLineNavigationAndUriChange(false);
+			}
+		}
 
-	const expandComment = id => {
-		setExpandedComments({
-			...expandedComments,
-			[id]: !expandedComments[id]
-		});
-	};
+		if (pendingLineNavigationAndUriChange) {
+			navigateToLineNumber();
+		}
+	}, [derivedState.textEditorUri, commentRange]);
 
 	const handleDiffClick = async () => {
 		const request = {
@@ -221,9 +209,8 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			Host: pr && pr.providerId
 		});
 
-		setTimeout(() => {
-			setPendingLineNavigation(true);
-		}, 1000);
+		setPendingLineNavigation(true);
+		setPendingLineNavigationAndUriChange(true);
 	};
 
 	const handleOpenFile = async () => {
@@ -367,6 +354,35 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			/>
 		);
 	}
+
+	const doneEditingComment = id => {
+		setEditingComments({ ...editingComments, [id]: false });
+	};
+
+	const handleTextInputFocus = async (databaseCommentId: number) => {
+		setOpenComments({
+			...openComments,
+			[databaseCommentId]: true
+		});
+	};
+
+	const setEditingComment = (comment, value) => {
+		setEditingComments({
+			...editingComments,
+			[comment.id]: value
+		});
+		setPendingComments({
+			...pendingComments,
+			[comment.id]: value ? comment.body : ""
+		});
+	};
+
+	const expandComment = id => {
+		setExpandedComments({
+			...expandedComments,
+			[id]: !expandedComments[id]
+		});
+	};
 
 	return (
 		<div ref={myRef} id={`comment_card_${comment.id}`}>
