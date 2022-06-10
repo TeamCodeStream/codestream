@@ -833,7 +833,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						uniqueEntities?.map(_ => _.guid)
 					);
 					hasCodeLevelMetricSpanData =
-						respositoryEntitySpanDataExistsResponse?.find(_ => _["entity.guid"] != null) != null;
+						respositoryEntitySpanDataExistsResponse?.find(_ => _ && _["entity.guid"] != null) != null;
 				}
 				response.repos.push({
 					repoId: repo.id!,

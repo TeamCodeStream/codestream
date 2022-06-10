@@ -20,6 +20,13 @@ export const WarningBoxRoot = styled.div`
 	.message {
 		margin-left: 10px;
 	}
+	.icon.dismiss {
+		display: inline-block;
+		margin-top: -35px;
+	}
+	.icon.dismiss:hover {
+		cursor: pointer;
+	}
 `;
 
 interface Props {
@@ -65,7 +72,7 @@ export const WarningBox = (props: Props) => {
 					});
 				})}
 			</div>
-			{props.dismissCallback && <Icon name="x" onClick={props.dismissCallback} />}
+			{props.dismissCallback && <Icon name="x" className="dismiss" onClick={props.dismissCallback} />}
 		</WarningBoxRoot>
 	);
 };
