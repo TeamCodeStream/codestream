@@ -23,15 +23,13 @@ import {
 	FetchProviderDefaultPullRequestsType,
 	ThirdPartyProviderConfig,
 	UpdateTeamSettingsRequestType,
-	FetchThirdPartyPullRequestPullRequest,
 	SwitchBranchRequestType,
 	GetReposScmRequestType
 } from "@codestream/protocols/agent";
 import {
-	NewPullRequestNotificationType,
-	OpenUrlRequestType,
 	WebviewPanels,
-	EditorRevealRangeRequestType
+	ReviewCloseDiffRequestType,
+	OpenUrlRequestType
 } from "@codestream/protocols/webview";
 import { Button } from "../src/components/Button";
 import {
@@ -47,9 +45,7 @@ import { setUserPreference, openPanel } from "./actions";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { confirmPopup } from "./Confirm";
 import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
-
 import { PullRequestExpandedSidebar } from "./PullRequestExpandedSidebar";
-
 import { PullRequestQuery } from "@codestream/protocols/api";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import {
@@ -760,6 +756,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (!derivedState.maximized) {
 			dispatch(setPaneMaximized("open-pull-requests", !derivedState.maximized));
 		}
+
+		HostApi.instance.send(ReviewCloseDiffRequestType, {});
 
 		// if we have an expanded PR diffs in the sidebar, collapse it
 		if (pr.id === derivedState.expandedPullRequestId) {
