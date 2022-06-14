@@ -962,9 +962,11 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 				// if the error was specific to the sharing step, just continue
 				// https://trello.com/c/ZoSRHGVi/3171-bug-submitting-a-codemark-while-in-review-mode-stays-on-the-codemark-compose-form#comment-5e6199467d3fb86590a942ac
 				if (!isCreateCodemarkError(error) || error.reason === "create") {
-					const message = `There was an error creating the codemark.${
-						!isCreateCodemarkError(error) ? ` (${error.toString()})` : ""
-					}`;
+					const message =
+						error?.message ||
+						`There was an error creating the codemark.${
+							!isCreateCodemarkError(error) ? ` (${error.toString()})` : ""
+						}`;
 					this.setState({ codemarkFormError: message });
 					return;
 				}

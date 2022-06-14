@@ -91,6 +91,7 @@ export function isLegacyNewCodemarkAttributes(
 
 export interface CreateCodemarkError {
 	reason: "share" | "create";
+	message?: string;
 }
 
 export function isCreateCodemarkError(object: any): object is CreateCodemarkError {
@@ -202,7 +203,13 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 				: "Error creating a codemark",
 			{ message: error.toString() }
 		);
-		throw { reason: "create" } as CreateCodemarkError;
+
+		let regex = /(?<=\:)(.*?)(?=\:)/;
+		let userFriendlyMessage = regex.exec(error?.message);
+		throw {
+			reason: "create",
+			message: userFriendlyMessage ? userFriendlyMessage[0] : ""
+		} as CreateCodemarkError;
 	}
 };
 
