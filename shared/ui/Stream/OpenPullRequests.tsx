@@ -487,6 +487,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [derivedState.myPullRequests]);
 
 	useEffect(() => {
+		HostApi.instance.send(ReviewCloseDiffRequestType, {});
+	}, [derivedState.expandedPullRequestId]);
+
+	useEffect(() => {
 		if (!mountedRef.current) return;
 		const newQueries = {
 			...defaultQueries,
@@ -756,8 +760,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (!derivedState.maximized) {
 			dispatch(setPaneMaximized("open-pull-requests", !derivedState.maximized));
 		}
-
-		HostApi.instance.send(ReviewCloseDiffRequestType, {});
 
 		// if we have an expanded PR diffs in the sidebar, collapse it
 		if (pr.id === derivedState.expandedPullRequestId) {

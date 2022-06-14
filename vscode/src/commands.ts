@@ -345,9 +345,7 @@ export class Commands implements Disposable {
 			const uri = Uri.parse(e.document.uri.toString(false));
 
 			if (uri.scheme === "codestream-diff") {
-				// FIXME -- this is where we should close the tab, but vscode
-				// doesn't provide the right API call yet to do that
-				await e.show(e.viewColumn);
+				await window.showTextDocument(e.document, e.viewColumn);
 				await commands.executeCommand("workbench.action.closeActiveEditor");
 			}
 		}
