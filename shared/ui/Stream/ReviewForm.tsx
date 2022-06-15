@@ -223,7 +223,10 @@ interface State {
 	includeSaved: boolean;
 	includeStaged: boolean;
 	excludeCommit: { [sha: string]: boolean };
-	startCommit: string;
+	// -2 = saved, -1 = staged, 0...N = commit index
+	topSelectionIndex: number;
+	bottomSelectionIndex: number;
+	startCommit: string | undefined;
 	// if set, a SHA that represents a "hard start" to the review changeset
 	prevEndCommit: string;
 	unsavedFiles: string[];
@@ -286,8 +289,10 @@ class ReviewForm extends React.Component<Props, State> {
 			excludedFiles: {},
 			includeSaved: !props.currentReviewOptions?.includeLatestCommit,
 			includeStaged: !props.currentReviewOptions?.includeLatestCommit,
+			topSelectionIndex: props.currentReviewOptions?.includeLatestCommit ? 0 : -2,
+			bottomSelectionIndex: props.currentReviewOptions?.includeLatestCommit ? 0 : -1,
 			excludeCommit: {},
-			startCommit: "",
+			startCommit: undefined,
 			prevEndCommit: "",
 			unsavedFiles: props.unsavedFiles,
 			commitListLength: 10,
@@ -373,7 +378,7 @@ class ReviewForm extends React.Component<Props, State> {
 			if (scmInfo.scm) {
 				const repoId: string = scmInfo.scm.repoId || "";
 				const repoName = this.props.repos[repoId] ? this.props.repos[repoId].name : "";
-				this.setState({ scmInfo, repoName, startCommit: "" }, () => {
+				this.setState({ scmInfo, repoName, startCommit: undefined }, () => {
 					this.handleRepoChange(uri, callback);
 				});
 			} else {
@@ -502,13 +507,25 @@ class ReviewForm extends React.Component<Props, State> {
 				teamMates,
 				currentUser,
 				isEditing,
+				isAmending,
 				inviteUsersOnTheFly,
 				blameMap = {},
 				editingReview
 			} = this.props;
-			const { includeSaved, includeStaged, startCommit, prevEndCommit } = this.state;
+			const {
+				includeSaved,
+				includeStaged,
+				topSelectionIndex,
+				repoStatus,
+				startCommit,
+				prevEndCommit
+			} = this.state;
 			const includeLatestCommit =
 				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
+
+			const commits = repoStatus?.scm?.commits;
+			const endCommit =
+				commits != null && topSelectionIndex >= 0 ? commits[topSelectionIndex].sha : undefined;
 
 			const uri = repoUri || this.state.repoUri;
 			let statusInfo: GetRepoScmStatusResponse;
@@ -516,6 +533,7 @@ class ReviewForm extends React.Component<Props, State> {
 				statusInfo = await HostApi.instance.send(GetRepoScmStatusRequestType, {
 					uri,
 					startCommit,
+					endCommit,
 					includeStaged,
 					includeSaved,
 					currentUserEmail: currentUser.email,
@@ -608,7 +626,57 @@ class ReviewForm extends React.Component<Props, State> {
 			if (!startCommit && statusInfo.scm && statusInfo.scm.startCommit) {
 				let limitedLength: number | undefined = undefined;
 
-				this.setChangeStart(statusInfo.scm.startCommit);
+				const startCommitIndex = this.getRowIndex(statusInfo.scm.startCommit);
+				if (startCommitIndex != undefined && startCommitIndex >= 1) {
+					const excludeCommit: { [sha: string]: boolean } = {};
+					statusInfo.scm.commits?.forEach((commit, index) => {
+						excludeCommit[commit.sha] = index >= startCommitIndex;
+					});
+
+					this.setState(
+						{
+							bottomSelectionIndex: startCommitIndex - 1,
+							startCommit: statusInfo.scm.startCommit,
+							excludeCommit
+						},
+						() => this.handleRepoChange()
+					);
+				} else {
+					const hasSavedFiles = (statusInfo?.scm?.savedFiles?.length || 0) > 0;
+					const hasStagedFiles = (statusInfo?.scm?.stagedFiles?.length || 0) > 0;
+					const excludeCommit: { [sha: string]: boolean } = {};
+					if (!hasStagedFiles && !hasSavedFiles) {
+						statusInfo.scm.commits?.forEach((commit, index) => {
+							excludeCommit[commit.sha] = index > 0;
+						});
+
+						this.setState(
+							{
+								topSelectionIndex: 0,
+								bottomSelectionIndex: 0,
+								startCommit: statusInfo.scm.commits && statusInfo.scm.commits[0]?.sha,
+								excludeCommit
+							},
+							() => this.handleRepoChange()
+						);
+					} else if (!hasStagedFiles && this.state.bottomSelectionIndex === -1) {
+						statusInfo.scm.commits?.forEach(commit => {
+							excludeCommit[commit.sha] = true;
+						});
+						this.setState({
+							bottomSelectionIndex: -2,
+							excludeCommit
+						});
+					} else if (!hasSavedFiles && this.state.topSelectionIndex === -2) {
+						statusInfo.scm.commits?.forEach(commit => {
+							excludeCommit[commit.sha] = true;
+						});
+						this.setState({
+							topSelectionIndex: -1,
+							excludeCommit
+						});
+					}
+				}
 
 				if (
 					includeLatestCommit &&
@@ -637,10 +705,12 @@ class ReviewForm extends React.Component<Props, State> {
 					}
 				}
 			}
-			// if (isAmending && statusInfo.scm && statusInfo.scm.branch !== this.state.editingReviewBranch) {
-			// 	this.setState({ isLoadingScm: false, scmError: true });
-			// 	return;
-			// }
+
+			if (isAmending && startCommit) {
+				this.setState({
+					bottomSelectionIndex: (statusInfo?.scm?.commits?.length || 0) - 1
+				});
+			}
 
 			if (statusInfo.scm) {
 				const authorsBlameData = {};
@@ -796,6 +866,7 @@ class ReviewForm extends React.Component<Props, State> {
 			selectedTags,
 			repoStatus,
 			startCommit,
+			topSelectionIndex,
 			excludeCommit,
 			excludedFiles,
 			allReviewersMustApprove,
@@ -867,6 +938,8 @@ class ReviewForm extends React.Component<Props, State> {
 							repoId: scm!.repoId,
 							scm,
 							startCommit,
+							endCommit:
+								topSelectionIndex > 0 ? this.getRowIdentifier(topSelectionIndex) : undefined,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),
 							// new files will originally have excludedFiles[file] = true
@@ -918,6 +991,8 @@ class ReviewForm extends React.Component<Props, State> {
 						{
 							scm,
 							startCommit,
+							endCommit:
+								topSelectionIndex > 0 ? this.getRowIdentifier(topSelectionIndex) : undefined,
 							excludeCommit,
 							excludedFiles: keyFilter(excludedFiles),
 							// new files will originally have excludedFiles[file] = true
@@ -1417,99 +1492,194 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ ...settings }, () => this.handleRepoChange());
 	};
 
-	handleClickChangeStart = (event: React.SyntheticEvent, sha: string) => {
+	handleClickChangeSelectionRange = (event: React.SyntheticEvent, identifier: string) => {
 		const target = event.target as HTMLElement;
 		if (target.tagName === "A") return;
-		this.setChangeStart(sha, () => this.handleRepoChange());
+		this.changeSelectionRange(identifier, () => this.handleRepoChange());
 	};
 
-	setChangeStart = (sha: string, callback?) => {
+	changeSelectionRange = (identifier: string, callback?) => {
 		if (!this.state.repoStatus) return;
 		const { scm } = this.state.repoStatus;
+
 		if (!scm) return;
 		const { commits } = scm;
 		if (!commits) return;
 
-		// are we turning it on, or turning it off? checkbox=true means we're including
-		const exclude = !this.state.excludeCommit[sha];
+		const { isAmending } = this.props;
+		const { topSelectionIndex, bottomSelectionIndex } = this.state;
+		const hasStagedFiles = scm.stagedFiles.length > 0;
+		let newTopSelectionIndex, newBottomSelectionIndex;
+		const index = this.getRowIndex(identifier);
+		if (index == null) return;
+
+		if (isAmending) {
+			if (index === topSelectionIndex && index < commits.length - 1) {
+				// deselecting top of selection, unless it's the last bottom row
+				newTopSelectionIndex = index + 1;
+				if (!hasStagedFiles && newTopSelectionIndex === -1) {
+					// deselected "saved", and there is no "staged"
+					newTopSelectionIndex = 0;
+				}
+			} else {
+				newTopSelectionIndex = index;
+			}
+			newBottomSelectionIndex = bottomSelectionIndex;
+		} else {
+			if (index < topSelectionIndex) {
+				// expanding selection up
+				newTopSelectionIndex = index;
+				newBottomSelectionIndex = bottomSelectionIndex;
+			} else if (index > bottomSelectionIndex) {
+				// expanding selection down
+				newTopSelectionIndex = topSelectionIndex;
+				newBottomSelectionIndex = index;
+			} else if (index === topSelectionIndex && index < bottomSelectionIndex) {
+				// deselecting top row, if more than one row is selected
+				newTopSelectionIndex = topSelectionIndex + 1;
+				if (!hasStagedFiles && newTopSelectionIndex === -1) {
+					// deselected "saved", and there is no "staged"
+					newTopSelectionIndex = 0;
+				}
+				newBottomSelectionIndex = bottomSelectionIndex;
+			} else if (index === bottomSelectionIndex && index > topSelectionIndex) {
+				// deselecting bottom row, if more than one row is selected
+				newTopSelectionIndex = topSelectionIndex;
+				newBottomSelectionIndex = bottomSelectionIndex - 1;
+				if (!hasStagedFiles && newBottomSelectionIndex === -1) {
+					// deselected top commit, and there is no "staged"
+					newBottomSelectionIndex = -2;
+				}
+			} else {
+				// within the current selection
+				newTopSelectionIndex = index;
+				newBottomSelectionIndex = index;
+			}
+		}
 
 		const excludeCommit: { [sha: string]: boolean } = {};
-		let newValue = false;
-		let startCommit = "";
 		commits.forEach((commit, index) => {
-			// turning it on
-			if (exclude) {
-				if (commit.sha === sha) {
-					// this one, plus all others after will be excluded
-					newValue = true;
-
-					// the commit to diff against is this one, since
-					// we don't want to include this (or any prior)
-					// in the review
-					startCommit = sha;
-				}
-				excludeCommit[commit.sha] = newValue;
-			}
-			// turning it off
-			else {
-				excludeCommit[commit.sha] = newValue;
-				if (commit.sha === sha) {
-					// all others after this will be excluded
-					newValue = true;
-					// start commit is the parent of this one
-					if (commits[index + 1]) startCommit = commits[index + 1].sha;
-					else startCommit = commit.sha + "^";
-				}
+			if (index < newTopSelectionIndex) {
+				excludeCommit[commit.sha] = true;
+			} else if (index === newTopSelectionIndex) {
+				excludeCommit[commit.sha] = false;
+			} else if (newBottomSelectionIndex != null && index <= newBottomSelectionIndex) {
+				excludeCommit[commit.sha] = false;
+			} else {
+				excludeCommit[commit.sha] = true;
 			}
 		});
 
-		// if the start commit isn't in the commit list, set it to
-		// the passed-in value, which might be the parent of the first commit
-		if (!startCommit) startCommit = sha;
-
-		this.setState({ startCommit, excludeCommit }, callback);
-	};
-
-	toggleSaved = () => {
-		if (this.state.includeSaved) {
-			this.changeScmState({ includeSaved: false, includeStaged: true });
-		} else {
-			this.changeScmState({ includeSaved: true, includeStaged: true });
+		let startCommitIndex = 0;
+		if (newBottomSelectionIndex >= 0) {
+			startCommitIndex = newBottomSelectionIndex + 1;
+		} else if (newTopSelectionIndex >= 0) {
+			startCommitIndex = newTopSelectionIndex + 1;
 		}
-	};
 
-	toggleStaged = () => {
-		if (this.state.includeStaged) {
-			this.changeScmState({ includeSaved: false, includeStaged: false });
+		let startCommit;
+		if (commits[startCommitIndex]) {
+			startCommit = commits[startCommitIndex].sha;
 		} else {
-			this.changeScmState({ includeSaved: false, includeStaged: true });
+			startCommit = commits[startCommitIndex - 1].sha + "^";
 		}
+
+		this.setState(
+			{
+				includeSaved: newTopSelectionIndex <= -2,
+				includeStaged: newTopSelectionIndex <= -1,
+				topSelectionIndex: newTopSelectionIndex,
+				bottomSelectionIndex: newBottomSelectionIndex,
+				startCommit,
+				excludeCommit
+			},
+			callback
+		);
 	};
 
-	dimBelow = (id?: string) => {
+	getRowIdentifier(index: number) {
+		if (index === -2) {
+			return "saved";
+		} else if (index === -1) {
+			return "staged";
+		} else {
+			const { repoStatus } = this.state;
+			const commits = repoStatus?.scm?.commits;
+			if (commits == null) return;
+			return commits[index]?.sha;
+		}
+	}
+
+	getRowIndex(identifier: string) {
+		if (identifier === "saved") {
+			return -2;
+		} else if (identifier === "staged") {
+			return -1;
+		} else {
+			const { repoStatus } = this.state;
+			const commits = repoStatus?.scm?.commits;
+			if (commits == null) return;
+			const index = commits.findIndex(c => c.sha === identifier);
+			if (index < 0) return;
+			return index;
+		}
+	}
+
+	highlightFromSelectionEdgeTo(index?: number) {
+		const { topSelectionIndex, bottomSelectionIndex, repoStatus } = this.state;
+		const topIndex = Math.min(
+			topSelectionIndex,
+			bottomSelectionIndex,
+			index != null ? index : Number.MAX_SAFE_INTEGER
+		);
+		const bottomIndex = Math.max(
+			topSelectionIndex,
+			bottomSelectionIndex,
+			index != null ? index : Number.MIN_SAFE_INTEGER
+		);
+		const commits = repoStatus?.scm?.commits;
+		if (commits == null) return;
+
+		let topSelectionId = this.getRowIdentifier(topIndex);
+		if (topSelectionId == null) return;
+		topSelectionId = "row-" + topSelectionId;
+
+		let bottomSelectionId = this.getRowIdentifier(bottomIndex);
+		if (bottomSelectionId == null) return;
+		bottomSelectionId = "row-" + bottomSelectionId;
+
 		const $rows = document.getElementsByClassName("row-with-icon-actions");
-		let seen = false;
+		let foundTop = false;
+		let foundBottom = false;
+
 		for (let i = 0; i < $rows.length; i++) {
-			if ($rows[i].classList.contains("muted")) {
-				if (!seen) $rows[i].classList.add("litup");
-				else $rows[i].classList.remove("litup");
+			const row = $rows[i];
+			if (!row.id.startsWith("row-")) continue; // skip rows representing files
+			const isTop = row.id === topSelectionId;
+			const isBottom = row.id === bottomSelectionId;
+			if (isTop) foundTop = true;
+			if (isBottom) foundBottom = true;
+
+			const inRange = isTop || isBottom || foundTop != foundBottom;
+			if (row.classList.contains("muted")) {
+				if (inRange) row.classList.add("litup");
+				else row.classList.remove("litup");
 			} else {
-				if (seen) $rows[i].classList.add("dimmed");
-				else $rows[i].classList.remove("dimmed");
+				if (!inRange) row.classList.add("dimmed");
+				else row.classList.remove("dimmed");
 			}
-			if ($rows[i].id === id) seen = true;
 		}
-	};
+	}
 
 	renderChange(
-		id: string,
+		id: string, // either the commit sha or the strings "saved" and "staged"
+		index: number,
 		onOff: boolean,
 		headshot: ReactElement,
 		title: string,
 		message: string | ReactElement,
 		onClick,
-		tooltip?: string | ReactElement,
-		dimBelow?: boolean
+		tooltip?: string | ReactElement
 	) {
 		return (
 			<Tooltip
@@ -1526,10 +1696,10 @@ class ReviewForm extends React.Component<Props, State> {
 					style={{ display: "flex", alignItems: "center" }}
 					onClick={onClick}
 					onMouseEnter={() => {
-						dimBelow && this.dimBelow("row-" + id);
+						this.highlightFromSelectionEdgeTo(index);
 					}}
 					onMouseLeave={() => {
-						dimBelow && this.dimBelow();
+						this.highlightFromSelectionEdgeTo();
 					}}
 				>
 					<input
@@ -1633,21 +1803,23 @@ class ReviewForm extends React.Component<Props, State> {
 				{numSavedFiles > 0 &&
 					this.renderChange(
 						"saved",
+						-2,
 						includeSaved,
 						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Saved Changes (Working Tree)",
 						this.fileListLabel(scm.savedFiles),
-						() => this.toggleSaved(),
+						e => this.handleClickChangeSelectionRange(e, "saved"),
 						this.fileListTip(scm.savedFiles)
 					)}
 				{numStagedFiles > 0 &&
 					this.renderChange(
 						"staged",
+						-1,
 						includeStaged,
 						<Headshot person={this.props.currentUser} size={20} display="inline-block" />,
 						"Staged Changes (Index)",
 						this.fileListLabel(scm.stagedFiles),
-						() => this.toggleStaged(),
+						e => this.handleClickChangeSelectionRange(e, "staged"),
 						this.fileListTip(scm.stagedFiles)
 					)}
 				{localCommits.length > 0 && (
@@ -1682,15 +1854,16 @@ class ReviewForm extends React.Component<Props, State> {
 
 	renderCommitList(commits, excludeCommit) {
 		const { reviewsByCommit } = this.props;
-		return commits.map(commit =>
+		return commits.map((commit, index) =>
 			this.renderChange(
 				commit.sha,
+				index,
 				!excludeCommit[commit.sha],
 				<></>,
 				// @ts-ignore
 				commit.info.shortMessage,
 				<span className="monospace">{commit.sha.substr(0, 8)}</span>,
-				e => this.handleClickChangeStart(e, commit.sha),
+				e => this.handleClickChangeSelectionRange(e, commit.sha),
 				<div style={{ maxWidth: "65vw" }}>
 					{this.authorHeadshot(commit)}
 					{commit.info && <b>{commit.info.author}</b>}
@@ -1714,14 +1887,20 @@ class ReviewForm extends React.Component<Props, State> {
 							</div>
 						</div>
 					)}
-				</div>,
-				true
+				</div>
 			)
 		);
 	}
 
 	showLocalDiff(path, oldPath) {
-		const { repoStatus, includeSaved, includeStaged, excludedFiles, startCommit } = this.state;
+		const {
+			repoStatus,
+			includeSaved,
+			includeStaged,
+			excludedFiles,
+			startCommit,
+			topSelectionIndex
+		} = this.state;
 		const { editingReview } = this.props;
 		if (!repoStatus) return;
 		const repoId = repoStatus.scm ? repoStatus.scm.repoId : "";
@@ -1731,6 +1910,12 @@ class ReviewForm extends React.Component<Props, State> {
 		// and we need to pass that fact along to showlocaldiff
 		const addedFileManually = path in excludedFiles;
 
+		let endCommit;
+		if (topSelectionIndex > 0) {
+			// most recent commit is not selected
+			endCommit = this.getRowIdentifier(topSelectionIndex);
+		}
+
 		HostApi.instance.send(ReviewShowLocalDiffRequestType, {
 			path,
 			oldPath,
@@ -1738,7 +1923,8 @@ class ReviewForm extends React.Component<Props, State> {
 			includeSaved: addedFileManually || (includeSaved && repoStatus.scm!.savedFiles.length > 0),
 			includeStaged: includeStaged && repoStatus.scm!.stagedFiles.length > 0,
 			editingReviewId: editingReview && editingReview.id,
-			baseSha: startCommit
+			baseSha: startCommit || "",
+			headSha: endCommit
 		});
 		this.setState({
 			currentFile: path

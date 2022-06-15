@@ -588,6 +588,7 @@ export type CSReviewCheckpoint = number | undefined;
 export interface CSRepoChange {
 	scm: RepoScmStatus;
 	startCommit: string;
+	endCommit?: string;
 	excludeCommit: string;
 	excludedFiles: string[];
 	newFiles: string[];

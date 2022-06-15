@@ -101,14 +101,15 @@ class ReviewService(private val project: Project) {
         includeSaved: Boolean,
         includeStaged: Boolean,
         editingReviewId: String?,
-        baseSha: String
+        baseSha: String,
+        headSha: String?
     ) {
         val agent = project.agentService ?: return
 
         val rightVersion = when {
             includeSaved -> "saved"
             includeStaged -> "staged"
-            else -> "head"
+            else -> headSha ?: "head"
         }
         val contents = agent.getLocalReviewContents(
             GetLocalReviewContentsParams(

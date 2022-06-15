@@ -242,6 +242,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			case "saved":
 				rightContents = await xfs.readText(rightBasePath);
 				break;
+			default:
+				rightContents = await git.getFileContentForRevision(rightBasePath, request.rightVersion);
 		}
 
 		return {

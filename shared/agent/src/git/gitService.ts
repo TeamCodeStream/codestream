@@ -543,7 +543,7 @@ export class GitService implements IGitService, Disposable {
 			if (reverse === true) options.push("-R");
 			if (includeStaged && !includeSaved) options.push("--staged");
 			if (ref1 && ref1.length) options.push(ref1);
-			if (ref2 && ref2.length) options.push(ref2);
+			if (ref2 && ref2.length && !includeSaved && !includeStaged) options.push(ref2);
 			if ((!includeStaged && !ref1) || (!includeSaved && !includeStaged && !ref2)) {
 				options.push("HEAD");
 			}

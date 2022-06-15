@@ -1522,6 +1522,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		);
 		let modifiedFiles: ModifiedFile[];
 		let startCommit = repoChange.startCommit;
+		const endCommit = repoChange.endCommit;
 		let leftBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
 		let rightBaseShaForFirstChangesetInThisRepo: string | undefined = undefined;
 		if (amendingReviewId) {
@@ -1559,7 +1560,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				includeStaged,
 				uri: URI.file(scm.repoPath).toString(),
 				currentUserEmail: "", // FIXME
-				startCommit
+				startCommit,
+				endCommit
 			});
 			modifiedFiles = statusFromBeginningOfReview.scm!.modifiedFiles.filter(
 				mf => !excludedFiles.includes(mf.file)
@@ -1599,7 +1601,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		// otherwise the startCommit is probably the parent of the oldest commit
 		// so that means just take the whole commit list
 		const startIndex = scm.commits.findIndex(commit => commit.sha === startCommit);
-		const commits = startIndex >= 0 ? scm.commits.slice(0, startIndex) : scm.commits;
+		const endIndex = scm.commits.findIndex(commit => commit.sha === endCommit);
+		// starting commit is at the end and vice versa
+		const sliceStart = endIndex >= 0 ? endIndex : 0;
+		const sliceEnd = startIndex >= 0 ? startIndex : undefined;
+		const commits = scm.commits.slice(sliceStart, sliceEnd);
 
 		// perform a diff against the most recent pushed commit
 		const pushedCommit = scm.commits.find(commit => !commit.localOnly);
@@ -1614,7 +1620,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let leftBaseAuthor;
 		let leftDiffs: ParsedDiff[];
 
-		const newestCommitNotInReview = scm.commits[commits.length];
+		const newestCommitNotInReview = scm.commits[sliceEnd != undefined ? sliceEnd : commits.length];
 		const userEmail = await git.getConfig(scm.repoPath, "user.email");
 		const ancestorSearchStartingSha =
 			oldestCommitInReview != null ? oldestCommitInReview.sha : "HEAD";
@@ -1738,11 +1744,22 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			rightBaseAuthor = leftBaseAuthor;
 		}
 
+		const rightContentSha = commits[0]?.sha;
 		rightDiffs = (
-			await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, rightBaseSha)
+			await git.getDiffs(
+				scm.repoPath,
+				{ includeSaved, includeStaged },
+				rightBaseSha,
+				rightContentSha
+			)
 		).filter(removeExcluded);
 		rightReverseDiffs = (
-			await git.getDiffs(scm.repoPath, { includeSaved, includeStaged, reverse: true }, rightBaseSha)
+			await git.getDiffs(
+				scm.repoPath,
+				{ includeSaved, includeStaged, reverse: true },
+				rightBaseSha,
+				rightContentSha
+			)
 		).filter(removeExcluded);
 		rightDiffs.push(...newFileDiffs);
 		rightReverseDiffs.push(...newFileReverseDiffs);
@@ -1751,7 +1768,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			await git.getDiffs(
 				scm.repoPath,
 				{ includeSaved, includeStaged, reverse: true },
-				latestCommitSha
+				latestCommitSha,
+				rightContentSha
 			)
 		).filter(removeExcluded);
 		rightToLatestCommitDiffs.push(...newFileReverseDiffs);
@@ -1759,7 +1777,12 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		let latestCommitToRightDiffs =
 			includeSaved || includeStaged
 				? (
-						await git.getDiffs(scm.repoPath, { includeSaved, includeStaged }, latestCommitSha)
+						await git.getDiffs(
+							scm.repoPath,
+							{ includeSaved, includeStaged },
+							latestCommitSha,
+							rightContentSha
+						)
 				  ).filter(removeExcluded)
 				: [];
 		latestCommitToRightDiffs.push(...newFileDiffs);
@@ -1791,7 +1814,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				rightBaseSha,
 				rightDiffsCompressed: compressToBase64(JSON.stringify(rightDiffs)),
 				rightReverseDiffsCompressed: compressToBase64(JSON.stringify(rightReverseDiffs)),
-				latestCommitSha,
+				latestCommitSha: rightContentSha || latestCommitSha,
 				rightToLatestCommitDiffsCompressed: compressToBase64(
 					JSON.stringify(rightToLatestCommitDiffs)
 				), // for backtracking

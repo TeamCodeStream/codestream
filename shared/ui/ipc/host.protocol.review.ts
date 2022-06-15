@@ -27,6 +27,7 @@ export interface ReviewShowLocalDiffRequest {
 	includeStaged: boolean;
 	editingReviewId?: string;
 	baseSha: string;
+	headSha?: string;
 }
 
 export interface ReviewShowLocalDiffResponse {}

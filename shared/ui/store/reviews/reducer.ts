@@ -104,7 +104,6 @@ export const getReviewsUnread = createSelector(getReviews, (reviews: Index<CSRev
 export function getAllByCommit(state: CodeStreamState): { [commit: string]: CSReview } {
 	let ret = {};
 	getAllReviews(state).forEach(review => {
-		if (!review.reviewChangesets) logWarning("No changesets for: ", review);
 		(review.reviewChangesets || []).forEach(changeset => {
 			(changeset.commits || []).forEach(commit => (ret[commit.sha] = review));
 		});

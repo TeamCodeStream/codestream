@@ -653,10 +653,11 @@ export class ScmManager {
 		uri: documentUri,
 		includeStaged,
 		includeSaved,
-		reviewId
+		reviewId,
+		endCommit
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
-		const { git, reviews, repositoryMappings } = SessionContainer.instance();
+		const { git, reviews } = SessionContainer.instance();
 
 		const review = await reviews.getById(reviewId!);
 		const uri = URI.parse(documentUri);
@@ -728,7 +729,7 @@ export class ScmManager {
 		let numStatsFromNewestCommitShaInOrBeforeReview = await git.getNumStat(
 			repoPath,
 			newestCommitShaInOrBeforeReview,
-			undefined,
+			endCommit,
 			includeSaved,
 			includeStaged
 		);
@@ -821,7 +822,7 @@ export class ScmManager {
 					const numStatsFromLatestCommit = await git.getNumStat(
 						repoPath,
 						diff.latestCommitSha,
-						undefined,
+						endCommit,
 						includeSaved,
 						includeStaged
 					);
@@ -841,7 +842,7 @@ export class ScmManager {
 				const numStatsFromNewestCommitShaBeforeFirstCheckpoint = await git.getNumStat(
 					repoPath,
 					newestCommitShaBeforeFirstCheckpoint,
-					undefined,
+					endCommit,
 					includeSaved,
 					includeStaged
 				);

@@ -120,7 +120,8 @@ class ReviewShowLocalDiffRequest(
     val includeSaved: Boolean,
     val includeStaged: Boolean,
     val editingReviewId: String?,
-    val baseSha: String
+    val baseSha: String,
+    val headSha: String?
 )
 
 class ShellPromptFolderResponse(

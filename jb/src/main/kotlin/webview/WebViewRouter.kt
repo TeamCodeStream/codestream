@@ -258,7 +258,8 @@ class WebViewRouter(val project: Project) {
             request.includeSaved,
             request.includeStaged,
             request.editingReviewId,
-            request.baseSha
+            request.baseSha,
+            request.headSha
         )
     }
 
