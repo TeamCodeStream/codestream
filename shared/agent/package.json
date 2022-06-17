@@ -91,7 +91,6 @@
 	"devDependencies": {
 		"@istanbuljs/nyc-config-typescript": "1.0.2",
 		"@microsoft/microsoft-graph-types": "1.10.0",
-		"@sentry/types": "5.5.0",
 		"@types/analytics-node": "3.1.7",
 		"@types/chai": "4.2.21",
 		"@types/diff": "5.0.2",
