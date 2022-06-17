@@ -494,8 +494,8 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
-								{abTestValue === 1 && <h3>Connect to get started</h3>}
 								{abTestValue === 0 && <h3>Create a CodeStream account, for free</h3>}
+								{abTestValue === 1 && <h3>Connect to get started</h3>}
 								<br />
 								{regionItems && !forceRegionName && (
 									<>
