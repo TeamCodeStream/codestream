@@ -459,7 +459,8 @@ async function showStartupUpgradeMessage(version: string, previousVersion: strin
 	const compareTo = Versions.from(major, minor);
 	if (skipVersions.some(v => Versions.compare(compareTo, v) === 0)) return;
 
-	if (major > prevMajor) {
+	// only show for new releases that are in the X.0 format
+	if (major > prevMajor && minor === "0") {
 		const actions: MessageItem[] = [{ title: "What's New" } /* , { title: "Release Notes" } */];
 
 		const result = await window.showInformationMessage(
