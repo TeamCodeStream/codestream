@@ -128,6 +128,7 @@ export const Signup = (props: Props) => {
 			isInVSCode: state.ide.name === "VSC",
 			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin,
 			acceptedTOS: state.session.acceptedTOS,
+			machineId: state.session.machineId || "0",
 			webviewFocused: state.context.hasFocus,
 			pendingProtocolHandlerQuerySource: state.context.pendingProtocolHandlerQuery?.src,
 			environmentHosts,
@@ -221,7 +222,12 @@ export const Signup = (props: Props) => {
 		// @TODO: Temp code, delete when which UX is determined to be best
 		// 0 = old version (Signup for a codestream account, for free)
 		// 1 = connect version
-		const _abTestValue = Math.floor(Math.random() * 2);
+		//
+		// machineId is alphanumeric, so we parse it to contain only numeric values.
+		// Then we need to trim down the value to a length of 10 digits max because
+		// remainder calculations have rounding errors on numbers that are too large.
+		const machineIdNumeric = derivedState.machineId.replace(/\D/g, "").substring(0, 10);
+		const _abTestValue = Number(machineIdNumeric) % 2;
 		setAbTestValue(_abTestValue);
 		if (derivedState.webviewFocused) {
 			if (_abTestValue === 0) {
