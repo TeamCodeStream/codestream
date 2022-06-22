@@ -147,10 +147,11 @@ export const PullRequestFilesChanged = (props: Props) => {
 			setErrorMessage(
 				<>
 					{errorMessageCopy}
-
-					<div>
-						<Link onClick={e => handleMoreDetailsErrorClick(e)}>More details</Link>
-					</div>
+					{!showErrorDetails && (
+						<div>
+							<Link onClick={e => handleMoreDetailsErrorClick(e)}>More details</Link>
+						</div>
+					)}
 				</>
 			);
 
@@ -535,9 +536,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 						{errorMessage || repoErrorMessage}
 						{showErrorDetails && (
 							<>
-								<div style={{ marginTop: "5px" }}>This pull request is associated with:</div>
-								<div>{pr?.repository?.url}</div>
-								<div style={{ marginTop: "5px" }}>You have the following repositories open:</div>
+								<div style={{ marginTop: "10px" }}>This pull request is associated with:</div>
+								<div>
+									<div style={{ marginLeft: "10px" }}>
+										<Link href={pr?.repository?.url}>{pr?.repository?.url}</Link>
+									</div>
+								</div>
+								<div style={{ marginTop: "10px" }}>You have the following repositories open:</div>
 								<div style={{ marginLeft: "10px" }}>
 									{openRepos.map(_ => {
 										return <div>{_?.folder?.name}</div>;
