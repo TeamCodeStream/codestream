@@ -144,16 +144,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				) : (
 					<span>Could not get fork point.</span>
 				);
-			setErrorMessage(
-				<>
-					{errorMessageCopy}
-					{!showErrorDetails && (
-						<div>
-							<Link onClick={e => handleMoreDetailsErrorClick(e)}>More details</Link>
-						</div>
-					)}
-				</>
-			);
+			setErrorMessage(errorMessageCopy);
 
 			setIsDisabled(true);
 		} else if (forkPointResponse.sha) {
@@ -164,15 +155,17 @@ export const PullRequestFilesChanged = (props: Props) => {
 	const handleMoreDetailsErrorClick = async e => {
 		e.preventDefault();
 		e.stopPropagation();
-		const response = await HostApi.instance.send(GetReposScmRequestType, {
-			inEditorOnly: true,
-			includeCurrentBranches: true,
-			includeProviders: true
-		});
-		if (response && response.repositories) {
-			setOpenRepos(response.repositories);
+		if (!showErrorDetails) {
+			const response = await HostApi.instance.send(GetReposScmRequestType, {
+				inEditorOnly: true,
+				includeCurrentBranches: true,
+				includeProviders: true
+			});
+			if (response && response.repositories) {
+				setOpenRepos(response.repositories);
+			}
+			setShowErrorDetails(true);
 		}
-		setShowErrorDetails(true);
 	};
 
 	const getRef = useMemo(() => {
@@ -534,6 +527,11 @@ export const PullRequestFilesChanged = (props: Props) => {
 					<Icon style={{ marginRight: "10px" }} name="alert" className="alert" />
 					<div>
 						{errorMessage || repoErrorMessage}
+						{!showErrorDetails && (
+							<div>
+								<Link onClick={e => handleMoreDetailsErrorClick(e)}>More details</Link>
+							</div>
+						)}
 						{showErrorDetails && (
 							<>
 								<div style={{ marginTop: "10px" }}>This pull request is associated with:</div>
@@ -544,8 +542,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 								</div>
 								<div style={{ marginTop: "10px" }}>You have the following repositories open:</div>
 								<div style={{ marginLeft: "10px" }}>
-									{openRepos.map(_ => {
-										return <div>{_?.folder?.name}</div>;
+									{openRepos.map((_, index) => {
+										return <div key={`${index}_${_?.folder?.name}`}>{_?.folder?.name}</div>;
 									})}
 								</div>
 							</>
