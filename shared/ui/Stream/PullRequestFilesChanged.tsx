@@ -159,7 +159,9 @@ export const PullRequestFilesChanged = (props: Props) => {
 			const response = await HostApi.instance.send(GetReposScmRequestType, {
 				inEditorOnly: true,
 				includeCurrentBranches: true,
-				includeProviders: true
+				includeProviders: true,
+				includeRemotes: true,
+				includeConnectedProviders: true
 			});
 			if (response && response.repositories) {
 				setOpenRepos(response.repositories);
@@ -543,7 +545,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 								<div style={{ marginTop: "10px" }}>You have the following repositories open:</div>
 								<div style={{ marginLeft: "10px" }}>
 									{openRepos.map((_, index) => {
-										return <div key={`${index}_${_?.folder?.name}`}>{_?.folder?.name}</div>;
+										const repoName = _.path.substring(_.path.lastIndexOf("/") + 1);
+										return <div key={`${index}_${repoName}`}>{repoName}</div>;
 									})}
 								</div>
 							</>
