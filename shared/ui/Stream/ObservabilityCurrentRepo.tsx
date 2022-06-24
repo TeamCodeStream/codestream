@@ -2,29 +2,16 @@ import { forEach as _forEach } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
-import { useDidMount, usePrevious } from "../utilities/hooks";
-import { isNotOnDisk, ComponentUpdateEmitter, uriToFilePath } from "../utils";
+import { useDidMount } from "../utilities/hooks";
+import { isNotOnDisk } from "../utils";
 import { setEditorContext } from "../store/editorContext/actions";
-import {
-	ScmError,
-	getFileScmError,
-	mapFileScmErrorForTelemetry
-} from "../store/editorContext/reducer";
+import { getFileScmError, mapFileScmErrorForTelemetry } from "../store/editorContext/reducer";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
-import {
-	GetFileScmInfoRequestType,
-	DidChangeDataNotificationType,
-	ChangeDataType,
-	GetReposScmRequestType
-} from "@codestream/protocols/agent";
+import { GetFileScmInfoRequestType, GetReposScmRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 
-interface Props {
-	paneState?: PaneState;
-}
+interface Props {}
 
 const CurrentRepoContainer = styled.span`
 	color: var(--text-color-subtle);
@@ -44,12 +31,12 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 	const [problem, setProblem] = useState();
 
 	useDidMount(() => {
-		onFileChanged(true, onFileChangedError);
+		onFileChanged(onFileChangedError);
 	});
 
 	useEffect(() => {
 		if (String(derivedState.textEditorUri).length > 0) {
-			onFileChanged(false, onFileChangedError);
+			onFileChanged(onFileChangedError);
 		}
 	}, [derivedState.textEditorUri]);
 
@@ -58,16 +45,12 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 	};
 
 	const onFileChanged = async (
-		isInitialRender = false,
 		renderErrorCallback: ((error: string) => void) | undefined = undefined,
 		checkBranchUpdate = false
 	) => {
 		let { scmInfo, textEditorUri } = derivedState;
 
 		if (textEditorUri === undefined) {
-			if (isInitialRender) {
-				// this.setState({ isLoading: false });
-			}
 			if (renderErrorCallback !== undefined) {
 				renderErrorCallback("InvalidUri");
 			}
@@ -75,9 +58,6 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 		}
 
 		if (isNotOnDisk(textEditorUri)) {
-			if (isInitialRender) {
-				// this.setState({ isLoading: false });
-			}
 			if (renderErrorCallback !== undefined) {
 				renderErrorCallback("FileNotSaved");
 			}
@@ -103,13 +83,11 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 			if (currentRepo?.folder.name) {
 				repoName = currentRepo.folder.name;
 			}
-			//@TODO: currentRepo.folder.name returning is flaky depending on IDE, specifically JB.
-			//		 this ensures we will have the full repo name for the filter, but is a little hacky.
+
 			if (!repoName && currentRepo?.path) {
 				repoName = currentRepo.path.substring(currentRepo.path.lastIndexOf("/") + 1);
 			}
 
-			// this.setState({ repoName });
 			setCurrentRepoName(repoName);
 
 			dispatch(setEditorContext({ scmInfo }));

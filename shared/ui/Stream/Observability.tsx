@@ -753,6 +753,7 @@ export const Observability = React.memo((props: Props) => {
 													.map((or: ObservabilityRepo) => {
 														return (
 															<>
+																{/* @TODO, set or.entityAccounts.length < 2 when done testing */}
 																<PaneNodeName
 																	title={or.repoName}
 																	id={"newrelic-errors-in-repo-" + or.repoId}
