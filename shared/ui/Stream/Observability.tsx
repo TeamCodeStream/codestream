@@ -48,6 +48,7 @@ import { Provider } from "./IntegrationsPanel";
 import { Link } from "./Link";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { WarningBox } from "./WarningBox";
 
 interface Props {
@@ -647,9 +648,15 @@ export const Observability = React.memo((props: Props) => {
 
 	const { hiddenPaneNodes } = derivedState;
 
+	console.warn(observabilityRepos);
+
 	return (
 		<Root>
-			<PaneHeader title="Observability" id={WebviewPanels.Observability}>
+			<PaneHeader
+				title="Observability"
+				id={WebviewPanels.Observability}
+				subtitle={<ObservabilityCurrentRepo />}
+			>
 				{derivedState.newRelicIsConnected ? (
 					<>
 						<Icon
@@ -750,7 +757,7 @@ export const Observability = React.memo((props: Props) => {
 																	title={or.repoName}
 																	id={"newrelic-errors-in-repo-" + or.repoId}
 																	subtitle={
-																		!or.entityAccounts || or.entityAccounts.length < 2 ? (
+																		!or.entityAccounts || or.entityAccounts.length < 1 ? (
 																			undefined
 																		) : (
 																			<>
