@@ -11,7 +11,9 @@ import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { GetFileScmInfoRequestType, GetReposScmRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 
-interface Props {}
+interface Props {
+	currentRepoCallback: Function;
+}
 
 const CurrentRepoContainer = styled.span`
 	color: var(--text-color-subtle);
@@ -89,6 +91,7 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 			}
 
 			setCurrentRepoName(repoName);
+			props.currentRepoCallback(currentRepo);
 
 			dispatch(setEditorContext({ scmInfo }));
 		}

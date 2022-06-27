@@ -212,6 +212,7 @@ export const Observability = React.memo((props: Props) => {
 	>([]);
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
+	const [currentRepo, setCurrentRepo] = useState<Object>({});
 	const previousHiddenPaneNodes = usePrevious(derivedState.hiddenPaneNodes);
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 
@@ -648,14 +649,16 @@ export const Observability = React.memo((props: Props) => {
 
 	const { hiddenPaneNodes } = derivedState;
 
-	console.warn(observabilityRepos);
+	console.warn("eric observabilityRepos", observabilityRepos);
+	console.warn("eric observabilityErrors", observabilityErrors);
+	console.warn("eric currentRepo", currentRepo);
 
 	return (
 		<Root>
 			<PaneHeader
 				title="Observability"
 				id={WebviewPanels.Observability}
-				subtitle={<ObservabilityCurrentRepo />}
+				subtitle={<ObservabilityCurrentRepo currentRepoCallback={setCurrentRepo} />}
 			>
 				{derivedState.newRelicIsConnected ? (
 					<>
@@ -754,6 +757,7 @@ export const Observability = React.memo((props: Props) => {
 														return (
 															<>
 																{/* @TODO, set or.entityAccounts.length < 2 when done testing */}
+
 																<PaneNodeName
 																	title={or.repoName}
 																	id={"newrelic-errors-in-repo-" + or.repoId}
@@ -776,6 +780,7 @@ export const Observability = React.memo((props: Props) => {
 																		)
 																	}
 																></PaneNodeName>
+
 																{loadingErrors && loadingErrors[or.repoId] ? (
 																	<>
 																		<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
