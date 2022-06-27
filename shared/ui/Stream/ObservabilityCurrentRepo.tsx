@@ -91,7 +91,7 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 			}
 
 			setCurrentRepoName(repoName);
-			props.currentRepoCallback(currentRepo);
+			props.currentRepoCallback(currentRepo?.id);
 
 			dispatch(setEditorContext({ scmInfo }));
 		}

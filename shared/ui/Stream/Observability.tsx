@@ -22,7 +22,8 @@ import {
 	GetObservabilityReposResponse,
 	ObservabilityErrorCore,
 	ObservabilityRepo,
-	ObservabilityRepoError
+	ObservabilityRepoError,
+	ReposScm
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -212,7 +213,10 @@ export const Observability = React.memo((props: Props) => {
 	>([]);
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
-	const [currentRepo, setCurrentRepo] = useState<Object>({});
+	const [currentRepoId, setCurrentRepoId] = useState<string>("");
+	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
+		[]
+	);
 	const previousHiddenPaneNodes = usePrevious(derivedState.hiddenPaneNodes);
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 
@@ -548,6 +552,19 @@ export const Observability = React.memo((props: Props) => {
 		);
 	};
 
+	useEffect(() => {
+		if (currentRepoId && observabilityRepos) {
+			const currentEntityAccounts = observabilityRepos.find(or => {
+				return or.repoId === currentRepoId;
+			})?.entityAccounts;
+
+			console.warn(currentEntityAccounts);
+			setCurrentEntityAccounts(currentEntityAccounts);
+
+			//here set obseravbilityErrors
+		}
+	}, [currentRepoId, observabilityRepos]);
+
 	/*
 	 *	When all parts of the observability panel are done loading
 	 *  and a user is connected to NR, fire off a tracking event
@@ -651,14 +668,16 @@ export const Observability = React.memo((props: Props) => {
 
 	console.warn("eric observabilityRepos", observabilityRepos);
 	console.warn("eric observabilityErrors", observabilityErrors);
-	console.warn("eric currentRepo", currentRepo);
+	console.warn("eric currentRepo", currentRepoId);
+	console.warn("eric currentEntityAccounts", currentEntityAccounts);
 
 	return (
 		<Root>
 			<PaneHeader
 				title="Observability"
 				id={WebviewPanels.Observability}
-				subtitle={<ObservabilityCurrentRepo currentRepoCallback={setCurrentRepo} />}
+				o
+				subtitle={<ObservabilityCurrentRepo currentRepoCallback={setCurrentRepoId} />}
 			>
 				{derivedState.newRelicIsConnected ? (
 					<>
