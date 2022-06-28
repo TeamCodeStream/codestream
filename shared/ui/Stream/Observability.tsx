@@ -50,6 +50,7 @@ import { Link } from "./Link";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
+import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { WarningBox } from "./WarningBox";
 
 interface Props {
@@ -116,7 +117,19 @@ const NoEntitiesCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
-const ErrorRow = (props: {
+const ExpansionNode = styled.div`
+	padding: 2px 10px 2px 20px;
+	display: flex;
+	cursor: pointer;
+	position: relative;
+
+	&:hover {
+		background: var(--app-background-color-hover);
+		// color: var(--text-color-highlight);
+	}
+`;
+
+export const ErrorRow = (props: {
 	title: string;
 	subtle?: string;
 	tooltip?: string;
@@ -552,16 +565,34 @@ export const Observability = React.memo((props: Props) => {
 		);
 	};
 
+	/*
+	 *	When current repo changes in IDE, set new entity accounts
+	 *  and fetch corresponding errors
+	 */
 	useEffect(() => {
-		if (currentRepoId && observabilityRepos) {
-			const currentEntityAccounts = observabilityRepos.find(or => {
+		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
+			const _currentEntityAccounts = observabilityRepos.find(or => {
 				return or.repoId === currentRepoId;
 			})?.entityAccounts;
 
-			console.warn(currentEntityAccounts);
-			setCurrentEntityAccounts(currentEntityAccounts);
+			setCurrentEntityAccounts(_currentEntityAccounts);
 
-			//here set obseravbilityErrors
+			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
+				const _entityGuid = _currentEntityAccounts[0]?.entityGuid;
+
+				fetchObservabilityErrors(_currentEntityAccounts[0]?.entityGuid, currentRepoId);
+
+				const newPreferences = derivedState.observabilityRepoEntities.filter(
+					_ => _.repoId !== currentRepoId
+				);
+				newPreferences.push({
+					repoId: currentRepoId,
+					entityGuid: _entityGuid
+				});
+				dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
+				// update the IDEs
+				HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+			}
 		}
 	}, [currentRepoId, observabilityRepos]);
 
@@ -676,7 +707,6 @@ export const Observability = React.memo((props: Props) => {
 			<PaneHeader
 				title="Observability"
 				id={WebviewPanels.Observability}
-				o
 				subtitle={<ObservabilityCurrentRepo currentRepoCallback={setCurrentRepoId} />}
 			>
 				{derivedState.newRelicIsConnected ? (
@@ -768,6 +798,8 @@ export const Observability = React.memo((props: Props) => {
 												)}
 											</>
 										)}
+
+										{/* 
 										{observabilityRepos.length !== 0 && hasEntities && (
 											<>
 												{observabilityRepos
@@ -775,13 +807,12 @@ export const Observability = React.memo((props: Props) => {
 													.map((or: ObservabilityRepo) => {
 														return (
 															<>
-																{/* @TODO, set or.entityAccounts.length < 2 when done testing */}
 
 																<PaneNodeName
 																	title={or.repoName}
 																	id={"newrelic-errors-in-repo-" + or.repoId}
 																	subtitle={
-																		!or.entityAccounts || or.entityAccounts.length < 1 ? (
+																		!or.entityAccounts || or.entityAccounts.length < 2 ? (
 																			undefined
 																		) : (
 																			<>
@@ -873,6 +904,121 @@ export const Observability = React.memo((props: Props) => {
 																)}
 															</>
 														);
+													})}
+											</>
+										)}
+										*/}
+										{currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities && (
+											<>
+												{currentEntityAccounts
+													.filter(_ => _)
+													.map(ea => {
+														const _observabilityRepo = observabilityRepos.find(
+															_ => _.repoId === currentRepoId
+														);
+														if (_observabilityRepo) {
+															return (
+																<>
+																	<PaneNodeName
+																		title={ea.entityName}
+																		id={"newrelic-errors-in-repo-" + _observabilityRepo.repoId}
+																	/>
+																	{loadingErrors && loadingErrors[_observabilityRepo.repoId] ? (
+																		<>
+																			<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
+																		</>
+																	) : (
+																		<>
+																			{!hiddenPaneNodes[
+																				"newrelic-errors-in-repo-" + _observabilityRepo.repoId
+																			] && (
+																				<>
+																					{observabilityErrors?.find(
+																						oe =>
+																							oe.repoId === _observabilityRepo.repoId &&
+																							oe.errors.length > 0
+																					) ? (
+																						<>
+																							<ObservabilityErrorDropdown
+																								observabilityErrors={observabilityErrors}
+																								observabilityRepo={_observabilityRepo}
+																							/>
+																							{/* 
+																							<ExpansionNode>
+																								<PaneNodeName
+																									title={"Errors"}
+																									id={"observability_errors"}
+																								/>
+																							</ExpansionNode>
+																							{observabilityErrors
+																								.filter(
+																									oe => oe.repoId === _observabilityRepo.repoId
+																								)
+																								.map(oe => {
+																									return oe.errors.map(err => {
+																										return (
+																											<ErrorRow
+																												title={`${err.errorClass} (${err.count})`}
+																												tooltip={err.message}
+																												subtle={err.message}
+																												timestamp={err.lastOccurrence}
+																												url={err.errorGroupUrl}
+																												onClick={e => {
+																													dispatch(
+																														openErrorGroup(
+																															err.errorGroupGuid,
+																															err.occurrenceId,
+																															{
+																																timestamp: err.lastOccurrence,
+																																remote:
+																																	_observabilityRepo.repoRemote,
+																																sessionStart:
+																																	derivedState.sessionStart,
+																																pendingEntityId: err.entityId,
+																																occurrenceId: err.occurrenceId,
+																																pendingErrorGroupGuid:
+																																	err.errorGroupGuid,
+																																src: "Observability Section"
+																															}
+																														)
+																													);
+																												}}
+																											/>
+																										);
+																									});
+																								})}
+																								*/}
+																						</>
+																					) : _observabilityRepo.hasRepoAssociation ? (
+																						<ErrorRow title="No errors to display" />
+																					) : (
+																						<EntityAssociator
+																							label="Associate this repo with an entity on New Relic in order to see errors"
+																							onSuccess={async e => {
+																								HostApi.instance.track("NR Entity Association", {
+																									"Repo ID": _observabilityRepo.repoId
+																								});
+
+																								await fetchObservabilityRepos(
+																									e.entityGuid,
+																									_observabilityRepo.repoId
+																								);
+																								fetchObservabilityErrors(
+																									e.entityGuid,
+																									_observabilityRepo.repoId
+																								);
+																							}}
+																							remote={_observabilityRepo.repoRemote}
+																							remoteName={_observabilityRepo.repoName}
+																						/>
+																					)}
+																				</>
+																			)}
+																		</>
+																	)}
+																</>
+															);
+														} else return null;
 													})}
 											</>
 										)}
