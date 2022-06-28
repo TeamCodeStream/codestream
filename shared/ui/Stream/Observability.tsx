@@ -51,6 +51,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
+import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { WarningBox } from "./WarningBox";
 
 interface Props {
@@ -115,18 +116,6 @@ const NoEntitiesWrapper = styled.div`
 
 const NoEntitiesCopy = styled.div`
 	margin: 5px 0 10px 0;
-`;
-
-const ExpansionNode = styled.div`
-	padding: 2px 10px 2px 20px;
-	display: flex;
-	cursor: pointer;
-	position: relative;
-
-	&:hover {
-		background: var(--app-background-color-hover);
-		// color: var(--text-color-highlight);
-	}
 `;
 
 export const ErrorRow = (props: {
@@ -782,7 +771,6 @@ export const Observability = React.memo((props: Props) => {
 													}}
 												/>
 											)}
-										{hasEntities && renderAssignments()}
 										{observabilityRepos.length == 0 && (
 											<>
 												{loadingErrors && Object.keys(loadingErrors).length > 0 && (
@@ -799,115 +787,6 @@ export const Observability = React.memo((props: Props) => {
 											</>
 										)}
 
-										{/* 
-										{observabilityRepos.length !== 0 && hasEntities && (
-											<>
-												{observabilityRepos
-													.filter(_ => _)
-													.map((or: ObservabilityRepo) => {
-														return (
-															<>
-
-																<PaneNodeName
-																	title={or.repoName}
-																	id={"newrelic-errors-in-repo-" + or.repoId}
-																	subtitle={
-																		!or.entityAccounts || or.entityAccounts.length < 2 ? (
-																			undefined
-																		) : (
-																			<>
-																				<InlineMenu
-																					key="codemark-display-options"
-																					className="subtle no-padding"
-																					noFocusOnSelect
-																					preventMenuStopPropagation={true}
-																					items={inlineMenuEntityItems(or)}
-																					title="Entities"
-																				>
-																					{buildSelectedLabel(or.repoId, or.entityAccounts)}
-																				</InlineMenu>
-																			</>
-																		)
-																	}
-																></PaneNodeName>
-
-																{loadingErrors && loadingErrors[or.repoId] ? (
-																	<>
-																		<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
-																	</>
-																) : (
-																	<>
-																		{!hiddenPaneNodes["newrelic-errors-in-repo-" + or.repoId] && (
-																			<>
-																				{observabilityErrors?.find(
-																					oe => oe.repoId === or.repoId && oe.errors.length > 0
-																				) ? (
-																					<>
-																						{observabilityErrors
-																							.filter(oe => oe.repoId === or.repoId)
-																							.map(oe => {
-																								return oe.errors.map(err => {
-																									return (
-																										<ErrorRow
-																											title={`${err.errorClass} (${err.count})`}
-																											tooltip={err.message}
-																											subtle={err.message}
-																											timestamp={err.lastOccurrence}
-																											url={err.errorGroupUrl}
-																											onClick={e => {
-																												dispatch(
-																													openErrorGroup(
-																														err.errorGroupGuid,
-																														err.occurrenceId,
-																														{
-																															timestamp: err.lastOccurrence,
-																															remote: or.repoRemote,
-																															sessionStart:
-																																derivedState.sessionStart,
-																															pendingEntityId: err.entityId,
-																															occurrenceId: err.occurrenceId,
-																															pendingErrorGroupGuid:
-																																err.errorGroupGuid,
-																															src: "Observability Section"
-																														}
-																													)
-																												);
-																											}}
-																										/>
-																									);
-																								});
-																							})}
-																					</>
-																				) : or.hasRepoAssociation ? (
-																					<ErrorRow title="No errors to display" />
-																				) : (
-																					<EntityAssociator
-																						label="Associate this repo with an entity on New Relic in order to see errors"
-																						onSuccess={async e => {
-																							HostApi.instance.track("NR Entity Association", {
-																								"Repo ID": or.repoId
-																							});
-
-																							await fetchObservabilityRepos(
-																								e.entityGuid,
-																								or.repoId
-																							);
-																							fetchObservabilityErrors(e.entityGuid, or.repoId);
-																						}}
-																						remote={or.repoRemote}
-																						remoteName={or.repoName}
-																					/>
-																				)}
-																			</>
-																		)}
-																	</>
-																)}
-															</>
-														);
-													})}
-											</>
-										)}
-										*/}
 										{currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities && (
 											<>
 												{currentEntityAccounts
@@ -939,55 +818,12 @@ export const Observability = React.memo((props: Props) => {
 																							oe.errors.length > 0
 																					) ? (
 																						<>
+																							<ObservabilityGoldenMetricDropdown />
+
 																							<ObservabilityErrorDropdown
 																								observabilityErrors={observabilityErrors}
 																								observabilityRepo={_observabilityRepo}
 																							/>
-																							{/* 
-																							<ExpansionNode>
-																								<PaneNodeName
-																									title={"Errors"}
-																									id={"observability_errors"}
-																								/>
-																							</ExpansionNode>
-																							{observabilityErrors
-																								.filter(
-																									oe => oe.repoId === _observabilityRepo.repoId
-																								)
-																								.map(oe => {
-																									return oe.errors.map(err => {
-																										return (
-																											<ErrorRow
-																												title={`${err.errorClass} (${err.count})`}
-																												tooltip={err.message}
-																												subtle={err.message}
-																												timestamp={err.lastOccurrence}
-																												url={err.errorGroupUrl}
-																												onClick={e => {
-																													dispatch(
-																														openErrorGroup(
-																															err.errorGroupGuid,
-																															err.occurrenceId,
-																															{
-																																timestamp: err.lastOccurrence,
-																																remote:
-																																	_observabilityRepo.repoRemote,
-																																sessionStart:
-																																	derivedState.sessionStart,
-																																pendingEntityId: err.entityId,
-																																occurrenceId: err.occurrenceId,
-																																pendingErrorGroupGuid:
-																																	err.errorGroupGuid,
-																																src: "Observability Section"
-																															}
-																														)
-																													);
-																												}}
-																											/>
-																										);
-																									});
-																								})}
-																								*/}
 																						</>
 																					) : _observabilityRepo.hasRepoAssociation ? (
 																						<ErrorRow title="No errors to display" />
@@ -1022,6 +858,7 @@ export const Observability = React.memo((props: Props) => {
 													})}
 											</>
 										)}
+										{hasEntities && renderAssignments()}
 									</PaneNode>
 								</>
 							)}
