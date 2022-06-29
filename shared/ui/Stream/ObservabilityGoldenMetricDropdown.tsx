@@ -6,6 +6,7 @@ import { CodeStreamState } from "../store";
 import { useDidMount } from "../utilities/hooks";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
+import Timestamp from "./Timestamp";
 import { HostApi } from "../webview-api";
 
 interface Props {}
@@ -40,7 +41,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				<>
 					<Row
 						style={{
-							padding: "0 0 0 42px"
+							padding: "0 10px 0 42px"
 						}}
 						className={"pr-row"}
 					>
@@ -63,10 +64,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 									delay={1}
 								/>
 							</span>
-							{/* 				
-							{props.timestamp && <Timestamp time={props.timestamp} relative abbreviated />}
-							 */}
-							33m
+							<Timestamp time={1656519836872} relative abbreviated />
 						</div>
 					</Row>
 				</>
