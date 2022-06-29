@@ -1049,6 +1049,7 @@ export const getProviderPullRequestRepoObjectCore = (
 					if (bucket.length) {
 						bucket.sort((a, b) => b.points - a.points);
 						result.currentRepo = bucket[0].repo;
+						result.currentRepo.repoFoundReason = "closestMatch";
 						result.reason = "closestMatch";
 					} else {
 						result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;

@@ -190,7 +190,10 @@ export const PullRequestFilesChanged = (props: Props) => {
 				let forkPointResponse;
 				try {
 					forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
-						repoId: derivedState.currentRepo!.id!,
+						repoId:
+							derivedState.currentRepo?.repoFoundReason === "closestMatch"
+								? "0"
+								: derivedState.currentRepo!.id!,
 						baseSha: props.baseRef,
 						headSha: props.headRef,
 						ref: getRef
@@ -214,7 +217,10 @@ export const PullRequestFilesChanged = (props: Props) => {
 				try {
 					setLoading(true);
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
-						repoId: derivedState.currentRepo!.id!,
+						repoId:
+							derivedState.currentRepo?.repoFoundReason === "closestMatch"
+								? "0"
+								: derivedState.currentRepo!.id!,
 						baseSha: props.pr.baseRefOid,
 						headSha: props.pr.headRefOid,
 						ref: getRef
