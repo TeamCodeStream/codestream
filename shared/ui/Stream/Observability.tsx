@@ -49,10 +49,11 @@ import { Provider } from "./IntegrationsPanel";
 import { Link } from "./Link";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { WarningBox } from "./WarningBox";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
-import { WarningBox } from "./WarningBox";
+import { ObservabilityAssignmentsDropdown } from "./ObservabilityAssignmentsDropdown";
 
 interface Props {
 	paneState: PaneState;
@@ -464,96 +465,6 @@ export const Observability = React.memo((props: Props) => {
 		}
 	];
 
-	const buildSelectedLabel = (repoId: string, entityAccounts: EntityAccount[]) => {
-		const selected = derivedState.observabilityRepoEntities.find(_ => _.repoId === repoId);
-		if (selected) {
-			const found = entityAccounts.find(_ => _.entityGuid === selected.entityGuid);
-			if (found) {
-				return found.entityName;
-			}
-		} else if (entityAccounts?.length) {
-			return entityAccounts[0].entityName;
-		}
-		return "(select)";
-	};
-
-	const renderAssignments = () => {
-		return (
-			<>
-				<PaneNodeName
-					title="Errors assigned to me"
-					id="newrelic-errors-assigned-to-me"
-				></PaneNodeName>
-				<>
-					{!hiddenPaneNodes["newrelic-errors-assigned-to-me"] && (
-						<>
-							{loadingAssigments ? (
-								<>
-									<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
-								</>
-							) : (
-								<>
-									{observabilityAssignments.length == 0 ? (
-										<>
-											<ErrorRow title={"No errors to display"}></ErrorRow>
-										</>
-									) : (
-										<>
-											{observabilityAssignments.map((_, index) => {
-												return (
-													<ErrorRow
-														key={index}
-														title={_.errorClass}
-														isLoading={loadingAssignmentErrorsClick[_.errorGroupGuid]}
-														tooltip={_.message}
-														url={_.errorGroupUrl}
-														onClick={async e => {
-															setLoadingAssignmentErrorsClick({
-																...loadingAssignmentErrorsClick,
-																[_.errorGroupGuid]: true
-															});
-															try {
-																const response = (await HostApi.instance.send(
-																	GetObservabilityErrorGroupMetadataRequestType,
-																	{ errorGroupGuid: _.errorGroupGuid }
-																)) as GetObservabilityErrorGroupMetadataResponse;
-																if (response) {
-																	dispatch(
-																		openErrorGroup(_.errorGroupGuid, response.occurrenceId, {
-																			remote: response.remote,
-																			sessionStart: derivedState.sessionStart,
-																			pendingEntityId: response.entityId,
-																			occurrenceId: response.occurrenceId,
-																			pendingErrorGroupGuid: _.errorGroupGuid,
-																			openType: "Observability Section"
-																		})
-																	);
-																} else {
-																	console.error("could not open error group");
-																}
-															} catch (ex) {
-																console.error(ex);
-															} finally {
-																setLoadingAssignmentErrorsClick({
-																	...loadingAssignmentErrorsClick,
-																	[_.errorGroupGuid]: false
-																});
-															}
-														}}
-													></ErrorRow>
-												);
-											})}
-										</>
-									)}
-								</>
-							)}
-						</>
-					)}
-				</>
-			</>
-		);
-	};
-
 	/*
 	 *	When current repo changes in IDE, set new entity accounts
 	 *  and fetch corresponding errors
@@ -824,6 +735,10 @@ export const Observability = React.memo((props: Props) => {
 																								observabilityErrors={observabilityErrors}
 																								observabilityRepo={_observabilityRepo}
 																							/>
+
+																							<ObservabilityAssignmentsDropdown
+																								observabilityAssignments={observabilityAssignments}
+																							/>
 																						</>
 																					) : _observabilityRepo.hasRepoAssociation ? (
 																						<ErrorRow title="No errors to display" />
@@ -858,7 +773,6 @@ export const Observability = React.memo((props: Props) => {
 													})}
 											</>
 										)}
-										{hasEntities && renderAssignments()}
 									</PaneNode>
 								</>
 							)}

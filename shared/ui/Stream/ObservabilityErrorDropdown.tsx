@@ -42,7 +42,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Errors</span>
+				<span style={{ marginLeft: "2px" }}>Recent Errors</span>
 			</Row>
 			{expanded && (
 				<>
