@@ -23,7 +23,9 @@ import {
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
-	ReposScm
+	ReposScm,
+	GetMethodLevelTelemetryRequestType,
+	GetMethodLevelTelemetryResponse
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -50,6 +52,7 @@ import { Link } from "./Link";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
+import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
@@ -197,7 +200,9 @@ export const Observability = React.memo((props: Props) => {
 			observabilityRepoEntities: preferences.observabilityRepoEntities || EMPTY_ARRAY,
 			showGoldenSignalsInEditor: state.configs.showGoldenSignalsInEditor,
 			isVS: state.ide.name === "VS",
-			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions
+			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
+			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
+				{}) as CurrentMethodLevelTelemetry
 		};
 	}, shallowEqual);
 
@@ -451,6 +456,16 @@ export const Observability = React.memo((props: Props) => {
 			});
 	};
 
+	const fetchGoldenMetrics = async (entityGuid: string) => {
+		const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
+			newRelicEntityGuid: entityGuid,
+			metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
+				.metricTimesliceNameMapping!,
+			repoId: currentRepoId
+		});
+		console.warn(response);
+	};
+
 	const settingsMenuItems = [
 		{
 			label: "Instrument my App",
@@ -480,7 +495,8 @@ export const Observability = React.memo((props: Props) => {
 			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
 				const _entityGuid = _currentEntityAccounts[0]?.entityGuid;
 
-				fetchObservabilityErrors(_currentEntityAccounts[0]?.entityGuid, currentRepoId);
+				fetchObservabilityErrors(_entityGuid, currentRepoId);
+				// fetchGoldenMetrics(_entityGuid);
 
 				const newPreferences = derivedState.observabilityRepoEntities.filter(
 					_ => _.repoId !== currentRepoId
@@ -725,8 +741,8 @@ export const Observability = React.memo((props: Props) => {
 																				<>
 																					{observabilityErrors?.find(
 																						oe =>
-																							oe.repoId === _observabilityRepo.repoId &&
-																							oe.errors.length > 0
+																							oe?.repoId === _observabilityRepo?.repoId &&
+																							oe?.errors.length > 0
 																					) ? (
 																						<>
 																							<ObservabilityGoldenMetricDropdown />

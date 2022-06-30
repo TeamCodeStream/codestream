@@ -2262,7 +2262,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	private async getGoldenMetricsQueries(
 		entityGuid: string,
-		metricTimesliceNameMapping: MetricTimesliceNameMapping
+		metricTimesliceNameMapping?: MetricTimesliceNameMapping
 	): Promise<GoldenMetricsQueryResult> {
 		// NOTE: these queries can be queried! we're hard-coding below because
 		// we want golden metrics on a method-level rather than an entity level
@@ -2282,36 +2282,83 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		// }`,
 		// 	{ entityGuid: entityGuid }
 		// );
-		return {
-			actor: {
-				entity: {
-					goldenMetrics: {
-						metrics: [
-							// duration
-							{
-								query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
-								title: "Response time (ms)"
-							},
-							// throughput
-							{
-								query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
-								title: "Throughput"
-							},
-							// error
-							{
-								query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}' AND metricTimesliceName='${metricTimesliceNameMapping["e"]}' FACET metricTimesliceName TIMESERIES`,
-								title: "Error rate"
-							}
-						]
+		if (metricTimesliceNameMapping) {
+			return {
+				actor: {
+					entity: {
+						goldenMetrics: {
+							metrics: [
+								// duration
+								{
+									query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
+									title: "Response time (ms)"
+								},
+								// throughput
+								{
+									query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
+									title: "Throughput"
+								},
+								// error
+								{
+									query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}' AND metricTimesliceName='${metricTimesliceNameMapping["e"]}' FACET metricTimesliceName TIMESERIES`,
+									title: "Error rate"
+								}
+							]
+						}
 					}
 				}
-			}
-		};
+			};
+		} else {
+			return this.query(
+				`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
+					actor {
+						entity(guid: $entityGuid) {
+							goldenMetrics {
+								metrics {
+									query
+									title
+									name
+								}
+							}
+						}
+					}
+				}`,
+				{ entityGuid: entityGuid }
+			);
+
+			// return {
+			// 	actor: {
+			// 		entity: {
+			// 			goldenMetrics: {
+			// 				metrics: [
+			// 					// duration
+			// 					{
+			// 						query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}')`,
+			// 						title: "Response time (ms)"
+			// 					},
+			// 					// throughput
+			// 					{
+			// 						query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}')`,
+			// 						title: "Throughput"
+			// 					},
+			// 					// error
+			// 					{
+			// 						query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}'`,
+			// 						title: "Error rate"
+			// 					}
+			// 				]
+			// 			}
+			// 		}
+			// 	}
+			// };
+		}
 	}
 
-	private async getGoldenMetrics(
+	// @lspHandler(GetObservabilityEntitiesRequestType)
+	// @log()
+	async getGoldenMetrics(
 		entityGuid: string,
-		metricTimesliceNames: MetricTimesliceNameMapping
+		metricTimesliceNames?: MetricTimesliceNameMapping
 	): Promise<GoldenMetricsResult[] | undefined> {
 		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
 
