@@ -534,7 +534,7 @@ export const Observability = React.memo((props: Props) => {
 			// Count all errors for each element of observabilityErrors
 			// Also set to hasObservability errors to true if nested errors array is populated
 			_forEach(observabilityErrors, oe => {
-				if (oe.errors.length) {
+				if (oe?.errors?.length) {
 					errorCount += oe.errors.length;
 					hasObservabilityErrors = true;
 				}
