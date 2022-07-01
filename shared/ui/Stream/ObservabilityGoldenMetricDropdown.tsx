@@ -78,6 +78,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							goldenMetricValue = goldenMetricValue.toFixed(2);
 						}
 
+						// add commas to numbers
+						goldenMetricValue = goldenMetricValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
 						return (
 							<Row
 								style={{

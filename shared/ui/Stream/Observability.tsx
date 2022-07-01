@@ -729,9 +729,28 @@ export const Observability = React.memo((props: Props) => {
 															return (
 																<>
 																	<PaneNodeName
-																		title={ea.entityName}
+																		title={ea.accountName}
 																		id={"newrelic-errors-in-repo-" + _observabilityRepo.repoId}
 																	/>
+																	{/* 
+																	<span
+																		onClick={e => {
+																			e.preventDefault();
+																			e.stopPropagation();
+																			HostApi.instance.send(OpenUrlRequestType, {
+																				url: pr.url
+																			});
+																		}}
+																	>
+																		<Icon
+																			name="link-external"
+																			className="clickable"
+																			title="View on GitHub"
+																			placement="bottomLeft"
+																			delay={1}
+																		/>
+																	</span>
+																	*/}
 																	{loadingErrors && loadingErrors[_observabilityRepo.repoId] ? (
 																		<>
 																			<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
