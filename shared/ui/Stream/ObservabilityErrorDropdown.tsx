@@ -47,7 +47,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			{expanded && (
 				<>
 					{observabilityErrors
-						.filter(oe => oe.repoId === observabilityRepo.repoId)
+						.filter(oe => oe?.repoId === observabilityRepo?.repoId)
 						.map(oe => {
 							return oe.errors.map(err => {
 								return (

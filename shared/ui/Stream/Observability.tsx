@@ -221,6 +221,7 @@ export const Observability = React.memo((props: Props) => {
 	>([]);
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
+	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
@@ -463,7 +464,9 @@ export const Observability = React.memo((props: Props) => {
 				.metricTimesliceNameMapping!,
 			repoId: currentRepoId
 		});
-		console.warn(response);
+		if (response?.goldenMetrics) {
+			setGoldenMetrics(response.goldenMetrics);
+		}
 	};
 
 	const settingsMenuItems = [
@@ -496,7 +499,7 @@ export const Observability = React.memo((props: Props) => {
 				const _entityGuid = _currentEntityAccounts[0]?.entityGuid;
 
 				fetchObservabilityErrors(_entityGuid, currentRepoId);
-				// fetchGoldenMetrics(_entityGuid);
+				fetchGoldenMetrics(_entityGuid);
 
 				const newPreferences = derivedState.observabilityRepoEntities.filter(
 					_ => _.repoId !== currentRepoId
@@ -615,8 +618,8 @@ export const Observability = React.memo((props: Props) => {
 
 	console.warn("eric observabilityRepos", observabilityRepos);
 	console.warn("eric observabilityErrors", observabilityErrors);
-	console.warn("eric currentRepo", currentRepoId);
 	console.warn("eric currentEntityAccounts", currentEntityAccounts);
+	console.warn("eric goldenMetrics", goldenMetrics);
 
 	return (
 		<Root>
@@ -745,7 +748,9 @@ export const Observability = React.memo((props: Props) => {
 																							oe?.errors.length > 0
 																					) ? (
 																						<>
-																							<ObservabilityGoldenMetricDropdown />
+																							<ObservabilityGoldenMetricDropdown
+																								goldenMetrics={goldenMetrics}
+																							/>
 
 																							<ObservabilityErrorDropdown
 																								observabilityErrors={observabilityErrors}

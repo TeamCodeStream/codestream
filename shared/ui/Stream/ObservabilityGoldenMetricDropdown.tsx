@@ -9,7 +9,23 @@ import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import { HostApi } from "../webview-api";
 
-interface Props {}
+interface Props {
+	goldenMetrics: any;
+}
+
+const StyledMetric = styled.div`
+	color: var(--text-color-subtle);
+	font-weight: normal;
+	padding-left: 5px;
+	&.no-padding {
+		padding-left: 0;
+	}
+	// details isn't used in relative timestamps
+	.details {
+		padding-left: 5px;
+		transition: opacity 0.4s;
+	}
+`;
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const dispatch = useDispatch();
@@ -23,6 +39,20 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	// useDidMount(() => {});
 	// useEffect(() => {}, []);
+
+	const { goldenMetrics } = props;
+
+	// const goldenMetricTitleMapping = {
+	// 	responseTimeMs: "Response Time Ms",
+	// 	throughput: "Throughput",
+	// 	errorRate: "Error Rate"
+	// };
+
+	const goldenMetricTitleMapping = {
+		responseTimeMs: { title: "Response Time Ms", units: "ms" },
+		throughput: { title: "Throughput", units: "rpm" },
+		errorRate: { title: "Error Rate", units: "avg" }
+	};
 
 	return (
 		<>
@@ -39,34 +69,50 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			</Row>
 			{expanded && (
 				<>
-					<Row
-						style={{
-							padding: "0 10px 0 42px"
-						}}
-						className={"pr-row"}
-					>
-						<div>
-							<Icon name="info" /> <span>Throughput</span>
-						</div>
+					{goldenMetrics.map(gm => {
+						const goldenMetricUnit = goldenMetricTitleMapping[gm?.name]?.units;
+						let goldenMetricValue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
 
-						<div className="icons">
-							<span
-								onClick={e => {
-									e.preventDefault();
-									e.stopPropagation();
+						// If decimal, round to 2 places more space in UX
+						if (goldenMetricValue % 1 !== 0) {
+							goldenMetricValue = goldenMetricValue.toFixed(2);
+						}
+
+						return (
+							<Row
+								style={{
+									padding: "0 10px 0 42px"
 								}}
+								className={"pr-row"}
 							>
-								<Icon
-									name="globe"
-									className="clickable"
-									title="View on New Relic"
-									placement="bottomLeft"
-									delay={1}
-								/>
-							</span>
-							<Timestamp time={1656519836872} relative abbreviated />
-						</div>
-					</Row>
+								<div>
+									<Icon name="info" /> <span>{gm.title}</span>
+								</div>
+
+								<div className="icons">
+									{/* @TODO: currently no need, but might be added later
+									<span
+										onClick={e => {
+											e.preventDefault();
+											e.stopPropagation();
+										}}
+									>
+										<Icon
+											name="globe"
+											className="clickable"
+											title="View on New Relic"
+											placement="bottomLeft"
+											delay={1}
+										/>
+									</span>
+									*/}
+									<StyledMetric>
+										{goldenMetricValue} {goldenMetricUnit}
+									</StyledMetric>
+								</div>
+							</Row>
+						);
+					})}
 				</>
 			)}
 		</>

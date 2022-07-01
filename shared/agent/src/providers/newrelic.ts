@@ -2370,10 +2370,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const results = await Promise.all(
 				queries.actor.entity.goldenMetrics.metrics.map(_ => {
+					let _query = _.query;
+
+					// if no metricTimesliceNames, then we don't need TIMESERIES in query
+					if (!metricTimesliceNames) {
+						_query = _query.replace(/TIMESERIES/, "");
+					}
+
 					const q = `query getMetric($accountId: Int!) {
 						actor {
 						  account(id: $accountId) {
-							nrql(query: "${_.query}") {
+							nrql(query: "${_query}") {
 							  results
 							}
 						  }
