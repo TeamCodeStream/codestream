@@ -40,6 +40,7 @@ interface PaneNodeNameProps {
 	subtitle?: string | React.ReactNode;
 	collapsed?: boolean;
 	actionsVisibleIfOpen?: boolean;
+	labelIsFlex?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
@@ -58,7 +59,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 
 	return (
 		<div className={props.className} onClick={props.onClick || toggleNode}>
-			<div className="label">
+			<div style={{ display: props.labelIsFlex ? "flex" : "block" }} className="label">
 				{props.isLoading && <Icon name="sync" className="spin" />}
 				{!props.isLoading && (
 					<Icon

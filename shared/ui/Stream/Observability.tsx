@@ -122,6 +122,14 @@ const NoEntitiesCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
+const EntityHealth = styled.div`
+	background-color: #24a100;
+	width: 15px;
+	height: 15px;
+	border-radius: 2px;
+	margin-right: 4px;
+`;
+
 export const ErrorRow = (props: {
 	title: string;
 	subtle?: string;
@@ -558,57 +566,6 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [loadingErrors, loadingAssigments]);
 
-	const inlineMenuEntityItems = or => {
-		let items = or.entityAccounts.map((ea, index) => {
-			let checked = false;
-			// if we dont have a setting for this, we choose the first one
-			if (derivedState.observabilityRepoEntities.length === 0 && index === 0) {
-				checked = true;
-			} else {
-				const setting = derivedState.observabilityRepoEntities.find(
-					_ => _.repoId === or.repoId && _.entityGuid === ea.entityGuid
-				);
-				checked = !!setting;
-			}
-			return {
-				label: ea.entityName,
-				searchLabel: ea.entityName,
-				subtle: `${
-					ea.accountName && ea.accountName.length > 25
-						? ea.accountName.substr(0, 25) + "..."
-						: ea.accountName
-				}${ea.domain ? ` (${ea.domain})` : ""}`,
-				key: ea.entityGuid,
-				action: () => {
-					fetchObservabilityErrors(ea.entityGuid, or.repoId);
-					const newPreferences = derivedState.observabilityRepoEntities.filter(
-						_ => _.repoId !== or.repoId
-					);
-					newPreferences.push({
-						repoId: or.repoId,
-						entityGuid: ea.entityGuid
-					});
-					dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
-					// update the IDEs
-					HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
-				},
-				checked: checked
-			};
-		});
-
-		// didn't find any checked items, check the first
-		if (items.length && !items.find(_ => _.checked)) {
-			items[0].checked = true;
-		}
-
-		if (items.length >= 5) {
-			items.unshift({ label: "-" });
-			items.unshift({ type: "search", placeholder: "Search...", action: "search" });
-		}
-
-		return items;
-	};
-
 	const handleSetUpMonitoring = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		dispatch(openPanel(WebviewPanels.OnboardNewRelic));
@@ -721,7 +678,7 @@ export const Observability = React.memo((props: Props) => {
 											<>
 												{currentEntityAccounts
 													.filter(_ => _)
-													.map(ea => {
+													.map((ea, index) => {
 														const _observabilityRepo = observabilityRepos.find(
 															_ => _.repoId === currentRepoId
 														);
@@ -729,28 +686,33 @@ export const Observability = React.memo((props: Props) => {
 															return (
 																<>
 																	<PaneNodeName
-																		title={ea.accountName}
-																		id={"newrelic-errors-in-repo-" + _observabilityRepo.repoId}
-																	/>
-																	{/* 
-																	<span
-																		onClick={e => {
-																			e.preventDefault();
-																			e.stopPropagation();
-																			HostApi.instance.send(OpenUrlRequestType, {
-																				url: pr.url
-																			});
-																		}}
+																		title={
+																			<div style={{ display: "flex", alignItems: "center" }}>
+																				<EntityHealth />
+																				<div>{ea.accountName}</div>
+																			</div>
+																		}
+																		id={
+																			index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId
+																		}
+																		labelIsFlex={true}
 																	>
+																		{/* @TODO fix link */}
 																		<Icon
 																			name="link-external"
 																			className="clickable"
-																			title="View on GitHub"
+																			title="View on New Relic"
 																			placement="bottomLeft"
 																			delay={1}
+																			onClick={e => {
+																				e.preventDefault();
+																				e.stopPropagation();
+																				HostApi.instance.send(OpenUrlRequestType, {
+																					url: "google.com"
+																				});
+																			}}
 																		/>
-																	</span>
-																	*/}
+																	</PaneNodeName>
 																	{loadingErrors && loadingErrors[_observabilityRepo.repoId] ? (
 																		<>
 																			<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
@@ -758,7 +720,9 @@ export const Observability = React.memo((props: Props) => {
 																	) : (
 																		<>
 																			{!hiddenPaneNodes[
-																				"newrelic-errors-in-repo-" + _observabilityRepo.repoId
+																				index +
+																					"newrelic-errors-in-repo-" +
+																					_observabilityRepo.repoId
 																			] && (
 																				<>
 																					{observabilityErrors?.find(
