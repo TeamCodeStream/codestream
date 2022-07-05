@@ -855,7 +855,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								entityGuid: entity.guid,
 								entityName: entity.name,
 								tags: entity.tags,
-								domain: entity.domain
+								domain: entity.domain,
+								alertSeverity: entity?.alertSeverity
 							} as EntityAccount;
 						})
 						.filter(Boolean)
@@ -2198,7 +2199,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return {
 				goldenMetrics: goldenMetrics,
 				newRelicEntityAccounts: observabilityRepo.entityAccounts,
-				newRelicAlertSeverity: entity.alertSeverity,
+				newRelicAlertSeverity: entity.alertSeverity || "hi",
 				newRelicEntityName: entity.entityName!,
 				newRelicEntityGuid: entity.entityGuid!,
 				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
@@ -3079,6 +3080,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							id
 						}
 						domain
+						alertSeverity
 						name
 						guid
 						type

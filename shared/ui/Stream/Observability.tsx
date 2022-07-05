@@ -6,7 +6,7 @@ import {
 } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
+import styled, { withTheme } from "styled-components";
 
 import {
 	DidChangeObservabilityDataNotificationType,
@@ -53,6 +53,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
+import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
@@ -122,13 +123,46 @@ const NoEntitiesCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
-const EntityHealth = styled.div`
-	background-color: #24a100;
+// const EntityHealth = styled.div`
+// 	background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
+// 	width: 15px;
+// 	height: 15px;
+// 	border-radius: 2px;
+// 	margin-right: 4px;
+// `;
+
+const EntityHealth = styled.div<{ backgroundColor: string }>`
+	background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
 	width: 15px;
 	height: 15px;
 	border-radius: 2px;
 	margin-right: 4px;
 `;
+
+// const EntityHealth = styled.div<props>(props) => {
+// 		const { theme, noCard } = props;
+
+// 		if (noCard)
+// 			return `
+// 			cursor: ${props.onClick != undefined ? "pointer" : "default"};
+// 			display: flex;
+// 			margin: -10px;
+// 			border: 1px solid transparent;
+// 		`;
+
+// 		const boxShadow = isDarkTheme(theme)
+// 			? "0 5px 10px rgba(0, 0, 0, 0.2)"
+// 			: "0 2px 5px rgba(0, 0, 0, 0.08)";
+
+// 		return `
+// 		cursor: ${props.onClick != undefined ? "pointer" : "default"};
+// 		display: flex;
+// 		box-shadow: ${boxShadow};
+// 		background: ${theme.colors.appBackground};
+// 		border: 1px solid ${theme.colors.baseBorder};
+//  	 `;
+// 	}
+// );
 
 export const ErrorRow = (props: {
 	title: string;
@@ -230,6 +264,7 @@ export const Observability = React.memo((props: Props) => {
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
 	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
+	// const [alertSeverity, setAlertSeverity] = useState<any>();
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
@@ -474,6 +509,7 @@ export const Observability = React.memo((props: Props) => {
 		});
 		if (response?.goldenMetrics) {
 			setGoldenMetrics(response.goldenMetrics);
+			// setAlertSeverity(response.newRelicAlertSeverity);
 		}
 	};
 
@@ -577,6 +613,9 @@ export const Observability = React.memo((props: Props) => {
 	console.warn("eric observabilityErrors", observabilityErrors);
 	console.warn("eric currentEntityAccounts", currentEntityAccounts);
 	console.warn("eric goldenMetrics", goldenMetrics);
+	console.warn("eric ALERT_SEVERITY_COLORS", ALERT_SEVERITY_COLORS);
+
+	//${props => props.primary ? "white"
 
 	return (
 		<Root>
@@ -682,13 +721,17 @@ export const Observability = React.memo((props: Props) => {
 														const _observabilityRepo = observabilityRepos.find(
 															_ => _.repoId === currentRepoId
 														);
+
 														if (_observabilityRepo) {
+															const _alertSeverity = ea?.alertSeverity || "";
+															const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
+
 															return (
 																<>
 																	<PaneNodeName
 																		title={
 																			<div style={{ display: "flex", alignItems: "center" }}>
-																				<EntityHealth />
+																				<EntityHealth backgroundColor={alertSeverityColor} />
 																				<div>{ea.accountName}</div>
 																			</div>
 																		}
