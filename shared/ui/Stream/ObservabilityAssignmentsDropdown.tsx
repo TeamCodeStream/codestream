@@ -17,6 +17,7 @@ import {
 
 interface Props {
 	observabilityAssignments?: any;
+	entityGuid?: string;
 }
 
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
@@ -28,11 +29,21 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	}, shallowEqual);
 
 	const [expanded, setExpanded] = useState<boolean>(true);
+	const [filteredAssignments, setFilteredAssignments] = useState<any>([]);
 
 	// useDidMount(() => {});
-	// useEffect(() => {}, []);
 
-	const { observabilityAssignments } = props;
+	// Only show assigments that correlate to the entityGuid prop
+	useEffect(() => {
+		let _filteredAssignments = props.observabilityAssignments.find(
+			_ => _.entityGuid === props.entityGuid
+		);
+		setFilteredAssignments(_filteredAssignments || []);
+	}, [props.observabilityAssignments]);
+
+	if (!filteredAssignments) {
+		return null;
+	}
 
 	return (
 		<>
@@ -49,13 +60,13 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 			</Row>
 			{expanded && (
 				<>
-					{observabilityAssignments.length == 0 ? (
+					{filteredAssignments && filteredAssignments.length == 0 ? (
 						<>
 							<ErrorRow title={"No errors to display"}></ErrorRow>
 						</>
 					) : (
 						<>
-							{observabilityAssignments.map((_, index) => {
+							{filteredAssignments.map((_, index) => {
 								return (
 									<ErrorRow
 										key={index}

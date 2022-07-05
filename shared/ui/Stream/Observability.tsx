@@ -785,6 +785,7 @@ export const Observability = React.memo((props: Props) => {
 
 																							<ObservabilityAssignmentsDropdown
 																								observabilityAssignments={observabilityAssignments}
+																								entityGuid={ea.entityGuid}
 																							/>
 																						</>
 																					) : _observabilityRepo.hasRepoAssociation ? (
