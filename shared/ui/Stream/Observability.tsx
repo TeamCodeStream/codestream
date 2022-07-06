@@ -513,6 +513,10 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
+	const handleClickErrorsInRepo = () => {
+		return null;
+	};
+
 	const settingsMenuItems = [
 		{
 			label: "Instrument my App",
@@ -739,6 +743,7 @@ export const Observability = React.memo((props: Props) => {
 																			index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId
 																		}
 																		labelIsFlex={true}
+																		onClick={handleClickErrorsInRepo}
 																	>
 																		{/* @TODO fix link */}
 																		<Icon
