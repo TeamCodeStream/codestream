@@ -41,6 +41,7 @@ interface PaneNodeNameProps {
 	collapsed?: boolean;
 	actionsVisibleIfOpen?: boolean;
 	labelIsFlex?: boolean;
+	forceExpand?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
@@ -52,8 +53,6 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		};
 	});
 	const toggleNode = e => {
-		// Here, probably use custom onClick method and collapse all panenodes with id preface except 1
-
 		if (e.target.closest(".actions")) return;
 		if (!props.id) return;
 		dispatch(setUserPreference(["hiddenPaneNodes"], { [props.id]: !derivedState.collapsed }));

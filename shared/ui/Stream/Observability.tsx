@@ -264,7 +264,8 @@ export const Observability = React.memo((props: Props) => {
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
 	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
-	// const [alertSeverity, setAlertSeverity] = useState<any>();
+	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
+	const [expandedEntity, setExpandedEntity] = useState<number | undefined>();
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
@@ -509,12 +510,19 @@ export const Observability = React.memo((props: Props) => {
 		});
 		if (response?.goldenMetrics) {
 			setGoldenMetrics(response.goldenMetrics);
-			// setAlertSeverity(response.newRelicAlertSeverity);
+			setNewRelicUrl(response.newRelicUrl);
 		}
 	};
 
-	const handleClickErrorsInRepo = () => {
-		return null;
+	const handleClickErrorsInRepo = (e, index) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		setExpandedEntity(index);
+		// const { hiddenPaneNodes } = derivedState;
+		// Object.keys(object).find(key => object[key] === value);
+		// console.warn("eric handleClick", index, hiddenPaneNodes);
+		// dispatch(setUserPreference(["hiddenPaneNodes"], { [id]: !derivedState.collapsed }));
 	};
 
 	const settingsMenuItems = [
@@ -617,7 +625,6 @@ export const Observability = React.memo((props: Props) => {
 	console.warn("eric observabilityErrors", observabilityErrors);
 	console.warn("eric currentEntityAccounts", currentEntityAccounts);
 	console.warn("eric goldenMetrics", goldenMetrics);
-	console.warn("eric ALERT_SEVERITY_COLORS", ALERT_SEVERITY_COLORS);
 
 	//${props => props.primary ? "white"
 
@@ -743,9 +750,7 @@ export const Observability = React.memo((props: Props) => {
 																			index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId
 																		}
 																		labelIsFlex={true}
-																		onClick={handleClickErrorsInRepo}
 																	>
-																		{/* @TODO fix link */}
 																		<Icon
 																			name="link-external"
 																			className="clickable"
@@ -756,7 +761,7 @@ export const Observability = React.memo((props: Props) => {
 																				e.preventDefault();
 																				e.stopPropagation();
 																				HostApi.instance.send(OpenUrlRequestType, {
-																					url: "google.com"
+																					url: newRelicUrl || " "
 																				});
 																			}}
 																		/>
