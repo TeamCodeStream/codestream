@@ -265,7 +265,7 @@ export const Observability = React.memo((props: Props) => {
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
 	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
-	const [expandedEntity, setExpandedEntity] = useState<number | undefined>();
+	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
@@ -514,15 +514,36 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const handleClickErrorsInRepo = (e, index) => {
+	const handleClickErrorsInRepo = (e, id, entityGuid) => {
 		e.preventDefault();
 		e.stopPropagation();
 
-		setExpandedEntity(index);
-		// const { hiddenPaneNodes } = derivedState;
-		// Object.keys(object).find(key => object[key] === value);
-		// console.warn("eric handleClick", index, hiddenPaneNodes);
-		// dispatch(setUserPreference(["hiddenPaneNodes"], { [id]: !derivedState.collapsed }));
+		const collapsed = derivedState.hiddenPaneNodes[id];
+
+		let filteredPaneNodes = Object.keys(derivedState.hiddenPaneNodes)
+			.filter(k => {
+				if (k === id) {
+					return false;
+				}
+				return !_isEmpty(k.match(/[0-9]+newrelic-errors-in-repo/gi));
+			})
+			.reduce((newData, k) => {
+				newData[k] = derivedState.hiddenPaneNodes[k];
+				return newData;
+			}, {});
+
+		Object.keys(filteredPaneNodes).map(function(key) {
+			if (filteredPaneNodes[key] === false) {
+				dispatch(setUserPreference(["hiddenPaneNodes"], { [key]: true }));
+			}
+		});
+		dispatch(setUserPreference(["hiddenPaneNodes"], { [id]: !collapsed }));
+
+		if (entityGuid === expandedEntity) {
+			setExpandedEntity(null);
+		} else {
+			setExpandedEntity(entityGuid);
+		}
 	};
 
 	const settingsMenuItems = [
@@ -552,7 +573,7 @@ export const Observability = React.memo((props: Props) => {
 			setCurrentEntityAccounts(_currentEntityAccounts);
 
 			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
-				const _entityGuid = _currentEntityAccounts[0]?.entityGuid;
+				const _entityGuid = expandedEntity || "";
 
 				fetchObservabilityErrors(_entityGuid, currentRepoId);
 				fetchGoldenMetrics(_entityGuid);
@@ -569,7 +590,7 @@ export const Observability = React.memo((props: Props) => {
 				HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 			}
 		}
-	}, [currentRepoId, observabilityRepos]);
+	}, [currentRepoId, observabilityRepos, expandedEntity]);
 
 	/*
 	 *	When all parts of the observability panel are done loading
@@ -625,8 +646,6 @@ export const Observability = React.memo((props: Props) => {
 	console.warn("eric observabilityErrors", observabilityErrors);
 	console.warn("eric currentEntityAccounts", currentEntityAccounts);
 	console.warn("eric goldenMetrics", goldenMetrics);
-
-	//${props => props.primary ? "white"
 
 	return (
 		<Root>
@@ -736,6 +755,8 @@ export const Observability = React.memo((props: Props) => {
 														if (_observabilityRepo) {
 															const _alertSeverity = ea?.alertSeverity || "";
 															const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
+															const paneId =
+																index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
 
 															return (
 																<>
@@ -746,10 +767,10 @@ export const Observability = React.memo((props: Props) => {
 																				<div>{ea.accountName}</div>
 																			</div>
 																		}
-																		id={
-																			index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId
-																		}
+																		id={paneId}
 																		labelIsFlex={true}
+																		onClick={e => handleClickErrorsInRepo(e, paneId, ea.entityGuid)}
+																		collapsed={expandedEntity !== ea.entityGuid}
 																	>
 																		<Icon
 																			name="link-external"

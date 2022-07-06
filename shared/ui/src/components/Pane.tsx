@@ -14,6 +14,7 @@ import Draggable from "react-draggable";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import cx from "classnames";
 import { HostApi } from "@codestream/webview/webview-api";
+import { isUndefined } from "lodash-es";
 
 export enum PaneState {
 	Open = "open",
@@ -45,6 +46,7 @@ interface PaneNodeNameProps {
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
+
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const hiddenPaneNodes = preferences.hiddenPaneNodes || EMPTY_HASH;
@@ -52,11 +54,14 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 			collapsed: props.id ? hiddenPaneNodes[props.id] : props.collapsed
 		};
 	});
+
 	const toggleNode = e => {
 		if (e.target.closest(".actions")) return;
 		if (!props.id) return;
 		dispatch(setUserPreference(["hiddenPaneNodes"], { [props.id]: !derivedState.collapsed }));
 	};
+
+	// const expandPane = isUndefined(props.forceExpand) ? !derivedState.collapsed : props.forceExpand;
 
 	return (
 		<div className={props.className} onClick={props.onClick || toggleNode}>
