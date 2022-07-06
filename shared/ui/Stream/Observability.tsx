@@ -123,14 +123,6 @@ const NoEntitiesCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
-// const EntityHealth = styled.div`
-// 	background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
-// 	width: 15px;
-// 	height: 15px;
-// 	border-radius: 2px;
-// 	margin-right: 4px;
-// `;
-
 const EntityHealth = styled.div<{ backgroundColor: string }>`
 	background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
 	width: 15px;
@@ -138,31 +130,6 @@ const EntityHealth = styled.div<{ backgroundColor: string }>`
 	border-radius: 2px;
 	margin-right: 4px;
 `;
-
-// const EntityHealth = styled.div<props>(props) => {
-// 		const { theme, noCard } = props;
-
-// 		if (noCard)
-// 			return `
-// 			cursor: ${props.onClick != undefined ? "pointer" : "default"};
-// 			display: flex;
-// 			margin: -10px;
-// 			border: 1px solid transparent;
-// 		`;
-
-// 		const boxShadow = isDarkTheme(theme)
-// 			? "0 5px 10px rgba(0, 0, 0, 0.2)"
-// 			: "0 2px 5px rgba(0, 0, 0, 0.08)";
-
-// 		return `
-// 		cursor: ${props.onClick != undefined ? "pointer" : "default"};
-// 		display: flex;
-// 		box-shadow: ${boxShadow};
-// 		background: ${theme.colors.appBackground};
-// 		border: 1px solid ${theme.colors.baseBorder};
-//  	 `;
-// 	}
-// );
 
 export const ErrorRow = (props: {
 	title: string;
@@ -263,6 +230,7 @@ export const Observability = React.memo((props: Props) => {
 	>([]);
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
+	const [loadingPane, setLoadingPane] = useState<string | null>("");
 	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
@@ -288,6 +256,7 @@ export const Observability = React.memo((props: Props) => {
 		});
 	};
 
+	//@TODO: probably depreciated/candidate for deletion and cleanup
 	const loading = (repoIdOrRepoIds: string | string[], isLoading: boolean) => {
 		if (Array.isArray(repoIdOrRepoIds)) {
 			setLoadingErrors(
@@ -482,6 +451,7 @@ export const Observability = React.memo((props: Props) => {
 
 	const fetchObservabilityErrors = (entityGuid: string, repoId) => {
 		loading(repoId, true);
+		setLoadingPane(expandedEntity);
 
 		HostApi.instance
 			.send(GetObservabilityErrorsRequestType, {
@@ -494,10 +464,12 @@ export const Observability = React.memo((props: Props) => {
 					setObservabilityErrors(existingObservabilityErrors!);
 				}
 				loading(repoId, false);
+				setLoadingPane(null);
 			})
 			.catch(_ => {
 				console.warn(_);
 				loading(repoId, false);
+				setLoadingPane(null);
 			});
 	};
 
@@ -787,7 +759,9 @@ export const Observability = React.memo((props: Props) => {
 																			}}
 																		/>
 																	</PaneNodeName>
-																	{loadingErrors && loadingErrors[_observabilityRepo.repoId] ? (
+
+																	{ea.entityGuid === loadingPane ||
+																	(loadingErrors && loadingErrors[_observabilityRepo.repoId]) ? (
 																		<>
 																			<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
 																		</>
