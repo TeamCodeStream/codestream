@@ -490,6 +490,10 @@ export const Observability = React.memo((props: Props) => {
 		e.preventDefault();
 		e.stopPropagation();
 
+		if (loadingPane) {
+			return;
+		}
+
 		const collapsed = derivedState.hiddenPaneNodes[id];
 
 		let filteredPaneNodes = Object.keys(derivedState.hiddenPaneNodes)
@@ -715,117 +719,123 @@ export const Observability = React.memo((props: Props) => {
 											</>
 										)}
 
-										{currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities && (
-											<>
-												{currentEntityAccounts
-													.filter(_ => _)
-													.map((ea, index) => {
-														const _observabilityRepo = observabilityRepos.find(
-															_ => _.repoId === currentRepoId
-														);
-
-														if (_observabilityRepo) {
-															const _alertSeverity = ea?.alertSeverity || "";
-															const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
-															const paneId =
-																index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
-
-															return (
-																<>
-																	<PaneNodeName
-																		title={
-																			<div style={{ display: "flex", alignItems: "center" }}>
-																				<EntityHealth backgroundColor={alertSeverityColor} />
-																				<div>{ea.accountName}</div>
-																			</div>
-																		}
-																		id={paneId}
-																		labelIsFlex={true}
-																		onClick={e => handleClickErrorsInRepo(e, paneId, ea.entityGuid)}
-																		collapsed={expandedEntity !== ea.entityGuid}
-																	>
-																		<Icon
-																			name="link-external"
-																			className="clickable"
-																			title="View on New Relic"
-																			placement="bottomLeft"
-																			delay={1}
-																			onClick={e => {
-																				e.preventDefault();
-																				e.stopPropagation();
-																				HostApi.instance.send(OpenUrlRequestType, {
-																					url: newRelicUrl || " "
-																				});
-																			}}
-																		/>
-																	</PaneNodeName>
-
-																	{ea.entityGuid === loadingPane ||
-																	(loadingErrors && loadingErrors[_observabilityRepo.repoId]) ? (
-																		<>
-																			<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
-																		</>
-																	) : (
-																		<>
-																			{!hiddenPaneNodes[
-																				index +
-																					"newrelic-errors-in-repo-" +
-																					_observabilityRepo.repoId
-																			] && (
-																				<>
-																					{observabilityErrors?.find(
-																						oe =>
-																							oe?.repoId === _observabilityRepo?.repoId &&
-																							oe?.errors.length > 0
-																					) ? (
-																						<>
-																							<ObservabilityGoldenMetricDropdown
-																								goldenMetrics={goldenMetrics}
-																							/>
-
-																							<ObservabilityErrorDropdown
-																								observabilityErrors={observabilityErrors}
-																								observabilityRepo={_observabilityRepo}
-																							/>
-
-																							<ObservabilityAssignmentsDropdown
-																								observabilityAssignments={observabilityAssignments}
-																								entityGuid={ea.entityGuid}
-																							/>
-																						</>
-																					) : _observabilityRepo.hasRepoAssociation ? (
-																						<ErrorRow title="No errors to display" />
-																					) : (
-																						<EntityAssociator
-																							label="Associate this repo with an entity on New Relic in order to see errors"
-																							onSuccess={async e => {
-																								HostApi.instance.track("NR Entity Association", {
-																									"Repo ID": _observabilityRepo.repoId
-																								});
-
-																								await fetchObservabilityRepos(
-																									e.entityGuid,
-																									_observabilityRepo.repoId
-																								);
-																								fetchObservabilityErrors(
-																									e.entityGuid,
-																									_observabilityRepo.repoId
-																								);
-																							}}
-																							remote={_observabilityRepo.repoRemote}
-																							remoteName={_observabilityRepo.repoName}
-																						/>
-																					)}
-																				</>
-																			)}
-																		</>
-																	)}
-																</>
+										{!loadingEntities &&
+											currentEntityAccounts &&
+											currentEntityAccounts?.length !== 0 &&
+											hasEntities && (
+												<>
+													{currentEntityAccounts
+														.filter(_ => _)
+														.map((ea, index) => {
+															const _observabilityRepo = observabilityRepos.find(
+																_ => _.repoId === currentRepoId
 															);
-														} else return null;
-													})}
-											</>
-										)}
+
+															if (_observabilityRepo) {
+																const _alertSeverity = ea?.alertSeverity || "";
+																const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
+																const paneId =
+																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
+
+																return (
+																	<>
+																		<PaneNodeName
+																			title={
+																				<div style={{ display: "flex", alignItems: "center" }}>
+																					<EntityHealth backgroundColor={alertSeverityColor} />
+																					<div>{ea.accountName}</div>
+																				</div>
+																			}
+																			id={paneId}
+																			labelIsFlex={true}
+																			onClick={e =>
+																				handleClickErrorsInRepo(e, paneId, ea.entityGuid)
+																			}
+																			collapsed={expandedEntity !== ea.entityGuid}
+																		>
+																			<Icon
+																				name="link-external"
+																				className="clickable"
+																				title="View on New Relic"
+																				placement="bottomLeft"
+																				delay={1}
+																				onClick={e => {
+																					e.preventDefault();
+																					e.stopPropagation();
+																					HostApi.instance.send(OpenUrlRequestType, {
+																						url: newRelicUrl || " "
+																					});
+																				}}
+																			/>
+																		</PaneNodeName>
+
+																		{ea.entityGuid === loadingPane ? (
+																			<>
+																				<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
+																			</>
+																		) : (
+																			<>
+																				{!hiddenPaneNodes[
+																					index +
+																						"newrelic-errors-in-repo-" +
+																						_observabilityRepo.repoId
+																				] && (
+																					<>
+																						{observabilityErrors?.find(
+																							oe =>
+																								oe?.repoId === _observabilityRepo?.repoId &&
+																								oe?.errors.length > 0
+																						) ? (
+																							<>
+																								<ObservabilityGoldenMetricDropdown
+																									goldenMetrics={goldenMetrics}
+																								/>
+
+																								<ObservabilityErrorDropdown
+																									observabilityErrors={observabilityErrors}
+																									observabilityRepo={_observabilityRepo}
+																								/>
+
+																								<ObservabilityAssignmentsDropdown
+																									observabilityAssignments={
+																										observabilityAssignments
+																									}
+																									entityGuid={ea.entityGuid}
+																								/>
+																							</>
+																						) : _observabilityRepo.hasRepoAssociation ? (
+																							<ErrorRow title="No errors to display" />
+																						) : (
+																							<EntityAssociator
+																								label="Associate this repo with an entity on New Relic in order to see errors"
+																								onSuccess={async e => {
+																									HostApi.instance.track("NR Entity Association", {
+																										"Repo ID": _observabilityRepo.repoId
+																									});
+
+																									await fetchObservabilityRepos(
+																										e.entityGuid,
+																										_observabilityRepo.repoId
+																									);
+																									fetchObservabilityErrors(
+																										e.entityGuid,
+																										_observabilityRepo.repoId
+																									);
+																								}}
+																								remote={_observabilityRepo.repoRemote}
+																								remoteName={_observabilityRepo.repoName}
+																							/>
+																						)}
+																					</>
+																				)}
+																			</>
+																		)}
+																	</>
+																);
+															} else return null;
+														})}
+												</>
+											)}
 									</PaneNode>
 								</>
 							)}
