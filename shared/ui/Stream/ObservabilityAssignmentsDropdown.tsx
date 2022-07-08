@@ -49,14 +49,14 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 30px"
+					padding: "2px 10px 2px 40px"
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Errors Assigned to Me</span>
+				<span style={{ marginLeft: "2px" }}>Assigned to Me</span>
 			</Row>
 			{expanded && (
 				<>
@@ -73,6 +73,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 										title={_.errorClass}
 										tooltip={_.message}
 										url={_.errorGroupUrl}
+										customPadding={"0 10px 0 50px"}
 										onClick={async e => {
 											try {
 												const response = (await HostApi.instance.send(

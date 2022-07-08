@@ -35,14 +35,14 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 30px"
+					padding: "2px 10px 2px 40px"
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Recent Errors</span>
+				<span style={{ marginLeft: "2px" }}>Recent</span>
 			</Row>
 			{expanded && (
 				<>
@@ -57,6 +57,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 										subtle={err.message}
 										timestamp={err.lastOccurrence}
 										url={err.errorGroupUrl}
+										customPadding={"0 10px 0 50px"}
 										onClick={e => {
 											dispatch(
 												openErrorGroup(err.errorGroupGuid, err.occurrenceId, {

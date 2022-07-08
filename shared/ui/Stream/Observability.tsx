@@ -56,8 +56,9 @@ import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/t
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
-import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityAssignmentsDropdown } from "./ObservabilityAssignmentsDropdown";
+import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
+import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 
 interface Props {
 	paneState: PaneState;
@@ -139,6 +140,7 @@ export const ErrorRow = (props: {
 	isLoading?: boolean;
 	url?: string;
 	onClick?: Function;
+	customPadding?: any;
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
@@ -152,6 +154,7 @@ export const ErrorRow = (props: {
 			onClick={e => {
 				props.onClick && props.onClick();
 			}}
+			style={{ padding: props.customPadding ? props.customPadding : "0 10px 0 40px" }}
 		>
 			<div>{props.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="alert" />}</div>
 			<div>
@@ -300,6 +303,8 @@ export const Observability = React.memo((props: Props) => {
 		setLoadingEntities(true);
 		loadAssignments();
 
+		const expandedRepoId = getCurrentlyExpandedIndex();
+
 		HostApi.instance
 			.send(GetObservabilityReposRequestType, {})
 			.then((_: GetObservabilityReposResponse) => {
@@ -311,6 +316,10 @@ export const Observability = React.memo((props: Props) => {
 					})
 					.map(r => r.replace("newrelic-errors-in-repo-", ""));
 				repoIds = repoIds.filter(r => !hiddenRepos.includes(r));
+
+				// TODO GET INDEX === ID FOR THE BEGINNING OF THE REPO STRING, then just get whatever entity account the index is omg
+				// const _expandedEntity = _.repos.find(r => {
+				console.warn(expandedRepoId);
 
 				loading(repoIds, true);
 
@@ -367,6 +376,7 @@ export const Observability = React.memo((props: Props) => {
 
 					setTimeout(() => {
 						fetchObservabilityErrors(e.data.entityGuid, e.data.repoId);
+						fetchGoldenMetrics(e.data.entityGuid);
 					}, 2500);
 				}
 			}
@@ -421,6 +431,24 @@ export const Observability = React.memo((props: Props) => {
 			});
 		}
 	}, [derivedState.hiddenPaneNodes]);
+
+	const getCurrentlyExpandedIndex = () => {
+		const expandedRepoEntityNode = Object.keys(derivedState.hiddenPaneNodes).filter(k => {
+			return (
+				!_isEmpty(k.match(/[0-9]+newrelic-errors-in-repo/gi)) &&
+				derivedState.hiddenPaneNodes[k] === false
+			);
+		})[0];
+		const expandedRepoId = expandedRepoEntityNode.substring(
+			expandedRepoEntityNode.lastIndexOf("-") + 1
+		);
+
+		if (expandedRepoEntityNode) {
+			return expandedRepoEntityNode?.match(/^\d+/)[0];
+		}
+
+		return null;
+	};
 
 	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
 		loading(repoId, true);
@@ -496,17 +524,7 @@ export const Observability = React.memo((props: Props) => {
 
 		const collapsed = derivedState.hiddenPaneNodes[id];
 
-		let filteredPaneNodes = Object.keys(derivedState.hiddenPaneNodes)
-			.filter(k => {
-				if (k === id) {
-					return false;
-				}
-				return !_isEmpty(k.match(/[0-9]+newrelic-errors-in-repo/gi));
-			})
-			.reduce((newData, k) => {
-				newData[k] = derivedState.hiddenPaneNodes[k];
-				return newData;
-			}, {});
+		let filteredPaneNodes = getFilteredPaneNodes(id);
 
 		Object.keys(filteredPaneNodes).map(function(key) {
 			if (filteredPaneNodes[key] === false) {
@@ -520,6 +538,20 @@ export const Observability = React.memo((props: Props) => {
 		} else {
 			setExpandedEntity(entityGuid);
 		}
+	};
+
+	const getFilteredPaneNodes = id => {
+		return Object.keys(derivedState.hiddenPaneNodes)
+			.filter(k => {
+				if (k === id) {
+					return false;
+				}
+				return !_isEmpty(k.match(/[0-9]+newrelic-errors-in-repo/gi));
+			})
+			.reduce((newData, k) => {
+				newData[k] = derivedState.hiddenPaneNodes[k];
+				return newData;
+			}, {});
 	};
 
 	const settingsMenuItems = [
@@ -551,8 +583,10 @@ export const Observability = React.memo((props: Props) => {
 			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
 				const _entityGuid = expandedEntity || "";
 
-				fetchObservabilityErrors(_entityGuid, currentRepoId);
-				fetchGoldenMetrics(_entityGuid);
+				if (!_isEmpty(_entityGuid)) {
+					fetchObservabilityErrors(_entityGuid, currentRepoId);
+					fetchGoldenMetrics(_entityGuid);
+				}
 
 				const newPreferences = derivedState.observabilityRepoEntities.filter(
 					_ => _.repoId !== currentRepoId
@@ -791,12 +825,9 @@ export const Observability = React.memo((props: Props) => {
 																									goldenMetrics={goldenMetrics}
 																								/>
 
-																								<ObservabilityErrorDropdown
+																								<ObservabilityErrorWrapper
 																									observabilityErrors={observabilityErrors}
 																									observabilityRepo={_observabilityRepo}
-																								/>
-
-																								<ObservabilityAssignmentsDropdown
 																									observabilityAssignments={
 																										observabilityAssignments
 																									}
@@ -821,6 +852,7 @@ export const Observability = React.memo((props: Props) => {
 																										e.entityGuid,
 																										_observabilityRepo.repoId
 																									);
+																									fetchGoldenMetrics(e.entityGuid);
 																								}}
 																								remote={_observabilityRepo.repoRemote}
 																								remoteName={_observabilityRepo.repoName}

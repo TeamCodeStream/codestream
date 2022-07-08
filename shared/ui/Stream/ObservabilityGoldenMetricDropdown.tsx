@@ -42,12 +42,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 
 	const { goldenMetrics } = props;
 
-	// const goldenMetricTitleMapping = {
-	// 	responseTimeMs: "Response Time Ms",
-	// 	throughput: "Throughput",
-	// 	errorRate: "Error Rate"
-	// };
-
 	const goldenMetricTitleMapping = {
 		responseTimeMs: { title: "Response Time Ms", units: "ms" },
 		throughput: { title: "Throughput", units: "rpm" },
