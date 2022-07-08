@@ -1,8 +1,6 @@
 import { forEach as _forEach } from "lodash-es";
 import React, { useEffect, useState } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { CodeStreamState } from "../store";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 
@@ -25,13 +23,6 @@ const StyledMetric = styled.div`
 `;
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		return {
-			sessionStart: state.context.sessionStart
-		};
-	}, shallowEqual);
-
 	const [expanded, setExpanded] = useState<boolean>(true);
 
 	// useDidMount(() => {});
@@ -100,7 +91,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 											name="info"
 											className="clickable"
 											title={goldenMetricTooltip}
-											placement="bottomLeft"
+											placement="bottomRight"
 											delay={1}
 										/>
 									)}

@@ -427,7 +427,9 @@ export const Observability = React.memo((props: Props) => {
 			);
 		})[0];
 
-		setCurrentEntityAccountIndex(expandedRepoEntityNode.match(/^\d+/)![0]);
+		if (expandedRepoEntityNode) {
+			setCurrentEntityAccountIndex(expandedRepoEntityNode.match(/^\d+/)![0]);
+		}
 	};
 
 	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
@@ -564,7 +566,9 @@ export const Observability = React.memo((props: Props) => {
 				let _entityGuid = expandedEntity || "";
 
 				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
-					_entityGuid = _currentEntityAccounts[currentEntityAccountIndex]?.entityGuid;
+					fetchGoldenMetrics(_currentEntityAccounts[currentEntityAccountIndex]?.entityGuid);
+					//Only used to load on mount
+					setCurrentEntityAccountIndex(null);
 				}
 
 				if (!_isEmpty(_entityGuid)) {
