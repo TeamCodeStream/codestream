@@ -1613,18 +1613,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				accountId: request.newRelicAccountId!
 			});
 
-			if (response?.actor?.account?.equals.results.length) {
+			if (response?.actor?.account?.equals.results?.length) {
 				return response.actor.account.equals.results;
 			}
 
-			if (response?.actor?.account?.like.results.length) {
+			if (response?.actor?.account?.like.results?.length) {
 				Logger.warn("getSpans using like", {
 					query: query,
 					accountId: request.newRelicAccountId
 				});
 				return response.actor.account.like.results;
 			}
-			if (response?.actor?.account?.fuzzy.results.length) {
+			if (response?.actor?.account?.fuzzy.results?.length) {
 				Logger.warn("getSpans using fuzzy", {
 					query: query,
 					accountId: request.newRelicAccountId
