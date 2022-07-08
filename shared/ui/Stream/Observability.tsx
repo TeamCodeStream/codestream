@@ -237,6 +237,7 @@ export const Observability = React.memo((props: Props) => {
 	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
+	const [currentEntityAccountIndex, setCurrentEntityAccountIndex] = useState<string | null>(null);
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
@@ -302,8 +303,7 @@ export const Observability = React.memo((props: Props) => {
 
 		setLoadingEntities(true);
 		loadAssignments();
-
-		const expandedRepoId = getCurrentlyExpandedIndex();
+		processCurrentEntityAccountIndex();
 
 		HostApi.instance
 			.send(GetObservabilityReposRequestType, {})
@@ -316,13 +316,7 @@ export const Observability = React.memo((props: Props) => {
 					})
 					.map(r => r.replace("newrelic-errors-in-repo-", ""));
 				repoIds = repoIds.filter(r => !hiddenRepos.includes(r));
-
-				// TODO GET INDEX === ID FOR THE BEGINNING OF THE REPO STRING, then just get whatever entity account the index is omg
-				// const _expandedEntity = _.repos.find(r => {
-				console.warn(expandedRepoId);
-
 				loading(repoIds, true);
-
 				HostApi.instance
 					.send(GetObservabilityErrorsRequestType, {
 						filters: buildFilters(repoIds)
@@ -432,22 +426,18 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [derivedState.hiddenPaneNodes]);
 
-	const getCurrentlyExpandedIndex = () => {
+	const processCurrentEntityAccountIndex = () => {
 		const expandedRepoEntityNode = Object.keys(derivedState.hiddenPaneNodes).filter(k => {
 			return (
 				!_isEmpty(k.match(/[0-9]+newrelic-errors-in-repo/gi)) &&
 				derivedState.hiddenPaneNodes[k] === false
 			);
 		})[0];
-		const expandedRepoId = expandedRepoEntityNode.substring(
-			expandedRepoEntityNode.lastIndexOf("-") + 1
-		);
 
-		if (expandedRepoEntityNode) {
-			return expandedRepoEntityNode?.match(/^\d+/)[0];
-		}
-
-		return null;
+		// const expandedRepoId = expandedRepoEntityNode.substring(
+		// 	expandedRepoEntityNode.lastIndexOf("-") + 1
+		// );
+		setCurrentEntityAccountIndex(expandedRepoEntityNode.match(/^\d+/)![0]);
 	};
 
 	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
@@ -581,7 +571,11 @@ export const Observability = React.memo((props: Props) => {
 			setCurrentEntityAccounts(_currentEntityAccounts);
 
 			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
-				const _entityGuid = expandedEntity || "";
+				let _entityGuid = expandedEntity || "";
+
+				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
+					_entityGuid = _currentEntityAccounts[currentEntityAccountIndex]?.entityGuid;
+				}
 
 				if (!_isEmpty(_entityGuid)) {
 					fetchObservabilityErrors(_entityGuid, currentRepoId);
@@ -600,7 +594,7 @@ export const Observability = React.memo((props: Props) => {
 				HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 			}
 		}
-	}, [currentRepoId, observabilityRepos, expandedEntity]);
+	}, [currentRepoId, observabilityRepos, expandedEntity, currentEntityAccountIndex]);
 
 	/*
 	 *	When all parts of the observability panel are done loading
