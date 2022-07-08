@@ -2265,24 +2265,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		entityGuid: string,
 		metricTimesliceNameMapping?: MetricTimesliceNameMapping
 	): Promise<GoldenMetricsQueryResult> {
-		// NOTE: these queries can be queried! we're hard-coding below because
-		// we want golden metrics on a method-level rather than an entity level
-
-		// return this.query(
-		// 	`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
-		// actor {
-		// 	entity(guid: $entityGuid) {
-		// 		goldenMetrics {
-		// 		  metrics {
-		// 			query
-		// 			title
-		// 		  }
-		// 		}
-		// 	  }
-		// 	}
-		// }`,
-		// 	{ entityGuid: entityGuid }
-		// );
 		if (metricTimesliceNameMapping) {
 			return {
 				actor: {
@@ -2326,32 +2308,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}`,
 				{ entityGuid: entityGuid }
 			);
-
-			// return {
-			// 	actor: {
-			// 		entity: {
-			// 			goldenMetrics: {
-			// 				metrics: [
-			// 					// duration
-			// 					{
-			// 						query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}')`,
-			// 						title: "Response time (ms)"
-			// 					},
-			// 					// throughput
-			// 					{
-			// 						query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}')`,
-			// 						title: "Throughput"
-			// 					},
-			// 					// error
-			// 					{
-			// 						query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}'`,
-			// 						title: "Error rate"
-			// 					}
-			// 				]
-			// 			}
-			// 		}
-			// 	}
-			// };
 		}
 	}
 

@@ -61,8 +61,6 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		dispatch(setUserPreference(["hiddenPaneNodes"], { [props.id]: !derivedState.collapsed }));
 	};
 
-	// const expandPane = isUndefined(props.forceExpand) ? !derivedState.collapsed : props.forceExpand;
-
 	return (
 		<div className={props.className} onClick={props.onClick || toggleNode}>
 			<div style={{ display: props.labelIsFlex ? "flex" : "block" }} className="label">

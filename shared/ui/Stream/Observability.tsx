@@ -15,17 +15,13 @@ import {
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityErrorAssignmentsRequestType,
 	GetObservabilityErrorAssignmentsResponse,
-	GetObservabilityErrorGroupMetadataRequestType,
-	GetObservabilityErrorGroupMetadataResponse,
 	GetObservabilityErrorsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
-	ReposScm,
-	GetMethodLevelTelemetryRequestType,
-	GetMethodLevelTelemetryResponse
+	GetMethodLevelTelemetryRequestType
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -38,7 +34,6 @@ import { Button } from "../src/components/Button";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
-import { openErrorGroup } from "../store/codeErrors/actions";
 import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
 import { useDidMount, usePrevious } from "../utilities/hooks";
@@ -55,8 +50,6 @@ import { WarningBox } from "./WarningBox";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
-import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
-import { ObservabilityAssignmentsDropdown } from "./ObservabilityAssignmentsDropdown";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 
@@ -434,9 +427,6 @@ export const Observability = React.memo((props: Props) => {
 			);
 		})[0];
 
-		// const expandedRepoId = expandedRepoEntityNode.substring(
-		// 	expandedRepoEntityNode.lastIndexOf("-") + 1
-		// );
 		setCurrentEntityAccountIndex(expandedRepoEntityNode.match(/^\d+/)![0]);
 	};
 
@@ -646,11 +636,6 @@ export const Observability = React.memo((props: Props) => {
 
 	const { hiddenPaneNodes } = derivedState;
 
-	console.warn("eric observabilityRepos", observabilityRepos);
-	console.warn("eric observabilityErrors", observabilityErrors);
-	console.warn("eric currentEntityAccounts", currentEntityAccounts);
-	console.warn("eric goldenMetrics", goldenMetrics);
-
 	return (
 		<Root>
 			<PaneHeader
@@ -809,16 +794,16 @@ export const Observability = React.memo((props: Props) => {
 																						_observabilityRepo.repoId
 																				] && (
 																					<>
+																						<ObservabilityGoldenMetricDropdown
+																							goldenMetrics={goldenMetrics}
+																						/>
+
 																						{observabilityErrors?.find(
 																							oe =>
 																								oe?.repoId === _observabilityRepo?.repoId &&
 																								oe?.errors.length > 0
 																						) ? (
 																							<>
-																								<ObservabilityGoldenMetricDropdown
-																									goldenMetrics={goldenMetrics}
-																								/>
-
 																								<ObservabilityErrorWrapper
 																									observabilityErrors={observabilityErrors}
 																									observabilityRepo={_observabilityRepo}

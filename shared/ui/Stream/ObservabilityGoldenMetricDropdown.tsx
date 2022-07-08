@@ -3,11 +3,8 @@ import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import Timestamp from "./Timestamp";
-import { HostApi } from "../webview-api";
 
 interface Props {
 	goldenMetrics: any;
@@ -43,9 +40,23 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const { goldenMetrics } = props;
 
 	const goldenMetricTitleMapping = {
-		responseTimeMs: { title: "Response Time Ms", units: "ms" },
-		throughput: { title: "Throughput", units: "rpm" },
-		errorRate: { title: "Error Rate", units: "avg" }
+		responseTimeMs: {
+			title: "Response Time Ms",
+			units: "ms",
+			tooltip: "This shows the average time this service spends processing web requests."
+		},
+		throughput: {
+			title: "Throughput",
+			units: "rpm",
+			tooltip:
+				"Throughput measures how many requests this service processes per minute. It will help you find your busiest service"
+		},
+		errorRate: {
+			title: "Error Rate",
+			units: "avg",
+			tooltip:
+				"Error rate is the percentage of transactions that result in an error during a particular time range."
+		}
 	};
 
 	return (
@@ -65,13 +76,13 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				<>
 					{goldenMetrics.map(gm => {
 						const goldenMetricUnit = goldenMetricTitleMapping[gm?.name]?.units;
-						let goldenMetricValue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
+						const goldenMetricTooltip = goldenMetricTitleMapping[gm?.name]?.tooltip;
 
+						let goldenMetricValue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
 						// If decimal, round to 2 places more space in UX
 						if (goldenMetricValue % 1 !== 0) {
 							goldenMetricValue = goldenMetricValue.toFixed(2);
 						}
-
 						// add commas to numbers
 						goldenMetricValue = goldenMetricValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
@@ -83,26 +94,19 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								className={"pr-row"}
 							>
 								<div>
-									<Icon name="info" /> <span>{gm.title}</span>
-								</div>
-
-								<div className="icons">
-									{/* @TODO: currently no need, but might be added later
-									<span
-										onClick={e => {
-											e.preventDefault();
-											e.stopPropagation();
-										}}
-									>
+									<span style={{ marginRight: "5px" }}>{gm.title}</span>
+									{goldenMetricTooltip && (
 										<Icon
-											name="globe"
+											name="info"
 											className="clickable"
-											title="View on New Relic"
+											title={goldenMetricTooltip}
 											placement="bottomLeft"
 											delay={1}
 										/>
-									</span>
-									*/}
+									)}
+								</div>
+
+								<div className="icons">
 									<StyledMetric>
 										{goldenMetricValue} {goldenMetricUnit}
 									</StyledMetric>
