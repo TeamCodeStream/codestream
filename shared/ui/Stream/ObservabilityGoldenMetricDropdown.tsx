@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
+import Tooltip from "./Tooltip";
 
 interface Props {
 	goldenMetrics: any;
@@ -68,14 +69,22 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					{goldenMetrics.map(gm => {
 						const goldenMetricUnit = goldenMetricTitleMapping[gm?.name]?.units;
 						const goldenMetricTooltip = goldenMetricTitleMapping[gm?.name]?.tooltip;
-
+						const goldenMetricValueTrue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
 						let goldenMetricValue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
+						let noCommas = false;
 						// If decimal, round to 2 places more space in UX
 						if (goldenMetricValue % 1 !== 0) {
-							goldenMetricValue = goldenMetricValue.toFixed(2);
+							let logValue = -Math.floor(Math.log10(goldenMetricValue)) + 1;
+							let roundToValue = logValue > 2 ? logValue : 2;
+							goldenMetricValue = goldenMetricValue.toFixed(roundToValue);
+							noCommas = true;
 						}
 						// add commas to numbers
-						goldenMetricValue = goldenMetricValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+						if (!noCommas) {
+							goldenMetricValue = goldenMetricValue
+								.toString()
+								.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+						}
 
 						return (
 							<Row
@@ -98,9 +107,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								</div>
 
 								<div className="icons">
-									<StyledMetric>
-										{goldenMetricValue} {goldenMetricUnit}
-									</StyledMetric>
+									<Tooltip placement="topRight" title={goldenMetricValueTrue} delay={1}>
+										<StyledMetric>
+											{goldenMetricValue} {goldenMetricUnit}
+										</StyledMetric>
+									</Tooltip>
 								</div>
 							</Row>
 						);
