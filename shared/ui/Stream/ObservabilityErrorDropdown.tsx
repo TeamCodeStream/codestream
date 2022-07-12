@@ -14,6 +14,7 @@ import { HostApi } from "../webview-api";
 interface Props {
 	observabilityErrors?: any;
 	observabilityRepo?: any;
+	entityGuid?: string;
 }
 
 export const ObservabilityErrorDropdown = React.memo((props: Props) => {
@@ -25,6 +26,23 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 	}, shallowEqual);
 
 	const [expanded, setExpanded] = useState<boolean>(true);
+	const [filteredErrors, setFilteredErrors] = useState<any>([]);
+
+	useEffect(() => {
+		let _filteredErrorsByRepo = props.observabilityErrors.filter(
+			oe => oe?.repoId === observabilityRepo?.repoId
+		);
+
+		const _filteredErrors = _filteredErrorsByRepo.map(fe => {
+			return fe.errors.filter(error => {
+				return error.entityId === props.entityGuid;
+				// if (error.entityId === props.entityGuid) {
+				// 	return error;
+				// }
+			});
+		});
+		setFilteredErrors(_filteredErrors || []);
+	}, [props.observabilityErrors]);
 
 	// useDidMount(() => {});
 	// useEffect(() => {}, []);
@@ -46,35 +64,41 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			</Row>
 			{expanded && (
 				<>
-					{observabilityErrors
-						.filter(oe => oe?.repoId === observabilityRepo?.repoId)
-						.map(oe => {
-							return oe.errors.map(err => {
-								return (
-									<ErrorRow
-										title={`${err.errorClass} (${err.count})`}
-										tooltip={err.message}
-										subtle={err.message}
-										timestamp={err.lastOccurrence}
-										url={err.errorGroupUrl}
-										customPadding={"0 10px 0 50px"}
-										onClick={e => {
-											dispatch(
-												openErrorGroup(err.errorGroupGuid, err.occurrenceId, {
-													timestamp: err.lastOccurrence,
-													remote: observabilityRepo.repoRemote,
-													sessionStart: derivedState.sessionStart,
-													pendingEntityId: err.entityId,
-													occurrenceId: err.occurrenceId,
-													pendingErrorGroupGuid: err.errorGroupGuid,
-													src: "Observability Section"
-												})
-											);
-										}}
-									/>
-								);
-							});
-						})}
+					{filteredErrors && filteredErrors.length == 0 ? (
+						<>
+							<ErrorRow title={"No errors to display"}></ErrorRow>
+						</>
+					) : (
+						<>
+							{filteredErrors.map(fe => {
+								return fe.map(err => {
+									return (
+										<ErrorRow
+											title={`${err.errorClass} (${err.count})`}
+											tooltip={err.message}
+											subtle={err.message}
+											timestamp={err.lastOccurrence}
+											url={err.errorGroupUrl}
+											customPadding={"0 10px 0 50px"}
+											onClick={e => {
+												dispatch(
+													openErrorGroup(err.errorGroupGuid, err.occurrenceId, {
+														timestamp: err.lastOccurrence,
+														remote: observabilityRepo.repoRemote,
+														sessionStart: derivedState.sessionStart,
+														pendingEntityId: err.entityId,
+														occurrenceId: err.occurrenceId,
+														pendingErrorGroupGuid: err.errorGroupGuid,
+														src: "Observability Section"
+													})
+												);
+											}}
+										/>
+									);
+								});
+							})}
+						</>
+					)}
 				</>
 			)}
 		</>

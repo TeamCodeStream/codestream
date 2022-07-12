@@ -34,6 +34,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 					<ObservabilityErrorDropdown
 						observabilityErrors={props.observabilityErrors}
 						observabilityRepo={props.observabilityRepo}
+						entityGuid={props.entityGuid}
 					/>
 
 					<ObservabilityAssignmentsDropdown
