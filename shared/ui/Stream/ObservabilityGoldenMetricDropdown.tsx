@@ -1,4 +1,4 @@
-import { forEach as _forEach } from "lodash-es";
+import { forEach as _forEach, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -69,8 +69,19 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					{goldenMetrics.map(gm => {
 						const goldenMetricUnit = goldenMetricTitleMapping[gm?.name]?.units;
 						const goldenMetricTooltip = goldenMetricTitleMapping[gm?.name]?.tooltip;
-						const goldenMetricValueTrue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
+						let goldenMetricValueTrue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
 						let goldenMetricValue = gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title];
+
+						// Set value to non null result if golden metric does not appear in mapping array
+						if (!goldenMetricValueTrue && !goldenMetricValue && gm?.result[0]) {
+							let resultObject = gm?.result[0];
+							for (const property in resultObject) {
+								if (!_isNil(resultObject[property])) {
+									goldenMetricValue = resultObject[property];
+									goldenMetricValueTrue = resultObject[property];
+								}
+							}
+						}
 						let noCommas = false;
 						// If decimal, round to 2 places more space in UX
 						if (goldenMetricValue % 1 !== 0) {
