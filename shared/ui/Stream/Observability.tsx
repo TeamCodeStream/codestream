@@ -762,10 +762,6 @@ export const Observability = React.memo((props: Props) => {
 																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
 																const collapsed = expandedEntity !== ea.entityGuid;
 
-																// const collapsed =
-																// !derivedState.hiddenPaneNodes.hasOwnProperty(paneId) ||
-																// expandedEntity !== ea.entityGuid;
-
 																return (
 																	<>
 																		<PaneNodeName
