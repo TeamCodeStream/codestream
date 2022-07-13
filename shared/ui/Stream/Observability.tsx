@@ -776,20 +776,22 @@ export const Observability = React.memo((props: Props) => {
 																			}
 																			collapsed={expandedEntity !== ea.entityGuid}
 																		>
-																			<Icon
-																				name="link-external"
-																				className="clickable"
-																				title="View on New Relic"
-																				placement="bottomLeft"
-																				delay={1}
-																				onClick={e => {
-																					e.preventDefault();
-																					e.stopPropagation();
-																					HostApi.instance.send(OpenUrlRequestType, {
-																						url: newRelicUrl || " "
-																					});
-																				}}
-																			/>
+																			{newRelicUrl && (
+																				<Icon
+																					name="link-external"
+																					className="clickable"
+																					title="View on New Relic"
+																					placement="bottomLeft"
+																					delay={1}
+																					onClick={e => {
+																						e.preventDefault();
+																						e.stopPropagation();
+																						HostApi.instance.send(OpenUrlRequestType, {
+																							url: newRelicUrl
+																						});
+																					}}
+																				/>
+																			)}
 																		</PaneNodeName>
 
 																		{ea.entityGuid === loadingPane ? (

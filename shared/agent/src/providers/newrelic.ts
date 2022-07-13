@@ -2199,7 +2199,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return {
 				goldenMetrics: goldenMetrics,
 				newRelicEntityAccounts: observabilityRepo.entityAccounts,
-				newRelicAlertSeverity: entity.alertSeverity || "hi",
+				newRelicAlertSeverity: entity.alertSeverity,
 				newRelicEntityName: entity.entityName!,
 				newRelicEntityGuid: entity.entityGuid!,
 				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
