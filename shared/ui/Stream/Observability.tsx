@@ -510,7 +510,7 @@ export const Observability = React.memo((props: Props) => {
 			return;
 		}
 
-		const collapsed = derivedState.hiddenPaneNodes[id];
+		const collapsed = derivedState.hiddenPaneNodes[id] || true;
 
 		let filteredPaneNodes = getFilteredPaneNodes(id);
 
@@ -759,6 +759,9 @@ export const Observability = React.memo((props: Props) => {
 																const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
 																const paneId =
 																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
+																const collapsed =
+																	!derivedState.hiddenPaneNodes.hasOwnProperty(paneId) ||
+																	expandedEntity !== ea.entityGuid;
 
 																return (
 																	<>
@@ -774,7 +777,7 @@ export const Observability = React.memo((props: Props) => {
 																			onClick={e =>
 																				handleClickErrorsInRepo(e, paneId, ea.entityGuid)
 																			}
-																			collapsed={expandedEntity !== ea.entityGuid}
+																			collapsed={collapsed}
 																		>
 																			{newRelicUrl && (
 																				<Icon
@@ -793,61 +796,70 @@ export const Observability = React.memo((props: Props) => {
 																				/>
 																			)}
 																		</PaneNodeName>
-
-																		{ea.entityGuid === loadingPane ? (
+																		{!collapsed && (
 																			<>
-																				<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
-																			</>
-																		) : (
-																			<>
-																				{!hiddenPaneNodes[
-																					index +
-																						"newrelic-errors-in-repo-" +
-																						_observabilityRepo.repoId
-																				] && (
+																				{ea.entityGuid === loadingPane ? (
 																					<>
-																						<ObservabilityGoldenMetricDropdown
-																							goldenMetrics={goldenMetrics}
-																						/>
-
-																						{observabilityErrors?.find(
-																							oe =>
-																								oe?.repoId === _observabilityRepo?.repoId &&
-																								oe?.errors.length > 0
-																						) ? (
+																						<ErrorRow
+																							isLoading={true}
+																							title="Loading..."
+																						></ErrorRow>
+																					</>
+																				) : (
+																					<>
+																						{!hiddenPaneNodes[
+																							index +
+																								"newrelic-errors-in-repo-" +
+																								_observabilityRepo.repoId
+																						] && (
 																							<>
-																								<ObservabilityErrorWrapper
-																									observabilityErrors={observabilityErrors}
-																									observabilityRepo={_observabilityRepo}
-																									observabilityAssignments={
-																										observabilityAssignments
-																									}
-																									entityGuid={ea.entityGuid}
+																								<ObservabilityGoldenMetricDropdown
+																									goldenMetrics={goldenMetrics}
 																								/>
-																							</>
-																						) : _observabilityRepo.hasRepoAssociation ? (
-																							<ErrorRow title="No errors to display" />
-																						) : (
-																							<EntityAssociator
-																								label="Associate this repo with an entity on New Relic in order to see errors"
-																								onSuccess={async e => {
-																									HostApi.instance.track("NR Entity Association", {
-																										"Repo ID": _observabilityRepo.repoId
-																									});
 
-																									await fetchObservabilityRepos(
-																										e.entityGuid,
-																										_observabilityRepo.repoId
-																									);
-																									fetchObservabilityErrors(
-																										e.entityGuid,
-																										_observabilityRepo.repoId
-																									);
-																									fetchGoldenMetrics(e.entityGuid);
-																								}}
-																								remote={_observabilityRepo.repoRemote}
-																								remoteName={_observabilityRepo.repoName}
-																							/>
+																								{observabilityErrors?.find(
+																									oe =>
+																										oe?.repoId === _observabilityRepo?.repoId &&
+																										oe?.errors.length > 0
+																								) ? (
+																									<>
+																										<ObservabilityErrorWrapper
+																											observabilityErrors={observabilityErrors}
+																											observabilityRepo={_observabilityRepo}
+																											observabilityAssignments={
+																												observabilityAssignments
+																											}
+																											entityGuid={ea.entityGuid}
+																										/>
+																									</>
+																								) : _observabilityRepo.hasRepoAssociation ? (
+																									<ErrorRow title="No errors to display" />
+																								) : (
+																									<EntityAssociator
+																										label="Associate this repo with an entity on New Relic in order to see errors"
+																										onSuccess={async e => {
+																											HostApi.instance.track(
+																												"NR Entity Association",
+																												{
+																													"Repo ID": _observabilityRepo.repoId
+																												}
+																											);
+
+																											await fetchObservabilityRepos(
+																												e.entityGuid,
+																												_observabilityRepo.repoId
+																											);
+																											fetchObservabilityErrors(
+																												e.entityGuid,
+																												_observabilityRepo.repoId
+																											);
+																											fetchGoldenMetrics(e.entityGuid);
+																										}}
+																										remote={_observabilityRepo.repoRemote}
+																										remoteName={_observabilityRepo.repoName}
+																									/>
+																								)}
+																							</>
 																						)}
 																					</>
 																				)}

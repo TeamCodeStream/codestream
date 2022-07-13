@@ -50,8 +50,10 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const hiddenPaneNodes = preferences.hiddenPaneNodes || EMPTY_HASH;
+		const collapsed =
+			props?.id && hiddenPaneNodes[props?.id] ? hiddenPaneNodes[props.id] : props?.collapsed;
 		return {
-			collapsed: props.id ? hiddenPaneNodes[props.id] : props.collapsed
+			collapsed
 		};
 	});
 
