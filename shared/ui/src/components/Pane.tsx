@@ -43,6 +43,7 @@ interface PaneNodeNameProps {
 	actionsVisibleIfOpen?: boolean;
 	labelIsFlex?: boolean;
 	forceExpand?: boolean;
+	showChildIconOnCollapse?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
@@ -79,7 +80,9 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 					<span className="subtle"> {props.subtitle}</span>
 				) : null}
 			</div>
-			{!derivedState.collapsed && <div className="actions">{props.children}</div>}
+			{(!derivedState.collapsed || props.showChildIconOnCollapse) && (
+				<div className="actions">{props.children}</div>
+			)}
 		</div>
 	);
 })`

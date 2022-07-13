@@ -778,10 +778,11 @@ export const Observability = React.memo((props: Props) => {
 																				handleClickErrorsInRepo(e, paneId, ea.entityGuid)
 																			}
 																			collapsed={collapsed}
+																			showChildIconOnCollapse={true}
 																		>
 																			{newRelicUrl && (
 																				<Icon
-																					name="link-external"
+																					name="globe"
 																					className="clickable"
 																					title="View on New Relic"
 																					placement="bottomLeft"
