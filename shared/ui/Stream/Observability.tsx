@@ -36,7 +36,7 @@ import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/
 import { CodeStreamState } from "../store";
 import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
-import { useDidMount, usePrevious } from "../utilities/hooks";
+import { useDidMount, useInterval, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -419,6 +419,10 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [derivedState.hiddenPaneNodes]);
 
+	useInterval(() => {
+		fetchGoldenMetrics(expandedEntity);
+	}, 60000);
+
 	const processCurrentEntityAccountIndex = () => {
 		const expandedRepoEntityNode = Object.keys(derivedState.hiddenPaneNodes).filter(k => {
 			return (
@@ -483,16 +487,18 @@ export const Observability = React.memo((props: Props) => {
 			});
 	};
 
-	const fetchGoldenMetrics = async (entityGuid: string) => {
-		const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
-			newRelicEntityGuid: entityGuid,
-			metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
-				.metricTimesliceNameMapping!,
-			repoId: currentRepoId
-		});
-		if (response?.goldenMetrics) {
-			setGoldenMetrics(response.goldenMetrics);
-			setNewRelicUrl(response.newRelicUrl);
+	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
+		if (entityGuid) {
+			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
+				newRelicEntityGuid: entityGuid,
+				metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
+					.metricTimesliceNameMapping!,
+				repoId: currentRepoId
+			});
+			if (response?.goldenMetrics) {
+				setGoldenMetrics(response.goldenMetrics);
+				setNewRelicUrl(response.newRelicUrl);
+			}
 		}
 	};
 

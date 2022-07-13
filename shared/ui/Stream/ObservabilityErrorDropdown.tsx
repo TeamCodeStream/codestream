@@ -1,4 +1,4 @@
-import { forEach as _forEach } from "lodash-es";
+import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -10,7 +10,6 @@ import { openErrorGroup } from "../store/codeErrors/actions";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
-
 interface Props {
 	observabilityErrors?: any;
 	observabilityRepo?: any;
@@ -64,7 +63,8 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			</Row>
 			{expanded && (
 				<>
-					{filteredErrors && filteredErrors.length == 0 ? (
+					{(filteredErrors && filteredErrors.length == 0) ||
+					(filteredErrors && _isEmpty(filteredErrors[0])) ? (
 						<>
 							<ErrorRow title={"No errors to display"}></ErrorRow>
 						</>
