@@ -573,6 +573,7 @@ export const Observability = React.memo((props: Props) => {
 
 				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
 					fetchGoldenMetrics(_currentEntityAccounts[currentEntityAccountIndex]?.entityGuid);
+					setExpandedEntity(_currentEntityAccounts[currentEntityAccountIndex]?.entityGuid);
 					//Only used to load on mount
 					setCurrentEntityAccountIndex(null);
 				}
@@ -759,9 +760,11 @@ export const Observability = React.memo((props: Props) => {
 																const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
 																const paneId =
 																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
-																const collapsed =
-																	!derivedState.hiddenPaneNodes.hasOwnProperty(paneId) ||
-																	expandedEntity !== ea.entityGuid;
+																const collapsed = expandedEntity !== ea.entityGuid;
+
+																// const collapsed =
+																// !derivedState.hiddenPaneNodes.hasOwnProperty(paneId) ||
+																// expandedEntity !== ea.entityGuid;
 
 																return (
 																	<>
