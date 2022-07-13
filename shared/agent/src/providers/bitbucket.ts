@@ -539,9 +539,71 @@ export class BitbucketProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 
-		// TODO all the things
+		const queriesSafe = request.queries.map(query => query.replace(/["']/g, '\\"'));
+		const items = await Promise.all(
+			queriesSafe.map(_query => {
+				let query = _query;
+				let limit = 100;
+				// recent is kind of a magic string, where we just look
+				// for some random PR activity to at least show you
+				// something. if you have the repo query checked, and
+				// we can query by repo, then use that. otherwise github
+				// needs at least one qualifier so we query for PRs
+				// that you were the author of
+				// https://trello.com/c/XIg6MKWy/4813-add-4th-default-pr-query-recent
+				// if (query === "recent") {
+				// 	if (repoQuery.length > 0) {
+				// 		query = "is:pr";
+				// 	} else {
+				// 		query = "is:pr author:@me";
+				// 	}
+				// 	limit = 5;
+				// }
 
-		return [];
+				// if a user has put a "repo:X/Y" in their query, don't add the repoQuery as specified by the request.isOpen option
+				// const finalQuery = query.indexOf("repo:") > -1 ? query : repoQuery + query;
+				// if (query !== finalQuery) {
+				// 	Logger.log(
+				// 		`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}" query=${query}`
+				// 	);
+				// } else {
+				// 	Logger.log(`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}"`);
+				// }
+				return this.get(`/${query}`); //https://api.bitbucket.org//2.0/
+			})
+		).catch(ex => {
+			Logger.error(ex, "getMyPullRequests");
+			let errString;
+			if (ex.response) {
+				errString = JSON.stringify(ex.response);
+			} else {
+				errString = ex.message;
+			}
+			throw new Error(errString);
+		});
+		const response: GetMyPullRequestsResponse[][] = [];
+		items.forEach((item, index) => {
+			debugger;
+			Logger.log(JSON.stringify(item))
+
+			// if (item && item.search && item.search.edges) {
+			// 	response[index] = item.search.edges
+			// 		.map((_: any) => _.node)
+			// 		.filter((_: any) => _.id)
+			// 		.map((pr: { createdAt: string }) => ({
+			// 			...pr,
+			// 			providerId: providerId,
+			// 			createdAt: new Date(pr.createdAt).getTime()
+			// 		}));
+			// 	if (!queries[index].match(/\bsort:/)) {
+			// 		response[index] = response[index].sort(
+			// 			(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
+			// 		);
+			// 	}
+			// }
+		});
+
+		return response;
 	}
 }
 

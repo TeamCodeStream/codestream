@@ -849,33 +849,33 @@ export class ThirdPartyProviderRegistry {
 				}
 			],
 			"bitbucket*org": [
-				//https://api.bitbucket.org/2.0/repositories/pullrequests
+				//https://api.bitbucket.org//2.0/
 				{
 					providerId: "bitbucket*org",
 					name: "Waiting on my Review",
 					// TODO - @me @workspace @repo
-					query: `status=waiting&selected_user=@me&state=open&workspace=@workspace&repo_slug=@repo`,
+					query: `status=waiting&selected_user=@me&state=open&workspace=@me&repo_slug=@me`,
 					hidden: false,
 				},
 				{
 					providerId: "bitbucket*org",
 					name: "Assigned to Me",
 					// TODO - how should this be formatted?
-					query: `status=reviewing&selected_user=@me&state=open&workspace=@workspace&repo_slug=@repo`,
+					query: `repositories/@me/@slug/pullrequests?assignee=@me`,
 					hidden: false,
 				},
 				{
 					providerId: "bitbucket*org",
 					name: "Created by Me",
-					// TODO - how should this be formatted?
-					query: `selected_user=@me&state=open`,
+					// TODO - how does @me work?
+					query: `pullrequests/@me`,
 					hidden: false,
 				},
 				{
 					providerId: "bitbucket*org",
 					name: "Recent",
-					// TODO - how should this be formatted?
-					query: `sort=updated_on&size=5&selected_user=@me&repo_slug=@repo&workspace=@workspace&state=open`,
+					// TODO - how does @me work?
+					query: `pullrequests/@me?sort=updated_on`,
 					hidden: false,
 				}
 			]
