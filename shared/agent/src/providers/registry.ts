@@ -850,34 +850,34 @@ export class ThirdPartyProviderRegistry {
 			],
 			"bitbucket*org": [
 				//https://api.bitbucket.org//2.0/
-				{
-					providerId: "bitbucket*org",
-					name: "Waiting on my Review",
-					// TODO - @me @workspace @repo
-					query: `status=waiting&selected_user=@me&state=open&workspace=@me&repo_slug=@me`,
-					hidden: false,
-				},
-				{
-					providerId: "bitbucket*org",
-					name: "Assigned to Me",
-					// TODO - how should this be formatted?
-					query: `repositories/@me/@slug/pullrequests?assignee=@me`,
-					hidden: false,
-				},
+				// {
+				// 	providerId: "bitbucket*org",
+				// 	name: "Waiting on my Review",
+				// 	// TODO - @me @workspace @repo
+				// 	query: ``,
+				// 	hidden: false
+				// },
+				// {
+				// 	providerId: "bitbucket*org",
+				// 	name: "Assigned to Me",
+				// 	// TODO - how should this be formatted?
+				// 	query: `repositories/@me/@slug/pullrequests?assignee=@me`,
+				// 	hidden: false
+				// },
 				{
 					providerId: "bitbucket*org",
 					name: "Created by Me",
 					// TODO - how does @me work?
-					query: `pullrequests/@me`,
+					query: `@me?state=OPEN`,
 					hidden: false,
 				},
-				{
-					providerId: "bitbucket*org",
-					name: "Recent",
-					// TODO - how does @me work?
-					query: `pullrequests/@me?sort=updated_on`,
-					hidden: false,
-				}
+				// {
+				// 	providerId: "bitbucket*org",
+				// 	name: "Recent",
+				// 	// TODO - how does @me work?
+				// 	query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED`,
+				// 	hidden: false
+				// }
 			]
 		};
 		try {
