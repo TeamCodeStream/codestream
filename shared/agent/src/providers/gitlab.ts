@@ -2279,9 +2279,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
+
+		const providerVersion = await this.getVersion();
+		let discussionId = "DiscussionID";
+		if (semver.lt(providerVersion.version, "13.6.4")) {
+			discussionId = "ID";
+		}
+
 		const response = await this.mutate<any>(
 			`
-		mutation DiscussionToggleResolve($id:ID!, $resolve: Boolean!) {
+		mutation DiscussionToggleResolve($id:${discussionId}!, $resolve: Boolean!) {
 			discussionToggleResolve(input:{id:$id, resolve:$resolve}) {
 				  clientMutationId
 					  discussion {
