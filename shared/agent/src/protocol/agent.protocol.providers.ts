@@ -1032,6 +1032,7 @@ export interface EntityAccount {
 	accountName: string;
 	entityGuid: string;
 	entityName: string;
+	domain?: string;
 	tags: {
 		key: string;
 		values: string[];

@@ -2339,6 +2339,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						  account(id: $accountId) {
 							nrql(query: "${_query}") {
 							  results
+							  metadata {
+								timeWindow {
+								  end
+								}
+							  }
 							}
 						  }
 						}
@@ -2376,7 +2381,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								: null,
 							endDate: date
 						};
-					})
+					}),
+					timeWindow: results[i].actor?.account?.nrql?.metadata?.timeWindow?.end
 				};
 			});
 			Logger.log("getGoldenMetrics has response?", {

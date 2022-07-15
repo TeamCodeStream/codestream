@@ -419,9 +419,10 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [derivedState.hiddenPaneNodes]);
 
+	// Update golden metrics every 5 minutes
 	useInterval(() => {
 		fetchGoldenMetrics(expandedEntity);
-	}, 60000);
+	}, 300000);
 
 	const processCurrentEntityAccountIndex = () => {
 		const expandedRepoEntityNode = Object.keys(derivedState.hiddenPaneNodes).filter(k => {
@@ -768,7 +769,15 @@ export const Observability = React.memo((props: Props) => {
 																			title={
 																				<div style={{ display: "flex", alignItems: "center" }}>
 																					<EntityHealth backgroundColor={alertSeverityColor} />
-																					<div>{ea.accountName}</div>
+																					<div>
+																						<span>{ea.entityName}</span>
+																						<span className="subtle">
+																							{ea.accountName && ea.accountName.length > 25
+																								? ea.accountName.substr(0, 25) + "..."
+																								: ea.accountName}
+																							{ea?.domain ? ` (${ea?.domain})` : ""}
+																						</span>
+																					</div>
 																				</div>
 																			}
 																			id={paneId}

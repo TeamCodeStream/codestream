@@ -25,12 +25,8 @@ const StyledMetric = styled.div`
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-
-	// useDidMount(() => {});
-	// useEffect(() => {}, []);
-
+	const [updatedAt, setUpdatedAt] = useState<string>("");
 	const { goldenMetrics } = props;
-
 	const goldenMetricTitleMapping = {
 		responseTimeMs: {
 			title: "Response Time Ms",
@@ -51,6 +47,18 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		}
 	};
 
+	useEffect(() => {
+		if (goldenMetrics) {
+			goldenMetrics.every(gm => {
+				if (gm?.timeWindow) {
+					setUpdatedAt("Updated at: " + new Date(gm.timeWindow).toLocaleString());
+					return false;
+				}
+				return true;
+			});
+		}
+	}, [goldenMetrics]);
+
 	return (
 		<>
 			<Row
@@ -62,7 +70,8 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Golden Metrics</span>
+				<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>{" "}
+				<Icon name="clock" className="clickable" title={updatedAt} delay={1} />
 			</Row>
 			{expanded && (
 				<>
@@ -84,14 +93,14 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						}
 						let noCommas = false;
 						// If decimal, round to 2 places more space in UX
-						if (goldenMetricValue % 1 !== 0) {
+						if (goldenMetricValue && goldenMetricValue % 1 !== 0) {
 							let logValue = -Math.floor(Math.log10(goldenMetricValue)) + 1;
 							let roundToValue = logValue > 2 ? logValue : 2;
 							goldenMetricValue = goldenMetricValue.toFixed(roundToValue);
 							noCommas = true;
 						}
 						// add commas to numbers
-						if (!noCommas) {
+						if (goldenMetricValue && !noCommas) {
 							goldenMetricValue = goldenMetricValue
 								.toString()
 								.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -120,7 +129,13 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								<div className="icons">
 									<Tooltip placement="topRight" title={goldenMetricValueTrue} delay={1}>
 										<StyledMetric>
-											{goldenMetricValue} {goldenMetricUnit}
+											{goldenMetricValue && goldenMetricUnit ? (
+												<>
+													{goldenMetricValue} {goldenMetricUnit}
+												</>
+											) : (
+												<>No Data</>
+											)}
 										</StyledMetric>
 									</Tooltip>
 								</div>
