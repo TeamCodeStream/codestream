@@ -538,8 +538,11 @@ export class BitbucketProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
+		//call to /user
+		//get the username
+		const username = this.get('https://api.bitbucket.org/2.0/user')
 
-		const queriesSafe = request.queries.map(query => query.replace(/["']/g, '\\"'));
+		const queriesSafe = request.queries.map(query => query.replace(/["']/g, '\\"').replace(/[@me]/g, 'username'));
 		const items = await Promise.all(
 			queriesSafe.map(_query => {
 				let query = _query;
