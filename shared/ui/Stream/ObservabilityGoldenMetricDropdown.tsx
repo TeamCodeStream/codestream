@@ -51,7 +51,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		if (goldenMetrics) {
 			goldenMetrics.every(gm => {
 				if (gm?.timeWindow) {
-					setUpdatedAt("Updated at: " + new Date(gm.timeWindow).toLocaleString());
+					setUpdatedAt("Updated at " + new Date(gm.timeWindow).toLocaleString());
 					return false;
 				}
 				return true;
@@ -71,7 +71,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>{" "}
-				<Icon name="clock" className="clickable" title={updatedAt} delay={1} />
+				{updatedAt && <Icon name="clock" className="clickable" title={updatedAt} delay={1} />}
 			</Row>
 			{expanded && (
 				<>
