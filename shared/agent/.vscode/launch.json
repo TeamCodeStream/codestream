@@ -5,7 +5,7 @@
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Agent",
-			"port": 6009,
+			"port": 6010,
 			"cwd": "${workspaceFolder}",
 			"outFiles": ["${workspaceFolder}/dist/agent.js"],
 			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
