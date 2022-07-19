@@ -592,30 +592,31 @@ export class BitbucketProvider
 		});
 		const response: GetMyPullRequestsResponse[][] = [];
 		items.forEach((item, index) => {
+			
+
+			if (item && item.search && item.search.edges) {
+				response[index] = item.search.edges
+					.map((_: any) => _.node)
+					.filter((_: any) => _.id)
+					.map((pr: { createdAt: string }) => ({
+						...pr,
+						providerId: providerId,
+						createdAt: new Date(pr.createdAt).getTime()
+					}));
+				if (!queries[index].match(/\bsort:/)) {
+					response[index] = response[index].sort(
+						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
+					);
+				}
+			}
 			debugger;
 			Logger.log(JSON.stringify(item, null, 4));
-
-			// if (item && item.search && item.search.edges) {
-			// 	response[index] = item.search.edges
-			// 		.map((_: any) => _.node)
-			// 		.filter((_: any) => _.id)
-			// 		.map((pr: { createdAt: string }) => ({
-			// 			...pr,
-			// 			providerId: providerId,
-			// 			createdAt: new Date(pr.createdAt).getTime()
-			// 		}));
-			// 	if (!queries[index].match(/\bsort:/)) {
-			// 		response[index] = response[index].sort(
-			// 			(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
-			// 		);
-			// 	}
-			// }
 		});
 
 		return response;
 	}
 }
-
+//TODO this for bitbucket info
 interface BitBucketCreatePullRequestRequest {
 	source: {
 		branch: {
