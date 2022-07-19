@@ -441,6 +441,7 @@ export const Observability = React.memo((props: Props) => {
 
 	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
 		loading(repoId, true);
+		setLoadingEntities(true);
 
 		return HostApi.instance
 			.send(GetObservabilityReposRequestType, {
@@ -452,7 +453,7 @@ export const Observability = React.memo((props: Props) => {
 					existingObservabilityRepos.push(response.repos[0]);
 					setObservabilityRepos(existingObservabilityRepos!);
 				}
-
+				setLoadingEntities(false);
 				loading(repoId, false);
 			})
 			.catch(ex => {
@@ -462,6 +463,7 @@ export const Observability = React.memo((props: Props) => {
 						Query: "GetObservabilityRepos"
 					});
 					setNoAccess(true);
+					setLoadingEntities(false);
 				}
 			});
 	};
@@ -716,7 +718,13 @@ export const Observability = React.memo((props: Props) => {
 							) : (
 								<>
 									<PaneNode>
-										{loadingEntities && <ErrorRow isLoading={true} title="Loading..."></ErrorRow>}
+										{loadingEntities && (
+											<ErrorRow
+												isLoading={true}
+												title="Loading..."
+												customPadding={"0 10px 0 20px"}
+											></ErrorRow>
+										)}
 										{!loadingEntities && !hasEntities && (
 											<NoEntitiesWrapper>
 												<NoEntitiesCopy>
@@ -868,29 +876,9 @@ export const Observability = React.memo((props: Props) => {
 																								) : _observabilityRepo.hasRepoAssociation ? (
 																									<ErrorRow title="No errors to display" />
 																								) : (
-																									<EntityAssociator
-																										label="Associate this repo with an entity on New Relic in order to see errors"
-																										onSuccess={async e => {
-																											HostApi.instance.track(
-																												"NR Entity Association",
-																												{
-																													"Repo ID": _observabilityRepo.repoId
-																												}
-																											);
-
-																											await fetchObservabilityRepos(
-																												e.entityGuid,
-																												_observabilityRepo.repoId
-																											);
-																											fetchObservabilityErrors(
-																												e.entityGuid,
-																												_observabilityRepo.repoId
-																											);
-																											fetchGoldenMetrics(e.entityGuid);
-																										}}
-																										remote={_observabilityRepo.repoRemote}
-																										remoteName={_observabilityRepo.repoName}
-																									/>
+																									<>
+																										{/* @TODO rework this conditional, this part will never be triggered */}
+																									</>
 																								)}
 																							</>
 																						)}

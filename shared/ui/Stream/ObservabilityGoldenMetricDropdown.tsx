@@ -31,7 +31,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const goldenMetricTitleMapping = {
 		responseTimeMs: {
 			title: "Response Time Ms",
-			units: "ms",
+			units: " ",
 			tooltip: "This shows the average time this service spends processing web requests."
 		},
 		throughput: {
@@ -159,9 +159,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								<div className="icons">
 									<Tooltip placement="topRight" title={goldenMetricValueTrue} delay={1}>
 										<StyledMetric>
-											{goldenMetricValue && goldenMetricUnit ? (
+											{goldenMetricValue ? (
 												<>
-													{goldenMetricValue} {goldenMetricUnit}
+													{goldenMetricValue} {goldenMetricUnit && <>{goldenMetricUnit}</>}
 												</>
 											) : (
 												<>No Data</>

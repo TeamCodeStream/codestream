@@ -104,6 +104,9 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 								} else if (_?.error) {
 									setWarningOrErrors([{ message: _.error }]);
 								} else {
+									setWarningOrErrors([
+										{ message: "Failed to direct to entity dropdown, please refresh" }
+									]);
 									console.warn("Could not find directive", {
 										_: _,
 										payload: payload
