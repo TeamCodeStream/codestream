@@ -874,14 +874,29 @@ export const Observability = React.memo((props: Props) => {
 																			)}
 																			{showCodeLevelMetricsBroadcastIcon && (
 																				<Icon
-																					style={{ display: "inlineBlock" }}
+																					style={{
+																						display: "inlineBlock",
+																						color: isSelectedCLM
+																							? "var(--text-color-highlight)"
+																							: "inherit",
+																						opacity: isSelectedCLM ? "1" : "inherit"
+																					}}
 																					name="broadcast"
 																					className={cx("clickable", {
 																						"icon-override-actions-visible": !isSelectedCLM
 																					})}
 																					title={
 																						isSelectedCLM ? (
-																							<span>Displaying...</span>
+																							<span>
+																								Displaying{" "}
+																								<Link
+																									useStopPropagation={true}
+																									href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+																								>
+																									code level metrics
+																								</Link>{" "}
+																								for this service
+																							</span>
 																						) : (
 																							<span>
 																								View{" "}
