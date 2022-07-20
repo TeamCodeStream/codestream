@@ -23,6 +23,7 @@ function Link(props: Props) {
 		function(event: React.SyntheticEvent) {
 			if (!(event.target as any).href) {
 				event.preventDefault();
+				event.stopPropagation();
 				HostApi.instance.send(OpenUrlRequestType, { url: props.href! });
 			}
 		};

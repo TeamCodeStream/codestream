@@ -40,6 +40,7 @@ import { isConnected } from "../store/providers/reducer";
 import { useDidMount, useInterval, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
+import cx from "classnames";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
@@ -234,6 +235,10 @@ export const Observability = React.memo((props: Props) => {
 	const [currentEntityAccountIndex, setCurrentEntityAccountIndex] = useState<string | null>(null);
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
+	// const [loadingCLMBroadcast, setLoadingCLMBroadcast] = useState<boolean>(false);
+	const [showCodeLevelMetricsBroadcastIcon, setShowCodeLevelMetricsBroadcastIcon] = useState<
+		boolean
+	>(false);
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
 	);
@@ -423,7 +428,7 @@ export const Observability = React.memo((props: Props) => {
 
 	// Update golden metrics every 5 minutes
 	useInterval(() => {
-		fetchGoldenMetrics(expandedEntity);
+		fetchGoldenMetrics(expandedEntity, true);
 	}, 300000);
 
 	const processCurrentEntityAccountIndex = () => {
@@ -492,9 +497,11 @@ export const Observability = React.memo((props: Props) => {
 			});
 	};
 
-	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
+	const fetchGoldenMetrics = async (entityGuid?: string | null, noLoadingSpinner?: boolean) => {
 		if (entityGuid) {
-			setLoadingGoldenMetrics(true);
+			if (!noLoadingSpinner) {
+				setLoadingGoldenMetrics(true);
+			}
 			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
 				newRelicEntityGuid: entityGuid,
 				repoId: currentRepoId
@@ -561,6 +568,34 @@ export const Observability = React.memo((props: Props) => {
 		}
 	];
 
+	const handleClickCLMBroadcast = (e, entityGuid) => {
+		e.preventDefault();
+		e.stopPropagation();
+
+		const newPreferences = derivedState.observabilityRepoEntities.filter(
+			_ => _.repoId !== currentRepoId
+		);
+		newPreferences.push({
+			repoId: currentRepoId,
+			entityGuid: entityGuid
+		});
+		dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
+
+		// update the IDEs
+		setTimeout(() => {
+			HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
+		}, 2500);
+	};
+
+	// get latest code lenses in the IDEs
+	useEffect(() => {
+		const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(ore => {
+			return ore.repoId === currentRepoId;
+		});
+
+		console.warn(currentObservabilityRepoEntity);
+	}, [derivedState.observabilityRepoEntities]);
+
 	/*
 	 *	When current repo changes in IDE, set new entity accounts
 	 *  and fetch corresponding errors
@@ -587,17 +622,6 @@ export const Observability = React.memo((props: Props) => {
 					fetchObservabilityErrors(_entityGuid, currentRepoId);
 					fetchGoldenMetrics(_entityGuid);
 				}
-
-				const newPreferences = derivedState.observabilityRepoEntities.filter(
-					_ => _.repoId !== currentRepoId
-				);
-				newPreferences.push({
-					repoId: currentRepoId,
-					entityGuid: _entityGuid
-				});
-				dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
-				// update the IDEs
-				HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 			}
 		}
 	}, [currentRepoId, observabilityRepos, expandedEntity, currentEntityAccountIndex]);
@@ -649,6 +673,7 @@ export const Observability = React.memo((props: Props) => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
 			const currentRepo = _head(observabilityRepos.filter(_ => _.repoId === currentRepoId));
 
+			// Show repo entity associator UI if needed
 			if (
 				currentRepo &&
 				!currentRepo.hasRepoAssociation &&
@@ -659,6 +684,18 @@ export const Observability = React.memo((props: Props) => {
 				setRepoForEntityAssociator(currentRepo);
 			} else {
 				setRepoForEntityAssociator({});
+			}
+
+			// Show CLM broadcast icon if needed
+			if (
+				currentRepo &&
+				currentRepo.hasCodeLevelMetricSpanData &&
+				currentRepo.entityAccounts &&
+				currentRepo.entityAccounts.length > 1
+			) {
+				setShowCodeLevelMetricsBroadcastIcon(true);
+			} else {
+				setShowCodeLevelMetricsBroadcastIcon(false);
 			}
 		}
 	}, [currentRepoId, observabilityRepos]);
@@ -790,7 +827,13 @@ export const Observability = React.memo((props: Props) => {
 																const paneId =
 																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
 																const collapsed = expandedEntity !== ea.entityGuid;
-
+																const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(
+																	ore => {
+																		return ore.repoId === currentRepoId;
+																	}
+																);
+																const isSelectedCLM =
+																	ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
 																return (
 																	<>
 																		<PaneNodeName
@@ -818,11 +861,14 @@ export const Observability = React.memo((props: Props) => {
 																			}
 																			collapsed={collapsed}
 																			showChildIconOnCollapse={true}
+																			actionsVisibleIfOpen={true}
 																		>
 																			{newRelicUrl && (
 																				<Icon
 																					name="globe"
-																					className="clickable"
+																					className={cx("clickable", {
+																						"icon-override-actions-visible": true
+																					})}
 																					title="View on New Relic"
 																					placement="bottomLeft"
 																					delay={1}
@@ -832,6 +878,35 @@ export const Observability = React.memo((props: Props) => {
 																						HostApi.instance.send(OpenUrlRequestType, {
 																							url: newRelicUrl
 																						});
+																					}}
+																				/>
+																			)}
+																			{showCodeLevelMetricsBroadcastIcon && (
+																				<Icon
+																					style={{ display: "inlineBlock" }}
+																					name="broadcast"
+																					className={cx("clickable", {
+																						"icon-override-actions-visible": !isSelectedCLM
+																					})}
+																					title={
+																						isSelectedCLM ? (
+																							<span>Displaying...</span>
+																						) : (
+																							<span>
+																								View{" "}
+																								<Link href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level">
+																									code level metrics
+																								</Link>{" "}
+																								for this service
+																							</span>
+																						)
+																					}
+																					placement="bottomLeft"
+																					delay={1}
+																					onClick={e => {
+																						e.preventDefault();
+																						e.stopPropagation();
+																						handleClickCLMBroadcast(e, ea.entityGuid);
 																					}}
 																				/>
 																			)}

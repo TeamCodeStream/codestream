@@ -7,7 +7,7 @@ import Tooltip from "./Tooltip";
 
 interface Props {
 	goldenMetrics: any;
-	loadingGoldenMetrics: boolean;
+	loadingGoldenMetrics?: boolean;
 }
 
 const StyledMetric = styled.div`
