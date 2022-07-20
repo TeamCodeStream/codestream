@@ -1944,7 +1944,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			Logger.log("getFileLevelTelemetry: resetting cache", {
 				cacheKey
 			});
-			this._mltTimedCache = new Cache();
+			this._mltTimedCache.clear();
 			Logger.log("getFileLevelTelemetry: reset cache complete", {
 				cacheKey
 			});
