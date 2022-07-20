@@ -885,7 +885,10 @@ export const Observability = React.memo((props: Props) => {
 																						) : (
 																							<span>
 																								View{" "}
-																								<Link href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level">
+																								<Link
+																									useStopPropagation={true}
+																									href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+																								>
 																									code level metrics
 																								</Link>{" "}
 																								for this service
