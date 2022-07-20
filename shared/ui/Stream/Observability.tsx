@@ -587,15 +587,6 @@ export const Observability = React.memo((props: Props) => {
 		}, 2500);
 	};
 
-	// get latest code lenses in the IDEs
-	useEffect(() => {
-		const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(ore => {
-			return ore.repoId === currentRepoId;
-		});
-
-		console.warn(currentObservabilityRepoEntity);
-	}, [derivedState.observabilityRepoEntities]);
-
 	/*
 	 *	When current repo changes in IDE, set new entity accounts
 	 *  and fetch corresponding errors
