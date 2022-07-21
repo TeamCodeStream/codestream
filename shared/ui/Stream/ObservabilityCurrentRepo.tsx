@@ -92,6 +92,10 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 				repoName = currentRepo.path.substring(currentRepo.path.lastIndexOf("/") + 1);
 			}
 
+			if (!repoName && scmInfo?.scm?.repoPath) {
+				repoName = scmInfo?.scm?.repoPath.substring(scmInfo?.scm?.repoPath.lastIndexOf("/") + 1);
+			}
+
 			setCurrentRepoName(repoName);
 			props.currentRepoCallback(currentRepo?.id);
 
