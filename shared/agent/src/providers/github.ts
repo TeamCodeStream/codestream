@@ -5585,7 +5585,7 @@ export class GitHubProvider
 
 	async getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
-	): Promise<FetchThirdPartyPullRequestCommitsResponse> {
+	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
 		const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
 		const pullRequestNumber = await this.getPullRequestNumber(request.pullRequestId);
 
