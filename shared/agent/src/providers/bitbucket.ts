@@ -20,6 +20,7 @@ import {
 	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
+	FetchThirdPartyPullRequestFilesResponse,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsRequest,
@@ -348,14 +349,36 @@ export class BitbucketProvider
 	getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
-		throw new Error("Method not implemented.");
+		// TODO implementation
+		const response: FetchThirdPartyPullRequestResponse = {
+			rateLimit: {} as any,
+			viewer: {} as any,
+			repository: {
+				providerId: this.providerConfig.id,
+				pullRequest: {
+					providerId: this.providerConfig.id
+				} as any
+			} as any
+		};
+
+		return response as any;
 	}
 
 	@log()
 	getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
-	): Promise<FetchThirdPartyPullRequestCommitsResponse> {
-		throw new Error("Method not implemented.");
+	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
+		// TODO implementation (easier)
+		const response: FetchThirdPartyPullRequestCommitsResponse[] = [];
+		return response as any;
+	}
+
+	async getPullRequestFilesChanged(request: {
+		pullRequestId: string;
+	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
+		// TODO implementation (easier, start with this one)
+		const response: FetchThirdPartyPullRequestFilesResponse[] = [];
+		return response;
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {

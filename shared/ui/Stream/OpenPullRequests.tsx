@@ -1207,13 +1207,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						key={`pr_${prId}_${groupIndex}_${providerId}`}
 						className={selected ? "pr-row selected" : "pr-row"}
 						onClick={e => {
-							// TODO FIXME
-							//	clickPR(pr, groupIndex, queryName);
-							e.preventDefault();
-							e.stopPropagation();
-							HostApi.instance.send(OpenUrlRequestType, {
-								url: pr.url
-							});
+							clickPR(pr, groupIndex, queryName);
 						}}
 					>
 						<div style={{ display: "flex" }}>
