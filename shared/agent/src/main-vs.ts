@@ -12,6 +12,25 @@ import { CodeStreamAgent, FileLspLogger, NullLspLogger } from "./agent";
 import { Logger } from "./logger";
 import { AgentOptions, LogoutReason } from "./protocol/agent.protocol";
 
+export * from "./providers/trello";
+export * from "./providers/jira";
+export * from "./providers/jiraserver";
+export * from "./providers/github";
+export * from "./providers/githubEnterprise";
+export * from "./providers/gitlab";
+export * from "./providers/gitlabEnterprise";
+export * from "./providers/asana";
+export * from "./providers/bitbucket";
+export * from "./providers/bitbucketServer";
+export * from "./providers/youtrack";
+export * from "./providers/azuredevops";
+export * from "./providers/slack";
+export * from "./providers/msteams";
+export * from "./providers/okta";
+export * from "./providers/shortcut";
+export * from "./providers/linear";
+export * from "./providers/newrelic";
+
 let logPath;
 process.argv.forEach(function(val, index, array) {
 	if (val && val.indexOf("--log=") === 0) {
