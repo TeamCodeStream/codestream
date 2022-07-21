@@ -873,7 +873,7 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "bitbucket*org",
 					name: "Recent",
-					query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED`,
+					query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED&pagelen=5`,
 					hidden: false,
 				}
 			]
