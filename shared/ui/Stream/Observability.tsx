@@ -703,7 +703,12 @@ export const Observability = React.memo((props: Props) => {
 			<PaneHeader
 				title="Observability"
 				id={WebviewPanels.Observability}
-				subtitle={<ObservabilityCurrentRepo currentRepoCallback={setCurrentRepoId} />}
+				subtitle={
+					<ObservabilityCurrentRepo
+						observabilityRepos={observabilityRepos}
+						currentRepoCallback={setCurrentRepoId}
+					/>
+				}
 			>
 				{derivedState.newRelicIsConnected ? (
 					<>
@@ -982,23 +987,14 @@ export const Observability = React.memo((props: Props) => {
 													<>
 														<EntityAssociator
 															label="Associate this repo with an entity on New Relic in order to see errors"
-															onSuccess={async e => {
+															remote={repoForEntityAssociator.repoRemote}
+															remoteName={repoForEntityAssociator.repoName}
+															onFinally={() => {
 																HostApi.instance.track("NR Entity Association", {
 																	"Repo ID": repoForEntityAssociator.repoId
 																});
-
-																await fetchObservabilityRepos(
-																	e.entityGuid,
-																	repoForEntityAssociator.repoId
-																);
-																fetchObservabilityErrors(
-																	e.entityGuid,
-																	repoForEntityAssociator.repoId
-																);
-																fetchGoldenMetrics(e.entityGuid);
+																_useDidMount();
 															}}
-															remote={repoForEntityAssociator.repoRemote}
-															remoteName={repoForEntityAssociator.repoName}
 														/>
 													</>
 												)}

@@ -12,13 +12,15 @@ import { HostApi } from "../webview-api";
 import { DropdownButton } from "./DropdownButton";
 import { WarningBox } from "./WarningBox";
 import Tooltip from "./Tooltip";
+import { logError } from "../logger";
 
 interface EntityAssociatorProps {
 	title?: string;
 	label?: string;
 	remote: string;
 	remoteName: string;
-	onSuccess: Function;
+	onSuccess?: Function;
+	onFinally?: Function;
 }
 
 export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssociatorProps>) => {
@@ -89,32 +91,47 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 							entityId: selected?.guid,
 							parseableAccountId: selected?.guid
 						};
-						dispatch(api("assignRepository", payload)).then(_ => {
-							setTimeout(() => {
-								if (_?.directives) {
-									console.log("assignRepository", {
-										directives: _?.directives
-									});
-									// a little fragile, but we're trying to get the entity guid back
-									props.onSuccess &&
-										props.onSuccess({
-											entityGuid: _?.directives.find(d => d.type === "assignRepository")?.data
-												?.entityGuid
+						dispatch(api("assignRepository", payload))
+							.then(_ => {
+								setTimeout(() => {
+									if (_?.directives) {
+										console.log("assignRepository", {
+											directives: _?.directives
 										});
-								} else if (_?.error) {
-									setWarningOrErrors([{ message: _.error }]);
-								} else {
-									setWarningOrErrors([
-										{ message: "Failed to direct to entity dropdown, please refresh" }
-									]);
-									console.warn("Could not find directive", {
-										_: _,
-										payload: payload
-									});
-								}
-								setIsLoading(false);
-							}, 2500);
-						});
+										// a little fragile, but we're trying to get the entity guid back
+										if (props.onSuccess) {
+											props.onSuccess({
+												entityGuid: _?.directives.find(d => d.type === "assignRepository")?.data
+													?.entityGuid
+											});
+										}
+									} else if (_?.error) {
+										setWarningOrErrors([{ message: _.error }]);
+									} else {
+										setWarningOrErrors([
+											{ message: "Failed to direct to entity dropdown, please refresh" }
+										]);
+										console.warn("Could not find directive", {
+											_: _,
+											payload: payload
+										});
+									}
+								}, 2500);
+							})
+							.catch(err => {
+								setWarningOrErrors([
+									{ message: "Failed to direct to entity dropdown, please refresh" }
+								]);
+								logError(`Unexpected error during assignRepository: ${err}`, {});
+							})
+							.finally(() => {
+								setTimeout(() => {
+									if (props.onFinally) {
+										props.onFinally();
+									}
+									setIsLoading(false);
+								}, 2500);
+							});
 					}}
 				>
 					Associate

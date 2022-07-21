@@ -14,6 +14,7 @@ import Icon from "./Icon";
 
 interface Props {
 	currentRepoCallback: Function;
+	observabilityRepos: any;
 }
 
 const CurrentRepoContainer = styled.span`
@@ -41,7 +42,7 @@ export const ObservabilityCurrentRepo = React.memo((props: Props) => {
 		if (String(derivedState.textEditorUri).length > 0) {
 			onFileChanged(onFileChangedError);
 		}
-	}, [derivedState.textEditorUri]);
+	}, [props.observabilityRepos, derivedState.textEditorUri]);
 
 	const onFileChangedError = () => {
 		// unused currently
