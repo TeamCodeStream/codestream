@@ -869,14 +869,13 @@ export class ThirdPartyProviderRegistry {
 					name: "Created by Me",
 					query: `@me?state=OPEN`,
 					hidden: false,
+				},
+				{
+					providerId: "bitbucket*org",
+					name: "Recent",
+					query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED`,
+					hidden: false,
 				}
-				// {
-				// 	providerId: "bitbucket*org",
-				// 	name: "Recent",
-				// 	// TODO - how does @me work?
-				// 	query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED`,
-				// 	hidden: false
-				// }
 			]
 		};
 		try {
