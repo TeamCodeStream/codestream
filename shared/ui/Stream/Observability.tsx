@@ -441,6 +441,9 @@ export const Observability = React.memo((props: Props) => {
 
 		if (expandedRepoEntityNode) {
 			setCurrentEntityAccountIndex(expandedRepoEntityNode.match(/^\d+/)![0]);
+			// If none are expanded, default open the top one
+		} else {
+			setCurrentEntityAccountIndex("0");
 		}
 	};
 
@@ -568,9 +571,11 @@ export const Observability = React.memo((props: Props) => {
 		}
 	];
 
-	const handleClickCLMBroadcast = (e, entityGuid) => {
-		e.preventDefault();
-		e.stopPropagation();
+	const handleClickCLMBroadcast = (entityGuid, e?) => {
+		if (e) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 
 		const newPreferences = derivedState.observabilityRepoEntities.filter(
 			_ => _.repoId !== currentRepoId
@@ -602,11 +607,23 @@ export const Observability = React.memo((props: Props) => {
 			if (_currentEntityAccounts && !_isEmpty(_currentEntityAccounts)) {
 				let _entityGuid = expandedEntity || "";
 
+				// Only triggers conditional occurs during _useOnMount
 				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
-					fetchGoldenMetrics(_currentEntityAccounts[currentEntityAccountIndex]?.entityGuid);
-					setExpandedEntity(_currentEntityAccounts[currentEntityAccountIndex]?.entityGuid);
-					//Only used to load on mount
+					let __entityGuid = _currentEntityAccounts[currentEntityAccountIndex]?.entityGuid;
+					fetchGoldenMetrics(__entityGuid);
+					setExpandedEntity(__entityGuid);
 					setCurrentEntityAccountIndex(null);
+					// Set user observabilityRepoEntities preference to expanded entity if one doesnt exist
+					// otherwise, set to first entity in entity account list if observabilityRepoEntities is empty
+					if (!_isEmpty(__entityGuid) && derivedState.observabilityRepoEntities.length === 0) {
+						handleClickCLMBroadcast(__entityGuid);
+					} else if (
+						_isEmpty(__entityGuid) &&
+						derivedState.observabilityRepoEntities.length === 0 &&
+						_currentEntityAccounts.length > 0
+					) {
+						handleClickCLMBroadcast(_currentEntityAccounts[0]?.entityGuid);
+					}
 				}
 
 				if (!_isEmpty(_entityGuid)) {
@@ -920,7 +937,7 @@ export const Observability = React.memo((props: Props) => {
 																					onClick={e => {
 																						e.preventDefault();
 																						e.stopPropagation();
-																						handleClickCLMBroadcast(e, ea.entityGuid);
+																						handleClickCLMBroadcast(ea.entityGuid, e);
 																					}}
 																				/>
 																			)}
