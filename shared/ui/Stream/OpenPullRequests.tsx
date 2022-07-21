@@ -1193,9 +1193,143 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					)}
 				</>
 			);
-		} else {
-			return undefined;
-		}
+		} else if (providerId === "bitbucket*org") {
+			const selected = openRepos.find(repo => {
+				return (
+					repo.currentBranch === pr.headRefName &&
+					pr.headRepository &&
+					repo?.name === pr.headRepository?.name
+				);
+			});
+			return (
+				<>
+					<Row
+						key={`pr_${prId}_${groupIndex}_${providerId}`}
+						className={selected ? "pr-row selected" : "pr-row"}
+						onClick={e => {
+							// TODO FIXME
+							//	clickPR(pr, groupIndex, queryName);
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, {
+								url: pr.url
+							});
+						}}
+					>
+						<div style={{ display: "flex" }}>
+							{chevronIcon}
+							{pr.author && <PRHeadshot person={pr.author} />}
+						</div>
+						<div>
+							<span>
+								#{pr.number} {pr.title}
+							</span>
+							{pr.labels &&
+								pr.labels.nodes &&
+								pr.labels.nodes.length > 0 &&
+								!derivedState.hideLabels && (
+									<span className="cs-tag-container">
+										{pr.labels.nodes.map((_, index) => (
+											<Tag key={index} tag={{ label: _?.name, color: `#${_?.color}` }} />
+										))}
+									</span>
+								)}
+						</div>
+						<div className="icons">
+							<span
+								onClick={e => {
+									e.preventDefault();
+									e.stopPropagation();
+									HostApi.instance.send(OpenUrlRequestType, {
+										url: pr.url
+									});
+								}}
+							>
+								<Icon
+									name="link-external"
+									className="clickable"
+									title="View on Bitbucket"
+									placement="bottomLeft"
+									delay={1}
+								/>
+							</span>
+							<Icon
+								title="Copy"
+								placement="bottom"
+								name="copy"
+								className="clickable"
+								onClick={e => handleClickCopy(e, pr.url)}
+								delay={1}
+							/>
+
+							<span className={cantCheckoutReason(pr) ? "disabled" : ""}>
+								<Icon
+									title={
+										<>
+											Checkout Branch
+											{cantCheckoutReason(pr) && (
+												<div className="subtle smaller" style={{ maxWidth: "200px" }}>
+													Disabled: {cantCheckoutReason(pr)}
+												</div>
+											)}
+										</>
+									}
+									trigger={["hover"]}
+									onClick={e => checkout(e, pr, cantCheckoutReason(pr))}
+									placement="bottom"
+									name="git-branch"
+									delay={1}
+									className="clickable"
+								/>
+							</span>
+							<span>
+								<Icon
+									title="Reload"
+									trigger={["hover"]}
+									delay={1}
+									onClick={e => {
+										if (isLoadingPR) {
+											console.warn("reloading pr, cancelling...");
+											return;
+										}
+										reload(e, pr);
+									}}
+									placement="bottom"
+									className={`${isLoadingPR ? "spin" : ""}`}
+									name="refresh"
+								/>
+							</span>
+							{groupIndex === "-1" && (
+								<Icon
+									title="Remove"
+									placement="bottom"
+									name="x"
+									className="clickable"
+									onClick={e => {
+										e.preventDefault();
+										e.stopPropagation();
+										setPrFromUrl({});
+									}}
+									delay={1}
+								/>
+							)}
+							<Timestamp time={pr.createdAt} relative abbreviated />
+						</div>
+					</Row>
+					{expanded && !derivedState.isVS && (
+						<PullRequestExpandedSidebar
+							key={`pr_detail_row_${index}`}
+							pullRequest={pr}
+							thirdPartyPrObject={expandedPR}
+							loadingThirdPartyPrObject={isLoadingPR}
+							fetchOnePR={fetchOnePR}
+							prCommitsRange={prCommitsRange}
+							setPrCommitsRange={setPrCommitsRange}
+						/>
+					)}
+				</>
+			);
+		} else return undefined;
 	};
 
 	useEffect(() => {

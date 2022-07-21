@@ -1,5 +1,4 @@
 "use strict";
-import { use } from "chai";
 import { GitRemoteLike } from "git/gitService";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
@@ -67,6 +66,45 @@ interface BitbucketUser {
 	uuid: string;
 	display_name: string;
 	account_id: string;
+	username: string;
+}
+
+interface BitbucketPullRequest {
+	author: {
+		links: {
+			avatar: {
+				href: string;
+			};
+		};
+	};
+	created_on: string;
+	destination: {
+		branch: {
+			name: string;
+		};
+	};
+	id: number;
+	links: {
+		html: {
+			href: string;
+		};
+	};
+	source: {
+		branch: {
+			name: string;
+		};
+		repository: {
+			name: string;
+			full_name: string;
+		};
+	};
+	summary: {
+		html: string;
+		raw: string;
+	};
+	state: string;
+	title: string;
+	updated_on: string;
 }
 
 interface BitbucketValues<T> {
@@ -426,19 +464,19 @@ export class BitbucketProvider
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 			const repoResponse = await this.get<BitBucketRepo>(`/repositories/${owner}/${name}`);
-			const pullRequestResponse = await this.get<BitBucketPullRequest>(
+			const pullRequestResponse = await this.get<BitbucketValues<BitbucketPullRequest[]>>(
 				`/repositories/${owner}/${name}/pullrequests?state=OPEN`
 			);
 			let pullRequests: ProviderPullRequestInfo[] = [];
 			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
 				pullRequests = pullRequestResponse.body.values.map(_ => {
 					return {
-						id: _.id,
+						id: _.id + "",
 						url: _.links!.html!.href,
 						baseRefName: _.destination.branch.name,
 						headRefName: _.source.branch.name,
 						nameWithOwner: _.source.repository.full_name,
-					};
+					} as ProviderPullRequestInfo;
 				});
 			}
 			return {
@@ -539,16 +577,18 @@ export class BitbucketProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
-		//call to /user
-		//get the username
-		const username = (await this.get('/user').then( response => {
-			console.log("Response body", response.body)
-			const user_info = response.body.username;
-			console.log("userName is ", user_info)
-			return user_info;
-		}))
+		// call to /user to get the username
+		const usernameResponse = await this.get<BitbucketUser>("/user");
+		if (!usernameResponse) {
+			Logger.warn("getMyPullRequests user not found");
+			return undefined;
+		}
 
-		const queriesSafe = request.queries.map(query => query.replace(/["']/g, '\\"').replace("username", username));
+		const username = usernameResponse.body.username;
+		const queriesSafe = request.queries.map(query =>
+			query.replace(/["']/g, '\\"').replace("@me", username)
+		);
+		const providerId = this.providerConfig?.id;
 		const items = await Promise.all(
 			queriesSafe.map(_query => {
 				let query = _query;
@@ -578,7 +618,9 @@ export class BitbucketProvider
 				// } else {
 				// 	Logger.log(`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}"`);
 				// }
-				return this.get(`/pullrequests/${query}`); //https://api.bitbucket.org//2.0/
+
+				// the baseUrl will be applied inside the this.get, it normally looks like https://api.bitbucket.org/2.0
+				return this.get<BitbucketValues<BitbucketPullRequest[]>>(`/pullrequests/${query}`);
 			})
 		).catch(ex => {
 			Logger.error(ex, "getMyPullRequests");
@@ -592,25 +634,42 @@ export class BitbucketProvider
 		});
 		const response: GetMyPullRequestsResponse[][] = [];
 		items.forEach((item, index) => {
-			
-
-			if (item && item.search && item.search.edges) {
-				response[index] = item.search.edges
-					.map((_: any) => _.node)
-					.filter((_: any) => _.id)
-					.map((pr: { createdAt: string }) => ({
-						...pr,
+			if (item?.body?.values?.length) {
+				response[index] = item.body.values.map(pr => {
+					const lastEditedString = new Date(pr.updated_on).getTime() + "";
+					return {
+						author: {
+							avatarUrl: pr.author.links.avatar.href,
+							login: username
+						},
+						baseRefName: pr.destination.branch.name,
+						body: pr.summary.html,
+						bodyText: pr.summary.raw,
+						createdAt: new Date(pr.created_on).getTime(),
+						headRefName: pr.source.branch.name,
+						headRepository: {
+							name: pr.source.repository.name,
+							nameWithOwner: pr.source.repository.full_name
+						},
+						id: pr.id + "",
+						lastEditedAt: lastEditedString,
+						labels: {
+							nodes: []
+						},
+						number: pr.id,
 						providerId: providerId,
-						createdAt: new Date(pr.createdAt).getTime()
-					}));
-				if (!queries[index].match(/\bsort:/)) {
+						state: pr.state,
+						title: pr.title,
+						updatedAt: lastEditedString,
+						url: pr.links.html.href
+					} as GetMyPullRequestsResponse;
+				});
+				if (!request.queries[index].match(/\bsort:/)) {
 					response[index] = response[index].sort(
 						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
 					);
 				}
 			}
-			debugger;
-			Logger.log(JSON.stringify(item, null, 4));
 		});
 
 		return response;
@@ -654,25 +713,4 @@ interface BitBucketRepo {
 		type?: string;
 	};
 	parent?: any;
-}
-
-interface BitBucketPullRequest {
-	values: {
-		id: string;
-		source: {
-			branch: {
-				name: string;
-			};
-			repository: {
-				full_name: string;
-			};
-		};
-
-		destination: {
-			branch: {
-				name: string;
-			};
-		};
-		links: { html: { href: string } };
-	}[];
 }
