@@ -116,7 +116,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 											payload: payload
 										});
 									}
-								}, 2500);
+								}, 5000);
 							})
 							.catch(err => {
 								setWarningOrErrors([
@@ -126,11 +126,11 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 							})
 							.finally(() => {
 								setTimeout(() => {
-									if (props.onFinally) {
-										props.onFinally();
+									{
+										/* @TODO clean up this code, put in place so spinner doesn't stop before onSuccess */
 									}
 									setIsLoading(false);
-								}, 2500);
+								}, 6000);
 							});
 					}}
 				>

@@ -987,14 +987,23 @@ export const Observability = React.memo((props: Props) => {
 													<>
 														<EntityAssociator
 															label="Associate this repo with an entity on New Relic in order to see errors"
-															remote={repoForEntityAssociator.repoRemote}
-															remoteName={repoForEntityAssociator.repoName}
-															onFinally={() => {
+															onSuccess={async e => {
 																HostApi.instance.track("NR Entity Association", {
 																	"Repo ID": repoForEntityAssociator.repoId
 																});
-																_useDidMount();
+
+																await fetchObservabilityRepos(
+																	e.entityGuid,
+																	repoForEntityAssociator.repoId
+																);
+																fetchObservabilityErrors(
+																	e.entityGuid,
+																	repoForEntityAssociator.repoId
+																);
+																fetchGoldenMetrics(e.entityGuid);
 															}}
+															remote={repoForEntityAssociator.repoRemote}
+															remoteName={repoForEntityAssociator.repoName}
 														/>
 													</>
 												)}
