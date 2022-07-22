@@ -1003,7 +1003,19 @@ export const Observability = React.memo((props: Props) => {
 												{!_isEmpty(repoForEntityAssociator) && (
 													<>
 														<EntityAssociator
-															label="Associate this repo with an entity on New Relic in order to see errors"
+															label={
+																<span>
+																	Associate this repo with an entity on New Relic in order to see
+																	errors. Or,{" "}
+																	<Link
+																		onClick={() => {
+																			dispatch(openPanel(WebviewPanels.OnboardNewRelic));
+																		}}
+																	>
+																		set up instrumentation.
+																	</Link>
+																</span>
+															}
 															onSuccess={async e => {
 																HostApi.instance.track("NR Entity Association", {
 																	"Repo ID": repoForEntityAssociator.repoId

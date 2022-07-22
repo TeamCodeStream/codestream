@@ -16,7 +16,7 @@ import { logError } from "../logger";
 
 interface EntityAssociatorProps {
 	title?: string;
-	label?: string;
+	label?: string | React.ReactNode;
 	remote: string;
 	remoteName: string;
 	onSuccess?: Function;
