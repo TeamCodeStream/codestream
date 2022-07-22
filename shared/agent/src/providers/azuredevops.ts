@@ -96,7 +96,7 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 			const wiql =
 				"Select ID, System.Title, System.Description, State, [Team Project] " +
 				"From WorkItems " +
-				"Where State <> 'Closed' " +
+				"Where State NOT IN ('Closed','Done','Completed','Inactive','Removed') " +
 				"And [Assigned To] = @Me " +
 				"Order By [Changed Date] Desc";
 			const { body } = (await this.post(
@@ -107,7 +107,7 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 				{ "Content-Type": "application/json" }
 			)) as { body: { workItems: AzureDevOpsWorkItem[] } };
 			if (body && body.workItems) {
-				const ids = body.workItems.map(workItem => workItem.id);
+				const ids = body.workItems.map(workItem => workItem.id).slice(0, 200);
 				const response = (await this.get(
 					`/_apis/wit/workitems?${qs.stringify({
 						ids: ids.join(","),
