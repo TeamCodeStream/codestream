@@ -116,7 +116,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
-	private _codeStreamUser: CSMe | undefined = undefined;
 	private _mltTimedCache: Cache;
 	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
 
@@ -182,7 +181,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
 		delete this._newRelicUserId;
-		delete this._codeStreamUser;
 		delete this._accountIds;
 		this._mltTimedCache.clear();
 		this._applicationEntitiesCache = {};
@@ -1958,11 +1956,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		}
 		const { users, git } = this._sessionServiceContainer || SessionContainer.instance();
-		if (!this._codeStreamUser) {
-			this._codeStreamUser = await users.getMe();
-		}
+		const codeStreamUser = await users.getMe();
 
-		const isConnected = this.isConnected(this._codeStreamUser);
+		const isConnected = this.isConnected(codeStreamUser);
 		if (!isConnected) {
 			ContextLogger.warn("getFileLevelTelemetry: not connected", {
 				request
@@ -2019,7 +2015,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			} as any;
 		}
 
-		const entity = this.getGoldenSignalsEntity(this._codeStreamUser!, observabilityRepo);
+		const entity = this.getGoldenSignalsEntity(codeStreamUser!, observabilityRepo);
 
 		const newRelicAccountId = entity.accountId;
 		const newRelicEntityGuid = entity.entityGuid;

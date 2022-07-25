@@ -572,6 +572,8 @@ export const Observability = React.memo((props: Props) => {
 	];
 
 	const handleClickCLMBroadcast = (entityGuid, e?) => {
+		fetchObservabilityErrors(entityGuid, currentRepoId);
+
 		if (e) {
 			e.preventDefault();
 			e.stopPropagation();
