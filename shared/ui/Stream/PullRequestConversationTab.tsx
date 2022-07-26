@@ -481,21 +481,33 @@ export const PullRequestConversationTab = (props: {
 		}
 		const reviewerIds = reviewers.map(_ => _.id);
 		if (availableReviewers && availableReviewers.length) {
-			const menuItems = availableReviewers.map((_: any) => ({
-				checked: reviewerIds.includes(_.id),
-				label: <PRHeadshotName person={_} className="no-padding" />,
-				subtle: _.name,
-				searchLabel: `${_.login}:${_.name}`,
-				key: _.id,
-				action: () => {
-					const reviewer = (reviewers || []).find(r => r.id === _.id);
-					if (reviewer && reviewer.isPending) {
-						removeReviewer(_.id);
-					} else {
-						addReviewer(_.id);
+			const prAuthorLogin = pr?.author?.login || GHOST;
+			const menuItems = availableReviewers
+				.filter(_ => {
+					// Cannot assign a pr to the owner, filter this value out
+					if (_["login"] === prAuthorLogin) {
+						return false;
 					}
-				}
-			})) as any;
+
+					return true;
+				})
+				.map((_: any) => {
+					return {
+						checked: reviewerIds.includes(_.id),
+						label: <PRHeadshotName person={_} className="no-padding" />,
+						subtle: _.name,
+						searchLabel: `${_.login}:${_.name}`,
+						key: _.id,
+						action: () => {
+							const reviewer = (reviewers || []).find(r => r.id === _.id);
+							if (reviewer && reviewer.isPending) {
+								removeReviewer(_.id);
+							} else {
+								addReviewer(_.id);
+							}
+						}
+					};
+				}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
 		} else {

@@ -612,8 +612,8 @@ export function reduceProviderPullRequests(
 								}
 							}
 						} else if (directive.type === "addNode") {
-							if (!directive.data.id) continue;
-							const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+							if (!directive?.data?.id) continue;
+							const node = pr.timelineItems.nodes.find(_ => _?.id === directive?.data?.id);
 							if (!node) {
 								pr.timelineItems.nodes.push(directive.data);
 							}
