@@ -119,7 +119,7 @@ export const startSSOSignin = (
 		});
 		return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
 	} catch (error) {
-		logError(`Unable to start ${provider} sign in: ${error}`);
+		logError(error, { detail: `Unable to start ${provider} sign in` });
 	}
 };
 
@@ -157,7 +157,7 @@ export const startIDESignin = (provider: SupportedSSOProvider, info?: SSOAuthInf
 			return dispatch(goToSSOAuth(provider, { ...(info || emptyObject) }));
 		}
 	} catch (error) {
-		logError(`Unable to start VSCode ${provider} sign in: ${error}`);
+		logError(error, { detail: `Unable to start VSCode ${provider} sign in` });
 	}
 };
 

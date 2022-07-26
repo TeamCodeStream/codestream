@@ -154,7 +154,7 @@ export const deleteCodeError = (id: string) => async dispatch => {
 		});
 		dispatch(_deleteCodeError(id));
 	} catch (error) {
-		logError(`failed to delete code error: ${error}`, { id });
+		logError(error, { detail: `failed to delete code error`, id });
 	}
 };
 
@@ -328,7 +328,11 @@ export const setProviderError = (
 	try {
 		dispatch(_addProviderError(providerId, errorGroupGuid, error));
 	} catch (error) {
-		logError(`failed to setProviderError: ${error}`, { providerId, errorGroupGuid });
+		logError(error, {
+			detail: `failed to setProviderError`,
+			providerId,
+			errorGroupGuid
+		});
 	}
 };
 
@@ -340,7 +344,7 @@ export const clearProviderError = (
 	try {
 		dispatch(_clearProviderError(providerId, id));
 	} catch (error) {
-		logError(`failed to setProviderError: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to setProviderError`, providerId, id });
 	}
 };
 
@@ -368,7 +372,7 @@ export const fetchErrorGroup = (
 			return dispatch(_setErrorGroup(codeError.objectId!, result.errorGroup));
 		});
 	} catch (error) {
-		logError(`failed to fetchErrorGroup: ${error}`, { objectId });
+		logError(error, { detail: `failed to fetchErrorGroup`, objectId });
 	}
 };
 
@@ -400,7 +404,11 @@ export const findErrorGroupByObjectId = (objectId: string, occurrenceId?: string
 			return locator(state, objectId, occurrenceId);
 		}
 	} catch (error) {
-		logError(`failed to findErrorGroupByObjectId: ${error}`, { objectId, occurrenceId });
+		logError(error, {
+			detail: `failed to findErrorGroupByObjectId`,
+			objectId,
+			occurrenceId
+		});
 	}
 	return undefined;
 };
@@ -412,7 +420,7 @@ export const setErrorGroup = (errorGroupGuid: string, data?: any) => async (
 	try {
 		dispatch(_setErrorGroup(errorGroupGuid, data));
 	} catch (error) {
-		logError(`failed to _setErrorGroup: ${error}`, { errorGroupGuid });
+		logError(error, { detail: `failed to _setErrorGroup`, errorGroupGuid });
 	}
 };
 

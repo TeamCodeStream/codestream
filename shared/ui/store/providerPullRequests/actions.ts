@@ -213,7 +213,7 @@ export const getPullRequestConversations = (providerId: string, id: string) => a
 		await dispatch(_addPullRequestCollaborators(providerId, id, responses.collaborators));
 		return responses.conversations;
 	} catch (error) {
-		logError(`failed to get pullRequest conversations: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to get pullRequest conversations`, providerId, id });
 		return { error };
 	}
 };
@@ -274,7 +274,7 @@ export const getPullRequestFiles = (
 		dispatch(_addPullRequestFiles(providerId, id, commitsIndex, response, accessRawDiffs));
 		return response;
 	} catch (error) {
-		logError(`failed to get pullRequest files: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to get pullRequest files`, providerId, id });
 	}
 	return undefined;
 };
@@ -293,7 +293,7 @@ export const getPullRequestFilesFromProvider = (
 		dispatch(_addPullRequestFiles(providerId, id, JSON.stringify([]), response, undefined));
 		return response;
 	} catch (error) {
-		logError(`failed to get pullRequest files from provider: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to get pullRequest files from provider`, providerId, id });
 	}
 	return undefined;
 };
@@ -345,7 +345,7 @@ export const getMyPullRequests = (
 			throw error;
 		}
 		// callee is handling, let them handle any logging
-		logError(`failed to get my pullRequests: ${error}`, { providerId });
+		logError(error, { detail: `failed to get my pullRequests`, providerId });
 	}
 	return undefined;
 };
@@ -368,7 +368,7 @@ export const getPullRequestCommitsFromProvider = (
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
 	} catch (error) {
-		logError(`failed to refresh pullRequest commits: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to refresh pullRequest commits`, providerId, id });
 	}
 	return undefined;
 };
@@ -400,7 +400,7 @@ export const getPullRequestCommits = (
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
 	} catch (error) {
-		logError(`failed to get pullRequest commits: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to get pullRequest commits`, providerId, id });
 	}
 	return undefined;
 };
@@ -450,7 +450,7 @@ export const openPullRequestByUrl = (
 			}
 		}
 	} catch (error) {
-		logError(`failed to openPullRequestByUrl: ${error}`, { url });
+		logError(error, { detail: `failed to openPullRequestByUrl`, url });
 		let errorString = typeof error === "string" ? error : error.message;
 		if (errorString) {
 			const target = "failed with message: ";
@@ -476,7 +476,7 @@ export const setProviderError = (
 	try {
 		dispatch(_addPullRequestError(providerId, id, error));
 	} catch (error) {
-		logError(`failed to setProviderError: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to setProviderError`, providerId, id });
 	}
 };
 
@@ -488,7 +488,7 @@ export const clearProviderError = (
 	try {
 		dispatch(_addPullRequestError(providerId, id, error));
 	} catch (error) {
-		logError(`failed to setProviderError: ${error}`, { providerId, id });
+		logError(error, { detail: `failed to setProviderError`, providerId, id });
 	}
 };
 

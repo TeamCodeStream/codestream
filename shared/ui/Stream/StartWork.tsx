@@ -877,8 +877,7 @@ export const StartWork = (props: Props) => {
 			});
 			await fetchBranchCommitsStatus();
 		} catch (error) {
-			logError(error, {});
-			logError(`Unexpected error during branch pulling : ${error}`, {});
+			logError(error, { detail: `Unexpected error during branch pulling` });
 			confirmPopup({
 				title: "Git Error",
 				message: (

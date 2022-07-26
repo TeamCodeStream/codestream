@@ -172,7 +172,7 @@ export const deleteReview = (id: string) => async dispatch => {
 		});
 		dispatch(_deleteReview(id));
 	} catch (error) {
-		logError(`failed to delete review: ${error}`, { id });
+		logError(error, { detail: `failed to delete review`, id });
 	}
 };
 
@@ -245,7 +245,7 @@ export const editReview = (
 			);
 		}
 	} catch (error) {
-		logError(`failed to update review: ${error}`, { id });
+		logError(error, { detail: `failed to update review`, id });
 	}
 	return response;
 };

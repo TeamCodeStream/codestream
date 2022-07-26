@@ -39,7 +39,7 @@ export const ChangePhoneNumber = props => {
 			HostApi.instance.track("fullName Changed", {});
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during change fullName: ${error}`, { phoneNumber });
+			logError(error, { detail: `Unexpected error during change fullName`, phoneNumber });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

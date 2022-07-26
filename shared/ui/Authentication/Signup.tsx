@@ -366,8 +366,9 @@ export const Signup = (props: Props) => {
 					throw status;
 			}
 		} catch (error) {
-			logError(`Unexpected error during registration request: ${error}`, {
-				email,
+			logError(error, {
+				detail: `Unexpected error during registration request`,
+				email: email,
 				inviteCode: props.inviteCode
 			});
 			setUnexpectedError(true);

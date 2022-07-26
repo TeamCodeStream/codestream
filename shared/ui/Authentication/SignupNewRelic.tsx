@@ -178,7 +178,9 @@ export const SignupNewRelic = () => {
 		} catch (error) {
 			setShowGenericErrorMessage(true);
 			setShowEmailErrorMessage(false);
-			logError(`Unexpected error during nr registration request: ${error}`);
+			logError(error, {
+				detail: `Unexpected error during nr registration request`
+			});
 		}
 	};
 

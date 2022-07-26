@@ -59,7 +59,7 @@ export const AddAppMonitoringJava = (props: {
 		try {
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during New Relic installation: ${error}`);
+			logError(error, { detail: `Unexpected error during New Relic java installation` });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

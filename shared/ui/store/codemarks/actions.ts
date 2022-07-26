@@ -223,7 +223,7 @@ export const deleteCodemark = (codemarkId: string) => async dispatch => {
 		}));
 		dispatch(_deleteCodemark(codemarkId));
 	} catch (error) {
-		logError(`failed to delete codemark: ${error}`, { codemarkId });
+		logError(error, { detail: `failed to delete codemark`, codemarkId });
 	}
 };
 
@@ -294,7 +294,10 @@ export const editCodemark = (
 
 		dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		logError(`failed to update codemark: ${error}`, { codemarkId: codemark.id });
+		logError(error, {
+			detail: `failed to update codemark`,
+			codemarkId: codemark.id
+		});
 	}
 };
 
