@@ -1,6 +1,7 @@
 "use strict";
 import { GitRemoteLike } from "git/gitService";
 import * as qs from "querystring";
+import { isRequestMessage } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
@@ -367,19 +368,98 @@ export class BitbucketProvider
 	@log()
 	getPullRequestCommits(
 		request: FetchThirdPartyPullRequestCommitsRequest
-	): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		// TODO implementation (easier)
-		const response: FetchThirdPartyPullRequestCommitsResponse[] = [];
+	): Promise<FetchThirdPartyPullRequestCommitsResponse[][] | undefined> {
+		void (await this.ensureConnected());
+		//call to get pull request (TODO: change so not hardcoded)
+		const commitsResponse = this.get<BitbucketRepo>("/repositories/reneepetit86/bitbucketpractice/pullrequests/6");
+		if (!commitsResponse) {
+			Logger.warn("getPullRequestCommits commit not found");
+			return undefined;
+		}
+
+		// const queriesSafe = request.queries.map(query => 
+		// 	query.replace());
+
+		const providerId = this.providerConfig?.id;
+		// const items = await Promise.all(
+		// 	queriesSafe.map(_query => {
+		// 		let query = _query;
+		// 		let limit = 100;
+		// 		return this.get<BitbucketRepo>(`/repositories/${query}`);
+		// 	})
+		// ).catch(ex => {
+		// 	Logger.error(ex, "getPullRequestCommits");
+		// 	let errString;
+		// 	if (ex.response) {
+		// 		errString = JSON.stringify(ex.response);
+		// 	} else {
+		// 		errString = ex.message;
+		// 	}
+		// 	throw new Error(errString);
+		// });
+		const response: FetchThirdPartyPullRequestCommitsResponse[][] = [];
+		items.forEach((item, index) => {
+			if (item?.body?.valules?.length) {
+				response[index] = item.body.values.map(prcommit => {
+					return {
+						abbreviatedOid: prcommit.;
+						author: {
+							name: prcommit.;
+							avatarUrl: prcommit.;
+							user?: {
+								login: prcommit.;
+							};
+						};
+						committer: {
+							avatarUrl: prcommit.;
+							name: prcommit.;
+							user?: {
+								login: prcommit.;
+							};
+						};
+						message: prcommit.;
+						authoredDate: prcommit.;
+						oid: prcommit.;
+						url?: prcommit.;
+					}
+				})
+				// if (!request.queries[index].match(/\bsort:/)) {
+				// 	response[index] = response[index].sort(
+				// 		(a: {authoredDate: string}, b: {authoredDate: string}) => parseInt(b.authoredDate) - parseInt(a.authoredDate)
+				// 	);
+				// }
+			}
+		});
+
 		return response as any;
 	}
+
 
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		// TODO implementation (easier, start with this one)
+		const prurl = await this.get("/repositories/reneepetit86/bitbucketpractice/pullrequests/6")
 		const response: FetchThirdPartyPullRequestFilesResponse[] = [];
+		items.forEach((item, index) => {
+			if (item?.body?.values?.length) {
+				response[index] = item.body.values.map(prurl. => {
+					return {
+						sha: prurl.destination.commit.hash;
+						filename: prurl.destination.c.;
+						previousFilename?: prurl.;
+						status: prurl.;
+						additions: prurl.;
+						changes: prurl.;
+						deletions: prurl.;
+						patch?: prurl.;
+					} as FetchThirdPartyPullRequestFilesResponse;
+				});
+			}
+	});
 		return response;
 	}
+
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
 		// TODO don't need this ensureConnected -- doesn't hit api
@@ -701,7 +781,7 @@ export class BitbucketProvider
 		return response;
 	}
 }
-//TODO this for bitbucket info
+
 interface BitBucketCreatePullRequestRequest {
 	source: {
 		branch: {

@@ -861,7 +861,7 @@ export class ThirdPartyProviderRegistry {
 				// 	providerId: "bitbucket*org",
 				// 	name: "Assigned to Me",
 				// 	// TODO - how should this be formatted?
-				// 	query: `repositories/@me/@slug/pullrequests?assignee=@me`,
+				// 	query: `repositories/reneepetit86/bitbucketpractice/pullrequests/6?fields=reviewers`, //this is per pullrequest
 				// 	hidden: false
 				// },
 				{
