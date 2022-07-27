@@ -4549,6 +4549,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 
+		changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+
 		return changedFiles;
 	}
 
