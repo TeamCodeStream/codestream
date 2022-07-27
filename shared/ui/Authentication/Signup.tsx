@@ -216,6 +216,9 @@ export const Signup = (props: Props) => {
 
 	useDidMount(() => {
 		getUserInfo();
+		if (derivedState.webviewFocused) {
+			HostApi.instance.track("Page Viewed", { "Page Name": "Create Account" });
+		}
 		if (props.teamId) getTeamAuthInfo(props.teamId);
 	});
 
