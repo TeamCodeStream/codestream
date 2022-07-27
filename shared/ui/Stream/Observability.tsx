@@ -33,7 +33,14 @@ import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { Button } from "../src/components/Button";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
+import {
+	NoContent,
+	PaneBody,
+	PaneHeader,
+	PaneNode,
+	PaneNodeName,
+	PaneState
+} from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
@@ -208,7 +215,8 @@ export const Observability = React.memo((props: Props) => {
 			isVS: state.ide.name === "VS",
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
-				{}) as CurrentMethodLevelTelemetry
+				{}) as CurrentMethodLevelTelemetry,
+			textEditorUri: state.editorContext.textEditorUri
 		};
 	}, shallowEqual);
 
@@ -724,6 +732,8 @@ export const Observability = React.memo((props: Props) => {
 
 	const { hiddenPaneNodes } = derivedState;
 
+	console.warn(currentRepoId);
+
 	return (
 		<Root>
 			<PaneHeader
@@ -794,6 +804,16 @@ export const Observability = React.memo((props: Props) => {
 													Set Up Monitoring
 												</Button>
 											</NoEntitiesWrapper>
+										)}
+										{!loadingEntities && _isEmpty(currentRepoId) && (
+											<NoContent>
+												<p>
+													Open a source file to see how your code is performing. Learn more.{" "}
+													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+														Learn more.
+													</a>
+												</p>
+											</NoContent>
 										)}
 										{!loadingEntities &&
 											!derivedState.hideCodeLevelMetricsInstructions &&
