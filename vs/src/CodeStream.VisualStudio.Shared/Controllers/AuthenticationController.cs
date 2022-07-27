@@ -200,13 +200,12 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			var user = token?["loginResponse"]?["user"]?.ToObject<CsUser>();
 			var teamId = GetTeamId(token);
 
-			var availableTeams = (token?["loginResponse"]?["teams"]?.ToObject<List<CsTeam>>() ?? Enumerable.Empty<CsTeam>())
-				.ToList();
+			var availableTeams = (token?["loginResponse"]?["teams"]?.ToObject<List<CsTeam>>()
+			                      ?? Enumerable.Empty<CsTeam>()).ToList();
 			var currentTeam = availableTeams.FirstOrDefault(_ => _.Id == teamId);
 
-			var availableCompanies = (token?["loginResponse"]?["companies"]?.ToObject<List<CsCompany>>() ??
-			                 Enumerable.Empty<CsCompany>()).ToList();
-
+			var availableCompanies = (token?["loginResponse"]?["companies"]?.ToObject<List<CsCompany>>()
+			                      ?? Enumerable.Empty<CsCompany>()).ToList();
 			var currentCompany = availableCompanies.FirstOrDefault(x => x.Id == currentTeam?.CompanyId);
 
 			return new User(user?.Id, user?.Username, user?.Email, currentTeam?.Name, availableTeams.Count, currentCompany?.CompanyName, availableCompanies.Count);

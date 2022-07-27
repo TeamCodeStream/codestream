@@ -477,10 +477,10 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public List<string> DomainJoining { get; set; }
 
 		[JsonProperty("nrOrgIds", NullValueHandling = NullValueHandling.Ignore)]
-		public List<long> NROrgIds { get; set; }
+		public List<string> NROrgIds { get; set; }
 
 		[JsonProperty("nrAccountIds", NullValueHandling = NullValueHandling.Ignore)]
-		public List<long> NRAccountIds { get; set; }
+		public List<string> NRAccountIds { get; set; }
 
 		[JsonProperty("isNRConnected", NullValueHandling = NullValueHandling.Ignore)]
 		public bool IsNRConnected{ get; set; }
