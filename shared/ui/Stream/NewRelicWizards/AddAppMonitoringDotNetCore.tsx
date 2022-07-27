@@ -95,34 +95,6 @@ export const AddAppMonitoringDotNetCore = (props: {
 		}
 	}, [repo]);
 
-	// const onSubmit = async (event: React.SyntheticEvent) => {
-	// 	setUnexpectedError(false);
-	// 	event.preventDefault();
-
-	// 	setLoading(true);
-	// 	try {
-	// 		dispatch(closeModal());
-	// 	} catch (error) {
-	// 		logError(`Unexpected error during New Relic installation: ${error}`);
-	// 		setUnexpectedError(true);
-	// 	}
-	// 	// @ts-ignore
-	// 	setLoading(false);
-	// };
-
-	// const onSetLicenseKey = useCallback(
-	// 	key => {
-	// 		setLicenseKey(key);
-	// 		if (key) {
-	// 			setUnexpectedError(false);
-	// 			// setStep(2);
-	// 		} else {
-	// 			setStep(1);
-	// 		}
-	// 	},
-	// 	[licenseKey]
-	// );
-
 	const onInstallLibrary = async (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		setInstallingLibrary(true);

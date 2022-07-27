@@ -102,7 +102,7 @@ import {
 } from "./newrelic/spanQuery";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
-const supportedLanguages = ["python", "ruby", "csharp"] as const;
+const supportedLanguages = ["python", "ruby", "csharp", "java"] as const;
 export type LanguageId = typeof supportedLanguages[number];
 
 // Use type guard so that list of languages can be defined once and shared with union type LanguageId
@@ -116,7 +116,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
-	private _codeStreamUser: CSMe | undefined = undefined;
 	private _mltTimedCache: Cache;
 	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
 
@@ -182,7 +181,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
 		delete this._newRelicUserId;
-		delete this._codeStreamUser;
 		delete this._accountIds;
 		this._mltTimedCache.clear();
 		this._applicationEntitiesCache = {};
@@ -1884,6 +1882,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						additionalMetadata["code.function"]!
 					);
 					break;
+				case "java":
+					functionInfo = {
+						functionName: additionalMetadata["code.function"],
+						className: additionalMetadata["code.namespace"]
+					};
+					break;
 			}
 
 			let { className, functionName, namespace } = functionInfo;
@@ -1910,6 +1914,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	getResolutionMethod(languageId: LanguageId): ResolutionMethod {
 		switch (languageId) {
 			case "csharp":
+			case "java":
 				return "locator";
 			default:
 				return "filePath";
@@ -1944,7 +1949,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			Logger.log("getFileLevelTelemetry: resetting cache", {
 				cacheKey
 			});
-			this._mltTimedCache = new Cache();
+			this._mltTimedCache.clear();
 			Logger.log("getFileLevelTelemetry: reset cache complete", {
 				cacheKey
 			});
@@ -1958,11 +1963,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		}
 		const { users, git } = this._sessionServiceContainer || SessionContainer.instance();
-		if (!this._codeStreamUser) {
-			this._codeStreamUser = await users.getMe();
-		}
+		const codeStreamUser = await users.getMe();
 
-		const isConnected = this.isConnected(this._codeStreamUser);
+		const isConnected = this.isConnected(codeStreamUser);
 		if (!isConnected) {
 			ContextLogger.warn("getFileLevelTelemetry: not connected", {
 				request
@@ -2019,7 +2022,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			} as any;
 		}
 
-		const entity = this.getGoldenSignalsEntity(this._codeStreamUser!, observabilityRepo);
+		const entity = this.getGoldenSignalsEntity(codeStreamUser!, observabilityRepo);
 
 		const newRelicAccountId = entity.accountId;
 		const newRelicEntityGuid = entity.entityGuid;

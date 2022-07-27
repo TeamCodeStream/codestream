@@ -1344,7 +1344,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 		const review = response.review!;
 
-		trackReviewPostCreation(review, 0, 0, entryPoint, addedUsers);
+		trackReviewPostCreation(review, 0, 0, 0, entryPoint, addedUsers);
 		this.cacheResponse(response);
 
 		return review;

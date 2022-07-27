@@ -4,6 +4,7 @@ import { ResolutionMethod } from "./newrelic.types";
 
 export const spanQueryTypes = ["equals", "like", "fuzzy"] as const;
 export type SpanQueryType = typeof spanQueryTypes[number];
+const LIMIT = 250;
 
 function functionLocatorQuery(
 	newRelicEntityGuid: string,
@@ -20,7 +21,7 @@ function functionLocatorQuery(
 			equalsQueryParts.push(`code.function='${functionLocator.functionName}'`);
 		}
 		const innerQueryEqualsClause = equalsQueryParts.join(" AND ");
-		query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${innerQueryEqualsClause} SINCE 30 minutes AGO LIMIT 250`;
+		query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${innerQueryEqualsClause} SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 	} else {
 		const likeQueryParts: string[] = [];
 		if (functionLocator.namespace) {
@@ -30,7 +31,7 @@ function functionLocatorQuery(
 			likeQueryParts.push(`code.function like '${functionLocator.functionName}%'`);
 		}
 		const innerQueryLikeClause = likeQueryParts.join(" AND ");
-		query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${innerQueryLikeClause} SINCE 30 minutes AGO LIMIT 250`;
+		query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${innerQueryLikeClause} SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 	}
 	return `query GetSpans($accountId:Int!) {
 			actor {
@@ -70,12 +71,12 @@ export function generateSpanQuery(
 	switch (spanQueryType) {
 		case "equals": {
 			const equalsLookup = `code.filepath='${codeFilePath}'`;
-			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${equalsLookup}  SINCE 30 minutes AGO LIMIT 250`;
+			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${equalsLookup}  SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 			break;
 		}
 		case "like": {
 			const likeLookup = `code.filepath like '%${codeFilePath}'`;
-			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${likeLookup}  SINCE 30 minutes AGO LIMIT 250`;
+			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${likeLookup}  SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 			break;
 		}
 		case "fuzzy": {
@@ -84,7 +85,7 @@ export function generateSpanQuery(
 				.slice(-2)
 				.join("/")}%'`;
 
-			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzyLookup}  SINCE 30 minutes AGO LIMIT 250`;
+			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzyLookup}  SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 		}
 	}
 

@@ -159,7 +159,6 @@ export default function ConfigureNewRelic(props: Props) {
 							knownRepo.projects
 						)
 					);
-					await dispatch(openPanel(WebviewPanels.OnboardNewRelic));
 				}
 			}
 		}

@@ -188,6 +188,9 @@ export const Signup = (props: Props) => {
 			if (selectedHost) {
 				selectedRegionName = selectedHost.name;
 			}
+			// Set to first value in array if non of the above for default
+		} else {
+			selectedRegionName = environmentHosts[0]?.name;
 		}
 	}
 
@@ -363,8 +366,9 @@ export const Signup = (props: Props) => {
 					throw status;
 			}
 		} catch (error) {
-			logError(`Unexpected error during registration request: ${error}`, {
-				email,
+			logError(error, {
+				detail: `Unexpected error during registration request`,
+				email: email,
 				inviteCode: props.inviteCode
 			});
 			setUnexpectedError(true);

@@ -57,7 +57,7 @@ export const ChangeUsername = props => {
 			HostApi.instance.track("Username Changed", {});
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during change username: ${error}`, { username });
+			logError(error, { detail: `Unexpected error during change username`, username });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

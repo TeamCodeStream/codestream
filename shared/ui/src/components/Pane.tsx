@@ -116,7 +116,15 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 			margin: 0 5px;
 			opacity: 0.7;
 		}
+		.icon-override-actions-visible {
+			display: none;
+		}
 	}
+
+	&:hover .actions .icon-override-actions-visible {
+		display: inline-block !important;
+	}
+
 	&:hover .actions {
 		// background: var(--app-background-color-hover);
 		display: block;

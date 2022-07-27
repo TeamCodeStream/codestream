@@ -75,8 +75,11 @@ export const ChangeEmail = props => {
 			setPendingChange(true);
 			// props.closePanel();
 		} catch (error) {
-			logError(`Unexpected error during change email: ${error}`, { email });
-			setUnexpectedError(error);
+			logError(error, { detail: `Unexpected error during change email`, email });
+			setUnexpectedError(
+				(typeof error === "string" ? error : error?.message) ||
+					"Unexpected error during change email"
+			);
 		}
 		// @ts-ignore
 		setLoading(false);

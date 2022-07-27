@@ -13,6 +13,9 @@
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withPython.xml">
         com.intellij.modules.python
     </depends>
+    <depends optional="true" config-file="com.codestream.jetbrains-codestream-withJava.xml">
+        com.intellij.java
+    </depends>
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withCSharp.xml">
         com.intellij.modules.rider
     </depends>

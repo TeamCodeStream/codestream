@@ -100,7 +100,7 @@ export const TeamSetup = (props: Props) => {
 
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during update team settings: ${error}`, {});
+			logError(error, { detail: `Unexpected error during update team settings` });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

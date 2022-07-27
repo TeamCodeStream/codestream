@@ -1,5 +1,24 @@
 # Change Log
 
+## [13.3.0] - 2022-7-25
+
+### Added
+
+- Adds Golden Metrics to the Observability section for the services on New Relic associated with the currently selected repository
+
+### Changed
+
+- Universally apply proxy configuration setting to integration connections
+- Stop prompting users to instrument their projects after connecting to New Relic
+
+### Fixed
+
+- Addresses [#968](https://github.com/TeamCodeStream/CodeStream/issues/968) &mdash; Repo not found if the folder with 2 Git Repositories opened in Intellij
+- Addresses [#1043](https://github.com/TeamCodeStream/CodeStream/issues/1043) &mdash; Unable to resolve threads in GLSM merge request
+- Fixes an issue where associating a repo with a New Relic entity isn't reflected in the UI without a reload
+- Fixes an issue where clicking `PR Details` for a merge request results in an unexpected error
+- Fixes an issue when creating a feedback request where all commits were selected by default, but grayed out
+
 ## [13.2.0] - 2022-7-6
 
 ### Changed

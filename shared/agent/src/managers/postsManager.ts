@@ -626,6 +626,7 @@ export function trackReviewPostCreation(
 	review: ReviewPlus,
 	totalExcludedFilesCount: number,
 	reviewChangesetsSizeInBytes: number,
+	skippedCommitsCount: number,
 	entryPoint?: string,
 	addedUsers?: string[]
 ) {
@@ -649,6 +650,7 @@ export function trackReviewPostCreation(
 				"Staged Changes": review.reviewChangesets.some(_ => _.includeStaged),
 				"Saved Changes": review.reviewChangesets.some(_ => _.includeSaved),
 				"Excluded Files": totalExcludedFilesCount,
+				"Skipped Commits": skippedCommitsCount,
 				// rounds to 4 places
 				"Payload Size":
 					reviewChangesetsSizeInBytes > 0
@@ -1419,10 +1421,27 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 
 		review = response.review!;
 
+		let skippedCommitsCount = 0;
+		const repoChanges = request.attributes.repoChanges && request.attributes.repoChanges[0];
+		if (repoChanges) {
+			type ObjectKey = keyof typeof repoChanges.excludeCommit;
+			for (const commit of repoChanges.scm.commits || []) {
+				const sha = commit.sha as ObjectKey;
+				if (!repoChanges.excludeCommit[sha]) {
+					break;
+				}
+				skippedCommitsCount++;
+			}
+			if ((repoChanges.scm.commits || []).length === skippedCommitsCount) {
+				skippedCommitsCount = 0;
+			}
+		}
+
 		trackReviewPostCreation(
 			review,
 			totalExcludedFilesCount,
 			reviewChangesetsSizeInBytes,
+			skippedCommitsCount,
 			request.entryPoint,
 			request.addedUsers
 		);

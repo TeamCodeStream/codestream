@@ -41,6 +41,7 @@ import { EntityAssociator } from "../EntityAssociator";
 import { DropdownButton } from "../DropdownButton";
 import {
 	MissingCsharpExtension,
+	MissingJavaExtension,
 	MissingPythonExtension,
 	MissingRubyExtension,
 	RubyPluginLanguageServer
@@ -220,6 +221,8 @@ export const MethodLevelTelemetryPanel = () => {
 	switch (derivedState.currentMethodLevelTelemetry?.error?.type) {
 		case "NO_RUBY_VSCODE_EXTENSION":
 			return <MissingRubyExtension />;
+		case "NO_JAVA_VSCODE_EXTENSION":
+			return <MissingJavaExtension />;
 		case "NO_PYTHON_VSCODE_EXTENSION":
 			return <MissingPythonExtension />;
 		case "NO_CSHARP_VSCODE_EXTENSION":

@@ -7,7 +7,7 @@ import Tooltip from "./Tooltip";
 
 interface Props {
 	goldenMetrics: any;
-	loadingGoldenMetrics: boolean;
+	loadingGoldenMetrics?: boolean;
 }
 
 const StyledMetric = styled.div`
@@ -31,7 +31,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const goldenMetricTitleMapping = {
 		responseTimeMs: {
 			title: "Response Time Ms",
-			units: " ",
+			units: "ms",
 			tooltip: "This shows the average time this service spends processing web requests."
 		},
 		throughput: {
@@ -115,8 +115,15 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							let resultObject = gm?.result[0];
 							for (const property in resultObject) {
 								if (!_isNil(resultObject[property])) {
-									goldenMetricValue = resultObject[property];
-									goldenMetricValueTrue = resultObject[property];
+									if (typeof resultObject[property] === "object") {
+										for (const k in resultObject[property]) {
+											goldenMetricValue = resultObject[property][k];
+											goldenMetricValueTrue = resultObject[property][k];
+										}
+									} else {
+										goldenMetricValue = resultObject[property];
+										goldenMetricValueTrue = resultObject[property];
+									}
 								}
 							}
 						}
@@ -159,7 +166,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								<div className="icons">
 									<Tooltip placement="topRight" title={goldenMetricValueTrue} delay={1}>
 										<StyledMetric>
-											{goldenMetricValue ? (
+											{goldenMetricValue || goldenMetricValue === 0 ? (
 												<>
 													{goldenMetricValue} {goldenMetricUnit && <>{goldenMetricUnit}</>}
 												</>

@@ -74,6 +74,17 @@ export function MissingPythonExtension() {
 	);
 }
 
+export function MissingJavaExtension() {
+	return (
+		<MissingExtensionBase>
+			<h3>Code-Level Metrics</h3>
+			<p style={{ marginTop: 0 }}>
+			To see code-level metrics you'll need to install the <Link href={"vscode:extension/redhat.java"}>Language Support for Java(TM) by Red Hat</Link> for VS Code that allows CodeStream to identify the methods in your Java code.
+			</p>
+		</MissingExtensionBase>
+	);
+}
+
 export function MissingCsharpExtension() {
 	return (
 		<MissingExtensionBase>
