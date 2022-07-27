@@ -40,6 +40,7 @@
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
         <projectService serviceImplementation="com.codestream.review.ReviewService"/>
         <projectService serviceImplementation="com.codestream.telemetry.TelemetryService"/>
+        <projectService serviceImplementation="com.codestream.editor.LineLevelBlameService"/>
 
         <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                                  instance="com.codestream.settings.CodeStreamConfigurable"/>

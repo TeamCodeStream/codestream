@@ -35,12 +35,12 @@ import { memoize } from "lodash";
 import * as path from "path";
 import { Disposable, Event, Range } from "vscode-languageserver";
 import { URI } from "vscode-uri";
-import { SessionContainer } from "../container";
+import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CommitsChangedData, WorkspaceChangedData } from "../protocol/agent.protocol";
 import { FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
-import { Iterables, log, Strings } from "../system";
+import { Dates, Iterables, log, Strings } from "../system";
 import { xfs } from "../xfs";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitServiceLite } from "./gitServiceLite";
@@ -259,17 +259,53 @@ export class GitService implements IGitService, Disposable {
 		return git({ cwd: repoPath, stdin: stdin }, ...params, "--", relativePath);
 	}
 
-	async getCommitShaByLine(uriOrPath: URI | string): Promise<string[]> {
+	async getCommitShaByLine(
+		uriOrPath: URI | string,
+		options: { startLine?: number; endLine?: number; contents?: string } = {}
+	): Promise<string[]> {
 		const [dir, filename] = Strings.splitPath(
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
 
-		const data = await git({ cwd: dir }, "blame", "-l", filename);
+		const params = ["blame", "-l"];
+		if (options.startLine != null && options.endLine != null) {
+			params.push(`-L ${options.startLine + 1},${options.endLine + 1}`);
+		}
+		let stdin;
+		if (options.contents) {
+			params.push("--contents", "-");
+			// Pipe the blame contents to stdin
+			stdin = options.contents;
+		}
+		params.push(filename);
+
+		const data = await git({ cwd: dir, stdin }, ...params);
 
 		return data
 			.trim()
 			.split("\n")
 			.map(line => line.substr(0, 40));
+	}
+
+	async getLineBlames(
+		uri: URI,
+		startLine: number,
+		endLine: number
+	): Promise<{
+		shas: string[];
+		revisionEntries: RevisionEntry[];
+	}> {
+		const doc = Container.instance().documents.get(uri.toString(true));
+		const contents = doc?.getText();
+		const options = { startLine, endLine, contents };
+		const shasPromise = this.getCommitShaByLine(uri, options);
+		const revisionEntriesPromise = this.getBlameRevisions(uri, options);
+
+		const [shas, revisionEntries] = await Promise.all([shasPromise, revisionEntriesPromise]);
+		return {
+			shas,
+			revisionEntries
+		};
 	}
 
 	async getFileCurrentRevision(uri: URI): Promise<string | undefined>;

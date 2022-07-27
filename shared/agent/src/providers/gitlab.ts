@@ -59,7 +59,9 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
 	PullRequestComment,
-	ThirdPartyProviderSupportsIssues
+	ThirdPartyIssueProviderBase,
+	ThirdPartyProviderSupportsIssues,
+	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ProviderVersion } from "./types";
@@ -88,7 +90,7 @@ interface GitLabBranch {
 
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo>
-	implements ThirdPartyProviderSupportsIssues {
+	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	/** version used when a query to get the version fails */
 	private static defaultUnknownVersion = "0.0.0";
 	protected LOWEST_SUPPORTED_VERSION = {
@@ -448,6 +450,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			owner: owner.join("/"),
 			name: name!
 		};
+	}
+
+	async getPullRequestsContainigSha(
+		repoIdentifiers: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		// /projects/:id/repository/commits/:sha/merge_requests
+
+		for (const repoIdentifier of repoIdentifiers) {
+			const { owner, name } = repoIdentifier;
+			try {
+				const projectResponse = await this.get<GitLabProjectInfoResponse>(
+					`/projects/${encodeURIComponent(`${owner}/${name}`)}`
+				);
+			} catch (ex) {
+				Logger.warn(ex);
+				// Logger.error(ex, `${this.displayName}: failed to get projects`, {
+				// 	remote: request.remote,
+				// 	owner: owner,
+				// 	name: name,
+				// 	hasProviderInfo: this._providerInfo != null
+				// });
+				// return {
+				// 	error: {
+				// 		type: "PROVIDER",
+				// 		message: ex.message
+				// 	}
+				// };
+			}
+		}
+
+		return [];
 	}
 
 	@log()

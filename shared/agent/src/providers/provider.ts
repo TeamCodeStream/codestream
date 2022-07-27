@@ -95,6 +95,11 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	getIsMatchingRemotePredicate(): (remoteLike: GitRemoteLike) => boolean;
 
 	getRemotePaths(repo: GitRepository, _projectsByRemotePath: any): any;
+	getOwnerFromRemote(remote: string): { owner: string; name: string };
+	getPullRequestsContainigSha(
+		repoIdentifier: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]>;
 }
 
 export interface ThirdPartyProviderSupportsCreatingPullRequests

@@ -1194,6 +1194,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return unreviewedCommits.length;
 	}
 
+	async getReviewsContainingSha(repoId: string, sha: string): Promise<CSReview[]> {
+		const allReviews = await this.getAllCached();
+		return allReviews.filter(
+			r =>
+				!r.deactivated &&
+				r.reviewChangesets?.some(rc => rc.repoId === repoId && rc.commits.some(c => c.sha === sha))
+		);
+	}
+
 	@lspHandler(CreateReviewsForUnreviewedCommitsRequestType)
 	@log()
 	async createReviewsForUnreviewedCommits(

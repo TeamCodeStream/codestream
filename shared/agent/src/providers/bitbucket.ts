@@ -338,6 +338,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		};
 	}
 
+	async getPullRequestsContainigSha(
+		repoIdentifier: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		return [];
+	}
+
 	async createPullRequest(
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined> {

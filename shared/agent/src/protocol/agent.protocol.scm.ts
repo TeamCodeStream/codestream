@@ -1,7 +1,7 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
 import { FetchThirdPartyPullRequestFilesResponse } from "./agent.protocol.providers";
-import { CSRepository, CSTeam, CSUser, ModifiedFile } from "./api.protocol";
+import { CSRepository, CSReview, CSTeam, CSUser, ModifiedFile } from "./api.protocol";
 
 export interface GetBranchesRequest {
 	uri: string;
@@ -589,6 +589,38 @@ export const GetLatestCommitScmRequestType = new RequestType<
 	void,
 	void
 >("codestream/scm/latestCommit");
+
+export interface GetBlameRequest {
+	uri: string;
+	startLine: number;
+	endLine: number;
+}
+
+export interface GetBlameResponse {
+	blame: GetBlameLineInfo[];
+}
+
+export interface GetBlameCommitInfo {
+	sha: string;
+	isUncommitted: boolean;
+	formattedBlame: string;
+	authorName: string;
+	authorEmail: string;
+	dateFromNow: string;
+	dateFormatted: string;
+	gravatarUrl: string;
+	summary: string;
+	prs: any[];
+	reviews: CSReview[];
+}
+
+export interface GetBlameLineInfo extends GetBlameCommitInfo {
+	diff: string;
+}
+
+export const GetBlameRequestType = new RequestType<GetBlameRequest, GetBlameResponse, void, void>(
+	"codestream/scm/blame"
+);
 
 export interface DiffBranchesRequest {
 	repoId: string;

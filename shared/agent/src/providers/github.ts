@@ -1160,6 +1160,31 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		};
 	}
 
+	private _pullRequestsContainingShaCache = new Map<string, any[]>();
+	async getPullRequestsContainigSha(
+		repoIdentifiers: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		const cached = this._pullRequestsContainingShaCache.get(sha);
+		if (cached) return cached;
+
+		const result = [];
+		for (const repo of repoIdentifiers) {
+			const pulls = await this.restGet(`/repos/${repo.owner}/${repo.name}/commits/${sha}/pulls`);
+			try {
+				result.push(...(pulls.body as any));
+			} catch (ex) {
+				Logger.warn(ex);
+			}
+		}
+
+		if (result.length) {
+			this._pullRequestsContainingShaCache.set(sha, result);
+		}
+
+		return result;
+	}
+
 	private _isMatchingRemotePredicate = (r: GitRemoteLike) => r.domain === "github.com";
 
 	getIsMatchingRemotePredicate() {
