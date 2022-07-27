@@ -1443,7 +1443,7 @@ export class ScmManager {
 		const weightedRemotes =
 			repo &&
 			providerRepo?.remotes &&
-			(await repo.getWeightedRemotesByStrategy(providerRepo.remotes, "prioritizeUpstream"));
+			(await repo.getWeightedRemotesByStrategy("prioritizeUpstream", providerRepo.remotes));
 		const ownersAndNames =
 			providerRepo?.provider &&
 			weightedRemotes?.map(r => providerRepo.provider.getOwnerFromRemote(r.path));
