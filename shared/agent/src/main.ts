@@ -1,6 +1,7 @@
 "use strict";
 import { createConnection, ProposedFeatures } from "vscode-languageserver";
-import { CodeStreamAgent } from "./agent";
+import { CodeStreamAgent, FileLspLogger } from "./agent";
+import { Logger } from "./logger";
 
 export * from "./providers/trello";
 export * from "./providers/jira";
@@ -23,10 +24,22 @@ export * from "./providers/newrelic";
 
 process.title = "CodeStream";
 
+let logPath;
+process.argv.forEach(function(val, index, array) {
+	if (val && val.indexOf("--log=") === 0) {
+		logPath = val.substring(6);
+	}
+});
+const logger = logPath != null ? new FileLspLogger(logPath) : undefined;
+
+const agentConfig = {
+	logger: logger
+};
+
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 const connection = createConnection(ProposedFeatures.all);
 
-new CodeStreamAgent(connection);
+new CodeStreamAgent(connection, agentConfig);
 
 connection.listen();
