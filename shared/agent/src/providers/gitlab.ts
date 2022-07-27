@@ -59,7 +59,6 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
 	PullRequestComment,
-	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
