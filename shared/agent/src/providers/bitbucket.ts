@@ -409,25 +409,26 @@ export class BitbucketProvider
 		
 		return items.map(commit => {
 			return {
-				abbreviatedOid: commit.;
+				abbreviatedOid: commit.hash,
 				author: {
-					name: commit.;
-					avatarUrl: commit.;
+					name: commit.author.display_name,
+					avatarUrl: commit.author.user.avatar.html.href,
 					user?: {
-						login: commit.;
-					};
-				};
+						login: commit.author.account_id,
+					},
+				},
+				//TODO: figure out author vs committer on bitbucket -- the UI doesn't track committer vs author, it's all just author
 				committer: {
-					avatarUrl: commit.;
-					name: commit.;
+					avatarUrl: "",
+					name: "",
 					user?: {
-						login: commit.;
-					};
-				};
-				message: commit.;
-				authoredDate: commit.;
-				oid: commit.;
-				url?: commit.;
+						login: "",
+					},
+				},
+				message: commit.message,
+				authoredDate: commit.date,
+				oid: commit.hash,
+				url?: commit.links.html,
 			} as FetchThirdPartyPullRequestCommitsResponse
 		})
 	}
@@ -435,19 +436,19 @@ export class BitbucketProvider
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
-		// TODO implementation (easier, start with this one)
+		// TODO implementation (easier, start with this one) TODO change it from hardcode
 		const items = await this.get<BitbucketValues<BitbucketPullRequestDiffStat[]>>("repositories/reneepetit86/bitbucketpractice/pullrequests/6/diffstat")
 		
 		return items.map(file => {
 			return {
-				sha: file.hash
-				filename: file.;
-				previousFilename?: file.;
-				status: file.;
-				additions: file.;
-				changes: file.;
-				deletions: file.;
-				patch?: file.;
+				sha: file.hash,
+				filename: file.new.path,
+				previousFilename?: file.old.path,
+				status: file.status,
+				additions: 0, //what is this?
+				changes: 0, //TODO can we find this?
+				deletions: 0,
+				patch?: "",
 			} as FetchThirdPartyPullRequestFilesResponse
 		})
 	}
