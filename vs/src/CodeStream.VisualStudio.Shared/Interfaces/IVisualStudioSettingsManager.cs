@@ -3,8 +3,7 @@ using Microsoft.VisualStudio.Settings;
 
 namespace CodeStream.VisualStudio.Shared.Interfaces {
 	public interface IVisualStudioSettingsManager {
-		bool IsCodeLevelMetricsEnabled();
-		bool IsCodeLensEnabled();
+		bool IsCodeLevelMetricsEnabled(bool defaultVal = true);
 
 		ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting);
 	}

@@ -5,16 +5,19 @@ using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Enums;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared.Exceptions;
 using CodeStream.VisualStudio.Shared.Interfaces;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
+using Serilog;
 
 
 namespace CodeStream.VisualStudio.Shared.Services {
 	[Export(typeof(IVisualStudioSettingsManager))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class VisualStudioSettingsManager : IVisualStudioSettingsManager {
+		private static readonly ILogger Log = LogManager.ForContext<VisualStudioSettingsManager>();
 		private readonly ISettingsManager _roamingSettingsManager;
 
 		// I can't fully explain this, but this is needed for the Service Provider
@@ -34,11 +37,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			var result = _roamingSettingsManager.TryGetValue(attribute.Path, out T value);
 
-#if DEBUG
-			if(result != GetValueResult.Success) {
+			if (result != GetValueResult.Success) {
 				throw new VisualStudioSettingException(setting, result);
-			};
-#endif
+			}
 
 			return value;
 		}
@@ -49,11 +50,21 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return _roamingSettingsManager.GetSubset(attribute.Path);
 		}
 
-		public bool IsCodeLevelMetricsEnabled() {
-			return IsCodeLensEnabled() && !IsCodeLevelMetricsDisabled();
+		public bool IsCodeLevelMetricsEnabled(bool defaultVal = true) {
+			try {
+				return IsCodeLensEnabled() && !IsCodeLevelMetricsDisabled();
+			}
+			catch (VisualStudioSettingException vsse) {
+				Log.Information(vsse.Message);
+			}
+			catch (Exception ex) {
+				Log.Error(ex, ex.Message);
+			}
+			
+			return defaultVal;
 		}
 
-		public bool IsCodeLensEnabled() {
+		private bool IsCodeLensEnabled() {
 			return GetSetting<bool>(VisualStudioSetting.IsCodeLensEnabled);
 		}
 
