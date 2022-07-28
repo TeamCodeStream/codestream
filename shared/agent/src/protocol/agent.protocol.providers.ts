@@ -473,7 +473,9 @@ export interface StatusContext {
 
 export interface FetchThirdPartyPullRequestPullRequest {
 	id: string;
+	/** used by some other providers like GitLab  */
 	iid?: string;
+	idComputed?: string;
 	providerId: string; // e.g. "github*com"
 	// this is the parent repo
 	repository: {
@@ -698,7 +700,7 @@ export interface FetchThirdPartyPullRequestRepository {
 	providerId: string;
 	viewerDefaultMergeMethod?: "MERGE" | "REBASE" | "SQUASH";
 	viewerPermission: "ADMIN" | "MAINTAIN" | "READ" | "TRIAGE" | "WRITE";
-	branchProtectionRules: BranchProtectionRules;
+	branchProtectionRules?: BranchProtectionRules;
 }
 
 interface RateLimit {
@@ -712,7 +714,7 @@ export interface FetchThirdPartyPullRequestResponse {
 	error?: {
 		message: string;
 	};
-	rateLimit: RateLimit;
+	rateLimit?: RateLimit;
 	repository: FetchThirdPartyPullRequestRepository;
 	viewer: {
 		id: string;
@@ -844,6 +846,7 @@ export interface Labels {
 
 export interface GetMyPullRequestsResponse {
 	id: string;
+	idComputed?: string;
 	providerId: string;
 	url: string;
 	title: string;

@@ -754,10 +754,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			if (pr?.providerId && pr?.id) {
 				const view = derivedState.hideDiffs || derivedState.isVS ? "details" : "sidebar-diffs";
 				let prId;
-				if (pr?.providerId === "gitlab*com" || pr?.providerId === "gitlab/enterprise") {
-					prId = pr.idComputed || pr?.id;
+				if (
+					pr.providerId === "gitlab*com" ||
+					pr.providerId === "gitlab/enterprise" ||
+					pr.providerId === "bitbucket*org"
+				) {
+					prId = pr.idComputed || pr.id;
 				} else {
-					prId = pr?.id;
+					prId = pr.id;
 				}
 
 				dispatch(setCurrentPullRequest(pr.providerId, prId, "", "", view, groupIndex));
@@ -784,7 +788,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		}
 	};
 
-	const fetchOnePR = async (providerId: string, pullRequestId: string, message?: string) => {
+	const fetchOnePR = async (providerId: string, pullRequestId: string) => {
 		if (providerId && pullRequestId) {
 			//GL ids can be a stringified object, order of parameters can fluctuate.  So a
 			//simple string comparison is not sufficent, we have to convert to an object if possible
@@ -887,7 +891,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	 */
 	const reload = async (e, pr) => {
 		e.stopPropagation();
-		fetchOnePR(pr.providerId!, pr.id);
+		fetchOnePR(pr.providerId!, pr.idComputed || pr.id);
 	};
 
 	const handleClickCopy = (e, prUrl) => {

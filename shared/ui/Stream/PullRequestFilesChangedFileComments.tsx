@@ -113,6 +113,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const [iconName, setIconName] = React.useState("sync");
 	const [currentRepoRoot, setCurrentRepoRoot] = React.useState("");
 	const isGitLab = pullRequest?.providerId?.includes("gitlab");
+	const isBitbucket = pullRequest?.providerId?.includes("bitbucket");
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -261,7 +262,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		event.preventDefault();
 		event.stopPropagation();
 
-		let prId = isGitLab ? pullRequest?.idComputed : pullRequest?.id;
+		let prId = isGitLab || isBitbucket ? pullRequest?.idComputed : pullRequest?.id;
 
 		dispatch(
 			setCurrentPullRequest(

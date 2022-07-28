@@ -23,6 +23,7 @@ import {
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
+	FetchThirdPartyPullRequestRepository,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsRequest,
@@ -385,19 +386,35 @@ export class BitbucketProvider
 	}
 
 	@log()
-	getPullRequest(
+	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
 		// TODO implementation
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+
+		const item = await this.get<BitbucketPullRequest>(
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
+		);
+
 		const response: FetchThirdPartyPullRequestResponse = {
-			rateLimit: {} as any,
 			viewer: {} as any,
 			repository: {
+				id: item.body.id + "",
+				url: "",
+				resourcePath: "",
+				rebaseMergeAllowed: true,
+				squashMergeAllowed: true,
+				mergeCommitAllowed: true,
+				repoOwner: "",
+				repoName: "",
 				providerId: this.providerConfig.id,
+				viewerDefaultMergeMethod: "MERGE",
+				viewerPermission: "WRITE",
+				branchProtectionRules: undefined,
 				pullRequest: {
 					providerId: this.providerConfig.id
-				} as any
-			} as any
+				}
+			} as FetchThirdPartyPullRequestRepository
 		};
 
 		return response as any;
@@ -407,9 +424,9 @@ export class BitbucketProvider
 	async getPullRequestCommits(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestCommitsResponse[]> {
-		//call to get pull request (TODO: change so not hardcoded)
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const items = await this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
-			`/repositories/reneepetit86/bitbucketpractice/pullrequests/${request.pullRequestId}/commits`
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 		);
 
 		return items.body.values.map(commit => {
@@ -435,9 +452,9 @@ export class BitbucketProvider
 	async getPullRequestFilesChanged(request: {
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
-		// TODO implementation (easier, start with this one) TODO change it from hardcode
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const items = await this.get<BitbucketValues<BitbucketPullRequestDiffStat[]>>(
-			`/repositories/reneepetit86/bitbucketpractice/pullrequests/${request.pullRequestId}/diffstat`
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 		);
 
 		return items.body.values.map(file => {
@@ -751,6 +768,10 @@ export class BitbucketProvider
 							nameWithOwner: pr.source.repository.full_name
 						},
 						id: pr.id + "",
+						idComputed: JSON.stringify({
+							pullRequestId: pr.id,
+							repoWithOwner: pr.source.repository.full_name
+						}),
 						lastEditedAt: lastEditedString,
 						labels: {
 							nodes: []
@@ -772,6 +793,17 @@ export class BitbucketProvider
 		});
 
 		return response;
+	}
+
+	parseId(pullRequestId: string) {
+		const parsed = JSON.parse(pullRequestId);
+		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
+		// id - Is unique across all issues and is used for any API call
+		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
+		return {
+			pullRequestId: parsed.pullRequestId,
+			repoWithOwner: parsed.repoWithOwner
+		};
 	}
 }
 
