@@ -197,7 +197,6 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\ui-variables.less" />
     <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\webview.less" />
-    <None Include="$(MSBuildThisFileDirectory)UI\WebViews\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)LanguageServer\ContentDefinitions.tt">

@@ -251,28 +251,23 @@
     <Content Include="..\resources\assets\light\review.svg">
       <Link>resources\assets\light\review.svg</Link>
     </Content>
+    <Content Include="..\resources\webview\index.js">
+      <Link>webview\index.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="..\resources\webview\newrelic-browser.js">
       <Link>webview\newrelic-browser.js</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="..\resources\webview\webview-data.js">
-      <Link>webview\webview-data.js</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\resources\webview\webview.css">
-      <Link>webview\webview.css</Link>
+    <Content Include="..\resources\webview\styles\webview.css">
+      <Link>webview\styles\webview.css</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="..\resources\webview\webview.html">
       <Link>webview\webview.html</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
-    <Content Include="..\resources\webview\webview.js">
-      <Link>webview\webview.js</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -519,6 +514,19 @@
       <Link>CodeStream.VisualStudio.Settings.json</Link>
     </None>
     <Content Include="agent\agent.js.map" Condition="'$(Configuration)' == 'Debug'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\index.js.map">
+      <Link>webview\index.js.map</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="Monikers.imagemanifest">
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\styles\webview.css.map">
+      <Link>webview\styles\webview.css.map</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
