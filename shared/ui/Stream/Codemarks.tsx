@@ -254,6 +254,10 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				repoName = currentRepo.path.substring(currentRepo.path.lastIndexOf("/") + 1);
 			}
 
+			if (!repoName && scmInfo?.scm?.repoPath) {
+				repoName = scmInfo?.scm?.repoPath.substring(scmInfo?.scm?.repoPath.lastIndexOf("/") + 1);
+			}
+
 			this.setState({ repoName });
 
 			setEditorContext({ scmInfo });

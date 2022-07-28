@@ -803,16 +803,18 @@ export const Observability = React.memo((props: Props) => {
 												</Button>
 											</NoEntitiesWrapper>
 										)}
-										{!loadingEntities && _isEmpty(currentRepoId) && (
-											<NoContent>
-												<p>
-													Open a source file to see how your code is performing.{" "}
-													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
-														Learn more.
-													</a>
-												</p>
-											</NoContent>
-										)}
+										{!loadingEntities &&
+											_isEmpty(currentRepoId) &&
+											_isEmpty(repoForEntityAssociator) && (
+												<NoContent>
+													<p>
+														Open a source file to see how your code is performing.{" "}
+														<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+															Learn more.
+														</a>
+													</p>
+												</NoContent>
+											)}
 										{!loadingEntities &&
 											!derivedState.hideCodeLevelMetricsInstructions &&
 											!derivedState.showGoldenSignalsInEditor &&

@@ -16,6 +16,7 @@ import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { NewCodemarkCommandArgs } from "../commands";
 import { configuration } from "../configuration";
 import { Container } from "../container";
+import { Logger } from "../logger";
 
 export class BlameDecorationProvider implements Disposable {
 	private _decorationTypes: { [key: string]: TextEditorDecorationType } | undefined;
@@ -113,20 +114,23 @@ export class BlameDecorationProvider implements Disposable {
 			start: new Position(cursor.line, length),
 			end: new Position(cursor.line, length)
 		});
-		const { blame } = await Container.agent.scm.getBlame(
-			editor.document.uri.toString(),
-			cursor.line,
-			cursor.line
-		);
-		const lineBlame = blame[0];
-		const hoverMessage = this.formatHover(lineBlame);
-		editor.setDecorations(this._decorationTypes!.blameSuffix, [
-			{ hoverMessage, range, renderOptions: { after: { contentText: lineBlame.formattedBlame } } }
-		]);
+		try {
+			const { blame } = await Container.agent.scm.getBlame(
+				editor.document.uri.toString(),
+				cursor.line,
+				cursor.line
+			);
+			const lineBlame = blame[0];
+			const hoverMessage = this.formatHover(lineBlame);
+			editor.setDecorations(this._decorationTypes!.blameSuffix, [
+				{ hoverMessage, range, renderOptions: { after: { contentText: lineBlame.formattedBlame } } }
+			]);
+		} catch (ex) {
+			Logger.error(ex);
+		}
 	}
 
 	private formatHover(commitInfo: GetBlameLineInfo): MarkdownString {
-		// const gravatarUrl = Strings.toGravatar(commitInfo.authorEmail, 32);
 		const commandArgs: NewCodemarkCommandArgs = {
 			source: "Blame Hover"
 		};
