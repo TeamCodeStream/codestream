@@ -60,8 +60,6 @@ interface BitbucketRepo {
 	has_issues: boolean;
 }
 
-interface Bitbucket {}
-
 interface BitbucketAuthor {
 	account_id: string;
 	display_name: string;
@@ -109,159 +107,6 @@ interface BitbucketUser {
 	display_name: string;
 	account_id: string;
 	username: string;
-}
-
-interface FetchThirdPartyPullRequestPullRequest {
-	id: string;
-	providerId: string; // e.g. "github*com"
-	// this is the parent repo
-	repository: {
-		full_name: string;
-		links: {
-			html {
-				href: string;
-			}
-		}
-	}
-	locked: any;
-	activeLockReason: "OFF_TOPIC" | "SPAM" | "TOO_HEATED" | "RESOLVED";
-	body: string;
-	bodyHTML: string;
-	baseRefName: string;
-	baseRefOid: string;
-	forkPointSha?: string;
-	author: {
-		login: string;
-		avatarUrl: string;
-	};
-	authorAssociation:
-		| "COLLABORATOR"
-		| "CONTRIBUTOR"
-		| "FIRST_TIMER"
-		| "FIRST_TIME_CONTRIBUTOR"
-		| "MEMBER"
-		| "NONE"
-		| "OWNER";
-	createdAt: string;
-	commits: {
-		totalCount: number;
-		nodes: {
-			commit: {
-				statusCheckRollup?: {
-					state: StatusState;
-					contexts: {
-						nodes: CheckRun | StatusContext;
-					};
-				};
-			};
-		};
-	};
-	files: {
-		totalCount: number;
-		nodes: {
-			path: string;
-			additions: number;
-			deletions: number;
-		}[];
-	};
-	headRefName: string;
-	headRepositoryOwner?: {
-		login: string;
-	};
-	headRepository?: {
-		isFork: boolean;
-		name: string;
-		url: string;
-	};
-	headRefOid: string;
-	labels: Labels;
-	number: number;
-	state: string;
-	isDraft?: boolean;
-	reviewRequests: {
-		nodes: {
-			requestedReviewer: {
-				id: string;
-				login: string;
-				avatarUrl: string;
-			};
-		}[];
-	};
-	reviewThreads: {
-		edges: {
-			node: {
-				id: string;
-				isResolved: boolean;
-				viewerCanResolve: boolean;
-				viewerCanUnresolve: boolean;
-				comments: {
-					totalCount: number;
-					nodes: {
-						author: {
-							login: string;
-							avatarUrl: string;
-						};
-						id: string;
-					}[];
-				};
-			};
-		}[];
-	};
-	projectCards: {
-		nodes: {
-			project: {
-				id: string;
-				name: string;
-			};
-		}[];
-	};
-	reviews: {
-		nodes: {
-			id: string;
-			createdAt: string;
-			state: string;
-			comments: {
-				totalCount: number;
-			};
-			author: {
-				id: string;
-				login: string;
-				avatarUrl: string;
-			};
-			commit: {
-				oid: string;
-			};
-		}[];
-	}
-}
-
-interface FetchThirdPartyPullRequestRepository {
-	id: string;
-	url: string;
-	resourcePath: string;
-	rebaseMergeAllowed: boolean;
-	squashMergeAllowed: boolean;
-	mergeCommitAllowed: boolean;
-	repoOwner: string;
-	repoName: string;
-	pullRequest: FetchThirdPartyPullRequestPullRequest;
-	providerId: string;
-	viewerDefaultMergeMethod?: "MERGE" | "REBASE" | "SQUASH";
-	viewerPermission: "ADMIN" | "MAINTAIN" | "READ" | "TRIAGE" | "WRITE";
-	branchProtectionRules: BranchProtectionRules;
-}
-
-interface FetchThirdPartyPullRequestResponse {
-	error?: {
-		message: string;
-	};
-	rateLimit: RateLimit;
-	repository: FetchThirdPartyPullRequestRepository;
-	viewer: {
-		id: string;
-		login: string;
-		avatarUrl: string;
-	};
 }
 
 interface BitbucketPullRequest {
@@ -540,57 +385,22 @@ export class BitbucketProvider
 	}
 
 	@log()
-	async getPullRequest(
-		request: {
-			providerId: string;
-			providerTeamId?: string;
-			pullRequestId: string;
-		}): Promise<FetchThirdPartyPullRequestResponse[]> {
+	getPullRequest(
+		request: FetchThirdPartyPullRequestRequest
+	): Promise<FetchThirdPartyPullRequestResponse> {
 		// TODO implementation
+		const response: FetchThirdPartyPullRequestResponse = {
+			rateLimit: {} as any,
+			viewer: {} as any,
+			repository: {
+				providerId: this.providerConfig.id,
+				pullRequest: {
+					providerId: this.providerConfig.id
+				} as any
+			} as any
+		};
 
-		const items = await this.get<BitbucketValues<BitbucketPullRequest[]>>(
-			`repositories/reneepetit86/bitbucketpractice/pullrequests/${request.pullRequestId}`
-		);
-
-		return items.body.values.map(pr => {
-			return {
-				author: {
-					links: {
-						avatar: {
-							href: pr.author.links.avatar.href;
-							}
-						}
-				}
-				created_on: String(pr.created_on);
-				destination: {
-					branch: {
-						name: pr.destination.branch.name;
-					}
-				}
-				id: pr.id;
-				links: {
-					html: {
-						href: pr.links.html.href;
-					}
-				}
-				source: {
-					branch: {
-						name: pr.source.branch.name;
-					}
-					repository: {
-						name: pr.source.repository.name;
-						full_name: pr.source.repository.full_name;
-					}
-				}
-				summary: {
-					html: pr.summary.html;
-					raw: pr.summary.raw;
-				}
-				state: pr.state;
-				title: pr.title;
-				updated_on: pr.updated_on;
-			} as FetchThirdPartyPullRequestResponse;
-		});
+		return response as any;
 	}
 
 	@log()
@@ -622,9 +432,8 @@ export class BitbucketProvider
 		});
 	}
 
-	async getPullRequestFilesChanged(
-		request: {
-			pullRequestId: string;
+	async getPullRequestFilesChanged(request: {
+		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		// TODO implementation (easier, start with this one) TODO change it from hardcode
 		const items = await this.get<BitbucketValues<BitbucketPullRequestDiffStat[]>>(
