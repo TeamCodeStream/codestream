@@ -745,13 +745,13 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 	abbreviatedOid: string;
 	author: {
 		name: string;
-		avatarUrl: string;
+		avatarUrl?: string;
 		user?: {
 			login: string;
 		};
 	};
 	committer: {
-		avatarUrl: string;
+		avatarUrl?: string;
 		name: string;
 		user?: {
 			login: string;

@@ -429,7 +429,7 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 		);
 
-		return items.body.values.map(commit => {
+		const response = items.body.values.map(commit => {
 			const author = {
 				name: commit.author.display_name,
 				avatarUrl: commit.author.user.avatar?.html?.href,
@@ -447,6 +447,7 @@ export class BitbucketProvider
 				url: commit.links.html
 			} as FetchThirdPartyPullRequestCommitsResponse;
 		});
+		return response;
 	}
 
 	async getPullRequestFilesChanged(request: {
