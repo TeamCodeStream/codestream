@@ -116,8 +116,10 @@ function Build-Extension {
 	$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
 
 	$baseOutputDir = $(Join-Path $root "build/artifacts")
-	Write-Log "Cleaning $($baseOutputDir)..."
-	Remove-Item $("$($baseOutputDir)/*") -Recurse -Force
+    if ((Test-Path -Path $baseOutputDir) -eq $True) {
+	    Write-Log "Cleaning $($baseOutputDir)..."
+	    Remove-Item $("$($baseOutputDir)/*") -Recurse -Force
+    }
 
 	$x86OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x86")
 	$x64OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x64")
