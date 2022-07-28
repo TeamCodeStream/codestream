@@ -522,16 +522,13 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Monikers.imagemanifest">
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="..\resources\webview\styles\webview.css.map">
       <Link>webview\styles\webview.css.map</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="publishManifest.json" />
-    <None Include="README.md" />
+    <None Include="publish\publishManifest.json" />
+    <None Include="publish\README.md" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

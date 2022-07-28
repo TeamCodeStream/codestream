@@ -527,8 +527,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="publishManifest.json" />
-    <None Include="README.md" />
+    <None Include="publish\publishManifest.json" />
+    <None Include="publish\README.md" />
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
