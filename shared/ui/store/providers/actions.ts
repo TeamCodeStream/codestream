@@ -207,7 +207,7 @@ export const addEnterpriseProvider = (
 
 		return response.providerId;
 	} catch (error) {
-		logError(`Failed to add enterprise provider for ${provider.name}: ${error}`);
+		logError(error, { detail: `Failed to add enterprise provider for ${provider.name}` });
 		return "";
 	}
 };
@@ -221,7 +221,7 @@ export const removeEnterpriseProvider = (providerId: string) => async (dispatch,
 			providerId
 		});
 	} catch (error) {
-		logError(`Failed to remove enterprise provider for ${providerId}: ${error}`);
+		logError(error, { detail: `Failed to remove enterprise provider for ${providerId}` });
 	}
 };
 

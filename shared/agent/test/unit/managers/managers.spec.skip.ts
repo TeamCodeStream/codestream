@@ -22,7 +22,7 @@
 // 				.returns(joeFoo);
 //
 // 			const entity = await manager.get(joeFoo.id);
-// 			expect(entity).to.equals(joeFoo);
+// 			expect(entity).toEquals(joeFoo);
 //
 // 			mockCache.verify();
 // 		});
@@ -53,7 +53,7 @@
 // 				.withArgs(joeFoo);
 //
 // 			const entity = await manager.get(joeFoo.id);
-// 			expect(entity).to.equals(joeFoo);
+// 			expect(entity).toEquals(joeFoo);
 //
 // 			mockCache.verify();
 // 			mockApi.verify();
@@ -75,7 +75,7 @@
 // 				.returns(joeFoo);
 //
 // 			const person = await manager.getBy("ssn", "111-11-1111");
-// 			expect(person).to.equals(joeFoo);
+// 			expect(person).toEquals(joeFoo);
 //
 // 			mockCache.verify();
 // 		});
@@ -106,7 +106,7 @@
 // 				.withArgs(joeFoo);
 //
 // 			const person = await manager.getBy("ssn", "111-11-1111");
-// 			expect(person).to.equals(joeFoo);
+// 			expect(person).toEquals(joeFoo);
 //
 // 			mockApi.verify();
 // 			mockCache.verify();

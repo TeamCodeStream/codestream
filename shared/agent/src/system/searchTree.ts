@@ -1,39 +1,44 @@
 "use strict";
+import { Logger } from "../logger";
 import { Iterables } from "../system/iterable";
+import { whoCalledMe } from "./stackUtil";
 
 /**
-Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
-MIT License
+ Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
+ MIT License
 
-Copyright (c) 2015 - present Microsoft Corporation
+ Copyright (c) 2015 - present Microsoft Corporation
 
-All rights reserved.
+ All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
 
 export interface IKeyIterator {
 	reset(key: string): this;
+
 	next(): this;
 
 	hasNext(): boolean;
+
 	cmp(a: string): number;
+
 	value(): string;
 }
 
@@ -170,11 +175,25 @@ export class TernarySearchTree<E> {
 		this._iter = segments;
 	}
 
+	debugPrint(): void {
+		if (!Logger.isDebugging) {
+			return;
+		}
+
+		Logger.warn(whoCalledMe(2));
+
+		for (const item of this.values()) {
+			Logger.warn(JSON.stringify(item));
+		}
+	}
+
 	clear(): void {
+		Logger.debug("TernarySearchTree clear");
 		this._root = undefined;
 	}
 
 	set(key: string, element: E): E | undefined {
+		Logger.debug("TernarySearchTree set");
 		const iter = this._iter.reset(key);
 		let node: TernarySearchTreeNode<E>;
 
@@ -215,10 +234,12 @@ export class TernarySearchTree<E> {
 		const oldElement = node.value;
 		node.value = element;
 		node.key = key;
+		this.debugPrint();
 		return oldElement;
 	}
 
 	get(key: string): E | undefined {
+		Logger.debug(`TernarySearchTree get ${key}`);
 		const iter = this._iter.reset(key);
 		let node = this._root;
 		while (node) {
@@ -241,6 +262,7 @@ export class TernarySearchTree<E> {
 	}
 
 	delete(key: string): void {
+		Logger.debug("TernarySearchTree delete");
 		const iter = this._iter.reset(key);
 		const stack: [-1 | 0 | 1, TernarySearchTreeNode<E>][] = [];
 		let node = this._root;

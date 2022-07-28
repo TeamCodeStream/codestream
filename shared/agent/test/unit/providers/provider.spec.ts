@@ -1,7 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-
+import { describe, expect, it } from "@jest/globals";
 import { BitbucketProvider } from "../../../src/providers/bitbucket";
 import { BitbucketServerProvider } from "../../../src/providers/bitbucketServer";
 import { GitHubProvider } from "../../../src/providers/github";
@@ -10,15 +9,12 @@ import { GitLabProvider } from "../../../src/providers/gitlab";
 import { GitLabEnterpriseProvider } from "../../../src/providers/gitlabEnterprise";
 import { ThirdPartyIssueProvider } from "../../../src/providers/provider";
 
-require("mocha").describe;
-require("mocha").it;
-
-describe("provider", async () => {
+describe("provider", () => {
 	it("supportsViewingPullRequests", async () => {
 		[GitHubProvider, GitHubEnterpriseProvider, GitLabProvider, GitLabEnterpriseProvider].forEach(
 			Provider => {
 				const provider = new Provider({} as any, Provider as any);
-				expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).to.eq(true);
+				expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(true);
 			}
 		);
 	});
@@ -26,11 +22,11 @@ describe("provider", async () => {
 	it("does not supportsViewingPullRequests", async () => {
 		[BitbucketProvider, BitbucketServerProvider].forEach(Provider => {
 			const provider = new Provider({} as any, Provider as any);
-			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).to.eq(false);
+			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(false);
 		});
 	});
 
-	it("supportsCreatingPullRequests", async () => {
+	it("supportsCreatingPullRequests", () => {
 		[
 			GitHubProvider,
 			GitHubEnterpriseProvider,
@@ -40,7 +36,7 @@ describe("provider", async () => {
 			BitbucketServerProvider
 		].forEach(Provider => {
 			const provider = new Provider({} as any, Provider as any);
-			expect(ThirdPartyIssueProvider.supportsCreatingPullRequests(provider)).to.eq(true);
+			expect(ThirdPartyIssueProvider.supportsCreatingPullRequests(provider)).toEqual(true);
 		});
 	});
 });

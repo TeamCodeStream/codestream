@@ -1,9 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
+import { describe, expect, it } from "@jest/globals";
 import { GitRemoteParser } from "../../../src/git/parsers/remoteParser";
-require("mocha").describe;
-require("mocha").it;
 
 describe("git", () => {
 	describe("getRepoRemoteVariants", () => {
@@ -11,7 +9,7 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
 			);
-			expect(results).to.deep.equal([
+			expect(results).toEqual([
 				{
 					type: "ssh",
 					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
@@ -38,7 +36,7 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"ssh://git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
 			);
-			expect(results).to.deep.equal([
+			expect(results).toEqual([
 				{
 					type: "ssh",
 					value: "git@gitlabratory.example.com/myorg/myrepo-sample-java.git"
@@ -65,7 +63,7 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"ssh://git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
 			);
-			expect(results).to.deep.equal([
+			expect(results).toEqual([
 				{
 					type: "ssh",
 					value: "git@gitlabratory.example.com:myorg/myrepo-sample-java.git"
@@ -92,7 +90,7 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"git@github.com:theuser/therepo.git"
 			);
-			expect(results).to.deep.equal([
+			expect(results).toEqual([
 				{
 					type: "ssh",
 					value: "git@github.com:theuser/therepo.git"
@@ -119,7 +117,7 @@ describe("git", () => {
 			const results = await GitRemoteParser.getRepoRemoteVariants(
 				"https://gitlabratory.example.com/myorg/myrepo-sample-java.git"
 			);
-			expect(results).to.deep.equal([
+			expect(results).toEqual([
 				{
 					type: "https",
 					value: "https://gitlabratory.example.com/myorg/myrepo-sample-java.git"

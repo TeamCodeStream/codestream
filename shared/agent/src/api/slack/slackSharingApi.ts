@@ -10,10 +10,10 @@ import {
 } from "@slack/web-api";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { orderBy, take, uniq } from "lodash-es";
+import { orderBy, take, uniq } from "lodash";
 import asyncPool from "tiny-async-pool";
 import { Container, SessionContainer } from "../../container";
-import { LogCorrelationContext, Logger, TraceLevel } from "../../logger";
+import { Logger } from "../../logger";
 import {
 	Capabilities,
 	CreatePostResponse,
@@ -38,6 +38,7 @@ import {
 	StreamType
 } from "../../protocol/api.protocol";
 import { debug, Functions, log, Strings } from "../../system";
+import { LogCorrelationContext, TraceLevel } from "../../types";
 import { MessageType, StreamsRTMessage } from "../apiProvider";
 
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";

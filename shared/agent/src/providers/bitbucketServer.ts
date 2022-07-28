@@ -16,9 +16,10 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
 	ProviderPullRequestInfo,
-	PullRequestComment,
-	ThirdPartyIssueProviderBase
+	PullRequestComment
 } from "./provider";
+
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface BitbucketServerRepo {
 	id: string;

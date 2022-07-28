@@ -1,5 +1,5 @@
 "use strict";
-import { sortBy } from "lodash-es";
+import { sortBy } from "lodash";
 import { WorkspaceFolder } from "vscode-languageserver";
 import { SessionContainer } from "../../container";
 import { Logger } from "../../logger";
@@ -63,8 +63,8 @@ export class GitRepository {
 	 * @memberof GitRepository
 	 */
 	async getWeightedRemotesByStrategy(
-		remotes?: GitRemote[],
-		strategy: "prioritizeOrigin" | "prioritizeUpstream" = "prioritizeOrigin"
+		strategy: "prioritizeOrigin" | "prioritizeUpstream" = "prioritizeOrigin",
+		remotes?: GitRemote[]
 	) {
 		return sortBy(remotes || (await this.getRemotes()), _ => [_.remoteWeightByStrategy(strategy)]);
 	}
@@ -95,7 +95,7 @@ export class GitRepository {
 		this._knownRepository = repo;
 	}
 
-	private async getDefaultRemoteBranchReferencesPromise() {
+	async getDefaultRemoteBranchReferencesPromise() {
 		const { git } = SessionContainer.instance();
 		const references: string[] = [];
 		for (const remote of ["upstream", "origin"]) {
@@ -138,6 +138,9 @@ export class GitRepository {
 			}
 
 			const projectsByRemotePath = new Map((remotes || []).map(obj => [obj.path, obj]));
+			if (!connectedProviders) {
+				return undefined;
+			}
 			for (const provider of connectedProviders) {
 				try {
 					const remotePaths = await provider.getRemotePaths(this, projectsByRemotePath);
@@ -172,7 +175,7 @@ export class GitRepository {
 		return undefined;
 	}
 
-	private async isProviderConnected(
+	async isProviderConnected(
 		providerId: string,
 		provider: ThirdPartyProvider,
 		user: CSMe,

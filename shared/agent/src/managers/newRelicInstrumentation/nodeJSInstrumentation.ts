@@ -1,6 +1,6 @@
 "use strict";
 import { promises as fsPromises } from "fs";
-import { uniq as _uniq } from "lodash-es";
+import { uniq as _uniq } from "lodash";
 import path from "path";
 import {
 	AddNewRelicIncludeResponse,

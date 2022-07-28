@@ -2,8 +2,6 @@
 import * as qs from "querystring";
 import {
 	CreateThirdPartyCardRequest,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -19,7 +17,8 @@ import {
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ApiResponse, ThirdPartyIssueProviderBase } from "./provider";
+import { ApiResponse } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 @lspProvider("trello")
 export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProviderInfo> {

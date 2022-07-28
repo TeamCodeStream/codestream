@@ -2,8 +2,8 @@
 
 import { structuredPatch } from "diff";
 import path from "path";
-import { URI } from "vscode-uri";
 import { Container, SessionContainer } from "../container";
+import { isWindows } from "../git/shell";
 import { Logger } from "../logger";
 import { calculateLocation, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
@@ -86,13 +86,11 @@ export class NRManager {
 	_nodeJS: NodeJSInstrumentation;
 	_java: JavaInstrumentation;
 	_dotNetCore: DotNetCoreInstrumentation;
-	_isWindows: boolean;
 
 	constructor(readonly session: CodeStreamSession) {
 		this._nodeJS = new NodeJSInstrumentation(session);
 		this._java = new JavaInstrumentation(session);
 		this._dotNetCore = new DotNetCoreInstrumentation(session);
-		this._isWindows = process.platform === "win32";
 	}
 
 	// returns info gleaned from parsing a stack trace
@@ -302,9 +300,9 @@ export class NRManager {
 
 		const fullPath = path.join(repoPath, filePath);
 		let normalizedPath = Strings.normalizePath(fullPath, {
-			addLeadingSlash: this._isWindows && !fullPath.startsWith("\\\\")
+			addLeadingSlash: isWindows && !fullPath.startsWith("\\\\")
 		});
-		if (this._isWindows) {
+		if (isWindows) {
 			normalizedPath = normalizedPath.replace(":", "%3A");
 		}
 		const uri = "file://" + normalizedPath;

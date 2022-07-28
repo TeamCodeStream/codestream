@@ -716,6 +716,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		prFromUrlInput?.current?.blur();
 
 		if (response && response.error) {
+			if (!derivedState.isVS) {
+				setPrFromUrlLoading(false);
+			}
 			setPrError(response.error);
 		}
 	};

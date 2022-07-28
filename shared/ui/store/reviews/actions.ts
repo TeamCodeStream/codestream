@@ -184,7 +184,9 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 			return result;
 		}
 	} catch (error) {
-		logError("Error creating a review", error);
+		logError(error, {
+			detail: "Error creating a review"
+		});
 		throw { reason: "create", ...error } as CreateReviewError;
 	}
 };
@@ -212,7 +214,7 @@ export const deleteReview = (id: string, sharedTo?: ShareTarget[]) => async disp
 		}
 		dispatch(_deleteReview(id));
 	} catch (error) {
-		logError(`failed to delete review: ${error}`, { id });
+		logError(error, { detail: `failed to delete review`, id });
 	}
 };
 
@@ -338,7 +340,7 @@ export const editReview = (
 			}
 		}
 	} catch (error) {
-		logError(`failed to update review: ${error}`, { id });
+		logError(error, { detail: `failed to update review`, id });
 	}
 	return response;
 };

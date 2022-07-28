@@ -1,5 +1,5 @@
 "use strict";
-import { differenceWith } from "lodash-es";
+import { differenceWith } from "lodash";
 import semver from "semver";
 import { URI } from "vscode-uri";
 import { SessionContainer } from "../container";
@@ -83,26 +83,6 @@ import {
 	ThirdPartyProviderSupportsViewingPullRequests
 } from "./provider";
 
-// NOTE: You must include all new providers here, otherwise the webpack build will exclude them
-export * from "./trello";
-export * from "./jira";
-export * from "./jiraserver";
-export * from "./github";
-export * from "./githubEnterprise";
-export * from "./gitlab";
-export * from "./gitlabEnterprise";
-export * from "./asana";
-export * from "./bitbucket";
-export * from "./bitbucketServer";
-export * from "./youtrack";
-export * from "./azuredevops";
-export * from "./slack";
-export * from "./msteams";
-export * from "./okta";
-export * from "./shortcut";
-export * from "./linear";
-export * from "./newrelic";
-
 const PR_QUERIES: {
 	[Identifier: string]: {
 		name: string;
@@ -173,7 +153,7 @@ export class ThirdPartyProviderRegistry {
 		return this;
 	}
 
-	private async pullRequestsStateHandler() {
+	async pullRequestsStateHandler() {
 		const user = await SessionContainer.instance().users.getMe();
 		if (!user) return;
 
@@ -295,7 +275,7 @@ export class ThirdPartyProviderRegistry {
 		return newProvidersPRs;
 	};
 
-	private fireNewPRsNotifications(providersPRs: ProviderPullRequests[]) {
+	fireNewPRsNotifications(providersPRs: ProviderPullRequests[]) {
 		const prNotificationMessages: PullRequestsChangedData[] = [];
 
 		providersPRs.map(_ =>
@@ -902,7 +882,7 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	private getPullRequestProvider(
+	getPullRequestProvider(
 		provider: ThirdPartyProvider
 	): ThirdPartyIssueProvider & ThirdPartyProviderSupportsViewingPullRequests {
 		const pullRequestProvider = provider as ThirdPartyIssueProvider;
@@ -958,7 +938,9 @@ export class ThirdPartyProviderRegistry {
 	 *
 	 * @param user
 	 */
-	async getConnectedPullRequestProviders(user: CSMe) {
+	async getConnectedPullRequestProviders(
+		user: CSMe
+	): Promise<(ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests)[]> {
 		const connectedProviders = this.getConnectedProviders(user, (p): p is ThirdPartyProvider &
 			ThirdPartyProviderSupportsPullRequests => {
 			const thirdPartyProvider = p as ThirdPartyProvider;

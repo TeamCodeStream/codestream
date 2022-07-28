@@ -5,7 +5,7 @@ import * as path from "path";
 import { Disposable, Emitter, Event, WorkspaceFoldersChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { Container, SessionContainer } from "../container";
-import { Logger, TraceLevel } from "../logger";
+import { Logger } from "../logger";
 import {
 	CommitsChangedData,
 	ReportingMessageType,
@@ -16,8 +16,11 @@ import { CSRepository } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Iterables, Strings, TernarySearchTree } from "../system";
 import { Disposables } from "../system/disposable";
+import { TraceLevel } from "../types";
+import { getDriveLetterFromPath, getMappedDrives, mapMountedDriveToUNC } from "../winUtil/winUtil";
 import { GitRepository } from "./gitService";
 import { RepositoryLocator } from "./repositoryLocator";
+import { isWindows } from "./shell";
 
 export class GitRepositories {
 	private _onWorkspaceDidChange = new Emitter<WorkspaceChangedData>();
@@ -74,15 +77,40 @@ export class GitRepositories {
 		return result;
 	}
 
+	// If we find a Windows mapped drive convert it to UNC path
+	private async normalizeFilePath(filePath: string): Promise<string> {
+		if (!isWindows) {
+			return Strings.normalizePath(filePath);
+		}
+
+		const driveLetter = getDriveLetterFromPath(filePath);
+		if (!driveLetter) {
+			return Strings.normalizePath(filePath);
+		}
+
+		const mappedDrives = await getMappedDrives();
+		if (mappedDrives.isEmpty) {
+			return Strings.normalizePath(filePath);
+		}
+
+		const uncPath = mappedDrives.getUNCForDriveLetter(driveLetter);
+		if (!uncPath) {
+			return Strings.normalizePath(filePath);
+		}
+
+		return Strings.normalizePath(mapMountedDriveToUNC(filePath, driveLetter, uncPath));
+	}
+
 	async getByFilePath(filePath: string): Promise<GitRepository | undefined> {
+		const normalizedFilePath = await this.normalizeFilePath(filePath);
 		const tree = await this.getRepositoryTree();
-		let result = tree.findSubstr(filePath);
+		let result = tree.findSubstr(normalizedFilePath);
 		if (!result) {
 			await this.repositorySearchByDocument({
-				uri: URI.file(filePath).toString()
+				uri: URI.file(normalizedFilePath).toString()
 			});
 			const tree = await this.getRepositoryTree();
-			result = tree.findSubstr(filePath);
+			result = tree.findSubstr(normalizedFilePath);
 		}
 		return result;
 	}
@@ -423,7 +451,10 @@ export class GitRepositories {
 			);
 			found = repositories && repositories.length;
 			for (const r of repositories) {
-				this._repositoryTree.set(r.path, r);
+				// Existing entries will be enriched with _knownRepository - don't overwrite
+				if (!this._repositoryTree.get(r.path)) {
+					this._repositoryTree.set(r.path, r);
+				}
 			}
 		}
 		if (found) {
@@ -440,6 +471,7 @@ export class GitRepositories {
 	 * File watchers, could be an fs.FSWatcher or chokidar.FSWatcher
 	 */
 	private _monitors: { dispose(): Promise<void> }[] = [];
+
 	/**
 	 * Creates file/directory watchers for the git repos in this workspace
 	 */
@@ -472,29 +504,29 @@ export class GitRepositories {
 
 			try {
 				/**
-				 *  Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/e2a6ae1317ce348985314e18c3d5ed257f0ef357/src/git/models/repository.ts#L133 which carries this notice:
-				 * 	The MIT License (MIT)
+                 *  Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/e2a6ae1317ce348985314e18c3d5ed257f0ef357/src/git/models/repository.ts#L133 which carries this notice:
+                 *    The MIT License (MIT)
 
-					Copyright (c) 2016-2021 Eric Amodio
+                 Copyright (c) 2016-2021 Eric Amodio
 
-					Permission is hereby granted, free of charge, to any person obtaining a copy
-					of this software and associated documentation files (the "Software"), to deal
-					in the Software without restriction, including without limitation the rights
-					to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-					copies of the Software, and to permit persons to whom the Software is
-					furnished to do so, subject to the following conditions:
+                 Permission is hereby granted, free of charge, to any person obtaining a copy
+                 of this software and associated documentation files (the "Software"), to deal
+                 in the Software without restriction, including without limitation the rights
+                 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+                 copies of the Software, and to permit persons to whom the Software is
+                 furnished to do so, subject to the following conditions:
 
-					The above copyright notice and this permission notice shall be included in all
-					copies or substantial portions of the Software.
+                 The above copyright notice and this permission notice shall be included in all
+                 copies or substantial portions of the Software.
 
-					THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-					IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-					FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-					AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-					LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-					OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-					SOFTWARE.
-				 */
+                 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+                 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+                 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+                 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+                 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+                 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+                 SOFTWARE.
+                 */
 				/**
 				 * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
 				 */

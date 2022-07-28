@@ -42,7 +42,7 @@ import {
 	JiraProjectsMetaResponse,
 	JiraServerOauthParams
 } from "./jiraserver.types";
-import { ThirdPartyIssueProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 export type jsonCallback = (
 	err?: { statusCode: number; data?: any },

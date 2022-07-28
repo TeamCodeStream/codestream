@@ -1,8 +1,7 @@
 "use strict";
 
-import { expect } from "chai";
+import { describe, expect, it } from "@jest/globals";
 import { Dictionary } from "lodash";
-
 import {
 	Entity,
 	GetReposScmResponse,
@@ -18,9 +17,7 @@ import {
 	Span
 } from "../../../../src/providers/newrelic/newrelic.types";
 
-require("mocha").describe;
-require("mocha").it;
-describe("NewRelicProvider", async () => {
+describe("NewRelicProvider", () => {
 	it("tryFormatStack", async () => {
 		const data = {
 			crash: null,
@@ -122,7 +119,7 @@ describe("NewRelicProvider", async () => {
 			data.exception
 		);
 
-		expect(results?.stackTrace.frames.map(_ => _.formatted)).to.deep.equal([
+		expect(results?.stackTrace.frames.map(_ => _.formatted)).toEqual([
 			"\tcom.newrelic.common.Logger(Logger.kt:67)",
 			"\tcom.newrelic.common.Logger(Logger.kt:28)",
 			"\tcom.newrelic.common.Logger(Logger.kt:18)",
@@ -181,7 +178,7 @@ describe("NewRelicProvider", async () => {
 				"python"
 			);
 
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					averageDuration: 3.2,
 					className: undefined,
@@ -240,7 +237,7 @@ describe("NewRelicProvider", async () => {
 				"python"
 			);
 
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					averageDuration: 3.2,
 					className: undefined,
@@ -324,7 +321,7 @@ describe("NewRelicProvider", async () => {
 				metricTimesliceNames,
 				"ruby"
 			);
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					className: "AgentsController",
 					facet: "Controller/agents/create",
@@ -416,7 +413,7 @@ describe("NewRelicProvider", async () => {
 				metricTimesliceNames,
 				"ruby"
 			);
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					className: "NotifierJob",
 					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
@@ -559,7 +556,7 @@ describe("NewRelicProvider", async () => {
 				"ruby"
 			);
 			// console.info("result", JSON.stringify(results, null, 2));
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					className: "Helpers",
 					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
@@ -673,7 +670,7 @@ describe("NewRelicProvider", async () => {
 				"ruby"
 			);
 			// console.info("result", JSON.stringify(results, null, 2));
-			expect(results).to.deep.eq([
+			expect(results).toEqual([
 				{
 					className: "WhichIsWhich",
 					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
@@ -755,8 +752,8 @@ describe("NewRelicProvider", async () => {
 			}
 		});
 
-		expect(results?.throughput?.length).to.eq(2);
-		expect(results?.throughput?.map(_ => _.functionName)).to.deep.eq(["error", "hello_world"]);
+		expect(results?.throughput?.length).toEqual(2);
+		expect(results?.throughput?.map(_ => _.functionName)).toEqual(["error", "hello_world"]);
 	});
 
 	it("getFileLevelTelemetry2", async () => {
@@ -806,22 +803,22 @@ describe("NewRelicProvider", async () => {
 			}
 		});
 
-		expect(results?.throughput?.length).to.eq(1);
-		expect(results?.throughput?.map(_ => _.functionName)).to.deep.eq([
+		expect(results?.throughput?.length).toEqual(1);
+		expect(results?.throughput?.map(_ => _.functionName)).toEqual([
 			"create_bill_credit_payment_thing"
 		]);
 	});
 
 	it("generateEntityQueryStatements", async () => {
 		const provider = new NewRelicProvider({} as any, {} as any);
-		expect(provider.generateEntityQueryStatements("foo-bar_baz")).to.deep.equal([
+		expect(provider.generateEntityQueryStatements("foo-bar_baz")).toEqual([
 			"name LIKE '%foo-bar_baz%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'",
 			"name LIKE '%baz%'"
 		]);
 
-		expect(provider.generateEntityQueryStatements("test/foo-bar_baz")).to.deep.equal([
+		expect(provider.generateEntityQueryStatements("test/foo-bar_baz")).toEqual([
 			"name LIKE '%test/foo-bar_baz%'",
 			"name LIKE '%test%'",
 			"name LIKE '%foo%'",
@@ -829,24 +826,24 @@ describe("NewRelicProvider", async () => {
 			"name LIKE '%baz%'"
 		]);
 
-		expect(provider.generateEntityQueryStatements("foo\\bar\\baz")).to.deep.equal([
+		expect(provider.generateEntityQueryStatements("foo\\bar\\baz")).toEqual([
 			"name LIKE '%foo\\bar\\baz%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'",
 			"name LIKE '%baz%'"
 		]);
 
-		expect(provider.generateEntityQueryStatements("foo/bar")).to.deep.equal([
+		expect(provider.generateEntityQueryStatements("foo/bar")).toEqual([
 			"name LIKE '%foo/bar%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'"
 		]);
 
-		expect(provider.generateEntityQueryStatements("not~a$separator")).to.deep.equal([
+		expect(provider.generateEntityQueryStatements("not~a$separator")).toEqual([
 			"name LIKE '%not~a$separator%'"
 		]);
 
-		expect(provider.generateEntityQueryStatements("")).to.eq(undefined);
+		expect(provider.generateEntityQueryStatements("")).toEqual(undefined);
 	});
 
 	it("getObservabilityRepos", async () => {
@@ -891,9 +888,9 @@ describe("NewRelicProvider", async () => {
 
 		const results = await provider.getObservabilityRepos({});
 
-		expect(results?.repos?.length).to.eq(1);
-		expect(results?.repos[0].entityAccounts.length).to.eq(1);
-		expect(results?.repos[0].repoRemote).to.eq(
+		expect(results?.repos?.length).toEqual(1);
+		expect(results?.repos[0].entityAccounts.length).toEqual(1);
+		expect(results?.repos[0].repoRemote).toEqual(
 			"git@yoursourcecode.net:biz-enablement/foo-account-persister.git"
 		);
 	});
@@ -925,7 +922,7 @@ describe("NewRelicProvider", async () => {
 
 		// console.log(JSON.stringify(results, null, 4));
 		// NOTE: this data is not quite correct, but we're testing to assert that we will use whatever is in `code.function`
-		expect(results[0].functionName).to.eq("SuperheroBySlug");
+		expect(results[0].functionName).toEqual("SuperheroBySlug");
 	});
 });
 

@@ -97,6 +97,8 @@ export const SignupNewRelic = () => {
 			if (selectedHost) {
 				selectedRegionName = selectedHost.name;
 			}
+		} else {
+			selectedRegionName = environmentHosts[0]?.name;
 		}
 	}
 
@@ -176,7 +178,9 @@ export const SignupNewRelic = () => {
 		} catch (error) {
 			setShowGenericErrorMessage(true);
 			setShowEmailErrorMessage(false);
-			logError(`Unexpected error during nr registration request: ${error}`);
+			logError(error, {
+				detail: `Unexpected error during nr registration request`
+			});
 		}
 	};
 

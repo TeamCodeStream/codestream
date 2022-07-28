@@ -1,0 +1,7 @@
+<idea-plugin>
+    <project-components>
+        <component>
+            <implementation-class>com.codestream.clm.CLMJavaComponent</implementation-class>
+        </component>
+    </project-components>
+</idea-plugin>

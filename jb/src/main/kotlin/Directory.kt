@@ -3,6 +3,7 @@ package com.codestream
 import com.codestream.agent.AgentService
 import com.codestream.authentication.AuthenticationService
 import com.codestream.editor.EditorService
+import com.codestream.editor.LineLevelBlameService
 import com.codestream.notification.NotificationComponent
 import com.codestream.review.ReviewService
 import com.codestream.session.SessionService
@@ -42,6 +43,9 @@ val Project.reviewService: ReviewService?
 
 val Project.telemetryService: TelemetryService?
     get() = getServiceIfNotDisposed(TelemetryService::class.java)
+
+val Project.lineLevelBlameService: LineLevelBlameService?
+    get() = getServiceIfNotDisposed(LineLevelBlameService::class.java)
 
 fun <T : Any> Project.getServiceIfNotDisposed(serviceClass: Class<T>): T? =
     if (!isDisposed) getService(serviceClass)

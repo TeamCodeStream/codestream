@@ -103,10 +103,9 @@ class WebViewService(val project: Project) : Disposable {
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js"), File(tempDir, "webview.js"))
         FileUtils.copyToFile(
-            javaClass.getResourceAsStream("/webview/webview-data.js"),
-            File(tempDir, "webview-data.js")
+            javaClass.getResourceAsStream("/webview/styles/webview.css"),
+            File(tempDir.resolve("styles"), "webview.css")
         )
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.css"), File(tempDir, "webview.css"))
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/${WEBVIEW_TEMPLATE_HTML}"), File(tempDir,
             WEBVIEW_TEMPLATE_HTML
         ))

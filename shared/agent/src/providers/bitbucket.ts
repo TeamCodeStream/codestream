@@ -38,10 +38,10 @@ import {
 	ProviderGetRepoInfoResponse,
 	ProviderPullRequestInfo,
 	PullRequestComment,
-	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface BitbucketRepo {
 	uuid: string;
@@ -336,6 +336,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			owner,
 			name
 		};
+	}
+
+	async getPullRequestsContainigSha(
+		repoIdentifier: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		return [];
 	}
 
 	async createPullRequest(

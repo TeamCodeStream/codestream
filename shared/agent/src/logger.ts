@@ -31,22 +31,10 @@ SOFTWARE.
 import { URI } from "vscode-uri";
 import { CodeStreamAgent } from "./agent";
 import { getCorrelationContext } from "./system";
+import { LogCorrelationContext, TraceLevel } from "./types";
 // import { Telemetry } from './telemetry';
 
 // const ConsolePrefix = `[CodeStreamAgent]`;
-
-export enum TraceLevel {
-	Silent = "silent",
-	Errors = "errors",
-	Verbose = "verbose",
-	Debug = "debug"
-}
-
-export interface LogCorrelationContext {
-	readonly correlationId?: number;
-	readonly prefix: string;
-	exitDetails?: string;
-}
 
 export class Logger {
 	static level: TraceLevel = TraceLevel.Silent;

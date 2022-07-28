@@ -14,6 +14,7 @@ import Draggable from "react-draggable";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import cx from "classnames";
 import { HostApi } from "@codestream/webview/webview-api";
+import { isUndefined } from "lodash-es";
 
 export enum PaneState {
 	Open = "open",
@@ -40,16 +41,23 @@ interface PaneNodeNameProps {
 	subtitle?: string | React.ReactNode;
 	collapsed?: boolean;
 	actionsVisibleIfOpen?: boolean;
+	labelIsFlex?: boolean;
+	forceExpand?: boolean;
+	showChildIconOnCollapse?: boolean;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
+
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const hiddenPaneNodes = preferences.hiddenPaneNodes || EMPTY_HASH;
+		const collapsed =
+			props?.id && hiddenPaneNodes[props?.id] ? hiddenPaneNodes[props.id] : props?.collapsed;
 		return {
-			collapsed: props.id ? hiddenPaneNodes[props.id] : props.collapsed
+			collapsed
 		};
 	});
+
 	const toggleNode = e => {
 		if (e.target.closest(".actions")) return;
 		if (!props.id) return;
@@ -58,7 +66,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 
 	return (
 		<div className={props.className} onClick={props.onClick || toggleNode}>
-			<div className="label">
+			<div style={{ display: props.labelIsFlex ? "flex" : "block" }} className="label">
 				{props.isLoading && <Icon name="sync" className="spin" />}
 				{!props.isLoading && (
 					<Icon
@@ -72,7 +80,9 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 					<span className="subtle"> {props.subtitle}</span>
 				) : null}
 			</div>
-			{!derivedState.collapsed && <div className="actions">{props.children}</div>}
+			{(!derivedState.collapsed || props.showChildIconOnCollapse) && (
+				<div className="actions">{props.children}</div>
+			)}
 		</div>
 	);
 })`
@@ -106,7 +116,15 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 			margin: 0 5px;
 			opacity: 0.7;
 		}
+		.icon-override-actions-visible {
+			display: none;
+		}
 	}
+
+	&:hover .actions .icon-override-actions-visible {
+		display: inline-block !important;
+	}
+
 	&:hover .actions {
 		// background: var(--app-background-color-hover);
 		display: block;

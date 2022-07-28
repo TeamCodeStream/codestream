@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/pythonStackTraceParser";
 
 describe("pythonStackTraceParser", () => {
@@ -21,7 +19,7 @@ describe("pythonStackTraceParser", () => {
 
 			const result = Parser(str);
 
-			expect(result).to.deep.equals({
+			expect(result).toEqual({
 				lines: [
 					{
 						arguments: undefined,

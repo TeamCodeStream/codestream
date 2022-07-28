@@ -3,8 +3,6 @@ import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -21,7 +19,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSShortcutProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyIssueProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 @lspProvider("shortcut")
 export class ShortcutProvider extends ThirdPartyIssueProviderBase<CSShortcutProviderInfo> {

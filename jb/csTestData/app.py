@@ -12,7 +12,6 @@ class MyClass(object):
         return 1
 
 @app.route("/")
-
 def hello_world():
     call_me()  # Maybe
     MyClass().my_method()

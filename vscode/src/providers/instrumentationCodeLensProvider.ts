@@ -97,6 +97,12 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			: this.missingPythonExtensionCodelens();
 	}
 
+	private checkJavaPlugin(): vscode.CodeLens[] | undefined {
+		return extensions.getExtension("redhat.java")?.isActive
+			? undefined
+			: this.missingJavaExtensionCodelens();
+	}
+
 	private checkCsharpPlugin(): vscode.CodeLens[] | undefined {
 		return extensions.getExtension("ms-dotnettools.csharp")?.isActive
 			? undefined
@@ -107,6 +113,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		switch (languageId) {
 			case "ruby": {
 				return this.checkRubyPlugin();
+			}
+			case "java": {
+				return this.checkJavaPlugin();
 			}
 			case "python": {
 				return this.checkPythonPlugin();
@@ -156,6 +165,16 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		);
 	}
 
+	private missingJavaExtensionCodelens(newRelicAccountId?: number): vscode.CodeLens[] {
+		return this.errorCodelens(
+			"NO_JAVA_VSCODE_EXTENSION",
+			"java",
+			"Click to configure golden signals from New Relic",
+			"To see code-level metrics you'll need to install one of the following extensions for VS Code...",
+			newRelicAccountId
+		);
+	}
+
 	private missingCsharpExtensionCodelens(newRelicAccountId?: number): vscode.CodeLens[] {
 		return this.errorCodelens(
 			"NO_CSHARP_VSCODE_EXTENSION",
@@ -187,6 +206,20 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			)
 		];
 		return errorCodelens;
+	}
+
+	// Shouldn't have to to this (╯°□°)╯︵ ┻━┻
+	// java plugin doesn't include package name - just class name
+	parseJavaPackage(documentText: string): string | undefined {
+		const lines = documentText.split(/\r?\n/);
+
+		for (const line of lines) {
+			const matcher = line.match(/^\s*package\s+([A-Za-z\.]+);\s*$/);
+			if (matcher && matcher.length > 1) {
+				return matcher[1];
+			}
+		}
+		return undefined;
 	}
 
 	public async provideCodeLenses(
@@ -249,11 +282,17 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			};
 
 			let functionLocator: FunctionLocator | undefined = undefined;
-			if (document.languageId === "csharp") {
+			if (document.languageId === "csharp" || document.languageId === "java") {
 				const thePackage = instrumentableSymbols.find(_ => _.parent?.kind === SymbolKind.Package);
-				if (thePackage) {
-					functionLocator = { namespace: thePackage?.parent?.name };
+				if (thePackage && thePackage?.parent?.name) {
+					functionLocator = { namespace: thePackage.parent.name };
 				}
+			}
+
+			if (document.languageId === "java" && functionLocator?.namespace) {
+				functionLocator.namespace = `${this.parseJavaPackage(document.getText())}.${
+					functionLocator.namespace
+				}`;
 			}
 
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
@@ -337,8 +376,8 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				data: { namespace?: string; className?: string; functionName: string }
 			) => {
 				let result: boolean;
-				// Strip off any trailing () for function (csharp)
-				const simpleSymbolName = symbol.symbol.name.replace(/\(\)$/, "");
+				// Strip off any trailing () for function (csharp and java) - undo this if we get types in agent
+				const simpleSymbolName = symbol.symbol.name.replace(/\(\w*\)$/, "");
 				if (symbol.parent) {
 					result =
 						(data.className === symbol.parent.name && data.functionName === simpleSymbolName) ||

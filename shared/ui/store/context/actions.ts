@@ -195,8 +195,15 @@ export const setCurrentCodeError = (codeErrorId?: string, data?: CodeErrorData) 
 export const setCurrentRepo = (id?: string, path?: string) =>
 	action(ContextActionsType.SetCurrentRepo, { id, path });
 
-export const setCreatePullRequest = (reviewId?: string) =>
+export const _setCreatePullRequest = (reviewId?: string) =>
 	action(ContextActionsType.SetCreatePullRequest, { reviewId });
+
+export const setCreatePullRequest = (reviewId?: string) => dispatch => {
+	// Previously viewed PR/MR still in react state (even after restart) - make sure to clear it so that
+	// PullRequestsFilesChanged.tsx doesn't try to load an existing PR
+	dispatch(clearCurrentPullRequest());
+	return dispatch(_setCreatePullRequest(reviewId));
+};
 
 export const setCurrentPullRequest = (
 	providerId: string,

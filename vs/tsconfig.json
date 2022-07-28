@@ -2,7 +2,6 @@
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
-		"baseUrl": ".",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"jsx": "react",
@@ -14,25 +13,27 @@
 		"noImplicitReturns": false,
 		"noImplicitAny": false,
 		"noUnusedLocals": false,
-		"outDir": "../build/ts",
+		"outDir": "./dist",
 		"paths": {
 			"@codestream/protocols/agent": [
-				"../../shared/ui/protocols/agent/agent.protocol.ts"
+				"../shared/ui/protocols/agent/agent.protocol.ts"
 			],
 			"@codestream/protocols/api": [
-				"../../shared/ui/protocols/agent/api.protocol.ts"
+				"../shared/ui/protocols/agent/api.protocol.ts"
 			],
 			"@codestream/protocols/webview": [
-				"../../shared/ui/ipc/webview.protocol.ts"
+				"../shared/ui/ipc/webview.protocol.ts"
 			],
-			"@codestream/webview/*": ["../../shared/ui/*"],
-			"vscode-jsonrpc": ["../../shared/ui/vscode-jsonrpc.shim.ts"]
+			"@codestream/util/*": ["../shared/util/*"],
+			"@codestream/webview/*": ["../shared/ui/*"],
+			"vscode-jsonrpc": ["../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
-		"skipDefaultLibCheck": true,
+		"rootDir": "../",
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
 		"useUnknownInCatchVariables": false
-	}
+	},
+	"include": ["src/CodeStream.VisualStudio/UI/WebViews/**/*.ts", "../shared/util/**/*"]
 }

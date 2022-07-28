@@ -314,7 +314,7 @@ export const deleteCodemark = (codemarkId: string, sharedTo?: ShareTarget[]) => 
 		}
 		dispatch(_deleteCodemark(codemarkId));
 	} catch (error) {
-		logError(`failed to delete codemark: ${error}`, { codemarkId });
+		logError(error, { detail: `failed to delete codemark`, codemarkId });
 	}
 };
 
@@ -438,7 +438,10 @@ export const editCodemark = (codemark: CodemarkPlus, attributes: EditableAttribu
 
 		dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		logError(`failed to update codemark: ${error}`, { codemarkId: codemark.id });
+		logError(error, {
+			detail: `failed to update codemark`,
+			codemarkId: codemark.id
+		});
 	}
 };
 

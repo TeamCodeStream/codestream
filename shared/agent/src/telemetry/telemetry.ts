@@ -1,7 +1,8 @@
 "use strict";
 import uuid from "uuid/v4";
 import { Logger } from "../logger";
-import { CodeStreamSession, SessionStatus, SessionStatusChangedEvent } from "../session";
+import { CodeStreamSession, SessionStatusChangedEvent } from "../session";
+import { SessionStatus } from "../types";
 
 // FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
 import Analytics from "analytics-node";

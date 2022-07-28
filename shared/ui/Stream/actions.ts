@@ -106,14 +106,16 @@ export {
 export const markStreamRead = (streamId: string, postId?: string) => () => {
 	HostApi.instance
 		.send(MarkStreamReadRequestType, { streamId, postId })
-		.catch(error => logError(`There was an error marking a stream read: ${error}`, { streamId }));
+		.catch(error =>
+			logError(error, { detail: `There was an error marking a stream read`, streamId })
+		);
 };
 
 export const markPostUnread = (streamId: string, postId: string) => () => {
 	HostApi.instance
 		.send(MarkPostUnreadRequestType, { streamId, postId })
 		.catch(error =>
-			logError(`There was an error marking a post unread: ${error}`, { streamId, postId })
+			logError(error, { detail: `There was an error marking a post unread`, streamId, postId })
 		);
 };
 
@@ -121,7 +123,7 @@ export const markItemRead = (itemId: string, numReplies: number) => () => {
 	HostApi.instance
 		.send(MarkItemReadRequestType, { itemId, numReplies })
 		.catch(error =>
-			logError(`There was an error marking an item read: ${error}`, { itemId, numReplies })
+			logError(error, { detail: `There was an error marking an item read`, itemId, numReplies })
 		);
 };
 
@@ -570,7 +572,7 @@ export const editPost = (
 			}
 		}
 	} catch (error) {
-		logError(`There was an error editing a post: ${error}`, { streamId, postId, text });
+		logError(error, { detail: `There was an error editing a post`, streamId, postId, text });
 	}
 };
 
@@ -596,7 +598,7 @@ export const reactToPost = (post: CSPost, emoji: string, value: boolean) => asyn
 		});
 		return dispatch(postsActions.updatePost(response.post));
 	} catch (error) {
-		logError(`There was an error reacting to a post: ${error}`, { post, emoji, value });
+		logError(error, { detail: `There was an error reacting to a post`, post, emoji, value });
 	}
 };
 
@@ -633,7 +635,7 @@ export const deletePost = (streamId: string, postId: string, sharedTo?: ShareTar
 		}
 		return dispatch(postsActions.deletePost(post));
 	} catch (error) {
-		logError(`There was an error deleting a post: ${error}`, { streamId, postId });
+		logError(error, { detail: `There was an error deleting a post`, streamId, postId });
 	}
 };
 
@@ -783,7 +785,7 @@ export const createStream = (
 				- restricted actions
 				- users can't join
 		*/
-		logError(`There was an error creating a channel: ${error}`, attributes);
+		logError(error, { ...attributes, detail: `There was an error creating a channel` });
 		return undefined;
 	}
 };
@@ -809,7 +811,7 @@ export const leaveChannel = (streamId: string) => async (dispatch, getState) => 
 			// dispatch(setPanel("channels"));
 		}
 	} catch (error) {
-		logError(`There was an error leaving a channel: ${error}`, { streamId });
+		logError(error, { detail: `There was an error leaving a channel`, streamId });
 	}
 };
 
@@ -821,7 +823,11 @@ export const removeUsersFromStream = (streamId: string, userIds: string[]) => as
 		});
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error removing user(s) from a stream: ${error}`, { streamId, userIds });
+		logError(error, {
+			detail: `There was an error removing user(s) from a stream`,
+			streamId,
+			userIds
+		});
 	}
 };
 
@@ -833,7 +839,7 @@ export const addUsersToStream = (streamId: string, userIds: string[]) => async d
 		});
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error adding user(s) to a stream: ${error}`, { streamId, userIds });
+		logError(error, { detail: `There was an error adding user(s) to a stream`, streamId, userIds });
 	}
 };
 
@@ -842,7 +848,7 @@ export const joinStream = (streamId: string) => async dispatch => {
 		const { stream } = await HostApi.instance.send(JoinStreamRequestType, { streamId });
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error joining a stream: ${error}`, { streamId });
+		logError(error, { detail: `There was an error joining a stream`, streamId });
 	}
 };
 
@@ -851,7 +857,7 @@ export const renameStream = (streamId: string, name: string) => async dispatch =
 		const { stream } = await HostApi.instance.send(RenameStreamRequestType, { streamId, name });
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error renaming a stream: ${error}`, { streamId, name });
+		logError(error, { detail: `There was an error renaming a stream`, streamId, name });
 	}
 };
 
@@ -863,7 +869,7 @@ export const setPurpose = (streamId: string, purpose: string) => async dispatch 
 		});
 		return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error setting stream purpose: ${error}`, { streamId });
+		logError(error, { detail: `There was an error setting stream purpose`, streamId });
 	}
 };
 
@@ -873,7 +879,10 @@ export const archiveStream = (streamId: string, archive = true) => async dispatc
 		const { stream } = await HostApi.instance.send(command, { streamId });
 		if (stream) return dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error ${archive ? "" : "un"}archiving stream: ${error}`, { streamId });
+		logError(error, {
+			detail: `There was an error ${archive ? "" : "un"}archiving stream`,
+			streamId
+		});
 	}
 };
 
@@ -886,7 +895,7 @@ export const invite = (attributes: {
 		const response = await HostApi.instance.send(InviteUserRequestType, attributes);
 		return dispatch(addUsers([response.user]));
 	} catch (error) {
-		logError(`There was an error inviting a user: ${error}`, attributes);
+		logError(error, { ...attributes, detail: `There was an error inviting a user` });
 	}
 };
 
@@ -901,7 +910,7 @@ export const fetchPosts = (params: {
 		response.codemarks && dispatch(saveCodemarks(response.codemarks));
 		return response;
 	} catch (error) {
-		logError(`There was an error fetching posts: ${error}`, params);
+		logError(error, { ...params, detail: `There was an error fetching posts` });
 		return undefined;
 	}
 };
@@ -933,7 +942,7 @@ export const fetchThread = (streamId: string, parentPostId: string) => async (
 		codemarks && (await dispatch(saveCodemarks(codemarks)));
 		await dispatch(postsActions.addPostsForStream(streamId, posts));
 	} catch (error) {
-		logError(`There was an error fetching a thread: ${error}`, { parentPostId });
+		logError(error, { detail: `There was an error fetching a thread`, parentPostId });
 	}
 };
 
@@ -943,7 +952,7 @@ export const closeDirectMessage = (streamId: string) => async dispatch => {
 		const { stream } = await HostApi.instance.send(CloseStreamRequestType, { streamId });
 		dispatch(streamActions.updateStream(stream));
 	} catch (error) {
-		logError(`There was an error closing a dm: ${error}`);
+		logError(error, { detail: `There was an error closing a dm` });
 	}
 };
 
@@ -952,7 +961,7 @@ export const openDirectMessage = (streamId: string) => async dispatch => {
 		const response = await HostApi.instance.send(OpenStreamRequestType, { streamId });
 		return dispatch(streamActions.updateStream(response.stream));
 	} catch (error) {
-		logError(`There was an error opening a dm: ${error}`);
+		logError(error, { detail: `There was an error opening a dm` });
 	}
 };
 
@@ -966,7 +975,7 @@ export const changeStreamMuteState = (streamId: string, mute: boolean) => async 
 		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: mute } }));
 		await HostApi.instance.send(MuteStreamRequestType, { streamId, mute });
 	} catch (error) {
-		logError(`There was an error toggling stream mute state: ${error}`, { streamId });
+		logError(error, { detail: `There was an error toggling stream mute state`, streamId });
 		// TODO: communicate failure
 		dispatch(updatePreferences({ mutedStreams: { ...mutedStreams, [streamId]: !mute } }));
 	}
@@ -977,7 +986,7 @@ export const fetchCodemarks = () => async dispatch => {
 		const response = await HostApi.instance.send(FetchCodemarksRequestType, {});
 		if (response) dispatch(saveCodemarks(response.codemarks));
 	} catch (error) {
-		logError(`failed to fetch codemarks: ${error}`);
+		logError(error, { detail: `failed to fetch codemarks` });
 	}
 };
 
@@ -1016,7 +1025,7 @@ export const setCodemarkStatus = (
 
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		logError(`failed to change codemark status: ${error}`, { codemarkId });
+		logError(error, { detail: `failed to change codemark status`, codemarkId });
 		return undefined;
 	}
 };
@@ -1051,7 +1060,7 @@ export const setCodemarkPinned = (
 
 		return dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {
-		logError(`failed to change codemark pinned: ${error}`, { codemarkId: codemark.id });
+		logError(error, { detail: `failed to change codemark pinned`, codemarkId: codemark.id });
 		return undefined;
 	}
 };
@@ -1123,7 +1132,7 @@ export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => asy
 
 		return dispatch(updateReviews([response.review]));
 	} catch (error) {
-		logError(`failed to change review status: ${error}`, { reviewId });
+		logError(error, { detail: `failed to change review status`, reviewId });
 		return undefined;
 	}
 };
@@ -1179,6 +1188,6 @@ export const updateTeamTag = (
 		team.tags[tag.id] = tag;
 		return dispatch(updateTeam(team));
 	} catch (error) {
-		logError(`There was an error updating a tag: ${error}`, attributes);
+		logError(error, { ...attributes, detail: `There was an error updating a tag` });
 	}
 };

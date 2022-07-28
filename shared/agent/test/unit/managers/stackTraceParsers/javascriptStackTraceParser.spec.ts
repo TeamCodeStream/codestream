@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/javascriptStackTraceParser";
 
 describe("javascriptStackTraceParser", () => {
@@ -17,7 +15,7 @@ at runMicrotasks (<anonymous>)
 at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 
 		const result = Parser(str);
-		expect(result).to.deep.equals({
+		expect(result).toEqual({
 			lines: [
 				{
 					fileFullPath:
@@ -95,7 +93,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 		at HTTPParser.parserOnHeadersComplete (_http_common.js:116:17)`;
 
 		const result = Parser(str);
-		expect(result.lines[1].fileFullPath).to.equal("/Users/bobross/acme/nodexample/app.js");
+		expect(result.lines[1].fileFullPath).toEqual("/Users/bobross/acme/nodexample/app.js");
 	});
 
 	it("stack webpack", () => {
@@ -119,7 +117,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 
 		const result = Parser(str);
 
-		expect(result).to.deep.equal({
+		expect(result).toEqual({
 			lines: [
 				{
 					fileFullPath:

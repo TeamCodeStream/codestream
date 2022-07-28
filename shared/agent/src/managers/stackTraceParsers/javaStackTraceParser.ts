@@ -51,7 +51,7 @@ export function Parser(stack: string): CSStackTraceInfo {
 		if (isNaN(lineNum)) lineNum = undefined;
 
 		let fileFromClass = file;
-		if (className && file && className.indexOf(file.replace(".java", "")) > -1) {
+		if (className && file && className.indexOf(file.replace(/(\.java|\.kt)/, "")) > -1) {
 			// attempt to construct a file path based upon
 			// the name of the class
 			fileFromClass = `${packageName.replace(/\./g, "/")}/${file}`;

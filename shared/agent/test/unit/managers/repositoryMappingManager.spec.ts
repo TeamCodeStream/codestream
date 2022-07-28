@@ -1,6 +1,4 @@
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { RepositoryMappingManager } from "../../../src/managers/repositoryMappingManager";
 
 describe("repositoryMappingManager.spec.ts", () => {
@@ -10,7 +8,7 @@ describe("repositoryMappingManager.spec.ts", () => {
 			const response = await manager.normalizeUrl({
 				url: "git@gitlab.com:foobar.io/development/api/largerepo.git"
 			});
-			expect(response.normalizedUrl).to.equal("gitlab.com/foobar.io/development/api/largerepo");
+			expect(response.normalizedUrl).toEqual("gitlab.com/foobar.io/development/api/largerepo");
 		});
 	});
 });

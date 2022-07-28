@@ -1,7 +1,6 @@
-import * as os from "os";
-import { ReportSuppressedMessages } from "./agentError";
-import { Team } from "./api/extensions";
-import { SessionContainer } from "./container";
+import * as NewRelic from "newrelic";
+import { CodeStreamAgent } from "./agent";
+import { Logger } from "./logger";
 import {
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
@@ -10,12 +9,9 @@ import {
 	WebviewErrorRequest,
 	WebviewErrorRequestType
 } from "./protocol/agent.protocol";
-import { CodeStreamSession, SessionStatus } from "./session";
+import { CodeStreamSession } from "./session";
 import { lsp, lspHandler, Strings } from "./system";
-import { Logger } from "./logger";
-import * as NewRelic from "newrelic";
 import md5 = Strings.md5;
-import { CodeStreamAgent } from "./agent";
 
 interface IErrorReporterProvider {
 	reportMessage(request: ReportMessageRequest): void;
@@ -61,23 +57,61 @@ class NewRelicErrorReporterProvider extends ErrorReporterProviderBase
 	reportMessage(request: ReportMessageRequest) {
 		if (!request.error && !request.message) return;
 
-		const key = request.error ? md5(JSON.stringify(request.error)) : `${request.message}`;
-		if (this._errorCache.has(key)) {
+		let cacheKey: string;
+		let hash: string | undefined;
+
+		if (request.error) {
+			if (typeof request.error === "object") {
+				hash = JSON.stringify(request.error);
+			} else {
+				hash = request.error;
+			}
+		} else {
+			hash = request.message;
+		}
+		cacheKey = md5(hash || "");
+
+		if (this._errorCache.has(cacheKey)) {
 			Logger.warn("Ignoring duplicate error", {
-				key: key
+				key: cacheKey
 			});
 			return;
 		}
 
-		this._errorCache.add(key);
+		this._errorCache.add(cacheKey);
 
 		try {
-			NewRelic.noticeError(request.error || new Error(request.message), {
+			let error: Error | undefined = undefined;
+			let stack;
+			if (request.error) {
+				if (typeof request.error === "string") {
+					const deserializedError = JSON.parse(request.error as string) as {
+						message: string;
+						stack: any;
+					};
+					error = new Error(deserializedError.message);
+					// eventually setting the stack _should_ show in NR...
+					error.stack = stack = deserializedError.stack;
+				} else {
+					error = request.error as Error;
+				}
+			} else if (request.message) {
+				error = new Error(request.message);
+			}
+			if (!error) {
+				Logger.warn("Failed to create error for reportMessage", {
+					request
+				});
+				return;
+			}
+
+			NewRelic.noticeError(error, {
 				...((this.agent.createNewRelicCustomAttributes() as any) || {}),
 				extra:
 					typeof request.extra === "object" ? JSON.stringify(request.extra) : request.extra || "",
 				type: request.type,
-				source: request.source || "agent"
+				source: request.source || "agent",
+				stack: stack || undefined
 			});
 		} catch (ex) {
 			Logger.warn("Failed to reportMessage", {

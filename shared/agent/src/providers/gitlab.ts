@@ -2,8 +2,7 @@
 import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
-import { merge } from "lodash";
-import { groupBy } from "lodash-es";
+import { groupBy, merge } from "lodash";
 import { Response } from "node-fetch";
 import * as qs from "querystring";
 import semver from "semver";
@@ -18,8 +17,6 @@ import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
 	DiscussionNode,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -61,11 +58,12 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
-	ProviderVersion,
 	PullRequestComment,
-	ThirdPartyIssueProviderBase,
-	ThirdPartyProviderSupportsIssues
+	ThirdPartyProviderSupportsIssues,
+	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
+import { ProviderVersion } from "./types";
 
 interface GitLabProject {
 	path_with_namespace: any;
@@ -91,7 +89,7 @@ interface GitLabBranch {
 
 @lspProvider("gitlab")
 export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProviderInfo>
-	implements ThirdPartyProviderSupportsIssues {
+	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	/** version used when a query to get the version fails */
 	private static defaultUnknownVersion = "0.0.0";
 	protected LOWEST_SUPPORTED_VERSION = {
@@ -451,6 +449,38 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 			owner: owner.join("/"),
 			name: name!
 		};
+	}
+
+	async getPullRequestsContainigSha(
+		repoIdentifiers: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		// /projects/:id/repository/commits/:sha/merge_requests
+
+		for (const repoIdentifier of repoIdentifiers) {
+			const { owner, name } = repoIdentifier;
+			try {
+				const projectResponse = await this.get<GitLabProjectInfoResponse>(
+					`/projects/${encodeURIComponent(`${owner}/${name}`)}`
+				);
+			} catch (ex) {
+				Logger.warn(ex);
+				// Logger.error(ex, `${this.displayName}: failed to get projects`, {
+				// 	remote: request.remote,
+				// 	owner: owner,
+				// 	name: name,
+				// 	hasProviderInfo: this._providerInfo != null
+				// });
+				// return {
+				// 	error: {
+				// 		type: "PROVIDER",
+				// 		message: ex.message
+				// 	}
+				// };
+			}
+		}
+
+		return [];
 	}
 
 	@log()
@@ -2282,9 +2312,16 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		pullRequestId: string;
 	}): Promise<Directives | undefined> {
 		const noteId = request.id;
+
+		const providerVersion = await this.getVersion();
+		let discussionId = "DiscussionID";
+		if (semver.lt(providerVersion.version, "13.6.4")) {
+			discussionId = "ID";
+		}
+
 		const response = await this.mutate<any>(
 			`
-		mutation DiscussionToggleResolve($id:ID!, $resolve: Boolean!) {
+		mutation DiscussionToggleResolve($id:${discussionId}!, $resolve: Boolean!) {
 			discussionToggleResolve(input:{id:$id, resolve:$resolve}) {
 				  clientMutationId
 					  discussion {

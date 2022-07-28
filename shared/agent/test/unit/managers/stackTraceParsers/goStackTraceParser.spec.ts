@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/goStackTraceParser";
 
 describe("goStackTraceParser", () => {
@@ -19,7 +17,7 @@ describe("goStackTraceParser", () => {
 			foooo.middleware.ServeHTTP (/work/src/github.com/foobar/msmith/vendor/github.com/something/foooo/foooo.go:33)`;
 
 			const result = Parser(str);
-			expect(result).to.deep.equals({
+			expect(result).toEqual({
 				lines: [
 					{
 						arguments: undefined,

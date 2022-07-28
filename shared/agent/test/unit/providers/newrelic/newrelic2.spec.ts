@@ -1,11 +1,9 @@
 "use strict";
 
-import { expect } from "chai";
+import { describe, expect, it } from "@jest/globals";
 import { NewRelicProvider } from "../../../../src/providers/newrelic";
-require("mocha").describe;
-require("mocha").it;
 
-describe("newRelicProvider", async () => {
+describe("newRelicProvider", () => {
 	it("getBestEntity-basedOnTag", () => {
 		const newrelic = new NewRelicProvider({} as any, {} as any);
 		const asdf = newrelic.getGoldenSignalsEntity({} as any, {
@@ -22,7 +20,7 @@ describe("newRelicProvider", async () => {
 				}
 			]
 		});
-		expect(asdf.entityGuid).to.eq("123");
+		expect(asdf.entityGuid).toEqual("123");
 	});
 
 	it("getBestEntity-basedOnName", () => {
@@ -48,7 +46,7 @@ describe("newRelicProvider", async () => {
 				}
 			]
 		});
-		expect(asdf.entityGuid).to.eq("234");
+		expect(asdf.entityGuid).toEqual("234");
 	});
 
 	it("getBestEntity-default", () => {
@@ -81,7 +79,7 @@ describe("newRelicProvider", async () => {
 				}
 			]
 		});
-		expect(asdf.entityGuid).to.eq("012");
+		expect(asdf.entityGuid).toEqual("012");
 	});
 	it("getBestEntity-basedOnpreferences", () => {
 		const newrelic = new NewRelicProvider({} as any, {} as any);
@@ -142,6 +140,6 @@ describe("newRelicProvider", async () => {
 				]
 			}
 		);
-		expect(asdf.entityGuid).to.eq("234");
+		expect(asdf.entityGuid).toEqual("234");
 	});
 });

@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/phpStackTraceParser";
 
 describe("phpStackTraceParser", () => {
@@ -43,7 +41,7 @@ in Acme\\Foundation\\Http\\Kernel::sendRequestThroughRouter called at /var/www/v
 in Acme\\Foundation\\Http\\Kernel::handle called at /var/www/public/index.php (55)`;
 
 		const result = Parser(str);
-		expect(result).to.deep.equals({
+		expect(result).toEqual({
 			lines: [
 				{
 					method: "Acme\\Foundation\\Bootstrap\\HandleExceptions::handleError",

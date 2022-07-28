@@ -296,10 +296,6 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="dist\webview\webview-data.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <Content Include="Resources\codestream.codestream">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -314,7 +310,6 @@
     </None>
     <None Include="UI\WebViews\styles\ui-variables.less" />
     <None Include="UI\WebViews\styles\webview.less" />
-    <None Include="UI\WebViews\tsconfig.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="CodeStream.VisualStudio.pkgdef" />
@@ -337,11 +332,11 @@
     <Content Include="Resources\CommandsSprites.png" />
     <Content Include="Resources\Sprites.png" />
     <EmbeddedResource Include="teamdev.licenses" />
-    <Content Include="dist\webview\webview.css">
+    <Content Include="dist\webview\styles\webview.css">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="dist\webview\webview.js">
+    <Content Include="dist\webview\index.js">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -5,7 +5,7 @@ import FormData from "form-data";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import { debounce, isEqual } from "lodash-es";
+import { isEqual } from "lodash";
 import fetch, { Headers, RequestInit, Response } from "node-fetch";
 import { ParsedUrlQueryInput } from "querystring";
 import * as qs from "querystring";
@@ -304,7 +304,7 @@ import {
 	CSProviderShareResponse
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
-import { VersionInfo } from "../../session";
+import { VersionInfo } from "../../types";
 import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import {
 	ApiProvider,

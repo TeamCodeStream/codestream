@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { NRManager } from "../../../src/managers/NRManager";
 
 describe("NRManager", () => {
@@ -36,14 +34,14 @@ describe("NRManager", () => {
 			"HighThroughputStackTraceExceptionService.java",
 			all
 		);
-		expect(result).to.equals(
+		expect(result).toEqual(
 			"/Users/johnd/code/error-tracking-sample-java/src/main/java/com/newrelic/errortrackingsamplejava/HighThroughputStackTraceExceptionService.java"
 		);
 		result = NRManager.getBestMatchingPath(
 			"com/newrelic/errortrackingsamplejava/HighThroughputStackTraceExceptionService.java",
 			all
 		);
-		expect(result).to.equals(
+		expect(result).toEqual(
 			"/Users/johnd/code/error-tracking-sample-java/src/main/java/com/newrelic/errortrackingsamplejava/HighThroughputStackTraceExceptionService.java"
 		);
 	});

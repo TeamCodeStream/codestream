@@ -66,8 +66,8 @@ const _fetchCards = async (
 	try {
 		await Promise.all(
 			activeProviders.map(async provider => {
-				const filterCustom = getFilterCustom(startWorkPreferences, provider.id);
 				try {
+					const filterCustom = getFilterCustom(startWorkPreferences, provider.id);
 					const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
 						customFilter: filterCustom.selected,
 						providerId: provider.id
@@ -79,7 +79,7 @@ const _fetchCards = async (
 						} as any) // TODO Fix typing problem on ActiveIntegrationData
 					);
 				} catch (error) {
-					logError("Error Loading Cards: ", error);
+					logError(error, { detail: "Error Loading Cards" });
 				}
 			})
 		);
@@ -100,7 +100,7 @@ export const _fetchBoards = async (dispatch, activeProviders: ThirdPartyProvider
 					});
 					dispatch(updateForProvider(provider.id, { boards: response.boards } as any));
 				} catch (error) {
-					logError("Error Loading Boards: ", error);
+					logError(error, { detail: "Error Loading Boards" });
 				}
 			})
 		);

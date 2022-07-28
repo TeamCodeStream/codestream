@@ -56,7 +56,7 @@ export const ChangeAvatar = props => {
 			HostApi.instance.track("Avatar Change Request", {});
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during change avatar: ${error}`, { image });
+			logError(error, { detail: `Unexpected error during change avatar`, image });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

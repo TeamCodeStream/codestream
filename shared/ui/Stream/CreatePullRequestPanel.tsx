@@ -566,7 +566,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				}
 			}
 		} catch (error) {
-			logError(`Unexpected error during pull request creation: ${error}`, {});
+			logError(error, { detail: `Unexpected error during pull request creation` });
 			setUnexpectedError(true);
 		} finally {
 			setIsSubmitting(false);
@@ -1762,7 +1762,7 @@ export const PullLatest = (props: {
 			});
 			props.onClick && props.onClick();
 		} catch (error) {
-			logError(`Unexpected error during branch pulling : ${error}`, {});
+			logError(error, { detail: `Unexpected error during branch pulling` });
 			setUnexpectedPullError(true);
 		} finally {
 			setPullSubmitting(false);

@@ -1,5 +1,4 @@
 "use strict";
-import { isEqual as _isEqual } from "lodash-es";
 import path from "path";
 import {
 	Connection,
@@ -11,6 +10,7 @@ import {
 	TextDocuments
 } from "vscode-languageserver";
 import { URI } from "vscode-uri";
+import { isWindows } from "./git/shell";
 import { Logger } from "./logger";
 import { Disposables } from "./system";
 const escapedRegex = /(^.*?:\/\/\/)([a-z])%3A(\/.*$)/;
@@ -38,13 +38,10 @@ export class DocumentManager implements Disposable {
 	}
 
 	private readonly _disposable: Disposable;
-	private readonly _isWindows: boolean;
 
 	private readonly _normalizedUriLookup = new Map<string, string>();
 
 	constructor(private readonly _documents: TextDocuments, connection: Connection) {
-		this._isWindows = process.platform === "win32";
-
 		this._disposable = Disposables.from(
 			this._documents.onDidChangeContent(async e => {
 				this._onDidChangeContent.fire(e);
@@ -109,7 +106,7 @@ export class DocumentManager implements Disposable {
 			this._normalizedUriLookup.set(uri, doc.uri);
 		}
 
-		if (doc || !this._isWindows) {
+		if (doc || !isWindows) {
 			return doc;
 		}
 

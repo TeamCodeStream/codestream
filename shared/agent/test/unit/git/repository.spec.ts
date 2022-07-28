@@ -1,10 +1,8 @@
 "use strict";
 
-import { expect } from "chai";
+import { describe, expect, it } from "@jest/globals";
 import { GitRemote, GitRemoteType } from "../../../src/git/models/remote";
 import { GitRepository } from "../../../src/git/models/repository";
-require("mocha").describe;
-require("mocha").it;
 
 describe("GitRepository", () => {
 	describe("getRepoRemoteVariants", () => {
@@ -47,9 +45,9 @@ describe("GitRepository", () => {
 						true,
 						{ name: "", uri: "" },
 						true
-					).getWeightedRemotesByStrategy(remotes, "prioritizeOrigin")
+					).getWeightedRemotesByStrategy("prioritizeOrigin", remotes)
 				).map(_ => _.name)
-			).to.deep.equal(["origin", "upstream"]);
+			).toEqual(["origin", "upstream"]);
 		});
 
 		it("remoteWeightByStrategy=origin then upstream", async () => {
@@ -119,9 +117,9 @@ describe("GitRepository", () => {
 						true,
 						{ name: "", uri: "" },
 						true
-					).getWeightedRemotesByStrategy(remotes, "prioritizeOrigin")
+					).getWeightedRemotesByStrategy("prioritizeOrigin", remotes)
 				).map(_ => _.name)
-			).to.deep.equal(["origin", "upstream", "end", "cheese"]);
+			).toEqual(["origin", "upstream", "end", "cheese"]);
 		});
 
 		it("remoteWeightByStrategy=upstream", async () => {
@@ -191,9 +189,9 @@ describe("GitRepository", () => {
 						true,
 						{ name: "", uri: "" },
 						true
-					).getWeightedRemotesByStrategy(remotes, "prioritizeUpstream")
+					).getWeightedRemotesByStrategy("prioritizeUpstream", remotes)
 				).map(_ => _.name)
-			).to.deep.equal(["upstream", "origin", "other", "somethingelse"]);
+			).toEqual(["upstream", "origin", "other", "somethingelse"]);
 		});
 	});
 });

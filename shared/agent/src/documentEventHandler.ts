@@ -1,7 +1,6 @@
 import { Disposable, TextDocumentChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
 import { DocumentManager } from "./documentManager";
-import { GitRepository, GitService } from "./git/gitService";
 import { ChangeDataType, DidChangeDataNotificationType } from "./protocol/agent.protocol";
 import { CodeStreamSession } from "./session";
 import { Disposables } from "./system/disposable";

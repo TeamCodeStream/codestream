@@ -6,8 +6,10 @@ import { URI } from "vscode-uri";
 import { Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { GitRepositoryExtensions } from "../extensions";
+import { isUncommitted } from "../git/common";
 import { EMPTY_TREE_SHA, GitRemote, GitRepository } from "../git/gitService";
 import { GitNumStat } from "../git/models/numstat";
+import { RevisionEntry } from "../git/parsers/blameRevisionParser";
 import { Logger } from "../logger";
 import {
 	BlameAuthor,
@@ -35,6 +37,10 @@ import {
 	FetchRemoteBranchRequest,
 	FetchRemoteBranchRequestType,
 	FetchRemoteBranchResponse,
+	GetBlameCommitInfo,
+	GetBlameRequest,
+	GetBlameRequestType,
+	GetBlameResponse,
 	GetBranchesRequest,
 	GetBranchesRequestType,
 	GetBranchesResponse,
@@ -82,11 +88,13 @@ import {
 } from "../protocol/agent.protocol";
 import { CSMe, FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
-import { FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
+import { Dates, FileSystem, Iterables, log, lsp, lspHandler, Strings } from "../system";
 import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
 import { IgnoreFilesHelper } from "./ignoreFilesManager";
 import { ReviewsManager } from "./reviewsManager";
+import toFormatter = Dates.toFormatter;
+import toGravatar = Strings.toGravatar;
 
 @lsp
 export class ScmManager {
@@ -1417,6 +1425,92 @@ export class ScmManager {
 
 		const commit = await git.getCommit(repoPath, request.branch);
 		return { shortMessage: commit ? commit.shortMessage : "" };
+	}
+
+	@lspHandler(GetBlameRequestType)
+	async getBlame(request: GetBlameRequest): Promise<GetBlameResponse> {
+		const uri = URI.parse(request.uri);
+		const { git, reviews, users, providerRegistry } = SessionContainer.instance();
+		const { shas, revisionEntries } = await git.getLineBlames(
+			uri,
+			request.startLine,
+			request.endLine
+		);
+		const repo = await git.getRepositoryByFilePath(uri.fsPath);
+		const user = await users.getMe();
+		const connectedProviders = await providerRegistry.getConnectedPullRequestProviders(user);
+		const providerRepo = repo && (await repo.getPullRequestProvider(user, connectedProviders));
+		const weightedRemotes =
+			repo &&
+			providerRepo?.remotes &&
+			(await repo.getWeightedRemotesByStrategy("prioritizeUpstream", providerRepo.remotes));
+		const ownersAndNames =
+			providerRepo?.provider &&
+			weightedRemotes?.map(r => providerRepo.provider.getOwnerFromRemote(r.path));
+
+		const commitInfos = new Map<string, GetBlameCommitInfo>();
+		for (const revisionEntry of revisionEntries) {
+			let prs = [];
+			if (ownersAndNames && !isUncommitted(revisionEntry.sha)) {
+				try {
+					prs = await providerRepo?.provider?.getPullRequestsContainigSha(
+						ownersAndNames,
+						revisionEntry.sha
+					);
+				} catch (e) {
+					Logger.warn(e);
+				}
+			}
+
+			const dateFormatter = toFormatter(revisionEntry.date);
+			commitInfos.set(revisionEntry.sha, {
+				sha: revisionEntry.sha,
+				isUncommitted: isUncommitted(revisionEntry.sha),
+				formattedBlame: this._formatRevisionEntry(revisionEntry),
+				authorName: revisionEntry.authorName,
+				authorEmail: revisionEntry.authorEmail,
+				dateFromNow: dateFormatter.fromNow(),
+				dateFormatted: revisionEntry.date.toLocaleString("default"),
+				gravatarUrl: toGravatar(revisionEntry.authorEmail, 16),
+				summary: revisionEntry.summary,
+				reviews: repo?.id ? await reviews.getReviewsContainingSha(repo.id, revisionEntry.sha) : [],
+				prs: prs || []
+			});
+		}
+
+		const uncommittedInfo: GetBlameCommitInfo = {
+			sha: "",
+			isUncommitted: true,
+			formattedBlame: "You · Uncommitted changes",
+			authorName: "",
+			authorEmail: "",
+			gravatarUrl: "",
+			dateFromNow: "",
+			dateFormatted: "",
+			reviews: [],
+			prs: [],
+			summary: "Uncommitted changes"
+		};
+		const blame = shas
+			.map(sha => commitInfos.get(sha))
+			.map(commitInfo => ({
+				...(commitInfo || uncommittedInfo),
+				diff: "- something\n+ something else"
+			}));
+
+		return {
+			blame
+		};
+	}
+
+	private _formatRevisionEntry(entry: RevisionEntry | undefined): string {
+		if (!entry || isUncommitted(entry.sha)) return "You · Uncommitted changes";
+
+		const author = entry.authorName ? entry.authorName.split(" ").reverse()[0] : entry.authorEmail;
+		const date = toFormatter(entry.date).fromNow();
+		const summary = entry.summary;
+
+		return `${author}, ${date} · ${summary}`;
 	}
 
 	@lspHandler(CommitAndPushRequestType)

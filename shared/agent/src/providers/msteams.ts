@@ -1,5 +1,5 @@
 "use strict";
-import { sortBy } from "lodash-es";
+import { sortBy } from "lodash";
 import { SessionContainer } from "../container";
 import {
 	AgentOpenUrlRequestType,
@@ -11,7 +11,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSMSTeamsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyPostProviderBase } from "./provider";
+import { ThirdPartyPostProviderBase } from "./thirdPartyPostProviderBase";
 
 @lspProvider("msteams")
 export class MSTeamsProvider extends ThirdPartyPostProviderBase<CSMSTeamsProviderInfo> {

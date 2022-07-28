@@ -22,15 +22,15 @@
 // 		// 	const data = `origin  git@beer.github.com:TeamCodeStream/codestream.git (fetch)
 // 		// 	origin  git@beer.github.com:TeamCodeStream/codestream.git (push)`;
 // 		// 	const parsed = await GitRemoteParser.parse(data, "c:\\users\\anything");
-// 		// 	expect(parsed[0].domain).to.equal("github.com");
+// 		// 	expect(parsed[0].domain).toEqual("github.com");
 // 		// });
 // 		// it("can match on an ssh gitlab remote", async function() {
 // 		// 	const data = `origin  git@sub.gitlab.com:TeamCodeStream/codestream/codestream-vs.git (fetch)
 // 		// 	origin  git@sub.gitlab.com:TeamCodeStream/codestream/codestream-vs.git (push)`;
 // 		// 	const parsed = await GitRemoteParser.parse(data, "c:\\users\\anything");
 // 		// 	console.log(parsed);
-// 		// 	expect(parsed[0].domain).to.equal("gitlab.com");
-// 		// 	expect(parsed[0].normalizedUrl).to.equal(
+// 		// 	expect(parsed[0].domain).toEqual("gitlab.com");
+// 		// 	expect(parsed[0].normalizedUrl).toEqual(
 // 		// 		"gitlab.com/teamcodestream/codestream/codestream-vs"
 // 		// 	);
 // 		// });
@@ -39,8 +39,8 @@
 // 		// 		"origin\thttps://github.com/TeamCodeStream/codestream (fetch)\norigin\thttps://github.com/TeamCodeStream/codestream (push)\n";
 // 		// 	const parsed = await GitRemoteParser.parse(data, "c:\\users\\anything");
 // 		// 	console.log(parsed);
-// 		// 	expect(parsed[0].domain).to.equal("github.com");
-// 		// 	expect(parsed[0].normalizedUrl).to.equal("github.com/teamcodestream/codestream");
+// 		// 	expect(parsed[0].domain).toEqual("github.com");
+// 		// 	expect(parsed[0].normalizedUrl).toEqual("github.com/teamcodestream/codestream");
 // 		// });
 // 	});
 // });

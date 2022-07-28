@@ -20,7 +20,7 @@
 // 			// const cache = new Cache<TestPerson>(new Map());
 // 			// const indexes = cache["indexes"] as Map<keyof TestPerson, Index<TestPerson>>;
 // 			//
-// 			// expect(indexes.size).to.equals(1);
+// 			// expect(indexes.size).toEquals(1);
 // 			// const idIndex = indexes.get("id")!;
 // 			// expect(idIndex).to.have.deep.property("fields", ["id"]);
 // 			// expect(idIndex).to.have.property("type", IndexType.Unique);
@@ -41,7 +41,7 @@
 // 			// 	.withArgs("1")
 // 			// 	.returns(johnDoe);
 // 			//
-// 			// expect(cache.get("1")).to.equals(johnDoe);
+// 			// expect(cache.get("1")).toEquals(johnDoe);
 // 			// mock.verify();
 // 		});
 // 	});
@@ -80,7 +80,7 @@
 // 			// 	.withArgs("1")
 // 			// 	.returns(johnDoe);
 // 			//
-// 			// expect(cache.getBy("ssn", "1")).to.equals(johnDoe);
+// 			// expect(cache.getBy("ssn", "1")).toEquals(johnDoe);
 // 			// mock.verify();
 // 		});
 // 	});

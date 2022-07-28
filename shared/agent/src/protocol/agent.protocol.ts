@@ -228,7 +228,10 @@ export enum ReportingMessageType {
 
 export interface ReportMessageRequest {
 	type: ReportingMessageType;
-	error?: Error;
+	/**
+	 * The js Error or js Error object serialized to a json string
+	 */
+	error?: Error | string | undefined;
 	message?: string;
 	source: "webview" | "extension" | "agent";
 	extra?: object;

@@ -53,7 +53,7 @@ export const ChangeCompanyName = props => {
 			HostApi.instance.track("companyName Changed", {});
 			dispatch(closeModal());
 		} catch (error) {
-			logError(`Unexpected error during change companyName: ${error}`, { companyName });
+			logError(error, { detail: `Unexpected error during change companyName`, companyName });
 			setUnexpectedError(true);
 		}
 		// @ts-ignore

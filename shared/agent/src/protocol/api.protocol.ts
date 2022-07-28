@@ -597,7 +597,7 @@ export interface CSRepoChange {
 	scm: RepoScmStatus;
 	startCommit: string;
 	endCommit?: string;
-	excludeCommit: string;
+	excludeCommit: Object;
 	excludedFiles: string[];
 	newFiles: string[];
 	includeSaved: boolean;

@@ -31,7 +31,7 @@ import { NewRelicProvider } from "../providers/newrelic";
 import { CodeStreamSession } from "../session";
 import { getProvider, Strings } from "../system";
 import { lsp, lspHandler } from "../system/decorators/lsp";
-import padLeft = Strings.padLeft;
+const padLeft = Strings.padLeft;
 
 // see: https://www.npmjs.com/package/protobufjs
 protobuf.util.Long = Long;

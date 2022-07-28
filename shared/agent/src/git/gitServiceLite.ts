@@ -1,6 +1,6 @@
 "use strict";
 import * as fs from "fs";
-import { memoize } from "lodash-es";
+import { memoize } from "lodash";
 import * as path from "path";
 import { URI } from "vscode-uri";
 import { Logger } from "../logger";

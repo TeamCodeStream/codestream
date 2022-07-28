@@ -215,26 +215,6 @@ export const EditPullRequest = props => {
 		}
 	};
 
-	const deletePR = () => {
-		confirmPopup({
-			title: "Are you sure?",
-			message: "Merge request will be removed.",
-			centered: true,
-			buttons: [
-				{ label: "Go Back", className: "control-button" },
-				{
-					label: "Delete",
-					className: "delete",
-					wait: true,
-					action: () => {
-						dispatch(api("deletePullRequest", {}));
-						dispatch(closeAllModals());
-					}
-				}
-			]
-		});
-	};
-
 	const [remoteBranches, setRemoteBranches] = useState([] as any[]);
 
 	const fetchRemoteBranches = async () => {
@@ -630,9 +610,6 @@ export const EditPullRequest = props => {
 										Save changes
 									</Button>
 									<Right>
-										<Button variant="destructive" onClick={deletePR}>
-											Delete
-										</Button>
 										<Button variant="secondary" onClick={cancel}>
 											Cancel
 										</Button>

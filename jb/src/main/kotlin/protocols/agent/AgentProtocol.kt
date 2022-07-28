@@ -712,6 +712,35 @@ class CreateShareableCodemarkResult(
     val directives: JsonObject?
 )
 
+class GetBlameParams(
+    val uri: String,
+    val startLine: Int,
+    val endLine: Int
+)
+
+class GetBlameResult(
+    val blame: List<GetBlameResultLineInfo>
+)
+
+class GetBlameResultLineInfo(
+    val sha: String,
+    val isUncommitted: Boolean,
+    val formattedBlame: String,
+    val authorName: String,
+    val authorEmail: String,
+    val dateFromNow: String,
+    val dateFormatted: String,
+    val gravatarUrl: String,
+    val prs: List<GetBlameResultPR>,
+    val reviews: List<Review>,
+    val summary: String
+)
+
+class GetBlameResultPR(
+    val url: String,
+    val title: String?
+)
+
 class ReportMessageParams(
     val type: String,
     val error: ReportMessageRequestError?,

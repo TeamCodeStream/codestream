@@ -1,7 +1,5 @@
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
-import { uniq } from "lodash-es";
+import { describe, expect, it } from "@jest/globals";
+import { uniq } from "lodash";
 import { Strings } from "../../../src/system/string";
 
 describe("strings.ts", () => {
@@ -19,8 +17,8 @@ describe("strings.ts", () => {
 					// "C:\\foo\\bar\\"
 				].map(_ => Strings.normalizePath(_))
 			);
-			expect(unique.length).to.eq(1);
-			expect(unique[0]).to.equal("c:/foo/bar");
+			expect(unique.length).toEqual(1);
+			expect(unique[0]).toEqual("c:/foo/bar");
 		});
 
 		it("can normalize a variety of OS-specific paths (mac/linux)", async function() {
@@ -29,43 +27,43 @@ describe("strings.ts", () => {
 					Strings.normalizePath(_)
 				)
 			);
-			expect(unique.length).to.eq(1);
-			expect(unique[0]).to.equal("/users/foo/bar");
+			expect(unique.length).toEqual(1);
+			expect(unique[0]).toEqual("/users/foo/bar");
 		});
 	});
 
 	describe("trimEnd", () => {
 		it("has a trailing slash", () => {
-			expect(Strings.trimEnd("https://codestream.com/", "/")).to.equal("https://codestream.com");
+			expect(Strings.trimEnd("https://codestream.com/", "/")).toEqual("https://codestream.com");
 		});
 
 		it("has a trailing ?", () => {
-			expect(Strings.trimEnd("https://codestream.com/?", "?")).to.equal("https://codestream.com/");
+			expect(Strings.trimEnd("https://codestream.com/?", "?")).toEqual("https://codestream.com/");
 		});
 	});
 
 	describe("trimStart", () => {
 		it("has a front dot", () => {
-			expect(Strings.trimStart(".", ".")).to.equal("");
-			expect(Strings.trimStart("..", ".")).to.equal(".");
-			expect(Strings.trimStart("/foo", ".")).to.equal("/foo");
-			expect(Strings.trimStart("../foo", ".")).to.equal("./foo");
-			expect(Strings.trimStart("./foo", ".")).to.equal("/foo");
+			expect(Strings.trimStart(".", ".")).toEqual("");
+			expect(Strings.trimStart("..", ".")).toEqual(".");
+			expect(Strings.trimStart("/foo", ".")).toEqual("/foo");
+			expect(Strings.trimStart("../foo", ".")).toEqual("./foo");
+			expect(Strings.trimStart("./foo", ".")).toEqual("/foo");
 		});
 	});
 
 	describe("asPartialPaths", () => {
 		it("good", () => {
-			expect(Strings.asPartialPaths("main.js")).to.deep.equal(["main.js"]);
-			expect(Strings.asPartialPaths("foo.bar.js")).to.deep.equal(["foo.bar.js"]);
-			expect(Strings.asPartialPaths("/users/test/foo/bar/main.js")).to.deep.equal([
+			expect(Strings.asPartialPaths("main.js")).toEqual(["main.js"]);
+			expect(Strings.asPartialPaths("foo.bar.js")).toEqual(["foo.bar.js"]);
+			expect(Strings.asPartialPaths("/users/test/foo/bar/main.js")).toEqual([
 				"users/test/foo/bar/main.js",
 				"test/foo/bar/main.js",
 				"foo/bar/main.js",
 				"bar/main.js",
 				"main.js"
 			]);
-			expect(Strings.asPartialPaths("/users/test/foo/bar/main.js")).to.deep.equal([
+			expect(Strings.asPartialPaths("/users/test/foo/bar/main.js")).toEqual([
 				"users/test/foo/bar/main.js",
 				"test/foo/bar/main.js",
 				"foo/bar/main.js",
@@ -75,7 +73,7 @@ describe("strings.ts", () => {
 		});
 
 		it("bad", () => {
-			expect(Strings.asPartialPaths("")).to.deep.equal([]);
+			expect(Strings.asPartialPaths("")).toEqual([]);
 		});
 	});
 });

@@ -1,3 +1,4 @@
+import { CSRepository } from "@codestream/protocols/api";
 import { Index } from "../common";
 import { GetMyPullRequestsResponse } from "@codestream/protocols/agent";
 
@@ -50,4 +51,33 @@ export type ProviderPullRequestsState = {
 			accessRawDiffs?: boolean;
 		}>
 	>;
+};
+
+export type RepoPullRequest = {
+	conversations: {
+		// github
+		repository?: {
+			repoName: string;
+			url: string;
+		};
+		// gitlab
+		project?: {
+			name: string;
+			repoName: string;
+			mergeRequest: {
+				webUrl: string;
+			};
+		};
+	};
+};
+
+export type RepoMatchReason = "remote" | "repoName" | "matchedOnProviderUrl" | "closestMatch";
+
+export type CurrentRepoResponse = {
+	error?: string;
+	currentRepo?: CSRepository;
+	repos?: CSRepository[];
+	repoName?: string;
+	repoUrl?: string;
+	reason?: RepoMatchReason;
 };

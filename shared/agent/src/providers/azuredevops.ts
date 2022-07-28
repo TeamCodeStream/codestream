@@ -2,15 +2,12 @@
 import * as qs from "querystring";
 import { Logger } from "../logger";
 import {
-	AzureDevOpsCard,
 	AzureDevOpsCreateCardRequest,
 	AzureDevOpsCreateCardResponse,
 	AzureDevOpsProject,
 	AzureDevOpsTeam,
 	AzureDevOpsUser,
 	CreateThirdPartyCardRequest,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -22,7 +19,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSAzureDevOpsProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyIssueProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface AzureDevOpsProfile {
 	emailAddress: string;

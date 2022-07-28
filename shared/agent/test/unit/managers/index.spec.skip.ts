@@ -31,9 +31,9 @@
 // 			index.set(jimFoo);
 // 			index.set(joeBar);
 //
-// 			expect(index.get(joeFoo.ssn)).to.equal(joeFoo);
-// 			expect(index.get(jimFoo.ssn)).to.equal(jimFoo);
-// 			expect(index.get(joeBar.ssn)).to.equal(joeBar);
+// 			expect(index.get(joeFoo.ssn)).toEqual(joeFoo);
+// 			expect(index.get(jimFoo.ssn)).toEqual(jimFoo);
+// 			expect(index.get(joeBar.ssn)).toEqual(joeBar);
 // 		});
 //
 // 		it("Dissociates entity from old value when its old version is supplied", function() {
@@ -47,11 +47,11 @@
 // 			};
 //
 // 			index.set(oldPerson);
-// 			expect(index.get(oldSSN)).to.equal(oldPerson);
+// 			expect(index.get(oldSSN)).toEqual(oldPerson);
 //
 // 			index.set(newPerson, oldPerson);
 // 			expect(index.get(oldSSN)).to.be.undefined;
-// 			expect(index.get(newSSN)).to.equal(newPerson);
+// 			expect(index.get(newSSN)).toEqual(newPerson);
 // 		});
 //
 // 		it("Rejects entities without a valid key value", function() {
@@ -217,11 +217,11 @@
 // 			index.set(stream1Post4);
 //
 // 			const stream1 = index.getGroupSlice("1", 1, 6);
-// 			expect(stream1!.data[0]).to.equal(stream1Post1);
-// 			expect(stream1!.data[1]).to.equal(stream1Post2);
-// 			expect(stream1!.data[2]).to.equal(stream1Post3);
-// 			expect(stream1!.data[3]).to.equal(stream1Post4);
-// 			expect(stream1!.data[4]).to.equal(stream1Post5);
+// 			expect(stream1!.data[0]).toEqual(stream1Post1);
+// 			expect(stream1!.data[1]).toEqual(stream1Post2);
+// 			expect(stream1!.data[2]).toEqual(stream1Post3);
+// 			expect(stream1!.data[3]).toEqual(stream1Post4);
+// 			expect(stream1!.data[4]).toEqual(stream1Post5);
 // 		});
 //
 // 		it("Returns slices a group", function() {
@@ -229,13 +229,13 @@
 // 			index.set(stream1Post2); // simulating a gap in the group
 //
 // 			const slice11 = index.getGroupSlice("1", 1, 1);
-// 			expect(slice11!.seqStart).to.equals(1);
-// 			expect(slice11!.seqEnd).to.equals(1);
-// 			expect(slice11!.data.length).to.equals(0);
+// 			expect(slice11!.seqStart).toEquals(1);
+// 			expect(slice11!.seqEnd).toEquals(1);
+// 			expect(slice11!.data.length).toEquals(0);
 //
 // 			const slice16 = index.getGroupSlice("1", 1, 6);
-// 			expect(slice16!.seqStart).to.equals(1);
-// 			expect(slice16!.seqEnd).to.equals(6);
+// 			expect(slice16!.seqStart).toEquals(1);
+// 			expect(slice16!.seqEnd).toEquals(6);
 // 			expect(slice16!.data).to.have.ordered.members([
 // 				undefined,
 // 				stream1Post2,
@@ -245,8 +245,8 @@
 // 			]);
 //
 // 			const slice19 = index.getGroupSlice("1", 1, 9);
-// 			expect(slice19!.seqStart).to.equals(1);
-// 			expect(slice19!.seqEnd).to.equals(9);
+// 			expect(slice19!.seqStart).toEquals(1);
+// 			expect(slice19!.seqEnd).toEquals(9);
 // 			expect(slice19!.data).to.have.ordered.members([
 // 				undefined,
 // 				stream1Post2,
@@ -256,8 +256,8 @@
 // 			]);
 //
 // 			const slice35 = index.getGroupSlice("1", 3, 5);
-// 			expect(slice35!.seqStart).to.equals(3);
-// 			expect(slice35!.seqEnd).to.equals(5);
+// 			expect(slice35!.seqStart).toEquals(3);
+// 			expect(slice35!.seqEnd).toEquals(5);
 // 			expect(slice35!.data).to.have.ordered.members([undefined, stream1Post4]);
 // 		});
 //
@@ -265,8 +265,8 @@
 // 			index.initGroup("1", [stream1Post3, stream1Post4, stream1Post5]);
 //
 // 			const tail9 = index.getGroupTail("1", 9);
-// 			expect(tail9!.seqStart).to.equals(1);
-// 			expect(tail9!.seqEnd).to.equals(6);
+// 			expect(tail9!.seqStart).toEquals(1);
+// 			expect(tail9!.seqEnd).toEquals(6);
 // 			expect(tail9!.data).to.have.ordered.members([
 // 				undefined,
 // 				undefined,
@@ -276,8 +276,8 @@
 // 			]);
 //
 // 			const tail5 = index.getGroupTail("1", 5);
-// 			expect(tail5!.seqStart).to.equals(1);
-// 			expect(tail5!.seqEnd).to.equals(6);
+// 			expect(tail5!.seqStart).toEquals(1);
+// 			expect(tail5!.seqEnd).toEquals(6);
 // 			expect(tail5!.data).to.have.ordered.members([
 // 				undefined,
 // 				undefined,
@@ -287,8 +287,8 @@
 // 			]);
 //
 // 			const tail2 = index.getGroupTail("1", 2);
-// 			expect(tail2!.seqStart).to.equals(4);
-// 			expect(tail2!.seqEnd).to.equals(6);
+// 			expect(tail2!.seqStart).toEquals(4);
+// 			expect(tail2!.seqEnd).toEquals(6);
 // 			expect(tail2!.data).to.have.ordered.members([stream1Post4, stream1Post5]);
 // 		});
 //

@@ -1,6 +1,4 @@
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { ReviewsManager } from "../../../src/managers/reviewsManager";
 
 describe("ReviewsManager.spec.ts", () => {
@@ -13,7 +11,7 @@ describe("ReviewsManager.spec.ts", () => {
 				providerRegistry: {}
 			} as any);
 
-			expect(response.error?.type).to.equal("REPO_NOT_FOUND");
+			expect(response.error?.type).toEqual("REPO_NOT_FOUND");
 		});
 
 		describe("with review", () => {
@@ -50,7 +48,7 @@ describe("ReviewsManager.spec.ts", () => {
 					} as any
 				);
 
-				expect(response.error?.type).to.equal("HAS_LOCAL_MODIFICATIONS");
+				expect(response.error?.type).toEqual("HAS_LOCAL_MODIFICATIONS");
 			});
 
 			it("HAS_LOCAL_COMMITS", async () => {
@@ -86,7 +84,7 @@ describe("ReviewsManager.spec.ts", () => {
 					} as any
 				);
 
-				expect(response.error?.type).to.equal("HAS_LOCAL_COMMITS");
+				expect(response.error?.type).toEqual("HAS_LOCAL_COMMITS");
 			});
 		});
 
@@ -144,7 +142,7 @@ describe("ReviewsManager.spec.ts", () => {
 					} as any
 				);
 
-				expect(response.error?.type).to.equal("REQUIRES_PROVIDER");
+				expect(response.error?.type).toEqual("REQUIRES_PROVIDER");
 			});
 
 			it("works", async () => {
@@ -230,8 +228,10 @@ describe("ReviewsManager.spec.ts", () => {
 						}
 					} as any
 				);
-				console.warn(response.error);
-				expect(response.success).to.equal(true);
+				if (response?.error) {
+					console.warn(response.error);
+				}
+				expect(response.success).toEqual(true);
 			});
 		});
 	});

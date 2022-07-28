@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/csharpStackTraceParser";
 
 describe("csharpStackTraceParser", () => {
@@ -18,7 +16,7 @@ describe("csharpStackTraceParser", () => {
 	   at dotnet_console.Program.Main(String[] args) in /Users/jdoe/code/dotnet_console/Program.cs:line 10`;
 
 			const result = Parser(str);
-			expect(result).to.deep.equals({
+			expect(result).toEqual({
 				lines: [
 					{
 						arguments: undefined,
@@ -81,16 +79,16 @@ describe("csharpStackTraceParser", () => {
 			at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware.Invoke(HttpContext context)`;
 
 			const result = Parser(str);
-			expect(result.header).to.equal("System.DivideByZeroException: Attempted to divide by zero.");
-			expect(result.error).to.equal("Attempted to divide by zero.");
-			expect(result.lines[0]).to.deep.equal({
+			expect(result.header).toEqual("System.DivideByZeroException: Attempted to divide by zero.");
+			expect(result.error).toEqual("Attempted to divide by zero.");
+			expect(result.lines[0]).toEqual({
 				arguments: undefined,
 				fileFullPath: "/Users/jdoe/code/dotnet_mvc/Views/Home/Index.cshtml",
 				method: "ExecuteAsync",
 				line: 5,
 				column: undefined
 			});
-			expect(result.lines[1]).to.deep.equal({
+			expect(result.lines[1]).toEqual({
 				arguments: ["IRazorPage page", "ViewContext context"],
 				fileFullPath: undefined,
 				method: "RenderPageCoreAsync",

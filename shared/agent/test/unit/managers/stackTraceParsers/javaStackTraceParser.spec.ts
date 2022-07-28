@@ -1,8 +1,6 @@
 "use strict";
 
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/javaStackTraceParser";
 
 describe("javaStackTraceParser", () => {
@@ -31,7 +29,7 @@ at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)
 
 		const result = Parser(str);
 
-		expect(result).to.deep.equals({
+		expect(result).toEqual({
 			lines: [
 				{
 					method: "com.example.myproject.OpenSessionInViewFilter.doFilter",
@@ -139,10 +137,10 @@ at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)
 		});
 	});
 
-	it("stack2", () => {
+	describe("stack2", () => {
 		const str = `\tjava.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)\n\tjava.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\n\tjava.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)\n\tjava.base/sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:219)\n\tjava.base/java.nio.file.Files.newByteChannel(Files.java:371)\n\tjava.base/java.nio.file.Files.newByteChannel(Files.java:422)\n\tjava.base/java.nio.file.Files.readAll…va.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tjava.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tjava.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tjava.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tjava.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tjava.base/java.lang.Thread.run(Thread.java:834)`;
 		const result = Parser(str);
-		expect(result).to.deep.equals({
+		expect(result).toEqual({
 			lines: [
 				{
 					fileFullPath: "java/base/sun/nio/fs/UnixException.java",
@@ -206,71 +204,71 @@ at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)
 		it("stack with java and kotlin", () => {
 			const str = `\tcom.newrelic.distributedtracingservice.util.ExceptionUtilsKt.apiGet(ExceptionUtils.kt:25)\n\tcom.newrelic.distributedtracingservice.nrdb.NrdbApi.getAccountsWritingSpans(NrdbApi.kt:1212)\n\tjava.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)\n\tjava.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)\n\tjava.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:116)\n\tjava.base/sun.nio.fs.UnixFileSystemProvider.newByteChannel(UnixFileSystemProvider.java:219)\n\tjava.base/java.nio.file.Files.newByteChannel(Files.java:371)\n\tjava.base/java.nio.file.Files.newByteChannel(Files.java:422)\n\tjava.base/java.nio.file.Files.readAll…va.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tjava.base/java.util.concurrent.FutureTask.runAndReset(FutureTask.java:305)\n\tjava.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:305)\n\tjava.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tjava.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tjava.base/java.lang.Thread.run(Thread.java:834)`;
 			const result = Parser(str);
-			expect(result).to.deep.equals({
+			expect(result).toEqual({
 				lines: [
 					{
 						method: "com.newrelic.distributedtracingservice.util.ExceptionUtilsKt.apiGet",
-						fileFullPath: "ExceptionUtils.kt",
+						fileFullPath: "com/newrelic/distributedtracingservice/util/ExceptionUtils.kt",
 						line: 25
 					},
 					{
 						method: "com.newrelic.distributedtracingservice.nrdb.NrdbApi.getAccountsWritingSpans",
-						fileFullPath: "NrdbApi.kt",
+						fileFullPath: "com/newrelic/distributedtracingservice/nrdb/NrdbApi.kt",
 						line: 1212
 					},
 					{
 						method: "java.base/sun.nio.fs.UnixException.translateToIOException",
-						fileFullPath: "UnixException.java",
+						fileFullPath: "java/base/sun/nio/fs/UnixException.java",
 						line: 92
 					},
 					{
-						fileFullPath: "UnixException.java",
+						fileFullPath: "java/base/sun/nio/fs/UnixException.java",
 						line: 111,
 						method: "java.base/sun.nio.fs.UnixException.rethrowAsIOException"
 					},
 					{
-						fileFullPath: "UnixException.java",
+						fileFullPath: "java/base/sun/nio/fs/UnixException.java",
 						line: 116,
 						method: "java.base/sun.nio.fs.UnixException.rethrowAsIOException"
 					},
 					{
-						fileFullPath: "UnixFileSystemProvider.java",
+						fileFullPath: "java/base/sun/nio/fs/UnixFileSystemProvider.java",
 						line: 219,
 						method: "java.base/sun.nio.fs.UnixFileSystemProvider.newByteChannel"
 					},
 					{
-						fileFullPath: "Files.java",
+						fileFullPath: "java/base/java/nio/file/Files.java",
 						line: 371,
 						method: "java.base/java.nio.file.Files.newByteChannel"
 					},
 					{
-						fileFullPath: "Files.java",
+						fileFullPath: "java/base/java/nio/file/Files.java",
 						line: 422,
 						method: "java.base/java.nio.file.Files.newByteChannel"
 					},
 					{
-						fileFullPath: "FutureTask.java",
+						fileFullPath: "java/base/java/util/concurrent/FutureTask.java",
 						line: 305,
 						method: "java.base/java.util.concurrent.FutureTask.runAndReset"
 					},
 					{
-						fileFullPath: "ScheduledThreadPoolExecutor.java",
+						fileFullPath: "java/base/java/util/concurrent/ScheduledThreadPoolExecutor.java",
 						line: 305,
 						method:
 							"java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run"
 					},
 					{
-						fileFullPath: "ThreadPoolExecutor.java",
+						fileFullPath: "java/base/java/util/concurrent/ThreadPoolExecutor.java",
 						line: 1128,
 						method: "java.base/java.util.concurrent.ThreadPoolExecutor.runWorker"
 					},
 					{
-						fileFullPath: "ThreadPoolExecutor.java",
+						fileFullPath: "java/base/java/util/concurrent/ThreadPoolExecutor.java",
 						line: 628,
 						method: "java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run"
 					},
 					{
-						fileFullPath: "Thread.java",
+						fileFullPath: "java/base/java/lang/Thread.java",
 						line: 834,
 						method: "java.base/java.lang.Thread.run"
 					}
@@ -281,7 +279,7 @@ at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)
 
 	it("stack with unknown source", () => {
 		const result = Parser("\tsun.reflect.GeneratedMethodAccessor77.invoke(Unknown Source)");
-		expect(result).to.deep.equals({
+		expect(result).toEqual({
 			lines: [
 				{
 					method: "sun.reflect.GeneratedMethodAccessor77.invoke",

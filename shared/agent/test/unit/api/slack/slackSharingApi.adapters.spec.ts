@@ -1,8 +1,5 @@
-import { expect } from "chai";
-require("mocha").describe;
-require("mocha").it;
+import { describe, expect, it } from "@jest/globals";
 import { CSUser } from "protocol/api.protocol";
-import { stubInterface } from "ts-sinon";
 import {
 	toSlackPostBlocks,
 	toSlackTextSafe,
@@ -10,7 +7,7 @@ import {
 } from "../../../../src/api/slack/slackSharingApi.adapters";
 
 describe("slackSharingApi.adapters.ts", () => {
-	const userMaps = stubInterface<UserMaps>();
+	const userMaps: Partial<UserMaps> = {};
 	userMaps.codeStreamUsersByUsername = new Map<string, CSUser>();
 	const user = {
 		id: "123",
@@ -23,14 +20,15 @@ describe("slackSharingApi.adapters.ts", () => {
 
 	describe("toSlackTextSafe", () => {
 		it("has a long text block", () => {
-			const text = toSlackTextSafe("x".repeat(3200), stubInterface<UserMaps>(), undefined, 3000);
-			expect(text.wasTruncated).to.eq(true);
-			expect(text.text.length).to.be.lessThan(3000);
+			// const userMaps: Partial<UserMaps> = {};
+			const text = toSlackTextSafe("x".repeat(3200), userMaps as UserMaps, undefined, 3000);
+			expect(text.wasTruncated).toBe(true);
+			expect(text.text.length).toBeLessThan(3000);
 		});
 
 		it("has replaceable mentions", () => {
-			const text = toSlackTextSafe("@cheese what is this?", userMaps);
-			expect(text.text).to.eq("<@456> what is this?");
+			const text = toSlackTextSafe("@cheese what is this?", userMaps as UserMaps);
+			expect(text.text).toBe("<@456> what is this?");
 		});
 	});
 
@@ -42,7 +40,7 @@ describe("slackSharingApi.adapters.ts", () => {
 					type: "comment"
 				} as any,
 				undefined,
-				userMaps,
+				userMaps as UserMaps,
 				{
 					r123: {
 						name: "repo123"
@@ -50,7 +48,7 @@ describe("slackSharingApi.adapters.ts", () => {
 				},
 				""
 			);
-			expect(blocks.length).to.be.greaterThan(2);
+			expect(blocks.length).toBeGreaterThan(2);
 		});
 	});
 });

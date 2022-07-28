@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/../shared/agent/agent.iml" filepath="$PROJECT_DIR$/../shared/agent/agent.iml" />
       <module fileurl="file://$PROJECT_DIR$/../shared/ui/ui.iml" filepath="$PROJECT_DIR$/../shared/ui/ui.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../shared/util/util.iml" filepath="$PROJECT_DIR$/../shared/util/util.iml" />
       <module fileurl="file://$PROJECT_DIR$/../vscode/vscode.iml" filepath="$PROJECT_DIR$/../vscode/vscode.iml" />
     </modules>
   </component>

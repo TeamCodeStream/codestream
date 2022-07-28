@@ -91,6 +91,8 @@ import {
 	FetchUsersRequestType,
 	FileLevelTelemetryRequestOptions,
 	FunctionLocator,
+	GetBlameRequestType,
+	GetBlameResponse,
 	GetDocumentFromKeyBindingRequestType,
 	GetDocumentFromKeyBindingResponse,
 	GetDocumentFromMarkerRequestType,
@@ -697,6 +699,14 @@ export class CodeStreamAgentConnection implements Disposable {
 				sha: sha
 			});
 		}
+
+		getBlame(uri: string, startLine: number, endLine: number): Promise<GetBlameResponse> {
+			return this._connection.sendRequest(GetBlameRequestType, {
+				uri: uri,
+				startLine: startLine,
+				endLine: endLine
+			});
+		}
 	})(this);
 
 	get streams() {
@@ -1131,14 +1141,14 @@ export class CodeStreamAgentConnection implements Disposable {
 				if (telemetryOptions.error) {
 					Logger.warn("no NewRelic telemetry", { error: telemetryOptions.error });
 				} else if (telemetryOptions.telemetryEndpoint && telemetryOptions.licenseIngestKey) {
-					const newRelicEnvironmentVariables = {
+					const newRelicEnvironmentVariables: NewRelicEnvironmentVariables = {
 						NEW_RELIC_HOST: telemetryOptions.telemetryEndpoint,
 						// do not want to release with NEW_RELIC_LOG_ENABLED=true
 						NEW_RELIC_LOG_ENABLED: false,
 						// NEW_RELIC_LOG_LEVEL: "info",
 						NEW_RELIC_APP_NAME: "lsp-agent",
 						NEW_RELIC_LICENSE_KEY: telemetryOptions.licenseIngestKey
-					} as NewRelicEnvironmentVariables;
+					};
 
 					this._serverOptions.run.options = this._serverOptions.run.options || process.env;
 					this._serverOptions.run.options.env = {

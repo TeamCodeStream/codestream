@@ -1,14 +1,13 @@
 "use strict";
 import { ParsedDiff } from "diff";
 import * as fs from "fs";
-import { flatten } from "lodash-es";
+import { flatten } from "lodash";
 import { decompressFromBase64 } from "lz-string";
 import * as path from "path";
-import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { MessageType } from "../api/apiProvider";
 import { Container, SessionContainer, SessionServiceContainer } from "../container";
-import { EMPTY_TREE_SHA, GitCommit, GitRemote, GitRepository } from "../git/gitService";
+import { EMPTY_TREE_SHA, GitCommit, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
 import {
 	CheckPullRequestPreconditionsRequest,
@@ -73,7 +72,6 @@ import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 import { trackReviewPostCreation } from "./postsManager";
-import Timer = NodeJS.Timer;
 
 const uriRegexp = /codestream-diff:\/\/(\w+)\/(\w+)\/(\w+)\/(\w+)\/(.+)/;
 
@@ -150,7 +148,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		string,
 		{ version: number; responses: FetchReviewCheckpointDiffsResponse }
 	>();
-	private diffsCacheTimeout: Timer | undefined;
+	private diffsCacheTimeout: NodeJS.Timer | undefined;
 
 	@gate()
 	async getAllDiffs(
@@ -680,8 +678,8 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 				// that will give the user the option to create a PR to its parent repo or
 				// to itself.
 				const weightedRemotes = await repo.getWeightedRemotesByStrategy(
-					providerRepo.remotes,
-					"prioritizeOrigin"
+					"prioritizeOrigin",
+					providerRepo.remotes
 				);
 				let lastError;
 				const remotesLength = weightedRemotes.length;
@@ -1196,6 +1194,15 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		return unreviewedCommits.length;
 	}
 
+	async getReviewsContainingSha(repoId: string, sha: string): Promise<CSReview[]> {
+		const allReviews = await this.getAllCached();
+		return allReviews.filter(
+			r =>
+				!r.deactivated &&
+				r.reviewChangesets?.some(rc => rc.repoId === repoId && rc.commits.some(c => c.sha === sha))
+		);
+	}
+
 	@lspHandler(CreateReviewsForUnreviewedCommitsRequestType)
 	@log()
 	async createReviewsForUnreviewedCommits(
@@ -1346,7 +1353,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		});
 		const review = response.review!;
 
-		trackReviewPostCreation(review, 0, 0, entryPoint, addedUsers);
+		trackReviewPostCreation(review, 0, 0, 0, entryPoint, addedUsers);
 		this.cacheResponse(response);
 
 		return review;

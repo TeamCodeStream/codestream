@@ -1,8 +1,7 @@
 "use strict";
-import { OktaConfigurationData } from "../protocol/agent.protocol";
 import { CSOktaProviderInfo } from "../protocol/api.protocol";
-import { log, lspProvider } from "../system";
-import { ThirdPartyPostProviderBase } from "./provider";
+import { lspProvider } from "../system";
+import { ThirdPartyPostProviderBase } from "./thirdPartyPostProviderBase";
 
 @lspProvider("okta")
 export class OktaProvider extends ThirdPartyPostProviderBase<CSOktaProviderInfo> {

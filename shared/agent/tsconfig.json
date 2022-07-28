@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
 		"baseUrl": "src",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
@@ -23,5 +24,6 @@
 		"useUnknownInCatchVariables": false,
 		"resolveJsonModule": true
 	},
-	"exclude": ["node_modules"]
+	"exclude": ["node_modules"],
+	"include": ["src/**/*.ts", "test/unit/**/*.ts", "../shared/util/**/*"]
 }

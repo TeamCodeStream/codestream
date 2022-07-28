@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": "src",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"lib": ["es2017", "es2018.asynciterable"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": false,
+		"outDir": "dist",
+		"skipDefaultLibCheck": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2017",
+		"useUnknownInCatchVariables": false,
+		"resolveJsonModule": true
+	},
+	"exclude": ["node_modules"],
+}

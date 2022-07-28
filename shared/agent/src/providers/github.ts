@@ -1,5 +1,4 @@
 "use strict";
-import { GitRemoteLike } from "git/gitService";
 import { GraphQLClient } from "graphql-request";
 import { Headers, Response } from "node-fetch";
 import { performance } from "perf_hooks";
@@ -9,13 +8,12 @@ import { CodeStreamSession } from "session";
 import { URI } from "vscode-uri";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { Container, SessionContainer } from "../container";
+import { GitRemoteLike } from "../git/models/remote";
 import { toRepoName } from "../git/utils";
-import { Logger, TraceLevel } from "../logger";
+import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchReposResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
@@ -47,6 +45,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
 import { Dates, Functions, log, lspProvider } from "../system";
+import { TraceLevel } from "../types";
 import { Directive, Directives } from "./directives";
 import {
 	ApiResponse,
@@ -55,12 +54,12 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoResponse,
-	ProviderVersion,
 	PullRequestComment,
-	ThirdPartyIssueProviderBase,
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
+import { ProviderVersion } from "./types";
 
 interface GitHubRepo {
 	id: string;
@@ -1159,6 +1158,31 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			owner,
 			name
 		};
+	}
+
+	private _pullRequestsContainingShaCache = new Map<string, any[]>();
+	async getPullRequestsContainigSha(
+		repoIdentifiers: { owner: string; name: string }[],
+		sha: string
+	): Promise<any[]> {
+		const cached = this._pullRequestsContainingShaCache.get(sha);
+		if (cached) return cached;
+
+		const result = [];
+		for (const repo of repoIdentifiers) {
+			const pulls = await this.restGet(`/repos/${repo.owner}/${repo.name}/commits/${sha}/pulls`);
+			try {
+				result.push(...(pulls.body as any));
+			} catch (ex) {
+				Logger.warn(ex);
+			}
+		}
+
+		if (result.length) {
+			this._pullRequestsContainingShaCache.set(sha, result);
+		}
+
+		return result;
 	}
 
 	private _isMatchingRemotePredicate = (r: GitRemoteLike) => r.domain === "github.com";
@@ -4550,6 +4574,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 
+		changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+
 		return changedFiles;
 	}
 
@@ -5645,8 +5671,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 					}
 				}
 			} else if (directive.type === "addNode") {
-				if (!directive.data.id) continue;
-				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.id);
+				if (!directive?.data?.id) continue;
+				const node = pr.timelineItems.nodes.find(_ => _?.id === directive?.data?.id);
 				if (!node) {
 					pr.timelineItems.nodes.push(directive.data);
 				}

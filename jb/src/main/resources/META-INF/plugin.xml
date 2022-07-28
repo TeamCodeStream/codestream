@@ -13,6 +13,9 @@
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withPython.xml">
         com.intellij.modules.python
     </depends>
+    <depends optional="true" config-file="com.codestream.jetbrains-codestream-withJava.xml">
+        com.intellij.java
+    </depends>
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withCSharp.xml">
         com.intellij.modules.rider
     </depends>
@@ -37,6 +40,7 @@
         <projectService serviceImplementation="com.codestream.editor.EditorService"/>
         <projectService serviceImplementation="com.codestream.review.ReviewService"/>
         <projectService serviceImplementation="com.codestream.telemetry.TelemetryService"/>
+        <projectService serviceImplementation="com.codestream.editor.LineLevelBlameService"/>
 
         <applicationConfigurable groupId="tools" displayName="CodeStream" id="preferences.CodeStreamConfigurable"
                                  instance="com.codestream.settings.CodeStreamConfigurable"/>

@@ -10,6 +10,7 @@ interface Props {
 	onClick?(event: React.SyntheticEvent): any;
 	children: React.ReactNode;
 	className?: string;
+	useStopPropagation?: boolean;
 }
 
 function Link(props: Props) {
@@ -23,6 +24,9 @@ function Link(props: Props) {
 		function(event: React.SyntheticEvent) {
 			if (!(event.target as any).href) {
 				event.preventDefault();
+				if (props.useStopPropagation) {
+					event.stopPropagation();
+				}
 				HostApi.instance.send(OpenUrlRequestType, { url: props.href! });
 			}
 		};

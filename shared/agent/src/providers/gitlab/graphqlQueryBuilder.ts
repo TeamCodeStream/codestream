@@ -10,7 +10,7 @@ import {
 } from "graphql";
 import semver from "semver";
 import { Logger } from "../../logger";
-import { ProviderVersion } from "../../providers/provider";
+import { ProviderVersion } from "../types";
 import { gate } from "../../system/decorators/gate";
 
 interface Leaf {

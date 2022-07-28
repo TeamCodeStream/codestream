@@ -51,7 +51,10 @@ export class RepositoryLocator {
 				Logger.log(`startCore: Starting repository search in ${e.added.length} folders`);
 
 				for (const folder of e.added) {
-					if (URI.parse(folder.uri).scheme !== "file") continue;
+					if (URI.parse(folder.uri).scheme !== "file") {
+						Logger.log(`startCore: skipping unsupported folder ${folder.uri}`);
+						continue;
+					}
 
 					// Search for and add all repositories (nested and/or submodules)
 					const repositories = await this.repositorySearch(

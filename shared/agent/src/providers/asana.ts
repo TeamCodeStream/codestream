@@ -10,8 +10,6 @@ import {
 	AsanaUser,
 	AsanaWorkspace,
 	CreateThirdPartyCardRequest,
-	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -22,7 +20,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ThirdPartyIssueProviderBase } from "./provider";
+import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface AsanaProjectData {
 	data: AsanaProject;

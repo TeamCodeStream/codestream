@@ -677,6 +677,13 @@ class ReviewForm extends React.Component<Props, State> {
 							topSelectionIndex: -1,
 							excludeCommit
 						});
+					} else if (startCommitIndex === 0) {
+						statusInfo.scm.commits?.forEach((commit, index) => {
+							excludeCommit[commit.sha] = true;
+						});
+						this.setState({
+							excludeCommit
+						});
 					}
 				}
 
