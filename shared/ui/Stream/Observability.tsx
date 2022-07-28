@@ -732,8 +732,6 @@ export const Observability = React.memo((props: Props) => {
 
 	const { hiddenPaneNodes } = derivedState;
 
-	console.warn(currentRepoId);
-
 	return (
 		<Root>
 			<PaneHeader
@@ -994,10 +992,8 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 
 																								{observabilityErrors?.find(
-																									oe =>
-																										oe?.repoId === _observabilityRepo?.repoId &&
-																										oe?.errors.length > 0
-																								) ? (
+																									oe => oe?.repoId === _observabilityRepo?.repoId
+																								) && (
 																									<>
 																										<ObservabilityErrorWrapper
 																											observabilityErrors={observabilityErrors}
@@ -1007,12 +1003,6 @@ export const Observability = React.memo((props: Props) => {
 																											}
 																											entityGuid={ea.entityGuid}
 																										/>
-																									</>
-																								) : _observabilityRepo.hasRepoAssociation ? (
-																									<ErrorRow title="No errors to display" />
-																								) : (
-																									<>
-																										{/* @TODO rework this conditional, this part will never be triggered */}
 																									</>
 																								)}
 																							</>
