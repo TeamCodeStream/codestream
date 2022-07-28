@@ -1,0 +1,27 @@
+{
+	"name": "codestream-build-utils",
+	"description": "The knowledge base behind your codebase",
+	"version": "0.0.2",
+	"author": "CodeStream",
+	"publisher": "CodeStream",
+	"private": true,
+	"license": "UNLICENSED",
+	"homepage": "https://codestream.com",
+	"bugs": {
+		"url": "https://github.com/TeamCodeStream/codestream/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/TeamCodeStream/codestream"
+	},
+	"engines": {
+		"node": ">=10.2.0"
+	},
+	"devDependencies": {
+		"@luckycatfactory/esbuild-graphql-loader": "3.7.0",
+		"@types/node": "16.11.35",
+		"cpy": "9.0.1",
+		"esbuild": "0.14.50",
+		"esbuild-plugin-less": "1.1.8"
+	}
+}

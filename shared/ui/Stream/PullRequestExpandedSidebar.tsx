@@ -48,7 +48,17 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 			});
 		}
 
-		dispatch(setCurrentPullRequest(pullRequest.providerId, pullRequest.id, "", "", "details"));
+		let prId;
+		if (
+			pullRequest?.providerId === "gitlab*com" ||
+			pullRequest?.providerId === "gitlab/enterprise"
+		) {
+			prId = pullRequest?.idComputed || pullRequest?.id;
+		} else {
+			prId = pullRequest?.id;
+		}
+
+		dispatch(setCurrentPullRequest(pullRequest.providerId, prId, "", "", "details"));
 	};
 
 	const handleReviewClick = e => {

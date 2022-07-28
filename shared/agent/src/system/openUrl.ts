@@ -1,6 +1,6 @@
 "use strict";
 
-import * as opn from "opn";
+import opn from "opn";
 import * as path from "path";
 
 export function openUrl(target: string) {

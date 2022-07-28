@@ -4,7 +4,6 @@
 		"baseUrl": "src",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
-		"forceConsistentCasingInFileNames": true,
 		"lib": ["es2017", "es2018.asynciterable"],
 		"module": "esnext",
 		"moduleResolution": "node",
@@ -12,10 +11,6 @@
 		"noImplicitReturns": true,
 		"noUnusedLocals": false,
 		"outDir": "dist",
-		"paths": {
-			"https-proxy-agent": ["@types/https-proxy-agent"],
-			"opn": ["@types/opn"]
-		},
 		"skipDefaultLibCheck": true,
 		"skipLibCheck": true,
 		"sourceMap": true,
@@ -25,5 +20,4 @@
 		"resolveJsonModule": true
 	},
 	"exclude": ["node_modules"],
-	"include": ["src/**/*.ts", "test/unit/**/*.ts", "../shared/util/**/*"]
 }

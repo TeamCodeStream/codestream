@@ -1,0 +1,15 @@
+diff --git a/node_modules/newrelic/lib/config/index.js b/node_modules/newrelic/lib/config/index.js
+index 9e1b01e..15fd67d 100644
+--- a/node_modules/newrelic/lib/config/index.js
++++ b/node_modules/newrelic/lib/config/index.js
+@@ -28,8 +28,8 @@ const mergeServerConfig = new MergeServerConfig()
+  */
+ const AZURE_APP_NAME = 'APP_POOL_ID'
+ const DEFAULT_MAX_PAYLOAD_SIZE_IN_BYTES = 1000000
+-const DEFAULT_CONFIG_PATH = require.resolve('./default')
+-const BASE_CONFIG_PATH = require.resolve('../../newrelic')
++const DEFAULT_CONFIG_PATH = path.resolve('./default')
++const BASE_CONFIG_PATH = path.resolve('../../newrelic')
+ const HAS_ARBITRARY_KEYS = new Set(['ignore_messages', 'expected_messages', 'labels'])
+ 
+ const LASP_MAP = require('./lasp').LASP_MAP

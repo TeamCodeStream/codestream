@@ -33,7 +33,14 @@ import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { Button } from "../src/components/Button";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PaneBody, PaneHeader, PaneNode, PaneNodeName, PaneState } from "../src/components/Pane";
+import {
+	NoContent,
+	PaneBody,
+	PaneHeader,
+	PaneNode,
+	PaneNodeName,
+	PaneState
+} from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
@@ -208,7 +215,8 @@ export const Observability = React.memo((props: Props) => {
 			isVS: state.ide.name === "VS",
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
-				{}) as CurrentMethodLevelTelemetry
+				{}) as CurrentMethodLevelTelemetry,
+			textEditorUri: state.editorContext.textEditorUri
 		};
 	}, shallowEqual);
 
@@ -795,6 +803,16 @@ export const Observability = React.memo((props: Props) => {
 												</Button>
 											</NoEntitiesWrapper>
 										)}
+										{!loadingEntities && _isEmpty(currentRepoId) && (
+											<NoContent>
+												<p>
+													Open a source file to see how your code is performing.{" "}
+													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+														Learn more.
+													</a>
+												</p>
+											</NoContent>
+										)}
 										{!loadingEntities &&
 											!derivedState.hideCodeLevelMetricsInstructions &&
 											!derivedState.showGoldenSignalsInEditor &&
@@ -974,10 +992,8 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 
 																								{observabilityErrors?.find(
-																									oe =>
-																										oe?.repoId === _observabilityRepo?.repoId &&
-																										oe?.errors.length > 0
-																								) ? (
+																									oe => oe?.repoId === _observabilityRepo?.repoId
+																								) && (
 																									<>
 																										<ObservabilityErrorWrapper
 																											observabilityErrors={observabilityErrors}
@@ -987,12 +1003,6 @@ export const Observability = React.memo((props: Props) => {
 																											}
 																											entityGuid={ea.entityGuid}
 																										/>
-																									</>
-																								) : _observabilityRepo.hasRepoAssociation ? (
-																									<ErrorRow title="No errors to display" />
-																								) : (
-																									<>
-																										{/* @TODO rework this conditional, this part will never be triggered */}
 																									</>
 																								)}
 																							</>

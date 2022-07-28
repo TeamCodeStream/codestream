@@ -1,6 +1,8 @@
 package com.codestream.editor;
 
 import com.codestream.actions.AddComment;
+import com.codestream.actions.CreateIssue;
+import com.codestream.actions.GetPermalink;
 import com.codestream.protocols.agent.GetBlameResultLineInfo;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -57,5 +59,7 @@ public class BlameHover {
 
     private void createUIComponents() {
         addComment = new ActionLink("Add Comment", actionEvent -> { (new AddComment()).invoke(_project, _editor, _psiFile); });
+        createIssue = new ActionLink("Create issue", actionEvent -> { (new CreateIssue()).invoke(_project, _editor, _psiFile); });
+        sharePermalink = new ActionLink("Share permalink", actionEvent -> { (new GetPermalink()).invoke(_project, _editor, _psiFile); });
     }
 }

@@ -79,7 +79,7 @@
               <text value="Add comment"/>
             </properties>
           </component>
-          <component id="3e618" class="com.intellij.ui.components.ActionLink" binding="createIssue">
+          <component id="3e618" class="com.intellij.ui.components.ActionLink" binding="createIssue" custom-create="true">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
@@ -87,7 +87,7 @@
               <text value="Create issue"/>
             </properties>
           </component>
-          <component id="eccfe" class="com.intellij.ui.components.ActionLink" binding="sharePermalink">
+          <component id="eccfe" class="com.intellij.ui.components.ActionLink" binding="sharePermalink" custom-create="true">
             <constraints>
               <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>

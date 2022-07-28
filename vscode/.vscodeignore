@@ -23,3 +23,7 @@ out/**
 test-projects/**
 coverage
 newrelic-browser.js
+esbuild.ts
+newrelic_agent.log
+patches/**
+stats*.json
