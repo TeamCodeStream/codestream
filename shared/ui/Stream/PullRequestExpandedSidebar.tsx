@@ -52,7 +52,8 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		let prId;
 		if (
 			pullRequest?.providerId === "gitlab*com" ||
-			pullRequest?.providerId === "gitlab/enterprise"
+			pullRequest?.providerId === "gitlab/enterprise" ||
+			pullRequest?.providerId === "bitbucket*org"
 		) {
 			prId = pullRequest?.idComputed || pullRequest?.id;
 		} else {

@@ -405,14 +405,29 @@ export class BitbucketProvider
 				rebaseMergeAllowed: true,
 				squashMergeAllowed: true,
 				mergeCommitAllowed: true,
-				repoOwner: "",
-				repoName: "",
+				repoOwner: repoWithOwner.split("/")[0],
+				repoName: repoWithOwner.split("/")[1],
 				providerId: this.providerConfig.id,
 				viewerDefaultMergeMethod: "MERGE",
 				viewerPermission: "WRITE",
 				branchProtectionRules: undefined,
 				pullRequest: {
-					providerId: this.providerConfig.id
+					repository: {
+						name: "TODO",
+						repoWithOwner: repoWithOwner,
+						url: "TODO"
+					} as any,
+					providerId: this.providerConfig.id,
+					files: {
+						nodes: [
+							{
+								// TODO FIXME
+								path: "TODO",
+								additions: 1,
+								deletions: 1
+							}
+						]
+					}
 				}
 			} as FetchThirdPartyPullRequestRepository
 		};
@@ -770,6 +785,7 @@ export class BitbucketProvider
 						},
 						id: pr.id + "",
 						idComputed: JSON.stringify({
+							id: pr.id,
 							pullRequestId: pr.id,
 							repoWithOwner: pr.source.repository.full_name
 						}),
@@ -802,6 +818,7 @@ export class BitbucketProvider
 		// id - Is unique across all issues and is used for any API call
 		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
 		return {
+			id: parsed.id || parsed.pullRequestId,
 			pullRequestId: parsed.pullRequestId,
 			repoWithOwner: parsed.repoWithOwner
 		};
