@@ -868,7 +868,8 @@ export const getPullRequestExactId = createSelector(
 		if (!context.currentPullRequest) return "";
 		if (
 			context.currentPullRequest.providerId === "gitlab*com" ||
-			context.currentPullRequest.providerId === "gitlab/enterprise"
+			context.currentPullRequest.providerId === "gitlab/enterprise" ||
+			context.currentPullRequest.providerId === "bitbucket*org"
 		) {
 			try {
 				if (context.currentPullRequest.id.indexOf("{") === 0) {
@@ -924,6 +925,9 @@ export const getCurrentProviderPullRequestRootObject = createSelector(
 			if (providerId.indexOf("gitlab") > -1) {
 				return providerPullRequest?.conversations;
 			}
+			if (providerId.indexOf("bitbucket") > -1) {
+				return providerPullRequest.conversations;
+			}
 		}
 		return undefined;
 	}
@@ -935,8 +939,8 @@ export const getCurrentProviderPullRequestObject = createSelector(
 	(providerPullRequest, providerId) => {
 		// TODO merge github and gitlab into single shared type
 		if (providerId) {
-			if (providerId.indexOf("github") > -1) {
-				return providerPullRequest?.conversations?.repository.pullRequest;
+			if (providerId.indexOf("github") > -1 || providerId.indexOf("bitbucket") > -1) {
+				return providerPullRequest.conversations.repository.pullRequest;
 			}
 			if (providerId.indexOf("gitlab") > -1) {
 				return providerPullRequest?.conversations?.project?.mergeRequest;
@@ -953,7 +957,7 @@ export const getCurrentProviderPullRequestLastUpdated = createSelector(
 		if (!providerPullRequest) return undefined;
 		if (!providerId) return undefined;
 
-		if (providerId.indexOf("github") > -1) {
+		if (providerId.indexOf("github") > -1 || providerId.indexOf("bitbucket") > -1) {
 			return providerPullRequest?.conversations?.repository?.pullRequest?.updatedAt;
 		}
 		if (providerId.indexOf("gitlab") > -1) {
@@ -1010,7 +1014,7 @@ export const getProviderPullRequestRepoObjectCore = (
 		let repoUrl;
 		if (
 			providerId &&
-			providerId.indexOf("github") > -1 &&
+			(providerId.indexOf("github") > -1 || providerId.indexOf("bitbucket") > -1) &&
 			currentPr.conversations &&
 			currentPr.conversations.repository
 		) {

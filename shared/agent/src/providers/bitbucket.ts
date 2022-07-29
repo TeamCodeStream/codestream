@@ -123,6 +123,9 @@ interface BitbucketPullRequest {
 		branch: {
 			name: string;
 		};
+		commit: {
+			hash: string;
+		};
 	};
 	id: number;
 	links: {
@@ -134,9 +137,17 @@ interface BitbucketPullRequest {
 		branch: {
 			name: string;
 		};
+		commit: {
+			hash: string;
+		};
 		repository: {
 			name: string;
 			full_name: string;
+			links: {
+				html: {
+					href: string;
+				};
+			};
 		};
 	};
 	summary: {
@@ -389,6 +400,8 @@ export class BitbucketProvider
 	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
 	): Promise<FetchThirdPartyPullRequestResponse> {
+		await this.ensureConnected();
+
 		// TODO implementation
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
@@ -396,26 +409,33 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 		);
 
+		const repoWithOwnerSplit = repoWithOwner.split("/");
 		const response: FetchThirdPartyPullRequestResponse = {
 			viewer: {} as any,
 			repository: {
 				id: item.body.id + "",
-				url: "",
+				url: item.body.source?.repository?.links?.html?.href,
+				// TODO start
 				resourcePath: "",
 				rebaseMergeAllowed: true,
 				squashMergeAllowed: true,
 				mergeCommitAllowed: true,
-				repoOwner: repoWithOwner.split("/")[0],
-				repoName: repoWithOwner.split("/")[1],
-				providerId: this.providerConfig.id,
 				viewerDefaultMergeMethod: "MERGE",
 				viewerPermission: "WRITE",
+				// TODO end
+				repoOwner: repoWithOwnerSplit[0],
+				repoName: repoWithOwnerSplit[1],
+				providerId: this.providerConfig.id,
+
 				branchProtectionRules: undefined,
 				pullRequest: {
+					baseRefOid: item.body.destination.commit.hash,
+					headRefOid: item.body.source.commit.hash,
+					number: item.body.id,
 					repository: {
-						name: "TODO",
+						name: repoWithOwnerSplit[1],
 						repoWithOwner: repoWithOwner,
-						url: "TODO"
+						url: item.body.source?.repository?.links?.html?.href
 					} as any,
 					providerId: this.providerConfig.id,
 					files: {
@@ -469,22 +489,26 @@ export class BitbucketProvider
 		pullRequestId: string;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+
 		const items = await this.get<BitbucketValues<BitbucketPullRequestDiffStat[]>>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 		);
 
-		return items.body.values.map(file => {
+		const response = items.body.values.map(file => {
 			return {
 				sha: file.hash,
-				filename: file.new.path,
-				previousFilename: file.old.path,
+				filename: file.new?.path,
+				previousFilename: file.old?.path,
 				status: file.status,
-				additions: 0, //what is this?
-				changes: 0, //TODO can we find this?
+				// TODO start
+				additions: 0,
+				changes: 0,
 				deletions: 0,
 				patch: ""
+				// TODO end
 			} as FetchThirdPartyPullRequestFilesResponse;
 		});
+		return response;
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
