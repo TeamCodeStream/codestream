@@ -1,8 +1,7 @@
 "use strict";
 import { GitRemoteLike } from "git/gitService";
+import { flatten } from "lodash-es";
 import * as qs from "querystring";
-import { file } from "tmp";
-import { isRequestMessage } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
@@ -741,42 +740,48 @@ export class BitbucketProvider
 		const queriesSafe = request.queries.map(query =>
 			query.replace(/["']/g, '\\"').replace("@me", username)
 		);
+
+		let reposWithOwners: string[] = [];
+		if (request.isOpen) {
+			try {
+				reposWithOwners = await this.getOpenedRepos();
+				if (!reposWithOwners.length) {
+					Logger.log(`getMyPullRequests: request.isOpen=true, but no repos found, returning empty`);
+					return [];
+				}
+			} catch (ex) {
+				Logger.warn(ex);
+			}
+		}
+
 		const providerId = this.providerConfig?.id;
 		const items = await Promise.all(
-			queriesSafe.map(_query => {
-				let query = _query;
-				let limit = 100;
+			queriesSafe.map(async query => {
+				// TODO fix below
+				const results = {
+					body: {
+						values: [] as BitbucketPullRequest[]
+					}
+				};
 
-				// TODO deal with request.isOpen
-
-				// recent is kind of a magic string, where we just look
-				// for some random PR activity to at least show you
-				// something. if you have the repo query checked, and
-				// we can query by repo, then use that. otherwise github
-				// needs at least one qualifier so we query for PRs
-				// that you were the author of
-				// https://trello.com/c/XIg6MKWy/4813-add-4th-default-pr-query-recent
-				// if (query === "recent") {
-				// 	if (repoQuery.length > 0) {
-				// 		query = "is:pr";
-				// 	} else {
-				// 		query = "is:pr author:@me";
-				// 	}
-				// 	limit = 5;
-				// }
-
-				// if a user has put a "repo:X/Y" in their query, don't add the repoQuery as specified by the request.isOpen option
-				// const finalQuery = query.indexOf("repo:") > -1 ? query : repoQuery + query;
-				// if (query !== finalQuery) {
-				// 	Logger.log(
-				// 		`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}" query=${query}`
-				// 	);
-				// } else {
-				// 	Logger.log(`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}"`);
-				// }
-
-				// the baseUrl will be applied inside the this.get, it normally looks like https://api.bitbucket.org/2.0
-				return this.get<BitbucketValues<BitbucketPullRequest[]>>(`/pullrequests/${query}`);
+				if (reposWithOwners.length) {
+					for (const repo of reposWithOwners) {
+						results.body.values.push(
+							(
+								await this.get<BitbucketValues<BitbucketPullRequest[]>>(
+									`/repositories/${repo}/pullrequests?${query}`
+								)
+							)?.body?.values as any
+						);
+					}
+					results.body.values = flatten(results.body.values);
+					return results;
+				} else {
+					// the baseUrl will be applied inside the this.get, it normally looks like https://api.bitbucket.org/2.0
+					return this.get<BitbucketValues<BitbucketPullRequest[]>>(
+						`/pullrequests/${username}?${query}`
+					);
+				}
 			})
 		).catch(ex => {
 			Logger.error(ex, "getMyPullRequests");

@@ -867,13 +867,13 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "bitbucket*org",
 					name: "Created by Me",
-					query: `@me?state=OPEN`,
+					query: `state=OPEN`,
 					hidden: false,
 				},
 				{
 					providerId: "bitbucket*org",
 					name: "Recent",
-					query: `@me?sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED&pagelen=5`,
+					query: `sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED&pagelen=5`,
 					hidden: false,
 				}
 			]
