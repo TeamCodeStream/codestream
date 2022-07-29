@@ -7,18 +7,20 @@ $localVSCETokenFile = $homeDir + '\.vsce'
 Write-Host '**** The script is running in directory' (Get-Location)
 $vsDir = $checkoutDir + '\vs'
 $buildDir = $vsDir + '\build'
-$assetDir = $buildDir + '\artifacts\x86\Release'
+$x86AssetDir = $buildDir + '\artifacts\Release\x86'
+$x64AssetDir = $buildDir + '\artifacts\Release\x64'
 
-$asset = $assetDir + '\codestream-vs-' + $buildNumber + '.vsix'
-Write-Host 'Here is the VSIX file (' $asset '):'
-Get-ChildItem $asset
+$x86Asset = $x86AssetDir + '\codestream-vs-' + $buildNumber + '-x86.vsix'
+$x64Asset = $x64AssetDir + '\codestream-vs-' + $buildNumber + '-x64.vsix'
+
+Write-Host 'Here is the x86 VSIX file (' $x86Asset '):'
+Get-ChildItem $x86Asset
 if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
     exit 1
 }
 
-$assetInfo = $assetDir + '\codestream-vs-' + $buildNumber + '.info'
-Write-Host 'Here is the VSIX file (' $assetInfo '):'
-Get-ChildItem $assetInfo
+Write-Host 'Here is the x64 VSIX file (' $x64Asset '):'
+Get-ChildItem $x64Asset
 if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
     exit 1
 }
@@ -35,14 +37,22 @@ $exe = (-join($path, "\VSSDK\VisualStudioIntegration\Tools\Bin\VsixPublisher.exe
 Write-Host "VsixPublish path... $($exe)"
 
 if ($WhatIfPreference.IsPresent -eq $True) {
-    Write-Host "Would have published $($asset)"
+    Write-Host "Would have published $($x86Asset)"
+    Write-Host "Would have published $($x64Asset)"
 }
 else {
-    Write-Host 'Publishing asset to marketplace...'
+    Write-Host 'Publishing assets to marketplace...'
     # https://docs.microsoft.com/en-us/visualstudio/extensibility/walkthrough-publishing-a-visual-studio-extension-via-command-line?view=vs-2019
     #  -ignoreWarnings "VSIXValidatorWarning01,VSIXValidatorWarning02"
-    & $exe publish -payload $asset -publishManifest "$($vsDir)\publishManifest.json" -personalAccessToken $pat
+    & $exe publish -payload $x86Asset -publishManifest "$($vsDir)\CodeStream.VisualStudio.Vsix.x86\publish\publishManifest.json" -personalAccessToken $pat
     if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
+        Write-Error "Failed to publish $($x86Asset) to marketplace"
+		exit 1
+	}
+
+    & $exe publish -payload $x64Asset -publishManifest "$($vsDir)\CodeStream.VisualStudio.Vsix.x64\publish\publishManifest.json" -personalAccessToken $pat
+    if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
+        Write-Error "Failed to publish $($x64Asset) to marketplace"
 		exit 1
 	}
 }
