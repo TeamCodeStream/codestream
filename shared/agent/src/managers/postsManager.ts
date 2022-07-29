@@ -174,6 +174,10 @@ function search(posts: CSPost[], seq: string | number): SearchResult {
 	throw new Error("Unexpected error on PostIndex.search()");
 }
 
+const noEscape = (s: string) => {
+	return s;
+};
+
 class PostCollection {
 	private posts: CSPost[];
 
@@ -984,7 +988,6 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				request.attributes.type === CodemarkType.Issue ? request.attributes.status : undefined,
 			markers: []
 		};
-
 		if (
 			request.textDocuments &&
 			request.textDocuments.length &&
@@ -2111,6 +2114,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		end: string;
 		linefeed: string;
 		anchorFormat: string;
+		escapeFn: (s: string) => string;
 	} => {
 		switch (codeDelimiterStyle) {
 			// https://asana.com/guide/help/fundamentals/text
@@ -2119,14 +2123,16 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					start: "",
 					end: "",
 					linefeed: "\n",
-					anchorFormat: "${text} ${url}"
+					anchorFormat: "${text} ${url}",
+					escapeFn: noEscape
 				};
 			case CodeDelimiterStyles.HTML_LIGHT_MARKUP:
 				return {
 					start: "",
 					end: "",
 					linefeed: "\n",
-					anchorFormat: '<a href="${url}">${text}</a>'
+					anchorFormat: '<a href="${url}">${text}</a>',
+					escapeFn: Strings.escapeHtml
 				};
 			// https://docs.microsoft.com/en-us/azure/devops/project/wiki/markdown-guidance?view=azure-devops
 			case CodeDelimiterStyles.HTML_MARKUP:
@@ -2134,7 +2140,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					start: "<pre><div><code>",
 					end: "</code></div></pre>",
 					linefeed: "<br/>",
-					anchorFormat: '<a href="${url}">${text}</a>'
+					anchorFormat: '<a href="${url}">${text}</a>',
+					escapeFn: Strings.escapeHtml
 				};
 
 			// https://www.jetbrains.com/help/youtrack/incloud/youtrack-markdown-syntax-issues.html
@@ -2143,7 +2150,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					start: "`",
 					end: "`",
 					linefeed: "\n",
-					anchorFormat: "[${text}](${url})"
+					anchorFormat: "[${text}](${url})",
+					escapeFn: noEscape
 				};
 			// https://jira.atlassian.com/secure/WikiRendererHelpAction.jspa?section=all
 			case CodeDelimiterStyles.CODE_BRACE:
@@ -2151,7 +2159,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					start: "{code}",
 					end: "{code}",
 					linefeed: "\n",
-					anchorFormat: "[${text}|${url}]"
+					anchorFormat: "[${text}|${url}]",
+					escapeFn: noEscape
 				};
 			// https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html
 			// https://help.trello.com/article/821-using-markdown-in-trello
@@ -2161,7 +2170,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					start: "```\n",
 					end: "```\n",
 					linefeed: "\n",
-					anchorFormat: "[${text}](${url})"
+					anchorFormat: "[${text}](${url})",
+					escapeFn: noEscape
 				};
 		}
 	};
@@ -2180,8 +2190,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 		ideName?: string
 	) => {
 		const delimiters = this.getCodeDelimiters(attributes.codeDelimiterStyle);
-		const { linefeed, start, end } = delimiters;
-		let description = `${providerCardRequest.codemark.text}${linefeed}${linefeed}`;
+		const { linefeed, start, end, escapeFn } = delimiters;
+		let description = `${escapeFn(providerCardRequest.codemark.text || "")}${linefeed}${linefeed}`;
 
 		if (providerCardRequest.codemark.markers && providerCardRequest.codemark.markers.length) {
 			let createdAtLeastOne = false;
@@ -2189,10 +2199,10 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 				const links = [];
 				const repo = await SessionContainer.instance().repos.getById(marker.repoId);
 				if (repo) {
-					const repoName = this.bareRepo(repo.name);
+					const repoName = escapeFn(this.bareRepo(repo.name));
 					description += `[${repoName}] `;
 				}
-				description += marker.file;
+				description += escapeFn(marker.file);
 				let range;
 				if (marker.locationWhenCreated) {
 					range = MarkerLocation.toRangeFromArray(marker.locationWhenCreated);
@@ -2211,7 +2221,9 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 					}
 				}
 
-				description += `${linefeed}${linefeed}${start}${linefeed}${marker.code}${linefeed}${end}${linefeed}${linefeed}`;
+				description += `${linefeed}${linefeed}${start}${linefeed}${escapeFn(
+					marker.code
+				)}${linefeed}${end}${linefeed}${linefeed}`;
 
 				if (providerCardRequest.codemark.permalink) {
 					const link = Strings.interpolate(delimiters.anchorFormat, {

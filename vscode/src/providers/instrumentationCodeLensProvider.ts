@@ -84,7 +84,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			return;
 		}
 
-		if (extensions.getExtension("castwide.solargraph")?.isActive) {
+		if (extensions.getExtension("castwide.solargraph")?.isActive === true) {
 			return;
 		} else {
 			return this.missingRubyExtensionCodelens();
@@ -92,19 +92,19 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	}
 
 	private checkPythonPlugin(): vscode.CodeLens[] | undefined {
-		return extensions.getExtension("ms-python.vscode-pylance")?.isActive
+		return extensions.getExtension("ms-python.vscode-pylance")?.isActive === true
 			? undefined
 			: this.missingPythonExtensionCodelens();
 	}
 
 	private checkJavaPlugin(): vscode.CodeLens[] | undefined {
-		return extensions.getExtension("redhat.java")?.isActive
+		return extensions.getExtension("redhat.java")?.isActive === true
 			? undefined
 			: this.missingJavaExtensionCodelens();
 	}
 
 	private checkCsharpPlugin(): vscode.CodeLens[] | undefined {
-		return extensions.getExtension("ms-dotnettools.csharp")?.isActive
+		return extensions.getExtension("ms-dotnettools.csharp")?.isActive === true
 			? undefined
 			: this.missingCsharpExtensionCodelens();
 	}

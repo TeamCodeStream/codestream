@@ -1453,9 +1453,19 @@ export class ScmManager {
 			let prs = [];
 			if (ownersAndNames && !isUncommitted(revisionEntry.sha)) {
 				try {
-					prs = await providerRepo?.provider?.getPullRequestsContainigSha(
-						ownersAndNames,
-						revisionEntry.sha
+					const providerPrs =
+						(await providerRepo?.provider?.getPullRequestsContainigSha(
+							ownersAndNames,
+							revisionEntry.sha
+						)) || [];
+					prs.push(
+						...providerPrs.map(pr => ({
+							id: pr.id,
+							title: pr.title,
+							url: pr.url,
+							providerId: providerRepo.providerId,
+							providerName: providerRepo.providerName
+						}))
 					);
 				} catch (e) {
 					Logger.warn(e);

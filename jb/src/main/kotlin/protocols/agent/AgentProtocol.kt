@@ -737,8 +737,10 @@ class GetBlameResultLineInfo(
 )
 
 class GetBlameResultPR(
+    val providerId: String,
+    val id: String,
     val url: String,
-    val title: String?
+    val title: String
 )
 
 class ReportMessageParams(
