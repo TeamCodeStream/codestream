@@ -416,8 +416,8 @@ export class SlackSharingApiProvider {
 				blocks = toSlackCodeErrorPostBlocks(codeError, userMaps, repoHash, this._slackUserId);
 				// Set the fallback (notification) content for the message
 				text = `${codeError.title}`;
-			} else if (request.parentText && text) {
-				blocks = toSlackTextPostBlocks(text, request.parentText);
+			} else if (text) {
+				blocks = toSlackTextPostBlocks(text, request.parentText, request.files);
 			}
 
 			if (request.providerServerTokenUserId) {

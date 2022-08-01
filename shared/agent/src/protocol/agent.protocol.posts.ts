@@ -59,6 +59,7 @@ export interface CreateSharedExternalPostRequest {
 	crossPostIssueValues?: CrossPostIssueValues;
 	providerServerTokenUserId?: string;
 	existingPostId?: string;
+	files: { name: string; url?: string }[];
 }
 
 export interface DeleteSharedExternalPostRequest {

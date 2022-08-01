@@ -232,6 +232,7 @@ export interface CreateThirdPartyPostRequest {
 	parentText?: string;
 	providerServerTokenUserId?: string;
 	existingPostId?: string;
+	files?: { name: string; url?: string }[];
 }
 export interface CreateThirdPartyPostResponse {
 	post: any;

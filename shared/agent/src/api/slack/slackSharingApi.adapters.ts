@@ -626,6 +626,16 @@ function blockRepliedTo(text: string): KnownBlock {
 	};
 }
 
+function blockFile(name: string, url: string): KnownBlock {
+	return {
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: `<${url}|${name}>`
+		}
+	};
+}
+
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
@@ -1168,7 +1178,11 @@ export function toSlackCodeErrorPostBlocks(
 	return blocks;
 }
 
-export function toSlackTextPostBlocks(text: string, parentText: string) {
+export function toSlackTextPostBlocks(
+	text: string,
+	parentText?: string,
+	files?: { name: string; url?: string }[]
+) {
 	const blocks: Blocks = [];
 	if (parentText) {
 		blocks.push(blockRepliedTo(parentText));
@@ -1180,6 +1194,13 @@ export function toSlackTextPostBlocks(text: string, parentText: string) {
 			text: text
 		}
 	});
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
+	}
 	return blocks;
 }
 

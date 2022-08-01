@@ -424,7 +424,8 @@ export const createPost = (
 								parentText: parentText,
 								text: text,
 								codemark: response.codemark,
-								mentionedUserIds: mentions
+								mentionedUserIds: mentions,
+								files: extra.files
 							}
 						);
 						if (ts) {
