@@ -140,7 +140,7 @@
       <Version>2.4.32</Version>
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
-      <Version>12.0.2</Version>
+      <Version>13.0.1</Version>
     </PackageReference>
     <PackageReference Include="Serilog">
       <Version>2.5.0</Version>
