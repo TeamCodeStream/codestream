@@ -60,6 +60,7 @@ import {
 } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ProviderVersion } from "./types";
+import { TernarySearchTree } from "../../../ui/utilities/searchTree";
 
 interface GitHubRepo {
 	id: string;
@@ -4578,7 +4579,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 
-		changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+		// changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+		const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
+		changedFiles
+			.sort((a, b) => {
+				if (b.filename < a.filename) return 1;
+				if (a.filename < b.filename) return -1;
+				return 0;
+			})
+			.filter(f => f.filename);
+		// console.warn("SETTING UP THE TREE: ", tree, filesChanged);
+		changedFiles.forEach(f => tree.set(f.filename, f));
 
 		return changedFiles;
 	}

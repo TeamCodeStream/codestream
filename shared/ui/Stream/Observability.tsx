@@ -741,15 +741,6 @@ export const Observability = React.memo((props: Props) => {
 					.then((_: GetObservabilityReposResponse) => {
 						setObservabilityRepos(_.repos || []);
 					});
-				const response: GetReposScmResponse = HostApi.instance
-					.send(GetReposScmRequestType, {
-						inEditorOnly: true,
-						includeCurrentBranches: true
-					})
-					.then(_ => {
-						console.warn(_);
-					});
-				console.warn("eric response", response);
 			}
 		}
 	}, [derivedState.scmInfo]);
