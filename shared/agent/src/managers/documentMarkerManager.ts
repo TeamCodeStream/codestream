@@ -364,6 +364,60 @@ export class DocumentMarkerManager {
 					});
 				});
 			}
+		} else if (providerId === "bitbucket*org") {
+			// TODO get all the review comments for this PR
+			// const pr = result.project.mergeRequest;
+			// const comments: any[] = [];
+			// result.project.mergeRequest.discussions.nodes.forEach((_: any) => {
+			// 	if (_.notes && _.notes.nodes) {
+			// 		_.notes.nodes.forEach((n: any) => {
+			// 			if (n.position && n.position.newPath === parsedUri.path) {
+			// 				comments.push(n);
+			// 			}
+			// 		});
+			// 	}
+			// });
+			// const provider = providerRegistry
+			// 	.getProviders()
+			// 	.find((provider: ThirdPartyProvider) => provider.getConfig().id === pr.providerId);
+			// if (provider) {
+			// 	// comments.forEach(async (comment: any) => {
+			// 	// 	let summary = comment.body;
+			// 	// 	if (summary.length !== 0) {
+			// 	// 		summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
+			// 	// 	}
+			// 	// 	const gotoLine = comment.position.newLine;
+			// 	// 	const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+			// 	// 	documentMarkers.push({
+			// 	// 		createdAt: +new Date(comment.createdAt),
+			// 	// 		modifiedAt: +new Date(comment.createdAt),
+			// 	// 		id: comment.id,
+			// 	// 		file: comment.position.newPath,
+			// 	// 		repoId: "",
+			// 	// 		creatorId: comment.author.username,
+			// 	// 		teamId: "",
+			// 	// 		fileStreamId: "",
+			// 	// 		creatorAvatar: comment.author ? comment.author.avatarUrl : undefined,
+			// 	// 		code: "",
+			// 	// 		fileUri: documentId.uri,
+			// 	// 		creatorName: comment.author ? comment.author.name : "Unknown",
+			// 	// 		range: MarkerLocation.toRangeFromArray(location),
+			// 	// 		location: MarkerLocation.fromArray(location, comment.id),
+			// 	// 		title: pr.title,
+			// 	// 		summary: summary,
+			// 	// 		summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
+			// 	// 		type: CodemarkType.PRComment,
+			// 	// 		externalContent: {
+			// 	// 			provider: { name: provider.name, id: pr.providerId, icon: provider.icon },
+			// 	// 			externalId: pr.idComputed,
+			// 	// 			externalChildId: comment.id,
+			// 	// 			externalType: "pr",
+			// 	// 			title: comment.body,
+			// 	// 			subhead: ""
+			// 	// 		}
+			// 	// 	});
+			// 	// });
+			// }
 		} else {
 			// TODO this is all GH-specific
 			const pr = result.repository.pullRequest;

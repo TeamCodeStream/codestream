@@ -35,6 +35,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
+import { Directives } from "./directives";
 import {
 	getOpenedRepos,
 	getRemotePaths,
@@ -839,6 +840,60 @@ export class BitbucketProvider
 		});
 
 		return response;
+	}
+
+	async getPullRequestReviewId(request: { pullRequestId: string }): Promise<string | undefined> {
+		// TODO implementation (aka find out if there is an existing PR review for this PR & user combo)
+		return undefined;
+	}
+
+	@log()
+	async createCommitComment(request: {
+		pullRequestId: string;
+		sha: string;
+		text: string;
+		path: string;
+		startLine: number;
+		// use endLine for multi-line comments
+		endLine?: number;
+		// used for old servers
+		position?: number;
+	}): Promise<Directives> {
+		const payload = {
+			id: "pr id?",
+			inline: {
+				raw: request.text
+			},
+			path: request.path
+		} as any;
+
+		Logger.log(`commenting:createCommitComment`, {
+			//	ownerData: ownerData,
+			request: request,
+			payload: payload
+		});
+
+		// const response = await this.post("the url for PR comments", payload);
+		/**
+		 * TODO
+		 * .5) Ensure we have workspace/repo info in the request (check pullRequestId for parsing -- it might be lik {id:6 owner:foo repo: bar})
+		 * 1) call BB PR api to create a PR comment
+		 * 2) check on CS return directives (besides updatePullRequest)
+		 * 3) setup a PR cache (like  github.ts has)
+		 * 4) trigger a DidChangePullRequestCommentsNotificationType notification
+		 * 5) update updatedAt
+		 */
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: new Date().getTime()
+				}
+			}
+		] as any;
+		return {
+			directives: directives
+		};
 	}
 
 	parseId(pullRequestId: string) {
