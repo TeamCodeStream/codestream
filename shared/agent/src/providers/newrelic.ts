@@ -726,7 +726,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const response: GetObservabilityReposResponse = { repos: [] };
 		try {
 			const { scm } = this._sessionServiceContainer || SessionContainer.instance();
-			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
+			const reposResponse = await scm.getRepos({ includeRemotes: true });
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {
 				const repoIds = request.filters.map(_ => _.repoId);

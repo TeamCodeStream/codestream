@@ -22,7 +22,8 @@ import {
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
-	GetMethodLevelTelemetryRequestType
+	GetMethodLevelTelemetryRequestType,
+	GetReposScmRequestType
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -61,6 +62,7 @@ import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
+import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 
 interface Props {
 	paneState: PaneState;
@@ -216,7 +218,8 @@ export const Observability = React.memo((props: Props) => {
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
-			textEditorUri: state.editorContext.textEditorUri
+			textEditorUri: state.editorContext.textEditorUri,
+			scmInfo: state.editorContext.scmInfo
 		};
 	}, shallowEqual);
 
@@ -464,7 +467,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
+	const fetchObservabilityRepos = (entityGuid?: string, repoId?) => {
 		loading(repoId, true);
 		setLoadingEntities(true);
 
@@ -616,7 +619,10 @@ export const Observability = React.memo((props: Props) => {
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
 			const _currentEntityAccounts = observabilityRepos.find(or => {
-				return or.repoId === currentRepoId;
+				if (or?.repoId) {
+					return or?.repoId === currentRepoId;
+				}
+				return false;
 			})?.entityAccounts;
 
 			setCurrentEntityAccounts(_currentEntityAccounts);
@@ -723,7 +729,30 @@ export const Observability = React.memo((props: Props) => {
 				setShowCodeLevelMetricsBroadcastIcon(false);
 			}
 		}
-	}, [currentRepoId, observabilityRepos, loadingEntities]);
+	}, [currentRepoId, observabilityRepos, loadingEntities, derivedState.textEditorUri]);
+
+	// If a user adds a newly cloned repo into their IDE, we need to refetch observability Repos
+	useEffect(() => {
+		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
+			const currentRepo = _head(observabilityRepos.filter(_ => _.repoId === currentRepoId));
+			if (!currentRepo) {
+				HostApi.instance
+					.send(GetObservabilityReposRequestType, {})
+					.then((_: GetObservabilityReposResponse) => {
+						setObservabilityRepos(_.repos || []);
+					});
+				const response: GetReposScmResponse = HostApi.instance
+					.send(GetReposScmRequestType, {
+						inEditorOnly: true,
+						includeCurrentBranches: true
+					})
+					.then(_ => {
+						console.warn(_);
+					});
+				console.warn("eric response", response);
+			}
+		}
+	}, [derivedState.scmInfo]);
 
 	const handleSetUpMonitoring = (event: React.SyntheticEvent) => {
 		event.preventDefault();
