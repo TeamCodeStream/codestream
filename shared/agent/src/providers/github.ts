@@ -4579,7 +4579,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 
-		// changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+		// Logic pulled from webview for setting up tree view with the purpose
+		// of copying the order.  This is important because JB uses this call to
+		// determine "Next difference" order.
 		const tree: TernarySearchTree<any> = TernarySearchTree.forPaths();
 		changedFiles
 			.sort((a, b) => {
@@ -4588,10 +4590,48 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				return 0;
 			})
 			.filter(f => f.filename);
-		// console.warn("SETTING UP THE TREE: ", tree, filesChanged);
 		changedFiles.forEach(f => tree.set(f.filename, f));
+		let filesInOrder: any[] = [];
+		let index = 0;
+		const render = (
+			node: any,
+			fullPath: string[],
+			dirPath: string[],
+			depth: number,
+			renderSiblings: boolean
+		) => {
+			if (dirPath.length > 0 && (node.right || node.value)) {
+				dirPath = [];
+				depth++;
 
-		return changedFiles;
+				const hideKey = "hide:" + fullPath.join("/");
+			}
+
+			if (!renderSiblings) {
+				if (node.value) {
+					filesInOrder.push(node.value);
+				}
+				if (node.mid) {
+					render(node.mid, [...fullPath, node.segment], [...dirPath, node.segment], depth, true);
+				}
+			}
+			if (renderSiblings) {
+				const siblings: any[] = [node];
+
+				let n = node;
+				while (n.right) {
+					siblings.push(n.right);
+					n = n.right;
+				}
+				siblings.sort(
+					(a, b) => Number(!!a.value) - Number(!!b.value) || a.segment.localeCompare(b.segment)
+				);
+				siblings.forEach(n => render(n, [...fullPath, n.segment], dirPath, depth, false));
+			}
+		};
+		render((tree as any)._root, [], [], 0, true);
+
+		return filesInOrder;
 	}
 
 	_timelineQueryItemsString!: string;
