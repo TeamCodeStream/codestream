@@ -402,7 +402,6 @@ export class BitbucketProvider
 	): Promise<FetchThirdPartyPullRequestResponse> {
 		await this.ensureConnected();
 
-		// TODO implementation
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
 		const item = await this.get<BitbucketPullRequest>(
@@ -410,6 +409,9 @@ export class BitbucketProvider
 		);
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
+
+		// TODO implementation
+		// TODO get PR comments???
 		const response: FetchThirdPartyPullRequestResponse = {
 			viewer: {} as any,
 			repository: {
