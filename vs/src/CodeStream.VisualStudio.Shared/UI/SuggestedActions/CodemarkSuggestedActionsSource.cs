@@ -98,8 +98,7 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 						actions: new ISuggestedAction[] {
 							new CodemarkCommentSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument),
 							new CodemarkIssueSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument),
-							new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument),
-							new CreateReviewSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument)
+							new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument)
 						},
 						categoryName: null,
 						title: null,
@@ -137,88 +136,6 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		public CodemarkPermalinkSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument) : base(componentModel, wpfTextView, textDocument) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 		public override string DisplayText { get; } = $"Get Permalink";
-	}
-
-	internal class CreateReviewSuggestedAction : ISuggestedAction {
-		private readonly IComponentModel _componentModel;
-		private readonly IWpfTextView _wpfTextView;
-		private readonly IVirtualTextDocument _virtualTextDocument;
-
-		public CreateReviewSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument) {
-			_componentModel = componentModel;
-			_wpfTextView = wpfTextView;
-			_virtualTextDocument = virtualTextDocument;
-		}
-
-		public string DisplayText { get; } = $"Request Feedback";
-
-		public bool HasActionSets => false;
-
-		public ImageMoniker IconMoniker => default(ImageMoniker);
-
-		public string IconAutomationText => null;
-
-		public string InputGestureText => null;
-
-		public bool HasPreview => false;
-
-		public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
-			return System.Threading.Tasks.Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
-		}
-
-		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
-			return System.Threading.Tasks.Task.FromResult<object>(null);
-		}
-
-		public void Invoke(CancellationToken cancellationToken) {
-			if (_virtualTextDocument == null) return;
-
-			var codeStreamService = _componentModel?.GetService<ICodeStreamService>();
-			if (codeStreamService == null) return;
-
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-				try {
-					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
-						if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
-						}
-						else {
-							Log.Warning("Could not activate tool window");
-						}
-					}
-					var sessionService = _componentModel.GetService<ISessionService>();
-					if (sessionService.WebViewDidInitialize == true) {
-						_ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
-					}
-					else {
-						var eventAggregator = _componentModel.GetService<IEventAggregator>();
-						IDisposable d = null;
-						d = eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(e => {
-							try {
-								_ = codeStreamService.NewReviewAsync(_virtualTextDocument.Uri, "Lightbulb Menu", cancellationToken: cancellationToken);
-								d.Dispose();
-							}
-							catch (Exception ex) {
-								Log.Error(ex, $"{nameof(CreateReviewSuggestedAction)} event");
-							}
-						});
-					}
-				}
-				catch (Exception ex) {
-					Log.Error(ex, nameof(CreateReviewSuggestedAction));
-				}
-			});
-		}
-
-		public void Dispose() { }
-
-		public bool TryGetTelemetryId(out Guid telemetryId) {
-			// This is a sample action and doesn't participate in LightBulb telemetry  
-			telemetryId = Guid.Empty;
-			return false;
-		}
 	}
 
 	internal abstract class CodemarkSuggestedActionBase : ISuggestedAction {
