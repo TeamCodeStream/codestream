@@ -1,6 +1,6 @@
 "use strict";
 import { GitRemoteLike } from "git/gitService";
-import { flatten } from "lodash-es";
+import { flatten } from "lodash";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
 import { toRepoName } from "../git/utils";
