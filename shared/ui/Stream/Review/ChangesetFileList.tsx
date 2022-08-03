@@ -39,6 +39,7 @@ export const ChangesetFileList = (props: {
 	withTelemetry?: boolean;
 	repoRoots?: { [repoId: string]: string };
 	showViewOptions?: boolean;
+	isTouring?: boolean;
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
 	const dispatch = useDispatch<Dispatch>();
@@ -402,13 +403,37 @@ export const ChangesetFileList = (props: {
 		checkpoint,
 		visitedFiles,
 		mode,
-		hasLoaded
+		hasLoaded,
+		props.isTouring
 	]);
+
+	// const goDiff = async index => {
+	// 	// console.warn("GOING TO: ", index);
+	// 	// console.warn("FIO: ", filesInOrder);
+
+	// 	console.warn("eric filesInOrder 1 diff ", filesInOrder);
+
+	// 	if (index < 0) index = filesInOrder.length - 1;
+	// 	if (index > filesInOrder.length - 1) index = 0;
+	// 	const f = filesInOrder[index];
+	// 	const visitedKey = [f.repoId, f.file].join(":");
+	// 	await dispatch(showDiff(review.id, checkpoint, f.repoId, f.file));
+	// 	visitFile(visitedKey, index);
+
+	// 	if (props.withTelemetry && review.id) {
+	// 		HostApi.instance.track("Review Diff Viewed", {
+	// 			"Review ID": review.id
+	// 		});
+	// 	}
+	// };
 
 	const goDiff = React.useCallback(
 		async index => {
 			// console.warn("GOING TO: ", index);
 			// console.warn("FIO: ", filesInOrder);
+
+			console.warn("eric filesInOrder 1 diff ", filesInOrder);
+
 			if (index < 0) index = filesInOrder.length - 1;
 			if (index > filesInOrder.length - 1) index = 0;
 			const f = filesInOrder[index];
@@ -461,6 +486,9 @@ export const ChangesetFileList = (props: {
 	}, [visitedFiles, goDiff]);
 
 	const pct = filesInOrder.length > 0 ? (100 * totalVisitedFiles) / filesInOrder.length : 0;
+
+	console.warn("eric filesInOrder return", filesInOrder);
+	console.warn("eric isTouring ", props.isTouring);
 
 	return (
 		<>

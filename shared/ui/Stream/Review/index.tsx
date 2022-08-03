@@ -168,6 +168,7 @@ export interface BaseReviewMenuProps {
 	review: CSReview;
 	setIsEditing: Function;
 	setIsAmending?: Function;
+	isTouring?: boolean;
 	changeRequests?: CodemarkPlus[];
 	collapsed?: boolean;
 }
@@ -927,6 +928,7 @@ const BaseReview = (props: BaseReviewProps) => {
 										noOnClick={!props.canStartReview}
 										withTelemetry={true}
 										showViewOptions
+										isTouring={props.isTouring}
 									/>
 								</MetaDescriptionForAssignees>
 							</Meta>
@@ -1166,6 +1168,7 @@ type FromBaseReviewProps = Pick<
 	| "filesTip"
 	| "isAmending"
 	| "setIsAmending"
+	| "isTouring"
 >;
 
 interface PropsWithId extends FromBaseReviewProps {
