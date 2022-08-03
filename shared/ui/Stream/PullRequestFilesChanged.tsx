@@ -400,6 +400,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	const [changedFiles, filesInOrder] = React.useMemo(() => {
 		const lines: any[] = [];
+		//@TODO: No need to reorder files since that logic is done in agent
+		//this can be cleaned up
 		let filesInOrder: any[] = [];
 
 		if (props.viewMode === "tree") {

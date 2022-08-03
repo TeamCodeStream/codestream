@@ -2888,7 +2888,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		accessRawDiffs?: boolean;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		const response = await this.getPullRequestFilesChangedCore(request);
-		return response.filesChanged;
+		const filesInOrder = this.sortFilesInTreeOrder(response.filesChanged);
+
+		return filesInOrder;
 	}
 
 	@log()

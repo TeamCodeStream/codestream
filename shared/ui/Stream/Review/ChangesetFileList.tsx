@@ -412,7 +412,7 @@ export const ChangesetFileList = (props: {
 			if (index < 0) index = filesInOrder.length - 1;
 			if (index > filesInOrder.length - 1) index = 0;
 			const f = filesInOrder[index];
-			const visitedKey = [f.repoId, f.file].join(":");
+			const visitedKey = [f?.repoId, f.file].join(":");
 			await dispatch(showDiff(review.id, checkpoint, f.repoId, f.file));
 			visitFile(visitedKey, index);
 
