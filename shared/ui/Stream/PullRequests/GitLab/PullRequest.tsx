@@ -387,7 +387,6 @@ export const PullRequest = () => {
 	const getOpenRepos = async () => {
 		const { reposState } = derivedState;
 		const response: GetReposScmResponse = await HostApi.instance.send(GetReposScmRequestType, {
-			inEditorOnly: true,
 			includeCurrentBranches: true
 		});
 		if (response && response.repositories) {
