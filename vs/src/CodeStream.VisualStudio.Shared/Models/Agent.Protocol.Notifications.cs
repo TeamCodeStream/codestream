@@ -26,9 +26,20 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public bool? CodemarksShowArchived { get; set; }
 	}
 
+	public class DidChangeUnreadsData {
+		// there are other properties in the agent that are not mapped here
+		public int TotalMentions { get; set; }
+		public int TotalUnreads { get; set; }
+	}
+
 	public class DidChangeUserPreferencesEvent {
 		public string Type { get; set; } = "preferences";
 		public DidChangeUserPreferencesData Data { get; set; }
+	}
+
+	public class DidChangeUnreadsEvent {
+		public string Type { get; set; } = "unreads";
+		public DidChangeUnreadsData Data { get; set; }
 	}
 
 	public class DidChangeDataNotificationTypeParams {

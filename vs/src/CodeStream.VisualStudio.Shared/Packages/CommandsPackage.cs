@@ -105,42 +105,29 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 					var eventAggregator = _componentModel.GetService<IEventAggregator>();
 					_disposables = new List<IDisposable> {
-					//when a user has logged in/out we alter the text of some of the commands
-					eventAggregator?.GetEvent<SessionReadyEvent>()
-						.ObserveOnApplicationDispatcher()
-						.Subscribe(_ => {
-							userCommand.Update();
-					}),
-					eventAggregator?.GetEvent<SessionLogoutEvent>()
-						.ObserveOnApplicationDispatcher()
-						.Subscribe(_ => {
-							userCommand.Update();
-					}),
-					eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
-						.ObserveOnApplicationDispatcher()
-						.Subscribe(_ => {
-							userCommand.Update();
-					}),
-
-					//eventAggregator?.GetEvent<SessionDidStartSignInEvent>().Subscribe(_ => {
-					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					//	userCommand.Update();
-					//	});
-					//}),
-					//eventAggregator?.GetEvent<SessionDidFailSignInEvent>().Subscribe(_ => {
-					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					//	userCommand.Update();
-					//	});
-					//}),
-					//eventAggregator?.GetEvent<SessionDidStartSignOutEvent>().Subscribe(_ => {
-					//	ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					//		await JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					//		userCommand.Update();
-					//	});
-					//})
+						//when a user has logged in/out we alter the text of some of the commands
+						eventAggregator?.GetEvent<SessionReadyEvent>()
+							.ObserveOnApplicationDispatcher()
+							.Subscribe(_ => {
+								userCommand.Update();
+						}),
+						eventAggregator?.GetEvent<SessionLogoutEvent>()
+							.ObserveOnApplicationDispatcher()
+							.Subscribe(_ => {
+								userCommand.Update();
+						}),
+						eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+							.ObserveOnApplicationDispatcher()
+							.Subscribe(_ => {
+								userCommand.Update();
+						}),
+						eventAggregator?.GetEvent<UserUnreadsChangedEvent>()
+							.ObserveOnApplicationDispatcher()
+							.Subscribe(e => {
+								userCommand.UpdateAfterLogin(e);
+						})
 					};
+
 					if (_sessionService.IsAgentReady) {
 						userCommand.Update();
 					}

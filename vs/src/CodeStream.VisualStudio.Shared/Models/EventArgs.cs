@@ -70,4 +70,12 @@ namespace CodeStream.VisualStudio.Shared.Events {
 			Data = data;
 		}
 	}
+
+	public sealed class UserUnreadsChangedEvent : EventBase {
+		public DidChangeUnreadsData Data { get; }
+
+		public UserUnreadsChangedEvent(DidChangeUnreadsData data) {
+			Data = data;
+		}
+	}
 }

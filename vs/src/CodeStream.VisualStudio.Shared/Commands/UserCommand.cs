@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Shell;
 using System;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Services;
 using Serilog;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -18,6 +19,7 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
 
 		private const string DefaultText = "Sign In...";
+		private string _loggedInLabel;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 
@@ -53,73 +55,36 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 				try {
 					switch (state) {
 						case SessionState.UserSignInFailed: {
-								// the caching on this sucks and it doesn't always update...
-								//Visible = false;
-								//Enabled = false;
-								//Text = DefaultText;
-
-								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-								statusBar.IsFrozen(out var frozen);
-								if (frozen != 0) {
-									statusBar.FreezeOutput(0);
-								}
-								statusBar.SetText("Ready");
-								statusBar.FreezeOutput(1);
-								break;
-							}
+							UpdateStatusBar("Ready");
+							break;
+						}
 						case SessionState.UserSigningIn: {
-								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-								statusBar.IsFrozen(out var frozen);
-
-								if (frozen != 0) {
-									statusBar.FreezeOutput(0);
-								}
-
-								statusBar.SetText("CodeStream: Signing In...");
-								statusBar.FreezeOutput(1);
-								break;
-							}
+							UpdateStatusBar("CodeStream: Signing In...");
+							break;
+						}
 						case SessionState.UserSigningOut: {
-								// the caching on this sucks and it doesn't always update...
-								//if (!_sessionService.IsReady) {
-								//	Text = "Loading...";
-								//	Visible = false;
-								//	Enabled = false;
-								//}
-								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-								statusBar.IsFrozen(out var frozen);
-								if (frozen != 0) {
-									statusBar.FreezeOutput(0);
-								}
-								statusBar.SetText("CodeStream: Signing Out...");
-								statusBar.FreezeOutput(1);
-								break;
-							}
+							UpdateStatusBar("CodeStream: Signing Out...");
+							break;
+						}
 						case SessionState.UserSignedIn: {
-								var user = _sessionService.User;
-								var env = _codeStreamSettingsManager?.GetUsefulEnvironmentName();
-								var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
+							var user = _sessionService.User;
+							var env = _codeStreamSettingsManager?.GetUsefulEnvironmentName();
+							var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
 
-								Visible = true;
-								Enabled = true;
-								Text = user.HasSingleOrg ? label : $"{label} - {user.OrgName}";
+							Visible = true;
+							Enabled = true;
 
-								var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
-								statusBar.IsFrozen(out var frozen);
-								if (frozen != 0) {
-									statusBar.FreezeOutput(0);
-								}
-								statusBar.SetText("Ready");
-								statusBar.FreezeOutput(1);
-
-								break;
-							}
+							Text = _loggedInLabel = user.HasSingleOrg ? label : $"{label} - {user.OrgName}";
+							
+							UpdateStatusBar("Ready");
+							break;
+						}
 						default: {
-								Visible = false;
-								Enabled = false;
-								Text = DefaultText;
-								break;
-							}
+							Visible = false;
+							Enabled = false;
+							Text = DefaultText;
+							break;
+						}
 					}
 				}
 				catch (Exception ex) {
@@ -130,6 +95,35 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 
 		protected override void ExecuteUntyped(object parameter) {
 			//noop
+		}
+
+		public void UpdateAfterLogin(UserUnreadsChangedEvent eventArgs) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+			
+			var totalMentions = eventArgs.Data?.TotalMentions ?? 0;
+			var totalUnreads = eventArgs.Data?.TotalUnreads ?? 0;
+
+			if (totalMentions > 0) {
+				Text = $"{_loggedInLabel} ({totalMentions})";
+			}
+			else if (totalUnreads > 0) {
+				Text = $"{_loggedInLabel} ·";
+			}
+			else {
+				Text = _loggedInLabel;
+			}
+			
+			UpdateStatusBar("Ready");
+		}
+
+		private static void UpdateStatusBar(string text) {
+			var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
+			statusBar.IsFrozen(out var frozen);
+			if (frozen != 0) {
+				statusBar.FreezeOutput(0);
+			}
+			statusBar.SetText(text);
+			statusBar.FreezeOutput(1);
 		}
 	}
 }

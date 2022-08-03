@@ -111,9 +111,18 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				if (preferences?.Data != null) {
 					_userPreferencesChangedSubject.OnNext(new UserPreferencesChangedSubjectArgs(preferences.Data));
 				}
+
+				BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 			}
 
-			BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
+			if (type?.Value<string>() == "unreads") {
+				var unreads = e.ToObjectSafe<DidChangeUnreadsEvent>();
+				if (unreads?.Data != null) {
+					_eventAggregator.Publish(new UserUnreadsChangedEvent(unreads.Data));
+				}
+			}
+
+			
 		}
 
 		/// <summary>
