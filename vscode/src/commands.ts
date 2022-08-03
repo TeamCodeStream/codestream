@@ -341,14 +341,18 @@ export class Commands implements Disposable {
 
 	@command("closeReviewDiff", { showErrorMessage: "Unable to close review diff" })
 	async closeReviewDiff(_args: CloseReviewDiffCommandArgs): Promise<boolean> {
-		for (const e of window.visibleTextEditors) {
-			const uri = Uri.parse(e.document.uri.toString(false));
+		// @TODO: commented out, possibly causing intermittent issue where closing a
+		// PR leads to an IDE error, see:
+		// https://issues.newrelic.com/browse/NR-39332
 
-			if (uri.scheme === "codestream-diff") {
-				await window.showTextDocument(e.document, e.viewColumn);
-				await commands.executeCommand("workbench.action.closeActiveEditor");
-			}
-		}
+		// for (const e of window.visibleTextEditors) {
+		// 	const uri = Uri.parse(e.document.uri.toString(false));
+
+		// 	if (uri.scheme === "codestream-diff") {
+		// 		await window.showTextDocument(e.document, e.viewColumn);
+		// 		await commands.executeCommand("workbench.action.closeActiveEditor");
+		// 	}
+		// }
 
 		return true;
 	}
