@@ -403,13 +403,6 @@ export const PullRequestConversationTab = (props: {
 			map,
 			function(obj, param) {
 				obj[param.key] = param.value;
-				// if (
-				// 	param.value?.author?.login &&
-				// 	prAuthorLogin &&
-				// 	param.value.author.login === prAuthorLogin
-				// ) {
-				// 	return;
-				// }
 				return obj;
 			},
 			{}
@@ -457,20 +450,6 @@ export const PullRequestConversationTab = (props: {
 			}
 			return map;
 		}, reviewsHash);
-
-	// const reviewers = Object.entries(reviewsHash)
-	// 	.filter(key => {
-	// 		const val = reviewsHash[key];
-	// 		// Cannot assign a pr to the owner, filter this value out
-	// 		if (val.author.login === prAuthorLogin) {
-	// 			return false;
-	// 		}
-	// 		return true;
-	// 	})
-	// 	.map((key: any) => {
-	// 		const val = reviewsHash[key];
-	// 		return { ...val, id: key };
-	// 	}) as { id: string; login: string; avatarUrl: string; isPending: boolean; state: string }[];
 
 	const reviewers = Object.keys(reviewsHash).map(key => {
 		const val = reviewsHash[key];
