@@ -14,7 +14,6 @@ using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
-using CodeStream.VisualStudio.Vsix.x86.Models;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;

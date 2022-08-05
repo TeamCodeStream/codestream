@@ -1,4 +1,4 @@
-﻿namespace CodeStream.VisualStudio.Vsix.x86.Models {
+﻿namespace CodeStream.VisualStudio.Shared.Models {
 	public class ResponseError {
 		public int? Code { get; set; }
 		public string Message { get; set; }
