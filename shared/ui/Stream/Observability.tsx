@@ -225,7 +225,8 @@ export const Observability = React.memo((props: Props) => {
 		};
 	}, shallowEqual);
 
-	const NO_ACCESS_ERROR_MESSAGE = "Your New Relic account doesn’t have access to the integration with CodeStream.	Contact your New Relic admin to upgrade.";
+	const NO_ACCESS_ERROR_MESSAGE =
+		"Your New Relic account doesn’t have access to the integration with CodeStream.	Contact your New Relic admin to upgrade.";
 	const GENERIC_ERROR_MESSAGE = "There was an error loading this data.";
 
 	const [noAccess, setNoAccess] = useState<string | undefined>(undefined);
@@ -310,7 +311,7 @@ export const Observability = React.memo((props: Props) => {
 						Query: "GetObservabilityErrorAssignments"
 					});
 					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
-				}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
@@ -361,7 +362,7 @@ export const Observability = React.memo((props: Props) => {
 								Query: "GetObservabilityErrors"
 							});
 							setNoAccess(NO_ACCESS_ERROR_MESSAGE);
-						}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+						} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 							setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 						}
 					});
@@ -447,7 +448,7 @@ export const Observability = React.memo((props: Props) => {
 										Query: "GetObservabilityErrors"
 									});
 									setNoAccess(NO_ACCESS_ERROR_MESSAGE);
-								}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+								} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 									setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 								}
 							});
@@ -503,7 +504,7 @@ export const Observability = React.memo((props: Props) => {
 					});
 					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
 					setLoadingEntities(false);
-				}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
@@ -810,9 +811,7 @@ export const Observability = React.memo((props: Props) => {
 						<>
 							{noAccess ? (
 								<div style={{ padding: "0 20px 20px 20px" }}>
-									<span>
-										{noAccess}
-									</span>
+									<span>{noAccess}</span>
 								</div>
 							) : (
 								<>
