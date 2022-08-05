@@ -100,6 +100,7 @@ export class InstrumentableCodeLensController implements Disposable {
 					{ language: "ruby" },
 					{ language: "csharp" },
 					{ language: "java" },
+					{ language: "go" }
 				],
 				this._provider
 			)

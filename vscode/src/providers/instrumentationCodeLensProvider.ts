@@ -109,6 +109,12 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			: this.missingCsharpExtensionCodelens();
 	}
 
+	private checkGoPlugin(): vscode.CodeLens[] | undefined {
+		return extensions.getExtension("golang.go")?.isActive === true
+			? undefined
+			: this.missingGoExtensionCodelens();
+	}
+
 	private checkPlugin(languageId: string): vscode.CodeLens[] | undefined {
 		switch (languageId) {
 			case "ruby": {
@@ -122,6 +128,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 			case "csharp": {
 				return this.checkCsharpPlugin();
+			}
+			case "go": {
+				return this.checkGoPlugin();
 			}
 		}
 		return undefined;
@@ -185,6 +194,16 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		);
 	}
 
+	private missingGoExtensionCodelens(newRelicAccountId?: number): vscode.CodeLens[] {
+		return this.errorCodelens(
+			"NO_GO_VSCODE_EXTENSION",
+			"go",
+			"Click to configure golden signals from New Relic",
+			"To see code-level metrics you'll need to install one of the following extensions for VS Code...",
+			newRelicAccountId
+		);
+	}
+
 	private errorCodelens(
 		errorCode: string,
 		languageId: string,
@@ -215,6 +234,19 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 		for (const line of lines) {
 			const matcher = line.match(/^\s*package\s+([A-Za-z\.]+);\s*$/);
+			if (matcher && matcher.length > 1) {
+				return matcher[1];
+			}
+		}
+		return undefined;
+	}
+
+	// like java, the go plugin doesn't give us the package name
+	parseGoPackage(documentText: string): string | undefined {
+		const lines = documentText.split(/\r?\n/);
+
+		for (const line of lines) {
+			const matcher = line.match(/^\s*package\s+([A-Za-z0-9_]+)\s*$/);
 			if (matcher && matcher.length > 1) {
 				return matcher[1];
 			}
@@ -293,6 +325,12 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				functionLocator.namespace = `${this.parseJavaPackage(document.getText())}.${
 					functionLocator.namespace
 				}`;
+			}
+
+			if (document.languageId === "go") {
+				functionLocator = {
+					namespace: this.parseGoPackage(document.getText())
+				};
 			}
 
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
