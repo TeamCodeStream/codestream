@@ -14,11 +14,13 @@ using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
+using CodeStream.VisualStudio.Vsix.x86.Models;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Newtonsoft.Json.Linq;
 using Serilog;
+using StreamJsonRpc;
 
 namespace CodeStream.VisualStudio.Shared {
 	public class WebViewRouter {
@@ -85,15 +87,27 @@ namespace CodeStream.VisualStudio.Shared {
 								using (var scope = _browserService.CreateScope(message)) {
 									JToken @params = null;
 									string error = null;
+									ResponseError response = null;
 									try {
-										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.Params);
+										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method,
+											message.Params);
+									}
+									catch (RemoteRpcException rex) {
+										// in cases where we don't have a code, hard-code to 10000,
+										// which maps to `ERROR_GENERIC_USE_ERROR_MESSAGE` in the agent / webview
+										#if X64
+											response = new ResponseError(rex.ErrorCode?.ToIntSafe(10000), rex.Message);
+										#else
+											response = new ResponseError(10000 ,rex.Message);
+										#endif
+										Log.Warning(rex, $"Method={message.Method}");
 									}
 									catch (Exception ex) {
 										Log.Warning(ex, $"Method={message.Method}");
 										error = ex.Message;
 									}
 									finally {
-										scope.FulfillRequest(@params, error);
+										scope.FulfillRequest(@params, error, response);
 									}
 								}
 								break;

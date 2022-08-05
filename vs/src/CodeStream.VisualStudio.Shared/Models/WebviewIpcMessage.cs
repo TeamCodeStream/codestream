@@ -20,7 +20,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 			Id = id;
 			Method = method;
 			Params = @params;
-			Error = error?.ToString();
+			Error = error;
 		}
 
 		public override string AsJson() {

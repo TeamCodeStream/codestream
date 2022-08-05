@@ -23,7 +23,8 @@ import {
 	ObservabilityRepo,
 	ObservabilityRepoError,
 	GetMethodLevelTelemetryRequestType,
-	GetReposScmRequestType
+	GetReposScmRequestType,
+	ERROR_GENERIC_USE_ERROR_MESSAGE
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -63,6 +64,7 @@ import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
+import { offline } from "../store/connectivity/actions";
 
 interface Props {
 	paneState: PaneState;
@@ -223,7 +225,10 @@ export const Observability = React.memo((props: Props) => {
 		};
 	}, shallowEqual);
 
-	const [noAccess, setNoAccess] = useState<boolean>(false);
+	const NO_ACCESS_ERROR_MESSAGE = "Your New Relic account doesn’t have access to the integration with CodeStream.	Contact your New Relic admin to upgrade.";
+	const GENERIC_ERROR_MESSAGE = "There was an error loading this data.";
+
+	const [noAccess, setNoAccess] = useState<string | undefined>(undefined);
 	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
 		undefined
 	);
@@ -296,7 +301,7 @@ export const Observability = React.memo((props: Props) => {
 			.then((_: GetObservabilityErrorAssignmentsResponse) => {
 				setObservabilityAssignments(_.items);
 				setLoadingAssigments(false);
-				setNoAccess(false);
+				setNoAccess(undefined);
 			})
 			.catch(ex => {
 				setLoadingAssigments(false);
@@ -304,7 +309,9 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityErrorAssignments"
 					});
-					setNoAccess(true);
+					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+				}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -353,7 +360,9 @@ export const Observability = React.memo((props: Props) => {
 							HostApi.instance.track("NR Access Denied", {
 								Query: "GetObservabilityErrors"
 							});
-							setNoAccess(true);
+							setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+						}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+							setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 						}
 					});
 			});
@@ -437,7 +446,9 @@ export const Observability = React.memo((props: Props) => {
 									HostApi.instance.track("NR Access Denied", {
 										Query: "GetObservabilityErrors"
 									});
-									setNoAccess(true);
+									setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+								}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+									setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 								}
 							});
 					}
@@ -490,8 +501,10 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityRepos"
 					});
-					setNoAccess(true);
+					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
 					setLoadingEntities(false);
+				}else if(ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE){
+					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -798,8 +811,7 @@ export const Observability = React.memo((props: Props) => {
 							{noAccess ? (
 								<div style={{ padding: "0 20px 20px 20px" }}>
 									<span>
-										Your New Relic account doesn’t have access to the integration with CodeStream.
-										Contact your New Relic admin to upgrade.
+										{noAccess}
 									</span>
 								</div>
 							) : (
