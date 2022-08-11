@@ -732,11 +732,9 @@
   <PropertyGroup>
     <PostBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)..\resources\scripts\Post-Build.ps1 -ConfigurationName $(ConfigurationName) -TargetDir $(TargetDir)</PostBuildEvent>
   </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
+  <Target Name="IncludePackageReferenceDependencies" AfterTargets="GetVsixSourceItems">
+  	<ItemGroup>
+		<VSIXSourceItem Include="@(ReferencePath)" Condition="$([System.String]::new('%(ReferencePath.FusionName)').StartsWith('Microsoft.VisualStudio.Shell.Interop'))" />
+  	</ItemGroup>
   </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
