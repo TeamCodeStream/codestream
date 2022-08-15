@@ -831,6 +831,17 @@ const providerPullRequestsSlice = createSlice({
 							}
 						}
 					}
+				} else if (providerId === "bitbucket*org") {
+					const pr = newState[providerId][id].conversations.repository
+						.pullRequest as FetchThirdPartyPullRequestPullRequest;
+
+					for (const directive of action.payload.data) {
+						if (directive.type === "updatePullRequest") {
+							for (const key in directive.data) {
+								(pr as any)[key] = directive.data[key];
+							}
+						}
+					}
 				}
 			}
 			return;
