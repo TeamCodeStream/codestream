@@ -45,6 +45,9 @@ import {
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
+	GetNewRelicRelatedEntitiesRequest,
+	GetNewRelicRelatedEntitiesRequestType,
+	GetNewRelicRelatedEntitiesResponse,
 	GetObservabilityEntitiesRequest,
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityEntitiesResponse,
@@ -1058,6 +1061,50 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return response.actor;
 		} catch (e) {
 			ContextLogger.error(e, "getAccounts");
+			throw e;
+		}
+	}
+
+	//ERIC HERE
+	@lspHandler(GetNewRelicRelatedEntitiesRequestType)
+	@log()
+	async getNewRelicRelatedEntities(
+		request: GetNewRelicRelatedEntitiesRequest
+	): Promise<GetNewRelicRelatedEntitiesResponse | undefined> {
+		try {
+			const response = await this.query(
+				`query relatedEntitiesTest($entityGuid: EntityGuid!) {
+					actor {
+					  entity(guid: $entityGuid) {
+						name
+						relatedEntities(filter: {relationshipTypes: {include: [CALLS, CONNECTS_TO]}, entityDomainTypes: {include: {type: "SERVICE", domain: "EXTERNAL"}}}) {
+						  results {
+							target {
+							  entity {
+								name
+								guid
+								alertSeverity
+							  }
+							}
+							type
+						  }
+						}
+					  }
+					}
+				  }				  
+			  	`,
+				{
+					entityGuid: request.entityGuid
+				}
+			);
+			if (response?.actor?.entity?.relatedEntities?.results) {
+				const results = response.actor?.entity?.relatedEntities?.results;
+				return _groupBy(results, _ => _.type);
+			} else {
+				return {};
+			}
+		} catch (e) {
+			ContextLogger.error(e, "getRelatedEntities");
 			throw e;
 		}
 	}

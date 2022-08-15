@@ -49,7 +49,6 @@ import {
 	GetReposScmRequestType,
 	DidChangeProcessBufferNotificationType,
 	NormalizeUrlRequestType,
-	GetNewRelicErrorGroupRequestType,
 	PixieDynamicLoggingResultNotification,
 	DidResolveStackTraceLineNotificationType,
 	TelemetrySetAnonymousIdRequestType,

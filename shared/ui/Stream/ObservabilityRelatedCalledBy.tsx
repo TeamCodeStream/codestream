@@ -20,7 +20,7 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 30px"
+					padding: "2px 10px 2px 40px"
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
@@ -32,7 +32,7 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 			{expanded && (
 				<Row
 					style={{
-						padding: "0 10px 0 48px"
+						padding: "0 10px 0 50px"
 					}}
 					className={"pr-row"}
 				>

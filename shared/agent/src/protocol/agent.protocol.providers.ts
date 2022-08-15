@@ -864,6 +864,10 @@ export interface GetNewRelicErrorGroupRequest {
 	timestamp?: number;
 }
 
+export interface GetNewRelicRelatedEntitiesRequest {
+	entityGuid: string;
+}
+
 export interface NewRelicUser {
 	email?: string;
 	gravatar?: string;
@@ -944,12 +948,21 @@ export interface GetNewRelicErrorGroupResponse {
 	};
 }
 
+export interface GetNewRelicRelatedEntitiesResponse {}
+
 export const GetNewRelicErrorGroupRequestType = new RequestType<
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupResponse,
 	void,
 	void
 >("codestream/newrelic/errorGroup");
+
+export const GetNewRelicRelatedEntitiesRequestType = new RequestType<
+	GetNewRelicRelatedEntitiesRequest,
+	GetNewRelicRelatedEntitiesResponse,
+	void,
+	void
+>("codestream/newrelic/relatedEntities");
 
 export interface GetNewRelicAssigneesRequest {}
 export interface GetNewRelicAssigneesResponse {

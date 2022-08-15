@@ -2,6 +2,9 @@ import { forEach as _forEach } from "lodash-es";
 import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
+import { HostApi } from "..";
+import { useDidMount } from "../utilities/hooks";
+import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
 import { any } from "prop-types";
@@ -15,6 +18,17 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
+
+	useDidMount(() => {
+		(async () => {
+			// @TODO: hardcoded guid, CHANGE
+			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
+				entityGuid: "MTExODkwMzh8QVBNfEFQUExJQ0FUSU9OfDE3NDY3MzAw"
+			});
+
+			console.warn("ERIC HERE RESPONSE", response);
+		})();
+	});
 
 	return (
 		<>
