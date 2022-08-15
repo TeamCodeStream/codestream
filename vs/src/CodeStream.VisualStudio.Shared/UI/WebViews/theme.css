@@ -43,6 +43,14 @@
     --list-inactive-foreground: --cs--list-inactive-foreground--;
 }
 
+.menu-popup .menu-popup-body .compact .menu-item span.shortcut {
+	display: none;
+}
+
+.no-codemarks-container .no-codemarks .keybindings {
+	display: none;
+}
+
 .codestream #app .stream nav.inline {
 	padding-top: 6px;
 }
