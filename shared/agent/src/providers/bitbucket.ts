@@ -846,6 +846,11 @@ export class BitbucketProvider
 
 	async getPullRequestReviewId(request: { pullRequestId: string }): Promise<string | undefined> {
 		// TODO implementation (aka find out if there is an existing PR review for this PR & user combo)
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
+		// id - Is unique across all issues and is used for any API call
+		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
+
 		return undefined;
 	}
 
@@ -862,11 +867,14 @@ export class BitbucketProvider
 		position?: number;
 	}): Promise<Directives> {
 		const payload = {
-			id: "pr id?",
-			inline: {
+			content: {
 				raw: request.text
 			},
-			path: request.path
+			inline: {
+				from: request.startLine,
+				to: request.endLine,
+				path: request.path
+			}
 		} as any;
 
 		Logger.log(`commenting:createCommitComment`, {
@@ -874,8 +882,12 @@ export class BitbucketProvider
 			request: request,
 			payload: payload
 		});
-
-		// const response = await this.post("the url for PR comments", payload);
+		//TODO: change workspace & repo to not be hardcoded
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+		const response = await this.post(
+			`/repositories/${repoWithOwner}pullrequests/${pullRequestId}/comments`,
+			payload
+		);
 		/**
 		 * TODO
 		 * .5) Ensure we have workspace/repo info in the request (check pullRequestId for parsing -- it might be lik {id:6 owner:foo repo: bar})
@@ -893,6 +905,16 @@ export class BitbucketProvider
 				}
 			}
 		] as any;
+
+		// this.updateCache(request.pullRequestId, {
+		// 	directives: directives
+		// });
+
+		// this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+		// 	pullRequestId: request.pullRequestId,
+		// 	commentId: request.id
+		// });
+
 		return {
 			directives: directives
 		};
