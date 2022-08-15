@@ -77,6 +77,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\MessageTypes.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\NREnvironmentSettings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\OpenEditorResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ResponseError.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\SettingsScope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Types.cs" />

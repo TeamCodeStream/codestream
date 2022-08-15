@@ -8,7 +8,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	public interface IAbstractMessageType {
 		string Id { get; }
 		string Method { get; }
-		string Error { get; set; }
+		JToken Error { get; set; }
 		string AsJson();
 	}
 
@@ -29,7 +29,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 			if (!message.Method.IsNullOrWhiteSpace()) {
 				result.Add(nameof(message.Method), message.Method);
 			}
-			if (!message.Error.IsNullOrWhiteSpace()) {
+			if (message.Error != null) {
 				result.Add(nameof(message.Error), message.Error);
 			}
 			if (canEnqueue) {
@@ -60,13 +60,13 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 		public T Params { get; set; }
 
-		public string Error { get; set; }
+		public JToken Error { get; set; }
 
 		public virtual string AsJson() {
 			return ToResponseMessage(Id, Method, JToken.Parse(Params.ToJson()), Error);
 		}
 
-		protected static string ToResponseMessage(string id, string method, JToken @params, string error) {
+		protected static string ToResponseMessage(string id, string method, JToken @params, JToken error) {
 			var result = new JObject();
 			if (!id.IsNullOrWhiteSpace()) {
 				result["id"] = id;
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 			if (@params != null) {
 				result["params"] = @params;
 			}
-			if (!error.IsNullOrWhiteSpace()) {
+			if (error != null) {
 				result["error"] = error;
 			}
 

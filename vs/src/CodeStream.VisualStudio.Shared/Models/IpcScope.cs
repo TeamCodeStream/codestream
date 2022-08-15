@@ -1,6 +1,6 @@
 ﻿using System;
 using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Services;
 using Newtonsoft.Json.Linq;
 
@@ -30,14 +30,17 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// <summary>
 		/// Attach additional data to the response message
 		/// </summary>
-		/// <param name="params"></param>
-		/// <param name="error"></param>
-		public void FulfillRequest(JToken @params, string error = null) {
+		public void FulfillRequest(JToken @params, string errorMsg = null, ResponseError responseError = null) {
 			if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
 
-			_message = error.IsNullOrWhiteSpace() ?
-				new WebviewIpcMessage(_message.Id, @params) :
-				new WebviewIpcMessage(_message.Id, @params, new JValue(error));
+			if (errorMsg == null && responseError == null) {
+				_message = new WebviewIpcMessage(_message.Id, @params);
+				return;
+			}
+
+			_message = errorMsg != null
+				? new WebviewIpcMessage(_message.Id, @params, new JValue(errorMsg))
+				: new WebviewIpcMessage(_message.Id, @params, responseError.ToJToken());
 		}
 
 		/// <summary>

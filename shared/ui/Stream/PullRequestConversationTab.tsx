@@ -58,7 +58,7 @@ import { Link } from "./Link";
 import { setUserPreference } from "./actions";
 import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
-import { reduce as _reduce, groupBy as _groupBy, map as _map } from "lodash-es";
+import { reduce as _reduce, groupBy as _groupBy, map as _map, pickBy as _pickBy } from "lodash-es";
 import { api } from "../store/providerPullRequests/actions";
 import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
@@ -377,9 +377,10 @@ export const PullRequestConversationTab = (props: {
 
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
 	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
+	const prAuthorLogin = pr?.author?.login || GHOST;
 
-	var reviewsHash: any = {};
-	var opinionatedReviewsHash: any = {};
+	let reviewsHash: any = {};
+	let opinionatedReviewsHash: any = {};
 	// the list of reviewers isn't in a single spot...
 
 	// these are completed reviews
@@ -406,6 +407,14 @@ export const PullRequestConversationTab = (props: {
 			},
 			{}
 		);
+
+		reviewsHash = _pickBy(reviewsHash, (value, key) => {
+			if (prAuthorLogin !== value?.author?.login) {
+				return true;
+			}
+			return false;
+		});
+
 		const opinionatedMap = _map(gb, (values, key) => {
 			const opinionatedReviews = values.filter(
 				review => review.state === "CHANGES_REQUESTED" || review.state === "APPROVED"
