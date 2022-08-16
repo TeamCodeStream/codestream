@@ -1065,7 +1065,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
-	//ERIC HERE
 	@lspHandler(GetNewRelicRelatedEntitiesRequestType)
 	@log()
 	async getNewRelicRelatedEntities(

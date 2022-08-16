@@ -18,6 +18,7 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
+	const [relatedEntities, setRelatedEntities] = useState<any | undefined>(undefined);
 
 	useDidMount(() => {
 		(async () => {
@@ -25,8 +26,8 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
 				entityGuid: "MTExODkwMzh8QVBNfEFQUExJQ0FUSU9OfDE3NDY3MzAw"
 			});
-
-			console.warn("ERIC HERE RESPONSE", response);
+			console.warn("relatedEntities on useDidMount", response);
+			setRelatedEntities(response);
 		})();
 	});
 
@@ -43,10 +44,10 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Related Services</span>
 			</Row>
-			{expanded && (
+			{expanded && relatedEntities && (
 				<>
-					<ObservabilityRelatedCalls />
-					<ObservabilityRelatedCalledBy />
+					<ObservabilityRelatedCalls relatedEntities={relatedEntities.CALLS} />
+					<ObservabilityRelatedCalledBy relatedEntities={relatedEntities.CONNECTS_TO} />
 				</>
 			)}
 		</>

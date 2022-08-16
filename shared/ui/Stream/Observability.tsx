@@ -1027,6 +1027,7 @@ export const Observability = React.memo((props: Props) => {
 																									oe => oe?.repoId === _observabilityRepo?.repoId
 																								) && (
 																									<>
+																										<ObservabilityRelatedWrapper />
 																										<ObservabilityErrorWrapper
 																											observabilityErrors={observabilityErrors}
 																											observabilityRepo={_observabilityRepo}
@@ -1035,7 +1036,6 @@ export const Observability = React.memo((props: Props) => {
 																											}
 																											entityGuid={ea.entityGuid}
 																										/>
-																										<ObservabilityRelatedWrapper />
 																									</>
 																								)}
 																							</>

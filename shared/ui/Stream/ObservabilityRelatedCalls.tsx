@@ -1,4 +1,4 @@
-import { forEach as _forEach } from "lodash-es";
+import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
 import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -8,16 +8,16 @@ import { HostApi } from "..";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { any } from "prop-types";
+
 interface Props {
-	// observabilityErrors: any;
-	// observabilityRepo: any;
-	// observabilityAssignments: any;
-	// entityGuid: string;
+	relatedEntities: any;
 }
 
 export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
+	const { relatedEntities } = props;
 
+	console.warn(relatedEntities, expanded);
 	return (
 		<>
 			<Row
@@ -31,7 +31,13 @@ export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Calls</span>
 			</Row>
-			{expanded && <ObservabilityRelatedEntity />}
+			{expanded && !_isEmpty(relatedEntities) && (
+				<>
+					{relatedEntities.map(_ => {
+						return <ObservabilityRelatedEntity relatedEntity={_} />;
+					})}
+				</>
+			)}
 		</>
 	);
 });
