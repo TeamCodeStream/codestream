@@ -917,14 +917,6 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 			});
 		}
 		if (props.codeError?.id?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === -1) {
-			// don't add the ability to share for pending codeErrors
-			items.push({
-				label: "Share",
-				icon: <Icon name="share" />,
-				key: "share",
-				action: () => setShareModalOpen(true)
-			});
-
 			items.push({
 				label: "Copy Link",
 				icon: <Icon name="copy" />,
