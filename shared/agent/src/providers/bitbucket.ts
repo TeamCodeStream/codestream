@@ -462,7 +462,7 @@ export class BitbucketProvider
 					} as any,
 					providerId: this.providerConfig.id,
 
-					comments: comments || []
+					comments: comments.body.values || []
 				}
 				// TODO fix this any
 			} as any
