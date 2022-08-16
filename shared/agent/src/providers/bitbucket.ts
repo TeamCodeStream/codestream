@@ -862,7 +862,7 @@ export class BitbucketProvider
 		path: string;
 		startLine: number;
 		// use endLine for multi-line comments
-		endLine?: number;
+		// endLine?: number;
 		// used for old servers
 		position?: number;
 	}): Promise<Directives> {
@@ -871,8 +871,8 @@ export class BitbucketProvider
 				raw: request.text
 			},
 			inline: {
-				from: request.startLine,
-				to: request.endLine,
+				to: request.startLine,
+				// to: request.endLine,
 				path: request.path
 			}
 		} as any;
@@ -885,7 +885,7 @@ export class BitbucketProvider
 		//TODO: change workspace & repo to not be hardcoded
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post(
-			`/repositories/${repoWithOwner}pullrequests/${pullRequestId}/comments`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
 			payload
 		);
 		/**
