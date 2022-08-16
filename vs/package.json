@@ -10,7 +10,7 @@
 		"url": ""
 	},
 	"scripts": {
-		"build": "tsx esbuld.ts",
+		"build": "tsx esbuild.ts",
 		"bundle": "npm install --no-save && npm run agent:bundle && tsx esbuild.ts --prod",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",

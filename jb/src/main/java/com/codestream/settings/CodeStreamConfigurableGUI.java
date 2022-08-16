@@ -21,6 +21,7 @@ public class CodeStreamConfigurableGUI {
     private JCheckBox showNewCodemarkGutterIconOnHover;
     private JCheckBox showGoldenSignalsInEditor;
     private JTextField goldenSignalsInEditorFormat;
+    private JCheckBox showGitBlame;
 
     public JPanel getRootPanel() {
         return rootPanel;
@@ -57,6 +58,8 @@ public class CodeStreamConfigurableGUI {
     public JCheckBox getShowNewCodemarkGutterIconOnHover() {
         return showNewCodemarkGutterIconOnHover;
     }
+
+    public JCheckBox getShowGitBlame() { return showGitBlame; }
 
     public JComboBox<ProxySupport> getProxySupport() {
         return proxySupport;

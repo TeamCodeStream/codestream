@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Shared;
 
 namespace CodeStream.VisualStudio.UnitTests {
 	[TestClass]

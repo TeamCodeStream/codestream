@@ -1,7 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Services;
 using CodeStream.VisualStudio.Core.UI;
-using CodeStream.VisualStudio.Services;
 using CodeStream.VisualStudio.UnitTests.Stubs;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -13,8 +12,9 @@ using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
-using CodeStream.VisualStudio.UI;
-using CodeStream.VisualStudio.UI.Margins;
+using CodeStream.VisualStudio.Shared.Services;
+using CodeStream.VisualStudio.Shared.UI;
+using CodeStream.VisualStudio.Shared.UI.Margins;
 using Microsoft.VisualStudio.Text.Projection;
 
 namespace CodeStream.VisualStudio.UnitTests.UI {

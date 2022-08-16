@@ -4,4 +4,9 @@
             <add-to-group group-id="com.codestream.Actions" />
         </action>
     </actions>
+    <project-components>
+        <component>
+            <implementation-class>com.codestream.clm.CLMGoComponent</implementation-class>
+        </component>
+    </project-components>
 </idea-plugin>

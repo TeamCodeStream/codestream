@@ -1,7 +1,7 @@
-﻿using CodeStream.VisualStudio.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Shared.Services;
 
 namespace CodeStream.VisualStudio.UnitTests.Events {
 	[TestClass]

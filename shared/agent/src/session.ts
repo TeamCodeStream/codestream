@@ -55,6 +55,7 @@ import {
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
+	DidChangeRepositoryCommitHashNotificationType,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
@@ -1675,6 +1676,12 @@ export class CodeStreamSession {
 		const { git, markerLocations, reviews, users } = SessionContainer.instance();
 		markerLocations.flushUncommittedLocations(repo);
 
+		const commit = await git.getCommit(repo.path, "HEAD");
+		this.agent.sendNotification(DidChangeRepositoryCommitHashNotificationType, {
+			sha: commit?.ref,
+			repoPath: repo.path
+		});
+
 		const me = await users.getMe();
 		// disable FROP for new users by default
 		let createReviewOnDetectUnreviewedCommits;
@@ -1694,7 +1701,6 @@ export class CodeStreamSession {
 		if (!this.apiCapabilities.autoFR) {
 			return;
 		}
-		const commit = await git.getCommit(repo.path, "HEAD");
 		const userEmail = await git.getConfig(repo.path, "user.email");
 		const twentySeconds = 20 * 1000;
 		if (

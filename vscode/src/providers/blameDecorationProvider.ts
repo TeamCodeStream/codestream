@@ -1,16 +1,19 @@
 "use strict";
 
 import { GetBlameLineInfo } from "protocols/agent/agent.protocol.scm";
+import { Functions } from "system";
 import {
 	ConfigurationChangeEvent,
 	Disposable,
 	extensions,
 	MarkdownString,
 	Position,
+	TextDocumentChangeEvent,
 	TextEditorDecorationType,
 	TextEditorSelectionChangeEvent,
 	ThemeColor,
-	window
+	window,
+	workspace
 } from "vscode";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { NewCodemarkCommandArgs } from "../commands";
@@ -22,12 +25,20 @@ export class BlameDecorationProvider implements Disposable {
 	private _decorationTypes: { [key: string]: TextEditorDecorationType } | undefined;
 	private readonly _disposable: Disposable;
 	private _enabledDisposable: Disposable | undefined;
+	private _latestCursorEvent: TextEditorSelectionChangeEvent | undefined;
+	private _blameCache: Map<number, GetBlameLineInfo>;
+	private readonly onSourceChangeDebounced = Functions.debounce(
+		this.onSourceChange.bind(this),
+		2000,
+		{ track: true }
+	);
 
 	constructor() {
 		this._disposable = Disposable.from(
 			configuration.onDidChange(this.onConfigurationChanged, this),
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
+		this._blameCache = new Map<number, GetBlameLineInfo>();
 
 		this.onConfigurationChanged(configuration.initializingChangeEvent);
 	}
@@ -38,10 +49,9 @@ export class BlameDecorationProvider implements Disposable {
 	}
 
 	private onConfigurationChanged(e: ConfigurationChangeEvent) {
-		// if (configuration.changed(e, configuration.name("showLineBlames").value)) {
-		// 	this.ensure(true);
-		// }
-		this.ensure(true); // remove me
+		if (configuration.changed(e, configuration.name("showLineLevelBlame").value)) {
+			this.ensure(true);
+		}
 	}
 
 	private onSessionStatusChanged(e: SessionStatusChangedEvent) {
@@ -58,7 +68,7 @@ export class BlameDecorationProvider implements Disposable {
 	}
 
 	private ensure(reset: boolean = false) {
-		if (!Container.session.signedIn) {
+		if (!Container.config.showLineLevelBlame || !Container.session.signedIn) {
 			this.disable();
 			return;
 		}
@@ -70,6 +80,7 @@ export class BlameDecorationProvider implements Disposable {
 	}
 
 	private disable() {
+		this.resetBlameCache();
 		if (this._enabledDisposable === undefined) return;
 
 		this._enabledDisposable.dispose();
@@ -99,11 +110,49 @@ export class BlameDecorationProvider implements Disposable {
 		this._decorationTypes = decorationTypes;
 
 		this._enabledDisposable = Disposable.from(
-			window.onDidChangeTextEditorSelection(this.onCursorChange, this)
+			workspace.onDidChangeTextDocument(this.onTextDocumentChange, this),
+			workspace.onDidSaveTextDocument(this.onTextDocumentSave, this),
+			window.onDidChangeTextEditorSelection(this.onCursorChange, this),
+			Container.agent.onDidChangeRepositoryCommitHash(this.onSourceChange, this)
 		);
 	}
 
+	private resetBlameCache() {
+		this._blameCache.clear();
+	}
+
+	private async onTextDocumentChange(e: TextDocumentChangeEvent) {
+		if (e.document.uri.scheme !== "file") {
+			return;
+		}
+		this.clearDecorations();
+		await this.onSourceChangeDebounced();
+	}
+
+	private async onTextDocumentSave() {
+		this.onSourceChangeDebounced.flush();
+		await this.onSourceChange();
+	}
+
+	private async onSourceChange() {
+		this.resetBlameCache();
+		if (this._latestCursorEvent) {
+			await this.onCursorChange(this._latestCursorEvent);
+		}
+	}
+
+	private clearDecorations() {
+		if (this._latestCursorEvent) {
+			const editor = this._latestCursorEvent.textEditor;
+			editor.setDecorations(this._decorationTypes!.blameSuffix, []);
+		}
+	}
+
 	private async onCursorChange(e: TextEditorSelectionChangeEvent) {
+		this._latestCursorEvent = e;
+		if (this.onSourceChangeDebounced.pending()) {
+			return;
+		}
 		const cursor = e.selections[0].active;
 		const editor = e.textEditor;
 		if (editor.document.uri.scheme !== "file") {
@@ -115,16 +164,30 @@ export class BlameDecorationProvider implements Disposable {
 			end: new Position(cursor.line, length)
 		});
 		try {
-			const { blame } = await Container.agent.scm.getBlame(
-				editor.document.uri.toString(),
-				cursor.line,
-				cursor.line
-			);
-			const lineBlame = blame[0];
-			const hoverMessage = this.formatHover(lineBlame);
-			editor.setDecorations(this._decorationTypes!.blameSuffix, [
-				{ hoverMessage, range, renderOptions: { after: { contentText: lineBlame.formattedBlame } } }
-			]);
+			if (!this._blameCache.get(cursor.line)) {
+				const startLine = Math.max(cursor.line - 5, 0);
+				const endLine = Math.min(cursor.line + 5, editor.document.lineCount);
+				const { blame } = await Container.agent.scm.getBlame(
+					editor.document.uri.toString(),
+					startLine,
+					endLine
+				);
+				blame.forEach((blameInfo, index) => {
+					const lineNumber = startLine + index;
+					this._blameCache.set(lineNumber, blameInfo);
+				});
+			}
+			const lineBlame = this._blameCache.get(cursor.line);
+			if (lineBlame) {
+				const hoverMessage = lineBlame.isUncommitted ? undefined : this.formatHover(lineBlame);
+				editor.setDecorations(this._decorationTypes!.blameSuffix, [
+					{
+						hoverMessage,
+						range,
+						renderOptions: { after: { contentText: lineBlame.formattedBlame } }
+					}
+				]);
+			}
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -137,9 +200,7 @@ export class BlameDecorationProvider implements Disposable {
 		const mdString = new MarkdownString("", true);
 		mdString.isTrusted = true;
 		if (commitInfo.gravatarUrl && commitInfo.gravatarUrl.length > 0) {
-			const authorString = commitInfo.authorEmail
-				? `**[${commitInfo.authorName}](mailto:${commitInfo.authorEmail})**`
-				: "**You**";
+			const authorString = commitInfo.authorEmail ? `**${commitInfo.authorName}**` : "**You**";
 			const dateString =
 				commitInfo.dateFormatted && commitInfo.dateFromNow
 					? `${commitInfo.dateFromNow} (${commitInfo.dateFormatted})`
@@ -147,6 +208,8 @@ export class BlameDecorationProvider implements Disposable {
 			mdString.appendMarkdown(
 				`![headshot](${commitInfo.gravatarUrl}) ${authorString} ${dateString}`
 			);
+			mdString.appendText("\n\n");
+			mdString.appendMarkdown(`<${commitInfo.authorEmail}>`);
 		}
 		mdString.appendText("\n\n");
 		if (!commitInfo.sha || commitInfo.sha.length === 0 || commitInfo.sha.match(/0{40}/)) {
@@ -157,11 +220,15 @@ export class BlameDecorationProvider implements Disposable {
 			mdString.appendText("\n\n");
 			mdString.appendText(commitInfo.summary);
 		}
-		commitInfo.prs.forEach((pr: { url: string; title: string }) => {
+		commitInfo.prs.forEach((pr: { id: string; providerId: string; title: string; url: string }) => {
 			mdString.appendText("\n\n");
 			mdString.appendMarkdown(
-				`[$(pull-request) ${pr.title}](command:codestream.openPullRequest?${encodeURIComponent(
+				`[$(git-pull-request) ${
+					pr.title
+				} $(link-external)](command:codestream.openPullRequest?${encodeURIComponent(
 					JSON.stringify({
+						providerId: pr.providerId,
+						pullRequestId: pr.id,
 						externalUrl: pr.url
 					})
 				)})`

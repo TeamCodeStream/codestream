@@ -41,6 +41,7 @@ import { EntityAssociator } from "../EntityAssociator";
 import { DropdownButton } from "../DropdownButton";
 import {
 	MissingCsharpExtension,
+	MissingGoExtension,
 	MissingJavaExtension,
 	MissingPythonExtension,
 	MissingRubyExtension,
@@ -227,6 +228,8 @@ export const MethodLevelTelemetryPanel = () => {
 			return <MissingPythonExtension />;
 		case "NO_CSHARP_VSCODE_EXTENSION":
 			return <MissingCsharpExtension />;
+		case "NO_GO_VSCODE_EXTENSION":
+			return <MissingGoExtension />;
 		case "RUBY_PLUGIN_NO_LANGUAGE_SERVER":
 			return <RubyPluginLanguageServer />;
 	}

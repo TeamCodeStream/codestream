@@ -39,3 +39,4 @@ A big thanks to the members of the community that have contributed to CodeStream
 - Johan Emanuel Palacios Rivera ([@Johan-Palacios](https://github.com/Johan-Palacios)) &mdash; [contributions](https://github.com/TeamCodeStream/codestream/commits?author=Johan-Palacios)
 - Karen Rodriguez ([@kleyla](https://github.com/kleyla)) &mdash; [contributions](https://github.com/TeamCodeStream/codestream/commits?author=kleyla)
 - TalkySafe143 ([@TalkySafe143](https://github.com/TalkySafe143)) &mdash; [contributions](https://github.com/TeamCodeStream/codestream/commits?author=TalkySafe143)
+- Lukas Wöhrl ([@woehrl01](https://github.com/woehrl01)) &mdash; [contributions](https://github.com/TeamCodeStream/codestream/commits?author=woehrl01)

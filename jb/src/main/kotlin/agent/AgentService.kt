@@ -594,11 +594,11 @@ class AgentService(private val project: Project) : Disposable {
         return gson.fromJson(json)
     }
 
-    suspend fun fileLevelTelemetry(params: FileLevelTelemetryParams): FileLevelTelemetryResult {
-        val json = remoteEndpoint
+    suspend fun fileLevelTelemetry(params: FileLevelTelemetryParams): FileLevelTelemetryResult? {
+        val json: JsonObject = remoteEndpoint
             .request("codestream/newrelic/fileLevelTelemetry", params)
-            .await() as JsonObject?
-        return gson.fromJson(json!!)
+            .await() as JsonObject? ?: return null
+        return gson.fromJson(json)
     }
 
     suspend fun scmRangeInfo(params: ScmRangeInfoParams): ScmRangeInfoResult {

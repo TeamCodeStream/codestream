@@ -1,5 +1,5 @@
 ﻿using System;
-using CodeStream.VisualStudio.Shared.Enums;
+using CodeStream.VisualStudio.Core.Enums;
 using Microsoft.VisualStudio.Settings;
 
 namespace CodeStream.VisualStudio.Shared.Exceptions {

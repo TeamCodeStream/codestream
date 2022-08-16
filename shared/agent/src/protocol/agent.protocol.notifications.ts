@@ -353,6 +353,16 @@ export const UserDidCommitNotificationType = new NotificationType<UserDidCommitN
 	"codestream/userDidCommit"
 );
 
+export interface DidChangeRepositoryCommitHashNotification {
+	sha?: string;
+	repoPath: string;
+}
+
+export const DidChangeRepositoryCommitHashNotificationType = new NotificationType<
+	DidChangeRepositoryCommitHashNotification,
+	void
+>("codestream/didChangeRepositoryCommitHash");
+
 export interface DidDetectUnreviewedCommitsNotification {
 	sequence: number;
 	openReviewId?: string;

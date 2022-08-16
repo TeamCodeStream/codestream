@@ -22,7 +22,9 @@ import {
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
-	GetMethodLevelTelemetryRequestType
+	GetMethodLevelTelemetryRequestType,
+	GetReposScmRequestType,
+	ERROR_GENERIC_USE_ERROR_MESSAGE
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -61,6 +63,8 @@ import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
+import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
+import { offline } from "../store/connectivity/actions";
 
 interface Props {
 	paneState: PaneState;
@@ -216,11 +220,16 @@ export const Observability = React.memo((props: Props) => {
 			hideCodeLevelMetricsInstructions: state.preferences.hideCodeLevelMetricsInstructions,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
-			textEditorUri: state.editorContext.textEditorUri
+			textEditorUri: state.editorContext.textEditorUri,
+			scmInfo: state.editorContext.scmInfo
 		};
 	}, shallowEqual);
 
-	const [noAccess, setNoAccess] = useState<boolean>(false);
+	const NO_ACCESS_ERROR_MESSAGE =
+		"Your New Relic account doesn’t have access to the integration with CodeStream.	Contact your New Relic admin to upgrade.";
+	const GENERIC_ERROR_MESSAGE = "There was an error loading this data.";
+
+	const [noAccess, setNoAccess] = useState<string | undefined>(undefined);
 	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
 		undefined
 	);
@@ -293,7 +302,7 @@ export const Observability = React.memo((props: Props) => {
 			.then((_: GetObservabilityErrorAssignmentsResponse) => {
 				setObservabilityAssignments(_.items);
 				setLoadingAssigments(false);
-				setNoAccess(false);
+				setNoAccess(undefined);
 			})
 			.catch(ex => {
 				setLoadingAssigments(false);
@@ -301,7 +310,9 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityErrorAssignments"
 					});
-					setNoAccess(true);
+					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -350,7 +361,9 @@ export const Observability = React.memo((props: Props) => {
 							HostApi.instance.track("NR Access Denied", {
 								Query: "GetObservabilityErrors"
 							});
-							setNoAccess(true);
+							setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+						} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+							setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 						}
 					});
 			});
@@ -434,7 +447,9 @@ export const Observability = React.memo((props: Props) => {
 									HostApi.instance.track("NR Access Denied", {
 										Query: "GetObservabilityErrors"
 									});
-									setNoAccess(true);
+									setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+								} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+									setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 								}
 							});
 					}
@@ -464,7 +479,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const fetchObservabilityRepos = (entityGuid: string, repoId) => {
+	const fetchObservabilityRepos = (entityGuid?: string, repoId?) => {
 		loading(repoId, true);
 		setLoadingEntities(true);
 
@@ -487,8 +502,10 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityRepos"
 					});
-					setNoAccess(true);
+					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
 					setLoadingEntities(false);
+				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -616,7 +633,10 @@ export const Observability = React.memo((props: Props) => {
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
 			const _currentEntityAccounts = observabilityRepos.find(or => {
-				return or.repoId === currentRepoId;
+				if (or?.repoId) {
+					return or?.repoId === currentRepoId;
+				}
+				return false;
 			})?.entityAccounts;
 
 			setCurrentEntityAccounts(_currentEntityAccounts);
@@ -723,7 +743,21 @@ export const Observability = React.memo((props: Props) => {
 				setShowCodeLevelMetricsBroadcastIcon(false);
 			}
 		}
-	}, [currentRepoId, observabilityRepos, loadingEntities]);
+	}, [currentRepoId, observabilityRepos, loadingEntities, derivedState.textEditorUri]);
+
+	// If a user adds a newly cloned repo into their IDE, we need to refetch observability Repos
+	useEffect(() => {
+		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
+			const currentRepo = _head(observabilityRepos.filter(_ => _.repoId === currentRepoId));
+			if (!currentRepo) {
+				HostApi.instance
+					.send(GetObservabilityReposRequestType, {})
+					.then((_: GetObservabilityReposResponse) => {
+						setObservabilityRepos(_.repos || []);
+					});
+			}
+		}
+	}, [derivedState.scmInfo]);
 
 	const handleSetUpMonitoring = (event: React.SyntheticEvent) => {
 		event.preventDefault();
@@ -777,10 +811,7 @@ export const Observability = React.memo((props: Props) => {
 						<>
 							{noAccess ? (
 								<div style={{ padding: "0 20px 20px 20px" }}>
-									<span>
-										Your New Relic account doesn’t have access to the integration with CodeStream.
-										Contact your New Relic admin to upgrade.
-									</span>
+									<span>{noAccess}</span>
 								</div>
 							) : (
 								<>
@@ -803,16 +834,18 @@ export const Observability = React.memo((props: Props) => {
 												</Button>
 											</NoEntitiesWrapper>
 										)}
-										{!loadingEntities && _isEmpty(currentRepoId) && (
-											<NoContent>
-												<p>
-													Open a source file to see how your code is performing.{" "}
-													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
-														Learn more.
-													</a>
-												</p>
-											</NoContent>
-										)}
+										{!loadingEntities &&
+											_isEmpty(currentRepoId) &&
+											_isEmpty(repoForEntityAssociator) && (
+												<NoContent>
+													<p>
+														Open a source file to see how your code is performing.{" "}
+														<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+															Learn more.
+														</a>
+													</p>
+												</NoContent>
+											)}
 										{!loadingEntities &&
 											!derivedState.hideCodeLevelMetricsInstructions &&
 											!derivedState.showGoldenSignalsInEditor &&

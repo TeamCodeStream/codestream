@@ -1,0 +1,742 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetVsixContainerName>codestream-vs-22.vsix</TargetVsixContainerName>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <UseCodebase>true</UseCodebase>
+    <TargetFrameworkProfile />
+    <ProjectGuid>{A97D7813-7B1A-4369-98A3-80F5721C1831}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;X64</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE;X64</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectTypeGuids>{82b43b9b-a64c-4715-b499-d71e9ca2bd60};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>CodeStream.VisualStudio.Vsix.x64</RootNamespace>
+    <AssemblyName>CodeStream.VisualStudio.Vsix.x64</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <GeneratePkgDefFile>true</GeneratePkgDefFile>
+    <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
+    <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <StartAction>Program</StartAction>
+    <StartProgram Condition="'$(DevEnvDir)' != ''">$(DevEnvDir)devenv.exe</StartProgram>
+    <StartArguments>/rootsuffix Exp</StartArguments>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="CodeStreamPackage.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>CodeStreamPackage.vsct</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\resources\assets\codestream.png">
+      <Link>resources\assets\codestream.png</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\assets\dark\add.svg">
+      <Link>resources\assets\dark\add.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\channel.svg">
+      <Link>resources\assets\dark\channel.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\close-small.svg">
+      <Link>resources\assets\dark\close-small.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\comment.svg">
+      <Link>resources\assets\dark\comment.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\issue.svg">
+      <Link>resources\assets\dark\issue.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\pull-request.svg">
+      <Link>resources\assets\dark\pull-request.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\refresh.svg">
+      <Link>resources\assets\dark\refresh.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\repository.svg">
+      <Link>resources\assets\dark\repository.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\dark\review.svg">
+      <Link>resources\assets\dark\review.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-aqua.png">
+      <Link>resources\assets\icons16\marker-comment-aqua.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-blue.png">
+      <Link>resources\assets\icons16\marker-comment-blue.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-gray.png">
+      <Link>resources\assets\icons16\marker-comment-gray.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-green.png">
+      <Link>resources\assets\icons16\marker-comment-green.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-orange.png">
+      <Link>resources\assets\icons16\marker-comment-orange.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-purple.png">
+      <Link>resources\assets\icons16\marker-comment-purple.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-red.png">
+      <Link>resources\assets\icons16\marker-comment-red.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment-yellow.png">
+      <Link>resources\assets\icons16\marker-comment-yellow.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-comment.svg">
+      <Link>resources\assets\icons16\marker-comment.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-fr-blue.png">
+      <Link>resources\assets\icons16\marker-fr-blue.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-aqua.png">
+      <Link>resources\assets\icons16\marker-issue-aqua.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-blue.png">
+      <Link>resources\assets\icons16\marker-issue-blue.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-gray.png">
+      <Link>resources\assets\icons16\marker-issue-gray.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-green.png">
+      <Link>resources\assets\icons16\marker-issue-green.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-orange.png">
+      <Link>resources\assets\icons16\marker-issue-orange.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-purple.png">
+      <Link>resources\assets\icons16\marker-issue-purple.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-red.png">
+      <Link>resources\assets\icons16\marker-issue-red.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-issue-yellow.png">
+      <Link>resources\assets\icons16\marker-issue-yellow.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-aqua.png">
+      <Link>resources\assets\icons16\marker-pr-aqua.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-blue.png">
+      <Link>resources\assets\icons16\marker-pr-blue.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-gray.png">
+      <Link>resources\assets\icons16\marker-pr-gray.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-green.png">
+      <Link>resources\assets\icons16\marker-pr-green.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-orange.png">
+      <Link>resources\assets\icons16\marker-pr-orange.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-purple.png">
+      <Link>resources\assets\icons16\marker-pr-purple.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-red.png">
+      <Link>resources\assets\icons16\marker-pr-red.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr-yellow.png">
+      <Link>resources\assets\icons16\marker-pr-yellow.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons16\marker-pr.png">
+      <Link>resources\assets\icons16\marker-pr.png</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons8\marker-bookmark.svg">
+      <Link>resources\assets\icons8\marker-bookmark.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons8\marker-comment.svg">
+      <Link>resources\assets\icons8\marker-comment.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons8\marker-issue.svg">
+      <Link>resources\assets\icons8\marker-issue.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons8\marker-question.svg">
+      <Link>resources\assets\icons8\marker-question.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\icons8\marker-trap.svg">
+      <Link>resources\assets\icons8\marker-trap.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\add.svg">
+      <Link>resources\assets\light\add.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\channel.svg">
+      <Link>resources\assets\light\channel.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\close-small.svg">
+      <Link>resources\assets\light\close-small.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\comment.svg">
+      <Link>resources\assets\light\comment.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\issue.svg">
+      <Link>resources\assets\light\issue.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\pull-request.svg">
+      <Link>resources\assets\light\pull-request.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\refresh.svg">
+      <Link>resources\assets\light\refresh.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\repository.svg">
+      <Link>resources\assets\light\repository.svg</Link>
+    </Content>
+    <Content Include="..\resources\assets\light\review.svg">
+      <Link>resources\assets\light\review.svg</Link>
+    </Content>
+    <Content Include="..\resources\webview\index.js">
+      <Link>webview\index.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\newrelic-browser.js">
+      <Link>webview\newrelic-browser.js</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\styles\webview.css">
+      <Link>webview\styles\webview.css</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\webview.html">
+      <Link>webview\webview.html</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="agent\agent.exe" Condition="'$(Configuration)' == 'Release'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="agent\agent.js" Condition="'$(Configuration)' == 'Debug'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Resource Include="..\resources\assets\marker-add-comment-aqua.png">
+      <Link>resources\assets\marker-add-comment-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-blue.png">
+      <Link>resources\assets\marker-add-comment-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-gray.png">
+      <Link>resources\assets\marker-add-comment-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-green.png">
+      <Link>resources\assets\marker-add-comment-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-orange.png">
+      <Link>resources\assets\marker-add-comment-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-purple.png">
+      <Link>resources\assets\marker-add-comment-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-red.png">
+      <Link>resources\assets\marker-add-comment-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-add-comment-yellow.png">
+      <Link>resources\assets\marker-add-comment-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-aqua.png">
+      <Link>resources\assets\marker-bookmark-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-blue.png">
+      <Link>resources\assets\marker-bookmark-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-gray.png">
+      <Link>resources\assets\marker-bookmark-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-green.png">
+      <Link>resources\assets\marker-bookmark-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-orange.png">
+      <Link>resources\assets\marker-bookmark-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-purple.png">
+      <Link>resources\assets\marker-bookmark-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-red.png">
+      <Link>resources\assets\marker-bookmark-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-bookmark-yellow.png">
+      <Link>resources\assets\marker-bookmark-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-aqua.png">
+      <Link>resources\assets\marker-comment-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-blue.png">
+      <Link>resources\assets\marker-comment-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-gray.png">
+      <Link>resources\assets\marker-comment-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-green.png">
+      <Link>resources\assets\marker-comment-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-orange.png">
+      <Link>resources\assets\marker-comment-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-purple.png">
+      <Link>resources\assets\marker-comment-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-red.png">
+      <Link>resources\assets\marker-comment-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-comment-yellow.png">
+      <Link>resources\assets\marker-comment-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-aqua.png">
+      <Link>resources\assets\marker-issue-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-blue.png">
+      <Link>resources\assets\marker-issue-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-gray.png">
+      <Link>resources\assets\marker-issue-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-green.png">
+      <Link>resources\assets\marker-issue-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-orange.png">
+      <Link>resources\assets\marker-issue-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-purple.png">
+      <Link>resources\assets\marker-issue-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-red.png">
+      <Link>resources\assets\marker-issue-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-issue-yellow.png">
+      <Link>resources\assets\marker-issue-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pr.png">
+      <Link>resources\assets\marker-pr.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-aqua.png">
+      <Link>resources\assets\marker-prcomment-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-blue.png">
+      <Link>resources\assets\marker-prcomment-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-gray.png">
+      <Link>resources\assets\marker-prcomment-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-green.png">
+      <Link>resources\assets\marker-prcomment-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-orange.png">
+      <Link>resources\assets\marker-prcomment-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-purple.png">
+      <Link>resources\assets\marker-prcomment-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-red.png">
+      <Link>resources\assets\marker-prcomment-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-prcomment-yellow.png">
+      <Link>resources\assets\marker-prcomment-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-aqua.png">
+      <Link>resources\assets\marker-pull-request-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-blue.png">
+      <Link>resources\assets\marker-pull-request-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-gray.png">
+      <Link>resources\assets\marker-pull-request-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-green.png">
+      <Link>resources\assets\marker-pull-request-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-orange.png">
+      <Link>resources\assets\marker-pull-request-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-purple.png">
+      <Link>resources\assets\marker-pull-request-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-red.png">
+      <Link>resources\assets\marker-pull-request-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-pull-request-yellow.png">
+      <Link>resources\assets\marker-pull-request-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-aqua.png">
+      <Link>resources\assets\marker-question-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-blue.png">
+      <Link>resources\assets\marker-question-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-gray.png">
+      <Link>resources\assets\marker-question-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-green.png">
+      <Link>resources\assets\marker-question-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-orange.png">
+      <Link>resources\assets\marker-question-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-purple.png">
+      <Link>resources\assets\marker-question-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-red.png">
+      <Link>resources\assets\marker-question-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-question-yellow.png">
+      <Link>resources\assets\marker-question-yellow.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-aqua.png">
+      <Link>resources\assets\marker-trap-aqua.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-blue.png">
+      <Link>resources\assets\marker-trap-blue.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-gray.png">
+      <Link>resources\assets\marker-trap-gray.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-green.png">
+      <Link>resources\assets\marker-trap-green.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-orange.png">
+      <Link>resources\assets\marker-trap-orange.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-purple.png">
+      <Link>resources\assets\marker-trap-purple.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-red.png">
+      <Link>resources\assets\marker-trap-red.png</Link>
+    </Resource>
+    <Resource Include="..\resources\assets\marker-trap-yellow.png">
+      <Link>resources\assets\marker-trap-yellow.png</Link>
+    </Resource>
+    <Content Include="..\resources\CodeStream.VisualStudio.pkgdef">
+      <Link>CodeStream.VisualStudio.pkgdef</Link>
+    </Content>
+    <Content Include="..\resources\CodestreamPackage.ico">
+      <Link>resources\CodestreamPackage.ico</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\CommandsSprites.png">
+      <Link>resources\CommandsSprites.png</Link>
+    </Content>
+    <Content Include="..\resources\Sprites.png">
+      <Link>resources\Sprites.png</Link>
+    </Content>
+    <EmbeddedResource Include="..\resources\teamdev.licenses">
+      <Link>teamdev.licenses</Link>
+    </EmbeddedResource>
+    <VSCTCompile Include="CodeStreamPackage.vsct">
+      <Generator>VsctGenerator</Generator>
+      <ResourceName>Menus.ctmenu</ResourceName>
+      <LastGenOutput>CodeStreamPackage.cs</LastGenOutput>
+    </VSCTCompile>
+    <ContentManifest Include="..\resources\ContentManifest.json">
+      <Link>ContentManifest.json</Link>
+    </ContentManifest>
+    <Content Include="..\resources\codestream.codestream">
+      <Link>resources\codestream.codestream</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\assets\README.md">
+      <Link>resources\assets\README.md</Link>
+    </Content>
+    <None Include="..\resources\CodeStream.VisualStudio.Settings.json">
+      <Link>CodeStream.VisualStudio.Settings.json</Link>
+    </None>
+    <Content Include="agent\agent.js.map" Condition="'$(Configuration)' == 'Debug'">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\index.js.map">
+      <Link>webview\index.js.map</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\resources\webview\styles\webview.css.map">
+      <Link>webview\styles\webview.css.map</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <None Include="publish\publishManifest.json" />
+    <None Include="publish\README.md" />
+    <None Include="source.extension.vsixmanifest">
+      <SubType>Designer</SubType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="..\resources\VSPackage.resx">
+      <Link>VSPackage.resx</Link>
+      <ManifestResourceName>VSPackage</ManifestResourceName>
+      <MergeWithCTO>true</MergeWithCTO>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.Entity" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj">
+      <Project>{31eb1b96-34e8-4e37-872d-4ed7363c95d9}</Project>
+      <Name>CodeStream.VisualStudio.CodeLens</Name>
+      <IncludeOutputGroupsInVSIX>BuiltProjectOutputGroup%3bBuiltProjectOutputGroupDependencies%3bGetCopyToOutputDirectoryItems%3bSatelliteDllsProjectOutputGroup%3b</IncludeOutputGroupsInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj">
+      <Project>{1a29b558-c55a-4769-ad37-69f903ed6eb3}</Project>
+      <Name>CodeStream.VisualStudio.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DotNetBrowser64">
+      <Version>1.20.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client">
+      <Version>5.2.8</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Options">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Primitives">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.Platforms">
+      <Version>1.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NETCore.Targets">
+      <Version>1.1.3</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.CommandBars">
+      <Version>17.2.32505.113</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.LanguageServer.Client">
+      <Version>17.2.2105</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.LanguageServer.Protocol">
+      <Version>17.2.8</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.SDK">
+      <Version>17.2.32505.173</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VSSDK.BuildTools">
+      <Version>17.2.2186</Version>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Win32.Registry">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="Nerdbank.Streams">
+      <Version>2.1.37</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog">
+      <Version>2.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog.Enrichers.Process">
+      <Version>2.0.1</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog.Enrichers.Thread">
+      <Version>3.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog.Sinks.File">
+      <Version>3.2.0</Version>
+    </PackageReference>
+    <PackageReference Include="SerilogTimings">
+      <Version>2.2.0</Version>
+    </PackageReference>
+    <PackageReference Include="StreamJsonRpc">
+      <Version>2.11.35</Version>
+    </PackageReference>
+    <PackageReference Include="System.Buffers">
+      <Version>4.5.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.Collections.Immutable">
+      <Version>1.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.ComponentModel.Composition">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.IO">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.IO.Pipelines">
+      <Version>4.5.3</Version>
+    </PackageReference>
+    <PackageReference Include="System.Memory">
+      <Version>4.5.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.Net.Http">
+      <Version>4.3.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.Net.WebSockets">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Numerics.Vectors">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Private.Uri">
+      <Version>4.3.2</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reactive">
+      <Version>4.1.5</Version>
+    </PackageReference>
+    <PackageReference Include="System.Reflection.Emit">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Runtime">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.AccessControl">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Algorithms">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Encoding">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Primitives">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.X509Certificates">
+      <Version>4.3.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Security.Principal.Windows">
+      <Version>4.5.0</Version>
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks.Extensions">
+      <Version>4.5.4</Version>
+    </PackageReference>
+    <PackageReference Include="System.ValueTuple">
+      <Version>4.5.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="..\CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.projitems" Label="Shared" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <PropertyGroup>
+    <PreBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)..\resources\scripts\Pre-Build.ps1 -ConfigurationName $(ConfigurationName)  -ProjectDir $(ProjectDir)..\resources</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)..\resources\scripts\Post-Build.ps1 -ConfigurationName $(ConfigurationName) -TargetDir $(TargetDir)</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

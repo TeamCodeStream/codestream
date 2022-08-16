@@ -1,7 +1,7 @@
 <idea-plugin require-restart="true">
     <id>com.codestream.jetbrains-codestream</id>
     <name>New Relic CodeStream: GitHub, GitLab, PRs and Code Review</name>
-    <vendor email="support@codestream.com" url="http://www.codestream.com">New Relic CodeStream</vendor>
+    <vendor email="support@codestream.com" url="http://www.newrelic.com/codestream">New Relic</vendor>
 
     <description>DO NOT EDIT: Generated from docs/description.html</description>
 

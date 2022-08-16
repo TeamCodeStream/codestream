@@ -70,7 +70,7 @@ val Editor.margins: EditorMargins
         val height = this.component.height
         val heightWithBreadcrumbs = withBreadcrumbs?.height ?: height
         val heightWithTabHeaders = withTabHeaders?.height ?: height
-        val tabRowHeight = ((withTabHeaders as? JBTabsImpl)?.myInfo2Label?.values?.first()?.height ?: 27) + 1
+        val tabRowHeight = ((withTabHeaders as? JBTabsImpl)?.myInfo2Label?.values?.firstOrNull()?.height ?: 27) + 1
 
         var bottom: Int
         var top: Int

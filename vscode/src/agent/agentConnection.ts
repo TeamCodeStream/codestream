@@ -59,6 +59,8 @@ import {
 	DidChangeProcessBufferNotificationType,
 	DidChangePullRequestCommentsNotification,
 	DidChangePullRequestCommentsNotificationType,
+	DidChangeRepositoryCommitHashNotification,
+	DidChangeRepositoryCommitHashNotificationType,
 	DidChangeServerUrlNotification,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
@@ -234,6 +236,13 @@ export class CodeStreamAgentConnection implements Disposable {
 	>();
 	get onDidDetectUnreviewedCommits(): Event<DidDetectUnreviewedCommitsNotification> {
 		return this._onDidDetectUnreviewedCommits.event;
+	}
+
+	private _onDidChangeRepositoryCommitHash = new EventEmitter<
+		DidChangeRepositoryCommitHashNotification
+	>();
+	get onDidChangeRepositoryCommitHash(): Event<DidChangeRepositoryCommitHashNotification> {
+		return this._onDidChangeRepositoryCommitHash.event;
 	}
 
 	private _onDidChangeVersion = new EventEmitter<DidChangeVersionCompatibilityNotification>();
@@ -1258,6 +1267,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(
 			DidDetectUnreviewedCommitsNotificationType,
 			this.onUnreviewedCommitsDetected.bind(this)
+		);
+		this._client.onNotification(DidChangeRepositoryCommitHashNotificationType, e =>
+			this._onDidChangeRepositoryCommitHash.fire(e)
 		);
 		this._client.onNotification(DidSetEnvironmentNotificationType, e =>
 			this._onDidSetEnvironment.fire(e)

@@ -21,31 +21,26 @@ const postBuildCopy: CopyStuff[] = [
 		to: outputDir
 	},
 	{
+        // VS Code
 		from: `${outputDir}/agent.*`,
-		// TODO: Use environment variable if exists
 		to: path.resolve(__dirname, "../../vscode/dist/")
 	},
-	{
-		from: `${outputDir}/agent-pkg.js`,
-		// TODO: Use environment variable if exists
-		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio/dist"),
+    {
+        // Visual Studio 2019
+		from: `${outputDir}/agent-vs-2019.js`,
+		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
 		options: { rename: "agent.js" }
 	},
 	{
-		from: `${outputDir}/agent-pkg.js.map`,
-		// TODO: Use environment variable if exists
-		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio/dist"),
-		options: { rename: "agent-pkg.js.map" }
+        // Visual Studio 2019
+		from: `${outputDir}/agent-vs-2019.js.map`,
+		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent"),
+		options: { rename: "agent.js.map" }
 	},
 	{
-		from: `${outputDir}/agent-pkg.js`,
-		// TODO: Use environment variable if exists
-		to: path.resolve(__dirname, "../../jb/src/main/resources/agent")
-	},
-	{
-		from: `${outputDir}/agent-pkg.js.map`,
-		// TODO: Use environment variable if exists
-		to: path.resolve(__dirname, "../../jb/src/main/resources/agent")
+        // Visual Studio 2022
+		from: `${outputDir}/agent.*`,
+		to: path.resolve(__dirname, "../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/")
 	}
 ];
 
@@ -55,7 +50,7 @@ const postBuildCopy: CopyStuff[] = [
 		...commonEsbuildOptions(false, args),
 		entryPoints: {
 			agent: "./src/main.ts",
-			"agent-pkg": "./src/main-vs.ts"
+			"agent-vs-2019": "./src/main-vs-2019.ts"
 		},
 		plugins: [
 			graphqlLoaderPlugin(),

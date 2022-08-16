@@ -1,13 +1,13 @@
 #requires -Version 5.0
-$zipPath = "..\src\CodeStream.VisualStudio\bin\x86\Debug\codestream-vs.zip";
+$zipPath = "..\src\CodeStream.VisualStudio.Vsix.x86\bin\x86\Debug\codestream-vs.zip";
 
 if(Test-Path $zipPath) {
 	Remove-Item -Path $zipPath -Force
 }
 
-Copy-Item -Path $(Resolve-Path -Path "..\src\CodeStream.VisualStudio\bin\x86\Debug\codestream-vs.vsix") -Destination "$($(Resolve-Path -Path "..\src\CodeStream.VisualStudio\bin\x86\Debug\"))codestream-vs-CHEESE.vsix"
+Copy-Item -Path $(Resolve-Path -Path "..\src\CodeStream.VisualStudio.Vsix.x86\bin\x86\Debug\codestream-vs.vsix") -Destination "$($(Resolve-Path -Path "..\src\CodeStream.VisualStudio.Vsix.x86\bin\x86\Debug\"))codestream-vs-CHEESE.vsix"
 
-Rename-Item -Path $(Resolve-Path -Path "..\src\CodeStream.VisualStudio\bin\x86\Debug\codestream-vs-CHEESE.vsix") -NewName "codestream-vs.zip"
+Rename-Item -Path $(Resolve-Path -Path "..\src\CodeStream.VisualStudio.Vsix.x86\bin\x86\Debug\codestream-vs-CHEESE.vsix") -NewName "codestream-vs.zip"
 
 # change $Path to a ZIP file that exists on your system!
 $Path = Resolve-Path -Path $zipPath

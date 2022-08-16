@@ -1,7 +1,5 @@
 ﻿using System;
-#if DEBUG
 using System.Runtime.CompilerServices;
-#endif
 
 namespace CodeStream.VisualStudio.Core.Events {
 	public interface IEventAggregator {

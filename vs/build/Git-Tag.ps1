@@ -4,7 +4,9 @@ param([string] $checkoutDir = $pwd, [string] $assetEnv = "", [string] $buildNumb
 Write-Host '**** The script is running in directory' (Get-Location)
 $vsDir = $checkoutDir + '\vs'
 $buildDir = $vsDir + '\build'
-$assetDir = $buildDir + '\artifacts\x86\Release'
+
+# using the x86 info file for all of this, but its the same content as the x64, so it doesn't really matter
+$assetDir = $buildDir + '\artifacts\Release\x86'
 $assetInfo = $assetDir + '\codestream-vs-' + $buildNumber + '.info'
 
 Write-Host 'Here is the VSIX asset file (' $assetInfo '):'

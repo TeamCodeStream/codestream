@@ -18,9 +18,8 @@ class CLMJavaComponent(project: Project) :
 }
 
 class CLMJavaEditorManager(editor: Editor) : CLMEditorManager(editor, "java", true) {
-    private val logger = Logger.getInstance(CLMJavaEditorManager::class.java)
     override fun getLookupClassName(psiFile: PsiFile): String? {
-        if (psiFile !is PsiJavaFileImpl) return null
+        if (psiFile !is PsiJavaFileImpl || psiFile.classes.isEmpty()) return null
         val clazz = psiFile.classes[0]
         return clazz.qualifiedName
     }

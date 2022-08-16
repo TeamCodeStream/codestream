@@ -267,7 +267,7 @@ export class GitService implements IGitService, Disposable {
 			typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath
 		);
 
-		const params = ["blame", "-l"];
+		const params = ["blame", "--root", "-w", "-l"];
 		if (options.startLine != null && options.endLine != null) {
 			params.push(`-L ${options.startLine + 1},${options.endLine + 1}`);
 		}

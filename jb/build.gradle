@@ -7,7 +7,7 @@ plugins {
 }
 
 group "com.codestream"
-version "13.3.1"
+version "13.4.1"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -40,7 +40,6 @@ dependencies {
     testImplementation "io.mockk:mockk:1.12.4"
     testImplementation "io.kotest:kotest-assertions-core:5.3.1"
 
-//    compileOnly(files("lib/app.jar"))
 }
 
 compileKotlin {
@@ -84,8 +83,12 @@ intellij {
 
     // sandboxDir = "$System.env.HOME/ide-sandbox" // It is sometimes useful to not have IDE config inside source control
 
-     plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:212.5080.55', 'Pythonid:212.5080.64', 'org.jetbrains.plugins.ruby:212.5080.8']
-     // plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:213.6461.48', 'Pythonid:213.7172.26', 'org.jetbrains.plugins.ruby:213.7172.6']
+    // 2021.2.1
+    plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:212.5080.55', 'Pythonid:212.5080.64', 'org.jetbrains.plugins.ruby:212.5080.8']
+    // 2022.1.4
+    // plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:221.6008.13', 'Pythonid:221.6008.17', 'org.jetbrains.plugins.ruby:221.6008.13']
+    // 2021.3
+    // plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:213.6461.48', 'Pythonid:213.7172.26', 'org.jetbrains.plugins.ruby:213.7172.6']
 }
 
 runIde {
@@ -184,6 +187,7 @@ copyDebugAgent.dependsOn buildDebugDeps
 
 task buildDebugDependencies {}
 buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent, copyProtobuf
+
 
 
 

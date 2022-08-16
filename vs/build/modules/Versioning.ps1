@@ -38,27 +38,18 @@ New-Module -ScriptBlock {
         }
     }
 
-    function Read-Version {
-       Read-CurrentVersionVsix
+    function Read-Version([string] $architecture) {
+       Read-CurrentVersionVsix $architecture
     }
 
-    function Write-Version([System.Version]$version, [System.String] $environment) {
-        Write-VersionVsixManifest $version
+    function Write-Version([System.Version]$version, [string] $environment) {
+        Write-VersionVsixManifest $version "x86"
+		Write-VersionVsixManifest $version "x64"
         Write-SolutionInfo $version $environment
-        Write-AssemblyInfo $version "CodeStream.VisualStudio"
+        Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x86"
+		Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x64"
         Write-AssemblyInfo $version "CodeStream.VisualStudio.Core"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Shell.2017"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Shell.2019"
         Write-AssemblyInfo $version "CodeStream.VisualStudio.CodeLens"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Shared"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.Services"
-        
-        #Write-VersionAppVeyor $version
-        #Write-DirectoryBuildProps $version
-        #Push-Location $rootDirectory
-        #New-Item -Type Directory -ErrorAction SilentlyContinue build | out-null
-        #Set-Content build\version $version
-        #Pop-Location
     }
 
     function Commit-Version([System.Version]$version) {

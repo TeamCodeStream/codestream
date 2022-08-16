@@ -3,8 +3,7 @@
 New-Module -ScriptBlock {
     $rootDirectory = Split-Path ($PSScriptRoot)
     $scriptsDirectory = Join-Path $rootDirectory "build"
-    $nuget = Join-Path $rootDirectory "tools\nuget\nuget.exe"
-    Export-ModuleMember -Variable scriptsDirectory,rootDirectory,nuget
+    Export-ModuleMember -Variable scriptsDirectory,rootDirectory
 }
 
 New-Module -ScriptBlock {
@@ -171,7 +170,6 @@ if (!$git) {
   throw "Couldn't find installed an git.exe"
 }
 
-$nuget = Join-Path $rootDirectory "nuget.exe"
 
 function Create-TempDirectory {
     $path = Join-Path ([System.IO.Path]::GetTempPath()) ([System.IO.Path]::GetRandomFileName())

@@ -16,12 +16,12 @@ class PixieDynamicLoggingAction : DumbAwareAction() {
 
     override fun update(e: AnActionEvent) {
         val psiElement = CommonDataKeys.PSI_ELEMENT.getData(e.dataContext)
-        e.presentation.isVisible = psiElement?.parentsOfType<GoFunctionOrMethodDeclaration>(true)?.first() != null
+        e.presentation.isVisible = psiElement?.parentsOfType<GoFunctionOrMethodDeclaration>(true)?.firstOrNull() != null
     }
 
     override fun actionPerformed(e: AnActionEvent) = ApplicationManager.getApplication().invokeLater {
         val psiElement = CommonDataKeys.PSI_ELEMENT.getData(e.dataContext)
-        val declaration = psiElement?.parentsOfType<GoFunctionOrMethodDeclaration>(true)?.first()
+        val declaration = psiElement?.parentsOfType<GoFunctionOrMethodDeclaration>(true)?.firstOrNull()
         if (declaration !is GoFunctionOrMethodDeclaration) {
             return@invokeLater
         }

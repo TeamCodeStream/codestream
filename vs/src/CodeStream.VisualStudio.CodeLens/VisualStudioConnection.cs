@@ -1,8 +1,8 @@
 ﻿using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
-using CodeStream.VisualStudio.Shared;
-using CodeStream.VisualStudio.Shared.Interfaces;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.CodeLevelMetrics;
 using StreamJsonRpc;
 
 namespace CodeStream.VisualStudio.CodeLens {

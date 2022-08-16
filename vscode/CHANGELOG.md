@@ -1,5 +1,23 @@
 # Change Log
 
+## [13.4.0] - 2022-8-4
+
+### Added
+
+- Adds line-level blame info (unless you have GitLens installed) that shows commit info and related pull requests/feedback requests on hover
+- Adds support for code-level metrics for New Relic's Java agent
+
+### Changed
+
+- Update display of issues from Azure to include issues where state is not in 'Closed','Done','Completed','Inactive','Removed', and limit number of results to 200
+
+### Fixed
+
+- Fixes an issue where creating an issue on Asana fails if the description contains mismatched angle brackets
+- Fixes an issue where adding a reaction to a GitLab merge request fails
+- Fixes an issue where you couldn't view diffs in a feedback request after going through the feedback-request intro tour
+- Fixes an issue where approving/rejecting a feedback request while a diff was open would trigger an error
+
 ## [13.3.0] - 2022-7-25
 
 ### Added

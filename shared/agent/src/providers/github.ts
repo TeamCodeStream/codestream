@@ -60,6 +60,7 @@ import {
 } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ProviderVersion } from "./types";
+import { TernarySearchTree } from "../../../ui/utilities/searchTree";
 
 interface GitHubRepo {
 	id: string;
@@ -1172,15 +1173,19 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		for (const repo of repoIdentifiers) {
 			const pulls = await this.restGet(`/repos/${repo.owner}/${repo.name}/commits/${sha}/pulls`);
 			try {
-				result.push(...(pulls.body as any));
+				for (const pr of pulls.body as any[]) {
+					result.push({
+						id: pr.node_id,
+						title: pr.title,
+						url: pr.html_url
+					});
+				}
 			} catch (ex) {
 				Logger.warn(ex);
 			}
 		}
 
-		if (result.length) {
-			this._pullRequestsContainingShaCache.set(sha, result);
-		}
+		this._pullRequestsContainingShaCache.set(sha, result);
 
 		return result;
 	}
@@ -4574,9 +4579,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			debugger;
 		}
 
-		changedFiles.sort((a, b) => a.filename.localeCompare(b.filename));
+		const filesInOrder = this.sortFilesInTreeOrder(changedFiles);
 
-		return changedFiles;
+		return filesInOrder;
 	}
 
 	_timelineQueryItemsString!: string;

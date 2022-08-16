@@ -6,6 +6,7 @@ import com.codestream.codeStream
 import com.codestream.editorService
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
+import com.codestream.lineLevelBlameService
 import com.codestream.notificationComponent
 import com.codestream.protocols.agent.EnvironmentInfo
 import com.codestream.protocols.agent.LoginResult
@@ -157,6 +158,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         }
     }
 
+    @JsonNotification("codestream/didChangeRepositoryCommitHash")
+    fun didChangeRepositoryCommitHash(notification: DidChangeRepositoryCommitHash) {
+        project.lineLevelBlameService?.resetCache()
+    }
+
     @JsonNotification("codestream/restartRequired")
     fun restartRequired(json: JsonElement) = GlobalScope.launch {
         project.agentService?.restart()
@@ -290,6 +296,8 @@ class UserDidCommitNotification(val sha: String)
 class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int, val openReviewId: String?)
 
 class DidChangeBranchNotification(val repoPath: String, val branch: String)
+
+class DidChangeRepositoryCommitHash(val sha: String?, val repoPath: String)
 
 class DidChangeApiVersionCompatibilityNotification(
     val compatibility: ApiVersionCompatibility,

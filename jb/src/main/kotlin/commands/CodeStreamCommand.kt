@@ -55,7 +55,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                 val openProjects = projectManager.openProjects
                 if (openProjects.isNotEmpty()) {
                     logger.info("Defaulting to first open project")
-                    project = openProjects.first()
+                    project = openProjects.firstOrNull()
                 } else if (repoMapping != null) {
                     try {
                         logger.info("Attempting to open ${repoMapping.defaultPath}")

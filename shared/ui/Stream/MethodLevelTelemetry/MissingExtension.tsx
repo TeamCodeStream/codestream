@@ -40,10 +40,13 @@ export function MissingRubyExtension() {
 			</p>
 			<br />
 			<p>
-				<Link href={"vscode:extension/rebornix.Ruby"}>Ruby</Link> - Be sure to add <pre>"ruby.useLanguageServer": true</pre> to your settings file.
+				<Link href={"vscode:extension/rebornix.Ruby"}>Ruby</Link> - Be sure to add{" "}
+				<pre>"ruby.useLanguageServer": true</pre> to your settings file.
 			</p>
 			<p>
-				<Link href={"vscode:extension/castwide.solargraph"}>Ruby Solargraph</Link> - Be sure to have ruby / gems installed and run <pre>gem install solargraph</pre> (might require sudo depending on your setup)
+				<Link href={"vscode:extension/castwide.solargraph"}>Ruby Solargraph</Link> - Be sure to have
+				ruby / gems installed and run <pre>gem install solargraph</pre> (might require sudo
+				depending on your setup)
 			</p>
 		</MissingExtensionBase>
 	);
@@ -54,7 +57,7 @@ export function RubyPluginLanguageServer() {
 		<MissingExtensionBase>
 			<h3>Code-Level Metrics</h3>
 			<p style={{ marginTop: 0 }}>
-				To see code-level metrics you'll need to enable the language server in your Ruby extension. 
+				To see code-level metrics you'll need to enable the language server in your Ruby extension.
 			</p>
 			<p style={{ marginTop: 0 }}>
 				To do so, add <pre>"ruby.useLanguageServer": true</pre> to your settings file.
@@ -68,7 +71,9 @@ export function MissingPythonExtension() {
 		<MissingExtensionBase>
 			<h3>Code-Level Metrics</h3>
 			<p style={{ marginTop: 0 }}>
-			To see code-level metrics you'll need to install the <Link href={"vscode:extension/ms-python.python"}>Python Extension</Link> for VS Code that allows CodeStream to identify the methods in your Python code.
+				To see code-level metrics you'll need to install the{" "}
+				<Link href={"vscode:extension/ms-python.python"}>Python Extension</Link> for VS Code that
+				allows CodeStream to identify the methods in your Python code.
 			</p>
 		</MissingExtensionBase>
 	);
@@ -79,7 +84,9 @@ export function MissingJavaExtension() {
 		<MissingExtensionBase>
 			<h3>Code-Level Metrics</h3>
 			<p style={{ marginTop: 0 }}>
-			To see code-level metrics you'll need to install the <Link href={"vscode:extension/redhat.java"}>Language Support for Java(TM) by Red Hat</Link> for VS Code that allows CodeStream to identify the methods in your Java code.
+				To see code-level metrics you'll need to install the{" "}
+				<Link href={"vscode:extension/redhat.java"}>Language Support for Java(TM) by Red Hat</Link>{" "}
+				for VS Code that allows CodeStream to identify the methods in your Java code.
 			</p>
 		</MissingExtensionBase>
 	);
@@ -90,7 +97,22 @@ export function MissingCsharpExtension() {
 		<MissingExtensionBase>
 			<h3>Code-Level Metrics</h3>
 			<p style={{ marginTop: 0 }}>
-			To see code-level metrics you'll need to install the <Link href={"vscode:extension/ms-dotnettools.csharp"}>C# Extension</Link> for VS Code that allows CodeStream to identify the methods in your C# code.
+				To see code-level metrics you'll need to install the{" "}
+				<Link href={"vscode:extension/ms-dotnettools.csharp"}>C# Extension</Link> for VS Code that
+				allows CodeStream to identify the methods in your C# code.
+			</p>
+		</MissingExtensionBase>
+	);
+}
+
+export function MissingGoExtension() {
+	return (
+		<MissingExtensionBase>
+			<h3>Code-Level Metrics</h3>
+			<p style={{ marginTop: 0 }}>
+				To see code-level metrics you'll need to install the{" "}
+				<Link href={"vscode:extension/golang.go"}>Go Extension</Link> for VS Code that allows
+				CodeStream to identify the methods in your Go code.
 			</p>
 		</MissingExtensionBase>
 	);

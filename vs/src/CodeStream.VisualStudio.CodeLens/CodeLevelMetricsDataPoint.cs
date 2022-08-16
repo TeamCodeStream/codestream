@@ -4,13 +4,12 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Core.CodeLevelMetrics;
+using CodeStream.VisualStudio.Core.Enums;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Shared;
-using CodeStream.VisualStudio.Shared.Enums;
-using CodeStream.VisualStudio.Shared.Interfaces;
-using CodeStream.VisualStudio.Shared.Models;
 using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Threading;
@@ -20,7 +19,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 	public class CodeLevelMetricDataPoint : IAsyncCodeLensDataPoint {
 		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricDataPoint>();
 		private readonly ICodeLensCallbackService _callbackService;
-		private GetFileLevelTelemetryResponse _metrics;
+		private CodeLevelMetricsTelemetry _metrics;
 		private string _editorFormatString;
 
 		public readonly string DataPointId = Guid.NewGuid().ToString();
@@ -67,14 +66,14 @@ namespace CodeStream.VisualStudio.CodeLens {
 					.ConfigureAwait(false);
 
 				_metrics = await _callbackService
-					.InvokeAsync<GetFileLevelTelemetryResponse>(
+					.InvokeAsync<CodeLevelMetricsTelemetry>(
 						this,
 						nameof(ICodeLevelMetricsCallbackService.GetTelemetryAsync),
 						new object[] { codeNamespace, functionName },
 						cancellationToken: token)
 					.ConfigureAwait(false);
 
-				_metrics = _metrics ?? new GetFileLevelTelemetryResponse();
+				_metrics = _metrics ?? new CodeLevelMetricsTelemetry();
 
 				var throughput = _metrics.Throughput?.FirstOrDefault(x =>
 						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.RequestsPerMinute;
@@ -89,7 +88,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 					Regex.Escape(Constants.CodeLevelMetrics.Tokens.Throughput), throughput is null ? "n/a" : $"{throughput.ToFixed(3)}rpm", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorsPerMinute), errors is null ? "n/a" : $"{errors.ToFixed(3)}epm", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.SinceDateFormatted, RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.Properties.SinceDateFormatted, RegexOptions.IgnoreCase);
 
 				return new CodeLensDataPointDescriptor {
 					Description = formatted,
@@ -105,7 +104,7 @@ namespace CodeStream.VisualStudio.CodeLens {
 		}
 
 		/// <summary>
-		/// Populates the data to pass to the WPF view <seealso cref="VisualStudio.UI.ToolWindows.CodeLevelMetricsDetails.ViewMore_OnMouseDown" />
+		/// Populates the data to pass to the WPF view <seealso cref="ToolWindows.CodeLevelMetricsDetails.ViewMore_OnMouseDown" />
 		/// when a user "clicks" the CodeLens description populated from <see cref="GetDataAsync"/>
 		/// </summary>
 		/// <remarks>
@@ -137,14 +136,14 @@ namespace CodeStream.VisualStudio.CodeLens {
 				new Tuple<int, string, string>(throughputPosition, "Throughput", throughput is null ? "n/a" : $"{throughput.RequestsPerMinute.ToFixed(3)}rpm"),
 				new Tuple<int, string, string>(averageDurationPosition, "Avg. Duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
 				new Tuple<int, string, string>(errorRatePosition, "Errors per Minute", errors is null ? "n/a" : $"{errors.ErrorsPerMinute.ToFixed(3)}epm"),
-				new Tuple<int, string, string>(sincePosition, "Since", _metrics.SinceDateFormatted)
+				new Tuple<int, string, string>(sincePosition, "Since", _metrics.Properties.SinceDateFormatted)
 			};
 
 			var descriptor = new CodeLensDetailsDescriptor();
 			var data = new CodeLevelMetricsData {
 				Repo = _metrics.Repo,
 				FunctionName = functionName,
-				NewRelicEntityGuid = _metrics.NewRelicEntityGuid,
+				NewRelicEntityGuid = _metrics.Properties.NewRelicEntityGuid,
 				MetricTimeSliceNameMapping = new MetricTimesliceNameMapping {
 					D = avgDuration?.MetricTimesliceName ?? "",
 					T = throughput?.MetricTimesliceName ?? "",

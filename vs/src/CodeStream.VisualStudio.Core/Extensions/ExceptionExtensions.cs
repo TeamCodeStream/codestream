@@ -5,11 +5,7 @@ using System.Linq;
 
 namespace CodeStream.VisualStudio.Core.Extensions {
 	public static class ExceptionExtensions {
-		/// <summary>
-		/// https://haacked.com/archive/2014/12/09/unwrap-mef-exception/
-		/// </summary>
-		/// <param name="exception"></param>
-		/// <returns></returns>
+
 		public static Exception UnwrapCompositionException(this Exception exception) {
 			var compositionException = exception as CompositionException;
 			if (compositionException == null) {

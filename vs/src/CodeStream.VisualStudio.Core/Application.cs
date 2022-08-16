@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using CodeStream.VisualStudio.Core.Annotations;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Properties;
+using Newtonsoft.Json;
 
 namespace CodeStream.VisualStudio.Core {
 	public class Application {
@@ -109,19 +110,23 @@ namespace CodeStream.VisualStudio.Core {
 			// essentially a static class of semi-primitive types that all others rely on, it's ok.
 			VisualStudioDisplayName = (TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName).ToAplhaNumericPlusSafe();
 
-			string logYear = null; ;
-			if (VisualStudioVersion.Major == 15) {
-				VisualStudioVersionYear = logYear = "2017";
+			switch (VisualStudioVersion.Major) {
+				case 15:
+					VisualStudioVersionYear = "2017";
+					break;
+				case 16:
+					VisualStudioVersionYear = "2019";
+					break;
+				case 17:
+					VisualStudioVersionYear = "2022";
+					break;
 			}
-			else if (VisualStudioVersion.Major == 16) {
-				VisualStudioVersionYear = "2019";
-			}
+
 #if DEBUG
-			if (logYear != null) {
-				LogNameExtension = $"vs-{logYear}-extension.log";
-				LogNameAgent = $"vs-{logYear}-agent.log";
-			}
+			LogNameExtension = $"vs-{VisualStudioVersionYear}-extension.log";
+			LogNameAgent = $"vs-{VisualStudioVersionYear}-agent.log";
 #endif
+
 			LogPath = Path.Combine(localApplicationData, "Logs") + @"\";
 			TempDataPath = Path.Combine(tempData, "Data") + @"\";
 		}
@@ -156,7 +161,7 @@ namespace CodeStream.VisualStudio.Core {
 				}
 
 				process.WaitForExit(2000);
-				return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(output);
+				return JsonConvert.DeserializeObject<T>(output);
 			}
 			catch {
 				// suffer because logs aren't setup yet.

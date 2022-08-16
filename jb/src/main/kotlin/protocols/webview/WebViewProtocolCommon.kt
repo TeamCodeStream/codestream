@@ -32,7 +32,7 @@ class WebViewContext(
     val hasFocus: Boolean? = null,
     val panelStack: Array<String>? = null
 ) {
-    val spatialViewVisible get() = panelStack?.first() == "codemarks-for-file"
+    val spatialViewVisible get() = panelStack?.firstOrNull() == "codemarks-for-file"
 }
 
 class EditorContext(

@@ -4,14 +4,14 @@ import { copyPlugin } from "../shared/util/src/copyPlugin";
 import { commonEsbuildOptions, processArgs } from "../shared/util/src/esbuildCommon";
 import { createSymlinks } from "../shared/util/src/symlinks";
 
-const context = path.resolve(__dirname, "src/CodeStream.VisualStudio/UI/WebViews");
-const target = path.resolve(__dirname, "src/CodeStream.VisualStudio/dist/webview");
+const context = path.resolve(__dirname, "src/CodeStream.VisualStudio.Shared/UI/WebViews");
+const target = path.resolve(__dirname, "src/resources/webview");
 
 const copy = copyPlugin({
 	onEnd: [
 		{
 			from: path.resolve(__dirname, "../shared/ui/newrelic-browser.js"),
-			to: path.resolve(__dirname, "src/CodeStream.VisualStudio/dist/webview")
+			to: path.resolve(__dirname, "src/resources/webview")
 		},
 		{
 			from: path.resolve(context, "index.html"),
@@ -30,7 +30,8 @@ const copy = copyPlugin({
 			path.resolve(context, "index.ts"),
 			path.resolve(context, "styles", "webview.less")
 		],
-		outdir: target
+		outdir: target,
+        target: "chrome69"
 	};
 	await build(buildOptions);
 })();

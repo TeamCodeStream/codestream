@@ -73,7 +73,8 @@ import {
 	ReposScm,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
+	ERROR_GENERIC_USE_ERROR_MESSAGE
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -102,7 +103,7 @@ import {
 } from "./newrelic/spanQuery";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
-const supportedLanguages = ["python", "ruby", "csharp", "java"] as const;
+const supportedLanguages = ["python", "ruby", "csharp", "java", "go"] as const;
 export type LanguageId = typeof supportedLanguages[number];
 
 // Use type guard so that list of languages can be defined once and shared with union type LanguageId
@@ -726,7 +727,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const response: GetObservabilityReposResponse = { repos: [] };
 		try {
 			const { scm } = this._sessionServiceContainer || SessionContainer.instance();
-			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
+			const reposResponse = await scm.getRepos({ includeRemotes: true });
 			let filteredRepos: ReposScm[] | undefined = reposResponse?.repositories;
 			if (request?.filters?.length) {
 				const repoIds = request.filters.map(_ => _.repoId);
@@ -1883,6 +1884,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					);
 					break;
 				case "java":
+				case "go":
 					functionInfo = {
 						functionName: additionalMetadata["code.function"],
 						className: additionalMetadata["code.namespace"]
@@ -1913,6 +1915,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	getResolutionMethod(languageId: LanguageId): ResolutionMethod {
 		switch (languageId) {
+			case "go":
 			case "csharp":
 			case "java":
 				return "locator";

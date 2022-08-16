@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>85c56160-88ea-4bbf-acfd-62045e76adcd</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>CodeStream.VisualStudio.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CamelCaseStringEnumConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\AddCodemarkCommandBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\AddCodemarkCommands.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\AuthenticationCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\IVsCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\IVsCommandBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\MenuCommandServiceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\RequestCodeReviewCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\StartWorkCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\UserCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommandBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewDevToolsCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewReloadCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewToggleCommand.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\AuthenticationController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Controllers\ConfigurationController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\NRApiErrorException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Exceptions\VisualStudioSettingException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\ITextSelectionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\JsonExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\PackageExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\RangeExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\TextViewExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Interfaces\IVisualStudioSettingsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IpcLogger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\CustomCamelCasePropertyNamesContractResolver.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\CustomMessageHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\Extensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\ILanguageServerClientManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\ILanguageServerClientProcess.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\LanguageClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\ClientManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\ContentDefinitions1.cs">
+      <DependentUpon>ContentDefinitions.tt</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\ICodestreamLanguageClient.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\LanguageClientActivator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\LanguageServerClientBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\LanguageServerClientProcess.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)LanguageServer\MiddleLayerProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Logging\CustomOutputPaneSink.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Managers\ThemeManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ActiveTextEditor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.Auth.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.CodeLevelMetrics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.DocumentMarkers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.Notifications.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Agent.Protocol.Scm.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\AgentState.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\AgentStateException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\CodeLensConnection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\CodeStreamModels.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\CurrentTextViews.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\EventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Editor.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Notifications.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Review.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Vsls.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\IOptions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\IpcScope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\MessageTypes.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\NREnvironmentSettings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\OpenEditorResult.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\ResponseError.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Settings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\SettingsScope.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Types.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\VirtualTextDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Webview.Protocol.CodeLevelMetrics.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Webview.Protocol.Common.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Webview.Protocol.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Webview.Protocol.Notifications.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Webview.Protocol.Shell.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\WebviewIpcMessage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Packages\AsyncPackageHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Packages\CommandsPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Packages\ProtocolHandlerPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Packages\SettingsPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Packages\WebViewPackage.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Providers\ToolWindowProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ServiceLocator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\AuthenticationService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\AuthenticationServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\BrowserServiceExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CodeLevelMetricsCallbackService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CredentialsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\CredentialsServiceBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\DotNetBrowserService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\EditorService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\EventAggregator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\HttpClientService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IAuthenticationService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IAuthenticationServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IBrowserService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IBrowserServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamAgentService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamAgentServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamSettingsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ICredentialsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IdeService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Providers\ShellSettingsProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IEditorService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IHttpClientService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IIdeService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISessionService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISettingsServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ISolutionEventsListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IWebviewUserSettingsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IWpfTextViewCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ServiceFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ServiceProviderExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SessionService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SolutionEventsListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ThemeEventsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\UserSettingsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\VisualStudioSettingsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\WebviewUserSettingsService.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\WpfTextViewCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ActiveTextEditorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentMarkerManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Extensions\AnimationExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Glyphs\DocumentMarkGlyphFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Glyphs\DocumentMarkGlyphFactoryProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Glyphs\DocumentMarkGlyphTag.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\HighlightAdornmentManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\InfoBarProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\CodeStreamMarginExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMark.xaml.cs">
+      <DependentUpon>DocumentMark.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkMargin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkMarginProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkScrollbar.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkScrollbarFormat.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkScrollbarMarkersEnabledOption.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkScrollbarProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMarkViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\ICodeStreamMarginProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Margins\IGlyphMetadata.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\PredefinedCodestreamNames.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Settings\OptionsDialogPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\SuggestedActions\CodemarkSuggestedActionsSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\SuggestedActions\CodemarkSuggestedActionsSourceProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Taggers\DocumentMarkTagger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Taggers\DocumentMarkTaggerProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TextDocumentExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewCreationListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewRoles.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetails.xaml.cs">
+      <DependentUpon>CodeLevelMetricsDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetailsViewFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewControl.xaml.cs">
+      <DependentUpon>WebViewControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewToolWindowPane.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\Wpf\KeyChordGesture.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)WebViewRouter.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMark.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\ui-variables.less" />
+    <None Include="$(MSBuildThisFileDirectory)UI\WebViews\styles\webview.less" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)LanguageServer\ContentDefinitions.tt">
+      <LastGenOutput>ContentDefinitions1.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </Content>
+    <Content Include="$(MSBuildThisFileDirectory)LanguageServer\ContentTypesVisualStudio.txt" />
+    <Content Include="$(MSBuildThisFileDirectory)LanguageServer\FileExtensionExclusions.txt" />
+    <Content Include="$(MSBuildThisFileDirectory)LanguageServer\FileExtensionsGeneric.txt" />
+    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\index.html" />
+    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\index.ts" />
+    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\theme.css" />
+    <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\waiting.html" />
+  </ItemGroup>
+</Project>

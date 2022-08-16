@@ -451,36 +451,36 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		};
 	}
 
+	private _pullRequestsContainingShaCache = new Map<string, any[]>();
 	async getPullRequestsContainigSha(
 		repoIdentifiers: { owner: string; name: string }[],
 		sha: string
 	): Promise<any[]> {
-		// /projects/:id/repository/commits/:sha/merge_requests
+		const cached = this._pullRequestsContainingShaCache.get(sha);
+		if (cached) return cached;
 
+		const result = [];
 		for (const repoIdentifier of repoIdentifiers) {
 			const { owner, name } = repoIdentifier;
 			try {
-				const projectResponse = await this.get<GitLabProjectInfoResponse>(
-					`/projects/${encodeURIComponent(`${owner}/${name}`)}`
-				);
+				const url = `/projects/${encodeURIComponent(
+					`${owner}/${name}`
+				)}/repository/commits/${sha}/merge_requests`;
+				const mrs = await this.get<any>(url);
+				for (const mr of mrs.body as any[]) {
+					result.push({
+						id: mr.id,
+						title: mr.title,
+						url: mr.web_url
+					});
+				}
 			} catch (ex) {
 				Logger.warn(ex);
-				// Logger.error(ex, `${this.displayName}: failed to get projects`, {
-				// 	remote: request.remote,
-				// 	owner: owner,
-				// 	name: name,
-				// 	hasProviderInfo: this._providerInfo != null
-				// });
-				// return {
-				// 	error: {
-				// 		type: "PROVIDER",
-				// 		message: ex.message
-				// 	}
-				// };
 			}
 		}
+		this._pullRequestsContainingShaCache.set(sha, result);
 
-		return [];
+		return result;
 	}
 
 	@log()
@@ -2888,7 +2888,9 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		accessRawDiffs?: boolean;
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		const response = await this.getPullRequestFilesChangedCore(request);
-		return response.filesChanged;
+		const filesInOrder = this.sortFilesInTreeOrder(response.filesChanged);
+
+		return filesInOrder;
 	}
 
 	@log()

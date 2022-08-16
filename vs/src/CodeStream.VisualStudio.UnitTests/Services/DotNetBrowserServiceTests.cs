@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Services;
+using CodeStream.VisualStudio.Shared.Services;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 

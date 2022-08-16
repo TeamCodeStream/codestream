@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CodeStream.VisualStudio.Core.Logging;
-using Serilog;
 
 namespace CodeStream.VisualStudio.Core.Extensions {
 	public class ListExtensionsDummy { }
 
 	public static class ListExtensions {
-		private static readonly ILogger Log = LogManager.ForContext<ListExtensionsDummy>();
-
 		public static void AddMany<T>(this List<T> list, params T[] t) {
 			list.AddRange(t);
 		}
@@ -35,10 +31,7 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 		public static void DisposeAll(this List<IDisposable> disposables) {
 			if (!disposables.AnySafe()) return;
 
-			Log.Debug($"Disposing {disposables.Count()} disposables");
-
 			foreach (IDisposable disposable in disposables) {
-				Log.Verbose($"Disposing Type={disposable?.GetType()}...");
 				disposable?.Dispose();
 			}
 		}

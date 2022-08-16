@@ -14,12 +14,12 @@ import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
+import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settings.GoldenSignalListener
 import com.codestream.webViewService
 import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
-import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
@@ -29,12 +29,18 @@ import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.Project
-import com.intellij.psi.NavigatablePsiElement
+import com.intellij.openapi.util.TextRange
+import com.intellij.psi.PsiComment
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiWhiteSpace
+import com.intellij.psi.SmartPointerManager
+import com.intellij.psi.SyntaxTraverser
+import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Range
@@ -72,7 +78,7 @@ abstract class CLMEditorManager(
     private val path = editor.document.file?.path
     private val project = editor.project
     private val metricsBySymbol = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
-    private val inlays = mutableSetOf<Inlay<PresentationRenderer>>()
+    private val inlays = mutableSetOf<Inlay<CLMCustomRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
     private var analyticsTracked = false
     private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
@@ -81,6 +87,11 @@ abstract class CLMEditorManager(
     init {
         pollLoadInlays()
         editor.document.addDocumentListener(this)
+        project?.agentService?.onDidStart {
+            project.sessionService?.onUserLoggedInChanged {
+                ApplicationManager.getApplication().invokeLater { this.updateInlays() }
+            }
+        }
     }
 
     abstract fun getLookupClassName(psiFile: PsiFile): String?
@@ -88,7 +99,9 @@ abstract class CLMEditorManager(
     fun pollLoadInlays() {
         GlobalScope.launch {
             while (doPoll) {
-                loadInlays(false)
+                if (project?.isDisposed == false && project.sessionService?.userLoggedIn?.user != null) {
+                    loadInlays(false)
+                }
                 delay(60000)
             }
         }
@@ -113,7 +126,7 @@ abstract class CLMEditorManager(
 
                 GlobalScope.launch {
                     try {
-                        lastResult = project.agentService?.fileLevelTelemetry(
+                        val result = project.agentService?.fileLevelTelemetry(
                             FileLevelTelemetryParams(
                                 path,
                                 languageId,
@@ -123,7 +136,9 @@ abstract class CLMEditorManager(
                                 resetCache,
                                 OPTIONS
                             )
-                        )
+                        ) ?: return@launch
+                        // result guaranteed to be non-null, don't overwrite previous result if we get a NR timeout
+                        lastResult = result
                         metricsBySymbol.clear()
 
                         lastResult?.errorRate?.forEach { errorRate ->
@@ -138,8 +153,10 @@ abstract class CLMEditorManager(
                             val metrics = metricsBySymbol.getOrPut(throughput.symbolIdentifier) { Metrics() }
                             metrics.throughput = throughput
                         }
-
-                        updateInlays()
+                        ApplicationManager.getApplication().invokeLater {
+                            // invokeLater required since we're in coroutine
+                            updateInlays()
+                        }
                     } catch (ex: Exception) {
                         ex.printStackTrace()
                     }
@@ -149,23 +166,31 @@ abstract class CLMEditorManager(
         }
     }
 
+    private var debouncedRenderBlame: Job? = null
     override fun documentChanged(event: DocumentEvent) {
-        updateInlays()
+        debouncedRenderBlame?.cancel()
+        debouncedRenderBlame = GlobalScope.launch {
+            delay(750L)
+            updateInlays()
+        }
+    }
+
+    private fun _updateInlays() {
+        inlays.forEach {
+            it.dispose()
+        }
+        inlays.clear()
+        val result = lastResult ?: return
+        if (result.error?.type == "NOT_ASSOCIATED") {
+            updateInlayNotAssociated()
+        } else {
+            updateInlaysCore()
+        }
     }
 
     private fun updateInlays() {
-        ApplicationManager.getApplication().invokeLater {
-            inlays.forEach {
-                it.dispose()
-            }
-            inlays.clear()
-            val result = lastResult ?: return@invokeLater
-            if (result.error?.type == "NOT_ASSOCIATED") {
-                updateInlayNotAssociated()
-            } else {
-                updateInlaysCore()
-            }
-
+        ApplicationManager.getApplication().invokeLater() {
+            _updateInlays()
         }
     }
 
@@ -181,6 +206,7 @@ abstract class CLMEditorManager(
         if (editor !is EditorImpl) return null
         val result = lastResult ?: return null
         val project = editor.project ?: return null
+        if (project.sessionService?.userLoggedIn?.user == null) return null
         if (path == null) return null
         return DisplayDeps(result, project, path, editor)
     }
@@ -192,15 +218,15 @@ abstract class CLMEditorManager(
         functionName: String
     ): PsiElement?
 
-    abstract fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement?
+    abstract fun findTopLevelFunction(psiFile: PsiFile, functionName: String): PsiElement?
 
     private fun updateInlaysCore() {
         val (result, project, path, editor) = displayDeps() ?: return
         if (project.isDisposed) {
             return
         }
-        val presentationFactory = PresentationFactory(editor)
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
+        val presentationFactory = PresentationFactory(editor)
         val since = result.sinceDateFormatted ?: "30 minutes ago"
         metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
             val symbol = if (symbolIdentifier.className != null) {
@@ -218,35 +244,41 @@ abstract class CLMEditorManager(
             if (symbol == null) return@forEach
 
             val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
-            val textPresentation = presentationFactory.text("\t\t$text")
+            val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)
+            val smartElement = SmartPointerManager.createPointer(symbol)
+            val textPresentation = presentationFactory.text(text)
             val referenceOnHoverPresentation =
                 presentationFactory.referenceOnHover(textPresentation, object : InlayPresentationFactory.ClickListener {
                     override fun onClick(event: MouseEvent, translated: Point) {
-                        val start = editor.document.lspPosition(symbol.textRange.startOffset)
-                        val end = editor.document.lspPosition(symbol.textRange.endOffset)
-                        val range = Range(start, end)
-                        project.codeStream?.show {
-                            project.webViewService?.postNotification(
-                                MethodLevelTelemetryNotifications.View(
-                                    result.error,
-                                    result.repo,
-                                    result.codeNamespace,
-                                    path,
-                                    result.relativeFilePath,
-                                    languageId,
-                                    range,
-                                    symbolIdentifier.functionName,
-                                    result.newRelicAccountId,
-                                    result.newRelicEntityGuid,
-                                    OPTIONS,
-                                    metrics.nameMapping
+                        val actualSymbol = smartElement.element
+                        if (actualSymbol != null) {
+                            val start = editor.document.lspPosition(actualSymbol.textRange.startOffset)
+                            val end = editor.document.lspPosition(actualSymbol.textRange.endOffset)
+                            val range = Range(start, end)
+                            project.codeStream?.show {
+                                project.webViewService?.postNotification(
+                                    MethodLevelTelemetryNotifications.View(
+                                        result.error,
+                                        result.repo,
+                                        result.codeNamespace,
+                                        path,
+                                        result.relativeFilePath,
+                                        languageId,
+                                        range,
+                                        symbolIdentifier.functionName,
+                                        result.newRelicAccountId,
+                                        result.newRelicEntityGuid,
+                                        OPTIONS,
+                                        metrics.nameMapping
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 })
-            val renderer = PresentationRenderer(referenceOnHoverPresentation)
-            val inlay = editor.inlayModel.addBlockElement(symbol.startOffset, false, true, 1, renderer)
+            val renderer = CLMCustomRenderer(referenceOnHoverPresentation)
+            val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
+
             inlay.let {
                 inlays.add(it)
                 if (!analyticsTracked) {
@@ -295,7 +327,7 @@ abstract class CLMEditorManager(
             "Associate this repository with an entity from New Relic so that you can see golden signals right in your editor",
             referenceOnHoverPresentation
         )
-        val renderer = PresentationRenderer(withTooltipPresentation)
+        val renderer = CLMCustomRenderer(withTooltipPresentation)
         val inlay = editor.inlayModel.addBlockElement(0, false, true, 1, renderer)
         inlays.add(inlay)
     }
@@ -311,5 +343,15 @@ abstract class CLMEditorManager(
     override fun dispose() {
         doPoll = false
         appSettings.removeGoldenSignalsListener(this)
+    }
+
+    /*
+     From com.intellij.codeInsight.hints.VcsCodeAuthorInlayHintsCollector
+     */
+    private fun getTextRangeWithoutLeadingCommentsAndWhitespaces(element: PsiElement): TextRange {
+        val start = SyntaxTraverser.psiApi().children(element).firstOrNull { it !is PsiComment && it !is PsiWhiteSpace }
+            ?: element
+
+        return TextRange.create(start.startOffset, element.endOffset)
     }
 }

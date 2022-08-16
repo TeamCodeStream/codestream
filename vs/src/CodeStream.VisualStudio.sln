@@ -1,17 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28729.10
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32616.157
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio", "CodeStream.VisualStudio\CodeStream.VisualStudio.csproj", "{EB360D87-8769-44A4-B837-8BC3279070C9}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Shell.2017", "CodeStream.VisualStudio.Shell.2017\CodeStream.VisualStudio.Shell.2017.csproj", "{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Shell.2019", "CodeStream.VisualStudio.Shell.2019\CodeStream.VisualStudio.Shell.2019.csproj", "{E45E73E2-3442-464F-A54F-A5B8A8E48084}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Core", "CodeStream.VisualStudio.Core\CodeStream.VisualStudio.Core.csproj", "{1A29B558-C55A-4769-AD37-69F903ED6EB3}"
 EndProject
@@ -20,92 +12,63 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		..\docs\dev.md = ..\docs\dev.md
 		..\package.json = ..\package.json
-		..\publishManifest.json = ..\publishManifest.json
-		..\README.md = ..\README.md
 		..\webpack.config.js = ..\webpack.config.js
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.CodeLens", "CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj", "{31EB1B96-34E8-4E37-872D-4ED7363C95D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Shared", "CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.csproj", "{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}"
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CodeStream.VisualStudio.Shared", "CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.shproj", "{85C56160-88EA-4BBF-ACFD-62045E76ADCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Services", "CodeStream.VisualStudio.Services\CodeStream.VisualStudio.Services.csproj", "{31BD46B5-C00E-4C79-9F9D-03768DAB918D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsix.x86", "CodeStream.VisualStudio.Vsix.x86\CodeStream.VisualStudio.Vsix.x86.csproj", "{EB360D87-8769-44A4-B837-8BC3279070C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsix.x64", "CodeStream.VisualStudio.Vsix.x64\CodeStream.VisualStudio.Vsix.x64.csproj", "{A97D7813-7B1A-4369-98A3-80F5721C1831}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
-		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|Any CPU.Build.0 = Debug|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.ActiveCfg = Debug|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.Build.0 = Debug|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|Any CPU.ActiveCfg = Release|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.ActiveCfg = Release|x86
-		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.Build.0 = Release|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|Any CPU.Build.0 = Debug|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.ActiveCfg = Debug|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.Build.0 = Debug|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|Any CPU.ActiveCfg = Release|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.ActiveCfg = Release|x86
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.Build.0 = Release|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Debug|Any CPU.Build.0 = Debug|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Debug|x86.ActiveCfg = Debug|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Debug|x86.Build.0 = Debug|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Release|Any CPU.ActiveCfg = Release|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Release|x86.ActiveCfg = Release|x86
-		{689F3AA3-DE22-4675-A461-C92F1E1EE2FB}.Release|x86.Build.0 = Release|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Debug|Any CPU.Build.0 = Debug|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Debug|x86.ActiveCfg = Debug|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Debug|x86.Build.0 = Debug|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Release|Any CPU.ActiveCfg = Release|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Release|x86.ActiveCfg = Release|x86
-		{E45E73E2-3442-464F-A54F-A5B8A8E48084}.Release|x86.Build.0 = Release|x86
-		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|Any CPU.Build.0 = Debug|x86
+		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|x64.ActiveCfg = Debug|x64
+		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|x64.Build.0 = Debug|x64
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|x86.ActiveCfg = Debug|x86
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Debug|x86.Build.0 = Debug|x86
-		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|Any CPU.ActiveCfg = Release|x86
+		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x64.ActiveCfg = Release|x64
+		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x64.Build.0 = Release|x64
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x86.ActiveCfg = Release|x86
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x86.Build.0 = Release|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x64.ActiveCfg = Debug|x64
+		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x64.Build.0 = Debug|x64
 		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x86.ActiveCfg = Debug|x86
 		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x86.Build.0 = Debug|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x64.ActiveCfg = Release|x64
+		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x64.Build.0 = Release|x64
 		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x86.ActiveCfg = Release|x86
 		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x86.Build.0 = Release|x86
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Debug|x86.ActiveCfg = Debug|x86
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Debug|x86.Build.0 = Debug|x86
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Release|Any CPU.Build.0 = Release|Any CPU
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Release|x86.ActiveCfg = Release|x86
-		{89A17DFF-415D-4DAF-A489-1F3C25AF0C35}.Release|x86.Build.0 = Release|x86
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Debug|x86.Build.0 = Debug|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Release|x86.ActiveCfg = Release|Any CPU
-		{31BD46B5-C00E-4C79-9F9D-03768DAB918D}.Release|x86.Build.0 = Release|Any CPU
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x64.ActiveCfg = Debug|x64
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.ActiveCfg = Debug|x86
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.Build.0 = Debug|x86
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x64.ActiveCfg = Release|x64
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.ActiveCfg = Release|x86
+		{EB360D87-8769-44A4-B837-8BC3279070C9}.Release|x86.Build.0 = Release|x86
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Debug|x64.ActiveCfg = Debug|x64
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Debug|x64.Build.0 = Debug|x64
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Debug|x86.ActiveCfg = Debug|x86
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x64.ActiveCfg = Release|x64
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x64.Build.0 = Release|x64
+		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x86.ActiveCfg = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3} = {5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}
-	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA2F01D3-69DD-4FEE-B239-775F5C1DFA2F}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.projitems*{85c56160-88ea-4bbf-acfd-62045e76adcd}*SharedItemsImports = 13
+		CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.projitems*{a97d7813-7b1a-4369-98a3-80f5721c1831}*SharedItemsImports = 4
+		CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.projitems*{eb360d87-8769-44a4-b837-8bc3279070c9}*SharedItemsImports = 4
 	EndGlobalSection
 EndGlobal

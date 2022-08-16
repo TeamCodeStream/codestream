@@ -610,8 +610,16 @@ export interface GetBlameCommitInfo {
 	dateFormatted: string;
 	gravatarUrl: string;
 	summary: string;
-	prs: any[];
+	prs: GetBlamePRInfo[];
 	reviews: CSReview[];
+}
+
+export interface GetBlamePRInfo {
+	providerId: string;
+	providerName: string;
+	id: string;
+	title: string;
+	url: string;
 }
 
 export interface GetBlameLineInfo extends GetBlameCommitInfo {

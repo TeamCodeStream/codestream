@@ -261,7 +261,8 @@ export const isConnectedSelectorFriendly = (
 		);
 		if (accessTokenError) {
 			// see comment on accessTokenError in the method parameters, above
-			accessTokenError.accessTokenError = infoForProvider.hosts![providerConfig.id].tokenError;
+			accessTokenError.accessTokenError =
+				infoForProvider.hosts && infoForProvider.hosts[providerConfig.id].tokenError;
 		}
 		return isConnected;
 	}

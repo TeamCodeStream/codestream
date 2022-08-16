@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.Services;
+﻿using CodeStream.VisualStudio.Shared.Services;
 
 namespace CodeStream.VisualStudio.UnitTests.Stubs
 {

@@ -18,9 +18,9 @@ Param(
 	[System.String] $Verbosity = "quiet",
 
 	[Parameter(Mandatory = $false)]
-	[ValidateSet("16.0")]
+	[ValidateSet(17.0)]
 	[Alias("t")]
-	[double] $VSVersion = 16.0,
+	[double] $VSVersion = 17.0,
 
 	# TODO: Get this to work -- i.e. auto install into a vs experiemental instance
 	# [Parameter(Mandatory = $false)]
@@ -79,7 +79,7 @@ function Build-AgentAndWebview {
 
 	Write-Log "Bundling agent & webview..."
 
-	& npm run $(if ($CI) { "bundle:ci" } else { "bundle" })
+	& npm run bundle
 	if ($LastExitCode -ne 0) {
 		throw "Bundling webview failed"
 	}
@@ -92,11 +92,13 @@ function Build-AgentAndWebview {
 		throw "Agent packaging failed"
 	}
 
-	if ((Test-Path -Path "../shared/agent/dist/agent.exe") -eq $False) {
+	if ((Test-Path -Path "../shared/agent/dist/agent-vs-2019.exe") -eq $False) {
 		throw "Creating packaged artifacts failed, ensure the agent has been built"
 	}
 
-	Copy-Item -Path ..\shared\agent\dist\agent.exe -Destination src\CodeStream.VisualStudio\dist\agent.exe -Force
+	Copy-Item -Path ..\shared\agent\dist\agent-vs-2019.exe -Destination src\CodeStream.VisualStudio.Vsix.x86\agent\agent.exe -Force
+	Copy-Item -Path ..\shared\agent\dist\agent-vs-2022.exe -Destination src\CodeStream.VisualStudio.Vsix.x64\agent\agent.exe -Force
+
 	if ($LastExitCode -ne 0) {
 		throw "Copying packaged artifacts failed"
 	}
@@ -109,58 +111,57 @@ function Build-AgentAndWebview {
 function Build-Extension {
 	$timer = Start-Timer
 
-	# https://stackoverflow.com/questions/42874400/how-to-build-a-visual-studio-2017-vsix-using-msbuild
-	$msbuild = ""
-	$vstest = ""
-	if ($VSVersion -eq 16.0) {
-		$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/MSBuild/Current/Bin/MSBuild.exe"		
-	}
-	$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
-	if (!(Test-Path -Path $vstest)) {
-		$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
-	}
+	# validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
+	$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"		
+	$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
 
-	$OutputDir = $(Join-Path $root "build/artifacts/$($platform)/$($Mode)")
-	Try-Create-Directory($OutputDir)
+	$baseOutputDir = $(Join-Path $root "build/artifacts")
+    if ((Test-Path -Path $baseOutputDir) -eq $True) {
+	    Write-Log "Cleaning $($baseOutputDir)..."
+	    Remove-Item $("$($baseOutputDir)/*") -Recurse -Force
+    }
 
-	Write-Log "Cleaning $($OutputDir)..."
-	Remove-Item $("$($OutputDir)/*") -Recurse -Force
+	$x86OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x86")
+	$x64OutputDir = $(Join-Path $baseOutputDir "$($Mode)/x64")
+	Try-Create-Directory($x86OutputDir)
+	Try-Create-Directory($x64OutputDir)
 
-	Write-Log "Restoring packages..."
-	& ./build/nuget.exe restore src/CodeStream.VisualStudio.sln
+	Write-Log "Running MSBuild (x86)..."
+	& $msbuild './src/CodeStream.VisualStudio.Vsix.x86/CodeStream.VisualStudio.Vsix.x86.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:OutputPath=$x86OutputDir /p:DeployExtension=$DeployExtension
 
-	Write-Log "Running MSBuild..."
-	& $msbuild src/CodeStream.VisualStudio.sln /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /target:$target /p:Configuration=$Mode /p:Platform=$platform /p:OutputPath=$OutputDir /p:VisualStudioVersion=$VSVersion /p:DeployExtension=$DeployExtension
+	Write-Log "Running MSBuild (x64)..."
+	& $msbuild './src/CodeStream.VisualStudio.Vsix.x64/CodeStream.VisualStudio.Vsix.x64.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:OutputPath=$x64OutputDir /p:DeployExtension=$DeployExtension
 
 	if ($LastExitCode -ne 0) {
 		throw "MSBuild failed"
 	}
 
-	if (!$Quick) {
-		Write-Log "Running UnitTests..."
-		if (!(Test-Path -Path $vstest)) {
-			throw "UnitTest executable not found $($vstest)"
-		}
-		& $vstest "$($OutputDir)/CodeStream.VisualStudio.UnitTests.dll" /Platform:$platform
-
-		if ($LastExitCode -ne 0) {
-			throw "UnitTests failed"
-		}
-
-		Write-Log "UnitTests completed"
-	}
-	else {
-		Write-Log "UnitTests skipped"
-	}
+	# TODO - how should tests be run when targeting two different VS versions?
+	#if (!$Quick) {
+	#	Write-Log "Running UnitTests..."
+	#	if (!(Test-Path -Path $vstest)) {
+	#		throw "UnitTest executable not found $($vstest)"
+	#	}
+	#	& $vstest "$($OutputDir)/CodeStream.VisualStudio.UnitTests.dll" /Platform:$platform
+	#
+	#	if ($LastExitCode -ne 0) {
+	#		throw "UnitTests failed"
+	#	}
+	#
+	#	Write-Log "UnitTests completed"
+	#}
+	#else {
+	#	Write-Log "UnitTests skipped"
+	#}
 
 	Write-Log "Build-Extension completed in {$(Get-ElapsedTime($timer))}"
-	Write-Log "Artifacts: $($OutputDir) at $(Get-Date)"    
+	Write-Log "x86 Artifacts: $($x86OutputDir) at $(Get-Date)"    
+	Write-Log "x64 Artifacts: $($x64OutputDir) at $(Get-Date)"    
 }
 
 Print-Help
 
 $target = "Rebuild"
-$platform = "x86"
 
 if ($CI) {
 	$Quick = $false

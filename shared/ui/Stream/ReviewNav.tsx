@@ -615,6 +615,7 @@ export function ReviewNav(props: Props) {
 									isAmending={isAmending}
 									setIsAmending={setIsAmending}
 									filesTip={filesTip}
+									isTouring={hoverButton ? true : false}
 								/>
 							</StyledReview>
 

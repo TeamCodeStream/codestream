@@ -13,7 +13,10 @@ val platform: Platform by lazy {
             CpuArch.isArm64() -> Platform.MAC_ARM64
             else -> Platform.MAC_X64
         }
-        SystemInfo.isWindows -> Platform.WIN_X64
+        SystemInfo.isWindows -> when {
+            CpuArch.isArm64() || CpuArch.isIntel64() -> Platform.WIN_X64
+            else -> Platform.WIN_32
+        }
         else -> throw IllegalStateException("Unable to detect system platform")
     }
 }
@@ -23,5 +26,6 @@ enum class Platform(val isPosix: Boolean) {
     LINUX_ARM64(true),
     MAC_X64(true),
     MAC_ARM64(true),
-    WIN_X64(false)
+    WIN_X64(false),
+    WIN_32(false)
 }
