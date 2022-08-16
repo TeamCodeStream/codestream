@@ -73,6 +73,24 @@ interface BitbucketAuthor {
 	};
 }
 
+interface BitbucketPullRequestComment {
+	id: number;
+	content: {
+		raw: string;
+		html: string;
+	};
+	user: {
+		display_name: string;
+		nickname: string;
+	};
+	deleted: boolean;
+	inline: {
+		from: number | undefined;
+		to: number | undefined;
+		path: string;
+	};
+	type: string;
+}
 interface BitbucketPullRequestCommit {
 	abbreviatedOid: string;
 	/* Author & Committer are the same for Bitbucket */
@@ -408,28 +426,9 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 		);
 
-		const comments = await this.get<
-			BitbucketValues<
-				{
-					id: number;
-					content: {
-						raw: string;
-						html: string;
-					};
-					user: {
-						display_name: string;
-						nickname: string;
-					};
-					deleted: boolean;
-					inline: {
-						from: number | undefined;
-						to: number | undefined;
-						path: string;
-					};
-					type: string;
-				}[]
-			>
-		>(`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`);
+		const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
+		);
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
 
