@@ -272,6 +272,21 @@ export const PullRequestFilesChangedList = (props: Props) => {
 						});
 					}
 				});
+		} else if (pr && derivedState.currentPullRequestProviderId === "bitbucket*org") {
+			// TODO
+			(pr as any).comments.forEach(comment => {
+				if (comment && comment.inline && comment.inline.path) {
+					if (!map[comment.inline.path]) map[comment.inline.path] = [];
+					map[comment.inline.path].push({
+						review: {
+							// TODO??
+							state: comment.state
+						},
+						// TODO? what shape is this
+						comment: comment
+					});
+				}
+			});
 		}
 		return map;
 	}, [pr?.updatedAt, derivedState.currentPullRequestProviderId]);

@@ -404,19 +404,40 @@ export class BitbucketProvider
 
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
-		const item = await this.get<BitbucketPullRequest>(
+		const pr = await this.get<BitbucketPullRequest>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 		);
+
+		const comments = await this.get<
+			BitbucketValues<{
+				id: number;
+				content: {
+					raw: string;
+					html: string;
+				};
+				user: {
+					display_name: string;
+					nickname: string;
+				};
+				deleted: boolean;
+				inline: {
+					from: number | undefined;
+					to: number | undefined;
+					path: string;
+				};
+				type: string;
+			}>
+		>(`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`);
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
 
 		// TODO implementation
-		// TODO get PR comments???
+
 		const response: FetchThirdPartyPullRequestResponse = {
 			viewer: {} as any,
 			repository: {
-				id: item.body.id + "",
-				url: item.body.source?.repository?.links?.html?.href,
+				id: pr.body.id + "",
+				url: pr.body.source?.repository?.links?.html?.href,
 				// TODO start
 				resourcePath: "",
 				rebaseMergeAllowed: true,
@@ -431,27 +452,20 @@ export class BitbucketProvider
 
 				branchProtectionRules: undefined,
 				pullRequest: {
-					baseRefOid: item.body.destination.commit.hash,
-					headRefOid: item.body.source.commit.hash,
-					number: item.body.id,
+					baseRefOid: pr.body.destination.commit.hash,
+					headRefOid: pr.body.source.commit.hash,
+					number: pr.body.id,
 					repository: {
 						name: repoWithOwnerSplit[1],
 						repoWithOwner: repoWithOwner,
-						url: item.body.source?.repository?.links?.html?.href
+						url: pr.body.source?.repository?.links?.html?.href
 					} as any,
 					providerId: this.providerConfig.id,
-					files: {
-						nodes: [
-							{
-								// TODO FIXME
-								path: "TODO",
-								additions: 1,
-								deletions: 1
-							}
-						]
-					}
+
+					comments: comments || []
 				}
-			} as FetchThirdPartyPullRequestRepository
+				// TODO fix this any
+			} as any
 		};
 
 		return response as any;
