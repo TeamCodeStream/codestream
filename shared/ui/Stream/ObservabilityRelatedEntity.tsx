@@ -6,7 +6,8 @@ import { useDidMount } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "..";
 import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
-import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
+import { ObservabilityAssignmentsDropdown } from "./ObservabilityAssignmentsDropdown";
+
 import { any } from "prop-types";
 interface Props {
 	// observabilityErrors: any;
@@ -15,23 +16,32 @@ interface Props {
 	// entityGuid: string;
 }
 
-export const ObservabilityRelatedCalls = React.memo((props: Props) => {
+export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 
 	return (
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 40px"
+					padding: "2px 10px 2px 50px"
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Calls</span>
+				<span style={{ marginLeft: "2px" }}>RELATED ENTIITY TITLE</span>
 			</Row>
-			{expanded && <ObservabilityRelatedEntity />}
+			{expanded && (
+				<Row
+					style={{
+						padding: "2px 10px 2px 60px"
+					}}
+					className={"pr-row"}
+				>
+					RELATED ENTITY CONTENT
+				</Row>
+			)}
 		</>
 	);
 });

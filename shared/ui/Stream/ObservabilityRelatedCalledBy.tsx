@@ -2,7 +2,7 @@ import { forEach as _forEach } from "lodash-es";
 import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
+import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityAssignmentsDropdown } from "./ObservabilityAssignmentsDropdown";
 import { any } from "prop-types";
 
@@ -29,16 +29,7 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Called By</span>
 			</Row>
-			{expanded && (
-				<Row
-					style={{
-						padding: "0 10px 0 50px"
-					}}
-					className={"pr-row"}
-				>
-					Hello World
-				</Row>
-			)}
+			{expanded && <ObservabilityRelatedEntity />}
 		</>
 	);
 });

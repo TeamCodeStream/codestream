@@ -1077,8 +1077,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					actor {
 					  entity(guid: $entityGuid) {
 						name
-						relatedEntities(filter: {relationshipTypes: {include: [CALLS, CONNECTS_TO]}, entityDomainTypes: {include: {type: "SERVICE", domain: "EXTERNAL"}}}) {
-						  results {
+						relatedEntities(filter: {direction: BOTH, relationshipTypes: {include: [CALLS, CONNECTS_TO]}}) {
+							results {
 							target {
 							  entity {
 								name
@@ -1086,6 +1086,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								alertSeverity
 							  }
 							}
+							source {
+							  entity {
+								  name
+								  guid
+								  alertSeverity
+								}
+							  }
 							type
 						  }
 						}
@@ -1098,8 +1105,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
-				const results = response.actor?.entity?.relatedEntities?.results;
-				return _groupBy(results, _ => _.type);
+				const _results = response.actor.entity.relatedEntities.results.map((_: any) => {
+					const _type = _.type;
+					let _entity;
+					_type === "CALLS" ? (_entity = _.source.entity) : (_entity = _.target.entity);
+					return {
+						alertSeverity: _entity.alertSeverity,
+						guid: _entity.guid,
+						name: _entity.name,
+						type: _.type
+					};
+				});
+				return _groupBy(_results, _ => _.type);
 			} else {
 				return {};
 			}
