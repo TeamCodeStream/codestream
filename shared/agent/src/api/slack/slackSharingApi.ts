@@ -398,7 +398,8 @@ export class SlackSharingApiProvider {
 					request.remotes,
 					userMaps,
 					repoHash,
-					this._slackUserId
+					this._slackUserId,
+					request.files
 				);
 
 				// Set the fallback (notification) content for the message
@@ -407,7 +408,13 @@ export class SlackSharingApiProvider {
 				}${codemark.text || ""}`;
 			} else if (request.review != null) {
 				const review = request.review;
-				blocks = toSlackReviewPostBlocks(review, userMaps, repoHash, this._slackUserId);
+				blocks = toSlackReviewPostBlocks(
+					review,
+					userMaps,
+					repoHash,
+					this._slackUserId,
+					request.files
+				);
 				// Set the fallback (notification) content for the message
 				text = `${review.title || ""}${review.title && review.text ? `\n\n` : ""}${review.text ||
 					""}`;

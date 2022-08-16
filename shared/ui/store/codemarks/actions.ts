@@ -175,7 +175,8 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 								text: rest.text,
 								codemark: response.codemark,
 								remotes: attributes.remotes,
-								mentionedUserIds: attributes.mentionedUserIds
+								mentionedUserIds: attributes.mentionedUserIds,
+								files: attributes.files
 							}
 						);
 						if (ts) {

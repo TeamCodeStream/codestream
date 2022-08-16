@@ -641,7 +641,8 @@ export function toSlackPostBlocks(
 	remotes: string[] | undefined,
 	userMaps: UserMaps,
 	repos: { [key: string]: CSRepository } | undefined,
-	slackUserId: string
+	slackUserId: string,
+	files?: { name: string; url?: string }[]
 ): Blocks {
 	const blocks: Blocks = [];
 
@@ -926,6 +927,14 @@ export function toSlackPostBlocks(
 		blocks.push(actions);
 	}
 
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
+	}
+
 	blocks.push({
 		type: "context",
 		// MUST keep this data in sync with codemarkAttachmentRegex above
@@ -945,7 +954,8 @@ export function toSlackReviewPostBlocks(
 	review: ReviewPlus,
 	userMaps: UserMaps,
 	repos?: { [key: string]: CSRepository } | undefined,
-	slackUserId?: string
+	slackUserId?: string,
+	files?: { name: string; url?: string }[]
 ): Blocks {
 	const blocks: Blocks = [];
 	const modifiedFiles: string[] = [];
@@ -1069,6 +1079,14 @@ export function toSlackReviewPostBlocks(
 		};
 
 		blocks.push(actions);
+	}
+
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
 	}
 
 	blocks.push({

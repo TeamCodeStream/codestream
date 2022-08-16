@@ -144,7 +144,8 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 							providerServerTokenUserId: sharingAttributes.botUserId,
 							text: rest.text,
 							review: response.review,
-							mentionedUserIds: attributes.mentionedUserIds
+							mentionedUserIds: attributes.mentionedUserIds,
+							files: attributes.files
 						}
 					);
 					if (ts) {
