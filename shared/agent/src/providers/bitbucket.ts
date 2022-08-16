@@ -409,24 +409,26 @@ export class BitbucketProvider
 		);
 
 		const comments = await this.get<
-			BitbucketValues<{
-				id: number;
-				content: {
-					raw: string;
-					html: string;
-				};
-				user: {
-					display_name: string;
-					nickname: string;
-				};
-				deleted: boolean;
-				inline: {
-					from: number | undefined;
-					to: number | undefined;
-					path: string;
-				};
-				type: string;
-			}>
+			BitbucketValues<
+				{
+					id: number;
+					content: {
+						raw: string;
+						html: string;
+					};
+					user: {
+						display_name: string;
+						nickname: string;
+					};
+					deleted: boolean;
+					inline: {
+						from: number | undefined;
+						to: number | undefined;
+						path: string;
+					};
+					type: string;
+				}[]
+			>
 		>(`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`);
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
@@ -462,7 +464,9 @@ export class BitbucketProvider
 					} as any,
 					providerId: this.providerConfig.id,
 
-					comments: comments.body.values || []
+					comments: (comments.body.values || []).map((_: any) => {
+						return { ..._, file: _.inline?.path };
+					})
 				}
 				// TODO fix this any
 			} as any
