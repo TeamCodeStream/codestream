@@ -111,8 +111,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				if (preferences?.Data != null) {
 					_userPreferencesChangedSubject.OnNext(new UserPreferencesChangedSubjectArgs(preferences.Data));
 				}
-
-				BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 			}
 
 			if (type?.Value<string>() == "unreads") {
@@ -122,7 +120,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				}
 			}
 
-			
+			BrowserService.EnqueueNotification(new DidChangeDataNotificationType(e));
 		}
 
 		/// <summary>
