@@ -74,7 +74,10 @@ import {
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
-	ERROR_GENERIC_USE_ERROR_MESSAGE
+	GetServiceLevelTelemetryRequest,
+	GetServiceLevelTelemetryRequestType,
+	GetServiceLevelTelemetryResponse,
+	ServiceGoldenMetricsQueryResult
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -2217,6 +2220,45 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
+	@lspHandler(GetServiceLevelTelemetryRequestType)
+	@log()
+	async getServiceLevelTelemetry(
+		request: GetServiceLevelTelemetryRequest
+	): Promise<GetServiceLevelTelemetryResponse | undefined> {
+		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
+		if (!observabilityRepo || !observabilityRepo.entityAccounts) {
+			return undefined;
+		}
+
+		const entity = observabilityRepo.entityAccounts.find(
+			_ => _.entityGuid === request.newRelicEntityGuid
+		);
+		if (!entity) {
+			ContextLogger.warn("Missing entity", {
+				entityId: request.newRelicEntityGuid
+			});
+			return undefined;
+		}
+
+		try {
+			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(entity.entityGuid);
+			return {
+				goldenMetrics: serviceLevelGoldenMetrics,
+				newRelicEntityAccounts: observabilityRepo.entityAccounts,
+				newRelicAlertSeverity: entity.alertSeverity,
+				newRelicEntityName: entity.entityName!,
+				newRelicEntityGuid: entity.entityGuid!,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
+			};
+		} catch (ex) {
+			Logger.error(ex, "getServiceLevelTelemetry", {
+				request
+			});
+		}
+
+		return undefined;
+	}
+
 	/**
 	 * Given a CodeStream repoId, get a list of NR entities that have this
 	 * git remote attached to it
@@ -2278,17 +2320,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								// duration
 								{
 									query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
-									title: "Response time (ms)"
+									title: "Response time (ms)",
+									name: "responseTimeMs"
 								},
 								// throughput
 								{
 									query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
-									title: "Throughput"
+									title: "Throughput",
+									name: "throughput"
 								},
 								// error
 								{
 									query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}' AND metricTimesliceName='${metricTimesliceNameMapping["e"]}' FACET metricTimesliceName TIMESERIES`,
-									title: "Error rate"
+									title: "Error rate",
+									name: "errorRate"
 								}
 							]
 						}
@@ -2315,8 +2360,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
-	// @lspHandler(GetObservabilityEntitiesRequestType)
-	// @log()
 	async getGoldenMetrics(
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping
@@ -2399,6 +2442,104 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			entityGuid
 		});
 		return undefined;
+	}
+
+	async getServiceGoldenMetrics(entityGuid: string): Promise<GoldenMetricsResult[] | undefined> {
+		try {
+			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+			const query = `{
+			actor {			  
+			  account(id: ${parsedId.accountId}) {       
+				throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+				  results
+				  metadata {
+					timeWindow {
+					  end
+					}
+				  }
+				}
+				errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+				  results
+				  metadata {
+					timeWindow {
+					  end
+					}
+				  }
+				}
+				responseTimeMs: nrql(query: "SELECT average(apm.service.overview.web) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
+				  results
+				  metadata {
+					timeWindow {
+					  end
+					}
+				  }
+				}
+			  }
+			}
+		  }
+		  `;
+			const results = await this.query<ServiceGoldenMetricsQueryResult>(query);
+			const account = results?.actor?.account;
+			const response = [
+				{
+					name: "responseTimeMs",
+					result: [
+						{
+							// response times are reported for each "segment" of a request.
+							// "web" | "cache" | "db" | "etc" -- we need to add them up
+							// to get the total response times
+							responseTimeMs: account?.responseTimeMs?.results
+								? account.responseTimeMs.results.reduce(
+										(
+											sum: number,
+											item: {
+												facet: string;
+												data: number;
+												segmentName: string;
+											}
+										) => {
+											return sum + item.data;
+										},
+										0
+								  ) || 0
+								: 0
+						}
+					],
+					timeWindow: account?.responseTimeMs?.metadata?.timeWindow?.end || 0
+				},
+				{
+					name: "throughput",
+					result: [
+						{
+							throughput: account?.throughput?.results
+								? account.throughput.results[0]?.throughput || 0
+								: 0
+						}
+					],
+					timeWindow: account?.throughput?.metadata?.timeWindow?.end || 0
+				},
+				{
+					name: "errorRate",
+					result: [
+						{
+							// errors is a decimal here -- return it as a % with a * 100
+							errorRate: account?.errorRate?.results
+								? account.errorRate.results[0]?.errors * 100 || 0
+								: 0
+						}
+					],
+					timeWindow: account?.errorRate?.metadata?.timeWindow?.end || 0
+				}
+			];
+
+			return response;
+		} catch (ex) {
+			Logger.warn("getServiceGoldenMetrics no response", {
+				entityGuid,
+				error: ex
+			});
+			return undefined;
+		}
 	}
 
 	@log()

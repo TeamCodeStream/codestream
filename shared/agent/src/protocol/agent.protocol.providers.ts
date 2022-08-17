@@ -1154,6 +1154,13 @@ export interface GetMethodLevelTelemetryRequest {
 	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
 }
 
+export interface GetServiceLevelTelemetryRequest {
+	/** CodeStream repoId */
+	repoId: string;
+	/** entity id of the NewRelic entity */
+	newRelicEntityGuid: string;
+}
+
 export type MetricTimesliceNameMapping = {
 	/**
 	 * duration
@@ -1223,6 +1230,15 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityName: string;
 }
 
+export interface GetServiceLevelTelemetryResponse {
+	newRelicEntityGuid: string;
+	newRelicUrl?: string;
+	goldenMetrics?: GoldenMetricsResult[];
+	newRelicAlertSeverity?: string;
+	newRelicEntityAccounts: EntityAccount[];
+	newRelicEntityName: string;
+}
+
 export const GetFileLevelTelemetryRequestType = new RequestType<
 	GetFileLevelTelemetryRequest,
 	GetFileLevelTelemetryResponse,
@@ -1231,11 +1247,18 @@ export const GetFileLevelTelemetryRequestType = new RequestType<
 >("codestream/newrelic/fileLevelTelemetry");
 
 export const GetMethodLevelTelemetryRequestType = new RequestType<
-	GetMethodLevelTelemetryRequest,
+	GetServiceLevelTelemetryRequest,
 	GetMethodLevelTelemetryResponse,
 	void,
 	void
 >("codestream/newrelic/methodLevelMethodTelemetry");
+
+export const GetServiceLevelTelemetryRequestType = new RequestType<
+	GetServiceLevelTelemetryRequest,
+	GetServiceLevelTelemetryResponse,
+	void,
+	void
+>("codestream/newrelic/serviceLevelTelemetry");
 
 export interface CrashOrException {
 	message?: string;
@@ -1434,24 +1457,80 @@ export interface GoldenMetricsQueryResult {
 				metrics: {
 					query: string;
 					title: string;
+					name: string;
 				}[];
 			};
 		};
 	};
 }
 
+export interface ServiceGoldenMetricsQueryResult {
+	actor: {
+		account: {
+			throughput: {
+				results: {
+					throughput: number;
+				}[];
+				metadata: {
+					timeWindow: {
+						end: number;
+					};
+				};
+			};
+			errorRate: {
+				results: {
+					errors: number;
+				}[];
+				metadata: {
+					timeWindow: {
+						end: number;
+					};
+				};
+			};
+			responseTimeMs: {
+				results: {
+					facet: string;
+					data: number;
+					segmentName: string;
+				}[];
+				metadata: {
+					timeWindow: {
+						end: number;
+					};
+				};
+			};
+		};
+	};
+}
+
 export interface GoldenMetricsResult {
-	query: string;
-	title: string;
+	/** the NR query we are running */
+	query?: string;
+	/** this name is more like a "key" */
+	name: "responseTimeMs" | "throughput" | "errorRate" | string;
+	/** this title field is deprecated. use `name`as a query "key" and set the title with calling code */
+	title?: "Error Rate" | "Throughput" | "Response Time Ms" | string | undefined;
 	result: {
-		beginTimeSeconds: number;
-		endDate: Date;
-		endTimeSeconds: number;
+		beginTimeSeconds?: number;
+		endDate?: Date;
+		endTimeSeconds?: number;
+
+		/* old/deprecated -- used in CLM[?], but let's move to the new props*/
 		"Error %"?: string;
-		"Error rate"?: string;
-		"Response time (ms)": string;
-		Throughput: string;
+		"Error rate"?: number;
+		"Error Rate"?: number;
+		"Response Time Ms"?: number | undefined;
+		"Response time (ms)"?: number | undefined;
+		Throughput?: number;
+		/* end old */
+
+		/* new */
+		throughput?: number;
+		errorRate?: number;
+		responseTimeMs?: number;
+		/* end new  */
 	}[];
+	timeWindow: number;
 }
 
 export interface RelatedEntityByRepositoryGuidsResult {

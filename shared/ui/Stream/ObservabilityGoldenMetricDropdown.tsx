@@ -1,3 +1,4 @@
+import { GoldenMetricsResult } from "@codestream/protocols/agent";
 import { forEach as _forEach, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -6,7 +7,7 @@ import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 
 interface Props {
-	goldenMetrics: any;
+	goldenMetrics: GoldenMetricsResult[];
 	loadingGoldenMetrics?: boolean;
 }
 
@@ -24,24 +25,53 @@ const StyledMetric = styled.div`
 	}
 `;
 
+interface GoldenMetricTitleMapping {
+	responseTimeMs: {
+		name: "responseTimeMs";
+		title: string;
+		units: "ms";
+		tooltip: string;
+	};
+	throughput: {
+		name: "throughput";
+		title: string;
+		units: "rpm";
+		tooltip: string;
+	};
+	errorRate: {
+		name: "errorRate";
+		title: string;
+		units: "avg";
+		tooltip: string;
+	};
+}
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const [updatedAt, setUpdatedAt] = useState<string>("");
 	const { goldenMetrics } = props;
-	const goldenMetricTitleMapping = {
+	const goldenMetricTitleMapping: GoldenMetricTitleMapping = {
 		responseTimeMs: {
-			title: "Response Time Ms",
+			// this matches the "name" from the goldenMetrics in the agent and the key here
+			name: "responseTimeMs",
+
+			title: "Response time (ms)",
 			units: "ms",
 			tooltip: "This shows the average time this service spends processing web requests."
 		},
 		throughput: {
+			// this matches the "name" from the goldenMetrics in the agent and the key here
+			name: "throughput",
+
 			title: "Throughput",
 			units: "rpm",
 			tooltip:
 				"Throughput measures how many requests this service processes per minute. It will help you find your busiest service"
 		},
 		errorRate: {
-			title: "Error Rate",
+			// this matches the "name" from the goldenMetrics in the agent and the key here
+			name: "errorRate",
+
+			title: "Error rate",
 			units: "avg",
 			tooltip:
 				"Error rate is the percentage of transactions that result in an error during a particular time range."
@@ -106,7 +136,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						const goldenMetricTooltip = goldenMetricTitleMapping[gm?.name]?.tooltip;
 						let goldenMetricValueTrue =
 							gm?.result && gm.result.length > 0
-								? gm?.result[0][goldenMetricTitleMapping[gm?.name]?.title]
+								? gm?.result[0][goldenMetricTitleMapping[gm?.name]?.name]
 								: "";
 						let goldenMetricValue = goldenMetricValueTrue;
 
@@ -150,7 +180,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								className={"pr-row"}
 							>
 								<div>
-									<span style={{ marginRight: "5px" }}>{gm.title}</span>
+									<span style={{ marginRight: "5px" }}>
+										{goldenMetricTitleMapping[gm?.name]?.title}
+									</span>
 									{goldenMetricTooltip && (
 										<Icon
 											style={{ transform: "scale(0.9)" }}
