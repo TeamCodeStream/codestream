@@ -22,9 +22,9 @@ import {
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
-	GetMethodLevelTelemetryRequestType,
-	GetReposScmRequestType,
-	ERROR_GENERIC_USE_ERROR_MESSAGE
+	ERROR_GENERIC_USE_ERROR_MESSAGE,
+	GetServiceLevelTelemetryRequestType,
+	GoldenMetricsResult
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -63,8 +63,6 @@ import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
-import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
-import { offline } from "../store/connectivity/actions";
 
 interface Props {
 	paneState: PaneState;
@@ -246,7 +244,7 @@ export const Observability = React.memo((props: Props) => {
 	const [observabilityErrors, setObservabilityErrors] = useState<ObservabilityRepoError[]>([]);
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
 	const [loadingPane, setLoadingPane] = useState<string | null>("");
-	const [goldenMetrics, setGoldenMetrics] = useState<any>([]);
+	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
 	const [currentEntityAccountIndex, setCurrentEntityAccountIndex] = useState<string | null>(null);
@@ -539,7 +537,7 @@ export const Observability = React.memo((props: Props) => {
 			if (!noLoadingSpinner) {
 				setLoadingGoldenMetrics(true);
 			}
-			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
+			const response = await HostApi.instance.send(GetServiceLevelTelemetryRequestType, {
 				newRelicEntityGuid: entityGuid,
 				repoId: currentRepoId
 			});
