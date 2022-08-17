@@ -1106,6 +1106,11 @@ class ReviewForm extends React.Component<Props, State> {
 			invalid = true;
 		}
 
+		if (!this.props.isEditing && this.props.shouldShare && !this._sharingAttributes) {
+			invalid = true;
+			validationState.sharingAttributesInvalid = true;
+		}
+
 		this.setState(validationState as State);
 		return invalid;
 	};
@@ -1131,6 +1136,14 @@ class ReviewForm extends React.Component<Props, State> {
 
 		if (textInvalid) return <small className="error-message">Required</small>;
 		else return null;
+	};
+
+	renderSharingHelp = () => {
+		const { sharingAttributesInvalid } = this.state;
+
+		if (sharingAttributesInvalid) {
+			return <small className="error-message">Select channel, or deselect sharing</small>;
+		} else return null;
 	};
 
 	switchChannel = (event: React.SyntheticEvent) => {
@@ -1193,6 +1206,7 @@ class ReviewForm extends React.Component<Props, State> {
 			this.state.repoStatus && this.state.repoStatus.scm ? this.state.repoStatus.scm.repoId : "";
 		return (
 			<div className="checkbox-row" style={{ float: "left" }}>
+				{this.renderSharingHelp()}
 				<SharingControls
 					showToggle
 					onChangeValues={values => {

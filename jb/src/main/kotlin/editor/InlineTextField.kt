@@ -18,6 +18,7 @@ import com.intellij.ui.AnimatedIcon
 import com.intellij.ui.EditorTextField
 import com.intellij.ui.ListFocusTraversalPolicy
 import com.intellij.ui.TextFieldWithAutoCompletionListProvider
+import com.intellij.ui.components.ActionLink
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.labels.LinkLabel
 import com.intellij.ui.scale.JBUIScale
@@ -48,8 +49,9 @@ class InlineTextField(
     project: Project,
     @NlsActions.ActionText actionName: String,
     private val submitter: ((String) -> CompletableFuture<Unit>),
+    private val advancedHandler: ((String) -> CompletableFuture<Unit>),
     private val completionProvider: TextFieldWithAutoCompletionListProvider<InlineTextFieldMentionableUser>,
-    authorLabel: LinkLabel<out Any>? = null,
+    authorLabel: ActionLink? = null,
     title: String?,
     onCancel: (() -> Unit)? = null
 ) : JPanel(null) {
@@ -79,7 +81,7 @@ class InlineTextField(
             .fillX())
 
         title?.let {
-            add(JBLabel(title), CC().spanX().wrap("5px"))
+            add(JBLabel(it), CC().spanX().wrap("5px"))
         }
 
         if (authorLabel != null) {
@@ -91,6 +93,13 @@ class InlineTextField(
 
         add(textFieldWithOverlay, CC().grow().pushX())
         add(cancelButton, CC().alignY("top").hideMode(3))
+
+        val advancedLink = ActionLink("Advanced") {
+            advancedHandler(textField.text).thenRun {
+                onCancel?.invoke()
+            }
+        }
+        add(advancedLink, CC().newline().spanX().gapTop("5px").alignX("right"))
 
         Controller(this, textField, busyLabel, submitButton, cancelButton, onCancel)
 

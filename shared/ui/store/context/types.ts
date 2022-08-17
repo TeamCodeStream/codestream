@@ -66,6 +66,7 @@ export type PostEntryPoint =
 	| "Spatial View"
 	| "VSC SCM"
 	| "Status"
+	| "Advanced"
 	| string
 	| undefined;
 

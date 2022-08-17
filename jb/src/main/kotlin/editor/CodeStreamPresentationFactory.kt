@@ -7,11 +7,16 @@ import com.intellij.codeInsight.hint.HintManagerImpl
 import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.InlayPresentation
 import com.intellij.codeInsight.hints.presentation.OnHoverPresentation
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.ui.LightweightHint
 import com.intellij.util.ui.JBUI
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.annotations.Contract
 import java.awt.Component
 import java.awt.Point
@@ -25,26 +30,35 @@ class CodeStreamPresentationFactory(val editor: EditorImpl) {
     @Contract(pure = true)
     fun withTooltip(blameHover: BlameHover, base: InlayPresentation): InlayPresentation {
         var hint: LightweightHint? = null
+        var hoverJob: Job? = null
 
         return onHover(base, object : InlayPresentationFactory.HoverListener {
             override fun onHover(event: MouseEvent, translated: Point) {
-                if (hint?.isVisible != true) {
-                    blameHover.onActionInvoked {
-                        hint?.hide()
-                        hint = null
-                    }
-                    hint = showTooltip(editor, event, blameHover.rootPanel)
-                    try {
-                        editor.project?.agentService?.agent?.telemetry(TelemetryParams("Blame Hover Viewed", mapOf(
-                            "File Extension" to editor.virtualFile.extension
-                        )))
-                    } catch(ex: Exception) {
-                        logger.warn(ex)
+                if (hoverJob != null) return
+                hoverJob = GlobalScope.launch {
+                    delay(500L)
+                    ApplicationManager.getApplication().invokeLater {
+                        if (hint?.isVisible != true) {
+                            blameHover.onActionInvoked {
+                                hint?.hide()
+                                hint = null
+                            }
+                            hint = showTooltip(editor, event, blameHover.rootPanel)
+                            try {
+                                editor.project?.agentService?.agent?.telemetry(TelemetryParams("Blame Hover Viewed", mapOf(
+                                    "File Extension" to editor.virtualFile.extension
+                                )))
+                            } catch(ex: Exception) {
+                                logger.warn(ex)
+                            }
+                        }
                     }
                 }
             }
 
             override fun onHoverFinished() {
+                hoverJob?.cancel()
+                hoverJob = null
                 // hint?.hide()
                 // hint = null
             }

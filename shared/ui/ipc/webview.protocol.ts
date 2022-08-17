@@ -76,6 +76,7 @@ export interface NewCodemarkNotification {
 	range?: Range;
 	type: CodemarkType;
 	source?: string;
+	defaultCodemarkText?: string;
 }
 
 export const NewCodemarkNotificationType = new NotificationType<NewCodemarkNotification, void>(

@@ -697,7 +697,7 @@ export class CodeStreamSession {
 				this.registerApiCapabilities(newCapabilities, currentTeam);
 				this.agent.sendNotification(DidChangeDataNotificationType, {
 					type: ChangeDataType.ApiCapabilities,
-					data: newCapabilities
+					data: this._apiCapabilities // Use filtered apiCapabilities
 				});
 			}
 		}

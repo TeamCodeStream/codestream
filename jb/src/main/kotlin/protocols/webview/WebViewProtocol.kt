@@ -57,7 +57,8 @@ object CodemarkNotifications {
         val uri: String?,
         val range: Range,
         val type: CodemarkType,
-        val source: String?
+        val source: String?,
+        val defaultCodemarkText: String? = null
     ) : WebViewNotification {
         override fun getMethod() = "webview/codemark/new"
     }

@@ -120,6 +120,7 @@ interface Props extends ConnectedProps {
 	collapsed: boolean;
 	isEditing?: boolean;
 	editingCodemark?: CodemarkPlus;
+	defaultText?: string;
 	placeholder?: string;
 	onDidChangeSelection?(location: EditorSelection): void;
 	positionAtLocation?: boolean;
@@ -265,7 +266,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		const defaultState: Partial<State> = {
 			crossPostIssueValues: {},
 			title: "",
-			text: "",
+			text: props.defaultText || "",
 			touchedText: false,
 			formatCode: false,
 			type: defaultType,

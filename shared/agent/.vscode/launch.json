@@ -26,17 +26,6 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Agent (Atom)",
-			"port": 6012,
-			"cwd": "${workspaceFolder}",
-			"outFiles": ["${workspaceFolder}/dist/agent-pkg.js"],
-			"skipFiles": ["<node_internals>/**", "**/node_modules/**"],
-			"smartStep": true,
-			"sourceMaps": true
-		},
-		{
-			"type": "node",
-			"request": "attach",
 			"name": "Attach to Agent (debug node_modules)",
 			"port": 6009,
 			"cwd": "${workspaceFolder}",

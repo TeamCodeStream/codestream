@@ -1,13 +1,16 @@
 package com.codestream.editor
 
 import com.codestream.agentService
+import com.codestream.codeStream
 import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.textDocumentIdentifier
 import com.codestream.extensions.uri
+import com.codestream.protocols.CodemarkType
 import com.codestream.protocols.agent.CreateShareableCodemarkParams
 import com.codestream.protocols.agent.ScmRangeInfoParams
 import com.codestream.protocols.agent.ShareableCodemarkAttributes
 import com.codestream.protocols.agent.TelemetryParams
+import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.protocols.webview.DocumentMarkerNotifications
 import com.codestream.protocols.webview.PullRequestNotifications
 import com.codestream.review.PARENT_POST_ID
@@ -25,7 +28,7 @@ import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.util.text.StringUtil
 import com.intellij.openapi.wm.IdeFocusManager
 import com.intellij.ui.TextFieldWithAutoCompletionListProvider
-import com.intellij.ui.components.labels.LinkLabel
+import com.intellij.ui.components.ActionLink
 import com.intellij.util.io.HttpRequests
 import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
@@ -90,7 +93,6 @@ class InlineTextFieldManager(val editor: Editor) {
             component = null
         }
     }
-
 
     private fun createSubmitter(isReview: Boolean?): (String) -> CompletableFuture<Unit> {
         return  {
@@ -179,8 +181,29 @@ class InlineTextFieldManager(val editor: Editor) {
 
             done
         }
+    }
 
+    private fun createAdvancedHandler(isReview: Boolean?): (String) -> CompletableFuture<Unit> {
+        return {
+            val done = CompletableFuture<Unit>()
 
+            with(editor) {
+                project?.codeStream?.show {
+                    project?.webViewService?.postNotification(
+                        CodemarkNotifications.New(
+                            document.uri,
+                            selectionOrCurrentLine,
+                            CodemarkType.COMMENT,
+                            "Advanced",
+                            it
+                        )
+                    )
+                    done.complete(Unit)
+                }
+            }
+
+            done
+        }
     }
 
     fun showTextField(isReview: Boolean? = true, line: Int, title: String? = null) {
@@ -235,7 +258,7 @@ class InlineTextFieldManager(val editor: Editor) {
                         }
                     }
 
-                val authorLabel = LinkLabel.create("") {
+                val authorLabel = ActionLink("") {
                     // BrowserUtil.browse("https://github.com")
                 }.apply {
                     // icon = avatarIconsProvider.getIcon("https://avatars.githubusercontent.com/u/1028286?v=4")
@@ -251,6 +274,7 @@ class InlineTextFieldManager(val editor: Editor) {
                     editor.project!!,
                     actionName,
                     createSubmitter(isReview),
+                    createAdvancedHandler(isReview),
                     completionProvider,
                     authorLabel,
                     title,
