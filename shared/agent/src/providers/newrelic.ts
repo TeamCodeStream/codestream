@@ -1083,6 +1083,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								name
 								guid
 								alertSeverity
+								domain
+								account {
+								  name
+								}
 							  }
 							}
 							source {
@@ -1090,6 +1094,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								  name
 								  guid
 								  alertSeverity
+								  domain
+								  account {
+									name
+								  }
 								}
 							  }
 							type
@@ -1112,7 +1120,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						alertSeverity: _entity.alertSeverity,
 						guid: _entity.guid,
 						name: _entity.name,
-						type: _.type
+						type: _.type,
+						domain: _entity.domain,
+						accountName: _entity.account.name
 					};
 				});
 				return _groupBy(_results, _ => _.type);

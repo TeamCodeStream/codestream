@@ -23,17 +23,13 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [goldenMetrics, setGoldenMetrics] = useState<any | undefined>(undefined);
 	const { relatedEntity } = props;
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[relatedEntity?.alertSeverity];
+
 	const EntityHealth = styled.div<{ backgroundColor: string }>`
 		background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
 		width: 10px;
 		height: 10px;
-		margin-right: 4px;
+		display: inline-block;
 	`;
-	// Related Entity object structure for quick reference:
-	// alertSeverity: _entity.alertSeverity,
-	// guid: _entity.guid,
-	// name: _entity.name,
-	// type: _.type
 
 	useDidMount(() => {
 		fetchGoldenMetrics(relatedEntity.guid, true);
@@ -56,7 +52,6 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 		}
 	};
 
-	console.warn(expanded);
 	return (
 		<>
 			<Row
@@ -71,6 +66,12 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				<span style={{ marginLeft: "2px" }}>
 					{" "}
 					<EntityHealth backgroundColor={alertSeverityColor} /> {relatedEntity?.name}
+					<span className="subtle" style={{ fontSize: "11px", verticalAlign: "bottom" }}>
+						{relatedEntity.accountName && relatedEntity.accountName.length > 15
+							? relatedEntity.accountName.substr(0, 15) + "..."
+							: relatedEntity.accountName}
+						{relatedEntity?.domain ? ` (${relatedEntity?.domain})` : ""}
+					</span>
 				</span>
 			</Row>
 			{expanded && (
