@@ -1,6 +1,8 @@
 import {
 	FetchThirdPartyCardsRequestType,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderCard,
+	ThirdPartyProviderConfig,
+	TransitionsEntity
 } from "@codestream/protocols/agent";
 import { CSMe, CSTeamSettings } from "@codestream/protocols/api";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
@@ -51,6 +53,26 @@ interface FetchCardError {
 interface ProviderInfo {
 	provider: ThirdPartyProviderConfig;
 	display: ProviderDisplay;
+}
+
+interface ThirdPartyProviderBase extends Pick<ThirdPartyProviderConfig, "id" | "name"> {}
+
+/*
+ThirdPartyProviderCard enhanced with extra fields for the UI
+ */
+export interface CardView extends ThirdPartyProviderCard {
+	providerIcon?: string;
+	icon?: JSX.Element;
+	providerToken?: string;
+	providerName?: string;
+	providerId?: string;
+	moveCardLabel?: string;
+	idList?: string;
+	branchName?: string;
+	body: string;
+	moveCardOptions?: TransitionsEntity[];
+	provider: ThirdPartyProviderBase;
+	key: string;
 }
 
 interface Props {
@@ -364,16 +386,6 @@ export default function IssuesPane(props: Props) {
 	);
 }
 
-export function Issue(props) {
-	const { card } = props;
-	return (
-		<div onClick={props.onClick} style={{ padding: "2px 0" }}>
-			{card.icon}
-			{card.label}
-		</div>
-	);
-}
-
 interface IssueListProps {
 	activeProviders: ThirdPartyProviderConfig[];
 	knownIssueProviderOptions: any;
@@ -432,11 +444,10 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	>();
 	const [newCustomFilter, setNewCustomFilter] = React.useState("");
 	const [newCustomFilterName, setNewCustomFilterName] = React.useState("");
-	const [query, setQuery] = React.useState("");
 	const [reload, setReload] = React.useState(1);
-	const [testCards, setTestCards] = React.useState<any[] | undefined>(undefined);
+	const [testCards, setTestCards] = React.useState<CardView[] | undefined>(undefined);
 	const [loadingTest, setLoadingTest] = React.useState(false);
-	const [startWorkCard, setStartWorkCard] = React.useState<any>(undefined);
+	const [startWorkCard, setStartWorkCard] = React.useState<CardView | undefined>(undefined);
 	const [validGHQueries, setvalidGHQueries] = React.useState(
 		new Set([
 			"user",
@@ -507,7 +518,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 	useEffect(() => {
 		const card = derivedState.startWorkCard;
-		if (card) selectCard({ ...card, label: card.title });
+		if (card) selectCard(card);
 	}, [derivedState.startWorkCard]);
 
 	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
@@ -538,31 +549,21 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	}, 60000);
 
 	const selectCard = React.useCallback(
-		async (card?) => {
+		async (card: CardView | undefined) => {
 			if (card) {
 				const { provider } = card;
 				if (provider) {
 					const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 					const pData = data[provider.id] || {};
-					// @ts-ignore
 					const board = pData.boards && pData.boards.find(b => b.id === card.idBoard);
 					// console.warn("SETTINGS VALUES: ", pData, card);
 					let { idList } = card;
-					let moveCardOptions = board && board.lists;
-					if (providerDisplay.hasCardBasedWorkflow) {
-						// setIsLoadingCard(card.id);
-						// const response = await HostApi.instance.send(FetchThirdPartyCardWorkflowRequestType, {
-						// 	providerId: provider.id,
-						// 	cardId: card.id
-						// });
-						// moveCardOptions = response.workflow;
-
-						// setIsLoadingCard("");
+					let moveCardOptions: TransitionsEntity[] = board?.lists ?? [];
+					if (providerDisplay.hasCardBasedWorkflow && card.lists && card.lists.length > 0) {
 						moveCardOptions = card.lists;
 					}
 					setStartWorkCard({
 						...card,
-						label: card.title,
 						providerIcon: provider.id === "codestream" ? "issue" : providerDisplay.icon,
 						providerToken: providerDisplay.icon,
 						providerName: providerDisplay.displayName,
@@ -580,15 +581,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			}
 		},
 		[reload]
-	);
-
-	const escapeRegExp = (str: string) => str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
-	const queryRegexp = React.useMemo(() => new RegExp(escapeRegExp(query), "gi"), [query]);
-
-	const underlineQ = string => (
-		<span
-			dangerouslySetInnerHTML={{ __html: (string || "").replace(queryRegexp, "<u><b>$&</b></u>") }}
-		/>
 	);
 
 	const filterMenuItemsSubmenu = provider => {
@@ -653,17 +645,14 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			}
 		}
 
-		// @ts-ignore
 		if (providerDisplay.hasFilters && pData.boards) {
 			if (items.length > 0) {
 				items.push({ label: "-" });
 			}
-			// @ts-ignore
 			pData.boards.forEach(board => {
 				const b = board;
 				let boardChecked = false;
-				const lists = board.lists;
-				if (lists) {
+				if (board.lists) {
 					const submenu = board.lists.map(list => {
 						const l = list;
 						const checked = !!filterLists[list.id || "_"];
@@ -717,9 +706,8 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	};
 
 	const { cards, canFilter, cardLabel, selectedLabel, fetchCardErrors } = React.useMemo(() => {
-		const items = [] as any;
+		const items: CardView[] = [];
 		const fetchCardErrors: FetchCardError[] = [];
-		const lowerQ = (query || "").toLocaleLowerCase();
 		const numConnectedProviders = props.activeProviders.length;
 		let canFilter = false;
 		let cardLabel = "issue";
@@ -750,59 +738,46 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			}
 
 			const pData = data[provider.id] || {};
-			// @ts-ignore
-			const cards = pData.cards || [];
+			const cards = pData?.cards ?? [];
 
-			// @ts-ignore
 			if (pData.fetchCardsError) {
 				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
-				// THESE @ts-ignore's are awesome!!!
 				fetchCardErrors.push({
 					provider: providerDisplay.displayName,
-					// @ts-ignore
 					error: pData.fetchCardsError.message
 				});
 			}
 
 			// console.warn("COMPARING: ", cards, " TO ", filterLists);
 			items.push(
-				...(cards
-					// @ts-ignore
+				...cards
 					.filter(card => !isFilteringLists || filterLists[card.idList || "_"])
 					.filter(card => !isFilteringBoards || filterBoards[card.idBoard || "_"])
-					.filter(
+					.map(
 						card =>
-							!query ||
-							(card.title || "").toLocaleLowerCase().includes(lowerQ) ||
-							(card.body || "").toLocaleLowerCase().includes(lowerQ)
+							({
+								...card,
+								label: card.title,
+								body: card.body,
+								icon: <Icon name={providerDisplay.icon} />,
+								key: "card-" + card.id,
+								provider
+							} as CardView)
 					)
-					.map(card => ({
-						...card,
-						label: query ? underlineQ(card.title) : card.title,
-						body: query ? underlineQ(card.body) : card.body,
-						icon: providerDisplay.icon && <Icon name={providerDisplay.icon} />,
-						key: "card-" + card.id,
-						provider
-					})) as any)
 			);
 		});
 
 		items.push(
-			...(derivedState.csIssues
-				.filter(
-					issue =>
-						!query ||
-						(issue.title || "").toLocaleLowerCase().includes(lowerQ) ||
-						(issue.text || "").toLocaleLowerCase().includes(lowerQ)
-				)
-				.map(issue => ({
-					...issue,
-					label: query ? underlineQ(issue.title) : issue.title,
-					body: query ? underlineQ(issue.text) : issue.text,
-					key: "card-" + issue.id,
-					icon: <Icon name="issue" />,
-					provider: { id: "codestream", name: "codestream" }
-				})) as any)
+			...derivedState.csIssues.map(issue => ({
+				id: issue.id,
+				label: issue.title,
+				body: issue.text,
+				title: issue.title,
+				modifiedAt: issue.lastActivityAt,
+				key: "card-" + issue.id,
+				icon: <Icon name="issue" />,
+				provider: { id: "codestream", name: "codestream" }
+			}))
 		);
 
 		items.sort((a, b) => b.modifiedAt - a.modifiedAt);
@@ -934,19 +909,20 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				setErrorQuery(false);
 			}
 
-			if (id !== "") {
-				const provider = props.activeProviders.find(_ => _.id === id);
-				const cardsWithProvider = response.cards.map(card => {
+			const provider = id !== "" ? props.activeProviders.find(_ => _.id === id) : undefined;
+			if (provider) {
+				const cardsWithProvider: CardView[] = response.cards.map(card => {
 					return {
 						...card,
-						provider
+						provider: { id: provider.id, name: provider.name },
+						key: "card-" + card.id
 					};
 				});
 				setLoadingTest(false);
-				setTestCards(cardsWithProvider || ([] as any));
+				setTestCards(cardsWithProvider);
 			} else {
 				setLoadingTest(false);
-				setTestCards(response.cards || ([] as any));
+				setTestCards(response.cards.map(card => ({ ...card, key: "card-" + card.id } as CardView)));
 			}
 		}
 	};
@@ -1135,7 +1111,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				<Icon
 					name="checked-checkbox"
 					onClick={() => {
-						selectCard({ title: "" });
+						selectCard(undefined);
 						HostApi.instance.track("StartWork Form Opened", {
 							"Opened Via": "Ad-Hoc Button"
 						});
@@ -1146,7 +1122,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				/>
 			</PaneHeader>
 			{props.paneState !== PaneState.Collapsed && (
-				<PaneBody key={'issuespane'}>
+				<PaneBody key={"issuespane"}>
 					<div className="instructions">
 						<Icon name="light-bulb" />
 						Start work by grabbing a ticket below, and creating a branch.
@@ -1268,7 +1244,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 								)}
 							</div>
 							<div>
-								{card.label}
+								{card.title}
 								<span className="subtle">{card.body}</span>
 							</div>
 							<div className="icons">
@@ -1295,11 +1271,13 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 										name="globe"
 										className="clickable"
 										onClick={e => {
-											e.stopPropagation();
-											e.preventDefault();
-											HostApi.instance.send(OpenUrlRequestType, {
-												url: card.url
-											});
+											if (card.url) {
+												e.stopPropagation();
+												e.preventDefault();
+												HostApi.instance.send(OpenUrlRequestType, {
+													url: card.url
+												});
+											}
 										}}
 									/>
 								)}

@@ -420,7 +420,7 @@ export abstract class ThirdPartyProviderBase<
 
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;
-					if (options?.useRawResponse) {
+					if (options?.useRawResponse || resp.status === 204) {
 						json = resp.text() as any;
 					} else {
 						try {

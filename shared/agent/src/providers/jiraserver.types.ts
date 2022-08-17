@@ -46,13 +46,6 @@ export interface CreateJiraIssueResponse {
 	self: string;
 }
 
-export interface CardSearchResponse {
-	issues: JiraCard[];
-	nextPage?: string;
-	isLast: boolean;
-	total: number;
-}
-
 export interface IssueType {
 	self: string;
 	id: string;
@@ -74,4 +67,110 @@ export interface IssueTypeDetails {
 	autocompleteUrl: string;
 	hasDefaultValue: boolean;
 	operations: string[];
+}
+
+export interface JiraCardResponse extends JiraPaginate {
+	expand: string;
+	issues: IssuesEntity[];
+	names: Names;
+	nextPage?: string;
+}
+
+export interface IssuesEntity {
+	id: string;
+	self: string;
+	key: string;
+	fields: Fields;
+	transitions?: TransitionsEntity[];
+	expand?: string;
+}
+
+export interface Fields {
+	summary: string;
+	issuetype: Issuetype;
+	subtasks?: IssuesEntity[];
+	description: string;
+	project: Project;
+	assignee: Assignee;
+	priority: Priority;
+	updated: string;
+	status: Status;
+}
+
+export interface Issuetype {
+	self: string;
+	id: string;
+	description: string;
+	iconUrl: string;
+	name: string;
+	subtask: boolean;
+	avatarId?: number;
+}
+
+export interface Status {
+	self: string;
+	description: string;
+	iconUrl: string;
+	name: string;
+	id: string;
+	statusCategory: StatusCategory;
+}
+
+export interface StatusCategory {
+	self: string;
+	id: number;
+	key: string;
+	colorName: string;
+	name: string;
+}
+
+export interface Priority {
+	self: string;
+	iconUrl: string;
+	name: string;
+	id: string;
+}
+
+export interface Project {
+	self: string;
+	id: string;
+	key: string;
+	name: string;
+	projectTypeKey: string;
+	avatarUrls: AvatarUrls;
+}
+
+export interface AvatarUrls {
+	"48x48": string;
+	"24x24": string;
+	"16x16": string;
+	"32x32": string;
+}
+
+export interface Assignee {
+	self: string;
+	name: string;
+	key: string;
+	avatarUrls: AvatarUrls;
+	displayName: string;
+	active: boolean;
+	timeZone: string;
+}
+
+export interface TransitionsEntity {
+	id: string;
+	name: string;
+	to: Status;
+}
+
+export interface Names {
+	summary: string;
+	issuetype: string;
+	subtasks: string;
+	description: string;
+	project: string;
+	assignee: string;
+	priority: string;
+	updated: string;
+	status: string;
 }

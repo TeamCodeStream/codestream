@@ -16,7 +16,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	MoveThirdPartyCardRequest,
 	ThirdPartyDisconnect,
-	ThirdPartyProviderBoard
+	ThirdPartyProviderBoard,
+	TransitionsEntity
 } from "../protocol/agent.protocol";
 import { CSAsanaProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -79,19 +80,12 @@ export class AsanaProvider extends ThirdPartyIssueProviderBase<CSAsanaProviderIn
 				singleAssignee: true // asana cards allow only a single assignee
 			};
 
-			if (project.layout !== "board") {
-				board.lists.push({
-					id: undefined!,
-					name: "No Section"
-				});
-			}
-
 			for (const section of project.sections) {
-				const list: AsanaList = {
+				const list: TransitionsEntity = {
 					id: section.gid,
 					name: section.name
 				};
-				board.lists.push(list);
+				board?.lists?.push(list);
 			}
 
 			boards.push(board);

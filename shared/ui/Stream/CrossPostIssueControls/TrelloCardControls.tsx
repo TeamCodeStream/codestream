@@ -38,7 +38,13 @@ export function TrelloCardControls(props: React.PropsWithChildren<Props>) {
 	);
 
 	useDidMount(() => {
-		if (data.boards && data.boards.length > 0 && data.currentBoard) {
+		if (
+			data.boards &&
+			data.boards.length > 0 &&
+			data.currentBoard &&
+			data.boards[0]?.lists &&
+			data.boards[0].lists.length > 0
+		) {
 			const boardId = (data.currentBoard || data.boards[0]).id;
 			const listId = (data.currentList || data.boards[0].lists[0]).id;
 			crossPostIssueContext.setValues({ boardId, listId });

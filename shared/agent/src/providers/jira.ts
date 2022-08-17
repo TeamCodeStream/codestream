@@ -13,15 +13,16 @@ import {
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	JiraBoard,
-	JiraCard,
 	JiraUser,
 	MoveThirdPartyCardRequest,
 	ReportingMessageType,
 	ThirdPartyDisconnect,
-	ThirdPartyProviderCard
+	ThirdPartyProviderCard,
+	TransitionsEntity
 } from "../protocol/agent.protocol";
 import { CSJiraProviderInfo } from "../protocol/api.protocol";
 import { Iterables, log, lspProvider } from "../system";
+import { IssuesEntity, JiraCardResponse } from "./jiraserver.types";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 type AccessibleResourcesResponse = { id: string; name: string; url: string }[];
@@ -52,13 +53,6 @@ interface ProjectSearchResponse {
 	total: number;
 }
 
-interface CardSearchResponse {
-	issues: JiraCard[];
-	nextPage?: string;
-	isLast: boolean;
-	total: number;
-}
-
 // this doesn't work because of a JIRA bug
 // https://community.atlassian.com/t5/Jira-questions/Paging-is-broken-for-user-search-queries/qaq-p/712071
 // interface UserSearchResponse {
@@ -74,11 +68,15 @@ interface CreateJiraIssueResponse {
 	self: string;
 }
 
-export const makeCardFromJira = (card: any, webUrl: string, parentId?: string) => {
-	const { fields = {} } = card;
-	const subtasks =
+export const makeCardFromJira = (
+	card: IssuesEntity,
+	webUrl: string,
+	parentId?: string
+): ThirdPartyProviderCard => {
+	const fields = card.fields;
+	const subtasks: ThirdPartyProviderCard[] =
 		fields.subtasks && fields.subtasks.length
-			? fields.subtasks.map((subtask: any) => makeCardFromJira(subtask, webUrl, card.id))
+			? fields.subtasks.map(subtask => makeCardFromJira(subtask, webUrl, card.id))
 			: [];
 	return {
 		id: card.id,
@@ -89,12 +87,19 @@ export const makeCardFromJira = (card: any, webUrl: string, parentId?: string) =
 		body: fields.description,
 		idList: fields.status ? fields.status.id : "",
 		listName: fields.status ? fields.status.name : "",
-		lists: card.transitions,
+		lists: card.transitions?.map(
+			transition =>
+				({
+					name: transition.name,
+					id: transition.id
+				} as TransitionsEntity)
+		),
 		priorityName: fields.priority ? fields.priority.name : "",
 		priorityIcon: fields.priority ? fields.priority.iconUrl : "",
 		typeIcon: fields.issuetype ? fields.issuetype.iconUrl : "",
 		subtasks,
-		parentId
+		parentId,
+		projectId: card?.fields?.project?.id
 	};
 };
 
@@ -313,7 +318,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 								!attributes.hasDefaultValue
 						);
 
-						board.issueTypeIcons[type.name] = type.iconUrl;
+						board.issueTypeIcons![type.name] = type.iconUrl;
 
 						if (type.fields.assignee === undefined) {
 							board.assigneesDisabled = true;
@@ -342,7 +347,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 
 		try {
 			Logger.debug("Jira: fetching cards");
-			const jiraCards: JiraCard[] = [];
+			const jiraCards: IssuesEntity[] = [];
 			let pageNum = 0;
 			const queryString = qs.stringify({
 				jql:
@@ -356,9 +361,7 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 
 			while (nextPage !== undefined) {
 				try {
-					const { body }: { body: CardSearchResponse } = await this.get<CardSearchResponse>(
-						nextPage
-					);
+					const { body }: { body: JiraCardResponse } = await this.get<JiraCardResponse>(nextPage);
 					// Logger.debug("GOT CARDS: " + JSON.stringify(body, null, 4));
 					jiraCards.push(...body.issues);
 

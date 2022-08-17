@@ -14,11 +14,15 @@ import {
 	SlackChannel,
 	AzureDevOpsBoard,
 	YouTrackBoard,
-	TrelloCard
+	ThirdPartyProviderCard,
+	ThirdPartyProviderBoard
 } from "@codestream/protocols/agent";
 
-export interface ActiveIntegrationData {
+export interface ActiveIntegrationData<T = ThirdPartyProviderBoard> {
 	isLoading?: boolean;
+	cards: ThirdPartyProviderCard[];
+	boards: T[];
+	fetchCardsError: { message: string };
 }
 
 export type SlackV2IntegrationData = ActiveIntegrationData & {
@@ -29,15 +33,12 @@ export type SlackV2IntegrationData = ActiveIntegrationData & {
 	};
 };
 
-export interface SlackIntegrationData extends ActiveIntegrationData {
-	boards?: SlackChannel[];
+export interface SlackIntegrationData extends ActiveIntegrationData<SlackChannel> {
 	currentBoard?: SlackChannel;
 	//currentList?: TrelloList;
 }
 
-export interface TrelloIntegrationData extends ActiveIntegrationData {
-	boards?: TrelloBoard[];
-	cards?: TrelloCard[];
+export interface TrelloIntegrationData extends ActiveIntegrationData<TrelloBoard> {
 	currentBoard?: TrelloBoard;
 	currentList?: TrelloList;
 }
@@ -63,8 +64,7 @@ export interface BitbucketIntegrationData extends ActiveIntegrationData {
 	currentRepo?: BitbucketBoard;
 }
 
-export interface AsanaIntegrationData extends ActiveIntegrationData {
-	boards?: AsanaBoard[];
+export interface AsanaIntegrationData extends ActiveIntegrationData<AsanaBoard> {
 	currentBoard?: AsanaBoard;
 	currentList?: AsanaList;
 }

@@ -15,6 +15,7 @@ import { CSMe } from "@codestream/protocols/api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { logError } from "@codestream/webview/logger";
 import { connectProvider } from "@codestream/webview/store/providers/actions";
+import { CardView } from "@codestream/webview/Stream/CrossPostIssueControls/IssuesPane";
 import React, { useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
@@ -377,7 +378,7 @@ export const EMPTY_STATUS = {
 const EMPTY_ARRAY = [];
 
 interface Props {
-	card: any;
+	card: CardView;
 	onClose: (e?: any) => void;
 }
 
@@ -449,10 +450,9 @@ export const StartWork = (props: Props) => {
 		};
 	});
 	const { card } = props;
-	const { status } = derivedState;
 	const [loading, setLoading] = useState(false);
 	const [scmError, setScmError] = useState("");
-	const [label, setLabel] = useState(card.label || "");
+	const [label, setLabel] = useState(card.title || "");
 	const [loadingSlack, setLoadingSlack] = useState(false);
 	const [currentBranch, setCurrentBranch] = useState("");
 	const [editingBranch, setEditingBranch] = useState(false);
@@ -640,10 +640,9 @@ export const StartWork = (props: Props) => {
 
 	useDidMount(() => {
 		getBranches();
+		// TODO Only works for Trello, Jira needs MRU
 		if (card.moveCardOptions && card.moveCardOptions.length) {
-			const index = card.moveCardOptions.findIndex(option =>
-				option.to ? option.to.id === card.idList : option.id === card.idList
-			);
+			const index = card.moveCardOptions.findIndex(option => option.id === card.idList);
 			const next = card.moveCardOptions[index + 1];
 			if (next) setMoveCardDestination(next);
 			else setMoveCardDestination(card.moveCardOptions[0]);
@@ -733,7 +732,7 @@ export const StartWork = (props: Props) => {
 				}
 			}
 
-			if (moveTheCardNow) {
+			if (moveTheCardNow && card.providerId) {
 				const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
 					providerId: card.providerId,
 					cardId: card.id,
@@ -760,9 +759,9 @@ export const StartWork = (props: Props) => {
 			});
 		}
 
-		const ticketId = card ? card.id : "";
-		const ticketUrl = card ? card.url : "";
-		const ticketProvider = card ? card.providerIcon : "";
+		const ticketId = card?.id ?? "";
+		const ticketUrl = card?.url ?? "";
+		const ticketProvider = card?.providerIcon ?? "";
 		await dispatch(
 			setUserStatus(
 				label,
@@ -857,7 +856,7 @@ export const StartWork = (props: Props) => {
 		!card || !card.moveCardOptions
 			? []
 			: card.moveCardOptions.map(option => {
-					const selected = option.to ? option.to.id === card.idList : option.id === card.idList;
+					const selected = option.id === card.idList;
 					return {
 						label: option.name,
 						icon: <Icon name={selected ? "arrow-right" : "blank"} />,
@@ -928,15 +927,17 @@ export const StartWork = (props: Props) => {
 												) : card.providerIcon ? (
 													<Icon className="ticket-icon" name={card.providerIcon} />
 												) : null}
-												{card.label || card.title}
+												{card.title}
 												{card.url && (
 													<div
 														className="link-to-ticket"
-														onClick={() =>
-															HostApi.instance.send(OpenUrlRequestType, {
-																url: card.url
-															})
-														}
+														onClick={() => {
+															if (card.url) {
+																HostApi.instance.send(OpenUrlRequestType, {
+																	url: card.url
+																});
+															}
+														}}
 													>
 														<Icon title="Open on web" className="clickable" name="globe" />
 													</div>

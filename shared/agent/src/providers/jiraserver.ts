@@ -17,7 +17,6 @@ import {
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
 	JiraBoard,
-	JiraCard,
 	JiraUser,
 	MoveThirdPartyCardRequest,
 	ProviderConfigurationData,
@@ -31,8 +30,8 @@ import { CodeStreamSession } from "../session";
 import { Iterables, log, lspProvider } from "../system";
 import { makeCardFromJira } from "./jira";
 import {
-	CardSearchResponse,
 	CreateJiraIssueResponse,
+	IssuesEntity,
 	IssueType,
 	IssueTypeDescriptor,
 	IssueTypeDetails,
@@ -40,7 +39,8 @@ import {
 	JiraPaginateValues,
 	JiraProject,
 	JiraProjectsMetaResponse,
-	JiraServerOauthParams
+	JiraServerOauthParams,
+	JiraCardResponse
 } from "./jiraserver.types";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
@@ -328,12 +328,9 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 	private getCompatibleBoards(meta: JiraProjectsMetaResponse) {
 		const boards = meta.projects.map(project => {
-			const board: Partial<JiraBoard> = {
-				id: project.id,
-				name: project.name,
-				key: project.key,
-				issueTypeIcons: {}
-			};
+			const issueTypeIcons: { [key: string]: string } = {};
+			let assigneesDisabled: boolean | undefined = undefined;
+			let assigneesRequired: boolean | undefined = undefined;
 
 			const issueTypes = Array.from(
 				Iterables.filterMap(project.issueTypes, type => {
@@ -349,22 +346,30 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 								!attributes.hasDefaultValue
 						);
 
-						board.issueTypeIcons[type.name] = type.iconUrl;
+						issueTypeIcons[type.name] = type.iconUrl;
 
 						if (type.fields.Assignee === undefined) {
-							board.assigneesDisabled = true;
+							assigneesDisabled = true;
 						} else {
-							board.assigneesRequired = type.fields.Assignee.required;
+							assigneesRequired = type.fields.Assignee.required;
 						}
 						return hasOtherRequiredFields ? undefined : type.name;
 					}
 					return undefined;
 				})
 			);
+			const board: JiraBoard = {
+				id: project.id,
+				name: project.name,
+				key: project.key,
+				issueTypes,
+				issueTypeIcons,
+				singleAssignee: true, // all jira cards have a single assignee?
+				assigneesRequired,
+				assigneesDisabled
+			};
 
-			board.issueTypes = issueTypes;
-			board.singleAssignee = true; // all jira cards have a single assignee?
-			return board as JiraBoard;
+			return board;
 		});
 		return boards;
 	}
@@ -397,7 +402,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 		try {
 			Logger.debug("Jira: fetching cards");
-			const jiraCards: JiraCard[] = [];
+			const jiraCards: IssuesEntity[] = [];
 			let nextPage: string | undefined = `/rest/api/2/search?${qs.stringify({
 				jql:
 					request.customFilter ||
@@ -408,7 +413,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 
 			while (nextPage !== undefined) {
 				try {
-					const result = (await this._getJira(nextPage)) as CardSearchResponse;
+					const result = (await this._getJira(nextPage)) as JiraCardResponse;
 
 					// Logger.debug("GOT RESULT: " + JSON.stringify(result, null, 4));
 					jiraCards.push(...result.issues);
@@ -436,8 +441,7 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			}
 
 			Logger.debug(`Jira: total cards: ${jiraCards.length}`);
-			const cards: ThirdPartyProviderCard[] = [];
-			jiraCards.forEach(card => cards.push(makeCardFromJira(card, this.baseUrl)));
+			const cards = jiraCards.map(card => makeCardFromJira(card, this.baseUrl));
 			return { cards };
 		} catch (error) {
 			debugger;

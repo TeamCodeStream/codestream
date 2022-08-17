@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import { last as getLast } from "lodash-es";
-import Menu from "./Menu";
 import Icon from "./Icon";
 import { Button } from "../src/components/Button";
 import { HostApi } from "../webview-api";
@@ -20,7 +19,7 @@ import {
 import { connectProvider } from "../store/providers/actions";
 import { getIntegrationData } from "../store/activeIntegrations/reducer";
 import { updateForProvider } from "../store/activeIntegrations/actions";
-import { SlackV2IntegrationData } from "../store/activeIntegrations/types";
+import { ActiveIntegrationData, SlackV2IntegrationData } from "../store/activeIntegrations/types";
 import { setContext } from "../store/context/actions";
 import { safe } from "../utils";
 import { useDidMount, useUpdates } from "../utilities/hooks";
@@ -77,7 +76,7 @@ const Root = styled.div`
 const formatChannelName = (channel: { type: string; name: string }) =>
 	channel.type === "direct" ? channel.name : `#${channel.name}`;
 
-function useActiveIntegrationData<T>(providerId: string) {
+function useActiveIntegrationData<T extends ActiveIntegrationData>(providerId: string) {
 	const dispatch = useDispatch();
 	const data = useSelector((state: CodeStreamState) =>
 		getIntegrationData<T>(state.activeIntegrations, providerId)

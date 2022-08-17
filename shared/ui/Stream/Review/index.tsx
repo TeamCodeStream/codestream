@@ -138,6 +138,7 @@ export interface BaseReviewProps extends CardProps {
 	currentUserId?: string;
 	collapsed?: boolean;
 	isFollowing?: boolean;
+	isTouring?: boolean;
 	reviewers?: CSUser[];
 	tags?: { id: string }[];
 	changeRequests?: CodemarkPlus[];

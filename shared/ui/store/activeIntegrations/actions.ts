@@ -76,7 +76,7 @@ const _fetchCards = async (
 						updateForProvider(provider.id, {
 							cards: response.cards,
 							fetchCardsError: response.error
-						} as any) // TODO Fix typing problem on ActiveIntegrationData
+						})
 					);
 				} catch (error) {
 					logError(error, { detail: "Error Loading Cards" });

@@ -17,7 +17,6 @@ import {
 } from "../protocol/agent.protocol";
 import { CSTrelloProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
-import { ApiResponse } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 @lspProvider("trello")
@@ -99,64 +98,15 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 		// have to force connection here because we need apiKey and accessToken to even create our request
 		await this.ensureConnected();
 
-		let response: ApiResponse<TrelloCard[]>;
-
-		if (true || request.data.assignedToMe) {
-			response = await this.get<TrelloCard[]>(
-				`/members/${this._trelloUserId}/cards?${qs.stringify({
-					cards: "open",
-					filter: "open",
-					fields:
-						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
-					key: this.apiKey,
-					token: this.accessToken
-				})}`
-			);
-		} else if (request.data.assignedToAnyone) {
-			response = await this.get<TrelloCard[]>(
-				`/members/${this._trelloUserId}/cards?${qs.stringify({
-					cards: "open",
-					filter: "open",
-					fields:
-						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
-					key: this.apiKey,
-					token: this.accessToken
-				})}`
-			);
-			response.body = [];
-			const bodies = (
-				await Promise.all(
-					// @ts-ignore
-					request.filterBoards.map(boardId => {
-						const innerResponse = this.get<TrelloCard[]>(
-							`/boards/${boardId}/cards?${qs.stringify({
-								cards: "open",
-								fields:
-									"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
-								key: this.apiKey,
-								token: this.accessToken
-							})}`
-						);
-						return innerResponse;
-					})
-				)
-			).forEach(resp => {
-				// @ts-ignore
-				if (!response) response = resp;
-				// @ts-ignore
-				else response.body = response.body.concat(resp.body);
-			});
-		} else {
-			response = await this.get<TrelloCard[]>(
-				`/lists/${request.listId}/cards?${qs.stringify({
-					cards: "open",
-					fields:
-						"id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
-					key: this.apiKey,
-					token: this.accessToken
-				})}`
-			);
-		}
+		const response = await this.get<TrelloCard[]>(
+			`/members/${this._trelloUserId}/cards?${qs.stringify({
+				cards: "open",
+				filter: "open",
+				fields: "id,name,desc,url,idList,idBoard,idOrganization,dateLastActivity,shortLink,idShort",
+				key: this.apiKey,
+				token: this.accessToken
+			})}`
+		);
 
 		const cards = (request.organizationId
 			? response.body.filter(c => c.idOrganization === request.organizationId)
@@ -181,7 +131,7 @@ export class TrelloProvider extends ThirdPartyIssueProviderBase<CSTrelloProvider
 	async createCard(request: CreateThirdPartyCardRequest) {
 		await this.ensureConnected();
 
-		const data = request.data as TrelloCreateCardRequest;
+		const data = request.data as TrelloCreateCardRequest; // TODO Don't undo the API contract - properly use either agent.protocol.trello or agent.protocol.providers
 		const response = await this.post<{}, TrelloCreateCardResponse>(
 			`/cards?${qs.stringify({
 				idList: data.listId,
