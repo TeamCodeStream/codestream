@@ -222,6 +222,8 @@ export function reduceContext(
 			return { ...state, issueProvider: action.payload };
 		case ContextActionsType.SetNewPostEntryPoint:
 			return { ...state, newPostEntryPoint: action.payload };
+		case ContextActionsType.SetNewPostDefaultText:
+			return { ...state, newPostDefaultText: action.payload };
 		case PreferencesActionsType.Set:
 		case PreferencesActionsType.Update: {
 			if (action.payload.showChannels) {

@@ -295,6 +295,9 @@ export const setIssueProvider = (providerId: string | undefined) =>
 export const setNewPostEntry = (entryPoint: PostEntryPoint) =>
 	action(ContextActionsType.SetNewPostEntryPoint, entryPoint);
 
+export const setNewPostDefaultText = (defaultText: string | undefined) =>
+	action(ContextActionsType.SetNewPostDefaultText, defaultText);
+
 export const goToNewUserEntry = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.NewUser, params });
 

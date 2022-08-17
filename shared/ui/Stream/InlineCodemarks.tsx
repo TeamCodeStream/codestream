@@ -129,6 +129,7 @@ interface Props {
 	currentPullRequestCommentId?: string;
 	currentPullRequestId?: string;
 	currentPullRequestProviderId?: string;
+	newPostDefaultText?: string;
 	lightningCodeReviewsEnabled: boolean;
 	activePanel: WebviewPanels | string;
 	expandedPullRequestGroupIndex?: string;
@@ -190,7 +191,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 	private root = React.createRef<HTMLDivElement>();
 	hiddenCodemarks = {};
 	currentPostEntryPoint?: PostEntryPoint;
-	defaultCodemarkText?: string;
 	_updateEmitter = new ComponentUpdateEmitter();
 	minimumDistance = 20;
 	_waitingForPRProviderConnection = false;
@@ -238,7 +238,6 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			},
 			HostApi.instance.on(NewCodemarkNotificationType, e => {
 				this.currentPostEntryPoint = e.source as PostEntryPoint;
-				this.defaultCodemarkText = e.defaultCodemarkText;
 				if (!this._mounted) {
 					console.debug(
 						`<InlineCodemarks/>: notification ${NewCodemarkNotificationType.method} received but the component is not mounted yet so the notification will be re-emitted`
@@ -870,7 +869,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			// <ContainerAtEditorSelection>
 			<CodemarkForm
 				commentType={this.props.composeCodemarkActive}
-				defaultText={this.currentPostEntryPoint === "Advanced" ? this.defaultCodemarkText : undefined}
+				defaultText={this.props.newPostDefaultText}
 				streamId={this.props.currentStreamId!}
 				onSubmit={this.submitCodemark}
 				onClickClose={this.closeCodemarkForm}
@@ -1420,6 +1419,7 @@ const mapStateToProps = (state: CodeStreamState) => {
 		currentPullRequestProviderId: context.currentPullRequest
 			? context.currentPullRequest.providerId
 			: undefined,
+		newPostDefaultText: context.newPostDefaultText,
 		team: teams[context.currentTeamId],
 		viewInline: context.codemarksFileViewStyle === "inline",
 		viewHeadshots: configs.showHeadshots,

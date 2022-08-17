@@ -32,6 +32,7 @@ export enum ContextActionsType {
 	SetChannelsMuteAll = "@context/SetChannelsMuteAll",
 	SetShowFeedbackSmiley = "@context/SetShowFeedbackSmiley",
 	SetNewPostEntryPoint = "@context/SetNewPostEntryPoint",
+	SetNewPostDefaultText = "@context/SetNewPostDefaultText",
 	SetRoute = "@context/SetRoute",
 	SetChatProviderAccess = "@context/SetChatProviderAccess",
 	SetCurrentCodemark = "@context/SetCurrentCodemark",
@@ -101,6 +102,7 @@ export interface ContextState extends WebviewContext {
 	showFeedbackSmiley: boolean;
 
 	newPostEntryPoint: PostEntryPoint;
+	newPostDefaultText?: string;
 	route: RouteState;
 
 	chatProviderAccess: ChatProviderAccess;

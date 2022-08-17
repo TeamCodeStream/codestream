@@ -17,7 +17,8 @@ import { CodemarkType } from "@codestream/protocols/api";
 import {
 	setCurrentCodemark,
 	setComposeCodemarkActive,
-	setNewPostEntry
+	setNewPostEntry,
+	setNewPostDefaultText
 } from "../store/context/actions";
 import {
 	getCurrentSelection,
@@ -133,7 +134,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			if (e.source === "Codemark" && e.range) {
 				handleClickPlus(undefined, e.type, e.range.start.line, e.source);
 			} else {
-				handleClickPlus(undefined, e.type, undefined as any, e.source, false);
+				handleClickPlus(undefined, e.type, undefined as any, e.source, false, e.defaultCodemarkText);
 			}
 		});
 		return () => disposable.dispose();
@@ -183,7 +184,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 		type: CodemarkType,
 		lineNum0: number,
 		postEntry: string | undefined = undefined,
-		shouldChangeSelection = true
+		shouldChangeSelection = true,
+		defaultText: string | undefined = undefined
 	) => {
 		if (event) event.preventDefault();
 
@@ -224,6 +226,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			postEntryName = `unknown: ${derivedState.activePanel}`;
 		}
 		dispatch(setNewPostEntry(postEntryName));
+		dispatch(setNewPostDefaultText(defaultText));
 		dispatch(setCurrentCodemark());
 	};
 	const mapLine0ToVisibleRange = fromLineNum0 => {
