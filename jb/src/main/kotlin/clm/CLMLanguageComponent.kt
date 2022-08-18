@@ -1,5 +1,6 @@
 package com.codestream.clm
 
+import com.codestream.extensions.uri
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
@@ -41,6 +42,8 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         if (event.editor.project != project) return
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.editor.document) ?: return
         if (!isPsiFileSupported(psiFile)) return
+        // Ignore library sources (eg: files in .jar). Might need extra work to do the same with "node_modules", etc.
+        if (event.editor.document.uri?.startsWith("file://") != true) return
         managersByEditor[event.editor] = editorFactory(event.editor)
     }
 
