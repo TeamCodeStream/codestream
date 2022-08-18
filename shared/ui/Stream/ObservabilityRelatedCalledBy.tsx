@@ -8,6 +8,7 @@ import { any } from "prop-types";
 
 interface Props {
 	relatedEntities: any;
+	currentRepoId: string;
 }
 
 export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
@@ -30,7 +31,9 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 			{expanded && !_isEmpty(relatedEntities) && (
 				<>
 					{relatedEntities.map(_ => {
-						return <ObservabilityRelatedEntity relatedEntity={_} />;
+						return (
+							<ObservabilityRelatedEntity currentRepoId={props.currentRepoId} relatedEntity={_} />
+						);
 					})}
 				</>
 			)}

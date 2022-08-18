@@ -10,10 +10,7 @@ import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
 import { any } from "prop-types";
 
 interface Props {
-	// observabilityErrors: any;
-	// observabilityRepo: any;
-	// observabilityAssignments: any;
-	// entityGuid: string;
+	currentRepoId: string;
 }
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
@@ -46,8 +43,14 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			</Row>
 			{expanded && relatedEntities && (
 				<>
-					<ObservabilityRelatedCalls relatedEntities={relatedEntities.CALLS} />
-					<ObservabilityRelatedCalledBy relatedEntities={relatedEntities.CONNECTS_TO} />
+					<ObservabilityRelatedCalls
+						currentRepoId={props.currentRepoId}
+						relatedEntities={relatedEntities.CALLS}
+					/>
+					<ObservabilityRelatedCalledBy
+						currentRepoId={props.currentRepoId}
+						relatedEntities={relatedEntities.CONNECTS_TO}
+					/>
 				</>
 			)}
 		</>
