@@ -119,8 +119,8 @@ function Build-Extension {
 		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/" -Force -Recurse
 		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -Force
 		
-		Push-Location "./src/CodeStream.VisualStudio.UnitTests"
-		& dotnet tool restore --tool-manifest "./.config/dotnet-tools.json" --ignore-failed-sources
+		Push-Location "./src"
+		& dotnet tool restore --ignore-failed-sources
 		Pop-Location
 
 		Push-Location "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
