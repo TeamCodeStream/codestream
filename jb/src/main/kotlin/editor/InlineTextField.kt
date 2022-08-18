@@ -80,9 +80,8 @@ class InlineTextField(
             .insets("0", "0", "0", "0")
             .fillX())
 
-        title?.let {
-            add(JBLabel(it), CC().spanX().wrap("5px"))
-        }
+        add(JBLabel(title ?: ""), CC().spanX(2))
+        add(cancelButton, CC().alignY("top").hideMode(3).wrap())
 
         if (authorLabel != null) {
             isFocusCycleRoot = true
@@ -91,15 +90,14 @@ class InlineTextField(
             add(authorLabel, CC().alignY("top").gapRight("${JBUIScale.scale(6)}"))
         }
 
-        add(textFieldWithOverlay, CC().grow().pushX())
-        add(cancelButton, CC().alignY("top").hideMode(3))
+        add(textFieldWithOverlay, CC().spanX().grow().pushX())
 
         val advancedLink = ActionLink("Advanced") {
             advancedHandler(textField.text).thenRun {
                 onCancel?.invoke()
             }
         }
-        add(advancedLink, CC().newline().spanX().gapTop("5px").alignX("right"))
+        add(advancedLink, CC().newline().spanX(3).gapTop("5px").alignX("right"))
 
         Controller(this, textField, busyLabel, submitButton, cancelButton, onCancel)
 
