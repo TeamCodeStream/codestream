@@ -35,7 +35,7 @@
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
@@ -79,7 +79,7 @@
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <GeneratePkgDefFile>true</GeneratePkgDefFile>
     <IncludeAssemblyInVSIXContainer>true</IncludeAssemblyInVSIXContainer>
-    <IncludeDebugSymbolsInVSIXContainer>true</IncludeDebugSymbolsInVSIXContainer>
+    <IncludeDebugSymbolsInVSIXContainer>false</IncludeDebugSymbolsInVSIXContainer>
     <IncludeDebugSymbolsInLocalVSIXDeployment>true</IncludeDebugSymbolsInLocalVSIXDeployment>
     <CopyBuildOutputToOutputDirectory>true</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
@@ -488,9 +488,12 @@
     <Content Include="..\resources\Sprites.png">
       <Link>resources\Sprites.png</Link>
     </Content>
-    <EmbeddedResource Include="..\resources\teamdev.licenses">
+ 	<EmbeddedResource Include="..\..\licenses\Debug\teamdev.licenses" Condition="'$(Configuration)' == 'Debug'">
       <Link>teamdev.licenses</Link>
-    </EmbeddedResource>
+    </EmbeddedResource>	
+ 	<EmbeddedResource Include="..\..\licenses\Release\teamdev.licenses" Condition="'$(Configuration)' == 'Release'">
+      <Link>teamdev.licenses</Link>
+    </EmbeddedResource>	
     <VSCTCompile Include="CodeStreamPackage.vsct">
       <Generator>VsctGenerator</Generator>
       <ResourceName>Menus.ctmenu</ResourceName>
@@ -726,17 +729,4 @@
   <Import Project="..\CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
-  <PropertyGroup>
-    <PreBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)..\resources\scripts\Pre-Build.ps1 -ConfigurationName $(ConfigurationName)  -ProjectDir $(ProjectDir)..\resources</PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>powershell -ExecutionPolicy Unrestricted $(ProjectDir)..\resources\scripts\Post-Build.ps1 -ConfigurationName $(ConfigurationName) -TargetDir $(TargetDir)</PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

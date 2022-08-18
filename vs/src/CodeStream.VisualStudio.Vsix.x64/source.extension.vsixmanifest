@@ -12,13 +12,13 @@
         <Tags>gitlab;collaboration;github;review;slack</Tags>
     </Metadata>
     <Installation Experimental="false" AllUsers="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.0, 18.0)">
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.2.32505.173, 18.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
-        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.0, 18.0)">
+        <InstallationTarget Id="Microsoft.VisualStudio.Pro" Version="[17.2.32505.173, 18.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
-        <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.0, 18.0)">
+        <InstallationTarget Id="Microsoft.VisualStudio.Enterprise" Version="[17.2.32505.173, 18.0)">
             <ProductArchitecture>amd64</ProductArchitecture>
         </InstallationTarget>
     </Installation>

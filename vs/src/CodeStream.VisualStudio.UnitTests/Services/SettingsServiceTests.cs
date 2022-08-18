@@ -1,20 +1,21 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CodeStream.VisualStudio.UnitTests.Stubs;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services
 {
-    [TestClass]
     public class SettingsServiceTests
     {
-        //[TestMethod]
-        //[DataRow("https://localhost.codestream.us", "local")]
-        //[DataRow("https://api.codestream.com", "prod")]
-        //[DataRow("https://api.codestream.co.uk", "unknown")]
-        //[DataRow("", "unknown")]
-        //[DataRow("https://foo-api.codestream.us:123", "foo")]
-        //public void GetEnvironmentTest(string url, string expected)
-        //{
-        //    var settingsService = new SettingsService(new OptionsDialogPageStub{ServerUrl = url});
-        //    Assert.AreEqual(expected, settingsService.GetEnvironmentName());
-        //}
-    }
+		//[Fact]
+		//[InlineData("https://localhost.codestream.us", "local")]
+		//[InlineData("https://api.codestream.com", "prod")]
+		//[InlineData("https://api.codestream.co.uk", "unknown")]
+		//[InlineData("", "unknown")]
+		//[InlineData("https://foo-api.codestream.us:123", "foo")]
+		//public void GetEnvironmentTest(string url, string expected)
+		//{
+		//	var settingsService = new SettingsService(new OptionsDialogPageStub { ServerUrl = url });
+		//	Assert.Equal(expected, settingsService.GetEnvironmentName());
+		//}
+	}
 }

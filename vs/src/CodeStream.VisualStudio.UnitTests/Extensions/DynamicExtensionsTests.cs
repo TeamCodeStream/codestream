@@ -1,12 +1,12 @@
 ﻿using CodeStream.VisualStudio.Core.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions
 {
-    [TestClass()]
     public class DynamicExtensionsTests
     {
-        [TestMethod()]
+        [Fact]
         public void ToExpandoObjectTest()
         {
             var foo = new
@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.UnitTests.Extensions
                 }
             };
 
-            Assert.AreEqual("foo", foo.GetValue<string>("Header.Name"));
+            Assert.Equal("foo", foo.GetValue<string>("Header.Name"));
         }
     }
 }

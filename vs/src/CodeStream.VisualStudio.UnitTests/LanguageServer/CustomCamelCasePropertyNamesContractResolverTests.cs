@@ -1,34 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
-using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.LanguageServer;
-using CodeStream.VisualStudio.Core.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using CodeStream.VisualStudio.Shared.Extensions;
+using CodeStream.VisualStudio.Shared.LanguageServer;
+using CodeStream.VisualStudio.Shared.Models;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
+using Xunit;
+
 namespace CodeStream.VisualStudio.UnitTests.LanguageServer {
-	[TestClass]
     public class CustomCamelCasePropertyNamesContractResolverTests
     {
-        [TestMethod]
+        [Fact]
         public void CamelCasePropertyNamesContractResolverTest()
         {
             var str = JsonConvert.SerializeObject(GetTelemetryRequest(), GetSettings(new CamelCasePropertyNamesContractResolver()));
             var result = str.FromJson<TelemetryRequest>();
 
-            Assert.IsTrue(result.EventName == "Foo");
-            Assert.IsTrue(result.Properties["cheese"].ToString() == "yum");
+            Assert.True(result.EventName == "Foo");
+            Assert.True(result.Properties["cheese"].ToString() == "yum");
         }
 
-        [TestMethod]
+        [Fact]
         public void CustomCamelCasePropertyNamesContractResolverTest()
         {
             var str = JsonConvert.SerializeObject(GetTelemetryRequest(), GetSettings(new CustomCamelCasePropertyNamesContractResolver(new HashSet<Type> { typeof(TelemetryProperties) })));
             var result = str.FromJson<TelemetryRequest>();
 
-            Assert.IsTrue(result.EventName == "Foo");
-            Assert.IsTrue(result.Properties["Cheese"].ToString() == "yum");
+            Assert.True(result.EventName == "Foo");
+            Assert.True(result.Properties["Cheese"].ToString() == "yum");
         }
 
         private TelemetryRequest GetTelemetryRequest()

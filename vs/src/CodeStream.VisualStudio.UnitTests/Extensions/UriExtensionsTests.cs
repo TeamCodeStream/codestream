@@ -1,18 +1,19 @@
 ﻿using System;
 using CodeStream.VisualStudio.Core.Extensions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Extensions {
-	[TestClass]
+	
 	public class UriExtensionsTests {
-		[TestMethod]
+		[Fact]
 		public void EqualsIgnoreCaseTest() {
-			Assert.IsTrue(new Uri("file:///c%3A/cheese.js").EqualsIgnoreCase(new Uri("file:///c:/cheese.js")));
-			Assert.IsTrue(new Uri("file:///c:/cheese.js").EqualsIgnoreCase(new Uri("file:///c%3A/cheese.js")));
+			Assert.True(new Uri("file:///c%3A/cheese.js").EqualsIgnoreCase(new Uri("file:///c:/cheese.js")));
+			Assert.True(new Uri("file:///c:/cheese.js").EqualsIgnoreCase(new Uri("file:///c%3A/cheese.js")));
 		}
-		[TestMethod]
+		[Fact]
 		public void ToUriTest() {
-			Assert.AreEqual( "file:///c:/cheese.js", "file:///c%3A/cheese.js".ToUri().ToString());
+			Assert.Equal("file:///c:/cheese.js", "file:///c%3A/cheese.js".ToUri().ToString());
 		}
 	}
 }

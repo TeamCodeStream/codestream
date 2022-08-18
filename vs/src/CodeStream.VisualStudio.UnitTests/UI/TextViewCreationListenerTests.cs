@@ -1,9 +1,6 @@
 ﻿using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Services;
-using CodeStream.VisualStudio.Core.UI;
 using CodeStream.VisualStudio.UnitTests.Stubs;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
@@ -12,15 +9,19 @@ using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reactive.Subjects;
+using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Services;
 using CodeStream.VisualStudio.Shared.UI;
 using CodeStream.VisualStudio.Shared.UI.Margins;
 using Microsoft.VisualStudio.Text.Projection;
 
+using Xunit;
+
 namespace CodeStream.VisualStudio.UnitTests.UI {
-	[TestClass]
+	
 	public class TextViewCreationListenerTests {
-		[TestMethod]
+		[Fact]
 		public void TextViewCreationListenerTest() {
 
 			var textView = new Mock<IVsTextView>();
@@ -93,16 +94,16 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 
 			((IWpfTextViewConnectionListener)listener).SubjectBuffersConnected(wpfTextViewMock.Object, reason, bufferCollection);
 			var propertyCount = wpfTextViewMock.Object.Properties.PropertyList.Count;
-			Assert.AreEqual(1, textViewCache.Count());
-			Assert.AreEqual(true, propertyCount > 0);
+			Assert.Equal(1, textViewCache.Count());
+			Assert.True(propertyCount > 0);
 
 			listener.VsTextViewCreated(textView.Object);
 			listener.OnSessionReadyAsync(wpfTextViewMock.Object);
-			Assert.AreEqual(true, wpfTextViewMock.Object.Properties.PropertyList.Count > propertyCount);
+			Assert.True(wpfTextViewMock.Object.Properties.PropertyList.Count > propertyCount);
 
 			((IWpfTextViewConnectionListener)listener).SubjectBuffersDisconnected(wpfTextViewMock.Object, reason, bufferCollection);
-			Assert.AreEqual(0, textViewCache.Count());
-			Assert.AreEqual(true, wpfTextViewMock.Object.Properties.PropertyList.Count == 0);
+			Assert.Equal(0, textViewCache.Count());
+			Assert.True(wpfTextViewMock.Object.Properties.PropertyList.Count == 0);
 		}
 	}
 }

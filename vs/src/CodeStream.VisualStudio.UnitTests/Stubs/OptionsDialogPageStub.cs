@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Models;
 
 namespace CodeStream.VisualStudio.UnitTests.Stubs
 {

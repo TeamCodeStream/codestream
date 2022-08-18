@@ -1,14 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using CodeStream.VisualStudio.Core.Extensions;
+﻿using System.Collections.Generic;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Extensions;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.UI
 {
-    [TestClass]
     public class TextViewExtensionsTests
     {
-        [TestMethod]
+        [Fact]
         public void RangeCollapsedTest0()
         {
             var positions = new List<Range>
@@ -22,21 +22,21 @@ namespace CodeStream.VisualStudio.UnitTests.UI
             };
 
             var results = positions.ToVisibleRanges();
-            Assert.AreEqual(4, results.Count);
-            Assert.AreEqual(0, results[0].Start.Line);
-            Assert.AreEqual(1, results[0].End.Line);
+            Assert.Equal(4, results.Count);
+            Assert.Equal(0, results[0].Start.Line);
+            Assert.Equal(1, results[0].End.Line);
 
-            Assert.AreEqual(2, results[1].Start.Line);
-            Assert.AreEqual(11, results[1].End.Line);
+            Assert.Equal(2, results[1].Start.Line);
+            Assert.Equal(11, results[1].End.Line);
 
-            Assert.AreEqual(12, results[2].Start.Line);
-            Assert.AreEqual(13, results[2].End.Line);
+            Assert.Equal(12, results[2].Start.Line);
+            Assert.Equal(13, results[2].End.Line);
 
-            Assert.AreEqual(14, results[3].Start.Line);
-            Assert.AreEqual(16, results[3].End.Line);
+            Assert.Equal(14, results[3].Start.Line);
+            Assert.Equal(16, results[3].End.Line);
         }
 
-        [TestMethod]
+        [Fact]
         public void RangeCollapsedTest1()
         {
             var positions = new List<Range>
@@ -46,12 +46,12 @@ namespace CodeStream.VisualStudio.UnitTests.UI
 
             var results = positions.ToVisibleRanges();
 
-            Assert.AreEqual(1, results.Count);
-            Assert.AreEqual(0, results[0].Start.Line);
-            Assert.AreEqual(100, results[0].End.Line);
+            Assert.Equal(1, results.Count);
+            Assert.Equal(0, results[0].Start.Line);
+            Assert.Equal(100, results[0].End.Line);
         }
 
-        [TestMethod]
+        [Fact]
         public void RangeCollapsedTest2()
         {
             var positions = new List<Range>
@@ -64,15 +64,15 @@ namespace CodeStream.VisualStudio.UnitTests.UI
 
             var results = positions.ToVisibleRanges();
 
-            Assert.AreEqual(2, results.Count);
-            Assert.AreEqual(0, results[0].Start.Line);
-            Assert.AreEqual(100, results[0].End.Line);
+            Assert.Equal(2, results.Count);
+            Assert.Equal(0, results[0].Start.Line);
+            Assert.Equal(100, results[0].End.Line);
 
-            Assert.AreEqual(101, results[1].Start.Line);
-            Assert.AreEqual(103, results[1].End.Line);
+            Assert.Equal(101, results[1].Start.Line);
+            Assert.Equal(103, results[1].End.Line);
         }
 
-        [TestMethod]
+        [Fact]
         public void RangeCollapsedTest3()
         {
             var positions = new List<Range>
@@ -85,9 +85,9 @@ namespace CodeStream.VisualStudio.UnitTests.UI
 
             var results = positions.ToVisibleRanges();
 
-            Assert.AreEqual(1, results.Count);
-            Assert.AreEqual(0, results[0].Start.Line);
-            Assert.AreEqual(3, results[0].End.Line);
+            Assert.Single(results);
+            Assert.Equal(0, results[0].Start.Line);
+            Assert.Equal(3, results[0].End.Line);
         }
     }
 }

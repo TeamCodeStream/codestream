@@ -1,21 +1,21 @@
-﻿using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CodeStream.VisualStudio.Shared.Extensions;
+using CodeStream.VisualStudio.Shared.Models;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Models
 {
-    [TestClass]
     public class CamelCaseStringEnumConverterTests
     {
-        [TestMethod]
+        [Fact]
         public void CamelCaseStringEnumConverterTest()
         {
             var foo = new Foo { Type = CodemarkType.Prcomment };
             var json = foo.ToJson();
 
             var result = json.FromJson<Foo>();
-            Assert.IsTrue(json.Contains("prcomment"));
-            Assert.AreEqual(CodemarkType.Prcomment, result.Type);
+            Assert.True(json.Contains("prcomment"));
+            Assert.Equal(CodemarkType.Prcomment, result.Type);
         }
 
         class Foo

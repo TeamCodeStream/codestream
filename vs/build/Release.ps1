@@ -4,4 +4,4 @@ if (!$?) {
     exit 1
 }
 
-.\Build
+.\Build.ps1

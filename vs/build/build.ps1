@@ -4,10 +4,6 @@ Param(
 	[switch] $CI = $false,
 
 	[Parameter(Mandatory = $false)]
-	[Alias("q")]
-	[switch] $Quick = $false,
-
-	[Parameter(Mandatory = $false)]
 	[ValidateSet("Debug", "Release")]
 	[Alias("m")]
 	[System.String] $Mode = "Debug",
@@ -16,16 +12,6 @@ Param(
 	[ValidateSet("quiet", "minimal", "normal", "detailed", "diagnostic")]
 	[Alias("v")]
 	[System.String] $Verbosity = "quiet",
-
-	[Parameter(Mandatory = $false)]
-	[ValidateSet(17.0)]
-	[Alias("t")]
-	[double] $VSVersion = 17.0,
-
-	# TODO: Get this to work -- i.e. auto install into a vs experiemental instance
-	# [Parameter(Mandatory = $false)]
-	# [Alias("d")]
-	# [switch] $ExperimentalDeploy = $false,
 
 	[Parameter(Mandatory = $false)]
 	[Alias("h")]
@@ -65,12 +51,10 @@ function Print-Help {
 	Write-Host -object "  Help (-h)                    - [Switch] - Prints this help message."
 	Write-Host -object ""
 	Write-Host -object "  CI (-ci)                     - [Switch] - For CI only."
-	Write-Host -object "  Quick (-q                    - [Switch] - Quick build (avoids agent & webview builds)."
 	Write-Host -object "  Mode (-m)                    - [String] - Debug or Release."
 	Write-Host -object "  Verbosity (-v)               - [String] - Logging verbosity (quiet, minimal, normal, detailed, or diagnostic)."
 	Write-Host -object ""
-	Write-Host -object "  VSVersion (-t)               - [String] - Currently only 15.0."
-	Write-Host -object ""
+
 	exit 0
 }
 
@@ -112,8 +96,45 @@ function Build-Extension {
 	$timer = Start-Timer
 
 	# validation only allows 17.0 and is defaulted to 17.0, so it can't be anything else anyway
-	$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"		
-	$vstest = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/Common7/IDE/CommonExtensions/Microsoft/TestWindow/vstest.console.exe"
+	$msbuild = "C:/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/MSBuild/Current/Bin/MSBuild.exe"
+    $xunit = "C:/.nuget/xunit.runner.console/2.4.2/tools/net472/xunit.console.x86.exe"	
+
+	if ($CI) {
+		Write-Host "Running UnitTests..."
+
+		& $msbuild './src/CodeStream.VisualStudio.sln' /t:restore,$target /p:Configuration=Debug /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86'
+
+		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out") -eq $True) {
+			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out" -Force -Recurse
+		}
+
+		if((Test-Path -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip") -eq $True) {
+			Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -Force
+		}
+
+		Copy-Item -Path "./src/CodeStream.VisualStudio.Vsix.x86/bin/x86/Debug/codestream-vs.vsix" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip"
+		Expand-Archive -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -DestinationPath "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/"
+		Copy-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/CodeStream.VisualStudio.*.pdb" -Destination "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
+		
+		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/.codestream-out/" -Force -Recurse
+		Remove-Item -Path "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/codestream-vs.zip" -Force
+		
+		Push-Location "./src/CodeStream.VisualStudio.UnitTests"
+		& dotnet tool restore --tool-manifest "./.config/dotnet-tools.json" --ignore-failed-sources
+		Pop-Location
+
+		Push-Location "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
+		& dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "$xunit" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --format cobertura 
+		& dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"
+		Compress-Archive -Path coveragereport\* -DestinationPath CoverageReport.zip
+		Pop-Location
+
+		if ($LastExitCode -ne 0) {
+			throw "UnitTests failed"
+		}
+
+		Write-Host "UnitTests completed"
+	}
 
 	$baseOutputDir = $(Join-Path $root "build/artifacts")
     if ((Test-Path -Path $baseOutputDir) -eq $True) {
@@ -128,7 +149,6 @@ function Build-Extension {
 
 	Write-Log "Running MSBuild (x86)..."
 	& $msbuild './src/CodeStream.VisualStudio.Vsix.x86/CodeStream.VisualStudio.Vsix.x86.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:OutputPath=$x86OutputDir /p:DeployExtension=$DeployExtension
-
 	Write-Log "Running MSBuild (x64)..."
 	& $msbuild './src/CodeStream.VisualStudio.Vsix.x64/CodeStream.VisualStudio.Vsix.x64.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:OutputPath=$x64OutputDir /p:DeployExtension=$DeployExtension
 
@@ -136,47 +156,24 @@ function Build-Extension {
 		throw "MSBuild failed"
 	}
 
-	# TODO - how should tests be run when targeting two different VS versions?
-	#if (!$Quick) {
-	#	Write-Log "Running UnitTests..."
-	#	if (!(Test-Path -Path $vstest)) {
-	#		throw "UnitTest executable not found $($vstest)"
-	#	}
-	#	& $vstest "$($OutputDir)/CodeStream.VisualStudio.UnitTests.dll" /Platform:$platform
-	#
-	#	if ($LastExitCode -ne 0) {
-	#		throw "UnitTests failed"
-	#	}
-	#
-	#	Write-Log "UnitTests completed"
-	#}
-	#else {
-	#	Write-Log "UnitTests skipped"
-	#}
-
 	Write-Log "Build-Extension completed in {$(Get-ElapsedTime($timer))}"
 	Write-Log "x86 Artifacts: $($x86OutputDir) at $(Get-Date)"    
 	Write-Log "x64 Artifacts: $($x64OutputDir) at $(Get-Date)"    
 }
 
-Print-Help
-
-$target = "Rebuild"
-
-if ($CI) {
-	$Quick = $false
-	$Mode = "Release"
-	$Verbosity = "diagnostic"
-	# $ExperimentalDeploy = $false
-
-	Write-Log "Running in CI mode..."
-}
-
-$root = $(Resolve-Path -path "$PSScriptRoot/..")
-Push-Location $root
-
 try {
-	if (!$Quick) {
+	Print-Help
+
+	$target = "Rebuild"
+	$root = $(Resolve-Path -path "$PSScriptRoot/..")
+	Push-Location $root
+
+	if ($CI) {
+		$Mode = "Release"
+		$Verbosity = "normal"
+	
+		Write-Log "Running in CI mode..."
+
 		Build-AgentAndWebview
 	}
 	else {
