@@ -5,7 +5,7 @@ import Icon from "./Icon";
 import { useDidMount } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "..";
-import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
+import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { any } from "prop-types";
 
@@ -18,7 +18,10 @@ export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const { relatedEntities } = props;
 
-	console.warn(relatedEntities, expanded);
+	// @TODO change 2 to 10
+	const relatedEntitiesSliced = relatedEntities.slice(0, 2);
+	const relatedEntitiesForSearch = relatedEntities.slice(2);
+
 	return (
 		<>
 			<Row
@@ -32,14 +35,17 @@ export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Calls</span>
 			</Row>
-			{expanded && !_isEmpty(relatedEntities) && (
+			{expanded && !_isEmpty(relatedEntitiesSliced) && (
 				<>
-					{relatedEntities.map(_ => {
+					{relatedEntitiesSliced.map(_ => {
 						return (
 							<ObservabilityRelatedEntity currentRepoId={props.currentRepoId} relatedEntity={_} />
 						);
 					})}
 				</>
+			)}
+			{!_isEmpty(relatedEntitiesForSearch) && (
+				<ObservabilityRelatedSearch searchItems={relatedEntitiesForSearch} />
 			)}
 		</>
 	);

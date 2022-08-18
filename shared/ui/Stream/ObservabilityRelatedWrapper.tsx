@@ -23,7 +23,6 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
 				entityGuid: "MTExODkwMzh8QVBNfEFQUExJQ0FUSU9OfDE3NDY3MzAw"
 			});
-			console.warn("relatedEntities on useDidMount", response);
 			setRelatedEntities(response);
 		})();
 	});

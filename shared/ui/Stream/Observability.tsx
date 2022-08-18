@@ -1022,14 +1022,13 @@ export const Observability = React.memo((props: Props) => {
 																									goldenMetrics={goldenMetrics}
 																									loadingGoldenMetrics={loadingGoldenMetrics}
 																								/>
-
+																								<ObservabilityRelatedWrapper
+																									currentRepoId={currentRepoId}
+																								/>
 																								{observabilityErrors?.find(
 																									oe => oe?.repoId === _observabilityRepo?.repoId
 																								) && (
 																									<>
-																										<ObservabilityRelatedWrapper
-																											currentRepoId={currentRepoId}
-																										/>
 																										<ObservabilityErrorWrapper
 																											observabilityErrors={observabilityErrors}
 																											observabilityRepo={_observabilityRepo}
