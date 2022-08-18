@@ -1,5 +1,20 @@
 # Change Log
 
+## [13.5.0] - 2022-8-18
+
+### Added
+
+- Adds support for code-level metrics for New Relic's Go agent
+
+### Changed
+
+- File attachments in codemarks, feedback requests and replies are now included when shared to Slack
+
+### Fixed
+
+- Fixes an issue where CodeStream would attempt to add you as a reviewer of a PR when you werew the PR author
+- Fixes an issue where channel selection wasn't being required when sharing a feedback request to Slack
+
 ## [13.4.0] - 2022-8-4
 
 ### Added

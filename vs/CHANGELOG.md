@@ -1,5 +1,23 @@
 # Change Log
 
+## [13.5.0] - 2022-8-18
+
+### Added
+
+- Adds unread message indicator at the end of the CodeStream toolbar entry
+
+### Changed
+
+- File attachments in codemarks, feedback requests and replies are now included when shared to Slack
+
+### Fixed
+
+- Fixes an issue where CodeStream would attempt to add you as a reviewer of a PR when you werew the PR author
+- Fixes an issue where channel selection wasn't being required when sharing a feedback request to Slack
+- Fixes an issue where the compose icons would appear after clicking in the editor and scrolling
+- Fixes an issue where the CodeStream pane didn't display in VS 2019
+- Fixes an issue that was interfering with real-time updates in CodeStream
+
 ## [13.4.0] - 2022-8-4
 
 ### Added
