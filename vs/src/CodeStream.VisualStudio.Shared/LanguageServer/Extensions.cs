@@ -9,7 +9,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		/// </summary>
 		/// <param name="filePath"></param>
 		/// <returns></returns>
-		public static string ToLspUriString(string filePath) {
+		public static string ToLspUriString(this string filePath) {
 			var split = filePath.Split(new[] { '\\' });
 
 			var driveLetter = split[0];

@@ -5,21 +5,19 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using CompositionTests;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests {
 	//https://docs.microsoft.com/en-us/previous-versions/dotnet/netframework-4.0/ff576068%28v%3dvs.100%29
 	//https://stackoverflow.com/questions/8324302/how-to-debug-mef-exception
 
-
-	[TestClass]
 	public class CompositionTests {
 
 		private Lazy<string> SourceDirectory => new Lazy<string>(() =>
 			Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\..\..\CodeStream.VisualStudio\bin\x86\Debug\"));
 
-		[Ignore("need to figure out directory when in release")]
-		[TestMethod]
+		[Fact(Skip = "need to figure out directory when in release")]
 		public void VerifyComposition() {
 			var assemblyNames = GetAssemblyNames(SourceDirectory.Value, "CodeStream.VisualStudio.dll");
 			var assemblies = assemblyNames.Select(Assembly.Load);
@@ -75,8 +73,7 @@ namespace CodeStream.VisualStudio.UnitTests {
 		//	return catalog;
 		//}
 
-		//[TestMethod]
-		//[Ignore("Used locally")]
+		//[Fact(Skip = "Used locally")]
 		//public async Task HandleAsyncTest() {
 
 		//	var catalog = await CreateProductCatalogAsync();

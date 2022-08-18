@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using System.Threading;
 using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Services;
+using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Services;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Moq;
 
+using Xunit;
+
 namespace CodeStream.VisualStudio.UnitTests.Services {
-	[TestClass]
 	public class DotNetBrowserServiceTests {
-		[TestMethod]
+		[Fact]
 		public void DotNetBrowserServiceTest() {
 			var serviceProviderMock = new Mock<IServiceProvider>();
 			var httpServiceMock = new Mock<IHttpClientService>();
@@ -27,15 +28,15 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			browserService.PostMessage("lsp3", true);
 			browserService.PostMessage("bootstrap");
 
-			Assert.IsTrue(browserService.QueueCount > 0);
-			Assert.IsTrue(browserService.QueueCount < 4);
+			Assert.True(browserService.QueueCount > 0);
+			Assert.True(browserService.QueueCount < 4);
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
-			Assert.IsTrue(browserService.QueueCount == 0);
-			Assert.IsTrue(browserService.Items[0] == "bootstrap");
-			Assert.IsTrue(browserService.Items[1] == "lsp1");
-			Assert.IsTrue(browserService.Items[2] == "lsp2");
-			Assert.IsTrue(browserService.Items[3] == "lsp3");
+			Assert.True(browserService.QueueCount == 0);
+			Assert.True(browserService.Items[0] == "bootstrap");
+			Assert.True(browserService.Items[1] == "lsp1");
+			Assert.True(browserService.Items[2] == "lsp2");
+			Assert.True(browserService.Items[3] == "lsp3");
 
 			eventAggregator.Publish(new SessionLogoutEvent());
 
@@ -49,16 +50,16 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
-			Assert.IsTrue(browserService.QueueCount == 0);
-			Assert.IsTrue(browserService.Items[0] == "bootstrap");
-			Assert.IsTrue(browserService.Items[1] == "lsp1");
-			Assert.IsTrue(browserService.Items[2] == "lsp2");
-			Assert.IsTrue(browserService.Items[3] == "lsp3");
+			Assert.True(browserService.QueueCount == 0);
+			Assert.True(browserService.Items[0] == "bootstrap");
+			Assert.True(browserService.Items[1] == "lsp1");
+			Assert.True(browserService.Items[2] == "lsp2");
+			Assert.True(browserService.Items[3] == "lsp3");
 
 			browserService.Dispose();
 		}
 
-		[TestMethod()]
+		[Fact]
 		public void DotNetBrowserServiceNormalThenQueuedTest() {
 			var serviceProviderMock = new Mock<IServiceProvider>();
 			var httpServiceMock = new Mock<IHttpClientService>();
@@ -78,23 +79,23 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			browserService.PostMessage("bootstrap3");
 			browserService.PostMessage("bootstrap4");
 
-			Assert.IsTrue(browserService.QueueCount > 0);
-			Assert.IsTrue(browserService.QueueCount < 4);
+			Assert.True(browserService.QueueCount > 0);
+			Assert.True(browserService.QueueCount < 4);
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1000);
-			Assert.IsTrue(browserService.QueueCount == 0);
-			Assert.IsTrue(browserService.Items[0] == "bootstrap1");
-			Assert.IsTrue(browserService.Items[1] == "bootstrap2");
-			Assert.IsTrue(browserService.Items[2] == "bootstrap3");
-			Assert.IsTrue(browserService.Items[3] == "bootstrap4");
-			Assert.IsTrue(browserService.Items[4] == "lsp1");
-			Assert.IsTrue(browserService.Items[5] == "lsp2");
-			Assert.IsTrue(browserService.Items[6] == "lsp3");
+			Assert.True(browserService.QueueCount == 0);
+			Assert.True(browserService.Items[0] == "bootstrap1");
+			Assert.True(browserService.Items[1] == "bootstrap2");
+			Assert.True(browserService.Items[2] == "bootstrap3");
+			Assert.True(browserService.Items[3] == "bootstrap4");
+			Assert.True(browserService.Items[4] == "lsp1");
+			Assert.True(browserService.Items[5] == "lsp2");
+			Assert.True(browserService.Items[6] == "lsp3");
 
 			browserService.Dispose();
 		}
 
-		[TestMethod()]
+		[Fact]
 		public void DotNetBrowserServiceNormalTest() {
 			var serviceProviderMock = new Mock<IServiceProvider>();
 			var httpServiceMock = new Mock<IHttpClientService>();
@@ -108,25 +109,25 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 			browserService.PostMessage("bootstrap1");
 			//goes through -- no queue
-			Assert.IsTrue(browserService.QueueCount == 0);
+			Assert.True(browserService.QueueCount == 0);
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			browserService.PostMessage("bootstrap2");
 			//goes through -- no queue
-			Assert.IsTrue(browserService.QueueCount == 0);
+			Assert.True(browserService.QueueCount == 0);
 			eventAggregator.Publish(new SessionLogoutEvent());
 			browserService.PostMessage("bootstrap3");
 			Thread.Sleep(1);
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			Thread.Sleep(1);
-			Assert.IsTrue(browserService.QueueCount == 0);
+			Assert.True(browserService.QueueCount == 0);
 
-			Assert.IsTrue(browserService.Items[0] == "bootstrap1");
-			Assert.IsTrue(browserService.Items[1] == "bootstrap2");
-			Assert.IsTrue(browserService.Items[2] == "bootstrap3");
+			Assert.True(browserService.Items[0] == "bootstrap1");
+			Assert.True(browserService.Items[1] == "bootstrap2");
+			Assert.True(browserService.Items[2] == "bootstrap3");
 			browserService.Dispose();
 		}
 
-		[TestMethod()]
+		[Fact]
 		public void DotNetBrowserServiceReloadTest() {
 			var serviceProviderMock = new Mock<IServiceProvider>();
 			var httpServiceMock = new Mock<IHttpClientService>();
@@ -139,13 +140,13 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			);
 
 			browserService.PostMessage("bootstrap1");
-			Assert.IsTrue(browserService.QueueCount == 0);
+			Assert.True(browserService.QueueCount == 0);
 			for (var i = 0; i < 200; i++) {
 				browserService.PostMessage($"data{i}", true);
 			}
 			eventAggregator.Publish(new WebviewDidInitializeEvent());
 			SpinWait.SpinUntil(() => browserService.WasReloaded, 2000);
-			Assert.AreEqual(true, browserService.WasReloaded);
+			Assert.Equal(true, browserService.WasReloaded);
 			browserService.Dispose();
 		}
 	}

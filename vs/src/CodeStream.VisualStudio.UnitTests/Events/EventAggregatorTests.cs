@@ -1,10 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Shared.Services;
 
+using Xunit;
+
 namespace CodeStream.VisualStudio.UnitTests.Events {
-	[TestClass]
+	
 	public class EventAggregatorTests {
 		private readonly IEventAggregator _ea;
 
@@ -12,18 +13,18 @@ namespace CodeStream.VisualStudio.UnitTests.Events {
 			_ea = new EventAggregator();
 		}
 
-		[TestMethod]
+		[Fact]
 		public void GetEventTest() {
 			IDisposable x = null;
 			IDisposable y = null;
 
 			try {
 				x = _ea.GetEvent<Foo>().Subscribe(_ => { });
-				Assert.IsNotNull(x);
+				Assert.NotNull(x);
 
 				y = _ea.GetEvent<Foo>().Subscribe(_ => { });
-				Assert.IsNotNull(y);
-				Assert.AreNotSame(x, y);
+				Assert.NotNull(y);
+				Assert.NotSame(x, y);
 			}
 			finally {
 				x?.Dispose();
@@ -31,7 +32,7 @@ namespace CodeStream.VisualStudio.UnitTests.Events {
 			}
 		}
 
-		[TestMethod]
+		[Fact]
 		public void PublishTest() {
 			IDisposable x = null;
 			bool called = false;
@@ -40,7 +41,7 @@ namespace CodeStream.VisualStudio.UnitTests.Events {
 				x = _ea.GetEvent<Bar>().Subscribe(_ => { called = true; });
 				_ea.Publish(new Bar());
 
-				Assert.IsTrue(called);
+				Assert.True(called);
 			}
 			finally {
 				x?.Dispose();

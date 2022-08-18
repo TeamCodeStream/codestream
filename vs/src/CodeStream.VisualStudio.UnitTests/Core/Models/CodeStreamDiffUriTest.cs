@@ -1,35 +1,38 @@
 ﻿using CodeStream.VisualStudio.Core.Models;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Core.Models {
-	[TestClass]
+	
 	public class CodeStreamDiffUriTest {
-		[TestMethod]
-		[DataRow(@"c:/users/foo/code/codestream/codestream-diff/2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
-		[DataRow(@"c:\users\foo\code\codestream\codestream-diff\2asdf\1\repoId\left\codestream-diff\foo\bar\baz1.cs", true)]
-		[DataRow(@"codestream-diff/2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
-		[DataRow(@"codestream-diff/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
-		[DataRow(@"codestream-diff://2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
-		[DataRow("", false)]
-		[DataRow(null, false)]
+		[Theory]
+		[InlineData(@"c:/users/foo/code/codestream/codestream-diff/2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
+		[InlineData(@"c:\users\foo\code\codestream\codestream-diff\2asdf\1\repoId\left\codestream-diff\foo\bar\baz1.cs", true)]
+		[InlineData(@"codestream-diff/2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
+		[InlineData(@"codestream-diff/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
+		[InlineData(@"codestream-diff://2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
+		[InlineData("", false)]
+		[InlineData(null, false)]
 		public void IsTempFileTest(string filePathPart, bool expected) {			
-			Assert.AreEqual(expected, CodeStreamDiffUri.IsTempFile(filePathPart));
+			Assert.Equal(expected, CodeStreamDiffUri.IsTempFile(filePathPart));
 		}
 		
-		[DataRow(@"codestream-diff/reviewId/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
-		[DataRow(@"codestream-diff/reviewId/undefined/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
-		[DataRow(@"codestream-diff/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
-		[DataRow(@"codestream-diff://2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
-		[DataRow("", false)]
-		[DataRow(null, false)]
+		[Theory]
+		[InlineData(@"codestream-diff/reviewId/1/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
+		[InlineData(@"codestream-diff/reviewId/undefined/repoId/left/codestream-diff/foo/bar/baz1.cs", true)]
+		[InlineData(@"codestream-diff/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
+		[InlineData(@"codestream-diff://2asdf/1/repoId/left/codestream-diff/foo/bar/baz1.cs", false)]
+		[InlineData("", false)]
+		[InlineData(null, false)]
 		public void TryParseTest(string filePathPart, bool expected) {
-			Assert.AreEqual(expected, CodeStreamDiffUri.TryParse(filePathPart, out CodeStreamDiffUri result));
+			Assert.Equal(expected, CodeStreamDiffUri.TryParse(filePathPart, out CodeStreamDiffUri result));
 		}
 		
-		[DataRow(@"codestream-diff/reviewId/undefined/repoId/left/codestream-diff/foo/bar/baz1.cs", "foo/bar/baz1.cs", true)]
+		[Theory]
+		[InlineData(@"codestream-diff/reviewId/undefined/repoId/left/codestream-diff/foo/bar/baz1.cs", "foo/bar/baz1.cs", true)]
 		public void TryParseFileNameTest(string filePathPart, string fileName, bool expected) {
-			Assert.AreEqual(expected, CodeStreamDiffUri.TryParse(filePathPart, out CodeStreamDiffUri result));
-			Assert.AreEqual(fileName, result.FileName);
+			Assert.Equal(expected, CodeStreamDiffUri.TryParse(filePathPart, out CodeStreamDiffUri result));
+			Assert.Equal(fileName, result.FileName);
 		}
 	}
 }

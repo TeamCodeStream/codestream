@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsix.x64", "CodeStream.VisualStudio.Vsix.x64\CodeStream.VisualStudio.Vsix.x64.csproj", "{A97D7813-7B1A-4369-98A3-80F5721C1831}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.UnitTests", "CodeStream.VisualStudio.UnitTests\CodeStream.VisualStudio.UnitTests.csproj", "{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -59,9 +61,19 @@ Global
 		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x64.ActiveCfg = Release|x64
 		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x64.Build.0 = Release|x64
 		{A97D7813-7B1A-4369-98A3-80F5721C1831}.Release|x86.ActiveCfg = Release|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x64.ActiveCfg = Debug|x64
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.ActiveCfg = Debug|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Debug|x86.Build.0 = Debug|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x64.ActiveCfg = Release|x64
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x64.Build.0 = Release|x64
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.ActiveCfg = Release|x86
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5170B4CF-9657-4AB1-BC9E-F91D90076DF3} = {5BFDF0EC-9F77-4ED8-A7C9-BDED85BD3239}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA2F01D3-69DD-4FEE-B239-775F5C1DFA2F}

@@ -1,12 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using CodeStream.VisualStudio.Shared.LanguageServer;
+
+using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.LanguageServer {
-	[TestClass]
+	
 	public class ExtensionsTest {
-		[TestMethod]
+		[Fact]
 		public void ToLspUriStringTest() {
-		Assert.AreEqual(@"file:///c%3A/Users/xul/code/foo/OptionsSample/src/Options/BaseOptionModel.cs",
-				VisualStudio.Core.LanguageServer.Extensions.ToLspUriString(@"C:\Users\xul\code\foo\OptionsSample\src\Options\BaseOptionModel.cs"));
+			Assert.Equal(@"file:///c%3A/Users/xul/code/foo/OptionsSample/src/Options/BaseOptionModel.cs",
+				@"C:\Users\xul\code\foo\OptionsSample\src\Options\BaseOptionModel.cs".ToLspUriString());
 		}
 	}
 }

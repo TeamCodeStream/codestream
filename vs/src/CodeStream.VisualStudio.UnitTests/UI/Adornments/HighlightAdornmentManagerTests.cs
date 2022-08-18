@@ -1,21 +1,21 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 using Moq;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using CodeStream.VisualStudio.Core.Adornments;
 using CodeStream.VisualStudio.Core.Models;
-using CodeStream.VisualStudio.Core.UI.Adornments;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Formatting;
 
+using Xunit;
+
 namespace CodeStream.VisualStudio.UnitTests.UI.Adornments {
-	[TestClass]
 	public class HighlightAdornmentManagerTests {
 		private MockRepository _mockRepository;
 		private Mock<IWpfTextView> _mockWpfTextView;
 
-		[TestInitialize]
-		public void TestInitialize() {
+		public HighlightAdornmentManagerTests()
+		{
 			_mockRepository = new MockRepository(MockBehavior.Default);
 			_mockWpfTextView = _mockRepository.Create<IWpfTextView>();
 			_mockWpfTextView.Setup(_ => _.GetAdornmentLayer(It.IsAny<string>()))
@@ -38,24 +38,19 @@ namespace CodeStream.VisualStudio.UnitTests.UI.Adornments {
 			//TODO figure out why textViewLineCollection throws in the foreach
 			_mockWpfTextView.Setup(_ => _.TextViewLines).Returns(textViewLineCollection.Object);
 		}
-
-		[TestCleanup]
-		public void TestCleanup() {
-			_mockRepository.VerifyAll();
-		}
-
+		
 		private HighlightAdornmentManager CreateManager() {
 			return new HighlightAdornmentManager(_mockWpfTextView.Object);
 		}
 
-		[TestMethod]
+		[Fact(Skip = "These need work")]
 		public void RemoveAllHighlights_StateUnderTest_ExpectedBehavior() {
 			var unitUnderTest = this.CreateManager();
 			unitUnderTest.RemoveAllHighlights();
+			_mockRepository.VerifyAll();
 		}
 
-		[TestMethod]
-		[Ignore("Requires too much VS UI/Process")]
+		[Fact(Skip = "Requires too much VS UI/Process")]
 		public void Highlight_StateUnderTest_ExpectedBehavior() {
 			var unitUnderTest = this.CreateManager();
 			var range = new VisualStudio.Core.Models.Range {
@@ -65,10 +60,10 @@ namespace CodeStream.VisualStudio.UnitTests.UI.Adornments {
 			var result = unitUnderTest.Highlight(
 				range,
 				true);
-			Assert.IsTrue(result);
+			Assert.True(result);
 		}
 
-		[TestMethod]
+		[Fact(Skip = "These need work")]
 		public void Dispose_StateUnderTest_ExpectedBehavior() {
 			var unitUnderTest = this.CreateManager();
 			unitUnderTest.Dispose();

@@ -91,38 +91,29 @@ To debug the CodeStream LSP agent you will need both Visual Studio and VS Code.
 - Once you have started debugging CodeStream in Visual Studio, leave it running, and in VS Code with the `codestream` repo open, choose `Attach to Agent (VS/JB) (agent)` from the launcher dropdown. This is allow you to attach to the running shared/agent process that Visual Studio spawned.
 - From there, you can add breakpoints to the shared/agent code in VS Code. As requests and notifications to the agent happen, your breakpoints will be triggered.
 
-## Build (CI)
+## Builds
 
-Visual Studio builds are attached to an internal Team City build process.
+In Visual Studio, certain Solution/Project Configurations and Platforms have been configured.
+
+Using 'Debug' and 'x86' will produce a Visual Studio 2019 compatible artifact at `.\vs\src\CodeStream.VisualStudio.Vsix.x86/bin/x86/Debug/codestream-vs.vsix` and can be debugged directly using the Visual Studio 2019 experimental instance.
+
+Using 'Debug' and 'x64' will produce a Visual Studio 2022 compatible artifact at `.\vs\src\CodeStream.VisualStudio.Vsix.x64/bin/x64/Debug/codestream-vs-22.vsix` and can be debugged directly using the Visual Studio 2022 experimental instance.
+
+The 'Release' configuration does the same thing, but does not produce any debugging symbols.
+
+Our CI builds are processed via a private / internal Team City build server.
+
+The steps are as follows:
 
 ```shell
-cd build
-.\Pre-Build.ps1
-.\Bump-Version.ps1 -BuildNumber $env:build_number  -BumpBuild
-.\Build.ps1
+.\vs\build\Pre-Build.ps1
+.\vs\build\Build.ps1 -CI
+.\vs\build\Post-Build.ps1
 ```
-
-The build portion of the artifact version can be updated using `.\Bump-Version.ps1 -BuildNumber 666 -BumpBuild`. this will convert `0.1.0` to `0.1.0.666`
 
 ## Releasing
 
-To create a local release artifact. From PowerShell, run
-
-```shell
-cd vs\build
-.\Release.ps1
-```
-
-Under the hood this calls `Bump-Version.ps1` and `Build.ps1`. These can be run separately if necessary
-
-By default `Release.ps1` will bump the Minor version of the package (the version lives in three spots: manifest, AssemblyInfo, SolutionInfo).
-
-`Build.ps1` will restore, build, unit test, and generate all output in:
-
-- `\build\artifacts\\{Configuration}\\x64`
-  - The resulting extension in that directory is `codestream-vs-22.vsix`
-- `\build\artifacts\\{Configuration}\\x86`
-  - The resulting extension in that directory is `codestream-vs.vsix`
+All releases are processed through the same internal / private Team City build server, with similar steps to a DEV build mentioned above, however, the final step pushes the artifacts to the proper VS Marketplace entries.
 
 ## Notes
 
