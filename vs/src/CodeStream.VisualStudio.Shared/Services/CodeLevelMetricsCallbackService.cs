@@ -74,6 +74,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string functionName) {
+			if (!_sessionService.IsReady)
+			{
+				return new CodeLevelMetricsTelemetry();
+			}
+		
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solution = _vsSolution.GetSolutionFile();
 
