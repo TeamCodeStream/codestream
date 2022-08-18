@@ -7,7 +7,7 @@ plugins {
 }
 
 group "com.codestream"
-version "13.5.0"
+version "13.5.1"
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 
@@ -187,6 +187,7 @@ copyDebugAgent.dependsOn buildDebugDeps
 
 task buildDebugDependencies {}
 buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent, copyProtobuf
+
 
 
 
