@@ -105,17 +105,6 @@ interface BitbucketPullRequestCommit {
 	};
 }
 
-interface BitbucketPullRequestDiffStat {
-	hash: string;
-	new: {
-		path: string;
-	};
-	old: {
-		path: string;
-	};
-	status: string;
-}
-
 interface BitbucketPermission {
 	permission: string;
 	repository: BitbucketRepo;
@@ -175,6 +164,33 @@ interface BitbucketPullRequest {
 	state: string;
 	title: string;
 	updated_on: string;
+}
+
+interface BitbucketDiffStat {
+	type: string;
+	lines_added: number;
+	lines_removed: number;
+	status: string;
+	old: {
+		path: string;
+		type: string;
+		escaped_path: string;
+		links: {
+			self: {
+				href: string;
+			};
+		};
+	};
+	new: {
+		path: string;
+		type: string;
+		escaped_path: string;
+		links: {
+			self: {
+				href: string;
+			};
+		};
+	};
 }
 
 interface BitbucketValues<T> {
@@ -464,7 +480,10 @@ export class BitbucketProvider
 					providerId: this.providerConfig.id,
 
 					comments: (comments.body.values || []).map((_: any) => {
-						return { ..._, file: _.inline?.path };
+						return {
+							..._,
+							file: _.inline?.path
+						};
 					})
 				}
 				// TODO fix this any
@@ -509,20 +528,20 @@ export class BitbucketProvider
 	}): Promise<FetchThirdPartyPullRequestFilesResponse[]> {
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
-		const items = await this.get<BitbucketValues<BitbucketPullRequestDiffStat[]>>(
+		const items = await this.get<BitbucketValues<BitbucketDiffStat[]>>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 		);
 
 		const response = items.body.values.map(file => {
 			return {
-				sha: file.hash,
+				sha: "", //TODO: fix this
 				filename: file.new?.path,
 				previousFilename: file.old?.path,
 				status: file.status,
 				// TODO start
-				additions: 0,
-				changes: 0,
-				deletions: 0,
+				additions: file?.lines_added,
+				changes: 0, //TODO: check documentation
+				deletions: file?.lines_removed,
 				patch: ""
 				// TODO end
 			} as FetchThirdPartyPullRequestFilesResponse;

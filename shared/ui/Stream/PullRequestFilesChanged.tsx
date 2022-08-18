@@ -192,6 +192,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 			} else if (derivedState.currentPullRequestProviderId.indexOf("gitlab") > -1) {
 				return `merge-requests/${props.pr.iid}/head`;
 			} else if (derivedState.currentPullRequestProviderId.indexOf("bitbucket") > -1) {
+				//TODO: figure this out  FETCH_HEAD???
 				return `refs/pull/${props.pr.number}/head`;
 			}
 		}

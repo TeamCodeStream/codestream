@@ -275,7 +275,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		} else if (pr && derivedState.currentPullRequestProviderId === "bitbucket*org") {
 			// TODO
 			(pr as any).comments.forEach(comment => {
-				//TODO: check for deleted flag in comment object / comment.deleted
+				//check for deleted flag in comment object / comment.deleted
 				if (comment.deleted === true) {
 					return;
 				}
