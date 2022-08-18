@@ -145,7 +145,6 @@ private class BlameManager(private val editor: EditorImpl, private val iconsCach
     override fun caretPositionChanged(e: CaretEvent) {
         if (e.newPosition.line != currentLine) {
             currentLine = e.newPosition.line
-            println("caretPositionChanged $currentLine")
             renderBlame()
         }
     }
