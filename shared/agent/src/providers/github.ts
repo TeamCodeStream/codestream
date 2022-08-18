@@ -613,7 +613,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		try {
 			let timelineQueryResponse;
 			if (request.owner == null && request.repo == null) {
-				const data = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+				const data = await this.retryOnErrorType(
+					() => this.getRepoOwnerFromPullRequestId(request.pullRequestId),
+					"NOT_FOUND"
+				);
 				repoOwner = data.owner;
 				repoName = data.name;
 			} else {

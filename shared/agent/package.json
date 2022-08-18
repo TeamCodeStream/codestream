@@ -120,6 +120,7 @@
 		"esm": "3.2.25",
 		"graphql-tag": "2.12.6",
 		"https-proxy-agent": "3.0.1",
+		"jest-mock-extended": "2.0.7",
 		"jest-teamcity": "1.11.0",
 		"jest-transform-graphql": "2.1.0",
 		"patch-package": "6.4.7",

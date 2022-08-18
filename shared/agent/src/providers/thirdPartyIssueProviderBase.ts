@@ -124,6 +124,7 @@ export abstract class ThirdPartyIssueProviderBase<
 	protected _isSuppressedException(ex: any): ReportSuppressedMessages | undefined {
 		const networkErrors = [
 			"ENOTFOUND",
+			"NOT_FOUND",
 			"ETIMEDOUT",
 			"EAI_AGAIN",
 			"ECONNRESET",
@@ -330,5 +331,28 @@ export abstract class ThirdPartyIssueProviderBase<
 		request: FetchAssignableUsersAutocompleteRequest
 	): Promise<FetchAssignableUsersResponse> {
 		throw new Error("ERR_METHOD_NOT_IMPLEMENTED");
+	}
+
+	// Based on  https://stackoverflow.com/questions/45444601/promise-retries-until-success-failure-with-typescript
+	async retryOnErrorType<T>(
+		func: () => Promise<T>,
+		errorType: string,
+		retries = 3,
+		retryInterval = 1000,
+		previousError?: Error
+	): Promise<T> {
+		return !retries
+			? Promise.reject(previousError)
+			: func().catch(async error => {
+					const innerErrors = error.info?.error?.response?.errors;
+					if (innerErrors instanceof Array && innerErrors.length > 0) {
+						const innerError = innerErrors[0];
+						if (innerError.type === errorType) {
+							await new Promise(resolve => setTimeout(resolve, retryInterval));
+							return this.retryOnErrorType(func, errorType, retries - 1, retryInterval, error);
+						}
+					}
+					return Promise.reject(error);
+			  });
 	}
 }
