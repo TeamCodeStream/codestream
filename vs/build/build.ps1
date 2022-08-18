@@ -124,7 +124,7 @@ function Build-Extension {
 		Pop-Location
 
 		Push-Location "./src/CodeStream.VisualStudio.UnitTests/bin/x86/Debug/"
-		& dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "$xunit" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --format cobertura 
+		& dotnet coverlet "CodeStream.VisualStudio.UnitTests.dll" --target "$xunit" --targetargs "CodeStream.VisualStudio.UnitTests.dll" --exclude-by-file "**/Annotations/Annotations.cs" --format cobertura 
 		& dotnet reportgenerator "-reports:coverage.cobertura.xml" "-targetdir:coveragereport" "-reporttypes:Html;TeamCitySummary"
 		Compress-Archive -Path coveragereport\* -DestinationPath CoverageReport.zip
 		Pop-Location
