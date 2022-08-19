@@ -371,6 +371,7 @@ export const SharingControls = React.memo(
 			derivedState.selectedShareTarget && derivedState.selectedShareTarget.teamId,
 			selectedChannel && selectedChannel.id,
 			checkedUsers,
+			channelOrDirect,
 			// hack[?] for asserting this hook runs after the data has changed.
 			// for some reason selectedChannel updating is not making this hook
 			// re-run
