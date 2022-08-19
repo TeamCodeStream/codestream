@@ -542,9 +542,17 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					catch (Exception ex) {
 						Log.Warning(ex, "aux component failed to dispose");
 					}
-					_browserView.Dispose();
-					_browserView.Browser.Dispose();
+
+					// There is an intermittent problem with our browser
+					// "remembering" that a spatial view was open / etc.
+					_browserView.Browser.CacheStorage.ClearCache();
+					_browserView.Browser.CookieStorage.DeleteAll();
+					_browserView.Browser.GetSessionWebStorage().Clear();
+					_browserView.Browser.GetLocalWebStorage().Clear();
+
 					_browserView.Browser.Context.Dispose();
+					_browserView.Browser.Dispose();
+					_browserView.Dispose();
 					_browserView = null;
 
 					var deleted = false;

@@ -367,7 +367,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 					webviewContext.CurrentTeamId = teamId;
 					if (!webviewContext.PanelStack.AnySafe()) {
-						webviewContext.PanelStack = new List<string> {WebviewPanels.CodemarksForFile};
+						webviewContext.PanelStack = new List<string> {WebviewPanels.LandingRedirect};
 					}
 					var bootstrapResponse = new BootstrapAuthenticatedResponse {
 						Capabilities = capabilitiesObject,

@@ -30,8 +30,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	}
 
 	public static class WebviewPanels {
-		public static string Codemarks = "knowledge";
 		public static string CodemarksForFile = "codemarks-for-file";
+		public static string LandingRedirect = "landing-redirect";
 	}
 
 	[Serializable]
