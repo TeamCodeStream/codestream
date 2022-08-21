@@ -9,6 +9,7 @@ import {
 	MoveThirdPartyCardRequestType,
 	ReposScm,
 	SwitchBranchRequestType,
+	TransitionsEntity,
 	UpdateThirdPartyStatusRequestType
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
@@ -382,6 +383,8 @@ interface Props {
 	onClose: (e?: any) => void;
 }
 
+const mruTransitionProviders = new Set(["auth*atlassian*com", "jiraserver/enterprise"]);
+
 export const StartWork = (props: Props) => {
 	const dispatch = useDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -397,6 +400,7 @@ export const StartWork = (props: Props) => {
 		const settings = team.settings || {};
 		const { preferences = {} } = state;
 		const workPrefs = preferences["startWork"] || {};
+		const transitionProviderPrefs = preferences.issueMru;
 
 		const currentTeamId = state.context.currentTeamId;
 		const preferencesForTeam = state.preferences[currentTeamId] || {};
@@ -446,7 +450,8 @@ export const StartWork = (props: Props) => {
 			selectedShareTarget: selectedShareTarget || shareTargets[0],
 			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
 			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack"),
-			teamId
+			teamId,
+			transitionProviderPrefs
 		};
 	});
 	const { card } = props;
@@ -640,12 +645,34 @@ export const StartWork = (props: Props) => {
 
 	useDidMount(() => {
 		getBranches();
-		// TODO Only works for Trello, Jira needs MRU
-		if (card.moveCardOptions && card.moveCardOptions.length) {
+		const transitionPrefs = derivedState.transitionProviderPrefs?.[card.provider.id];
+		if (
+			mruTransitionProviders.has(card.provider.id) &&
+			transitionPrefs &&
+			card.moveCardOptions &&
+			card.moveCardOptions.length &&
+			card.idList
+		) {
+			const lastUsedState = transitionPrefs[card.idList];
+			if (lastUsedState) {
+				const index = card.moveCardOptions.findIndex(option => option.id === lastUsedState);
+				const next = card.moveCardOptions[index];
+				if (next) {
+					setMoveCardDestination(next);
+				} else {
+					setMoveCardDestination(card.moveCardOptions[0]);
+				}
+			} else {
+				setMoveCardDestination(card.moveCardOptions[0]);
+			}
+		} else if (card.moveCardOptions && card.moveCardOptions.length) {
 			const index = card.moveCardOptions.findIndex(option => option.id === card.idList);
 			const next = card.moveCardOptions[index + 1];
-			if (next) setMoveCardDestination(next);
-			else setMoveCardDestination(card.moveCardOptions[0]);
+			if (next) {
+				setMoveCardDestination(next);
+			} else {
+				setMoveCardDestination(card.moveCardOptions[0]);
+			}
 		}
 
 		const disposable = HostApi.instance.on(DidChangeDataNotificationType, async (e: any) => {
@@ -733,7 +760,12 @@ export const StartWork = (props: Props) => {
 			}
 
 			if (moveTheCardNow && card.providerId) {
-				const response = await HostApi.instance.send(MoveThirdPartyCardRequestType, {
+				if (mruTransitionProviders.has(card.provider.id) && card.idList) {
+					dispatch(
+						setUserPreference(["issueMru", card.provider.id, card.idList], moveCardDestinationId)
+					);
+				}
+				await HostApi.instance.send(MoveThirdPartyCardRequestType, {
 					providerId: card.providerId,
 					cardId: card.id,
 					listId: moveCardDestinationId
@@ -844,7 +876,7 @@ export const StartWork = (props: Props) => {
 		};
 	});
 
-	const setMoveCardDestination = option => {
+	const setMoveCardDestination = (option: TransitionsEntity) => {
 		setMoveCardDestinationId(option.id);
 		setMoveCardDestinationLabel(option.name);
 	};

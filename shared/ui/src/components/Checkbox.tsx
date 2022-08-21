@@ -62,6 +62,7 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 				) : (
 					<input
 						id={id}
+						data-testid={id}
 						type="checkbox"
 						name={name}
 						checked={checked}
@@ -70,7 +71,7 @@ export function Checkbox(props: PropsWithChildren<Props>) {
 				)}
 			</div>
 			<span>
-				<label htmlFor={htmlFor} onClick={onClickLabel}>
+				<label htmlFor={htmlFor} onClick={onClickLabel} data-testid={`${id}-label`}>
 					{props.children}
 				</label>
 			</span>

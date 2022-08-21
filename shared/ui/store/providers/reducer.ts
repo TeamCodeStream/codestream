@@ -287,7 +287,7 @@ export const getConnectedProviders = createSelector(
 	}
 );
 
-export const getConnectedSharingTargets = (state: CodeStreamState) => {
+export const getConnectedSharingTargets = (state: CodeStreamState): ThirdPartyTeam[] => {
 	if (state.session.userId == undefined) return [];
 
 	const currentUser = state.users[state.session.userId] as CSMe;
