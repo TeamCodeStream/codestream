@@ -1001,18 +1001,6 @@ export function CodeErrorNav(props: Props) {
 									stackTraceTip={stackTraceTip}
 								/>
 							</StyledCodeError>
-							{derivedState.hideCodeErrorInstructions && (
-								<ShowInstructionsContainer>
-									<span
-										onClick={() => {
-											setHoverButton("stacktrace");
-											toggleInstructions();
-										}}
-									>
-										Show Instructions
-									</span>
-								</ShowInstructionsContainer>
-							)}
 						</div>
 					</ScrollBox>
 				</div>
