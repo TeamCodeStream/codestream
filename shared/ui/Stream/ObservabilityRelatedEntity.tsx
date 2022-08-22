@@ -10,7 +10,7 @@ import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDr
 import styled from "styled-components";
 import { PaneNodeName } from "../src/components/Pane";
 import { GetServiceLevelTelemetryRequestType } from "@codestream/protocols/agent";
-
+import { useInterval } from "../utilities/hooks";
 import { any } from "prop-types";
 interface Props {
 	relatedEntity: any;
@@ -37,6 +37,12 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 			fetchGoldenMetrics(relatedEntity.guid);
 		}
 	}, [expanded]);
+
+	useInterval(() => {
+		if (expanded) {
+			fetchGoldenMetrics(relatedEntity.guid);
+		}
+	}, 300000);
 
 	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
 		if (entityGuid) {
