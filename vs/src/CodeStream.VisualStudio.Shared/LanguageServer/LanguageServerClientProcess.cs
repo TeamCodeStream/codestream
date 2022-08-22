@@ -29,12 +29,16 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 
 			var nrSettings = httpClient.GetNREnvironmentSettings();
 
-			StringDictionary additionalEnv = new StringDictionary {
-				{ "NODE_EXTRA_CA_CERTS", codeStreamSettingsManager.ExtraCertificates },
+			var additionalEnv = new StringDictionary {
 				{ "NODE_TLS_REJECT_UNAUTHORIZED", codeStreamSettingsManager.DisableStrictSSL ? "0" : "1" },
 				// do not want to release with NEW_RELIC_LOG_ENABLED=true
 				{ "NEW_RELIC_LOG_ENABLED", "false"}
 			};
+
+			if (!string.IsNullOrEmpty(codeStreamSettingsManager.ExtraCertificates))
+			{
+				additionalEnv.Add("NODE_EXTRA_CA_CERTS", codeStreamSettingsManager.ExtraCertificates);
+			}
 
 			if (nrSettings.HasValidSettings) {
 				additionalEnv.Add("NEW_RELIC_HOST", nrSettings.Host);
