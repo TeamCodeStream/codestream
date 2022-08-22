@@ -1,7 +1,10 @@
 import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
+import Select from "react-select";
+import ReactDOM from "react-dom";
+import { mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "..";
@@ -15,7 +18,8 @@ interface Props {
 
 export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const [selectedItem, setSelectedItem] = useState<boolean>(true);
+	const [selectedValue, setSelectedValue] = useState<string>("");
+	const [selectOptions, setSelectOptions] = useState<any>({ value: "", label: "" });
 	const { searchItems } = props;
 
 	// Note: searchItems[0] example structure for reference, delete later
@@ -26,6 +30,37 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	// guid: "MXxWSVp8REFTSEJPQVJEfDEyNzM1MA"
 	// name: " Tischler Researching 05/01 Incident"
 	// type: "CALLS"
+
+	useEffect(() => {
+		const _selectOptions = searchItems.map(item => {
+			return {
+				value: item?.guid,
+				label: item?.name
+			};
+		});
+
+		// const _selectOptions = mapFilter(searchItems, item => {
+		// 	return {
+		// 		value: item?.guid,
+		// 		label: item?.name
+		// 	};
+		// });
+		setSelectOptions(_selectOptions);
+	}, [searchItems, expanded]);
+
+	const handleChange = e => {
+		e.preventDefault();
+		e.stopPropagation();
+	};
+
+	// const options = [
+	// 	{ label: "apple", value: "1" },
+	// 	{ label: "orange", value: "2" },
+	// 	{ label: "kiwi", value: "3" }
+	// ];
+
+	// console.warn("eric options", options);
+	console.warn("eric selectOptions", selectOptions);
 
 	return (
 		<>
@@ -44,16 +79,50 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 			</Row>
 			{expanded && !_isEmpty(searchItems) && (
 				<>
-					<Row
+					<div
 						style={{
-							padding: "2px 10px 2px 60px"
+							padding: "2px 10px 2px 50px",
+							width: "100%"
 						}}
-						className={"pr-row"}
 					>
-						Search Dropdown here
-					</Row>
+						<Select
+							id="input-related-services"
+							name="relatedservices"
+							classNamePrefix="react-select"
+							value={selectedValue}
+							placeholder="Related Service"
+							options={selectOptions}
+							onChange={e => handleChange(e)}
+						/>
+					</div>
 				</>
 			)}
 		</>
 	);
 });
+
+// import Select from "react-select";
+// import React, { useState, useEffect } from "react";
+
+// const options = [
+// 	{ label: "apple", value: "1" },
+// 	{ label: "orange", value: "2" },
+// 	{ label: "kiwi", value: "3" }
+// ];
+
+// export const ObservabilityRelatedSearch = React.memo(() => {
+// 	const [items, setItems] = useState<any>();
+
+// 	console.log(items);
+
+// 	const handleOption = selections => {
+// 		setItems(selections);
+// 	};
+
+// 	return (
+// 		<div className="App">
+// 			<h1>Hello CodeSandbox</h1>
+// 			<Select options={options} onChange={handleOption} />
+// 		</div>
+// 	);
+// });
