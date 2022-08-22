@@ -4,23 +4,33 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import Select from "react-select";
 import ReactDOM from "react-dom";
-import { mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "../utilities/hooks";
-import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "..";
-import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
-import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { any } from "prop-types";
+import { GetServiceLevelTelemetryRequestType } from "@codestream/protocols/agent";
+import styled from "styled-components";
+import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 
 interface Props {
 	searchItems: any;
+	currentRepoId: string;
 }
 
 export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const [selectedValue, setSelectedValue] = useState<string>("");
-	const [selectOptions, setSelectOptions] = useState<any>({ value: "", label: "" });
+	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
+	const [goldenMetrics, setGoldenMetrics] = useState<any | undefined>(undefined);
+	const [selectedOption, setSelectedOption] = useState<any>();
+	const [selectOptions, setSelectOptions] = useState<any>([{ value: "", label: "" }]);
 	const { searchItems } = props;
+
+	const SelectContainer = styled.div`
+		padding: 2px 10px 2px 50px;
+		width: 100%;
+		.react-select__single-value {
+			background: none !important;
+		}
+	`;
 
 	// Note: searchItems[0] example structure for reference, delete later
 	//
@@ -32,35 +42,42 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	// type: "CALLS"
 
 	useEffect(() => {
-		const _selectOptions = searchItems.map(item => {
-			return {
-				value: item?.guid,
-				label: item?.name
-			};
-		});
-
-		// const _selectOptions = mapFilter(searchItems, item => {
-		// 	return {
-		// 		value: item?.guid,
-		// 		label: item?.name
-		// 	};
-		// });
-		setSelectOptions(_selectOptions);
+		if (expanded) {
+			const _selectOptions = searchItems.map(item => {
+				return {
+					value: item?.guid,
+					label: item?.name
+				};
+			});
+			setSelectOptions(_selectOptions);
+		}
 	}, [searchItems, expanded]);
 
-	const handleChange = e => {
-		e.preventDefault();
-		e.stopPropagation();
+	useEffect(() => {
+		if (!_isEmpty(selectedOption)) {
+			setLoadingGoldenMetrics(true);
+			fetchGoldenMetrics(selectedOption.value);
+		}
+	}, [selectedOption]);
+
+	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
+		if (entityGuid) {
+			const response = await HostApi.instance.send(GetServiceLevelTelemetryRequestType, {
+				newRelicEntityGuid: entityGuid,
+				repoId: props.currentRepoId,
+				skipRepoFetch: true
+			});
+			if (response?.goldenMetrics) {
+				setGoldenMetrics(response.goldenMetrics);
+			}
+			setLoadingGoldenMetrics(false);
+		}
 	};
 
-	// const options = [
-	// 	{ label: "apple", value: "1" },
-	// 	{ label: "orange", value: "2" },
-	// 	{ label: "kiwi", value: "3" }
-	// ];
-
-	// console.warn("eric options", options);
-	console.warn("eric selectOptions", selectOptions);
+	const handleChange = option => {
+		console.warn(option);
+		setSelectedOption(option);
+	};
 
 	return (
 		<>
@@ -79,50 +96,29 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 			</Row>
 			{expanded && !_isEmpty(searchItems) && (
 				<>
-					<div
-						style={{
-							padding: "2px 10px 2px 50px",
-							width: "100%"
-						}}
-					>
+					<SelectContainer>
 						<Select
 							id="input-related-services"
 							name="relatedservices"
 							classNamePrefix="react-select"
-							value={selectedValue}
+							value={selectedOption}
 							placeholder="Related Service"
 							options={selectOptions}
-							onChange={e => handleChange(e)}
+							onChange={handleChange}
+							isClearable={true}
 						/>
-					</div>
+					</SelectContainer>
+					{!_isEmpty(goldenMetrics) && (
+						<>
+							<ObservabilityGoldenMetricDropdown
+								goldenMetrics={goldenMetrics}
+								loadingGoldenMetrics={loadingGoldenMetrics}
+								noDropdown={true}
+							/>
+						</>
+					)}
 				</>
 			)}
 		</>
 	);
 });
-
-// import Select from "react-select";
-// import React, { useState, useEffect } from "react";
-
-// const options = [
-// 	{ label: "apple", value: "1" },
-// 	{ label: "orange", value: "2" },
-// 	{ label: "kiwi", value: "3" }
-// ];
-
-// export const ObservabilityRelatedSearch = React.memo(() => {
-// 	const [items, setItems] = useState<any>();
-
-// 	console.log(items);
-
-// 	const handleOption = selections => {
-// 		setItems(selections);
-// 	};
-
-// 	return (
-// 		<div className="App">
-// 			<h1>Hello CodeSandbox</h1>
-// 			<Select options={options} onChange={handleOption} />
-// 		</div>
-// 	);
-// });

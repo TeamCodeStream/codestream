@@ -45,7 +45,10 @@ export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 				</>
 			)}
 			{!_isEmpty(relatedEntitiesForSearch) && (
-				<ObservabilityRelatedSearch searchItems={relatedEntitiesForSearch} />
+				<ObservabilityRelatedSearch
+					currentRepoId={props.currentRepoId}
+					searchItems={relatedEntitiesForSearch}
+				/>
 			)}
 		</>
 	);
