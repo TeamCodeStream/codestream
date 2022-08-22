@@ -65,7 +65,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			title: "Throughput",
 			units: "rpm",
 			tooltip:
-				"Throughput measures how many requests this service processes per minute. It will help you find your busiest service"
+				"Throughput measures how many requests this service processes per minute. It will help you find your busiest service."
 		},
 		errorRate: {
 			// this matches the "name" from the goldenMetrics in the agent and the key here
