@@ -1140,6 +1140,8 @@ export interface GetServiceLevelTelemetryRequest {
 	repoId: string;
 	/** entity id of the NewRelic entity */
 	newRelicEntityGuid: string;
+	/** related service needs less data, skips redundant call */
+	skipRepoFetch?: boolean;
 }
 
 export type MetricTimesliceNameMapping = {

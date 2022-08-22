@@ -1,5 +1,5 @@
-import { forEach as _forEach } from "lodash-es";
-import React, { useState } from "react";
+import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
+import React, { useEffect, useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
@@ -9,7 +9,7 @@ import { HostApi } from "..";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import styled from "styled-components";
 import { PaneNodeName } from "../src/components/Pane";
-import { GetMethodLevelTelemetryRequestType } from "@codestream/protocols/agent";
+import { GetServiceLevelTelemetryRequestType } from "@codestream/protocols/agent";
 
 import { any } from "prop-types";
 interface Props {
@@ -19,7 +19,7 @@ interface Props {
 
 export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<any | undefined>(undefined);
+	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(true);
 	const [goldenMetrics, setGoldenMetrics] = useState<any | undefined>(undefined);
 	const { relatedEntity } = props;
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[relatedEntity?.alertSeverity];
@@ -31,18 +31,19 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 		display: inline-block;
 	`;
 
-	useDidMount(() => {
-		fetchGoldenMetrics(relatedEntity.guid, true);
-	});
+	useEffect(() => {
+		if (expanded) {
+			setLoadingGoldenMetrics(true);
+			fetchGoldenMetrics(relatedEntity.guid);
+		}
+	}, [expanded]);
 
-	const fetchGoldenMetrics = async (entityGuid?: string | null, noLoadingSpinner?: boolean) => {
+	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
 		if (entityGuid) {
-			if (!noLoadingSpinner) {
-				setLoadingGoldenMetrics(true);
-			}
-			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
+			const response = await HostApi.instance.send(GetServiceLevelTelemetryRequestType, {
 				newRelicEntityGuid: entityGuid,
-				repoId: props.currentRepoId
+				repoId: props.currentRepoId,
+				skipRepoFetch: true
 			});
 			if (response?.goldenMetrics) {
 				setGoldenMetrics(response.goldenMetrics);
@@ -76,30 +77,11 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 			</Row>
 			{expanded && (
 				<>
-					<Row
-						style={{
-							padding: "2px 10px 2px 60px"
-						}}
-						className={"pr-row"}
-					>
-						Golden Signal 1
-					</Row>
-					<Row
-						style={{
-							padding: "2px 10px 2px 60px"
-						}}
-						className={"pr-row"}
-					>
-						Golden Signal 2
-					</Row>
-					<Row
-						style={{
-							padding: "2px 10px 2px 60px"
-						}}
-						className={"pr-row"}
-					>
-						Golden Signal 3
-					</Row>
+					<ObservabilityGoldenMetricDropdown
+						goldenMetrics={goldenMetrics}
+						loadingGoldenMetrics={loadingGoldenMetrics}
+						noDropdown={true}
+					/>
 				</>
 			)}
 		</>

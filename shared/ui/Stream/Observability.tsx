@@ -1024,6 +1024,7 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 																								<ObservabilityRelatedWrapper
 																									currentRepoId={currentRepoId}
+																									entityGuid={ea.entityGuid}
 																								/>
 																								{observabilityErrors?.find(
 																									oe => oe?.repoId === _observabilityRepo?.repoId

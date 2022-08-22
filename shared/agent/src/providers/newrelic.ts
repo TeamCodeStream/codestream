@@ -2299,14 +2299,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		request: GetServiceLevelTelemetryRequest
 	): Promise<GetServiceLevelTelemetryResponse | undefined> {
 		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
-		if (!observabilityRepo || !observabilityRepo.entityAccounts) {
+		if (!request.skipRepoFetch && (!observabilityRepo || !observabilityRepo.entityAccounts)) {
 			return undefined;
 		}
 
-		const entity = observabilityRepo.entityAccounts.find(
+		const entity = observabilityRepo?.entityAccounts.find(
 			_ => _.entityGuid === request.newRelicEntityGuid
 		);
-		if (!entity) {
+		if (!request.skipRepoFetch && !entity) {
 			ContextLogger.warn("Missing entity", {
 				entityId: request.newRelicEntityGuid
 			});
@@ -2314,14 +2314,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 
 		try {
-			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(entity.entityGuid);
+			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
+				entity?.entityGuid || request.newRelicEntityGuid
+			);
 			return {
 				goldenMetrics: serviceLevelGoldenMetrics,
-				newRelicEntityAccounts: observabilityRepo.entityAccounts,
-				newRelicAlertSeverity: entity.alertSeverity,
-				newRelicEntityName: entity.entityName!,
-				newRelicEntityGuid: entity.entityGuid!,
-				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
+				newRelicEntityAccounts: observabilityRepo?.entityAccounts || [],
+				newRelicAlertSeverity: entity?.alertSeverity,
+				newRelicEntityName: entity?.entityName!,
+				newRelicEntityGuid: entity?.entityGuid! || request.newRelicEntityGuid,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${entity?.entityGuid ||
+					request.newRelicEntityGuid}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getServiceLevelTelemetry", {

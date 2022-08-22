@@ -11,6 +11,7 @@ import { any } from "prop-types";
 
 interface Props {
 	currentRepoId: string;
+	entityGuid: string;
 }
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
@@ -19,9 +20,8 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 
 	useDidMount(() => {
 		(async () => {
-			// @TODO: hardcoded guid, CHANGE
 			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
-				entityGuid: "MTExODkwMzh8QVBNfEFQUExJQ0FUSU9OfDE3NDY3MzAw"
+				entityGuid: props.entityGuid
 			});
 			setRelatedEntities(response);
 		})();
@@ -42,6 +42,10 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			</Row>
 			{expanded && relatedEntities && (
 				<>
+					{/* 
+						Could possibly merge these to components together, 
+						for now keeping seperate for clarity 
+					*/}
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}
 						relatedEntities={relatedEntities.CALLS}
