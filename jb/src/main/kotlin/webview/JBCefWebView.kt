@@ -1,13 +1,16 @@
 package com.codestream.webview
 
 import com.codestream.DEBUG
+import com.codestream.agentService
 import com.codestream.extensions.escapeUnicode
+import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.system.Platform
 import com.codestream.system.SPACE_ENCODED
 import com.codestream.system.platform
 import com.google.gson.JsonElement
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.project.Project
 import com.intellij.ui.jcef.JBCefBrowserBase
 import com.intellij.ui.jcef.JBCefJSQuery
 import org.cef.browser.CefBrowser
@@ -15,16 +18,17 @@ import org.cef.browser.CefFrame
 import org.cef.callback.CefContextMenuParams
 import org.cef.callback.CefMenuModel
 import org.cef.handler.CefContextMenuHandlerAdapter
+import org.cef.handler.CefLoadHandler
 import org.cef.handler.CefLoadHandlerAdapter
 import org.cef.handler.CefRequestHandlerAdapter
 import org.cef.network.CefRequest
 
 private const val BASE_ZOOM_LEVEL = 1.0
 
-class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter) : WebView {
+class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter, val project: Project) : WebView {
 
     private val logger = Logger.getInstance(JBCefWebView::class.java)
-    private var loadedUrl: String? = null
+    private var routerConnected = false
 
     val routerQuery: JBCefJSQuery = JBCefJSQuery.create(jbCefBrowser).also {
         it.addHandler { message: String ->
@@ -55,6 +59,26 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
             }
         }, jbCefBrowser.cefBrowser)
         jbCefBrowser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
+            override fun onLoadError(
+                browser: CefBrowser?,
+                frame: CefFrame?,
+                errorCode: CefLoadHandler.ErrorCode?,
+                errorText: String?,
+                failedUrl: String?
+            ) {
+                val properties = mapOf(
+                    "errorCode" to errorCode,
+                    "errorText" to errorText,
+                    "failedUrl" to failedUrl
+                )
+                val eventName = "JCEF load error"
+                logger.warn("$eventName (${properties.entries.joinToString()})")
+                project.agentService?.agent?.telemetry(TelemetryParams(
+                    eventName,
+                    properties
+                ))
+            }
+
             override fun onLoadingStateChange(
                 browser: CefBrowser?,
                 isLoading: Boolean,
@@ -62,6 +86,20 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                 canGoForward: Boolean
             ) {
                 if (isLoading || jbCefBrowser.cefBrowser.url == "about:blank") return
+                if (routerConnected) {
+                    val isOwnBrowser = jbCefBrowser.cefBrowser == browser
+                    val eventName = "Unexpected JCEF loading state changed"
+                    val properties = mapOf(
+                        "url" to browser?.url,
+                        "isOwnBrowser" to isOwnBrowser
+                    )
+                    logger.warn("$eventName (${properties.entries.joinToString()})")
+                    project.agentService?.agent?.telemetry(TelemetryParams(
+                        eventName,
+                        properties
+                    ))
+                    return
+                }
 
                 browser?.executeJavaScript(
                     """
@@ -89,6 +127,7 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                     """.trimIndent(), browser.url, 0
                 )
                 logger.info("Router connected")
+                routerConnected = true
             }
         }, jbCefBrowser.cefBrowser)
 
@@ -113,7 +152,7 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
     }
 
     override fun loadUrl(url: String) {
-        loadedUrl = url
+        routerConnected = false
         jbCefBrowser.loadURL(url)
     }
 

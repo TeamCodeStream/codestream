@@ -607,28 +607,6 @@ export function ReviewNav(props: Props) {
 								/>
 							</StyledReview>
 
-							{derivedState.hideReviewInstructions && (
-								<div
-									style={{
-										marginTop: "50px",
-										float: "right",
-										cursor: "pointer",
-										fontSize: "smaller",
-										opacity: 0.5
-									}}
-								>
-									<span
-										onClick={() => {
-											const el = document.getElementById("changed-files");
-											if (el) el.scrollIntoView(true);
-											setHoverButton("files");
-											toggleInstructions();
-										}}
-									>
-										Show Instructions
-									</span>
-								</div>
-							)}
 						</div>
 					</ScrollBox>
 				</div>

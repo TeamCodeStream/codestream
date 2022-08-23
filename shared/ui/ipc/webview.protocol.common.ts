@@ -1,5 +1,4 @@
-import { EnvironmentHost, GetFileScmInfoResponse } from "@codestream/protocols/agent";
-import { CardView } from "@codestream/webview/Stream/CrossPostIssueControls/IssuesPane";
+import { EnvironmentHost, GetFileScmInfoResponse, ThirdPartyProviderCard, ThirdPartyProviderConfig, TransitionsEntity } from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
 import { NewPullRequestBranch } from "./webview.protocol";
 
@@ -191,7 +190,7 @@ export interface WebviewContext {
 	isFirstPageview?: boolean;
 	panelStack?: (WebviewPanels | string)[];
 	activePanel?: WebviewPanels;
-	startWorkCard?: CardView;
+	startWorkCard?: any; // TODO figure out how to type CardView which include JSX.Element
 	onboardStep: number;
 	pendingProtocolHandlerUrl?: string;
 	pendingProtocolHandlerQuery?: any;

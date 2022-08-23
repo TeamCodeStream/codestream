@@ -415,7 +415,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			) => {
 				let result: boolean;
 				// Strip off any trailing () for function (csharp and java) - undo this if we get types in agent
-				const simpleSymbolName = symbol.symbol.name.replace(/\(\w*\)$/, "");
+				const simpleSymbolName = symbol.symbol.name.replace(/\(.*?\)$/, "");
 				if (symbol.parent) {
 					result =
 						(data.className === symbol.parent.name && data.functionName === simpleSymbolName) ||
