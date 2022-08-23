@@ -109,7 +109,7 @@ export interface ThirdPartyProviderBoard {
 	assigneesRequired?: boolean;
 	assigneesDisabled?: boolean;
 	singleAssignee?: boolean;
-	[key: string]: any;
+	lists?: TransitionsEntity[];
 }
 
 export interface FetchThirdPartyBoardsRequest {
@@ -127,18 +127,29 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/boards");
-
+export interface TransitionsEntity {
+	id: string;
+	name: string;
+}
 export interface ThirdPartyProviderCard {
 	id: string;
 	title: string;
 	body: string;
-	url: string;
+	url?: string;
 	modifiedAt: number;
-	tokenId: string;
+	tokenId?: string;
 	idList?: string;
+	idBoard?: string;
 	apiIdentifier?: string;
 	comments?: number;
-	[key: string]: any;
+	lists?: TransitionsEntity[];
+	listName?: string;
+	priorityName?: string;
+	priorityIcon?: string;
+	typeIcon?: string;
+	subtasks?: ThirdPartyProviderCard[];
+	parentId?: string;
+	projectId?: string;
 }
 
 export interface FetchThirdPartyCardsRequest {
