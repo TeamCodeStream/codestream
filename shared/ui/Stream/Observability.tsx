@@ -63,6 +63,7 @@ import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
+import { ObservabilityRelatedWrapper } from "./ObservabilityRelatedWrapper";
 
 interface Props {
 	paneState: PaneState;
@@ -1007,7 +1008,10 @@ export const Observability = React.memo((props: Props) => {
 																							goldenMetrics={goldenMetrics}
 																							loadingGoldenMetrics={loadingGoldenMetrics}
 																						/>
-
+																						<ObservabilityRelatedWrapper
+																							currentRepoId={currentRepoId}
+																							entityGuid={ea.entityGuid}
+																						/>
 																						{
 																							<>
 																								{observabilityErrors?.find(

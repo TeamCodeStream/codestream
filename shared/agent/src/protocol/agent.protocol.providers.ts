@@ -109,7 +109,7 @@ export interface ThirdPartyProviderBoard {
 	assigneesRequired?: boolean;
 	assigneesDisabled?: boolean;
 	singleAssignee?: boolean;
-	lists?: TransitionsEntity[];
+	[key: string]: any;
 }
 
 export interface FetchThirdPartyBoardsRequest {
@@ -128,30 +128,17 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 	void
 >("codestream/provider/boards");
 
-export interface TransitionsEntity {
-	id: string;
-	name: string;
-}
-
 export interface ThirdPartyProviderCard {
 	id: string;
 	title: string;
 	body: string;
-	url?: string;
+	url: string;
 	modifiedAt: number;
-	tokenId?: string;
+	tokenId: string;
 	idList?: string;
-	idBoard?: string;
 	apiIdentifier?: string;
 	comments?: number;
-	lists?: TransitionsEntity[];
-	listName?: string;
-	priorityName?: string;
-	priorityIcon?: string;
-	typeIcon?: string;
-	subtasks?: ThirdPartyProviderCard[];
-	parentId?: string;
-	projectId?: string;
+	[key: string]: any;
 }
 
 export interface FetchThirdPartyCardsRequest {
@@ -877,6 +864,13 @@ export interface GetNewRelicErrorGroupRequest {
 	timestamp?: number;
 }
 
+export interface GetNewRelicRelatedEntitiesRequest {
+	entityGuid: string;
+}
+export interface GetNewRelicUrlRequest {
+	entityGuid: string;
+}
+
 export interface NewRelicUser {
 	email?: string;
 	gravatar?: string;
@@ -957,12 +951,30 @@ export interface GetNewRelicErrorGroupResponse {
 	};
 }
 
+export interface GetNewRelicRelatedEntitiesResponse {}
+
+export interface GetNewRelicUrlResponse {}
+
 export const GetNewRelicErrorGroupRequestType = new RequestType<
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupResponse,
 	void,
 	void
 >("codestream/newrelic/errorGroup");
+
+export const GetNewRelicRelatedEntitiesRequestType = new RequestType<
+	GetNewRelicRelatedEntitiesRequest,
+	GetNewRelicRelatedEntitiesResponse,
+	void,
+	void
+>("codestream/newrelic/relatedEntities");
+
+export const GetNewRelicUrlRequestType = new RequestType<
+	GetNewRelicUrlRequest,
+	GetNewRelicUrlResponse,
+	void,
+	void
+>("codestream/newrelic/url");
 
 export interface GetNewRelicAssigneesRequest {}
 export interface GetNewRelicAssigneesResponse {
@@ -1140,6 +1152,8 @@ export interface GetServiceLevelTelemetryRequest {
 	repoId: string;
 	/** entity id of the NewRelic entity */
 	newRelicEntityGuid: string;
+	/** related service needs less data, skips redundant call */
+	skipRepoFetch?: boolean;
 }
 
 export type MetricTimesliceNameMapping = {

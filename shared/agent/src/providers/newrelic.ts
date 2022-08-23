@@ -45,6 +45,12 @@ import {
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupRequestType,
 	GetNewRelicErrorGroupResponse,
+	GetNewRelicRelatedEntitiesRequest,
+	GetNewRelicRelatedEntitiesRequestType,
+	GetNewRelicRelatedEntitiesResponse,
+	GetNewRelicUrlRequest,
+	GetNewRelicUrlRequestType,
+	GetNewRelicUrlResponse,
 	GetObservabilityEntitiesRequest,
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityEntitiesResponse,
@@ -1060,6 +1066,82 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.error(e, "getAccounts");
 			throw e;
 		}
+	}
+
+	@lspHandler(GetNewRelicRelatedEntitiesRequestType)
+	@log()
+	async getNewRelicRelatedEntities(
+		request: GetNewRelicRelatedEntitiesRequest
+	): Promise<GetNewRelicRelatedEntitiesResponse | undefined> {
+		try {
+			const response = await this.query(
+				`query relatedEntitiesTest($entityGuid: EntityGuid!) {
+					actor {
+					  entity(guid: $entityGuid) {
+						name
+						relatedEntities(filter: {direction: BOTH, relationshipTypes: {include: [CALLS, CONNECTS_TO]}}) {
+							results {
+							target {
+							  entity {
+								name
+								guid
+								alertSeverity
+								domain
+								account {
+								  name
+								}
+							  }
+							}
+							source {
+							  entity {
+								  name
+								  guid
+								  alertSeverity
+								  domain
+								  account {
+									name
+								  }
+								}
+							  }
+							type
+						  }
+						}
+					  }
+					}
+				  }				  
+			  	`,
+				{
+					entityGuid: request.entityGuid
+				}
+			);
+			if (response?.actor?.entity?.relatedEntities?.results) {
+				const _results = response.actor.entity.relatedEntities.results.map((_: any) => {
+					const _type = _.type;
+					let _entity;
+					_type === "CALLS" ? (_entity = _.source.entity) : (_entity = _.target.entity);
+					return {
+						alertSeverity: _entity.alertSeverity,
+						guid: _entity.guid,
+						name: _entity.name,
+						type: _.type,
+						domain: _entity.domain,
+						accountName: _entity.account.name
+					};
+				});
+				return _groupBy(_results, _ => _.type);
+			} else {
+				return {};
+			}
+		} catch (e) {
+			ContextLogger.error(e, "getRelatedEntities");
+			throw e;
+		}
+	}
+
+	@lspHandler(GetNewRelicUrlRequestType)
+	@log()
+	async getNewRelicUrl(request: GetNewRelicUrlRequest): Promise<GetNewRelicUrlResponse> {
+		return `${this.productUrl}/redirect/entity/${request.entityGuid}`;
 	}
 
 	@lspHandler(GetNewRelicErrorGroupRequestType)
@@ -2226,14 +2308,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		request: GetServiceLevelTelemetryRequest
 	): Promise<GetServiceLevelTelemetryResponse | undefined> {
 		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
-		if (!observabilityRepo || !observabilityRepo.entityAccounts) {
+		if (!request.skipRepoFetch && (!observabilityRepo || !observabilityRepo.entityAccounts)) {
 			return undefined;
 		}
 
-		const entity = observabilityRepo.entityAccounts.find(
+		const entity = observabilityRepo?.entityAccounts.find(
 			_ => _.entityGuid === request.newRelicEntityGuid
 		);
-		if (!entity) {
+		if (!request.skipRepoFetch && !entity) {
 			ContextLogger.warn("Missing entity", {
 				entityId: request.newRelicEntityGuid
 			});
@@ -2241,14 +2323,17 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 
 		try {
-			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(entity.entityGuid);
+			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
+				entity?.entityGuid || request.newRelicEntityGuid
+			);
 			return {
 				goldenMetrics: serviceLevelGoldenMetrics,
-				newRelicEntityAccounts: observabilityRepo.entityAccounts,
-				newRelicAlertSeverity: entity.alertSeverity,
-				newRelicEntityName: entity.entityName!,
-				newRelicEntityGuid: entity.entityGuid!,
-				newRelicUrl: `${this.productUrl}/redirect/entity/${entity.entityGuid}`
+				newRelicEntityAccounts: observabilityRepo?.entityAccounts || [],
+				newRelicAlertSeverity: entity?.alertSeverity,
+				newRelicEntityName: entity?.entityName!,
+				newRelicEntityGuid: entity?.entityGuid! || request.newRelicEntityGuid,
+				newRelicUrl: `${this.productUrl}/redirect/entity/${entity?.entityGuid ||
+					request.newRelicEntityGuid}`
 			};
 		} catch (ex) {
 			Logger.error(ex, "getServiceLevelTelemetry", {
