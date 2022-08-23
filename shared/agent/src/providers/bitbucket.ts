@@ -471,30 +471,34 @@ export class BitbucketProvider
 				pullRequest: {
 					baseRefOid: pr.body.destination.commit.hash,
 					headRefOid: pr.body.source.commit.hash,
+					comments: (comments.body.values || [])
+						.filter(_ => !_.deleted)
+						.map((_: BitbucketPullRequestComment) => {
+							return {
+								..._,
+								file: _.inline?.path,
+								bodyHtml: _.content?.html,
+								bodyText: _.content?.raw
+							};
+						}) as any, // TODO add new interface: ThirdPartyPullRequestComments inside that ThirdPartyPullRequestComment (file, bodyHtml, bodyText, state, etc. (things the UI needs))
 					number: pr.body.id,
 					idComputed: JSON.stringify({
 						id: pr.body.id,
 						pullRequestId: pr.body.id,
 						repoWithOwner: repoWithOwner
 					}),
+					providerId: this.providerConfig.id,
 					repository: {
 						name: repoWithOwnerSplit[1],
 						repoWithOwner: repoWithOwner,
 						url: pr.body.source?.repository?.links?.html?.href
 					} as any,
-					providerId: this.providerConfig.id,
-
-					comments: (comments.body.values || []).map((_: any) => {
-						return {
-							..._,
-							file: _.inline?.path
-						};
-					})
+					state: pr.body.state
 				}
-				// TODO fix this any
-			} as any
+			} as any // TODO fix this any
 		};
 
+		// TODO fix this any
 		return response as any;
 	}
 

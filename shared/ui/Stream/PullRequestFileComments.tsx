@@ -182,6 +182,28 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 					});
 				}
 			});
+		} else if (derivedState.currentPullRequestProviderId === "bitbucket*org") {
+			// TODO some typings
+			(pr as any).comments.forEach(comment => {
+				//check for deleted flag in comment object / comment.deleted
+				if (comment.deleted === true) {
+					return;
+				}
+				if (comment && comment.inline && comment.inline.path) {
+					if (!map[comment.inline.path]) map[comment.inline.path] = [];
+					map[comment.inline.path].push({
+						review: {
+							// TODO??
+							state: comment.state
+						},
+						// TODO? what shape is this (need type)
+						comment: comment
+					});
+					if (comment.id === props.commentId) {
+						setFilename(comment.inline.path);
+					}
+				}
+			});
 		} else {
 			const reviews = pr
 				? pr.timelineItems.nodes.filter(node => node.__typename === "PullRequestReview")
@@ -216,7 +238,10 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		setSortedComments(sortedCommentsWithRefs);
 	}, [commentMap]);
 
-	if (!filename) return null;
+	if (!filename) {
+		console.warn("no filename");
+		return null;
+	}
 
 	return (
 		<Modal translucent onClose={() => props.onClose()}>

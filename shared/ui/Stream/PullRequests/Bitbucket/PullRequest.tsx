@@ -25,7 +25,6 @@ import {
 	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
-	GitLabMergeRequest,
 	GitLabMergeRequestWrapper
 } from "@codestream/protocols/agent";
 import {
@@ -62,17 +61,17 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../DropdownButton";
-import { ApproveBox } from "./ApproveBox";
-import { MergeBox } from "./MergeBox";
-import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
-import { SummaryBox } from "./SummaryBox";
-import { RightActionBar } from "./RightActionBar";
+//import { ApproveBox } from "./ApproveBox";
+//import { MergeBox } from "./MergeBox";
+//import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
+//import { SummaryBox } from "./SummaryBox";
+//import { RightActionBar } from "./RightActionBar";
 import { MarkdownText } from "../../MarkdownText";
-import { EditPullRequest } from "./EditPullRequest";
+//import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
-import { Timeline } from "./Timeline";
+//import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
-import { PipelineBox } from "./PipelineBox";
+//import { PipelineBox } from "./PipelineBox";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 export const PullRequestRoot = styled.div`
@@ -372,12 +371,11 @@ export const PullRequest = () => {
 
 	const _assignState = _pr => {
 		if (!_pr) return;
-		if (!_pr.project) {
-			console.warn("possible bad request");
-		}
-		// TODO is this needed??
-		//setGhRepo(pr.repository);
-		if (_pr && _pr.project) setTitle(_pr.project.mergeRequest.title);
+		// if (!_pr.project) {
+		// 	console.warn("possible bad request");
+		// }
+
+		//	if (_pr && _pr.project) setTitle(_pr.project.mergeRequest.title);
 		setEditingTitle(false);
 		setSavingTitle(false);
 		setIsLoadingPR(false);
@@ -488,8 +486,8 @@ export const PullRequest = () => {
 		};
 	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
-	const pr: GitLabMergeRequest =
-		derivedState.currentPullRequest?.conversations?.project?.mergeRequest;
+	// TODO fix this thing (need the PR typing here)
+	const pr: any = derivedState.currentPullRequest?.conversations?.repository?.pullRequest;
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);
@@ -603,6 +601,7 @@ export const PullRequest = () => {
 	};
 
 	const [unresolvedThreads, resolvedThreads] = (() => {
+		// TODO FIX THIS or remove?? (does bitbucket have notion of resolving comments / discussions??)
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return [0, 0];
 		return [
 			pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length,
@@ -635,7 +634,7 @@ export const PullRequest = () => {
 		setIsLoadingMessage("");
 	};
 
-	const { order, filter } = derivedState;
+	const { order } = derivedState;
 
 	if (!pr) {
 		return (
@@ -652,20 +651,14 @@ export const PullRequest = () => {
 				</div>
 				{generalError && (
 					<ErrorMessage>
-						Error Loading Merge Request:
+						Error Loading Pull Request:
 						<br />
 						<div style={{ overflow: "auto", width: "100%", height: "7vh" }}>
 							{generalError.replace(/\\t/g, "     ").replace(/\\n/g, "")}
 						</div>
-						{generalError.includes("404 Project Not Found") && (
-							<div>
-								Using apache2 reverse proxy? Click <Link href={GL_404_HELP}>here</Link> for a
-								possible solution.
-							</div>
-						)}
 					</ErrorMessage>
 				)}
-				{!generalError && <LoadingMessage>Loading Merge Request...</LoadingMessage>}
+				{!generalError && <LoadingMessage>Loading Pull Request...</LoadingMessage>}
 			</div>
 		);
 	}
@@ -713,16 +706,17 @@ export const PullRequest = () => {
 
 	return (
 		<ThemeProvider theme={addViewPreferencesToTheme}>
-			<PullRequestRoot className="gitlab" onClick={hijackUserLinks}>
+			<PullRequestRoot className="bitbucket" onClick={hijackUserLinks}>
 				<CreateCodemarkIcons narrow onebutton />
 				{isLoadingMessage && <FloatingLoadingMessage>{isLoadingMessage}</FloatingLoadingMessage>}
-				{isEditing && (
+				{/* add this back for BB */}
+				{/* {isEditing && (
 					<EditPullRequest
 						pr={pr}
 						setIsEditing={setIsEditing}
 						setIsLoadingMessage={setIsLoadingMessage}
 					/>
-				)}
+				)} */}
 				<Left onClick={closeRight}>
 					<PRHeader>
 						<Header>
@@ -773,7 +767,7 @@ export const PullRequest = () => {
 								</PRActionIcons>
 								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
-							{pr.userPermissions.adminMergeRequest && (
+							{/* {pr.userPermissions.adminMergeRequest && (
 								<div style={{ marginLeft: "auto" }}>
 									{pr.state === "closed" ? (
 										<DropdownButton
@@ -811,17 +805,17 @@ export const PullRequest = () => {
 										</DropdownButton>
 									)}
 								</div>
-							)}
+							)} */}
 						</Header>
-						{!pr.sourceProject && (
+						{/* {!pr.sourceProject && (
 							<PRError>
 								<Icon name="alert" />
 								<div>The source project for this merge request has been removed.</div>
 							</PRError>
-						)}
+						)} */}
 						<PRTitle>
 							{pr.title}{" "}
-							<Tooltip title="Open on GitLab" placement="top" delay={1}>
+							<Tooltip title="Open on Bitbucket" placement="top" delay={1}>
 								<span>
 									<Link href={pr.webUrl}>
 										!{pr.number}
@@ -966,7 +960,7 @@ export const PullRequest = () => {
 											/>
 										</Description>
 									)}
-									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
+									{/* <SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
 									<ApproveBox pr={pr} />
 									<PipelineBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
@@ -978,7 +972,7 @@ export const PullRequest = () => {
 										filter={filter}
 										setIsLoadingMessage={setIsLoadingMessage}
 										collapseAll={collapseAll}
-									/>
+									/> */}
 									{order === "oldest" && bottomComment}
 								</>
 							)}
@@ -1004,13 +998,6 @@ export const PullRequest = () => {
 						/>
 					)}
 				</Left>
-				<RightActionBar
-					pr={pr}
-					rightOpen={rightOpen}
-					setRightOpen={setRightOpen}
-					setIsLoadingMessage={setIsLoadingMessage}
-					onRefreshClick={reload}
-				/>
 			</PullRequestRoot>
 		</ThemeProvider>
 	);
