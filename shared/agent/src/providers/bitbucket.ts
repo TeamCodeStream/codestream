@@ -472,6 +472,11 @@ export class BitbucketProvider
 					baseRefOid: pr.body.destination.commit.hash,
 					headRefOid: pr.body.source.commit.hash,
 					number: pr.body.id,
+					idComputed: JSON.stringify({
+						id: pr.body.id,
+						pullRequestId: pr.body.id,
+						repoWithOwner: repoWithOwner
+					}),
 					repository: {
 						name: repoWithOwnerSplit[1],
 						repoWithOwner: repoWithOwner,
