@@ -223,11 +223,10 @@ export const Observability = React.memo((props: Props) => {
 		};
 	}, shallowEqual);
 
-	const NO_ACCESS_ERROR_MESSAGE =
-		"Your New Relic account doesn’t have access to the integration with CodeStream.	Contact your New Relic admin to upgrade.";
+	const NO_ERRORS_ACCESS_ERROR_MESSAGE = "403";
 	const GENERIC_ERROR_MESSAGE = "There was an error loading this data.";
 
-	const [noAccess, setNoAccess] = useState<string | undefined>(undefined);
+	const [noErrorsAccess, setNoErrorsAccess] = useState<string | undefined>(undefined);
 	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
 		undefined
 	);
@@ -300,7 +299,7 @@ export const Observability = React.memo((props: Props) => {
 			.then((_: GetObservabilityErrorAssignmentsResponse) => {
 				setObservabilityAssignments(_.items);
 				setLoadingAssigments(false);
-				setNoAccess(undefined);
+				setNoErrorsAccess(undefined);
 			})
 			.catch(ex => {
 				setLoadingAssigments(false);
@@ -308,9 +307,9 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityErrorAssignments"
 					});
-					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
+					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -359,9 +358,9 @@ export const Observability = React.memo((props: Props) => {
 							HostApi.instance.track("NR Access Denied", {
 								Query: "GetObservabilityErrors"
 							});
-							setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+							setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 						} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-							setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
+							setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 						}
 					});
 			});
@@ -445,9 +444,9 @@ export const Observability = React.memo((props: Props) => {
 									HostApi.instance.track("NR Access Denied", {
 										Query: "GetObservabilityErrors"
 									});
-									setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+									setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 								} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-									setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
+									setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 								}
 							});
 					}
@@ -500,10 +499,10 @@ export const Observability = React.memo((props: Props) => {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityRepos"
 					});
-					setNoAccess(NO_ACCESS_ERROR_MESSAGE);
+					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 					setLoadingEntities(false);
 				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-					setNoAccess(ex.message || GENERIC_ERROR_MESSAGE);
+					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
 			});
 	};
@@ -807,221 +806,210 @@ export const Observability = React.memo((props: Props) => {
 					<div style={{ padding: "0 10px 0 20px" }}></div>
 					{derivedState.newRelicIsConnected ? (
 						<>
-							{noAccess ? (
-								<div style={{ padding: "0 20px 20px 20px" }}>
-									<span>{noAccess}</span>
-								</div>
-							) : (
-								<>
-									<PaneNode>
-										{loadingEntities && (
-											<ErrorRow
-												isLoading={true}
-												title="Loading..."
-												customPadding={"0 10px 0 20px"}
-											></ErrorRow>
-										)}
-										{!loadingEntities && !hasEntities && (
-											<NoEntitiesWrapper>
-												<NoEntitiesCopy>
-													Set up application performance monitoring for your project so that you can
-													discover and investigate errors with CodeStream
-												</NoEntitiesCopy>
-												<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
-													Set Up Monitoring
-												</Button>
-											</NoEntitiesWrapper>
-										)}
-										{!loadingEntities &&
-											_isEmpty(currentRepoId) &&
-											_isEmpty(repoForEntityAssociator) && (
-												<NoContent>
-													<p>
-														Open a source file to see how your code is performing.{" "}
-														<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
-															Learn more.
-														</a>
-													</p>
-												</NoContent>
-											)}
-										{!loadingEntities &&
-											!derivedState.hideCodeLevelMetricsInstructions &&
-											!derivedState.showGoldenSignalsInEditor &&
-											derivedState.isVS &&
-											observabilityRepos?.find(_ => _.hasCodeLevelMetricSpanData) && (
-												<WarningBox
-													style={{ margin: "20px" }}
-													items={[
-														{
-															message: `Enable CodeLenses to see code-level metrics. 
+							<PaneNode>
+								{loadingEntities && (
+									<ErrorRow
+										isLoading={true}
+										title="Loading..."
+										customPadding={"0 10px 0 20px"}
+									></ErrorRow>
+								)}
+								{!loadingEntities && !hasEntities && (
+									<NoEntitiesWrapper>
+										<NoEntitiesCopy>
+											Set up application performance monitoring for your project so that you can
+											discover and investigate errors with CodeStream
+										</NoEntitiesCopy>
+										<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
+											Set Up Monitoring
+										</Button>
+									</NoEntitiesWrapper>
+								)}
+								{!loadingEntities && _isEmpty(currentRepoId) && _isEmpty(repoForEntityAssociator) && (
+									<NoContent>
+										<p>
+											Open a source file to see how your code is performing.{" "}
+											<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#observability-in-IDE">
+												Learn more.
+											</a>
+										</p>
+									</NoContent>
+								)}
+								{!loadingEntities &&
+									!derivedState.hideCodeLevelMetricsInstructions &&
+									!derivedState.showGoldenSignalsInEditor &&
+									derivedState.isVS &&
+									observabilityRepos?.find(_ => _.hasCodeLevelMetricSpanData) && (
+										<WarningBox
+											style={{ margin: "20px" }}
+											items={[
+												{
+													message: `Enable CodeLenses to see code-level metrics. 
 														Go to Tools > Options > Text Editor > All Languages > CodeLens or [learn more about code-level metrics]`,
-															helpUrl:
-																"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
-														}
-													]}
-													dismissCallback={e => {
-														dispatch(setUserPreference(["hideCodeLevelMetricsInstructions"], true));
-													}}
-												/>
-											)}
-										{observabilityRepos.length == 0 && (
+													helpUrl:
+														"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+												}
+											]}
+											dismissCallback={e => {
+												dispatch(setUserPreference(["hideCodeLevelMetricsInstructions"], true));
+											}}
+										/>
+									)}
+								{observabilityRepos.length == 0 && (
+									<>
+										{loadingErrors && Object.keys(loadingErrors).length > 0 && (
 											<>
-												{loadingErrors && Object.keys(loadingErrors).length > 0 && (
-													<>
-														<PaneNodeName
-															title="Recent errors"
-															id="newrelic-errors-empty"
-														></PaneNodeName>
-														{!hiddenPaneNodes["newrelic-errors-empty"] && (
-															<ErrorRow title="No repositories found"></ErrorRow>
-														)}
-													</>
+												<PaneNodeName
+													title="Recent errors"
+													id="newrelic-errors-empty"
+												></PaneNodeName>
+												{!hiddenPaneNodes["newrelic-errors-empty"] && (
+													<ErrorRow title="No repositories found"></ErrorRow>
 												)}
 											</>
 										)}
+									</>
+								)}
 
-										{!loadingEntities &&
-											currentEntityAccounts &&
-											currentEntityAccounts?.length !== 0 &&
-											hasEntities && (
-												<>
-													{currentEntityAccounts
-														.filter(_ => _)
-														.map((ea, index) => {
-															const _observabilityRepo = observabilityRepos.find(
-																_ => _.repoId === currentRepoId
-															);
+								{!loadingEntities &&
+									currentEntityAccounts &&
+									currentEntityAccounts?.length !== 0 &&
+									hasEntities && (
+										<>
+											{currentEntityAccounts
+												.filter(_ => _)
+												.map((ea, index) => {
+													const _observabilityRepo = observabilityRepos.find(
+														_ => _.repoId === currentRepoId
+													);
 
-															if (_observabilityRepo) {
-																const _alertSeverity = ea?.alertSeverity || "";
-																const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
-																const paneId =
-																	index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
-																const collapsed = expandedEntity !== ea.entityGuid;
-																const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(
-																	ore => {
-																		return ore.repoId === currentRepoId;
+													if (_observabilityRepo) {
+														const _alertSeverity = ea?.alertSeverity || "";
+														const alertSeverityColor = ALERT_SEVERITY_COLORS[_alertSeverity];
+														const paneId =
+															index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
+														const collapsed = expandedEntity !== ea.entityGuid;
+														const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(
+															ore => {
+																return ore.repoId === currentRepoId;
+															}
+														);
+														const isSelectedCLM =
+															ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
+														return (
+															<>
+																<PaneNodeName
+																	title={
+																		<div style={{ display: "flex", alignItems: "center" }}>
+																			<EntityHealth backgroundColor={alertSeverityColor} />
+																			<div>
+																				<span>{ea.entityName}</span>
+																				<span
+																					className="subtle"
+																					style={{ fontSize: "11px", verticalAlign: "bottom" }}
+																				>
+																					{ea.accountName && ea.accountName.length > 25
+																						? ea.accountName.substr(0, 25) + "..."
+																						: ea.accountName}
+																					{ea?.domain ? ` (${ea?.domain})` : ""}
+																				</span>
+																			</div>
+																		</div>
 																	}
-																);
-																const isSelectedCLM =
-																	ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
-																return (
-																	<>
-																		<PaneNodeName
+																	id={paneId}
+																	labelIsFlex={true}
+																	onClick={e => handleClickErrorsInRepo(e, paneId, ea.entityGuid)}
+																	collapsed={collapsed}
+																	showChildIconOnCollapse={true}
+																	actionsVisibleIfOpen={true}
+																>
+																	{newRelicUrl && (
+																		<Icon
+																			name="globe"
+																			className={cx("clickable", {
+																				"icon-override-actions-visible": true
+																			})}
+																			title="View on New Relic"
+																			placement="bottomLeft"
+																			delay={1}
+																			onClick={e => {
+																				e.preventDefault();
+																				e.stopPropagation();
+																				HostApi.instance.send(OpenUrlRequestType, {
+																					url: newRelicUrl
+																				});
+																			}}
+																		/>
+																	)}
+																	{showCodeLevelMetricsBroadcastIcon && (
+																		<Icon
+																			style={{
+																				display: "inlineBlock",
+																				color: isSelectedCLM
+																					? "var(--text-color-highlight)"
+																					: "inherit",
+																				opacity: isSelectedCLM ? "1" : "inherit"
+																			}}
+																			name="broadcast"
+																			className={cx("clickable", {
+																				"icon-override-actions-visible": !isSelectedCLM
+																			})}
 																			title={
-																				<div style={{ display: "flex", alignItems: "center" }}>
-																					<EntityHealth backgroundColor={alertSeverityColor} />
-																					<div>
-																						<span>{ea.entityName}</span>
-																						<span
-																							className="subtle"
-																							style={{ fontSize: "11px", verticalAlign: "bottom" }}
+																				isSelectedCLM ? (
+																					<span>
+																						Displaying{" "}
+																						<Link
+																							useStopPropagation={true}
+																							href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
 																						>
-																							{ea.accountName && ea.accountName.length > 25
-																								? ea.accountName.substr(0, 25) + "..."
-																								: ea.accountName}
-																							{ea?.domain ? ` (${ea?.domain})` : ""}
-																						</span>
-																					</div>
-																				</div>
-																			}
-																			id={paneId}
-																			labelIsFlex={true}
-																			onClick={e =>
-																				handleClickErrorsInRepo(e, paneId, ea.entityGuid)
-																			}
-																			collapsed={collapsed}
-																			showChildIconOnCollapse={true}
-																			actionsVisibleIfOpen={true}
-																		>
-																			{newRelicUrl && (
-																				<Icon
-																					name="globe"
-																					className={cx("clickable", {
-																						"icon-override-actions-visible": true
-																					})}
-																					title="View on New Relic"
-																					placement="bottomLeft"
-																					delay={1}
-																					onClick={e => {
-																						e.preventDefault();
-																						e.stopPropagation();
-																						HostApi.instance.send(OpenUrlRequestType, {
-																							url: newRelicUrl
-																						});
-																					}}
-																				/>
-																			)}
-																			{showCodeLevelMetricsBroadcastIcon && (
-																				<Icon
-																					style={{
-																						display: "inlineBlock",
-																						color: isSelectedCLM
-																							? "var(--text-color-highlight)"
-																							: "inherit",
-																						opacity: isSelectedCLM ? "1" : "inherit"
-																					}}
-																					name="broadcast"
-																					className={cx("clickable", {
-																						"icon-override-actions-visible": !isSelectedCLM
-																					})}
-																					title={
-																						isSelectedCLM ? (
-																							<span>
-																								Displaying{" "}
-																								<Link
-																									useStopPropagation={true}
-																									href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
-																								>
-																									code level metrics
-																								</Link>{" "}
-																								for this service
-																							</span>
-																						) : (
-																							<span>
-																								View{" "}
-																								<Link
-																									useStopPropagation={true}
-																									href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
-																								>
-																									code level metrics
-																								</Link>{" "}
-																								for this service
-																							</span>
-																						)
-																					}
-																					placement="bottomLeft"
-																					delay={1}
-																					onClick={e => {
-																						e.preventDefault();
-																						e.stopPropagation();
-																						handleClickCLMBroadcast(ea.entityGuid, e);
-																					}}
-																				/>
-																			)}
-																		</PaneNodeName>
-																		{!collapsed && (
-																			<>
-																				{ea.entityGuid === loadingPane ? (
-																					<>
-																						<ErrorRow
-																							isLoading={true}
-																							title="Loading..."
-																						></ErrorRow>
-																					</>
+																							code level metrics
+																						</Link>{" "}
+																						for this service
+																					</span>
 																				) : (
+																					<span>
+																						View{" "}
+																						<Link
+																							useStopPropagation={true}
+																							href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+																						>
+																							code level metrics
+																						</Link>{" "}
+																						for this service
+																					</span>
+																				)
+																			}
+																			placement="bottomLeft"
+																			delay={1}
+																			onClick={e => {
+																				e.preventDefault();
+																				e.stopPropagation();
+																				handleClickCLMBroadcast(ea.entityGuid, e);
+																			}}
+																		/>
+																	)}
+																</PaneNodeName>
+																{!collapsed && (
+																	<>
+																		{ea.entityGuid === loadingPane ? (
+																			<>
+																				<ErrorRow isLoading={true} title="Loading..."></ErrorRow>
+																			</>
+																		) : (
+																			<>
+																				{!hiddenPaneNodes[
+																					index +
+																						"newrelic-errors-in-repo-" +
+																						_observabilityRepo.repoId
+																				] && (
 																					<>
-																						{!hiddenPaneNodes[
-																							index +
-																								"newrelic-errors-in-repo-" +
-																								_observabilityRepo.repoId
-																						] && (
-																							<>
-																								<ObservabilityGoldenMetricDropdown
-																									goldenMetrics={goldenMetrics}
-																									loadingGoldenMetrics={loadingGoldenMetrics}
-																								/>
+																						<ObservabilityGoldenMetricDropdown
+																							goldenMetrics={goldenMetrics}
+																							loadingGoldenMetrics={loadingGoldenMetrics}
+																						/>
 
+																						{
+																							<>
 																								{observabilityErrors?.find(
 																									oe => oe?.repoId === _observabilityRepo?.repoId
 																								) && (
@@ -1033,64 +1021,62 @@ export const Observability = React.memo((props: Props) => {
 																												observabilityAssignments
 																											}
 																											entityGuid={ea.entityGuid}
+																											noAccess={noErrorsAccess}
 																										/>
 																									</>
 																								)}
 																							</>
-																						)}
+																						}
 																					</>
 																				)}
 																			</>
 																		)}
 																	</>
-																);
-															} else return null;
-														})}
-												</>
-											)}
-										{!loadingEntities && hasEntities && (
+																)}
+															</>
+														);
+													} else return null;
+												})}
+										</>
+									)}
+								{!loadingEntities && hasEntities && (
+									<>
+										{!_isEmpty(repoForEntityAssociator) && (
 											<>
-												{!_isEmpty(repoForEntityAssociator) && (
-													<>
-														<EntityAssociator
-															label={
-																<span>
-																	Associate this repo with an entity on New Relic in order to see
-																	telemetry. Or,{" "}
-																	<Link
-																		onClick={() => {
-																			dispatch(openPanel(WebviewPanels.OnboardNewRelic));
-																		}}
-																	>
-																		set up instrumentation.
-																	</Link>
-																</span>
-															}
-															onSuccess={async e => {
-																HostApi.instance.track("NR Entity Association", {
-																	"Repo ID": repoForEntityAssociator.repoId
-																});
+												<EntityAssociator
+													label={
+														<span>
+															Associate this repo with an entity on New Relic in order to see
+															telemetry. Or,{" "}
+															<Link
+																onClick={() => {
+																	dispatch(openPanel(WebviewPanels.OnboardNewRelic));
+																}}
+															>
+																set up instrumentation.
+															</Link>
+														</span>
+													}
+													onSuccess={async e => {
+														HostApi.instance.track("NR Entity Association", {
+															"Repo ID": repoForEntityAssociator.repoId
+														});
 
-																await fetchObservabilityRepos(
-																	e.entityGuid,
-																	repoForEntityAssociator.repoId
-																);
-																fetchObservabilityErrors(
-																	e.entityGuid,
-																	repoForEntityAssociator.repoId
-																);
-																fetchGoldenMetrics(e.entityGuid);
-															}}
-															remote={repoForEntityAssociator.repoRemote}
-															remoteName={repoForEntityAssociator.repoName}
-														/>
-													</>
-												)}
+														await fetchObservabilityRepos(
+															e.entityGuid,
+															repoForEntityAssociator.repoId
+														);
+														fetchObservabilityErrors(e.entityGuid, repoForEntityAssociator.repoId);
+														fetchGoldenMetrics(e.entityGuid);
+													}}
+													remote={repoForEntityAssociator.repoRemote}
+													remoteName={repoForEntityAssociator.repoName}
+												/>
 											</>
 										)}
-									</PaneNode>
-								</>
-							)}
+									</>
+								)}
+							</PaneNode>
 						</>
 					) : (
 						<>
