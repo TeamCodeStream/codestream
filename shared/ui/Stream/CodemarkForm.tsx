@@ -2052,7 +2052,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (commentType !== "comment" && (currentReviewId || currentCodeErrorId)) {
 			const activity = currentReviewId ? "doing a review" : "investigating an error";
 			const additionalInfo = currentReviewId
-				? 'Mark your comment as a "change request" instead.'
+				? ' Mark your comment as a "change request" instead.'
 				: "";
 			return (
 				<Modal onClose={this.cancelCompose} verticallyCenter>
