@@ -32,14 +32,35 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 		}
 	`;
 
-	// Note: searchItems[0] example structure for reference, delete later
-	//
-	// accountName: "NewRelic Administration"
-	// alertSeverity: null
-	// domain: "VIZ"
-	// guid: "MXxWSVp8REFTSEJPQVJEfDEyNzM1MA"
-	// name: " Tischler Researching 05/01 Incident"
-	// type: "CALLS"
+	//https://stackoverflow.com/a/60912805/1704858
+	const customStyles = {
+		control: (provided, state) => ({
+			...provided,
+			background: "#fff",
+			borderColor: "#9e9e9e",
+			minHeight: "25px",
+			height: "25px",
+			boxShadow: state.isFocused ? null : null
+		}),
+
+		valueContainer: (provided, state) => ({
+			...provided,
+			height: "25px",
+			padding: "0 6px"
+		}),
+
+		input: (provided, state) => ({
+			...provided,
+			margin: "0px"
+		}),
+		indicatorSeparator: state => ({
+			display: "none"
+		}),
+		indicatorsContainer: (provided, state) => ({
+			...provided,
+			height: "25px"
+		})
+	};
 
 	useEffect(() => {
 		if (expanded) {
@@ -75,8 +96,10 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	};
 
 	const handleChange = option => {
-		console.warn(option);
 		setSelectedOption(option);
+		if (!option) {
+			setGoldenMetrics(undefined);
+		}
 	};
 
 	return (
@@ -106,17 +129,15 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 							options={selectOptions}
 							onChange={handleChange}
 							isClearable={true}
+							styles={customStyles}
 						/>
 					</SelectContainer>
-					{!_isEmpty(goldenMetrics) && (
-						<>
-							<ObservabilityGoldenMetricDropdown
-								goldenMetrics={goldenMetrics}
-								loadingGoldenMetrics={loadingGoldenMetrics}
-								noDropdown={true}
-							/>
-						</>
-					)}
+					{loadingGoldenMetrics && <div style={{ marginTop: "2px" }}> </div>}
+					<ObservabilityGoldenMetricDropdown
+						goldenMetrics={goldenMetrics}
+						loadingGoldenMetrics={loadingGoldenMetrics}
+						noDropdown={true}
+					/>
 				</>
 			)}
 		</>

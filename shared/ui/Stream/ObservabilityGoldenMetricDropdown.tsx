@@ -1,5 +1,5 @@
 import { GoldenMetricsResult } from "@codestream/protocols/agent";
-import { forEach as _forEach, isNil as _isNil } from "lodash-es";
+import { forEach as _forEach, isNil as _isNil, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -221,7 +221,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					Loading...
 				</Row>
 			)}
-			{(noDropdown || expanded) && !loadingGoldenMetrics && <>{goldenMetricOutput()}</>}
+			{(noDropdown || expanded) && !loadingGoldenMetrics && !_isEmpty(goldenMetrics) && (
+				<>{goldenMetricOutput()}</>
+			)}
 		</>
 	);
 });
