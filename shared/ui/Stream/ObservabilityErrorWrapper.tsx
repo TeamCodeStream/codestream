@@ -47,7 +47,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 									CodeStream. Contact your New Relic admin to upgrade your account or{" "}
 									<Link
 										useStopPropagation={true}
-										href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
+										href="https://docs.newrelic.com/docs/accounts/original-accounts-billing/original-users-roles/user-migration"
 									>
 										migrate to New Relic’s new user model
 									</Link>{" "}
