@@ -75,6 +75,7 @@ import Feedback from "./Feedback";
 import Icon from "./Icon";
 import { Modal } from "./Modal";
 import { PullRequest } from "./PullRequest";
+import { PullRequest as BitbucketPullRequest } from "./PullRequests/Bitbucket/PullRequest";
 import { PullRequest as GitLabPullRequest } from "./PullRequests/GitLab/PullRequest";
 import { ReviewNav } from "./ReviewNav";
 import ScrollBox from "./ScrollBox";
@@ -1192,6 +1193,7 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 			currentPullRequestId &&
 			(currentPullRequestProviderId === "gitlab*com" ||
 				currentPullRequestProviderId === "gitlab/enterprise");
+		const isBitbucketPR = currentPullRequestId && currentPullRequestProviderId === "bitbucket*org";
 
 		return (
 			<Modal
@@ -1212,6 +1214,8 @@ export class SimpleInlineCodemarks extends Component<Props, State> {
 							<PullRequest />
 						) : isGitLabPR ? (
 							<GitLabPullRequest />
+						) : isBitbucketPR ? (
+							<BitbucketPullRequest />
 						) : (
 							<div id="oops">
 								<form className="standard-form">
