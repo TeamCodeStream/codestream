@@ -196,7 +196,7 @@ class WebViewService(val project: Project) : Disposable {
                     val jbCefBrowser = JBCefBrowser()
                     jbCefBrowserFuture.complete(jbCefBrowser)
                 }
-                JBCefWebView(jbCefBrowserFuture.await(), router).also {
+                JBCefWebView(jbCefBrowserFuture.await(), router, project).also {
                     webviewTelemetry("JCEF")
                 }
             } else {
