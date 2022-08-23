@@ -20,9 +20,8 @@ export const ObservabilityRelatedCalls = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const { relatedEntities, loadingRelatedEntities } = props;
 
-	// @TODO change 2 to 10
-	const relatedEntitiesSliced = relatedEntities?.slice(0, 2);
-	const relatedEntitiesForSearch = relatedEntities?.slice(2);
+	const relatedEntitiesSliced = relatedEntities?.slice(0, 10);
+	const relatedEntitiesForSearch = relatedEntities?.slice(10);
 
 	return (
 		<>

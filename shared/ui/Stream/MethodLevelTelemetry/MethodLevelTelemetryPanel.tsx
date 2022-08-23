@@ -335,9 +335,8 @@ export const MethodLevelTelemetryPanel = () => {
 														<Link
 															onClick={e => {
 																e.preventDefault();
-																HostApi.instance.track("MLT Open on NR1", {
-																	"NR Account ID":
-																		derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""
+																HostApi.instance.track("Open Service Summary on NR", {
+																	Section: "Code-level Metrics"
 																});
 																HostApi.instance.send(OpenUrlRequestType, {
 																	url: telemetryResponse.newRelicUrl!

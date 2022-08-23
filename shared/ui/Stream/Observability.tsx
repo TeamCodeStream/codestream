@@ -936,6 +936,9 @@ export const Observability = React.memo((props: Props) => {
 																			onClick={e => {
 																				e.preventDefault();
 																				e.stopPropagation();
+																				HostApi.instance.track("Open Service Summary on NR", {
+																					Section: "Golden Metrics"
+																				});
 																				HostApi.instance.send(OpenUrlRequestType, {
 																					url: newRelicUrl
 																				});

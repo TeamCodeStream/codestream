@@ -132,6 +132,9 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 						onClick={e => {
 							e.preventDefault();
 							e.stopPropagation();
+							HostApi.instance.track("Open Service Summary on NR", {
+								Section: "Related Services"
+							});
 							HostApi.instance.send(OpenUrlRequestType, {
 								url: newRelicUrl
 							});
@@ -139,50 +142,6 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 					/>
 				)}
 			</PaneNodeName>
-
-			{/*  
-			<Row
-				style={{
-					padding: "2px 10px 2px 50px"
-				}}
-				className={"pr-row"}
-				onClick={() => setExpanded(!expanded)}
-			>
-				{expanded && <Icon name="chevron-down-thin" />}
-				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>
-					{" "}
-					<EntityHealth backgroundColor={alertSeverityColor} /> {relatedEntity?.name}
-					<span className="subtle" style={{ fontSize: "11px", verticalAlign: "bottom" }}>
-						{relatedEntity.accountName && relatedEntity.accountName.length > 15
-							? relatedEntity.accountName.substr(0, 15) + "..."
-							: relatedEntity.accountName}
-						{relatedEntity?.domain ? ` (${relatedEntity?.domain})` : ""}
-					</span>
-				</span>
-				<RowIcons>
-					{newRelicUrl && (
-						<Icon
-							name="globe"
-							className={cx("clickable", {
-								"icon-override-actions-visible": true
-							})}
-							title="View on New Relic"
-							placement="bottomLeft"
-							delay={1}
-							onClick={e => {
-								e.preventDefault();
-								e.stopPropagation();
-								HostApi.instance.send(OpenUrlRequestType, {
-									url: newRelicUrl
-								});
-							}}
-						/>
-					)}
-				</RowIcons>
-			</Row>
-
-			*/}
 			{expanded && (
 				<>
 					<ObservabilityGoldenMetricDropdown
