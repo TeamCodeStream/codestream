@@ -127,6 +127,7 @@ export const FetchThirdPartyBoardsRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/boards");
+
 export interface TransitionsEntity {
 	id: string;
 	name: string;
