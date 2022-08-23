@@ -345,3 +345,4 @@ src/protocols/
 stats.json
 src/**/agent/
 src/resources/webview/
+.tsbuildinfo

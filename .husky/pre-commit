@@ -1,0 +1,13 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pushd shared/agent
+npm run verify:compile
+npx lint-staged
+npm run test-unit
+popd
+pushd shared/ui
+npm run verify:compile
+npx lint-staged
+npm run test
+popd

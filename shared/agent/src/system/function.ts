@@ -1,29 +1,29 @@
 "use strict";
 /**
-Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/6b341c5ae6bea67f9aefc573d89bbe3e3f1d0776/src/system/function.ts which carries this notice:
+ Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/6b341c5ae6bea67f9aefc573d89bbe3e3f1d0776/src/system/function.ts which carries this notice:
 
-The MIT License (MIT)
+ The MIT License (MIT)
 
-Copyright (c) 2016-2021 Eric Amodio
+ Copyright (c) 2016-2021 Eric Amodio
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
 
 /**
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
@@ -34,12 +34,15 @@ import { CancellationToken } from "vscode-jsonrpc";
 
 export interface IDeferrable {
 	cancel(): void;
+
 	flush(...args: any[]): void;
+
 	pending?(): boolean;
 }
 
 interface IPropOfValue {
 	(): any;
+
 	value: string | undefined;
 }
 
@@ -154,26 +157,26 @@ export namespace Functions {
 		let pending = false;
 
 		const debounced = _debounce(
-			(function(this: any, ...args: any[]) {
+			function (this: any, ...args: any[]) {
 				pending = false;
 				return fn.apply(this, args);
-			} as any) as T,
+			} as any as T,
 			wait,
 			options
 		) as T & IDeferrable;
 
-		const tracked = (function(this: any, ...args: any[]) {
+		const tracked = function (this: any, ...args: any[]) {
 			pending = true;
 			return debounced.apply(this, args);
-		} as any) as T & IDeferrable;
+		} as any as T & IDeferrable;
 
-		tracked.pending = function() {
+		tracked.pending = function () {
 			return pending;
 		};
-		tracked.cancel = function() {
+		tracked.cancel = function () {
 			return debounced.cancel.apply(debounced);
 		};
-		tracked.flush = function(...args: any[]) {
+		tracked.flush = function (...args: any[]) {
 			return debounced.flush.apply(debounced, args);
 		};
 
@@ -187,11 +190,11 @@ export namespace Functions {
 	): T {
 		const { resolver, ...opts } = options || ({} as DebounceOptions & { resolver?: T });
 
-		const memo = _memoize(function() {
+		const memo = _memoize(function () {
 			return debounce(fn, wait, opts);
 		}, resolver);
 
-		return function(this: any, ...args: []) {
+		return function (this: any, ...args: []) {
 			return memo.apply(this, args).apply(this, args);
 		} as T;
 	}
@@ -206,7 +209,7 @@ export namespace Functions {
 		let context: any;
 
 		const debounced = debounce<T>(
-			function() {
+			function () {
 				const data = merged;
 				merged = undefined;
 
@@ -222,7 +225,7 @@ export namespace Functions {
 			options
 		);
 
-		return function(this: any, current: any) {
+		return function (this: any, current: any) {
 			context = this;
 			merged = merger.apply(context, [merged, current]);
 			return debounced();
@@ -397,7 +400,8 @@ export namespace Functions {
 		tryCount: number = 5,
 		sleepIntervalInMilliseconds: number = 250
 	): Promise<{ success: boolean; count: number }> {
-		for (var i = 1; i < tryCount + 1; i++) {
+		let i: number;
+		for (i = 1; i < tryCount + 1; i++) {
 			if (await fn()) {
 				return { success: true, count: i };
 			}

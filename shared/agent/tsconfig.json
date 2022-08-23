@@ -5,6 +5,7 @@
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"forceConsistentCasingInFileNames": true,
+		"incremental": true,
 		"lib": ["es2017", "es2018.asynciterable"],
 		"module": "esnext",
 		"moduleResolution": "node",
@@ -21,6 +22,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
+		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false,
 		"resolveJsonModule": true
 	},

@@ -46,9 +46,9 @@ To format the code as you make changes you can install the [Prettier - Code form
 
 ### Linting
 
-We use [tslint](https://palantir.github.io/tslint/) for linting our code. You can run tslint across the code by calling `npm run lint` from a terminal. Warnings from tslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
+We use [eslint](https://eslint.org/) for linting our code. You can run eslint across the code by calling `npm run verify:lint` from a terminal. Warnings from eslint show up in the `Errors and Warnings` quick box and you can navigate to them from inside VS Code.
 
-To lint the code as you make changes you can install the [TSLint](https://marketplace.visualstudio.com/items/eg2.tslint) extension.
+To lint the code as you make changes you can install the [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) extension.
 
 ### Testing
 

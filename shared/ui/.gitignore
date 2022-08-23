@@ -4,3 +4,4 @@ protocols
 .DS_Store
 *~
 coverage
+.tsbuildinfo

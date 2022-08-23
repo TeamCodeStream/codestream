@@ -20,6 +20,9 @@ const copy = copyPlugin({
 (async function() {
 	const args = processArgs();
 	createSymlinks(__dirname, args);
+	if (args.onlySymlinks) {
+		return;
+	}
 	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(true, args, [copy]),
 		entryPoints: [

@@ -72,6 +72,9 @@ async function extensionBuild(args: Args) {
 (async function() {
 	const args = processArgs();
 	createSymlinks(__dirname, args);
+	if (args.onlySymlinks) {
+		return;
+	}
 	console.info("Starting webBuild");
 	await webBuild(args);
 	console.info("Starting extensionBuild");

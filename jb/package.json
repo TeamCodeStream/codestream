@@ -11,7 +11,7 @@
 	},
 	"scripts": {
 		"build": "npm run agent:build && tsx esbuild.ts --prod",
-		"bundle": "npm install --no-save && npm run agent:bundle && npm run agent:pkg && tsx esbuild.ts --prod",
+		"bundle": "npm install --no-save && npm run webview:verify && npm run agent:bundle && npm run agent:pkg && tsx esbuild.ts --prod",
 		"bundle:mac": "npm run agent:bundle && npm run agent:pkg:mac && tsx esbuild.ts --prod",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"clean:ci": "git clean -xdf -e licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
@@ -26,6 +26,7 @@
 		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch && popd",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
+		"webview:verify": "tsx esbuild.ts --only-symlinks && pushd \"../shared/ui\" && npm run verify:compile && popd",
 		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd"
 	},
 	"dependencies": {

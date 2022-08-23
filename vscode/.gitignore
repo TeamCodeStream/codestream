@@ -14,3 +14,4 @@ codestream-*.info
 *~
 stats*.json
 stats-*.json
+.tsbuildinfo

@@ -168,7 +168,7 @@ export const MethodLevelTelemetryPanel = () => {
 					<EntityAssociator
 						title="Method-Level Telemetry"
 						label="Associate this repository with an entity from New Relic so that you can see golden signals right in your editor, and errors in the Observability section."
-						onSuccess={async e => {
+						onSuccess={async (e) => {
 							HostApi.instance.track("MLT Repo Association", {
 								"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""
 							});
@@ -188,7 +188,7 @@ export const MethodLevelTelemetryPanel = () => {
 								name="dontShowGoldenSignalsInEditor"
 								type="checkbox"
 								checked={!showGoldenSignalsInEditor}
-								onClick={e => {
+								onClick={(e) => {
 									HostApi.instance.send(UpdateConfigurationRequestType, {
 										name: "showGoldenSignalsInEditor",
 										value: !showGoldenSignalsInEditor
@@ -206,7 +206,7 @@ export const MethodLevelTelemetryPanel = () => {
 		);
 	}
 
-	const renderEntityDropdownSubtext = item => {
+	const renderEntityDropdownSubtext = (item) => {
 		let subtext;
 		if (item.accountName && item.accountName.length > 25) {
 			subtext = item.accountName.substr(0, 25) + "...";
@@ -271,14 +271,16 @@ export const MethodLevelTelemetryPanel = () => {
 										<EntityDropdownContainer>
 											<b>Entity: </b>
 											<DropdownButton
-												items={([
-													{
-														type: "search",
-														placeholder: "Search...",
-														action: "search",
-														key: "search"
-													}
-												] as any).concat(
+												items={(
+													[
+														{
+															type: "search",
+															placeholder: "Search...",
+															action: "search",
+															key: "search"
+														}
+													] as any
+												).concat(
 													telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
 														return {
 															label: item.entityName,
@@ -288,9 +290,10 @@ export const MethodLevelTelemetryPanel = () => {
 															checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,
 															action: async () => {
 																const repoId = derivedState.currentMethodLevelTelemetry?.repo?.id;
-																const newPreferences = derivedState.observabilityRepoEntities.filter(
-																	_ => _.repoId !== repoId
-																);
+																const newPreferences =
+																	derivedState.observabilityRepoEntities.filter(
+																		(_) => _.repoId !== repoId
+																	);
 																if (repoId) {
 																	newPreferences.push({
 																		repoId: repoId,
@@ -333,7 +336,7 @@ export const MethodLevelTelemetryPanel = () => {
 												>
 													<ApmServiceTitle>
 														<Link
-															onClick={e => {
+															onClick={(e) => {
 																e.preventDefault();
 																HostApi.instance.track("Open Service Summary on NR", {
 																	Section: "Code-level Metrics"
@@ -388,7 +391,7 @@ export const MethodLevelTelemetryPanel = () => {
 																<XAxis
 																	dataKey="endDate"
 																	tick={{ fontSize: 12 }}
-																	tickFormatter={label =>
+																	tickFormatter={(label) =>
 																		new Date(label).toLocaleTimeString(undefined, {
 																			hour: "2-digit",
 																			minute: "2-digit"

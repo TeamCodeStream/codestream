@@ -11,17 +11,20 @@ export interface Args {
 	watchMode: boolean;
 	reset: boolean;
 	mode: Mode;
+	onlySymlinks: boolean;
 }
 
 export function processArgs(): Args {
 	const watchMode = process.argv.findIndex(arg => arg === "--watch") !== -1;
 	const reset = process.argv.findIndex(arg => arg === "--reset") !== -1;
+	const onlySymlinks = process.argv.findIndex(arg => arg === "--only-symlinks") !== -1;
 	const mode =
 		process.argv.findIndex(arg => arg === "--prod") !== -1 ? "production" : "development";
 	const args: Args = {
 		watchMode,
 		reset,
-		mode
+		mode,
+		onlySymlinks
 	};
 	console.info(JSON.stringify(args));
 	return args;

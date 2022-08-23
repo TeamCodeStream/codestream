@@ -6,6 +6,7 @@
 		"baseUrl": ".",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
+		"incremental": true,
 		"jsx": "react",
 		"lib": ["es2017", "dom", "dom.iterable"],
 		"module": "esnext",
@@ -22,8 +23,9 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "es2017",
+		"tsBuildInfoFile": ".tsbuildinfo",
 		"types": ["styled-components", "jest"],
-		"useUnknownInCatchVariables": false,
+		"useUnknownInCatchVariables": false
 	},
 	"exclude": ["dist", "node_modules", "coverage"]
 }

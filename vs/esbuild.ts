@@ -21,9 +21,12 @@ const copy = copyPlugin({
 	]
 });
 
-(async function() {
+(async function () {
 	const args = processArgs();
 	createSymlinks(__dirname, args);
+	if (args.onlySymlinks) {
+		return;
+	}
 	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(true, args, [copy]),
 		entryPoints: [
@@ -31,7 +34,7 @@ const copy = copyPlugin({
 			path.resolve(context, "styles", "webview.less")
 		],
 		outdir: target,
-        target: "chrome69"
+		target: "chrome69"
 	};
 	await build(buildOptions);
 })();

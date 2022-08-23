@@ -10,12 +10,6 @@
 		"url": ""
 	},
 	"scripts": {
-		"build": "tsx esbuild.ts",
-		"bundle": "npm install --no-save && npm run agent:bundle && tsx esbuild.ts --prod",
-		"bundle:ci": "npm run clean:ci && npm run bundle",
-		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
-		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
-		"watch": "tsx esbuild.ts --watch",
 		"agent:build": "pushd \"../shared/agent\" && npm run build && popd",
 		"agent:bundle": "pushd \"../shared/agent\" && npm run bundle && popd",
 		"agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
@@ -23,8 +17,17 @@
 		"agent:rebuild": "pushd \"../shared/agent\" && npm run rebuild && popd",
 		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch && popd",
+		"build": "tsx esbuild.ts",
+		"bundle:ci": "npm run clean:ci && npm run bundle",
+		"bundle": "npm install --no-save && npm run webview:verify && npm run agent:bundle && tsx esbuild.ts --prod",
+		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd",
+		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
+		"verify:lint": "npx eslint  src/CodeStream.VisualStudio.Shared/UI/WebViews/**/*.ts *.js *.ts",
+		"verify:prettier": "prettier --check src/CodeStream.VisualStudio.Shared/UI/WebViews/** docs/** *.ts *.js *.md package.json .prettierrc",
+		"watch": "tsx esbuild.ts --watch",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd"
+		"webview:verify": "tsx esbuild.ts --only-symlinks && pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
 	"dependencies": {
 		"core-js": "2.6.9"
@@ -46,15 +49,15 @@
 		"@types/node": "10.1.4",
 		"@types/node-fetch": "2.6.1",
 		"@types/uuid": "3.4.5",
+		"@typescript-eslint/eslint-plugin": "5.35.1",
+		"@typescript-eslint/parser": "5.35.1",
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "^9.0.1",
-		"css-loader": "6.5.1",
 		"esbuild": "^0.14.49",
+		"eslint": "8.22.0",
 		"less": "4.1.2",
-		"prettier": "1.19.1",
-		"tslint": "6.1.3",
-		"tslint-loader": "3.5.4",
+		"prettier": "2.7.1",
 		"tsx": "^3.8.0",
 		"typescript": "4.5.4"
 	}

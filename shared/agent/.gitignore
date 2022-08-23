@@ -8,3 +8,4 @@ npm-debug.log
 src/protocol/*.js
 stats.json
 build
+.tsbuildinfo
