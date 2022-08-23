@@ -17,13 +17,16 @@ interface Props {
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const [relatedEntities, setRelatedEntities] = useState<any | undefined>(undefined);
+	const [loadingRelatedEntities, setLoadingRelatedEntities] = useState<boolean>(true);
 
 	useDidMount(() => {
 		(async () => {
+			setLoadingRelatedEntities(true);
 			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
 				entityGuid: props.entityGuid
 			});
 			setRelatedEntities(response);
+			setLoadingRelatedEntities(false);
 		})();
 	});
 
@@ -49,10 +52,12 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}
 						relatedEntities={relatedEntities.CALLS}
+						loadingRelatedEntities={loadingRelatedEntities}
 					/>
 					<ObservabilityRelatedCalledBy
 						currentRepoId={props.currentRepoId}
 						relatedEntities={relatedEntities.CONNECTS_TO}
+						loadingRelatedEntities={loadingRelatedEntities}
 					/>
 				</>
 			)}

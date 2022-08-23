@@ -48,6 +48,9 @@ import {
 	GetNewRelicRelatedEntitiesRequest,
 	GetNewRelicRelatedEntitiesRequestType,
 	GetNewRelicRelatedEntitiesResponse,
+	GetNewRelicUrlRequest,
+	GetNewRelicUrlRequestType,
+	GetNewRelicUrlResponse,
 	GetObservabilityEntitiesRequest,
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityEntitiesResponse,
@@ -1133,6 +1136,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.error(e, "getRelatedEntities");
 			throw e;
 		}
+	}
+
+	@lspHandler(GetNewRelicUrlRequestType)
+	@log()
+	async getNewRelicUrl(request: GetNewRelicUrlRequest): Promise<GetNewRelicUrlResponse> {
+		return `${this.productUrl}/redirect/entity/${request.entityGuid}`;
 	}
 
 	@lspHandler(GetNewRelicErrorGroupRequestType)

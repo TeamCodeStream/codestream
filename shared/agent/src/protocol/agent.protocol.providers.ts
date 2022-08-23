@@ -867,6 +867,9 @@ export interface GetNewRelicErrorGroupRequest {
 export interface GetNewRelicRelatedEntitiesRequest {
 	entityGuid: string;
 }
+export interface GetNewRelicUrlRequest {
+	entityGuid: string;
+}
 
 export interface NewRelicUser {
 	email?: string;
@@ -950,6 +953,8 @@ export interface GetNewRelicErrorGroupResponse {
 
 export interface GetNewRelicRelatedEntitiesResponse {}
 
+export interface GetNewRelicUrlResponse {}
+
 export const GetNewRelicErrorGroupRequestType = new RequestType<
 	GetNewRelicErrorGroupRequest,
 	GetNewRelicErrorGroupResponse,
@@ -963,6 +968,13 @@ export const GetNewRelicRelatedEntitiesRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/relatedEntities");
+
+export const GetNewRelicUrlRequestType = new RequestType<
+	GetNewRelicUrlRequest,
+	GetNewRelicUrlResponse,
+	void,
+	void
+>("codestream/newrelic/url");
 
 export interface GetNewRelicAssigneesRequest {}
 export interface GetNewRelicAssigneesResponse {

@@ -5,10 +5,12 @@ import Icon from "./Icon";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { any } from "prop-types";
+import { ErrorRow } from "./Observability";
 
 interface Props {
 	relatedEntities: any;
 	currentRepoId: string;
+	loadingRelatedEntities: boolean;
 }
 
 // Note: This could potentially be depreciated and abstracted into ObservabilityRelatedCalls.tsx
@@ -16,11 +18,11 @@ interface Props {
 //       they could easily be merged into one.
 export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const { relatedEntities } = props;
+	const { relatedEntities, loadingRelatedEntities } = props;
 
 	// @TODO change 2 to 10
-	const relatedEntitiesSliced = relatedEntities.slice(0, 2);
-	const relatedEntitiesForSearch = relatedEntities.slice(2);
+	const relatedEntitiesSliced = relatedEntities?.slice(0, 2);
+	const relatedEntitiesForSearch = relatedEntities?.slice(2);
 
 	return (
 		<>
@@ -43,6 +45,9 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 						);
 					})}
 				</>
+			)}
+			{!loadingRelatedEntities && expanded && _isEmpty(relatedEntitiesSliced) && (
+				<ErrorRow customPadding={"0 10px 0 50px"} title={"No related services"}></ErrorRow>
 			)}
 			{!_isEmpty(relatedEntitiesForSearch) && (
 				<ObservabilityRelatedSearch
