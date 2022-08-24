@@ -10,18 +10,22 @@ import { any } from "prop-types";
 import { GetServiceLevelTelemetryRequestType } from "@codestream/protocols/agent";
 import styled from "styled-components";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
-
+import { GoldenMetricsResult, RelatedEntitiesByType } from "@codestream/protocols/agent";
 interface Props {
-	searchItems: any;
+	searchItems: RelatedEntitiesByType;
 	currentRepoId: string;
+}
+interface SelectedOption {
+	value: string;
+	label: string;
 }
 
 export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
-	const [goldenMetrics, setGoldenMetrics] = useState<any | undefined>(undefined);
-	const [selectedOption, setSelectedOption] = useState<any>();
-	const [selectOptions, setSelectOptions] = useState<any>([{ value: "", label: "" }]);
+	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
+	const [selectedOption, setSelectedOption] = useState<SelectedOption | undefined>(undefined);
+	const [selectOptions, setSelectOptions] = useState<SelectedOption[]>([]);
 	const { searchItems } = props;
 
 	const SelectContainer = styled.div`
@@ -70,14 +74,16 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 					label: item?.name
 				};
 			});
-			setSelectOptions(_selectOptions);
+			if (_selectOptions) {
+				setSelectOptions(_selectOptions);
+			}
 		}
 	}, [searchItems, expanded]);
 
 	useEffect(() => {
 		if (!_isEmpty(selectedOption)) {
 			setLoadingGoldenMetrics(true);
-			fetchGoldenMetrics(selectedOption.value);
+			fetchGoldenMetrics(selectedOption?.value);
 		}
 	}, [selectedOption]);
 
@@ -98,7 +104,7 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const handleChange = option => {
 		setSelectedOption(option);
 		if (!option) {
-			setGoldenMetrics(undefined);
+			setGoldenMetrics([]);
 		}
 	};
 

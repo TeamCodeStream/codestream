@@ -963,9 +963,14 @@ export interface GetNewRelicErrorGroupResponse {
 	};
 }
 
-export interface GetNewRelicRelatedEntitiesResponse {}
+export interface GetNewRelicRelatedEntitiesResponse {
+	CALLS?: RelatedEntityByType;
+	CONNECTS_TO?: RelatedEntityByType;
+}
 
-export interface GetNewRelicUrlResponse {}
+export interface GetNewRelicUrlResponse {
+	newRelicUrl: string;
+}
 
 export const GetNewRelicErrorGroupRequestType = new RequestType<
 	GetNewRelicErrorGroupRequest,
@@ -1364,9 +1369,21 @@ export interface RelatedEntity {
 	target: {
 		entity: Entity;
 	};
-	type: "BUILT_FROM";
+	type: string;
 }
 
+export interface RelatedEntityByType {
+	alertSeverity: string;
+	guid: string;
+	name: string;
+	type: string;
+	domain: string;
+	accountName?: string;
+}
+
+export interface RelatedEntitiesByType extends Array<RelatedEntityByType> {}
+
+export interface RelatedEntities extends Array<RelatedEntity> {}
 export interface EntitySearchResponse {
 	actor: {
 		entitySearch: {

@@ -7,7 +7,7 @@ import { useDidMount } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
-import { any } from "prop-types";
+import { GetNewRelicRelatedEntitiesResponse } from "@codestream/protocols/agent";
 
 interface Props {
 	currentRepoId: string;
@@ -16,7 +16,7 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const [relatedEntities, setRelatedEntities] = useState<any | undefined>(undefined);
+	const [relatedEntities, setRelatedEntities] = useState<GetNewRelicRelatedEntitiesResponse>([]);
 	const [loadingRelatedEntities, setLoadingRelatedEntities] = useState<boolean>(true);
 
 	useDidMount(() => {
@@ -25,7 +25,9 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
 				entityGuid: props.entityGuid
 			});
-			setRelatedEntities(response);
+			if (response) {
+				setRelatedEntities(response);
+			}
 			setLoadingRelatedEntities(false);
 		})();
 	});

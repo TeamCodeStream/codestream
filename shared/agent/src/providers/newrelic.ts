@@ -1115,7 +1115,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
-				const _results = response.actor.entity.relatedEntities.results.map((_: any) => {
+				const _results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
 					const _type = _.type;
 					let _entity;
 					_type === "CALLS" ? (_entity = _.source.entity) : (_entity = _.target.entity);
@@ -1125,7 +1125,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						name: _entity.name,
 						type: _.type,
 						domain: _entity.domain,
-						accountName: _entity.account.name
+						accountName: _entity?.account?.name
 					};
 				});
 				return _groupBy(_results, _ => _.type);
@@ -1141,7 +1141,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	@lspHandler(GetNewRelicUrlRequestType)
 	@log()
 	async getNewRelicUrl(request: GetNewRelicUrlRequest): Promise<GetNewRelicUrlResponse> {
-		return `${this.productUrl}/redirect/entity/${request.entityGuid}`;
+		return { newRelicUrl: `${this.productUrl}/redirect/entity/${request.entityGuid}` };
 	}
 
 	@lspHandler(GetNewRelicErrorGroupRequestType)

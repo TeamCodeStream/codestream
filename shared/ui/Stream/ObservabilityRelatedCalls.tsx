@@ -7,11 +7,11 @@ import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/age
 import { HostApi } from "..";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
-import { any } from "prop-types";
 import { ErrorRow } from "./Observability";
+import { RelatedEntitiesByType } from "@codestream/protocols/agent";
 
 interface Props {
-	relatedEntities: any;
+	relatedEntities: RelatedEntitiesByType;
 	currentRepoId: string;
 	loadingRelatedEntities: boolean;
 }

@@ -4,11 +4,10 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
-import { any } from "prop-types";
 import { ErrorRow } from "./Observability";
-
+import { RelatedEntities } from "../protocols/agent/agent.protocol.providers";
 interface Props {
-	relatedEntities: any;
+	relatedEntities: RelatedEntities;
 	currentRepoId: string;
 	loadingRelatedEntities: boolean;
 }

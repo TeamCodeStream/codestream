@@ -1,6 +1,5 @@
 import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
-import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import { HostApi } from "..";
@@ -14,17 +13,18 @@ import {
 import { useDidMount, useInterval } from "../utilities/hooks";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import cx from "classnames";
+import { GoldenMetricsResult, RelatedEntityByType } from "@codestream/protocols/agent";
 
 interface Props {
-	relatedEntity: any;
+	relatedEntity: RelatedEntityByType;
 	currentRepoId: string;
 }
 
 export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(true);
-	const [goldenMetrics, setGoldenMetrics] = useState<any | undefined>(undefined);
-	const [newRelicUrl, setNewRelicUrl] = useState<any>("");
+	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
+	const [newRelicUrl, setNewRelicUrl] = useState<string>("");
 
 	const { relatedEntity } = props;
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[relatedEntity?.alertSeverity];
@@ -76,7 +76,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				entityGuid
 			});
 			if (response) {
-				setNewRelicUrl(response);
+				setNewRelicUrl(response.newRelicUrl);
 			}
 			setLoadingGoldenMetrics(false);
 		}
