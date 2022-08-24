@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { HostApi } from "..";
-import { useDidMount } from "../utilities/hooks";
+import { useRequestType, useDidMount } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
@@ -16,21 +16,13 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const [relatedEntities, setRelatedEntities] = useState<GetNewRelicRelatedEntitiesResponse>();
-	const [loadingRelatedEntities, setLoadingRelatedEntities] = useState<boolean>(true);
-
-	useDidMount(() => {
-		(async () => {
-			setLoadingRelatedEntities(true);
-			const response = await HostApi.instance.send(GetNewRelicRelatedEntitiesRequestType, {
-				entityGuid: props.entityGuid
-			});
-			if (response) {
-				setRelatedEntities(response);
-			}
-			setLoadingRelatedEntities(false);
-		})();
-	});
+	const {
+		loading,
+		data
+	}: {
+		loading: boolean;
+		data: GetNewRelicRelatedEntitiesResponse;
+	} = useRequestType(GetNewRelicRelatedEntitiesRequestType, { entityGuid: props.entityGuid });
 
 	return (
 		<>
@@ -45,7 +37,7 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Related Services</span>
 			</Row>
-			{expanded && relatedEntities && (
+			{expanded && data && (
 				<>
 					{/* 
 						Could possibly merge these to components together, 
@@ -53,13 +45,13 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 					*/}
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}
-						relatedEntities={relatedEntities?.CALLS || []}
-						loadingRelatedEntities={loadingRelatedEntities}
+						relatedEntities={data?.CALLS || []}
+						loadingRelatedEntities={loading}
 					/>
 					<ObservabilityRelatedCalledBy
 						currentRepoId={props.currentRepoId}
-						relatedEntities={relatedEntities?.CONNECTS_TO || []}
-						loadingRelatedEntities={loadingRelatedEntities}
+						relatedEntities={data?.CONNECTS_TO || []}
+						loadingRelatedEntities={loading}
 					/>
 				</>
 			)}
