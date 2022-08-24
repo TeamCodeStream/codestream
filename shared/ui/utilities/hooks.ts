@@ -8,6 +8,7 @@ import {
 	useMemo
 } from "react";
 import { noop } from "../utils";
+import { HostApi } from "..";
 
 type Fn = () => void;
 
@@ -47,6 +48,30 @@ export function useInterval(callback: Fn, delay = 1000) {
 		let id = setInterval(tick, delay);
 		return () => clearInterval(id);
 	}, [delay]);
+}
+
+/**
+ * @param requestType
+ * @param payload
+ * @param dependencies
+ * @returns [loading, data]
+ */
+export function useRequestType(requestType, payload = {}, dependencies = []) {
+	const [loading, setLoading] = useState(true);
+	const [data, setData] = useState(null);
+
+	const fetch = async () => {
+		setLoading(true);
+		const response: any = await HostApi.instance.send(requestType, payload);
+		setData(response);
+		setLoading(false);
+	};
+
+	useEffect(() => {
+		fetch();
+	}, dependencies);
+
+	return { loading, data } as any;
 }
 
 export function useTimeout(callback: Fn, delay: number) {

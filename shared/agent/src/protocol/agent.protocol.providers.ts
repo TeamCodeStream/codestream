@@ -964,8 +964,8 @@ export interface GetNewRelicErrorGroupResponse {
 }
 
 export interface GetNewRelicRelatedEntitiesResponse {
-	CALLS?: RelatedEntityByType;
-	CONNECTS_TO?: RelatedEntityByType;
+	CALLS?: RelatedEntitiesByType;
+	CONNECTS_TO?: RelatedEntitiesByType;
 }
 
 export interface GetNewRelicUrlResponse {

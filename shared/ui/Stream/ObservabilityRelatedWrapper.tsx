@@ -16,7 +16,7 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const [relatedEntities, setRelatedEntities] = useState<GetNewRelicRelatedEntitiesResponse>([]);
+	const [relatedEntities, setRelatedEntities] = useState<GetNewRelicRelatedEntitiesResponse>();
 	const [loadingRelatedEntities, setLoadingRelatedEntities] = useState<boolean>(true);
 
 	useDidMount(() => {
@@ -53,12 +53,12 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 					*/}
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}
-						relatedEntities={relatedEntities.CALLS}
+						relatedEntities={relatedEntities?.CALLS || []}
 						loadingRelatedEntities={loadingRelatedEntities}
 					/>
 					<ObservabilityRelatedCalledBy
 						currentRepoId={props.currentRepoId}
-						relatedEntities={relatedEntities.CONNECTS_TO}
+						relatedEntities={relatedEntities?.CONNECTS_TO || []}
 						loadingRelatedEntities={loadingRelatedEntities}
 					/>
 				</>

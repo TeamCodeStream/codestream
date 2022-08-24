@@ -5,9 +5,9 @@ import Icon from "./Icon";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ErrorRow } from "./Observability";
-import { RelatedEntities } from "../protocols/agent/agent.protocol.providers";
+import { RelatedEntitiesByType } from "@codestream/protocols/agent";
 interface Props {
-	relatedEntities: RelatedEntities;
+	relatedEntities: RelatedEntitiesByType;
 	currentRepoId: string;
 	loadingRelatedEntities: boolean;
 }
