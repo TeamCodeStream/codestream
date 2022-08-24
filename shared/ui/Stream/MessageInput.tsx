@@ -965,6 +965,11 @@ export class MessageInput extends React.Component<Props, State> {
 	};
 
 	tagsMenuAction = action => {
+		// the close button returns an event object, everything else returns a string or null
+		if (!action || typeof action === "object") {
+			this.setState({ tagsOpen: false, editingTag: null });
+			return;
+		}
 		switch (action) {
 			case "search":
 			case "noop":
@@ -975,7 +980,6 @@ export class MessageInput extends React.Component<Props, State> {
 			default:
 				if (this.props.toggleTag) this.props.toggleTag(action);
 		}
-		if (!action) this.setState({ tagsOpen: false, editingTag: null });
 	};
 
 	buildTagMenu = () => {
