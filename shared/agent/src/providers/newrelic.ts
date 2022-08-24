@@ -1492,7 +1492,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				request.entityId || (await this.fetchErrorGroupById(request.errorGroupGuid!))?.entityGuid;
 			if (entityId) {
 				const entityRelationshipUserDefinedCreateOrReplaceResponse = await this.mutate<{
-					errors?: { message: string }[];
+					entityRelationshipUserDefinedCreateOrReplace: {
+						errors?: { message: string }[];
+					};
 				}>(
 					`mutation EntityRelationshipUserDefinedCreateOrReplace($sourceEntityGuid:EntityGuid!, $targetEntityGuid:EntityGuid!) {
 						entityRelationshipUserDefinedCreateOrReplace(sourceEntityGuid: $sourceEntityGuid, targetEntityGuid: $targetEntityGuid, type: BUILT_FROM) {
@@ -1514,8 +1516,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					response: entityRelationshipUserDefinedCreateOrReplaceResponse
 				});
 
-				if (entityRelationshipUserDefinedCreateOrReplaceResponse?.errors?.length) {
-					const createOrReplaceError = entityRelationshipUserDefinedCreateOrReplaceResponse.errors
+				if (
+					entityRelationshipUserDefinedCreateOrReplaceResponse
+						?.entityRelationshipUserDefinedCreateOrReplace?.errors?.length
+				) {
+					const createOrReplaceError = entityRelationshipUserDefinedCreateOrReplaceResponse.entityRelationshipUserDefinedCreateOrReplace?.errors
 						.map(_ => _.message)
 						.join("\n");
 					ContextLogger.warn("entityRelationshipUserDefinedCreateOrReplace failure", {
@@ -1531,11 +1536,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							data: {
 								id: request.errorGroupGuid,
 								entityGuid: entityId,
-								repositoryEntityGuid:
-									response.referenceEntityCreateOrUpdateRepository &&
-									response.referenceEntityCreateOrUpdateRepository.created
-										? response.referenceEntityCreateOrUpdateRepository.created[0]
-										: undefined,
+								repositoryEntityGuid: response?.referenceEntityCreateOrUpdateRepository?.created
+									?.length
+									? response.referenceEntityCreateOrUpdateRepository.created[0]
+									: response?.referenceEntityCreateOrUpdateRepository?.updated?.length
+									? response.referenceEntityCreateOrUpdateRepository.updated[0]
+									: undefined,
 								repo: {
 									accountId: accountId,
 									name: request.name,
