@@ -224,6 +224,14 @@ export const ALERT_SEVERITY_COLORS = {
 	// if not connected, we're unknown
 	UNKNOWN: "transparent"
 };
+export const ALERT_SEVERITY_SORTING_ORDER: string[] = [
+	"",
+	"CRITICAL",
+	"NOT_ALERTING",
+	"NOT_CONFIGURED",
+	"WARNING",
+	"UNKNOWN"
+];
 
 /**
  * States are from NR

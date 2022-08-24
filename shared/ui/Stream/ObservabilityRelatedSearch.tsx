@@ -63,6 +63,14 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 		indicatorsContainer: (provided, state) => ({
 			...provided,
 			height: "25px"
+		}),
+		clearIndicator: (provided, state) => ({
+			...provided,
+			marginTop: "3px"
+		}),
+		dropdownIndicator: (provided, state) => ({
+			...provided,
+			marginTop: "3px"
 		})
 	};
 

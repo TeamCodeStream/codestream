@@ -47,7 +47,7 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 			{!loadingRelatedEntities && expanded && _isEmpty(relatedEntitiesSliced) && (
 				<ErrorRow customPadding={"0 10px 0 50px"} title={"No related services"}></ErrorRow>
 			)}
-			{!_isEmpty(relatedEntitiesForSearch) && (
+			{!loadingRelatedEntities && expanded && !_isEmpty(relatedEntitiesForSearch) && (
 				<ObservabilityRelatedSearch
 					currentRepoId={props.currentRepoId}
 					searchItems={relatedEntitiesForSearch}
