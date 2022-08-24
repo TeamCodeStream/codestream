@@ -73,6 +73,14 @@ interface BitbucketAuthor {
 	};
 }
 
+// interface ThirdPartyPullRequestComments extends Array<BitbucketPullRequestComment> {
+// 	file: string;
+// 	bodyHtml: string;
+// 	bodyText: string;
+// 	state: string;
+// }
+
+interface ThirdPartyPullRequestComments extends Array<BitbucketPullRequestComment> {}
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -90,6 +98,10 @@ interface BitbucketPullRequestComment {
 		path: string;
 	};
 	type: string;
+	file: string;
+	bodyHtml: string;
+	bodyText: string;
+	state: string;
 }
 interface BitbucketPullRequestCommit {
 	abbreviatedOid: string;
@@ -478,9 +490,10 @@ export class BitbucketProvider
 								..._,
 								file: _.inline?.path,
 								bodyHtml: _.content?.html,
-								bodyText: _.content?.raw
+								bodyText: _.content?.raw,
+								state: _.type
 							};
-						}) as any, // TODO add new interface: ThirdPartyPullRequestComments inside that ThirdPartyPullRequestComment (file, bodyHtml, bodyText, state, etc. (things the UI needs))
+						}) as ThirdPartyPullRequestComments, // TODO add new interface: ThirdPartyPullRequestComments inside that ThirdPartyPullRequestComment (file, bodyHtml, bodyText, state, etc. (things the UI needs))
 					number: pr.body.id,
 					idComputed: JSON.stringify({
 						id: pr.body.id,
@@ -495,7 +508,7 @@ export class BitbucketProvider
 					} as any,
 					state: pr.body.state
 				}
-			} as any // TODO fix this any
+			} as any // TODO fix this any (repository interface)
 		};
 
 		// TODO fix this any
@@ -964,6 +977,63 @@ export class BitbucketProvider
 			directives: directives
 		};
 	}
+
+	//TODO: Change for bitbucket!
+	/*
+	async createCommentReply(request: {
+		pullRequestId: string;
+		parentId: string;
+		commentId: string;
+		text: string;
+	}): Promise<Directives> {
+		// https://docs.github.com/en/rest/reference/pulls#create-a-reply-for-a-review-comment
+		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
+		const data = await this.restPost<any, any>(
+			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments/${request.commentId}/replies`,
+			{
+				body: request.text
+			}
+		);
+		// GH doesn't provide a way to add comment replies via the graphQL api
+		// see https://stackoverflow.com/questions/55708085/is-there-a-way-to-reply-to-pull-request-review-comments-with-the-github-api-v4
+		// below, we're crafting a response that looks like what graphQL would give us
+		const body = data.body;
+
+		return this.handleResponse(request.pullRequestId, {
+			directives: [
+				{
+					type: "updatePullRequest",
+					data: {
+						updatedAt: Dates.toUtcIsoNow()
+					}
+				},
+				{
+					type: "addLegacyCommentReply",
+					data: {
+						// this isn't normally part of the response, but it's
+						// the databaseId of the parent comment
+						_inReplyToId: body.in_reply_to_id,
+						author: {
+							login: body.user.login,
+							avatarUrl: body.user.avatar_url
+						},
+						authorAssociation: body.author_association,
+						body: body.body,
+						bodyText: body.body,
+						createdAt: body.created_at,
+						id: body.node_id,
+						replyTo: {
+							id: body.node_id
+						},
+						reactionGroups: this._createReactionGroups(),
+						viewerCanUpdate: true,
+						viewerCanReact: true,
+						viewerCanDelete: true
+					}
+				}
+			]
+		});
+	} */
 
 	parseId(pullRequestId: string) {
 		const parsed = JSON.parse(pullRequestId);

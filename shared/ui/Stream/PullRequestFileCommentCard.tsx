@@ -409,7 +409,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 					) : (
 						<>
 							<PRThreadedCommentHeader>
-								<b>{(comment.author || GHOST).login}</b>
+								<b>{(comment.author || comment.user.display_name || GHOST).login}</b>
 								<Timestamp time={comment.createdAt} relative />
 								<PRActionIcons>
 									<PRAuthorBadges pr={pr} node={comment} isPending={review.state === "PENDING"} />
@@ -496,6 +496,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 												)}
 											</div>
 										</CodeBlockContainerIcons>
+										{/* if bitbucket doesn't have diffHunk, skip it - don't render*/}
 										{codeBlock()}
 									</div>
 								</>
