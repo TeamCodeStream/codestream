@@ -66,9 +66,11 @@ export function JiraCardControls(
 			if (!isValid) return;
 
 			// make sure to persist current selections if possible
-			const newCurrentProject = (data.currentProject
-				? response.boards.find(b => b.id === data.currentProject!.id)
-				: response.boards[0]) as JiraBoard;
+			const newCurrentProject = (
+				data.currentProject
+					? response.boards.find(b => b.id === data.currentProject!.id)
+					: response.boards[0]
+			) as JiraBoard;
 
 			const newCurrentIssueType = data.currentIssueType
 				? newCurrentProject.issueTypes.find(type => type === data.currentIssueType)
@@ -153,7 +155,12 @@ export function JiraCardControls(
 				return { label: user.displayName, value: user };
 			});
 		} catch (error) {
+			// NR-42018
+			if (error.message.endsWith("failed with message: Forbidden")) {
+				return [];
+			}
 			// TODO: Don't disconnect on any error - only in case auth tokens have expired
+			// Hard to reproduce might be "Unauthorized" for expired auth token
 			// TODO: needs to be communicated to the user
 			dispatch(disconnectProvider(props.provider.id, "Compose Modal"));
 			return [];

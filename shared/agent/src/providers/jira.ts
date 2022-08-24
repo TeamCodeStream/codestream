@@ -1,6 +1,7 @@
 "use strict";
 import { sortBy } from "lodash";
 import * as qs from "querystring";
+import { URLSearchParams } from "url";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
@@ -210,15 +211,15 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 
 					// For explanation on this commented out code, see the definition of the isCompatibleProject() method, below
 					/*
-					await Promise.all(
-						body.values.map(async project => {
-							const board = await this.isCompatibleProject(project);
-							if (board) {
-								jiraBoards.push(board);
-							}
-						})
-					);
-					*/
+                    await Promise.all(
+                        body.values.map(async project => {
+                            const board = await this.isCompatibleProject(project);
+                            if (board) {
+                                jiraBoards.push(board);
+                            }
+                        })
+                    );
+                    */
 
 					jiraBoards.push(...(await this.filterBoards(body.values)));
 
@@ -481,10 +482,10 @@ export class JiraProvider extends ThirdPartyIssueProviderBase<CSJiraProviderInfo
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		const { body } = await this.get<JiraUser[]>(
-			`/rest/api/2/user/assignable/search?${qs.stringify({
+			`/rest/api/2/user/assignable/search?${new URLSearchParams({
 				project: request.boardId,
-				maxResults: 1000
-			})}`
+				maxResults: "1000"
+			}).toString()}`
 		);
 		return { users: body.map(u => ({ ...u, id: u.accountId })) };
 	}
