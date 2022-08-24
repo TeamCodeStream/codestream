@@ -1108,18 +1108,6 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					placement="bottom"
 					delay={1}
 				/>
-				<Icon
-					name="checked-checkbox"
-					onClick={() => {
-						selectCard(undefined);
-						HostApi.instance.track("StartWork Form Opened", {
-							"Opened Via": "Ad-Hoc Button"
-						});
-					}}
-					title="Start ad-hoc work"
-					placement="bottom"
-					delay={1}
-				/>
 			</PaneHeader>
 			{props.paneState !== PaneState.Collapsed && (
 				<PaneBody key={"issuespane"}>
