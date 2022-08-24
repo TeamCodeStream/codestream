@@ -81,7 +81,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
-import { log, lspHandler, lspProvider } from "../system";
+import { Functions, log, lspHandler, lspProvider } from "../system";
 import { Strings } from "../system/string";
 import { generateMethodAverageDurationQuery } from "./newrelic/methodAverageDurationQuery";
 import { generateMethodErrorRateQuery } from "./newrelic/methodErrorRateQuery";
@@ -774,7 +774,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					// find the application entities
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
-							_.relatedEntities?.results?.filter(r => r.source?.entity?.type === "APPLICATION")
+							_?.relatedEntities?.results?.filter(r => r.source?.entity?.type === "APPLICATION")
 								.length
 					);
 					hasRepoAssociation = applicationAssociations?.length > 0;
@@ -1528,6 +1528,33 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					});
 					throw new Error(createOrReplaceError);
 				}
+
+				// after the getOrCreate of the repo entity and its association to the entity,
+				// query the entity to ensure the repo entity exists
+				// this is needed since right after this, a client can re-query to find
+				// entities based on the request.url
+				const fn = async () => {
+					try {
+						const result = await this.findRepositoryEntitiesByRepoRemotes([request.url]);
+						return !!result?.entities?.length;
+					} catch (error) {
+						ContextLogger.warn("findRepositoryEntitiesByRepoRemotesResult error", {
+							error: error
+						});
+						return false;
+					}
+				};
+				// max wait time is (1*1000)+(2*1000)+(3*1000)+(4*1000)+(5*1000) or 15 seconds
+				const findRepositoryEntitiesByRepoRemotesResult = await Functions.withExponentialRetryBackoff(
+					fn,
+					5,
+					1000
+				);
+				ContextLogger.log(
+					`findRepositoryEntitiesByRepoRemotesResult result=${JSON.stringify(
+						findRepositoryEntitiesByRepoRemotesResult
+					)}`
+				);
 
 				return {
 					directives: [

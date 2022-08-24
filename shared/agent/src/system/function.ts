@@ -383,6 +383,29 @@ export namespace Functions {
 		}
 	}
 
+	/**
+	 * withExponentialRetryBackoff allows to re-run a function N times with a sleep of sleepIntervalInMilliseconds
+	 *
+	 * @export
+	 * @param {(...args: any[]) => Promise<boolean>} fn
+	 * @param {number} [tryCount=5]
+	 * @param {number} [sleepIntervalInMilliseconds=250]
+	 * @return {*}  {Promise<{ success: boolean; count: number }>}
+	 */
+	export async function withExponentialRetryBackoff(
+		fn: (...args: any[]) => Promise<boolean>,
+		tryCount: number = 5,
+		sleepIntervalInMilliseconds: number = 250
+	): Promise<{ success: boolean; count: number }> {
+		for (var i = 1; i < tryCount + 1; i++) {
+			if (await fn()) {
+				return { success: true, count: i };
+			}
+			await new Promise(resolve => setTimeout(resolve, sleepIntervalInMilliseconds * i));
+		}
+		return { success: false, count: i };
+	}
+
 	export function safe<T>(fn: () => T | undefined): T | undefined {
 		try {
 			return fn();
