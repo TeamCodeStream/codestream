@@ -1115,10 +1115,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
-				const _results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
-					const _type = _.type;
-					let _entity;
-					_type === "CALLS" ? (_entity = _.source.entity) : (_entity = _.target.entity);
+				const results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
+					const _entity = _.target.entity;
 					return {
 						alertSeverity: _entity.alertSeverity,
 						guid: _entity.guid,
@@ -1128,7 +1126,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						accountName: _entity?.account?.name
 					};
 				});
-				return _groupBy(_results, _ => _.type);
+				return _groupBy(results, _ => _.type);
 			} else {
 				return {};
 			}
