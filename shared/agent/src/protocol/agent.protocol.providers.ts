@@ -516,6 +516,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 			};
 		};
 	};
+	comments?: any[]; //TODO: Fix this!
 	files: {
 		pageInfo: {
 			endCursor?: string;

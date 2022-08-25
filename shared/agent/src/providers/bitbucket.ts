@@ -54,11 +54,30 @@ interface BitbucketRepo {
 	full_name: string;
 	path: string;
 	owner: {
-		uuid: string;
-		username: string;
+		display_name: string;
+		links: {
+			self: {
+				href: string;
+			};
+			avatar: {
+				href: string;
+			};
+			html: {
+				href: string;
+			};
+		};
 		type: string;
+		uuid: string;
+		account_id: string;
+		nickname: string;
+		username: string;
 	};
 	has_issues: boolean;
+	mainbranch?: {
+		name?: string;
+		type?: string;
+	};
+	parent?: any;
 }
 
 interface BitbucketAuthor {
@@ -72,134 +91,118 @@ interface BitbucketAuthor {
 		};
 	};
 }
-// interface BitbucketFullRepoInfo {
-// 	type: string;
-// 	full_name: string;
-// 	links: {
-// 		self: {
-// 			href: string;
-// 		};
-// 		html: {
-// 			href: string;
-// 		};
-// 		avatar: {
-// 			href: string;
-// 		};
-// 		pullrequests: {
-// 			href: string;
-// 		};
-// 		commits: {
-// 			href: string;
-// 		};
-// 		forks: {
-// 			href: string;
-// 		};
-// 		watchers: {
-// 			href: string;
-// 		};
-// 		branches: {
-// 			href: string;
-// 		};
-// 		tags: {
-// 			href: string;
-// 		};
-// 		downloads: {
-// 			href: string;
-// 		};
-// 		source: {
-// 			href: string;
-// 		};
-// 		clone: [
-// 			{
-// 				name: string;
-// 				href: string;
-// 			},
-// 			{
-// 				name: string;
-// 				href: string;
-// 			}
-// 		];
-// 		hooks: {
-// 			href: string;
-// 		};
-// 	};
-// 	name: string;
-// 	slug: string;
-// 	description: string;
-// 	scm: string;
-// 	website: string;
-// 	owner: {
-// 		display_name: string;
-// 		links: {
-// 			self: {
-// 				href: string;
-// 			};
-// 			avatar: {
-// 				href: string;
-// 			};
-// 			html: {
-// 				href: string;
-// 			};
-// 		};
-// 		type: string;
-// 		uuid: string;
-// 		account_id: string;
-// 		nickname: string;
-// 	};
-// 	workspace: {
-// 		type: string;
-// 		uuid: string;
-// 		name: string;
-// 		slug: string;
-// 		links: {
-// 			avatar: {
-// 				href: string;
-// 			};
-// 			html: {
-// 				href: string;
-// 			};
-// 			self: {
-// 				href: string;
-// 			};
-// 		};
-// 	};
-// 	is_private: boolean;
-// 	project: {
-// 		type: string;
-// 		key: string;
-// 		uuid: string;
-// 		name: string;
-// 		links: {
-// 			self: {
-// 				href: string;
-// 			};
-// 			html: {
-// 				href: string;
-// 			};
-// 			avatar: {
-// 				href: string;
-// 			};
-// 		};
-// 	};
-// 	fork_policy: string;
-// 	created_on: Date;
-// 	updated_on: Date;
-// 	size: number;
-// 	language: string;
-// 	has_issues: boolean;
-// 	has_wiki: boolean;
-// 	uuid: string;
-// 	mainbranch: {
-// 		name: string;
-// 		type: string;
-// 	};
-// 	override_settings: {
-// 		default_merge_strategy: boolean;
-// 		branching_model: boolean;
-// 	};
-// }
+interface BitbucketRepoFull extends BitbucketRepo {
+	type: string;
+	full_name: string;
+	links: {
+		self: {
+			href: string;
+		};
+		html: {
+			href: string;
+		};
+		avatar: {
+			href: string;
+		};
+		pullrequests: {
+			href: string;
+		};
+		commits: {
+			href: string;
+		};
+		forks: {
+			href: string;
+		};
+		watchers: {
+			href: string;
+		};
+		branches: {
+			href: string;
+		};
+		tags: {
+			href: string;
+		};
+		downloads: {
+			href: string;
+		};
+		source: {
+			href: string;
+		};
+		clone: [
+			{
+				name: string;
+				href: string;
+			},
+			{
+				name: string;
+				href: string;
+			}
+		];
+		hooks: {
+			href: string;
+		};
+	};
+	/* The name of the repository */
+	name: string;
+	slug: string;
+	description: string;
+	scm: string;
+	website: string;
 
-interface ThirdPartyPullRequestComments extends Array<BitbucketPullRequestComment> {}
+	workspace: {
+		type: string;
+		uuid: string;
+		name: string;
+		slug: string;
+		links: {
+			avatar: {
+				href: string;
+			};
+			html: {
+				href: string;
+			};
+			self: {
+				href: string;
+			};
+		};
+	};
+	is_private: boolean;
+	project: {
+		type: string;
+		key: string;
+		uuid: string;
+		name: string;
+		links: {
+			self: {
+				href: string;
+			};
+			html: {
+				href: string;
+			};
+			avatar: {
+				href: string;
+			};
+		};
+	};
+	fork_policy: string;
+	created_on: Date;
+	updated_on: Date;
+	size: number;
+	language: string;
+	has_issues: boolean;
+	has_wiki: boolean;
+	uuid: string;
+	mainbranch: {
+		name: string;
+		type: string;
+	};
+	override_settings: {
+		default_merge_strategy: boolean;
+		branching_model: boolean;
+	};
+}
+
+export interface ThirdPartyPullRequestComments extends Array<BitbucketPullRequestComment> {}
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -278,15 +281,7 @@ interface BitbucketPullRequest {
 		commit: {
 			hash: string;
 		};
-		repository: {
-			name: string;
-			full_name: string;
-			links: {
-				html: {
-					href: string;
-				};
-			};
-		};
+		repository: BitbucketRepoFull;
 	};
 	summary: {
 		html: string;
@@ -624,12 +619,12 @@ export class BitbucketProvider
 					providerId: this.providerConfig.id,
 					repository: {
 						name: repoWithOwnerSplit[1],
-						repoWithOwner: repoWithOwner,
+						nameWithOwner: repoWithOwner,
 						url: pr.body.source?.repository?.links?.html?.href
-					} as any,
+					},
 					state: pr.body.state
-				}
-			} as any // TODO fix this any (repository interface)
+				} as any //TODO: make this work
+			}
 		};
 
 		// TODO fix this any
@@ -801,7 +796,7 @@ export class BitbucketProvider
 	async getRepoInfo(request: { remote: string }): Promise<ProviderGetRepoInfoResponse> {
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
-			const repoResponse = await this.get<BitBucketRepo>(`/repositories/${owner}/${name}`);
+			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${owner}/${name}`);
 			const pullRequestResponse = await this.get<BitbucketValues<BitbucketPullRequest[]>>(
 				`/repositories/${owner}/${name}/pullrequests?state=OPEN`
 			);
@@ -841,7 +836,7 @@ export class BitbucketProvider
 		try {
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
 
-			const repoResponse = await this.get<BitBucketRepo>(`/repositories/${owner}/${name}`);
+			const repoResponse = await this.get<BitbucketRepo>(`/repositories/${owner}/${name}`);
 
 			const parentOrSelfProject = repoResponse.body.parent
 				? repoResponse.body.parent
@@ -1160,7 +1155,7 @@ export class BitbucketProvider
 		});
 	} */
 
-	parseId(pullRequestId: string) {
+	parseId(pullRequestId: string): { id: string; pullRequestId: string; repoWithOwner: string } {
 		const parsed = JSON.parse(pullRequestId);
 		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
 		// id - Is unique across all issues and is used for any API call
@@ -1200,14 +1195,4 @@ interface BitBucketCreatePullRequestResponse {
 	links: { html: { href: string } };
 	number: number;
 	title: string;
-}
-
-interface BitBucketRepo {
-	full_name: string;
-	uuid: string;
-	mainbranch?: {
-		name?: string;
-		type?: string;
-	};
-	parent?: any;
 }
