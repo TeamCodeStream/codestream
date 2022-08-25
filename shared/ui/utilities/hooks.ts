@@ -9,6 +9,7 @@ import {
 } from "react";
 import { noop } from "../utils";
 import { HostApi } from "..";
+import { RequestType } from "vscode-jsonrpc";
 
 type Fn = () => void;
 
@@ -50,28 +51,43 @@ export function useInterval(callback: Fn, delay = 1000) {
 	}, [delay]);
 }
 
+interface UseRequestTypeResult<T> {
+	data: T | undefined;
+	loading: boolean;
+	error: T | undefined;
+}
 /**
- * @param requestType
+ * @param requestType<Req, Resp>
  * @param payload
  * @param dependencies
- * @returns [loading, data]
+ * @returns { loading, data, error }
  */
-export function useRequestType(requestType, payload = {}, dependencies = []) {
+export function useRequestType<Req, Resp>(
+	requestType: RequestType<Req, Resp, void, void>,
+	payload: Req,
+	dependencies = []
+): UseRequestTypeResult<Resp> {
 	const [loading, setLoading] = useState(true);
-	const [data, setData] = useState(null);
+	const [data, setData] = useState<Resp | undefined>(undefined);
+	const [error, setError] = useState<Resp | undefined>(undefined);
 
 	const fetch = async () => {
-		setLoading(true);
-		const response: any = await HostApi.instance.send(requestType, payload);
-		setData(response);
-		setLoading(false);
+		try {
+			setLoading(true);
+			const response = (await HostApi.instance.send(requestType, payload)) as Resp;
+			setData(response);
+			setLoading(false);
+		} catch (error) {
+			setLoading(false);
+			setError(error);
+		}
 	};
 
 	useEffect(() => {
 		fetch();
 	}, dependencies);
 
-	return { loading, data } as any;
+	return { loading, data, error } as UseRequestTypeResult<Resp>;
 }
 
 export function useTimeout(callback: Fn, delay: number) {

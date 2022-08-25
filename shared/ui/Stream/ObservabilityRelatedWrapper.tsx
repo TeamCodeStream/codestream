@@ -2,12 +2,15 @@ import { forEach as _forEach } from "lodash-es";
 import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { HostApi } from "..";
-import { useRequestType, useDidMount } from "../utilities/hooks";
+import { useRequestType } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
-import { GetNewRelicRelatedEntitiesResponse } from "@codestream/protocols/agent";
+import {
+	GetNewRelicRelatedEntitiesResponse,
+	GetNewRelicRelatedEntitiesRequest
+} from "@codestream/protocols/agent";
+import { logError } from "../logger";
 
 interface Props {
 	currentRepoId: string;
@@ -16,13 +19,18 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const {
-		loading,
-		data
-	}: {
-		loading: boolean;
-		data: GetNewRelicRelatedEntitiesResponse;
-	} = useRequestType(GetNewRelicRelatedEntitiesRequestType, { entityGuid: props.entityGuid });
+	const { loading, data, error } = useRequestType<
+		GetNewRelicRelatedEntitiesRequest,
+		GetNewRelicRelatedEntitiesResponse
+	>(GetNewRelicRelatedEntitiesRequestType, { entityGuid: props.entityGuid }, []);
+
+	if (error) {
+		const errorMessage = typeof error === "string";
+		logError(`Unexpected error during related entities fetch: ${errorMessage}`, {
+			currentRepoId: props.currentRepoId,
+			entityGuid: props.entityGuid
+		});
+	}
 
 	return (
 		<>
