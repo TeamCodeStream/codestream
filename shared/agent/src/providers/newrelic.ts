@@ -1087,6 +1087,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								guid
 								alertSeverity
 								domain
+								type
 								account {
 								  name
 								}
@@ -1098,6 +1099,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								  guid
 								  alertSeverity
 								  domain
+								  type
 								  account {
 									name
 								  }
@@ -1115,17 +1117,25 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
-				const results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
-					const _entity = _.target.entity;
-					return {
-						alertSeverity: _entity.alertSeverity,
-						guid: _entity.guid,
-						name: _entity.name,
-						type: _.type,
-						domain: _entity.domain,
-						accountName: _entity?.account?.name
-					};
-				});
+				const results = response.actor.entity.relatedEntities.results
+					.filter((_: RelatedEntity) => {
+						const _type = _?.target?.entity?.type;
+						if (!_type?.includes("SERVICE")) {
+							return false; //skip
+						}
+						return true;
+					})
+					.map((_: RelatedEntity) => {
+						const _entity = _.target.entity;
+						return {
+							alertSeverity: _entity.alertSeverity,
+							guid: _entity.guid,
+							name: _entity.name,
+							type: _.type,
+							domain: _entity.domain,
+							accountName: _entity?.account?.name
+						};
+					});
 				return _groupBy(results, _ => _.type);
 			} else {
 				return {};
