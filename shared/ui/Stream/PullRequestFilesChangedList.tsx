@@ -141,6 +141,84 @@ interface Props extends CompareFilesProps {
 	initialScrollPosition?: number;
 }
 
+// interface Comment {
+// 	bodyHtml: string;
+// 	bodyText: string;
+// 	content: {
+// 		html: string;
+// 		markup: string;
+// 		raw: string;
+// 		type: string;
+// 	};
+// 	created_on: Date;
+// 	deleted: boolean;
+// 	file: string;
+// 	id: number;
+// 	inline: {
+// 		from: number;
+// 		path: string;
+// 		to: number;
+// 	};
+// 	links: {
+// 		code: {
+// 			href: string;
+// 		};
+// 		html: {
+// 			href: string;
+// 		};
+// 		self: { href: string };
+// 	};
+// 	pullrequest: {
+// 		id: number;
+// 		links: {
+// 			html: {
+// 				href: string;
+// 			};
+// 			self: {
+// 				href: string;
+// 			};
+// 		};
+// 		title: string;
+// 		type: string;
+// 	};
+// 	state: string;
+// 	type: string;
+// 	updated_on: Date;
+// 	user: {
+// 		account_id: string;
+// 		display_name: string;
+// 		links: {
+// 			avatar: {
+// 				href: string;
+// 			};
+// 			html: {
+// 				href: string;
+// 			};
+// 			self: {
+// 				href: string;
+// 			};
+// 		};
+// 		nickname: "Renee Peti";
+// 		type: "user";
+// 		uuid: "{aa5e7a1e-10bd-416f-979c-10a377e767d5}";
+// 	};
+// }
+
+// interface PR {
+// 	baseRefOid: string;
+// 	comments: Array<Comment>;
+// 	headRefOid: string;
+// 	idComputed: string;
+// 	number: number;
+// 	providerId: string;
+// 	repository: {
+// 		name: string;
+// 		repoWithOwner: string;
+// 		url: string;
+// 	};
+// 	state: string;
+// }
+
 export const PullRequestFilesChangedList = (props: Props) => {
 	const { filesChanged, isLoading, pr } = props;
 	const dispatch = useAppDispatch();
