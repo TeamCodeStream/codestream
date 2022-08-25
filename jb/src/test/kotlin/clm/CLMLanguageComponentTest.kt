@@ -1,15 +1,24 @@
 package clm
 
 import com.codestream.agent.AgentService
+import com.codestream.clm.CLMCustomRenderer
+import com.codestream.protocols.agent.CSCompany
 import com.codestream.protocols.agent.CSRepo
+import com.codestream.protocols.agent.CSTeam
+import com.codestream.protocols.agent.CSUser
+import com.codestream.protocols.agent.EnvironmentHost
+import com.codestream.protocols.agent.EnvironmentInfo
 import com.codestream.protocols.agent.FileLevelTelemetryResult
+import com.codestream.protocols.agent.LoginState
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
+import com.codestream.protocols.agent.UserLoggedIn
+import com.codestream.sessionService
 import com.codestream.webview.JxBrowserEngineService
 import com.codestream.webview.WebViewService
+import com.google.gson.JsonObject
 import com.intellij.codeInsight.hints.presentation.DynamicDelegatePresentation
 import com.intellij.codeInsight.hints.presentation.OnHoverPresentation
-import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.codeInsight.hints.presentation.TextInlayPresentation
 import com.intellij.codeInsight.hints.presentation.WithAttributesPresentation
 import com.intellij.openapi.editor.Inlay
@@ -47,6 +56,31 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
         // Mimic the actual implementation
         val slot = slot<() -> Unit>()
         every { mockAgentService.onDidStart(capture(slot)) } answers { slot.captured() }
+        project.sessionService?.login(
+            UserLoggedIn(
+                CSUser("userid", "username", "email", "fullname", null),
+                CSTeam("teamid", "companyid", "myteam", null),
+                CSCompany("companyid", "companyname"),
+                LoginState(
+                    "userid",
+                    "teamid",
+                    "email",
+                    JsonObject(),
+                    EnvironmentInfo(
+                        "environmentinfo",
+                        true,
+                        false,
+                        "landingUrl",
+                        "apiUrl",
+                        listOf(EnvironmentHost("envhostname", "publicapi", "shortname"))
+                    ),
+                    "serverUrl",
+                    null
+                ),
+                1,
+                1
+            )
+        )
     }
 
     fun `test python method`() {
@@ -83,7 +117,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
 
         myFixture.configureByFile("app.py")
 
-        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.gradle)
+        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.g
 
         val inlayBlock = myFixture.editor.inlayModel.getBlockElementsInRange(
             0, 1000
@@ -172,7 +206,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
     }
 
     private fun extractTextFromInlay(inlayBlock: Inlay<*>): String {
-        val presentation = (inlayBlock.renderer as PresentationRenderer).presentation as OnHoverPresentation
+        val presentation = (inlayBlock.renderer as CLMCustomRenderer).presentation as OnHoverPresentation
         val dynamicDelegatePresentation = presentation.presentation as DynamicDelegatePresentation
         val withAttributesPresentation = dynamicDelegatePresentation.delegate as WithAttributesPresentation
         val textPresentation = withAttributesPresentation.presentation as TextInlayPresentation

@@ -11,6 +11,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
 
+val testMode: Boolean = System.getProperty("idea.system.path")?.endsWith("system-test") ?: false
+
 abstract class CLMLanguageComponent<T : CLMEditorManager>(
     val project: Project, private val fileType: Class<out PsiFile>, val editorFactory: (editor: Editor) -> T
 ) : EditorFactoryListener, Disposable {
@@ -42,8 +44,10 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         if (event.editor.project != project) return
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(event.editor.document) ?: return
         if (!isPsiFileSupported(psiFile)) return
-        // Ignore library sources (eg: files in .jar). Might need extra work to do the same with "node_modules", etc.
-        if (event.editor.document.uri?.startsWith("file://") != true) return
+        if (!testMode) {
+            // Ignore library sources (eg: files in .jar). Might need extra work to do the same with "node_modules", etc.
+            if (event.editor.document.uri?.startsWith("file://") != true) return
+        }
         managersByEditor[event.editor] = editorFactory(event.editor)
     }
 
