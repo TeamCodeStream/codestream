@@ -1,5 +1,13 @@
 # Change Log
 
+## [13.6.0] - 2022-8-25
+
+### Fixed
+
+- Fixes an issue with the "show instructions" link at the bottom of feedback requests preventing you from viewing diffs
+- Fixes an issue that prevented a user from associating a repo with a New Relic entity
+- Adds a workaround for New Relic v1/SAML users to be able to use Observability features, such as code-level metrics, even though they can't access the errors integration
+
 ## [13.5.0] - 2022-8-18
 
 ### Added
