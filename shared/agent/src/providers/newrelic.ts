@@ -1079,7 +1079,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					actor {
 					  entity(guid: $entityGuid) {
 						name
-						relatedEntities(filter: {direction: BOTH, relationshipTypes: {include: [CALLS, CONNECTS_TO]}}) {
+						relatedEntities(filter: {relationshipTypes: {include: [CALLS, CONNECTS_TO]}, entityDomainTypes: {include: {domain: "EXT", type: "SERVICE"}}}) {
 							results {
 							target {
 							  entity {
@@ -1118,15 +1118,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
 				const results = response.actor.entity.relatedEntities.results
-					.filter((_: RelatedEntity) => {
-						const _type = _?.target?.entity?.type;
-						if (!_type?.includes("SERVICE")) {
-							return false; //skip
-						}
-						return true;
-					})
+					// filter out related entities that is itself
+					// .filter((_: RelatedEntity) => {
+					// 	const guid = _?.target?.entity?.guid;
+					// 	if (guid === request.entityGuid) {
+					// 		return false; //skip
+					// 	}
+					// 	return true;
+					// })
 					.map((_: RelatedEntity) => {
-						const _entity = _.target.entity;
+						const _entity = _.type === "CALLS" ? _.target.entity : _.source.entity;
 						return {
 							alertSeverity: _entity.alertSeverity,
 							guid: _entity.guid,

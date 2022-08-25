@@ -66,7 +66,8 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 		}),
 		clearIndicator: (provided, state) => ({
 			...provided,
-			marginTop: "3px"
+			marginTop: "3px",
+			padding: "8px 0px 8px 8px"
 		}),
 		dropdownIndicator: (provided, state) => ({
 			...provided,
