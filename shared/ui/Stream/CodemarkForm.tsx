@@ -1663,7 +1663,9 @@ class CodemarkForm extends React.Component<Props, State> {
 				renderCodeBlocks={this.renderCodeBlocks}
 				attachments={this.state.attachments}
 				attachmentContainerType="codemark"
-				setAttachments={this.setAttachments}
+				setAttachments={
+					this.props.textEditorUriHasPullRequestContext ? undefined : this.setAttachments
+				}
 				__onDidRender={__onDidRender}
 			/>
 		);
@@ -1756,7 +1758,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				)}
 				{liveLocation != index && !isPreviewing && (
 					<div className="code-buttons">
-						{commentType !== "link" && (
+						{commentType !== "link" && !this.props.textEditorUriHasPullRequestContext && (
 							<Icon
 								title={
 									blockInjected
@@ -1885,7 +1887,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				)}
 				{liveLocation != index && !isPreviewing && (
 					<div className="code-buttons">
-						{commentType !== "link" && (
+						{commentType !== "link" && !this.props.textEditorUriHasPullRequestContext && (
 							<Icon
 								title={
 									blockInjected
