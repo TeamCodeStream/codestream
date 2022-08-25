@@ -115,7 +115,7 @@ abstract class CLMEditorManager(
 
         project?.agentService?.onDidStart {
             ApplicationManager.getApplication().invokeLater {
-
+                if (project.isDisposed) return@invokeLater
                 val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@invokeLater
 
                 val className = if (lookupByClassName) {
