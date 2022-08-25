@@ -719,8 +719,8 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 				Logger.warn(ex);
 			}
 		}
-		const queries = request.queries.map(query =>
-			query === "recent" ? "scope=created_by_me&per_page=5" : query
+		const queries = request.prQueries.map(query =>
+			query.query === "recent" ? "scope=created_by_me&per_page=5" : query.query
 		);
 
 		let items;

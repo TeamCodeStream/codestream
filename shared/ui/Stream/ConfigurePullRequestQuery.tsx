@@ -28,12 +28,6 @@ const PRTestResults = styled.div`
 	}
 `;
 
-const EMPTY_QUERY: PullRequestQuery = {
-	providerId: "",
-	name: "",
-	query: "",
-	hidden: false
-};
 interface Props {
 	query?: PullRequestQuery;
 	openReposOnly: boolean;
@@ -63,10 +57,10 @@ export function ConfigurePullRequestQuery(props: Props) {
 		return "";
 	}, [props]);
 
-	const { query = EMPTY_QUERY } = props;
+	const query: PullRequestQuery | undefined = props.query;
 	const [providerIdField, setProviderIdField] = React.useState(defaultProviderId);
-	const [nameField, setNameField] = React.useState(query.name);
-	const [queryField, setQueryField] = React.useState(query.query);
+	const [nameField, setNameField] = React.useState(query?.name);
+	const [queryField, setQueryField] = React.useState(query?.query);
 	const [validGHQueries, setvalidGHQueries] = React.useState(
 		new Set([
 			"user",
@@ -200,7 +194,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	};
 
-	const title = query.query
+	const title = query?.query
 		? `Edit ${derivedState.prLabel.PullRequest} Query`
 		: `New ${derivedState.prLabel.PullRequest} Query`;
 	return (
@@ -219,7 +213,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<span dangerouslySetInnerHTML={{ __html: customPullRequestFilterExample || "" }} />
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
-								{!query.providerId && props.prConnectedProviders.length > 1 && (
+								{!query?.providerId && props.prConnectedProviders.length > 1 && (
 									<>
 										<label>PR Provider: &nbsp;</label>
 										<InlineMenu
@@ -311,14 +305,14 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<ButtonRow>
 							<Button
 								isLoading={isLoading}
-								disabled={queryField.length === 0}
+								disabled={queryField?.length === 0}
 								variant="secondary"
 								onClick={() => fetchTestPRs(queryField)}
 							>
 								Test Query
 							</Button>
 							<Button
-								disabled={queryField.length === 0}
+								disabled={queryField?.length === 0}
 								onClick={() => {
 									if (isValidQuery(queryField)) props.save(providerIdField, nameField, queryField);
 								}}

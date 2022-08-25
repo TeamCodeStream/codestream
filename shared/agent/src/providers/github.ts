@@ -1,5 +1,6 @@
 "use strict";
 import { GraphQLClient } from "graphql-request";
+import { isNil as _isNil } from "lodash";
 import { Headers, Response } from "node-fetch";
 import { performance } from "perf_hooks";
 import * as qs from "querystring";
@@ -33,6 +34,7 @@ import {
 	GitHubCreateCardRequest,
 	GitHubCreateCardResponse,
 	GitHubUser,
+	Labels,
 	MergeMethod,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
@@ -58,15 +60,66 @@ import {
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
+import { WAITING_ON_REVIEW } from "./registry";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ProviderVersion } from "./types";
-import { TernarySearchTree } from "../../../ui/utilities/searchTree";
 
 interface GitHubRepo {
 	id: string;
 	full_name: string;
 	path: string;
 	has_issues: boolean;
+}
+
+interface PRResponse {
+	viewer: {
+		id: string;
+	};
+	search: {
+		edges: {
+			node: {
+				id: string;
+				createdAt: number;
+				url: string;
+				title: string;
+				closed: boolean;
+				merged: boolean;
+				reviewDecision?: string;
+				viewerDidAuthor: boolean;
+				viewerLatestReviewRequest?: {
+					asCodeOwner: boolean;
+					requestedReviewer: {
+						name?: string;
+						login: string;
+						id: string;
+						email?: string;
+					};
+				};
+				viewerLatestReview?: {
+					state: string;
+					submittedAt: string;
+				};
+				baseRefName: string;
+				headRefName: string;
+				author: {
+					login: string;
+					avatarUrl: string;
+				};
+				body: string;
+				bodyText: string;
+				number: number;
+				updatedAt: string;
+				state: string;
+				lastEditedAt: string;
+				labels: Labels;
+				headRepository?: {
+					name: string;
+					nameWithOwner: string;
+				};
+				isDraft?: boolean;
+			};
+		}[];
+	};
 }
 
 interface RateLimit {
@@ -240,7 +293,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return this._version;
 	}
 
-	async query<T = any>(query: string, variables: any = undefined) {
+	async query<T = any>(query: string, variables: any = undefined): Promise<T> {
 		if (this._providerInfo && this._providerInfo.tokenError) {
 			delete this._client;
 			throw new InternalError(ReportSuppressedMessages.AccessTokenInvalid);
@@ -1165,6 +1218,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	private _pullRequestsContainingShaCache = new Map<string, any[]>();
+
 	async getPullRequestsContainigSha(
 		repoIdentifiers: { owner: string; name: string }[],
 		sha: string
@@ -2929,11 +2983,33 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				remaining
 				resetAt
 			}
+			viewer {
+				id
+			}
 			search(query: "${query}", type: ISSUE, last: ${limit}) {
 			edges {
 			  node {
 				... on PullRequest {
 					url
+					viewerLatestReviewRequest {
+						asCodeOwner
+						requestedReviewer {
+							... on User {
+								name
+								login
+								id
+								email
+							}
+						}
+					}
+					closed
+					reviewDecision
+					viewerDidAuthor
+					merged
+					viewerLatestReview {
+						state
+						submittedAt
+					}
 					title
 					createdAt
 					baseRefName
@@ -3010,9 +3086,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		}
 
-		const queries = request.queries;
+		const queries = request.prQueries;
 
-		const queriesSafe = request.queries.map(query => query.replace(/["']/g, '\\"'));
+		const queriesSafe = request.prQueries.map(query => ({
+			...query,
+			query: query.query.replace(/["']/g, '\\"')
+		}));
 
 		// NOTE: there is also `reviewed-by` which `review-requested` translates to after the user
 		// has started or completed the review.
@@ -3024,11 +3103,15 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		// 	{ name: "Created by Me", query: `is:pr author:@me` }
 		// ];
 
+		const { providerRegistry } = SessionContainer.instance();
+
+		const defaultQueries = await providerRegistry.getProviderDefaultPullRequestQueries({});
+
 		const providerId = this.providerConfig?.id;
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
 		const items = await Promise.all(
-			queriesSafe.map(_query => {
-				let query = _query;
+			queriesSafe.map(prQuery => {
+				// let query = _query;
 				let limit = 100;
 				// recent is kind of a magic string, where we just look
 				// for some random PR activity to at least show you
@@ -3037,25 +3120,26 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				// needs at least one qualifier so we query for PRs
 				// that you were the author of
 				// https://trello.com/c/XIg6MKWy/4813-add-4th-default-pr-query-recent
-				if (query === "recent") {
+				if (prQuery.query === "recent") {
 					if (repoQuery.length > 0) {
-						query = "is:pr";
+						prQuery.query = "is:pr";
 					} else {
-						query = "is:pr author:@me";
+						prQuery.query = "is:pr author:@me";
 					}
 					limit = 5;
 				}
 
 				// if a user has put a "repo:X/Y" in their query, don't add the repoQuery as specified by the request.isOpen option
-				const finalQuery = query.indexOf("repo:") > -1 ? query : repoQuery + query;
-				if (query !== finalQuery) {
+				const finalQuery =
+					prQuery.query.indexOf("repo:") > -1 ? prQuery.query : repoQuery + prQuery.query;
+				if (prQuery.query !== finalQuery) {
 					Logger.log(
-						`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}" query=${query}`
+						`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}" query=${prQuery}`
 					);
 				} else {
 					Logger.log(`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}"`);
 				}
-				return this.query<any>(this.buildSearchQuery(finalQuery, limit));
+				return this.query<PRResponse>(this.buildSearchQuery(finalQuery, limit));
 			})
 		).catch(ex => {
 			Logger.error(ex, "getMyPullRequests");
@@ -3071,14 +3155,31 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		items.forEach((item, index) => {
 			if (item && item.search && item.search.edges) {
 				response[index] = item.search.edges
-					.map((_: any) => _.node)
-					.filter((_: any) => _.id)
-					.map((pr: { createdAt: string }) => ({
+					.map(_ => _.node)
+					.filter(_ => _.id)
+					.filter(_ => {
+						if (queries[index].name === WAITING_ON_REVIEW) {
+							const isDefaultQuery =
+								queries[index].query ===
+								defaultQueries[providerId].find(_ => _.name === WAITING_ON_REVIEW)?.query;
+							const isReviewer =
+								_.viewerLatestReviewRequest?.requestedReviewer.id === item.viewer.id;
+							const hasReviewed: boolean = !_isNil(_.viewerLatestReview?.state);
+							const result =
+								isDefaultQuery &&
+								(isReviewer || hasReviewed) &&
+								_.closed === false &&
+								_.viewerLatestReview?.state !== "APPROVED";
+							return result;
+						}
+						return true;
+					})
+					.map(pr => ({
 						...pr,
 						providerId: providerId,
 						createdAt: new Date(pr.createdAt).getTime()
 					}));
-				if (!queries[index].match(/\bsort:/)) {
+				if (!queries[index].query.match(/\bsort:/)) {
 					response[index] = response[index].sort(
 						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
 					);

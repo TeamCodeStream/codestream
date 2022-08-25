@@ -109,8 +109,8 @@ export const MethodLevelTelemetryPanel = () => {
 
 			const response = await HostApi.instance.send(GetMethodLevelTelemetryRequestType, {
 				newRelicEntityGuid: newRelicEntityGuid,
-				metricTimesliceNameMapping: derivedState.currentMethodLevelTelemetry
-					.metricTimesliceNameMapping!,
+				metricTimesliceNameMapping:
+					derivedState.currentMethodLevelTelemetry.metricTimesliceNameMapping,
 				repoId: derivedState.currentMethodLevelTelemetry.repo.id
 			});
 			setTelemetryResponse(response);

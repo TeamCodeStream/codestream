@@ -1,3 +1,4 @@
+import { PullRequestQuery } from "@codestream/protocols/api";
 import { action } from "../common";
 import { ProviderPullRequestActionsTypes } from "./types";
 import { logError } from "@codestream/webview/logger";
@@ -300,7 +301,7 @@ export const getPullRequestFilesFromProvider = (
 
 export const getMyPullRequests = (
 	providerId: string,
-	queries: string[],
+	queries: PullRequestQuery[],
 	openReposOnly: boolean,
 	options?: { force?: boolean },
 	throwOnError?: boolean,
@@ -330,7 +331,7 @@ export const getMyPullRequests = (
 			method: "getMyPullRequests",
 			providerId: providerId,
 			params: {
-				queries,
+				prQueries: queries,
 				isOpen: openReposOnly,
 				force: force || (options && options.force)
 			}

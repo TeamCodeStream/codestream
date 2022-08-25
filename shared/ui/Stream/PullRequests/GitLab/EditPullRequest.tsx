@@ -196,12 +196,11 @@ export const EditPullRequest = props => {
 							derivedState.pullRequestQueries[connectedProvider.id]
 								? derivedState.pullRequestQueries[connectedProvider.id]
 								: defaultQueries[connectedProvider.id];
-						const queryStrings = Object.values(providerQuery).map(_ => _.query);
 
 						await dispatch(
 							getMyPullRequests(
 								connectedProvider.id,
-								queryStrings,
+								providerQuery,
 								!derivedState.allRepos,
 								options,
 								true

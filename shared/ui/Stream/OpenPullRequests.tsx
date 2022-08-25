@@ -24,7 +24,8 @@ import {
 	ThirdPartyProviderConfig,
 	UpdateTeamSettingsRequestType,
 	SwitchBranchRequestType,
-	GetReposScmRequestType
+	GetReposScmRequestType,
+	FetchProviderDefaultPullResponse
 } from "@codestream/protocols/agent";
 import {
 	WebviewPanels,
@@ -63,8 +64,7 @@ import {
 	getMyPullRequests as getMyPullRequestsSelector,
 	getPullRequestExactId,
 	getPullRequestId,
-	getProviderPullRequestRepoObject,
-	getProviderPullRequestRepo
+	getProviderPullRequestRepoObject
 } from "../store/providerPullRequests/reducer";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { getPRLabel } from "../store/providers/reducer";
@@ -379,7 +379,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				for (const connectedProvider of PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
-					const queryStrings = Object.values(queriesByProvider).map(_ => _.query);
 					activePrListedIndex = queriesByProvider.findIndex(
 						_ => _?.name === "Waiting on my Review"
 					);
@@ -388,7 +387,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						const response: any = await dispatch(
 							getMyPullRequests(
 								connectedProvider.id,
-								queryStrings,
+								queriesByProvider,
 								!derivedState.allRepos,
 								options,
 								true
@@ -504,53 +503,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	useDidMount(() => {
 		(async () => {
-			const defaultQueriesResponse: any = (await HostApi.instance.send(
+			const defaultQueriesResponse: FetchProviderDefaultPullResponse = await HostApi.instance.send(
 				FetchProviderDefaultPullRequestsType,
 				{}
-			)) as any;
+			);
 			if (defaultQueriesResponse) {
 				// Update default queries for users in a non-destructive way
 				if (derivedState.pullRequestQueries) {
-					Object.keys(derivedState.pullRequestQueries).forEach(provider => {
-						// Little shimmy to update old gitlab default filters to our new syntax
-						let shouldUpdate = false;
-						derivedState.pullRequestQueries![provider].forEach((query, index) => {
-							if (provider === "gitlab*com" || provider === "gitlab/enterprise") {
-								if (
-									query.name === "Waiting on my Review" &&
-									query.query === "state:opened reviewer_username:@me scope:all"
-								) {
-									derivedState.pullRequestQueries![provider][index].query =
-										"state=opened&reviewer_username=@me&scope=all";
-									shouldUpdate = true;
-								}
-								if (
-									query.name === "Assigned to Me" &&
-									query.query === "state:opened scope:assigned_to_me"
-								) {
-									derivedState.pullRequestQueries![provider][index].query =
-										"state=opened&scope=assigned_to_me";
-									shouldUpdate = true;
-								}
-								if (
-									query.name === "Created by Me" &&
-									query.query === "state:opened scope:created_by_me"
-								) {
-									derivedState.pullRequestQueries![provider][index].query =
-										"state=opened&scope=created_by_me";
-									shouldUpdate = true;
-								}
-								if (query.name === "Recent" && query.query === "recent") {
-									derivedState.pullRequestQueries![provider][index].query =
-										"scope=created_by_me&per_page=5";
-									shouldUpdate = true;
-								}
-							}
-						});
-						if (shouldUpdate) {
-							saveQueries(provider, derivedState.pullRequestQueries![provider]);
-						}
-					});
+					patchQueries(defaultQueriesResponse, derivedState.pullRequestQueries, saveQueries);
 				}
 
 				const queries = {
@@ -1212,7 +1172,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					)}
 				</>
 			);
-		} else return undefined;
+		} else {
+			return undefined;
+		}
 	};
 
 	useEffect(() => {
@@ -1240,8 +1202,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	]);
 
 	const expandedPR: any = useMemo(() => {
-		if (!derivedState.currentPullRequest || derivedState.hideDiffs || derivedState.isVS)
+		if (!derivedState.currentPullRequest || derivedState.hideDiffs || derivedState.isVS) {
 			return undefined;
+		}
 		const conversations = derivedState.currentPullRequest.conversations;
 		if (!conversations) {
 			return undefined;
@@ -1540,7 +1503,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 													{providerDisplay.displayName}
 												</Provider>
 											);
-										} else return null;
+										} else {
+											return null;
+										}
 									})}
 								</IntegrationButtons>
 							</>
@@ -1572,4 +1537,62 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			</>
 		</Root>
 	);
+
+	function patchQueries(
+		defaultQueries: FetchProviderDefaultPullResponse,
+		pullRequestQueries: PullRequestQuery[],
+		saveQueries: (providerId, queries) => void
+	) {
+		Object.keys(pullRequestQueries).forEach(provider => {
+			// Little shimmy to update old default filters to our new syntax
+			let shouldUpdate = false;
+			pullRequestQueries![provider].forEach((query, index) => {
+				if (provider === "gitlab*com" || provider === "gitlab/enterprise") {
+					if (
+						query.name === "Waiting on my Review" &&
+						query.query === "state:opened reviewer_username:@me scope:all"
+					) {
+						pullRequestQueries![provider][index].query =
+							"state=opened&reviewer_username=@me&scope=all";
+						shouldUpdate = true;
+					}
+					if (
+						query.name === "Assigned to Me" &&
+						query.query === "state:opened scope:assigned_to_me"
+					) {
+						pullRequestQueries![provider][index].query = "state=opened&scope=assigned_to_me";
+						shouldUpdate = true;
+					}
+					if (
+						query.name === "Created by Me" &&
+						query.query === "state:opened scope:created_by_me"
+					) {
+						pullRequestQueries![provider][index].query = "state=opened&scope=created_by_me";
+						shouldUpdate = true;
+					}
+					if (query.name === "Recent" && query.query === "recent") {
+						pullRequestQueries![provider][index].query = "scope=created_by_me&per_page=5";
+						shouldUpdate = true;
+					}
+				}
+				if (provider === "github*com" || provider === "github/enterprise") {
+					if (
+						query.name === "Waiting on my Review" &&
+						query.query === "is:pr is:open review-requested:@me"
+					) {
+						const replacementQuery = defaultQueries[provider].find(
+							_ => _.name === "Waiting on my Review"
+						)?.query;
+						if (replacementQuery) {
+							pullRequestQueries![provider][index].query = replacementQuery;
+							shouldUpdate = true;
+						}
+					}
+				}
+			});
+			if (shouldUpdate) {
+				saveQueries(provider, pullRequestQueries![provider]);
+			}
+		});
+	}
 });
