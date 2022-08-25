@@ -401,7 +401,7 @@ export namespace Functions {
 			if (await fn()) {
 				return { success: true, count: i };
 			}
-			await new Promise(resolve => setTimeout(resolve, sleepIntervalInMilliseconds * i));
+			await wait(sleepIntervalInMilliseconds * i);
 		}
 		return { success: false, count: i };
 	}
