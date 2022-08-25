@@ -942,7 +942,7 @@ export function toSlackPostBlocks(
 		elements: [
 			{
 				type: "plain_text",
-				text: "Posted via CodeStream"
+				text: "Note that replies will be shared to CodeStream"
 			}
 		]
 	});
