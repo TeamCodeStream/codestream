@@ -1050,7 +1050,7 @@ export class BitbucketProvider
 			},
 			inline: {
 				to: request.startLine,
-				// to: request.endLine,
+				// from: request.endLine,
 				path: request.path
 			}
 		} as any;
@@ -1084,76 +1084,49 @@ export class BitbucketProvider
 			}
 		] as any;
 
-		// this.updateCache(request.pullRequestId, {
-		// 	directives: directives
-		// });
-
-		// this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-		// 	pullRequestId: request.pullRequestId,
-		// 	commentId: request.id
-		// });
-
 		return {
 			directives: directives
 		};
 	}
 
-	//TODO: Change for bitbucket!
-	/*
+	//how do we get the parentId for this?  we need the idea of the comment we're replying to
 	async createCommentReply(request: {
 		pullRequestId: string;
-		parentId: string;
+		parentId: number;
 		commentId: string;
 		text: string;
 	}): Promise<Directives> {
-		// https://docs.github.com/en/rest/reference/pulls#create-a-reply-for-a-review-comment
-		const ownerData = await this.getRepoOwnerFromPullRequestId(request.pullRequestId);
-		const data = await this.restPost<any, any>(
-			`/repos/${ownerData.owner}/${ownerData.name}/pulls/${ownerData.pullRequestNumber}/comments/${request.commentId}/replies`,
-			{
-				body: request.text
+		const payload = {
+			content: {
+				raw: request.text
+			},
+			parent: {
+				id: request.parentId
 			}
-		);
-		// GH doesn't provide a way to add comment replies via the graphQL api
-		// see https://stackoverflow.com/questions/55708085/is-there-a-way-to-reply-to-pull-request-review-comments-with-the-github-api-v4
-		// below, we're crafting a response that looks like what graphQL would give us
-		const body = data.body;
+		} as any;
 
-		return this.handleResponse(request.pullRequestId, {
-			directives: [
-				{
-					type: "updatePullRequest",
-					data: {
-						updatedAt: Dates.toUtcIsoNow()
-					}
-				},
-				{
-					type: "addLegacyCommentReply",
-					data: {
-						// this isn't normally part of the response, but it's
-						// the databaseId of the parent comment
-						_inReplyToId: body.in_reply_to_id,
-						author: {
-							login: body.user.login,
-							avatarUrl: body.user.avatar_url
-						},
-						authorAssociation: body.author_association,
-						body: body.body,
-						bodyText: body.body,
-						createdAt: body.created_at,
-						id: body.node_id,
-						replyTo: {
-							id: body.node_id
-						},
-						reactionGroups: this._createReactionGroups(),
-						viewerCanUpdate: true,
-						viewerCanReact: true,
-						viewerCanDelete: true
-					}
-				}
-			]
+		Logger.log(`commenting:createCommentReply`, {
+			//	ownerData: ownerData,
+			request: request,
+			payload: payload
 		});
-	} */
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+		const response = await this.post(
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
+			payload
+		);
+
+		const directives = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: new Date().getTime()
+				}
+			}
+		] as any;
+
+		return { directives: directives };
+	}
 
 	parseId(pullRequestId: string): { id: string; pullRequestId: string; repoWithOwner: string } {
 		const parsed = JSON.parse(pullRequestId);
