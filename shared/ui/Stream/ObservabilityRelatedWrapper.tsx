@@ -6,10 +6,6 @@ import { useRequestType } from "../utilities/hooks";
 import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
-import {
-	GetNewRelicRelatedEntitiesResponse,
-	GetNewRelicRelatedEntitiesRequest
-} from "@codestream/protocols/agent";
 import { logError } from "../logger";
 
 interface Props {
@@ -19,10 +15,9 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const { loading, data, error } = useRequestType<
-		GetNewRelicRelatedEntitiesRequest,
-		GetNewRelicRelatedEntitiesResponse
-	>(GetNewRelicRelatedEntitiesRequestType, { entityGuid: props.entityGuid }, []);
+	const { loading, data, error } = useRequestType(GetNewRelicRelatedEntitiesRequestType, {
+		entityGuid: props.entityGuid
+	});
 
 	if (error) {
 		const errorMessage = typeof error === "string";

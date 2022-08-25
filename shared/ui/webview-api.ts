@@ -21,8 +21,8 @@ import {
 import { AnyObject, Disposable, shortUuid } from "./utils";
 
 type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
-type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
-type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
+export type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
+export type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
 type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>> = (
 	event: NotificationParamsOf<NT>
@@ -197,6 +197,7 @@ export class HostApi extends EventEmitter {
 		options?: { alternateReject?: (error) => {} }
 	): Promise<RequestResponseOf<RT>> {
 		const id = this.nextId();
+
 		return new Promise((resolve, reject) => {
 			reject = (options && options.alternateReject) || reject;
 			this._pendingRequests.set(id, { resolve, reject, method: type.method });
