@@ -1130,7 +1130,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				});
 				return results;
 			} else {
-				return {};
+				return [];
 			}
 		} catch (e) {
 			ContextLogger.error(e, "getRelatedEntities");
