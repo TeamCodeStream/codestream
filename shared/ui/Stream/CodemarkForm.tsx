@@ -1937,20 +1937,25 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { editingCodemark, multiLocation, commentType } = this.props;
 
 		const addLocationDiv = (
-			<Tooltip
-				placement="topLeft"
-				title="Comments can refer to multiple blocks of code, even across files."
-				delay={1}
-			>
-				<div
-					className="clickable"
-					style={{ margin: "15px 0 5px 3px", cursor: "pointer" }}
-					onClick={this.addLocation}
-				>
-					<Icon name="plus" className="clickable margin-right" />
-					Add Code Block
-				</div>
-			</Tooltip>
+			<>
+				{this.props.textEditorUriHasPullRequestContext && <> </>}
+				{!this.props.textEditorUriHasPullRequestContext && (
+					<Tooltip
+						placement="topLeft"
+						title="Comments can refer to multiple blocks of code, even across files."
+						delay={1}
+					>
+						<div
+							className="clickable"
+							style={{ margin: "15px 0 5px 3px", cursor: "pointer" }}
+							onClick={this.addLocation}
+						>
+							<Icon name="plus" className="clickable margin-right" />
+							Add Code Block
+						</div>
+					</Tooltip>
+				)}
+			</>
 		);
 
 		if (editingCodemark) {
