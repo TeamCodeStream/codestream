@@ -1,3 +1,4 @@
+import { errorDismissed, errorOccurred } from "@codestream/webview/store/connectivity/actions";
 import { updateCapabilities } from "./capabilities/actions";
 import { action } from "./common";
 import * as contextActions from "./context/actions";
@@ -23,10 +24,12 @@ import { updateConfigs } from "./configs/actions";
 import {
 	ApiVersionCompatibility,
 	BootstrapRequestType,
+	BootstrapResponse,
 	VersionCompatibility
 } from "@codestream/protocols/agent";
 import {
 	BootstrapInHostRequestType,
+	EditorContext,
 	GetActiveEditorContextRequestType
 } from "@codestream/protocols/webview";
 import { BootstrapActionType } from "./bootstrapped/types";
@@ -56,10 +59,34 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 			return;
 		}
 
-		const [bootstrapData, { editorContext }] = await Promise.all([
-			api.send(BootstrapRequestType, {}),
-			api.send(GetActiveEditorContextRequestType, undefined)
-		]);
+		const bootstrapPromise = new Promise<{
+			bootstrapData: BootstrapResponse;
+			editorContext: EditorContext;
+		}>((resolve, reject) => {
+			const delays = [5000, 10000, 30000, 60000, 10 * 60000];
+			async function doBootstrap() {
+				try {
+					const [bootstrapData, { editorContext }] = await Promise.all([
+						api.send(BootstrapRequestType, {}),
+						api.send(GetActiveEditorContextRequestType, undefined)
+					]);
+					dispatch(errorDismissed());
+					resolve({
+						bootstrapData,
+						editorContext
+					});
+				} catch (ex) {
+					dispatch(errorOccurred(ex.message));
+					console.error(ex.message);
+					const delay = delays.shift() || 30 * 60000;
+					console.log(`Retrying bootstrap in ${delay}ms`);
+					setTimeout(doBootstrap, delay);
+				}
+			}
+			doBootstrap();
+		});
+
+		const { bootstrapData, editorContext } = await bootstrapPromise;
 		data = { ...bootstrapData, ...bootstrapCore, editorContext };
 	}
 
