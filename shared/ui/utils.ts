@@ -134,6 +134,23 @@ export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined | nul
 	});
 	return result;
 }
+// Sort an array of objects based on order of a seperate array
+export function mapOrder(array: any = [], order: string[] = [], key: string = "") {
+	if (array.length > 0 && order.length > 0 && key) {
+		array.sort(function(a, b) {
+			var A = a[key],
+				B = b[key];
+
+			if (order.indexOf(A) > order.indexOf(B)) {
+				return 1;
+			} else {
+				return -1;
+			}
+		});
+	}
+
+	return array;
+}
 
 /* keyFilter returns all of the keys for whom values are truthy (or)
   keyFilter({

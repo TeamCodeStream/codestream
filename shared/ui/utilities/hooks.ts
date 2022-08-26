@@ -8,6 +8,9 @@ import {
 	useMemo
 } from "react";
 import { noop } from "../utils";
+import { HostApi } from "..";
+import { RequestType } from "vscode-jsonrpc";
+import { RequestParamsOf, RequestResponseOf } from "../webview-api";
 
 type Fn = () => void;
 
@@ -47,6 +50,45 @@ export function useInterval(callback: Fn, delay = 1000) {
 		let id = setInterval(tick, delay);
 		return () => clearInterval(id);
 	}, [delay]);
+}
+
+interface UseRequestTypeResult<T> {
+	data: T | undefined;
+	loading: boolean;
+	error: T | undefined;
+}
+/**
+ * @param requestType<Req, Resp>
+ * @param payload
+ * @param dependencies
+ * @returns { loading, data, error }
+ */
+export function useRequestType<RT extends RequestType<any, any, any, any>>(
+	requestType: RT,
+	payload: RequestParamsOf<RT>,
+	dependencies = []
+): UseRequestTypeResult<RequestResponseOf<RT>> {
+	const [loading, setLoading] = useState(true);
+	const [data, setData] = useState<RequestResponseOf<RT> | undefined>(undefined);
+	const [error, setError] = useState<undefined>(undefined);
+
+	const fetch = async () => {
+		try {
+			setLoading(true);
+			const response = (await HostApi.instance.send(requestType, payload)) as RequestResponseOf<RT>;
+			setData(response);
+			setLoading(false);
+		} catch (error) {
+			setLoading(false);
+			setError(error);
+		}
+	};
+
+	useEffect(() => {
+		fetch();
+	}, dependencies);
+
+	return { loading, data, error } as UseRequestTypeResult<RequestResponseOf<RT>>;
 }
 
 export function useTimeout(callback: Fn, delay: number) {

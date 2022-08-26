@@ -44,6 +44,7 @@ interface PaneNodeNameProps {
 	labelIsFlex?: boolean;
 	forceExpand?: boolean;
 	showChildIconOnCollapse?: boolean;
+	customPadding?: string;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useDispatch();
@@ -86,7 +87,7 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 		</div>
 	);
 })`
-	padding: 2px 10px 2px 20px;
+	padding: ${props => (props.customPadding ? props.customPadding : "2px 10px 2px 20px")};
 	display: flex;
 	cursor: pointer;
 	position: relative;
