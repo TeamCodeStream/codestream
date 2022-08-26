@@ -4,7 +4,7 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import Select from "react-select";
 import ReactDOM from "react-dom";
-import { useDidMount } from "../utilities/hooks";
+import { useInterval } from "../utilities/hooks";
 import { HostApi } from "..";
 import { any } from "prop-types";
 import { GetServiceLevelTelemetryRequestType } from "@codestream/protocols/agent";
@@ -95,6 +95,12 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 			fetchGoldenMetrics(selectedOption?.value);
 		}
 	}, [selectedOption]);
+
+	useInterval(() => {
+		if (!_isEmpty(selectedOption)) {
+			fetchGoldenMetrics(selectedOption?.value);
+		}
+	}, 300000);
 
 	const fetchGoldenMetrics = async (entityGuid?: string | null) => {
 		if (entityGuid) {
