@@ -11,8 +11,11 @@ import {
 	ProviderTokenRequestType,
 	GenerateLoginCodeRequestType,
 	ConfirmLoginCodeRequest,
-	ConfirmLoginCodeRequestType
+	ConfirmLoginCodeRequestType,
+	BootstrapResponse
 } from "@codestream/protocols/agent";
+import { EditorContext } from "@codestream/protocols/webview";
+import { errorDismissed, errorOccurred } from "@codestream/webview/store/connectivity/actions";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { CodemarkType, LoginResult } from "@codestream/protocols/api";
@@ -39,6 +42,7 @@ import { getCodemark } from "../store/codemarks/reducer";
 import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import {
 	BootstrapInHostRequestType,
+	BootstrapInHostResponse,
 	ConnectToIDEProviderRequestType,
 	OpenUrlRequestType
 } from "../ipc/host.protocol";
@@ -251,6 +255,8 @@ export const generateLoginCode = (email: string) => async (
 	}
 };
 
+const _bootstrap = () => {};
+
 export const onLogin = (
 	response: LoginSuccessResponse,
 	isFirstPageview?: boolean,
@@ -258,11 +264,38 @@ export const onLogin = (
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const api = HostApi.instance;
 
-	const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
-		api.send(BootstrapRequestType, {}),
-		api.send(GetActiveEditorContextRequestType, undefined),
-		api.send(BootstrapInHostRequestType, undefined)
-	]);
+	debugger;
+	const bootstrapPromise = new Promise<{
+		bootstrapData: BootstrapResponse;
+		editorContext: EditorContext;
+		bootstrapCore: BootstrapInHostResponse;
+	}>((resolve, reject) => {
+		const delays = [5000, 10000, 30000, 60000, 10 * 60000];
+		async function doBootstrap() {
+			try {
+				const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
+					api.send(BootstrapRequestType, {}),
+					api.send(GetActiveEditorContextRequestType, undefined),
+					api.send(BootstrapInHostRequestType, undefined)
+				]);
+				dispatch(errorDismissed());
+				resolve({
+					bootstrapData,
+					editorContext,
+					bootstrapCore
+				});
+			} catch (ex) {
+				dispatch(errorOccurred(ex.message));
+				console.error(ex.message);
+				const delay = delays.shift() || 30 * 60000;
+				console.log(`Retrying bootstrap in ${delay}ms`);
+				setTimeout(doBootstrap, delay);
+			}
+		}
+		doBootstrap();
+	});
+
+	const { bootstrapData, editorContext, bootstrapCore } = await bootstrapPromise;
 
 	await dispatch(
 		bootstrap({
