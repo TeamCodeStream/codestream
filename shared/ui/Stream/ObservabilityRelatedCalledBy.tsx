@@ -5,23 +5,39 @@ import Icon from "./Icon";
 import { ObservabilityRelatedEntity } from "./ObservabilityRelatedEntity";
 import { ObservabilityRelatedSearch } from "./ObservabilityRelatedSearch";
 import { ErrorRow } from "./Observability";
-import { RelatedEntitiesByType } from "@codestream/protocols/agent";
+import { ALERT_SEVERITY_SORTING_ORDER } from "./CodeError/index";
+import { mapOrder } from "../utils";
+import { logError } from "../logger";
+import { GetNewRelicRelatedEntitiesRequestType } from "@codestream/protocols/agent";
+import { useRequestType } from "../utilities/hooks";
+
 interface Props {
-	relatedEntities: RelatedEntitiesByType;
 	currentRepoId: string;
-	loadingRelatedEntities: boolean;
+	entityGuid: string;
 }
 
-// Note: This could potentially be depreciated and abstracted into ObservabilityRelatedCalls.tsx
-// 		 At this point in time it feels like its worth to keep them sepearte components, but
-//       they could easily be merged into one.
 export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const { relatedEntities, loadingRelatedEntities } = props;
+	const { loading, data, error } = useRequestType(GetNewRelicRelatedEntitiesRequestType, {
+		entityGuid: props.entityGuid,
+		direction: "INBOUND"
+	});
 
-	const relatedEntitiesSliced = relatedEntities?.slice(0, 10);
-	const relatedEntitiesForSearch = relatedEntities?.slice(10);
+	if (error) {
+		const errorMessage = typeof error === "string";
+		logError(`Unexpected error during related entities fetch: ${errorMessage}`, {
+			currentRepoId: props.currentRepoId,
+			entityGuid: props.entityGuid
+		});
+	}
 
+	const relatedEntitiesSliced: any = data?.slice(0, 10);
+	const relatedEntitiesSlicedSorted = mapOrder(
+		relatedEntitiesSliced,
+		ALERT_SEVERITY_SORTING_ORDER,
+		"alertSeverity"
+	);
+	const relatedEntitiesForSearch = data?.slice(10);
 	return (
 		<>
 			<Row
@@ -35,23 +51,40 @@ export const ObservabilityRelatedCalledBy = React.memo((props: Props) => {
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Called By</span>
 			</Row>
-			{expanded && !_isEmpty(relatedEntitiesSliced) && (
+			{expanded && !_isEmpty(relatedEntitiesSlicedSorted) && (
 				<>
-					{relatedEntitiesSliced.map(_ => {
+					{relatedEntitiesSlicedSorted.map(_ => {
 						return (
 							<ObservabilityRelatedEntity currentRepoId={props.currentRepoId} relatedEntity={_} />
 						);
 					})}
 				</>
 			)}
-			{!loadingRelatedEntities && expanded && _isEmpty(relatedEntitiesSliced) && (
+			{!loading && expanded && _isEmpty(relatedEntitiesSlicedSorted) && (
 				<ErrorRow customPadding={"0 10px 0 50px"} title={"No related services"}></ErrorRow>
 			)}
-			{!loadingRelatedEntities && expanded && !_isEmpty(relatedEntitiesForSearch) && (
+			{!loading && expanded && !_isEmpty(relatedEntitiesForSearch) && (
 				<ObservabilityRelatedSearch
 					currentRepoId={props.currentRepoId}
 					searchItems={relatedEntitiesForSearch}
 				/>
+			)}
+			{loading && expanded && (
+				<Row
+					style={{
+						padding: "0 10px 0 60px"
+					}}
+					className={"pr-row"}
+				>
+					<Icon
+						style={{
+							marginRight: "5px"
+						}}
+						className="spin"
+						name="sync"
+					/>{" "}
+					Loading...
+				</Row>
 			)}
 		</>
 	);

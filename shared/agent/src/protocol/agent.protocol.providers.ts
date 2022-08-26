@@ -878,6 +878,7 @@ export interface GetNewRelicErrorGroupRequest {
 
 export interface GetNewRelicRelatedEntitiesRequest {
 	entityGuid: string;
+	direction: string;
 }
 export interface GetNewRelicUrlRequest {
 	entityGuid: string;

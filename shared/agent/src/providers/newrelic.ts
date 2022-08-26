@@ -1079,7 +1079,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					actor {
 					  entity(guid: $entityGuid) {
 						name
-						relatedEntities(filter: {relationshipTypes: {include: [CALLS, CONNECTS_TO]}, entityDomainTypes: {include: {domain: "EXT", type: "SERVICE"}}}) {
+						relatedEntities(filter: {entityDomainTypes: {include: {type: "SERVICE", domain: "EXT"}}, direction: ${request.direction}, relationshipTypes: {include: CALLS}}) {
 							results {
 							target {
 							  entity {
@@ -1117,27 +1117,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
-				const results = response.actor.entity.relatedEntities.results
-					// filter out related entities that is itself
-					// .filter((_: RelatedEntity) => {
-					// 	const guid = _?.target?.entity?.guid;
-					// 	if (guid === request.entityGuid) {
-					// 		return false; //skip
-					// 	}
-					// 	return true;
-					// })
-					.map((_: RelatedEntity) => {
-						const _entity = _.type === "CALLS" ? _.target.entity : _.source.entity;
-						return {
-							alertSeverity: _entity.alertSeverity,
-							guid: _entity.guid,
-							name: _entity.name,
-							type: _.type,
-							domain: _entity.domain,
-							accountName: _entity?.account?.name
-						};
-					});
-				return _groupBy(results, _ => _.type);
+				const results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
+					const _entity = request.direction === "INBOUND" ? _.source.entity : _.target.entity;
+					return {
+						alertSeverity: _entity.alertSeverity,
+						guid: _entity.guid,
+						name: _entity.name,
+						type: _.type,
+						domain: _entity.domain,
+						accountName: _entity?.account?.name
+					};
+				});
+				return results;
 			} else {
 				return {};
 			}
