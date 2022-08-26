@@ -1011,7 +1011,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				throw ex;
 			}
 		}
-		return response as any;
+		return response;
 	}
 
 	@log()
