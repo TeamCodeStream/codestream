@@ -2,7 +2,7 @@ import { CSReviewChangeset } from "@codestream/protocols/api";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect } from "react";
 import { ReviewPlus } from "@codestream/protocols/agent";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import * as path from "path-browserify";
 import { ChangesetFile } from "./ChangesetFile";
 import { useSelector, useDispatch } from "react-redux";

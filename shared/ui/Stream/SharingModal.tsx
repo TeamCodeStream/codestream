@@ -13,7 +13,7 @@ import {
 	ReviewPlus,
 	UpdatePostSharingDataRequestType
 } from "@codestream/protocols/agent";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { useSelector, useStore } from "react-redux";
 import { CodeStreamState } from "../store";
 import { Card, CardBody } from "../src/components/Card";

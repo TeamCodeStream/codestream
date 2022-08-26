@@ -23,7 +23,7 @@ import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { replaceHtml, emptyArray } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import {
 	api,
 	fetchCodeError,

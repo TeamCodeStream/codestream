@@ -4,7 +4,7 @@ import { CodeStreamState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
 import { goToSignup } from "../store/context/actions";
 import { TextInput } from "./TextInput";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { GetInviteInfoRequestType } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
 import { FormattedMessage } from "react-intl";

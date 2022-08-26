@@ -25,7 +25,7 @@ import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName"
 import { useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../../Timestamp";
 import { Circle } from "../../PullRequestConversationTab";
-import { HostApi } from "@codestream/webview/index";
+import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "../../../ipc/host.protocol";
 import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
 import * as providerSelectors from "../../../store/providers/reducer";

@@ -3,7 +3,7 @@ import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
 import { RadioGroup, Radio } from "../src/components/RadioGroup";
 import { useDispatch } from "react-redux";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
 import { api } from "../store/providerPullRequests/actions";

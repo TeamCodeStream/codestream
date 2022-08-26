@@ -13,7 +13,7 @@ import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import { RelatedCodemark } from "../RelatedCodemark";
 import { getPost } from "@codestream/webview/store/posts/reducer";
 import Menu from "../Menu";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { CodemarkForm } from "../CodemarkForm";
 import {
 	NewCodemarkAttributes,
@@ -25,7 +25,6 @@ import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
 import { SharingModal } from "../SharingModal";
 import { BaseCodemarkProps, BaseCodemark } from "./BaseCodemark";
 import Icon from "../Icon";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { logError } from "@codestream/webview/logger";
 import { mapFilter } from "@codestream/webview/utils";
 import { MarkdownText } from "../MarkdownText";

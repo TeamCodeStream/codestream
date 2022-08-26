@@ -1,3 +1,4 @@
+import { HostApi } from "@codestream/webview/webview-api";
 import React, { useState, useEffect, useMemo } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -6,7 +7,6 @@ import { OpenReviews } from "./OpenReviews";
 import { ReposScm, GetReposScmRequestType } from "../protocols/agent/agent.protocol.scm";
 import { HostDidChangeWorkspaceFoldersNotificationType } from "../ipc/host.protocol.notifications";
 import { useDidMount } from "../utilities/hooks";
-import { HostApi } from "..";
 import { OpenPullRequests } from "./OpenPullRequests";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import IssuesPane from "./CrossPostIssueControls/IssuesPane";
@@ -25,7 +25,6 @@ import { getPreferences } from "../store/users/reducer";
 import { getRepos } from "../store/repos/reducer";
 import { Observability } from "./Observability";
 
-
 const Root = styled.div`
 	height: 100%;
 	background: var(--sidebar-background);
@@ -33,7 +32,7 @@ const Root = styled.div`
 `;
 
 const Panels = styled.div`
-    height: 100%;
+	height: 100%;
 `;
 
 export const ExtensionTitle = styled.h2`

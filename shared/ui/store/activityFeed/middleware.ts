@@ -2,7 +2,7 @@ import { GetPostRequestType, PostPlus } from "@codestream/protocols/agent";
 import { AnyAction, Middleware } from "redux";
 import { ThunkDispatch } from "redux-thunk";
 import { CodeStreamState } from "..";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { saveCodemarks } from "../codemarks/actions";
 import { addPosts, savePosts } from "../posts/actions";
 import { getPost } from "../posts/reducer";

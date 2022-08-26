@@ -10,7 +10,7 @@ import {
 	GetReposScmRequestType,
 	ReposScm
 } from "@codestream/protocols/agent";
-import { HostApi } from "../../";
+import { HostApi } from "@codestream/webview/webview-api";
 import { CSCodeError } from "@codestream/protocols/api";
 import { logWarning } from "../../logger";
 import { DropdownButton } from "../DropdownButton";

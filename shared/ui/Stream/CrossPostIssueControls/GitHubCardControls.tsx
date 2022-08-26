@@ -15,7 +15,7 @@ import { GitHubIntegrationData } from "@codestream/webview/store/activeIntegrati
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 import { emptyArray, mapFilter } from "@codestream/webview/utils";
 import ReactDOM from "react-dom";

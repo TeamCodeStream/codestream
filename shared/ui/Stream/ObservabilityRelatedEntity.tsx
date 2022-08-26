@@ -2,7 +2,7 @@ import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import Icon from "./Icon";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import styled from "styled-components";
 import { PaneNodeName } from "../src/components/Pane";

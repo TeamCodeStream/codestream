@@ -5,7 +5,7 @@ import {
 	FetchForkPointRequestType,
 	ReposScm
 } from "@codestream/protocols/agent";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import Icon from "./Icon";

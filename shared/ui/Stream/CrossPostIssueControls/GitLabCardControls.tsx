@@ -17,7 +17,7 @@ import { updateForProvider } from "@codestream/webview/store/activeIntegrations/
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 
 export function GitLabCardControls(

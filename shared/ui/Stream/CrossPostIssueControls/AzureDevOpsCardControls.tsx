@@ -17,7 +17,7 @@ import { AzureDevOpsIntegrationData } from "@codestream/webview/store/activeInte
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { mapFilter, emptyArray } from "@codestream/webview/utils";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 

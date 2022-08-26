@@ -1,12 +1,8 @@
 import { CSTeam } from "@codestream/protocols/api";
+import { HostApi } from "@codestream/webview/webview-api";
 import { action } from "../common";
 import { TeamsActionsType } from "./types";
-import {
-	CreateTeamRequest,
-	CreateTeamRequestType,
-	UpdateTeamSettingsRequestType
-} from "@codestream/protocols/agent";
-import { HostApi } from "../..";
+import { CreateTeamRequest, CreateTeamRequestType } from "@codestream/protocols/agent";
 import { addCompanies } from "../companies/actions";
 import { addStreams } from "../streams/actions";
 

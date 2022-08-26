@@ -21,7 +21,7 @@ import { keyFilter, mapFilter } from "@codestream/webview/utils";
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import {
 	openPanel,

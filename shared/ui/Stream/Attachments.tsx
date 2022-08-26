@@ -1,6 +1,6 @@
 import { CSPost } from "@codestream/protocols/api";
 import React from "react";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
 import Icon from "./Icon";
 

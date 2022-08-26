@@ -117,8 +117,6 @@ import { appendProcessBuffer } from "./store/editorContext/actions";
 import { logError } from "@codestream/webview/logger";
 import { parseProtocol } from "./utilities/urls";
 
-export { HostApi };
-
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
 	Object.defineProperty(window, "acquireCodestreamHost", {
 		value() {

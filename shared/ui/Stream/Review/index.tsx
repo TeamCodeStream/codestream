@@ -48,7 +48,7 @@ import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
 import {
 	setCurrentReview,

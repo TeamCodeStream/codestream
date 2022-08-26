@@ -27,7 +27,7 @@ import { prettyPrintOne } from "code-prettify";
 import { escapeHtml } from "../utils";
 import * as Path from "path-browserify";
 import styled from "styled-components";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
 import {

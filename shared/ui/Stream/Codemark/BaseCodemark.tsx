@@ -19,7 +19,7 @@ import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
 import React from "react";
 import styled from "styled-components";
 import Tooltip from "../Tooltip";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { MarkdownText } from "../MarkdownText";
 import { DropdownButton } from "../DropdownButton";
 import { useDispatch } from "react-redux";

@@ -8,9 +8,8 @@ import {
 	useMemo
 } from "react";
 import { noop } from "../utils";
-import { HostApi } from "..";
 import { RequestType } from "vscode-jsonrpc";
-import { RequestParamsOf, RequestResponseOf } from "../webview-api";
+import { HostApi, RequestParamsOf, RequestResponseOf } from "../webview-api";
 
 type Fn = () => void;
 

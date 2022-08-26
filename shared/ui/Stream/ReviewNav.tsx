@@ -5,7 +5,7 @@ import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { setCurrentReview, setCreatePullRequest } from "@codestream/webview/store/context/actions";
 import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
@@ -618,7 +618,6 @@ export function ReviewNav(props: Props) {
 									isTouring={hoverButton ? true : false}
 								/>
 							</StyledReview>
-
 						</div>
 					</ScrollBox>
 				</div>

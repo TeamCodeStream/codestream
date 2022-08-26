@@ -9,8 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import Icon from "../Stream/Icon";
 import { useDidMount } from "../utilities/hooks";
 import styled from "styled-components";
-import { Loading } from "../Container/Loading";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { completeSignup, ProviderNames } from "./actions";
 import {
 	CreateCompanyRequestType,

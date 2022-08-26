@@ -47,7 +47,7 @@ import {
 	WarningOrError,
 	GetNewRelicErrorGroupResponse
 } from "@codestream/protocols/agent";
-import { HostApi } from "..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { CSCodeError } from "@codestream/protocols/api";
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { logError, logWarning } from "../logger";

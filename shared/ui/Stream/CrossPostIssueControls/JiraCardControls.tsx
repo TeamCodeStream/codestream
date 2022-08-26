@@ -17,7 +17,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import AsyncSelect from "react-select/async";
-import { HostApi } from "../..";
+import { HostApi } from "@codestream/webview/webview-api";
 import { CrossPostIssueContext } from "../CodemarkForm";
 import Icon from "../Icon";
 import Menu from "../Menu";
