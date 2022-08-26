@@ -995,16 +995,12 @@ export interface GetNewRelicErrorGroupResponse {
 		};
 	};
 }
-
-export interface GetNewRelicRelatedEntitiesResponse {
-	CALLS?: RelatedEntitiesByType;
-	CONNECTS_TO?: RelatedEntitiesByType;
+export interface GetNewRelicRelatedEntitiesResponse extends Array<RelatedEntityByType> {
 	error?: {
 		message: string;
 	};
 	message?: string;
 }
-
 export interface GetNewRelicUrlResponse {
 	newRelicUrl: string;
 }
@@ -1296,7 +1292,7 @@ export const GetFileLevelTelemetryRequestType = new RequestType<
 >("codestream/newrelic/fileLevelTelemetry");
 
 export const GetMethodLevelTelemetryRequestType = new RequestType<
-	GetServiceLevelTelemetryRequest,
+	GetMethodLevelTelemetryRequest,
 	GetMethodLevelTelemetryResponse,
 	void,
 	void
