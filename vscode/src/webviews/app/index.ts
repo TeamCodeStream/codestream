@@ -1,6 +1,7 @@
 "use strict";
 import { LiveShareJoinSessionRequestType } from "@codestream/protocols/webview";
-import { HostApi, initialize, setupCommunication } from "@codestream/webview/index";
+import { initialize, setupCommunication } from "@codestream/webview/index";
+import { HostApi } from "@codestream/webview/webview-api";
 import { initializeColorPalette } from "./theme";
 
 declare function acquireVsCodeApi();
