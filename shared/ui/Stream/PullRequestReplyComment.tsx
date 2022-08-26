@@ -20,7 +20,7 @@ interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	mode?: string;
 	className?: string;
-	databaseId: string;
+	databaseId?: string;
 	parentId?: string;
 	isOpen: boolean;
 	__onDidRender: Function;

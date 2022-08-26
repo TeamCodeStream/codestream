@@ -32,6 +32,7 @@ import {
 	ProviderGetForkedReposResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
+	ThirdPartyPullRequestComments,
 } from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -202,7 +203,6 @@ interface BitbucketRepoFull extends BitbucketRepo {
 	};
 }
 
-export interface ThirdPartyPullRequestComments extends Array<BitbucketPullRequestComment> {}
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -609,7 +609,7 @@ export class BitbucketProvider
 								bodyText: _.content?.raw,
 								state: _.type
 							};
-						}) as ThirdPartyPullRequestComments,
+						}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment>,
 					number: pr.body.id,
 					idComputed: JSON.stringify({
 						id: pr.body.id,
@@ -1093,7 +1093,7 @@ export class BitbucketProvider
 	async createCommentReply(request: {
 		pullRequestId: string;
 		parentId: number;
-		commentId: string;
+		commentId: number;
 		text: string;
 	}): Promise<Directives> {
 		const payload = {
@@ -1101,7 +1101,7 @@ export class BitbucketProvider
 				raw: request.text
 			},
 			parent: {
-				id: request.parentId
+				id: request.commentId
 			}
 		} as any;
 

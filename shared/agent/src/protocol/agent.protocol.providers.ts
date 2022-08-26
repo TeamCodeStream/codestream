@@ -711,6 +711,8 @@ interface RateLimit {
 	resetAt: any;
 }
 
+export interface ThirdPartyPullRequestComments<T> extends Array<T> {}
+
 export interface FetchThirdPartyPullRequestResponse {
 	error?: {
 		message: string;
