@@ -11,7 +11,6 @@ export interface ParseStackTraceRequest {
 
 export interface ParseStackTraceResponse extends CSStackTraceInfo {
 	parseError?: string;
-	language?: string;
 	warning?: WarningOrError;
 }
 

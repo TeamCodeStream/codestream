@@ -6,7 +6,7 @@ import { Strings } from "../../system/string";
 let regex: RegExp;
 
 export function Parser(stack: string): CSStackTraceInfo {
-	const info: CSStackTraceInfo = { lines: [] };
+	const info: CSStackTraceInfo = { lines: [], language: "ruby" };
 
 	if (!regex) {
 		// NOTE: there's no great way to have a multiline regex in js (except for this hackery ;)

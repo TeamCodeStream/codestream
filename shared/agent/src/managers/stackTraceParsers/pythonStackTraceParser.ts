@@ -7,7 +7,7 @@ import { Strings } from "../../system/string";
 let regex: RegExp;
 
 export function Parser(stack: string): CSStackTraceInfo {
-	const info: CSStackTraceInfo = { text: stack, lines: [] };
+	const info: CSStackTraceInfo = { text: stack, lines: [], language: "python" };
 
 	if (!stack) return info;
 

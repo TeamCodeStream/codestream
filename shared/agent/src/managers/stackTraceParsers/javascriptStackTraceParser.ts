@@ -5,7 +5,7 @@ import { CSStackTraceInfo } from "../../protocol/api.protocol.models";
 import { Strings } from "../../system";
 
 export function Parser(stack: string): CSStackTraceInfo {
-	const info: CSStackTraceInfo = { text: stack, lines: [] };
+	const info: CSStackTraceInfo = { text: stack, lines: [], language: "javascript" };
 	const firstLine = stack.split("\n")[0];
 	const match = firstLine.match(/Error: (.*)$/);
 	if (match && match[1]) {
