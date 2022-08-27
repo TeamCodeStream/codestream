@@ -325,8 +325,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	// 		.length > 0;
 
 	const { PRConnectedProviders, pullRequestProviderHidden, prLabel } = derivedState;
-	const [queries, setQueries] = React.useState({});
-	const [defaultQueries, setDefaultQueries] = React.useState({});
+	const [queries, setQueries] = React.useState<FetchProviderDefaultPullResponse>({});
+	const [defaultQueries, setDefaultQueries] = React.useState<FetchProviderDefaultPullResponse>({});
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState({});
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
 	const [prError, setPrError] = React.useState("");
@@ -491,7 +491,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (!mountedRef.current) return;
-		const newQueries = {
+		const newQueries: FetchProviderDefaultPullResponse = {
 			...defaultQueries,
 			...(derivedState.pullRequestQueries || {})
 		};
@@ -565,14 +565,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const editQuery = (providerId: string, index: number) => {
 		setEditingQuery({ providerId, index });
 	};
-	const reloadQuery = async (providerId, index) => {
+	const reloadQuery = async (providerId: string, index: number) => {
 		setIsLoadingPRGroup(index);
 		try {
 			const q = queries[providerId][index];
 			const response: any = await dispatch(
 				getMyPullRequests(
 					providerId,
-					[q.query],
+					[q],
 					!derivedState.allRepos,
 					{ force: true },
 					true,
@@ -1540,7 +1540,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	function patchQueries(
 		defaultQueries: FetchProviderDefaultPullResponse,
-		pullRequestQueries: PullRequestQuery[],
+		pullRequestQueries: FetchProviderDefaultPullResponse,
 		saveQueries: (providerId, queries) => void
 	) {
 		Object.keys(pullRequestQueries).forEach(provider => {

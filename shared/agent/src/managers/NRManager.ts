@@ -256,7 +256,7 @@ export class NRManager {
 				resolvedStackInfo.lines.push(resolvedLine);
 				line.fileRelativePath = resolvedLine.fileRelativePath;
 
-				if (!line.error && matchingRepoPath) {
+				if (!line.error && matchingRepoPath && parsedStackInfo.language) {
 					this.resolveStackTraceLine(line, ref, matchingRepoPath, parsedStackInfo.language).then(
 						resolvedLine => {
 							if (resolvedLine.error) {

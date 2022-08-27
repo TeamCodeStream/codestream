@@ -292,7 +292,7 @@ export class ThirdPartyProviderRegistry {
 			_.queriedPullRequests.map((pullRequests: GetMyPullRequestsResponse[], queryIndex: number) => {
 				prNotificationMessages.push(
 					...pullRequests.map(pullRequest => ({
-						queryName: PR_QUERIES[_.providerId][queryIndex].name,
+						queryName: PR_QUERIES[_.providerId][queryIndex].name!,
 						pullRequest
 					}))
 				);

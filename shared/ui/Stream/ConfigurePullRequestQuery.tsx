@@ -58,9 +58,9 @@ export function ConfigurePullRequestQuery(props: Props) {
 	}, [props]);
 
 	const query: PullRequestQuery | undefined = props.query;
-	const [providerIdField, setProviderIdField] = React.useState(defaultProviderId);
-	const [nameField, setNameField] = React.useState(query?.name);
-	const [queryField, setQueryField] = React.useState(query?.query);
+	const [providerIdField, setProviderIdField] = React.useState<string>(defaultProviderId);
+	const [nameField, setNameField] = React.useState<string | undefined>(query?.name);
+	const [queryField, setQueryField] = React.useState<string | undefined>(query?.query);
 	const [validGHQueries, setvalidGHQueries] = React.useState(
 		new Set([
 			"user",
@@ -93,12 +93,12 @@ export function ConfigurePullRequestQuery(props: Props) {
 			"assigned_to_me"
 		])
 	);
-	const [validQuery, setValidQuery] = React.useState(true);
-	const [errorQuery, setErrorQuery] = React.useState(false);
+	const [validQuery, setValidQuery] = React.useState<boolean>(true);
+	const [errorQuery, setErrorQuery] = React.useState<boolean>(false);
 	const [testPRSummaries, setTestPRSummaries] = React.useState<
 		GetMyPullRequestsResponse[] | undefined
 	>(undefined);
-	const [isLoading, setIsLoading] = React.useState(false);
+	const [isLoading, setIsLoading] = React.useState<boolean>(false);
 
 	const providerDisplayName = React.useMemo(() => {
 		if (derivedState.providers[providerIdField]) {
@@ -127,8 +127,11 @@ export function ConfigurePullRequestQuery(props: Props) {
 		}
 	}, [providerIdField]);
 
-	const isValidQuery = query => {
+	const isValidQuery = (query?: string) => {
 		// "recent" is a special query string that we handle specifically
+		if (!query) {
+			return false;
+		}
 		if (query === "recent") {
 			setValidQuery(true);
 			return true;
@@ -163,8 +166,8 @@ export function ConfigurePullRequestQuery(props: Props) {
 		return true;
 	};
 
-	const fetchTestPRs = async query => {
-		if (isValidQuery(query)) {
+	const fetchTestPRs = async (prQuery: PullRequestQuery) => {
+		if (isValidQuery(prQuery.query)) {
 			setIsLoading(true);
 			setTestPRSummaries(undefined);
 			try {
@@ -172,7 +175,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 				const response: any = await dispatch(
 					getMyPullRequests(
 						providerIdField,
-						[query],
+						[prQuery],
 						props.openReposOnly,
 						{ force: true },
 						true,
@@ -307,7 +310,17 @@ export function ConfigurePullRequestQuery(props: Props) {
 								isLoading={isLoading}
 								disabled={queryField?.length === 0}
 								variant="secondary"
-								onClick={() => fetchTestPRs(queryField)}
+								onClick={() => {
+									if (!queryField) {
+										return;
+									}
+									fetchTestPRs({
+										query: queryField,
+										name: nameField,
+										providerId: defaultProviderId,
+										hidden: false
+									});
+								}}
 							>
 								Test Query
 							</Button>

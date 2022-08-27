@@ -48,10 +48,9 @@ import {
 	GetNewRelicErrorGroupResponse
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
-import { CSCodeError } from "@codestream/protocols/api";
+import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { logError, logWarning } from "../logger";
-import { Link } from "./Link";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 import { WarningBox } from "./WarningBox";
 
@@ -534,7 +533,7 @@ export function CodeErrorNav(props: Props) {
 				dispatch(setErrorGroup(errorGroupGuidToUse, errorGroupResult.errorGroup!));
 			}
 
-			const actualStackInfo = stackInfo
+			const actualStackInfo: CSStackTraceInfo[] = stackInfo
 				? stackInfo.error
 					? [{ ...stackInfo, lines: [] }]
 					: [stackInfo.parsedStackInfo!]

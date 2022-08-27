@@ -1,6 +1,6 @@
 "use strict";
 import { GraphQLClient } from "graphql-request";
-import { isNil as _isNil } from "lodash";
+import { isEmpty as _isEmpty } from "lodash";
 import { Headers, Response } from "node-fetch";
 import { performance } from "perf_hooks";
 import * as qs from "querystring";
@@ -71,6 +71,14 @@ interface GitHubRepo {
 	has_issues: boolean;
 }
 
+type ReviewState = "PENDING" | "APPROVED" | "CHANGES_REQUESTED" | "DISMISSED" | "COMMENTED";
+
+interface GithubSelfResponse {
+	viewer: {
+		login: string;
+	};
+}
+
 interface PRResponse {
 	viewer: {
 		id: string;
@@ -84,20 +92,22 @@ interface PRResponse {
 				title: string;
 				closed: boolean;
 				merged: boolean;
-				reviewDecision?: string;
 				viewerDidAuthor: boolean;
 				viewerLatestReviewRequest?: {
 					asCodeOwner: boolean;
 					requestedReviewer: {
-						name?: string;
 						login: string;
 						id: string;
-						email?: string;
 					};
 				};
-				viewerLatestReview?: {
-					state: string;
-					submittedAt: string;
+				reviews: {
+					nodes: {
+						createdAt: string;
+						state: ReviewState;
+						author: {
+							login: string;
+						};
+					}[];
 				};
 				baseRefName: string;
 				headRefName: string;
@@ -181,11 +191,12 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	}
 
 	private _knownRepos = new Map<string, GitHubRepo>();
-	_pullRequestCache: Map<string, FetchThirdPartyPullRequestResponse> = new Map();
-	_reviewersCache: Map<
+	private _pullRequestCache: Map<string, FetchThirdPartyPullRequestResponse> = new Map();
+	private _reviewersCache: Map<
 		{ owner: string; repo: string },
 		{ avatarUrl: string; id: string; login: string; name?: string }[]
 	> = new Map();
+	private _githubLoginCache = new Map<string, string>();
 
 	get displayName() {
 		return "GitHub";
@@ -260,6 +271,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
+		this._githubLoginCache.clear();
 		this._knownRepos.clear();
 		this._pullRequestCache.clear();
 		this._reviewersCache.clear();
@@ -3015,7 +3027,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		return query;
 	}
 
-	private buildSearchQuery(query: string, limit: number) {
+	private buildSearchQuery(query: string, limit: number, author: string) {
 		return `query Search {
 			rateLimit {
 				limit
@@ -3035,20 +3047,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						asCodeOwner
 						requestedReviewer {
 							... on User {
-								name
 								login
 								id
-								email
 							}
 						}
 					}
 					closed
-					reviewDecision
 					viewerDidAuthor
 					merged
-					viewerLatestReview {
-						state
-						submittedAt
+					reviews(last:5, states: [PENDING,APPROVED,CHANGES_REQUESTED,DISMISSED,COMMENTED], author: "${author}") {
+						 nodes {
+							createdAt
+							state
+							author {
+								login
+							}
+						}
 					}
 					title
 					createdAt
@@ -3095,6 +3109,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
+		Logger.log(`github getMyPullRequests ${JSON.stringify(request)}`);
 		// const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		// if (!request.force) {
 		// 	const cached = this._getMyPullRequestsCache.get(cacheKey);
@@ -3147,7 +3162,9 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 		const defaultQueries = await providerRegistry.getProviderDefaultPullRequestQueries({});
 
-		const providerId = this.providerConfig?.id;
+		const providerId = this.providerConfig?.id!;
+
+		const githubLogin = await this.getGithubLogin(providerId);
 		// see: https://docs.github.com/en/github/searching-for-information-on-github/searching-issues-and-pull-requests
 		const items = await Promise.all(
 			queriesSafe.map(prQuery => {
@@ -3179,7 +3196,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				} else {
 					Logger.log(`getMyPullRequests providerId="${providerId}" finalQuery="${finalQuery}"`);
 				}
-				return this.query<PRResponse>(this.buildSearchQuery(finalQuery, limit));
+				return this.query<PRResponse>(this.buildSearchQuery(finalQuery, limit, githubLogin));
 			})
 		).catch(ex => {
 			Logger.error(ex, "getMyPullRequests");
@@ -3197,20 +3214,32 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 				response[index] = item.search.edges
 					.map(_ => _.node)
 					.filter(_ => _.id)
-					.filter(_ => {
+					.filter(pullRequest => {
 						if (queries[index].name === WAITING_ON_REVIEW) {
 							const isDefaultQuery =
 								queries[index].query ===
 								defaultQueries[providerId].find(_ => _.name === WAITING_ON_REVIEW)?.query;
 							const isReviewer =
-								_.viewerLatestReviewRequest?.requestedReviewer.id === item.viewer.id;
-							const hasReviewed: boolean = !_isNil(_.viewerLatestReview?.state);
-							const result =
-								isDefaultQuery &&
-								(isReviewer || hasReviewed) &&
-								_.closed === false &&
-								_.viewerLatestReview?.state !== "APPROVED";
-							return result;
+								pullRequest.viewerLatestReviewRequest?.requestedReviewer.id === item.viewer.id;
+							const hasReviewed: boolean = !_isEmpty(pullRequest.reviews.nodes);
+							const lastDecision = pullRequest.reviews.nodes
+								.reverse()
+								.find(review => review.state !== "COMMENTED")?.state;
+
+							if (
+								!isDefaultQuery ||
+								pullRequest.closed ||
+								pullRequest.isDraft ||
+								pullRequest.viewerDidAuthor
+							) {
+								return false;
+							}
+
+							if (isReviewer) {
+								return true;
+							}
+
+							return hasReviewed && lastDecision !== "APPROVED";
 						}
 						return true;
 					})
@@ -6012,6 +6041,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 		}
 	}
+
+	private async getGithubLogin(providerId: string) {
+		const cached = this._githubLoginCache.get(providerId);
+		if (cached) {
+			return cached;
+		}
+		Logger.log(`Getting login for providerId: ${providerId}`);
+		const query = `query {
+						viewer {
+							login
+						}
+					}`;
+		const response = await this.query<GithubSelfResponse>(query);
+		this._githubLoginCache.set(providerId, response.viewer.login);
+		return response.viewer.login;
+	}
 }
 
 interface GitHubPullRequest {
@@ -6081,6 +6126,7 @@ interface GetPullRequestsResponse {
 		resetAt: string;
 	};
 }
+
 interface GitHubFiles {
 	pageInfo: {
 		endCursor?: string;
@@ -6094,6 +6140,7 @@ interface GitHubFiles {
 		viewerViewedState: string;
 	}[];
 }
+
 interface GitHubCreatePullRequestResponse {
 	createPullRequest: {
 		pullRequest: {

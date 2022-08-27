@@ -1,7 +1,11 @@
 "use strict";
 
 import { ParsedDiff } from "diff";
-import { EnvironmentHost, RepoScmStatus, ThirdPartyProviders } from "./agent.protocol";
+import {
+	EnvironmentHost,
+	FetchProviderDefaultPullResponse,
+	ThirdPartyProviders
+} from "./agent.protocol";
 import { CSReviewCheckpoint } from "./api.protocol";
 
 export interface CSEntity {
@@ -306,7 +310,7 @@ export interface CSStackTraceLine {
 
 export interface CSStackTraceInfo {
 	// TODO required??
-	language: string;
+	language?: string;
 	occurrenceId?: string;
 	text?: string;
 	repoId?: string;
@@ -724,7 +728,7 @@ export enum CSReviewAssignmentSetting {
 
 export interface PullRequestQuery {
 	providerId: string;
-	name: string;
+	name?: string;
 	query: string;
 	hidden?: boolean;
 }
@@ -747,7 +751,7 @@ export interface CSMePreferences {
 	skipEmailingAuthors?: boolean;
 	skipPostCreationModal?: boolean;
 	pullRequestFilesChangedMode?: "files" | "tree" | "hunks";
-	pullRequestQueries?: PullRequestQuery[];
+	pullRequestQueries?: FetchProviderDefaultPullResponse;
 	fetchRequestQueries?: FetchRequestQuery[];
 	pullRequestQueryShowAllRepos?: boolean;
 	pullRequestQueryHideLabels?: boolean;
