@@ -694,6 +694,22 @@ export function reduceProviderPullRequests(
 								}
 								if (done) break;
 							}
+						} else if (directive.type === "updatePullRequestFileNode") {
+							if (!directive.data) continue;
+
+							if (directive.data) {
+								let done = false;
+
+								for (const file of pr.files.nodes) {
+									if (!file) continue;
+
+									if (file.path === directive.data.path) {
+										file.viewerViewedState = directive.data.viewerViewedState;
+										done = true;
+									}
+									if (done) break;
+								}
+							}
 						} else if (directive.type === "updatePullRequestReviewCommentNode") {
 							const node = pr.timelineItems.nodes.find(
 								_ => _.id === directive.data.pullRequestReview.id

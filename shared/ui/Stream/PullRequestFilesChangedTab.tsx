@@ -86,7 +86,7 @@ export const PullRequestFilesChangedTab = (props: {
 	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
 	const _mapData = data => {
-		const filesChanged = data.map(_ => {
+		const filesChanged = data?.map(_ => {
 			return {
 				..._,
 				linesAdded: _.additions,

@@ -700,7 +700,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 			if (response?.repository?.pullRequest) {
 				let response2;
-				let prWithAllFiles: any = [];
+				let prWithAllFiles: any = { nodes: [], totalCount: 0 };
 				do {
 					response2 = await this.getPullRequestQuery(
 						{
@@ -712,12 +712,17 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						response2 && response2?.repository?.pullRequest?.files?.pageInfo?.endCursor
 					);
 					if (response2 === undefined) break;
-					if (response2.repository.pullRequest.files) {
-						prWithAllFiles = prWithAllFiles.concat(response2.repository.pullRequest.files);
+					if (response2.repository.pullRequest.files.totalCount) {
+						prWithAllFiles.totalCount = response2.repository.pullRequest.files.totalCount;
+					}
+					if (response2.repository.pullRequest.files.nodes) {
+						prWithAllFiles.nodes = prWithAllFiles.nodes.concat(
+							response2.repository.pullRequest.files.nodes
+						);
 					}
 				} while (response2.repository.pullRequest.files.pageInfo?.hasNextPage === true);
 
-				response.repository.pullRequest.files = response2.repository.pullRequest.files;
+				response.repository.pullRequest.files = prWithAllFiles;
 				response.repository.pullRequest.commits = response2.repository.pullRequest.commits;
 
 				const { repos } = SessionContainer.instance();
@@ -1460,27 +1465,21 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 		const query = `mutation ${Method}($pullRequestId: ID!, $path: String!) {
 			${method}(input: {pullRequestId: $pullRequestId, path: $path}) {
 				  clientMutationId
-				  pullRequest {
-					files(first: 100) {
-					  totalCount
-					  nodes {
-						path
-						deletions
-						additions
-						viewerViewedState
-					  }
-					}
-				  }
 				}
 			  }`;
 
-		const response = await this.mutate<any>(query, {
+		await this.mutate<any>(query, {
 			pullRequestId: request.pullRequestId,
 			path: request.path
 		});
 
 		return this.handleResponse(request.pullRequestId, {
-			directives: [{ type: "updatePullRequest", data: response[method].pullRequest }]
+			directives: [
+				{
+					type: "updatePullRequestFileNode",
+					data: { path: request.path, viewerViewedState: request.onOff ? "VIEWED" : "UNVIEWED" }
+				}
+			]
 		});
 	}
 
@@ -5895,6 +5894,22 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 						if (done) break;
 					}
 					if (done) break;
+				}
+			} else if (directive.type === "updatePullRequestFileNode") {
+				if (!directive.data) continue;
+
+				if (directive.data) {
+					let done = false;
+
+					for (const file of pr.files.nodes) {
+						if (!file) continue;
+
+						if (file.path === directive.data.path) {
+							file.viewerViewedState = directive.data.viewerViewedState;
+							done = true;
+						}
+						if (done) break;
+					}
 				}
 			} else if (directive.type === "updatePullRequestReviewCommentNode") {
 				const node = pr.timelineItems.nodes.find(_ => _.id === directive.data.pullRequestReview.id);

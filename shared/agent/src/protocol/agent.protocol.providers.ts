@@ -486,9 +486,11 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		pageInfo: any;
 		totalCount: number;
 		nodes: {
+			[x: string]: any;
 			path: string;
 			additions: number;
 			deletions: number;
+			viewerViewedState: string;
 		}[];
 	};
 	headRefName: string;
