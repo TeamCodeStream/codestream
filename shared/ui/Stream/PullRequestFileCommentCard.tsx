@@ -346,20 +346,12 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		}
 	};
 
-	if (
-		!props.skipResolvedCheck &&
-		comment.isResolved &&
-		!expandedComments[`resolved-${comment.id}`]
-	) {
-		return (
-			<PullRequestMinimizedComment
-				reason={"This conversation was marked as resolved"}
-				isResolved
-				onClick={() => expandComment(`resolved-${comment.id}`)}
-				key={`min-${comment.id}`}
-			/>
-		);
-	}
+	const expandComment = id => {
+		setExpandedComments({
+			...expandedComments,
+			[id]: !expandedComments[id]
+		});
+	};
 
 	const doneEditingComment = id => {
 		setEditingComments({ ...editingComments, [id]: false });
@@ -383,12 +375,20 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		});
 	};
 
-	const expandComment = id => {
-		setExpandedComments({
-			...expandedComments,
-			[id]: !expandedComments[id]
-		});
-	};
+	if (
+		!props.skipResolvedCheck &&
+		comment.isResolved &&
+		!expandedComments[`resolved-${comment.id}`]
+	) {
+		return (
+			<PullRequestMinimizedComment
+				reason={"This conversation was marked as resolved"}
+				isResolved
+				onClick={() => expandComment(`resolved-${comment.id}`)}
+				key={`min-${comment.id}`}
+			/>
+		);
+	}
 
 	return (
 		<div ref={myRef} id={`comment_card_${comment.id}`}>
