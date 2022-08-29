@@ -483,6 +483,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		};
 	};
 	files: {
+		pageInfo: any;
 		totalCount: number;
 		nodes: {
 			path: string;
