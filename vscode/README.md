@@ -1,7 +1,3 @@
-
-**CodeStream is now part of New Relic. [Learn more.](https://newrelic.com/blog/nerdlog/announcing-new-relic-codestream)**
-
-
 # New Relic CodeStream
 
 New Relic CodeStream is a developer collaboration platform that integrates essential dev tools into VS Code. Eliminate context-switching and simplify code discussion and code review by putting collaboration tools in your IDE.
