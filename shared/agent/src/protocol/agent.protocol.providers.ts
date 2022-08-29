@@ -483,10 +483,12 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		};
 	};
 	files: {
-		pageInfo: any;
+		pageInfo: {
+			endCursor?: string;
+			hasNextPage?: boolean;
+		};
 		totalCount: number;
 		nodes: {
-			[x: string]: any;
 			path: string;
 			additions: number;
 			deletions: number;

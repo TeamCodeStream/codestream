@@ -700,7 +700,11 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 
 			if (response?.repository?.pullRequest) {
 				let response2;
-				let prWithAllFiles: any = { nodes: [], totalCount: 0 };
+				let prWithAllFiles: GitHubFiles = {
+					pageInfo: {},
+					nodes: [],
+					totalCount: 0
+				};
 				do {
 					response2 = await this.getPullRequestQuery(
 						{
@@ -720,7 +724,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 							response2.repository.pullRequest.files.nodes
 						);
 					}
-				} while (response2.repository.pullRequest.files.pageInfo?.hasNextPage === true);
+				} while (response2.repository.pullRequest.files?.pageInfo?.hasNextPage === true);
 
 				response.repository.pullRequest.files = prWithAllFiles;
 				response.repository.pullRequest.commits = response2.repository.pullRequest.commits;
@@ -6077,7 +6081,19 @@ interface GetPullRequestsResponse {
 		resetAt: string;
 	};
 }
-
+interface GitHubFiles {
+	pageInfo: {
+		endCursor?: string;
+		hasNextPage?: boolean;
+	};
+	totalCount: number;
+	nodes: {
+		path: string;
+		additions: number;
+		deletions: number;
+		viewerViewedState: string;
+	}[];
+}
 interface GitHubCreatePullRequestResponse {
 	createPullRequest: {
 		pullRequest: {
