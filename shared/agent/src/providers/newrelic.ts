@@ -490,8 +490,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	 * Returns a list of entities, using an appName or appNames as query params
 	 * NOTE: we don't get all entities since we're capped at 500 results per, and
 	 * some accounts/orgs have over 20k entities.
+	 *
+	 * Can throw errors
+	 *
 	 * @param request
-	 * @returns GetObservabilityEntitiesResponse
+	 * @returns Promise<GetObservabilityEntitiesResponse>
+	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityEntitiesRequestType)
 	@log({
@@ -644,6 +648,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getEntities");
+			throw ex;
 		}
 		return {
 			entities: []
@@ -677,11 +682,22 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
+	/**
+	 * Returns NR errors assigned to this uer
+	 *
+	 * Can throw errors.
+	 *
+	 * @param {GetObservabilityErrorAssignmentsRequest} request
+	 * @return {Promise<GetObservabilityErrorAssignmentsResponse>}
+	 * @memberof NewRelicProvider
+	 */
 	@lspHandler(GetObservabilityErrorAssignmentsRequestType)
 	@log({
 		timed: true
 	})
-	async getObservabilityErrorAssignments(request: GetObservabilityErrorAssignmentsRequest) {
+	async getObservabilityErrorAssignments(
+		request: GetObservabilityErrorAssignmentsRequest
+	): Promise<GetObservabilityErrorAssignmentsResponse> {
 		const response: GetObservabilityErrorAssignmentsResponse = { items: [] };
 
 		try {
@@ -720,19 +736,28 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("getObservabilityErrorAssignments", {
 				error: ex
 			});
-			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				throw ex;
-			}
+			throw ex;
 		}
 
 		return response;
 	}
 
+	/**
+	 * Returns a list of git repos, along with any NR entity associations.
+	 *
+	 * Can throw errors.
+	 *
+	 * @param {GetObservabilityReposRequest} request
+	 * @return {*}
+	 * @memberof NewRelicProvider
+	 */
 	@lspHandler(GetObservabilityReposRequestType)
 	@log({
 		timed: true
 	})
-	async getObservabilityRepos(request: GetObservabilityReposRequest) {
+	async getObservabilityRepos(
+		request: GetObservabilityReposRequest
+	): Promise<GetObservabilityReposResponse> {
 		const response: GetObservabilityReposResponse = { repos: [] };
 		try {
 			const { scm } = this._sessionServiceContainer || SessionContainer.instance();
@@ -883,16 +908,28 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getObservabilityRepos");
+			throw ex;
 		}
 
 		return response;
 	}
 
+	/**
+	 * Returns a list of errors for a given entity
+	 *
+	 * Can throw errors
+	 *
+	 * @param {GetObservabilityErrorsRequest} request
+	 * @return {Promise<GetObservabilityErrorsResponse>}
+	 * @memberof NewRelicProvider
+	 */
 	@lspHandler(GetObservabilityErrorsRequestType)
 	@log({
 		timed: true
 	})
-	async getObservabilityErrors(request: GetObservabilityErrorsRequest) {
+	async getObservabilityErrors(
+		request: GetObservabilityErrorsRequest
+	): Promise<GetObservabilityErrorsResponse> {
 		const response: GetObservabilityErrorsResponse = { repos: [] };
 		try {
 			// NOTE: might be able to eliminate some of this if we can get a list of entities
@@ -1007,9 +1044,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		} catch (ex) {
 			ContextLogger.error(ex, "getObservabilityErrors");
-			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-				throw ex;
-			}
+			throw ex;
 		}
 		return response;
 	}
@@ -2389,9 +2424,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	protected async getObservabilityEntityRepos(
 		repoId: string
 	): Promise<ObservabilityRepo | undefined> {
-		const observabilityRepos = await this.getObservabilityRepos({
-			filters: [{ repoId: repoId }]
-		});
+		let observabilityRepos: GetObservabilityReposResponse | undefined;
+		try {
+			observabilityRepos = await this.getObservabilityRepos({
+				filters: [{ repoId: repoId }]
+			});
+		} catch (err) {
+			ContextLogger.warn("getObservabilityEntityRepos", { error: err });
+		}
 		if (!observabilityRepos?.repos?.length) {
 			ContextLogger.warn("observabilityRepos.repos empty", {
 				repoId: repoId
