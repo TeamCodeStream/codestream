@@ -264,7 +264,6 @@ export const onLogin = (
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const api = HostApi.instance;
 
-	debugger;
 	const bootstrapPromise = new Promise<{
 		bootstrapData: BootstrapResponse;
 		editorContext: EditorContext;
