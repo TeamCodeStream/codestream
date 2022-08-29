@@ -447,6 +447,13 @@ export namespace Strings {
 		});
 		let patchedContents = normalizedEolBaseContents;
 		if (patch !== undefined) {
+			for (const hunk of patch.hunks) {
+				for (let i = 0; i < hunk.lines.length; i++) {
+					// strip BOM characters
+					hunk.lines[i] = hunk.lines[i].replace(/\uFEFF/gm, "");
+				}
+			}
+
 			patchedContents = applyPatch(normalizedEolBaseContents, patch);
 			// @ts-ignore applyPatch returns false if patch is not compatible
 			if (patchedContents === false) {
