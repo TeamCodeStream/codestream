@@ -151,7 +151,7 @@ class WebViewRouter(val project: Project) {
     private suspend fun restart(message: WebViewMessage) {
         val agent = project.agentService ?: return
         val webview = project.webViewService ?: return
-        agent.restart()
+        agent.restart(null, true)
         agent.onDidStart {
             webview.load()
         }
