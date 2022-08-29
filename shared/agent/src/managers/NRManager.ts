@@ -39,6 +39,7 @@ import { log } from "../system/decorators/log";
 import { lsp, lspHandler } from "../system/decorators/lsp";
 import { Strings } from "../system/string";
 import { xfs } from "../xfs";
+import { libraryMatchers } from "./libraryMatcher/libraryMatchers";
 import { DotNetCoreInstrumentation } from "./newRelicInstrumentation/dotNetCoreInstrumentation";
 import { JavaInstrumentation } from "./newRelicInstrumentation/javaInstrumentation";
 import { NodeJSInstrumentation } from "./newRelicInstrumentation/nodeJSInstrumentation";
@@ -55,7 +56,7 @@ const ExtensionToLanguageMap: { [key: string]: string } = {
 	ts: "javascript",
 	rb: "ruby",
 	php: "php",
-	cs: "c#",
+	cs: "csharp",
 	py: "python",
 	kt: "java",
 	java: "java",
@@ -68,7 +69,7 @@ const StackTraceParsers: { [key: string]: Parser } = {
 	javascript: javascriptParser,
 	ruby: rubyParser,
 	php: phpParser,
-	"c#": csharpParser,
+	csharp: csharpParser,
 	python: pythonParser,
 	java: javaParser,
 	go: goParser
@@ -256,20 +257,22 @@ export class NRManager {
 				line.fileRelativePath = resolvedLine.fileRelativePath;
 
 				if (!line.error && matchingRepoPath) {
-					this.resolveStackTraceLine(line, ref, matchingRepoPath).then(resolvedLine => {
-						if (resolvedLine.error) {
-							Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
-						} else {
-							const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
-							Logger.log(`Stack trace line resolved: ${loggableLine}`);
+					this.resolveStackTraceLine(line, ref, matchingRepoPath, parsedStackInfo.language).then(
+						resolvedLine => {
+							if (resolvedLine.error) {
+								Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
+							} else {
+								const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
+								Logger.log(`Stack trace line resolved: ${loggableLine}`);
+							}
+							session.agent.sendNotification(DidResolveStackTraceLineNotificationType, {
+								occurrenceId,
+								resolvedLine,
+								index: i,
+								codeErrorId
+							});
 						}
-						session.agent.sendNotification(DidResolveStackTraceLineNotificationType, {
-							occurrenceId,
-							resolvedLine,
-							index: i,
-							codeErrorId
-						});
-					});
+					);
 				}
 			}
 		}
@@ -465,11 +468,16 @@ export class NRManager {
 	private async resolveStackTraceLine(
 		line: CSStackTraceLine,
 		ref: string,
-		matchingRepoPath: string
+		matchingRepoPath: string,
+		language: string
 	): Promise<CSStackTraceLine> {
-		const fileFullPath = line.fileFullPath || "";
+		const fileFullPath = line.fileFullPath;
 		if (!fileFullPath) {
 			return { error: `Unable to find file path for line` };
+		}
+		const isLibrary = libraryMatchers[language]?.(fileFullPath);
+		if (isLibrary) {
+			return { warning: `Line is a library path ${fileFullPath}` };
 		}
 		const fileSearchResponse = await SessionContainer.instance().session.onFileSearch(
 			matchingRepoPath,

@@ -7,7 +7,7 @@ import { Logger } from "../../logger";
 let regex: RegExp;
 
 export function Parser(stack: string): CSStackTraceInfo {
-	const info: CSStackTraceInfo = { lines: [] };
+	const info: CSStackTraceInfo = { lines: [], language: "java" };
 
 	Logger.log(`Stacktrace to be parsed by javaStackTraceParser.ts: ${stack}`);
 

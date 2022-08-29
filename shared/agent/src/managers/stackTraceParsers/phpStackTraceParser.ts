@@ -31,7 +31,7 @@ export function Parser(stack: string): CSStackTraceInfo {
 	}
 
 	let m;
-	const stackInfo: CSStackTraceInfo = { lines: [] };
+	const stackInfo: CSStackTraceInfo = { lines: [], language: "python" };
 	while ((m = regex.exec(stack)) !== null) {
 		// This is necessary to avoid infinite loops with zero-width matches
 		if (m.index === regex.lastIndex) {
