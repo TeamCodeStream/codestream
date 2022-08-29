@@ -16,6 +16,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 
 		const result = Parser(str);
 		expect(result).toEqual({
+			language: "javascript",
 			lines: [
 				{
 					fileFullPath:
@@ -118,6 +119,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 		const result = Parser(str);
 
 		expect(result).toEqual({
+			language: "javascript",
 			lines: [
 				{
 					fileFullPath:

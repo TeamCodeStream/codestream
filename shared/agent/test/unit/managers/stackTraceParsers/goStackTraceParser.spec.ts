@@ -18,6 +18,7 @@ describe("goStackTraceParser", () => {
 
 			const result = Parser(str);
 			expect(result).toEqual({
+				language: "go",
 				lines: [
 					{
 						arguments: undefined,

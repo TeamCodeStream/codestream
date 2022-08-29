@@ -60,6 +60,7 @@ describe("rubyStackTraceParser", () => {
 
 		const result = Parser(str);
 		expect(result).toEqual({
+			language: "ruby",
 			lines: [
 				{
 					method: "rescue in block in connect",
@@ -383,6 +384,7 @@ describe("rubyStackTraceParser", () => {
 
 		const result = Parser(lines.join("\n"));
 		expect(result).toEqual({
+			language: "ruby",
 			lines: [
 				{
 					method: "status_check",

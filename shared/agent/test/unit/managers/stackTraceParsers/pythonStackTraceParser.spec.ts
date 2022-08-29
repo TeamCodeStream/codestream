@@ -20,6 +20,7 @@ describe("pythonStackTraceParser", () => {
 			const result = Parser(str);
 
 			expect(result).toEqual({
+				language: "python",
 				lines: [
 					{
 						arguments: undefined,

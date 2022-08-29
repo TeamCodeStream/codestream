@@ -17,6 +17,7 @@ describe("csharpStackTraceParser", () => {
 
 			const result = Parser(str);
 			expect(result).toEqual({
+				language: "csharp",
 				lines: [
 					{
 						arguments: undefined,

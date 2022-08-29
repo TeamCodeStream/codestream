@@ -42,6 +42,7 @@ in Acme\\Foundation\\Http\\Kernel::handle called at /var/www/public/index.php (5
 
 		const result = Parser(str);
 		expect(result).toEqual({
+			language: "php",
 			lines: [
 				{
 					method: "Acme\\Foundation\\Bootstrap\\HandleExceptions::handleError",
