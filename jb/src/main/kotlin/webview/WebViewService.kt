@@ -59,8 +59,10 @@ class WebViewService(val project: Project) : Disposable {
 
         UIManager.addPropertyChangeListener {
             if (it.propertyName == "lookAndFeel") {
-                generateHtmlFile()
-                webView.loadUrl(htmlFile.url)
+                ApplicationManager.getApplication().invokeLater {
+                    generateHtmlFile()
+                    webView.loadUrl(htmlFile.url)
+                }
             }
         }
     }
