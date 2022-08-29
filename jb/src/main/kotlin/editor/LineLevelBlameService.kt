@@ -160,7 +160,6 @@ private class BlameManager(private val editor: EditorImpl, private val iconsCach
                 val textPresentation = presentationFactory.smallText(blame.formattedBlame)
                 val insetPresentation = presentationFactory.inset(textPresentation, 0, 0, textMetricsStorage.getFontMetrics(true).offsetFromTop(), 0)
                 val presentation = if (!blame.isUncommitted) {
-                    println("new BlameHover() $currentLine")
                     val blameHover = BlameHover().also {
                         it.configure(project, editor, psiFile, blame, iconsCache)
                     }
