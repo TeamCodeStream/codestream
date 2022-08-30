@@ -379,7 +379,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				for (const connectedProvider of PRConnectedProviders) {
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
-					activePrListedIndex = queriesByProvider.findIndex(
+					activePrListedIndex = queriesByProvider?.findIndex(
 						_ => _?.name === "Waiting on my Review"
 					);
 					// console.warn("Loading the PRs... in the loop", queryStrings);
