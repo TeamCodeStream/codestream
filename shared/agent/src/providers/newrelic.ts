@@ -798,11 +798,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				let hasRepoAssociation;
 				let applicationAssociations;
 				if (repositoryEntitiesResponse?.entities) {
-					// find applications that are tied to repo entities
+					// find RELATED entities that are tied to REPOSITORY entities
 					const entitiesReponse = await this.findRelatedEntityByRepositoryGuids(
 						repositoryEntitiesResponse?.entities?.map(_ => _.guid)
 					);
-					// find the application entities
+					// find the APPLICATION entities themselves
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(r => r.source?.entity?.type === "APPLICATION")
@@ -861,6 +861,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								// if it tied to another entity (in another account but still under the same trustedAccount),
 								// it's tag.account data will retain the origin account data
 								if (!relatedResult?.source?.entity?.account) {
+									continue;
+								}
+								if (
+									uniqueEntities.find(
+										ue =>
+											ue.guid === relatedResult.source.entity.guid &&
+											ue.account?.id === relatedResult.source.entity.account?.id
+									)
+								) {
 									continue;
 								}
 								uniqueEntities.push(relatedResult.source.entity);
