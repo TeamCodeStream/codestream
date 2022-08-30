@@ -1,10 +1,7 @@
 import { forEach as _forEach } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
-import { PaneNodeName } from "../src/components/Pane";
 import { ErrorRow } from "./Observability";
 import { openErrorGroup } from "../store/codeErrors/actions";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -12,11 +9,12 @@ import Icon from "./Icon";
 import { HostApi } from "../webview-api";
 import {
 	GetObservabilityErrorGroupMetadataRequestType,
-	GetObservabilityErrorGroupMetadataResponse
+	GetObservabilityErrorGroupMetadataResponse,
+	ObservabilityErrorCore
 } from "@codestream/protocols/agent";
 
 interface Props {
-	observabilityAssignments?: any;
+	observabilityAssignments?: ObservabilityErrorCore[];
 	entityGuid?: string;
 }
 
@@ -31,12 +29,10 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const [filteredAssignments, setFilteredAssignments] = useState<any>([]);
 
-	// useDidMount(() => {});
-
-	// Only show assigments that correlate to the entityGuid prop
+	// Only show assigments that correlate to the entityId prop
 	useEffect(() => {
-		let _filteredAssignments = props.observabilityAssignments.find(
-			_ => _.entityGuid === props.entityGuid
+		const _filteredAssignments = props.observabilityAssignments?.filter(
+			_ => _.entityId === props.entityGuid
 		);
 		setFilteredAssignments(_filteredAssignments || []);
 	}, [props.observabilityAssignments]);
@@ -71,6 +67,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 									<ErrorRow
 										key={index}
 										title={_.errorClass}
+										subtle={_.message}
 										tooltip={_.message}
 										url={_.errorGroupUrl}
 										customPadding={"0 10px 0 50px"}
