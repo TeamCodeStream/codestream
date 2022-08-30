@@ -356,7 +356,7 @@ export const PullRequestConversationTab = (props: {
 			case "Spam":
 				reason = "SPAM";
 				break;
-			case "RESOLVED":
+			case "Resolved":
 				reason = "RESOLVED";
 				break;
 		}
@@ -960,7 +960,12 @@ export const PullRequestConversationTab = (props: {
 								</Link>
 								.
 							</div>
-							<Button fillParent onClick={() => lockPullRequest()} isLoading={isLoadingLocking}>
+							<Button
+								fillParent
+								disabled={!isLockingReason || isLockingReason === "Choose a reason"}
+								onClick={() => lockPullRequest()}
+								isLoading={isLoadingLocking}
+							>
 								Lock conversation on this pull request
 							</Button>
 						</Dialog>
