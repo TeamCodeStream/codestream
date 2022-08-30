@@ -1114,7 +1114,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					actor {
 					  entity(guid: $entityGuid) {
 						name
-						relatedEntities(filter: {entityDomainTypes: {include: {type: "SERVICE", domain: "EXT"}}, direction: ${request.direction}, relationshipTypes: {include: CALLS}}) {
+						relatedEntities(filter: {direction: ${request.direction}, relationshipTypes: {include: CALLS}, entityDomainTypes: {include: [{domain: "EXT", type: "SERVICE"}, {domain: "APM", type: "APPLICATION"}]}}) {
 							results {
 							target {
 							  entity {
