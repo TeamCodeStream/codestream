@@ -1,59 +1,55 @@
 import {
-	PasswordLoginRequest,
-	PasswordLoginRequestType,
-	isLoginFailResponse,
-	LoginSuccessResponse,
 	BootstrapRequestType,
-	TokenLoginRequestType,
-	OtcLoginRequestType,
-	TokenLoginRequest,
-	ProviderTokenRequest,
-	ProviderTokenRequestType,
-	GenerateLoginCodeRequestType,
 	ConfirmLoginCodeRequest,
 	ConfirmLoginCodeRequestType,
-	BootstrapResponse
+	GenerateLoginCodeRequestType,
+	isLoginFailResponse,
+	LoginSuccessResponse,
+	OtcLoginRequestType,
+	PasswordLoginRequest,
+	PasswordLoginRequestType,
+	ProviderTokenRequest,
+	ProviderTokenRequestType,
+	TokenLoginRequest,
+	TokenLoginRequestType
 } from "@codestream/protocols/agent";
-import { EditorContext } from "@codestream/protocols/webview";
-import { errorDismissed, errorOccurred } from "@codestream/webview/store/connectivity/actions";
-import { CodeStreamState } from "../store";
-import { HostApi } from "../webview-api";
 import { CodemarkType, LoginResult } from "@codestream/protocols/api";
-import {
-	goToTeamCreation,
-	goToSSOAuth,
-	setContext,
-	SupportedSSOProvider,
-	goToSignup,
-	goToLogin,
-	goToSetPassword,
-	setCurrentCodemark,
-	setCurrentReview,
-	goToCompanyCreation,
-	setCurrentCodeError,
-	handlePendingProtocolHandlerUrl,
-	clearPendingProtocolHandlerUrl,
-	goToEmailConfirmation,
-	clearForceRegion
-} from "../store/context/actions";
-import { fetchCodemarks } from "../Stream/actions";
-import { getCodemark } from "../store/codemarks/reducer";
-
-import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
+import { withExponentialConnectionRetry } from "@codestream/webview/store/common";
 import {
 	BootstrapInHostRequestType,
-	BootstrapInHostResponse,
 	ConnectToIDEProviderRequestType,
 	OpenUrlRequestType
 } from "../ipc/host.protocol";
-import { bootstrap } from "../store/actions";
+
+import { GetActiveEditorContextRequestType } from "../ipc/host.protocol.editor";
 import { logError } from "../logger";
+import { CodeStreamState } from "../store";
+import { bootstrap } from "../store/actions";
+import { getCodemark } from "../store/codemarks/reducer";
+import {
+	clearForceRegion,
+	clearPendingProtocolHandlerUrl,
+	goToCompanyCreation,
+	goToEmailConfirmation,
+	goToLogin,
+	goToSetPassword,
+	goToSignup,
+	goToSSOAuth,
+	goToTeamCreation,
+	handlePendingProtocolHandlerUrl,
+	setContext,
+	setCurrentCodeError,
+	setCurrentCodemark,
+	setCurrentReview,
+	SupportedSSOProvider
+} from "../store/context/actions";
 import { ChatProviderAccess } from "../store/context/types";
-import { emptyObject, uuid } from "../utils";
-import { localStore } from "../utilities/storage";
-import { setSession, setMaintenanceMode } from "../store/session/actions";
+import { setMaintenanceMode, setSession } from "../store/session/actions";
+import { fetchCodemarks } from "../Stream/actions";
 import { moveCursorToLine } from "../Stream/api-functions";
-import { updateConfigs } from "../store/configs/actions";
+import { localStore } from "../utilities/storage";
+import { emptyObject, uuid } from "../utils";
+import { HostApi } from "../webview-api";
 
 export enum SignupType {
 	JoinTeam = "joinTeam",
@@ -264,37 +260,22 @@ export const onLogin = (
 ) => async (dispatch, getState: () => CodeStreamState) => {
 	const api = HostApi.instance;
 
-	const bootstrapPromise = new Promise<{
-		bootstrapData: BootstrapResponse;
-		editorContext: EditorContext;
-		bootstrapCore: BootstrapInHostResponse;
-	}>((resolve, reject) => {
-		const delays = [5000, 10000, 30000, 60000, 10 * 60000];
-		async function doBootstrap() {
-			try {
-				const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
-					api.send(BootstrapRequestType, {}),
-					api.send(GetActiveEditorContextRequestType, undefined),
-					api.send(BootstrapInHostRequestType, undefined)
-				]);
-				dispatch(errorDismissed());
-				resolve({
-					bootstrapData,
-					editorContext,
-					bootstrapCore
-				});
-			} catch (ex) {
-				dispatch(errorOccurred(ex.message));
-				console.error(ex.message);
-				const delay = delays.shift() || 30 * 60000;
-				console.log(`Retrying bootstrap in ${delay}ms`);
-				setTimeout(doBootstrap, delay);
-			}
-		}
-		doBootstrap();
-	});
-
-	const { bootstrapData, editorContext, bootstrapCore } = await bootstrapPromise;
+	const { bootstrapData, editorContext, bootstrapCore } = await withExponentialConnectionRetry(
+		dispatch,
+		async () => {
+			const [bootstrapData, { editorContext }, bootstrapCore] = await Promise.all([
+				api.send(BootstrapRequestType, {}),
+				api.send(GetActiveEditorContextRequestType, undefined),
+				api.send(BootstrapInHostRequestType, undefined)
+			]);
+			return {
+				bootstrapData,
+				editorContext,
+				bootstrapCore
+			};
+		},
+		"bootstrap"
+	);
 
 	await dispatch(
 		bootstrap({
