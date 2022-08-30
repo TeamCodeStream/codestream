@@ -86,7 +86,7 @@ export const PullRequestFilesChangedTab = (props: {
 	// const [lastReviewCommitOid, setLastReviewCommitOid] = useState<string | undefined>();
 
 	const _mapData = data => {
-		const filesChanged = data.map(_ => {
+		const filesChanged = data?.map(_ => {
 			return {
 				..._,
 				linesAdded: _.additions,
@@ -108,12 +108,11 @@ export const PullRequestFilesChangedTab = (props: {
 
 	//set ratio of viewed/total when currentPr changed in redux
 	useEffect(() => {
-		const prFileNodes =
-			derivedState.currentPullRequest?.conversations?.repository?.pullRequest?.files?.nodes;
+		const prFiles = derivedState.currentPullRequest?.conversations?.repository?.pullRequest?.files;
 
-		if (prFileNodes) {
-			const viewedCount = prFileNodes.filter(f => f?.viewerViewedState === "VIEWED").length;
-			setViewedRatio(`${viewedCount}/${prFileNodes.length}`);
+		if (prFiles?.nodes) {
+			const viewedCount = prFiles?.nodes.filter(f => f?.viewerViewedState === "VIEWED").length;
+			setViewedRatio(`${viewedCount}/${prFiles?.totalCount}`);
 		}
 	}, [derivedState.currentPullRequest]);
 

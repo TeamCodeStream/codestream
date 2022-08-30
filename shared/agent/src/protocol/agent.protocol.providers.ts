@@ -515,11 +515,16 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		};
 	};
 	files: {
+		pageInfo: {
+			endCursor?: string;
+			hasNextPage?: boolean;
+		};
 		totalCount: number;
 		nodes: {
 			path: string;
 			additions: number;
 			deletions: number;
+			viewerViewedState: string;
 		}[];
 	};
 	headRefName: string;

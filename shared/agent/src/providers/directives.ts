@@ -29,6 +29,7 @@ export interface Directive {
 		| "updatePullRequestReviewers"
 		| "updatePullRequestReviewCommentNode"
 		| "updatePullRequestReviewThreadComment"
+		| "updatePullRequestFileNode"
 		| "updateReview"
 		| "updateReviewCommentsCount"
 		| "updateReviewers"
