@@ -1,51 +1,43 @@
-import { errorDismissed, errorOccurred } from "@codestream/webview/store/connectivity/actions";
+import {
+	ApiVersionCompatibility,
+	BootstrapRequestType,
+	VersionCompatibility
+} from "@codestream/protocols/agent";
+import {
+	BootstrapInHostRequestType,
+	GetActiveEditorContextRequestType
+} from "@codestream/protocols/webview";
+import { BootstrapInHostResponse, SignedInBootstrapData } from "../ipc/host.protocol";
+import { CSApiCapabilities } from "../protocols/agent/api.protocol.models";
+import {
+	apiCapabilitiesUpdated,
+	apiUpgradeRecommended,
+	apiUpgradeRequired
+} from "../store/apiVersioning/actions";
+import { upgradeRequired } from "../store/versioning/actions";
+import { uuid } from "../utils";
+import { HostApi } from "../webview-api";
+import { BootstrapActionType } from "./bootstrapped/types";
 import { updateCapabilities } from "./capabilities/actions";
-import { action } from "./common";
+import { action, withExponentialConnectionRetry } from "./common";
+import { bootstrapCompanies } from "./companies/actions";
+import { updateConfigs } from "./configs/actions";
 import * as contextActions from "./context/actions";
 import * as editorContextActions from "./editorContext/actions";
 import { setIde } from "./ide/actions";
 import * as preferencesActions from "./preferences/actions";
+import { updateProviders } from "./providers/actions";
 import { bootstrapRepos } from "./repos/actions";
 import { bootstrapServices } from "./services/actions";
 import * as sessionActions from "./session/actions";
 import { bootstrapStreams } from "./streams/actions";
 import { bootstrapTeams } from "./teams/actions";
 import { updateUnreads } from "./unreads/actions";
-import { updateProviders } from "./providers/actions";
 import { bootstrapUsers } from "./users/actions";
-import {
-	LogoutRequestType,
-	SignedInBootstrapData,
-	BootstrapInHostResponse,
-	LogoutReason
-} from "../ipc/host.protocol";
-import { HostApi } from "../webview-api";
-import { updateConfigs } from "./configs/actions";
-import {
-	ApiVersionCompatibility,
-	BootstrapRequestType,
-	BootstrapResponse,
-	VersionCompatibility
-} from "@codestream/protocols/agent";
-import {
-	BootstrapInHostRequestType,
-	EditorContext,
-	GetActiveEditorContextRequestType
-} from "@codestream/protocols/webview";
-import { BootstrapActionType } from "./bootstrapped/types";
-import { uuid } from "../utils";
-import { upgradeRequired } from "../store/versioning/actions";
-import {
-	apiCapabilitiesUpdated,
-	apiUpgradeRecommended,
-	apiUpgradeRequired
-} from "../store/apiVersioning/actions";
-import { bootstrapCompanies } from "./companies/actions";
-import { CSApiCapabilities } from "../protocols/agent/api.protocol.models";
 
 export const reset = () => action("RESET");
 
-export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
+export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getState) => {
 	if (data == undefined) {
 		const api = HostApi.instance;
 		const bootstrapCore = await api.send(BootstrapInHostRequestType, undefined);
@@ -59,34 +51,20 @@ export const bootstrap = (data?: SignedInBootstrapData) => async dispatch => {
 			return;
 		}
 
-		const bootstrapPromise = new Promise<{
-			bootstrapData: BootstrapResponse;
-			editorContext: EditorContext;
-		}>((resolve, reject) => {
-			const delays = [5000, 10000, 30000, 60000, 10 * 60000];
-			async function doBootstrap() {
-				try {
-					const [bootstrapData, { editorContext }] = await Promise.all([
-						api.send(BootstrapRequestType, {}),
-						api.send(GetActiveEditorContextRequestType, undefined)
-					]);
-					dispatch(errorDismissed());
-					resolve({
-						bootstrapData,
-						editorContext
-					});
-				} catch (ex) {
-					dispatch(errorOccurred(ex.message));
-					console.error(ex.message);
-					const delay = delays.shift() || 30 * 60000;
-					console.log(`Retrying bootstrap in ${delay}ms`);
-					setTimeout(doBootstrap, delay);
-				}
-			}
-			doBootstrap();
-		});
-
-		const { bootstrapData, editorContext } = await bootstrapPromise;
+		const { bootstrapData, editorContext } = await withExponentialConnectionRetry(
+			dispatch,
+			async () => {
+				const [bootstrapData, { editorContext }] = await Promise.all([
+					api.send(BootstrapRequestType, {}),
+					api.send(GetActiveEditorContextRequestType, undefined)
+				]);
+				return {
+					bootstrapData,
+					editorContext
+				};
+			},
+			"bootstrap"
+		);
 		data = { ...bootstrapData, ...bootstrapCore, editorContext };
 	}
 
