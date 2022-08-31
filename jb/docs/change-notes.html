@@ -1,3 +1,30 @@
+<h4 id="13_7_0">13.7.0</h4>
+<h5>Added</h5>
+<ul>
+	<li>Adds a "Related Services" tree node in the Observability section, allowing you to see golden metrics for the services yours calls or is called by</li>
+</ul>
+<h5>Changed</h5>
+<ul>
+	<li>Changes the logic in the "Waiting on my review" section for GitHub PRs such that adding a single comment on a PR doesn't cause it to be removed from this section</li>
+	<li>Removed the ability start ad-hoc work</li>
+	<li>Removed spatial view</li>
+	<li>Well-known library paths for Python are excluded when resolving stack traces in errors</li>
+</ul>
+<h5>Fixed</h5>
+<ul>
+	<li>Fixes an issue that caused you to get disconnected from Jira when creating an issue if you didn't have permission on Jira to assign issues</li>
+	<li>Fixes an issue that caused the count of reviewed files in a pull request to be capped at 100, even if there were more files in the PR</li>
+	<li>Fixes an issue where dismissing the modals for adding tags or related codemarks wouldn't work</li>
+	<li>Fixes an issue where users were incorrectly seeing the message to set up instrumentation instead of telemetry in the Observability section</li>
+	<li>Fixes an issue where you couldn't add a comment to a GitLab merge request via the PR Details view unless you selected the "start thread" option</li>
+	<li>ixes an issue where trying to lock a PR without selecting a reason would fail</li>
+	<li>Fixes an "Unable to resolve text model content for resource" error in some feedback request diffs</li>
+	<li>Fixes an issue where a feedback request would include unselected commits</li>
+	<li>Fixes an issue where errors assigned to you were not displaying in the Observability section</li>
+	<li>CodeStream spins endlessly if you change your theme while you're disconnect from the network</li>
+	<li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/1125">#1125</a> - Cannot "Show resolved" in a PR</li>
+	<li>Addresses <a href="https://github.com/TeamCodeStream/CodeStream/issues/1023">#1023</a> - Start work not defaulting to correct</li>
+</ul>
 <h4 id="13_6_0">13.6.0</h4>
 <h5>Fixed</h5>
 <ul>

@@ -1,5 +1,32 @@
 # Change Log
 
+## [13.7.0] - 2022-9-1
+
+### Added
+
+- Adds a "Related Services" tree node in the Observability section, allowing you to see golden metrics for the services yours calls or is called by
+
+### Changed
+
+- Changes the logic in the "Waiting on my review" section for GitHub PRs such that adding a single comment on a PR doesn't cause it to be removed from this section
+- Removed the ability start ad-hoc work
+- Removed spatial view
+- Well-known library paths for Python are excluded when resolving stack traces in errors
+
+### Fixed
+
+- Fixes an issue that caused you to get disconnected from Jira when creating an issue if you didn't have permission on Jira to assign issues
+- Fixes an issue that caused the count of reviewed files in a pull request to be capped at 100, even if there were more files in the PR
+- Fixes an issue where dismissing the modals for adding tags or related codemarks wouldn't work
+- Fixes an issue where users were incorrectly seeing the message to set up instrumentation instead of telemetry in the Observability section
+- Fixes an issue where you couldn't add a comment to a GitLab merge request via the PR Details view unless you selected the "start thread" option
+- Fixes an issue where trying to lock a PR without selecting a reason would fail
+- Addresses [#1125](https://github.com/TeamCodeStream/CodeStream/issues/1125) &mdash; Cannot "Show resolved" in a PR
+- Addresses [#1023](https://github.com/TeamCodeStream/CodeStream/issues/1023) &mdash; Start work not defaulting to correct jira workflow step
+- Fixes an "Unable to resolve text model content for resource" error in some feedback request diffs
+- Fixes an issue where a feedback request would include unselected commits
+- Fixes an issue where errors assigned to you were not displaying in the Observability section
+
 ## [13.6.0] - 2022-8-25
 
 ### Fixed
