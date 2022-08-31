@@ -12,7 +12,7 @@ interface Props {
 }
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
-	const [expanded, setExpanded] = useState<boolean>(true);
+	const [expanded, setExpanded] = useState<boolean>(false);
 
 	return (
 		<>
