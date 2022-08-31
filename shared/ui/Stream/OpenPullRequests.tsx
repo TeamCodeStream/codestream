@@ -675,6 +675,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		prFromUrlInput?.current?.blur();
 
+		HostApi.instance.track("PR Load from URL", {
+			Host: providerId
+		});
+
 		if (response && response.error) {
 			if (!derivedState.isVS) {
 				setPrFromUrlLoading(false);
