@@ -1,5 +1,5 @@
 #import "./fragments/discussion.graphql"
-mutation CreateMergeRequestNote($noteableId: ID!, $body: String!, $iid: String!) {
+mutation CreateMergeRequestNote($noteableId: NoteableID!, $body: String!, $iid: String!) {
 	createNote(input: { noteableId: $noteableId, body: $body }) {
 		clientMutationId
 		note {
