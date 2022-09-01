@@ -414,6 +414,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				Log.Debug($"{nameof(ReloadWebView)}...");
 				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
+				_state = WebviewState.Restarting;
 			});
 		}
 
