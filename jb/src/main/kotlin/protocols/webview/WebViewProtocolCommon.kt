@@ -30,9 +30,12 @@ class WebViewContext(
     val currentCodemarkId: String? = null,
     val threadId: String? = null,
     val hasFocus: Boolean? = null,
-    val panelStack: Array<String>? = null
+    val panelStack: Array<String>? = null,
+    val currentCodeErrorId: String? = null
 ) {
     val spatialViewVisible get() = panelStack?.firstOrNull() == "codemarks-for-file"
+    val canCreateIssue get() = currentCodeErrorId == null
+    val canCreatePermalink get() = currentCodeErrorId == null
 }
 
 class EditorContext(

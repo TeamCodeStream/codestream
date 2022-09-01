@@ -3,6 +3,7 @@ package com.codestream.editor
 import com.codestream.actions.AddComment
 import com.codestream.actions.CreateIssue
 import com.codestream.actions.GetPermalink
+import com.codestream.actions.NewCodemark
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.addCommentToReviewText
@@ -18,6 +19,7 @@ import com.codestream.protocols.CodemarkType
 import com.codestream.protocols.webview.CodemarkNotifications
 import com.codestream.review.PULL_REQUEST
 import com.codestream.review.ReviewDiffVirtualFile
+import com.codestream.settingsService
 import com.codestream.webViewService
 import com.intellij.openapi.actionSystem.ActionGroup
 import com.intellij.openapi.actionSystem.AnAction
@@ -90,10 +92,14 @@ class NewCodemarkGutterIconRenderer(
             }
             future.join()
         } else {
-            val addComment = AddComment().also { it.telemetrySource = "Gutter" }
-            val createIssue = CreateIssue().also { it.telemetrySource = "Gutter" }
-            val getPermalink = GetPermalink().also { it.telemetrySource = "Gutter" }
-            DefaultActionGroup(addComment, createIssue, getPermalink)
+            val actions = mutableListOf<NewCodemark>(AddComment().also { it.telemetrySource = "Gutter" })
+            if (editor.project?.settingsService?.webViewContext?.canCreateIssue == true) {
+                actions.add(CreateIssue().also { it.telemetrySource = "Gutter" })
+            }
+            if (editor.project?.settingsService?.webViewContext?.canCreatePermalink == true) {
+                actions.add(GetPermalink().also { it.telemetrySource = "Gutter" })
+            }
+            DefaultActionGroup(actions)
         }
     }
 

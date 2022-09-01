@@ -10,6 +10,7 @@ import com.codestream.extensions.selectionOrCurrentLine
 import com.codestream.extensions.uri
 import com.codestream.protocols.CodemarkType
 import com.codestream.protocols.webview.CodemarkNotifications
+import com.codestream.settingsService
 import com.codestream.webViewService
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
@@ -89,7 +90,8 @@ class CreateIssue : NewCodemark("Create issue", CodemarkType.ISSUE) {
 
     override fun update(e: AnActionEvent) {
         val virtualFile = CommonDataKeys.VIRTUAL_FILE.getData(e.dataContext)
-        e.presentation.isVisible = virtualFile?.isInLocalFileSystem == true
+        val canCreateIssue = e.project?.settingsService?.webViewContext?.canCreateIssue == true
+        e.presentation.isVisible = virtualFile?.isInLocalFileSystem == true && canCreateIssue
     }
 }
 
@@ -98,6 +100,7 @@ class GetPermalink : NewCodemark("Get permalink", CodemarkType.LINK) {
 
     override fun update(e: AnActionEvent) {
         val virtualFile = CommonDataKeys.VIRTUAL_FILE.getData(e.dataContext)
-        e.presentation.isVisible = virtualFile?.isInLocalFileSystem == true
+        val canCreatePermalink = e.project?.settingsService?.webViewContext?.canCreatePermalink == true
+        e.presentation.isVisible = virtualFile?.isInLocalFileSystem == true && canCreatePermalink
     }
 }
