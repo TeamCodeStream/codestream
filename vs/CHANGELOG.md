@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- Fixes an issue that caused GitLab connections to be disconnected
 - Fixes an issue that caused you to get disconnected from Jira when creating an issue if you didn't have permission on Jira to assign issues
 - Fixes an issue that caused the count of reviewed files in a pull request to be capped at 100, even if there were more files in the PR
 - Fixes an issue where dismissing the modals for adding tags or related codemarks wouldn't work
