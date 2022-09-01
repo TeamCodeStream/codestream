@@ -62,7 +62,9 @@ const postBuildCopy: CopyStuff[] = [
 		format: "cjs",
 		platform: "node",
 		target: "node16.13",
-		outdir: outputDir
+		outdir: outputDir,
+		sourceRoot: path.resolve(__dirname, "../../agent/dist"),
+		sourcesContent: false
 	};
 
 	await build(buildOption);

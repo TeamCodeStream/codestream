@@ -15,10 +15,12 @@
 		{
 			"type": "node",
 			"request": "attach",
-			"name": "Attach to Agent (VS/JB)",
+			"name": "Attach to Agent VS",
 			"port": 6010,
 			"cwd": "${workspaceFolder}",
-			"outFiles": ["${workspaceFolder}/dist/agent-pkg.js"],
+			"outFiles": [
+				"${userHome}/AppData/Local/Microsoft/VisualStudio/**/Extensions/New Relic/**/agent/agent.js"
+			],
 			"skipFiles": ["<node_internals>/**", "**/node_modules/**"],
 			"smartStep": true,
 			"sourceMaps": true
