@@ -57,6 +57,7 @@
 		"@types/semver": "7.3.9",
 		"abort-controller": "3.0.0",
 		"analytics-node": "3.5.0",
+		"async-mutex": "0.3.2",
 		"bufferutil": "4.0.6",
 		"chokidar": "3.5.3",
 		"date-fns": "1.30.1",

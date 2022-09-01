@@ -39,6 +39,7 @@ export function reduceProviders(state = initialState, action: ProviderActions) {
 }
 
 type ProviderPropertyOption = { name: string } | { id: string };
+
 function isNameOption(o: ProviderPropertyOption): o is { name: string } {
 	return (o as any).name != undefined;
 }
@@ -203,8 +204,9 @@ export const isConnectedSelectorFriendly = (
 							Object.values(infoPerTeam)[0] &&
 							// @ts-ignore
 							Object.values(infoPerTeam)[0].data.scope.indexOf(requiredScope) === -1
-						)
+						) {
 							return false;
+						}
 					}
 					if (
 						infoPerTeam &&
@@ -308,7 +310,7 @@ export const getConnectedSharingTargets = (state: CodeStreamState): ThirdPartyTe
 	let teams: ThirdPartyTeam[] = [];
 
 	const slackInfos = safe(() => slackProviderInfo!.multiple);
-	if (slackInfos)
+	if (slackInfos) {
 		teams = teams.concat(
 			Object.entries(slackInfos).map(([teamId, info]) => ({
 				icon: PROVIDER_MAPPINGS.slack.icon!,
@@ -317,6 +319,7 @@ export const getConnectedSharingTargets = (state: CodeStreamState): ThirdPartyTe
 				teamName: info.data!.team_name
 			}))
 		);
+	}
 
 	const msTeamInfos = safe(() => msteamsProviderInfo!.multiple);
 	if (msTeamInfos) {
@@ -360,6 +363,11 @@ export const getSupportedPullRequestHosts = createSelector(
 	}
 );
 
+/* 
+ TODO Fix selector running too often due to 
+ received notification codestream/didChangeData from host on user object
+ every time OpenPullRequests.tsx fetchPRs is called
+ */
 export const getConnectedSupportedPullRequestHosts = createSelector(
 	(state: CodeStreamState) => state.users,
 	(state: CodeStreamState) => state.context.currentTeamId,

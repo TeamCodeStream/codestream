@@ -1,3 +1,4 @@
+import { random } from "lodash-es";
 import uuidv4 from "uuid/v4";
 import { Range } from "vscode-languageserver-types";
 import { MaxRangeValue } from "./ipc/webview.protocol";
@@ -10,6 +11,7 @@ export interface Disposable {
 // DO NOT USE THESE
 export const emptyObject = {};
 export const emptyArray = [];
+
 export function noop() {}
 
 export async function wait(millis: number) {
@@ -134,6 +136,7 @@ export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined | nul
 	});
 	return result;
 }
+
 // Sort an array of objects based on order of a seperate array
 export function mapOrder(array: any = [], order: string[] = [], key: string = "") {
 	if (array.length > 0 && order.length > 0 && key) {
@@ -170,6 +173,7 @@ export function keyFilter<A>(hash: A): string[] {
 	});
 	return result;
 }
+
 /* just like keyFilter only returns all the keys for whome the values are falsey */
 export function keyFilterFalsey<A>(hash: A): string[] {
 	const result: string[] = [];
@@ -403,13 +407,13 @@ export function escapeHtml(text: string) {
 export function replaceHtml(text: string) {
 	const domParser = new DOMParser();
 	/*
-	// Because this stuff is sensitive, I'm leaving this comment here, but 
-	// this code fails to account for newlines created via Shift-Enter
+    // Because this stuff is sensitive, I'm leaving this comment here, but 
+    // this code fails to account for newlines created via Shift-Enter
 
-	//input text's newlines will be created with <div> or <br> tags
-	//remove extra \n or \r\n to remove double lines later in markdown
-	text = text.replace(/\r\n/g, "").replace(/\n/g, "");
-	*/
+    //input text's newlines will be created with <div> or <br> tags
+    //remove extra \n or \r\n to remove double lines later in markdown
+    text = text.replace(/\r\n/g, "").replace(/\n/g, "");
+    */
 
 	// Instead of above, replace these legitimate newlines (presumably
 	// created with Shift-Enter) with <br> tags, which the markdowner
@@ -446,8 +450,9 @@ export function asPastedText(text: string) {
 	// the second regex ensures there is at least 1 non-whitespace character
 	// (don't want to fence seemingly empty text)
 	const lines = text.split("\n").length;
-	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/))
+	if (lines > 1 && !text.match(/^\S/m) && text.match(/(.|\s)*\S(.|\s)*/)) {
 		text = "```\n" + text + "\n```";
+	}
 
 	// console.log("asPastedText result=", text);
 	return text;
@@ -464,6 +469,7 @@ interface ArrayDiffResults {
 	added?: string[] | undefined;
 	removed?: string[] | undefined;
 }
+
 /**
  * Compares two string arrays and returns additions and removals
  * @param  {string[]|undefined} the originalArray
@@ -555,4 +561,42 @@ export function findLastIndex<T>(
 		if (predicate(array[l], l, array)) return l;
 	}
 	return -1;
+}
+
+const activePolls = new Set<number>();
+
+function getUnusedPollId(): number {
+	while (true) {
+		const candidate = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+		if (!activePolls.has(candidate)) {
+			return candidate;
+		}
+	}
+}
+
+// In case of multiple IDE windows opening at same time at least give a chance for polling queries to not
+// all happen at the same time by having each poll +/- 5% of target timeout time
+export function fluctuatePoll(handler: Function, timeout: number): number {
+	const margin = 0.05 * timeout;
+	const pollId = getUnusedPollId();
+	activePolls.add(pollId);
+
+	const doPoll = () => {
+		const waitFor = random(margin * -1, margin, false) + timeout;
+		setTimeout(async () => {
+			if (!activePolls.has(pollId)) {
+				return;
+			}
+			await handler();
+			doPoll();
+		}, waitFor);
+	};
+
+	doPoll();
+
+	return pollId;
+}
+
+export function disposePoll(pollId: number) {
+	activePolls.delete(pollId);
 }

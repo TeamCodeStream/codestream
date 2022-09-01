@@ -46,6 +46,7 @@ export function useInterval(callback: Fn, delay = 1000) {
 		function tick() {
 			savedCallback.current!();
 		}
+
 		let id = setInterval(tick, delay);
 		return () => clearInterval(id);
 	}, [delay]);
@@ -56,6 +57,7 @@ interface UseRequestTypeResult<T> {
 	loading: boolean;
 	error: T | undefined;
 }
+
 /**
  * @param requestType<Req, Resp>
  * @param payload
@@ -230,16 +232,46 @@ export function useIntersectionObserver(
 		[]
 	);
 }
+
 //https://stackoverflow.com/questions/53446020/how-to-compare-oldvalues-and-newvalues-on-react-hooks-useeffect
 export const useHasChanged = (val: any) => {
 	const prevVal = usePrevious(val);
 	return prevVal !== val;
 };
 
-export const usePrevious = <T>(value: T): T | undefined => {
-	const ref = useRef<T>();
+export const usePrevious = <T>(value: T, initialValue?: T): T | undefined => {
+	const ref = initialValue ? useRef<T>(initialValue) : useRef<T>();
 	useEffect(() => {
 		ref.current = value;
 	});
 	return ref.current;
+};
+
+/*
+ From https://stackoverflow.com/questions/55187563/determine-which-dependency-array-variable-caused-useeffect-hook-to-fire
+ Temporarily replace useEffect with this and check web console logs
+ */
+export const useEffectDebugger = (effectHook, dependencies, dependencyNames = []) => {
+	const previousDeps = usePrevious(dependencies, []);
+
+	const changedDeps = dependencies.reduce((accum, dependency, index) => {
+		if (dependency !== previousDeps[index]) {
+			const keyName = dependencyNames[index] || index;
+			return {
+				...accum,
+				[keyName]: {
+					before: previousDeps[index],
+					after: dependency
+				}
+			};
+		}
+
+		return accum;
+	}, {});
+
+	if (Object.keys(changedDeps).length) {
+		console.log("[use-effect-debugger] ", changedDeps);
+	}
+
+	useEffect(effectHook, dependencies);
 };

@@ -1,3 +1,4 @@
+import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
@@ -31,6 +32,7 @@ export abstract class ThirdPartyProviderBase<
 	protected _providerInfo: TProviderInfo | undefined;
 	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	protected _client: GraphQLClient | undefined;
+	private _refreshLock = new Mutex();
 
 	constructor(
 		public readonly session: CodeStreamSession,
@@ -267,25 +269,29 @@ export abstract class ThirdPartyProviderBase<
 		await this._ensuringConnection;
 	}
 
-	async refreshToken(request?: { providerTeamId?: string }) {
-		if (this._providerInfo === undefined || !isRefreshable(this._providerInfo)) {
-			return;
-		}
+	@log({ timed: true, singleLine: true })
+	async refreshToken(request?: { providerTeamId?: string }): Promise<void> {
+		await this._refreshLock.runExclusive(async () => {
+			if (this._providerInfo === undefined || !isRefreshable(this._providerInfo)) {
+				return;
+			}
 
-		const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
-		if (oneMinuteBeforeExpiration > new Date().getTime()) return;
+			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 7140 * 1000;
+			if (oneMinuteBeforeExpiration > new Date().getTime()) return;
 
-		try {
-			const me = await this.session.api.refreshThirdPartyProvider({
-				providerId: this.providerConfig.id,
-				refreshToken: this._providerInfo.refreshToken,
-				subId: request && request.providerTeamId
-			});
-			this._providerInfo = this.getProviderInfo(me);
-		} catch (error) {
-			await this.disconnect();
-			return this.ensureConnected();
-		}
+			try {
+				Logger.log(`refreshToken for providerId ${this.providerConfig.id}`);
+				const me = await this.session.api.refreshThirdPartyProvider({
+					providerId: this.providerConfig.id,
+					refreshToken: this._providerInfo.refreshToken,
+					subId: request && request.providerTeamId
+				});
+				this._providerInfo = this.getProviderInfo(me);
+			} catch (error) {
+				await this.disconnect();
+				return this.ensureConnected();
+			}
+		});
 	}
 
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {

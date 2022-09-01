@@ -1,75 +1,76 @@
+import {
+	ChangeDataType,
+	DidChangeDataNotificationType,
+	FetchProviderDefaultPullRequestsType,
+	FetchProviderDefaultPullResponse,
+	GetMyPullRequestsResponse,
+	GetReposScmRequestType,
+	ReposScm,
+	SwitchBranchRequestType,
+	ThirdPartyProviderConfig,
+	UpdateTeamSettingsRequestType
+} from "@codestream/protocols/agent";
+import { PullRequestQuery } from "@codestream/protocols/api";
+import {
+	OpenUrlRequestType,
+	ReviewCloseDiffRequestType,
+	WebviewPanels
+} from "@codestream/protocols/webview";
+import { setPaneMaximized } from "@codestream/webview/Stream/actions";
+import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
+import copy from "copy-to-clipboard";
+import { isEmpty, isEqual } from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { isEmpty, isEqual } from "lodash-es";
-import * as providerSelectors from "../store/providers/reducer";
-import { CodeStreamState } from "../store";
-import { Row } from "./CrossPostIssueControls/IssuesPane";
-import Icon from "./Icon";
+import styled from "styled-components";
+import { logError } from "../logger";
+import { Button } from "../src/components/Button";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { PRHeadshot } from "../src/components/Headshot";
+import { PRHeadshotName } from "../src/components/HeadshotName";
+import {
+	NoContent,
+	PaneBody,
+	PaneHeader,
+	PaneNode,
+	PaneNodeName,
+	PaneState
+} from "../src/components/Pane";
+import { CodeStreamState } from "../store";
 import {
 	clearCurrentPullRequest,
 	setCreatePullRequest,
 	setCurrentPullRequest,
 	setNewPostEntry
 } from "../store/context/actions";
-import { setPaneMaximized } from "@codestream/webview/Stream/actions";
-import Timestamp from "./Timestamp";
-import { HostApi } from "../webview-api";
-import {
-	ReposScm,
-	GetMyPullRequestsResponse,
-	DidChangeDataNotificationType,
-	ChangeDataType,
-	FetchProviderDefaultPullRequestsType,
-	ThirdPartyProviderConfig,
-	UpdateTeamSettingsRequestType,
-	SwitchBranchRequestType,
-	GetReposScmRequestType,
-	FetchProviderDefaultPullResponse
-} from "@codestream/protocols/agent";
-import {
-	WebviewPanels,
-	ReviewCloseDiffRequestType,
-	OpenUrlRequestType
-} from "@codestream/protocols/webview";
-import { Button } from "../src/components/Button";
 import {
 	getMyPullRequests,
 	getPullRequestConversationsFromProvider,
 	openPullRequestByUrl
 } from "../store/providerPullRequests/actions";
-import { PRBranch } from "./PullRequestComponents";
-import { PRHeadshotName } from "../src/components/HeadshotName";
-import styled from "styled-components";
-import Tag from "./Tag";
-import { setUserPreference, openPanel } from "./actions";
-import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import { confirmPopup } from "./Confirm";
-import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
-import { PullRequestExpandedSidebar } from "./PullRequestExpandedSidebar";
-import { PullRequestQuery } from "@codestream/protocols/api";
-import { configureAndConnectProvider } from "../store/providers/actions";
-import {
-	PaneHeader,
-	PaneBody,
-	NoContent,
-	PaneNode,
-	PaneNodeName,
-	PaneState
-} from "../src/components/Pane";
-import { Provider, IntegrationButtons } from "./IntegrationsPanel";
-import { useDidMount, usePrevious } from "../utilities/hooks";
 import {
 	getCurrentProviderPullRequest,
 	getMyPullRequests as getMyPullRequestsSelector,
+	getProviderPullRequestRepoObject,
 	getPullRequestExactId,
-	getPullRequestId,
-	getProviderPullRequestRepoObject
+	getPullRequestId
 } from "../store/providerPullRequests/reducer";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { configureAndConnectProvider } from "../store/providers/actions";
+import * as providerSelectors from "../store/providers/reducer";
 import { getPRLabel } from "../store/providers/reducer";
-import copy from "copy-to-clipboard";
-import { logError } from "../logger";
+import { useDidMount, usePrevious } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { openPanel, setUserPreference } from "./actions";
+import { ConfigurePullRequestQuery } from "./ConfigurePullRequestQuery";
+import { confirmPopup } from "./Confirm";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import Icon from "./Icon";
+import { IntegrationButtons, Provider } from "./IntegrationsPanel";
+import { PRBranch } from "./PullRequestComponents";
+import { PullRequestExpandedSidebar } from "./PullRequestExpandedSidebar";
+import Tag from "./Tag";
+import Timestamp from "./Timestamp";
 
 const Root = styled.div`
 	height: 100%;
@@ -361,7 +362,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const fetchPRs = useCallback(
 		async (
-			theQueries,
+			theQueries: FetchProviderDefaultPullResponse,
 			options?: { force?: boolean; alreadyLoading?: boolean },
 			src: string | undefined = undefined
 		) => {
@@ -468,13 +469,19 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		};
 	}, [queries]);
 
+	/* 
+	 TODO Fix this effect disposing / recreating every run of fetchPRs 
+	 received notification codestream/didChangeData from host on user object
+	 which triggers PRConnectedProviders / getConnectedSupportedPullRequestHosts selector
+	 with no changed data
+	 */
 	useEffect(() => {
-		const disposable = setInterval(() => {
+		const disposable = fluctuatePoll(() => {
 			fetchPRs(queries, { force: true, alreadyLoading: true }, "interval");
 		}, 60000); // every 1 minute
 
 		return () => {
-			clearInterval(disposable);
+			disposePoll(disposable);
 		};
 	}, [queries, fetchPRs]);
 
