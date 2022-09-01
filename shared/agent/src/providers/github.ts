@@ -3110,6 +3110,10 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
 		Logger.log(`github getMyPullRequests ${JSON.stringify(request)}`);
+		if (!this.isValidGetMyPullRequest(request)) {
+			Logger.warn(`Invalid GetMyPullRequestsRequest`);
+			return undefined;
+		}
 		// const cacheKey = JSON.stringify({ ...request, providerId: this.providerConfig.id });
 		// if (!request.force) {
 		// 	const cached = this._getMyPullRequestsCache.get(cacheKey);

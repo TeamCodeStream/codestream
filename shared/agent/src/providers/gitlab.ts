@@ -700,6 +700,11 @@ export class GitLabProvider extends ThirdPartyIssueProviderBase<CSGitLabProvider
 		request: GetMyPullRequestsRequest
 	): Promise<GetMyPullRequestsResponse[][] | undefined> {
 		void (await this.ensureConnected());
+		Logger.log(`gitlab getMyPullRequests ${JSON.stringify(request)}`);
+		if (!this.isValidGetMyPullRequest(request)) {
+			Logger.warn(`Invalid GetMyPullRequestsRequest`);
+			return undefined;
+		}
 		const currentUser = await this.getCurrentUser();
 		const currentVersion = await this.getVersion();
 		if (!currentVersion.isDefault && semver.lt(currentVersion.version, "12.10.0")) {

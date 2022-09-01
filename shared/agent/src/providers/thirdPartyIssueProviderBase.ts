@@ -7,7 +7,8 @@ import {
 } from "../protocol/agent.protocol.documentMarkers";
 import {
 	FetchAssignableUsersAutocompleteRequest,
-	FetchAssignableUsersResponse
+	FetchAssignableUsersResponse,
+	GetMyPullRequestsRequest
 } from "../protocol/agent.protocol.providers";
 import { CSProviderInfos } from "../protocol/api.protocol.models";
 import { log } from "../system/decorators/log";
@@ -354,5 +355,9 @@ export abstract class ThirdPartyIssueProviderBase<
 					}
 					return Promise.reject(error);
 			  });
+	}
+
+	isValidGetMyPullRequest(request: GetMyPullRequestsRequest): boolean {
+		return !(!request.prQueries || !request.prQueries.length || request.prQueries.length === 0);
 	}
 }
