@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="codestream-vs-22" Version="13.7.0.0" Language="en-US" Publisher="New Relic" />
+    <Identity Id="codestream-vs-22" Version="13.7.1.0" Language="en-US" Publisher="New Relic" />
     <!-- DisplayName maxLength=50 -->
     <DisplayName>New Relic CodeStream 2022 - GitHub &amp; GitLab PRs</DisplayName>
     <Description xml:space="preserve">GitHub pull requests, GitLab merge requests, and code reviews in your IDE. Eliminate context-switching. Integrates with New Relic observability, Bitbucket, Slack, MS Teams, Jira, Trello and more.</Description>
