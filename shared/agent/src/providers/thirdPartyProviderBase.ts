@@ -276,7 +276,7 @@ export abstract class ThirdPartyProviderBase<
 				return;
 			}
 
-			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 7140 * 1000;
+			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
 			if (oneMinuteBeforeExpiration > new Date().getTime()) return;
 
 			try {
