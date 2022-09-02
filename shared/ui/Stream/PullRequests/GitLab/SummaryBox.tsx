@@ -31,7 +31,13 @@ export const Root = styled.div`
 `;
 export const SummaryBox = (props: {
 	pr: GitLabMergeRequest;
-	openRepos: { name: string; currentBranch: string }[];
+	openRepos: {
+		folder: {
+			name: string;
+		};
+		name: string;
+		currentBranch: string;
+	}[];
 	getOpenRepos: Function;
 }) => {
 	const { pr, openRepos, getOpenRepos } = props;
@@ -49,9 +55,18 @@ export const SummaryBox = (props: {
 	const cantCheckoutReason = useMemo(() => {
 		if (pr) {
 			const currentRepo = openRepos.find(
-				_ => _?.name?.toLowerCase() === pr.repository?.name?.toLowerCase()
+				_ =>
+					_?.name.toLowerCase() === pr.repository?.name?.toLowerCase() ||
+					_?.folder?.name?.toLowerCase() === pr.repository?.name?.toLowerCase()
 			);
 			if (!currentRepo) {
+				// @TODO: this logerror might prove to be too much info/annoying in logs,
+				// look into deleting in future.  That said, because its in useMemo, it should
+				// only log 1-2 times per normal pr detail component load.
+				logError("Could not find matching repo in IDE", {
+					openRepos,
+					currentRepo
+				});
 				return `You don't have the ${pr.repository?.name} repo open in your IDE`;
 			}
 			if (currentRepo.currentBranch == pr.headRefName) {
