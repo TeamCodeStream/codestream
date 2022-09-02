@@ -63,9 +63,13 @@ export const SummaryBox = (props: {
 				// @TODO: this logerror might prove to be too much info/annoying in logs,
 				// look into deleting in future.  That said, because its in useMemo, it should
 				// only log 1-2 times per normal pr detail component load.
+				const openReposByName = openRepos?.map(_ => _?.name?.toLowerCase())?.join("|");
+				const openReposByFolderName = openRepos?.map(_ => _?.folder.name?.toLowerCase())?.join("|");
 				logError("Could not find matching repo in IDE", {
-					openRepos,
-					currentRepo
+					openReposByName,
+					openReposByFolderName,
+					prRepoName: pr?.repository?.name?.toLowerCase(),
+					prProjectPath: pr?.project?.path?.toLowerCase()
 				});
 				return `You don't have the ${pr.repository?.name} repo open in your IDE`;
 			}
