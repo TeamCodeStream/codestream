@@ -398,8 +398,8 @@ namespace CodeStream.VisualStudio.Shared {
 									case ReloadRequestType.MethodName: {
 											var languageServerClientManager = _componentModel.GetService<ILanguageServerClientManager>();
 											if (languageServerClientManager != null) {
-												_browserService.SetIsReloading();
 												await languageServerClientManager.RestartAsync();
+												_browserService.ReloadWebView();
 											}
 											break;
 										}
