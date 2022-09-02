@@ -284,45 +284,23 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			if (!(await super.configure(config, true))) return false;
 		}
 		await this.createClientAndValidateKey(config.accessToken!);
-		const accountsToOrgs = await this.session.api.lookupNewRelicOrganizations({
-			accountIds: this._accountIds!
-		});
-		const orgIdsSet = new Set(accountsToOrgs.map(_ => _.orgId));
-		const uniqueOrgIds = Array.from(orgIdsSet.values());
-		ContextLogger.log(`Found ${uniqueOrgIds.length} associated New Relic organizations`);
 
+		const orgId = await this.getOrgId();
 		const team = await SessionContainer.instance().teams.getByIdFromCache(this.session.teamId);
 		const company =
 			team && (await SessionContainer.instance().companies.getByIdFromCache(team.companyId));
-		if (company) {
-			const existingnOrgIds = company.nrOrgIds || [];
-			const uniqueNewOrgIds = uniqueOrgIds.filter(_ => existingnOrgIds.indexOf(_) < 0);
-			if (accountsToOrgs.length) {
-				if (uniqueNewOrgIds.length) {
-					ContextLogger.log(
-						`Associating company ${company.id} with NR orgs ${uniqueNewOrgIds.join(", ")}`
-					);
-					await this.session.api.addCompanyNewRelicInfo(company.id, undefined, uniqueNewOrgIds);
-				}
-			} else if (this._accountIds!.length) {
-				const existingAccountIds = company.nrAccountIds || [];
-				const newAccountIds = this._accountIds!.filter(_ => existingAccountIds.indexOf(_) < 0);
-				if (newAccountIds.length) {
-					ContextLogger.log(
-						`Associating company ${company.id} with NR accounts ${newAccountIds.join(", ")}`
-					);
-					await this.session.api.addCompanyNewRelicInfo(company.id, newAccountIds, undefined);
-				}
-			}
+		if (orgId && company) {
+			ContextLogger.log(`Associating company ${company.id} with NR org ${orgId}`);
+			await this.session.api.addCompanyNewRelicInfo(company.id, undefined, [orgId]);
 		}
 
 		config.data = config.data || {};
 		config.data.userId = this._newRelicUserId;
-		config.data.orgIds = uniqueOrgIds;
+		config.data.orgIds = orgId ? [orgId] : [];
 		await super.configure(config);
 
 		// update telemetry super-properties
-		this.session.addNewRelicSuperProps(this._newRelicUserId!, uniqueOrgIds[0]);
+		this.session.addNewRelicSuperProps(this._newRelicUserId!, orgId);
 		return true;
 	}
 
@@ -2745,6 +2723,35 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				error: ex
 			});
 		}
+		return undefined;
+	}
+
+	@log()
+	private async getOrgId(): Promise<number | undefined> {
+		try {
+			const response = await this.query<{
+				actor: {
+					organization: {
+						id: number;
+					};
+				};
+			}>(
+				`{
+					actor {
+						organization {
+							id
+						}
+					}
+				}`,
+				{}
+			);
+			return response?.actor?.organization?.id;
+		} catch (ex) {
+			ContextLogger.warn("getOrgId " + ex.message, {
+				error: ex
+			});
+		}
+
 		return undefined;
 	}
 

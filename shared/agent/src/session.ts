@@ -1607,7 +1607,7 @@ export class CodeStreamSession {
 		telemetry.addSuperProps(props);
 	}
 
-	async addNewRelicSuperProps(userId: number, orgId: number) {
+	async addNewRelicSuperProps(userId: number, orgId?: number) {
 		return this.addSuperProps({
 			"NR User ID": userId,
 			"NR Organization ID": orgId,
