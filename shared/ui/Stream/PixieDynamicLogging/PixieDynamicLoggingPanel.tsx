@@ -4,12 +4,12 @@ import {
 	PixieDynamicLoggingReponse,
 	PixieDynamicLoggingRequestType,
 	PixiePod,
-	TelemetryRequestType
+	TelemetryRequestType,
 } from "@codestream/protocols/agent";
 import { Button } from "@codestream/webview/src/components/Button";
 import {
 	clearDynamicLogging,
-	pixieDynamicLoggingCancel
+	pixieDynamicLoggingCancel,
 } from "@codestream/webview/store/dynamicLogging/actions";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import { ConditionalNewRelic } from "@codestream/webview/Stream/CodeError/ConditionalComponent";
@@ -27,7 +27,7 @@ import { PanelHeader } from "../../src/components/PanelHeader";
 import { CodeStreamState } from "../../store";
 import { closePanel, setUserPreference } from "../actions";
 import { DropdownButton } from "../DropdownButton";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 
 const Root = styled.div`
 	color: var(--text-color);
@@ -54,7 +54,7 @@ const DropdownWrapper = styled.div`
 `;
 
 export const PixieDynamicLoggingPanel = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [account, setAccount] = React.useState<NewRelicAccount | undefined>();
 	const [cluster, setCluster] = React.useState<PixieCluster | undefined>();
 	const [namespace, setNamespace] = React.useState<string | undefined>();
@@ -63,7 +63,7 @@ export const PixieDynamicLoggingPanel = () => {
 	useDidMount(() => {
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Pixie Logging Selected",
-			properties: {}
+			properties: {},
 		});
 	});
 
@@ -72,25 +72,32 @@ export const PixieDynamicLoggingPanel = () => {
 		setCluster(undefined);
 		setNamespace(undefined);
 		setPod(undefined);
-		if (account) dispatch(setUserPreference(["pixieDefaultAccountId"], account.id.toString()));
+		if (account)
+			dispatch(
+				setUserPreference({ prefPath: ["pixieDefaultAccountId"], value: account.id.toString() })
+			);
 	};
 
 	const setAndSaveCluster = cluster => {
 		setCluster(cluster);
 		setNamespace(undefined);
 		setPod(undefined);
-		if (cluster) dispatch(setUserPreference(["pixieDefaultClusterId"], cluster.clusterId));
+		if (cluster)
+			dispatch(
+				setUserPreference({ prefPath: ["pixieDefaultClusterId"], value: cluster.clusterId })
+			);
 	};
 
 	const setAndSaveNamespace = namespace => {
 		setNamespace(namespace);
 		setPod(undefined);
-		if (namespace) dispatch(setUserPreference(["pixieDefaultNamespace"], namespace));
+		if (namespace)
+			dispatch(setUserPreference({ prefPath: ["pixieDefaultNamespace"], value: namespace }));
 	};
 
 	const setAndSavePod = pod => {
 		setPod(pod);
-		if (pod) dispatch(setUserPreference(["pixieDefaultPodUpid"], pod.upid));
+		if (pod) dispatch(setUserPreference({ prefPath: ["pixieDefaultPodUpid"], value: pod.upid }));
 	};
 
 	return (
@@ -180,8 +187,8 @@ interface IPixieDynamicLoggingContext {
 const PixieDynamicLogging = props => {
 	const rootRef = React.useRef(null);
 
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers = {}, context, dynamicLogging } = state;
 		const newRelicIsConnected =
 			providers["newrelic*com"] && isConnected(state, { id: "newrelic*com" });
@@ -201,7 +208,7 @@ const PixieDynamicLogging = props => {
 			currentPixieDynamicLoggingOptions: context.currentPixieDynamicLoggingOptions,
 			dynamicLogs,
 			hasStatus,
-			status
+			status,
 		};
 	}, shallowEqual);
 
@@ -224,7 +231,7 @@ const PixieDynamicLogging = props => {
 			setIsLoading(true);
 			HostApi.instance.send(TelemetryRequestType, {
 				eventName: "Pixie Logging Started",
-				properties: {}
+				properties: {},
 			});
 			const result: PixieDynamicLoggingReponse = await HostApi.instance.send(
 				PixieDynamicLoggingRequestType,
@@ -233,7 +240,7 @@ const PixieDynamicLogging = props => {
 					clusterId: props.cluster.clusterId,
 					upid: props.pod.upid,
 					limitSeconds: time * 60,
-					...derivedState.currentPixieDynamicLoggingOptions
+					...derivedState.currentPixieDynamicLoggingOptions,
 				}
 			);
 			setLoggingId(result.id);
@@ -245,7 +252,7 @@ const PixieDynamicLogging = props => {
 		setIsCancelling(true);
 		HostApi.instance.send(TelemetryRequestType, {
 			eventName: "Pixie Logging Stopped",
-			properties: {}
+			properties: {},
 		});
 		await dispatch(pixieDynamicLoggingCancel({ id: loggingId }));
 		setTimeout(() => setIsCancelling(false), 2000);
@@ -260,7 +267,7 @@ const PixieDynamicLogging = props => {
 			<div
 				style={{
 					padding: "20px",
-					borderTop: "1px solid var(--base-border-color)"
+					borderTop: "1px solid var(--base-border-color)",
 				}}
 			>
 				{!derivedState.hasStatus ? (
@@ -269,7 +276,7 @@ const PixieDynamicLogging = props => {
 							return {
 								label: `Capture for ${time} minute${time > 1 ? "s" : ""}`,
 								key: `${time}`,
-								action: () => startLogging(time)
+								action: () => startLogging(time),
 							};
 						})}
 						splitDropdown
@@ -314,7 +321,7 @@ const PixieDynamicLogging = props => {
 								<tr
 									style={{
 										borderTop: "1px solid #888",
-										borderBottom: "2px solid #888"
+										borderBottom: "2px solid #888",
 									}}
 								>
 									{derivedState.dynamicLogs &&
@@ -324,7 +331,7 @@ const PixieDynamicLogging = props => {
 													style={{
 														width: "25%",
 														padding: "5px 1px",
-														fontWeight: "bold"
+														fontWeight: "bold",
 													}}
 												>
 													{_}

@@ -1,3 +1,5 @@
+import { editCodemark } from "@codestream/webview/store/codemarks/thunks";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import styled from "styled-components";
 import cx from "classnames";
 import { CSPost, CSUser } from "@codestream/protocols/api";
@@ -25,9 +27,8 @@ import { replaceHtml, escapeHtml } from "@codestream/webview/utils";
 import {
 	findMentionedUserIds,
 	getTeamMembers,
-	getTeamTagsHash
+	getTeamTagsHash,
 } from "@codestream/webview/store/users/reducer";
-import { editCodemark } from "@codestream/webview/store/codemarks/actions";
 import Tag from "../Tag";
 import { ProfileLink } from "@codestream/webview/src/components/ProfileLink";
 import { AddReactionIcon, Reactions } from "../Reactions";
@@ -191,7 +192,7 @@ const ReviewMarkerActionsWrapper = styled.div`
 `;
 
 const ComposeWrapper = styled.div.attrs(() => ({
-	className: "compose codemark-compose"
+	className: "compose codemark-compose",
 }))`
 	&&& {
 		padding: 0 !important;
@@ -200,7 +201,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 `;
 
 export const Reply = (props: ReplyProps) => {
-	const dispatch = useDispatch<Dispatch>();
+	const dispatch = useAppDispatch();
 	const { setEditingPostId, setReplyingToPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{
 		open: boolean;
@@ -390,7 +391,7 @@ export const Reply = (props: ReplyProps) => {
 								style={{
 									// fixed width to handle the isLoading case
 									width: "80px",
-									margin: "10px 10px"
+									margin: "10px 10px",
 								}}
 								onClick={reset}
 							>
@@ -400,7 +401,7 @@ export const Reply = (props: ReplyProps) => {
 								style={{
 									// fixed width to handle the isLoading case
 									width: "80px",
-									margin: "10px 0"
+									margin: "10px 0",
 								}}
 								className={cx("control-button", { cancel: newReplyText.length === 0 })}
 								type="submit"
@@ -455,7 +456,7 @@ const NestedReply = (props: {
 	editingPostId?: string;
 	lastNestedReply?: boolean;
 }) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const { setReplyingToPostId, setEditingPostId } = React.useContext(RepliesToPostContext);
 	const author = useSelector((state: CodeStreamState) => state.users[props.post.creatorId]);
 	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId);
@@ -466,7 +467,7 @@ const NestedReply = (props: {
 		menuItems.push({
 			label: "Reply",
 			key: "reply",
-			action: () => setReplyingToPostId(props.threadId)
+			action: () => setReplyingToPostId(props.threadId),
 		});
 
 		if (props.post.creatorId === currentUserId) {
@@ -497,7 +498,7 @@ const NestedReply = (props: {
 							}
 						]
 					});
-				}
+				},
 			});
 		}
 

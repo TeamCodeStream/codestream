@@ -1,3 +1,4 @@
+import { setEnvironment } from "@codestream/webview/store/session/thunks";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
@@ -9,14 +10,13 @@ import {
 	goToNewUserEntry,
 	goToForgotPassword,
 	goToOktaConfig,
-	clearForceRegion
+	clearForceRegion,
 } from "../store/context/actions";
-import { supportsSSOSignIn } from "../store/configs/reducer";
+import { supportsSSOSignIn } from "../store/configs/slice";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import Tooltip from "../Stream/Tooltip";
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
 import { EnvironmentHost } from "../protocols/agent/agent.protocol";
-import { setEnvironment } from "../store/session/actions";
 import { TooltipIconWrapper } from "./Signup";
 import { Dropdown } from "../Stream/Dropdown";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -80,7 +80,7 @@ class Login extends React.Component<Props, State> {
 			emailTouched: false,
 			loading: false,
 			error: undefined,
-			activeLoginMode: "code"
+			activeLoginMode: "code",
 		};
 	}
 
@@ -273,7 +273,7 @@ class Login extends React.Component<Props, State> {
 			regionItems = this.props.environmentHosts.map(host => ({
 				key: host.shortName,
 				label: host.name,
-				action: () => this.setSelectedRegion(host.shortName)
+				action: () => this.setSelectedRegion(host.shortName),
 			}));
 			if (!this.props.selectedRegion && usHost) {
 				this.props.setEnvironment(usHost.shortName, usHost.publicApiUrl);
@@ -478,7 +478,7 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 			supportsVSCodeGithubSignin: state.capabilities.vsCodeGithubSignin,
 			environmentHosts: state.configs.environmentHosts,
 			selectedRegion: state.context.__teamless__?.selectedRegion,
-			supportsMultiRegion
+			supportsMultiRegion,
 		};
 	},
 	{
@@ -490,7 +490,7 @@ const ConnectedLogin = connect<ConnectedProps, any, any, CodeStreamState>(
 		goToForgotPassword,
 		goToOktaConfig,
 		setEnvironment,
-		clearForceRegion
+		clearForceRegion,
 	}
 )(Login);
 

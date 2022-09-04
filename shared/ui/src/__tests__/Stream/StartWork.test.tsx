@@ -7,7 +7,7 @@ import {
 	GetBranchesResponse,
 	GetReposScmRequestType,
 	GetReposScmResponse,
-	UpdateStatusRequestType
+	UpdateStatusRequestType,
 } from "@codestream/protocols/agent";
 import { CSRepository, CSTeam, CSUser } from "@codestream/protocols/api";
 import { lightTheme } from "@codestream/webview/src/themes";
@@ -40,7 +40,7 @@ const MockedHostApi = HostApi as any;
 const mockHostApi = {
 	track: jest.fn(),
 	on: jest.fn(),
-	send: jest.fn()
+	send: jest.fn(),
 };
 
 MockedHostApi.mockImplementation(() => {
@@ -57,48 +57,48 @@ const user: Partial<CSUser> = {
 			label: "label",
 			ticketId: "ticketId",
 			ticketUrl: "ticketUrl",
-			ticketProvider: "trello*com"
-		}
-	}
+			ticketProvider: "trello*com",
+		},
+	},
 };
 
 const teams: TeamsState = {
-	myteam: ({
+	myteam: {
 		id: "myteam",
-		name: "teamname"
-	} as Partial<CSTeam>) as CSTeam
+		name: "teamname",
+	} as Partial<CSTeam> as CSTeam,
 };
 
 const context: Partial<ContextState> = {
-	currentTeamId: "myteam"
+	currentTeamId: "myteam",
 };
 
 const myrepo: Partial<CSRepository> = {
 	id: "repoid",
-	name: "myrepo"
+	name: "myrepo",
 };
 
 const baseState: Partial<CodeStreamState> = {
 	session: {
-		userId: "abcd1234"
+		userId: "abcd1234",
 	},
 	users: {
-		abcd1234: user as CSUser
+		abcd1234: user as CSUser,
 	},
 	context: context as ContextState,
 	preferences: {
-		startWork: { createBranch: false }
+		startWork: { createBranch: false },
 	},
 	ide: {
-		name: "JETBRAINS"
+		name: "JETBRAINS",
 	},
 	teams,
 	editorContext: {
-		textEditorUri: "blah"
+		textEditorUri: "blah",
 	},
 	repos: {
-		repoid: myrepo as CSRepository
-	}
+		repoid: myrepo as CSRepository,
+	},
 };
 
 let container: HTMLDivElement = null!;
@@ -124,27 +124,27 @@ const baseCard: CardView = {
 	moveCardLabel: "Move this ticket to",
 	provider: {
 		id: "trello*com",
-		name: "trello"
+		name: "trello",
 	},
 	providerId: "trello*com",
 	moveCardOptions: [
 		{
 			id: "1111",
-			name: "Backlog"
+			name: "Backlog",
 		},
 		{
 			id: "2222",
-			name: "In Progress"
+			name: "In Progress",
 		},
 		{
 			id: "3333",
-			name: "Review"
+			name: "Review",
 		},
 		{
 			id: "4444",
-			name: "Done"
-		}
-	]
+			name: "Done",
+		},
+	],
 };
 
 describe("Issue State Change", () => {
@@ -162,14 +162,14 @@ describe("Issue State Change", () => {
 					repositories: [
 						{
 							id: "repoid",
-							currentBranch: "main"
-						}
-					]
+							currentBranch: "main",
+						},
+					],
 				} as GetReposScmResponse;
 			}
 			case GetBranchesRequestType: {
 				return {
-					scm: { branches: ["main", "feature/feature1"], repoId: "repoid" }
+					scm: { branches: ["main", "feature/feature1"], repoId: "repoid" },
 				} as GetBranchesResponse;
 			}
 			case UpdateStatusRequestType: {
@@ -229,17 +229,17 @@ describe("Issue State Change", () => {
 				// In Jira current status "2222" not in moveCardOptions
 				{
 					id: "1111",
-					name: "Backlog"
+					name: "Backlog",
 				},
 				{
 					id: "3333",
-					name: "Review"
+					name: "Review",
 				},
 				{
 					id: "4444",
-					name: "Done"
-				}
-			]
+					name: "Done",
+				},
+			],
 		};
 
 		await act(async () => {
@@ -268,24 +268,24 @@ describe("Issue State Change", () => {
 				// In Jira current status "2222" not in moveCardOptions
 				{
 					id: "1111",
-					name: "Backlog"
+					name: "Backlog",
 				},
 				{
 					id: "3333",
-					name: "Review"
+					name: "Review",
 				},
 				{
 					id: "4444",
-					name: "Done"
-				}
-			]
+					name: "Done",
+				},
+			],
 		};
 		const state: Partial<CodeStreamState> = {
 			...baseState,
 			preferences: {
 				...baseState.preferences,
-				issueMru: { "jiraserver/enterprise": { "2222": "3333" } }
-			}
+				issueMru: { "jiraserver/enterprise": { "2222": "3333" } },
+			},
 		};
 
 		await act(async () => {
@@ -315,24 +315,24 @@ describe("Issue State Change", () => {
 				// In Jira current status "2222" not in moveCardOptions
 				{
 					id: "1111",
-					name: "Backlog"
+					name: "Backlog",
 				},
 				{
 					id: "3333",
-					name: "Review"
+					name: "Review",
 				},
 				{
 					id: "4444",
-					name: "Done"
-				}
-			]
+					name: "Done",
+				},
+			],
 		};
 		const state: Partial<CodeStreamState> = {
 			...baseState,
 			preferences: {
 				...baseState.preferences,
-				issueMru: { "jiraserver/enterprise": { "2222": "1111" } }
-			}
+				issueMru: { "jiraserver/enterprise": { "2222": "1111" } },
+			},
 		};
 
 		let component: RenderResult;
@@ -370,8 +370,10 @@ describe("Issue State Change", () => {
 
 		expect(spySetUserPreference).toHaveBeenLastCalledWith(
 			// ["issueMru", "jiraserver/enterprise", "2222"], // Correct but doesn't work
-			["2222"], // jest bug?
-			"3333"
+			{
+				prefPath: ["2222"], // jest bug?
+				value: "3333",
+			}
 		);
 	});
 });

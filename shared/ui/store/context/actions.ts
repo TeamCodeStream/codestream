@@ -2,13 +2,19 @@ import { RegisterUserRequest, RepoProjectType } from "@codestream/protocols/agen
 import { logError } from "../../logger";
 import { setUserPreference } from "../../Stream/actions";
 import { action } from "../common";
-import { ContextActionsType, ContextState, PostEntryPoint, Route } from "./types";
+import {
+	ContextActionsType,
+	ContextState,
+	PostEntryPoint,
+	Route,
+	WantNewRelicOptions,
+} from "./types";
 import {
 	WebviewPanels,
 	WebviewModals,
 	NewPullRequestBranch,
 	HostDidReceiveRequestNotificationType,
-	CodeErrorData
+	CodeErrorData,
 } from "@codestream/protocols/webview";
 import { CodemarkType } from "@codestream/protocols/api";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -42,22 +48,19 @@ export const closeModal = () => {
 	return action(ContextActionsType.CloseModal);
 };
 
-export const closePrDetailModal = (
-	providerId: string,
-	id: string,
-	groupIndex?: string | undefined
-) => dispatch => {
-	dispatch(closeModal());
-	dispatch(openPanel(WebviewPanels.Sidebar));
-	dispatch(setCurrentCodemark());
-	dispatch(setCurrentReview());
-	dispatch(setCurrentCodeError());
-	dispatch(setCurrentPullRequest(providerId, id, "", "", "sidebar-diffs", groupIndex));
-	dispatch(clearCurrentErrorsInboxOptions());
-	dispatch(clearCurrentInstrumentationOptions());
-	dispatch(clearWantNewRelicOptions());
-	dispatch(setCurrentMethodLevelTelemetry(undefined));
-};
+export const closePrDetailModal =
+	(providerId: string, id: string, groupIndex?: string | undefined) => dispatch => {
+		dispatch(closeModal());
+		dispatch(openPanel(WebviewPanels.Sidebar));
+		dispatch(setCurrentCodemark());
+		dispatch(setCurrentReview());
+		dispatch(setCurrentCodeError());
+		dispatch(setCurrentPullRequest(providerId, id, "", "", "sidebar-diffs", groupIndex));
+		dispatch(clearCurrentErrorsInboxOptions());
+		dispatch(clearCurrentInstrumentationOptions());
+		dispatch(clearWantNewRelicOptions());
+		dispatch(setCurrentMethodLevelTelemetry(undefined));
+	};
 
 export const closeAllPanels = () => dispatch => {
 	dispatch(closeModal());
@@ -95,7 +98,7 @@ export const setChannelFilter = (value: string) => async dispatch => {
 	if (value !== "selecting") {
 		// if a filter is selected, only update user preferences
 		// the context reducer will update the `channelFilter` on the preferences change
-		return await dispatch(setUserPreference(["showChannels"], value));
+		return await dispatch(setUserPreference({ prefPath: ["showChannels"], value }));
 	}
 	return dispatch(_setChannelFilter(value));
 };
@@ -168,16 +171,14 @@ export const _setCurrentReview = (reviewId?: string) =>
 export const _setCurrentReviewOptions = (options: any) =>
 	action(ContextActionsType.SetCurrentReviewOptions, { options });
 
-export const setCurrentReview = (reviewId?: string, options?: { openFirstDiff?: boolean }) => (
-	dispatch,
-	getState
-) => {
-	if (!reviewId) {
-		dispatch(_setCurrentReviewOptions(undefined));
-	}
-	dispatch(_setCurrentReviewOptions(options));
-	return dispatch(_setCurrentReview(reviewId));
-};
+export const setCurrentReview =
+	(reviewId?: string, options?: { openFirstDiff?: boolean }) => (dispatch, getState) => {
+		if (!reviewId) {
+			dispatch(_setCurrentReviewOptions(undefined));
+		}
+		dispatch(_setCurrentReviewOptions(options));
+		return dispatch(_setCurrentReview(reviewId));
+	};
 
 export const setCurrentReviewOptions = (options: any) =>
 	action(ContextActionsType.SetCurrentReviewOptions, { options });
@@ -185,12 +186,10 @@ export const setCurrentReviewOptions = (options: any) =>
 export const _setCurrentCodeError = (codeErrorId?: string, data?: any) =>
 	action(ContextActionsType.SetCurrentCodeError, { codeErrorId, data });
 
-export const setCurrentCodeError = (codeErrorId?: string, data?: CodeErrorData) => (
-	dispatch,
-	getState
-) => {
-	return dispatch(_setCurrentCodeError(codeErrorId, data));
-};
+export const setCurrentCodeError =
+	(codeErrorId?: string, data?: CodeErrorData) => (dispatch, getState) => {
+		return dispatch(_setCurrentCodeError(codeErrorId, data));
+	};
 
 export const setCurrentRepo = (id?: string, path?: string) =>
 	action(ContextActionsType.SetCurrentRepo, { id, path });
@@ -219,7 +218,7 @@ export const setCurrentPullRequest = (
 		commentId,
 		source,
 		view,
-		groupIndex
+		groupIndex,
 	});
 
 export const setCurrentErrorsInboxOptions = (
@@ -236,7 +235,7 @@ export const setCurrentPullRequestNeedsRefresh = (
 	action(ContextActionsType.SetCurrentPullRequestNeedsRefresh, {
 		needsRefresh,
 		providerId,
-		pullRequestId
+		pullRequestId,
 	});
 
 export const setCurrentInstrumentationOptions = (options?: any) =>
@@ -264,7 +263,8 @@ export const clearCurrentInstrumentationOptions = () =>
 export const clearCurrentPixieDynamicLoggingOptions = () =>
 	action(ContextActionsType.SetCurrentPixieDynamicLoggingOptions, { options: {} });
 
-export const clearWantNewRelicOptions = () => action(ContextActionsType.SetWantNewRelicOptions, {});
+export const clearWantNewRelicOptions = () =>
+	action(ContextActionsType.SetClearNewRelicOptions, {});
 
 export const clearCurrentPullRequest = () =>
 	action(ContextActionsType.SetCurrentPullRequest, {
@@ -272,7 +272,7 @@ export const clearCurrentPullRequest = () =>
 		id: "",
 		commentId: "",
 		source: "",
-		view: undefined
+		view: undefined,
 	});
 
 export const setOnboardStep = (step: number) => action(ContextActionsType.SetOnboardStep, { step });
@@ -353,12 +353,10 @@ export const goToSetPassword = params =>
 export const goToOktaConfig = params =>
 	action(ContextActionsType.SetRoute, { name: Route.OktaConfig, params });
 
-export const handlePendingProtocolHandlerUrl = (url: string | undefined) => (
-	dispatch,
-	getState
-) => {
-	HostApi.instance.emit(HostDidReceiveRequestNotificationType.method, { url: url });
-};
+export const handlePendingProtocolHandlerUrl =
+	(url: string | undefined) => (dispatch, getState) => {
+		HostApi.instance.emit(HostDidReceiveRequestNotificationType.method, { url: url });
+	};
 
 export const setPendingProtocolHandlerUrl = (params: { url?: string; query?: any } = {}) =>
 	action(ContextActionsType.SetPendingProtocolHandlerUrl, { url: params.url, query: params.query });

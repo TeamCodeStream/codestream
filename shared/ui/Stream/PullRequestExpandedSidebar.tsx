@@ -1,3 +1,4 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -11,7 +12,7 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "../ipc/webview.protocol.common";
 import { HostApi } from "../webview-api";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 
 export const ReviewButton = styled.div`
 	color: white;
@@ -34,7 +35,7 @@ interface PullRequestExpandedSidebarProps {
 }
 
 export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProps) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [submittingReview, setSubmittingReview] = useState(false);
 
 	const handleRowClick = e => {
@@ -44,7 +45,7 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		if (thirdPartyPrObject) {
 			HostApi.instance.track("PR Details Viewed", {
 				Host: thirdPartyPrObject?.providerId,
-				"Host Version": thirdPartyPrObject?.supports?.version?.version || "0.0.0"
+				"Host Version": thirdPartyPrObject?.supports?.version?.version || "0.0.0",
 			});
 		}
 
@@ -76,11 +77,14 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 		setSubmittingReview(true);
 		HostApi.instance.track("PR Review Finished", {
 			Host: props?.thirdPartyPrObject?.providerId,
-			"Review Type": "APPROVE"
+			"Review Type": "APPROVE",
 		});
 		await dispatch(
-			api("submitReview", {
-				eventType: "APPROVE"
+			api({
+				method: "submitReview",
+				params: {
+					eventType: "APPROVE",
+				},
 			})
 		);
 		setSubmittingReview(false);

@@ -1,22 +1,22 @@
 import {
 	RegisterNrUserRequestType,
-	GetNewRelicSignupJwtTokenRequestType
+	GetNewRelicSignupJwtTokenRequestType,
 } from "@codestream/protocols/agent";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { handleSelectedRegion, setSelectedRegion } from "@codestream/webview/store/session/thunks";
 import React, { useEffect } from "react";
 import { HostApi } from "../webview-api";
 import Icon from "../Stream/Icon";
 import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import styled from "styled-components";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
 import { logError } from "../logger";
 import { CodeStreamState } from "@codestream/webview/store";
 import { LoginResult } from "@codestream/protocols/api";
 import { goToNewUserEntry, goToCompanyCreation, goToLogin } from "../store/context/actions";
-import { handleSelectedRegion, setSelectedRegion } from "../store/session/actions";
 import { completeSignup } from "./actions";
 // TODO: BRIAN FIX (remove this dependency)...
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
@@ -43,8 +43,8 @@ export const SignupNewRelic = () => {
 	const [inviteConflict, setInviteConflict] = React.useState(false);
 
 	//Redux declarations
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { environmentHosts } = state.configs;
 		const { selectedRegion, forceRegion } = state.context.__teamless__ || {};
 		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
@@ -57,7 +57,7 @@ export const SignupNewRelic = () => {
 			environmentHosts,
 			selectedRegion,
 			forceRegion,
-			supportsMultiRegion
+			supportsMultiRegion,
 		};
 	});
 
@@ -84,7 +84,7 @@ export const SignupNewRelic = () => {
 			label: host.name,
 			action: () => {
 				dispatch(setSelectedRegion(host.shortName));
-			}
+			},
 		}));
 
 		if (forceRegion) {
@@ -116,7 +116,7 @@ export const SignupNewRelic = () => {
 				notInviteRelated,
 				eligibleJoinCompanies,
 				isWebmail,
-				accountIsConnected
+				accountIsConnected,
 			} = await HostApi.instance.send(RegisterNrUserRequestType, data);
 
 			setLoading(false);
@@ -125,10 +125,10 @@ export const SignupNewRelic = () => {
 				HostApi.instance.track("Account Created", {
 					email: email,
 					"Auth Provider": "New Relic",
-					Source: derivedState.pendingProtocolHandlerQuerySource
+					Source: derivedState.pendingProtocolHandlerQuerySource,
 				});
 				HostApi.instance.track("NR Connected", {
-					"Connection Location": "Onboarding"
+					"Connection Location": "Onboarding",
 				});
 			};
 
@@ -146,7 +146,7 @@ export const SignupNewRelic = () => {
 								eligibleJoinCompanies,
 								isWebmail,
 								accountIsConnected,
-								provider: "newrelic"
+								provider: "newrelic",
 							})
 						);
 					}
@@ -163,7 +163,7 @@ export const SignupNewRelic = () => {
 					if (email && token && teamId) {
 						sendTelemetry();
 						completeSignup(email, token!, teamId!, {
-							createdTeam: false
+							createdTeam: false,
 						});
 					}
 					break;
@@ -179,7 +179,7 @@ export const SignupNewRelic = () => {
 			setShowGenericErrorMessage(true);
 			setShowEmailErrorMessage(false);
 			logError(error, {
-				detail: `Unexpected error during nr registration request`
+				detail: `Unexpected error during nr registration request`,
 			});
 		}
 	};
@@ -250,7 +250,7 @@ export const SignupNewRelic = () => {
 								style={{
 									width: "100%",
 									display: "flex",
-									alignItems: "stretch"
+									alignItems: "stretch",
 								}}
 							>
 								<div style={{ position: "relative", flexGrow: 10 }}>

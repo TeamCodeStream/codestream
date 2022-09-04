@@ -1,7 +1,7 @@
 import React, { PropsWithChildren, useCallback, useEffect, useState } from "react";
 import Icon from "./Icon";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import { getPullRequestFiles } from "../store/providerPullRequests/actions";
+import { getPullRequestFiles } from "../store/providerPullRequests/thunks";
 import { useDispatch, useSelector } from "react-redux";
 import copy from "copy-to-clipboard";
 import { FileStatus } from "@codestream/protocols/api";
@@ -9,7 +9,7 @@ import { CodeStreamState } from "../store";
 import styled from "styled-components";
 import { Modal } from "./Modal";
 import { PullRequestFileCommentCard } from "./PullRequestFileCommentCard";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { orderBy } from "lodash-es";
 
 const Root = styled.div`
@@ -68,7 +68,7 @@ const CardContainer = styled.div`
 `;
 
 const STATUS_MAP = {
-	modified: FileStatus.modified
+	modified: FileStatus.modified,
 };
 
 interface Props {
@@ -82,9 +82,9 @@ interface Props {
 
 export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 	const { quote, pr, prCommitsRange } = props;
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
@@ -93,7 +93,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 				: undefined,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
-				: undefined
+				: undefined,
 		};
 	});
 
@@ -112,7 +112,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 					linesRemoved: _.deletions,
 					file: _.filename,
 					sha: _.sha,
-					status: STATUS_MAP[_.status]
+					status: STATUS_MAP[_.status],
 				};
 			});
 		setFileInfo(fileInfo[0]);
@@ -122,7 +122,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 	useDidMount(() => {
 		(async () => {
 			const data = await dispatch(
-				getPullRequestFiles(pr.providerId, derivedState.currentPullRequestId!)
+				getPullRequestFiles({ providerId: pr.providerId, id: derivedState.currentPullRequestId! })
 			);
 			_mapData(data);
 		})();
@@ -137,7 +137,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		let sortedCommentsWithRefs = sortedComments.map(c => ({
 			//@ts-ignore
 			...c,
-			ref: React.createRef()
+			ref: React.createRef(),
 		}));
 
 		setSortedComments(sortedCommentsWithRefs);
@@ -168,9 +168,9 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 							if (!map[position.newPath]) map[position.newPath] = [];
 							map[position.newPath].push({
 								review: {
-									state: comment.state
+									state: comment.state,
 								},
-								comment: comment
+								comment: comment,
 							});
 							if (
 								comment.id === props.commentId ||
@@ -210,7 +210,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		let sortedCommentsWithRefs = sortedComments.map(c => ({
 			//@ts-ignore
 			...c,
-			ref: React.createRef()
+			ref: React.createRef(),
 		}));
 
 		setSortedComments(sortedCommentsWithRefs);

@@ -1,21 +1,20 @@
 import React from "react";
-import { useSelector, useDispatch, useStore } from "react-redux";
-import { CodeStreamState } from "../store";
-import { getCodeError } from "../store/codeErrors/reducer";
-import { Loading } from "../Container/Loading";
-import { CodeError } from "./CodeError";
+import { useSelector, useStore } from "react-redux";
 import { DelayedRender } from "../Container/DelayedRender";
-import { setCurrentCodeError } from "../store/context/actions";
-import { HostApi } from "../webview-api";
-import { useDidMount } from "../utilities/hooks";
-import { markItemRead } from "./actions";
-import { isUnread } from "../store/users/reducer";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { LoadingMessage } from "../src/components/LoadingMessage";
+import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getCodeError } from "../store/codeErrors/reducer";
+import { setCurrentCodeError } from "../store/context/actions";
+import { isUnread } from "../store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { markItemRead } from "./actions";
+import { CodeError } from "./CodeError";
 
 export function CodeErrorView() {
-	const dispatch = useDispatch();
-	const codeError = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const codeError = useAppSelector((state: CodeStreamState) => {
 		return getCodeError(state.codeErrors, state.context.currentCodeErrorId!);
 	});
 	const unread = useSelector((state: CodeStreamState) => {

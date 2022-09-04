@@ -9,7 +9,7 @@ import { PullRequestQuery } from "@codestream/protocols/api";
 import { Link } from "../../Link";
 import { replaceHtml } from "../../../utils";
 import { PRBranch, PRError } from "../../PullRequestComponents";
-import { api, getMyPullRequests } from "../../../store/providerPullRequests/actions";
+import { api, getMyPullRequests } from "../../../store/providerPullRequests/thunks";
 import MessageInput from "../../MessageInput";
 import { TextInput } from "@codestream/webview/Authentication/TextInput";
 import { Modal } from "../../Modal";
@@ -22,12 +22,12 @@ import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { SmartFormattedList } from "../../SmartFormattedList";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import Timestamp from "../../Timestamp";
 import { Circle } from "../../PullRequestConversationTab";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "../../../ipc/host.protocol";
-import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/slice";
 import * as providerSelectors from "../../../store/providers/reducer";
 import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
 
@@ -103,8 +103,8 @@ let insertNewline;
 let focusOnMessageInput;
 
 export const EditPullRequest = props => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
@@ -125,7 +125,7 @@ export const EditPullRequest = props => {
 			allRepos:
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
-					: preferences.pullRequestQueryShowAllRepos
+					: preferences.pullRequestQueryShowAllRepos,
 		};
 	});
 
@@ -154,27 +154,30 @@ export const EditPullRequest = props => {
 	const save = async () => {
 		setIsLoading(true);
 		await dispatch(
-			api("updatePullRequest", {
-				title,
-				description: replaceHtml(description),
-				targetBranch,
-				labels: labelsField.map(_ => _.title).join(","),
-				availableLabels: availableLabels,
-				milestoneId: milestoneField
-					? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
-					: "",
-				assigneeIds: assigneesField
-					.filter(_ => _.id)
-					.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
-					.join(","),
-				reviewerIds: derivedState.supportsReviewers
-					? reviewersField
-							.filter(_ => _.id)
-							.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
-							.join(",")
-					: undefined,
-				deleteSourceBranch,
-				squashCommits
+			api({
+				method: "updatePullRequest",
+				params: {
+					title,
+					description: replaceHtml(description),
+					targetBranch,
+					labels: labelsField.map(_ => _.title).join(","),
+					availableLabels: availableLabels,
+					milestoneId: milestoneField
+						? milestoneField.id.toString().replace("gid://gitlab/Milestone/", "")
+						: "",
+					assigneeIds: assigneesField
+						.filter(_ => _.id)
+						.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
+						.join(","),
+					reviewerIds: derivedState.supportsReviewers
+						? reviewersField
+								.filter(_ => _.id)
+								.map(_ => _.id.toString().replace("gid://gitlab/User/", ""))
+								.join(",")
+						: undefined,
+					deleteSourceBranch,
+					squashCommits,
+				},
 			})
 		);
 		await new Promise(resolve => {
@@ -198,13 +201,13 @@ export const EditPullRequest = props => {
 								: defaultQueries[connectedProvider.id];
 
 						await dispatch(
-							getMyPullRequests(
-								connectedProvider.id,
-								providerQuery,
-								!derivedState.allRepos,
+							getMyPullRequests({
+								providerId: connectedProvider.id,
+								queries: providerQuery,
+								openReposOnly: !derivedState.allRepos,
 								options,
-								true
-							)
+								throwOnError: true,
+							})
 						);
 					}
 				} catch (error) {
@@ -217,7 +220,7 @@ export const EditPullRequest = props => {
 	const [remoteBranches, setRemoteBranches] = useState([] as any[]);
 
 	const fetchRemoteBranches = async () => {
-		const response = (await dispatch(api("remoteBranches", {}))) as any;
+		const response = await dispatch(api({ method: "remoteBranches", params: {} })).unwrap();
 		setRemoteBranches(response.filter(_ => _.name !== pr.sourceBranch));
 	};
 
@@ -236,7 +239,7 @@ export const EditPullRequest = props => {
 		if (availableReviewers === undefined) {
 			setAvailableReviewers([]);
 		}
-		const reviewers = (await dispatch(api("getReviewers", {}))) as any;
+		const reviewers = await dispatch(api({ method: "getReviewers", params: {} })).unwrap();
 		setAvailableReviewers(reviewers.users);
 	};
 
@@ -263,14 +266,16 @@ export const EditPullRequest = props => {
 					action: () => {
 						if (derivedState.supportsMultipleReviewers) {
 							const newReviewers = [
-								...reviewersField.filter(reviewer => reviewer.id !== _.id && reviewer.id !== longId)
+								...reviewersField.filter(
+									reviewer => reviewer.id !== _.id && reviewer.id !== longId
+								),
 							];
 							if (!checked) newReviewers.unshift(_);
 							setReviewersField(newReviewers);
 						} else {
 							setReviewersField([{ ..._ }]);
 						}
-					}
+					},
 				} as any;
 			});
 			menuItems.unshift({ label: "-" });
@@ -278,7 +283,7 @@ export const EditPullRequest = props => {
 				checked: reviewerIds.length === 0,
 				label: "Unassigned",
 				key: "unassigned",
-				action: () => setReviewersField([])
+				action: () => setReviewersField([]),
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -292,7 +297,7 @@ export const EditPullRequest = props => {
 		if (availableAssignees === undefined) {
 			setAvailableAssignees(EMPTY_ARRAY);
 		}
-		const assignees = (await dispatch(api("getReviewers", {}))) as any;
+		const assignees = await dispatch(api({ method: "getReviewers", params: {} })).unwrap();
 		setAvailableAssignees(assignees.users);
 	};
 
@@ -319,14 +324,16 @@ export const EditPullRequest = props => {
 					action: () => {
 						if (derivedState.supportsMultipleAssignees) {
 							const newAssignees = [
-								...assigneesField.filter(assignee => assignee.id !== _.id && assignee.id !== longId)
+								...assigneesField.filter(
+									assignee => assignee.id !== _.id && assignee.id !== longId
+								),
 							];
 							if (!checked) newAssignees.unshift(_);
 							setAssigneesField(newAssignees);
 						} else {
 							setAssigneesField([{ ..._ }]);
 						}
-					}
+					},
 				} as any;
 			});
 			menuItems.unshift({ label: "-" });
@@ -334,7 +341,7 @@ export const EditPullRequest = props => {
 				checked: assigneeIds.length === 0,
 				label: "Unassigned",
 				key: "unassigned",
-				action: () => setAssigneesField([])
+				action: () => setAssigneesField([]),
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -352,7 +359,7 @@ export const EditPullRequest = props => {
 		labelsField.length > 0 ? <SmartFormattedList value={labelsField.map(_ => _.title)} /> : "None";
 
 	const fetchAvailableLabels = async (e?) => {
-		const labels = (await dispatch(api("getLabels", {}))) as any;
+		const labels = await dispatch(api({ method: "getLabels", params: {} })).unwrap();
 		setAvailableLabels(labels);
 	};
 
@@ -375,11 +382,11 @@ export const EditPullRequest = props => {
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
 					action: () => {
 						const newLabels = [
-							...labelsField.filter(label => label.id !== _.id && label.id !== longId)
+							...labelsField.filter(label => label.id !== _.id && label.id !== longId),
 						];
 						if (!checked) newLabels.unshift(_);
 						setLabelsField(newLabels);
-					}
+					},
 				};
 			}) as any;
 
@@ -392,10 +399,10 @@ export const EditPullRequest = props => {
 				label: "Manage Labels",
 				action: () => {
 					HostApi.instance.send(OpenUrlRequestType, {
-						url: `${pr.repository.url}/-/labels`
+						url: `${pr.repository.url}/-/labels`,
 					});
 					setAvailableLabels(undefined);
-				}
+				},
 			});
 			return menuItems;
 		} else {
@@ -407,7 +414,7 @@ export const EditPullRequest = props => {
 	const [availableMilestones, setAvailableMilestones] = useState<[] | undefined>();
 
 	const fetchAvailableMilestones = async (e?) => {
-		const milestones = (await dispatch(api("getMilestones", {}))) as any;
+		const milestones = await dispatch(api({ method: "getMilestones", params: {} })).unwrap();
 		setAvailableMilestones(milestones);
 	};
 
@@ -428,7 +435,7 @@ export const EditPullRequest = props => {
 							<Timestamp time={_.dueOn || _.due_on} dateOnly />
 						</>
 					),
-					action: () => setMilestoneField(_)
+					action: () => setMilestoneField(_),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
@@ -437,12 +444,12 @@ export const EditPullRequest = props => {
 				label: "No milestone",
 				searchLabel: "",
 				checked: false,
-				action: () => setMilestoneField(undefined)
+				action: () => setMilestoneField(undefined),
 			});
 			return menuItems;
 		} else if (availableMilestones) {
 			return [
-				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true }
+				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true },
 			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
@@ -465,7 +472,7 @@ export const EditPullRequest = props => {
 										return {
 											label: branch.name,
 											key: branch.name,
-											action: () => setTargetBranch(branch.name)
+											action: () => setTargetBranch(branch.name),
 										};
 									})}
 								>

@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { MouseEventHandler, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -10,7 +11,7 @@ import {
 	connectProvider,
 	configureProvider,
 	disconnectProvider,
-	ViewLocation
+	ViewLocation,
 } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
 import { getUserProviderInfoFromState } from "../store/providers/utils";
@@ -35,8 +36,8 @@ export const ConfigureOAuthOrPATPanel = (props: {
 	providerId: string;
 	originLocation: ViewLocation | string;
 }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers, ide, capabilities } = state;
 		const provider = providers[props.providerId];
 		const userProviderInfo = getUserProviderInfoFromState(provider.name, state) as CSProviderInfo;
@@ -52,7 +53,7 @@ export const ConfigureOAuthOrPATPanel = (props: {
 			userProviderInfo,
 			verificationError: accessTokenError.accessTokenError,
 			didConnect,
-			isVSCGitHub
+			isVSCGitHub,
 		};
 	});
 
@@ -66,7 +67,7 @@ export const ConfigureOAuthOrPATPanel = (props: {
 		helpPATUrl = "",
 		icon = "",
 		namePAT = "Personal Access Token",
-		directPAT
+		directPAT,
 	} = mapping;
 
 	const [accessToken, setAccessToken] = useState("");

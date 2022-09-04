@@ -192,7 +192,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 		createdByMe: "Created By Me",
 		open: "Open",
 		closed: "Closed",
-		recent: "Recent"
+		recent: "Recent",
 	};
 	_searchInput: any;
 	_saveFilterInput: any;
@@ -207,13 +207,13 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				createdByMe: true,
 				open: true,
 				closed: true,
-				recent: true
+				recent: true,
 			},
 			filters: { text: "" },
 			displayItems: {},
 			totalItems: 0,
 			resultsPage: 1,
-			maximized: false
+			maximized: false,
 		};
 	}
 
@@ -246,7 +246,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 	toggleSection = (e, section) => {
 		e.stopPropagation();
 		this.setState({
-			expanded: { ...this.state.expanded, [section]: !this.state.expanded[section] }
+			expanded: { ...this.state.expanded, [section]: !this.state.expanded[section] },
 		});
 	};
 
@@ -271,7 +271,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 					<td colSpan={4}>
 						<div
 							className={createClassString("section", "has-children", {
-								expanded: this.state.expanded[section]
+								expanded: this.state.expanded[section],
 							})}
 						>
 							<div className="header" onClick={e => this.toggleSection(e, section)}>
@@ -536,9 +536,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			if (filters.commit) {
 				if (isReview) {
 					// @ts-ignore
-					const commits = ((item.reviewChangesets || []).map(
-						changeset => changeset.commits
-					) as any).flat(); // we might need to update typescript to get definition for Array.prototype.flat
+					const commits = (
+						(item.reviewChangesets || []).map(changeset => changeset.commits) as any
+					).flat(); // we might need to update typescript to get definition for Array.prototype.flat
 					const match = commits.find(commit => commit && commit.sha.startsWith(filters.commit));
 					if (!match) return null;
 				} else {
@@ -645,18 +645,21 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 			savedFilters.splice(index, 1, { label, q });
 		}
 
-		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters]);
+		this.props.setUserPreference({ prefPath: ["savedSearchFilters"], value: [...savedFilters] });
 		this.setState({
 			savingFilter: false,
 			editingFilterIndex: undefined,
-			editingFilterLabel: ""
+			editingFilterLabel: "",
 		});
 	};
 
 	deleteSavedFilter = index => {
 		const savedFilters = [...this.props.savedSearchFilters];
 		savedFilters.splice(index, 1);
-		this.props.setUserPreference(["savedSearchFilters"], [...savedFilters, { label: "", q: "" }]);
+		this.props.setUserPreference({
+			prefPath: ["savedSearchFilters"],
+			value: [...savedFilters, { label: "", q: "" }],
+		});
 	};
 
 	// this method renders a filter that is in the process of being saved
@@ -720,7 +723,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				noHover: true,
 				searchLabel: tag.label || tag.color,
-				action: e => this.props.setQuery(`tag:${label}`)
+				action: e => this.props.setQuery(`tag:${label}`),
 			};
 		});
 
@@ -733,7 +736,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				searchLabel: branch,
 				key: branch,
-				action: e => this.props.setQuery(`branch:"${branch}"`)
+				action: e => this.props.setQuery(`branch:"${branch}"`),
 			};
 		});
 
@@ -746,7 +749,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				),
 				searchLabel: name,
 				key: name,
-				action: e => this.props.setQuery(`repo:"${name}"`)
+				action: e => this.props.setQuery(`repo:"${name}"`),
 			};
 		});
 
@@ -773,53 +776,53 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				label: "Open Issues",
 				key: "open-issues",
 				action: () => this.props.setQuery("is:open type:issue"),
-				lightningOnly: true
+				lightningOnly: true,
 			},
 			{
 				label: "Open Code Comments",
 				key: "open-comments",
 				action: () => this.props.setQuery("is:open type:comment"),
-				lightningOnly: true
+				lightningOnly: true,
 			},
 			{
 				label: "Open Feedback Requests",
 				key: "open-frs",
 				action: () => this.props.setQuery("is:open type:fr"),
-				lightningOnly: true
+				lightningOnly: true,
 			},
 			{ label: "-" },
 			{
 				label: "Your Issues",
 				key: "issues",
-				action: () => this.props.setQuery("is:issue author:@me")
+				action: () => this.props.setQuery("is:issue author:@me"),
 			},
 			{
 				label: "Your Code Comments",
 				key: "comments",
-				action: () => this.props.setQuery("is:comment author:@me ")
+				action: () => this.props.setQuery("is:comment author:@me "),
 			},
 			{
 				label: "Your Feedback Requests",
 				key: "reviews",
 				action: () => this.props.setQuery("is:fr author:@me "),
-				lightningOnly: true
+				lightningOnly: true,
 			},
 			{ label: "-" },
 			{
 				label: "Everything assigned to you",
 				key: "assigned",
-				action: () => this.props.setQuery("assignee:@me ")
+				action: () => this.props.setQuery("assignee:@me "),
 			},
 			{
 				label: "Everything mentioning you",
 				key: "mine",
-				action: () => this.props.setQuery("mentions:@me ")
+				action: () => this.props.setQuery("mentions:@me "),
 			},
 			{
 				label: "Everything impacting code you wrote",
 				key: "mycode",
 				action: () => this.props.setQuery("impacts:@me "),
-				lightningOnly: true
+				lightningOnly: true,
 			},
 			{ label: "-" },
 			{ label: "By Tag", key: "tag", submenu: tagMenuItems },
@@ -831,10 +834,9 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				key: "view",
 				action: () =>
 					HostApi.instance.send(OpenUrlRequestType, {
-						url:
-							"https://docs.newrelic.com/docs/codestream/how-use-codestream/ui-overview/#filter-search"
-					})
-			}
+						url: "https://docs.newrelic.com/docs/codestream/how-use-codestream/ui-overview/#filter-search",
+					}),
+			},
 		].filter(item => this.props.lightningCodeReviewsEnabled || !item.lightningOnly);
 
 		// console.log("FILTERS: ", filters);
@@ -911,13 +913,13 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 											{
 												label: "Edit Name",
 												key: "edit",
-												action: () => this.editSavedFilter(index)
+												action: () => this.editSavedFilter(index),
 											},
 											{
 												label: "Delete",
 												key: "delete",
-												action: () => this.deleteSavedFilter(index)
-											}
+												action: () => this.deleteSavedFilter(index),
+											},
 										]}
 										target={this.state.filterMenuTarget}
 										action={() => this.setState({ filterMenuOpen: -1 })}
@@ -931,7 +933,7 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				<div
 					style={{
 						height: this.state.maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
-						overflow: "hidden"
+						overflow: "hidden",
 					}}
 				>
 					<ScrollBox>
@@ -1014,7 +1016,7 @@ const mapStateToProps = (state: CodeStreamState, _props): ConnectedProps => {
 		repos,
 		// authorFiltersLabelsLower,
 		webviewFocused: context.hasFocus,
-		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews")
+		lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
 	};
 };
 

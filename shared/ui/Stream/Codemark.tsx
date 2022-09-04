@@ -1,3 +1,4 @@
+import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemarks/thunks";
 import cx from "classnames";
 import React from "react";
 import { connect } from "react-redux";
@@ -7,7 +8,7 @@ import {
 	setCodemarkStatus,
 	setCodemarkPinned,
 	setUserPreference,
-	createPost
+	createPost,
 } from "./actions";
 import Headshot from "./Headshot";
 import Tag from "./Tag";
@@ -21,7 +22,7 @@ import {
 	DocumentMarker,
 	CodemarkPlus,
 	Capabilities,
-	MarkerNotLocated
+	MarkerNotLocated,
 } from "@codestream/protocols/agent";
 import {
 	CodemarkType,
@@ -30,7 +31,7 @@ import {
 	CSPost,
 	CSReview,
 	CodemarkStatus,
-	CSCodeError
+	CSCodeError,
 } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { FollowCodemarkRequestType } from "@codestream/protocols/agent";
@@ -40,16 +41,11 @@ import {
 	getTeamMembers,
 	getUsernames,
 	getTeamTagsHash,
-	isUnread
+	isUnread,
 } from "../store/users/reducer";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { CodemarkForm } from "./CodemarkForm";
-import {
-	deleteCodemark,
-	editCodemark,
-	addCodemarks,
-	NewCodemarkAttributes
-} from "../store/codemarks/actions";
+import { addCodemarks, NewCodemarkAttributes } from "../store/codemarks/actions";
 import { confirmPopup } from "./Confirm";
 import { getPost } from "../store/posts/reducer";
 import { getPosts } from "../store/posts/actions";
@@ -62,14 +58,14 @@ import {
 	EditorSelectRangeRequestType,
 	EditorSelectRangeRequest,
 	EditorRevealRangeRequestType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
 } from "@codestream/protocols/webview";
 import {
 	setCurrentCodemark,
 	repositionCodemark,
 	setCurrentReview,
 	setCurrentPullRequest,
-	setCurrentCodeError
+	setCurrentCodeError,
 } from "../store/context/actions";
 import { RelatedCodemark } from "./RelatedCodemark";
 import { addDocumentMarker } from "../store/documentMarkers/actions";
@@ -169,7 +165,7 @@ const EMPTY_OBJECT = {};
 
 export class Codemark extends React.Component<Props, State> {
 	static defaultProps: Partial<Props> = {
-		displayType: "default"
+		displayType: "default",
 	};
 
 	private _pollingTimer?: any;
@@ -188,7 +184,7 @@ export class Codemark extends React.Component<Props, State> {
 			isInjecting: false,
 			menuOpen: false,
 			shareModalOpen: false,
-			showDiffHunk: false
+			showDiffHunk: false,
 		};
 	}
 
@@ -237,7 +233,7 @@ export class Codemark extends React.Component<Props, State> {
 			this._sendHighlightRequest({
 				uri: fileUri,
 				range: range,
-				highlight: false
+				highlight: false,
 			});
 		}
 		this._markersToHighlight = {};
@@ -322,15 +318,8 @@ export class Codemark extends React.Component<Props, State> {
 	};
 
 	editCodemark = async (attributes: NewCodemarkAttributes) => {
-		const {
-			text,
-			assignees,
-			title,
-			relatedCodemarkIds,
-			tags,
-			codeBlocks,
-			deleteMarkerLocations
-		} = attributes;
+		const { text, assignees, title, relatedCodemarkIds, tags, codeBlocks, deleteMarkerLocations } =
+			attributes;
 		this.props.editCodemark(this.props.codemark!, {
 			text,
 			title,
@@ -635,7 +624,7 @@ export class Codemark extends React.Component<Props, State> {
 		if (!this.props.selected) {
 			HostApi.instance.track("Codemark Clicked", {
 				"Codemark ID": this.props.codemark!.id,
-				"Codemark Location": this.props.contextName ? this.props.contextName : undefined
+				"Codemark Location": this.props.contextName ? this.props.contextName : undefined,
 			});
 		}
 
@@ -665,7 +654,7 @@ export class Codemark extends React.Component<Props, State> {
 
 				this._markersToHighlight[markerId] = {
 					fileUri: uri,
-					range: info.range
+					range: info.range,
 				};
 				if (info.range) {
 					const position = { line: info.range.start.line, character: 0 };
@@ -705,7 +694,7 @@ export class Codemark extends React.Component<Props, State> {
 				if (info && info.range) {
 					this._markersToHighlight[markerId] = {
 						fileUri: info.textDocument.uri,
-						range: info.range
+						range: info.range,
 					};
 					this._sendHighlightRequest({ uri: info.textDocument.uri, range: info.range, highlight });
 				}
@@ -810,9 +799,9 @@ export class Codemark extends React.Component<Props, State> {
 					action: () => {
 						this.props.deleteCodemark(this.props.codemark!.id, this.props.post?.sharedTo);
 						this.props.setCurrentCodemark();
-					}
-				}
-			]
+					},
+				},
+			],
 		});
 	};
 
@@ -835,7 +824,7 @@ export class Codemark extends React.Component<Props, State> {
 				...marker,
 				codemark: updatedCodemark,
 				codemarkId: marker.codemarkId!,
-				externalContent: undefined
+				externalContent: undefined,
 			} as DocumentMarker);
 		}
 		this.props.addCodemarks([updatedCodemark]);
@@ -860,11 +849,11 @@ export class Codemark extends React.Component<Props, State> {
 		const { codemark } = this.props;
 		HostApi.instance.send(FollowCodemarkRequestType, {
 			codemarkId: codemark!.id,
-			value: true
+			value: true,
 		});
 		HostApi.instance.track("Notification Change", {
 			Change: "Codemark Followed",
-			"Source of Change": "Codemark menu"
+			"Source of Change": "Codemark menu",
 		});
 	};
 
@@ -872,11 +861,11 @@ export class Codemark extends React.Component<Props, State> {
 		const { codemark } = this.props;
 		HostApi.instance.send(FollowCodemarkRequestType, {
 			codemarkId: codemark!.id,
-			value: false
+			value: false,
 		});
 		HostApi.instance.track("Notification Change", {
 			Change: "Codemark Unfollowed",
-			"Source of Change": "Codemark menu"
+			"Source of Change": "Codemark menu",
 		});
 	};
 
@@ -989,7 +978,7 @@ export class Codemark extends React.Component<Props, State> {
 		}
 		bindings[key] = codemark!.id;
 
-		this.props.setUserPreference(["codemarkKeybindings"], bindings);
+		this.props.setUserPreference({ prefPath: ["codemarkKeybindings"], value: bindings });
 	}
 
 	renderKeybinding(codemark) {
@@ -1353,19 +1342,19 @@ export class Codemark extends React.Component<Props, State> {
 		if (codemark.status === "closed") {
 			menuItems.push({
 				label: "Reopen",
-				action: () => this.openIssue()
+				action: () => this.openIssue(),
 			});
 		}
 
 		if (codemark.pinned) {
 			menuItems.push({
 				label: "Archive",
-				action: () => this.setPinned(!this.props.codemark!.pinned)
+				action: () => this.setPinned(!this.props.codemark!.pinned),
 			});
 		} else {
 			menuItems.push({
 				label: "Unarchive",
-				action: () => this.setPinned(!this.props.codemark!.pinned)
+				action: () => this.setPinned(!this.props.codemark!.pinned),
 			});
 		}
 
@@ -1387,7 +1376,7 @@ export class Codemark extends React.Component<Props, State> {
 			menuItems.push({
 				label: "Inject as Inline Comment",
 				action: () => this.setInjecting(m.id),
-				key: "inject"
+				key: "inject",
 			});
 		}
 
@@ -1398,7 +1387,7 @@ export class Codemark extends React.Component<Props, State> {
 					return {
 						label,
 						action: () => this.startRepositioning(codemark.id, m.id, true),
-						key: index
+						key: index,
 					};
 				});
 				menuItems.push({ label: "Reposition Codemark", submenu: submenu, key: "reposition" });
@@ -1407,7 +1396,7 @@ export class Codemark extends React.Component<Props, State> {
 				menuItems.push({
 					label: "Reposition Codemark",
 					action: () => this.startRepositioning(codemark.id, m.id, true),
-					key: "reposition"
+					key: "reposition",
 				});
 			}
 		}
@@ -1416,7 +1405,7 @@ export class Codemark extends React.Component<Props, State> {
 			const inUse = codemarkKeybindings[index] ? " (in use)" : "";
 			return {
 				label: `${index}${inUse}`,
-				action: `set-keybinding-${index}`
+				action: `set-keybinding-${index}`,
 			};
 		});
 
@@ -1486,7 +1475,7 @@ export class Codemark extends React.Component<Props, State> {
 					unpinned: !codemark.pinned,
 					injecting: isInjecting,
 					repositioning: isRepositioning,
-					"has-striped-header": showStripedHeader
+					"has-striped-header": showStripedHeader,
 				})}
 				onClick={this.handleClickCodemark}
 				onMouseEnter={this.handleMouseEnterCodemark}
@@ -1495,32 +1484,34 @@ export class Codemark extends React.Component<Props, State> {
 				<div className="contents">
 					{showStripedHeader && (
 						<div className="striped-header">
-							{// foo
-							// @ts-ignore
-							marker && marker.notLocatedReason && (
-								<>
-									Position lost for this codemark
-									{this.props.moveMarkersEnabled && (
-										<Tooltip
-											title="Connect this codemark to a block of code in this file or another"
-											placement="topRight"
-											delay={1}
-										>
-											<div className="right">
-												<div
-													className="resolve-button reposition-button"
-													onClick={e => {
-														e.stopPropagation();
-														this.props.repositionCodemark(codemark.id, marker.id, true);
-													}}
-												>
-													Reposition
+							{
+								// foo
+								// @ts-ignore
+								marker && marker.notLocatedReason && (
+									<>
+										Position lost for this codemark
+										{this.props.moveMarkersEnabled && (
+											<Tooltip
+												title="Connect this codemark to a block of code in this file or another"
+												placement="topRight"
+												delay={1}
+											>
+												<div className="right">
+													<div
+														className="resolve-button reposition-button"
+														onClick={e => {
+															e.stopPropagation();
+															this.props.repositionCodemark(codemark.id, marker.id, true);
+														}}
+													>
+														Reposition
+													</div>
 												</div>
-											</div>
-										</Tooltip>
-									)}
-								</>
-							)}
+											</Tooltip>
+										)}
+									</>
+								)
+							}
 							{!codemark.pinned && <div>This codemark is archived.</div>}
 							{codemark.status == "closed" && <div>This codemark is resolved.</div>}
 							{codeWasDeleted && <div>This codemark refers to deleted code.</div>}
@@ -1712,7 +1703,7 @@ export class Codemark extends React.Component<Props, State> {
 				className={cx("codemark inline", {
 					// if it's selected, we don't render as hidden
 					"cs-hidden": !selected ? hidden : false,
-					selected: selected
+					selected: selected,
 				})}
 				onClick={e => {
 					e.preventDefault();
@@ -1722,7 +1713,7 @@ export class Codemark extends React.Component<Props, State> {
 						uri: marker.fileUri,
 						// @ts-ignore
 						range: marker.range,
-						preserveFocus: true
+						preserveFocus: true,
 					});
 					if (providerId && externalContent.externalId) {
 						this.props.setCurrentPullRequest(providerId!, externalContent.externalId);
@@ -1885,7 +1876,7 @@ export class Codemark extends React.Component<Props, State> {
 						uri: marker.fileUri,
 						// @ts-ignore
 						range: marker.range,
-						preserveFocus: true
+						preserveFocus: true,
 					});
 					if (providerId && externalContent.externalId) {
 						this.props.setCurrentPullRequest(
@@ -2059,7 +2050,7 @@ export class Codemark extends React.Component<Props, State> {
 		const user = {
 			username: "pez",
 			email: "pez@codestream.com",
-			fullName: "Peter Pezaris"
+			fullName: "Peter Pezaris",
 		};
 		return (
 			<div>
@@ -2074,7 +2065,7 @@ export class Codemark extends React.Component<Props, State> {
 						<div className="pinned-reply">
 							<Icon name="star" /> <Headshot size={18} person={user} />
 							<div className="pinned-reply-body">are you sure?</div>
-						</div>
+						</div>,
 					]}
 				{codemark.title && codemark.title.startsWith("let's avoid") && (
 					<div className="pinned-reply">
@@ -2100,7 +2091,7 @@ export class Codemark extends React.Component<Props, State> {
 
 const unknownAuthor = {
 	username: "CodeStream",
-	fullName: "Unknown User"
+	fullName: "Unknown User",
 };
 
 const mapStateToProps = (state: CodeStreamState, props: InheritedProps): ConnectedProps => {
@@ -2149,7 +2140,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 			return {
 				username: marker.creatorName,
 				avatar: { image: marker.externalContent.provider.name },
-				fullName: ""
+				fullName: "",
 			} as CSUser;
 		}
 		return unknownAuthor;
@@ -2190,7 +2181,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		codeNotInCurrentBranch,
 		textEditorUri: editorContext.textEditorUri || "",
 		isRepositioning: context.isRepositioning,
-		moveMarkersEnabled: isFeatureEnabled(state, "moveMarkers2")
+		moveMarkersEnabled: isFeatureEnabled(state, "moveMarkers2"),
 	};
 };
 
@@ -2212,7 +2203,7 @@ export default connect(
 		createPost,
 		setCurrentReview,
 		setCurrentPullRequest,
-		setCurrentCodeError
+		setCurrentCodeError,
 	}
 	// @ts-ignore
 )(Codemark);

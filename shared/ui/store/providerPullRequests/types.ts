@@ -1,6 +1,10 @@
 import { CSRepository } from "@codestream/protocols/api";
 import { Index } from "../common";
-import { GetMyPullRequestsResponse } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestCommitsResponse,
+	GetCommitsFilesResponse,
+	GetMyPullRequestsResponse,
+} from "@codestream/protocols/agent";
 
 export enum ProviderPullRequestActionsTypes {
 	AddPullRequestConversations = "@providerPullRequests/AddConversations",
@@ -14,7 +18,7 @@ export enum ProviderPullRequestActionsTypes {
 	ClearPullRequestError = "@providerPullRequests/ClearError",
 	HandleDirectives = "@providerPullRequests/HandleDirectives",
 	UpdatePullRequestTitle = "@providerPullRequests/UpdatePullRequestTitle",
-	UpdatePullRequestFilter = "@providerPullRequests/UpdatePullRequestFilter"
+	UpdatePullRequestFilter = "@providerPullRequests/UpdatePullRequestFilter",
 }
 
 /**
@@ -33,7 +37,7 @@ export enum ProviderPullRequestActionsTypes {
  * 	}
  */
 export type ProviderPullRequestsState = {
-	myPullRequests: Index<{ data?: GetMyPullRequestsResponse[] }>;
+	myPullRequests: GetMyPullRequestsResponse[][];
 	pullRequests: Index<
 		Index<{
 			conversations: any;
@@ -44,9 +48,9 @@ export type ProviderPullRequestsState = {
 			 * @type {(number | undefined)}
 			 */
 			conversationsLastFetch: number | undefined;
-			files?: any[];
+			files?: { [key: string]: GetCommitsFilesResponse[] };
 			collaborators?: any[];
-			commits?: any[];
+			commits?: FetchThirdPartyPullRequestCommitsResponse[];
 			error?: { message: string };
 			accessRawDiffs?: boolean;
 		}>

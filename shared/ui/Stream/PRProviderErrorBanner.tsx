@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -25,9 +26,9 @@ const Root = styled.div`
 `;
 
 export const PRProviderErrorBanner = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [isLoading, setIsLoading] = useState(false);
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers, connectivity, capabilities } = state;
 		const codeHostProviders = Object.keys(providers).filter(id =>
 			[
@@ -36,7 +37,7 @@ export const PRProviderErrorBanner = () => {
 				"bitbucket",
 				"bitbucket_server",
 				"gitlab",
-				"gitlab_enterprise"
+				"gitlab_enterprise",
 			].includes(providers[id].name)
 		);
 
@@ -80,7 +81,7 @@ export const PRProviderErrorBanner = () => {
 			failedProviderName,
 			errorMessage,
 			extra,
-			providerMessage
+			providerMessage,
 		};
 	});
 
@@ -133,7 +134,7 @@ export const PRProviderErrorBanner = () => {
 								style={{
 									backgroundColor: "#b55e08",
 									width: "10em",
-									margin: "5px 10px 5px 10px"
+									margin: "5px 10px 5px 10px",
 								}}
 							>
 								<b>Reauthorize</b>
@@ -145,7 +146,7 @@ export const PRProviderErrorBanner = () => {
 								style={{
 									backgroundColor: "#b55e08",
 									width: "10em",
-									margin: "5px 10px 5px 10px"
+									margin: "5px 10px 5px 10px",
 								}}
 							>
 								<b>Ignore</b>

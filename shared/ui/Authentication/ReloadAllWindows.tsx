@@ -1,3 +1,4 @@
+import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import React, { PropsWithChildren, useState } from "react";
 import { Dialog } from "../src/components/Dialog";
 import { Modal } from "../Stream/Modal";
@@ -6,7 +7,6 @@ import styled from "styled-components";
 import { HostApi } from "../webview-api";
 import { ReloadWebviewRequestType } from "../ipc/webview.protocol";
 import { useDispatch } from "react-redux";
-import { updateConfigs } from "../store/configs/actions";
 import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 
 const ReloadButtonWrapper = styled.div`
@@ -40,7 +40,7 @@ export const ReloadAllWindows = (props: PropsWithChildren<ReloadAllWindowsProps>
 		setLoading(true);
 		dispatch(updateConfigs({ serverUrl: SERVER_URL_ON_RELOAD }));
 		await HostApi.instance.send(UpdateServerUrlRequestType, {
-			serverUrl: SERVER_URL_ON_RELOAD
+			serverUrl: SERVER_URL_ON_RELOAD,
 		});
 		HostApi.instance.track("NR Switched to Staging");
 		HostApi.instance.send(ReloadWebviewRequestType, void undefined);

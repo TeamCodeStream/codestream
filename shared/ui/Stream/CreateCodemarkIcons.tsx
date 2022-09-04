@@ -4,13 +4,13 @@ import cx from "classnames";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
 import { Range } from "vscode-languageserver-types";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useDidMount } from "../utilities/hooks";
 import {
 	EditorHighlightRangeRequestType,
 	MaxRangeValue,
 	EditorSelection,
 	NewCodemarkNotificationType,
-	WebviewPanelNames
+	WebviewPanelNames,
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -18,14 +18,14 @@ import {
 	setCurrentCodemark,
 	setComposeCodemarkActive,
 	setNewPostEntry,
-	setNewPostDefaultText
+	setNewPostDefaultText,
 } from "../store/context/actions";
 import {
 	getCurrentSelection,
 	getVisibleRanges,
 	getLine0ForEditorLine,
 	getVisibleLineCount,
-	getSidebarLocation
+	getSidebarLocation,
 } from "../store/editorContext/reducer";
 import { setEditorContext, changeSelection } from "../store/editorContext/actions";
 import { CodeStreamState } from "../store";
@@ -39,7 +39,7 @@ interface Props {
 }
 
 export const CreateCodemarkIcons = (props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [highlightedLine, setHighlightedLine] = useState();
 	const [numLinesVisible, setNumLinesVisible] = useState(0);
 
@@ -121,7 +121,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 			activePanelName: WebviewPanelNames[activePanel],
 			sidebarLocation: getSidebarLocation(state),
 			parsedDiffUri,
-			isInJetBrains: state.ide.name === "JETBRAINS"
+			isInJetBrains: state.ide.name === "JETBRAINS",
 		};
 	};
 
@@ -134,7 +134,14 @@ export const CreateCodemarkIcons = (props: Props) => {
 			if (e.source === "Codemark" && e.range) {
 				handleClickPlus(undefined, e.type, e.range.start.line, e.source);
 			} else {
-				handleClickPlus(undefined, e.type, undefined as any, e.source, false, e.defaultCodemarkText);
+				handleClickPlus(
+					undefined,
+					e.type,
+					undefined as any,
+					e.source,
+					false,
+					e.defaultCodemarkText
+				);
 			}
 		});
 		return () => disposable.dispose();
@@ -173,7 +180,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 		HostApi.instance.send(EditorHighlightRangeRequestType, {
 			uri: derivedState.textEditorUri!,
 			range: Range.create(mappedLineNum, 0, mappedLineNum, MaxRangeValue),
-			highlight: highlight
+			highlight: highlight,
 		});
 
 		setHighlightedLine(highlight ? line0 : null);
@@ -258,14 +265,14 @@ export const CreateCodemarkIcons = (props: Props) => {
 				title: ComposeTitles.comment,
 				codemarkType: CodemarkType.Comment,
 				offset: [-3, 10],
-				isVisible: () => true
+				isVisible: () => true,
 			},
 			{
 				key: "issue",
 				title: ComposeTitles.issue,
 				codemarkType: CodemarkType.Issue,
 				offset: [-3, 10],
-				isVisible: () => showNonComments
+				isVisible: () => showNonComments,
 			},
 			// {
 			// 	key: "thumbsup",
@@ -279,8 +286,8 @@ export const CreateCodemarkIcons = (props: Props) => {
 				title: ComposeTitles.link,
 				codemarkType: CodemarkType.Link,
 				offset: [-3, 10],
-				isVisible: () => showNonComments
-			}
+				isVisible: () => showNonComments,
+			},
 		];
 		let right = "";
 		if (sidebarLocation === "left") {
@@ -298,7 +305,7 @@ export const CreateCodemarkIcons = (props: Props) => {
 					hover,
 					open,
 					narrow: props.narrow,
-					onebutton: props.onebutton
+					onebutton: props.onebutton,
 				})}
 				key={lineNum0}
 				style={{ top: top, right: right, width: width }}

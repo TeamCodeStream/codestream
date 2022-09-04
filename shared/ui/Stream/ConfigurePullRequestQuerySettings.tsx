@@ -1,19 +1,19 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { Button } from "../src/components/Button";
-import { Modal } from "./Modal";
-import { Dialog, ButtonRow } from "../src/components/Dialog";
 import { Checkbox } from "../src/components/Checkbox";
-import { setUserPreference } from "./actions";
+import { ButtonRow, Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
+import { setUserPreference } from "./actions";
+import { Modal } from "./Modal";
 
 interface Props {
 	onClose: Function;
 }
 
 export function ConfigurePullRequestQuerySettings(props: Props) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
 		return {
@@ -21,7 +21,7 @@ export function ConfigurePullRequestQuerySettings(props: Props) {
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
 					: preferences.pullRequestQueryShowAllRepos,
-			hideLabels: preferences.pullRequestQueryHideLabels
+			hideLabels: preferences.pullRequestQueryHideLabels,
 		};
 	});
 
@@ -29,8 +29,12 @@ export function ConfigurePullRequestQuerySettings(props: Props) {
 	const [repoOnlyField, setRepoOnlyField] = React.useState(!derivedState.allRepos);
 
 	const save = () => {
-		dispatch(setUserPreference(["pullRequestQueryShowAllRepos"], !repoOnlyField));
-		dispatch(setUserPreference(["pullRequestQueryHideLabels"], !showLabelsField));
+		dispatch(
+			setUserPreference({ prefPath: ["pullRequestQueryShowAllRepos"], value: !repoOnlyField })
+		);
+		dispatch(
+			setUserPreference({ prefPath: ["pullRequestQueryHideLabels"], value: !showLabelsField })
+		);
 		props.onClose();
 	};
 

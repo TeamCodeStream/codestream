@@ -1,10 +1,11 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { useDispatch } from "react-redux";
 import Icon from "./Icon";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import copy from "copy-to-clipboard";
 import { confirmPopup } from "./Confirm";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 
 interface CommentMenuProps {
 	pr: any;
@@ -23,7 +24,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 
 	// console.warn("MENU IS: ", props);
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const deleteComment = () => {
 		confirmPopup({
 			title: "Are you sure?",
@@ -40,25 +41,31 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 
 						if (props.nodeType === "REVIEW") {
 							await dispatch(
-								api("deletePullRequestReview", {
-									pullRequestReviewId: node.id,
-									parentId: props.parentId
+								api({
+									method: "deletePullRequestReview",
+									params: {
+										pullRequestReviewId: node.id,
+										parentId: props.parentId,
+									},
 								})
 							);
 						} else {
 							await dispatch(
-								api("deletePullRequestComment", {
-									type: props.nodeType,
-									isPending: props.isPending,
-									parentId: props.parentId,
-									id: node.id
+								api({
+									method: "deletePullRequestComment",
+									params: {
+										type: props.nodeType,
+										isPending: props.isPending,
+										parentId: props.parentId,
+										id: node.id,
+									},
 								})
 							);
 						}
 						setIsLoadingMessage("");
-					}
-				}
-			]
+					},
+				},
+			],
 		});
 	};
 
@@ -68,7 +75,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 		items.push({
 			label: "Copy Link",
 			key: "copy",
-			action: () => copy(pr.baseUrl + node.resourcePath)
+			action: () => copy(pr.baseUrl + node.resourcePath),
 		});
 	}
 
@@ -88,7 +95,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 			key: "edit",
 			action: () => {
 				if (setEdit) setEdit(node, true);
-			}
+			},
 		});
 	}
 
@@ -97,7 +104,7 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 			label: "Delete",
 			key: "delete",
 			destructive: true,
-			action: () => deleteComment()
+			action: () => deleteComment(),
 		});
 	}
 

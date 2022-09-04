@@ -1,10 +1,11 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
 	PRButtonRowFlex,
 	PRCodeCommentReply,
-	PRCodeCommentReplyInput
+	PRCodeCommentReplyInput,
 } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
@@ -12,7 +13,7 @@ import MessageInput from "./MessageInput";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
 import { PRHeadshot } from "../src/components/Headshot";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 
 interface Props {
@@ -30,7 +31,7 @@ interface Props {
 
 export const PullRequestReplyComment = styled((props: Props) => {
 	const { oneRow, pr, databaseId, parentId } = props;
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const [text, setText] = useState("");
 	const [open, setOpen] = useState(props.isOpen);
@@ -46,14 +47,17 @@ export const PullRequestReplyComment = styled((props: Props) => {
 
 			HostApi.instance.track("PR Comment Added", {
 				Host: pr.providerId,
-				"Comment Type": "Single Reply"
+				"Comment Type": "Single Reply",
 			});
 
 			await dispatch(
-				api("createCommentReply", {
-					parentId: parentId,
-					commentId: databaseId,
-					text: replaceHtml(text)
+				api({
+					method: "createCommentReply",
+					params: {
+						parentId: parentId,
+						commentId: databaseId,
+						text: replaceHtml(text),
+					},
 				})
 			);
 
@@ -85,9 +89,9 @@ export const PullRequestReplyComment = styled((props: Props) => {
 						action: () => {
 							setText("");
 							setOpen(false);
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		}
 	};

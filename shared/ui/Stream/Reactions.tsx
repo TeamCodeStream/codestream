@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import styled from "styled-components";
 import React, { useState } from "react";
 import { emojify } from "../Stream/Markdowner";
@@ -6,7 +7,6 @@ import { PostPlus } from "@codestream/protocols/agent";
 import Tooltip from "../Stream/Tooltip";
 import Icon from "../Stream/Icon";
 import { CodeStreamState } from "../store";
-import { useSelector, useDispatch } from "react-redux";
 import * as userSelectors from "../store/users/reducer";
 import EmojiPicker from "./EmojiPicker";
 import { reactToPost } from "./actions";
@@ -60,8 +60,8 @@ const toggleReaction = (post: PostPlus, currentUserId: string, emojiId: string, 
 export const AddReactionIcon = styled((props: { post: PostPlus; className?: string }) => {
 	const { post } = props;
 
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return { currentUserId: state.session.userId! };
 	});
 	const [emojiTarget, setEmojiTarget] = useState(null);
@@ -101,8 +101,8 @@ export const Reactions = styled((props: { post: PostPlus; className?: string }) 
 	const { post } = props;
 	const { reactions = {} } = post;
 
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const usernamesById = userSelectors.getUsernamesById(state);
 		return { currentUserId: state.session.userId!, usernamesById };
 	});

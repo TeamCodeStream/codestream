@@ -1,5 +1,5 @@
 import React, { PropsWithChildren } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
 import Timestamp from "./Timestamp";
@@ -12,7 +12,7 @@ import {
 	setCurrentCodemark,
 	setCurrentReview,
 	setCurrentCodeError,
-	closeAllPanels
+	closeAllPanels,
 } from "../store/context/actions";
 import { getActivity } from "../store/activityFeed/reducer";
 import { useDidMount, useIntersectionObserver, usePrevious } from "../utilities/hooks";
@@ -26,7 +26,7 @@ import {
 	ReposScm,
 	DirectoryTree,
 	ChangeDataType,
-	DidChangeDataNotificationType
+	DidChangeDataNotificationType,
 } from "@codestream/protocols/agent";
 import { savePosts } from "../store/posts/actions";
 import { addOlderActivity } from "../store/activityFeed/actions";
@@ -38,7 +38,8 @@ import {
 	CSReview,
 	ActivityFilter,
 	RepoSetting,
-	CSCodeError
+	CSCodeError,
+	CSPost,
 } from "@codestream/protocols/api";
 import { resetLastReads } from "../store/unreads/actions";
 import { PanelHeader } from "../src/components/PanelHeader";
@@ -85,8 +86,8 @@ const EmptyMessage = styled.div`
 
 const DEFAULT_ACTIVITY_FILTER = { mode: "openInIde", settings: { repos: [] } };
 export const ActivityPanel = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector(state => {
 		const usernames = userSelectors.getUsernames(state);
 		const { preferences } = state;
 		return {
@@ -104,7 +105,7 @@ export const ActivityPanel = () => {
 			webviewFocused: state.context.hasFocus,
 			repos: state.repos,
 			activityFilter:
-				preferences[state.context.currentTeamId]?.activityFilter || DEFAULT_ACTIVITY_FILTER
+				preferences[state.context.currentTeamId]?.activityFilter || DEFAULT_ACTIVITY_FILTER,
 		};
 	});
 
@@ -126,10 +127,12 @@ export const ActivityPanel = () => {
 		data: ActivityFilter,
 		src: "Folder" | "Everyone" | "Open Repos"
 	) => {
-		dispatch(setUserPreference([derivedState.currentTeamId, "activityFilter"], data));
+		dispatch(
+			setUserPreference({ prefPath: [derivedState.currentTeamId, "activityFilter"], value: data })
+		);
 
 		HostApi.instance.track("Activity Feed Filtered", {
-			"Selected Filter": src
+			"Selected Filter": src,
 		});
 	};
 
@@ -169,7 +172,7 @@ export const ActivityPanel = () => {
 					return _;
 				}
 				// check replies as well
-				const parentPosts = Object.values(streams).find(_ => {
+				const parentPosts = (Object.values(streams) as CSPost[]).find(_ => {
 					return _.parentPostId &&
 						_.parentPostId === post.id &&
 						_.mentionedUserIds?.includes(derivedState.currentUserId!)
@@ -282,7 +285,7 @@ export const ActivityPanel = () => {
 		setLastFilteredActivity(lastFilteredActivityPostId);
 		let response = await HostApi.instance.send(FetchActivityRequestType, {
 			limit: 50,
-			before: lastFetchedActivityPostId
+			before: lastFetchedActivityPostId,
 		});
 		dispatch(savePosts(response.posts));
 		dispatch(saveCodemarks(response.codemarks));
@@ -291,7 +294,7 @@ export const ActivityPanel = () => {
 		dispatch(
 			addOlderActivity({
 				activities: response.records,
-				hasMore: Boolean(response.more)
+				hasMore: Boolean(response.more),
 			})
 		);
 	}, [lastFetchedActivityPostId]);
@@ -311,7 +314,7 @@ export const ActivityPanel = () => {
 	const renderFilter = async () => {
 		const repoResponse = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
-			withSubDirectoriesDepth: 2
+			withSubDirectoriesDepth: 2,
 		});
 
 		if (repoResponse && repoResponse.repositories) {
@@ -346,14 +349,14 @@ export const ActivityPanel = () => {
 									repos: [
 										{
 											id: r.id!,
-											paths: [r.partialPath.join("/")]
-										}
-									]
-								}
+											paths: [r.partialPath.join("/")],
+										},
+									],
+								},
 							},
 							"Folder"
 						);
-					}
+					},
 				};
 				if (r?.children != null && r?.children.length) {
 					const menuItems: MenuItem[] = [];
@@ -390,14 +393,14 @@ export const ActivityPanel = () => {
 								settings: {
 									repos: [
 										{
-											id: _.id!
-										}
-									]
-								}
+											id: _.id!,
+										},
+									],
+								},
 							},
 							"Folder"
 						);
-					}
+					},
 				} as any;
 				selectedReposSubMenuItems.push(repoMenu);
 				if (_.directories && _.directories.children != null && _.directories.children.length) {
@@ -418,12 +421,12 @@ export const ActivityPanel = () => {
 							{
 								mode: "everyone",
 								settings: {
-									repos: []
-								}
+									repos: [],
+								},
 							},
 							"Everyone"
 						);
-					}
+					},
 				},
 				{
 					checked:
@@ -436,19 +439,19 @@ export const ActivityPanel = () => {
 							{
 								mode: "openInIde",
 								settings: {
-									repos: []
-								}
+									repos: [],
+								},
 							},
 							"Open Repos"
 						);
-					}
+					},
 				},
 				{
 					checked: derivedState.activityFilter.mode === "selectedRepos" && hasASelectedRepo,
 					label: "Activity associated with code in selected folder",
 					key: "selectedRepos",
-					submenu: selectedReposSubMenuItems
-				}
+					submenu: selectedReposSubMenuItems,
+				},
 			] as MenuItem[];
 			setActivityFilterMenuItems(mainFilterChoices);
 		}
@@ -551,7 +554,7 @@ export const ActivityPanel = () => {
 											return;
 										HostApi.instance.track("Codemark Clicked", {
 											"Codemark ID": codemark.id,
-											"Codemark Location": "Activity Feed"
+											"Codemark Location": "Activity Feed",
 										});
 										dispatch(setCurrentCodemark(codemark.id));
 									}}
@@ -676,7 +679,7 @@ export const ActivityPanel = () => {
 											return;
 										dispatch(
 											setCurrentCodeError(record.id, {
-												openType: "Activity Feed"
+												openType: "Activity Feed",
 											})
 										);
 									}}
@@ -735,7 +738,7 @@ export const ActivityPanel = () => {
 			<div
 				style={{
 					height: maximized ? "calc(100vh - 50px)" : "calc(100vh - 120px)",
-					overflow: "hidden"
+					overflow: "hidden",
 				}}
 			>
 				<ScrollBox>
@@ -824,7 +827,7 @@ const ActivityItem = (props: {
 	streamId: string;
 	children: ActivityItemChildren;
 }) => {
-	const { isUnread, post } = useSelector((state: CodeStreamState) => {
+	const { isUnread, post } = useAppSelector((state: CodeStreamState) => {
 		const post = getPost(state.posts, props.streamId, props.postId);
 		const lastReadForStream = state.umis.lastReads[props.streamId];
 
@@ -833,7 +836,7 @@ const ActivityItem = (props: {
 				lastReadForStream != undefined &&
 				post != undefined &&
 				(post as PostPlus).seqNum > lastReadForStream,
-			post
+			post,
 		};
 	});
 
@@ -868,10 +871,10 @@ const UnreadReply = (props: {
 					HostApi.instance.send(PinReplyToCodemarkRequestType, {
 						codemarkId: props.codemarkId!,
 						postId: props.post.id,
-						value: !props.starred
+						value: !props.starred,
 					});
-				}
-			}
+				},
+			},
 		];
 	}, [props.starred]);
 
@@ -892,7 +895,7 @@ const UnreadReply = (props: {
 const createUnknownUser = id => ({ username: id, fullName: "Unknown" });
 
 const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: string[] }) => {
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		if (props.parentPost == undefined) return { numberOfReplies: 0, unreadReplies: [] };
 		const lastUnreadForStream = state.umis.lastReads[props.parentPost.streamId] as
 			| number
@@ -907,7 +910,7 @@ const RepliesForActivity = (props: { parentPost?: PostPlus; pinnedReplies?: stri
 		return { numberOfReplies: props.parentPost.numReplies, unreadReplies };
 	});
 
-	const users = useSelector((state: CodeStreamState) => state.users);
+	const users = useAppSelector((state: CodeStreamState) => state.users);
 
 	if (derivedState.numberOfReplies === 0) return null;
 

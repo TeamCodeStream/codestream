@@ -1,13 +1,12 @@
-import React from "react";
-import { CSReview, CodemarkType } from "@codestream/protocols/api";
 import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodemarkType, CSReview } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector, useDispatch } from "react-redux";
-import { orderBy } from "lodash-es";
-import { createSelector } from "reselect";
+import { bootstrapReviews } from "@codestream/webview/store/reviews/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
+import { orderBy } from "lodash-es";
+import React from "react";
+import { createSelector } from "reselect";
 import { SearchContext, SearchContextType } from "./SearchContextProvider";
 
 type SearchableItems = (CSReview | CodemarkPlus)[];
@@ -37,10 +36,10 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 	Child: React.ElementType<ChildProps>
 ) {
 	return function WithSearchableItems(props: ChildProps) {
-		const dispatch = useDispatch();
-		const codemarks = useSelector(getSearchableCodemarks);
-		const reviewsState = useSelector((state: CodeStreamState) => state.reviews);
-		const reposState = useSelector((state: CodeStreamState) => state.repos);
+		const dispatch = useAppDispatch();
+		const codemarks = useAppSelector(getSearchableCodemarks);
+		const reviewsState = useAppSelector((state: CodeStreamState) => state.reviews);
+		const reposState = useAppSelector((state: CodeStreamState) => state.repos);
 		const searchContext = React.useContext(SearchContext);
 
 		useDidMount(() => {
@@ -76,12 +75,12 @@ export function withSearchableItems<ChildProps extends WithSearchableItemsProps>
 			items,
 			branchOptions,
 			repoOptions,
-			...searchContext
+			...searchContext,
 		};
 
 		return React.createElement(Child, {
 			...props,
-			...providingProps
+			...providingProps,
 		});
 	};
 }

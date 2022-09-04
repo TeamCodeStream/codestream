@@ -3,11 +3,12 @@ import {
 	GetRangeScmInfoRequestType,
 	GetUserInfoRequestType,
 	PostPlus,
-	SetCodemarkPinnedRequestType
+	SetCodemarkPinnedRequestType,
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSMe, CSUser } from "@codestream/protocols/api";
 import { PresentPrereleaseTOS } from "@codestream/webview/Authentication/PresentPrereleaseTOS";
 import { CodeStreamState } from "@codestream/webview/store";
+import { editCodemark } from "@codestream/webview/store/codemarks/thunks";
 import { PostsState } from "@codestream/webview/store/posts/types";
 import {
 	closeModal,
@@ -15,7 +16,7 @@ import {
 	createPostAndCodemark,
 	markPostUnread,
 	openPanel,
-	setUserPreference
+	setUserPreference,
 } from "@codestream/webview/Stream/actions";
 import cx from "classnames";
 import PropTypes from "prop-types";
@@ -31,10 +32,10 @@ import {
 	NewReviewNotificationType,
 	PixieDynamicLoggingType,
 	WebviewModals,
-	WebviewPanels
+	WebviewPanels,
 } from "../ipc/webview.protocol";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { canCreateCodemark, editCodemark } from "../store/codemarks/actions";
+import { canCreateCodemark } from "../store/codemarks/actions";
 import { getCodemark } from "../store/codemarks/reducer";
 import {
 	setCurrentCodeError,
@@ -47,7 +48,7 @@ import {
 	setCurrentStream,
 	setIsFirstPageview,
 	setNewPostEntry,
-	setNewPullRequestOptions
+	setNewPullRequestOptions,
 } from "../store/context/actions";
 import { clearDynamicLogging } from "../store/dynamicLogging/actions";
 import { getPost } from "../store/posts/reducer";
@@ -162,12 +163,12 @@ export class SimpleStream extends PureComponent<Props> {
 		skipGitEmailCheckState: false,
 		editingPostId: false,
 		multiCompose: false,
-		floatCompose: false
+		floatCompose: false,
 	};
 	updateEmitter = new ComponentUpdateEmitter();
 
 	static contextTypes = {
-		store: PropTypes.object
+		store: PropTypes.object,
 	};
 
 	componentDidMount() {
@@ -231,7 +232,7 @@ export class SimpleStream extends PureComponent<Props> {
 		this.props.setNewPullRequestOptions(undefined);
 		if (e) {
 			this.props.setCurrentReviewOptions({
-				includeLatestCommit: e.includeLatestCommit
+				includeLatestCommit: e.includeLatestCommit,
 			});
 		}
 		this.props.openPanel(WebviewPanels.NewReview);
@@ -315,7 +316,7 @@ export class SimpleStream extends PureComponent<Props> {
 			blameMap = {},
 			addBlameMapEnabled,
 			skipGitEmailCheck,
-			currentUser
+			currentUser,
 		} = this.props;
 
 		if (!this.emailHasBeenCheckedForMismatch) {
@@ -343,7 +344,7 @@ export class SimpleStream extends PureComponent<Props> {
 		await HostApi.instance.send(AddBlameMapRequestType, {
 			teamId,
 			userId,
-			email
+			email,
 		});
 	};
 
@@ -395,7 +396,7 @@ export class SimpleStream extends PureComponent<Props> {
 				activePanel !== WebviewPanels.CodemarksForFile,
 			"has-floating-compose":
 				this.state.floatCompose && activePanel !== WebviewPanels.CodemarksForFile,
-			"no-headshots": !showHeadshots
+			"no-headshots": !showHeadshots,
 		});
 
 		// these panels do not have global nav
@@ -407,7 +408,7 @@ export class SimpleStream extends PureComponent<Props> {
 				// WebviewPanels.Status,
 				WebviewPanels.Profile,
 				WebviewPanels.Flow,
-				WebviewPanels.NewPullRequest
+				WebviewPanels.NewPullRequest,
 			].includes(activePanel) &&
 			// !this.props.currentReviewId &&
 			// !this.props.currentPullRequestId &&
@@ -609,25 +610,25 @@ export class SimpleStream extends PureComponent<Props> {
 					HostApi.instance.send(EditorSelectRangeRequestType, {
 						uri: uri,
 						selection: { ...range, cursor: range.end },
-						preserveFocus: true
+						preserveFocus: true,
 					});
 				}
 				scmInfo = await HostApi.instance.send(GetRangeScmInfoRequestType, {
 					uri: uri,
 					range: range,
-					dirty: true // should this be determined here? using true to be safe
+					dirty: true, // should this be determined here? using true to be safe
 				});
 			}
 			this.setState({
 				multiCompose: value,
 				floatCompose: true,
-				composeBoxProps: { ...state, codeBlock: scmInfo }
+				composeBoxProps: { ...state, codeBlock: scmInfo },
 			});
 			if (!value) {
 				this.props.setNewPostEntry(undefined);
 				this.setState({
 					floatCompose: false,
-					composeBoxProps: {}
+					composeBoxProps: {},
 				});
 			}
 		}
@@ -652,7 +653,7 @@ export class SimpleStream extends PureComponent<Props> {
 						...this.state.composeBoxProps,
 						key: Math.random().toString(),
 						isEditing: true,
-						editingCodemark: codemark
+						editingCodemark: codemark,
 					},
 					null
 				);
@@ -681,7 +682,7 @@ export class SimpleStream extends PureComponent<Props> {
 
 		HostApi.instance.send(SetCodemarkPinnedRequestType, {
 			codemarkId: codemark.id,
-			value: !codemark.pinned
+			value: !codemark.pinned,
 		});
 
 		this.handleDismissThread();
@@ -812,7 +813,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		showPreReleaseTos: isFeatureEnabled(state, "showPreReleaseTos"),
 		skipGitEmailCheck: preferences.skipGitEmailCheck === true,
 		teamId: team.id,
-		threadId: context.threadId
+		threadId: context.threadId,
 	};
 };
 
@@ -835,5 +836,5 @@ export default connect(mapStateToProps, {
 	setIsFirstPageview,
 	setNewPostEntry,
 	setNewPullRequestOptions,
-	setUserPreference
+	setUserPreference,
 })(SimpleStream);

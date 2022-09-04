@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
@@ -149,7 +150,7 @@ export const STEPS = [
 		pulse: "global-nav-more-label",
 		video: "https://youtu.be/-HBWfm9P96k",
 		modal: WebviewModals.ChangeAvatar,
-		isComplete: user => user.avatar
+		isComplete: user => user.avatar,
 	},
 	{
 		id: "createReview",
@@ -159,7 +160,7 @@ export const STEPS = [
 		pulse: "global-nav-plus-label",
 		video: "https://www.youtube.com/watch?v=2AyqT4z5Omc",
 		panel: WebviewPanels.NewReview,
-		isComplete: user => user.totalReviews > 0
+		isComplete: user => user.totalReviews > 0,
 	},
 	{
 		id: "createCodemark",
@@ -169,7 +170,7 @@ export const STEPS = [
 		pulse: "compose-gutter",
 		video: "https://youtu.be/RPaIIZgaFK8",
 		panel: WebviewPanels.NewComment,
-		isComplete: user => user.totalPosts > 0
+		isComplete: user => user.totalPosts > 0,
 	},
 	{
 		id: "invite",
@@ -179,7 +180,7 @@ export const STEPS = [
 		pulse: "global-nav-team-label",
 		video: "https://www.youtube.com/watch?v=h5KI3svlq-0",
 		modal: WebviewModals.Invite,
-		isComplete: user => user.numUsersInvited > 0
+		isComplete: user => user.numUsersInvited > 0,
 	},
 	{
 		id: "viewPRs",
@@ -190,7 +191,7 @@ export const STEPS = [
 		video: "https://youtu.be/sM607iVWM3w",
 		panel: WebviewPanels.PRInfo,
 		isComplete: (_, state) =>
-			["github", "bitbucket", "gitlab"].some(name => isConnected(state, { name }))
+			["github", "bitbucket", "gitlab"].some(name => isConnected(state, { name })),
 	},
 	{
 		id: "setUpIntegrations",
@@ -203,21 +204,21 @@ export const STEPS = [
 		isComplete: user => {
 			const { providerInfo = {} } = user;
 			return Object.keys(providerInfo).length > 0;
-		}
-	}
+		},
+	},
 ];
 
 interface GettingStartedProps {}
 
 export function GettingStarted(props: GettingStartedProps) {
-	const dispatch = useDispatch<Dispatch>();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const user = state.users[state.session.userId!] as CSMe;
 		return {
 			todo: STEPS.filter(step => !step.isComplete(user, state)),
 			completed: STEPS.filter(step => step.isComplete(user, state)),
 			kickstartEnabled: false, //isFeatureEnabled(state, "kickstart")
-			sidebarLocation: getSidebarLocation(state)
+			sidebarLocation: getSidebarLocation(state),
 		};
 	}, shallowEqual);
 
@@ -250,7 +251,7 @@ export function GettingStarted(props: GettingStartedProps) {
 
 			const stepLabels = ["Getting Started", "The Basics", "Trunk Flow", "Branch Flow"];
 			HostApi.instance.track("Tour Tab Clicked", {
-				"Tour Step": stepLabels[index]
+				"Tour Step": stepLabels[index],
 			});
 		}
 	};
@@ -350,7 +351,9 @@ export function GettingStarted(props: GettingStartedProps) {
 										variant="secondary"
 										size="compact"
 										onClick={() => {
-											dispatch(setUserPreference(["skipGettingStarted"], true));
+											dispatch(
+												setUserPreference({ prefPath: ["skipGettingStarted"], value: true })
+											);
 											dispatch(openPanel(WebviewPanels.Activity));
 										}}
 									>
@@ -361,7 +364,7 @@ export function GettingStarted(props: GettingStartedProps) {
 										size="compact"
 										onClick={() =>
 											HostApi.instance.send(OpenUrlRequestType, {
-												url: "https://www.codestream.com/video-library"
+												url: "https://www.codestream.com/video-library",
 											})
 										}
 									>

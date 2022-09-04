@@ -1,13 +1,10 @@
-import React, { useCallback, useState } from "react";
-import cx from "classnames";
-import { CodeStreamState } from "../store";
-import { useDispatch, useSelector } from "react-redux";
-import { useDidMount } from "../utilities/hooks";
-import { Button } from "../src/components/Button";
+import { acceptTOS } from "@codestream/webview/store/session/thunks";
+import React from "react";
 import styled from "styled-components";
-import { acceptTOS } from "../store/session/actions";
+import { Button } from "../src/components/Button";
 import { Checkbox } from "../src/components/Checkbox";
 import { Link } from "../Stream/Link";
+import { useAppDispatch } from "../utilities/hooks";
 
 const Root = styled.div`
 	display: flex;
@@ -91,7 +88,7 @@ const DownloadLink = styled.div`
 `;
 
 export const PresentTOS = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const [scrolledFarEnough, setScrolledFarEnough] = React.useState(false);
 	const [inAgreement, setInAgreement] = React.useState(false);

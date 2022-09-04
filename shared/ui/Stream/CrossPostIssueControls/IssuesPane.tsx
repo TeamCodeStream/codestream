@@ -2,7 +2,7 @@ import {
 	FetchThirdPartyCardsRequestType,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig,
-	TransitionsEntity
+	TransitionsEntity,
 } from "@codestream/protocols/agent";
 import { CSMe, CSTeamSettings } from "@codestream/protocols/api";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
@@ -12,22 +12,25 @@ import { Headshot } from "@codestream/webview/src/components/Headshot";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
 import { CodeStreamState } from "@codestream/webview/store";
+import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
+import { fetchBoardsAndCardsAction } from "@codestream/webview/store/activeIntegrations/thunks";
 import {
-	fetchBoardsAndCardsAction,
-	updateForProvider
-} from "@codestream/webview/store/activeIntegrations/actions";
-import { useDidMount, useInterval, usePrevious } from "@codestream/webview/utilities/hooks";
+	useAppDispatch,
+	useAppSelector,
+	useDidMount,
+	useInterval,
+	usePrevious,
+} from "@codestream/webview/utilities/hooks";
 import { keyFilter, mapFilter } from "@codestream/webview/utils";
-import React, { useEffect, useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
 import { HostApi } from "@codestream/webview/webview-api";
+import React, { useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import {
 	openPanel,
 	setCurrentCodemark,
 	setIssueProvider,
-	setNewPostEntry
+	setNewPostEntry,
 } from "../../store/context/actions";
 import { configureAndConnectProvider } from "../../store/providers/actions";
 import { getUserProviderInfo } from "../../store/providers/utils";
@@ -81,7 +84,7 @@ interface Props {
 }
 
 export default function IssuesPane(props: Props) {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const [isLoading, setLoading] = useState(false);
 	const [issueProviderMenuOpen, setIssueProviderMenuOpen] = useState(false);
@@ -91,7 +94,7 @@ export default function IssuesPane(props: Props) {
 	>(undefined);
 	const [loadingProvider, setLoadingProvider] = useState<ProviderInfo | undefined>(undefined);
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { users, teams, session, context, providers, preferences, configs } = state;
 		const currentIssueProviderConfig = context.issueProvider
 			? providers[context.issueProvider]
@@ -116,7 +119,7 @@ export default function IssuesPane(props: Props) {
 			issueProviderConfig: currentIssueProviderConfig,
 			disabledProviders: workPreferences.disabledProviders || EMPTY_HASH,
 			isOnPrem: configs.isOnPrem,
-			knownIssueProviders
+			knownIssueProviders,
 		};
 	});
 
@@ -246,10 +249,17 @@ export default function IssuesPane(props: Props) {
 
 		if (providerIsDisabled(providerId)) {
 			// if it's disabled, enable it
-			dispatch(setUserPreference(["startWork", "disabledProviders", providerId], false));
+			dispatch(
+				setUserPreference({
+					prefPath: ["startWork", "disabledProviders", providerId],
+					value: false,
+				})
+			);
 		} else if (providerIsConnected(providerId)) {
 			// if it's conected and not disabled, disable it
-			dispatch(setUserPreference(["startWork", "disabledProviders", providerId], true));
+			dispatch(
+				setUserPreference({ prefPath: ["startWork", "disabledProviders", providerId], value: true })
+			);
 			// setUserPreference(["skipConnectIssueProviders"], false);
 		} else {
 			// otherwise we need to connect
@@ -333,7 +343,7 @@ export default function IssuesPane(props: Props) {
 		derivedState.knownIssueProviders,
 		derivedState.providers,
 		derivedState.currentUser,
-		derivedState.currentTeamId
+		derivedState.currentTeamId,
 	]);
 
 	// console.warn("rendering issues...");
@@ -364,7 +374,7 @@ export default function IssuesPane(props: Props) {
 			value: providerId,
 			label: displayName,
 			key: providerId,
-			action: () => selectIssueProvider(providerId)
+			action: () => selectIssueProvider(providerId),
 		};
 	}).sort((a, b) => a.label.localeCompare(b.label));
 	// const index = knownIssueProviderOptions.findIndex(i => i.disabled);
@@ -397,9 +407,9 @@ const EMPTY_HASH = {};
 const EMPTY_CUSTOM_FILTERS = { selected: "", filters: {} };
 
 export const IssueList = React.memo((props: React.PropsWithChildren<IssueListProps>) => {
-	const dispatch = useDispatch();
-	const data = useSelector((state: CodeStreamState) => state.activeIntegrations.integrations);
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const data = useAppSelector((state: CodeStreamState) => state.activeIntegrations.integrations);
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const startWorkPreferences = preferences.startWork || EMPTY_HASH;
@@ -430,7 +440,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			teamId,
 			isLoading,
 			initialLoadComplete,
-			activeProviderIds
+			activeProviderIds,
 		};
 	});
 
@@ -462,7 +472,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			"reviewed-by",
 			"review-requested",
 			"team-review-requested",
-			"project"
+			"project",
 		])
 	);
 	const [validGLQueries, setvalidGLQueries] = React.useState(
@@ -475,7 +485,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			"author_id",
 			"created_by_me",
 			"my_reaction_emoji",
-			"assigned_to_me"
+			"assigned_to_me",
 		])
 	);
 	const [validQuery, setValidQuery] = React.useState(true);
@@ -504,7 +514,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		return custom;
 	};
 
-	const codemarkState = useSelector((state: CodeStreamState) => state.codemarks);
+	const codemarkState = useAppSelector((state: CodeStreamState) => state.codemarks);
 
 	useDidMount(() => {
 		if (!codemarkState.bootstrapped) {
@@ -524,7 +534,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 	const updateDataState = (providerId, data) => dispatch(updateForProvider(providerId, data));
 
 	const setPreference = (providerId, key, value) => {
-		dispatch(setUserPreference(["startWork", providerId, key], value));
+		dispatch(setUserPreference({ prefPath: ["startWork", providerId, key], value }));
 	};
 
 	const fetchData = async () => {
@@ -570,7 +580,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 						providerId: provider.id,
 						moveCardLabel: `Move this ${providerDisplay.cardLabel} to`,
 						moveCardOptions,
-						idList
+						idList,
 					});
 				} else {
 					// creating a new card/issue
@@ -606,7 +616,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					action: () => {
 						setPreference(provider.id, "filterCustom", { selected: filter });
 						setReload(reload + 1);
-					}
+					},
 				});
 			});
 			if (items.length > 0) {
@@ -619,7 +629,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				action: () => {
 					setNewCustomFilterName("");
 					setAddingCustomFilterForProvider(provider);
-				}
+				},
 			});
 			if (activeFilters.length > 0) {
 				items.push({
@@ -635,12 +645,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 								setPreference(provider.id, "filterCustom", {
 									filters: { [filter]: false },
 									// reset selected if we're deleting the selected one
-									selected: selected === filter ? "" : selected
+									selected: selected === filter ? "" : selected,
 								});
 								if (selected === filter) setReload(reload + 1);
-							}
+							},
 						};
-					})
+					}),
 				});
 			}
 		}
@@ -664,8 +674,8 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							action: () =>
 								setPreference(provider.id, "filterLists", {
 									...filterLists,
-									[l.id || "_"]: !checked
-								})
+									[l.id || "_"]: !checked,
+								}),
 						};
 					});
 					items.push({
@@ -673,7 +683,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 						key: "board-" + board.id,
 						checked: boardChecked,
 						action: () => {},
-						submenu
+						submenu,
 					});
 				} else {
 					const checked = !!filterBoards[b.id];
@@ -685,8 +695,8 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 						action: () =>
 							setPreference(provider.id, "filterBoards", {
 								...filterBoards,
-								[b.id || "_"]: !checked
-							})
+								[b.id || "_"]: !checked,
+							}),
 					});
 				}
 			});
@@ -701,7 +711,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			label: `${providerDisplay.displayName} Filter`,
 			icon: <Icon name={providerDisplay.icon} />,
 			key: "filters-" + provider.name,
-			submenu: filterMenuItemsSubmenu(provider)
+			submenu: filterMenuItemsSubmenu(provider),
 		};
 	};
 
@@ -744,7 +754,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 				fetchCardErrors.push({
 					provider: providerDisplay.displayName,
-					error: pData.fetchCardsError.message
+					error: pData.fetchCardsError.message,
 				});
 			}
 
@@ -761,7 +771,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 								body: card.body,
 								icon: <Icon name={providerDisplay.icon} />,
 								key: "card-" + card.id,
-								provider
+								provider,
 							} as CardView)
 					)
 			);
@@ -776,7 +786,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 				modifiedAt: issue.lastActivityAt,
 				key: "card-" + issue.id,
 				icon: <Icon name="issue" />,
-				provider: { id: "codestream", name: "codestream" }
+				provider: { id: "codestream", name: "codestream" },
 			}))
 		);
 
@@ -787,7 +797,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		reload,
 		derivedState.startWorkPreferences,
 		derivedState.csIssues,
-		derivedState.selectedCardId
+		derivedState.selectedCardId,
 	]);
 
 	const menuItems = React.useMemo(() => {
@@ -850,9 +860,9 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
 			setPreference(id, "filterCustom", {
 				filters: {
-					[newCustomFilter]: newCustomFilterName || newCustomFilter
+					[newCustomFilter]: newCustomFilterName || newCustomFilter,
 				},
-				selected: newCustomFilter
+				selected: newCustomFilter,
 			});
 			setReload(reload + 1);
 			setAddingCustomFilterForProvider(undefined);
@@ -900,7 +910,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 			const id = addingCustomFilterForProvider ? addingCustomFilterForProvider.id : "";
 			const response = await HostApi.instance.send(FetchThirdPartyCardsRequestType, {
 				customFilter: newCustomFilter,
-				providerId: id
+				providerId: id,
 			});
 
 			if (response.error) {
@@ -915,7 +925,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 					return {
 						...card,
 						provider: { id: provider.id, name: provider.name },
-						key: "card-" + card.id
+						key: "card-" + card.id,
 					};
 				});
 				setLoadingTest(false);
@@ -1032,7 +1042,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									<h3
 										style={{
 											padding: "20px 0 0 20px",
-											borderTop: "1px solid var(--base-border-color)"
+											borderTop: "1px solid var(--base-border-color)",
 										}}
 									>
 										{testCards.length} total results
@@ -1156,7 +1166,12 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 									<Tooltip title="Connect later on the Integrations page" placement="top">
 										<Linkish
 											onClick={() =>
-												dispatch(setUserPreference(["skipConnectIssueProviders"], true))
+												dispatch(
+													setUserPreference({
+														prefPath: ["skipConnectIssueProviders"],
+														value: true,
+													})
+												)
 											}
 										>
 											Skip this step.
@@ -1211,7 +1226,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 							onClick={() => {
 								selectCard(card);
 								HostApi.instance.track("StartWork Form Opened", {
-									"Opened Via": "Selected Ticket"
+									"Opened Via": "Selected Ticket",
 								});
 							}}
 							className={card.id === derivedState.selectedCardId ? "selected" : ""}
@@ -1263,7 +1278,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 												e.stopPropagation();
 												e.preventDefault();
 												HostApi.instance.send(OpenUrlRequestType, {
-													url: card.url
+													url: card.url,
 												});
 											}
 										}}

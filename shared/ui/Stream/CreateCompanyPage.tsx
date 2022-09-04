@@ -1,3 +1,5 @@
+import { switchToForeignCompany, switchToTeam } from "@codestream/webview/store/session/thunks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { TextInput } from "../Authentication/TextInput";
 import { TooltipIconWrapper } from "../Authentication/Signup";
@@ -5,7 +7,6 @@ import { Button } from "../src/components/Button";
 import { FormattedMessage } from "react-intl";
 import { CodeStreamState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
-import { switchToTeam, switchToForeignCompany } from "../store/session/actions";
 import { CSCompany } from "@codestream/protocols/api";
 import { wait } from "../utils";
 import { Dialog } from "../src/components/Dialog";
@@ -17,8 +18,8 @@ import { Dropdown } from "../Stream/Dropdown";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 
 export function CreateCompanyPage() {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { environmentHosts, environment } = state.configs;
 		const { currentTeamId } = state.context;
 		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
@@ -28,7 +29,7 @@ export function CreateCompanyPage() {
 			environment,
 			currentCompanyId: state.teams[currentTeamId].companyId,
 			companies: state.companies,
-			supportsMultiRegion
+			supportsMultiRegion,
 		};
 	});
 
@@ -48,7 +49,7 @@ export function CreateCompanyPage() {
 		regionItems = derivedState.environmentHosts.map(host => ({
 			key: host.shortName,
 			label: host.name,
-			action: () => setRegion(host.name)
+			action: () => setRegion(host.name),
 		}));
 		if (derivedState.environment) {
 			const host = derivedState.environmentHosts.find(
@@ -101,20 +102,18 @@ export function CreateCompanyPage() {
 				const selectedHost = derivedState.environmentHosts.find(host => host.name === region);
 				if (selectedHost) {
 					// what's not to love about code like this?
-					const company = ((await dispatch(
+					const company = (await dispatch(
 						createForeignCompany({ name: companyName }, selectedHost)
-					)) as unknown) as CSCompany;
+					)) as unknown as CSCompany;
 					// artificial delay to ensure analytics from creating the team are actually processed before we logout below
 					await wait(1000);
 					await dispatch(switchToForeignCompany(company.id));
 				}
 			} else {
-				const team = ((await dispatch(
-					createCompany({ name: companyName })
-				)) as unknown) as CSCompany;
+				const team = (await dispatch(createCompany({ name: companyName }))) as unknown as CSCompany;
 				// artificial delay to ensure analytics from creating the team are actually processed before we logout below
 				await wait(1000);
-				await dispatch(switchToTeam(team.id));
+				await dispatch(switchToTeam({ teamId: team.id }));
 			}
 		} catch (error) {
 		} finally {

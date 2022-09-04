@@ -1,3 +1,4 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
 import MessageInput from "./MessageInput";
@@ -6,7 +7,7 @@ import { useDispatch } from "react-redux";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Button } from "../src/components/Button";
 import Tooltip from "./Tooltip";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
 import { confirmPopup } from "./Confirm";
@@ -33,7 +34,7 @@ export const PullRequestFinishReview = (props: {
 	setIsLoadingMessage: Function;
 	setFinishReviewOpen?: Function;
 }) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [reviewText, setReviewText] = useState("");
 	const [submittingReview, setSubmittingReview] = useState(false);
 	const [reviewType, setReviewType] = useState<"COMMENT" | "APPROVE" | "REQUEST_CHANGES">(
@@ -52,12 +53,15 @@ export const PullRequestFinishReview = (props: {
 		setSubmittingReview(true);
 		HostApi.instance.track("PR Review Finished", {
 			Host: pr.providerId,
-			"Review Type": reviewType
+			"Review Type": reviewType,
 		});
 		await dispatch(
-			api("submitReview", {
-				eventType: reviewType,
-				text: replaceHtml(reviewText)
+			api({
+				method: "submitReview",
+				params: {
+					eventType: reviewType,
+					text: replaceHtml(reviewText),
+				},
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
@@ -69,8 +73,11 @@ export const PullRequestFinishReview = (props: {
 		e.stopPropagation();
 		setIsLoadingMessage("Canceling Review...");
 		await dispatch(
-			api("deletePullRequestReview", {
-				pullRequestReviewId: id
+			api({
+				method: "deletePullRequestReview",
+				params: {
+					pullRequestReviewId: id,
+				},
 			})
 		);
 		setFinishReviewOpen && setFinishReviewOpen(false);
@@ -85,7 +92,7 @@ export const PullRequestFinishReview = (props: {
 			<div
 				style={{
 					margin: "5px 0 15px 0",
-					border: isPreviewing ? "none" : "1px solid var(--base-border-color)"
+					border: isPreviewing ? "none" : "1px solid var(--base-border-color)",
 				}}
 			>
 				<MessageInput
@@ -167,9 +174,9 @@ export const PullRequestFinishReview = (props: {
 											wait: true,
 											action: () => {
 												cancelReview(e, pr.pendingReview?.id);
-											}
-										}
-									]
+											},
+										},
+									],
 								});
 							}}
 						>

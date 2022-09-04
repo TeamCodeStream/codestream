@@ -1,3 +1,4 @@
+import { api } from "@codestream/webview/store/codeErrors/thunks";
 import { keyBy as _keyBy } from "lodash-es";
 import React, { PropsWithChildren, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -6,7 +7,6 @@ import { GetObservabilityEntitiesRequestType, WarningOrError } from "@codestream
 
 import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
-import { api } from "../store/codeErrors/actions";
 import { useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { DropdownButton } from "./DropdownButton";
@@ -40,14 +40,16 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 	});
 
 	const items = entities?.length
-		? ([
-				{
-					type: "search",
-					placeholder: "Search...",
-					action: "search",
-					key: "search"
-				}
-		  ] as any).concat(
+		? (
+				[
+					{
+						type: "search",
+						placeholder: "Search...",
+						action: "search",
+						key: "search",
+					},
+				] as any
+		  ).concat(
 				entities.map(_ => {
 					return {
 						key: _.guid,
@@ -55,7 +57,7 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 						searchLabel: _.name,
 						action: () => {
 							setSelected(_);
-						}
+						},
 					};
 				})
 		  )
@@ -89,38 +91,38 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 							name: props.remoteName,
 							applicationEntityGuid: selected?.guid,
 							entityId: selected?.guid,
-							parseableAccountId: selected?.guid
+							parseableAccountId: selected?.guid,
 						};
 						dispatch(api("assignRepository", payload))
 							.then(_ => {
 								setTimeout(() => {
 									if (_?.directives) {
 										console.log("assignRepository", {
-											directives: _?.directives
+											directives: _?.directives,
 										});
 										// a little fragile, but we're trying to get the entity guid back
 										if (props.onSuccess) {
 											props.onSuccess({
 												entityGuid: _?.directives.find(d => d.type === "assignRepository")?.data
-													?.entityGuid
+													?.entityGuid,
 											});
 										}
 									} else if (_?.error) {
 										setWarningOrErrors([{ message: _.error }]);
 									} else {
 										setWarningOrErrors([
-											{ message: "Failed to direct to entity dropdown, please refresh" }
+											{ message: "Failed to direct to entity dropdown, please refresh" },
 										]);
 										console.warn("Could not find directive", {
 											_: _,
-											payload: payload
+											payload: payload,
 										});
 									}
 								}, 5000);
 							})
 							.catch(err => {
 								setWarningOrErrors([
-									{ message: "Failed to direct to entity dropdown, please refresh" }
+									{ message: "Failed to direct to entity dropdown, please refresh" },
 								]);
 								logError(`Unexpected error during assignRepository: ${err}`, {});
 							})

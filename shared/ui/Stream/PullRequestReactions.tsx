@@ -1,3 +1,4 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -10,12 +11,12 @@ import Tooltip from "./Tooltip";
 import { SmartFormattedList } from "./SmartFormattedList";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	GitLabMergeRequest
+	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import {
 	PullRequestReactButton as GitLabPullRequestReactButton,
-	PullRequestReactions as GitLabPullRequestReactions
+	PullRequestReactions as GitLabPullRequestReactions,
 } from "./PullRequests/GitLab/PullRequestReactions";
 
 interface Props {
@@ -45,7 +46,7 @@ export const PRReact = styled.div`
 `;
 
 export const PullRequestReactButton = styled((props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [open, setOpen] = React.useState<EventTarget | undefined>();
 	const [menuTitle, setMenuTitle] = React.useState("");
 
@@ -58,10 +59,13 @@ export const PullRequestReactButton = styled((props: Props) => {
 		setOpen(undefined);
 
 		await dispatch(
-			api("toggleReaction", {
-				subjectId: props.targetId,
-				content: key,
-				onOff
+			api({
+				method: "toggleReaction",
+				params: {
+					subjectId: props.targetId,
+					content: key,
+					onOff,
+				},
 			})
 		);
 
@@ -117,8 +121,8 @@ export const PullRequestReactButton = styled((props: Props) => {
 									{makeIcon("rocket", "Rocket", "ROCKET")}
 									{makeIcon("eyes", "Eyes", "EYES")}
 								</div>
-							)
-						}
+							),
+						},
 					]}
 					action={() => setOpen(undefined)}
 				/>
@@ -148,7 +152,7 @@ const REACTION_MAP = {
 	CONFUSED: "confused",
 	HEART: "heart",
 	ROCKET: "rocket",
-	EYES: "eyes"
+	EYES: "eyes",
 };
 
 const REACTION_NAME_MAP = {
@@ -159,7 +163,7 @@ const REACTION_NAME_MAP = {
 	CONFUSED: "confused",
 	HEART: "heart",
 	ROCKET: "rocket",
-	EYES: "eyes"
+	EYES: "eyes",
 };
 
 export const PullRequestReactions = (props: ReactionProps) => {
@@ -171,15 +175,18 @@ export const PullRequestReactions = (props: ReactionProps) => {
 
 	if (!reactionGroups) return null;
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const saveReaction = async (key: string, onOff: boolean) => {
 		props.setIsLoadingMessage("Saving Reaction...");
 
 		await dispatch(
-			api("toggleReaction", {
-				subjectId: props.targetId,
-				content: key,
-				onOff
+			api({
+				method: "toggleReaction",
+				params: {
+					subjectId: props.targetId,
+					content: key,
+					onOff,
+				},
 			})
 		);
 		props.setIsLoadingMessage("");

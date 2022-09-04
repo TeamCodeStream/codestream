@@ -1,6 +1,6 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { CodeStreamState } from "../store";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
@@ -13,7 +13,7 @@ import { StartWorkNotificationType } from "@codestream/protocols/webview";
 import {
 	setCurrentReview,
 	clearCurrentPullRequest,
-	setCreatePullRequest
+	setCreatePullRequest,
 } from "../store/context/actions";
 import { ComposeKeybindings } from "./ComposeTitles";
 import { getPRLabel } from "../store/providers/reducer";
@@ -24,14 +24,14 @@ interface PlusMenuProps {
 }
 
 export function PlusMenu(props: PlusMenuProps) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			kickstartEnabled: isFeatureEnabled(state, "kickstart"),
 			activePanel: state.context.panelStack[0],
 			textEditorUri: state.editorContext && state.editorContext.textEditorUri,
 			lightningCodeReviewsEnabled: isFeatureEnabled(state, "lightningCodeReviews"),
-			prLabel: getPRLabel(state)
+			prLabel: getPRLabel(state),
 		};
 	});
 
@@ -76,7 +76,7 @@ export function PlusMenu(props: PlusMenuProps) {
 				shortcut: ComposeKeybindings.work,
 				subtextWide: "Grab a ticket & create a branch",
 
-				key: "work"
+				key: "work",
 			},
 			{ label: "-" }
 		);
@@ -90,7 +90,7 @@ export function PlusMenu(props: PlusMenuProps) {
 				action: () => go(WebviewPanels.NewComment),
 				subtextWide: "Comment on code & share to slack",
 				shortcut: ComposeKeybindings.comment,
-				key: "comment"
+				key: "comment",
 			},
 			{ label: "-" },
 			{
@@ -99,7 +99,7 @@ export function PlusMenu(props: PlusMenuProps) {
 				subtextWide: "Perform ad-hoc code review",
 				action: () => go(WebviewPanels.NewIssue),
 				shortcut: ComposeKeybindings.issue,
-				key: "issue"
+				key: "issue",
 			}
 		);
 	}
@@ -112,7 +112,7 @@ export function PlusMenu(props: PlusMenuProps) {
 			subtextWide: "Get quick feedback on your WIP",
 			action: () => go(WebviewPanels.NewReview),
 			shortcut: ComposeKeybindings.review,
-			key: "review"
+			key: "review",
 		});
 	}
 
@@ -123,7 +123,7 @@ export function PlusMenu(props: PlusMenuProps) {
 		subtextWide: `Open a ${derivedState.prLabel.PullRequest}`,
 		action: () => go(WebviewPanels.NewPullRequest),
 		shortcut: ComposeKeybindings.pr,
-		key: "pr"
+		key: "pr",
 	});
 
 	return (

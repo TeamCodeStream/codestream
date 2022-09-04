@@ -3,7 +3,7 @@ import { noop } from "../utils";
 import { useDispatch } from "react-redux";
 import { openPanel, setCurrentCodemark } from "../store/context/actions";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { HostDidReceiveRequestNotificationType } from "../ipc/host.protocol.notifications";
 import { parseProtocol } from "../utilities/urls";
@@ -19,7 +19,7 @@ const DEFAULT_SEARCH_CONTEXT = { query: "", setQuery: noop, goToSearch: noop } a
 export const SearchContext = React.createContext<SearchContextType>(DEFAULT_SEARCH_CONTEXT);
 
 export const SearchContextProvider = (props: React.PropsWithChildren<{}>) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [query, setQuery] = React.useState("");
 	const goToSearch = React.useCallback((query?: string) => {
 		dispatch(openPanel(WebviewPanels.FilterSearch));

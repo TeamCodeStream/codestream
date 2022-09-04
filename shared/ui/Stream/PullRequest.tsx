@@ -1,78 +1,75 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
-import styled, { ThemeProvider } from "styled-components";
-import { CSMe } from "@codestream/protocols/api";
-import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
-import ScrollBox from "./ScrollBox";
-import Icon from "./Icon";
-import { Tabs, Tab } from "../src/components/Tabs";
-import Timestamp from "./Timestamp";
-import copy from "copy-to-clipboard";
-import { Link } from "./Link";
 import {
-	clearCurrentPullRequest,
-	setCurrentPullRequest,
-	setCurrentReview
-} from "../store/context/actions";
-import { useDidMount } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
-import {
-	FetchThirdPartyPullRequestPullRequest,
+	ChangeDataType,
+	DidChangeDataNotificationType,
 	GetReposScmRequestType,
 	ReposScm,
 	SwitchBranchRequestType,
-	DidChangeDataNotificationType,
-	ChangeDataType,
-	FetchThirdPartyPullRequestResponse
 } from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
+import { setProviderError } from "@codestream/webview/store/codeErrors/thunks";
+import { bootstrapReviews } from "@codestream/webview/store/reviews/thunks";
+import copy from "copy-to-clipboard";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import styled, { ThemeProvider } from "styled-components";
+import { logError } from "../logger";
+import { Button } from "../src/components/Button";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { FloatingLoadingMessage } from "../src/components/FloatingLoadingMessage";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { Tab, Tabs } from "../src/components/Tabs";
+import { CodeStreamState } from "../store";
 import {
+	clearCurrentPullRequest,
+	setCurrentPullRequest,
+	setCurrentReview,
+} from "../store/context/actions";
+import {
+	clearPullRequestCommits,
+	getCurrentProviderPullRequest,
+	getCurrentProviderPullRequestLastUpdated,
+	getProviderPullRequestRepoObject,
+	updatePullRequestTitle,
+} from "../store/providerPullRequests/slice";
+import {
+	api,
+	clearPullRequestFiles,
+	getPullRequestConversations,
+	getPullRequestConversationsFromProvider,
+} from "../store/providerPullRequests/thunks";
+import * as reviewSelectors from "../store/reviews/reducer";
+import { getPreferences } from "../store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { setUserPreference } from "./actions";
+import { confirmPopup } from "./Confirm";
+import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
+import Icon from "./Icon";
+import { Link } from "./Link";
+import { PullRequestCommitsTab } from "./PullRequestCommitsTab";
+import {
+	PRAction,
+	PRActionButtons,
+	PRAuthor,
+	PRBadge,
+	PRBranch,
+	PREditTitle,
 	PRHeader,
-	PRTitle,
+	PRIAmRequested,
+	PRPlusMinus,
 	PRStatus,
 	PRStatusButton,
 	PRStatusMessage,
-	PRAuthor,
-	PRAction,
-	PRBranch,
-	PRBadge,
-	PRPlusMinus,
-	PREditTitle,
-	PRActionButtons,
 	PRSubmitReviewButton,
-	PRIAmRequested
+	PRTitle,
 } from "./PullRequestComponents";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import { bootstrapReviews } from "../store/reviews/actions";
 import { PullRequestConversationTab } from "./PullRequestConversationTab";
-import { PullRequestCommitsTab } from "./PullRequestCommitsTab";
-import * as reviewSelectors from "../store/reviews/reducer";
-import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
-import { FloatingLoadingMessage } from "../src/components/FloatingLoadingMessage";
-import { Button } from "../src/components/Button";
-import Tooltip from "./Tooltip";
-import { PullRequestFinishReview } from "./PullRequestFinishReview";
-import {
-	getPullRequestConversationsFromProvider,
-	clearPullRequestFiles,
-	getPullRequestConversations,
-	clearPullRequestCommits,
-	api,
-	updatePullRequestTitle,
-	setProviderError
-} from "../store/providerPullRequests/actions";
-import {
-	getCurrentProviderPullRequest,
-	getCurrentProviderPullRequestLastUpdated,
-	getProviderPullRequestRepoObject
-} from "../store/providerPullRequests/reducer";
-import { confirmPopup } from "./Confirm";
 import { PullRequestFileComments } from "./PullRequestFileComments";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { getPreferences } from "../store/users/reducer";
-import { setUserPreference } from "./actions";
+import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
+import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { GHOST } from "./PullRequestTimelineItems";
-import { logError } from "../logger";
+import ScrollBox from "./ScrollBox";
+import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 const Root = styled.div`
 	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
@@ -115,8 +112,8 @@ const EMPTY_ARRAY = [];
 export type autoCheckedMergeabilityStatus = "UNCHECKED" | "CHECKED" | "UNKNOWN";
 
 export const PullRequest = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const currentPullRequest = getCurrentProviderPullRequest(state);
@@ -150,7 +147,7 @@ export const PullRequest = () => {
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
 			currentRepoObject: getProviderPullRequestRepoObject(state),
-			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels
+			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels,
 		};
 	});
 
@@ -180,9 +177,8 @@ export const PullRequest = () => {
 	const [currentRepoChanged, setCurrentRepoChanged] = useState(false);
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 	const [oneLayerModal, setOneLayerModal] = useState(false);
-	const [autoCheckedMergeability, setAutoCheckedMergeability] = useState<
-		autoCheckedMergeabilityStatus
-	>("UNCHECKED");
+	const [autoCheckedMergeability, setAutoCheckedMergeability] =
+		useState<autoCheckedMergeabilityStatus>("UNCHECKED");
 	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
 
 	const switchActiveTab = tab => {
@@ -245,18 +241,14 @@ export const PullRequest = () => {
 		if (message) setIsLoadingMessage(message);
 		setIsLoadingPR(true);
 
-		const response = (await dispatch(
-			getPullRequestConversations(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as {
-			error?: {
-				message: string;
-			};
-		};
+		const response = await dispatch(
+			getPullRequestConversations({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
+		).unwrap();
 		setGeneralError("");
-		if (response.error && response.error.message) {
+		if (response?.error && response?.error.message) {
 			setIsLoadingPR(false);
 			setIsLoadingMessage("");
 			setGeneralError(response.error.message);
@@ -277,12 +269,12 @@ export const PullRequest = () => {
 		console.log("PullRequest is reloading");
 		if (message) setIsLoadingMessage(message);
 		setIsLoadingPR(true);
-		const response = (await dispatch(
-			getPullRequestConversationsFromProvider(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as any;
+		const response = await dispatch(
+			getPullRequestConversationsFromProvider({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
+		).unwrap();
 		_assignState(response, "reload");
 
 		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
@@ -293,10 +285,10 @@ export const PullRequest = () => {
 			)
 		);
 		dispatch(
-			clearPullRequestCommits(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
+			clearPullRequestCommits({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
 		);
 	};
 
@@ -308,14 +300,14 @@ export const PullRequest = () => {
 		const repoId = derivedState.currentRepoObject?.currentRepo?.id || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: repoId
+			repoId: repoId,
 		});
 		if (result.error) {
 			logError(result.error, {
 				...(derivedState.currentRepoObject || {}),
 				branch: pr.headRefName,
 				repoId: repoId,
-				prRepository: pr!.repository
+				prRepository: pr!.repository,
 			});
 
 			confirmPopup({
@@ -327,7 +319,7 @@ export const PullRequest = () => {
 					</div>
 				),
 				centered: false,
-				buttons: [{ label: "OK", className: "control-button" }]
+				buttons: [{ label: "OK", className: "control-button" }],
 			});
 			setIsLoadingBranch(false);
 		} else {
@@ -394,14 +386,16 @@ export const PullRequest = () => {
 		try {
 			setIsLoadingMessage("Saving Title...");
 			setSavingTitle(true);
-			const response = await dispatch(api("updatePullRequestTitle", { title }));
+			const response = await dispatch(
+				api({ method: "updatePullRequestTitle", params: { title } })
+			).unwrap();
 			if (response !== undefined) {
 				dispatch(
-					updatePullRequestTitle(
-						derivedState.currentPullRequestProviderId!,
-						derivedState.currentPullRequestId!,
-						{ title: title }
-					)
+					updatePullRequestTitle({
+						providerId: derivedState.currentPullRequestProviderId!,
+						id: derivedState.currentPullRequestId!,
+						pullRequestData: { title: title },
+					})
 				);
 			}
 		} catch (er) {
@@ -410,7 +404,7 @@ export const PullRequest = () => {
 					derivedState.currentPullRequestProviderId!,
 					derivedState.currentPullRequestId!,
 					{
-						message: "Error saving title"
+						message: "Error saving title",
 					}
 				)
 			);
@@ -425,7 +419,7 @@ export const PullRequest = () => {
 		const { reposState } = derivedState;
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
-			includeCurrentBranches: true
+			includeCurrentBranches: true,
 		});
 		if (response && response.repositories) {
 			const repos = response.repositories.map(repo => {
@@ -516,9 +510,13 @@ export const PullRequest = () => {
 		)
 			return undefined;
 		try {
-			const response = (await dispatch(
-				api("getPullRequestLastUpdated", {}, { preventClearError: true })
-			)) as any;
+			const response = await dispatch(
+				api({
+					method: "getPullRequestLastUpdated",
+					params: {},
+					options: { preventClearError: true },
+				})
+			).unwrap();
 			if (
 				derivedState.currentPullRequest &&
 				response &&
@@ -573,13 +571,13 @@ export const PullRequest = () => {
 				return;
 			}
 			try {
-				const response = (await dispatch(
-					api(
-						"getPullRequestLastUpdated",
-						{},
-						{ preventClearError: true, preventErrorReporting: true }
-					)
-				)) as any;
+				const response = await dispatch(
+					api({
+						method: "getPullRequestLastUpdated",
+						params: {},
+						options: { preventClearError: true, preventErrorReporting: true },
+					})
+				).unwrap();
 				if (
 					derivedState.currentPullRequest &&
 					response &&
@@ -616,7 +614,7 @@ export const PullRequest = () => {
 	}, [
 		derivedState.currentPullRequestLastUpdated,
 		derivedState.currentPullRequest,
-		autoCheckedMergeability
+		autoCheckedMergeability,
 	]);
 
 	const iAmRequested = useMemo(() => {
@@ -631,11 +629,11 @@ export const PullRequest = () => {
 	const breakpoints = {
 		auto: "630px",
 		"side-by-side": "10px",
-		vertical: "100000px"
+		vertical: "100000px",
 	};
 	const addViewPreferencesToTheme = theme => ({
 		...theme,
-		breakpoint: breakpoints[derivedState.viewPreference]
+		breakpoint: breakpoints[derivedState.viewPreference],
 	});
 
 	if (!pr) {
@@ -838,22 +836,34 @@ export const PullRequest = () => {
 											label: "Auto",
 											subtle: " (based on width)",
 											checked: derivedState.viewPreference === "auto",
-											action: () => dispatch(setUserPreference(["pullRequestView"], "auto"))
+											action: () =>
+												dispatch(
+													setUserPreference({ prefPath: ["pullRequestView"], value: "auto" })
+												),
 										},
 										{
 											key: "vertical",
 											label: "Vertical",
 											subtle: " (best for narrow)",
 											checked: derivedState.viewPreference === "vertical",
-											action: () => dispatch(setUserPreference(["pullRequestView"], "vertical"))
+											action: () =>
+												dispatch(
+													setUserPreference({ prefPath: ["pullRequestView"], value: "vertical" })
+												),
 										},
 										{
 											key: "side-by-side",
 											label: "Side-by-side",
 											subtle: " (best for wide)",
 											checked: derivedState.viewPreference === "side-by-side",
-											action: () => dispatch(setUserPreference(["pullRequestView"], "side-by-side"))
-										}
+											action: () =>
+												dispatch(
+													setUserPreference({
+														prefPath: ["pullRequestView"],
+														value: "side-by-side",
+													})
+												),
+										},
 									]}
 								>
 									<span>

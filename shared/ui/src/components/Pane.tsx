@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { PropsWithChildren } from "react";
 import styled from "styled-components";
 import Icon from "@codestream/webview/Stream/Icon";
@@ -8,7 +9,7 @@ import { WebviewPanels } from "@codestream/protocols/webview";
 import {
 	setUserPreference,
 	setPaneCollapsed,
-	setPaneMaximized
+	setPaneMaximized,
 } from "@codestream/webview/Stream/actions";
 import Draggable from "react-draggable";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
@@ -20,7 +21,7 @@ export enum PaneState {
 	Open = "open",
 	Minimized = "minimized",
 	Collapsed = "collapsed",
-	Removed = "removed"
+	Removed = "removed",
 }
 
 const EMPTY_HASH = {};
@@ -47,22 +48,27 @@ interface PaneNodeNameProps {
 	customPadding?: string;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const hiddenPaneNodes = preferences.hiddenPaneNodes || EMPTY_HASH;
 		const collapsed =
 			props?.id && hiddenPaneNodes[props?.id] ? hiddenPaneNodes[props.id] : props?.collapsed;
 		return {
-			collapsed
+			collapsed,
 		};
 	});
 
 	const toggleNode = e => {
 		if (e.target.closest(".actions")) return;
 		if (!props.id) return;
-		dispatch(setUserPreference(["hiddenPaneNodes"], { [props.id]: !derivedState.collapsed }));
+		dispatch(
+			setUserPreference({
+				prefPath: ["hiddenPaneNodes"],
+				value: { [props.id]: !derivedState.collapsed },
+			})
+		);
 	};
 
 	return (
@@ -156,8 +162,8 @@ interface PaneHeaderProps {
 	warning?: React.ReactNode;
 }
 export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const panePreferences = preferences.sidebarPanes || EMPTY_HASH;
 		const settings = panePreferences[props.id] || EMPTY_HASH;
@@ -179,7 +185,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			settings,
 			maximized: settings.maximized,
 			collapsed: settings.collapsed,
-			anyMaximized
+			anyMaximized,
 		};
 	}, shallowEqual);
 
@@ -216,7 +222,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 	const header = (
 		<PaneHeaderRoot
 			className={cx("pane-header", props.className, {
-				"visualize-dragging": draggingBeyondMinDistance
+				"visualize-dragging": draggingBeyondMinDistance,
 			})}
 			tabIndex={1}
 		>

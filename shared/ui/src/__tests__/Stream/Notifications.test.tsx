@@ -33,7 +33,7 @@ const MockedHostApi = HostApi as any;
 const mockHostApi = {
 	track: jest.fn(),
 	on: jest.fn(),
-	send: jest.fn()
+	send: jest.fn(),
 };
 
 MockedHostApi.mockImplementation(() => {
@@ -44,22 +44,22 @@ MockedHostApi.instance = mockHostApi;
 
 const user: Partial<CSUser> = {
 	id: "abcd1234",
-	createdAt: 1641415000000
+	createdAt: 1641415000000,
 };
 
 const baseState: Partial<CodeStreamState> = {
 	session: {
-		userId: "abcd1234"
+		userId: "abcd1234",
 	},
 	users: {
-		abcd1234: user as CSUser
+		abcd1234: user as CSUser,
 	},
 	preferences: {
-		reviewCreateOnDetectUnreviewedCommits: true
+		reviewCreateOnDetectUnreviewedCommits: true,
 	},
 	ide: {
-		name: "JETBRAINS"
-	}
+		name: "JETBRAINS",
+	},
 };
 
 describe("Notifications UI", () => {
@@ -71,8 +71,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		render(
 			<Provider store={mockStore(baseState)}>
@@ -93,8 +93,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		const mockStore = configureStore();
 		render(
@@ -119,8 +119,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		const mockStore = configureStore();
 		render(
@@ -145,8 +145,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		render(
 			<Provider store={mockStore(baseState)}>
@@ -168,8 +168,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		const mockStore = configureStore();
 		render(
@@ -190,8 +190,8 @@ describe("Notifications UI", () => {
 				isConnected: true,
 				name: "name",
 				host: "host",
-				hasAccessTokenError: false
-			}
+				hasAccessTokenError: false,
+			},
 		]);
 		let state = baseState;
 		const store = mockStore(() => state);
@@ -211,28 +211,31 @@ describe("Notifications UI", () => {
 		});
 
 		// Verify action called
-		expect(spySetUserPreference).toHaveBeenCalledWith(
-			["notificationDelivery"],
-			CSNotificationDeliveryPreference.ToastOnly
-		);
+		expect(spySetUserPreference).toHaveBeenCalledWith({
+			prefPath: ["notificationDelivery"],
+			value: CSNotificationDeliveryPreference.ToastOnly,
+		});
 
 		// Verify correct action to update state was dispatched
 		const expectedPayload = {
 			type: "UPDATE_PREFERENCES",
 			payload: {
-				notificationDelivery: "toastOnly"
-			}
+				notificationDelivery: "toastOnly",
+			},
 		};
 
-		expect(store.getActions()).toEqual([expectedPayload]);
+		// First action is auto-generated from redux stream/setUserPreferences/pending
+		const theAction = store.getActions()[1];
+
+		expect(theAction).toEqual(expectedPayload);
 
 		// Simulate state change and check UI (redux-mock-store does not update state)
 		state = {
 			...state,
 			preferences: {
 				...state.preferences,
-				notificationDelivery: CSNotificationDeliveryPreference.ToastOnly
-			}
+				notificationDelivery: CSNotificationDeliveryPreference.ToastOnly,
+			},
 		};
 
 		store.dispatch({ type: "ANY_ACTION" });

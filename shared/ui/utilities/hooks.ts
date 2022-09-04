@@ -1,3 +1,4 @@
+import { AppDispatch, CodeStreamState } from "@codestream/webview/store";
 import {
 	useEffect,
 	useRef,
@@ -5,8 +6,9 @@ import {
 	useCallback,
 	useLayoutEffect,
 	EffectCallback,
-	useMemo
+	useMemo,
 } from "react";
+import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { noop } from "../utils";
 import { RequestType } from "vscode-jsonrpc";
 import { HostApi, RequestParamsOf, RequestResponseOf } from "../webview-api";
@@ -94,7 +96,7 @@ export function useRequestType<RT extends RequestType<any, any, any, any>>(
 
 export function useTimeout(callback: Fn, delay: number) {
 	useEffect(() => {
-		let id = setTimeout(function() {
+		let id = setTimeout(function () {
 			callback();
 		}, delay);
 
@@ -132,7 +134,7 @@ function getRect<T extends HTMLElement>(element?: T): RectResult {
 		left: 0,
 		right: 0,
 		top: 0,
-		width: 0
+		width: 0,
 	};
 	if (element) rect = element.getBoundingClientRect();
 	return rect;
@@ -200,12 +202,12 @@ export function useIntersectionObserver(
 		if (_rootRef.current && _targetRef.current) {
 			if (observerRef.current == undefined) {
 				const observer = new IntersectionObserver(
-					function(...args: Parameters<IntersectionObserverCallback>) {
+					function (...args: Parameters<IntersectionObserverCallback>) {
 						callbackRef.current.call(undefined, ...args);
 					},
 					{
 						...options,
-						root: _rootRef.current
+						root: _rootRef.current,
 					}
 				);
 				observer.observe(_targetRef.current);
@@ -227,7 +229,7 @@ export function useIntersectionObserver(
 			},
 			rootRef(element) {
 				_rootRef.current = element;
-			}
+			},
 		}),
 		[]
 	);
@@ -261,8 +263,8 @@ export const useEffectDebugger = (effectHook, dependencies, dependencyNames = []
 				...accum,
 				[keyName]: {
 					before: previousDeps[index],
-					after: dependency
-				}
+					after: dependency,
+				},
 			};
 		}
 
@@ -275,3 +277,7 @@ export const useEffectDebugger = (effectHook, dependencies, dependencyNames = []
 
 	useEffect(effectHook, dependencies);
 };
+
+// Use throughout your app instead of plain `useDispatch` and `useSelector`
+export const useAppDispatch = () => useDispatch<AppDispatch>();
+export const useAppSelector: TypedUseSelectorHook<CodeStreamState> = useSelector;

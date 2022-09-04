@@ -1,114 +1,95 @@
-import React, { PropsWithChildren } from "react";
-import cx from "classnames";
-import {
-	CardBody,
-	CardProps,
-	getCardProps,
-	CardFooter,
-	CardBanner
-} from "@codestream/webview/src/components/Card";
 import {
 	ChangeDataType,
 	CheckReviewPreconditionsRequestType,
 	CodemarkPlus,
-	FollowReviewRequestType,
 	DidChangeDataNotification,
 	DidChangeDataNotificationType,
-	ExecuteThirdPartyRequestUntypedType
+	ExecuteThirdPartyRequestUntypedType,
+	FollowReviewRequestType,
 } from "@codestream/protocols/agent";
+import { CodemarkStatus, CodemarkType, CSPost, CSReview, CSUser } from "@codestream/protocols/api";
 import {
-	MinimumWidthCard,
-	Header,
-	MetaSection,
-	Meta,
-	MetaLabel,
-	MetaDescription,
-	MetaSectionCollapsed,
-	HeaderActions,
-	MetaDescriptionForAssignees,
-	MetaAssignee,
-	MetaRow,
-	MetaDescriptionForTags,
-	KebabIcon,
-	BigTitle,
-	MetaSectionCollapsedHeadshotArea
-} from "../Codemark/BaseCodemark";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
+	OpenUrlRequestType,
+	ShowNextChangedFileRequestType,
+	ShowPreviousChangedFileRequestType,
+	WebviewPanels,
+} from "@codestream/protocols/webview";
+import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { Loading } from "@codestream/webview/Container/Loading";
 import {
-	CSUser,
-	CSReview,
-	CSReviewStatus,
-	CodemarkType,
-	CodemarkStatus,
-	CSPost
-} from "@codestream/protocols/api";
+	CardBody,
+	CardFooter,
+	CardProps,
+	getCardProps,
+} from "@codestream/webview/src/components/Card";
+import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector, useDispatch, shallowEqual } from "react-redux";
-import Icon from "../Icon";
-import Tooltip from "../Tooltip";
-import { capitalize, replaceHtml, emptyArray, mapFilter } from "@codestream/webview/utils";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "@codestream/webview/webview-api";
-import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/actions";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
+import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
+import { createCodemark } from "@codestream/webview/store/codemarks/thunks";
 import {
-	setCurrentReview,
+	openPanel,
+	setCreatePullRequest,
 	setCurrentCodemark,
 	setCurrentPullRequest,
-	openPanel,
-	setCreatePullRequest
+	setCurrentReview,
 } from "@codestream/webview/store/context/actions";
-import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
-import MessageInput, { AttachmentField } from "../MessageInput";
+import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/thunks";
+import {
+	findMentionedUserIds,
+	getTeamMates,
+	getTeamTagsHash,
+} from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
+import { capitalize, emptyArray, mapFilter, replaceHtml } from "@codestream/webview/utils";
+import { HostApi } from "@codestream/webview/webview-api";
+import cx from "classnames";
+import React, { PropsWithChildren } from "react";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { getPost } from "../../store/posts/reducer";
+import { createPost, markItemRead, setCodemarkStatus, setReviewStatus } from "../actions";
+import { Attachments } from "../Attachments";
 import Button from "../Button";
 import {
-	getTeamMates,
-	findMentionedUserIds,
-	getTeamTagsHash,
-	getPreferences
-} from "@codestream/webview/store/users/reducer";
-import {
-	createPost,
-	setReviewStatus,
-	setCodemarkStatus,
-	setUserPreference,
-	markItemRead
-} from "../actions";
-import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { DropdownButton } from "../DropdownButton";
-import Tag from "../Tag";
-import { RepliesToPost } from "../Posts/RepliesToPost";
-import { ChangesetFileList } from "./ChangesetFileList";
-import Menu from "../Menu";
+	BigTitle,
+	Header,
+	HeaderActions,
+	KebabIcon,
+	Meta,
+	MetaDescription,
+	MetaDescriptionForAssignees,
+	MetaDescriptionForTags,
+	MetaLabel,
+	MetaRow,
+	MetaSection,
+	MetaSectionCollapsed,
+	MetaSectionCollapsedHeadshotArea,
+	MinimumWidthCard,
+} from "../Codemark/BaseCodemark";
 import { confirmPopup } from "../Confirm";
-import { Checkbox } from "@codestream/webview/src/components/Checkbox";
-import { createCodemark } from "@codestream/webview/store/codemarks/actions";
-import { getReviewChangeRequests } from "@codestream/webview/store/codemarks/reducer";
-import { Link } from "../Link";
-import { MarkdownText } from "../MarkdownText";
-import { ReviewForm } from "../ReviewForm";
-import Timestamp from "../Timestamp";
-import { Dispatch } from "@codestream/webview/store/common";
-import { Loading } from "@codestream/webview/Container/Loading";
-import { TourTip } from "@codestream/webview/src/components/TourTip";
-import { CommitList } from "./CommitList";
-import { SharingModal } from "../SharingModal";
-import {
-	ShowPreviousChangedFileRequestType,
-	ShowNextChangedFileRequestType,
-	WebviewPanels,
-	OpenUrlRequestType
-} from "@codestream/protocols/webview";
-import { HeadshotName } from "@codestream/webview/src/components/HeadshotName";
-import { LocateRepoButton } from "../LocateRepoButton";
 import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
-import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
-import { getPost } from "../../store/posts/reducer";
+import { DropdownButton } from "../DropdownButton";
+import Icon from "../Icon";
+import { Link } from "../Link";
+import { LocateRepoButton } from "../LocateRepoButton";
+import { MarkdownText } from "../MarkdownText";
+import Menu from "../Menu";
+import MessageInput, { AttachmentField } from "../MessageInput";
+import { RepliesToPost } from "../Posts/RepliesToPost";
+import { PRErrorBox } from "../PullRequestComponents";
 import { AddReactionIcon, Reactions } from "../Reactions";
-import { Attachments } from "../Attachments";
-import { PRErrorBox, PRSelectorButtons } from "../PullRequestComponents";
-import { PRProgress, PRProgressFill, PRProgressLine } from "../PullRequestFilesChangedList";
+import { ReviewForm } from "../ReviewForm";
+import { SharingModal } from "../SharingModal";
+import Tag from "../Tag";
+import Timestamp from "../Timestamp";
+import Tooltip from "../Tooltip";
+import { ChangesetFileList } from "./ChangesetFileList";
+import { CommitList } from "./CommitList";
 
 export interface RepoMetadata {
 	repoName: string;
@@ -181,7 +162,7 @@ const Clickable = styled(Link)`
 `;
 
 const ComposeWrapper = styled.div.attrs(() => ({
-	className: "compose codemark-compose"
+	className: "compose codemark-compose",
 }))`
 	&&& {
 		padding: 0 !important;
@@ -291,7 +272,7 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	const { review, post, collapsed, setIsAmending } = props;
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		let statusLabel = "";
 		switch (review.status) {
@@ -321,13 +302,13 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			author: state.users[props.review.creatorId],
 			userIsFollowing: (props.review.followerIds || []).includes(state.session.userId!),
 			statusLabel,
-			cr2prEnabled: isFeatureEnabled(state, "cr2pr")
+			cr2prEnabled: isFeatureEnabled(state, "cr2pr"),
 		};
 	}, shallowEqual);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
 		open: false,
-		target: undefined
+		target: undefined,
 	});
 
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
@@ -346,9 +327,9 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 						wait: true,
 						action: () => {
 							dispatch(setReviewStatus(props.review.id, "approved"));
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		else dispatch(setReviewStatus(props.review.id, "approved"));
 	};
@@ -363,12 +344,12 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	const unapproveItem = {
 		icon: <Icon name="diff-removed" />,
 		label: "Withdraw Approval",
-		action: reopen
+		action: reopen,
 	};
 	const reviewItem = {
 		icon: <Icon name="review" />,
 		label: "View Changes",
-		action: startReview
+		action: startReview,
 	};
 	const rejectItem = { icon: <Icon name="sync" />, label: "Request Changes", action: reject };
 	const reopenItem = { icon: <Icon name="reopen" />, label: "Reopen", action: reopen };
@@ -379,7 +360,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 		action: () => {
 			if (props.review.status !== "open") reopen();
 			setIsAmending && setIsAmending(true);
-		}
+		},
 	};
 
 	const menuItems = React.useMemo(() => {
@@ -392,7 +373,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 						permalinkRef.current.select();
 						document.execCommand("copy");
 					}
-				}
+				},
 			},
 			{
 				label: derivedState.userIsFollowing ? "Unfollow" : "Follow",
@@ -402,14 +383,14 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 					const changeType = value ? "Followed" : "Unfollowed";
 					HostApi.instance.send(FollowReviewRequestType, {
 						id: review.id,
-						value
+						value,
 					});
 					HostApi.instance.track("Notification Change", {
 						Change: `Review ${changeType}`,
-						"Source of Change": "Review menu"
+						"Source of Change": "Review menu",
 					});
-				}
-			}
+				},
+			},
 		];
 
 		if (!(post && post?.sharedTo && post?.sharedTo?.length > 0)) {
@@ -425,7 +406,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 				{
 					label: "Edit",
 					key: "edit",
-					action: () => props.setIsEditing(true)
+					action: () => props.setIsEditing(true),
 				},
 				{
 					label: "Delete",
@@ -443,11 +424,11 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 									action: () => {
 										dispatch(deleteReview(review.id, post?.sharedTo));
 										dispatch(setCurrentReview());
-									}
-								}
-							]
+									},
+								},
+							],
 						});
-					}
+					},
 				}
 			);
 		}
@@ -499,7 +480,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 						await dispatch(openPanel(WebviewPanels.NewPullRequest));
 					};
 					_action();
-				}
+				},
 			});
 		}
 
@@ -546,7 +527,7 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 					} else {
 						setMenuState({
 							open: true,
-							target: e.currentTarget.closest("button")
+							target: e.currentTarget.closest("button"),
 						});
 					}
 				}}
@@ -575,14 +556,14 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 const BaseReview = (props: BaseReviewProps) => {
 	const { review } = props;
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const codeAuthorId = (props.review.codeAuthorIds || [])[0];
 		return {
 			providers: state.providers,
 			isInVscode: state.ide.name === "VSC",
 			author: state.users[props.review.creatorId],
-			codeAuthor: state.users[codeAuthorId || props.review.creatorId]
+			codeAuthor: state.users[codeAuthorId || props.review.creatorId],
 		};
 	}, shallowEqual);
 	const [checkpoint, setCheckpoint] = React.useState<number | undefined>(undefined);
@@ -621,7 +602,7 @@ const BaseReview = (props: BaseReviewProps) => {
 		canLocateRepo = true;
 		singleRepo = {
 			id: props.repoInfoById.keys().next().value,
-			...props.repoInfoById.values().next().value
+			...props.repoInfoById.values().next().value,
 		};
 	}
 
@@ -634,7 +615,7 @@ const BaseReview = (props: BaseReviewProps) => {
 
 	const dropdownItems: any = [
 		{ label: "All Changed Files", action: () => setCheckpoint(undefined) },
-		{ label: "-" }
+		{ label: "-" },
 	];
 	for (var i = 0; i < numCheckpoints; i++) {
 		const label = i === 0 ? "Initial Review" : `Update #${i}`;
@@ -705,8 +686,8 @@ const BaseReview = (props: BaseReviewProps) => {
 													method: "getPullRequestIdFromUrl",
 													providerId: review.pullRequestProviderId,
 													params: {
-														url: review.pullRequestUrl
-													}
+														url: review.pullRequestUrl,
+													},
 												})
 												.then((id: any) => {
 													if (id) {
@@ -714,13 +695,13 @@ const BaseReview = (props: BaseReviewProps) => {
 														dispatch(setCurrentPullRequest(review.pullRequestProviderId!, id));
 													} else {
 														HostApi.instance.send(OpenUrlRequestType, {
-															url: review.pullRequestUrl!
+															url: review.pullRequestUrl!,
 														});
 													}
 												})
 												.catch(e => {
 													HostApi.instance.send(OpenUrlRequestType, {
-														url: review.pullRequestUrl!
+														url: review.pullRequestUrl!,
 													});
 												});
 										} else {
@@ -1061,7 +1042,7 @@ const ReplyInput = (props: {
 	streamId: string;
 	numReplies: number;
 }) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [text, setText] = React.useState("");
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isChangeRequest, setIsChangeRequest] = React.useState(false);
@@ -1087,7 +1068,7 @@ const ReplyInput = (props: {
 					isChangeRequest: true,
 					tags: [],
 					isPseudoCodemark: true,
-					files: attachments
+					files: attachments,
 				})
 			);
 		} else {
@@ -1100,7 +1081,7 @@ const ReplyInput = (props: {
 					findMentionedUserIds(teamMates, text),
 					{
 						entryPoint: "Review",
-						files: attachments
+						files: attachments,
 					}
 				)
 			);
@@ -1147,7 +1128,7 @@ const ReplyInput = (props: {
 								// fixed width to handle the isLoading case
 								width: "100px",
 								margin: "10px 0",
-								float: "right"
+								float: "right",
 							}}
 							className={cx("control-button", { cancel: text.length === 0 })}
 							type="submit"
@@ -1213,14 +1194,14 @@ const ReviewForReview = (props: PropsWithReview) => {
 			teamMates: getTeamMates(state),
 			replies: props.collapsed ? emptyArray : getThreadPosts(state, review.streamId, review.postId),
 			allUsers: state.users,
-			teamTagsById: getTeamTagsHash(state)
+			teamTagsById: getTeamTagsHash(state),
 		};
 	}, shallowEqual);
 
 	const [canStartReview, setCanStartReview] = React.useState(false);
 	const [preconditionError, setPreconditionError] = React.useState<SimpleError>({
 		message: "",
-		type: ""
+		type: "",
 	});
 	const [isEditing, setIsEditing] = React.useState(false);
 	// const [isAmending, setIsAmending] = React.useState(false);
@@ -1267,7 +1248,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 
 	const checkPreconditions = async () => {
 		let response = await HostApi.instance.send(CheckReviewPreconditionsRequestType, {
-			reviewId: review.id
+			reviewId: review.id,
 		});
 
 		if (disposableDidChangeDataNotification) {
@@ -1391,7 +1372,7 @@ const ReviewForReview = (props: PropsWithReview) => {
 const ReviewForId = (props: PropsWithId) => {
 	const { id, ...otherProps } = props;
 
-	const dispatch = useDispatch<Dispatch>();
+	const dispatch = useAppDispatch();
 	const review = useSelector((state: CodeStreamState) => {
 		return getReview(state.reviews, id);
 	});

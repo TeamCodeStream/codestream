@@ -1,31 +1,30 @@
+import { CodemarkPlus } from "@codestream/protocols/agent";
+import { CodemarkStatus, CodemarkType, CSMarker, CSPost, CSUser } from "@codestream/protocols/api";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "@codestream/webview/webview-api";
 import cx from "classnames";
+import React from "react";
+import styled from "styled-components";
 import {
 	Card,
 	CardBanner,
 	CardBody,
 	CardFooter,
 	CardProps,
-	getCardProps
+	getCardProps,
 } from "../../src/components/Card";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { CSUser, CSMarker, CodemarkType, CodemarkStatus, CSPost } from "@codestream/protocols/api";
-import Timestamp from "../Timestamp";
-import Tag from "../Tag";
+import { setCodemarkStatus } from "../actions";
+import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
+import { DropdownButton } from "../DropdownButton";
 import Icon from "../Icon";
 import { Link } from "../Link";
-import { Marker } from "../Marker";
-import { CodemarkPlus } from "@codestream/protocols/agent";
-import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
-import React from "react";
-import styled from "styled-components";
-import Tooltip from "../Tooltip";
-import { HostApi } from "@codestream/webview/webview-api";
 import { MarkdownText } from "../MarkdownText";
-import { DropdownButton } from "../DropdownButton";
-import { useDispatch } from "react-redux";
-import { setCodemarkStatus } from "../actions";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { Marker } from "../Marker";
 import { AddReactionIcon, Reactions } from "../Reactions";
+import Tag from "../Tag";
+import Tooltip from "../Tooltip";
 
 export interface BaseCodemarkProps extends CardProps {
 	codemark: CodemarkPlus;
@@ -55,10 +54,10 @@ export interface BaseCodemarkProps extends CardProps {
 export function BaseCodemark(props: BaseCodemarkProps) {
 	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
 		open: false,
-		target: undefined
+		target: undefined,
 	});
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const { codemark, menuItems = [] } = props;
 
@@ -99,7 +98,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 		HostApi.instance.track("Codemark Resolved", {
 			"Codemark ID": codemark.id,
 			"Codemark Type": codemark.type,
-			Archived: false
+			Archived: false,
 		});
 	};
 
@@ -198,7 +197,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 															className={cx({
 																"at-mention me":
 																	assignee.email != undefined &&
-																	assignee.email === props.currentUserEmail
+																	assignee.email === props.currentUserEmail,
 															})}
 														>
 															{assignee.username || assignee.email}
@@ -281,7 +280,7 @@ export function BaseCodemark(props: BaseCodemarkProps) {
 										e.preventDefault();
 										e.stopPropagation();
 										HostApi.instance.send(OpenUrlRequestType, {
-											url: codemark.externalProviderUrl!
+											url: codemark.externalProviderUrl!,
 										});
 									}}
 								>

@@ -1,4 +1,5 @@
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -13,8 +14,8 @@ import { Dialog } from "../src/components/Dialog";
 import { Link } from "./Link";
 
 export const ReviewSettings = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const teamId = state.context.currentTeamId;
 		const team = state.teams[teamId];
 		const currentUserId = state.session.userId!;
@@ -24,7 +25,7 @@ export const ReviewSettings = () => {
 			currentUserId,
 			createReviewOnCommit: state.preferences.reviewCreateOnCommit !== false,
 			reviewApproval: getTeamSetting(team, "reviewApproval"),
-			reviewAssignment: getTeamSetting(team, "reviewAssignment")
+			reviewAssignment: getTeamSetting(team, "reviewAssignment"),
 		};
 	});
 	const [loadingApproval, setLoadingApproval] = useState("");
@@ -35,7 +36,7 @@ export const ReviewSettings = () => {
 		HostApi.instance.track("Review Multiple Approval Setting Changed", { Value: value });
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: derivedState.teamId,
-			settings: { reviewApproval: value }
+			settings: { reviewApproval: value },
 		});
 		// give it 100 miliseconds to update react state
 		// otherwise it flashes for a second on the old radio button
@@ -47,7 +48,7 @@ export const ReviewSettings = () => {
 		HostApi.instance.track("Review Assignment Setting Changed", { Value: value });
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: derivedState.teamId,
-			settings: { reviewAssignment: value }
+			settings: { reviewAssignment: value },
 		});
 		// give it 100 miliseconds to update react state
 		setTimeout(() => setLoadingAssignment(""), 100);
@@ -55,7 +56,7 @@ export const ReviewSettings = () => {
 
 	const changeCreateOnCommit = async (value: boolean) => {
 		HostApi.instance.track("Review Create On Commit Setting Changed", { Value: value });
-		dispatch(setUserPreference(["reviewCreateOnCommit"], value));
+		dispatch(setUserPreference({ prefPath: ["reviewCreateOnCommit"], value }));
 	};
 
 	const { team, currentUserId } = derivedState;

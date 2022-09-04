@@ -1,24 +1,22 @@
-import styled from "styled-components";
-import cx from "classnames";
-import { useDispatch, useSelector } from "react-redux";
+import { PostPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { getTeamMates, findMentionedUserIds } from "@codestream/webview/store/users/reducer";
+import { findMentionedUserIds, getTeamMates } from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import { mapFilter, replaceHtml } from "@codestream/webview/utils";
+import cx from "classnames";
+import { groupBy } from "lodash-es";
 import React from "react";
+import styled from "styled-components";
 import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
-import { replaceHtml, mapFilter } from "@codestream/webview/utils";
-import { PostPlus } from "@codestream/protocols/agent";
+import Button from "../Button";
 import { confirmPopup } from "../Confirm";
-import { Reply } from "./Reply";
 import Menu from "../Menu";
 import MessageInput, { AttachmentField } from "../MessageInput";
-import Button from "../Button";
-import { groupBy } from "lodash-es";
-import { Dispatch } from "@codestream/webview/store/common";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { Reply } from "./Reply";
 
 const ComposeWrapper = styled.div.attrs(() => ({
-	className: "compose codemark-compose"
+	className: "compose codemark-compose",
 }))`
 	&&& {
 		padding: 0 !important;
@@ -32,7 +30,7 @@ const InlineMessageContainer = styled.div`
 
 export const RepliesToPostContext = React.createContext({
 	setReplyingToPostId(postId: string) {},
-	setEditingPostId(postId: string) {}
+	setEditingPostId(postId: string) {},
 });
 
 export const RepliesToPost = (props: {
@@ -41,17 +39,17 @@ export const RepliesToPost = (props: {
 	itemId: string;
 	numReplies: number;
 }) => {
-	const dispatch = useDispatch();
-	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId!);
-	const replies = useSelector((state: CodeStreamState) =>
+	const dispatch = useAppDispatch();
+	const currentUserId = useAppSelector((state: CodeStreamState) => state.session.userId!);
+	const replies = useAppSelector((state: CodeStreamState) =>
 		getThreadPosts(state, props.streamId, props.parentPostId, true)
 	);
 	const nestedRepliesByParent = React.useMemo(() => {
 		const nestedReplies = replies.filter(r => r.parentPostId !== props.parentPostId);
 		return groupBy(nestedReplies, "parentPostId");
 	}, [replies]);
-	const allUsers = useSelector((state: CodeStreamState) => state.users);
-	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
+	const allUsers = useAppSelector((state: CodeStreamState) => state.users);
+	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
 	const [replyingToPostId, setReplyingToPostId] = React.useState<string | null>();
 	const [editingPostId, setEditingPostId] = React.useState<string | undefined>();
 	const [newReplyText, setNewReplyText] = React.useState("");
@@ -61,7 +59,7 @@ export const RepliesToPost = (props: {
 	const contextValue = React.useMemo(
 		() => ({
 			setReplyingToPostId: setReplyingToPostId as any,
-			setEditingPostId: setEditingPostId as any
+			setEditingPostId: setEditingPostId as any,
 		}),
 		[]
 	);
@@ -118,7 +116,7 @@ export const RepliesToPost = (props: {
 							}
 						]
 					});
-				}
+				},
 			});
 		}
 
@@ -162,7 +160,7 @@ export const RepliesToPost = (props: {
 										style={{
 											// fixed width to handle the isLoading case
 											width: "80px",
-											margin: "10px 10px"
+											margin: "10px 10px",
 										}}
 										onClick={() => {
 											setReplyingToPostId(undefined);
@@ -175,7 +173,7 @@ export const RepliesToPost = (props: {
 										style={{
 											// fixed width to handle the isLoading case
 											width: "80px",
-											margin: "10px 0"
+											margin: "10px 0",
 										}}
 										className={cx("control-button", { cancel: newReplyText.length === 0 })}
 										type="submit"

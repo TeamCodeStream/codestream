@@ -8,20 +8,21 @@ import {
 	ReposScm,
 	SwitchBranchRequestType,
 	ThirdPartyProviderConfig,
-	UpdateTeamSettingsRequestType
+	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import {
 	OpenUrlRequestType,
 	ReviewCloseDiffRequestType,
-	WebviewPanels
+	WebviewPanels,
 } from "@codestream/protocols/webview";
 import { setPaneMaximized } from "@codestream/webview/Stream/actions";
 import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
 import copy from "copy-to-clipboard";
 import { isEmpty, isEqual } from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
@@ -34,27 +35,28 @@ import {
 	PaneHeader,
 	PaneNode,
 	PaneNodeName,
-	PaneState
+	PaneState,
 } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import {
 	clearCurrentPullRequest,
 	setCreatePullRequest,
 	setCurrentPullRequest,
-	setNewPostEntry
+	setNewPostEntry,
 } from "../store/context/actions";
 import {
 	getMyPullRequests,
 	getPullRequestConversationsFromProvider,
-	openPullRequestByUrl
-} from "../store/providerPullRequests/actions";
+	openPullRequestByUrl,
+	PRRequest,
+} from "../store/providerPullRequests/thunks";
 import {
 	getCurrentProviderPullRequest,
 	getMyPullRequests as getMyPullRequestsSelector,
 	getProviderPullRequestRepoObject,
 	getPullRequestExactId,
-	getPullRequestId
-} from "../store/providerPullRequests/reducer";
+	getPullRequestId,
+} from "../store/providerPullRequests/slice";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import * as providerSelectors from "../store/providers/reducer";
 import { getPRLabel } from "../store/providers/reducer";
@@ -195,7 +197,7 @@ export const PullRequestTooltip = (props: { pr: GetMyPullRequestsResponse }) => 
 				style={{
 					margin: "5px -5px 0 -5px",
 					padding: "15px 15px 0 15px",
-					borderTop: "1px solid rgba(0, 0, 0, 0.1)"
+					borderTop: "1px solid rgba(0, 0, 0, 0.1)",
 				}}
 			>
 				<PRHeadshotName person={pr.author} size={16} />
@@ -236,10 +238,10 @@ let hasRenderedOnce = false;
 const e: ThirdPartyProviderConfig[] = [];
 
 export const OpenPullRequests = React.memo((props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const mountedRef = useRef(false);
 	const prFromUrlInput = useRef<HTMLInputElement>(null);
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences, repos, context } = state;
 
 		const team = state.teams[state.context.currentTeamId];
@@ -311,7 +313,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			maximized: settings.maximized,
 			// VS will not use sidebar-diffs currently, uses old method of going directly to
 			// details view when selecting a PR
-			isVS: state.ide?.name?.toUpperCase() === "VS"
+			isVS: state.ide?.name?.toUpperCase() === "VS",
 		};
 	}, shallowEqual);
 
@@ -357,7 +359,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	);
 
 	const saveQueries = (providerId, queries) => {
-		dispatch(setUserPreference(["pullRequestQueries", providerId], [...queries]));
+		dispatch(
+			setUserPreference({ prefPath: ["pullRequestQueries", providerId], value: [...queries] })
+		);
 	};
 
 	const fetchPRs = useCallback(
@@ -388,18 +392,18 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					);
 					// console.warn("Loading the PRs... in the loop", queryStrings);
 					try {
-						const response: any = await dispatch(
-							getMyPullRequests(
-								connectedProvider.id,
-								queriesByProvider,
-								!derivedState.allRepos,
-								options,
-								true
-							)
-						);
+						const prRequest: PRRequest = {
+							providerId: connectedProvider.id,
+							queries: queriesByProvider,
+							openReposOnly: !derivedState.allRepos,
+							options,
+							throwOnError: true,
+						};
+						const response = await dispatch(getMyPullRequests(prRequest)).unwrap();
+						// const response = eponse.unwrap();
 						if (response && response.length) {
 							count = 0;
-							response.forEach(group => (count += group.length));
+							response.forEach(group => (count! += group.length));
 
 							const twoWeekAgoTimestamp = +new Date(Date.now() - 12096e5);
 							if (activePrListedIndex >= 0) {
@@ -436,7 +440,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									: "PRs Listed"
 								: "No PRs",
 						"PR Count": count,
-						Host: PRConnectedProviders ? PRConnectedProviders.map(_ => _.id)[0] : undefined
+						Host: PRConnectedProviders ? PRConnectedProviders.map(_ => _.id)[0] : undefined,
 					});
 					hasRenderedOnce = true;
 				}
@@ -470,11 +474,11 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [queries]);
 
 	/* 
-	 TODO Fix this effect disposing / recreating every run of fetchPRs 
-	 received notification codestream/didChangeData from host on user object
-	 which triggers PRConnectedProviders / getConnectedSupportedPullRequestHosts selector
-	 with no changed data
-	 */
+   TODO Fix this effect disposing / recreating every run of fetchPRs 
+   received notification codestream/didChangeData from host on user object
+   which triggers PRConnectedProviders / getConnectedSupportedPullRequestHosts selector
+   with no changed data
+   */
 	useEffect(() => {
 		const disposable = fluctuatePoll(() => {
 			fetchPRs(queries, { force: true, alreadyLoading: true }, "interval");
@@ -489,7 +493,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const newGroups = {};
 		for (const connectedProvider of PRConnectedProviders) {
 			if (derivedState.myPullRequests && derivedState.myPullRequests[connectedProvider.id]) {
-				newGroups[connectedProvider.id] = derivedState.myPullRequests[connectedProvider.id].data;
+				newGroups[connectedProvider.id] = derivedState.myPullRequests[connectedProvider.id];
 			}
 		}
 		setPullRequestGroups(newGroups);
@@ -503,7 +507,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (!mountedRef.current) return;
 		const newQueries: FetchProviderDefaultPullResponse = {
 			...defaultQueries,
-			...(derivedState.pullRequestQueries || {})
+			...(derivedState.pullRequestQueries || {}),
 		};
 		// need to check if it was new/editing pullRequestQueries or just updating other preferences
 		if (!isEqual(queries, newQueries)) {
@@ -525,7 +529,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 				const queries = {
 					...defaultQueriesResponse,
-					...(derivedState.pullRequestQueries || {})
+					...(derivedState.pullRequestQueries || {}),
 				};
 				// let results = {};
 				// // massage the data for any old data formats
@@ -579,17 +583,17 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		setIsLoadingPRGroup(index);
 		try {
 			const q = queries[providerId][index];
-			const response: any = await dispatch(
-				getMyPullRequests(
+			const response = await dispatch(
+				getMyPullRequests({
 					providerId,
-					[q],
-					!derivedState.allRepos,
-					{ force: true },
-					true,
-					false,
-					index
-				)
-			);
+					queries: [q],
+					openReposOnly: !derivedState.allRepos,
+					options: { force: true },
+					throwOnError: true,
+					test: false,
+					index: index,
+				})
+			).unwrap();
 			if (response && response.length) {
 				const newGroups = { ...pullRequestGroups };
 				newGroups[providerId][index] = response[0];
@@ -622,9 +626,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						const newGroups = [...pullRequestGroups[providerId]];
 						newGroups.splice(index, 1);
 						setPullRequestGroups({ ...pullRequestGroups, providerId: newGroups });
-					}
-				}
-			]
+					},
+				},
+			],
 		});
 	};
 
@@ -638,10 +642,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const toggleProviderHidden = (e, providerId) => {
 		dispatch(
-			setUserPreference(
-				["pullRequestProviderHidden", providerId],
-				!pullRequestProviderHidden[providerId]
-			)
+			setUserPreference({
+				prefPath: ["pullRequestProviderHidden", providerId],
+				value: !pullRequestProviderHidden[providerId],
+			})
 		);
 	};
 
@@ -651,7 +655,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			providerId,
 			name,
 			query,
-			hidden: false
+			hidden: false,
 		};
 		let queriesByProvider = queries[providerId];
 		let newQueries = queriesByProvider ? [...queriesByProvider] : [];
@@ -676,7 +680,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			setPrFromUrlLoading(true);
 		}
 		const response = (await dispatch(
-			openPullRequestByUrl(url, { providerId, groupIndex: "-1", isVS: derivedState.isVS })
+			openPullRequestByUrl({
+				url,
+				options: { providerId, groupIndex: "-1", isVS: derivedState.isVS },
+			})
 		)) as {
 			error?: string;
 		};
@@ -686,7 +693,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		prFromUrlInput?.current?.blur();
 
 		HostApi.instance.track("PR Load from URL", {
-			Host: providerId
+			Host: providerId,
 		});
 
 		if (response && response.error) {
@@ -762,7 +769,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					"Assigned to Me",
 					"Created by Me",
 					"Recent",
-					"From URL"
+					"From URL",
 				];
 				let telemetryQueryName = queryName;
 				if (!nonCustomQueries.includes(queryName)) {
@@ -771,7 +778,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 				HostApi.instance.track("PR Clicked", {
 					Host: pr.providerId,
-					Section: telemetryQueryName || ""
+					Section: telemetryQueryName || "",
 				});
 			}
 		}
@@ -784,7 +791,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			//and extract the id param.  For everything else that is not GL, we just use the standard pr.id
 			let prId = expandedPrIdObject(pullRequestId);
 			setIndividualLoadingPR(prId);
-			(await dispatch(getPullRequestConversationsFromProvider(providerId, pullRequestId))) as any;
+			await dispatch(getPullRequestConversationsFromProvider({ providerId, id: pullRequestId }));
 			setIndividualLoadingPR("");
 		}
 	};
@@ -803,14 +810,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const repoId = currentRepo?.id || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: prToCheckout!.headRefName,
-			repoId: repoId
+			repoId: repoId,
 		});
 		if (result.error) {
 			logError(result.error, {
 				...(derivedState.currentRepoObject || {}),
 				branch: prToCheckout.headRefName,
 				repoId: repoId,
-				prRepository: prToCheckout!.repository
+				prRepository: prToCheckout!.repository,
 			});
 
 			confirmPopup({
@@ -822,7 +829,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					</div>
 				),
 				centered: false,
-				buttons: [{ label: "OK", className: "control-button" }]
+				buttons: [{ label: "OK", className: "control-button" }],
 			});
 		} else {
 			getOpenRepos();
@@ -893,7 +900,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const { reposState } = derivedState;
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
-			includeCurrentBranches: true
+			includeCurrentBranches: true,
 		});
 		if (response && response.repositories) {
 			const repos = response.repositories.map(repo => {
@@ -978,7 +985,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									e.preventDefault();
 									e.stopPropagation();
 									HostApi.instance.send(OpenUrlRequestType, {
-										url: pr.url
+										url: pr.url,
 									});
 								}}
 							>
@@ -1088,7 +1095,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							<PRHeadshot
 								person={{
 									login: pr.author.login,
-									avatarUrl: pr.author.avatar_url || pr.author.avatarUrl
+									avatarUrl: pr.author.avatar_url || pr.author.avatarUrl,
 								}}
 							/>
 						</div>
@@ -1111,7 +1118,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									e.preventDefault();
 									e.stopPropagation();
 									HostApi.instance.send(OpenUrlRequestType, {
-										url: pr.web_url
+										url: pr.web_url,
 									});
 								}}
 							>
@@ -1212,7 +1219,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [
 		derivedState.currentPullRequestProviderId,
 		derivedState.currentPullRequestIdExact,
-		derivedState.providerPullRequests
+		derivedState.providerPullRequests,
 	]);
 
 	const expandedPR: any = useMemo(() => {
@@ -1249,7 +1256,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			key: "repo-only",
 			checked: !derivedState.allRepos,
 			action: () =>
-				dispatch(setUserPreference(["pullRequestQueryShowAllRepos"], !derivedState.allRepos))
+				dispatch(
+					setUserPreference({
+						prefPath: ["pullRequestQueryShowAllRepos"],
+						value: !derivedState.allRepos,
+					})
+				),
 		},
 		{
 			label: "Show Descriptions",
@@ -1257,16 +1269,24 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			checked: !derivedState.hideDescriptions,
 			action: () =>
 				dispatch(
-					setUserPreference(["pullRequestQueryHideDescriptions"], !derivedState.hideDescriptions)
-				)
+					setUserPreference({
+						prefPath: ["pullRequestQueryHideDescriptions"],
+						value: !derivedState.hideDescriptions,
+					})
+				),
 		},
 		{
 			label: "Show Labels",
 			key: "show-labels",
 			checked: !derivedState.hideLabels,
 			action: () =>
-				dispatch(setUserPreference(["pullRequestQueryHideLabels"], !derivedState.hideLabels))
-		}
+				dispatch(
+					setUserPreference({
+						prefPath: ["pullRequestQueryHideLabels"],
+						value: !derivedState.hideLabels,
+					})
+				),
+		},
 		// Not using this for now
 		// {
 		// 	label: "Show Diffs in Sidebar",
@@ -1288,10 +1308,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					HostApi.instance.send(UpdateTeamSettingsRequestType, {
 						teamId: derivedState.teamId,
 						settings: {
-							gitLabMultipleAssignees: !derivedState.teamSettings.gitLabMultipleAssignees
-						}
+							gitLabMultipleAssignees: !derivedState.teamSettings.gitLabMultipleAssignees,
+						},
 					});
-				}
+				},
 			});
 		}
 	}
@@ -1360,7 +1380,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							<Row
 								style={{
 									display: "block",
-									paddingRight: "8px"
+									paddingRight: "8px",
 								}}
 								id="error-row"
 								key="pr-error"

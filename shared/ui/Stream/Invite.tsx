@@ -3,9 +3,10 @@ import {
 	KickUserRequestType,
 	RepoScmStatus,
 	UpdateTeamAdminRequestType,
-	UpdateTeamSettingsRequestType
+	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import copy from "copy-to-clipboard";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
@@ -17,7 +18,6 @@ import { Dialog } from "../src/components/Dialog";
 import { UserStatus } from "../src/components/UserStatus";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { closeModal, openModal, openPanel } from "../store/context/actions";
-import { switchToTeam } from "../store/session/actions";
 import { getActiveMemberIds } from "../store/users/reducer";
 import { mapFilter } from "../utils";
 import { HostApi } from "../webview-api";
@@ -26,8 +26,6 @@ import Button from "./Button";
 import { confirmPopup } from "./Confirm";
 import { DropdownButton } from "./DropdownButton";
 import Icon from "./Icon";
-import { ChangesetFile } from "./Review/ChangesetFile";
-import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 
 export const EMAIL_REGEX = new RegExp(
@@ -185,7 +183,7 @@ class Invite extends React.Component<Props, State> {
 		suggested: [],
 		blameMapEmail: "",
 		addingBlameMap: false,
-		showInvitePopup: false
+		showInvitePopup: false,
 	};
 
 	postInviteResetState = {
@@ -198,7 +196,7 @@ class Invite extends React.Component<Props, State> {
 		newMemberInputTouched: false,
 		inputTouched: false,
 		newMemberEmailInvalid: false,
-		showInvitePopup: false
+		showInvitePopup: false,
 	};
 
 	private _pollingTimer?: any;
@@ -250,7 +248,7 @@ class Invite extends React.Component<Props, State> {
 		if (this.state.newMemberEmailInvalid) {
 			this.setState(state => ({
 				newMemberEmailInvalid:
-					state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+					state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false,
 			}));
 		}
 	};
@@ -259,7 +257,7 @@ class Invite extends React.Component<Props, State> {
 		this.setState(state => ({
 			inputTouched: true,
 			newMemberEmailInvalid:
-				state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+				state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false,
 		}));
 	};
 
@@ -286,7 +284,7 @@ class Invite extends React.Component<Props, State> {
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": newMemberEmail,
 			"Invitee Name": newMemberName,
-			"Invitation Method": "Manual"
+			"Invitation Method": "Manual",
 		});
 	};
 
@@ -312,7 +310,7 @@ class Invite extends React.Component<Props, State> {
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": user.email,
 			"Invitee Name": user.fullName,
-			"Invitation Method": type === "reinvite" ? "Reinvite" : "Suggested"
+			"Invitation Method": type === "reinvite" ? "Reinvite" : "Suggested",
 		});
 	};
 
@@ -472,9 +470,9 @@ class Invite extends React.Component<Props, State> {
 					label: "Remove User",
 					className: "delete",
 					wait: true,
-					action: () => this.kick(user)
-				}
-			]
+					action: () => this.kick(user),
+				},
+			],
 		});
 	}
 
@@ -520,7 +518,7 @@ class Invite extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { dontSuggestInvitees: { [user.email.replace(/\./g, "*")]: true } }
+			settings: { dontSuggestInvitees: { [user.email.replace(/\./g, "*")]: true } },
 		});
 		this.getSuggestedInvitees();
 	};
@@ -545,7 +543,7 @@ class Invite extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } }
+			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } },
 		});
 		this.setState({ blameMapEmail: "", addingBlameMap: false });
 	};
@@ -556,7 +554,7 @@ class Invite extends React.Component<Props, State> {
 			message:
 				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
 			centered: false,
-			buttons: [{ label: "OK", className: "control-button" }]
+			buttons: [{ label: "OK", className: "control-button" }],
 		});
 	};
 
@@ -600,12 +598,8 @@ class Invite extends React.Component<Props, State> {
 												</a>{" "}
 												to email an invitation from you.
 											</div>
-										) : (
-											undefined
-										)
-									) : (
-										undefined
-									);
+										) : undefined
+									) : undefined;
 									return (
 										<li key={user.email}>
 											<div className="committer-email">
@@ -750,7 +744,7 @@ const mapStateToProps = state => {
 		userTeams: _sortBy(
 			Object.values(teams).filter((t: any) => !t.deactivated),
 			"name"
-		) as CSTeam[]
+		) as CSTeam[],
 	};
 };
 
@@ -760,7 +754,7 @@ const ConnectedInvite = connect(mapStateToProps, {
 	openPanel,
 	openModal,
 	closeModal,
-	switchToTeam
+	switchToTeam,
 })(Invite);
 
 export { ConnectedInvite as Invite };

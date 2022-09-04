@@ -1,3 +1,4 @@
+import { handleSelectedRegion, setSelectedRegion } from "@codestream/webview/store/session/thunks";
 import React, { useCallback, useEffect, useState } from "react";
 import cx from "classnames";
 import { CodeStreamState } from "../store";
@@ -15,9 +16,8 @@ import {
 	goToOktaConfig,
 	goToCompanyCreation,
 	goToLogin,
-	goToNewRelicSignup
+	goToNewRelicSignup,
 } from "../store/context/actions";
-import { handleSelectedRegion, setSelectedRegion } from "../store/session/actions";
 import { TextInput } from "./TextInput";
 import { LoginResult } from "@codestream/protocols/api";
 import { RegisterUserRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
@@ -25,9 +25,9 @@ import { HostApi } from "../webview-api";
 import { completeSignup, startIDESignin, startSSOSignin, SignupType } from "./actions";
 import { logError } from "../logger";
 import { useDispatch, useSelector } from "react-redux";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { Loading } from "../Container/Loading";
-import { supportsSSOSignIn } from "../store/configs/reducer";
+import { supportsSSOSignIn } from "../store/configs/slice";
 import { Server } from "../webview-api";
 import { PresentTOS } from "./PresentTOS";
 import Tooltip from "../Stream/Tooltip";
@@ -109,8 +109,8 @@ interface Props {
 }
 
 export const Signup = (props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { serverUrl, isOnPrem, environment, isProductionCloud, environmentHosts } = state.configs;
 		const { selectedRegion, forceRegion } = state.context.__teamless__ || {};
 		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
@@ -134,7 +134,7 @@ export const Signup = (props: Props) => {
 			environmentHosts,
 			selectedRegion,
 			forceRegion,
-			supportsMultiRegion
+			supportsMultiRegion,
 		};
 	});
 
@@ -169,7 +169,7 @@ export const Signup = (props: Props) => {
 			label: host.name,
 			action: () => {
 				dispatch(setSelectedRegion(host.shortName));
-			}
+			},
 		}));
 
 		if (forceRegion) {
@@ -268,7 +268,7 @@ export const Signup = (props: Props) => {
 				// for auto-joining teams
 				commitHash: props.commitHash,
 				repoId: props.repoId,
-				teamId: props.commitHash ? props.teamId : undefined
+				teamId: props.commitHash ? props.teamId : undefined,
 			};
 			const { status, token } = await HostApi.instance.send(RegisterUserRequestType, attributes);
 
@@ -276,7 +276,7 @@ export const Signup = (props: Props) => {
 				HostApi.instance.track("Account Created", {
 					email: email,
 					"Git Email Match?": email === scmEmail,
-					Source: derivedState.pendingProtocolHandlerQuerySource
+					Source: derivedState.pendingProtocolHandlerQuerySource,
 				});
 			};
 
@@ -297,9 +297,9 @@ export const Signup = (props: Props) => {
 								action: e => {
 									onSubmit(e, false);
 								},
-								className: "secondary"
-							}
-						]
+								className: "secondary",
+							},
+						],
 					});
 
 					break;
@@ -311,7 +311,7 @@ export const Signup = (props: Props) => {
 							confirmationType: "signup",
 							email: attributes.email,
 							teamId: props.teamId,
-							registrationParams: attributes
+							registrationParams: attributes,
 						})
 					);
 					break;
@@ -331,7 +331,7 @@ export const Signup = (props: Props) => {
 					sendTelemetry();
 					dispatch(
 						completeSignup(attributes.email, token!, props.teamId!, {
-							createdTeam: false
+							createdTeam: false,
 						})
 					);
 					break;
@@ -348,7 +348,7 @@ export const Signup = (props: Props) => {
 			logError(error, {
 				detail: `Unexpected error during registration request`,
 				email: email,
-				inviteCode: props.inviteCode
+				inviteCode: props.inviteCode,
 			});
 			setUnexpectedError(true);
 			setIsSubmitting(false);
@@ -383,7 +383,7 @@ export const Signup = (props: Props) => {
 			info.repoInfo = {
 				teamId: props.teamId,
 				commitHash: props.commitHash,
-				repoId: props.repoId
+				repoId: props.repoId,
 			};
 		} else {
 			info.type = SignupType.CreateTeam;
@@ -398,7 +398,7 @@ export const Signup = (props: Props) => {
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Provider Auth Selected", {
-				Provider: "New Relic"
+				Provider: "New Relic",
 			});
 			dispatch(goToNewRelicSignup({}));
 		},
@@ -409,7 +409,7 @@ export const Signup = (props: Props) => {
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Provider Auth Selected", {
-				Provider: "GitHub"
+				Provider: "GitHub",
 			});
 			if (derivedState.isInVSCode && derivedState.supportsVSCodeGithubSignin) {
 				return dispatch(startIDESignin("github", buildSignupInfo()));
@@ -424,7 +424,7 @@ export const Signup = (props: Props) => {
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Provider Auth Selected", {
-				Provider: "GitLab"
+				Provider: "GitLab",
 			});
 			return dispatch(startSSOSignin("gitlab", buildSignupInfo()));
 		},
@@ -435,7 +435,7 @@ export const Signup = (props: Props) => {
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
 			HostApi.instance.track("Provider Auth Selected", {
-				Provider: "Bitbucket"
+				Provider: "Bitbucket",
 			});
 			return dispatch(startSSOSignin("bitbucket", buildSignupInfo()));
 		},

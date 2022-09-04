@@ -12,7 +12,7 @@ import {
 	CSTeam,
 	CSTag,
 	CSMe,
-	Attachment
+	Attachment,
 } from "@codestream/protocols/api";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import {
@@ -22,7 +22,7 @@ import {
 	emptyArray,
 	replaceHtml,
 	asPastedText,
-	lightOrDark
+	lightOrDark,
 } from "../utils";
 import { AtMentionsPopup } from "./AtMentionsPopup";
 import EmojiPicker from "./EmojiPicker";
@@ -33,7 +33,7 @@ import { confirmPopup } from "./Confirm";
 import {
 	CodemarkPlus,
 	UploadFileRequest,
-	UploadFileRequestType
+	UploadFileRequestType,
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { getTeamTagsArray, getTeamMembers, getUsernames } from "../store/users/reducer";
@@ -41,7 +41,7 @@ import { getTeamTagsArray, getTeamMembers, getUsernames } from "../store/users/r
 import { ServicesState } from "../store/services/types";
 import { MarkdownText } from "./MarkdownText";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/reducer";
+import { getProviderPullRequestCollaborators } from "../store/providerPullRequests/slice";
 import Tooltip from "./Tooltip";
 import { HostApi } from "../webview-api";
 
@@ -148,7 +148,7 @@ export class MessageInput extends React.Component<Props, State> {
 			insertPrefix: "",
 			isPreviewing: false,
 			isDropTarget: false,
-			isPasteEvent: false
+			isPasteEvent: false,
 		};
 	}
 
@@ -197,7 +197,7 @@ export class MessageInput extends React.Component<Props, State> {
 			const position = this.setCurrentCursorPosition(text.length);
 			if (position) {
 				this.setState({
-					cursorPosition: position
+					cursorPosition: position,
 				});
 			}
 		}
@@ -342,7 +342,7 @@ export class MessageInput extends React.Component<Props, State> {
 					path: file.path,
 					name: file.name,
 					size: file.size,
-					mimetype: file.type
+					mimetype: file.type,
 				};
 				if (!file.path) {
 					// encode as base64 to send to the agent
@@ -364,7 +364,7 @@ export class MessageInput extends React.Component<Props, State> {
 				}
 				HostApi.instance.track("File Attached", {
 					"File Type": file.type,
-					Parent: this.props.attachmentContainerType
+					Parent: this.props.attachmentContainerType,
 				});
 			} catch (e) {
 				console.warn("Error uploading file: ", e);
@@ -474,7 +474,7 @@ export class MessageInput extends React.Component<Props, State> {
 						id: person.id,
 						headshot: person,
 						identifier: person.username || person.email,
-						description: description
+						description: description,
 					});
 				}
 			});
@@ -498,7 +498,7 @@ export class MessageInput extends React.Component<Props, State> {
 				});
 			} else {
 				itemsToShow.push({
-					description: "Matching Emoji. Type 2 or more characters"
+					description: "Matching Emoji. Type 2 or more characters",
 				});
 			}
 		}
@@ -513,7 +513,7 @@ export class MessageInput extends React.Component<Props, State> {
 				popupPrefix: prefix,
 				popupItems: itemsToShow,
 				popupIndex: 0,
-				selectedPopupItem: selected
+				selectedPopupItem: selected,
 			});
 		}
 	}
@@ -529,7 +529,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 	handleClick = event => {
 		this.setState({
-			cursorPosition: getCurrentCursorPosition("input-div")
+			cursorPosition: getCurrentCursorPosition("input-div"),
 		});
 	};
 
@@ -588,7 +588,7 @@ export class MessageInput extends React.Component<Props, State> {
 		this.onChangeWrapper(this._contentEditable!.htmlEl.innerHTML, this.state.formatCode);
 		this.setState({
 			// autoMentions: this.state.autoMentions.filter(mention => newPostText.includes(mention)), // TODO
-			cursorPosition: getCurrentCursorPosition("input-div")
+			cursorPosition: getCurrentCursorPosition("input-div"),
 		});
 	};
 
@@ -664,7 +664,7 @@ export class MessageInput extends React.Component<Props, State> {
 			// this.focus();
 			this.onChangeWrapper(this._contentEditable!.htmlEl.innerHTML, this.state.formatCode);
 			this.setState({
-				cursorPosition: getCurrentCursorPosition("input-div")
+				cursorPosition: getCurrentCursorPosition("input-div"),
 			});
 		}
 	};
@@ -704,7 +704,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 			this.onChangeWrapper(this._contentEditable.htmlEl.innerHTML, this.state.formatCode);
 			this.setState({
-				cursorPosition: getCurrentCursorPosition("input-div")
+				cursorPosition: getCurrentCursorPosition("input-div"),
 			});
 		}
 	};
@@ -715,7 +715,7 @@ export class MessageInput extends React.Component<Props, State> {
 			this._contentEditable.htmlEl.focus();
 			this._contentEditable.htmlEl.scrollIntoView({
 				block: "nearest",
-				behavior: "smooth"
+				behavior: "smooth",
 			});
 		}
 		cbs.forEach(cb => cb.apply(undefined));
@@ -791,7 +791,7 @@ export class MessageInput extends React.Component<Props, State> {
 			}
 			this.setState({
 				popupIndex: newIndex,
-				selectedPopupItem: this.state.popupItems![newIndex].id
+				selectedPopupItem: this.state.popupItems![newIndex].id,
 			});
 		}
 	}
@@ -849,7 +849,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 		this.setState({
 			popupIndex: index,
-			selectedPopupItem: id
+			selectedPopupItem: id,
 		});
 	};
 
@@ -864,7 +864,7 @@ export class MessageInput extends React.Component<Props, State> {
 		event.persist();
 		this.setState(state => ({
 			codemarkOpen: !state.codemarkOpen,
-			codemarkMenuTarget: event.target
+			codemarkMenuTarget: event.target,
 		}));
 	};
 
@@ -898,7 +898,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 		let menuItems: any = [
 			{ type: "search", placeholder: "Search codemarks...", action: "search" },
-			{ label: "-" }
+			{ label: "-" },
 		];
 
 		const { codemarks = [] } = this.props;
@@ -933,7 +933,7 @@ export class MessageInput extends React.Component<Props, State> {
 							</span>
 						),
 						searchLabel: title || "",
-						action: codemark.id
+						action: codemark.id,
 					};
 				})
 				.filter(Boolean)
@@ -953,7 +953,7 @@ export class MessageInput extends React.Component<Props, State> {
 		event.persist();
 		this.setState(state => ({
 			tagsOpen: "select",
-			tagsMenuTarget: event.target
+			tagsMenuTarget: event.target,
 		}));
 	};
 
@@ -961,7 +961,7 @@ export class MessageInput extends React.Component<Props, State> {
 		event.persist();
 		this.setState(state => ({
 			attachOpen: true,
-			attachMenuTarget: event.target
+			attachMenuTarget: event.target,
 		}));
 	};
 
@@ -1031,14 +1031,14 @@ export class MessageInput extends React.Component<Props, State> {
 						if (this.props.updateTeamTag)
 							this.props.updateTeamTag(this.props.currentTeam, {
 								...this.state.editingTag,
-								deactivated: true
+								deactivated: true,
 							});
 						this.setState({ editingTag: null });
 						this.hideTagsPicker();
-					}
+					},
 				},
-				{ label: "Cancel" }
-			]
+				{ label: "Cancel" },
+			],
 		});
 	};
 
@@ -1083,7 +1083,7 @@ export class MessageInput extends React.Component<Props, State> {
 						gridRowGap: "10px",
 						margin: "20px 0 10px 0",
 						maxWidth: "160px",
-						whiteSpace: "normal"
+						whiteSpace: "normal",
 					}}
 				>
 					{COLOR_OPTIONS.map(color => {
@@ -1115,7 +1115,7 @@ export class MessageInput extends React.Component<Props, State> {
 								top: 0,
 								left: 0,
 								bottom: 0,
-								right: 0
+								right: 0,
 							}}
 							type="color"
 							className={`custom-tag-edit-block`}
@@ -1143,7 +1143,7 @@ export class MessageInput extends React.Component<Props, State> {
 		const items = [
 			{ label: body, noHover: true, action: "noop" },
 			{ label: "-" },
-			{ label: body2, noHover: true, action: "noop" }
+			{ label: body2, noHover: true, action: "noop" },
 		];
 
 		return (
@@ -1162,7 +1162,7 @@ export class MessageInput extends React.Component<Props, State> {
 
 		let menuItems: any = [
 			{ type: "search", placeholder: "Search tags...", action: "search" },
-			{ label: "-" }
+			{ label: "-" },
 		];
 
 		menuItems = menuItems.concat(
@@ -1194,7 +1194,7 @@ export class MessageInput extends React.Component<Props, State> {
 					),
 					customHover: true,
 					searchLabel: tag.label || tag.color,
-					action: tag.id
+					action: tag.id,
 				};
 			})
 		);
@@ -1304,7 +1304,7 @@ export class MessageInput extends React.Component<Props, State> {
 			__onDidRender({
 				insertTextAtCursor: this.insertTextAtCursor,
 				insertNewlineAtCursor: this.insertNewlineAtCursor,
-				focus: this.focus
+				focus: this.focus,
 			});
 
 		return (
@@ -1354,7 +1354,7 @@ export class MessageInput extends React.Component<Props, State> {
 								align={{ offset: [9, 0] }}
 								delay={1}
 								className={cx("smiley", {
-									hover: this.state.emojiOpen
+									hover: this.state.emojiOpen,
 								})}
 								onClick={this.handleClickEmojiButton}
 							/>
@@ -1392,7 +1392,7 @@ export class MessageInput extends React.Component<Props, State> {
 												height: "16px",
 												position: "absolute",
 												opacity: 0,
-												zIndex: 5
+												zIndex: 5,
 											}}
 										/>
 										<label htmlFor="attachment">
@@ -1461,7 +1461,7 @@ export class MessageInput extends React.Component<Props, State> {
 								{
 									"format-code": formatCode,
 									invisible: this.state.isDropTarget,
-									hide: isPreviewing
+									hide: isPreviewing,
 								}
 							)}
 							onDragEnter={this.handleDragEnter}
@@ -1511,7 +1511,7 @@ const mapStateToProps = (
 		services: state.services,
 		currentUser: state.users[state.session.userId!] as CSMe,
 		usernames: getUsernames(state),
-		attachFilesEnabled: isFeatureEnabled(state, "fileUploads")
+		attachFilesEnabled: isFeatureEnabled(state, "fileUploads"),
 	};
 };
 

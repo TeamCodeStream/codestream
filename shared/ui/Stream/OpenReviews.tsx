@@ -1,4 +1,5 @@
 import { DEFAULT_FR_QUERIES } from "@codestream/webview/store/preferences/reducer";
+import { bootstrapReviews } from "@codestream/webview/store/reviews/thunks";
 import { setUserPreference } from "@codestream/webview/Stream/actions";
 import React from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
@@ -14,10 +15,9 @@ import {
 	openPanel,
 	openModal,
 	setCreatePullRequest,
-	clearCurrentPullRequest
+	clearCurrentPullRequest,
 } from "../store/context/actions";
-import { useDidMount } from "../utilities/hooks";
-import { bootstrapReviews } from "../store/reviews/actions";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import Tooltip from "./Tooltip";
 import Timestamp from "./Timestamp";
 import { ReposScm } from "@codestream/protocols/agent";
@@ -28,7 +28,7 @@ import {
 	NoContent,
 	PaneState,
 	PaneNode,
-	PaneNodeName
+	PaneNodeName,
 } from "../src/components/Pane";
 import { WebviewModals, WebviewPanels } from "../ipc/webview.protocol.common";
 import { Link } from "./Link";
@@ -39,8 +39,8 @@ interface Props {
 }
 
 export const OpenReviews = React.memo(function OpenReviews(props: Props) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { session, preferences, reviews } = state;
 
 		const queries = preferences.fetchRequestQueries || DEFAULT_FR_QUERIES;
@@ -62,14 +62,14 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 			reviewGroups,
 			currentUserId,
 			teamMembers,
-			unreadMap: userSelectors.unreadMap(state, Object.values(reviews.reviews))
+			unreadMap: userSelectors.unreadMap(state, Object.values(reviews.reviews)),
 		};
 	}, shallowEqual);
 
 	const bootstrapped = useSelector((state: CodeStreamState) => state.reviews.bootstrapped);
 
 	const setQueries = queries => {
-		dispatch(setUserPreference(["fetchRequestQueries"], [...queries]));
+		dispatch(setUserPreference({ prefPath: ["fetchRequestQueries"], value: [...queries] }));
 	};
 
 	useDidMount(() => {
@@ -133,7 +133,7 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 				/>
 			</PaneHeader>
 			{props.paneState !== PaneState.Collapsed && (
-				<PaneBody key={'openreviews'}>
+				<PaneBody key={"openreviews"}>
 					{!bootstrapped && (
 						<Row>
 							<Icon name="sync" className="spin margin-right" />

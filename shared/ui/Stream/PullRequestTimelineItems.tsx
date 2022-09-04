@@ -1,8 +1,8 @@
 import { CompareLocalFilesRequestType } from "@codestream/protocols/webview";
 import {
 	getProviderPullRequestCollaborators,
-	getProviderPullRequestRepo
-} from "@codestream/webview/store/providerPullRequests/reducer";
+	getProviderPullRequestRepo,
+} from "@codestream/webview/store/providerPullRequests/slice";
 import {
 	PRComment,
 	PRCommentCard,
@@ -18,7 +18,7 @@ import {
 	PRThreadedCommentCard,
 	PRCodeCommentPatch,
 	PRKebabIcon,
-	PRIconOutdated
+	PRIconOutdated,
 } from "./PullRequestComponents";
 import React, { PropsWithChildren, useState } from "react";
 import { PRHeadshot } from "../src/components/Headshot";
@@ -27,7 +27,7 @@ import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	GetReposScmRequestType
+	GetReposScmRequestType,
 } from "@codestream/protocols/agent";
 import Tag from "./Tag";
 import { Link } from "./Link";
@@ -54,7 +54,7 @@ import Tooltip from "./Tooltip";
 export const GHOST = {
 	login: "ghost",
 	avatarUrl:
-		"https://avatars2.githubusercontent.com/u/10137?s=460&u=b1951d34a583cf12ec0d3b0781ba19be97726318&v=4"
+		"https://avatars2.githubusercontent.com/u/10137?s=460&u=b1951d34a583cf12ec0d3b0781ba19be97726318&v=4",
 };
 
 const ReviewIcons = {
@@ -62,7 +62,7 @@ const ReviewIcons = {
 	CHANGES_REQUESTED: <Icon name="plus-minus" className="circled red" />,
 	COMMENTED: <Icon name="eye" className="circled" />,
 	DISMISSED: <Icon name="x" className="circled" />,
-	PENDING: <Icon name="eye" className="circled" />
+	PENDING: <Icon name="eye" className="circled" />,
 };
 
 interface Props {
@@ -87,25 +87,25 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 	const handleTextInputFocus = async (databaseCommentId: number) => {
 		setOpenComments({
 			...openComments,
-			[databaseCommentId]: true
+			[databaseCommentId]: true,
 		});
 	};
 
 	const setEditingComment = (comment, value) => {
 		setEditingComments({
 			...editingComments,
-			[comment.id]: value
+			[comment.id]: value,
 		});
 		setPendingComments({
 			...pendingComments,
-			[comment.id]: value ? comment.body : ""
+			[comment.id]: value ? comment.body : "",
 		});
 	};
 
 	const expandComment = id => {
 		setExpandedComments({
 			...expandedComments,
-			[id]: !expandedComments[id]
+			[id]: !expandedComments[id],
 		});
 	};
 
@@ -114,7 +114,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 		return {
 			currentUser,
 			currentRepo: getProviderPullRequestRepo(state),
-			collaborators: getProviderPullRequestCollaborators(state)
+			collaborators: getProviderPullRequestCollaborators(state),
 		};
 	});
 
@@ -376,7 +376,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												let repoRoot = currentRepoRoot;
 												if (!repoRoot) {
 													const response = await HostApi.instance.send(GetReposScmRequestType, {
-														inEditorOnly: false
+														inEditorOnly: false,
 													});
 													if (!response.repositories) return;
 													const currentRepoInfo = response.repositories.find(
@@ -390,7 +390,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 
 												const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
 													uri: path.join("file://", repoRoot, filePath),
-													range: Range.create(startLine, 0, startLine, 0)
+													range: Range.create(startLine, 0, startLine, 0),
 												});
 
 												// if (!result.success) {
@@ -398,7 +398,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 												// }
 
 												HostApi.instance.track("PR File Viewed From Timeline", {
-													Host: props.pr && props.pr.providerId
+													Host: props.pr && props.pr.providerId,
 												});
 											};
 
@@ -415,10 +415,10 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 																pullRequest: {
 																	providerId: props.pr.providerId,
 																	id: props.pr.id,
-																	collaborators: derivedState.collaborators
-																}
+																	collaborators: derivedState.collaborators,
+																},
 														  }
-														: undefined
+														: undefined,
 												};
 
 												try {
@@ -717,7 +717,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 							OFF_TOPIC: "off-topic",
 							SPAM: "spam",
 							TOO_HEATED: "too heated",
-							RESOLVED: "resolved"
+							RESOLVED: "resolved",
 						};
 						return (
 							<PRTimelineItem key={index} className="tall">

@@ -1,4 +1,6 @@
 import { CodeStreamState } from "@codestream/webview/store";
+import { setEnvironment } from "@codestream/webview/store/session/thunks";
+import { useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { connect, useSelector } from "react-redux";
 import { FormattedMessage } from "react-intl";
@@ -7,9 +9,8 @@ import {
 	goToSignup,
 	goToTeamCreation,
 	goToLogin,
-	goToCompanyCreation
+	goToCompanyCreation,
 } from "../store/context/actions";
-import { setEnvironment } from "../store/session/actions";
 import { TextInput } from "./TextInput";
 import Button from "../Stream/Button";
 import { DispatchProp } from "../store/common";
@@ -19,7 +20,7 @@ import {
 	RegisterUserRequestType,
 	RegisterUserRequest,
 	ConfirmLoginCodeRequestType,
-	GenerateLoginCodeRequestType
+	GenerateLoginCodeRequestType,
 } from "@codestream/protocols/agent";
 import { LoginResult } from "@codestream/protocols/api";
 import { authenticate, completeSignup } from "./actions";
@@ -32,7 +33,7 @@ const errorToMessageId = {
 	[LoginResult.ExpiredCode]: "confirmation.expired",
 	[LoginResult.TooManyAttempts]: "confirmation.tooManyAttempts",
 	[LoginResult.InvalidCode]: "confirmation.invalid",
-	[LoginResult.Unknown]: "unexpectedError"
+	[LoginResult.Unknown]: "unexpectedError",
 };
 
 interface InheritedProps {
@@ -48,7 +49,7 @@ const array = new Array(defaultArrayLength);
 const initialValues: string[] = [...array].fill("");
 
 export const EmailConfirmation = (connect() as any)((props: Props) => {
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { context } = state;
 		const errorGroupGuid = context.pendingProtocolHandlerQuery?.errorGroupGuid;
 		return { errorGroupGuid };
@@ -113,7 +114,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 			const result = await HostApi.instance.send(ConfirmRegistrationRequestType, {
 				email: props.email,
 				errorGroupGuid: derivedState.errorGroupGuid,
-				confirmationCode: code
+				confirmationCode: code,
 			});
 
 			// as a result of confirmation, we may be told to switch environments (i.e., regions)
@@ -131,7 +132,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 						goToCompanyCreation({
 							...result,
 							userId: result.user?.id,
-							email: props.email
+							email: props.email,
 						})
 					);
 					break;
@@ -148,7 +149,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 						props.dispatch(
 							completeSignup(props.email, result.token!, props.teamId, {
 								createdTeam: false,
-								setEnvironment: result.setEnvironment
+								setEnvironment: result.setEnvironment,
 							})
 						);
 					} catch (error) {
@@ -187,7 +188,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 
 	const nativeProps = {
 		min: 0,
-		maxLength: "1"
+		maxLength: "1",
 	};
 
 	return (

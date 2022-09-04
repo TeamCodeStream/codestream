@@ -1,10 +1,11 @@
+import { logout } from "@codestream/webview/store/session/thunks";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import ScrollBox from "./ScrollBox";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { openModal, closeModal, setUserPreference } from "./actions";
@@ -17,7 +18,6 @@ import { UserStatus } from "../src/components/UserStatus";
 import { UpdateUserRequestType, DeleteUserRequestType } from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { confirmPopup } from "./Confirm";
-import { logout } from "../store/session/actions";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { isCurrentUserInternal } from "../store/users/reducer";
@@ -94,8 +94,8 @@ const RowIcon = ({ name, title, onClick }) => {
 };
 
 export const ProfilePanel = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { session, users, teams, context } = state;
 		const person = users[context.profileUserId!];
 		const me = users[session.userId!];
@@ -111,7 +111,7 @@ export const ProfilePanel = () => {
 			repos: state.repos,
 			teamId: state.context.currentTeamId,
 			currentUserEmail: me.email,
-			currentUserId: me.id
+			currentUserId: me.id,
 		};
 	});
 
@@ -140,7 +140,7 @@ export const ProfilePanel = () => {
 		action: async () => {
 			await HostApi.instance.send(UpdateUserRequestType, { timeZone });
 			HostApi.instance.track("TimeZone Change Request", {});
-		}
+		},
 	})) as any;
 	timeZoneItems.unshift({ type: "search" }, { label: "-" });
 
@@ -167,7 +167,7 @@ export const ProfilePanel = () => {
 				message:
 					"As the only admin in your organization, you may not delete your account. Please contact customer service.",
 				centered: true,
-				buttons: [{ label: "Go Back", className: "control-button" }]
+				buttons: [{ label: "Go Back", className: "control-button" }],
 			});
 		} else {
 			confirmPopup({
@@ -182,12 +182,12 @@ export const ProfilePanel = () => {
 						wait: true,
 						action: async () => {
 							await HostApi.instance.send(DeleteUserRequestType, {
-								userId: currentUserId!
+								userId: currentUserId!,
 							});
 							dispatch(logout());
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		}
 	};
@@ -202,12 +202,12 @@ export const ProfilePanel = () => {
 	);
 
 	const toggleDemoMode = () => {
-		dispatch(setUserPreference(["demoMode"], !derivedState.demoMode));
+		dispatch(setUserPreference({ prefPath: ["demoMode"], value: !derivedState.demoMode }));
 
 		// When toggling demo mode on, reset preference values that show tours
 		if (derivedState.demoMode) {
-			dispatch(setUserPreference(["hideCodeErrorInstructions"], false));
-			dispatch(setUserPreference(["hideReviewInstructions"], false));
+			dispatch(setUserPreference({ prefPath: ["hideCodeErrorInstructions"], value: false }));
+			dispatch(setUserPreference({ prefPath: ["hideReviewInstructions"], value: false }));
 		}
 	};
 
@@ -919,5 +919,5 @@ const timeZoneList = [
 	"Universal",
 	"W-SU",
 	"WET",
-	"Zulu"
+	"Zulu",
 ];

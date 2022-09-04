@@ -1,17 +1,16 @@
+import { CSProviderInfo } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import UrlInputComponent from "@codestream/webview/Stream/UrlInputComponent";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { normalizeUrl } from "@codestream/webview/utilities/urls";
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { configureProvider, disconnectProvider, ViewLocation } from "../store/providers/actions";
-import { getUserProviderInfoFromState } from "../store/providers/utils";
 import { isConnected } from "../store/providers/reducer";
+import { getUserProviderInfoFromState } from "../store/providers/utils";
 import { closePanel } from "./actions";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import { CSProviderInfo } from "@codestream/protocols/api";
 import { Link } from "./Link";
 
 interface Props {
@@ -22,7 +21,7 @@ interface Props {
 export default function ConfigureEnterprisePanel(props: Props) {
 	const initialInput = useRef<HTMLInputElement>(null);
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers, ide } = state;
 		const provider = providers[props.providerId];
 		const isInVscode = ide.name === "VSC";
@@ -39,11 +38,11 @@ export default function ConfigureEnterprisePanel(props: Props) {
 			isInVscode,
 			verificationError: accessTokenError.accessTokenError,
 			didConnect,
-			userProviderInfo
+			userProviderInfo,
 		};
 	});
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const [baseUrl, setBaseUrl] = useState("");
 	const [baseUrlValid, setBaseUrlValid] = useState(false);
@@ -135,7 +134,7 @@ export default function ConfigureEnterprisePanel(props: Props) {
 		checkVersionUrl,
 		invalidHosts,
 		namePAT = "Personal Access Token",
-		supportsPRManagement
+		supportsPRManagement,
 	} = providerDisplay;
 	const providerShortName = providerDisplay.shortDisplayName || displayName;
 	let providerUrl = helpUrl;

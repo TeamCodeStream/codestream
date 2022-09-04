@@ -1,33 +1,31 @@
-import React from "react";
 import {
 	CodemarkPlus,
+	FollowCodemarkRequestType,
 	SetCodemarkPinnedRequestType,
-	FollowCodemarkRequestType
 } from "@codestream/protocols/agent";
-import styled from "styled-components";
-import { useSelector, useDispatch, shallowEqual } from "react-redux";
-import { CodeStreamState } from "@codestream/webview/store";
-import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
-import { getTeamTagsHash } from "@codestream/webview/store/users/reducer";
-import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
-import { RelatedCodemark } from "../RelatedCodemark";
-import { getPost } from "@codestream/webview/store/posts/reducer";
-import Menu from "../Menu";
-import { HostApi } from "@codestream/webview/webview-api";
-import { CodemarkForm } from "../CodemarkForm";
-import {
-	NewCodemarkAttributes,
-	editCodemark,
-	deleteCodemark
-} from "@codestream/webview/store/codemarks/actions";
-import { confirmPopup } from "../Confirm";
-import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
-import { SharingModal } from "../SharingModal";
-import { BaseCodemarkProps, BaseCodemark } from "./BaseCodemark";
-import Icon from "../Icon";
 import { logError } from "@codestream/webview/logger";
+import { CodeStreamState } from "@codestream/webview/store";
+import { NewCodemarkAttributes } from "@codestream/webview/store/codemarks/actions";
+import { getCodemark } from "@codestream/webview/store/codemarks/reducer";
+import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemarks/thunks";
+import { setCurrentCodemark } from "@codestream/webview/store/context/actions";
+import { getPost } from "@codestream/webview/store/posts/reducer";
+import { getTeamTagsHash } from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
+import { HostApi } from "@codestream/webview/webview-api";
+import React from "react";
+import { shallowEqual, useSelector } from "react-redux";
+import styled from "styled-components";
+import { CodemarkForm } from "../CodemarkForm";
+import { confirmPopup } from "../Confirm";
+import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
+import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
+import Menu from "../Menu";
+import { RelatedCodemark } from "../RelatedCodemark";
+import { SharingModal } from "../SharingModal";
+import { BaseCodemark, BaseCodemarkProps } from "./BaseCodemark";
 
 const StyledRelatedCodemark = styled(RelatedCodemark)`
 	white-space: normal;
@@ -37,7 +35,7 @@ const PinnedReplies = (props: { replyIds: string[]; streamId: string }) => {
 	const { users, posts } = useSelector((state: CodeStreamState) => {
 		return {
 			users: state.users,
-			posts: props.replyIds.map(id => getPost(state.posts, props.streamId, id))
+			posts: props.replyIds.map(id => getPost(state.posts, props.streamId, id)),
 		};
 	});
 
@@ -88,8 +86,8 @@ interface PropsWithCodemark extends FromBaseCodemarkProps {
 
 function CodemarkForCodemark(props: PropsWithCodemark) {
 	const { codemark, ...baseProps } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const author = state.users[codemark.creatorId];
 		const teamTagsById = getTeamTagsHash(state);
 		const csAssignees = (codemark.assignees || []).map(id => state.users[id]).filter(Boolean);
@@ -104,7 +102,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			tags: codemark.tags ? mapFilter(codemark.tags, id => teamTagsById[id]) : [], // TODO: when a tag is not invalid, figure out a way to do an update to clean up the model
 			assignees: [...csAssignees, ...externalAssignees],
 			currentUserEmail: state.users[state.session.userId!].email,
-			userIsFollowingCodemark: (codemark.followerIds || []).includes(state.session.userId!)
+			userIsFollowingCodemark: (codemark.followerIds || []).includes(state.session.userId!),
 		};
 	}, shallowEqual);
 	// this is to try and figure out why and when this error might occur
@@ -112,7 +110,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 		if (derivedState.author == undefined) {
 			logError("<CodemarkForCodemark/> derivedState.author is undefined", {
 				codemarkId: props.codemark.id,
-				authorId: props.codemark.creatorId
+				authorId: props.codemark.creatorId,
 			});
 		}
 	}, [derivedState.author]);
@@ -128,7 +126,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 			{
 				label: "Share",
 				key: "share",
-				action: toggleShareModal
+				action: toggleShareModal,
 			},
 			{
 				label: "Copy link",
@@ -138,7 +136,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 						permalinkRef.current.select();
 						document.execCommand("copy");
 					}
-				}
+				},
 			},
 			{
 				label: derivedState.userIsFollowingCodemark ? "Unfollow" : "Follow",
@@ -148,13 +146,13 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 					const changeType = value ? "Followed" : "Unfollowed";
 					HostApi.instance.send(FollowCodemarkRequestType, {
 						codemarkId: codemark.id,
-						value
+						value,
 					});
 					HostApi.instance.track("Notification Change", {
 						Change: `Codemark ${changeType}`,
-						"Source of Change": "Codemark menu"
+						"Source of Change": "Codemark menu",
 					});
-				}
+				},
 			},
 			{
 				label: codemark.pinned ? "Archive" : "Unarchive",
@@ -162,10 +160,10 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 				action: () => {
 					HostApi.instance.send(SetCodemarkPinnedRequestType, {
 						codemarkId: codemark.id,
-						value: !codemark.pinned
+						value: !codemark.pinned,
 					});
-				}
-			}
+				},
+			},
 		];
 
 		if (derivedState.isMine) {
@@ -189,11 +187,11 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 									action: () => {
 										dispatch(deleteCodemark(codemark.id));
 										dispatch(setCurrentCodemark());
-									}
-								}
-							]
+									},
+								},
+							],
 						});
-					}
+					},
 				}
 			);
 		}
@@ -228,7 +226,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 							relatedCodemarkIds,
 							tags,
 							codeBlocks,
-							deleteMarkerLocations
+							deleteMarkerLocations,
 						} = attributes;
 						await dispatch(
 							editCodemark(props.codemark, {
@@ -238,7 +236,7 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 								relatedCodemarkIds,
 								tags,
 								codeBlocks,
-								deleteMarkerLocations
+								deleteMarkerLocations,
 							})
 						);
 						setIsEditing(false);

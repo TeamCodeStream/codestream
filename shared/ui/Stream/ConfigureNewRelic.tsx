@@ -1,23 +1,22 @@
 import {
 	GetNewRelicSignupJwtTokenRequestType,
 	GetReposScmRequestType,
-	RepoProjectType
+	RepoProjectType,
 } from "@codestream/protocols/agent";
-import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import { CSProviderInfo } from "@codestream/protocols/api";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "@codestream/webview/store";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { closeAllPanels, openPanel, setWantNewRelicOptions } from "../store/context/actions";
+import { closeAllPanels, setWantNewRelicOptions } from "../store/context/actions";
 import { configureProvider, disconnectProvider, ViewLocation } from "../store/providers/actions";
-import { getUserProviderInfoFromState } from "../store/providers/utils";
 import { isConnected } from "../store/providers/reducer";
+import { getUserProviderInfoFromState } from "../store/providers/utils";
 import { HostApi } from "../webview-api";
 import Button from "./Button";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import { Link } from "./Link";
-import { CSProviderInfo } from "@codestream/protocols/api";
 
 interface Props {
 	isInternalUser?: boolean;
@@ -40,7 +39,7 @@ export default function ConfigureNewRelic(props: Props) {
 	const [error, setError] = useState<string | null>(null);
 	const [alreadyConnected, setAlreadyConnected] = useState(false);
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const accessTokenError = { accessTokenError: undefined };
 		const isNewRelicConnected = isConnected(
 			state,
@@ -67,11 +66,11 @@ export default function ConfigureNewRelic(props: Props) {
 			providerDisplay,
 			didConnect,
 			verificationError: accessTokenError.accessTokenError,
-			userProviderInfo
+			userProviderInfo,
 		};
 	});
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	useDidMount(() => {
 		initialInput.current?.focus();
@@ -115,7 +114,7 @@ export default function ConfigureNewRelic(props: Props) {
 				{
 					setConnectedWhenConfigured: true,
 					connectionLocation: props.originLocation,
-					verify: true
+					verify: true,
 				}
 			)
 		);
@@ -129,7 +128,7 @@ export default function ConfigureNewRelic(props: Props) {
 		setAlreadyConnected(true);
 		let isOnSubmittedPromise = false;
 		HostApi.instance.track("NR Connected", {
-			"Connection Location": props.originLocation
+			"Connection Location": props.originLocation,
 		});
 		if (props.onSubmited) {
 			const result = props.onSubmited();
@@ -144,7 +143,7 @@ export default function ConfigureNewRelic(props: Props) {
 		if (!props.disablePostConnectOnboarding) {
 			const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
 				inEditorOnly: true,
-				guessProjectTypes: true
+				guessProjectTypes: true,
 			});
 			if (!reposResponse.error) {
 				const knownRepo = (reposResponse.repositories || []).find(repo => {
@@ -235,7 +234,7 @@ export default function ConfigureNewRelic(props: Props) {
 								style={{
 									width: "100%",
 									display: "flex",
-									alignItems: "stretch"
+									alignItems: "stretch",
 								}}
 							>
 								<div style={{ position: "relative", flexGrow: 10 }}>

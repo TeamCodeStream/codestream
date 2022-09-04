@@ -1,5 +1,5 @@
 import { CodeStreamState } from "@codestream/webview/store";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { isWordy } from "@codestream/webview/utilities/strings";
 import React, { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +17,7 @@ interface Props {
 export default function ConfigureAzureDevOpsPanel(props: Props) {
 	const initialInput = useRef<HTMLInputElement>(null);
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers, ide } = state;
 		const provider = providers[props.providerId];
 		const isInVscode = ide.name === "VSC";
@@ -25,7 +25,7 @@ export default function ConfigureAzureDevOpsPanel(props: Props) {
 		return { provider, providerDisplay, isInVscode };
 	});
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const [organization, setOrganization] = useState("");
 	const [organizationTouched, setOrganizationTouched] = useState(false);

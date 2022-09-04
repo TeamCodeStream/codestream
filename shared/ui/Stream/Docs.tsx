@@ -1,3 +1,4 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
@@ -26,7 +27,7 @@ const Root = styled.div`
 `;
 
 export const Docs = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	return (
 		<Root>
 			<span onClick={() => dispatch(openPanel(WebviewPanels.Flow))}>

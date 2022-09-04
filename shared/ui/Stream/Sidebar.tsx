@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { OpenReviews } from "./OpenReviews";
 import { ReposScm, GetReposScmRequestType } from "../protocols/agent/agent.protocol.scm";
 import { HostDidChangeWorkspaceFoldersNotificationType } from "../ipc/host.protocol.notifications";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { OpenPullRequests } from "./OpenPullRequests";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import IssuesPane from "./CrossPostIssueControls/IssuesPane";
@@ -19,7 +19,7 @@ import { setUserPreference } from "./actions";
 import cx from "classnames";
 import {
 	getConnectedSupportedPullRequestHosts,
-	isConnectedSelectorFriendly
+	isConnectedSelectorFriendly,
 } from "../store/providers/reducer";
 import { getPreferences } from "../store/users/reducer";
 import { getRepos } from "../store/repos/reducer";
@@ -55,7 +55,7 @@ export const ResizeHandle = styled.div`
 
 export const DragHeaderContext = React.createContext({
 	drag: (e: any, id: WebviewPanels) => {},
-	stop: (e: any, id: WebviewPanels) => {}
+	stop: (e: any, id: WebviewPanels) => {},
 });
 
 const _defaultPaneSettings = {};
@@ -75,14 +75,14 @@ export const AVAILABLE_PANES = [
 	WebviewPanels.OpenReviews,
 	WebviewPanels.CodemarksForFile,
 	WebviewPanels.Observability,
-	WebviewPanels.Tasks
+	WebviewPanels.Tasks,
 ];
 export const AVAILABLE_PANES_NR = [
 	WebviewPanels.Observability,
 	WebviewPanels.OpenPullRequests,
 	WebviewPanels.OpenReviews,
 	WebviewPanels.CodemarksForFile,
-	WebviewPanels.Tasks
+	WebviewPanels.Tasks,
 ];
 
 export const COLLAPSED_SIZE = 22;
@@ -91,8 +91,8 @@ const EMPTY_ARRAY = [];
 const EMPTY_HASH = {};
 const EMPTY_SIZE = { width: 0, height: 0 };
 export const Sidebar = React.memo(function Sidebar() {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const preferences = getPreferences(state);
 		const repos = getRepos(state);
 
@@ -122,7 +122,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			sidebarPaneOrder,
 			currentUserId: state.session.userId!,
 			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0,
-			ideName: state.ide.name
+			ideName: state.ide.name,
 		};
 	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
@@ -145,7 +145,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true,
-			includeProviders: true
+			includeProviders: true,
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
@@ -159,7 +159,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		fetchOpenRepos();
 		HostApi.instance.track("Sidebar Rendered", {
 			Width: window.innerWidth,
-			Height: window.innerHeight
+			Height: window.innerHeight,
 		});
 	});
 
@@ -170,7 +170,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			// Set window width/height to state
 			setWindowSize({
 				width: window.innerWidth,
-				height: window.innerHeight
+				height: window.innerHeight,
 			});
 		}
 
@@ -218,7 +218,7 @@ export const Sidebar = React.memo(function Sidebar() {
 				removed: settings.removed == null ? defaults.removed : settings.removed,
 				collapsed: settings.collapsed,
 				maximized: settings.maximized,
-				size: sizes[id] || Math.abs(settings.size) || 1
+				size: sizes[id] || Math.abs(settings.size) || 1,
 			};
 		});
 	// }, [sidebarPanes, sizes, derivedState.sidebarPaneOrder, showPullRequests]);
@@ -260,7 +260,7 @@ export const Sidebar = React.memo(function Sidebar() {
 				id: p.id,
 				height,
 				top: accumulator,
-				size: p.size
+				size: p.size,
 			};
 			accumulator += height;
 			return position;
@@ -331,9 +331,13 @@ export const Sidebar = React.memo(function Sidebar() {
 		setDragging(false);
 		if (firstIndex === undefined || secondIndex === undefined) return;
 		const firstId = positions[firstIndex].id;
-		dispatch(setUserPreference(["sidebarPanes", firstId, "size"], sizes[firstId]));
+		dispatch(
+			setUserPreference({ prefPath: ["sidebarPanes", firstId, "size"], value: sizes[firstId] })
+		);
 		const secondId = positions[secondIndex].id;
-		dispatch(setUserPreference(["sidebarPanes", secondId, "size"], sizes[secondId]));
+		dispatch(
+			setUserPreference({ prefPath: ["sidebarPanes", secondId, "size"], value: sizes[secondId] })
+		);
 	};
 
 	const handleDragHeader = (e: any, id: WebviewPanels) => {
@@ -369,7 +373,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			paneOrder = paneOrder.filter(p => p !== "TO_DELETE");
 			// stop the animation for this re-ordering...
 			setDragging(true);
-			dispatch(setUserPreference(["sidebarPaneOrder"], paneOrder));
+			dispatch(setUserPreference({ prefPath: ["sidebarPaneOrder"], value: paneOrder }));
 			// .. then re-enable it
 			setTimeout(() => setDragging(false), 100);
 		}
@@ -417,7 +421,7 @@ export const Sidebar = React.memo(function Sidebar() {
 				<DragHeaderContext.Provider
 					value={{
 						drag: handleDragHeader,
-						stop: handleStopHeader
+						stop: handleStopHeader,
 					}}
 				>
 					{panes.map((pane, index) => {
@@ -435,7 +439,7 @@ export const Sidebar = React.memo(function Sidebar() {
 								className={cx({
 									highlightTop,
 									highlightBottom,
-									open: paneState === PaneState.Open
+									open: paneState === PaneState.Open,
 								})}
 								top={position.top}
 								height={position.height}

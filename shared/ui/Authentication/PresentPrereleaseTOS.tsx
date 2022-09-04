@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import cx from "classnames";
 import { CodeStreamState } from "../store";
 import { useDispatch, useSelector } from "react-redux";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
 import { Checkbox } from "../src/components/Checkbox";
@@ -93,8 +93,8 @@ const DownloadLink = styled.div`
 `;
 
 export const PresentPrereleaseTOS = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { teams, context, session, users } = state;
 		const team = teams[context.currentTeamId];
 		const user = users[session.userId!];
@@ -112,10 +112,10 @@ export const PresentPrereleaseTOS = () => {
 		if (derivedState.currentUserIsAdmin) {
 			await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 				teamId: derivedState.team.id,
-				settings: { acceptedPrereleaseTOS: true }
+				settings: { acceptedPrereleaseTOS: true },
 			});
 		} else {
-			dispatch(setUserPreference(["acceptedPrereleaseTOS"], true));
+			dispatch(setUserPreference({ prefPath: ["acceptedPrereleaseTOS"], value: true }));
 		}
 
 		setIsLoading(false);

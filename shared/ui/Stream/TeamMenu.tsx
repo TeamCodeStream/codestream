@@ -1,5 +1,6 @@
+import { logout } from "@codestream/webview/store/session/thunks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openModal, openPanel } from "./actions";
@@ -7,16 +8,14 @@ import Menu from "./Menu";
 import {
 	setCurrentReview,
 	clearCurrentPullRequest,
-	setCreatePullRequest
+	setCreatePullRequest,
 } from "../store/context/actions";
 import { CodeStreamState } from "../store";
 import { keyFilter } from "../utils";
-import { confirmPopup } from "./Confirm";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { logout } from "../store/session/actions";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -26,8 +25,8 @@ interface TeamMenuProps {
 const EMPTY_HASH = {};
 
 export function TeamMenu(props: TeamMenuProps) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
 
 		const adminIds = team.adminIds || [];
@@ -40,7 +39,7 @@ export function TeamMenu(props: TeamMenuProps) {
 			mappedBlame,
 			team,
 			currentCompanyId,
-			autoJoinSupported: isFeatureEnabled(state, "autoJoin")
+			autoJoinSupported: isFeatureEnabled(state, "autoJoin"),
 		};
 	});
 
@@ -72,9 +71,9 @@ export function TeamMenu(props: TeamMenuProps) {
 						{
 							label: "Delete Organization",
 							className: "delete",
-							advance: true
-						}
-					]
+							advance: true,
+						},
+					],
 				},
 				{
 					title: "Are you sure?",
@@ -88,14 +87,14 @@ export function TeamMenu(props: TeamMenuProps) {
 							wait: true,
 							action: async () => {
 								await HostApi.instance.send(DeleteCompanyRequestType, {
-									companyId: currentCompanyId
+									companyId: currentCompanyId,
 								});
 								dispatch(logout());
-							}
-						}
-					]
-				}
-			]
+							},
+						},
+					],
+				},
+			],
 		});
 	};
 
@@ -105,7 +104,7 @@ export function TeamMenu(props: TeamMenuProps) {
 			label: "My Organization",
 			subtextWide: "View your teammates",
 			action: () => go(WebviewModals.Team),
-			key: "team"
+			key: "team",
 		},
 		{ label: "-" },
 		{
@@ -113,8 +112,8 @@ export function TeamMenu(props: TeamMenuProps) {
 			label: "Invite Teammates",
 			subtextWide: "Share CodeStream with your team",
 			action: () => go(WebviewModals.Invite),
-			key: "invite"
-		}
+			key: "invite",
+		},
 	] as any;
 	menuItems.push(
 		{ label: "-" },
@@ -123,7 +122,7 @@ export function TeamMenu(props: TeamMenuProps) {
 			label: "Blame Map",
 			subtextWide: "Reassign code responsibility",
 			action: () => go(WebviewModals.BlameMap),
-			key: "blame"
+			key: "blame",
 		}
 	);
 
@@ -134,7 +133,7 @@ export function TeamMenu(props: TeamMenuProps) {
 				icon: <Icon name="pencil" />,
 				label: "Change Organization Name",
 				key: "change-team-name",
-				action: () => go(WebviewModals.ChangeCompanyName)
+				action: () => go(WebviewModals.ChangeCompanyName),
 			},
 			{ label: "-" },
 			{
@@ -142,27 +141,27 @@ export function TeamMenu(props: TeamMenuProps) {
 				label: "Onboarding Settings...",
 				key: "onboarding-settings",
 				action: () => go(WebviewModals.TeamSetup),
-				disabled: !derivedState.autoJoinSupported
+				disabled: !derivedState.autoJoinSupported,
 			},
 			{
 				icon: <Icon name="gear" />,
 				label: "Feedback Request Settings...",
 				key: "review-settings",
-				action: () => go(WebviewModals.ReviewSettings)
+				action: () => go(WebviewModals.ReviewSettings),
 			},
 			{ label: "-" },
 			{
 				icon: <Icon name="download" />,
 				label: "Export Data",
 				key: "export",
-				action: () => goPanel(WebviewPanels.Export)
+				action: () => goPanel(WebviewPanels.Export),
 			},
 			{ label: "-" },
 			{
 				icon: <Icon name="no-entry" />,
 				label: "Delete Organization",
 				key: "delete",
-				action: () => deleteOrganization()
+				action: () => deleteOrganization(),
 			}
 		);
 	}

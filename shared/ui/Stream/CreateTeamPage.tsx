@@ -1,3 +1,5 @@
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import styled from "styled-components";
 import { TextInput } from "../Authentication/TextInput";
@@ -7,7 +9,6 @@ import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { CodeStreamState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import { createTeam } from "../store/teams/actions";
-import { switchToTeam } from "../store/session/actions";
 import { CSTeam } from "@codestream/protocols/api";
 import { CreateTeamRequest } from "@codestream/protocols/agent";
 import { wait } from "../utils";
@@ -19,7 +20,7 @@ const Header = styled.h3`
 `;
 
 export function CreateTeamPage() {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [teamName, setTeamName] = React.useState("");
 	const [teamNameValidity, setTeamNameValidity] = React.useState(true);
 	const [companyName, setCompanyName] = React.useState("");
@@ -28,7 +29,7 @@ export function CreateTeamPage() {
 		return {
 			companiesById: state.companies,
 			currentCompanyId: state.teams[state.context.currentTeamId].companyId,
-			teams: state.teams
+			teams: state.teams,
 		};
 	});
 
@@ -63,7 +64,7 @@ export function CreateTeamPage() {
 			...Object.values(companiesById).map(company => ({
 				key: company.id,
 				label: company.name,
-				action: () => setSelectedCompanyId(company.id)
+				action: () => setSelectedCompanyId(company.id),
 			})),
 			{ label: "-" },
 			{
@@ -71,8 +72,8 @@ export function CreateTeamPage() {
 				label: "New Organization",
 				action: () => {
 					setSelectedCompanyId();
-				}
-			}
+				},
+			},
 		];
 	}, [companiesById]);
 
@@ -92,12 +93,12 @@ export function CreateTeamPage() {
 				request = { name: teamName, companyId: selectedCompanyId };
 			}
 
-			const team = ((await dispatch(createTeam(request))) as unknown) as CSTeam;
+			const team = (await dispatch(createTeam(request))) as unknown as CSTeam;
 
 			// artificial delay to ensure analytics from creating the team are actually processed before we logout below
 			await wait(1000);
 
-			await dispatch(switchToTeam(team.id));
+			await dispatch(switchToTeam({ teamId: team.id }));
 		} catch (error) {
 		} finally {
 			setIsLoading(false);

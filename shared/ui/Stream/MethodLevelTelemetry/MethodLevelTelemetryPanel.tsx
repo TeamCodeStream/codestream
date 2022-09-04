@@ -8,7 +8,7 @@ import {
 	ResponsiveContainer,
 	Tooltip as ReTooltip,
 	XAxis,
-	YAxis
+	YAxis,
 } from "recharts";
 import Tooltip from "../Tooltip";
 
@@ -17,7 +17,7 @@ import {
 	DidChangeObservabilityDataNotificationType,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
-	WarningOrError
+	WarningOrError,
 } from "@codestream/protocols/agent";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
@@ -34,7 +34,7 @@ import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/t
 import {
 	OpenUrlRequestType,
 	RefreshEditorsCodeLensRequestType,
-	UpdateConfigurationRequestType
+	UpdateConfigurationRequestType,
 } from "@codestream/webview/ipc/host.protocol";
 import { closeAllPanels } from "@codestream/webview/store/context/actions";
 import { EntityAssociator } from "../EntityAssociator";
@@ -45,7 +45,7 @@ import {
 	MissingJavaExtension,
 	MissingPythonExtension,
 	MissingRubyExtension,
-	RubyPluginLanguageServer
+	RubyPluginLanguageServer,
 } from "./MissingExtension";
 
 const Root = styled.div``;
@@ -82,7 +82,7 @@ export const MethodLevelTelemetryPanel = () => {
 				{}) as CurrentMethodLevelTelemetry,
 			observabilityRepoEntities:
 				(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
-				EMPTY_ARRAY
+				EMPTY_ARRAY,
 		};
 	});
 
@@ -111,7 +111,7 @@ export const MethodLevelTelemetryPanel = () => {
 				newRelicEntityGuid: newRelicEntityGuid,
 				metricTimesliceNameMapping:
 					derivedState.currentMethodLevelTelemetry.metricTimesliceNameMapping,
-				repoId: derivedState.currentMethodLevelTelemetry.repo.id
+				repoId: derivedState.currentMethodLevelTelemetry.repo.id,
 			});
 			setTelemetryResponse(response);
 		} catch (ex) {
@@ -124,7 +124,7 @@ export const MethodLevelTelemetryPanel = () => {
 	useDidMount(() => {
 		HostApi.instance.track("MLT Codelens Clicked", {
 			"NR Account ID": derivedState.currentMethodLevelTelemetry?.newRelicAccountId + "",
-			Language: derivedState.currentMethodLevelTelemetry.languageId
+			Language: derivedState.currentMethodLevelTelemetry.languageId,
 		});
 		if (!derivedState.currentMethodLevelTelemetry.error) {
 			loadData(derivedState.currentMethodLevelTelemetry.newRelicEntityGuid!);
@@ -154,7 +154,7 @@ export const MethodLevelTelemetryPanel = () => {
 					style={{
 						display: "flex",
 						alignItems: "center",
-						width: "100%"
+						width: "100%",
 					}}
 				>
 					<div
@@ -168,13 +168,13 @@ export const MethodLevelTelemetryPanel = () => {
 					<EntityAssociator
 						title="Method-Level Telemetry"
 						label="Associate this repository with an entity from New Relic so that you can see golden signals right in your editor, and errors in the Observability section."
-						onSuccess={async (e) => {
+						onSuccess={async e => {
 							HostApi.instance.track("MLT Repo Association", {
-								"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + ""
+								"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + "",
 							});
 							HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});
 							HostApi.instance.emit(DidChangeObservabilityDataNotificationType.method, {
-								type: "RepositoryAssociation"
+								type: "RepositoryAssociation",
 							});
 							dispatch(closeAllPanels());
 						}}
@@ -188,10 +188,10 @@ export const MethodLevelTelemetryPanel = () => {
 								name="dontShowGoldenSignalsInEditor"
 								type="checkbox"
 								checked={!showGoldenSignalsInEditor}
-								onClick={(e) => {
+								onClick={e => {
 									HostApi.instance.send(UpdateConfigurationRequestType, {
 										name: "showGoldenSignalsInEditor",
-										value: !showGoldenSignalsInEditor
+										value: !showGoldenSignalsInEditor,
 									});
 									setshowGoldenSignalsInEditor(!showGoldenSignalsInEditor);
 								}}
@@ -206,7 +206,7 @@ export const MethodLevelTelemetryPanel = () => {
 		);
 	}
 
-	const renderEntityDropdownSubtext = (item) => {
+	const renderEntityDropdownSubtext = item => {
 		let subtext;
 		if (item.accountName && item.accountName.length > 25) {
 			subtext = item.accountName.substr(0, 25) + "...";
@@ -241,7 +241,7 @@ export const MethodLevelTelemetryPanel = () => {
 					style={{
 						whiteSpace: "nowrap",
 						overflow: "hidden",
-						textOverflow: "ellipsis"
+						textOverflow: "ellipsis",
 					}}
 				>
 					<PanelHeader
@@ -277,8 +277,8 @@ export const MethodLevelTelemetryPanel = () => {
 															type: "search",
 															placeholder: "Search...",
 															action: "search",
-															key: "search"
-														}
+															key: "search",
+														},
 													] as any
 												).concat(
 													telemetryResponse.newRelicEntityAccounts!.map((item, i) => {
@@ -292,15 +292,18 @@ export const MethodLevelTelemetryPanel = () => {
 																const repoId = derivedState.currentMethodLevelTelemetry?.repo?.id;
 																const newPreferences =
 																	derivedState.observabilityRepoEntities.filter(
-																		(_) => _.repoId !== repoId
+																		_ => _.repoId !== repoId
 																	);
 																if (repoId) {
 																	newPreferences.push({
 																		repoId: repoId,
-																		entityGuid: item.entityGuid
+																		entityGuid: item.entityGuid,
 																	});
 																	dispatch(
-																		setUserPreference(["observabilityRepoEntities"], newPreferences)
+																		setUserPreference({
+																			prefPath: ["observabilityRepoEntities"],
+																			value: newPreferences,
+																		})
 																	);
 																}
 
@@ -313,12 +316,12 @@ export const MethodLevelTelemetryPanel = () => {
 																		type: "Entity",
 																		data: {
 																			entityGuid: item.entityGuid,
-																			repoId: repoId
-																		}
+																			repoId: repoId,
+																		},
 																	}
 																);
 																loadData(item.entityGuid);
-															}
+															},
 														};
 													})
 												)}
@@ -336,13 +339,13 @@ export const MethodLevelTelemetryPanel = () => {
 												>
 													<ApmServiceTitle>
 														<Link
-															onClick={(e) => {
+															onClick={e => {
 																e.preventDefault();
 																HostApi.instance.track("Open Service Summary on NR", {
-																	Section: "Code-level Metrics"
+																	Section: "Code-level Metrics",
 																});
 																HostApi.instance.send(OpenUrlRequestType, {
-																	url: telemetryResponse.newRelicUrl!
+																	url: telemetryResponse.newRelicUrl!,
 																});
 															}}
 														>
@@ -384,17 +387,17 @@ export const MethodLevelTelemetryPanel = () => {
 																	top: 5,
 																	right: 0,
 																	left: 0,
-																	bottom: 5
+																	bottom: 5,
 																}}
 															>
 																<CartesianGrid strokeDasharray="3 3" />
 																<XAxis
 																	dataKey="endDate"
 																	tick={{ fontSize: 12 }}
-																	tickFormatter={(label) =>
+																	tickFormatter={label =>
 																		new Date(label).toLocaleTimeString(undefined, {
 																			hour: "2-digit",
-																			minute: "2-digit"
+																			minute: "2-digit",
 																		})
 																	}
 																/>

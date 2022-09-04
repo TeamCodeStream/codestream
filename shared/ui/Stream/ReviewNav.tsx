@@ -1,12 +1,12 @@
+import { fetchReview } from "@codestream/webview/store/reviews/thunks";
 import React from "react";
 import styled from "styled-components";
 import Tooltip from "./Tooltip";
 import { Button } from "../src/components/Button";
 import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { setCurrentReview, setCreatePullRequest } from "@codestream/webview/store/context/actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import { fetchReview } from "@codestream/webview/store/reviews/actions";
 import { CodeStreamState } from "../store";
 import { getReview } from "../store/reviews/reducer";
 import { MinimumWidthCard, Meta, BigTitle, Header } from "./Codemark/BaseCodemark";
@@ -191,14 +191,14 @@ const modifier = navigator.appVersion.includes("Macintosh") ? "^ /" : "Ctrl-Shif
 export type Props = React.PropsWithChildren<{ reviewId: string; composeOpen: boolean }>;
 
 export function ReviewNav(props: Props) {
-	const dispatch = useDispatch<Dispatch>();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { scmInfo } = state.editorContext;
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
 		const review = getReview(state.reviews, props.reviewId);
 		const post = review ? getPost(state.posts, review?.streamId, review?.postId) : undefined;
 
-		const changeRequests = useSelector((state: CodeStreamState) =>
+		const changeRequests = useAppSelector((state: CodeStreamState) =>
 			review ? getReviewChangeRequests(state, review) : []
 		);
 
@@ -218,7 +218,7 @@ export function ReviewNav(props: Props) {
 			isMine: currentUserId === (review ? review.creatorId : ""),
 			cr2prEnabled: isFeatureEnabled(state, "cr2pr"),
 			sidebarLocation: getSidebarLocation(state),
-			prLabel: getPRLabel(state)
+			prLabel: getPRLabel(state),
 		};
 	}, shallowEqual);
 
@@ -282,8 +282,9 @@ export function ReviewNav(props: Props) {
 	});
 
 	const approve = async () => {
-		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
-			.length;
+		const numOpenChangeRequests = derivedState.changeRequests.filter(
+			r => r.status !== "closed"
+		).length;
 
 		if (numOpenChangeRequests > 0) {
 			confirmPopup({
@@ -299,9 +300,9 @@ export function ReviewNav(props: Props) {
 						action: () => {
 							dispatch(setReviewStatus(review!.id, "approved"));
 							showReview();
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		} else {
 			setIsApproving(true);
@@ -321,9 +322,9 @@ export function ReviewNav(props: Props) {
 					label: "Request Changes",
 					wait: true,
 					action: rejectConfirm,
-					className: "delete"
-				}
-			]
+					className: "delete",
+				},
+			],
 		});
 	};
 
@@ -360,8 +361,9 @@ export function ReviewNav(props: Props) {
 	const statusButtons = () => {
 		if (!review) return null;
 		const { approvedByMe, isMine } = derivedState;
-		const numOpenChangeRequests = derivedState.changeRequests.filter(r => r.status !== "closed")
-			.length;
+		const numOpenChangeRequests = derivedState.changeRequests.filter(
+			r => r.status !== "closed"
+		).length;
 		switch (review.status) {
 			case "open":
 				return (
@@ -384,7 +386,7 @@ export function ReviewNav(props: Props) {
 											height: "16px",
 											minWidth: "16px",
 											lineHeight: "16px",
-											textAlign: "center"
+											textAlign: "center",
 										}}
 									>
 										{numOpenChangeRequests}
@@ -495,7 +497,12 @@ export function ReviewNav(props: Props) {
 	};
 
 	const toggleInstructions = () => {
-		dispatch(setUserPreference(["hideReviewInstructions"], !derivedState.hideReviewInstructions));
+		dispatch(
+			setUserPreference({
+				prefPath: ["hideReviewInstructions"],
+				value: !derivedState.hideReviewInstructions,
+			})
+		);
 	};
 
 	if (notFound || !review)
@@ -527,9 +534,7 @@ export function ReviewNav(props: Props) {
 					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	const commentTip =
 		hoverButton === "comment" ? (
@@ -549,9 +554,7 @@ export function ReviewNav(props: Props) {
 					</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	const actionsTip =
 		hoverButton === "actions" ? (
@@ -563,9 +566,7 @@ export function ReviewNav(props: Props) {
 					<Button onClick={tourDone}>Done</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	if (isEditing) {
 		return (
@@ -606,7 +607,7 @@ export function ReviewNav(props: Props) {
 							id="review-container"
 							style={{
 								padding: "0 20px 60px 40px",
-								width: "100%"
+								width: "100%",
 							}}
 						>
 							<StyledReview className={hoverButton == "files" ? "pulse" : ""}>

@@ -1,30 +1,32 @@
-import { CSReviewChangeset } from "@codestream/protocols/api";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import React, { useEffect } from "react";
-import { ReviewPlus } from "@codestream/protocols/agent";
-import { HostApi } from "@codestream/webview/webview-api";
-import * as path from "path-browserify";
-import { ChangesetFile } from "./ChangesetFile";
-import { useSelector, useDispatch } from "react-redux";
-import { CodeStreamState } from "@codestream/webview/store";
-import { showDiff } from "@codestream/webview/store/reviews/actions";
-import { Dispatch } from "../../store/common";
-import Icon from "../Icon";
-import { safe } from "@codestream/webview/utils";
-import { getById } from "@codestream/webview/store/repos/reducer";
 import {
+	ReadTextFileRequestType,
+	ReviewPlus,
+	WriteTextFileRequestType,
+} from "@codestream/protocols/agent";
+import { CSReviewChangeset } from "@codestream/protocols/api";
+import {
+	EditorRevealRangeRequestType,
 	ShowNextChangedFileNotificationType,
 	ShowPreviousChangedFileNotificationType,
-	EditorRevealRangeRequestType
 } from "@codestream/protocols/webview";
-import { WriteTextFileRequestType, ReadTextFileRequestType } from "@codestream/protocols/agent";
-import { Range } from "vscode-languageserver-types";
+import { CodeStreamState } from "@codestream/webview/store";
+import { getById } from "@codestream/webview/store/repos/reducer";
+import { showDiff } from "@codestream/webview/store/reviews/thunks";
 import { getPreferences } from "@codestream/webview/store/users/reducer";
-import { setUserPreference } from "../actions";
-import { PRSelectorButtons } from "../PullRequestComponents";
-import { PRProgress, PRProgressFill, PRProgressLine } from "../PullRequestFilesChangedList";
+import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import { TernarySearchTree } from "@codestream/webview/utilities/searchTree";
+import { safe } from "@codestream/webview/utils";
+import { HostApi } from "@codestream/webview/webview-api";
+import * as path from "path-browserify";
+import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Range } from "vscode-languageserver-types";
+import { setUserPreference } from "../actions";
+import Icon from "../Icon";
+import { PRSelectorButtons } from "../PullRequestComponents";
 import { Directory } from "../PullRequestFilesChanged";
+import { PRProgress, PRProgressFill, PRProgressLine } from "../PullRequestFilesChangedList";
+import { ChangesetFile } from "./ChangesetFile";
 
 // const VISITED_REVIEW_FILES = "review:changeset-file-list";
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
@@ -42,7 +44,7 @@ export const ChangesetFileList = (props: {
 	isTouring?: boolean;
 }) => {
 	const { review, noOnClick, loading, checkpoint } = props;
-	const dispatch = useDispatch<Dispatch>();
+	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const userId = state.session.userId || "";
 		const matchFile =
@@ -80,7 +82,7 @@ export const ChangesetFileList = (props: {
 			maxCheckpoint:
 				review.reviewChangesets && review.reviewChangesets.length
 					? review.reviewChangesets[review.reviewChangesets.length - 1].checkpoint
-					: 0
+					: 0,
 		};
 	});
 
@@ -91,7 +93,8 @@ export const ChangesetFileList = (props: {
 	});
 
 	const mode = derivedState.filesChangedMode;
-	const setMode = mode => dispatch(setUserPreference(["reviewFilesChangedMode"], mode));
+	const setMode = mode =>
+		dispatch(setUserPreference({ prefPath: ["reviewFilesChangedMode"], value: mode }));
 
 	// visitedFiles contains three things:
 	// 1. key/value pairs where the key is the filename, and the value is whether the file
@@ -135,7 +138,7 @@ export const ChangesetFileList = (props: {
 	const saveVisitedFiles = (newVisitedFiles, key) => {
 		HostApi.instance.send(WriteTextFileRequestType, {
 			path: `review-${review.id}-${key}.json`,
-			contents: JSON.stringify(newVisitedFiles, null, 4)
+			contents: JSON.stringify(newVisitedFiles, null, 4),
 		});
 	};
 
@@ -144,7 +147,7 @@ export const ChangesetFileList = (props: {
 	useEffect(() => {
 		(async () => {
 			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
-				path: `review-${review.id}-${reviewCheckpointKey}.json`
+				path: `review-${review.id}-${reviewCheckpointKey}.json`,
 			})) as any;
 
 			try {
@@ -198,7 +201,7 @@ export const ChangesetFileList = (props: {
 	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
-			HostApi.instance.on(ShowPreviousChangedFileNotificationType, prevFile)
+			HostApi.instance.on(ShowPreviousChangedFileNotificationType, prevFile),
 		];
 
 		return () => disposables.forEach(disposable => disposable.dispose());
@@ -404,7 +407,7 @@ export const ChangesetFileList = (props: {
 		visitedFiles,
 		mode,
 		hasLoaded,
-		props.isTouring
+		props.isTouring,
 	]);
 
 	const goDiff = React.useCallback(
@@ -421,7 +424,7 @@ export const ChangesetFileList = (props: {
 
 			if (props.withTelemetry && review.id) {
 				HostApi.instance.track("Review Diff Viewed", {
-					"Review ID": review.id
+					"Review ID": review.id,
 				});
 			}
 		},
@@ -438,12 +441,12 @@ export const ChangesetFileList = (props: {
 				const repoRoot = props.repoRoots[f.repoId];
 				void HostApi.instance.send(EditorRevealRangeRequestType, {
 					uri: path.join("file://", repoRoot, f.file),
-					range: Range.create(0, 0, 0, 0)
+					range: Range.create(0, 0, 0, 0),
 				});
 
 				if (props.withTelemetry && review.id) {
 					HostApi.instance.track("Review File Viewed", {
-						"Review ID": review.id
+						"Review ID": review.id,
 					});
 				}
 			}

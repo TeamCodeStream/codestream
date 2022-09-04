@@ -1,24 +1,22 @@
-import React, { useState } from "react";
-import { PRCommentCard, ButtonRow } from "./PullRequestComponents";
-import MessageInput from "./MessageInput";
-import { RadioGroup, Radio } from "../src/components/RadioGroup";
-import { useDispatch, useSelector } from "react-redux";
 import { HostApi } from "@codestream/webview/webview-api";
+import React, { useState } from "react";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { Button } from "../src/components/Button";
-import Tooltip from "./Tooltip";
-import { api } from "../store/providerPullRequests/actions";
-import { replaceHtml } from "../utils";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import { confirmPopup } from "./Confirm";
 import { Dialog } from "../src/components/Dialog";
-import { openModal, closeModal, setUserPreference } from "./actions";
-import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
+import { Radio, RadioGroup } from "../src/components/RadioGroup";
 import { CodeStreamState } from "../store";
-import { getPullRequestConversationsFromProvider } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
+import { replaceHtml } from "../utils";
+import { closeModal } from "./actions";
+import { confirmPopup } from "./Confirm";
+import MessageInput from "./MessageInput";
+import { ButtonRow } from "./PullRequestComponents";
+import Tooltip from "./Tooltip";
 
 export const FinishReview = (props: { fetch?: Function }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const validCurrentPullRequest =
 			currentPullRequest && (currentPullRequest.error === undefined || currentPullRequest.error);
@@ -43,12 +41,15 @@ export const FinishReview = (props: { fetch?: Function }) => {
 		setSubmittingReview(true);
 		HostApi.instance.track("PR Review Finished", {
 			Host: pr.providerId,
-			"Review Type": reviewType
+			"Review Type": reviewType,
 		});
 		await dispatch(
-			api("submitReview", {
-				eventType: reviewType,
-				text: replaceHtml(reviewText)
+			api({
+				method: "submitReview",
+				params: {
+					eventType: reviewType,
+					text: replaceHtml(reviewText),
+				},
 			})
 		);
 		// dispatch(getPullRequestConversationsFromProvider(pr.providerId, pr.id));
@@ -59,8 +60,11 @@ export const FinishReview = (props: { fetch?: Function }) => {
 		e.preventDefault();
 		e.stopPropagation();
 		await dispatch(
-			api("deletePullRequestReview", {
-				pullRequestReviewId: id
+			api({
+				method: "deletePullRequestReview",
+				params: {
+					pullRequestReviewId: id,
+				},
 			})
 		);
 		// dispatch(getPullRequestConversationsFromProvider(pr.providerId, pr.id));
@@ -78,7 +82,7 @@ export const FinishReview = (props: { fetch?: Function }) => {
 					<div
 						style={{
 							margin: "5px 0 15px 0",
-							border: isPreviewing ? "none" : "1px solid var(--base-border-color)"
+							border: isPreviewing ? "none" : "1px solid var(--base-border-color)",
 						}}
 					>
 						<MessageInput
@@ -164,9 +168,9 @@ export const FinishReview = (props: { fetch?: Function }) => {
 													wait: true,
 													action: () => {
 														cancelReview(e, pr.pendingReview?.id);
-													}
-												}
-											]
+													},
+												},
+											],
 										});
 									}}
 								>

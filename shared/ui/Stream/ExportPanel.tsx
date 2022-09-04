@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import ScrollBox from "./ScrollBox";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { mapFilter } from "../utils";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -31,9 +31,9 @@ const getSearchableCodemarks = createSelector(
 );
 
 export const ExportPanel = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const codemarks = useSelector(getSearchableCodemarks);
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const codemarks = useAppSelector(getSearchableCodemarks);
 
 		return { codemarks, webviewFocused: state.context.hasFocus, repos: state.repos };
 	});
@@ -102,7 +102,7 @@ export const ExportPanel = () => {
 							width: "100%",
 							height: "calc(100% - 5px)",
 							whiteSpace: "nowrap",
-							overflow: "auto"
+							overflow: "auto",
 						}}
 					>
 						{output}

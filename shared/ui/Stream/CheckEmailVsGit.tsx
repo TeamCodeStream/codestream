@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
-import { HostApi } from "../webview-api";
-import { Button } from "../src/components/Button";
-import styled from "styled-components";
+import { AddBlameMapRequestType, GetUserInfoRequestType } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
-import { GetUserInfoRequestType, AddBlameMapRequestType } from "@codestream/protocols/agent";
-import { Modal } from "./Modal";
-import { useDidMount } from "../utilities/hooks";
-import { setUserPreference } from "./actions";
+import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { useAppDispatch, useDidMount } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { setUserPreference } from "./actions";
+import { Modal } from "./Modal";
 
 // TODO: This file is depreciated - keeping for now in case we decide
 // 		 to add back in this dialog later, but its a candidate for deletion
@@ -29,7 +29,7 @@ export const ButtonRow = styled.div`
 `;
 
 export const CheckEmailVsGit = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
@@ -55,13 +55,13 @@ export const CheckEmailVsGit = () => {
 	});
 
 	const close = () => {
-		dispatch(setUserPreference(["skipGitEmailCheck"], true));
+		dispatch(setUserPreference({ prefPath: ["skipGitEmailCheck"], value: true }));
 	};
 
 	const getUserInfo = async () => {
 		const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 		if (response.email === currentUser.email) {
-			dispatch(setUserPreference(["skipGitEmailCheck"], true));
+			dispatch(setUserPreference({ prefPath: ["skipGitEmailCheck"], value: true }));
 		} else {
 			setScmEmail(response.email || "");
 		}
@@ -83,7 +83,7 @@ export const CheckEmailVsGit = () => {
 		await HostApi.instance.send(AddBlameMapRequestType, {
 			teamId: team.id,
 			userId,
-			email
+			email,
 		});
 		setLoading(false);
 	};

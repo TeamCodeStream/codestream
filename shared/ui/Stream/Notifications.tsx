@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -8,7 +9,7 @@ import { setUserPreference, closeModal } from "./actions";
 import { HostApi } from "../webview-api";
 import {
 	CSNotificationDeliveryPreference,
-	CSNotificationPreference
+	CSNotificationPreference,
 } from "@codestream/protocols/api";
 import Icon from "./Icon";
 import { Dialog } from "../src/components/Dialog";
@@ -18,12 +19,12 @@ const prNotificationProviders = new Set([
 	"github*com",
 	"github/enterprise",
 	"gitlab*com",
-	"gitlab/enterprise"
+	"gitlab/enterprise",
 ]);
 
 export const Notifications = props => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const hasDesktopNotifications = state.ide.name === "VSC" || state.ide.name === "JETBRAINS";
 		const notificationDeliverySupported = isFeatureEnabled(state, "notificationDeliveryPreference");
 		const emailSupported = isFeatureEnabled(state, "emailSupport");
@@ -56,7 +57,7 @@ export const Notifications = props => {
 			hasDesktopNotifications,
 			notificationDeliverySupported,
 			emailSupported,
-			showPRNotificationSetting
+			showPRNotificationSetting,
 		};
 	});
 	const [loading, setLoading] = useState(false);
@@ -64,7 +65,7 @@ export const Notifications = props => {
 	const [loadingReminderDelivery, setLoadingReminderDelivery] = useState(false);
 	const [
 		loadingCreateReviewOnDetectUnreviewedCommits,
-		setLoadingCreateReviewOnDetectUnreviewedCommits
+		setLoadingCreateReviewOnDetectUnreviewedCommits,
 	] = useState(false);
 	const [loadingToastPrNotify, setLoadingToastPrNotify] = useState(false);
 	const [loadingWeeklyEmailDelivery, setLoadingWeeklyEmailDelivery] = useState(false);
@@ -72,40 +73,40 @@ export const Notifications = props => {
 	const handleChange = async (value: string) => {
 		setLoading(true);
 		HostApi.instance.track("Notification Preference Changed", { Value: value });
-		dispatch(setUserPreference(["notifications"], value));
+		dispatch(setUserPreference({ prefPath: ["notifications"], value }));
 		setLoading(false);
 	};
 
 	const handleChangeReviewReminders = async (value: boolean) => {
 		setLoadingReminderDelivery(true);
-		dispatch(setUserPreference(["reviewReminderDelivery"], value));
+		dispatch(setUserPreference({ prefPath: ["reviewReminderDelivery"], value }));
 		setLoadingReminderDelivery(false);
 	};
 
 	const handleChangeWeeklyEmailDelivery = async (value: boolean) => {
 		setLoadingWeeklyEmailDelivery(true);
-		dispatch(setUserPreference(["weeklyEmailDelivery"], value));
+		dispatch(setUserPreference({ prefPath: ["weeklyEmailDelivery"], value }));
 		setLoadingWeeklyEmailDelivery(false);
 	};
 
 	const handleChangeDelivery = async (value: string) => {
 		setLoadingDelivery(true);
 		HostApi.instance.track("Notification Delivery Preference Changed", { Value: value });
-		dispatch(setUserPreference(["notificationDelivery"], value));
+		dispatch(setUserPreference({ prefPath: ["notificationDelivery"], value }));
 		setLoadingDelivery(false);
 	};
 
 	const handleChangeCreateReviewOnDetectUnreviewedCommits = async (value: boolean) => {
 		setLoadingCreateReviewOnDetectUnreviewedCommits(true);
 		HostApi.instance.track("Review Create On Detect Unreviewed Commits Changed", { Value: value });
-		dispatch(setUserPreference(["reviewCreateOnDetectUnreviewedCommits"], value));
+		dispatch(setUserPreference({ prefPath: ["reviewCreateOnDetectUnreviewedCommits"], value }));
 		setLoadingCreateReviewOnDetectUnreviewedCommits(false);
 	};
 
 	const handleToastPrNotify = async (value: boolean) => {
 		setLoadingToastPrNotify(true);
 		HostApi.instance.track("Toast New PR Notify Changed", { Value: value });
-		dispatch(setUserPreference(["toastPrNotify"], value));
+		dispatch(setUserPreference({ prefPath: ["toastPrNotify"], value }));
 		setLoadingToastPrNotify(false);
 	};
 

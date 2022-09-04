@@ -7,14 +7,14 @@ import { setCurrentPullRequest } from "../store/context/actions";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "../ipc/webview.protocol.common";
 import { orderBy } from "lodash-es";
-import { api } from "../store/providerPullRequests/actions";
-import { useDidMount } from "../utilities/hooks";
+import { api } from "../store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
 	getCurrentProviderPullRequest,
-	getProviderPullRequestRepo
-} from "../store/providerPullRequests/reducer";
+	getProviderPullRequestRepo,
+} from "../store/providerPullRequests/slice";
 import * as Path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
 import { HostApi } from "../webview-api";
@@ -102,10 +102,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		iconClass,
 		unVisitFile,
 		visitFile,
-		visited
+		visited,
 	} = props;
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const [showComments, setShowComments] = React.useState(true);
 	const [showCheckIcon, setShowCheckIcon] = React.useState(false);
 	const [showGoToFileIcon, setShowGoToFileIcon] = React.useState(false);
@@ -114,10 +114,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const [currentRepoRoot, setCurrentRepoRoot] = React.useState("");
 	const isGitLab = pullRequest?.providerId?.includes("gitlab");
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			currentPullRequest: getCurrentProviderPullRequest(state),
-			currentRepo: getProviderPullRequestRepo(state)
+			currentRepo: getProviderPullRequestRepo(state),
 		};
 	});
 	const { currentPullRequest } = derivedState;
@@ -156,9 +156,12 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 
 	const visitAndCheckFile = async () => {
 		await dispatch(
-			api("markFileAsViewed", {
-				onOff: true,
-				path: fileObject.file
+			api({
+				method: "markFileAsViewed",
+				params: {
+					onOff: true,
+					path: fileObject.file,
+				},
 			})
 		);
 		setIconName("ok");
@@ -167,9 +170,12 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 
 	const unvisitAndUncheckFile = async () => {
 		await dispatch(
-			api("markFileAsViewed", {
-				onOff: false,
-				path: fileObject.file
+			api({
+				method: "markFileAsViewed",
+				params: {
+					onOff: false,
+					path: fileObject.file,
+				},
 			})
 		);
 		setIconName("circle");
@@ -268,7 +274,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		);
 
 		HostApi.instance.track("PR Conversation View", {
-			Host: pullRequest?.providerId
+			Host: pullRequest?.providerId,
 		});
 	};
 
@@ -305,7 +311,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		let repoRoot = currentRepoRoot;
 		if (!repoRoot) {
 			const response = await HostApi.instance.send(GetReposScmRequestType, {
-				inEditorOnly: false
+				inEditorOnly: false,
 			});
 			if (!response.repositories) return;
 
@@ -322,12 +328,12 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		if (repoRoot) {
 			HostApi.instance.send(EditorRevealRangeRequestType, {
 				uri: Path.join("file://", repoRoot, fileObject.file),
-				range: Range.create(0, 0, 0, 0)
+				range: Range.create(0, 0, 0, 0),
 			});
 		}
 
 		HostApi.instance.track("PR Jump To Local File from Tree", {
-			Host: pullRequest && pullRequest.providerId
+			Host: pullRequest && pullRequest.providerId,
 		});
 	};
 
@@ -358,7 +364,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							<span
 								style={{
 									margin: showGoToFileIcon ? "0 9px 0 0" : "0 9px 0 auto",
-									display: showCheckIcon || displayIcon === "ok" ? "flex" : "none"
+									display: showCheckIcon || displayIcon === "ok" ? "flex" : "none",
 								}}
 							>
 								<Icon
@@ -378,7 +384,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							style={{
 								marginLeft: "auto",
 								marginRight: "10px",
-								display: showGoToFileIcon ? "flex" : "none"
+								display: showGoToFileIcon ? "flex" : "none",
 							}}
 						>
 							<Icon
@@ -400,7 +406,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									e.preventDefault();
 									goDiff(index);
 									HostApi.instance.track("PR File Clicked", {
-										Host: pullRequest && pullRequest.providerId
+										Host: pullRequest && pullRequest.providerId,
 									});
 							  }
 					}
@@ -433,7 +439,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							<span
 								style={{
 									marginRight: "10px",
-									display: showGoToFileIcon ? "flex" : "none"
+									display: showGoToFileIcon ? "flex" : "none",
 								}}
 							>
 								<Icon
@@ -454,7 +460,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 										<span
 											style={{
 												display: "flex",
-												marginRight: "9px"
+												marginRight: "9px",
 											}}
 										>
 											<Icon
@@ -473,7 +479,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 											style={{
 												width: "16px",
 												display: "flex",
-												marginRight: "9px"
+												marginRight: "9px",
 											}}
 										>
 											{" "}
@@ -490,7 +496,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 										e.preventDefault();
 										goDiff(index);
 										HostApi.instance.track("PR File Clicked", {
-											Host: pullRequest && pullRequest.providerId
+											Host: pullRequest && pullRequest.providerId,
 										});
 								  }
 						}
@@ -516,7 +522,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 												overflow: "hidden",
 												textOverflow: "ellipsis",
 												width: "calc(100%)",
-												whiteSpace: "nowrap"
+												whiteSpace: "nowrap",
 											}}
 										>
 											<Icon name="comment" className="type-icon" />{" "}

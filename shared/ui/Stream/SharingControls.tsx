@@ -7,14 +7,14 @@ import { HostApi } from "../webview-api";
 import {
 	FetchThirdPartyChannelsRequestType,
 	CreateThirdPartyPostRequest,
-	ThirdPartyChannel
+	ThirdPartyChannel,
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "../store";
 import { useSelector, useDispatch } from "react-redux";
 import {
 	isConnected,
 	getProviderConfig,
-	getConnectedSharingTargets
+	getConnectedSharingTargets,
 } from "../store/providers/reducer";
 import { connectProvider } from "../store/providers/actions";
 import { getIntegrationData } from "../store/activeIntegrations/reducer";
@@ -22,7 +22,7 @@ import { updateForProvider } from "../store/activeIntegrations/actions";
 import { ActiveIntegrationData, SlackV2IntegrationData } from "../store/activeIntegrations/types";
 import { setContext } from "../store/context/actions";
 import { safe } from "../utils";
-import { useDidMount, useUpdates } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount, useUpdates } from "../utilities/hooks";
 import { setUserPreference } from "./actions";
 import { Modal } from "./Modal";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
@@ -89,7 +89,7 @@ function useActiveIntegrationData<T extends ActiveIntegrationData>(providerId: s
 			},
 			set(fn: (data: T) => T) {
 				dispatch(updateForProvider(providerId, fn(data)));
-			}
+			},
 		};
 	}, [data]);
 }
@@ -105,7 +105,7 @@ function useDataForTeam(providerId: string, providerTeamId: string = "") {
 			},
 			set(fn: (currentTeamData: typeof teamData) => typeof teamData) {
 				data.set(d => ({ ...d, [providerTeamId]: fn(teamData) }));
-			}
+			},
 		};
 	}, [teamData]);
 }
@@ -137,9 +137,9 @@ export const SharingControls = React.memo(
 		showToggle?: boolean;
 		repoId?: string;
 	}) => {
-		const dispatch = useDispatch();
+		const dispatch = useAppDispatch();
 
-		const derivedState = useSelector((state: CodeStreamState) => {
+		const derivedState = useAppSelector((state: CodeStreamState) => {
 			const currentTeamId = state.context.currentTeamId;
 			const preferencesForTeam = state.preferences[currentTeamId] || {};
 
@@ -206,7 +206,12 @@ export const SharingControls = React.memo(
 				!derivedState.selectedShareTarget ||
 				(!derivedState.isConnectedToSlack && !derivedState.isConnectedToMSTeams)
 			) {
-				dispatch(setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], false));
+				dispatch(
+					setUserPreference({
+						prefPath: [derivedState.currentTeamId, "shareCodemarkEnabled"],
+						value: false,
+					})
+				);
 			}
 		});
 
@@ -224,7 +229,9 @@ export const SharingControls = React.memo(
 		);
 
 		const setCheckbox = value =>
-			dispatch(setUserPreference([derivedState.currentTeamId, "shareCodemarkEnabled"], value));
+			dispatch(
+				setUserPreference({ prefPath: [derivedState.currentTeamId, "shareCodemarkEnabled"], value })
+			);
 
 		const toggleCheckbox = () => setCheckbox(!derivedState.on);
 
@@ -257,7 +264,7 @@ export const SharingControls = React.memo(
 					try {
 						const response = await HostApi.instance.send(FetchThirdPartyChannelsRequestType, {
 							providerId: selectedShareTarget.providerId,
-							providerTeamId: selectedShareTarget.teamId
+							providerTeamId: selectedShareTarget.teamId,
 						});
 						/*
 							if we know the channel the user last selected for this target
@@ -330,10 +337,13 @@ export const SharingControls = React.memo(
 					botUserId
 				});
 				dispatch(
-					setUserPreference([derivedState.currentTeamId, "lastShareAttributes"], {
-						channelId: selectedChannel.id,
-						providerId: shareTarget.providerId,
-						providerTeamId: shareTarget.teamId
+					setUserPreference({
+						prefPath: [derivedState.currentTeamId, "lastShareAttributes"],
+						value: {
+							channelId: selectedChannel.id,
+							providerId: shareTarget.providerId,
+							providerTeamId: shareTarget.teamId,
+						},
 					})
 				);
 			} else if (
@@ -374,7 +384,7 @@ export const SharingControls = React.memo(
 			// hack[?] for asserting this hook runs after the data has changed.
 			// for some reason selectedChannel updating is not making this hook
 			// re-run
-			isFetchingData
+			isFetchingData,
 		]);
 
 		const { teamSettings } = derivedState;
@@ -387,7 +397,7 @@ export const SharingControls = React.memo(
 				key: target.teamId,
 				icon: <Icon name={target.icon} />,
 				label: target.teamName,
-				action: () => setSelectedShareTarget(target)
+				action: () => setSelectedShareTarget(target),
 			}));
 			if (derivedState.slackConfig || derivedState.msTeamsConfig) {
 				targetItems.push({ label: "-" } as any);
@@ -398,7 +408,7 @@ export const SharingControls = React.memo(
 						label: "Add Slack workspace",
 						action: (() => {
 							authenticateWithSlack();
-						}) as any
+						}) as any,
 					});
 				if (showTeams && derivedState.msTeamsConfig) {
 					targetItems.push({
@@ -407,7 +417,7 @@ export const SharingControls = React.memo(
 						label: "Add Teams organization",
 						action: (() => {
 							authenticateWithMSTeams();
-						}) as any
+						}) as any,
 					} as any);
 				}
 			}
@@ -469,7 +479,7 @@ export const SharingControls = React.memo(
 						key: channel.name,
 						label: channelName,
 						searchLabel: channelName,
-						action: () => action(channel)
+						action: () => action(channel),
 					};
 					if (channel.type === "direct") {
 						group.dms.push(item);
@@ -614,7 +624,12 @@ export const SharingControls = React.memo(
 
 		const setDefaultChannel = (repoId, providerTeamId, channelId) => {
 			const value = { providerTeamId, channelId };
-			dispatch(setUserPreference([derivedState.currentTeamId, "defaultChannel", repoId], value));
+			dispatch(
+				setUserPreference({
+					prefPath: [derivedState.currentTeamId, "defaultChannel", repoId],
+					value,
+				})
+			);
 		};
 
 		const getChannelById = id => {

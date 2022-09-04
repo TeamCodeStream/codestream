@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -8,7 +9,7 @@ import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/age
 import MessageInput from "./MessageInput";
 import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 import { CodeStreamState } from "../store";
 import { getPRLabel } from "../store/providers/reducer";
@@ -28,12 +29,12 @@ interface Props {
 }
 
 export const PullRequestInlineComment = styled((props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const { pr, filename, oldLineNumber, lineNumber, lineOffsetInHunk, setIsLoadingMessage } = props;
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			prLabel: getPRLabel(state)
+			prLabel: getPRLabel(state),
 		};
 	});
 
@@ -45,7 +46,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 	const trackComment = type => {
 		HostApi.instance.track("PR Comment Added", {
 			Host: pr.providerId,
-			"Comment Type": type
+			"Comment Type": type,
 		});
 	};
 
@@ -54,22 +55,25 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		setIsLoadingSingleComment(true);
 		trackComment("Inline Single Comment");
 		await dispatch(
-			api("createPullRequestInlineComment", {
-				filePath: filename,
-				oldLineNumber: oldLineNumber,
-				startLine: lineNumber,
-				text: replaceHtml(text),
-				leftSha: pr.baseRefOid,
-				rightSha: pr.headRefOid,
-				// old servers
-				position: lineOffsetInHunk,
-				metadata: {
-					contents: props.contents,
-					fileWithUrl: filename,
+			api({
+				method: "createPullRequestInlineComment",
+				params: {
+					filePath: filename,
+					oldLineNumber: oldLineNumber,
 					startLine: lineNumber,
-					// only single line comments
-					endLine: lineNumber
-				}
+					text: replaceHtml(text),
+					leftSha: pr.baseRefOid,
+					rightSha: pr.headRefOid,
+					// old servers
+					position: lineOffsetInHunk,
+					metadata: {
+						contents: props.contents,
+						fileWithUrl: filename,
+						startLine: lineNumber,
+						// only single line comments
+						endLine: lineNumber,
+					},
+				},
 			})
 		);
 		setText("");
@@ -84,14 +88,17 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		trackComment("Inline Review Comment");
 
 		await dispatch(
-			api("createPullRequestInlineReviewComment", {
-				filePath: filename,
-				position: lineOffsetInHunk,
-				oldLineNumber: oldLineNumber,
-				startLine: lineNumber,
-				text: replaceHtml(text),
-				leftSha: pr.baseRefOid,
-				sha: pr.headRefOid
+			api({
+				method: "createPullRequestInlineReviewComment",
+				params: {
+					filePath: filename,
+					position: lineOffsetInHunk,
+					oldLineNumber: oldLineNumber,
+					startLine: lineNumber,
+					text: replaceHtml(text),
+					leftSha: pr.baseRefOid,
+					sha: pr.headRefOid,
+				},
 			})
 		);
 		setText("");
@@ -104,7 +111,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		OFF_TOPIC: "off-topic",
 		SPAM: "spam",
 		TOO_HEATED: "too heated",
-		RESOLVED: "resolved"
+		RESOLVED: "resolved",
 	};
 
 	const marginWidth = pr.providerId.includes("gitlab") ? "110px" : "80px";
@@ -112,7 +119,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 		<PRComment
 			style={{
 				margin: "15px",
-				maxWidth: `min(600px, calc(100vw - ${marginWidth}))`
+				maxWidth: `min(600px, calc(100vw - ${marginWidth}))`,
 			}}
 		>
 			<PRCommentCard className="no-headshot no-arrow">
@@ -134,7 +141,7 @@ export const PullRequestInlineComment = styled((props: Props) => {
 							style={{
 								margin: "5px 0 0 0",
 								border: isPreviewing ? "none" : "1px solid var(--base-border-color)",
-								fontFamily: "var(--font-family)"
+								fontFamily: "var(--font-family)",
 							}}
 						>
 							<MessageInput

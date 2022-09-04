@@ -5,8 +5,8 @@ import { CodeStreamState } from "../store";
 import { Button } from "../src/components/Button";
 import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getCurrentProviderPullRequest } from "../store/providerPullRequests/reducer";
-import { getMyPullRequests } from "../store/providerPullRequests/actions";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
+import { getMyPullRequests } from "../store/providerPullRequests/thunks";
 import Icon from "./Icon";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
@@ -20,7 +20,7 @@ import {
 	DidChangeDataNotificationType,
 	ChangeDataType,
 	CheckRun,
-	StatusContext
+	StatusContext,
 } from "@codestream/protocols/agent";
 import {
 	PRContent,
@@ -45,7 +45,7 @@ import {
 	PRCloneURLWrapper,
 	PRHeadshots,
 	PRCommentCardRowsWrapper,
-	PRCommentCardRow
+	PRCommentCardRow,
 } from "./PullRequestComponents";
 import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
 import { DropdownButton } from "./DropdownButton";
@@ -59,12 +59,12 @@ import { setUserPreference } from "./actions";
 import copy from "copy-to-clipboard";
 import { PullRequestBottomComment } from "./PullRequestBottomComment";
 import { reduce as _reduce, groupBy as _groupBy, map as _map, pickBy as _pickBy } from "lodash-es";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
 import { autoCheckedMergeabilityStatus } from "./PullRequest";
 import cx from "classnames";
 import { getPRLabel } from "../store/providers/reducer";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import * as providerSelectors from "../store/providers/reducer";
 import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
 
@@ -146,12 +146,12 @@ const AUTHOR_ASSOCIATION_MAP = {
 	FIRST_TIMER: ["First Timer", "Author has not previously committed to GitHub."],
 	FIRST_TIME_CONTRIBUTOR: [
 		"First Time Contributor",
-		"Author has not previously committed to the repository."
+		"Author has not previously committed to the repository.",
 	],
 	MEMBER: ["Member", "Author is a member of the organization that owns the repository."],
 	// as per https://trello.com/c/P14tmDQQ/4528-dont-show-none-badge don't show "None"
 	// NONE: ["None", "Author has no association with the repository."],
-	OWNER: ["Owner", "Author is the owner of the repository."]
+	OWNER: ["Owner", "Author is the owner of the repository."],
 };
 
 export const PRAuthorBadges = (props: {
@@ -220,8 +220,8 @@ export const PullRequestConversationTab = (props: {
 	initialScrollPosition: number;
 }) => {
 	const { ghRepo, setIsLoadingMessage } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
@@ -258,7 +258,7 @@ export const PullRequestConversationTab = (props: {
 			allRepos:
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
-					: preferences.pullRequestQueryShowAllRepos
+					: preferences.pullRequestQueryShowAllRepos,
 		};
 	});
 	const { pr } = derivedState;
@@ -316,8 +316,11 @@ export const PullRequestConversationTab = (props: {
 	const markPullRequestReadyForReview = async (onOff: boolean) => {
 		setIsLoadingMessage("Updating...");
 		await dispatch(
-			api("markPullRequestReadyForReview", {
-				isReady: onOff
+			api({
+				method: "markPullRequestReadyForReview",
+				params: {
+					isReady: onOff,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -326,16 +329,19 @@ export const PullRequestConversationTab = (props: {
 	const mergePullRequest = useCallback(
 		async (options: { mergeMethod: MergeMethod }) => {
 			setIsLoadingMessage("Merging...");
-			dispatch(setUserPreference(["lastPRMergeMethod"], options.mergeMethod));
+			dispatch(setUserPreference({ prefPath: ["lastPRMergeMethod"], value: options.mergeMethod }));
 
-			const response = (await dispatch(
-				api("mergePullRequest", {
-					mergeMethod: options.mergeMethod
+			const response = await dispatch(
+				api({
+					method: "mergePullRequest",
+					params: {
+						mergeMethod: options.mergeMethod,
+					},
 				})
-			)) as any;
+			).unwrap();
 			if (response) {
 				HostApi.instance.emit(DidChangeDataNotificationType.method, {
-					type: ChangeDataType.PullRequests
+					type: ChangeDataType.PullRequests,
 				});
 			}
 			setIsLoadingMessage("");
@@ -361,7 +367,7 @@ export const PullRequestConversationTab = (props: {
 				break;
 		}
 
-		await dispatch(api("lockPullRequest", { lockReason: reason }));
+		await dispatch(api({ method: "lockPullRequest", params: { lockReason: reason } }));
 
 		setIsLocking(false);
 		setIsLoadingLocking(false);
@@ -369,7 +375,7 @@ export const PullRequestConversationTab = (props: {
 
 	const unlockPullRequest = async () => {
 		setIsLoadingLocking(true);
-		await dispatch(api("unlockPullRequest", {}));
+		await dispatch(api({ method: "unlockPullRequest", params: {} }));
 
 		setIsLocking(false);
 		setIsLoadingLocking(false);
@@ -395,13 +401,13 @@ export const PullRequestConversationTab = (props: {
 			)[0] as any;
 			return {
 				key: key,
-				value: { ...last, ...last.author }
+				value: { ...last, ...last.author },
 			};
 		});
 		// reduce to create the correct object structure
 		reviewsHash = _reduce(
 			map,
-			function(obj, param) {
+			function (obj, param) {
 				obj[param.key] = param.value;
 				return obj;
 			},
@@ -425,13 +431,13 @@ export const PullRequestConversationTab = (props: {
 			if (last)
 				return {
 					key: key,
-					value: { ...last, ...last.author }
+					value: { ...last, ...last.author },
 				};
 			else return {};
 		});
 		opinionatedReviewsHash = _reduce(
 			opinionatedMap,
-			function(obj, param) {
+			function (obj, param) {
 				if (param && param.key) obj[param.key] = param.value;
 				return obj;
 			},
@@ -445,7 +451,7 @@ export const PullRequestConversationTab = (props: {
 			if (obj && obj.requestedReviewer) {
 				map[obj.requestedReviewer.id] = {
 					...obj.requestedReviewer,
-					isPending: true
+					isPending: true,
 				};
 			}
 			return map;
@@ -460,12 +466,15 @@ export const PullRequestConversationTab = (props: {
 		if (availableReviewers === undefined) {
 			setAvailableReviewers(EMPTY_ARRAY);
 		}
-		const reviewers = (await dispatch(
-			api("getReviewers", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName
+		const reviewers = await dispatch(
+			api({
+				method: "getReviewers",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+				},
 			})
-		)) as any;
+		).unwrap();
 		setAvailableReviewers(reviewers);
 	};
 
@@ -484,8 +493,8 @@ export const PullRequestConversationTab = (props: {
 							<div>{derivedState.currentPullRequest.error.message}</div>
 						</PRError>
 					),
-					noHover: true
-				}
+					noHover: true,
+				},
 			];
 		}
 		const reviewerIds = reviewers.map(_ => _.id);
@@ -514,7 +523,7 @@ export const PullRequestConversationTab = (props: {
 							} else {
 								addReviewer(_.id);
 							}
-						}
+						},
 					};
 				}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
@@ -527,8 +536,11 @@ export const PullRequestConversationTab = (props: {
 	const removeReviewer = async id => {
 		setIsLoadingMessage("Removing Reviewer...");
 		await dispatch(
-			api("removeReviewerFromPullRequest", {
-				userId: id
+			api({
+				method: "removeReviewerFromPullRequest",
+				params: {
+					userId: id,
+				},
 			})
 		);
 
@@ -542,9 +554,12 @@ export const PullRequestConversationTab = (props: {
 	const addReviewer = async id => {
 		setIsLoadingMessage("Requesting Review...");
 		await dispatch(
-			api("addReviewerToPullRequest", {
-				pullRequestId: pr.id,
-				userId: id
+			api({
+				method: "addReviewerToPullRequest",
+				params: {
+					pullRequestId: pr.id,
+					userId: id,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -559,12 +574,15 @@ export const PullRequestConversationTab = (props: {
 		if (availableAssignees === undefined) {
 			setAvailableAssignees(EMPTY_ARRAY);
 		}
-		const assignees = (await dispatch(
-			api("getReviewers", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName
+		const assignees = await dispatch(
+			api({
+				method: "getReviewers",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+				},
 			})
-		)) as any;
+		).unwrap();
 		setAvailableAssignees(assignees);
 	};
 
@@ -583,8 +601,8 @@ export const PullRequestConversationTab = (props: {
 							<div>{derivedState.currentPullRequest.error.message}</div>
 						</PRError>
 					),
-					noHover: true
-				}
+					noHover: true,
+				},
 			];
 		}
 		const assigneeIds = pr.assignees.nodes.map(_ => _.login);
@@ -595,7 +613,7 @@ export const PullRequestConversationTab = (props: {
 				subtle: _.name,
 				searchLabel: `${_.login}:${_.name}`,
 				key: _.id,
-				action: () => toggleAssignee(_.id, !assigneeIds.includes(_.login))
+				action: () => toggleAssignee(_.id, !assigneeIds.includes(_.login)),
 			})) as any;
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -607,9 +625,12 @@ export const PullRequestConversationTab = (props: {
 	const toggleAssignee = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Assignee..." : "Removing Assignee...");
 		await dispatch(
-			api("setAssigneeOnPullRequest", {
-				assigneeId: id,
-				onOff
+			api({
+				method: "setAssigneeOnPullRequest",
+				params: {
+					assigneeId: id,
+					onOff,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -621,12 +642,15 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const fetchAvailableLabels = async (e?) => {
-		const labels = (await dispatch(
-			api("getLabels", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName
+		const labels = await dispatch(
+			api({
+				method: "getLabels",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+				},
 			})
-		)) as any;
+		).unwrap();
 		setAvailableLabels(labels);
 	};
 
@@ -646,7 +670,7 @@ export const PullRequestConversationTab = (props: {
 					searchLabel: _.name,
 					key: _.id,
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
-					action: () => setLabel(_.id, !checked)
+					action: () => setLabel(_.id, !checked),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
@@ -660,9 +684,12 @@ export const PullRequestConversationTab = (props: {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
 
 		await dispatch(
-			api("setLabelOnPullRequest", {
-				labelId: id,
-				onOff
+			api({
+				method: "setLabelOnPullRequest",
+				params: {
+					labelId: id,
+					onOff,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -685,13 +712,13 @@ export const PullRequestConversationTab = (props: {
 							: defaultQueries[connectedProvider.id];
 
 						await dispatch(
-							getMyPullRequests(
-								connectedProvider.id,
-								providerQuery,
-								!derivedState.allRepos,
+							getMyPullRequests({
+								providerId: connectedProvider.id,
+								queries: providerQuery,
+								openReposOnly: !derivedState.allRepos,
 								options,
-								true
-							)
+								throwOnError: true,
+							})
 						);
 					}
 				} catch (error) {
@@ -702,12 +729,15 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const fetchAvailableProjects = async (e?) => {
-		const projects = (await dispatch(
-			api("getProjects", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName
+		const projects = await dispatch(
+			api({
+				method: "getProjects",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+				},
 			})
-		)) as any;
+		).unwrap();
 		setAvailableProjects(projects);
 	};
 
@@ -724,7 +754,7 @@ export const PullRequestConversationTab = (props: {
 					searchLabel: _.name,
 					key: _.id,
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
-					action: () => setProject(_.id, !checked)
+					action: () => setProject(_.id, !checked),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter Projects" });
@@ -739,9 +769,12 @@ export const PullRequestConversationTab = (props: {
 	const setProject = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding to Project..." : "Removing from Project...");
 		await dispatch(
-			api("toggleProjectOnPullRequest", {
-				projectId: id,
-				onOff
+			api({
+				method: "toggleProjectOnPullRequest",
+				params: {
+					projectId: id,
+					onOff,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -753,12 +786,15 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
-		const milestones = (await dispatch(
-			api("getMilestones", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName
+		const milestones = await dispatch(
+			api({
+				method: "getMilestones",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+				},
 			})
-		)) as any;
+		).unwrap();
 		setAvailableMilestones(milestones);
 	};
 
@@ -778,14 +814,14 @@ export const PullRequestConversationTab = (props: {
 							<Timestamp time={_.dueOn} dateOnly />
 						</>
 					),
-					action: () => setMilestone(_.id, !checked)
+					action: () => setMilestone(_.id, !checked),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
 			return menuItems;
 		} else if (availableMilestones) {
 			return [
-				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true }
+				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true },
 			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
@@ -795,9 +831,12 @@ export const PullRequestConversationTab = (props: {
 	const setMilestone = async (id: string, onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Adding Milestone..." : "Clearing Milestone...");
 		await dispatch(
-			api("toggleMilestoneOnPullRequest", {
-				milestoneId: id,
-				onOff
+			api({
+				method: "toggleMilestoneOnPullRequest",
+				params: {
+					milestoneId: id,
+					onOff,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -855,10 +894,13 @@ export const PullRequestConversationTab = (props: {
 		const onOff = pr.viewerSubscription === "SUBSCRIBED" ? false : true;
 		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
 		await dispatch(
-			api("updatePullRequestSubscription", {
-				owner: ghRepo.repoOwner,
-				repo: ghRepo.repoName,
-				onOff
+			api({
+				method: "updatePullRequestSubscription",
+				params: {
+					owner: ghRepo.repoOwner,
+					repo: ghRepo.repoName,
+					onOff,
+				},
 			})
 		);
 	};
@@ -884,7 +926,7 @@ export const PullRequestConversationTab = (props: {
 		pr.commits.nodes[0].commit
 			? pr.commits.nodes[0].commit
 			: {
-					statusCheckRollup: null
+					statusCheckRollup: null,
 			  };
 	return (
 		<PRContent>
@@ -929,24 +971,24 @@ export const PullRequestConversationTab = (props: {
 										{
 											label: "Choose a reason",
 											key: "choose",
-											action: () => setIsLockingReason("Choose a reason")
+											action: () => setIsLockingReason("Choose a reason"),
 										},
 										{
 											label: "Off-topic",
 											key: "topic",
-											action: () => setIsLockingReason("Off-topic")
+											action: () => setIsLockingReason("Off-topic"),
 										},
 										{
 											label: "Too heated",
 											key: "heated",
-											action: () => setIsLockingReason("Too heated")
+											action: () => setIsLockingReason("Too heated"),
 										},
 										{
 											label: "Resolved",
 											key: "resolved",
-											action: () => setIsLockingReason("Resolved")
+											action: () => setIsLockingReason("Resolved"),
 										},
-										{ label: "Spam", key: "spam", action: () => setIsLockingReason("Spam") }
+										{ label: "Spam", key: "spam", action: () => setIsLockingReason("Spam") },
 									]}
 								>
 									{isLockingReason || "Choose a reason"}
@@ -1464,7 +1506,7 @@ export const PullRequestConversationTab = (props: {
 												emojiRegex,
 												(s: string, code: string) => emojiMap[code] || s
 											),
-											color: `#${_.color}`
+											color: `#${_.color}`,
 										}}
 									/>
 								);
@@ -1619,7 +1661,7 @@ const Merge = (props: {
 							),
 							disabled: !ghRepo.mergeCommitAllowed,
 							onSelect: () => onSelect("MERGE"),
-							action: () => action({ mergeMethod: "MERGE" })
+							action: () => action({ mergeMethod: "MERGE" }),
 						},
 						{
 							key: "SQUASH",
@@ -1633,7 +1675,7 @@ const Merge = (props: {
 							),
 							disabled: !ghRepo.squashMergeAllowed,
 							onSelect: () => onSelect("SQUASH"),
-							action: () => action({ mergeMethod: "SQUASH" })
+							action: () => action({ mergeMethod: "SQUASH" }),
 						},
 						{
 							key: "REBASE",
@@ -1647,8 +1689,8 @@ const Merge = (props: {
 							),
 							disabled: !ghRepo.rebaseMergeAllowed,
 							onSelect: () => onSelect("REBASE"),
-							action: () => action({ mergeMethod: "REBASE" })
-						}
+							action: () => action({ mergeMethod: "REBASE" }),
+						},
 					]}
 					selectedKey={defaultMergeMethod}
 					variant="success"
@@ -1676,48 +1718,48 @@ const CommitCheckSuite = (props: { commit: any }) => {
 		const checkStatuses = {
 			success: {
 				count: 0,
-				title: "successful"
+				title: "successful",
 			},
 			inProgress: {
 				count: 0,
-				title: "in progress"
+				title: "in progress",
 			},
 			cancel: {
 				count: 0,
-				title: "cancelled"
+				title: "cancelled",
 			},
 			failure: {
 				count: 0,
-				title: "failing"
+				title: "failing",
 			},
 			actionRequired: {
 				count: 0,
-				title: "action required"
+				title: "action required",
 			},
 			error: {
 				count: 0,
-				title: "errored"
+				title: "errored",
 			},
 			pending: {
 				count: 0,
-				title: "pending"
+				title: "pending",
 			},
 			queued: {
 				count: 0,
-				title: "queued"
+				title: "queued",
 			},
 			neutral: {
 				count: 0,
-				title: "neutral"
+				title: "neutral",
 			},
 			skipped: {
 				count: 0,
-				title: "skipped"
+				title: "skipped",
 			},
 			total: {
 				count: 0,
-				title: "total"
-			}
+				title: "total",
+			},
 		};
 
 		// if (checksData.length === 0) {
@@ -1980,7 +2022,7 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 			if (check.checkSuite.app) {
 				checkData.appIcon = {
 					src: check.checkSuite.app.logoUrl,
-					title: `@${check.checkSuite.app.slug} generated this status`
+					title: `@${check.checkSuite.app.slug} generated this status`,
 				};
 			} else {
 				checkData.appIcon = { src: "", title: "" };
@@ -2020,7 +2062,7 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 
 			checkData.appIcon = {
 				src: check.avatarUrl,
-				title: ""
+				title: "",
 			};
 			checkData.Description = (
 				<div className="description">
@@ -2038,56 +2080,56 @@ const getChecksData = (statusChecks: (CheckRun | StatusContext)[]) => {
 			case "failure":
 				checkData.statusIcon = {
 					name: "x",
-					className: "red-color"
+					className: "red-color",
 				};
 				break;
 			case "inProgress":
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "yellow-color"
+					className: "yellow-color",
 				};
 				break;
 			case "pending":
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "yellow-color"
+					className: "yellow-color",
 				};
 				break;
 			case "queued":
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "yellow-color"
+					className: "yellow-color",
 				};
 				break;
 			case "success":
 				checkData.statusIcon = {
 					name: "check",
-					className: "green-color"
+					className: "green-color",
 				};
 				break;
 			case "expected":
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "yellow-color"
+					className: "yellow-color",
 				};
 				break;
 			case "neutral":
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "gray-color"
+					className: "gray-color",
 				};
 				break;
 			case "cancel":
 				checkData.statusIcon = {
 					name: "stop",
-					className: "gray-color"
+					className: "gray-color",
 				};
 				break;
 			case "undefined":
 			default:
 				checkData.statusIcon = {
 					name: "dot-fill",
-					className: "yellow-color"
+					className: "yellow-color",
 				};
 				break;
 		}

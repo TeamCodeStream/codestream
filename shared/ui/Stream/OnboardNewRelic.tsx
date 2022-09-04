@@ -3,7 +3,7 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { CodeStreamState } from "../store";
 import { getTeamMembers } from "../store/users/reducer";
-import { useDidMount, usePrevious } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { closePanel, invite } from "./actions";
 import {
@@ -11,7 +11,7 @@ import {
 	NewRelicOptions,
 	RepoProjectType,
 	GetReposScmRequestType,
-	ReposScm
+	ReposScm,
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -31,12 +31,7 @@ import { FormattedMessage } from "react-intl";
 import { isEmailValid } from "../Authentication/Signup";
 import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
-import {
-	setOnboardStep,
-	setShowFeedbackSmiley,
-	setWantNewRelicOptions
-} from "../store/context/actions";
-import { getTestGroup } from "../store/context/reducer";
+import { setOnboardStep, setWantNewRelicOptions } from "../store/context/actions";
 import {
 	Step,
 	LinkRow,
@@ -49,7 +44,7 @@ import {
 	Sep,
 	OutlineNumber,
 	ExpandingText,
-	ConnectCodeHostProvider
+	ConnectCodeHostProvider,
 } from "./Onboard";
 import { AddAppMonitoringNodeJS } from "./NewRelicWizards/AddAppMonitoringNodeJS";
 import { AddAppMonitoringJava } from "./NewRelicWizards/AddAppMonitoringJava";
@@ -126,7 +121,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 					"bitbucket",
 					"bitbucket_server",
 					"gitlab",
-					"gitlab_enterprise"
+					"gitlab_enterprise",
 				].includes(providers[id].name)
 			)
 			.sort((a, b) => {
@@ -166,7 +161,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
 			isInJetBrains: state.ide.name === "JETBRAINS",
-			newRelicOptions
+			newRelicOptions,
 		};
 	}, shallowEqual);
 
@@ -175,7 +170,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 		connectedCodeHostProviders,
 		connectedIssueProviders,
 		connectedMessagingProviders,
-		newRelicOptions
+		newRelicOptions,
 	} = derivedState;
 
 	let NUM_STEPS = 4;
@@ -200,7 +195,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 			if (Object.keys(derivedState.wantNewRelicOptions || {}).length === 0) {
 				const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
 					inEditorOnly: true,
-					guessProjectTypes: true
+					guessProjectTypes: true,
 				});
 				if (!reposResponse.error) {
 					const knownRepo = (reposResponse.repositories || []).find(repo => {
@@ -259,13 +254,13 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 		if (step === NUM_STEPS - 1) {
 			HostApi.instance.track("Wizard Ended", {
 				"Language Selected": projectType,
-				"App Name": options?.appName
+				"App Name": options?.appName,
 			});
 		}
 
 		if (step === 1) {
 			HostApi.instance.track("Wizard Started", {
-				"Language Detected": derivedState.wantNewRelicOptions?.projectType
+				"Language Detected": derivedState.wantNewRelicOptions?.projectType,
 			});
 		}
 
@@ -315,7 +310,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 					position: "relative",
 					alignItems: "center",
 					overflowX: "hidden",
-					overflowY: currentStep === 0 ? "hidden" : "auto"
+					overflowY: currentStep === 0 ? "hidden" : "auto",
 				}}
 			>
 				<div className="standard-form" style={{ height: "auto", position: "relative" }}>
@@ -448,7 +443,7 @@ const GIF = (props: { src: string }) => {
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
-				width: "100%"
+				width: "100%",
 			}}
 		>
 			<img style={{ width: "100%" }} src={props.src} />
@@ -467,7 +462,7 @@ const CodeComments = (props: {
 
 		return {
 			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
-			img: state.ide.name === "JETBRAINS" ? "CM-JB.gif" : "CM.gif"
+			img: state.ide.name === "JETBRAINS" ? "CM-JB.gif" : "CM.gif",
 		};
 	}, shallowEqual);
 
@@ -511,7 +506,7 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 
 		return {
 			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
-			img: state.ide.name === "JETBRAINS" ? "FR-JB.gif" : "FR.gif"
+			img: state.ide.name === "JETBRAINS" ? "FR-JB.gif" : "FR.gif",
 		};
 	}, shallowEqual);
 
@@ -551,7 +546,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 					"bitbucket",
 					"bitbucket_server",
 					"gitlab",
-					"gitlab_enterprise"
+					"gitlab_enterprise",
 				].includes(providers[id].name)
 			)
 			.sort((a, b) => {
@@ -566,7 +561,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 			codeHostProviders,
 			connectedCodeHostProviders,
 			img1: state.ide.name === "JETBRAINS" ? "PR-GH-JB.gif" : "PR-GH.gif",
-			img2: state.ide.name === "JETBRAINS" ? "PR-GLBB-JB.gif" : "PR-GLBB.gif"
+			img2: state.ide.name === "JETBRAINS" ? "PR-GLBB-JB.gif" : "PR-GLBB.gif",
 		};
 	}, shallowEqual);
 
@@ -768,7 +763,7 @@ const ConnectIssueProvider = (props: { className: string; skip: Function }) => {
 				"bitbucket",
 				"bitbucket_server",
 				"gitlab",
-				"gitlab_enterprise"
+				"gitlab_enterprise",
 			].includes(providers[id].name)
 		);
 		const issueProviders = Object.keys(providers)
@@ -776,7 +771,7 @@ const ConnectIssueProvider = (props: { className: string; skip: Function }) => {
 			.filter(id => !codeHostProviders.includes(id));
 
 		return {
-			issueProviders
+			issueProviders,
 		};
 	}, shallowEqual);
 
@@ -830,7 +825,7 @@ const ConnectMessagingProvider = (props: {
 		const { providers } = state;
 
 		return {
-			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing)
+			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
 		};
 	}, shallowEqual);
 
@@ -886,15 +881,15 @@ const ConnectMessagingProvider = (props: {
 };
 
 const InviteTeammates = (props: { className: string; skip: Function; positionDots: Function }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
 		const dontSuggestInvitees = team.settings ? team.settings.dontSuggestInvitees || {} : {};
 
 		return {
 			providers: state.providers,
 			dontSuggestInvitees,
-			teamMembers: getTeamMembers(state)
+			teamMembers: getTeamMembers(state),
 		};
 	}, shallowEqual);
 
@@ -939,9 +934,9 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 				{
 					label: "Skip Step",
 					action: () => props.skip(),
-					className: "secondary"
-				}
-			]
+					className: "secondary",
+				},
+			],
 		});
 	};
 
@@ -970,7 +965,7 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 			await dispatch(invite({ email, inviteType: method }));
 			HostApi.instance.track("Teammate Invited", {
 				"Invitee Email Address": email,
-				"Invitation Method": method
+				"Invitation Method": method,
 			});
 		}
 	};
@@ -1014,7 +1009,7 @@ const InviteTeammates = (props: { className: string; skip: Function; positionDot
 										onChange={() => {
 											setSkipSuggestedField({
 												...skipSuggestedField,
-												[user.email]: !skipSuggestedField[user.email]
+												[user.email]: !skipSuggestedField[user.email],
 											});
 										}}
 									>
@@ -1071,7 +1066,7 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true,
-			includeProviders: true
+			includeProviders: true,
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
@@ -1092,7 +1087,7 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 							textAlign: "center",
 							margin: "0 0 10px 0",
 							fontSize: "larger",
-							color: "var(--text-color-highlight)"
+							color: "var(--text-color-highlight)",
 						}}
 					>
 						Try sharing a code comment with your team:
@@ -1133,14 +1128,14 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 };
 
 const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingStep?: Function }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers } = state;
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 
 		return {
 			providers: state.providers,
-			connectedProviders
+			connectedProviders,
 		};
 	}, shallowEqual);
 
@@ -1159,15 +1154,14 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 								if (connected) return;
 								if (provider.id == "login*microsoftonline*com") {
 									HostApi.instance.send(OpenUrlRequestType, {
-										url:
-											"https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
+										url: "https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/",
 									});
 									HostApi.instance.send(TelemetryRequestType, {
 										eventName: "Service Connected",
 										properties: {
 											Service: provider.name,
-											"Connection Location": "Onboard"
-										}
+											"Connection Location": "Onboard",
+										},
 									});
 									if (props.setShowNextMessagingStep) props.setShowNextMessagingStep(true);
 									return;

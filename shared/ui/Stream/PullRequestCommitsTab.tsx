@@ -2,9 +2,9 @@ import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessag
 import { CodeStreamState } from "@codestream/webview/store";
 import {
 	getPullRequestCommits,
-	getPullRequestCommitsFromProvider
-} from "@codestream/webview/store/providerPullRequests/actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+	getPullRequestCommitsFromProvider,
+} from "@codestream/webview/store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
@@ -19,7 +19,7 @@ import { HostApi } from "../webview-api";
 import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
-	FetchThirdPartyPullRequestCommitsResponse
+	FetchThirdPartyPullRequestCommitsResponse,
 } from "@codestream/protocols/agent";
 
 const PRCommitContent = styled.div`
@@ -109,8 +109,8 @@ const PRCommitButtons = styled.div`
 
 export const PullRequestCommitsTab = props => {
 	const { pr } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentPullRequestProviderId = state.context.currentPullRequest
 			? state.context.currentPullRequest.providerId
 			: null;
@@ -131,7 +131,7 @@ export const PullRequestCommitsTab = props => {
 			currentPullRequest: state.context.currentPullRequest,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
-				: undefined
+				: undefined,
 		};
 	});
 
@@ -162,9 +162,15 @@ export const PullRequestCommitsTab = props => {
 
 	const getData = async (options?: { force: true }) => {
 		const data = await dispatch(
-			getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!, options)
-		);
-		_mapData(data as any);
+			getPullRequestCommits({
+				providerId: pr.providerId,
+				id: derivedState.currentPullRequestId!,
+				options,
+			})
+		).unwrap();
+		if (data) {
+			_mapData(data);
+		}
 	};
 
 	useDidMount(() => {
@@ -177,9 +183,14 @@ export const PullRequestCommitsTab = props => {
 				if (e.type === ChangeDataType.Commits) {
 					setIsLoading(true);
 					const data = await dispatch(
-						getPullRequestCommitsFromProvider(pr.providerId, derivedState.currentPullRequestId!)
-					);
-					_mapData(data as any);
+						getPullRequestCommitsFromProvider({
+							providerId: pr.providerId,
+							id: derivedState.currentPullRequestId!,
+						})
+					).unwrap();
+					if (data) {
+						_mapData(data);
+					}
 				}
 			});
 		})();
@@ -208,7 +219,7 @@ export const PullRequestCommitsTab = props => {
 							{new Intl.DateTimeFormat("en", {
 								day: "numeric",
 								month: "short",
-								year: "numeric"
+								year: "numeric",
 							}).format(new Date(day.toString()))}
 						</PRCommitDay>
 						<div>

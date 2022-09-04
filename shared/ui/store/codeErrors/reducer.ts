@@ -1,14 +1,14 @@
-import { createSelector } from "reselect";
-import { toMapBy } from "../../utils";
-import { ActionType, Index } from "../common";
-import * as actions from "./actions";
-import * as activeIntegrationsActions from "../activeIntegrations/actions";
-import { CodeErrorsActionsTypes, CodeErrorsState } from "./types";
 import { CSCodeError } from "@codestream/protocols/api";
+import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
+import { toMapBy } from "../../utils";
+import * as activeIntegrationsActions from "../activeIntegrations/actions";
 import { ActiveIntegrationsActionType } from "../activeIntegrations/types";
-import { getTeamMates } from "../users/reducer";
+import { ActionType, Index } from "../common";
 import { ContextState } from "../context/types";
+import { getTeamMates } from "../users/reducer";
+import * as actions from "./actions";
+import { CodeErrorsActionsTypes, CodeErrorsState } from "./types";
 
 type CodeErrorsActions = ActionType<typeof actions>;
 type ActiveIntegrationsActions = ActionType<typeof activeIntegrationsActions>;
@@ -24,7 +24,7 @@ export function reduceCodeErrors(
 			return {
 				bootstrapped: true,
 				errorGroups: state.errorGroups,
-				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) }
+				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
 			};
 		case CodeErrorsActionsTypes.AddCodeErrors:
 			const newCodeErrors = toMapBy("id", action.payload);
@@ -38,14 +38,14 @@ export function reduceCodeErrors(
 			return {
 				bootstrapped: state.bootstrapped,
 				errorGroups: state.errorGroups,
-				codeErrors: { ...state.codeErrors, ...newCodeErrors }
+				codeErrors: { ...state.codeErrors, ...newCodeErrors },
 			};
 		case CodeErrorsActionsTypes.UpdateCodeErrors:
 		case CodeErrorsActionsTypes.SaveCodeErrors: {
 			return {
 				bootstrapped: state.bootstrapped,
 				errorGroups: state.errorGroups,
-				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) }
+				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
 			};
 		}
 		case CodeErrorsActionsTypes.Delete: {
@@ -54,7 +54,7 @@ export function reduceCodeErrors(
 			return {
 				bootstrapped: state.bootstrapped,
 				codeErrors: nextCodeErrors,
-				errorGroups: state.errorGroups
+				errorGroups: state.errorGroups,
 			};
 		}
 		case CodeErrorsActionsTypes.SetErrorGroup: {
@@ -62,22 +62,22 @@ export function reduceCodeErrors(
 
 			nextErrorGroups[action.payload.id] = {
 				errorGroup: action.payload.data,
-				id: action.payload.id
+				id: action.payload.id,
 			};
 			return {
 				...state,
-				errorGroups: nextErrorGroups
+				errorGroups: nextErrorGroups,
 			};
 		}
 		case CodeErrorsActionsTypes.IsLoadingErrorGroup: {
 			const nextErrorGroups = { ...state.errorGroups };
 			nextErrorGroups[action.payload.id] = {
 				...nextErrorGroups[action.payload.id],
-				isLoading: action.payload.data.isLoading
+				isLoading: action.payload.data.isLoading,
 			};
 			return {
 				...state,
-				errorGroups: nextErrorGroups
+				errorGroups: nextErrorGroups,
 			};
 		}
 		case ActiveIntegrationsActionType.DeleteForProvider: {
@@ -85,7 +85,7 @@ export function reduceCodeErrors(
 			if (action.payload.providerId === "newrelic*com") {
 				return {
 					...state,
-					errorGroups: {}
+					errorGroups: {},
 				};
 			} else {
 				return state;
@@ -94,7 +94,7 @@ export function reduceCodeErrors(
 		case CodeErrorsActionsTypes.HandleDirectives: {
 			const nextErrorGroups = { ...state.errorGroups };
 			nextErrorGroups[action.payload.id] = {
-				...nextErrorGroups[action.payload.id]
+				...nextErrorGroups[action.payload.id],
 			};
 
 			const errorGroupWrapper = nextErrorGroups[action.payload.id];
@@ -200,7 +200,7 @@ export const getAllCodeErrorLinks = createSelector(
 			.map(_ => {
 				return {
 					id: _.id,
-					permalink: _.permalink
+					permalink: _.permalink,
 				};
 			})
 );

@@ -1,32 +1,31 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Icon from "../../Icon";
-import { MarkdownText } from "../../MarkdownText";
-import { PullRequestReplyComment } from "../../PullRequestReplyComment";
-import Timestamp from "../../Timestamp";
-import Tooltip from "../../Tooltip";
-import { OutlineBox } from "./PullRequest";
 import {
-	Note,
 	DiscussionNode,
 	FetchThirdPartyPullRequestPullRequest,
-	GitLabMergeRequest
+	GitLabMergeRequest,
+	Note,
 } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { Button } from "@codestream/webview/src/components/Button";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
+import { HostApi } from "@codestream/webview/webview-api";
+import copy from "copy-to-clipboard";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { api } from "../../../store/providerPullRequests/thunks";
+import Icon from "../../Icon";
+import { Link } from "../../Link";
+import { MarkdownText } from "../../MarkdownText";
 import { PullRequestCommentMenu } from "../../PullRequestCommentMenu";
 import { PRActionIcons, PRCodeCommentReplyInput } from "../../PullRequestComponents";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
-import { Link } from "../../Link";
 import { PullRequestEditingComment } from "../../PullRequestEditingComment";
-import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
-import { Button } from "@codestream/webview/src/components/Button";
 import { PullRequestPatch } from "../../PullRequestPatch";
-import copy from "copy-to-clipboard";
-import { HostApi } from "@codestream/webview/webview-api";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { api } from "../../../store/providerPullRequests/actions";
+import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 import Tag from "../../Tag";
+import Timestamp from "../../Timestamp";
+import { OutlineBox } from "./PullRequest";
+import { PullRequestReactions } from "./PullRequestReactions";
 
 const ActionBox = styled.div`
 	margin: 0 20px 15px 20px;
@@ -189,7 +188,7 @@ export const Timeline = (props: Props) => {
 	if (filter === "history") discussions = discussions.filter(_ => !isComment(_));
 	else if (filter === "comments") discussions = discussions.filter(_ => isComment(_));
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	const iconMap = {
 		user: "person",
@@ -213,7 +212,7 @@ export const Timeline = (props: Props) => {
 		"merge-request-closed": "minus-circle",
 		"merge-request-merged": "git-merge",
 		"merge-request-approved": "check",
-		"merge-request-unapproved": "minus-circle"
+		"merge-request-unapproved": "minus-circle",
 	};
 
 	const __onDidRender = (functions, id) => {
@@ -243,11 +242,11 @@ export const Timeline = (props: Props) => {
 	const setEditingComment = (comment, value) => {
 		setEditingComments({
 			...editingComments,
-			[comment.id]: value
+			[comment.id]: value,
 		});
 		setPendingComments({
 			...pendingComments,
-			[comment.id]: value ? comment.body : ""
+			[comment.id]: value ? comment.body : "",
 		});
 	};
 
@@ -347,7 +346,7 @@ export const Timeline = (props: Props) => {
 
 					<PRActionIcons>
 						<PRAuthorBadges
-							pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+							pr={pr as unknown as FetchThirdPartyPullRequestPullRequest}
 							node={note}
 							isPending={note.state === "PENDING"}
 						/>
@@ -378,7 +377,7 @@ export const Timeline = (props: Props) => {
 											quote(text, id);
 											setOpenComments({
 												...openComments,
-												[id]: true
+												[id]: true,
 											});
 									  }
 									: undefined
@@ -460,7 +459,7 @@ export const Timeline = (props: Props) => {
 	const [resolvingNote, setResolvingNote] = useState("");
 	const resolveNote = async (id, shouldResolve) => {
 		setResolvingNote(id);
-		await dispatch(api("resolveReviewThread", { id, onOff: shouldResolve }));
+		await dispatch(api({ method: "resolveReviewThread", params: { id, onOff: shouldResolve } }));
 		setResolvingNote("");
 	};
 
@@ -605,7 +604,7 @@ export const Timeline = (props: Props) => {
 						{!hiddenComments[note.id] && note.state !== "PENDING" && (
 							<ReplyForm>
 								<PullRequestReplyComment
-									pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+									pr={pr as unknown as FetchThirdPartyPullRequestPullRequest}
 									databaseId={note.id}
 									parentId={note.discussion.id}
 									isOpen={openComments[note.id]}
@@ -637,7 +636,7 @@ export const Timeline = (props: Props) => {
 											narrow
 											onClick={() =>
 												HostApi.instance.send(OpenUrlRequestType, {
-													url: `${pr.repository.url}/-/issues/new?discussion_to_resolve=${note.databaseId}&merge_request_to_resolve_discussions_of=${pr.number}`
+													url: `${pr.repository.url}/-/issues/new?discussion_to_resolve=${note.databaseId}&merge_request_to_resolve_discussions_of=${pr.number}`,
 												})
 											}
 										>
@@ -680,7 +679,7 @@ export const Timeline = (props: Props) => {
 				style={{
 					height: "1px",
 					background: "var(--base-border-color)",
-					margin: "0 20px 30px 20px"
+					margin: "0 20px 30px 20px",
 				}}
 			/>
 		</>

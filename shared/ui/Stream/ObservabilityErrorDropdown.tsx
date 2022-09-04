@@ -1,15 +1,12 @@
+import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
-import { PaneNodeName } from "../src/components/Pane";
 import { ErrorRow } from "./Observability";
-import { openErrorGroup } from "../store/codeErrors/actions";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { HostApi } from "../webview-api";
 interface Props {
 	observabilityErrors?: any;
 	observabilityRepo?: any;
@@ -17,10 +14,10 @@ interface Props {
 }
 
 export const ObservabilityErrorDropdown = React.memo((props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			sessionStart: state.context.sessionStart
+			sessionStart: state.context.sessionStart,
 		};
 	}, shallowEqual);
 
@@ -52,7 +49,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 40px"
+					padding: "2px 10px 2px 40px",
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
@@ -89,7 +86,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 														pendingEntityId: err.entityId,
 														occurrenceId: err.occurrenceId,
 														pendingErrorGroupGuid: err.errorGroupGuid,
-														src: "Observability Section"
+														src: "Observability Section",
 													})
 												);
 											}}

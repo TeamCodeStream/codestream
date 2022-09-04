@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
@@ -27,12 +28,12 @@ export const Root = styled.div`
 export const ReactAndDisplayOptions = props => {
 	const { pr, setIsLoadingMessage } = props;
 
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
-			filter: preferences.pullRequestTimelineFilter || "all"
+			filter: preferences.pullRequestTimelineFilter || "all",
 		};
 	});
 
@@ -41,7 +42,7 @@ export const ReactAndDisplayOptions = props => {
 	const filterMap = {
 		all: "Show all activity",
 		history: "Show history only",
-		comments: "Show comments only"
+		comments: "Show comments only",
 	};
 
 	return (
@@ -61,14 +62,20 @@ export const ReactAndDisplayOptions = props => {
 							label: "Oldest first",
 							key: "oldest",
 							checked: order === "oldest",
-							action: () => dispatch(setUserPreference(["pullRequestTimelineOrder"], "oldest"))
+							action: () =>
+								dispatch(
+									setUserPreference({ prefPath: ["pullRequestTimelineOrder"], value: "oldest" })
+								),
 						},
 						{
 							label: "Newest first",
 							key: "newest",
 							checked: order === "newest",
-							action: () => dispatch(setUserPreference(["pullRequestTimelineOrder"], "newest"))
-						}
+							action: () =>
+								dispatch(
+									setUserPreference({ prefPath: ["pullRequestTimelineOrder"], value: "newest" })
+								),
+						},
 					]}
 				>
 					{order === "oldest" ? "Oldest first" : "Newest first"}
@@ -80,21 +87,30 @@ export const ReactAndDisplayOptions = props => {
 							label: "Show all activity",
 							key: "all",
 							checked: filter === "all",
-							action: () => dispatch(setUserPreference(["pullRequestTimelineFilter"], "all"))
+							action: () =>
+								dispatch(
+									setUserPreference({ prefPath: ["pullRequestTimelineFilter"], value: "all" })
+								),
 						},
 						{ label: "-" },
 						{
 							label: "Show comments only",
 							key: "comments",
 							checked: filter === "comments",
-							action: () => dispatch(setUserPreference(["pullRequestTimelineFilter"], "comments"))
+							action: () =>
+								dispatch(
+									setUserPreference({ prefPath: ["pullRequestTimelineFilter"], value: "comments" })
+								),
 						},
 						{
 							label: "Show history only",
 							key: "history",
 							checked: filter === "history",
-							action: () => dispatch(setUserPreference(["pullRequestTimelineFilter"], "history"))
-						}
+							action: () =>
+								dispatch(
+									setUserPreference({ prefPath: ["pullRequestTimelineFilter"], value: "history" })
+								),
+						},
 					]}
 				>
 					{filterMap[filter] || filter}

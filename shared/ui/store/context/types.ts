@@ -1,9 +1,9 @@
-import { MetricTimesliceNameMapping } from "@codestream/protocols/agent";
+import { MetricTimesliceNameMapping, RepoProjectType } from "@codestream/protocols/agent";
 import {
 	WebviewContext,
 	WebviewPanels,
 	WebviewModals,
-	NewPullRequestBranch
+	NewPullRequestBranch,
 } from "@codestream/protocols/webview";
 import { AnyObject } from "@codestream/webview/utils";
 import { CodemarkType } from "@codestream/protocols/api";
@@ -55,7 +55,8 @@ export enum ContextActionsType {
 	SetIsFirstPageview = "@context/SetIsFirstPageview",
 	SetPendingProtocolHandlerUrl = "@context/SetPendingProtocolHandlerUrl",
 	SetWantNewRelicOptions = "@context/SetWantNewRelicOptions",
-	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry"
+	SetClearNewRelicOptions = "@context/SetClearNewRelicOptions",
+	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 }
 
 /**
@@ -70,6 +71,13 @@ export type PostEntryPoint =
 	| "Advanced"
 	| string
 	| undefined;
+
+export interface WantNewRelicOptions {
+	projectType: RepoProjectType;
+	repoId?: string;
+	path?: string;
+	projects?: { path: string; name?: string; version?: string }[];
+}
 
 export interface ContextState extends WebviewContext {
 	channelFilter: string;
@@ -120,7 +128,7 @@ export interface ContextState extends WebviewContext {
 	};
 	errorsInboxOptions?: { stack?: string; customAttributes?: string; url?: string };
 
-	wantNewRelicOptions?: { repoId?: string; path?: string; projectType?: any };
+	wantNewRelicOptions?: WantNewRelicOptions;
 	currentMethodLevelTelemetry?: CurrentMethodLevelTelemetry;
 
 	selectedRegion?: string;
@@ -141,7 +149,7 @@ export enum Route {
 	CompanyCreation = "companyCreation",
 	ForgotPassword = "forgotPassword",
 	MustSetPassword = "MustSetPassword",
-	OktaConfig = "oktaConfig"
+	OktaConfig = "oktaConfig",
 }
 
 export interface RouteState {

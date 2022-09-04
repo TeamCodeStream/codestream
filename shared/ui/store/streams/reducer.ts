@@ -1,16 +1,16 @@
+import { createSelector } from "@reduxjs/toolkit";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { StreamActionType, StreamsState } from "./types";
 import { includes as _includes, sortBy as _sortBy, sortBy } from "lodash-es";
-import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { emptyArray } from "@codestream/webview/utils";
-import { CSChannelStream } from "@codestream/protocols/api";
+import { CSChannelStream, CSStream } from "@codestream/protocols/api";
 
 type StreamsAction = ActionType<typeof actions>;
 
 const initialState: StreamsState = {
-	byTeam: {}
+	byTeam: {},
 };
 
 const addStreamForTeam = (state, stream) => {
@@ -18,13 +18,13 @@ const addStreamForTeam = (state, stream) => {
 	const teamStreams = state[teamId] || {};
 	return {
 		...state,
-		[teamId]: { ...teamStreams, [stream.id]: stream }
+		[teamId]: { ...teamStreams, [stream.id]: stream },
 	};
 };
 
 const addStream = (state, stream) => {
 	return {
-		byTeam: addStreamForTeam(state.byTeam, stream)
+		byTeam: addStreamForTeam(state.byTeam, stream),
 	};
 };
 
@@ -40,7 +40,7 @@ export const reduceStreams = (state: StreamsState = initialState, action: Stream
 			delete streamsForTeam[action.payload.streamId];
 			return {
 				...state,
-				byTeam: { ...state.byTeam, [action.payload.teamId]: streamsForTeam }
+				byTeam: { ...state.byTeam, [action.payload.teamId]: streamsForTeam },
 			};
 		}
 		case "RESET":
@@ -64,8 +64,8 @@ export const getChannelStreamsForTeam = createSelector(
 	(state: CodeStreamState) => state.streams,
 	(_, teamId: string) => teamId,
 	(state: CodeStreamState) => state.session.userId!,
-	(state, teamId, userId) => {
-		const streams = state.byTeam[teamId];
+	(streamState, teamId, userId) => {
+		const streams: CSStream[] = streamState.byTeam[teamId]; // TODO why is this not auto-typed
 
 		if (streams == null) return emptyArray;
 
@@ -120,7 +120,7 @@ const makeDirectMessageStreamName = (memberIds, users) => {
 	if (names.length === 0) {
 		console.error("Cannot construct direct message stream name without member names", {
 			memberIds,
-			users
+			users,
 		});
 		return "NO NAME";
 	}

@@ -1,4 +1,10 @@
-import { EnvironmentHost, GetFileScmInfoResponse, ThirdPartyProviderCard, ThirdPartyProviderConfig, TransitionsEntity } from "@codestream/protocols/agent";
+import {
+	EnvironmentHost,
+	GetFileScmInfoResponse,
+	ThirdPartyProviderCard,
+	ThirdPartyProviderConfig,
+	TransitionsEntity,
+} from "@codestream/protocols/agent";
 import { Position, Range } from "vscode-languageserver-types";
 import { NewPullRequestBranch } from "./webview.protocol";
 
@@ -13,7 +19,7 @@ export interface EditorMargins {
 
 export enum EditorScrollMode {
 	Pixels = "pixels",
-	Lines = "lines"
+	Lines = "lines",
 }
 
 export interface EditorMetrics {
@@ -68,7 +74,7 @@ export enum WebviewPanels {
 	CodeError = "code-error",
 	Observability = "observability",
 	PixieDynamicLogging = "pixie-dynamic-logging",
-	MethodLevelTelemetry = "method-level-telemetry"
+	MethodLevelTelemetry = "method-level-telemetry",
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -93,7 +99,7 @@ export const WebviewPanelNames = {
 	"blame-map": "Blame Map",
 	newrelic: "Observability",
 	observability: "Observability",
-	"pixie-dynamic-logging": "Dynamic Logging Using Pixie"
+	"pixie-dynamic-logging": "Dynamic Logging Using Pixie",
 };
 
 export enum WebviewModals {
@@ -118,7 +124,7 @@ export enum WebviewModals {
 	Team = "people",
 	Profile = "profile",
 	AddNewRelicNodeJS = "add-new-relic-nodejs",
-	AddNewRelicJava = "add-new-relic-java"
+	AddNewRelicJava = "add-new-relic-java",
 }
 
 export interface CodeErrorData {
@@ -146,6 +152,19 @@ export interface TeamlessContext {
 	forceRegion?: string;
 }
 
+export interface PullRequest {
+	providerId: string;
+	id: string;
+	commentId?: string;
+	/* defined if this was triggered by an external means (like an IDE button, etc.) */
+	source?: string;
+	/* details means show the full PR as the only view. sidebar-diffs means to show it as an expanded tree node */
+	view?: "details" | "sidebar-diffs";
+	previousView?: "details" | "sidebar-diffs" | undefined;
+	metadata?: any;
+	groupIndex?: string | undefined;
+}
+
 export interface WebviewContext {
 	currentTeamId: string;
 	sessionStart?: number;
@@ -168,20 +187,7 @@ export interface WebviewContext {
 	currentCodeErrorData?: CodeErrorData;
 	createPullRequestReviewId?: string;
 	createPullRequestOptions?: NewPullRequestBranch;
-	currentPullRequest?:
-		| {
-				providerId: string;
-				id: string;
-				commentId?: string;
-				/* defined if this was triggered by an external means (like an IDE button, etc.) */
-				source?: string;
-				/* details means show the full PR as the only view. sidebar-diffs means to show it as an expanded tree node */
-				view?: "details" | "sidebar-diffs";
-				previousView?: "details" | "sidebar-diffs" | undefined;
-				metadata?: any;
-				groupIndex?: string | undefined;
-		  }
-		| undefined;
+	currentPullRequest?: PullRequest | undefined;
 	profileUserId?: string;
 	currentMarkerId?: string;
 	isRepositioning?: boolean;
@@ -270,7 +276,7 @@ export const findHost = (): IpcHost => {
 export enum IpcRoutes {
 	Agent = "codestream",
 	Host = "host",
-	Webview = "webview"
+	Webview = "webview",
 }
 
 export interface WebviewIpcNotificationMessage {

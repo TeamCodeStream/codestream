@@ -1,22 +1,22 @@
-import React from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { Row } from "./CrossPostIssueControls/IssuesPane";
-import { PRHeadshot } from "../src/components/Headshot";
-import Tooltip from "./Tooltip";
 import { GetMyPullRequestsResponse, ThirdPartyProviderConfig } from "@codestream/protocols/agent";
-import { Button } from "../src/components/Button";
-import { getMyPullRequests } from "../store/providerPullRequests/actions";
-import Tag from "./Tag";
-import { Modal } from "./Modal";
-import { Dialog, ButtonRow } from "../src/components/Dialog";
-import { Link } from "./Link";
-import { PullRequestTooltip } from "./OpenPullRequests";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import React from "react";
 import styled from "styled-components";
 import { PullRequestQuery } from "../protocols/agent/api.protocol.models";
-import { CodeStreamState } from "../store";
+import { Button } from "../src/components/Button";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { ButtonRow, Dialog } from "../src/components/Dialog";
+import { PRHeadshot } from "../src/components/Headshot";
+import { CodeStreamState } from "../store";
+import { getMyPullRequests } from "../store/providerPullRequests/thunks";
 import { getPRLabel } from "../store/providers/reducer";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { Link } from "./Link";
+import { Modal } from "./Modal";
+import { PullRequestTooltip } from "./OpenPullRequests";
+import Tag from "./Tag";
+import Tooltip from "./Tooltip";
 
 const PRTestResults = styled.div`
 	margin: 20px -20px 0 -20px;
@@ -37,8 +37,8 @@ interface Props {
 }
 
 export function ConfigurePullRequestQuery(props: Props) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences, providers } = state;
 
 		return {
@@ -47,7 +47,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 			allRepos:
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
-					: preferences.pullRequestQueryShowAllRepos
+					: preferences.pullRequestQueryShowAllRepos,
 		};
 	});
 
@@ -75,7 +75,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 			"reviewed-by",
 			"review-requested",
 			"team-review-requested",
-			"project"
+			"project",
 		])
 	);
 	const [validGLQueries, setvalidGLQueries] = React.useState(
@@ -90,7 +90,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 			"reviewer_id",
 			"created_by_me",
 			"my_reaction_emoji",
-			"assigned_to_me"
+			"assigned_to_me",
 		])
 	);
 	const [validQuery, setValidQuery] = React.useState<boolean>(true);
@@ -149,10 +149,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 			return false;
 		} else if (providerIdField === "gitlab*com" || providerIdField === "gitlab/enterprise") {
 			// Verify if valid query for Gitlab
-			const queryStr = query
-				.replace(/[=&]/g, " ")
-				.replace(/[:]/g, " ")
-				.split(/\s+/);
+			const queryStr = query.replace(/[=&]/g, " ").replace(/[:]/g, " ").split(/\s+/);
 			for (let word of queryStr) {
 				if (validGLQueries.has(word)) {
 					setValidQuery(true);
@@ -172,16 +169,18 @@ export function ConfigurePullRequestQuery(props: Props) {
 			setTestPRSummaries(undefined);
 			try {
 				// FIXME hardcoded github
-				const response: any = await dispatch(
-					getMyPullRequests(
-						providerIdField,
-						[prQuery],
-						props.openReposOnly,
-						{ force: true },
-						true,
-						true
-					)
-				);
+				const response = await dispatch(
+					getMyPullRequests({
+						providerId: providerIdField,
+						queries: [prQuery],
+						openReposOnly: props.openReposOnly,
+						options: {
+							force: true,
+						},
+						test: true,
+						throwOnError: true,
+					})
+				).unwrap();
 				if (response && response.length) {
 					setErrorQuery(false);
 					setTestPRSummaries(response[0]);
@@ -225,7 +224,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 												return {
 													key: provider.id,
 													label: providerDisplay.displayName,
-													action: () => setProviderIdField(provider.id)
+													action: () => setProviderIdField(provider.id),
 												};
 											})}
 										>
@@ -318,7 +317,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 										query: queryField,
 										name: nameField,
 										providerId: defaultProviderId,
-										hidden: false
+										hidden: false,
 									});
 								}}
 							>

@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -7,8 +8,8 @@ import { setUserPreference } from "./actions";
 interface Props {}
 
 export function WallToWallBanner(props: Props) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences = {} } = state;
 
 		const showBanner =
@@ -18,7 +19,8 @@ export function WallToWallBanner(props: Props) {
 		return { showBanner };
 	});
 
-	const setSkip = () => dispatch(setUserPreference(["skipWallToWallBanner"], true));
+	const setSkip = () =>
+		dispatch(setUserPreference({ prefPath: ["skipWallToWallBanner"], value: true }));
 
 	if (derivedState.showBanner)
 		return (

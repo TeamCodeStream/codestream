@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Icon from "./Icon";
@@ -8,13 +9,13 @@ import { HostApi } from "../webview-api";
 import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
-	FetchThirdPartyPullRequestPullRequest
+	FetchThirdPartyPullRequestPullRequest,
 } from "@codestream/protocols/agent";
 import { PRHeadshot } from "../src/components/Headshot";
 import MessageInput from "./MessageInput";
 import { ButtonRow } from "../src/components/Dialog";
 import { Button } from "../src/components/Button";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 import { DropdownButton, DropdownButtonItems } from "./DropdownButton";
 import { CodeStreamState } from "../store";
@@ -28,12 +29,12 @@ interface Props {
 }
 
 export const PullRequestBottomComment = styled((props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const { pr, setIsLoadingMessage } = props;
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			prLabel: getPRLabel(state)
+			prLabel: getPRLabel(state),
 		};
 	});
 
@@ -45,7 +46,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 	const trackComment = type => {
 		HostApi.instance.track("PR Comment Added", {
 			Host: pr.providerId,
-			"Comment Type": type
+			"Comment Type": type,
 		});
 	};
 
@@ -53,8 +54,13 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		setIsLoadingComment(true);
 		trackComment("Comment");
 		if (commentType === "thread")
-			await dispatch(api("createPullRequestThread", { text: replaceHtml(text) }));
-		else await dispatch(api("createPullRequestComment", { text: replaceHtml(text) }));
+			await dispatch(
+				api({ method: "createPullRequestThread", params: { text: replaceHtml(text) } })
+			);
+		else
+			await dispatch(
+				api({ method: "createPullRequestComment", params: { text: replaceHtml(text) } })
+			);
 		setText("");
 		setIsLoadingComment(false);
 	};
@@ -64,14 +70,17 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		setIsLoadingCommentAndClose(true);
 		trackComment("Comment and Close");
 		await dispatch(
-			api("createPullRequestCommentAndClose", {
-				text: replaceHtml(text),
-				startThread: commentType === "thread"
+			api({
+				method: "createPullRequestCommentAndClose",
+				params: {
+					text: replaceHtml(text),
+					startThread: commentType === "thread",
+				},
 			})
 		);
 
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
-			type: ChangeDataType.PullRequests
+			type: ChangeDataType.PullRequests,
 		});
 		setText("");
 		setIsLoadingMessage("");
@@ -86,14 +95,17 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		setIsLoadingCommentAndClose(true);
 		trackComment("Comment and Reopen");
 		await dispatch(
-			api("createPullRequestCommentAndReopen", {
-				text: replaceHtml(text),
-				startThread: commentType === "thread"
+			api({
+				method: "createPullRequestCommentAndReopen",
+				params: {
+					text: replaceHtml(text),
+					startThread: commentType === "thread",
+				},
 			})
 		);
 
 		HostApi.instance.emit(DidChangeDataNotificationType.method, {
-			type: ChangeDataType.PullRequests
+			type: ChangeDataType.PullRequests,
 		});
 		setText("");
 		setIsLoadingMessage("");
@@ -107,7 +119,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 		OFF_TOPIC: "off-topic",
 		SPAM: "spam",
 		TOO_HEATED: "too heated",
-		RESOLVED: "resolved"
+		RESOLVED: "resolved",
 	};
 
 	const [commentType, setCommentType] = useState("comment");
@@ -126,7 +138,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 				</span>
 			),
 			onSelect: () => setCommentType("comment"),
-			action: () => onCommentClick()
+			action: () => onCommentClick(),
 		});
 
 		if (pr.supports?.resolvingNotes) {
@@ -143,7 +155,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 					</span>
 				),
 				onSelect: () => setCommentType("thread"),
-				action: () => onCommentClick()
+				action: () => onCommentClick(),
 			});
 		}
 	}
@@ -255,7 +267,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 							style={{
 								margin: "5px 0 0 0",
 								border: isPreviewing ? "none" : "1px solid var(--base-border-color)",
-								fontFamily: "var(--font-family)"
+								fontFamily: "var(--font-family)",
 							}}
 						>
 							<MessageInput
@@ -276,7 +288,7 @@ export const PullRequestBottomComment = styled((props: Props) => {
 									flexGrow: 1,
 									flexWrap: "wrap",
 									justifyContent: "flex-end",
-									whiteSpace: "normal" // required for wrap
+									whiteSpace: "normal", // required for wrap
 								}}
 							>
 								{isGitLab ? [...buttons].reverse() : buttons}

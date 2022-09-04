@@ -10,7 +10,7 @@ import {
 	ReposScm,
 	SwitchBranchRequestType,
 	TransitionsEntity,
-	UpdateThirdPartyStatusRequestType
+	UpdateThirdPartyStatusRequestType,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
@@ -31,9 +31,9 @@ import { setCurrentCodemark, setStartWorkCard } from "../store/context/actions";
 import {
 	getConnectedSharingTargets,
 	getProviderConfig,
-	isConnected
+	isConnected,
 } from "../store/providers/reducer";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import { HostApi } from "../webview-api";
 import { setUserPreference, setUserStatus } from "./actions";
@@ -373,7 +373,7 @@ export const EMPTY_STATUS = {
 	ticketId: "",
 	ticketUrl: "",
 	ticketProvider: "",
-	invisible: false
+	invisible: false,
 };
 
 const EMPTY_ARRAY = [];
@@ -386,8 +386,8 @@ interface Props {
 const mruTransitionProviders = new Set(["auth*atlassian*com", "jiraserver/enterprise"]);
 
 export const StartWork = (props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const teamId = state.context.currentTeamId;
 		let status =
@@ -451,7 +451,7 @@ export const StartWork = (props: Props) => {
 			isCurrentUserAdmin: adminIds.includes(state.session.userId!),
 			shareToSlackSupported: isFeatureEnabled(state, "shareStatusToSlack"),
 			teamId,
-			transitionProviderPrefs
+			transitionProviderPrefs,
 		};
 	});
 	const { card } = props;
@@ -482,7 +482,7 @@ export const StartWork = (props: Props) => {
 			setLoadingSlack(true);
 			dispatch(connectProvider(derivedState.slackConfig!.id, "Status"));
 		} else {
-			dispatch(setUserPreference(["startWork", "updateSlack"], value));
+			dispatch(setUserPreference({ prefPath: ["startWork", "updateSlack"], value }));
 		}
 	};
 
@@ -524,9 +524,10 @@ export const StartWork = (props: Props) => {
 		return description;
 	}, [card]);
 
-	const setMoveCard = value => dispatch(setUserPreference(["startWork", "moveCard"], value));
+	const setMoveCard = value =>
+		dispatch(setUserPreference({ prefPath: ["startWork", "moveCard"], value }));
 	const setCreateBranch = value =>
-		dispatch(setUserPreference(["startWork", "createBranch"], value));
+		dispatch(setUserPreference({ prefPath: ["startWork", "createBranch"], value }));
 
 	const handleChangeStatus = value => {
 		setLabel(value || "");
@@ -574,7 +575,7 @@ export const StartWork = (props: Props) => {
 	const fetchBranchCommitsStatus = async () => {
 		const commitsStatus = await HostApi.instance.send(FetchBranchCommitsStatusRequestType, {
 			repoId: currentRepoId,
-			branchName: fromBranch || currentBranch
+			branchName: fromBranch || currentBranch,
 		});
 
 		setCommitsBehindOrigin(+commitsStatus.commitsBehindOrigin);
@@ -584,7 +585,7 @@ export const StartWork = (props: Props) => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true,
-			includeProviders: true
+			includeProviders: true,
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
@@ -595,7 +596,7 @@ export const StartWork = (props: Props) => {
 		}
 
 		let branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
-			uri: uri || derivedState.textEditorUri || ""
+			uri: uri || derivedState.textEditorUri || "",
 		});
 
 		// didn't find scm info for the current editor URI
@@ -603,7 +604,7 @@ export const StartWork = (props: Props) => {
 		if (!branchInfo.scm || branchInfo.error) {
 			if (response.repositories && response.repositories.length) {
 				branchInfo = await HostApi.instance.send(GetBranchesRequestType, {
-					uri: response.repositories[0].folder.uri
+					uri: response.repositories[0].folder.uri,
 				});
 				setRepoUri(response.repositories[0].folder.uri);
 			}
@@ -619,7 +620,10 @@ export const StartWork = (props: Props) => {
 			) {
 				defaultBranch = branchInfo.scm.current;
 				dispatch(
-					setUserPreference(["issueReposDefaultBranch"], { [branchInfo.scm.repoId]: defaultBranch })
+					setUserPreference({
+						prefPath: ["issueReposDefaultBranch"],
+						value: { [branchInfo.scm.repoId]: defaultBranch },
+					})
 				);
 			}
 
@@ -633,13 +637,13 @@ export const StartWork = (props: Props) => {
 
 			const commitsStatus = await HostApi.instance.send(FetchBranchCommitsStatusRequestType, {
 				repoId: branchInfo.scm.repoId,
-				branchName: defaultBranch
+				branchName: defaultBranch,
 			});
 
 			setCommitsBehindOrigin(+commitsStatus.commitsBehindOrigin);
 		}
 		return {
-			openRepos: response ? response.repositories : []
+			openRepos: response ? response.repositories : [],
 		};
 	};
 
@@ -707,7 +711,7 @@ export const StartWork = (props: Props) => {
 		card,
 		customBranchName,
 		derivedState.branchTicketTemplate,
-		derivedState.branchPreserveCase
+		derivedState.branchPreserveCase,
 	]);
 
 	const branch = React.useMemo(() => {
@@ -722,7 +726,7 @@ export const StartWork = (props: Props) => {
 		card,
 		customBranchName,
 		derivedState.branchTicketTemplate,
-		derivedState.branchPreserveCase
+		derivedState.branchPreserveCase,
 	]);
 
 	const save = async () => {
@@ -745,13 +749,13 @@ export const StartWork = (props: Props) => {
 				const result = await HostApi.instance.send(request, {
 					branch,
 					uri,
-					fromBranch: fromBranch || currentBranch
+					fromBranch: fromBranch || currentBranch,
 				});
 
 				if (result.error) {
 					logError(result.error, {
 						branch: branch,
-						uri: uri
+						uri: uri,
 					});
 					setScmError(result.error);
 					setLoading(false);
@@ -762,13 +766,16 @@ export const StartWork = (props: Props) => {
 			if (moveTheCardNow && card.providerId) {
 				if (mruTransitionProviders.has(card.provider.id) && card.idList) {
 					dispatch(
-						setUserPreference(["issueMru", card.provider.id, card.idList], moveCardDestinationId)
+						setUserPreference({
+							prefPath: ["issueMru", card.provider.id, card.idList],
+							value: moveCardDestinationId,
+						})
 					);
 				}
 				await HostApi.instance.send(MoveThirdPartyCardRequestType, {
 					providerId: card.providerId,
 					cardId: card.id,
-					listId: moveCardDestinationId
+					listId: moveCardDestinationId,
 				});
 			}
 
@@ -777,7 +784,7 @@ export const StartWork = (props: Props) => {
 					providerId: slackConfig.id,
 					providerTeamId: derivedState.selectedShareTarget.teamId,
 					text: "Working on: " + label,
-					icon: ":desktop_computer:"
+					icon: ":desktop_computer:",
 				});
 			}
 		} catch (e) {
@@ -787,7 +794,7 @@ export const StartWork = (props: Props) => {
 				"Branch Created": createTheBranchNow,
 				"Ticket Selected": card ? card.providerIcon : "",
 				"Ticket Moved": moveTheCardNow ? true : false,
-				"Status Set": updateSlackNow
+				"Status Set": updateSlackNow,
 			});
 		}
 
@@ -836,7 +843,7 @@ export const StartWork = (props: Props) => {
 				label: "Edit Branch Name",
 				key: "edit",
 				icon: <Icon name="pencil" />,
-				action: () => toggleEditingBranch(true)
+				action: () => toggleEditingBranch(true),
 			},
 			{
 				label: "Configure Branch Naming",
@@ -848,7 +855,7 @@ export const StartWork = (props: Props) => {
 					? "Disabled: branch name comes from 3rd party card"
 					: derivedState.isCurrentUserAdmin
 					? ""
-					: "Disabled: admin only"
+					: "Disabled: admin only",
 			}
 		);
 	}
@@ -862,7 +869,7 @@ export const StartWork = (props: Props) => {
 			action: () => {
 				setFromBranch(branch);
 				setIsFromBranchDefault(derivedState.issueReposDefaultBranch[currentRepoId] === branch);
-			}
+			},
 		};
 	});
 
@@ -872,7 +879,7 @@ export const StartWork = (props: Props) => {
 			icon: <Icon name={repo.id === currentRepoId ? "arrow-right" : "blank"} />,
 			label: derivedState.repos[repoId] ? derivedState.repos[repoId].name : repo.folder.name,
 			key: repo.id,
-			action: () => getBranches(repo.folder.uri)
+			action: () => getBranches(repo.folder.uri),
 		};
 	});
 
@@ -893,7 +900,7 @@ export const StartWork = (props: Props) => {
 						label: option.name,
 						icon: <Icon name={selected ? "arrow-right" : "blank"} />,
 						key: option.id,
-						action: () => setMoveCardDestination(option)
+						action: () => setMoveCardDestination(option),
 					};
 			  });
 
@@ -904,7 +911,7 @@ export const StartWork = (props: Props) => {
 		try {
 			await HostApi.instance.send(FetchRemoteBranchRequestType, {
 				repoId: currentRepoId,
-				branchName: fromBranch || currentBranch
+				branchName: fromBranch || currentBranch,
 			});
 			await fetchBranchCommitsStatus();
 		} catch (error) {
@@ -926,11 +933,11 @@ export const StartWork = (props: Props) => {
 						label: "Contact Support",
 						action: () => {
 							HostApi.instance.send(OpenUrlRequestType, {
-								url: "https://docs.newrelic.com/docs/codestream/"
+								url: "https://docs.newrelic.com/docs/codestream/",
 							});
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 			// setUnexpectedPullError(error);
 		} finally {
@@ -966,7 +973,7 @@ export const StartWork = (props: Props) => {
 														onClick={() => {
 															if (card.url) {
 																HostApi.instance.send(OpenUrlRequestType, {
-																	url: card.url
+																	url: card.url,
 																});
 															}
 														}}
@@ -1086,8 +1093,11 @@ export const StartWork = (props: Props) => {
 																	const isBranchDefault = !isFromBranchDefault;
 																	setIsFromBranchDefault(isBranchDefault);
 																	dispatch(
-																		setUserPreference(["issueReposDefaultBranch"], {
-																			[currentRepoId]: isBranchDefault ? fromBranch : ""
+																		setUserPreference({
+																			prefPath: ["issueReposDefaultBranch"],
+																			value: {
+																				[currentRepoId]: isBranchDefault ? fromBranch : "",
+																			},
 																		})
 																	);
 																	setCurrentBranch(fromBranch);

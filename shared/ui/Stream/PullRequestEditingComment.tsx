@@ -1,15 +1,16 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { PRButtonRow } from "./PullRequestComponents";
 import {
 	FetchThirdPartyPullRequestPullRequest,
-	GitLabMergeRequest
+	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
 import MessageInput from "./MessageInput";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
-import { api } from "../store/providerPullRequests/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 
 interface Props {
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export const PullRequestEditingComment = styled((props: Props) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const { pr, setIsLoadingMessage, type, id, done } = props;
 	const [text, setText] = useState(props.text);
 	const [isPreviewing, setIsPreviewing] = useState(false);
@@ -35,21 +36,22 @@ export const PullRequestEditingComment = styled((props: Props) => {
 			if (text == "" || text == props.text) return;
 
 			await dispatch(
-				api(
-					type === "REVIEW_COMMENT"
-						? "updateReviewComment"
-						: type === "ISSUE"
-						? "updateIssueComment"
-						: type === "PR"
-						? "updatePullRequestBody"
-						: "updateReview",
-					{
+				api({
+					method:
+						type === "REVIEW_COMMENT"
+							? "updateReviewComment"
+							: type === "ISSUE"
+							? "updateIssueComment"
+							: type === "PR"
+							? "updatePullRequestBody"
+							: "updateReview",
+					params: {
 						pullRequestId: "idComputed" in pr ? pr.idComputed : pr.id,
 						id,
 						isPending: props.isPending,
-						body: replaceHtml(text)
-					}
-				)
+						body: replaceHtml(text),
+					},
+				})
 			);
 
 			setText("");
@@ -80,9 +82,9 @@ export const PullRequestEditingComment = styled((props: Props) => {
 						action: () => {
 							setText("");
 							done();
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		}
 	};

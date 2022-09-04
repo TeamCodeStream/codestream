@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import * as Path from "path-browserify";
 import { connect, useDispatch, useSelector } from "react-redux";
@@ -105,8 +106,8 @@ interface Props {
 function Marker(props: Props) {
 	const { marker } = props;
 
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
 		return {
@@ -114,7 +115,7 @@ function Marker(props: Props) {
 			hideFile: preferences.markerHideFile,
 			showBranch: preferences.markerShowBranch,
 			showCommit: preferences.markerShowCommit,
-			tab: props.hasDiff ? preferences.markerTab || "original" : "original"
+			tab: props.hasDiff ? preferences.markerTab || "original" : "original",
 		};
 	});
 	const { showRepo, hideFile, showBranch, showCommit, tab } = derivedState;
@@ -130,11 +131,11 @@ function Marker(props: Props) {
 	};
 
 	const setPreference = (key, value) => {
-		dispatch(setUserPreference([key], value));
+		dispatch(setUserPreference({ prefPath: [key], value }));
 	};
 
 	const selectTab = value => {
-		dispatch(setUserPreference(["markerTab"], value));
+		dispatch(setUserPreference({ prefPath: ["markerTab"], value }));
 	};
 
 	const path = marker.file || "";
@@ -166,26 +167,26 @@ function Marker(props: Props) {
 						key: "repo",
 						label: "Show Repo",
 						checked: !!showRepo,
-						action: () => setPreference("markerShowRepo", !showRepo)
+						action: () => setPreference("markerShowRepo", !showRepo),
 					},
 					{
 						key: "file",
 						label: "Show File",
 						checked: !hideFile,
-						action: () => setPreference("markerHideFile", !hideFile)
+						action: () => setPreference("markerHideFile", !hideFile),
 					},
 					{
 						key: "branch",
 						label: "Show Branch",
 						checked: !!showBranch,
-						action: () => setPreference("markerShowBranch", !showBranch)
+						action: () => setPreference("markerShowBranch", !showBranch),
 					},
 					{
 						key: "commit",
 						label: "Show Commit",
 						checked: !!showCommit,
-						action: () => setPreference("markerShowCommit", !showCommit)
-					}
+						action: () => setPreference("markerShowCommit", !showCommit),
+					},
 				]}
 			>
 				<Icon name="gear" className="clickable" />

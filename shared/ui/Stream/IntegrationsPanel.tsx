@@ -1,7 +1,7 @@
 import {
 	configureAndConnectProvider,
 	disconnectProvider,
-	removeEnterpriseProvider
+	removeEnterpriseProvider,
 } from "@codestream/webview/store/providers/actions";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +9,7 @@ import ScrollBox from "./ScrollBox";
 import styled from "styled-components";
 import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
@@ -73,8 +73,8 @@ export const IntegrationButtons = styled.div<{ noBorder?: boolean; noPadding?: b
 `;
 
 export const IntegrationsPanel = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers, teams, context, session, users, configs } = state;
 		const team = teams[context.currentTeamId];
 		const teamSettings = team.settings || {};
@@ -98,7 +98,7 @@ export const IntegrationsPanel = () => {
 					"bitbucket",
 					"bitbucket_server",
 					"gitlab",
-					"gitlab_enterprise"
+					"gitlab_enterprise",
 				].includes(providers[id].name)
 			)
 			.filter(id => !connectedProviders.includes(id))
@@ -128,7 +128,7 @@ export const IntegrationsPanel = () => {
 			currentTeam: team,
 			currentUser: user,
 			currentUserIsAdmin,
-			isOnPrem: configs.isOnPrem
+			isOnPrem: configs.isOnPrem,
 		};
 	});
 
@@ -158,8 +158,8 @@ export const IntegrationsPanel = () => {
 						{
 							label: "Disconnect",
 							action: () =>
-								dispatch(disconnectProvider(providerId, "Integrations Panel", shareTarget.teamId))
-						}
+								dispatch(disconnectProvider(providerId, "Integrations Panel", shareTarget.teamId)),
+						},
 					];
 					return (
 						<ProviderDropdown key={providerId} items={items} variant="success">
@@ -177,13 +177,13 @@ export const IntegrationsPanel = () => {
 			const items = [
 				{
 					label: "Disconnect",
-					action: () => dispatch(disconnectProvider(providerId, "Integrations Panel"))
-				}
+					action: () => dispatch(disconnectProvider(providerId, "Integrations Panel")),
+				},
 			];
 			if (isEnterprise && derivedState.currentUserIsAdmin) {
 				items.push({
 					label: "Remove host",
-					action: () => dispatch(removeEnterpriseProvider(providerId))
+					action: () => dispatch(removeEnterpriseProvider(providerId)),
 				});
 			}
 			return (
@@ -242,12 +242,12 @@ export const IntegrationsPanel = () => {
 				const items = [
 					{
 						label: "Connect",
-						action
+						action,
 					},
 					{
 						label: "Remove host",
-						action: () => dispatch(removeEnterpriseProvider(providerId))
-					}
+						action: () => dispatch(removeEnterpriseProvider(providerId)),
+					},
 				];
 				return (
 					<ProviderDropdown key={providerId} items={items}>

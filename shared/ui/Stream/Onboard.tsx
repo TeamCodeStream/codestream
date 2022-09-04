@@ -3,14 +3,14 @@ import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { CodeStreamState } from "../store";
 import { getTeamMembers } from "../store/users/reducer";
-import { useDidMount, usePrevious } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { closePanel, invite, openPanel } from "./actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
 	ReposScm,
-	UpdateCompanyRequestType
+	UpdateCompanyRequestType,
 } from "@codestream/protocols/agent";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
@@ -35,7 +35,7 @@ import {
 	setOnboardStep,
 	handlePendingProtocolHandlerUrl,
 	clearPendingProtocolHandlerUrl,
-	clearForceRegion
+	clearForceRegion,
 } from "../store/context/actions";
 
 export const Step = styled.div`
@@ -337,7 +337,7 @@ export const Onboard = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS"
+			isInJetBrains: state.ide.name === "JETBRAINS",
 		};
 	}, shallowEqual);
 
@@ -394,7 +394,7 @@ export const OnboardFull = React.memo(function Onboard() {
 					"bitbucket",
 					"bitbucket_server",
 					"gitlab",
-					"gitlab_enterprise"
+					"gitlab_enterprise",
 				].includes(providers[id].name)
 			)
 			.sort((a, b) => {
@@ -433,7 +433,7 @@ export const OnboardFull = React.memo(function Onboard() {
 			teamMembers: getTeamMembers(state),
 			totalPosts: user.totalPosts || 0,
 			isInVSCode: state.ide.name === "VSC",
-			isInJetBrains: state.ide.name === "JETBRAINS"
+			isInJetBrains: state.ide.name === "JETBRAINS",
 		};
 	}, shallowEqual);
 
@@ -442,7 +442,7 @@ export const OnboardFull = React.memo(function Onboard() {
 		currentStep,
 		connectedCodeHostProviders,
 		connectedIssueProviders,
-		connectedMessagingProviders
+		connectedMessagingProviders,
 	} = derivedState;
 
 	let NUM_STEPS = 7;
@@ -543,7 +543,7 @@ export const OnboardFull = React.memo(function Onboard() {
 					position: "relative",
 					alignItems: "center",
 					overflowX: "hidden",
-					overflowY: currentStep === 0 ? "hidden" : "auto"
+					overflowY: currentStep === 0 ? "hidden" : "auto",
 				}}
 			>
 				<div className="standard-form" style={{ height: "auto", position: "relative" }}>
@@ -681,7 +681,7 @@ const GIF = (props: { src: string }) => {
 				display: "flex",
 				justifyContent: "center",
 				alignItems: "center",
-				width: "100%"
+				width: "100%",
 			}}
 		>
 			<img style={{ width: "100%" }} src={props.src} />
@@ -700,7 +700,7 @@ const CodeComments = (props: {
 
 		return {
 			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
-			img: state.ide.name === "JETBRAINS" ? "CM-JB.gif" : "CM.gif"
+			img: state.ide.name === "JETBRAINS" ? "CM-JB.gif" : "CM.gif",
 		};
 	}, shallowEqual);
 
@@ -744,7 +744,7 @@ const FeedbackRequests = (props: { className: string; skip: Function }) => {
 
 		return {
 			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
-			img: state.ide.name === "JETBRAINS" ? "FR-JB.gif" : "FR.gif"
+			img: state.ide.name === "JETBRAINS" ? "FR-JB.gif" : "FR.gif",
 		};
 	}, shallowEqual);
 
@@ -784,7 +784,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 					"bitbucket",
 					"bitbucket_server",
 					"gitlab",
-					"gitlab_enterprise"
+					"gitlab_enterprise",
 				].includes(providers[id].name)
 			)
 			.sort((a, b) => {
@@ -799,7 +799,7 @@ const PullRequests = (props: { className: string; skip: Function }) => {
 			codeHostProviders,
 			connectedCodeHostProviders,
 			img1: state.ide.name === "JETBRAINS" ? "PR-GH-JB.gif" : "PR-GH.gif",
-			img2: state.ide.name === "JETBRAINS" ? "PR-GLBB-JB.gif" : "PR-GLBB.gif"
+			img2: state.ide.name === "JETBRAINS" ? "PR-GLBB-JB.gif" : "PR-GLBB.gif",
 		};
 	}, shallowEqual);
 
@@ -881,12 +881,12 @@ export const ConnectCodeHostProvider = (props: { className: string; skip: Functi
 				"bitbucket",
 				"bitbucket_server",
 				"gitlab",
-				"gitlab_enterprise"
+				"gitlab_enterprise",
 			].includes(providers[id].name)
 		);
 
 		return {
-			codeHostProviders
+			codeHostProviders,
 		};
 	}, shallowEqual);
 
@@ -942,7 +942,7 @@ const ConnectIssueProvider = (props: { className: string; skip: Function }) => {
 				"bitbucket",
 				"bitbucket_server",
 				"gitlab",
-				"gitlab_enterprise"
+				"gitlab_enterprise",
 			].includes(providers[id].name)
 		);
 		const issueProviders = Object.keys(providers)
@@ -950,7 +950,7 @@ const ConnectIssueProvider = (props: { className: string; skip: Function }) => {
 			.filter(id => !codeHostProviders.includes(id));
 
 		return {
-			issueProviders
+			issueProviders,
 		};
 	}, shallowEqual);
 
@@ -1004,7 +1004,7 @@ const ConnectMessagingProvider = (props: {
 		const { providers } = state;
 
 		return {
-			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing)
+			messagingProviders: Object.keys(providers).filter(id => providers[id].hasSharing),
 		};
 	}, shallowEqual);
 
@@ -1060,9 +1060,9 @@ const ConnectMessagingProvider = (props: {
 };
 
 export const InviteTeammates = (props: { className: string; skip: Function; unwrap?: boolean }) => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const user = state.users[state.session.userId!];
 		const team =
 			state.teams && state.context.currentTeamId
@@ -1083,7 +1083,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			isWebmail: state.configs?.isWebmail,
 			webviewFocused: state.context.hasFocus,
 			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl,
-			currentUserIsAdmin
+			currentUserIsAdmin,
 		};
 	}, shallowEqual);
 
@@ -1160,7 +1160,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			await dispatch(invite({ email, inviteType: method }));
 			HostApi.instance.track("Teammate Invited", {
 				"Invitee Email Address": email,
-				"Invitation Method": method
+				"Invitation Method": method,
 			});
 		}
 	};
@@ -1207,7 +1207,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			try {
 				await HostApi.instance.send(UpdateCompanyRequestType, {
 					companyId,
-					domainJoining: allowDomainBasedJoining ? [domain] : []
+					domainJoining: allowDomainBasedJoining ? [domain] : [],
 				});
 				HostApi.instance.track("Domain Joining Enabled");
 			} catch (ex) {
@@ -1247,7 +1247,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 										onChange={() => {
 											setAddSuggestedField({
 												...addSuggestedField,
-												[user.email]: !addSuggestedField[user.email]
+												[user.email]: !addSuggestedField[user.email],
 											});
 										}}
 									>
@@ -1329,7 +1329,7 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true,
-			includeProviders: true
+			includeProviders: true,
 		});
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
@@ -1350,7 +1350,7 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 							textAlign: "center",
 							margin: "0 0 10px 0",
 							fontSize: "larger",
-							color: "var(--text-color-highlight)"
+							color: "var(--text-color-highlight)",
 						}}
 					>
 						Try sharing a code comment with your team:
@@ -1391,14 +1391,14 @@ const CreateCodemark = (props: { className: string; skip: Function }) => {
 };
 
 const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingStep?: Function }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers } = state;
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 
 		return {
 			providers: state.providers,
-			connectedProviders
+			connectedProviders,
 		};
 	}, shallowEqual);
 
@@ -1417,15 +1417,14 @@ const ProviderButtons = (props: { providerIds: string[]; setShowNextMessagingSte
 								if (connected) return;
 								if (provider.id == "login*microsoftonline*com") {
 									HostApi.instance.send(OpenUrlRequestType, {
-										url:
-											"https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/"
+										url: "https://docs.newrelic.com/docs/codestream/codestream-integrations/msteams-integration/",
 									});
 									HostApi.instance.send(TelemetryRequestType, {
 										eventName: "Service Connected",
 										properties: {
 											Service: provider.name,
-											"Connection Location": "Onboard"
-										}
+											"Connection Location": "Onboard",
+										},
 									});
 									if (props.setShowNextMessagingStep) props.setShowNextMessagingStep(true);
 									return;

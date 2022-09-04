@@ -1,3 +1,4 @@
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import Tooltip, { Placement } from "./Tooltip";
 import { useDispatch } from "react-redux";
@@ -23,7 +24,7 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 	let label = tag.label || color;
 	if (label.match(/\s/)) label = `"${label}"`;
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	const searchContext = React.useContext(SearchContext);
 	const goSearch = query => {
 		dispatch(setCurrentCodemark());
@@ -61,7 +62,7 @@ const Tag = React.forwardRef<any, Props>((props, ref) => {
 
 Tag.defaultProps = {
 	className: "",
-	onClick: event => event.preventDefault()
+	onClick: event => event.preventDefault(),
 };
 
 export default Tag;

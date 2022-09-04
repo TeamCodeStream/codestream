@@ -1,133 +1,128 @@
-import "@formatjs/intl-listformat/polyfill-locales";
-import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
-import React from "react";
-import { render } from "react-dom";
-import Container from "./Container";
-import {
-	EditorRevealRangeRequestType,
-	HostDidChangeActiveEditorNotificationType,
-	HostDidChangeConfigNotificationType,
-	HostDidChangeFocusNotificationType,
-	HostDidChangeEditorSelectionNotificationType,
-	HostDidChangeEditorVisibleRangesNotificationType,
-	HostDidLogoutNotificationType,
-	HostDidReceiveRequestNotificationType,
-	Route,
-	RouteControllerType,
-	RouteActionType,
-	ShowCodemarkNotificationType,
-	ShowReviewNotificationType,
-	ShowCodeErrorNotificationType,
-	ShowStreamNotificationType,
-	WebviewDidInitializeNotificationType,
-	WebviewPanels,
-	HostDidChangeVisibleEditorsNotificationType,
-	ShowPullRequestNotificationType,
-	HostDidChangeLayoutNotificationType,
-	RouteWithQuery,
-	ViewMethodLevelTelemetryNotificationType,
-	ShowProgressIndicatorType,
-	HandlePullRequestDirectivesNotificationType
-} from "./ipc/webview.protocol";
-import { createCodeStreamStore } from "./store";
-import { HostApi } from "./webview-api";
 import {
 	ApiVersionCompatibility,
+	ChangeDataType,
+	ConfigChangeReloadNotificationType,
+	ConnectionStatus,
 	DidChangeApiVersionCompatibilityNotificationType,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
-	DidChangeVersionCompatibilityNotificationType,
-	DidChangeServerUrlNotificationType,
-	ConnectionStatus,
-	ChangeDataType,
-	VersionCompatibility,
-	ThirdPartyProviders,
-	GetDocumentFromMarkerRequestType,
-	DidEncounterMaintenanceModeNotificationType,
-	VerifyConnectivityRequestType,
-	ExecuteThirdPartyRequestUntypedType,
-	GetReposScmRequestType,
 	DidChangeProcessBufferNotificationType,
-	NormalizeUrlRequestType,
-	GetNewRelicErrorGroupRequestType,
-	PixieDynamicLoggingResultNotification,
+	DidChangeServerUrlNotificationType,
+	DidChangeVersionCompatibilityNotificationType,
+	DidEncounterMaintenanceModeNotificationType,
 	DidResolveStackTraceLineNotificationType,
+	ExecuteThirdPartyRequestUntypedType,
+	GetDocumentFromMarkerRequestType,
+	GetReposScmRequestType,
+	NormalizeUrlRequestType,
+	PixieDynamicLoggingResultNotification,
 	TelemetrySetAnonymousIdRequestType,
-	ConfigChangeReloadNotificationType
+	ThirdPartyProviders,
+	VerifyConnectivityRequestType,
+	VersionCompatibility,
 } from "@codestream/protocols/agent";
-import { CSApiCapabilities, CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
-import translations from "./translations/en";
-// import translationsEs from "./translations/es";
-import { apiUpgradeRecommended, apiUpgradeRequired } from "./store/apiVersioning/actions";
-import { getCodemark } from "./store/codemarks/reducer";
-import { getReview } from "./store/reviews/reducer";
-import { getCodeError } from "./store/codeErrors/reducer";
-import { fetchCodemarks, openPanel } from "./Stream/actions";
-import { ContextState } from "./store/context/types";
-import { CodemarksState } from "./store/codemarks/types";
-import { EditorContextState } from "./store/editorContext/types";
-import { configureProvider, updateProviders } from "./store/providers/actions";
-import { isConnected } from "./store/providers/reducer";
-import { apiCapabilitiesUpdated } from "./store/apiVersioning/actions";
+import { CodemarkType, CSApiCapabilities, CSCodeError, CSMe } from "@codestream/protocols/api";
+import { logError } from "@codestream/webview/logger";
+import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
+import "@formatjs/intl-listformat/polyfill-locales";
+import { openErrorGroup, resolveStackTraceLine } from "@codestream/webview/store/codeErrors/thunks";
+import { updateConfigs } from "@codestream/webview/store/configs/slice";
+import { fetchReview } from "@codestream/webview/store/reviews/thunks";
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
+import * as path from "path-browserify";
+import React from "react";
+import { render } from "react-dom";
+import { Range } from "vscode-languageserver-types";
+import Container from "./Container";
+import {
+	EditorRevealRangeRequestType,
+	HandlePullRequestDirectivesNotificationType,
+	HostDidChangeActiveEditorNotificationType,
+	HostDidChangeConfigNotificationType,
+	HostDidChangeEditorSelectionNotificationType,
+	HostDidChangeEditorVisibleRangesNotificationType,
+	HostDidChangeFocusNotificationType,
+	HostDidChangeLayoutNotificationType,
+	HostDidChangeVisibleEditorsNotificationType,
+	HostDidLogoutNotificationType,
+	HostDidReceiveRequestNotificationType,
+	RouteControllerType,
+	RouteWithQuery,
+	ShowCodeErrorNotificationType,
+	ShowCodemarkNotificationType,
+	ShowProgressIndicatorType,
+	ShowPullRequestNotificationType,
+	ShowReviewNotificationType,
+	ShowStreamNotificationType,
+	ViewMethodLevelTelemetryNotificationType,
+	WebviewDidInitializeNotificationType,
+	WebviewPanels,
+} from "./ipc/webview.protocol";
+import { logWarning } from "./logger";
+import { store } from "./store";
 import { bootstrap, reset } from "./store/actions";
-import { online, offline, errorOccurred } from "./store/connectivity/actions";
-import { upgradeRequired, upgradeRecommended } from "./store/versioning/actions";
-import { updatePreferences } from "./store/preferences/actions";
-import { updateDocument, removeDocument, resetDocuments } from "./store/documents/actions";
-import { updateUnreads } from "./store/unreads/actions";
-import { updateConfigs } from "./store/configs/actions";
-import { setEditorContext, setEditorLayout } from "./store/editorContext/actions";
+
+import {
+	apiCapabilitiesUpdated,
+	apiUpgradeRecommended,
+	apiUpgradeRequired,
+} from "./store/apiVersioning/actions";
+import { fetchCodeError, handleDirectives } from "./store/codeErrors/actions";
+import { getCodeError } from "./store/codeErrors/reducer";
+import { getCodemark } from "./store/codemarks/reducer";
+import { CodemarksState } from "./store/codemarks/types";
+import { errorOccurred, offline, online } from "./store/connectivity/actions";
+import apiCapabilities from "./store/capabilities/slice";
 import {
 	blur,
-	focus,
-	setCurrentStream,
-	setCurrentCodemark,
-	setCurrentReview,
-	setCurrentCodeError,
-	setCurrentPullRequest,
-	setStartWorkCard,
-	closeAllPanels,
 	clearCurrentPullRequest,
-	setPendingProtocolHandlerUrl,
+	closeAllPanels,
+	focus,
 	goToNewRelicSignup,
+	setCurrentCodeError,
+	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
-	setForceRegion
+	setCurrentPullRequest,
+	setCurrentReview,
+	setCurrentStream,
+	setForceRegion,
+	setPendingProtocolHandlerUrl,
+	setStartWorkCard,
 } from "./store/context/actions";
-import { URI } from "vscode-uri";
-import { moveCursorToLine } from "./Stream/api-functions";
-import { setMaintenanceMode } from "./store/session/actions";
-import { logWarning } from "./logger";
-import { fetchReview } from "./store/reviews/actions";
+import { ContextState } from "./store/context/types";
+import { removeDocument, resetDocuments, updateDocument } from "./store/documents/actions";
 import {
-	addCodeErrors,
-	fetchCodeError,
-	claimCodeError,
-	findErrorGroupByObjectId,
-	openErrorGroup,
-	PENDING_CODE_ERROR_ID_FORMAT as toPendingCodeErrorId,
-	resolveStackTraceLine
-} from "./store/codeErrors/actions";
-import { handleDirectives, openPullRequestByUrl } from "./store/providerPullRequests/actions";
-import { updateCapabilities } from "./store/capabilities/actions";
+	appendProcessBuffer,
+	setEditorContext,
+	setEditorLayout,
+} from "./store/editorContext/actions";
+import { EditorContextState } from "./store/editorContext/types";
+import { updatePreferences } from "./store/preferences/actions";
+import { openPullRequestByUrl } from "./store/providerPullRequests/thunks";
+import { configureProvider, updateProviders } from "./store/providers/actions";
+import { isConnected } from "./store/providers/reducer";
+import { getReview } from "./store/reviews/reducer";
+import { setMaintenanceMode } from "./store/session/actions";
+import { updateUnreads } from "./store/unreads/actions";
+import { upgradeRecommended, upgradeRequired } from "./store/versioning/actions";
+import { fetchCodemarks, openPanel } from "./Stream/actions";
+import { moveCursorToLine } from "./Stream/api-functions";
 import { confirmPopup } from "./Stream/Confirm";
-import { switchToTeam } from "./store/session/actions";
-import { Range } from "vscode-languageserver-types";
-import * as path from "path-browserify";
-import { appendProcessBuffer } from "./store/editorContext/actions";
-import { logError } from "@codestream/webview/logger";
+import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
+import { HostApi } from "./webview-api";
+
+// import translationsEs from "./translations/es";
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
 	Object.defineProperty(window, "acquireCodestreamHost", {
 		value() {
 			return host;
-		}
+		},
 	});
 }
 
 export async function initialize(selector: string) {
-	const store = createCodeStreamStore(undefined, undefined);
-
 	listenForEvents(store);
 
 	const locale = "en";
@@ -156,7 +151,7 @@ export async function initialize(selector: string) {
 		store.dispatch(errorOccurred(resp.error.message, resp.error.details));
 	} else {
 		if (resp.capabilities) {
-			store.dispatch(updateCapabilities(resp.capabilities));
+			store.dispatch(apiCapabilities.actions.updateCapabilities(resp.capabilities));
 			store.dispatch(apiCapabilitiesUpdated(resp.capabilities));
 		}
 		if (resp.environment) {
@@ -166,7 +161,7 @@ export async function initialize(selector: string) {
 					environment: resp.environment,
 					isProductionCloud: resp.isProductionCloud,
 					environmentHosts: resp.environmentHosts,
-					newRelicApiUrl: resp.newRelicApiUrl
+					newRelicApiUrl: resp.newRelicApiUrl,
 				})
 			);
 		}
@@ -259,7 +254,7 @@ function listenForEvents(store) {
 				metrics: params.editor.metrics,
 
 				textEditorSelections: params.editor.selections,
-				scmInfo: undefined
+				scmInfo: undefined,
 				// scmInfo: isNotOnDisk(params.editor.uri)
 				// 	? undefined
 				// 	: await api.send(GetFileScmInfoRequestType, { uri: params.editor.uri })
@@ -271,7 +266,7 @@ function listenForEvents(store) {
 				textEditorGitSha: undefined,
 				textEditorSelections: [],
 				textEditorVisibleRanges: [],
-				scmInfo: undefined
+				scmInfo: undefined,
 			};
 		}
 		store.dispatch(setEditorContext(context));
@@ -308,7 +303,7 @@ function listenForEvents(store) {
 				textEditorGitSha: params.gitSha,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections,
-				textEditorLineCount: params.lineCount
+				textEditorLineCount: params.lineCount,
 			})
 		);
 	});
@@ -319,15 +314,15 @@ function listenForEvents(store) {
 				textEditorUri: params.uri,
 				textEditorVisibleRanges: params.visibleRanges,
 				textEditorSelections: params.selections,
-				textEditorLineCount: params.lineCount
+				textEditorLineCount: params.lineCount,
 			})
 		);
 	});
 
-	const onShowStreamNotificationType = async function(streamId, threadId, codemarkId) {
+	const onShowStreamNotificationType = async function (streamId, threadId, codemarkId) {
 		if (codemarkId) {
 			let {
-				codemarks
+				codemarks,
 			}: {
 				codemarks: CodemarksState;
 			} = store.getState();
@@ -344,13 +339,13 @@ function listenForEvents(store) {
 				store.dispatch(setCurrentStream(codemark.streamId, codemark.postId));
 			} else if (codemark.markerIds) {
 				const response = await HostApi.instance.send(GetDocumentFromMarkerRequestType, {
-					markerId: codemark.markerIds[0]
+					markerId: codemark.markerIds[0],
 				});
 				if (response) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: response.textDocument.uri,
 						range: response.range,
-						atTop: true
+						atTop: true,
 					});
 				}
 			}
@@ -367,7 +362,7 @@ function listenForEvents(store) {
 		let {
 			codemarks,
 			context,
-			editorContext
+			editorContext,
 		}: {
 			codemarks: CodemarksState;
 			context: ContextState;
@@ -408,7 +403,7 @@ function listenForEvents(store) {
 	api.on(ShowPullRequestNotificationType, async e => {
 		store.dispatch(setCurrentReview());
 		if (e.url) {
-			store.dispatch(openPullRequestByUrl(e.url, { source: e.source }));
+			store.dispatch(openPullRequestByUrl({ url: e.url, options: { source: e.source } }));
 		} else {
 			// if comment id is present, details view (its where the comment view is nested)
 			// if no comment id, set to sidebar-diffs view (ie coming from toast notification)
@@ -482,14 +477,14 @@ function listenForEvents(store) {
 			}
 			case RouteControllerType.File: {
 				const reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
-					inEditorOnly: true
+					inEditorOnly: true,
 				});
 
 				if (reposResponse) {
 					HostApi.instance.send(EditorRevealRangeRequestType, {
 						uri: path.join(reposResponse.repositories![0].path, "main.js"),
 						range: Range.create(0, 0, 0, 0),
-						atTop: true
+						atTop: true,
 					});
 				} else {
 					console.warn("no repo found");
@@ -582,7 +577,7 @@ function listenForEvents(store) {
 							}
 							if (route.query["anonymousId"]) {
 								await HostApi.instance.send(TelemetrySetAnonymousIdRequestType, {
-									anonymousId: route.query["anonymousId"]
+									anonymousId: route.query["anonymousId"],
 								});
 							}
 							store.dispatch(goToNewRelicSignup({}));
@@ -609,10 +604,10 @@ function listenForEvents(store) {
 								pendingEntityId: definedQuery.query.entityId,
 								pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
 								pendingRequiresConnection: !isConnected(state, {
-									id: "newrelic*com"
+									id: "newrelic*com",
 								}),
 								openType: "Open in IDE Flow",
-								environment: definedQuery.query.env
+								environment: definedQuery.query.env,
 							})
 						);
 						break;
@@ -627,7 +622,7 @@ function listenForEvents(store) {
 						let normalizedUrlResponse;
 						try {
 							normalizedUrlResponse = await HostApi.instance.send(NormalizeUrlRequestType, {
-								url: remote
+								url: remote,
 							});
 						} catch (e) {
 							logWarning(`could not normalize remote: ${e.message}`);
@@ -638,7 +633,7 @@ function listenForEvents(store) {
 						let reposResponse;
 						try {
 							reposResponse = await HostApi.instance.send(GetReposScmRequestType, {
-								inEditorOnly: true
+								inEditorOnly: true,
 							});
 						} catch (e) {
 							logWarning(`could not get repos: ${e.message}`);
@@ -662,7 +657,7 @@ function listenForEvents(store) {
 								HostApi.instance.send(EditorRevealRangeRequestType, {
 									uri: filePath,
 									range: Range.create(lineNumber, 0, lineNumber, 9999),
-									atTop: true
+									atTop: true,
 								});
 							} else {
 								logWarning(`no matching repo found to pixie remote ${normalizedUrl}`);
@@ -679,7 +674,10 @@ function listenForEvents(store) {
 					case "open": {
 						store.dispatch(closeAllPanels());
 						store.dispatch(
-							openPullRequestByUrl(route.query.url, { checkoutBranch: route.query.checkoutBranch })
+							openPullRequestByUrl({
+								url: route.query.url,
+								options: { checkoutBranch: route.query.checkoutBranch },
+							})
 						);
 						break;
 					}
@@ -696,7 +694,7 @@ function listenForEvents(store) {
 								.send(ExecuteThirdPartyRequestUntypedType, {
 									method: "selfAssignCard",
 									providerId: card.providerId,
-									params: { cardId: card.id }
+									params: { cardId: card.id },
 								})
 								.then(() => {
 									store.dispatch(closeAllPanels());
@@ -707,7 +705,7 @@ function listenForEvents(store) {
 								.send(ExecuteThirdPartyRequestUntypedType, {
 									method: "getIssueIdFromUrl",
 									providerId: route.query.providerId,
-									params: { url: route.query.url }
+									params: { url: route.query.url },
 								})
 								.then((issue: any) => {
 									if (issue) {
@@ -715,7 +713,7 @@ function listenForEvents(store) {
 											.send(ExecuteThirdPartyRequestUntypedType, {
 												method: "setAssigneeOnIssue",
 												providerId: route!.query.providerId,
-												params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true }
+												params: { issueId: issue.id, assigneeId: issue.viewer.id, onOff: true },
 											})
 											.then(() => {
 												store.dispatch(closeAllPanels());
@@ -770,7 +768,7 @@ function listenForEvents(store) {
 
 		store.dispatch({
 			type: `ADD_DYNAMICLOGGING`,
-			payload: { status: e.status, metaData: e.metaData, results: results }
+			payload: { status: e.status, metaData: e.metaData, results: results },
 		});
 	});
 
@@ -795,7 +793,7 @@ function listenForEvents(store) {
 	api.on(HandlePullRequestDirectivesNotificationType, params => {
 		store.dispatch(
 			handleDirectives(
-				params.pullRequest.providerId,
+				// params.pullRequest.providerId, // TODO verify not needed
 				params.pullRequest.id,
 				params.directives.directives
 			)
@@ -803,7 +801,7 @@ function listenForEvents(store) {
 	});
 }
 
-const confirmSwitchToTeam = function(
+const confirmSwitchToTeam = function (
 	store: any,
 	options: { teamId: string; companyName: string; codeError?: CSCodeError },
 	type: string,
@@ -829,9 +827,9 @@ const confirmSwitchToTeam = function(
 				buttons: [
 					{
 						label: "OK",
-						className: "control-button"
-					}
-				]
+						className: "control-button",
+					},
+				],
 			});
 			logError(title, { message, currentUser, currentTeamId, teamId, companyName });
 			return true;
@@ -866,17 +864,17 @@ const confirmSwitchToTeam = function(
 				buttons: [
 					{
 						label: "Cancel",
-						className: "control-button"
+						className: "control-button",
 					},
 					{
 						label: "Switch Organizations",
 						className: "control-button",
 						wait: true,
 						action: () => {
-							store.dispatch(switchToTeam(teamId, switchInfo));
-						}
-					}
-				]
+							store.dispatch(switchToTeam({ teamId, options: switchInfo }));
+						},
+					},
+				],
 			});
 			return true;
 		} else {
@@ -887,9 +885,9 @@ const confirmSwitchToTeam = function(
 				buttons: [
 					{
 						label: "OK",
-						className: "control-button"
-					}
-				]
+						className: "control-button",
+					},
+				],
 			});
 			return true;
 		}

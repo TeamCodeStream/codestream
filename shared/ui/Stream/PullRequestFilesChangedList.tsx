@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { PRSelectorButtons, PRSubmitReviewButton } from "./PullRequestComponents";
 import styled from "styled-components";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { useSelector, useDispatch } from "react-redux";
 import { CodeStreamState } from "../store";
 import { PullRequestFilesChanged } from "./PullRequestFilesChanged";
@@ -14,7 +14,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	ReadTextFileRequestType,
-	WriteTextFileRequestType
+	WriteTextFileRequestType,
 } from "@codestream/protocols/agent";
 import Icon from "./Icon";
 import { Button } from "../src/components/Button";
@@ -22,7 +22,7 @@ import { PullRequestFinishReview } from "./PullRequestFinishReview";
 import { Checkbox } from "../src/components/Checkbox";
 import { HostApi } from "../webview-api";
 import { Link } from "./Link";
-import { getProviderPullRequestRepo } from "../store/providerPullRequests/reducer";
+import { getProviderPullRequestRepo } from "../store/providerPullRequests/slice";
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import * as path from "path-browserify";
 import { Range } from "vscode-languageserver-types";
@@ -112,7 +112,7 @@ export const PRProgressFill = styled.div`
 `;
 
 const STATUS_MAP = {
-	modified: FileStatus.modified
+	modified: FileStatus.modified,
 };
 
 const NOW = new Date().getTime(); // a rough timestamp so we know when the file was visited
@@ -143,8 +143,8 @@ interface Props extends CompareFilesProps {
 
 export const PullRequestFilesChangedList = (props: Props) => {
 	const { filesChanged, isLoading, pr } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const ideName = state.ide?.name?.toUpperCase();
 		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
 		return {
@@ -155,7 +155,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 			diffSelectorEnabled: !requiresDiffHunkView,
 			pullRequestFilesChangedMode: requiresDiffHunkView
 				? "hunks"
-				: state.preferences.pullRequestFilesChangedMode || "files"
+				: state.preferences.pullRequestFilesChangedMode || "files",
 		};
 	});
 
@@ -164,7 +164,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const [errorMessage, setErrorMessage] = React.useState<string | React.ReactNode>("");
 
 	const setMode = mode => {
-		dispatch(setUserPreference(["pullRequestFilesChangedMode"], mode));
+		dispatch(setUserPreference({ prefPath: ["pullRequestFilesChangedMode"], value: mode }));
 	};
 
 	const [visitedFiles, setVisitedFiles] = React.useState({ _latest: 0 });
@@ -197,7 +197,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const saveVisitedFiles = newVisitedFiles => {
 		HostApi.instance.send(WriteTextFileRequestType, {
 			path: `${props.baseRef}-${props.headRef}.json`,
-			contents: JSON.stringify(newVisitedFiles, null, 4)
+			contents: JSON.stringify(newVisitedFiles, null, 4),
 		});
 		setVisitedFiles(newVisitedFiles);
 	};
@@ -205,7 +205,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	useEffect(() => {
 		(async () => {
 			const response = (await HostApi.instance.send(ReadTextFileRequestType, {
-				path: `${props.baseRef}-${props.headRef}.json`
+				path: `${props.baseRef}-${props.headRef}.json`,
 			})) as any;
 
 			try {
@@ -266,9 +266,9 @@ export const PullRequestFilesChangedList = (props: Props) => {
 						if (!map[comment.position.newPath]) map[comment.position.newPath] = [];
 						map[comment.position.newPath].push({
 							review: {
-								state: comment.state
+								state: comment.state,
 							},
-							comment: comment
+							comment: comment,
 						});
 					}
 				});
@@ -292,7 +292,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		let repoRoot = currentRepoRoot;
 		if (!repoRoot) {
 			const response = await HostApi.instance.send(GetReposScmRequestType, {
-				inEditorOnly: false
+				inEditorOnly: false,
 			});
 			if (!response.repositories) return;
 			const currentRepoInfo = response.repositories.find(
@@ -318,7 +318,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 
 		const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
 			uri: path.join("file://", repoRoot, filename),
-			range: Range.create(startLine, 0, startLine, 0)
+			range: Range.create(startLine, 0, startLine, 0),
 		});
 
 		if (!result.success) {
@@ -326,7 +326,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 		}
 
 		HostApi.instance.track("PR File Viewed", {
-			Host: props.pr && props.pr.providerId
+			Host: props.pr && props.pr.providerId,
 		});
 	};
 

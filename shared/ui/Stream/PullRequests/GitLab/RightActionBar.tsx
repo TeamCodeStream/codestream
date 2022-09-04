@@ -9,14 +9,14 @@ import { HostApi } from "../../../webview-api";
 import { LocalFilesCloseDiffRequestType, OpenUrlRequestType } from "@codestream/protocols/webview";
 import { closeAllModals } from "@codestream/webview/store/context/actions";
 import { Switch } from "@codestream/webview/src/components/controls/Switch";
-import { api, getMyPullRequests } from "../../../store/providerPullRequests/actions";
+import { api, getMyPullRequests } from "../../../store/providerPullRequests/thunks";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { PRError } from "../../PullRequestComponents";
 import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
-import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/reducer";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/slice";
 import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
 import Tag from "../../Tag";
 import { confirmPopup } from "../../Confirm";
@@ -30,7 +30,7 @@ import cx from "classnames";
 import { pluralize } from "@codestream/webview/utilities/strings";
 import * as providerSelectors from "../../../store/providers/reducer";
 import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 
 const Right = styled.div`
 	width: 48px;
@@ -189,9 +189,9 @@ export const RightActionBar = (props: {
 	onRefreshClick: Function;
 }) => {
 	const { pr, rightOpen, setRightOpen, setIsLoadingMessage } = props;
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
 		const teamSettings = team.settings ? team.settings : (EMPTY_HASH as any);
@@ -227,7 +227,7 @@ export const RightActionBar = (props: {
 			allRepos:
 				preferences.pullRequestQueryShowAllRepos == null
 					? true
-					: preferences.pullRequestQueryShowAllRepos
+					: preferences.pullRequestQueryShowAllRepos,
 		};
 	});
 
@@ -270,13 +270,13 @@ export const RightActionBar = (props: {
 						// const queryStrings = Object.values(providerQuery).map(_ => _.query);
 
 						await dispatch(
-							getMyPullRequests(
-								connectedProvider.id,
-								providerQuery,
-								!derivedState.allRepos,
+							getMyPullRequests({
+								providerId: connectedProvider.id,
+								queries: providerQuery,
+								openReposOnly: !derivedState.allRepos,
 								options,
-								true
-							)
+								throwOnError: true,
+							})
 						);
 					}
 				} catch (error) {
@@ -290,7 +290,7 @@ export const RightActionBar = (props: {
 		if (availableAssignees === undefined) {
 			setAvailableAssignees(EMPTY_ARRAY);
 		}
-		const assignees = (await dispatch(api("getReviewers", {}))) as any;
+		const assignees = await dispatch(api({ method: "getReviewers", params: {} })).unwrap();
 		setAvailableAssignees(assignees.users);
 	};
 
@@ -309,8 +309,8 @@ export const RightActionBar = (props: {
 							<div>{derivedState.currentPullRequest.error.message}</div>
 						</PRError>
 					),
-					noHover: true
-				}
+					noHover: true,
+				},
 			];
 		}
 		const assigneeIds = pr.assignees.nodes.map(_ =>
@@ -336,14 +336,14 @@ export const RightActionBar = (props: {
 							// yourself and you're already assigned, remove it
 							setAssignees(assigneeIds.includes(_.id) ? [] : [_.id]);
 						}
-					}
+					},
 				} as any;
 			});
 			menuItems.unshift({
 				checked: assigneeIds.length === 0,
 				label: "Unassigned",
 				key: "unassigned",
-				action: () => setAssignees([])
+				action: () => setAssignees([]),
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -354,7 +354,7 @@ export const RightActionBar = (props: {
 
 	const setAssignees = async (ids: number[]) => {
 		setIsLoadingMessage("Setting Assignee...");
-		await dispatch(api("setAssigneeOnPullRequest", { ids }));
+		await dispatch(api({ method: "setAssigneeOnPullRequest", params: { ids } }));
 		setIsLoadingMessage("");
 		await new Promise(resolve => {
 			setTimeout(resolve, 2000);
@@ -366,7 +366,7 @@ export const RightActionBar = (props: {
 		if (availableReviewers === undefined) {
 			setAvailableReviewers(EMPTY_ARRAY);
 		}
-		const reviewers = (await dispatch(api("getReviewers", {}))) as any;
+		const reviewers = await dispatch(api({ method: "getReviewers", params: {} })).unwrap();
 		setAvailableReviewers(reviewers.users);
 	};
 
@@ -385,14 +385,16 @@ export const RightActionBar = (props: {
 							<div>{derivedState.currentPullRequest.error.message}</div>
 						</PRError>
 					),
-					noHover: true
-				}
+					noHover: true,
+				},
 			];
 		}
 		const reviewerIds =
-			pr?.reviewers?.nodes?.map((
-				_ // just in case this is a number and not a string
-			) => parseInt((_.id + "").replace("gid://gitlab/User/", ""), 10)) || [];
+			pr?.reviewers?.nodes?.map(
+				(
+					_ // just in case this is a number and not a string
+				) => parseInt((_.id + "").replace("gid://gitlab/User/", ""), 10)
+			) || [];
 		if (availableReviewers && availableReviewers.length) {
 			const menuItems = availableReviewers.map((_: any) => {
 				const checked = reviewerIds.includes(_.id);
@@ -410,14 +412,14 @@ export const RightActionBar = (props: {
 						} else {
 							setReviewers(reviewerIds.includes(_.id) ? [] : [_.id]);
 						}
-					}
+					},
 				} as any;
 			});
 			menuItems.unshift({
 				checked: reviewerIds.length === 0,
 				label: "Unassigned",
 				key: "unassigned",
-				action: () => setReviewers([])
+				action: () => setReviewers([]),
 			});
 			menuItems.unshift({ type: "search", placeholder: "Type or choose a name" });
 			return menuItems;
@@ -428,7 +430,7 @@ export const RightActionBar = (props: {
 
 	const setReviewers = async (ids: number[]) => {
 		setIsLoadingMessage("Updating Reviewer...");
-		await dispatch(api("setReviewersOnPullRequest", { ids }));
+		await dispatch(api({ method: "setReviewersOnPullRequest", params: { ids } }));
 		setIsLoadingMessage("");
 		await new Promise(resolve => {
 			setTimeout(resolve, 2000);
@@ -437,7 +439,7 @@ export const RightActionBar = (props: {
 	};
 
 	const fetchAvailableMilestones = async (e?) => {
-		const milestones = (await dispatch(api("getMilestones", {}))) as any;
+		const milestones = await dispatch(api({ method: "getMilestones", params: {} })).unwrap();
 		setAvailableMilestones(milestones);
 	};
 
@@ -458,7 +460,7 @@ export const RightActionBar = (props: {
 							<Timestamp time={_.dueOn} dateOnly />
 						</>
 					),
-					action: () => setMilestone(_.id)
+					action: () => setMilestone(_.id),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter Milestones" });
@@ -467,12 +469,12 @@ export const RightActionBar = (props: {
 				label: "No milestone",
 				searchLabel: "",
 				checked: false,
-				action: () => setMilestone("")
+				action: () => setMilestone(""),
 			});
 			return menuItems;
 		} else if (availableMilestones) {
 			return [
-				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true }
+				{ label: <LoadingMessage noIcon>No milestones found</LoadingMessage>, noHover: true },
 			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Milestones...</LoadingMessage>, noHover: true }];
@@ -482,8 +484,11 @@ export const RightActionBar = (props: {
 	const setMilestone = async (id: string) => {
 		setIsLoadingMessage(id ? "Setting Milestone..." : "Clearing Milestone...");
 		await dispatch(
-			api("toggleMilestoneOnPullRequest", {
-				milestoneId: id
+			api({
+				method: "toggleMilestoneOnPullRequest",
+				params: {
+					milestoneId: id,
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -494,7 +499,7 @@ export const RightActionBar = (props: {
 	};
 
 	const fetchAvailableLabels = async (e?) => {
-		const labels = (await dispatch(api("getLabels", {}))) as any;
+		const labels = await dispatch(api({ method: "getLabels", params: {} })).unwrap();
 		setAvailableLabels(labels);
 	};
 
@@ -516,7 +521,7 @@ export const RightActionBar = (props: {
 					searchLabel: _.title,
 					key: _.id,
 					subtext: <div style={{ maxWidth: "250px", whiteSpace: "normal" }}>{_.description}</div>,
-					action: () => setLabel(`gid://gitlab/ProjectLabel/${_.id}`, !checked)
+					action: () => setLabel(`gid://gitlab/ProjectLabel/${_.id}`, !checked),
 				};
 			}) as any;
 			menuItems.unshift({ type: "search", placeholder: "Filter labels" });
@@ -527,11 +532,11 @@ export const RightActionBar = (props: {
 					label: "Manage Labels",
 					action: () => {
 						HostApi.instance.send(OpenUrlRequestType, {
-							url: `${pr.repository.url}/-/labels`
+							url: `${pr.repository.url}/-/labels`,
 						});
 						setAvailableLabels(undefined);
-					}
-				}
+					},
+				},
 			];
 		} else {
 			return [{ label: <LoadingMessage>Loading Labels...</LoadingMessage>, noHover: true }];
@@ -542,10 +547,13 @@ export const RightActionBar = (props: {
 		setIsLoadingMessage(onOff ? "Adding Label..." : "Removing Label...");
 
 		await dispatch(
-			api("setLabelOnPullRequest", {
-				labelIds: onOff
-					? [id].concat(pr.labels.nodes.map(_ => _.id))
-					: pr.labels.nodes.map(_ => _.id).filter(_ => _ !== id)
+			api({
+				method: "setLabelOnPullRequest",
+				params: {
+					labelIds: onOff
+						? [id].concat(pr.labels.nodes.map(_ => _.id))
+						: pr.labels.nodes.map(_ => _.id).filter(_ => _ !== id),
+				},
 			})
 		);
 		setIsLoadingMessage("");
@@ -559,7 +567,7 @@ export const RightActionBar = (props: {
 	const setNotificationsOn = async (onOff: boolean) => {
 		setIsLoadingMessage(onOff ? "Subscribing..." : "Unsubscribing...");
 		setIsLoadingNotifications(true);
-		await dispatch(api("updatePullRequestSubscription", { onOff }));
+		await dispatch(api({ method: "updatePullRequestSubscription", params: { onOff } }));
 		setIsLoadingNotifications(false);
 		setIsLoadingMessage("");
 	};
@@ -585,15 +593,15 @@ export const RightActionBar = (props: {
 						className: "delete",
 						action: async () => {
 							setIsLoadingMessage("Unlocking...");
-							await dispatch(api("unlockPullRequest", {}));
+							await dispatch(api({ method: "unlockPullRequest", params: {} }));
 							setIsLoadingMessage("");
 							await new Promise(resolve => {
 								setTimeout(resolve, 2000);
 							});
 							fetchPRs();
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		} else {
 			confirmPopup({
@@ -609,15 +617,15 @@ export const RightActionBar = (props: {
 						className: "delete",
 						action: async () => {
 							setIsLoadingMessage("Locking...");
-							await dispatch(api("lockPullRequest", {}));
+							await dispatch(api({ method: "lockPullRequest", params: {} }));
 							setIsLoadingMessage("");
 							await new Promise(resolve => {
 								setTimeout(resolve, 2000);
 							});
 							fetchPRs();
-						}
-					}
-				]
+						},
+					},
+				],
 			});
 		}
 	};
@@ -630,8 +638,11 @@ export const RightActionBar = (props: {
 	const toggleToDo = async () => {
 		setIsLoadingMessage(hasToDo ? "Marking as done..." : "Adding to do...");
 		setIsLoadingToDo(true);
-		if (hasToDo) await dispatch(api("markToDoDone", { id: hasToDo.id }));
-		else await dispatch(api("createToDo", {}));
+		if (hasToDo) {
+			await dispatch(api({ method: "markToDoDone", params: { id: hasToDo.id } }));
+		} else {
+			await dispatch(api({ method: "createToDo", params: {} }));
+		}
 		setIsLoadingToDo(false);
 		setIsLoadingMessage("");
 		await new Promise(resolve => {
@@ -670,7 +681,7 @@ export const RightActionBar = (props: {
 	return (
 		<Right
 			className={cx(rightOpen ? "expanded" : "collapsed", {
-				jetbrains: derivedState.isInJetBrains
+				jetbrains: derivedState.isInJetBrains,
 			})}
 		>
 			{rightOpen ? (
@@ -907,11 +918,11 @@ export const RightActionBar = (props: {
 													label: "Learn more",
 													action: () => {
 														HostApi.instance.send(OpenUrlRequestType, {
-															url: `${props.pr.baseWebUrl}/help/user/project/time_tracking.md`
+															url: `${props.pr.baseWebUrl}/help/user/project/time_tracking.md`,
 														});
-													}
-												}
-											]
+													},
+												},
+											],
 										});
 									}}
 								/>

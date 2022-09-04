@@ -1,57 +1,61 @@
-import { isSha } from "@codestream/webview/utilities/strings";
-import React from "react";
-import { useEffect } from "react";
-import styled from "styled-components";
-import { useDispatch, useSelector } from "react-redux";
-import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
-import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
-import {
-	addCodeErrors,
-	updateCodeError,
-	api,
-	fetchCodeError,
-	fetchErrorGroup,
-	openErrorGroup,
-	PENDING_CODE_ERROR_ID_PREFIX,
-	resolveStackTrace,
-	setErrorGroup
-} from "@codestream/webview/store/codeErrors/actions";
-import { CodeStreamState } from "../store";
-import { getCodeError, getErrorGroup } from "../store/codeErrors/reducer";
-import { Meta, BigTitle, Header } from "./Codemark/BaseCodemark";
-import { closePanel, markItemRead } from "./actions";
-import { Dispatch } from "../store/common";
-import { CodeError, BaseCodeErrorHeader, ExpandedAuthor, Description, Message } from "./CodeError";
-import ScrollBox from "./ScrollBox";
-import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { setUserPreference } from "./actions";
-import Icon from "./Icon";
-import { isConnected } from "../store/providers/reducer";
-import ConfigureNewRelic from "./ConfigureNewRelic";
-import Dismissable from "./Dismissable";
-import { bootstrapCodeErrors } from "@codestream/webview/store/codeErrors/actions";
-import { DelayedRender } from "../Container/DelayedRender";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import { Button } from "../src/components/Button";
-import { TourTip } from "../src/components/TourTip";
-import { ComposeArea, ClearModal, Subtext, Step, Tip } from "./ReviewNav";
 import {
 	GetNewRelicErrorGroupRequestType,
-	ResolveStackTraceResponse,
+	GetNewRelicErrorGroupResponse,
 	MatchReposRequestType,
 	MatchReposResponse,
 	NewRelicErrorGroup,
 	NormalizeUrlRequestType,
 	NormalizeUrlResponse,
+	ResolveStackTraceResponse,
 	WarningOrError,
-	GetNewRelicErrorGroupResponse
 } from "@codestream/protocols/agent";
-import { HostApi } from "@codestream/webview/webview-api";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
-import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
+import {
+	addCodeErrors,
+	bootstrapCodeErrors,
+	fetchCodeError,
+	PENDING_CODE_ERROR_ID_PREFIX,
+	resolveStackTrace,
+} from "@codestream/webview/store/codeErrors/actions";
+import {
+	api,
+	fetchErrorGroup,
+	openErrorGroup,
+	setErrorGroup,
+	updateCodeError,
+} from "@codestream/webview/store/codeErrors/thunks";
+import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import {
+	useAppDispatch,
+	useAppSelector,
+	useDidMount,
+	usePrevious,
+} from "@codestream/webview/utilities/hooks";
+import { isSha } from "@codestream/webview/utilities/strings";
+import { HostApi } from "@codestream/webview/webview-api";
+import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { DelayedRender } from "../Container/DelayedRender";
 import { logError, logWarning } from "../logger";
+import { Button } from "../src/components/Button";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { TourTip } from "../src/components/TourTip";
+import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getCodeError, getErrorGroup } from "../store/codeErrors/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
+import { isConnected } from "../store/providers/reducer";
+import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
+import { closePanel, markItemRead, setUserPreference } from "./actions";
+import { BaseCodeErrorHeader, CodeError, Description, ExpandedAuthor } from "./CodeError";
+import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
+import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
+import ConfigureNewRelic from "./ConfigureNewRelic";
+import Dismissable from "./Dismissable";
+import Icon from "./Icon";
+import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
+import ScrollBox from "./ScrollBox";
 import { WarningBox } from "./WarningBox";
 
 const NavHeader = styled.div`
@@ -128,7 +132,6 @@ const Root = styled.div`
 			display: none;
 		}
 	}
-
 `;
 
 const ShowInstructionsContainer = styled.div`
@@ -149,8 +152,8 @@ export type Props = React.PropsWithChildren<{ codeErrorId: string; composeOpen: 
  * @return {*}
  */
 export function CodeErrorNav(props: Props) {
-	const dispatch = useDispatch<Dispatch | any>();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorId
 			? (getCodeError(state.codeErrors, state.context.currentCodeErrorId) as CSCodeError)
 			: undefined;
@@ -168,7 +171,7 @@ export function CodeErrorNav(props: Props) {
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
 			errorGroup: errorGroup,
 			repos: state.repos,
-			sidebarLocation: getSidebarLocation(state)
+			sidebarLocation: getSidebarLocation(state),
 		};
 		return result;
 	});
@@ -237,7 +240,7 @@ export function CodeErrorNav(props: Props) {
 		) {
 			logWarning("preventing reload from creating a codeError, sessionStart mismatch", {
 				currentCodeErrorDataSessionStart: derivedState.currentCodeErrorData?.sessionStart,
-				sessionStart: derivedState.sessionStart
+				sessionStart: derivedState.sessionStart,
 			});
 			dispatch(setCurrentCodeError(undefined, undefined));
 			dispatch(closeAllPanels());
@@ -262,10 +265,10 @@ export function CodeErrorNav(props: Props) {
 									"This code error was not found. Perhaps it was deleted by the author, or you don't have permission to view it.";
 								setError({
 									title,
-									description
+									description,
 								});
 								logError(`${title}, description: ${description}`, {
-									currentCodeErrorId: derivedState.currentCodeErrorId!
+									currentCodeErrorId: derivedState.currentCodeErrorId!,
 								});
 							} else {
 								onConnected(_.payload[0]);
@@ -277,10 +280,10 @@ export function CodeErrorNav(props: Props) {
 							const description = ex.message ? ex.message : ex.toString();
 							setError({
 								title,
-								description
+								description,
 							});
 							logError(`${title}, description: ${description}`, {
-								currentCodeErrorId: derivedState.currentCodeErrorId!
+								currentCodeErrorId: derivedState.currentCodeErrorId!,
 							});
 						})
 						.finally(() => {
@@ -378,7 +381,7 @@ export function CodeErrorNav(props: Props) {
 					errorGroupGuid: errorGroupGuidToUse,
 					occurrenceId: occurrenceIdToUse,
 					entityGuid: entityIdToUse,
-					timestamp: derivedState.currentCodeErrorData?.timestamp
+					timestamp: derivedState.currentCodeErrorData?.timestamp,
 				});
 
 				if (!errorGroupResult || errorGroupResult?.error?.message) {
@@ -387,14 +390,14 @@ export function CodeErrorNav(props: Props) {
 					setError({
 						title,
 						description,
-						details: errorGroupResult?.error?.details
+						details: errorGroupResult?.error?.details,
 					});
 					logError(`${title}, description: ${description}`, {
 						currentCodeErrorId: derivedState.currentCodeErrorId!,
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
 						entityGuid: entityIdToUse,
-						timestamp: derivedState.currentCodeErrorData?.timestamp
+						timestamp: derivedState.currentCodeErrorData?.timestamp,
 					});
 					return;
 				}
@@ -415,13 +418,13 @@ export function CodeErrorNav(props: Props) {
 					const description = errorGroupResult.errorGroup.entity.relationship.error.message!;
 					setError({
 						title,
-						description
+						description,
 					});
 					logError(`${title}, description: ${description}`, {
 						errorGroupGuid: errorGroupGuidToUse,
 						occurrenceId: occurrenceIdToUse,
 						entityGuid: entityIdToUse,
-						timestamp: derivedState.currentCodeErrorData?.timestamp
+						timestamp: derivedState.currentCodeErrorData?.timestamp,
 					});
 					return;
 				}
@@ -432,7 +435,7 @@ export function CodeErrorNav(props: Props) {
 						title: "Select a Repository",
 						description: `The ${
 							errorGroup ? errorGroup.entityName + " " : "selected "
-						}stack trace is associated with multiple repositories. Please select the one required for investigating this error.`
+						}stack trace is associated with multiple repositories. Please select the one required for investigating this error.`,
 					});
 					return;
 				}
@@ -446,7 +449,7 @@ export function CodeErrorNav(props: Props) {
 					if (derivedState.isConnectedToNewRelic) {
 						setRepoAssociationError({
 							title: "Which Repository?",
-							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`
+							description: `Select the repository that this error is associated with so that we can take you to the code. If the repository doesn't appear in the list, open it in your IDE.`,
 						});
 						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Association" });
 						return;
@@ -456,21 +459,21 @@ export function CodeErrorNav(props: Props) {
 				if (targetRemote) {
 					// we have a remote, try to find a repo.
 					const normalizationResponse = (await HostApi.instance.send(NormalizeUrlRequestType, {
-						url: targetRemote
+						url: targetRemote,
 					})) as NormalizeUrlResponse;
 					if (!normalizationResponse || !normalizationResponse.normalizedUrl) {
 						const title = "Error";
 						const description = `Could not find a matching repo for the remote ${targetRemote}`;
 						setError({
 							title: "Error",
-							description: `Could not find a matching repo for the remote ${targetRemote}`
+							description: `Could not find a matching repo for the remote ${targetRemote}`,
 						});
 						logError(`${title}, description: ${description}`, {
 							errorGroupGuid: errorGroupGuidToUse,
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp
+							timestamp: derivedState.currentCodeErrorData?.timestamp,
 						});
 						return;
 					}
@@ -479,9 +482,9 @@ export function CodeErrorNav(props: Props) {
 						repos: [
 							{
 								remotes: [normalizationResponse.normalizedUrl],
-								knownCommitHashes: refToUse && isSha(refToUse) ? [refToUse] : []
-							}
-						]
+								knownCommitHashes: refToUse && isSha(refToUse) ? [refToUse] : [],
+							},
+						],
 					})) as MatchReposResponse;
 
 					if (reposResponse?.repos?.length === 0) {
@@ -489,14 +492,14 @@ export function CodeErrorNav(props: Props) {
 						const description = `Please open the following repository: ${targetRemote}`;
 						setError({
 							title: "Repo Not Found",
-							description: `Please open the following repository: ${targetRemote}`
+							description: `Please open the following repository: ${targetRemote}`,
 						});
 						logError(`${title}, description: ${description}`, {
 							errorGroupGuid: errorGroupGuidToUse,
 							occurrenceId: occurrenceIdToUse,
 							entityGuid: entityIdToUse,
 							targetRemote,
-							timestamp: derivedState.currentCodeErrorData?.timestamp
+							timestamp: derivedState.currentCodeErrorData?.timestamp,
 						});
 						HostApi.instance.track("Page Viewed", { "Page Name": "NR Repo Not Open" });
 						return;
@@ -572,9 +575,9 @@ export function CodeErrorNav(props: Props) {
 									remote: targetRemote,
 									accountId: errorGroupResult.accountId.toString(),
 									entityId: errorGroupResult?.errorGroup?.entityGuid || "",
-									entityName: errorGroupResult?.errorGroup?.entityName || ""
-								}
-							}
+									entityName: errorGroupResult?.errorGroup?.entityName || "",
+								},
+							},
 						])
 					);
 				} else if (derivedState.codeError && !derivedState.codeError.objectInfo) {
@@ -593,8 +596,8 @@ export function CodeErrorNav(props: Props) {
 								remote: targetRemote,
 								accountId: errorGroupResult.accountId.toString(),
 								entityId: errorGroupResult?.errorGroup?.entityGuid || "",
-								entityName: errorGroupResult?.errorGroup?.entityName || ""
-							}
+								entityName: errorGroupResult?.errorGroup?.entityName || "",
+							},
 						})
 					);
 				}
@@ -611,7 +614,7 @@ export function CodeErrorNav(props: Props) {
 				"Error Group ID": errorGroupResult?.errorGroup?.guid || codeError?.objectInfo?.entityId,
 				"NR Account ID": errorGroupResult?.accountId || codeError?.objectInfo?.accountId || "0",
 				"Entry Point": derivedState.currentCodeErrorData?.openType || "Open in IDE Flow",
-				"Stack Trace": !!(stackInfo && !stackInfo.error)
+				"Stack Trace": !!(stackInfo && !stackInfo.error),
 			};
 			if (trackingData["Stack Trace"]) {
 				trackingData["Build ref"] = !refToUse
@@ -627,12 +630,12 @@ export function CodeErrorNav(props: Props) {
 			const description = ex.message ? ex.message : ex.toString();
 			setError({
 				title,
-				description
+				description,
 			});
 			logError(`${title}, description: ${description}`, {
 				errorGroupGuid: errorGroupGuidToUse,
 				occurrenceId: occurrenceIdToUse,
-				entityGuid: entityIdToUse
+				entityGuid: entityIdToUse,
 			});
 		} finally {
 			setRequiresConnection(false);
@@ -677,7 +680,10 @@ export function CodeErrorNav(props: Props) {
 
 	const toggleInstructions = () => {
 		dispatch(
-			setUserPreference(["hideCodeErrorInstructions"], !derivedState.hideCodeErrorInstructions)
+			setUserPreference({
+				prefPath: ["hideCodeErrorInstructions"],
+				value: !derivedState.hideCodeErrorInstructions,
+			})
 		);
 	};
 
@@ -696,9 +702,7 @@ export function CodeErrorNav(props: Props) {
 					<Button onClick={() => setHoverButton("comment")}>Next &gt;</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	const commentTip =
 		hoverButton === "comment" ? (
@@ -718,9 +722,7 @@ export function CodeErrorNav(props: Props) {
 					</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	const resolutionTip =
 		hoverButton === "resolution" ? (
@@ -735,9 +737,7 @@ export function CodeErrorNav(props: Props) {
 					<Button onClick={tourDone}>Done</Button>
 				</div>
 			</Tip>
-		) : (
-			undefined
-		);
+		) : undefined;
 
 	// if for some reason we have a codemark, don't render anything
 	if (derivedState.currentCodemarkId) return null;
@@ -750,7 +750,7 @@ export function CodeErrorNav(props: Props) {
 			parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 			occurrenceId: occurrenceId,
 			entityGuid: derivedState.codeError?.objectInfo?.entityId,
-			timestamp: derivedState.currentCodeErrorData?.timestamp
+			timestamp: derivedState.currentCodeErrorData?.timestamp,
 		});
 		return (
 			<Dismissable
@@ -761,8 +761,8 @@ export function CodeErrorNav(props: Props) {
 						onClick: e => {
 							e.preventDefault();
 							exit();
-						}
-					}
+						},
+					},
 				]}
 			>
 				<p>{error.description}</p>
@@ -797,10 +797,10 @@ export function CodeErrorNav(props: Props) {
 					return new Promise((resolve, reject) => {
 						const payload = {
 							url: r.remote,
-							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!
+							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 						};
 						HostApi.instance.track("NR Multi Repo Selected", {
-							"Error Group ID": payload.errorGroupGuid
+							"Error Group ID": payload.errorGroupGuid,
 						});
 						onConnected(undefined, r.remote);
 					});
@@ -823,19 +823,19 @@ export function CodeErrorNav(props: Props) {
 							name: r.name,
 							entityId: pendingEntityId,
 							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-							parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!
+							parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 						};
 						dispatch(api("assignRepository", payload)).then(_ => {
 							setIsLoading(true);
 							if (_?.directives) {
 								console.log("assignRepository", {
-									directives: _?.directives
+									directives: _?.directives,
 								});
 								setRepoAssociationError(undefined);
 								resolve(true);
 
 								HostApi.instance.track("NR Repo Association", {
-									"Error Group ID": payload.errorGroupGuid
+									"Error Group ID": payload.errorGroupGuid,
 								});
 
 								onConnected(
@@ -844,21 +844,21 @@ export function CodeErrorNav(props: Props) {
 								);
 							} else {
 								console.log("Could not find directive", {
-									payload: payload
+									payload: payload,
 								});
 								resolve(true);
 								const title = "Failed to associate repository";
 								const description = _?.error;
 								setError({
 									title,
-									description
+									description,
 								});
 								logError(`${title}, description: ${description}`, {
 									url: r.remote,
 									name: r.name,
 									entityId: pendingEntityId,
 									errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
-									parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!
+									parseableAccountId: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 								});
 							}
 						});
@@ -875,7 +875,7 @@ export function CodeErrorNav(props: Props) {
 					style={{
 						display: "flex",
 						alignItems: "center",
-						width: "100%"
+						width: "100%",
 					}}
 				>
 					<div
@@ -940,7 +940,7 @@ export function CodeErrorNav(props: Props) {
 				style={{
 					display: "flex",
 					alignItems: "center",
-					width: "100%"
+					width: "100%",
 				}}
 			>
 				{/* <div
@@ -985,7 +985,7 @@ export function CodeErrorNav(props: Props) {
 							id="code-error-container"
 							style={{
 								padding: "0 20px 60px 40px",
-								width: "100%"
+								width: "100%",
 							}}
 						>
 							{/* TODO perhaps consolidate these? */}

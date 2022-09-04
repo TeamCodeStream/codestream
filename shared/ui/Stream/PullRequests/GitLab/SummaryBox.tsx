@@ -14,7 +14,7 @@ import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HostApi } from "../../../webview-api";
 import { GitLabMergeRequest, SwitchBranchRequestType } from "@codestream/protocols/agent";
 import { confirmPopup } from "../../Confirm";
-import { getProviderPullRequestRepoObject } from "@codestream/webview/store/providerPullRequests/reducer";
+import { getProviderPullRequestRepoObject } from "@codestream/webview/store/providerPullRequests/slice";
 import { pluralize } from "@codestream/webview/utilities/strings";
 import { logError } from "@codestream/webview/logger";
 
@@ -47,7 +47,7 @@ export const SummaryBox = (props: {
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
 			filter: preferences.pullRequestTimelineFilter || "all",
-			currentRepoObject: getProviderPullRequestRepoObject(state)
+			currentRepoObject: getProviderPullRequestRepoObject(state),
 		};
 	});
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
@@ -71,7 +71,7 @@ export const SummaryBox = (props: {
 					openReposByName,
 					openReposByFolderName,
 					prRepoName: pr?.repository?.name?.toLowerCase(),
-					prProjectPath: pr?.project?.path?.toLowerCase()
+					prProjectPath: pr?.project?.path?.toLowerCase(),
 				});
 				return `You don't have the ${pr.repository?.name} repo open in your IDE`;
 			}
@@ -94,14 +94,14 @@ export const SummaryBox = (props: {
 				: "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
-			repoId: repoId
+			repoId: repoId,
 		});
 		if (result.error) {
 			logError(result.error, {
 				...(derivedState.currentRepoObject || {}),
 				branch: pr.headRefName,
 				repoId: repoId,
-				prRepository: pr!.repository
+				prRepository: pr!.repository,
 			});
 
 			confirmPopup({
@@ -113,7 +113,7 @@ export const SummaryBox = (props: {
 					</div>
 				),
 				centered: false,
-				buttons: [{ label: "OK", className: "control-button" }]
+				buttons: [{ label: "OK", className: "control-button" }],
 			});
 			setIsLoadingBranch(false);
 		} else {
@@ -166,19 +166,19 @@ export const SummaryBox = (props: {
 									key: "email",
 									action: () => {
 										HostApi.instance.send(OpenUrlRequestType, {
-											url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`
+											url: `${pr.repository.url}/-/merge_requests/${pr.number}.patch`,
 										});
-									}
+									},
 								},
 								{
 									label: "Plain diff",
 									key: "plain",
 									action: () => {
 										HostApi.instance.send(OpenUrlRequestType, {
-											url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`
+											url: `${pr.repository.url}/-/merge_requests/${pr.number}.diff`,
 										});
-									}
-								}
+									},
+								},
 							]}
 						>
 							<Icon name="download" title="Download..." placement="top" />

@@ -1,6 +1,6 @@
 import { ActionType } from "../common";
 import * as preferencesActions from "../preferences/actions";
-import * as sessionActions from "../session/actions";
+// import * as sessionActions from "../session/actions";
 import { PreferencesActionsType } from "../preferences/types";
 import * as actions from "./actions";
 import { ContextActionsType, ContextState, Route } from "./types";
@@ -10,7 +10,7 @@ import { CodeStreamState } from "..";
 
 type ContextActions = ActionType<typeof actions>;
 type PreferencesActions = ActionType<typeof preferencesActions>;
-type SessionActions = ActionType<typeof sessionActions>;
+// type SessionActions = ActionType<typeof sessionActions>;
 
 const initialState: ContextState = {
 	chatProviderAccess: "strict",
@@ -52,12 +52,12 @@ const initialState: ContextState = {
 	currentInstrumentation: undefined,
 	currentPixieDynamicLoggingOptions: undefined,
 	wantNewRelicOptions: undefined,
-	currentPullRequestNeedsRefresh: { needsRefresh: false, providerId: "", pullRequestId: "" }
+	currentPullRequestNeedsRefresh: { needsRefresh: false, providerId: "", pullRequestId: "" },
 };
 
 export function reduceContext(
 	state: ContextState = initialState,
-	action: ContextActions | PreferencesActions | SessionActions
+	action: ContextActions | PreferencesActions
 ) {
 	switch (action.type) {
 		case ContextActionsType.SetContext:
@@ -73,20 +73,20 @@ export function reduceContext(
 				...state,
 				currentCodemarkId: action.payload.codemarkId,
 				currentMarkerId: action.payload.markerId,
-				isRepositioning: false
+				isRepositioning: false,
 			};
 		case ContextActionsType.SetComposeCodemarkActive:
 			const { type } = action.payload;
 			return {
 				...state,
-				composeCodemarkActive: type
+				composeCodemarkActive: type,
 			};
 		case ContextActionsType.RepositionCodemark:
 			return {
 				...state,
 				currentCodemarkId: action.payload.codemarkId,
 				currentMarkerId: action.payload.markerId,
-				isRepositioning: action.payload.value
+				isRepositioning: action.payload.value,
 			};
 
 		case ContextActionsType.OpenPanel:
@@ -135,7 +135,7 @@ export function reduceContext(
 			return {
 				...state,
 				currentCodeErrorId: action.payload.codeErrorId,
-				currentCodeErrorData: action.payload.data
+				currentCodeErrorData: action.payload.data,
 			};
 		case ContextActionsType.SetCurrentRepo:
 			return {
@@ -144,9 +144,9 @@ export function reduceContext(
 					action.payload.id && action.payload.path
 						? {
 								id: action.payload.id,
-								path: action.payload.path
+								path: action.payload.path,
 						  }
-						: undefined
+						: undefined,
 			};
 		case ContextActionsType.SetCreatePullRequest:
 			return { ...state, createPullRequestReviewId: action.payload.reviewId };
@@ -163,51 +163,51 @@ export function reduceContext(
 								view: action.payload.view,
 								previousView: state?.currentPullRequest?.view,
 								// @ts-ignore
-								groupIndex: action.payload?.groupIndex
+								groupIndex: action.payload?.groupIndex,
 						  }
 						: undefined,
-				pullRequestCheckoutBranch: false
+				pullRequestCheckoutBranch: false,
 			};
 		case ContextActionsType.SetCurrentPullRequestAndBranch:
 			return {
 				...state,
 				currentPullRequestId: action.payload.prId,
-				pullRequestCheckoutBranch: true
+				pullRequestCheckoutBranch: true,
 			};
 		case ContextActionsType.SetNewPullRequestOptions: {
 			return {
 				...state,
-				newPullRequestOptions: action.payload.options
+				newPullRequestOptions: action.payload.options,
 			};
 		}
 		case ContextActionsType.SetCurrentErrorsInboxOptions: {
 			return {
 				...state,
-				errorsInboxOptions: action.payload
+				errorsInboxOptions: action.payload,
 			};
 		}
 		case ContextActionsType.SetCurrentPullRequestNeedsRefresh: {
 			return {
 				...state,
-				currentPullRequestNeedsRefresh: action.payload
+				currentPullRequestNeedsRefresh: action.payload,
 			};
 		}
 		case ContextActionsType.SetCurrentInstrumentationOptions: {
 			return {
 				...state,
-				currentInstrumentation: action.payload.options
+				currentInstrumentation: action.payload.options,
 			};
 		}
 		case ContextActionsType.SetCurrentPixieDynamicLoggingOptions: {
 			return {
 				...state,
-				currentPixieDynamicLoggingOptions: action.payload.options
+				currentPixieDynamicLoggingOptions: action.payload.options,
 			};
 		}
 		case ContextActionsType.SetWantNewRelicOptions: {
 			return {
 				...state,
-				wantNewRelicOptions: action.payload
+				wantNewRelicOptions: action.payload,
 			};
 		}
 		case ContextActionsType.SetStartWorkCard:
@@ -236,25 +236,25 @@ export function reduceContext(
 			return { ...state, route: action.payload };
 		}
 
-		case SessionActionType.Set: {
-			// started a real session so next time the starting route should be login
-			if (action.payload.userId) {
-				return { ...state, route: { name: Route.Login, params: {} } };
-			}
-			return state;
-		}
+		// case SessionActionType.Set: {
+		// 	// started a real session so next time the starting route should be login
+		// 	if (action.payload.userId) {
+		// 		return { ...state, route: { name: Route.Login, params: {} } };
+		// 	}
+		// 	return state;
+		// }
 
 		case ContextActionsType.SetPendingProtocolHandlerUrl:
 			return {
 				...state,
 				pendingProtocolHandlerUrl: action.payload.url,
-				pendingProtocolHandlerQuery: action.payload.query
+				pendingProtocolHandlerQuery: action.payload.query,
 			};
 
 		case ContextActionsType.SetCurrentMethodLevelTelemetry: {
 			return {
 				...state,
-				currentMethodLevelTelemetry: action.payload.data
+				currentMethodLevelTelemetry: action.payload.data,
 			};
 		}
 
@@ -263,7 +263,7 @@ export function reduceContext(
 				...initialState,
 				route: { name: Route.Login, params: {} },
 				chatProviderAccess: state.chatProviderAccess,
-				__teamless__: state.__teamless__
+				__teamless__: state.__teamless__,
 			};
 		default:
 			return { ...initialState, ...state };

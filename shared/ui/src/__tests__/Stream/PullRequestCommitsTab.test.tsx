@@ -1,21 +1,24 @@
 /**
  * @jest-environment jsdom
  */
+import { FetchThirdPartyPullRequestCommitsResponse } from "@codestream/protocols/agent";
+import { CodeStreamState } from "@codestream/webview/store";
+import * as providerPullRequestActions from "@codestream/webview/store/providerPullRequests/thunks";
+import { GetPullRequestCommitsRequest } from "@codestream/webview/store/providerPullRequests/thunks";
+import { PullRequestCommitsTab } from "@codestream/webview/Stream/PullRequestCommitsTab";
+import { HostApi } from "@codestream/webview/webview-api";
+import { AsyncThunkAction } from "@reduxjs/toolkit";
 import "@testing-library/jest-dom";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
 import { ThemeProvider } from "styled-components";
-import { CodeStreamState } from "@codestream/webview/store";
-import * as providerPullRequestActions from "@codestream/webview/store/providerPullRequests/actions";
-import { PullRequestCommitsTab } from "@codestream/webview/Stream/PullRequestCommitsTab";
-import { HostApi } from "@codestream/webview/webview-api";
-import { act, render, screen, waitFor } from "@testing-library/react";
 import { lightTheme } from "../../themes";
 
 jest.mock("@codestream/webview/webview-api");
-jest.mock("@codestream/webview/store/providerPullRequests/actions");
+jest.mock("@codestream/webview/store/providerPullRequests/thunks");
 
 const providerPullRequestActionsMock = jest.mocked(providerPullRequestActions);
 const middlewares = [thunk];
@@ -42,7 +45,7 @@ const baseState: Partial<CodeStreamState> = {
 		},
 	} as any,
 	providerPullRequests: {
-		myPullRequests: {},
+		myPullRequests: [],
 		pullRequests: {},
 	},
 	capabilities: {
@@ -59,53 +62,64 @@ describe("PullRequestCommitsTab", () => {
 	it("Should show commits in order across different years", async () => {
 		const mockStore = configureStore(middlewares);
 
+		const pullRequestCommitsResponse: FetchThirdPartyPullRequestCommitsResponse[] = [
+			{
+				abbreviatedOid: "123456",
+				author: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				committer: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				message: "my message 2",
+				authoredDate: "2022-09-06T14:58:24.244Z",
+				oid: "1234567890",
+				url: "https://example.com",
+			},
+			{
+				abbreviatedOid: "123456",
+				author: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				committer: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				message: "my message 1",
+				authoredDate: "2021-09-06T14:58:24.244Z",
+				oid: "1234567890",
+				url: "https://example.com",
+			},
+		];
+
+		const mockAsyncThunkResponse = {
+			type: "providerPullRequests/getPullRequestCommits",
+			unwrap: () => {
+				return Promise.resolve(pullRequestCommitsResponse);
+			},
+		} as unknown;
+
 		providerPullRequestActionsMock.getPullRequestCommits.mockReturnValue(
-			(dispatch, getState: Function) => {
-				return Promise.resolve([
-					{
-						abbreviatedOid: "123456",
-						author: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						committer: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						message: "my message 2",
-						authoredDate: "2022-09-06T14:58:24.244Z",
-						oid: "1234567890",
-						url: "https://example.com",
-					},
-					{
-						abbreviatedOid: "123456",
-						author: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						committer: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						message: "my message 1",
-						authoredDate: "2021-09-06T14:58:24.244Z",
-						oid: "1234567890",
-						url: "https://example.com",
-					},
-				]);
-			}
+			mockAsyncThunkResponse as AsyncThunkAction<
+				FetchThirdPartyPullRequestCommitsResponse[] | undefined,
+				GetPullRequestCommitsRequest,
+				{}
+			>
 		);
 
 		await act(async () => {
@@ -128,53 +142,64 @@ describe("PullRequestCommitsTab", () => {
 	it("Should show commits in order of time", async () => {
 		const mockStore = configureStore(middlewares);
 
+		const pullRequestCommitsResponse: FetchThirdPartyPullRequestCommitsResponse[] = [
+			{
+				abbreviatedOid: "22222",
+				author: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				committer: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				message: "my message 2",
+				authoredDate: "2022-09-06T15:58:24.244Z",
+				oid: "1234567890",
+				url: "https://example.com",
+			},
+			{
+				abbreviatedOid: "11111",
+				author: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				committer: {
+					avatarUrl: "blah",
+					name: "jdoe",
+					user: {
+						login: "jdoe",
+					},
+				},
+				message: "my message 1",
+				authoredDate: "2022-09-06T14:58:24.244Z",
+				oid: "1234567890",
+				url: "https://example.com",
+			},
+		];
+
+		const mockAsyncThunkResponse = {
+			type: "providerPullRequests/getPullRequestCommits",
+			unwrap: () => {
+				return Promise.resolve(pullRequestCommitsResponse);
+			},
+		} as unknown;
+
 		providerPullRequestActionsMock.getPullRequestCommits.mockReturnValue(
-			(dispatch, getState: Function) => {
-				return Promise.resolve([
-					{
-						abbreviatedOid: "22222",
-						author: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						committer: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						message: "my message 2",
-						authoredDate: "2022-09-06T15:58:24.244Z",
-						oid: "1234567890",
-						url: "https://example.com",
-					},
-					{
-						abbreviatedOid: "11111",
-						author: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						committer: {
-							avatarUrl: "blah",
-							name: "jdoe",
-							user: {
-								login: "jdoe",
-							},
-						},
-						message: "my message 1",
-						authoredDate: "2022-09-06T14:58:24.244Z",
-						oid: "1234567890",
-						url: "https://example.com",
-					},
-				]);
-			}
+			mockAsyncThunkResponse as AsyncThunkAction<
+				FetchThirdPartyPullRequestCommitsResponse[] | undefined,
+				GetPullRequestCommitsRequest,
+				{}
+			>
 		);
 
 		await act(async () => {

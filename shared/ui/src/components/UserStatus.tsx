@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import styled from "styled-components";
 import React from "react";
 import { CSUser } from "@codestream/protocols/api";
@@ -37,12 +38,12 @@ const formatTheDate = time => {
 };
 
 export function UserStatus(props: { user: CSUser; className?: string }) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const teamId = state.context.currentTeamId;
 		return {
 			isMe: props.user.id === state.session.userId!,
-			teamId
+			teamId,
 		};
 	});
 

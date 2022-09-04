@@ -1,3 +1,4 @@
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
@@ -14,7 +15,7 @@ import {
 	KickUserRequestType,
 	UpdateTeamSettingsRequestType,
 	UpdateTeamAdminRequestType,
-	GetLatestCommittersRequestType
+	GetLatestCommittersRequestType,
 } from "@codestream/protocols/agent";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
 import { ChangesetFile } from "./Review/ChangesetFile";
@@ -31,15 +32,7 @@ import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
 import copy from "copy-to-clipboard";
 import { UserStatus } from "../src/components/UserStatus";
-import { SelectPeople } from "../src/components/SelectPeople";
-import { HeadshotName } from "../src/components/HeadshotName";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { PaneHeader, Pane, PaneNode, PaneNodeName } from "../src/components/Pane";
-import { Modal } from "./Modal";
 import { Dialog } from "../src/components/Dialog";
-import { switchToTeam } from "../store/session/actions";
-import { Link } from "./Link";
-import { ButtonRow } from "./ChangeUsername";
 
 export const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -199,7 +192,7 @@ class Team extends React.Component<Props, State> {
 		suggested: [],
 		blameMapEmail: "",
 		addingBlameMap: false,
-		showInvitePopup: false
+		showInvitePopup: false,
 	};
 
 	postInviteResetState = {
@@ -212,7 +205,7 @@ class Team extends React.Component<Props, State> {
 		newMemberInputTouched: false,
 		inputTouched: false,
 		newMemberEmailInvalid: false,
-		showInvitePopup: false
+		showInvitePopup: false,
 	};
 
 	private _pollingTimer?: any;
@@ -264,7 +257,7 @@ class Team extends React.Component<Props, State> {
 		if (this.state.newMemberEmailInvalid) {
 			this.setState(state => ({
 				newMemberEmailInvalid:
-					state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+					state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false,
 			}));
 		}
 	};
@@ -273,7 +266,7 @@ class Team extends React.Component<Props, State> {
 		this.setState(state => ({
 			inputTouched: true,
 			newMemberEmailInvalid:
-				state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false
+				state.newMemberEmail !== "" && EMAIL_REGEX.test(state.newMemberEmail) === false,
 		}));
 	};
 
@@ -300,7 +293,7 @@ class Team extends React.Component<Props, State> {
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": newMemberEmail,
 			"Invitee Name": newMemberName,
-			"Invitation Method": "Manual"
+			"Invitation Method": "Manual",
 		});
 	};
 
@@ -326,7 +319,7 @@ class Team extends React.Component<Props, State> {
 		HostApi.instance.track("Teammate Invited", {
 			"Invitee Email Address": user.email,
 			"Invitee Name": user.fullName,
-			"Invitation Method": type === "reinvite" ? "Reinvite" : "Suggested"
+			"Invitation Method": type === "reinvite" ? "Reinvite" : "Suggested",
 		});
 	};
 
@@ -486,9 +479,9 @@ class Team extends React.Component<Props, State> {
 					label: "Remove User",
 					className: "delete",
 					wait: true,
-					action: () => this.kick(user)
-				}
-			]
+					action: () => this.kick(user),
+				},
+			],
 		});
 	}
 
@@ -530,15 +523,8 @@ class Team extends React.Component<Props, State> {
 	}
 
 	renderModifiedRepos(user) {
-		const {
-			repos,
-			teamId,
-			company,
-			serverUrl,
-			currentUserEmail,
-			collisions,
-			xrayEnabled
-		} = this.props;
+		const { repos, teamId, company, serverUrl, currentUserEmail, collisions, xrayEnabled } =
+			this.props;
 		const { modifiedRepos, modifiedReposModifiedAt } = user;
 
 		if (!xrayEnabled) return null;
@@ -610,7 +596,7 @@ class Team extends React.Component<Props, State> {
 	changeXray = async value => {
 		await HostApi.instance.send(UpdateTeamSettingsRequestType, {
 			teamId: this.props.teamId,
-			settings: { xray: value }
+			settings: { xray: value },
 		});
 	};
 
@@ -619,7 +605,7 @@ class Team extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { dontSuggestInvitees: { [user.email.replace(/\./g, "*")]: true } }
+			settings: { dontSuggestInvitees: { [user.email.replace(/\./g, "*")]: true } },
 		});
 		this.getSuggestedInvitees();
 	};
@@ -644,7 +630,7 @@ class Team extends React.Component<Props, State> {
 			teamId: this.props.teamId,
 			// we need to replace . with * to allow for the creation of deeply-nested
 			// team settings, since that's how they're stored in mongo
-			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } }
+			settings: { blameMap: { [author.replace(/\./g, "*")]: assigneeId } },
 		});
 		this.setState({ blameMapEmail: "", addingBlameMap: false });
 	};
@@ -655,7 +641,7 @@ class Team extends React.Component<Props, State> {
 			message:
 				"Team deletion is handled by customer service. Please send an email to support@codestream.com.",
 			centered: false,
-			buttons: [{ label: "OK", className: "control-button" }]
+			buttons: [{ label: "OK", className: "control-button" }],
 		});
 	};
 
@@ -714,12 +700,8 @@ class Team extends React.Component<Props, State> {
 												</a>{" "}
 												to email an invitation from you.
 											</div>
-										) : (
-											undefined
-										)
-									) : (
-										undefined
-									);
+										) : undefined
+									) : undefined;
 									return (
 										<li key={user.email}>
 											<div className="committer-email">
@@ -855,7 +837,7 @@ const mapStateToProps = state => {
 		userTeams: _sortBy(
 			Object.values(teams).filter((t: any) => !t.deactivated),
 			"name"
-		) as CSTeam[]
+		) as CSTeam[],
 	};
 };
 
@@ -865,7 +847,7 @@ const ConnectedTeam = connect(mapStateToProps, {
 	openPanel,
 	openModal,
 	closeModal,
-	switchToTeam
+	switchToTeam,
 })(Team);
 
 export { ConnectedTeam as Team };

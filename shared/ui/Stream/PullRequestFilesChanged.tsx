@@ -3,7 +3,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	FetchForkPointRequestType,
-	ReposScm
+	ReposScm,
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { useSelector } from "react-redux";
@@ -12,7 +12,7 @@ import Icon from "./Icon";
 import {
 	ShowNextChangedFileNotificationType,
 	ShowPreviousChangedFileNotificationType,
-	EditorRevealRangeRequestType
+	EditorRevealRangeRequestType,
 } from "@codestream/protocols/webview";
 import { useDidMount } from "../utilities/hooks";
 import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
@@ -27,8 +27,8 @@ import {
 	getProviderPullRequestCollaborators,
 	getProviderPullRequestRepo,
 	getPullRequestId,
-	getCurrentProviderPullRequest
-} from "../store/providerPullRequests/reducer";
+	getCurrentProviderPullRequest,
+} from "../store/providerPullRequests/slice";
 import { CompareFilesProps } from "./PullRequestFilesChangedList";
 import { TernarySearchTree } from "../utilities/searchTree";
 import { PRErrorBox, PRErrorBoxSidebar } from "./PullRequestComponents";
@@ -111,7 +111,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 			numFiles: props.filesChanged.length,
 			isInVscode: state.ide.name === "VSC",
 			pullRequestId: getPullRequestId(state),
-			collaborators: getProviderPullRequestCollaborators(state)
+			collaborators: getProviderPullRequestCollaborators(state),
 		};
 	});
 
@@ -161,7 +161,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				includeCurrentBranches: true,
 				includeProviders: true,
 				includeRemotes: true,
-				includeConnectedProviders: true
+				includeConnectedProviders: true,
 			});
 			if (response && response.repositories) {
 				setOpenRepos(response.repositories);
@@ -196,7 +196,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 								: derivedState.currentRepo!.id!,
 						baseSha: props.baseRef,
 						headSha: props.headRef,
-						ref: getRef
+						ref: getRef,
 					});
 					handleForkPointResponse(forkPointResponse);
 				} catch (ex) {
@@ -223,7 +223,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 								: derivedState.currentRepo!.id!,
 						baseSha: props.pr.baseRefOid,
 						headSha: props.pr.headRefOid,
-						ref: getRef
+						ref: getRef,
 					});
 					handleForkPointResponse(forkPointResponse);
 				} catch (err) {
@@ -256,10 +256,10 @@ export const PullRequestFilesChanged = (props: Props) => {
 								pullRequest: {
 									providerId: pr.providerId,
 									id: derivedState.pullRequestId,
-									collaborators: derivedState.collaborators
-								}
+									collaborators: derivedState.collaborators,
+								},
 						  }
-						: undefined
+						: undefined,
 				};
 				try {
 					await HostApi.instance.send(CompareLocalFilesRequestType, request);
@@ -269,7 +269,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				}
 
 				HostApi.instance.track("PR Diff Viewed", {
-					Host: pr && pr.providerId
+					Host: pr && pr.providerId,
 				});
 			})(i);
 		},
@@ -291,7 +291,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 	useEffect(() => {
 		const disposables = [
 			HostApi.instance.on(ShowNextChangedFileNotificationType, nextFile),
-			HostApi.instance.on(ShowPreviousChangedFileNotificationType, prevFile)
+			HostApi.instance.on(ShowPreviousChangedFileNotificationType, prevFile),
 		];
 
 		return () => disposables.forEach(disposable => disposable.dispose());
@@ -305,7 +305,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		let repoRoot = currentRepoRoot;
 		if (!repoRoot) {
 			const response = await HostApi.instance.send(GetReposScmRequestType, {
-				inEditorOnly: false
+				inEditorOnly: false,
 			});
 			if (!response.repositories) return;
 			const repoIdToCheck = props.repoId
@@ -324,14 +324,14 @@ export const PullRequestFilesChanged = (props: Props) => {
 		if (repoRoot) {
 			const result = await HostApi.instance.send(EditorRevealRangeRequestType, {
 				uri: path.join("file://", repoRoot, f.file),
-				range: Range.create(0, 0, 0, 0)
+				range: Range.create(0, 0, 0, 0),
 			});
 
 			if (!result.success) {
 				setErrorMessage("Could not open file");
 			} else {
 				HostApi.instance.track("PR File Viewed", {
-					Host: props.pr && props.pr.providerId
+					Host: props.pr && props.pr.providerId,
 				});
 			}
 		} else {
@@ -485,7 +485,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		derivedState.matchFile,
 		visitedFiles,
 		forkPointSha,
-		props.viewMode
+		props.viewMode,
 	]);
 
 	React.useEffect(() => {

@@ -3,7 +3,7 @@ import {
 	FetchAssignableUsersAutocompleteRequestType,
 	FetchThirdPartyBoardsRequestType,
 	JiraBoard,
-	ThirdPartyProviderConfig
+	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
 import { updateForProvider } from "@codestream/webview/store/activeIntegrations/actions";
@@ -11,7 +11,7 @@ import { getIntegrationData } from "@codestream/webview/store/activeIntegrations
 import { JiraIntegrationData } from "@codestream/webview/store/activeIntegrations/types";
 import { setIssueProvider } from "@codestream/webview/store/context/actions";
 import { disconnectProvider } from "@codestream/webview/store/providers/actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { emptyArray } from "@codestream/webview/utils";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -25,8 +25,8 @@ import Menu from "../Menu";
 export function JiraCardControls(
 	props: React.PropsWithChildren<{ provider: ThirdPartyProviderConfig }>
 ) {
-	const dispatch = useDispatch();
-	const data = useSelector((state: CodeStreamState) =>
+	const dispatch = useAppDispatch();
+	const data = useAppSelector((state: CodeStreamState) =>
 		getIntegrationData<JiraIntegrationData>(state.activeIntegrations, props.provider.id)
 	);
 	const updateDataState = React.useCallback(
@@ -40,19 +40,19 @@ export function JiraCardControls(
 
 	useDidMount(() => {
 		crossPostIssueContext.setValues({
-			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE
+			codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE,
 		});
 		if (data.projects && data.projects.length > 0 && data.currentProject) {
 			const project = data.currentProject || data.projects[0];
 			crossPostIssueContext.setValues({
 				boardId: project.id,
-				issueType: data.currentIssueType || project.issueTypes[0]
+				issueType: data.currentIssueType || project.issueTypes[0],
 			});
 			return;
 		}
 		if (!data.isLoading) {
 			updateDataState({
-				isLoading: true
+				isLoading: true,
 			});
 		}
 
@@ -60,7 +60,7 @@ export function JiraCardControls(
 
 		const fetchBoards = async () => {
 			let response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
-				providerId: props.provider.id
+				providerId: props.provider.id,
 			});
 
 			if (!isValid) return;
@@ -80,13 +80,13 @@ export function JiraCardControls(
 				isLoading: false,
 				projects: response.boards as JiraBoard[],
 				currentProject: newCurrentProject,
-				currentIssueType: newCurrentIssueType
+				currentIssueType: newCurrentIssueType,
 			});
 
 			crossPostIssueContext.setValues({
 				codeDelimiterStyle: CodeDelimiterStyles.CODE_BRACE,
 				issueType: newCurrentIssueType,
-				boardId: newCurrentProject.id
+				boardId: newCurrentProject.id,
 			});
 		};
 
@@ -118,7 +118,7 @@ export function JiraCardControls(
 		if (issueType) {
 			updateDataState({ currentIssueType: issueType });
 			crossPostIssueContext.setValues({
-				issueType
+				issueType,
 			});
 		}
 	}, []);
@@ -137,7 +137,7 @@ export function JiraCardControls(
 			updateDataState({ currentProject: project, currentIssueType: issueType });
 			crossPostIssueContext.setValues({
 				boardId,
-				issueType
+				issueType,
 			});
 		}
 	}, []);
@@ -149,7 +149,7 @@ export function JiraCardControls(
 			const { users } = await HostApi.instance.send(FetchAssignableUsersAutocompleteRequestType, {
 				search: inputValue,
 				providerId: props.provider.id,
-				boardId: data.currentProject.id
+				boardId: data.currentProject.id,
 			});
 			return users.map(user => {
 				return { label: user.displayName, value: user };
@@ -242,7 +242,7 @@ export function JiraCardControls(
 							items={(data.projects || emptyArray).map(project => ({
 								key: project.id,
 								label: project.name,
-								action: project
+								action: project,
 							}))}
 							action={selectProject}
 						/>
@@ -263,7 +263,7 @@ export function JiraCardControls(
 									? data.currentProject.issueTypes.map(it => ({
 											label: it,
 											icon: issueTypeIcon(it),
-											action: it
+											action: it,
 									  }))
 									: []
 							}

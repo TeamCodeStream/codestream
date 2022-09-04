@@ -1,16 +1,16 @@
-import { forEach as _forEach } from "lodash-es";
+import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import { ErrorRow } from "./Observability";
-import { openErrorGroup } from "../store/codeErrors/actions";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
 import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
-	ObservabilityErrorCore
+	ObservabilityErrorCore,
 } from "@codestream/protocols/agent";
 
 interface Props {
@@ -19,10 +19,10 @@ interface Props {
 }
 
 export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			sessionStart: state.context.sessionStart
+			sessionStart: state.context.sessionStart,
 		};
 	}, shallowEqual);
 
@@ -45,7 +45,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 40px"
+					padding: "2px 10px 2px 40px",
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
@@ -85,7 +85,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 															pendingEntityId: response.entityId,
 															occurrenceId: response.occurrenceId,
 															pendingErrorGroupGuid: _.errorGroupGuid,
-															openType: "Observability Section"
+															openType: "Observability Section",
 														})
 													);
 												} else {

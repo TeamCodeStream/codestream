@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState, useCallback } from "react";
 import { TextInput } from "./TextInput";
 import Button from "../Stream/Button";
@@ -18,8 +19,8 @@ export interface MustSetPasswordProps {
 const isPasswordValid = (password: string) => password.length >= 6;
 
 export const MustSetPassword = (props: MustSetPasswordProps) => {
-	const dispatch = useDispatch();
-	const serverUrl = useSelector((state: CodeStreamState) => state.configs.serverUrl);
+	const dispatch = useAppDispatch();
+	const serverUrl = useAppSelector((state: CodeStreamState) => state.configs.serverUrl);
 	const [password, setPassword] = useState("");
 	const [passwordIsValid, setPasswordIsValid] = useState(true);
 	const [isLoading, setIsLoading] = useState(false);
@@ -38,7 +39,7 @@ export const MustSetPassword = (props: MustSetPasswordProps) => {
 			// @ts-ignore - the await is necessary
 			await dispatch(
 				authenticate({
-					token: { email: props.email || "", url: serverUrl, value: response.accessToken }
+					token: { email: props.email || "", url: serverUrl, value: response.accessToken },
 				})
 			);
 		} catch (error) {

@@ -1,29 +1,27 @@
 import React from "react";
-import { useSelector, useDispatch, useStore } from "react-redux";
-import { CodeStreamState } from "../store";
-import { getCodemark } from "../store/codemarks/reducer";
-import { Loading } from "../Container/Loading";
-import Codemark from "./Codemark";
-import CancelButton from "./CancelButton";
+import { useStore } from "react-redux";
 import { DelayedRender } from "../Container/DelayedRender";
-import { setCurrentCodemark } from "../store/context/actions";
-import { HostApi } from "../webview-api";
-import { useDidMount } from "../utilities/hooks";
-import { getDocumentFromMarker } from "./api-functions";
-import { markItemRead, setUserPreference } from "./actions";
-import { getPreferences, getReadReplies, isUnread } from "../store/users/reducer";
+import { Loading } from "../Container/Loading";
+import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getCodemark } from "../store/codemarks/reducer";
+import { setCurrentCodemark } from "../store/context/actions";
+import { isUnread } from "../store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { markItemRead } from "./actions";
+import Codemark from "./Codemark";
 
 const EMPTY_HASH = {};
 export function CodemarkView() {
-	const dispatch = useDispatch();
-	const codemark = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const codemark = useAppSelector((state: CodeStreamState) => {
 		return getCodemark(state.codemarks, state.context.currentCodemarkId);
 	});
-	const unread = useSelector((state: CodeStreamState) => {
+	const unread = useAppSelector((state: CodeStreamState) => {
 		return codemark ? isUnread(state, codemark) : false;
 	});
-	const unreadEnabled = useSelector((state: CodeStreamState) =>
+	const unreadEnabled = useAppSelector((state: CodeStreamState) =>
 		isFeatureEnabled(state, "readItem")
 	);
 

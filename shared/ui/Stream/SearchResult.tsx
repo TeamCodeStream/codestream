@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import styled from "styled-components";
 import { useDispatch, useSelector } from "react-redux";
@@ -119,12 +120,12 @@ interface Props {
 
 export default function SearchResult(props: Props) {
 	const { result } = props;
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
 			currentUserId: state.session.userId!,
 			teamTagsHash: userSelectors.getTeamTagsHash(state),
-			usernames: userSelectors.getUsernamesById(state)
+			usernames: userSelectors.getUsernamesById(state),
 		};
 	});
 
@@ -149,7 +150,7 @@ export default function SearchResult(props: Props) {
 			);
 		}
 	};
-	
+
 	function escapeRegExp(str: string) {
 		return str?.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	}

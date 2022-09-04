@@ -1,5 +1,5 @@
 import { CodeStreamState } from "@codestream/webview/store";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
+import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import { normalizeUrl } from "@codestream/webview/utilities/urls";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -37,7 +37,7 @@ export default function ConfigureYouTrackPanel(props: Props) {
 			isInVscode,
 			verificationError: accessTokenError.accessTokenError,
 			didConnect,
-			userProviderInfo
+			userProviderInfo,
 		};
 	});
 
@@ -48,7 +48,7 @@ export default function ConfigureYouTrackPanel(props: Props) {
 	const [submitAttempted, setSubmitAttempted] = useState(false);
 	const [loading, setLoading] = useState(false);
 
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 
 	useDidMount(() => {
 		initialInput.current?.focus();

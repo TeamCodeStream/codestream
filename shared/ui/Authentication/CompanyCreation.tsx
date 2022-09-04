@@ -1,13 +1,13 @@
+import { updateConfigs } from "@codestream/webview/store/configs/slice";
+import { changeRegistrationEmail, setEnvironment } from "@codestream/webview/store/session/thunks";
 import React, { useState, useCallback } from "react";
 import Button from "../Stream/Button";
 import { Link } from "../Stream/Link";
 import { FormattedMessage } from "react-intl";
 import { goToLogin } from "../store/context/actions";
-import { updateConfigs } from "../store/configs/actions";
 import { logError } from "../logger";
-import { useDispatch, useSelector } from "react-redux";
 import Icon from "../Stream/Icon";
-import { useDidMount } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import styled from "styled-components";
 import { HostApi } from "@codestream/webview/webview-api";
 import { completeSignup, ProviderNames } from "./actions";
@@ -16,9 +16,8 @@ import {
 	EnvironmentHost,
 	JoinCompanyRequestType,
 	JoinCompanyRequest,
-	JoinCompanyResponse
+	JoinCompanyResponse,
 } from "@codestream/protocols/agent";
-import { changeRegistrationEmail, setEnvironment } from "../store/session/actions";
 import { CSCompany, CSEligibleJoinCompany } from "@codestream/protocols/api";
 import { isUndefined as _isUndefined } from "lodash-es";
 import { ReloadAllWindows } from "./ReloadAllWindows";
@@ -73,10 +72,10 @@ export function CompanyCreation(props: {
 	eligibleJoinCompanies?: CSEligibleJoinCompany[];
 	accountIsConnected?: boolean;
 }) {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			serverUrl: state.configs.serverUrl
+			serverUrl: state.configs.serverUrl,
 		};
 	});
 	const providerName = props.provider
@@ -88,7 +87,7 @@ export function CompanyCreation(props: {
 
 		HostApi.instance.track("Try Another Email", {
 			"Discarded Email": props.email,
-			"Auth Provider": providerName
+			"Auth Provider": providerName,
 		});
 		dispatch(changeRegistrationEmail(props.userId!));
 	}, []);
@@ -111,7 +110,7 @@ export function CompanyCreation(props: {
 		allowDomainJoining: initialAllowDomainJoining,
 		companyName: initialCompanyName
 			? initialCompanyName.charAt(0).toUpperCase() + initialCompanyName.slice(1)
-			: ""
+			: "",
 	});
 	const [teamNameValidity, setTeamNameValidity] = useState(true);
 	const [requiresHelpText, setRequiresHelpText] = useState(false);
@@ -149,7 +148,7 @@ export function CompanyCreation(props: {
 			HostApi.instance.track("Organization Options Presented", {
 				"Domain Orgs":
 					props.eligibleJoinCompanies && props.eligibleJoinCompanies.length ? true : false,
-				"Auth Provider": providerName
+				"Auth Provider": providerName,
 			});
 			setInitialLoad(false);
 		}
@@ -174,23 +173,23 @@ export function CompanyCreation(props: {
 			setInitialLoad(false);
 			try {
 				const { team } = await HostApi.instance.send(CreateCompanyRequestType, {
-					name: organizationSettings.companyName!
+					name: organizationSettings.companyName!,
 				});
 				HostApi.instance.track("New Organization Created", {
 					"Domain Joining": props.isWebmail ? "Not Available" : "Off",
-					"Auth Provider": providerName
+					"Auth Provider": providerName,
 				});
 
 				dispatch(
 					completeSignup(props.email!, props.token!, team.id, {
 						createdTeam: true,
-						provider: props.provider
+						provider: props.provider,
 					})
 				);
 			} catch (error) {
 				const errorMessage = typeof error === "string" ? error : error.message;
 				logError(`Unexpected error during company creation: ${errorMessage}`, {
-					companyName: organizationSettings.companyName
+					companyName: organizationSettings.companyName,
 				});
 				dispatch(goToLogin());
 			}
@@ -210,7 +209,7 @@ export function CompanyCreation(props: {
 			}
 
 			const request: JoinCompanyRequest = {
-				companyId: organization.id
+				companyId: organization.id,
 			};
 			if (organization.host) {
 				// explicitly add the environment to the request, since the switch-over may still be in progress
@@ -220,7 +219,7 @@ export function CompanyCreation(props: {
 				request.fromEnvironment = {
 					serverUrl: derivedState.serverUrl,
 					userId: props.userId!,
-					toServerUrl: organization.host.publicApiUrl
+					toServerUrl: organization.host.publicApiUrl,
 				};
 			}
 			const result = (await HostApi.instance.send(
@@ -230,7 +229,7 @@ export function CompanyCreation(props: {
 
 			HostApi.instance.track("Joined Organization", {
 				Availability: organization._type,
-				"Auth Provider": providerName
+				"Auth Provider": providerName,
 			});
 			dispatch(
 				completeSignup(props.email!, props.token!, result.team.id, {
@@ -240,15 +239,15 @@ export function CompanyCreation(props: {
 					setEnvironment: organization.host
 						? {
 								environment: organization.host.shortName,
-								serverUrl: organization.host.publicApiUrl
+								serverUrl: organization.host.publicApiUrl,
 						  }
-						: undefined
+						: undefined,
 				})
 			);
 		} catch (error) {
 			const errorMessage = typeof error === "string" ? error : error.message;
 			logError(`Unexpected error during company join: ${errorMessage}`, {
-				companyId: organization.id
+				companyId: organization.id,
 			});
 			setIsLoadingJoinTeam(undefined);
 			dispatch(goToLogin());

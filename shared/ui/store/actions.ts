@@ -1,30 +1,30 @@
 import {
 	ApiVersionCompatibility,
 	BootstrapRequestType,
-	VersionCompatibility
+	VersionCompatibility,
 } from "@codestream/protocols/agent";
 import {
 	BootstrapInHostRequestType,
-	GetActiveEditorContextRequestType
+	GetActiveEditorContextRequestType,
 } from "@codestream/protocols/webview";
+import { updateConfigs } from "@codestream/webview/store/configs/slice";
+import { setIde } from "@codestream/webview/store/ide/slice";
 import { BootstrapInHostResponse, SignedInBootstrapData } from "../ipc/host.protocol";
 import { CSApiCapabilities } from "../protocols/agent/api.protocol.models";
 import {
 	apiCapabilitiesUpdated,
 	apiUpgradeRecommended,
-	apiUpgradeRequired
+	apiUpgradeRequired,
 } from "../store/apiVersioning/actions";
 import { upgradeRequired } from "../store/versioning/actions";
 import { uuid } from "../utils";
 import { HostApi } from "../webview-api";
 import { BootstrapActionType } from "./bootstrapped/types";
-import { updateCapabilities } from "./capabilities/actions";
+import { updateCapabilities } from "./capabilities/slice";
 import { action, withExponentialConnectionRetry } from "./common";
 import { bootstrapCompanies } from "./companies/actions";
-import { updateConfigs } from "./configs/actions";
 import * as contextActions from "./context/actions";
 import * as editorContextActions from "./editorContext/actions";
-import { setIde } from "./ide/actions";
 import * as preferencesActions from "./preferences/actions";
 import { updateProviders } from "./providers/actions";
 import { bootstrapRepos } from "./repos/actions";
@@ -45,7 +45,7 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 			dispatch(
 				bootstrapEssentials({
 					...bootstrapCore,
-					session: { ...bootstrapCore.session, otc: uuid() }
+					session: { ...bootstrapCore.session, otc: uuid() },
 				})
 			);
 			return;
@@ -56,11 +56,11 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 			async () => {
 				const [bootstrapData, { editorContext }] = await Promise.all([
 					api.send(BootstrapRequestType, {}),
-					api.send(GetActiveEditorContextRequestType, undefined)
+					api.send(GetActiveEditorContextRequestType, undefined),
 				]);
 				return {
 					bootstrapData,
-					editorContext
+					editorContext,
 				};
 			},
 			"bootstrap"
@@ -91,7 +91,7 @@ const bootstrapEssentials = (data: BootstrapInHostResponse) => dispatch => {
 		contextActions.setContext({
 			hasFocus: true,
 			...data.context,
-			sessionStart: new Date().getTime()
+			sessionStart: new Date().getTime(),
 		})
 	);
 	dispatch(updateCapabilities(data.capabilities || {}));

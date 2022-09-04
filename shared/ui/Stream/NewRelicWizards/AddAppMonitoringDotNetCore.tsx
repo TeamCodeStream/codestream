@@ -1,38 +1,37 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { NewRelicOptions, RepoProjectType } from "@codestream/protocols/agent";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import { clearProcessBuffer } from "@codestream/webview/store/editorContext/actions";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import * as path from "path-browserify";
+import React, { useEffect, useRef, useState } from "react";
+import { FormattedMessage } from "react-intl";
+import { Range } from "vscode-languageserver-types";
+import { TextInput } from "../../Authentication/TextInput";
+import { logError } from "../../logger";
 import {
 	CreateNewRelicConfigFileRequestType,
 	CreateNewRelicConfigFileResponse,
 	InstallNewRelicRequestType,
-	InstallNewRelicResponse
+	InstallNewRelicResponse,
 } from "../../protocols/agent/agent.protocol.nr";
-import { logError } from "../../logger";
-import { NewRelicOptions, RepoProjectType } from "@codestream/protocols/agent";
+import { Button } from "../../src/components/Button";
+import { Dialog } from "../../src/components/Dialog";
 import { CodeStreamState } from "../../store";
 import { HostApi } from "../../webview-api";
 import { closeModal } from "../actions";
+import Icon from "../Icon";
+import { Link } from "../Link";
 import { SkipLink, Step } from "../Onboard";
 import { InstallRow, StepNumber } from "../OnboardNewRelic";
-import { Dialog } from "../../src/components/Dialog";
-import { FormattedMessage } from "react-intl";
-import { Button } from "../../src/components/Button";
-import { Link } from "../Link";
-import Icon from "../Icon";
-import { TextInput } from "../../Authentication/TextInput";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
-import { clearProcessBuffer } from "@codestream/webview/store/editorContext/actions";
-import * as path from "path-browserify";
-import { Position, Range } from "vscode-languageserver-types";
 
 export const AddAppMonitoringDotNetCore = (props: {
 	className: string;
 	skip: Function;
 	newRelicOptions: NewRelicOptions;
 }) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const { repoId, path } = state.context.wantNewRelicOptions || {};
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const { repoId, path } = state.context.wantNewRelicOptions ?? {};
 		const repo = repoId ? state.repos[repoId] : undefined;
 
 		let token;
@@ -83,7 +82,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 			//TODO NrStart.cmd
 			void HostApi.instance.send(EditorRevealRangeRequestType, {
 				uri: path.join("file://", derivedState.repoPath, "NrStart.cmd"),
-				range: Range.create(0, 0, 0, 0)
+				range: Range.create(0, 0, 0, 0),
 			});
 		};
 	});
@@ -100,7 +99,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 		setInstallingLibrary(true);
 		const response = (await HostApi.instance.send(InstallNewRelicRequestType, {
 			type: RepoProjectType.DotNetCore,
-			cwd: cwd || repoPath!
+			cwd: cwd || repoPath!,
 		})) as InstallNewRelicResponse;
 		if (response.error) {
 			logError(`Unable to install New Relic module: ${response.error}`);
@@ -120,7 +119,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 			repoPath: repoPath!,
 			filePath: cwd || repoPath!,
 			appName,
-			licenseKey: derivedState.token
+			licenseKey: derivedState.token,
 		})) as CreateNewRelicConfigFileResponse;
 		if (response.error) {
 			logError(`Unable to create New Relic config file: ${response.error}`);

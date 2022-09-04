@@ -1,3 +1,4 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
@@ -13,21 +14,21 @@ import { EllipsisMenu } from "./EllipsisMenu";
 import {
 	setCurrentReview,
 	clearCurrentPullRequest,
-	setCreatePullRequest
+	setCreatePullRequest,
 } from "../store/context/actions";
 import { setCurrentCodemark } from "../store/context/actions";
 import { HostApi } from "../webview-api";
 import {
 	LocalFilesCloseDiffRequestType,
-	ReviewCloseDiffRequestType
+	ReviewCloseDiffRequestType,
 } from "@codestream/protocols/webview";
 import { HeadshotName } from "../src/components/HeadshotName";
 
 const sum = (total, num) => total + Math.round(num);
 
 export function GlobalNav() {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { umis, preferences } = state;
 
 		return {
@@ -43,7 +44,7 @@ export function GlobalNav() {
 			currentCodemarkId: state.context.currentCodemarkId,
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
-				: undefined
+				: undefined,
 		};
 	});
 
@@ -58,12 +59,12 @@ export function GlobalNav() {
 		currentCodemarkId,
 		currentReviewId,
 		currentCodeErrorId,
-		currentPullRequestId
+		currentPullRequestId,
 	} = derivedState;
 
 	const umisClass = cx("umis", {
 		mentions: totalMentions > 0,
-		unread: totalMentions == 0 && totalUnread > 0
+		unread: totalMentions == 0 && totalUnread > 0,
 	});
 	const totalUMICount = totalMentions ? (
 		<div className="mentions-badge">{totalMentions > 99 ? "99+" : totalMentions}</div>
@@ -79,12 +80,14 @@ export function GlobalNav() {
 	};
 
 	const togglePlusMenu = event => {
-		if (!derivedState.clickedPlus) dispatch(setUserPreference(["clickedPlus"], true));
+		if (!derivedState.clickedPlus)
+			dispatch(setUserPreference({ prefPath: ["clickedPlus"], value: true }));
 		setPlusMenuOpen(plusMenuOpen ? undefined : event.target.closest("label"));
 	};
 
 	const toggleTeamMenu = event => {
-		if (!derivedState.clickedInvite) dispatch(setUserPreference(["clickedInvite"], true));
+		if (!derivedState.clickedInvite)
+			dispatch(setUserPreference({ prefPath: ["clickedInvite"], value: true }));
 		setTeamMenuOpen(teamMenuOpen ? undefined : event.target.closest("label"));
 	};
 
@@ -241,6 +244,6 @@ export function GlobalNav() {
 		currentCodemarkId,
 		plusMenuOpen,
 		teamMenuOpen,
-		ellipsisMenuOpen
+		ellipsisMenuOpen,
 	]);
 }

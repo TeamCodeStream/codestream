@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { GitLabMergeRequest, GitLabMergeRequestWrapper } from "@codestream/protocols/agent";
 import Tooltip from "../../Tooltip";
 import { Link } from "../../Link";
-import { getCurrentProviderPullRequestRootObject } from "../../../store/providerPullRequests/reducer";
+import { getCurrentProviderPullRequestRootObject } from "../../../store/providerPullRequests/slice";
 import { CodeStreamState } from "@codestream/webview/store";
 
 export const IconButton = styled.div`
@@ -31,7 +31,7 @@ const iconForStatus = {
 	success: { icon: "check-circle" },
 	failed: { icon: "x" },
 	canceled: { icon: "cancel" },
-	skipped: { icon: "double-chevron-right" }
+	skipped: { icon: "double-chevron-right" },
 };
 
 export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage: Function }) => {
@@ -39,7 +39,7 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 	const pipeline = pr?.headPipeline;
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
-			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper
+			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper,
 		};
 	});
 
@@ -84,9 +84,9 @@ export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage
 										overlayStyle={{ zIndex: "3000" }}
 										title={`${_.name}: ${_.detailedStatus.tooltip}`}
 									>
-									<span>
-										<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
-									</span>
+										<span>
+											<Icon name={iconWrapper.icon} style={{ paddingRight: "5px" }} />
+										</span>
 									</Tooltip>
 								);
 							})}

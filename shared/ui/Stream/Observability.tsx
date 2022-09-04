@@ -3,7 +3,7 @@ import {
 	isEmpty as _isEmpty,
 	isNil as _isNil,
 	keyBy as _keyBy,
-	head as _head
+	head as _head,
 } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
@@ -24,11 +24,11 @@ import {
 	ObservabilityRepoError,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	GetServiceLevelTelemetryRequestType,
-	GoldenMetricsResult
+	GoldenMetricsResult,
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
-	OpenUrlRequestType
+	OpenUrlRequestType,
 } from "@codestream/protocols/webview";
 import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
 
@@ -41,12 +41,18 @@ import {
 	PaneHeader,
 	PaneNode,
 	PaneNodeName,
-	PaneState
+	PaneState,
 } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import { configureAndConnectProvider, disconnectProvider } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
-import { useDidMount, useInterval, usePrevious } from "../utilities/hooks";
+import {
+	useAppDispatch,
+	useAppSelector,
+	useDidMount,
+	useInterval,
+	usePrevious,
+} from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { openPanel, setUserPreference } from "./actions";
 import cx from "classnames";
@@ -148,7 +154,7 @@ export const ErrorRow = (props: {
 }) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
-			ideName: encodeURIComponent(state.ide.name || "")
+			ideName: encodeURIComponent(state.ide.name || ""),
 		};
 	}, shallowEqual);
 
@@ -178,7 +184,7 @@ export const ErrorRow = (props: {
 							HostApi.instance.send(OpenUrlRequestType, {
 								url:
 									props.url +
-									`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`
+									`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=error_group_link`,
 							});
 						}}
 					>
@@ -203,8 +209,8 @@ const EMPTY_ARRAY = [];
 let hasLoadedOnce = false;
 
 export const Observability = React.memo((props: Props) => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers = {}, preferences } = state;
 		const newRelicIsConnected =
 			providers["newrelic*com"] && isConnected(state, { id: "newrelic*com" });
@@ -220,7 +226,7 @@ export const Observability = React.memo((props: Props) => {
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
 			textEditorUri: state.editorContext.textEditorUri,
-			scmInfo: state.editorContext.scmInfo
+			scmInfo: state.editorContext.scmInfo,
 		};
 	}, shallowEqual);
 
@@ -252,9 +258,8 @@ export const Observability = React.memo((props: Props) => {
 	const [currentRepoId, setCurrentRepoId] = useState<string>("");
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
 	// const [loadingCLMBroadcast, setLoadingCLMBroadcast] = useState<boolean>(false);
-	const [showCodeLevelMetricsBroadcastIcon, setShowCodeLevelMetricsBroadcastIcon] = useState<
-		boolean
-	>(false);
+	const [showCodeLevelMetricsBroadcastIcon, setShowCodeLevelMetricsBroadcastIcon] =
+		useState<boolean>(false);
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
 		[]
 	);
@@ -267,11 +272,11 @@ export const Observability = React.memo((props: Props) => {
 			if (repoEntity) {
 				return {
 					repoId: repoId,
-					entityGuid: repoEntity.entityGuid
+					entityGuid: repoEntity.entityGuid,
 				};
 			}
 			return {
-				repoId: repoId
+				repoId: repoId,
 			};
 		});
 	};
@@ -280,7 +285,7 @@ export const Observability = React.memo((props: Props) => {
 	const loading = (repoIdOrRepoIds: string | string[], isLoading: boolean) => {
 		if (Array.isArray(repoIdOrRepoIds)) {
 			setLoadingErrors(
-				repoIdOrRepoIds.reduce(function(map, obj) {
+				repoIdOrRepoIds.reduce(function (map, obj) {
 					map[obj] = isLoading;
 					return map;
 				}, {})
@@ -288,7 +293,7 @@ export const Observability = React.memo((props: Props) => {
 		} else {
 			setLoadingErrors({
 				...loadingErrors,
-				[repoIdOrRepoIds]: isLoading
+				[repoIdOrRepoIds]: isLoading,
 			});
 		}
 	};
@@ -307,7 +312,7 @@ export const Observability = React.memo((props: Props) => {
 				setLoadingAssigments(false);
 				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityErrorAssignments"
+						Query: "GetObservabilityErrorAssignments",
 					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
@@ -351,7 +356,7 @@ export const Observability = React.memo((props: Props) => {
 					reposResponse?.repos && repoIds.length
 						? reposResponse.repos.filter(r => repoIds.includes(r.repoId)).map(r => r.repoName)
 						: [],
-				resetCache: force
+				resetCache: force,
 			});
 
 			setHasEntities(!_isEmpty(entitiesResponse.entities));
@@ -364,7 +369,7 @@ export const Observability = React.memo((props: Props) => {
 		if (repoIds.length) {
 			try {
 				const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
-					filters: buildFilters(repoIds)
+					filters: buildFilters(repoIds),
 				});
 
 				if (response?.repos) {
@@ -373,7 +378,7 @@ export const Observability = React.memo((props: Props) => {
 			} catch (err) {
 				if (err.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityErrors"
+						Query: "GetObservabilityErrors",
 					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 				} else if (err.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
@@ -462,7 +467,7 @@ export const Observability = React.memo((props: Props) => {
 								loading(repoId, false);
 								if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 									HostApi.instance.track("NR Access Denied", {
-										Query: "GetObservabilityErrors"
+										Query: "GetObservabilityErrors",
 									});
 									setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 								} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
@@ -502,7 +507,7 @@ export const Observability = React.memo((props: Props) => {
 
 		return HostApi.instance
 			.send(GetObservabilityReposRequestType, {
-				filters: [{ repoId: repoId, entityGuid: entityGuid }]
+				filters: [{ repoId: repoId, entityGuid: entityGuid }],
 			})
 			.then(response => {
 				if (response?.repos) {
@@ -517,7 +522,7 @@ export const Observability = React.memo((props: Props) => {
 				loading(repoId, false);
 				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityRepos"
+						Query: "GetObservabilityRepos",
 					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
 					setLoadingEntities(false);
@@ -533,7 +538,7 @@ export const Observability = React.memo((props: Props) => {
 
 		HostApi.instance
 			.send(GetObservabilityErrorsRequestType, {
-				filters: [{ repoId: repoId, entityGuid: entityGuid }]
+				filters: [{ repoId: repoId, entityGuid: entityGuid }],
 			})
 			.then(response => {
 				if (response?.repos) {
@@ -558,7 +563,7 @@ export const Observability = React.memo((props: Props) => {
 			}
 			const response = await HostApi.instance.send(GetServiceLevelTelemetryRequestType, {
 				newRelicEntityGuid: entityGuid,
-				repoId: currentRepoId
+				repoId: currentRepoId,
 			});
 			if (response?.goldenMetrics) {
 				setGoldenMetrics(response.goldenMetrics);
@@ -580,12 +585,12 @@ export const Observability = React.memo((props: Props) => {
 
 		let filteredPaneNodes = getFilteredPaneNodes(id);
 
-		Object.keys(filteredPaneNodes).map(function(key) {
+		Object.keys(filteredPaneNodes).map(function (key) {
 			if (filteredPaneNodes[key] === false) {
-				dispatch(setUserPreference(["hiddenPaneNodes"], { [key]: true }));
+				dispatch(setUserPreference({ prefPath: ["hiddenPaneNodes"], value: { [key]: true } }));
 			}
 		});
-		dispatch(setUserPreference(["hiddenPaneNodes"], { [id]: !collapsed }));
+		dispatch(setUserPreference({ prefPath: ["hiddenPaneNodes"], value: { [id]: !collapsed } }));
 
 		if (entityGuid === expandedEntity) {
 			setExpandedEntity(null);
@@ -612,14 +617,14 @@ export const Observability = React.memo((props: Props) => {
 		{
 			label: "Instrument my App",
 			key: "instrument",
-			action: () => dispatch(openPanel(WebviewPanels.OnboardNewRelic))
+			action: () => dispatch(openPanel(WebviewPanels.OnboardNewRelic)),
 		},
 		{ label: "-" },
 		{
 			label: "Disconnect",
 			key: "disconnect",
-			action: () => dispatch(disconnectProvider("newrelic*com", "Sidebar"))
-		}
+			action: () => dispatch(disconnectProvider("newrelic*com", "Sidebar")),
+		},
 	];
 
 	const handleClickCLMBroadcast = (entityGuid, e?) => {
@@ -633,9 +638,9 @@ export const Observability = React.memo((props: Props) => {
 		);
 		newPreferences.push({
 			repoId: currentRepoId,
-			entityGuid: entityGuid
+			entityGuid: entityGuid,
 		});
-		dispatch(setUserPreference(["observabilityRepoEntities"], newPreferences));
+		dispatch(setUserPreference({ prefPath: ["observabilityRepoEntities"], value: newPreferences }));
 
 		// update the IDEs
 		setTimeout(() => {
@@ -726,7 +731,7 @@ export const Observability = React.memo((props: Props) => {
 				"Errors Listed": !_isEmpty(observabilityAssignments) || hasObservabilityErrors,
 				"Assigned Errors": observabilityAssignments.length,
 				"Repo Errors": errorCount,
-				"Unassociated Repos": unassociatedRepoCount
+				"Unassociated Repos": unassociatedRepoCount,
 			});
 		}
 	}, [loadingErrors, loadingAssigments]);
@@ -872,11 +877,16 @@ export const Observability = React.memo((props: Props) => {
 															message: `Enable CodeLenses to see code-level metrics. 
 														Go to Tools > Options > Text Editor > All Languages > CodeLens or [learn more about code-level metrics]`,
 															helpUrl:
-																"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level"
-														}
+																"https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring#code-level",
+														},
 													]}
 													dismissCallback={e => {
-														dispatch(setUserPreference(["hideCodeLevelMetricsInstructions"], true));
+														dispatch(
+															setUserPreference({
+																prefPath: ["hideCodeLevelMetricsInstructions"],
+																value: true,
+															})
+														);
 													}}
 												/>
 											)}
@@ -911,11 +921,10 @@ export const Observability = React.memo((props: Props) => {
 															const paneId =
 																index + "newrelic-errors-in-repo-" + _observabilityRepo.repoId;
 															const collapsed = expandedEntity !== ea.entityGuid;
-															const currentObservabilityRepoEntity = derivedState.observabilityRepoEntities.find(
-																ore => {
+															const currentObservabilityRepoEntity =
+																derivedState.observabilityRepoEntities.find(ore => {
 																	return ore.repoId === currentRepoId;
-																}
-															);
+																});
 															const isSelectedCLM =
 																ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
 															return (
@@ -949,7 +958,7 @@ export const Observability = React.memo((props: Props) => {
 																			<Icon
 																				name="globe"
 																				className={cx("clickable", {
-																					"icon-override-actions-visible": true
+																					"icon-override-actions-visible": true,
 																				})}
 																				title="View on New Relic"
 																				placement="bottomLeft"
@@ -958,10 +967,10 @@ export const Observability = React.memo((props: Props) => {
 																					e.preventDefault();
 																					e.stopPropagation();
 																					HostApi.instance.track("Open Service Summary on NR", {
-																						Section: "Golden Metrics"
+																						Section: "Golden Metrics",
 																					});
 																					HostApi.instance.send(OpenUrlRequestType, {
-																						url: newRelicUrl
+																						url: newRelicUrl,
 																					});
 																				}}
 																			/>
@@ -973,11 +982,11 @@ export const Observability = React.memo((props: Props) => {
 																					color: isSelectedCLM
 																						? "var(--text-color-highlight)"
 																						: "inherit",
-																					opacity: isSelectedCLM ? "1" : "inherit"
+																					opacity: isSelectedCLM ? "1" : "inherit",
 																				}}
 																				name="broadcast"
 																				className={cx("clickable", {
-																					"icon-override-actions-visible": !isSelectedCLM
+																					"icon-override-actions-visible": !isSelectedCLM,
 																				})}
 																				title={
 																					isSelectedCLM ? (
@@ -1087,7 +1096,7 @@ export const Observability = React.memo((props: Props) => {
 															}
 															onSuccess={async e => {
 																HostApi.instance.track("NR Entity Association", {
-																	"Repo ID": repoForEntityAssociator.repoId
+																	"Repo ID": repoForEntityAssociator.repoId,
 																});
 
 																await fetchObservabilityRepos(
@@ -1145,7 +1154,7 @@ export const Observability = React.memo((props: Props) => {
 											fontSize: "smaller",
 											overflow: "hidden",
 											textOverflow: "ellipsis",
-											whiteSpace: "nowrap"
+											whiteSpace: "nowrap",
 										}}
 									>
 										<Icon name="newrelic" />

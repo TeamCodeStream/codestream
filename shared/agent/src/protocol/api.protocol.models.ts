@@ -4,7 +4,7 @@ import { ParsedDiff } from "diff";
 import {
 	EnvironmentHost,
 	FetchProviderDefaultPullResponse,
-	ThirdPartyProviders
+	ThirdPartyProviders,
 } from "./agent.protocol";
 import { CSReviewCheckpoint } from "./api.protocol";
 
@@ -20,7 +20,7 @@ export interface CSEntity {
 export enum ProviderType {
 	MSTeams = "msteams",
 	Slack = "slack",
-	CodeStream = "codestream"
+	CodeStream = "codestream",
 }
 
 export enum CodemarkType {
@@ -33,12 +33,12 @@ export enum CodemarkType {
 	Review = "review",
 	CodeError = "codeError",
 	Reaction = "reaction",
-	PRComment = "prcomment"
+	PRComment = "prcomment",
 }
 
 export enum CodemarkStatus {
 	Open = "open",
-	Closed = "closed"
+	Closed = "closed",
 }
 
 export interface ShareTarget {
@@ -99,6 +99,8 @@ export interface CSCodemark extends CSEntity {
 
 	// code error this codemark is in reply to
 	codeErrorId?: string;
+
+	markers?: CSMarker[];
 }
 
 export interface CSMarkerIdentifier {
@@ -176,7 +178,7 @@ export interface CSCodeBlock {
 // FIXME -- what other statuses do we need?
 export enum ReviewStatus {
 	Open = "open",
-	Closed = "closed"
+	Closed = "closed",
 }
 
 export enum FileStatus {
@@ -186,7 +188,7 @@ export enum FileStatus {
 	deleted = "D",
 	copied = "C",
 	unmerged = "U",
-	modified = "M"
+	modified = "M",
 }
 
 export interface ReviewChangesetFileInfo {
@@ -396,11 +398,11 @@ export enum StreamType {
 	Channel = "channel",
 	Direct = "direct",
 	File = "file",
-	Object = "object"
+	Object = "object",
 }
 
 export enum ChannelServiceType {
-	Vsls = "vsls"
+	Vsls = "vsls",
 }
 
 export interface CSBaseStream extends CSEntity {
@@ -701,20 +703,20 @@ export interface CSLastReadItems {
 export enum CSNotificationPreference {
 	All = "all",
 	InvolveMe = "involveMe",
-	Off = "off"
+	Off = "off",
 }
 
 export enum CSNotificationDeliveryPreference {
 	All = "all",
 	EmailOnly = "emailOnly",
 	ToastOnly = "toastOnly",
-	Off = "off"
+	Off = "off",
 }
 
 export enum CSReviewApprovalSetting {
 	User = "user",
 	Anyone = "anyone",
-	All = "all"
+	All = "all",
 }
 
 export enum CSReviewAssignmentSetting {
@@ -723,7 +725,7 @@ export enum CSReviewAssignmentSetting {
 	Authorship2 = "authorship2",
 	Authorship3 = "authorship3",
 	RoundRobin = "roundRobin",
-	Random = "random"
+	Random = "random",
 }
 
 export interface PullRequestQuery {
