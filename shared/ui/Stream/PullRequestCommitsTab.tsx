@@ -196,7 +196,7 @@ export const PullRequestCommitsTab = props => {
 		<PRCommitContent>
 			{orderBy(Object.keys(commits), _ => _, order).map((day, index) => {
 				return (
-					<div key={index}>
+					<div key={index} data-testid={day}>
 						<PRCommitDay>
 							<Icon name="git-commit" />
 							Commits on{" "}

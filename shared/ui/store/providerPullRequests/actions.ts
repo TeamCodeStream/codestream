@@ -16,7 +16,8 @@ import {
 	FetchAssignableUsersRequestType,
 	FetchAssignableUsersResponse,
 	GetCommitsFilesRequestType,
-	GetCommitsFilesResponse
+	GetCommitsFilesResponse,
+	FetchThirdPartyPullRequestCommitsResponse
 } from "@codestream/protocols/agent";
 import { CodeStreamState } from "..";
 import { RequestType } from "vscode-languageserver-protocol";
@@ -378,7 +379,10 @@ export const getPullRequestCommits = (
 	providerId: string,
 	id: string,
 	options?: { force: true }
-) => async (dispatch, getState: () => CodeStreamState) => {
+) => async (
+	dispatch,
+	getState: () => CodeStreamState
+): Promise<FetchThirdPartyPullRequestCommitsResponse[] | undefined> => {
 	try {
 		const state = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
@@ -394,10 +398,10 @@ export const getPullRequestCommits = (
 				return pr.commits;
 			}
 		}
-		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
+		const response = (await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
 			providerId: providerId,
 			pullRequestId: id
-		});
+		})) as FetchThirdPartyPullRequestCommitsResponse[];
 		dispatch(_addPullRequestCommits(providerId, id, response));
 		return response;
 	} catch (error) {
