@@ -207,7 +207,11 @@ export const PullRequestCommitsTab = props => {
 		);
 
 	const order = derivedState.providerName === "GitLab" ? "desc" : "asc";
+	// console.log("object.keys: ", Object.keys(commits));
 
+	// console.log("object.keys after change: ", Object.keys(commits));
+
+	// console.log(orderBy(Object.keys(commits), _ => _, order));
 	return (
 		<PRCommitContent>
 			{orderBy(Object.keys(commitsByDay), _ => _, order).map((day, index) => {
