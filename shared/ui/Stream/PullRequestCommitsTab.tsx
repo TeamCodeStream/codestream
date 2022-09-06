@@ -135,14 +135,13 @@ export const PullRequestCommitsTab = props => {
 	const [commits, setCommits] = useState<any>({});
 
 	const _mapData = data => {
+		let commit_order;
 		const commitsByDay = groupBy(data, _ => {
-			// need this to be all numbers so we can sort on them
-			// before changing them to a human readable format
-			return new Intl.DateTimeFormat("en", {
-				day: "2-digit",
-				month: "2-digit",
-				year: "2-digit"
-			}).format(new Date(_.authoredDate).getTime());
+			//set hours,minutes,seconds to 0
+			commit_order = new Date(_.authoredDate).setUTCHours(0, 0, 0, 0);
+			commit_order = new Date(commit_order).toISOString();
+
+			return commit_order;
 		});
 
 		setCommits(commitsByDay);
