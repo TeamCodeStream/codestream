@@ -120,4 +120,69 @@ describe("PullRequestCommitsTab", () => {
 			expect(Array.from(elements).map(el => el.getAttribute("data-testid"))).toEqual(expectedOrder);
 		});
 	});
+
+	it("Should show commits in order of time", async () => {
+		const mockStore = configureStore(middlewares);
+
+		providerPullRequestActionsMock.getPullRequestCommits.mockReturnValue(
+			(dispatch, getState: Function) => {
+				return Promise.resolve([
+					{
+						abbreviatedOid: "22222",
+						author: {
+							name: "jdoe",
+							user: {
+								login: "jdoe"
+							}
+						},
+						committer: {
+							name: "jdoe",
+							user: {
+								login: "jdoe"
+							}
+						},
+						message: "my message 2",
+						authoredDate: "2022-09-06T15:58:24.244Z",
+						oid: "1234567890",
+						url: "https://example.com"
+					},
+					{
+						abbreviatedOid: "11111",
+						author: {
+							name: "jdoe",
+							user: {
+								login: "jdoe"
+							}
+						},
+						committer: {
+							name: "jdoe",
+							user: {
+								login: "jdoe"
+							}
+						},
+						message: "my message 1",
+						authoredDate: "2022-09-06T14:58:24.244Z",
+						oid: "1234567890",
+						url: "https://example.com"
+					}
+				]);
+			}
+		);
+
+		await act(async () => {
+			render(
+				<Provider store={mockStore(baseState)}>
+					<ThemeProvider theme={lightTheme}>
+						<PullRequestCommitsTab pr={pr} />
+					</ThemeProvider>
+				</Provider>
+			);
+		});
+
+		await waitFor(() => {
+			const expectedOrder = ["commit-11111", "commit-22222"];
+			const elements = screen.queryAllByTestId(/commit-(.*)/);
+			expect(Array.from(elements).map(el => el.getAttribute("data-testid"))).toEqual(expectedOrder);
+		});
+	});
 });

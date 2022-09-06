@@ -16,7 +16,11 @@ import copy from "copy-to-clipboard";
 import { groupBy, orderBy } from "lodash-es";
 import { Link } from "./Link";
 import { HostApi } from "../webview-api";
-import { ChangeDataType, DidChangeDataNotificationType } from "@codestream/protocols/agent";
+import {
+	ChangeDataType,
+	DidChangeDataNotificationType,
+	FetchThirdPartyPullRequestCommitsResponse
+} from "@codestream/protocols/agent";
 
 const PRCommitContent = styled.div`
 	margin: 0 20px 20px 20px;
@@ -132,19 +136,20 @@ export const PullRequestCommitsTab = props => {
 	});
 
 	const [isLoading, setIsLoading] = useState(true);
-	const [commits, setCommits] = useState<any>({});
+	const [commitsByDay, setCommitsByDay] = useState<{
+		[Identifier: string]: FetchThirdPartyPullRequestCommitsResponse[];
+	}>({});
 
 	const _mapData = data => {
-		let commit_order;
-		const commitsByDay = groupBy(data, _ => {
-			//set hours,minutes,seconds to 0
-			commit_order = new Date(_.authoredDate).setUTCHours(0, 0, 0, 0);
-			commit_order = new Date(commit_order).toISOString();
-
-			return commit_order;
+		const commitsByDayGrouped = groupBy(data, _ => {
+			// set hours,minutes,seconds to 0
+			const normalizedAuthoredDate = new Date(
+				new Date(_.authoredDate).setUTCHours(0, 0, 0, 0)
+			).toISOString();
+			return normalizedAuthoredDate;
 		});
 
-		setCommits(commitsByDay);
+		setCommitsByDay(commitsByDayGrouped);
 		setIsLoading(false);
 
 		if (props.initialScrollPosition) {
@@ -194,7 +199,7 @@ export const PullRequestCommitsTab = props => {
 
 	return (
 		<PRCommitContent>
-			{orderBy(Object.keys(commits), _ => _, order).map((day, index) => {
+			{orderBy(Object.keys(commitsByDay), _ => _, order).map((day, index) => {
 				return (
 					<div key={index} data-testid={day}>
 						<PRCommitDay>
@@ -207,10 +212,10 @@ export const PullRequestCommitsTab = props => {
 							}).format(new Date(day.toString()))}
 						</PRCommitDay>
 						<div>
-							{orderBy(commits[day], "authoredDate", order).map((commit, index) => {
+							{orderBy(commitsByDay[day], "authoredDate", order).map((commit, index) => {
 								const { author, committer } = commit;
 								return (
-									<PRCommitCard key={index}>
+									<PRCommitCard key={index} data-testid={"commit-" + commit.abbreviatedOid}>
 										<h1>{commit.message}</h1>
 										{author && committer && author.name !== committer.name && (
 											<>
