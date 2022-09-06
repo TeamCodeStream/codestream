@@ -65,7 +65,7 @@ class CodeStreamPresentationFactory(val editor: EditorImpl) {
         })
     }
 
-    private fun showTooltip(editor: Editor, e: MouseEvent, tooltip: JPanel): LightweightHint {
+    private fun showTooltip(editor: Editor, e: MouseEvent, tooltip: JPanel): LightweightHint? {
         val hint = run {
             tooltip.border = JBUI.Borders.empty(6, 6, 5, 6)
             LightweightHint(tooltip)
@@ -74,11 +74,17 @@ class CodeStreamPresentationFactory(val editor: EditorImpl) {
         val constraint = HintManager.ABOVE
 
         val point = run {
-            val pointOnEditor = locationAt(e, editor.contentComponent)
-            val p = HintManagerImpl.getHintPosition(hint, editor, editor.xyToVisualPosition(pointOnEditor), constraint)
-            p.x = e.xOnScreen - editor.contentComponent.topLevelAncestor.locationOnScreen.x
-            p
-        }
+            try {
+                val pointOnEditor = locationAt(e, editor.contentComponent)
+                val p =
+                    HintManagerImpl.getHintPosition(hint, editor, editor.xyToVisualPosition(pointOnEditor), constraint)
+                p.x = e.xOnScreen - editor.contentComponent.topLevelAncestor.locationOnScreen.x
+                p
+            } catch (e: Throwable) {
+                logger.warn("Error getting tooltip position", e)
+                null
+            }
+        } ?: return null
 
         HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, point,
             HintManager.HIDE_BY_ANY_KEY

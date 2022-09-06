@@ -21,8 +21,6 @@ import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostRequestType,
 	CreateThirdPartyPostResponse,
-	DeleteThirdPartyPostRequest,
-	DeleteThirdPartyPostRequestType,
 	DidChangeDataNotificationType,
 	DisconnectThirdPartyProviderRequest,
 	DisconnectThirdPartyProviderRequestType,
@@ -578,27 +576,6 @@ export class ThirdPartyProviderRegistry {
 		return response;
 	}
 
-	@log()
-	@lspHandler(DeleteThirdPartyPostRequestType)
-	async deletePost(request: DeleteThirdPartyPostRequest): Promise<DeleteThirdPartyPostRequest> {
-		const provider = getProvider(request.providerId);
-		if (provider === undefined) {
-			throw new Error(`No registered provider for '${request.providerId}'`);
-		}
-
-		const postProvider = provider as ThirdPartyPostProvider;
-		if (
-			postProvider == null ||
-			typeof postProvider.supportsSharing !== "function" ||
-			!postProvider.supportsSharing()
-		) {
-			throw new Error(`Provider(${provider.name}) doesn't support sharing`);
-		}
-
-		const response = await postProvider.deletePost(request);
-		return response;
-	}
-
 	async createPullRequest(
 		request: ProviderCreatePullRequestRequest
 	): Promise<ProviderCreatePullRequestResponse | undefined> {
@@ -795,7 +772,7 @@ export class ThirdPartyProviderRegistry {
 				{
 					providerId: "github/enterprise",
 					name: WAITING_ON_REVIEW,
-					query: `is:pr is:open review-requested:@me`,
+					query: `is:pr is:open involves:@me`,
 					hidden: false
 				},
 				{

@@ -1,5 +1,12 @@
 # Change Log
 
+## [13.7.1] - 2022-9-2
+
+### Fixed
+
+- Fixes an issue that prevented CodeStream for Visual Studio from reloading after changing the serverUrl
+- Fixes an issue that prevented GitHub Enterprise users from seeing their pull requests
+
 ## [13.7.0] - 2022-9-1
 
 ### Added
@@ -188,7 +195,7 @@
 
 ### Fixed
 
-- Fixes an issue where the Assignee list when creating an issue on Jira Server didn't include all possible people 
+- Fixes an issue where the Assignee list when creating an issue on Jira Server didn't include all possible people
 
 ## [12.15.0] - 2022-4-7
 
@@ -227,7 +234,7 @@
 ### Fixed
 
 - Fixes an issue where issues wouldn't appear in the Issues section of the CodeStream pane without clicking Refresh
-- Fixes an issue with the parsing of Java filepaths in stack traces for errors 
+- Fixes an issue with the parsing of Java filepaths in stack traces for errors
 - Fixes an issue with broken images in the bot checks section of PRs
 - Addresses [#889](https://github.com/TeamCodeStream/CodeStream/issues/889) &mdash; Comment thread status (Resolved/Unresolved) are incorrect initially or if changed externally
 - Addresses [#898](https://github.com/TeamCodeStream/CodeStream/issues/898) &mdash; "404 Project Not found" when creating new merge request
@@ -316,7 +323,7 @@
 
 - Addresses [#767](https://github.com/TeamCodeStream/CodeStream/issues/767) &mdash; Slack channel-selector dropdown not working
 - Fixes an issue where CodeStream doesn't think you have the repo open when viewing a merge request
-- Fixes an issue where issues from a Jira instance with many projects would 
+- Fixes an issue where issues from a Jira instance with many projects would
 - Fixes an issue where channels for a workspace with a very large number of channels take a long time to load
 
 ## [12.6.0] - 2022-1-4

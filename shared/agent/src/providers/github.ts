@@ -82,6 +82,7 @@ interface GithubSelfResponse {
 interface PRResponse {
 	viewer: {
 		id: string;
+		login: string;
 	};
 	search: {
 		edges: {
@@ -3037,6 +3038,7 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 			}
 			viewer {
 				id
+				login
 			}
 			search(query: "${query}", type: ISSUE, last: ${limit}) {
 			edges {
@@ -3224,7 +3226,8 @@ export class GitHubProvider extends ThirdPartyIssueProviderBase<CSGitHubProvider
 								queries[index].query ===
 								defaultQueries[providerId].find(_ => _.name === WAITING_ON_REVIEW)?.query;
 							const isReviewer =
-								pullRequest.viewerLatestReviewRequest?.requestedReviewer.id === item.viewer.id;
+								pullRequest.viewerLatestReviewRequest?.requestedReviewer.login ===
+								item.viewer.login;
 							const hasReviewed: boolean = !_isEmpty(pullRequest.reviews.nodes);
 							const lastDecision = pullRequest.reviews.nodes
 								.reverse()

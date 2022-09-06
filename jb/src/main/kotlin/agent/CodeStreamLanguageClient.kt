@@ -21,10 +21,12 @@ import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.concurrency.NonUrgentExecutor
 import git4idea.GitUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -181,8 +183,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
 
         val fileFuture = CompletableFuture<FileSearchResponse>()
         ApplicationManager.getApplication().invokeLater {
-            val files = FilenameIndex.getFilesByName(project, request.path, GlobalSearchScope.projectScope(project)).map { it.virtualFile.path}
-            fileFuture.complete(FileSearchResponse(files))
+            ReadAction.nonBlocking({
+                val files = FilenameIndex.getFilesByName(project, request.path, GlobalSearchScope.projectScope(project))
+                    .map { it.virtualFile.path }
+                fileFuture.complete(FileSearchResponse(files))
+            }).submit(NonUrgentExecutor.getInstance())
         }
         return fileFuture
     }
