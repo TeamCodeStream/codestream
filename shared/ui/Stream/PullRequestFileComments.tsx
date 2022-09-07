@@ -183,7 +183,8 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 				}
 			});
 		} else if (derivedState.currentPullRequestProviderId === "bitbucket*org") {
-			// TODO some typings
+			// TODO some typings & put the Tree?
+
 			(pr as any).comments.forEach(comment => {
 				//check for deleted flag in comment object / comment.deleted
 				if (comment.deleted === true) {

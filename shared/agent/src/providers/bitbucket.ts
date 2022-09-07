@@ -224,6 +224,10 @@ interface BitbucketPullRequestComment {
 	bodyHtml: string;
 	bodyText: string;
 	state: string;
+	parent?: {
+		id: number;
+	};
+	// children?: [BitbucketPullRequestComment];
 }
 interface BitbucketPullRequestCommit {
 	abbreviatedOid: string;
@@ -573,6 +577,26 @@ export class BitbucketProvider
 		const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
 		);
+		// Tree here?
+		function listToTree(arr: any[]): void {
+			let map: any = {};
+			let res: any[] = [];
+			for (let i = 0; i < arr.length; i++) {
+				if (!arr[i].children) {
+					arr[i].children = [];
+				}
+				map[arr[i].id] = i;
+				if (!arr[i].parent) {
+					res.push(arr[i]);
+				} else {
+					arr[map[arr[i].parent.id]].children.push(arr[i]);
+				}
+			}
+			comments.body.values = res;
+			// return res;
+		}
+
+		listToTree(comments.body.values);
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
 
@@ -1089,7 +1113,7 @@ export class BitbucketProvider
 		};
 	}
 
-	//how do we get the parentId for this?  we need the idea of the comment we're replying to
+	// TODO: add Tree and get replies to display
 	async createCommentReply(request: {
 		pullRequestId: string;
 		parentId: number;
@@ -1103,7 +1127,7 @@ export class BitbucketProvider
 			parent: {
 				id: request.commentId
 			}
-		} as any;
+		} as any; //TODO: fix this any
 
 		Logger.log(`commenting:createCommentReply`, {
 			//	ownerData: ownerData,
@@ -1111,7 +1135,7 @@ export class BitbucketProvider
 			payload: payload
 		});
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
-		const response = await this.post(
+		const postComment = await this.post(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
 			payload
 		);
