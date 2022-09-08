@@ -137,10 +137,10 @@ export const PullRequestCommitsTab = props => {
 
 	const [isLoading, setIsLoading] = useState(true);
 	const [commitsByDay, setCommitsByDay] = useState<{
-		[Identifier: string]: FetchThirdPartyPullRequestCommitsResponse[];
+		[identifier: string]: FetchThirdPartyPullRequestCommitsResponse[];
 	}>({});
 
-	const _mapData = data => {
+	const _mapData = (data: FetchThirdPartyPullRequestCommitsResponse[]) => {
 		const commitsByDayGrouped = groupBy(data, _ => {
 			// set hours,minutes,seconds to 0
 			const normalizedAuthoredDate = new Date(
@@ -164,7 +164,7 @@ export const PullRequestCommitsTab = props => {
 		const data = await dispatch(
 			getPullRequestCommits(pr.providerId, derivedState.currentPullRequestId!, options)
 		);
-		_mapData(data);
+		_mapData(data as any);
 	};
 
 	useDidMount(() => {
@@ -179,7 +179,7 @@ export const PullRequestCommitsTab = props => {
 					const data = await dispatch(
 						getPullRequestCommitsFromProvider(pr.providerId, derivedState.currentPullRequestId!)
 					);
-					_mapData(data);
+					_mapData(data as any);
 				}
 			});
 		})();
