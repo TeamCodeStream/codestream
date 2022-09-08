@@ -75,6 +75,9 @@ import {
 	ReactToPostResponse,
 	ReportingMessageType,
 	ReviewPlus,
+	SharePostViaServerRequest,
+	SharePostViaServerRequestType,
+	SharePostViaServerResponse,
 	UpdatePostSharingDataRequest,
 	UpdatePostSharingDataRequestType,
 	UpdatePostSharingDataResponse
@@ -2065,6 +2068,11 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 	@lspHandler(UpdatePostSharingDataRequestType)
 	sharePost(request: UpdatePostSharingDataRequest): Promise<UpdatePostSharingDataResponse> {
 		return this.session.api.updatePostSharingData(request);
+	}
+
+	@lspHandler(SharePostViaServerRequestType)
+	sharePostViaServer(request: SharePostViaServerRequest): Promise<SharePostViaServerResponse> {
+		return this.session.api.sharePostViaServer(request);
 	}
 
 	@lspHandler(MarkPostUnreadRequestType)

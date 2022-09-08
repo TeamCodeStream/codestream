@@ -42,10 +42,12 @@ export interface CreateExternalPostRequest {
 }
 
 export interface CreateSharedExternalPostRequest {
-	channelId: string;
+	channelId?: string;
+	memberIds?: string[];
 	text: string;
 	mentionedUserIds?: string[];
 	parentPostId?: string;
+	parentText?: string;
 	remotes?: string[];
 	entryPoint?: string;
 	// can share either a codemark
@@ -55,6 +57,18 @@ export interface CreateSharedExternalPostRequest {
 	// ...or a "code error"
 	codeError?: CodeErrorPlus;
 	crossPostIssueValues?: CrossPostIssueValues;
+	providerServerTokenUserId?: string;
+	existingPostId?: string;
+	files?: { name: string; url?: string }[];
+}
+
+export interface DeleteSharedExternalPostRequest {
+	channelId: string;
+	postId: string;
+}
+
+export interface DeleteSharedExternalPostResponse {
+	ts?: string;
 }
 
 export interface CreatePostRequest {
@@ -113,6 +127,8 @@ export interface CreatePostResponse {
 	repos?: CSRepository[];
 	ts?: string;
 	permalink?: string;
+	channelId?: string;
+	channelName?: string;
 }
 export const CreatePostRequestType = new RequestType<
 	CreatePostRequest,
@@ -260,6 +276,22 @@ export const UpdatePostSharingDataRequestType = new RequestType<
 	void,
 	void
 >("codestream/post/share-update");
+
+export interface SharePostViaServerRequest {
+	postId: string;
+	providerId: string;
+}
+
+export interface SharePostViaServerResponse {
+	post: CSPost;
+}
+
+export const SharePostViaServerRequestType = new RequestType<
+	SharePostViaServerRequest,
+	SharePostViaServerResponse,
+	void,
+	void
+>("codestream/post/share-via-server");
 
 export interface GetPostRequest {
 	streamId: string;

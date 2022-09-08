@@ -6,6 +6,7 @@ import Icon from "../../../Stream/Icon";
 export interface MenuItem {
 	label: any;
 	action?: string | (() => void);
+	dontCloseOnSelect?: boolean;
 	key?: string;
 	default?: boolean;
 	checked?: boolean;
@@ -19,6 +20,7 @@ export interface MenuItem {
 	noHover?: boolean;
 	disabled?: boolean;
 	searchLabel?: string;
+	tabs?: MenuItem[];
 }
 
 export interface InlineMenuProps {
@@ -37,6 +39,12 @@ export interface InlineMenuProps {
 	allowEmpty?: boolean;
 	/** if true, prevents e.stopPropagation() from being called onclick */
 	preventStopPropagation?: boolean;
+	/** if true, leave the menu visible after selecting an item */
+	dontCloseOnSelect?: boolean;
+	/** if true, render a multiselect menu */
+	isMultiSelect?: boolean;
+	/** render item as a fixed position footer */
+	footer?: MenuItem;
 	onChevronClick?: Function;
 	preventMenuStopPropagation?: boolean;
 }
@@ -115,6 +123,9 @@ export function InlineMenu(props: InlineMenuProps) {
 					target={buttonRef.current}
 					items={props.items}
 					focusOnSelect={props.noFocusOnSelect ? null : buttonRef.current}
+					dontCloseOnSelect={props.dontCloseOnSelect}
+					isMultiSelect={props.isMultiSelect}
+					footer={props.footer}
 				/>
 			)}
 			<TextButton

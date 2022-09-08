@@ -300,7 +300,7 @@ class Post extends React.Component {
 					action: () => {
 						const { post, deletePost } = this.props;
 						if (post.parentPostId) {
-							deletePost(post.streamId, post.id);
+							deletePost(post.streamId, post.id, post.sharedTo);
 						} else {
 							confirmPopup({
 								title: "Are you sure?",

@@ -116,6 +116,7 @@ export interface BaseCodeErrorHeaderProps {
 
 export interface BaseCodeErrorMenuProps {
 	codeError: CSCodeError;
+	post?: CSPost;
 	errorGroup?: NewRelicErrorGroup;
 	setIsEditing: Function;
 	collapsed?: boolean;
@@ -824,6 +825,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 										>
 											<BaseCodeErrorMenu
 												codeError={codeError}
+												post={props.post}
 												errorGroup={props.errorGroup}
 												collapsed={collapsed}
 												setIsEditing={props.setIsEditing}

@@ -605,12 +605,44 @@ function blockTruncated(): KnownBlock {
 	};
 }
 
+function blockRepliedTo(text: string): KnownBlock {
+	let replyText: string;
+	const maxText = text.substring(0, 28);
+	if (text === maxText) {
+		replyText = text;
+	} else {
+		const match = maxText.match(/(.+\b)\W/);
+		const truncatedText = match ? match[1] : maxText;
+		replyText = truncatedText === text ? truncatedText : `${truncatedText}...`;
+	}
+	return {
+		type: "context",
+		elements: [
+			{
+				type: "mrkdwn",
+				text: `_reply to "${replyText}"_`
+			}
+		]
+	};
+}
+
+function blockFile(name: string, url: string): KnownBlock {
+	return {
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: `<${url}|${name}>`
+		}
+	};
+}
+
 export function toSlackPostBlocks(
 	codemark: CodemarkPlus,
 	remotes: string[] | undefined,
 	userMaps: UserMaps,
 	repos: { [key: string]: CSRepository } | undefined,
-	slackUserId: string
+	slackUserId: string,
+	files?: { name: string; url?: string }[]
 ): Blocks {
 	const blocks: Blocks = [];
 
@@ -831,54 +863,6 @@ export function toSlackPostBlocks(
 				elements: []
 			};
 
-			const features = SessionContainer.instance().session.api.features;
-			if (features && features.slack && features.slack.interactiveComponentsEnabled) {
-				if (codemark.id) {
-					actionId = toReplyActionId(counter, codemark, slackUserId);
-					actions.elements.push({
-						type: "button",
-						action_id: actionId,
-						style: "primary",
-						text: {
-							type: "plain_text",
-							text: "View Discussion & Reply"
-						}
-					});
-				} else {
-					// might be a passthrough codemark
-				}
-			} else {
-				actionId = toReplyDisabledActionId(counter, codemark, slackUserId);
-				actions.elements.push({
-					type: "button",
-					action_id: actionId,
-					confirm: {
-						title: {
-							// can't have markdown here, so using 'and' instead of '&' because it gets encoded to &amp;
-							type: "plain_text",
-							text: "View Discussion and Reply Disabled"
-						},
-						text: {
-							type: "mrkdwn",
-							text: `Contact your admin to enable replies from Slack.`
-						},
-						confirm: {
-							type: "plain_text",
-							text: "OK"
-						},
-						deny: {
-							type: "plain_text",
-							text: "Cancel"
-						}
-					},
-					// url: "https:// ... eventually a doc url here?",
-					text: {
-						type: "plain_text",
-						text: "View Discussion & Reply"
-					}
-				});
-			}
-
 			if (codemark.permalink) {
 				actionId = toActionId(counter, "ide", codemark, marker);
 				actions.elements.push({
@@ -921,7 +905,7 @@ export function toSlackPostBlocks(
 	} else {
 		counter++;
 
-		let actionId = toReplyActionId(counter, codemark, slackUserId);
+		const actionId = toActionId(counter, "ide", codemark);
 		const actions: ActionsBlock = {
 			type: "actions",
 			block_id: "actions",
@@ -929,29 +913,26 @@ export function toSlackPostBlocks(
 				{
 					type: "button",
 					action_id: actionId,
-					style: "primary",
 					text: {
 						type: "plain_text",
-						text: "View Discussion & Reply"
-					}
+						text: "Open in IDE"
+					},
+					url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(
+						providerDisplayNamesByNameKey.get("slack") || ""
+					)}`
 				}
 			]
 		};
 
-		actionId = toActionId(counter, "ide", codemark);
-		actions.elements.push({
-			type: "button",
-			action_id: actionId,
-			text: {
-				type: "plain_text",
-				text: "Open in IDE"
-			},
-			url: `${codemark.permalink}?ide=default&src=${encodeURIComponent(
-				providerDisplayNamesByNameKey.get("slack") || ""
-			)}`
-		});
-
 		blocks.push(actions);
+	}
+
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
 	}
 
 	blocks.push({
@@ -961,7 +942,7 @@ export function toSlackPostBlocks(
 		elements: [
 			{
 				type: "plain_text",
-				text: "Posted via CodeStream"
+				text: "Note that replies will be shared to CodeStream"
 			}
 		]
 	});
@@ -973,7 +954,8 @@ export function toSlackReviewPostBlocks(
 	review: ReviewPlus,
 	userMaps: UserMaps,
 	repos?: { [key: string]: CSRepository } | undefined,
-	slackUserId?: string
+	slackUserId?: string,
+	files?: { name: string; url?: string }[]
 ): Blocks {
 	const blocks: Blocks = [];
 	const modifiedFiles: string[] = [];
@@ -1074,41 +1056,37 @@ export function toSlackReviewPostBlocks(
 		}
 	}
 
-	let counter = 0;
-	let actionId = toReviewReplyActionId(counter, review, slackUserId);
-	const actions: ActionsBlock = {
-		type: "actions",
-		block_id: "review_actions",
-		elements: [
-			{
-				type: "button",
-				action_id: actionId,
-				style: "primary",
-				text: {
-					type: "plain_text",
-					text: "View Discussion & Reply"
-				}
-			}
-		]
-	};
-
 	const permalink = review.permalink;
 	if (permalink) {
-		counter++;
-		actionId = toReviewActionId(counter, "ide", review);
-		actions.elements.push({
-			type: "button",
-			action_id: actionId,
-			text: {
-				type: "plain_text",
-				text: "Open in IDE"
-			},
-			url: `${permalink}?ide=default&src=${encodeURIComponent(
-				providerDisplayNamesByNameKey.get("slack") || ""
-			)}`
-		});
+		const counter = 0;
+		const actionId = toReviewActionId(counter, "ide", review);
+		const actions: ActionsBlock = {
+			type: "actions",
+			block_id: "review_actions",
+			elements: [
+				{
+					type: "button",
+					action_id: actionId,
+					text: {
+						type: "plain_text",
+						text: "Open in IDE"
+					},
+					url: `${permalink}?ide=default&src=${encodeURIComponent(
+						providerDisplayNamesByNameKey.get("slack") || ""
+					)}`
+				}
+			]
+		};
 
 		blocks.push(actions);
+	}
+
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
 	}
 
 	blocks.push({
@@ -1178,39 +1156,27 @@ export function toSlackCodeErrorPostBlocks(
 		}
 	}
 
-	let counter = 0;
-	let actionId = toCodeErrorReplyActionId(counter, codeError, slackUserId);
-	const actions: ActionsBlock = {
-		type: "actions",
-		block_id: "codeerror_actions",
-		elements: [
-			{
-				type: "button",
-				action_id: actionId,
-				style: "primary",
-				text: {
-					type: "plain_text",
-					text: "View Discussion & Reply"
-				}
-			}
-		]
-	};
-
 	const permalink = codeError.permalink;
 	if (permalink) {
-		counter++;
-		actionId = toCodeErrorActionId(counter, "ide", codeError);
-		actions.elements.push({
-			type: "button",
-			action_id: actionId,
-			text: {
-				type: "plain_text",
-				text: "Open in IDE"
-			},
-			url: `${permalink}?ide=default&src=${encodeURIComponent(
-				providerDisplayNamesByNameKey.get("slack") || ""
-			)}`
-		});
+		const counter = 0;
+		const actionId = toCodeErrorActionId(counter, "ide", codeError);
+		const actions: ActionsBlock = {
+			type: "actions",
+			block_id: "codeerror_actions",
+			elements: [
+				{
+					type: "button",
+					action_id: actionId,
+					text: {
+						type: "plain_text",
+						text: "Open in IDE"
+					},
+					url: `${permalink}?ide=default&src=${encodeURIComponent(
+						providerDisplayNamesByNameKey.get("slack") || ""
+					)}`
+				}
+			]
+		};
 
 		blocks.push(actions);
 	}
@@ -1227,6 +1193,32 @@ export function toSlackCodeErrorPostBlocks(
 		]
 	});
 
+	return blocks;
+}
+
+export function toSlackTextPostBlocks(
+	text: string,
+	parentText?: string,
+	files?: { name: string; url?: string }[]
+) {
+	const blocks: Blocks = [];
+	if (parentText) {
+		blocks.push(blockRepliedTo(parentText));
+	}
+	blocks.push({
+		type: "section",
+		text: {
+			type: "mrkdwn",
+			text: text
+		}
+	});
+	if (files && files.length > 0) {
+		files.forEach(f => {
+			if (f.name && f.url) {
+				blocks.push(blockFile(f.name, f.url));
+			}
+		});
+	}
 	return blocks;
 }
 

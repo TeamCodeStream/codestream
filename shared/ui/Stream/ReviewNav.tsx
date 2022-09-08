@@ -28,6 +28,7 @@ import { WebviewPanels } from "@codestream/protocols/webview";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getPRLabel } from "../store/providers/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
+import { getPost } from "../store/posts/reducer";
 
 const NavHeader = styled.div`
 	// flex-grow: 0;
@@ -195,6 +196,7 @@ export function ReviewNav(props: Props) {
 		const { scmInfo } = state.editorContext;
 		const filePath = scmInfo && scmInfo.scm ? scmInfo.scm.file : "";
 		const review = getReview(state.reviews, props.reviewId);
+		const post = review ? getPost(state.posts, review?.streamId, review?.postId) : undefined;
 
 		const changeRequests = useSelector((state: CodeStreamState) =>
 			review ? getReviewChangeRequests(state, review) : []
@@ -205,6 +207,7 @@ export function ReviewNav(props: Props) {
 
 		return {
 			review,
+			post,
 			changeRequests,
 			editorContext: state.editorContext,
 			filePath,
@@ -227,7 +230,7 @@ export function ReviewNav(props: Props) {
 		derivedState.hideReviewInstructions ? "" : "files"
 	);
 
-	const { review } = derivedState;
+	const { review, post } = derivedState;
 
 	const exit = async () => {
 		// clear out the current review (set to blank) in the webview
@@ -433,6 +436,7 @@ export function ReviewNav(props: Props) {
 							<Button variant="secondary">
 								<BaseReviewMenu
 									review={review}
+									post={post}
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
@@ -476,6 +480,7 @@ export function ReviewNav(props: Props) {
 							<Button variant="secondary">
 								<BaseReviewMenu
 									review={review}
+									post={post}
 									setIsEditing={setIsEditing}
 									setIsAmending={setIsAmending}
 								/>
@@ -563,7 +568,14 @@ export function ReviewNav(props: Props) {
 		);
 
 	if (isEditing) {
-		return <ReviewForm isEditing editingReview={review} onClose={() => setIsEditing(false)} />;
+		return (
+			<ReviewForm
+				isEditing
+				editingReview={review}
+				existingSharedTo={derivedState.post?.sharedTo}
+				onClose={() => setIsEditing(false)}
+			/>
+		);
 	}
 
 	const { sidebarLocation } = derivedState;

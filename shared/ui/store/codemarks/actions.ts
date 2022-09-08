@@ -16,8 +16,11 @@ import {
 	DeleteMarkerRequestType,
 	CodemarkPlus,
 	MoveMarkerRequest,
-	MoveMarkerRequestType
+	MoveMarkerRequestType,
+	DeleteThirdPartyPostRequestType,
+	SharePostViaServerRequestType
 } from "@codestream/protocols/agent";
+import { ShareTarget } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
 import { TextDocumentIdentifier } from "vscode-languageserver-types";
@@ -26,6 +29,7 @@ import { CodeStreamState } from "..";
 import { capitalize } from "@codestream/webview/utils";
 import { isObject } from "lodash-es";
 import { handleDirectives } from "../providerPullRequests/actions";
+import { findMentionedUserIds, getTeamMembers } from "../users/reducer";
 
 export const reset = () => action("RESET");
 
@@ -54,16 +58,30 @@ export interface BaseNewCodemarkAttributes {
 	files?: Attachment[];
 }
 
+interface BaseSharingAttributes {
+	providerId: string;
+	providerTeamId: string;
+	providerTeamName?: string;
+	channelName?: string;
+	botUserId?: string;
+}
+
+type ChannelSharingAttributes = BaseSharingAttributes & {
+	type: "channel";
+	channelId: string;
+};
+
+type DirectSharingAttributes = BaseSharingAttributes & {
+	type: "direct";
+	userIds: string[];
+};
+
+type SharingAttributes = ChannelSharingAttributes | DirectSharingAttributes;
+
 export interface SharingNewCodemarkAttributes extends BaseNewCodemarkAttributes {
 	accessMemberIds: string[];
 	remotes?: string[];
-	sharingAttributes?: {
-		providerId: string;
-		providerTeamId: string;
-		providerTeamName?: string;
-		channelId: string;
-		channelName?: string;
-	};
+	sharingAttributes?: SharingAttributes;
 	textDocuments?: TextDocumentIdentifier[];
 	entryPoint?: string;
 	mentionedUserIds?: string[];
@@ -144,16 +162,21 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 				if (attributes.sharingAttributes) {
 					const { sharingAttributes } = attributes;
 					try {
-						const { post, ts, permalink } = await HostApi.instance.send(
+						const { post, ts, permalink, channelId } = await HostApi.instance.send(
 							CreateThirdPartyPostRequestType,
 							{
 								providerId: sharingAttributes.providerId,
-								channelId: sharingAttributes.channelId,
+								channelId:
+									sharingAttributes.type === "channel" ? sharingAttributes.channelId : undefined,
+								memberIds:
+									sharingAttributes.type === "direct" ? sharingAttributes.userIds : undefined,
 								providerTeamId: sharingAttributes.providerTeamId,
+								providerServerTokenUserId: sharingAttributes.botUserId,
 								text: rest.text,
 								codemark: response.codemark,
 								remotes: attributes.remotes,
-								mentionedUserIds: attributes.mentionedUserIds
+								mentionedUserIds: attributes.mentionedUserIds,
+								files: attributes.files
 							}
 						);
 						if (ts) {
@@ -165,7 +188,9 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 										providerId: sharingAttributes.providerId,
 										teamId: sharingAttributes.providerTeamId,
 										teamName: sharingAttributes.providerTeamName || "",
-										channelId: sharingAttributes.channelId,
+										channelId:
+											channelId ||
+											(sharingAttributes.type === "channel" ? sharingAttributes.channelId : ""),
 										channelName: sharingAttributes.channelName || "",
 										postId: ts,
 										url: permalink || ""
@@ -179,11 +204,64 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 									config => config.id === attributes.sharingAttributes!.providerId
 								)!.name
 							),
-							"Codemark Status": "New"
+							"Codemark Status": "New",
+							"Conversation Type": sharingAttributes.type === "channel" ? "Channel" : "Group DM"
 						});
 					} catch (error) {
 						logError("Error sharing a codemark", { message: error.toString() });
 						throw { reason: "share" } as CreateCodemarkError;
+					}
+				} else if (
+					attributes.parentPostId &&
+					state.posts.byStream[response.post.streamId] &&
+					state.posts.byStream[response.post.streamId][attributes.parentPostId] &&
+					state.posts.byStream[response.post.streamId][attributes.parentPostId].sharedTo
+				) {
+					const sharedTo = state.posts.byStream[response.post.streamId][attributes.parentPostId]
+						.sharedTo!;
+					for (const target of sharedTo) {
+						if (target.providerId !== "slack*com") continue;
+						try {
+							const { post, ts, permalink } = await HostApi.instance.send(
+								CreateThirdPartyPostRequestType,
+								{
+									providerId: target.providerId,
+									channelId: target.channelId,
+									providerTeamId: target.teamId,
+									parentPostId: target.postId,
+									text: rest.text,
+									codemark: response.codemark,
+									remotes: attributes.remotes,
+									mentionedUserIds: attributes.mentionedUserIds
+								}
+							);
+							if (ts) {
+								await HostApi.instance.send(UpdatePostSharingDataRequestType, {
+									postId: response.codemark.postId,
+									sharedTo: [
+										{
+											createdAt: post.createdAt,
+											providerId: target.providerId,
+											teamId: target.teamId,
+											teamName: target.teamName,
+											channelId: target.channelId,
+											channelName: target.channelName,
+											postId: ts,
+											url: permalink || ""
+										}
+									]
+								});
+							}
+						} catch (error) {
+							try {
+								await HostApi.instance.send(SharePostViaServerRequestType, {
+									postId: response.post.id,
+									providerId: target.providerId
+								});
+							} catch (error2) {
+								logError("Error sharing a post", { message: error2.toString() });
+							}
+						}
 					}
 				}
 			}
@@ -216,11 +294,25 @@ export const createCodemark = (attributes: SharingNewCodemarkAttributes) => asyn
 export const _deleteCodemark = (codemarkId: string) =>
 	action(CodemarksActionsTypes.Delete, codemarkId);
 
-export const deleteCodemark = (codemarkId: string) => async dispatch => {
+export const deleteCodemark = (codemarkId: string, sharedTo?: ShareTarget[]) => async dispatch => {
 	try {
 		void (await HostApi.instance.send(DeleteCodemarkRequestType, {
 			codemarkId
 		}));
+		try {
+			if (sharedTo) {
+				for (const shareTarget of sharedTo) {
+					await HostApi.instance.send(DeleteThirdPartyPostRequestType, {
+						providerId: shareTarget.providerId,
+						channelId: shareTarget.channelId,
+						providerPostId: shareTarget.postId,
+						providerTeamId: shareTarget.teamId
+					});
+				}
+			}
+		} catch (error) {
+			logError(`There was an error deleting a third party shared post: ${error}`);
+		}
 		dispatch(_deleteCodemark(codemarkId));
 	} catch (error) {
 		logError(error, { detail: `failed to delete codemark`, codemarkId });
@@ -234,12 +326,13 @@ type EditableAttributes = Partial<
 		[index: number]: boolean;
 	};
 	codeBlocks?: GetRangeScmInfoResponse[];
+	sharedTo?: ShareTarget[];
 };
 
-export const editCodemark = (
-	codemark: CodemarkPlus,
-	attributes: EditableAttributes
-) => async dispatch => {
+export const editCodemark = (codemark: CodemarkPlus, attributes: EditableAttributes) => async (
+	dispatch,
+	getState
+) => {
 	try {
 		const { markers = [] } = codemark;
 		const { deleteMarkerLocations = {}, codeBlocks } = attributes;
@@ -254,6 +347,7 @@ export const editCodemark = (
 			await Promise.all(toDelete.map(args => HostApi.instance.send(DeleteMarkerRequestType, args)));
 		}
 
+		let remotes: string[] = [];
 		if (codeBlocks) {
 			const toAdd: AddMarkersRequest = { codemarkId: codemark.id, newMarkers: [] };
 			const toMove: MoveMarkerRequest[] = [];
@@ -291,6 +385,57 @@ export const editCodemark = (
 			codemarkId: codemark.id,
 			...attributes
 		});
+		if (attributes.sharedTo) {
+			const { sharedTo } = attributes;
+			for (const shareTarget of sharedTo) {
+				try {
+					const { post, ts, permalink } = await HostApi.instance.send(
+						CreateThirdPartyPostRequestType,
+						{
+							providerId: shareTarget.providerId,
+							channelId: shareTarget.channelId,
+							providerTeamId: shareTarget.teamId,
+							existingPostId: shareTarget.postId,
+							text: attributes.text || "",
+							codemark: response.codemark,
+							remotes: [],
+							mentionedUserIds: findMentionedUserIds(
+								getTeamMembers(getState()),
+								attributes.text || ""
+							).concat(attributes.assignees || [])
+						}
+					);
+					if (ts) {
+						await HostApi.instance.send(UpdatePostSharingDataRequestType, {
+							postId: response.codemark.postId,
+							sharedTo: [
+								{
+									createdAt: post.createdAt,
+									providerId: shareTarget.providerId,
+									teamId: shareTarget.teamId,
+									teamName: shareTarget.teamName || "",
+									channelId: shareTarget.channelId,
+									channelName: shareTarget.channelName || "",
+									postId: ts,
+									url: permalink || ""
+								}
+							]
+						});
+					}
+					HostApi.instance.track("Shared Codemark", {
+						Destination: capitalize(
+							getConnectedProviders(getState()).find(
+								config => config.id === shareTarget.providerId
+							)!.name
+						),
+						"Codemark Status": "Edited"
+					});
+				} catch (error) {
+					logError("Error sharing a codemark", { message: error.toString() });
+					throw { reason: "share" } as CreateCodemarkError;
+				}
+			}
+		}
 
 		dispatch(updateCodemarks([response.codemark]));
 	} catch (error) {

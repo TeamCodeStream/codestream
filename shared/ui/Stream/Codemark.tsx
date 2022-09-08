@@ -338,7 +338,8 @@ export class Codemark extends React.Component<Props, State> {
 			relatedCodemarkIds,
 			tags,
 			codeBlocks,
-			deleteMarkerLocations
+			deleteMarkerLocations,
+			sharedTo: this.props.post?.sharedTo
 		});
 		this.setState({ isEditing: false });
 	};
@@ -807,7 +808,7 @@ export class Codemark extends React.Component<Props, State> {
 					className: "delete",
 					wait: true,
 					action: () => {
-						this.props.deleteCodemark(this.props.codemark!.id);
+						this.props.deleteCodemark(this.props.codemark!.id, this.props.post?.sharedTo);
 						this.props.setCurrentCodemark();
 					}
 				}
@@ -1309,7 +1310,8 @@ export class Codemark extends React.Component<Props, State> {
 			author,
 			marker,
 			isRepositioning,
-			repositionCodemark
+			repositionCodemark,
+			post
 		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
@@ -1326,15 +1328,17 @@ export class Codemark extends React.Component<Props, State> {
 		const mine = author && author.id === this.props.currentUser.id;
 
 		let menuItems: any[] = [
-			{
-				label: "Share",
-				key: "share",
-				action: () => this.setState({ shareModalOpen: true })
-			}
 			// { label: "Add Reaction", action: "react" },
 			// { label: "Get Permalink", action: "get-permalink" },
 			// { label: "-" }
 		];
+		if (!(post && post?.sharedTo && post?.sharedTo?.length > 0)) {
+			menuItems.push({
+				label: "Share",
+				key: "share",
+				action: () => this.setState({ shareModalOpen: true })
+			});
+		}
 
 		if (!codemark || !codemark.reviewId) {
 			if (codemark && (codemark.followerIds || []).indexOf(this.props.currentUser.id) !== -1) {

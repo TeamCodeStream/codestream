@@ -23,7 +23,8 @@ import {
 	CSReviewApprovalSetting,
 	CSReviewAssignmentSetting,
 	CodemarkStatus,
-	FileStatus
+	FileStatus,
+	ShareTarget
 } from "@codestream/protocols/api";
 import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
 import { debounce as _debounce } from "lodash-es";
@@ -117,6 +118,7 @@ const NoWrap = styled.span`
 interface Props extends ConnectedProps {
 	editingReview?: CSReview;
 	isEditing?: boolean;
+	existingSharedTo?: ShareTarget[];
 	isAmending?: boolean;
 	onClose?: Function;
 	openPanel: Function;
@@ -903,6 +905,7 @@ class ReviewForm extends React.Component<Props, State> {
 				const attributes: EditableAttributes = {
 					title: title,
 					text: replaceHtml(text || "")!,
+					sharedTo: this.props.existingSharedTo,
 					allReviewersMustApprove
 				};
 				let repoChanges;

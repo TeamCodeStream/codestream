@@ -486,7 +486,13 @@ const NestedReply = (props: {
 								className: "delete",
 								wait: true,
 								action: () => {
-									dispatch(deletePost(props.post.streamId, props.post.id));
+									dispatch(
+										deletePost(
+											props.post.streamId,
+											props.post.id,
+											isPending(props.post) ? undefined : props.post.sharedTo
+										)
+									);
 								}
 							}
 						]

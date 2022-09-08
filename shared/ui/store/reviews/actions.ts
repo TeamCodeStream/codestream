@@ -1,4 +1,10 @@
-import { CSReview, CSReviewChangeset, CSRepoChange, Attachment } from "@codestream/protocols/api";
+import {
+	CSReview,
+	CSReviewChangeset,
+	CSRepoChange,
+	Attachment,
+	ShareTarget
+} from "@codestream/protocols/api";
 import { action } from "../common";
 import { ReviewsActionsTypes } from "./types";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -11,7 +17,8 @@ import {
 	GetReviewRequestType,
 	FetchReviewsRequestType,
 	UpdateReviewResponse,
-	UpdatePostSharingDataRequestType
+	UpdatePostSharingDataRequestType,
+	DeleteThirdPartyPostRequestType
 } from "@codestream/protocols/agent";
 import { logError } from "@codestream/webview/logger";
 import { addStreams } from "../streams/actions";
@@ -25,7 +32,7 @@ import {
 	ReviewCheckpoint
 } from "@codestream/protocols/webview";
 import { createPost } from "@codestream/webview/Stream/actions";
-import { getTeamMembers } from "../users/reducer";
+import { findMentionedUserIds, getTeamMembers } from "../users/reducer";
 import { phraseList } from "@codestream/webview/utilities/strings";
 
 export const reset = () => action("RESET");
@@ -45,6 +52,26 @@ export const saveReviews = (reviews: CSReview[]) =>
 
 export const updateReviews = (reviews: CSReview[]) =>
 	action(ReviewsActionsTypes.UpdateReviews, reviews);
+
+interface BaseSharingAttributes {
+	providerId: string;
+	providerTeamId: string;
+	providerTeamName?: string;
+	channelName?: string;
+	botUserId?: string;
+}
+
+type ChannelSharingAttributes = BaseSharingAttributes & {
+	type: "channel";
+	channelId: string;
+};
+
+type DirectSharingAttributes = BaseSharingAttributes & {
+	type: "direct";
+	userIds: string[];
+};
+
+type SharingAttributes = ChannelSharingAttributes | DirectSharingAttributes;
 
 export interface NewReviewAttributes {
 	title: string;
@@ -71,13 +98,7 @@ export interface NewReviewAttributes {
 	}[];
 
 	accessMemberIds: string[];
-	sharingAttributes?: {
-		providerId: string;
-		providerTeamId: string;
-		providerTeamName?: string;
-		channelId: string;
-		channelName?: string;
-	};
+	sharingAttributes?: SharingAttributes;
 	mentionedUserIds?: string[];
 	addedUsers?: string[];
 	entryPoint?: string;
@@ -111,15 +132,20 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 			if (attributes.sharingAttributes) {
 				const { sharingAttributes } = attributes;
 				try {
-					const { post, ts, permalink } = await HostApi.instance.send(
+					const { post, ts, permalink, channelId } = await HostApi.instance.send(
 						CreateThirdPartyPostRequestType,
 						{
 							providerId: attributes.sharingAttributes.providerId,
-							channelId: attributes.sharingAttributes.channelId,
+							channelId:
+								sharingAttributes.type === "channel" ? sharingAttributes.channelId : undefined,
+							memberIds:
+								sharingAttributes.type === "direct" ? sharingAttributes.userIds : undefined,
 							providerTeamId: attributes.sharingAttributes.providerTeamId,
+							providerServerTokenUserId: sharingAttributes.botUserId,
 							text: rest.text,
 							review: response.review,
-							mentionedUserIds: attributes.mentionedUserIds
+							mentionedUserIds: attributes.mentionedUserIds,
+							files: attributes.files
 						}
 					);
 					if (ts) {
@@ -131,7 +157,9 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 									providerId: sharingAttributes.providerId,
 									teamId: sharingAttributes.providerTeamId,
 									teamName: sharingAttributes.providerTeamName || "",
-									channelId: sharingAttributes.channelId,
+									channelId:
+										channelId ||
+										(sharingAttributes.type === "channel" ? sharingAttributes.channelId : ""),
 									channelName: sharingAttributes.channelName || "",
 									postId: ts,
 									url: permalink || ""
@@ -145,7 +173,8 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 								config => config.id === attributes.sharingAttributes!.providerId
 							)!.name
 						),
-						"Review Status": "New"
+						"Review Status": "New",
+						"Conversation Type": sharingAttributes.type === "channel" ? "Channel" : "Group DM"
 					});
 				} catch (error) {
 					logError("Error sharing a review", { message: error.toString() });
@@ -165,11 +194,25 @@ export const createReview = (attributes: NewReviewAttributes) => async (
 
 export const _deleteReview = (id: string) => action(ReviewsActionsTypes.Delete, id);
 
-export const deleteReview = (id: string) => async dispatch => {
+export const deleteReview = (id: string, sharedTo?: ShareTarget[]) => async dispatch => {
 	try {
 		await HostApi.instance.send(DeleteReviewRequestType, {
 			id
 		});
+		try {
+			if (sharedTo) {
+				for (const shareTarget of sharedTo) {
+					await HostApi.instance.send(DeleteThirdPartyPostRequestType, {
+						providerId: shareTarget.providerId,
+						channelId: shareTarget.channelId,
+						providerPostId: shareTarget.postId,
+						providerTeamId: shareTarget.teamId
+					});
+				}
+			}
+		} catch (error) {
+			logError(`There was an error deleting a third party shared post: ${error}`);
+		}
 		dispatch(_deleteReview(id));
 	} catch (error) {
 		logError(error, { detail: `failed to delete review`, id });
@@ -181,6 +224,7 @@ export const deleteReview = (id: string) => async dispatch => {
  */
 interface AdvancedEditableReviewAttributes {
 	repoChanges?: CSRepoChange[];
+	sharedTo?: ShareTarget[];
 	// array of userIds / tags to add
 	$push: { reviewers?: string[]; tags?: string[] };
 	// array of userIds / tags to remove
@@ -243,6 +287,58 @@ export const editReview = (
 					{ reviewCheckpoint: checkpoint }
 				)
 			);
+		}
+
+		if (attributes.sharedTo) {
+			const { sharedTo } = attributes;
+			for (const shareTarget of sharedTo) {
+				try {
+					const { post, ts, permalink } = await HostApi.instance.send(
+						CreateThirdPartyPostRequestType,
+						{
+							providerId: shareTarget.providerId,
+							channelId: shareTarget.channelId,
+							providerTeamId: shareTarget.teamId,
+							existingPostId: shareTarget.postId,
+							text: attributes.text || "",
+							review: response.review,
+							mentionedUserIds: findMentionedUserIds(
+								getTeamMembers(getState()),
+								attributes.text || ""
+							)
+						}
+					);
+					if (ts) {
+						await HostApi.instance.send(UpdatePostSharingDataRequestType, {
+							postId: response.review.id,
+							sharedTo: [
+								{
+									createdAt: post.createdAt,
+									providerId: shareTarget.providerId,
+									teamId: shareTarget.teamId,
+									teamName: shareTarget.teamName || "",
+									channelId: shareTarget.channelId,
+									channelName: shareTarget.channelName || "",
+									postId: ts,
+									url: permalink || ""
+								}
+							]
+						});
+					}
+					HostApi.instance.track("Shared Review", {
+						Destination: capitalize(
+							getConnectedProviders(getState()).find(
+								config => config.id === shareTarget.providerId
+							)!.name
+						),
+						"Review Status": "Edited"
+					});
+				} catch (error) {
+					logError("Error sharing a review", { message: error.toString() });
+					// TODO: communicate failure to users
+					throw { reason: "share" } as CreateReviewError;
+				}
+			}
 		}
 	} catch (error) {
 		logError(error, { detail: `failed to update review`, id });

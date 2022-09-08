@@ -154,24 +154,35 @@ export function SharingModal(props: SharingModalProps) {
 		e.preventDefault();
 		setState({ name: "submitted" });
 		try {
-			const { post, ts, permalink } = await HostApi.instance.send(CreateThirdPartyPostRequestType, {
-				providerId: valuesRef.current!.providerId,
-				channelId: valuesRef.current!.channelId,
-				providerTeamId: valuesRef.current!.providerTeamId,
-				text: props.codeError ? shareTarget.title : shareTarget.text!,
-				codemark: props.codemark,
-				review: props.review,
-				codeError: props.codeError,
-				mentionedUserIds
-			});
+			if (!valuesRef.current) throw new Error();
+			const { post, ts, permalink, channelId } = await HostApi.instance.send(
+				CreateThirdPartyPostRequestType,
+				{
+					providerId: valuesRef.current!.providerId,
+					channelId:
+						valuesRef.current!.type === "channel" ? valuesRef.current!.channelId : undefined,
+					memberIds: valuesRef.current!.type === "direct" ? valuesRef.current!.userIds : undefined,
+					providerTeamId: valuesRef.current!.providerTeamId,
+					text: props.codeError ? shareTarget.title : shareTarget.text!,
+					codemark: props.codemark,
+					review: props.review,
+					codeError: props.codeError,
+					mentionedUserIds
+				}
+			);
 			if (props.post && ts) {
 				const newTarget = {
 					createdAt: post.createdAt,
 					providerId: valuesRef.current!.providerId,
 					teamId: valuesRef.current!.providerTeamId,
 					teamName: valuesRef.current!.providerTeamName || "",
-					channelId: valuesRef.current!.channelId,
-					channelName: valuesRef.current!.channelName || "",
+					channelId:
+						channelId ||
+						(valuesRef.current!.type === "channel" ? valuesRef.current!.channelId : ""),
+					channelName:
+						(valuesRef.current!.type === "channel"
+							? valuesRef.current!.channelName
+							: "Direct Message") || "",
 					postId: ts,
 					url: permalink || ""
 				};

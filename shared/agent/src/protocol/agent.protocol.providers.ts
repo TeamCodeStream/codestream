@@ -15,6 +15,7 @@ export interface ThirdPartyProviderConfig {
 	forEnterprise?: boolean;
 	hasCodeHosting?: boolean;
 	hasIssues?: boolean;
+	hasServerToken?: boolean;
 	hasSharing?: boolean;
 	supportsAuth?: boolean;
 	needsConfigure?: boolean;
@@ -230,7 +231,7 @@ export const UpdateThirdPartyStatusRequestType = new RequestType<
 export interface CreateThirdPartyPostRequest {
 	providerId: string;
 	providerTeamId: string;
-	channelId: string;
+	channelId?: string;
 	text: string;
 	attributes?: any;
 	memberIds?: any;
@@ -242,12 +243,18 @@ export interface CreateThirdPartyPostRequest {
 	crossPostIssueValues?: CrossPostIssueValues;
 	mentionedUserIds?: string[];
 	parentPostId?: string;
+	parentText?: string;
+	providerServerTokenUserId?: string;
+	existingPostId?: string;
+	files?: { name: string; url?: string }[];
 }
 
 export interface CreateThirdPartyPostResponse {
 	post: any;
 	ts?: string;
 	permalink?: string;
+	channelId?: string;
+	channelName?: string;
 }
 
 export const CreateThirdPartyPostRequestType = new RequestType<
@@ -256,6 +263,25 @@ export const CreateThirdPartyPostRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/posts/create");
+
+export interface DeleteThirdPartyPostRequest {
+	providerId: string;
+	providerTeamId: string;
+	channelId: string;
+	providerPostId: string;
+	providerServerTokenUserId?: string;
+}
+
+export interface DeleteThirdPartyPostResponse {
+	ts?: string;
+}
+
+export const DeleteThirdPartyPostRequestType = new RequestType<
+	DeleteThirdPartyPostRequest,
+	DeleteThirdPartyPostResponse,
+	void,
+	void
+>("codestream/provider/posts/delete");
 
 export const FetchThirdPartyChannelsRequestType = new RequestType<
 	FetchThirdPartyChannelsRequest,
@@ -276,8 +302,14 @@ export interface ThirdPartyChannel {
 	type: string;
 }
 
+export interface ThirdPartyChannelMember {
+	id: string;
+	name: string;
+}
+
 export interface FetchThirdPartyChannelsResponse {
 	channels: ThirdPartyChannel[];
+	members?: ThirdPartyChannelMember[];
 }
 
 export interface ThirdPartyProviderUser {

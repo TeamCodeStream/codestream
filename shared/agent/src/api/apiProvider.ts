@@ -152,6 +152,8 @@ import {
 	SetCodemarkStatusResponse,
 	SetStreamPurposeRequest,
 	SetStreamPurposeResponse,
+	SharePostViaServerRequest,
+	SharePostViaServerResponse,
 	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
 	UnarchiveStreamResponse,
@@ -434,6 +436,7 @@ export interface ApiProvider {
 	updatePostSharingData(
 		request: UpdatePostSharingDataRequest
 	): Promise<UpdatePostSharingDataResponse>;
+	sharePostViaServer(request: SharePostViaServerRequest): Promise<SharePostViaServerResponse>;
 	fetchPostReplies(request: FetchPostRepliesRequest): Promise<FetchPostRepliesResponse>;
 	fetchPosts(request: FetchPostsRequest): Promise<FetchPostsResponse>;
 	getPost(request: GetPostRequest): Promise<GetPostResponse>;

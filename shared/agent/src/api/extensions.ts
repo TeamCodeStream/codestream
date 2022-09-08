@@ -300,7 +300,18 @@ export namespace User {
 
 		const userProviderInfo = me.providerInfo[name];
 		const teamProviderInfo = me.providerInfo[teamId] && me.providerInfo[teamId][name];
-		const namedProvider = userProviderInfo || teamProviderInfo;
+
+		// sometimes we end up with me.providerInfo.slack.multiple being an empty object
+		const isProviderInfoValid = (p: any) => {
+			if (!p) return false;
+			if (p.accessToken) return true;
+			if (p.multiple && Object.keys(p.multiple).length > 0) return true;
+			return false;
+		};
+
+		const namedProvider = isProviderInfoValid(userProviderInfo)
+			? userProviderInfo
+			: teamProviderInfo;
 		if (!namedProvider) {
 			return undefined;
 		}

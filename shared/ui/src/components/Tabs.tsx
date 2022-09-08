@@ -11,6 +11,7 @@ interface TabProps {
 	onClick?: any;
 	id?: string;
 	className?: string;
+	style?: any;
 }
 
 interface ContentProps {
@@ -28,7 +29,7 @@ export const Tabs = styled.div`
 
 export const Tab = styled((props: PropsWithChildren<TabProps>) => {
 	return (
-		<div className={props.className} onClick={props.onClick} id={props.id}>
+		<div className={props.className} onClick={props.onClick} id={props.id} style={props.style}>
 			{props.children}
 		</div>
 	);

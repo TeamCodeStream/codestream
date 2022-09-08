@@ -6,6 +6,8 @@ import { SessionContainer } from "../container";
 import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
+	DeleteThirdPartyPostRequest,
+	DeleteThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
 	ThirdPartyDisconnect,
@@ -58,7 +60,11 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 			session.api as CodeStreamApiProvider,
 			{
 				accessToken: providerInfo.accessToken!,
-				teamId: session.api.teamId,
+				teamId:
+					providerInfo &&
+					providerInfo!.data &&
+					providerInfo!.data.team &&
+					providerInfo!.data.team!.id,
 				// this is the slack userId
 				userId: providerInfo && providerInfo!.data && providerInfo!.data.user_id // session.api.userId
 			},
@@ -140,8 +146,10 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 				}),
 			[_ => _.order, _ => _.name]
 		);
+		const members = streams.members || [];
 		return {
-			channels: channels
+			channels,
+			members
 		};
 	}
 
@@ -184,6 +192,23 @@ export class SlackProvider extends ThirdPartyPostProviderBase<CSSlackProviderInf
 			}
 		}
 		const post = await slackClient.createExternalPost(request);
+		return post;
+	}
+
+	@log()
+	async deletePost(request: DeleteThirdPartyPostRequest): Promise<DeleteThirdPartyPostResponse> {
+		await this.ensureConnected();
+		this._lastTeamId = request.providerTeamId;
+
+		const slackClient = this.getClient(request.providerTeamId);
+		if (!slackClient) {
+			return {};
+		}
+
+		const post = await slackClient.deleteExternalPost({
+			postId: request.providerPostId,
+			channelId: request.channelId
+		});
 		return post;
 	}
 }

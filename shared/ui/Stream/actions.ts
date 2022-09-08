@@ -38,9 +38,12 @@ import {
 	CodemarkPlus,
 	GetPostRequestType,
 	CreateThirdPartyPostRequestType,
-	MarkItemReadRequestType
+	MarkItemReadRequestType,
+	UpdatePostSharingDataRequestType,
+	SharePostViaServerRequestType,
+	DeleteThirdPartyPostRequestType
 } from "@codestream/protocols/agent";
-import { CSPost, StreamType, CSReviewStatus } from "@codestream/protocols/api";
+import { CSPost, StreamType, CSReviewStatus, ShareTarget } from "@codestream/protocols/api";
 import { logError } from "../logger";
 import {
 	saveCodemarks,
@@ -72,7 +75,7 @@ import * as postsActions from "../store/posts/actions";
 import { updatePreferences } from "../store/preferences/actions";
 import * as streamActions from "../store/streams/actions";
 import { addUsers, updateUser } from "../store/users/actions";
-import { uuid, isNotOnDisk, uriToFilePath } from "../utils";
+import { uuid, isNotOnDisk, uriToFilePath, capitalize } from "../utils";
 import { updateTeam } from "../store/teams/actions";
 import { HostApi } from "../webview-api";
 import { CodeStreamState } from "../store";
@@ -84,6 +87,8 @@ import { getFileScmError } from "../store/editorContext/reducer";
 import { PostEntryPoint } from "../store/context/types";
 import { middlewareInjector } from "../store/middleware-injector";
 import { PostsActionsType } from "../store/posts/types";
+import { getPost } from "../store/posts/reducer";
+import { getConnectedProviders } from "../store/providers/reducer";
 
 export {
 	openPanel,
@@ -303,7 +308,7 @@ export const createPost = (
 	mentions?: string[],
 	extra: any = {}
 ) => async (dispatch, getState: () => CodeStreamState) => {
-	const { session, context } = getState();
+	const { session, context, posts } = getState();
 	const pendingId = uuid();
 
 	// no need for pending post when creating a codemark
@@ -389,6 +394,71 @@ export const createPost = (
 		}
 		const response = await responsePromise;
 
+		const getTopLevelSharedTo = (
+			postId: string | undefined
+		): { sharedTo?: ShareTarget[]; parentText?: string } => {
+			if (!postId) return {};
+			const post = posts.byStream[streamId][postId];
+			if (post.parentPostId) {
+				return {
+					...getTopLevelSharedTo(post.parentPostId),
+					parentText: post.text
+				};
+			}
+			if (post.sharedTo) return { sharedTo: post.sharedTo };
+			return {};
+		};
+
+		if (response) {
+			const { sharedTo, parentText } = getTopLevelSharedTo(parentPostId);
+			if (sharedTo) {
+				for (const target of sharedTo) {
+					try {
+						const { post, ts, permalink } = await HostApi.instance.send(
+							CreateThirdPartyPostRequestType,
+							{
+								providerId: target.providerId,
+								channelId: target.channelId,
+								providerTeamId: target.teamId,
+								parentPostId: target.postId,
+								parentText: parentText,
+								text: text,
+								codemark: response.codemark,
+								mentionedUserIds: mentions,
+								files: extra.files
+							}
+						);
+						if (ts) {
+							await HostApi.instance.send(UpdatePostSharingDataRequestType, {
+								postId: response.post.id,
+								sharedTo: [
+									{
+										createdAt: post.createdAt,
+										providerId: target.providerId,
+										teamId: target.teamId,
+										teamName: target.teamName,
+										channelId: target.channelId,
+										channelName: target.channelName,
+										postId: ts,
+										url: permalink || ""
+									}
+								]
+							});
+						}
+					} catch (error) {
+						try {
+							await HostApi.instance.send(SharePostViaServerRequestType, {
+								postId: response.post.id,
+								providerId: target.providerId
+							});
+						} catch (error2) {
+							logError("Error sharing a post", { message: error2.toString() });
+						}
+					}
+				}
+			}
+		}
+
 		if (response.codemark) {
 			dispatch(saveCodemarks([response.codemark]));
 		}
@@ -466,7 +536,7 @@ export const editPost = (
 	postId: string,
 	text: string,
 	mentionedUserIds?: string[]
-) => async dispatch => {
+) => async (dispatch, getState) => {
 	try {
 		const response = await HostApi.instance.send(EditPostRequestType, {
 			streamId,
@@ -475,6 +545,33 @@ export const editPost = (
 			mentionedUserIds
 		});
 		dispatch(postsActions.updatePost(response.post));
+
+		if (response.post.sharedTo) {
+			for (const shareTarget of response.post.sharedTo) {
+				try {
+					const { post, ts, permalink } = await HostApi.instance.send(
+						CreateThirdPartyPostRequestType,
+						{
+							providerId: shareTarget.providerId,
+							channelId: shareTarget.channelId,
+							providerTeamId: shareTarget.teamId,
+							existingPostId: shareTarget.postId,
+							text,
+							mentionedUserIds
+						}
+					);
+				} catch (error) {
+					try {
+						await HostApi.instance.send(SharePostViaServerRequestType, {
+							postId,
+							providerId: shareTarget.providerId
+						});
+					} catch (error2) {
+						logError(`Error sharing an edited post: ${error2}`);
+					}
+				}
+			}
+		}
 	} catch (error) {
 		logError(error, { detail: `There was an error editing a post`, streamId, postId, text });
 	}
@@ -506,9 +603,37 @@ export const reactToPost = (post: CSPost, emoji: string, value: boolean) => asyn
 	}
 };
 
-export const deletePost = (streamId: string, postId: string) => async dispatch => {
+export const deletePost = (streamId: string, postId: string, sharedTo?: ShareTarget[]) => async (
+	dispatch,
+	getState
+) => {
 	try {
 		const { post } = await HostApi.instance.send(DeletePostRequestType, { streamId, postId });
+		try {
+			if (sharedTo) {
+				for (const shareTarget of sharedTo) {
+					try {
+						await HostApi.instance.send(DeleteThirdPartyPostRequestType, {
+							providerId: shareTarget.providerId,
+							channelId: shareTarget.channelId,
+							providerPostId: shareTarget.postId,
+							providerTeamId: shareTarget.teamId
+						});
+					} catch (error) {
+						try {
+							await HostApi.instance.send(SharePostViaServerRequestType, {
+								postId,
+								providerId: shareTarget.providerId
+							});
+						} catch (error2) {
+							logError(`Error deleting a shared post: ${error2}`);
+						}
+					}
+				}
+			}
+		} catch (error) {
+			logError(`There was an error deleting a third party shared post: ${error}`);
+		}
 		return dispatch(postsActions.deletePost(post));
 	} catch (error) {
 		logError(error, { detail: `There was an error deleting a post`, streamId, postId });
@@ -995,6 +1120,7 @@ export const setReviewStatus = (reviewId: string, status: CSReviewStatus) => asy
 		});
 		if (post && post.sharedTo && post.sharedTo.length > 0) {
 			for (const target of post.sharedTo) {
+				if (target.providerId === "slack*com") continue;
 				await HostApi.instance.send(CreateThirdPartyPostRequestType, {
 					providerId: target.providerId,
 					channelId: target.channelId,

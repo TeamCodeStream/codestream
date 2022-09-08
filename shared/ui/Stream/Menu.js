@@ -518,6 +518,12 @@ export default class Menu extends Component {
 						this.renderItem(item, parentItem, grandParentItem, grandGrandParentItem, keys, index)
 					)}
 				</ul>
+				{this.props.footer && (
+					<ul className="compact">
+						{this.renderItem({ label: "-" }, undefined, undefined, undefined, [0, 1], 0)}
+						{this.renderItem(this.props.footer, undefined, undefined, undefined, [0, 1], 1)}
+					</ul>
+				)}
 				<button
 					className="focus-button"
 					style={{ position: "absolute", left: "-10000px" }}
@@ -670,7 +676,7 @@ export default class Menu extends Component {
 		// support functions as item actions
 		if (typeof item.action === "function" && !item.disabled) {
 			item.action();
-			if (this.props.dontCloseOnSelect) {
+			if (this.props.dontCloseOnSelect || item.dontCloseOnSelect) {
 				if (!this.props.repositionMinimally) this.repositionIfNecessary(item);
 			} else {
 				// invoke the action callback for entire menu so it can removed

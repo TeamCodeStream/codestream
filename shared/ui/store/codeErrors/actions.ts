@@ -493,8 +493,6 @@ export const openErrorGroup = (
 			// just re-use the CodeErrorNav component which already does some work for
 			// directing / opening a codeError
 			dispatch(setCurrentCodeError(pendingId, data));
-
-			dispatch(openPanel(WebviewPanels.CodemarksForFile));
 		})
 		.catch(ex => {
 			logError(`failed to findErrorGroupByObjectId`, {

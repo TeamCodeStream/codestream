@@ -18,6 +18,8 @@ import {
 	Capabilities,
 	CreatePostResponse,
 	CreateSharedExternalPostRequest,
+	DeleteSharedExternalPostRequest,
+	DeleteSharedExternalPostResponse,
 	FetchStreamsRequest,
 	FetchStreamsResponse,
 	FetchUsersResponse,
@@ -52,6 +54,7 @@ import {
 	toSlackPostBlocks,
 	toSlackPostText,
 	toSlackReviewPostBlocks,
+	toSlackTextPostBlocks,
 	UserMaps
 } from "./slackSharingApi.adapters";
 
@@ -72,8 +75,13 @@ type SlackMethods =
 	| "channels.info"
 	| "chat.meMessage"
 	| "chat.postMessage"
+	| "chat.delete"
 	| "chat.getPermalink"
+	| "chat.update"
 	| "conversations.info"
+	| "conversations.invite"
+	| "conversations.members"
+	| "conversations.open"
 	| "groups.info"
 	| "users.profile.set"
 	| "users.info";
@@ -294,11 +302,31 @@ export class SlackSharingApiProvider {
 	})
 	async createExternalPost(request: CreateSharedExternalPostRequest): Promise<CreatePostResponse> {
 		let createdPostId;
+		let channelId = request.channelId;
+		const memberIds = request.memberIds;
 		try {
 			const userMaps = await this.ensureUserMaps();
-			const channelId = request.channelId;
 			let text = request.text;
 			const meMessage = meMessageRegex.test(text);
+
+			if (!channelId && (!memberIds || !memberIds.length || !request.providerServerTokenUserId)) {
+				throw new Error("No channelId found: cannot create external post");
+			}
+
+			if (!channelId) {
+				const openResponse = await this.slackApiCall("conversations.open", {
+					users: [...memberIds!, request.providerServerTokenUserId].join(",")
+				});
+				const {
+					ok: openOk,
+					error: openError,
+					channel: openData
+				} = openResponse as WebAPICallResult & {
+					channel: { id: string };
+				};
+				if (!openOk) throw new Error(openError);
+				channelId = openData.id;
+			}
 
 			const sleep = (miliseconds: number) => {
 				return new Promise(resolve => setTimeout(resolve, miliseconds));
@@ -311,6 +339,7 @@ export class SlackSharingApiProvider {
 			if (meMessage) {
 				const response = await this.slackApiCall("chat.meMessage", {
 					channel: channelId,
+					thread_ts: request.parentPostId,
 					text: text
 				});
 
@@ -369,7 +398,8 @@ export class SlackSharingApiProvider {
 					request.remotes,
 					userMaps,
 					repoHash,
-					this._slackUserId
+					this._slackUserId,
+					request.files
 				);
 
 				// Set the fallback (notification) content for the message
@@ -378,7 +408,13 @@ export class SlackSharingApiProvider {
 				}${codemark.text || ""}`;
 			} else if (request.review != null) {
 				const review = request.review;
-				blocks = toSlackReviewPostBlocks(review, userMaps, repoHash, this._slackUserId);
+				blocks = toSlackReviewPostBlocks(
+					review,
+					userMaps,
+					repoHash,
+					this._slackUserId,
+					request.files
+				);
 				// Set the fallback (notification) content for the message
 				text = `${review.title || ""}${review.title && review.text ? `\n\n` : ""}${review.text ||
 					""}`;
@@ -387,29 +423,56 @@ export class SlackSharingApiProvider {
 				blocks = toSlackCodeErrorPostBlocks(codeError, userMaps, repoHash, this._slackUserId);
 				// Set the fallback (notification) content for the message
 				text = `${codeError.title}`;
+			} else if (text) {
+				blocks = toSlackTextPostBlocks(text, request.parentText, request.files);
 			}
 
-			const response = await this.slackApiCall("chat.postMessage", {
-				channel: channelId,
-				text: text,
-				as_user: true,
-				unfurl_links: true,
-				thread_ts: request.parentPostId,
-				reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
-				blocks: blocks !== undefined ? blocks : undefined
-			});
+			if (request.providerServerTokenUserId) {
+				try {
+					const inviteResponse = await this.slackApiCall("conversations.invite", {
+						channel: channelId,
+						users: request.providerServerTokenUserId
+					});
+				} catch (error) {
+					Logger.log(`Could not invite bot user: ${error}`);
+				}
+			}
 
-			const { ok, error, message } = response as WebAPICallResult & { message?: any; ts?: any };
+			let response: WebAPICallResult;
+			if (request.existingPostId) {
+				response = await this.slackApiCall("chat.update", {
+					channel: channelId,
+					ts: request.existingPostId,
+					text: text,
+					as_user: true,
+					reply_broadcast: false,
+					blocks: blocks !== undefined ? blocks : undefined
+				});
+			} else {
+				response = await this.slackApiCall("chat.postMessage", {
+					channel: channelId,
+					text: text,
+					as_user: true,
+					unfurl_links: true,
+					thread_ts: request.parentPostId,
+					reply_broadcast: false, // parentPostId ? true : undefined --- because of slack bug (https://trello.com/c/Y48QI6Z9/919)
+					blocks: blocks !== undefined ? blocks : undefined
+				});
+			}
+
+			const { ok, error, message, ts } = response as WebAPICallResult & { message?: any; ts?: any };
 			if (!ok) throw new Error(error);
+			if (!message.ts) {
+				message.ts = ts;
+			}
 
 			sleep(1000); // wait for slack to be able to be called about this message
 
 			const permalinkResponse = await this.slackApiCall("chat.getPermalink", {
 				channel: channelId,
-				message_ts: message.ts
+				message_ts: ts
 			});
 
-			const ts = message.ts;
 			let thePermalink = "";
 
 			if (ts && !request.parentPostId) {
@@ -436,18 +499,34 @@ export class SlackSharingApiProvider {
 			return {
 				post: post,
 				ts: ts,
-				permalink: thePermalink
+				permalink: thePermalink,
+				channelId: channelId
 			};
 		} finally {
 			if (createdPostId) {
 				this._codestream.trackProviderPost({
 					provider: "slack",
 					teamId: this._codestreamTeamId,
-					streamId: request.channelId,
+					streamId: channelId || memberIds?.join(",") || "",
 					postId: createdPostId
 				});
 			}
 		}
+	}
+
+	@log()
+	async deleteExternalPost(
+		request: DeleteSharedExternalPostRequest
+	): Promise<DeleteSharedExternalPostResponse> {
+		const response = await this.slackApiCall("chat.delete", {
+			channel: request.channelId,
+			ts: request.postId
+		});
+		const { ok, error, ts } = response as WebAPICallResult & {
+			ts?: string;
+		};
+		if (!ok) throw new Error(error);
+		return { ts };
 	}
 
 	@log()
@@ -526,25 +605,23 @@ export class SlackSharingApiProvider {
 				CSChannelStream | CSDirectStream | CSObjectStream
 			>[] = [];
 
-			const [channels, groups, ims] = await Promise.all([
+			const [channels, groups] = await Promise.all([
 				this.fetchChannels(
 					// Filter out shared channels for now, until we can convert to the conversation apis
-					conversations.filter(c => c.is_channel && !c.is_shared),
+					conversations.filter(c => c.is_channel && !c.is_mpim && !c.is_shared),
 					undefined,
 					pendingRequestsQueue
 				),
 				this.fetchGroups(
 					// Filter out shared channels for now, until we can convert to the conversation apis
-					conversations.filter(c => c.is_group && !c.is_shared),
+					conversations.filter(c => c.is_group && !c.is_mpim && !c.is_shared),
 					userMaps.slackUsernamesById,
 					undefined,
 					pendingRequestsQueue
-				),
-				// only going to take the top N im conversations as dictated by filterConversationsByIm
-				this.fetchIMs(imConversations, userMaps.slackUsernamesById, undefined, pendingRequestsQueue)
+				)
 			]);
 
-			const streams = channels.concat(...groups, ...ims);
+			const streams = channels.concat(...groups);
 			if (this.capabilities.providerSupportsRealtimeEvents && pendingRequestsQueue.length !== 0) {
 				this.processPendingStreamsQueue(pendingRequestsQueue);
 			}
@@ -557,7 +634,14 @@ export class SlackSharingApiProvider {
 				return { streams: streams.filter(s => request.types!.includes(s.type)) };
 			}
 
-			return { streams: streams };
+			const members = Array.from(userMaps.slackUsernamesById, ([id, name]) => ({
+				id,
+				name
+			}))
+				.filter(_ => _.id !== "USLACKBOT")
+				.filter(_ => _.id !== this._slackUserId);
+
+			return { streams: streams, members: members };
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;

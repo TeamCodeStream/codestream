@@ -147,6 +147,7 @@ import {
 	SetPasswordRequest,
 	SetPasswordRequestType,
 	SetStreamPurposeRequest,
+	SharePostViaServerRequest,
 	ThirdPartyProviderSetInfoRequest,
 	UnarchiveStreamRequest,
 	Unreads,
@@ -298,7 +299,9 @@ import {
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
 	TriggerMsTeamsProactiveMessageResponse,
-	CSThirdPartyProviderSetInfoRequestData
+	CSThirdPartyProviderSetInfoRequestData,
+	CSProviderShareRequest,
+	CSProviderShareResponse
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
 import { VersionInfo } from "../../types";
@@ -1333,6 +1336,26 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
+	async sharePostViaServer(request: SharePostViaServerRequest) {
+		const provider = getProvider(request.providerId);
+		if (!provider) {
+			throw new Error("Invalid providerId");
+		}
+		const response = await this.post<CSProviderShareRequest, CSProviderShareResponse>(
+			`/provider-share/${provider.name}`,
+			{
+				postId: request.postId
+			},
+			this._token
+		);
+		const [post] = await SessionContainer.instance().posts.resolve({
+			type: MessageType.Streams,
+			data: [response.post]
+		});
+		return { ...response, post };
+	}
+
+	@log()
 	async fetchPostReplies(request: FetchPostRepliesRequest) {
 		const post = await SessionContainer.instance().posts.getById(request.postId);
 		const response = await this.get<CSGetPostsResponse>(
@@ -2194,6 +2217,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 			}
 			if (request.sharing) {
 				params.sharing = true.toString();
+			}
+			// TODO: feature flag
+			if (providerConfig.hasServerToken && true) {
+				params.requestServerToken = true.toString();
 			}
 
 			const query = Object.keys(params)

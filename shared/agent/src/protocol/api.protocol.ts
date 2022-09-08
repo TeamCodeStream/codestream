@@ -319,6 +319,14 @@ export interface CSUpdatePostSharingDataResponse {
 	post: { [key: string]: any };
 }
 
+export interface CSProviderShareRequest {
+	postId: string;
+}
+
+export interface CSProviderShareResponse {
+	post: { [key: string]: any };
+}
+
 export interface CSReactions {
 	[emoji: string]: boolean;
 }

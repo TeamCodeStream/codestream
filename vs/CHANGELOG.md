@@ -1,5 +1,11 @@
 # Change Log
 
+## [14.0.0] - 2022-9-8
+
+### Added
+
+- All new Slack integration that leverages Slack's native reply model and syncs replies between CodeStream and Slack
+
 ## [13.7.1] - 2022-9-2
 
 ### Fixed

@@ -156,6 +156,7 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		const message = `_${action}${thing}_\n${text}`;
 		if (post && post.sharedTo && post.sharedTo.length > 0) {
 			for (const target of post.sharedTo) {
+				if (target.providerId === "slack*com") continue;
 				await HostApi.instance.send(CreateThirdPartyPostRequestType, {
 					providerId: target.providerId,
 					channelId: target.channelId,

@@ -507,6 +507,15 @@ export interface CSTeam extends CSEntity {
 	// only used for analytics and reporting. differentiates between teams created by us employees
 	reportingGroup?: string;
 	isEveryoneTeam?: boolean;
+	serverProviderData?: {
+		slack?: {
+			multiple?: {
+				[teamId: string]: {
+					[key: string]: any;
+				};
+			};
+		};
+	};
 	settings?: CSTeamSettings;
 }
 

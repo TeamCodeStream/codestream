@@ -113,7 +113,7 @@ export const RepliesToPost = (props: {
 								className: "delete",
 								wait: true,
 								action: () => {
-									dispatch(deletePost(reply.streamId, reply.id));
+									dispatch(deletePost(reply.streamId, reply.id, reply.sharedTo));
 								}
 							}
 						]
