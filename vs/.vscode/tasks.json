@@ -4,37 +4,6 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "watch",
-			"group": "build",
-			"isBackground": true,
-			"problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
-			"presentation": {
-				"group": "vs"
-			}
-		},
-		{
-			"type": "npm",
-			"script": "agent:watch",
-			"group": "build",
-			"isBackground": true,
-			"problemMatcher": [
-				{
-					"base": "$ts-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": "absolute"
-				},
-				{
-					"base": "$tslint-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": ["relative", "${workspaceFolder}/../shared/agent/"]
-				}
-			],
-			"presentation": {
-				"group": "vs"
-			}
-		},
-		{
 			"label": "build",
 			"type": "shell",
 			"command": "pwsh",
@@ -58,51 +27,6 @@
 			"args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -c Debug"],
 			"problemMatcher": ["$msCompile"],
 			"group": "build"
-		},
-		{
-			"label": "watch",
-			"dependsOn": ["npm: watch", "npm: agent:watch"],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"isBackground": true,
-			"problemMatcher": [
-				{
-					"base": "$ts-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": "absolute"
-				},
-				{
-					"base": "$tslint-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": ["relative"]
-				}
-			],
-			"presentation": {
-				"group": "vs"
-			}
-		},
-		{
-			"label": "watch (vs)",
-			"dependsOn": ["npm: watch"],
-			"group": "build",
-			"isBackground": true,
-			"problemMatcher": [
-				{
-					"base": "$ts-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": "absolute"
-				},
-				{
-					"base": "$tslint-webpack-watch",
-					"applyTo": "closedDocuments",
-					"fileLocation": ["relative"]
-				}
-			],
-			"presentation": {
-				"group": "vs"
-			}
 		}
 	]
 }

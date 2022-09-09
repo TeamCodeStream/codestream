@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Agent Unit Tests" type="JavaScriptTestRunnerJest">
+    <config-file value="$PROJECT_DIR$/../shared/agent/jest.config.js" />
+    <node-interpreter value="project" />
+    <node-options value="" />
+    <jest-package value="$PROJECT_DIR$/../shared/agent/node_modules/jest-cli" />
+    <working-dir value="$PROJECT_DIR$/../shared/agent" />
+    <jest-options value="--testPathPattern=&quot;test/unit/.*.spec.ts$&quot;" />
+    <envs />
+    <scope-kind value="ALL" />
+    <method v="2" />
+  </configuration>
+</component>

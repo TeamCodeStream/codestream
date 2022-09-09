@@ -599,7 +599,7 @@
 		"agent:clean:ci": "pushd \"../shared/agent\" && npm run clean:ci && popd",
 		"agent:rebuild": "pushd \"../shared/agent\" && npm run rebuild && popd",
 		"agent:test:ci": "pushd \"../shared/agent\" && npm run test:ci && popd",
-		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
+		"agent:test": "pushd \"../shared/agent\" && npm run test-unit && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch && popd",
 		"build": "tsx esbuild.ts",
 		"bundle:ci": "npm run clean:ci && npm run bundle",
