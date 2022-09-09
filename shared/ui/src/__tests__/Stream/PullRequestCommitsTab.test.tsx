@@ -24,7 +24,7 @@ const MockedHostApi = HostApi as any;
 const mockHostApi = {
 	track: jest.fn(),
 	on: jest.fn(),
-	send: jest.fn()
+	send: jest.fn(),
 };
 
 MockedHostApi.mockImplementation(() => {
@@ -38,22 +38,22 @@ const baseState: Partial<CodeStreamState> = {
 	context: {
 		currentPullRequest: {
 			id: "something",
-			providerId: "bitbucket*org"
-		}
+			providerId: "bitbucket*org",
+		},
 	} as any,
 	providerPullRequests: {
 		myPullRequests: {},
-		pullRequests: {}
+		pullRequests: {},
 	},
 	capabilities: {
-		openLink: true
-	}
+		openLink: true,
+	},
 };
 
 describe("PullRequestCommitsTab", () => {
 	const pr = {
 		providerId: "bitbucket*org",
-		url: "https://example.com"
+		url: "https://example.com",
 	};
 
 	it("Should show commits in order across different years", async () => {
@@ -65,41 +65,45 @@ describe("PullRequestCommitsTab", () => {
 					{
 						abbreviatedOid: "123456",
 						author: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						committer: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						message: "my message 2",
 						authoredDate: "2022-09-06T14:58:24.244Z",
 						oid: "1234567890",
-						url: "https://example.com"
+						url: "https://example.com",
 					},
 					{
 						abbreviatedOid: "123456",
 						author: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						committer: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						message: "my message 1",
 						authoredDate: "2021-09-06T14:58:24.244Z",
 						oid: "1234567890",
-						url: "https://example.com"
-					}
+						url: "https://example.com",
+					},
 				]);
 			}
 		);
@@ -130,41 +134,45 @@ describe("PullRequestCommitsTab", () => {
 					{
 						abbreviatedOid: "22222",
 						author: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						committer: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						message: "my message 2",
 						authoredDate: "2022-09-06T15:58:24.244Z",
 						oid: "1234567890",
-						url: "https://example.com"
+						url: "https://example.com",
 					},
 					{
 						abbreviatedOid: "11111",
 						author: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						committer: {
+							avatarUrl: "blah",
 							name: "jdoe",
 							user: {
-								login: "jdoe"
-							}
+								login: "jdoe",
+							},
 						},
 						message: "my message 1",
 						authoredDate: "2022-09-06T14:58:24.244Z",
 						oid: "1234567890",
-						url: "https://example.com"
-					}
+						url: "https://example.com",
+					},
 				]);
 			}
 		);
