@@ -12,7 +12,8 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { openModal } from "../store/context/actions";
 import { WebviewModals } from "../ipc/webview.protocol.common";
 import { HostApi } from "../webview-api";
-import { api } from "../store/providerPullRequests/thunks";
+import { api } from "../store/providerPullRequests/actions";
+import { ProvidersActionsType } from "../store/providers/types";
 
 export const ReviewButton = styled.div`
 	color: white;
@@ -101,37 +102,44 @@ export const PullRequestExpandedSidebar = (props: PullRequestExpandedSidebarProp
 				<div>
 					{props?.thirdPartyPrObject && (
 						<>
-							{props?.thirdPartyPrObject?.providerId === "gitlab*com" ||
-							props?.thirdPartyPrObject?.providerId === "gitlab/enterprise" ? (
+							{props?.thirdPartyPrObject?.providerId !== "bitbucket*org" && (
 								<>
-									{reviewCount > 0 && !submittingReview && (
-										<ReviewButton style={{ width: "120px" }} onClick={e => handleSubmitReview(e)}>
-											<span className="wide-text">Submit Review ({reviewCount})</span>
-										</ReviewButton>
-									)}
-									{submittingReview && (
+									{props?.thirdPartyPrObject?.providerId === "gitlab*com" ||
+									props?.thirdPartyPrObject?.providerId === "gitlab/enterprise" ? (
+										<>
+											{reviewCount > 0 && !submittingReview && (
+												<ReviewButton
+													style={{ width: "120px" }}
+													onClick={e => handleSubmitReview(e)}
+												>
+													<span className="wide-text">Submit Review ({reviewCount})</span>
+												</ReviewButton>
+											)}
+											{submittingReview && (
+												<ReviewButton
+													onClick={e => {
+														e.preventDefault();
+														e.stopPropagation();
+													}}
+													style={{ width: "120px" }}
+												>
+													<span className="wide-text">
+														<Icon style={{ top: "-1px" }} className="spin" name="sync" />
+													</span>
+												</ReviewButton>
+											)}
+										</>
+									) : (
 										<ReviewButton
-											onClick={e => {
-												e.preventDefault();
-												e.stopPropagation();
-											}}
-											style={{ width: "120px" }}
+											style={{ width: reviewCount ? "70px" : "50px" }}
+											onClick={e => handleReviewClick(e)}
 										>
 											<span className="wide-text">
-												<Icon style={{ top: "-1px" }} className="spin" name="sync" />
+												Review {reviewCount > 0 && <> ({reviewCount})</>}
 											</span>
 										</ReviewButton>
 									)}
 								</>
-							) : (
-								<ReviewButton
-									style={{ width: reviewCount ? "70px" : "50px" }}
-									onClick={e => handleReviewClick(e)}
-								>
-									<span className="wide-text">
-										Review {reviewCount > 0 && <> ({reviewCount})</>}
-									</span>
-								</ReviewButton>
 							)}
 						</>
 					)}

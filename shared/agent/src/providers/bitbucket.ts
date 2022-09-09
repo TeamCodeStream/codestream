@@ -783,11 +783,12 @@ export class BitbucketProvider
 
 		// path:  [ '', 'reneepetit86', 'bitbucketpractice', 'pull-requests', '1' ]
 
-		return JSON.stringify({
+		const idComputed = JSON.stringify({
 			id: pullRequestId,
 			pullRequestId: pullRequestId,
 			repoWithOwner: repoWithOwner
 		});
+		return idComputed;
 	}
 
 	async getPullRequestsContainigSha(
