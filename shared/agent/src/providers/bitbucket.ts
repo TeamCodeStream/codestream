@@ -1,4 +1,5 @@
 "use strict";
+import { ConnectionLspLogger } from "agent";
 import { GitRemoteLike } from "git/gitService";
 import { flatten } from "lodash";
 import * as qs from "querystring";
@@ -227,7 +228,7 @@ interface BitbucketPullRequestComment {
 	parent?: {
 		id: number;
 	};
-	// children?: [BitbucketPullRequestComment];
+	children?: [BitbucketPullRequestComment];
 }
 interface BitbucketPullRequestCommit {
 	abbreviatedOid: string;
@@ -577,14 +578,15 @@ export class BitbucketProvider
 		const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
 		);
-		// Tree here?
-		function listToTree(arr: any[]): void {
+		// Tree here? ==>  This is working; creates proper structure
+		const listToTree: any = (arr: any = []) => {
 			let map: any = {};
-			let res: any[] = [];
+			let res: any = [];
 			for (let i = 0; i < arr.length; i++) {
 				if (!arr[i].children) {
 					arr[i].children = [];
 				}
+				// console.log((map[arr[i].id] = i));
 				map[arr[i].id] = i;
 				if (!arr[i].parent) {
 					res.push(arr[i]);
@@ -592,11 +594,13 @@ export class BitbucketProvider
 					arr[map[arr[i].parent.id]].children.push(arr[i]);
 				}
 			}
-			comments.body.values = res;
-			// return res;
-		}
-
-		listToTree(comments.body.values);
+			// console.log("res: ", res);
+			return res;
+		};
+		// console.log("comments.body.values: ", comments.body.values);
+		// console.log(JSON.stringify(listToTree(comments.body.values), undefined, 4));
+		const treeComments = listToTree(comments.body.values);
+		// console.log("treeComments: ", JSON.stringify(treeComments, undefined, 4));
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
 
@@ -623,7 +627,7 @@ export class BitbucketProvider
 				pullRequest: {
 					baseRefOid: pr.body.destination.commit.hash,
 					headRefOid: pr.body.source.commit.hash,
-					comments: (comments.body.values || [])
+					comments: (treeComments || [])
 						.filter(_ => !_.deleted)
 						.map((_: BitbucketPullRequestComment) => {
 							return {
@@ -942,8 +946,8 @@ export class BitbucketProvider
 		}
 
 		const username = usernameResponse.body.username;
-		const queriesSafe = request.queries.map(query =>
-			query.replace(/["']/g, '\\"').replace("@me", username)
+		const queriesSafe = request.prQueries.map(query =>
+			query.query.replace(/["']/g, '\\"').replace("@me", username)
 		);
 
 		let reposWithOwners: string[] = [];
@@ -1035,7 +1039,7 @@ export class BitbucketProvider
 						url: pr.links.html.href
 					} as GetMyPullRequestsResponse;
 				});
-				if (!request.queries[index].match(/\bsort:/)) {
+				if (!request.prQueries[index].query.match(/\bsort:/)) {
 					response[index] = response[index].sort(
 						(a: { createdAt: number }, b: { createdAt: number }) => b.createdAt - a.createdAt
 					);
