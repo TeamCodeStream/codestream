@@ -122,7 +122,6 @@ const providerPullRequestsSlice = createSlice({
 			}
 
 			state.pullRequests[action.payload.providerId][id].files = {};
-
 			return;
 		},
 		addPullRequestCommits: (state, action: PayloadAction<PullRequestCommitsPayload>) => {
@@ -140,7 +139,6 @@ const providerPullRequestsSlice = createSlice({
 			}
 
 			state.pullRequests[action.payload.providerId][id].commits = [];
-
 			return;
 		},
 		addPullRequestCollaborators: (

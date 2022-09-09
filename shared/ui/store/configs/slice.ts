@@ -16,7 +16,7 @@ const slice = createSlice({
 	initialState,
 	reducers: {
 		updateConfigs: (state, action) => {
-			return { ...state, ...action.payload };
+			return action.payload;
 		},
 	},
 });

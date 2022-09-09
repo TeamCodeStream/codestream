@@ -8,7 +8,7 @@ const slice = createSlice({
 	initialState,
 	reducers: {
 		setIde: (state, action: PayloadAction<IdeState>) => {
-			return { ...state, ...action.payload };
+			return action.payload;
 		},
 	},
 });
