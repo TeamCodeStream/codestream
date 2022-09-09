@@ -35,7 +35,9 @@ export const Attachments = (props: Props) => {
 						</span>
 						<span>{name}</span>
 						<span>
-							<Icon name="download" className="clickable" />
+							{
+								// this is necessary for consistent formatting
+							}
 						</span>
 					</div>
 				);
