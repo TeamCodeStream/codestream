@@ -204,6 +204,28 @@ interface BitbucketRepoFull extends BitbucketRepo {
 	};
 }
 
+interface BitbucketPullRequestComment2 {
+	id: number;
+	author: {
+		login: string;
+	};
+	deleted: boolean;
+	inline: {
+		from: number | undefined;
+		to: number | undefined;
+		path: string;
+	};
+	type: string;
+	file: string;
+	bodyHtml: string;
+	bodyText: string;
+	state: string;
+	parent?: {
+		id: number;
+	};
+	replies?: [BitbucketPullRequestComment2];
+}
+
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -583,23 +605,37 @@ export class BitbucketProvider
 			let map: any = {};
 			let res: any = [];
 			for (let i = 0; i < arr.length; i++) {
-				if (!arr[i].children) {
-					arr[i].children = [];
+				if (!arr[i].replies) {
+					arr[i].replies = [];
 				}
 				// console.log((map[arr[i].id] = i));
 				map[arr[i].id] = i;
 				if (!arr[i].parent) {
 					res.push(arr[i]);
 				} else {
-					arr[map[arr[i].parent.id]].children.push(arr[i]);
+					arr[map[arr[i].parent.id]].replies.push(arr[i]);
 				}
 			}
 			// console.log("res: ", res);
 			return res;
 		};
+		const filterComments = comments.body.values
+			.filter(_ => !_.deleted)
+			.map((_: BitbucketPullRequestComment) => {
+				return {
+					..._,
+					file: _.inline?.path,
+					bodyHtml: _.content?.html,
+					bodyText: _.content?.raw,
+					state: _.type,
+					author: {
+						login: _.user.display_name
+					}
+				} as BitbucketPullRequestComment2;
+			}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment2>;
 		// console.log("comments.body.values: ", comments.body.values);
 		// console.log(JSON.stringify(listToTree(comments.body.values), undefined, 4));
-		const treeComments = listToTree(comments.body.values);
+		const treeComments = listToTree(filterComments);
 		// console.log("treeComments: ", JSON.stringify(treeComments, undefined, 4));
 
 		const repoWithOwnerSplit = repoWithOwner.split("/");
@@ -627,17 +663,7 @@ export class BitbucketProvider
 				pullRequest: {
 					baseRefOid: pr.body.destination.commit.hash,
 					headRefOid: pr.body.source.commit.hash,
-					comments: (treeComments || [])
-						.filter(_ => !_.deleted)
-						.map((_: BitbucketPullRequestComment) => {
-							return {
-								..._,
-								file: _.inline?.path,
-								bodyHtml: _.content?.html,
-								bodyText: _.content?.raw,
-								state: _.type
-							};
-						}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment>,
+					comments: treeComments || [],
 					number: pr.body.id,
 					idComputed: JSON.stringify({
 						id: pr.body.id,
@@ -740,6 +766,28 @@ export class BitbucketProvider
 			owner,
 			name,
 		};
+	}
+
+	async getPullRequestIdFromUrl(request: { url: string }) {
+		// url string looks like: https://bitbucket.org/{reneepetit86/bitbucketpractice}/pull-requests/{1}
+
+		const uri = URI.parse(request.url);
+		const path = uri.path.split("/");
+
+		// TODO: Make this better???
+		const repoWithOwner = path[1] + "/" + path[2];
+		const pullRequestId = path[4];
+
+		// console.log("uri: ", uri);
+		// console.log("path: ", path);
+
+		// path:  [ '', 'reneepetit86', 'bitbucketpractice', 'pull-requests', '1' ]
+
+		return JSON.stringify({
+			id: pullRequestId,
+			pullRequestId: pullRequestId,
+			repoWithOwner: repoWithOwner
+		});
 	}
 
 	async getPullRequestsContainigSha(

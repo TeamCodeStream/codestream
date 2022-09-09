@@ -183,8 +183,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 				}
 			});
 		} else if (derivedState.currentPullRequestProviderId === "bitbucket*org") {
-			// TODO some typings & put the Tree?  ==> I think the problem is here
-
+			// TODO some typings
 			(pr as any).comments.forEach(comment => {
 				//check for deleted flag in comment object / comment.deleted
 				if (comment.deleted === true) {

@@ -526,7 +526,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 							<div key={i}>
 								<PRCodeCommentBody>
 									<PRThreadedCommentHeader>
-										<b>{(c.author || c.user.display_name || GHOST).login}</b>
+										<b>{(c.author || GHOST).login}</b>
 										<Timestamp time={c.createdAt} relative />
 										{c.includesCreatedEdit ? <> • edited</> : ""}
 										<PRActionIcons>
