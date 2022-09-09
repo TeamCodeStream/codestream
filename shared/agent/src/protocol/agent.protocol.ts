@@ -65,6 +65,9 @@ export interface Capabilities {
 	services?: {
 		vsls?: boolean;
 	};
+	vsCodeGithubSignin?: boolean;
+	providerReauth?: boolean;
+	openLink?: boolean;
 }
 
 export enum CodeDelimiterStyles {
@@ -73,7 +76,7 @@ export enum CodeDelimiterStyles {
 	SINGLE_BACK_QUOTE = "singleBackQuote",
 	HTML_MARKUP = "htmlMarkup",
 	HTML_LIGHT_MARKUP = "htmlLightMarkup",
-	CODE_BRACE = "codeBrace"
+	CODE_BRACE = "codeBrace",
 }
 
 export interface AccessToken {
@@ -91,7 +94,7 @@ export enum CodeStreamEnvironment {
 	OnPrem = "onprem",
 	RegionUS = "us",
 	RegionEU = "eu",
-	Unknown = "unknown"
+	Unknown = "unknown",
 }
 
 export interface CodeStreamEnvironmentInfo {
@@ -107,7 +110,7 @@ export enum TraceLevel {
 	Silent = "silent",
 	Errors = "errors",
 	Verbose = "verbose",
-	Debug = "debug"
+	Debug = "debug",
 }
 
 export interface BaseAgentOptions {
@@ -223,7 +226,7 @@ export enum ReportingMessageType {
 	Warning = "warning",
 	Info = "info",
 	Debug = "debug",
-	Fatal = "fatal"
+	Fatal = "fatal",
 }
 
 export interface ReportMessageRequest {

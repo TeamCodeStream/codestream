@@ -1,8 +1,7 @@
+import { Capabilities } from "@codestream/protocols/agent";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-export interface CapabilitiesState {
-	[name: string]: any;
-}
+export interface CapabilitiesState extends Capabilities {}
 
 const initialState: CapabilitiesState = {};
 
