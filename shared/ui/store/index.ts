@@ -1,11 +1,15 @@
-import { Action, configureStore } from "@reduxjs/toolkit";
+import rtk, {
+	Action,
+	AsyncThunk,
+	AsyncThunkOptions,
+	AsyncThunkPayloadCreator,
+	configureStore,
+} from "@reduxjs/toolkit";
 import { batchedSubscribe } from "redux-batched-subscribe";
 import { ThunkAction } from "redux-thunk";
 import { reduceApiVersioning } from "../store/apiVersioning/reducer";
-import reduceCapabilities from "./capabilities/slice";
 import { reduceCodeErrors } from "../store/codeErrors/reducer";
 import { reduceCodemarks } from "../store/codemarks/reducer";
-import reduceConfigs from "./configs/slice";
 import { reduceConnectivity } from "../store/connectivity/reducer";
 import { reduceContext } from "../store/context/reducer";
 import { reduceDocumentMarkers } from "../store/documentMarkers/reducer";
@@ -24,13 +28,15 @@ import { debounceToAnimationFrame } from "../utils";
 import { reduceActiveIntegrations } from "./activeIntegrations/reducer";
 import { reduceActivityFeed } from "./activityFeed/reducer";
 import { reduceBootstrapped } from "./bootstrapped/reducer";
+import reduceCapabilities from "./capabilities/slice";
 import { reduceCompanies } from "./companies/reducer";
+import reduceConfigs from "./configs/slice";
 import { reduceDocuments } from "./documents/reducer";
 import { reduceDynamicLogging } from "./dynamicLogging/reducer";
 import { reduceEditorContext } from "./editorContext/reducer";
 import reduceIde from "./ide/slice";
-import { reduceReviews } from "./reviews/reducer";
 import providerPullRequests from "./providerPullRequests/slice";
+import { reduceReviews } from "./reviews/reducer";
 
 const pluginVersion = (state = "", action) => {
 	if (action.type === "@pluginVersion/Set") return action.payload;
@@ -81,3 +87,11 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 	unknown,
 	Action<string>
 >;
+
+export function createAppAsyncThunk<Returned, ThunkArg = void>(
+	typePrefix: string,
+	payloadCreator: AsyncThunkPayloadCreator<Returned, ThunkArg, { state: CodeStreamState }>,
+	options?: AsyncThunkOptions<ThunkArg, { state: CodeStreamState }>
+): AsyncThunk<Returned, ThunkArg, { state: CodeStreamState }> {
+	return rtk.createAsyncThunk(typePrefix, payloadCreator, options);
+}

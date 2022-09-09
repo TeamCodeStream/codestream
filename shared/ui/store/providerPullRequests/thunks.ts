@@ -31,9 +31,8 @@ import {
 	updatePullRequestFilter,
 } from "@codestream/webview/store/providerPullRequests/slice";
 import { HostApi } from "@codestream/webview/webview-api";
-import { createAsyncThunk } from "@reduxjs/toolkit";
 import { RequestType } from "vscode-languageserver-protocol";
-import { CodeStreamState } from "..";
+import { createAppAsyncThunk } from "..";
 import { action } from "../common";
 import {
 	setCurrentPullRequest,
@@ -96,10 +95,9 @@ const _getPullRequestConversationsFromProvider = async (
 	};
 };
 
-export const getPullRequestConversationsFromProvider = createAsyncThunk<
+export const getPullRequestConversationsFromProvider = createAppAsyncThunk<
 	FetchThirdPartyPullRequestResponse | undefined,
-	PullRequestIdPayload,
-	{ state: CodeStreamState }
+	PullRequestIdPayload
 >("providerPullRequests/getPullRequestConversationsFromProvider", async (request, { dispatch }) => {
 	const { providerId, id } = request;
 	try {
@@ -134,10 +132,9 @@ export const getPullRequestConversationsFromProvider = createAsyncThunk<
 	return undefined;
 });
 
-export const getPullRequestConversations = createAsyncThunk<
+export const getPullRequestConversations = createAppAsyncThunk<
 	FetchThirdPartyPullRequestResponse | undefined,
-	PullRequestIdPayload,
-	{ state: CodeStreamState }
+	PullRequestIdPayload
 >("providerPullRequests/getPullRequestConversations", async (request, { getState, dispatch }) => {
 	const { providerId, id } = request;
 	try {
@@ -202,10 +199,9 @@ interface GetPullRequestFiles {
 	accessRawDiffs?: boolean;
 }
 
-export const getPullRequestFiles = createAsyncThunk<
+export const getPullRequestFiles = createAppAsyncThunk<
 	GetCommitsFilesResponse[] | undefined,
-	GetPullRequestFiles,
-	{ state: CodeStreamState }
+	GetPullRequestFiles
 >("providerPullRequests", async (params, { getState, dispatch }) => {
 	const { providerId, id, commits = [], repoId, accessRawDiffs } = params;
 	try {
@@ -266,10 +262,9 @@ export const getPullRequestFiles = createAsyncThunk<
 	return undefined;
 });
 
-export const getPullRequestFilesFromProvider = createAsyncThunk<
+export const getPullRequestFilesFromProvider = createAppAsyncThunk<
 	GetCommitsFilesResponse[] | undefined,
-	PullRequestIdPayload,
-	{ state: CodeStreamState }
+	PullRequestIdPayload
 >("providerPullRequests/getPullRequestFilesFromProvider", async (request, { dispatch }) => {
 	const { id, providerId } = request;
 	try {
@@ -308,10 +303,9 @@ export interface PRRequest {
 	index?: number;
 }
 
-export const getMyPullRequests = createAsyncThunk<
+export const getMyPullRequests = createAppAsyncThunk<
 	GetMyPullRequestsResponse[][] | undefined,
-	PRRequest,
-	{ state: CodeStreamState }
+	PRRequest
 >("providerPullRequests/myPullRequests", async (request: PRRequest, { getState, dispatch }) => {
 	const { providerId, queries, openReposOnly, options, index, throwOnError, test } = request;
 	try {
@@ -365,10 +359,9 @@ export const getMyPullRequests = createAsyncThunk<
 // 		id,
 // 	});
 
-export const getPullRequestCommitsFromProvider = createAsyncThunk<
+export const getPullRequestCommitsFromProvider = createAppAsyncThunk<
 	FetchThirdPartyPullRequestCommitsResponse[] | undefined,
-	PullRequestIdPayload,
-	{ state: CodeStreamState }
+	PullRequestIdPayload
 >(
 	"providerPullRequests/getPullRequestCommitsFromProvider",
 	async (request, { getState, dispatch }) => {
@@ -391,10 +384,9 @@ export interface GetPullRequestCommitsRequest extends PullRequestIdPayload {
 	options?: { force: true };
 }
 
-export const getPullRequestCommits = createAsyncThunk<
+export const getPullRequestCommits = createAppAsyncThunk<
 	FetchThirdPartyPullRequestCommitsResponse[] | undefined,
-	GetPullRequestCommitsRequest,
-	{ state: CodeStreamState }
+	GetPullRequestCommitsRequest
 >("providerPullRequests/getPullRequestCommits", async (request, { getState, dispatch }) => {
 	const { providerId, options, id } = request;
 	try {
@@ -448,10 +440,9 @@ export interface OpenPullRequestByUrlResponse {
 	error: string;
 }
 
-export const openPullRequestByUrl = createAsyncThunk<
+export const openPullRequestByUrl = createAppAsyncThunk<
 	OpenPullRequestByUrlResponse | undefined,
-	OpenPullRequestByUrlRequest,
-	{ state: CodeStreamState }
+	OpenPullRequestByUrlRequest
 >("providerPullReuqests/openPullRequestByUrl", async (request, { getState, dispatch }) => {
 	const { options, url } = request;
 	const prLabel = getPRLabelForProvider(options?.providerId || "");
@@ -594,7 +585,7 @@ interface ApiRequest {
  * @param params the data to send to the provider
  * @param options optional options
  */
-export const api = createAsyncThunk<any, ApiRequest, { state: CodeStreamState }>(
+export const api = createAppAsyncThunk<any, ApiRequest>(
 	"providerPullRequests/api",
 	async (request, { getState, dispatch }) => {
 		const { method, options } = request;

@@ -10,18 +10,15 @@ import { CSMe } from "@codestream/protocols/api";
 import { LogoutRequestType, UpdateServerUrlRequestType } from "@codestream/protocols/webview";
 import { onLogin } from "@codestream/webview/Authentication/actions";
 import { logError } from "@codestream/webview/logger";
-import { CodeStreamState } from "@codestream/webview/store";
+import { CodeStreamState, createAppAsyncThunk } from "@codestream/webview/store";
 import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
 import { BootstrapActionType } from "@codestream/webview/store/bootstrapped/types";
-import { ConfigsState } from "@codestream/webview/store/configs/types";
 import { goToSignup, setTeamlessContext } from "@codestream/webview/store/context/actions";
 import { reset, setTOS } from "@codestream/webview/store/session/actions";
-import { SessionState } from "@codestream/webview/store/session/types";
 import { setUserPreference } from "@codestream/webview/Stream/actions";
 import { HostApi } from "@codestream/webview/webview-api";
-import { createAsyncThunk } from "@reduxjs/toolkit";
 
-export const logout = createAsyncThunk<void, void, { state: CodeStreamState }>(
+export const logout = createAppAsyncThunk<void, void>(
 	"session/logout",
 	async (_request, { dispatch }) => {
 		dispatch(setBootstrapped(false));
@@ -41,10 +38,9 @@ export interface SwitchToTeamRequest {
 	options?: { codemarkId?: string; reviewId?: string };
 }
 
-export const switchToTeam = createAsyncThunk<
+export const switchToTeam = createAppAsyncThunk<
 	LoginResponse | LoginSuccessResponse | { type: BootstrapActionType } | void,
-	SwitchToTeamRequest,
-	{ state: CodeStreamState }
+	SwitchToTeamRequest
 >("session/switchToTeam", async (request, { dispatch, getState }) => {
 	const { teamId, options } = request;
 	const { accessToken } = await HostApi.instance.send(GetAccessTokenRequestType, {});
@@ -87,7 +83,7 @@ export const setEnvironment = (environment: string, serverUrl: string) => async 
 	dispatch(setTeamlessContext({ selectedRegion: environment }));
 };
 
-export const switchToForeignCompany = createAsyncThunk<any, string, { state: CodeStreamState }>(
+export const switchToForeignCompany = createAppAsyncThunk<any, string>(
 	"session/switchToForeignCompany",
 	async (companyId, { dispatch, getState }) => {
 		const { companies, session, users } = getState();
@@ -168,7 +164,7 @@ export const setSelectedRegion = region => async (dispatch, getState: () => Code
 
 // based on the currently "forced" region, or the selected region, or default region,
 // make sure our environment settings and serverUrl settings are in sync
-export const handleSelectedRegion = createAsyncThunk<any, void, { state: CodeStreamState }>(
+export const handleSelectedRegion = createAppAsyncThunk<any, void>(
 	"session/handleSelectedRegion",
 	async (_, { dispatch, getState }) => {
 		const { environmentHosts, serverUrl } = getState().configs;
