@@ -608,20 +608,6 @@ export const Observability = React.memo((props: Props) => {
 			}, {});
 	};
 
-	const settingsMenuItems = [
-		{
-			label: "Instrument my App",
-			key: "instrument",
-			action: () => dispatch(openPanel(WebviewPanels.OnboardNewRelic))
-		},
-		{ label: "-" },
-		{
-			label: "Disconnect",
-			key: "disconnect",
-			action: () => dispatch(disconnectProvider("newrelic*com", "Sidebar"))
-		}
-	];
-
 	const handleClickCLMBroadcast = (entityGuid, e?) => {
 		if (e) {
 			e.preventDefault();
@@ -796,27 +782,15 @@ export const Observability = React.memo((props: Props) => {
 				}
 			>
 				{derivedState.newRelicIsConnected ? (
-					<>
-						<Icon
-							name="refresh"
-							title="Refresh"
-							placement="bottom"
-							delay={1}
-							onClick={e => {
-								_useDidMount(true);
-							}}
-						/>
-						<InlineMenu
-							title="Connected to New Relic"
-							key="settings-menu"
-							className="subtle no-padding"
-							noFocusOnSelect
-							noChevronDown
-							items={settingsMenuItems}
-						>
-							<Icon name="gear" title="Settings" placement="bottom" delay={1} />
-						</InlineMenu>
-					</>
+					<Icon
+						name="refresh"
+						title="Refresh"
+						placement="bottom"
+						delay={1}
+						onClick={e => {
+							_useDidMount(true);
+						}}
+					/>
 				) : (
 					<>&nbsp;</>
 				)}
