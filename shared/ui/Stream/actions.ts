@@ -561,6 +561,7 @@ export const editPost = (
 						}
 					);
 				} catch (error) {
+					if (error.includes("edit_window_closed")) continue;
 					try {
 						await HostApi.instance.send(SharePostViaServerRequestType, {
 							postId,
