@@ -58,7 +58,7 @@ async function extensionBuild(args: Args) {
 	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(false, args),
 		entryPoints: [path.resolve(context, "./src/extension.ts")],
-		external: ["vscode"],
+		external: ["vscode", "keytar"],
 		outfile: path.resolve(dist, "extension.js"),
 		plugins: [statsPlugin, extensionCopy],
 		format: "cjs",

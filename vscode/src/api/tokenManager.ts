@@ -3,7 +3,7 @@ import { Logger } from "logger";
 import { GlobalState } from "../common";
 import { extensionId } from "../constants";
 import { Container } from "../container";
-import { keychain } from "../keychain";
+import keychain from "keytar";
 
 const CredentialService = `${extensionId}:vscode`;
 
