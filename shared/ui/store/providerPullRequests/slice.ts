@@ -14,9 +14,14 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { ContextState } from "../context/types";
-import { CurrentRepoResponse, ProviderPullRequestsState, RepoPullRequest } from "./types";
+import {
+	CurrentRepoResponse,
+	isGitLabMergeRequest,
+	ProviderPullRequestsState,
+	RepoPullRequest,
+} from "./types";
 
-const initialState: ProviderPullRequestsState = { pullRequests: {}, myPullRequests: [] };
+const initialState: ProviderPullRequestsState = { pullRequests: {}, myPullRequests: {} };
 
 function parseId(idOrJson?: string): string | undefined {
 	if (!idOrJson) {
@@ -94,7 +99,10 @@ const providerPullRequestsSlice = createSlice({
 	initialState,
 	reducers: {
 		addMyPullRequests: (state, action: PayloadAction<PullRequestPayload>) => {
-			state.myPullRequests[action.payload.providerId] = action.payload.data;
+			if (!state.myPullRequests[action.payload.providerId]) {
+				state.myPullRequests[action.payload.providerId] = {};
+			}
+			state.myPullRequests[action.payload.providerId].data = action.payload.data;
 			return;
 		},
 		updatePullRequestFilter: (state, action: PayloadAction<PullRequestFilterPayload>) => {
@@ -154,16 +162,17 @@ const providerPullRequestsSlice = createSlice({
 			return;
 		},
 		updatePullRequestTitle: (state, action: PayloadAction<UpdatePullRequestTitlePayload>) => {
-			state.myPullRequests[action.payload.providerId]["data"]?.forEach((arr: any, index) => {
-				arr?.forEach((pr, i) => {
-					if (pr.id === action.payload.id) {
-						state.myPullRequests[action.payload.providerId]["data"]![index][i] = {
-							...state.myPullRequests[action.payload.providerId]["data"]![index][i],
-							title: action.payload.pullRequestData.title,
-						};
-					}
-				});
-			});
+			const providerPrs: GetMyPullRequestsResponse[][] | undefined =
+				state.myPullRequests?.[action.payload.providerId]?.data;
+			if (!providerPrs) {
+				return;
+			}
+			for (const arr of providerPrs) {
+				const pr = arr.find(pr => pr.id === action.payload.id);
+				if (pr) {
+					pr.title = action.payload.pullRequestData.title;
+				}
+			}
 			return;
 		},
 		addPullRequestConversations: (
@@ -215,11 +224,11 @@ const providerPullRequestsSlice = createSlice({
 
 			if (state.pullRequests[providerId][id] && state.pullRequests[providerId][id].conversations) {
 				if (providerId === "gitlab*com" || providerId === "gitlab/enterprise") {
-					const pr = state.pullRequests[providerId][id].conversations.project
-						.mergeRequest as GitLabMergeRequest;
+					const pr = state.pullRequests[providerId][id]?.conversations?.project
+						?.mergeRequest as GitLabMergeRequest;
 					for (const directive of action.payload.data) {
 						if (directive.type === "addApprovedBy") {
-							if (pr.approvedBy) {
+							if (pr?.approvedBy) {
 								for (const d of directive.data) {
 									if (!pr.approvedBy.nodes.find(_ => _.login === d.login)) {
 										pr.approvedBy.nodes.push(d);
@@ -463,7 +472,7 @@ const providerPullRequestsSlice = createSlice({
 						}
 					}
 				} else if (providerId === "github*com" || providerId === "github/enterprise") {
-					const pr = state.pullRequests[providerId][id].conversations.repository
+					const pr = state.pullRequests[providerId][id]?.conversations?.repository
 						.pullRequest as FetchThirdPartyPullRequestPullRequest;
 					/**
 					 *
@@ -891,7 +900,7 @@ export const getPullRequestProviderId = createSelector(
 export const getCurrentProviderPullRequest = createSelector(
 	(state: CodeStreamState) => state.providerPullRequests,
 	getPullRequestExactId,
-	(providerPullRequests: ProviderPullRequestsState, id: string) => {
+	(providerPullRequests, id: string): RepoPullRequest | undefined => {
 		if (!id) return undefined;
 		for (const providerPullRequest of Object.values(providerPullRequests)) {
 			for (const pullRequests of Object.values(providerPullRequest)) {
@@ -910,10 +919,10 @@ export const getCurrentProviderPullRequestRootObject = createSelector(
 	(providerPullRequest, providerId) => {
 		if (providerId) {
 			if (providerId.indexOf("github") > -1) {
-				return providerPullRequest.conversations;
+				return providerPullRequest?.conversations;
 			}
 			if (providerId.indexOf("gitlab") > -1) {
-				return providerPullRequest.conversations;
+				return providerPullRequest?.conversations;
 			}
 		}
 		return undefined;
@@ -924,12 +933,13 @@ export const getCurrentProviderPullRequestObject = createSelector(
 	getCurrentProviderPullRequest,
 	getPullRequestProviderId,
 	(providerPullRequest, providerId) => {
+		// TODO merge github and gitlab into single shared type
 		if (providerId) {
 			if (providerId.indexOf("github") > -1) {
-				return providerPullRequest.conversations.repository.pullRequest;
+				return providerPullRequest?.conversations?.repository.pullRequest;
 			}
 			if (providerId.indexOf("gitlab") > -1) {
-				return providerPullRequest.conversations.project.mergeRequest;
+				return providerPullRequest?.conversations?.project?.mergeRequest;
 			}
 		}
 		return undefined;
@@ -979,7 +989,7 @@ export const getProviderPullRequestRepoObject = createSelector(
 
 export const getProviderPullRequestRepoObjectCore = (
 	repos: CSRepository[],
-	currentPr: RepoPullRequest,
+	currentPr?: RepoPullRequest,
 	providerId?: string
 ) => {
 	const result: CurrentRepoResponse = {};
@@ -1006,8 +1016,13 @@ export const getProviderPullRequestRepoObjectCore = (
 				result.error = "Missing project name for: " + currentPr;
 			}
 			// this is for gitlab
-			repoName = currentPr.conversations.project?.name?.toLowerCase();
-			repoUrl = currentPr.conversations.project!.mergeRequest.webUrl?.toLowerCase();
+			const glMr = currentPr.conversations.project?.mergeRequest;
+			if (isGitLabMergeRequest(glMr)) {
+				repoName = currentPr.conversations.project?.name?.toLowerCase();
+				repoUrl = glMr?.webUrl?.toLowerCase();
+			} else {
+				result.error = "Missing attributes name for: " + currentPr;
+			}
 		}
 		result.repoName = repoName;
 		result.repoUrl = repoUrl;

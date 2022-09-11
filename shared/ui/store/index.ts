@@ -1,10 +1,4 @@
-import rtk, {
-	Action,
-	AsyncThunk,
-	AsyncThunkOptions,
-	AsyncThunkPayloadCreator,
-	configureStore,
-} from "@reduxjs/toolkit";
+import { Action, configureStore } from "@reduxjs/toolkit";
 import { batchedSubscribe } from "redux-batched-subscribe";
 import { ThunkAction } from "redux-thunk";
 import { reduceApiVersioning } from "../store/apiVersioning/reducer";
@@ -87,11 +81,3 @@ export type AppThunk<ReturnType = void> = ThunkAction<
 	unknown,
 	Action<string>
 >;
-
-export function createAppAsyncThunk<Returned, ThunkArg = void>(
-	typePrefix: string,
-	payloadCreator: AsyncThunkPayloadCreator<Returned, ThunkArg, { state: CodeStreamState }>,
-	options?: AsyncThunkOptions<ThunkArg, { state: CodeStreamState }>
-): AsyncThunk<Returned, ThunkArg, { state: CodeStreamState }> {
-	return rtk.createAsyncThunk(typePrefix, payloadCreator, options);
-}

@@ -412,7 +412,7 @@ export const PullRequest = () => {
 
 		let _didChangeDataNotification;
 		getOpenRepos();
-		initialFetch().then((_: FetchThirdPartyPullRequestResponse | undefined) => {
+		initialFetch().then((_: FetchThirdPartyPullRequestResponse | { error: Error } | undefined) => {
 			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, e => {
 				if (e.type === ChangeDataType.Commits) {
 					reload("Updating...");
@@ -484,8 +484,8 @@ export const PullRequest = () => {
 		};
 	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
-	const pr: GitLabMergeRequest =
-		derivedState.currentPullRequest?.conversations?.project?.mergeRequest;
+	const pr = derivedState.currentPullRequest?.conversations?.project
+		?.mergeRequest as GitLabMergeRequest;
 
 	const initialFetch = async (message?: string) => {
 		if (message) setIsLoadingMessage(message);

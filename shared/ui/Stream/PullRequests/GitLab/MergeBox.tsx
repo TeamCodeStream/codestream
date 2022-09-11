@@ -1,23 +1,22 @@
-import Tooltip from "../../Tooltip";
-import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Icon from "../../Icon";
+import { GitLabMergeRequest, GitLabMergeRequestWrapper } from "@codestream/protocols/agent";
 import { Button, ButtonVariant } from "@codestream/webview/src/components/Button";
-import { OutlineBox, FlexRow } from "./PullRequest";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { CodeStreamState } from "@codestream/webview/store";
-// import { setUserPreference } from "../../actions";
-import { Link } from "../../Link";
-import { CommandLineInstructions } from "./CommandLineInstructions";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { api } from "../../../store/providerPullRequests/thunks";
 import {
 	getCurrentProviderPullRequestObject,
 	getCurrentProviderPullRequestRootObject,
 } from "../../../store/providerPullRequests/slice";
-import { GitLabMergeRequest, GitLabMergeRequestWrapper } from "@codestream/protocols/agent";
-import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import { api } from "../../../store/providerPullRequests/thunks";
+import Icon from "../../Icon";
+// import { setUserPreference } from "../../actions";
+import { Link } from "../../Link";
 import Timestamp from "../../Timestamp";
+import Tooltip from "../../Tooltip";
+import { CommandLineInstructions } from "./CommandLineInstructions";
+import { FlexRow, OutlineBox } from "./PullRequest";
 
 export const IconButton = styled.div`
 	flex-grow: 0;
@@ -40,7 +39,9 @@ export const MergeBox = props => {
 		return {
 			pr: pr,
 			pipeline: pr.headPipeline,
-			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper,
+			prRoot: getCurrentProviderPullRequestRootObject(
+				state
+			) as unknown as GitLabMergeRequestWrapper, // TODO fix typing
 		};
 	});
 

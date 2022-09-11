@@ -1,12 +1,12 @@
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useState } from "react";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { Radio, RadioGroup } from "../src/components/RadioGroup";
 import { CodeStreamState } from "../store";
-import { api } from "../store/providerPullRequests/thunks";
 import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
+import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 import { closeModal } from "./actions";
 import { confirmPopup } from "./Confirm";
@@ -40,7 +40,7 @@ export const FinishReview = (props: { fetch?: Function }) => {
 		e.stopPropagation();
 		setSubmittingReview(true);
 		HostApi.instance.track("PR Review Finished", {
-			Host: pr.providerId,
+			Host: pr!.providerId,
 			"Review Type": reviewType,
 		});
 		await dispatch(

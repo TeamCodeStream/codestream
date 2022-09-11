@@ -3,11 +3,13 @@ import {
 	DidChangeDataNotificationType,
 	FetchProviderDefaultPullRequestsType,
 	FetchProviderDefaultPullResponse,
+	FetchThirdPartyPullRequestPullRequest,
+	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsResponse,
 	GetReposScmRequestType,
+	GitLabMergeRequest,
 	ReposScm,
 	SwitchBranchRequestType,
-	ThirdPartyProviderConfig,
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { PullRequestQuery } from "@codestream/protocols/api";
@@ -16,12 +18,13 @@ import {
 	ReviewCloseDiffRequestType,
 	WebviewPanels,
 } from "@codestream/protocols/webview";
+import { Index } from "@codestream/webview/store/common";
 import { setPaneMaximized } from "@codestream/webview/Stream/actions";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
 import copy from "copy-to-clipboard";
 import { isEmpty, isEqual } from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 import { logError } from "../logger";
@@ -45,18 +48,18 @@ import {
 	setNewPostEntry,
 } from "../store/context/actions";
 import {
-	getMyPullRequests,
-	getPullRequestConversationsFromProvider,
-	openPullRequestByUrl,
-	PRRequest,
-} from "../store/providerPullRequests/thunks";
-import {
 	getCurrentProviderPullRequest,
 	getMyPullRequests as getMyPullRequestsSelector,
 	getProviderPullRequestRepoObject,
 	getPullRequestExactId,
 	getPullRequestId,
 } from "../store/providerPullRequests/slice";
+import {
+	getMyPullRequests,
+	getPullRequestConversationsFromProvider,
+	openPullRequestByUrl,
+	PRRequest,
+} from "../store/providerPullRequests/thunks";
 import { configureAndConnectProvider } from "../store/providers/actions";
 import * as providerSelectors from "../store/providers/reducer";
 import { getPRLabel } from "../store/providers/reducer";
@@ -230,12 +233,7 @@ interface Props {
 	paneState: PaneState;
 }
 
-const EMPTY_ARRAY = [] as any;
-const EMPTY_HASH = {} as any;
-const EMPTY_HASH_2 = {} as any;
-
 let hasRenderedOnce = false;
-const e: ThirdPartyProviderConfig[] = [];
 
 export const OpenPullRequests = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
@@ -245,14 +243,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const { preferences, repos, context } = state;
 
 		const team = state.teams[state.context.currentTeamId];
-		const teamSettings = team.settings ? team.settings : EMPTY_HASH;
+		const teamSettings = team.settings;
 		const adminIds = team.adminIds || [];
 		const isCurrentUserAdmin = adminIds.includes(state.session.userId!);
 
 		const prSupportedProviders = providerSelectors
 			.getSupportedPullRequestHosts(state)
 			.filter(
-				provider => !teamSettings.limitCodeHost || teamSettings.codeHostProviders[provider.id]
+				provider => !teamSettings?.limitCodeHost || teamSettings?.codeHostProviders?.[provider.id]
 			);
 		const prConnectedProviders = providerSelectors.getConnectedSupportedPullRequestHosts(state);
 		const prConnectedProvidersWithErrors = prConnectedProviders.filter(_ => _.hasAccessTokenError);
@@ -264,8 +262,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			context.currentPullRequest.id;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const expandedPullRequestGroupIndex = context.currentPullRequest?.groupIndex;
-		const panePreferences = preferences.sidebarPanes || EMPTY_HASH;
-		const settings = panePreferences["open-pull-requests"] || EMPTY_HASH;
+		const panePreferences = preferences.sidebarPanes;
+		const settings = panePreferences["open-pull-requests"];
 		return {
 			repos,
 			teamSettings,
@@ -291,7 +289,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			hideDiffs: preferences.pullRequestQueryHideDiffs,
 			hideDescriptions: preferences.pullRequestQueryHideDescriptions,
 			prLabel: getPRLabel(state),
-			pullRequestProviderHidden: preferences.pullRequestProviderHidden || EMPTY_HASH_2,
+			pullRequestProviderHidden: preferences.pullRequestProviderHidden,
 			expandedPullRequestId,
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
@@ -334,11 +332,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
 	const [prError, setPrError] = React.useState("");
 	const [prCommitsRange, setPrCommitsRange] = React.useState<string[]>([]);
-	const [openRepos, setOpenRepos] = React.useState<ReposScmPlusName[]>(EMPTY_ARRAY);
+	const [openRepos, setOpenRepos] = React.useState<ReposScmPlusName[]>([]);
 	const [currentGroupIndex, setCurrentGroupIndex] = React.useState();
 	const [prFromUrlLoading, setPrFromUrlLoading] = React.useState(false);
-	const [prFromUrl, setPrFromUrl] = React.useState<any>({});
-	const [prFromUrlProviderId, setPrFromUrlProviderId] = React.useState<any>(null);
+	const [prFromUrl, setPrFromUrl] = React.useState<
+		FetchThirdPartyPullRequestPullRequest | GitLabMergeRequest | undefined
+	>();
+	const [prFromUrlProviderId, setPrFromUrlProviderId] = React.useState<string | undefined>();
 
 	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
 		[providerId: string]: GetMyPullRequestsResponse[][];
@@ -378,7 +378,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			let activePrListedCount = 0;
 			let activePrListedIndex: number | undefined = undefined;
 			try {
-				const newGroups = {};
+				const newGroups: Index<GetMyPullRequestsResponse[][]> = {};
 				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of PRConnectedProviders) {
@@ -490,10 +490,11 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	}, [queries, fetchPRs]);
 
 	useEffect(() => {
-		const newGroups = {};
+		const newGroups: Index<GetMyPullRequestsResponse[][]> = {};
 		for (const connectedProvider of PRConnectedProviders) {
-			if (derivedState.myPullRequests && derivedState.myPullRequests[connectedProvider.id]) {
-				newGroups[connectedProvider.id] = derivedState.myPullRequests[connectedProvider.id];
+			const pullRequests = derivedState.myPullRequests[connectedProvider.id]?.data;
+			if (pullRequests) {
+				newGroups[connectedProvider.id] = pullRequests;
 			}
 		}
 		setPullRequestGroups(newGroups);
@@ -732,8 +733,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const totalPRs = useMemo(() => {
 		let total = 0;
-		if (!isEmpty(pullRequestGroups)) {
-			Object.values(pullRequestGroups).forEach(group =>
+		if (pullRequestGroups) {
+			Object.values(pullRequestGroups)?.forEach(group =>
 				group.forEach(list => (total += list.length))
 			);
 		}
@@ -1052,7 +1053,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									onClick={e => {
 										e.preventDefault();
 										e.stopPropagation();
-										setPrFromUrl({});
+										setPrFromUrl(undefined);
 									}}
 									delay={1}
 								/>
@@ -1164,7 +1165,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									onClick={e => {
 										e.preventDefault();
 										e.stopPropagation();
-										setPrFromUrl({});
+										setPrFromUrl(undefined);
 									}}
 									delay={1}
 								/>
@@ -1222,11 +1223,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		derivedState.providerPullRequests,
 	]);
 
-	const expandedPR: any = useMemo(() => {
+	const expandedPR = useMemo(() => {
 		if (!derivedState.currentPullRequest || derivedState.hideDiffs || derivedState.isVS) {
 			return undefined;
 		}
-		const conversations = derivedState.currentPullRequest.conversations;
+		const conversations: FetchThirdPartyPullRequestResponse | undefined =
+			derivedState.currentPullRequest.conversations;
 		if (!conversations) {
 			return undefined;
 		}
@@ -1300,7 +1302,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		if (derivedState.GitLabConnectedProviders.length > 0) {
 			settingsMenuItems.push({ label: "-" });
 			settingsMenuItems.push({
-				checked: derivedState.teamSettings.gitLabMultipleAssignees || false,
+				checked: derivedState.teamSettings?.gitLabMultipleAssignees ?? false,
 				label: "Allow Multiple Assignees & Reviewers",
 				subtext: "Requires paid GitLab account",
 				key: "multiple",
@@ -1308,7 +1310,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					HostApi.instance.send(UpdateTeamSettingsRequestType, {
 						teamId: derivedState.teamId,
 						settings: {
-							gitLabMultipleAssignees: !derivedState.teamSettings.gitLabMultipleAssignees,
+							gitLabMultipleAssignees: !derivedState.teamSettings?.gitLabMultipleAssignees,
 						},
 					});
 				},

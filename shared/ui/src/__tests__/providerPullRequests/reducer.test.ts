@@ -1,3 +1,7 @@
+import {
+	FetchThirdPartyPullRequestResponse,
+	GitLabMergeRequest,
+} from "@codestream/protocols/agent";
 import { CSRemote, CSRepository } from "@codestream/protocols/api";
 import { describe, expect, it } from "@jest/globals";
 import { getProviderPullRequestRepoObjectCore } from "../../../store/providerPullRequests/slice";
@@ -10,6 +14,12 @@ interface RemoteStub extends Partial<CSRemote> {}
 
 function stubRepos(repo: RepoStub[]): CSRepository[] {
 	return repo as CSRepository[];
+}
+
+function stubConversations(
+	ob: Partial<FetchThirdPartyPullRequestResponse>
+): FetchThirdPartyPullRequestResponse {
+	return ob as FetchThirdPartyPullRequestResponse;
 }
 
 describe("providers", () => {
@@ -26,15 +36,16 @@ describe("providers", () => {
 				},
 			]),
 			{
-				conversations: {
+				conversationsLastFetch: 1234,
+				conversations: stubConversations({
 					project: {
 						name: "my-project-one",
 						repoName: "my-project-one",
 						mergeRequest: {
 							webUrl: "https://my.gitlab.com/pow/my_group_name/my-project-one/-/merge_requests/55",
-						},
+						} as GitLabMergeRequest,
 					},
-				},
+				}),
 			},
 			"gitlab/enterprise"
 		);
@@ -67,15 +78,16 @@ describe("providers", () => {
 				},
 			]),
 			{
-				conversations: {
+				conversationsLastFetch: 1234,
+				conversations: stubConversations({
 					project: {
 						name: "my-project-one",
 						mergeRequest: {
 							webUrl: "https://my.gitlab.com/pow/my_group_name/my-project-one/-/merge_requests/55",
-						},
+						} as GitLabMergeRequest,
 						repoName: "my-project-one",
 					},
-				},
+				}),
 			},
 			"gitlab/enterprise"
 		);
@@ -104,15 +116,16 @@ describe("providers", () => {
 				},
 			]),
 			{
-				conversations: {
+				conversationsLastFetch: 1234,
+				conversations: stubConversations({
 					project: {
 						name: "backend",
 						repoName: "backend",
 						mergeRequest: {
 							webUrl: "https://gitlab.example.com/mono/backend",
-						},
+						} as GitLabMergeRequest,
 					},
-				},
+				}),
 			},
 			"gitlab*com"
 		);
@@ -151,15 +164,16 @@ describe("providers", () => {
 				},
 			]),
 			{
-				conversations: {
+				conversationsLastFetch: 1234,
+				conversations: stubConversations({
 					project: {
 						name: "backend",
 						repoName: "backend",
 						mergeRequest: {
 							webUrl: "https://gitlab.codestream.dev/mono/backend",
-						},
+						} as GitLabMergeRequest,
 					},
-				},
+				}),
 			},
 			"gitlab*com"
 		);
@@ -198,15 +212,16 @@ describe("providers", () => {
 				},
 			]),
 			{
-				conversations: {
+				conversationsLastFetch: 1234,
+				conversations: stubConversations({
 					project: {
 						name: "My Project One",
 						mergeRequest: {
 							webUrl: "https://my.gitlab.com/pow/my_group_name/my-project-one/-/merge_requests/55",
-						},
+						} as GitLabMergeRequest,
 						repoName: "my-project-one",
 					},
-				},
+				}),
 			},
 			"gitlab/enterprise"
 		);

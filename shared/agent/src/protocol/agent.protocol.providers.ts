@@ -1,6 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
-import { CrossPostIssueValues } from "./agent.protocol";
+import { CrossPostIssueValues, GitLabMergeRequest } from "./agent.protocol";
 import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ReviewPlus } from "./agent.protocol.reviews";
@@ -665,6 +665,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		viewerCanDelete?: boolean;
 	};
 	supports?: {
+		reviewers?: any;
 		version: {
 			version: string;
 		};
@@ -718,6 +719,12 @@ export interface FetchThirdPartyPullRequestResponse {
 		login: string;
 		avatarUrl: string;
 	};
+	project?: {
+		name?: string;
+		repoName?: string;
+		mergeRequest?: FetchThirdPartyPullRequestPullRequest | GitLabMergeRequest;
+	};
+	mergeRequest?: GitLabMergeRequest; // TODO - Probably can remove
 }
 
 export const FetchThirdPartyPullRequestRequestType = new RequestType<

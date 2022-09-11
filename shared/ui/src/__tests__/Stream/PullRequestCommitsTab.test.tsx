@@ -45,7 +45,7 @@ const baseState: Partial<CodeStreamState> = {
 		},
 	} as any,
 	providerPullRequests: {
-		myPullRequests: [],
+		myPullRequests: {},
 		pullRequests: {},
 	},
 	capabilities: {

@@ -4,20 +4,21 @@ import {
 	CodeStreamEnvironmentInfo,
 	ThirdPartyProviders,
 	Unreads,
-	VersionCompatibility
+	VersionCompatibility,
 } from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
+	CSCompany,
 	CSMarker,
 	CSMePreferences,
 	CSRepository,
 	CSStream,
 	CSTeam,
 	CSUser,
-	CSCompany
 } from "@codestream/protocols/api";
+import { Collaborator } from "@codestream/webview/store/providerPullRequests/slice";
 import { RequestType } from "vscode-jsonrpc";
-import { EditorContext, IpcRoutes, WebviewContext, SessionState } from "./webview.protocol.common";
+import { EditorContext, IpcRoutes, SessionState, WebviewContext } from "./webview.protocol.common";
 
 export interface BootstrapInHostResponse {
 	capabilities: Capabilities;
@@ -60,7 +61,7 @@ export interface SignedInBootstrapData extends BootstrapInHostResponse {
 
 export enum LogoutReason {
 	Unknown = "unknown",
-	ReAuthenticating = "reAuthenticating"
+	ReAuthenticating = "reAuthenticating",
 }
 
 export interface LogoutRequest {
@@ -188,6 +189,7 @@ export const OpenUrlRequestType = new RequestType<OpenUrlRequest, void, void, vo
 export interface CompareLocalFilesRequest {
 	repoId: string;
 	filePath: string;
+	previousFilePath?: string;
 	headSha: string;
 	headBranch: string;
 	baseSha: string;
@@ -197,7 +199,7 @@ export interface CompareLocalFilesRequest {
 			providerId: string;
 			pullRequestReviewId?: string;
 			id: string;
-			collaborators: any[];
+			collaborators: Collaborator[];
 		};
 	};
 }

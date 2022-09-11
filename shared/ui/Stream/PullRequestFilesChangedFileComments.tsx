@@ -1,26 +1,23 @@
-import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import styled from "styled-components";
-import { ChangesetFile } from "./Review/ChangesetFile";
-import Icon from "./Icon";
-import { setCurrentPullRequest } from "../store/context/actions";
-import { openModal } from "../store/context/actions";
-import { WebviewModals } from "../ipc/webview.protocol.common";
-import { orderBy } from "lodash-es";
-import { api } from "../store/providerPullRequests/thunks";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { useSelector } from "react-redux";
+import { GetReposScmRequestType } from "@codestream/protocols/agent";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "@codestream/webview/store";
+import { orderBy } from "lodash-es";
+import * as Path from "path-browserify";
+import React, { useEffect } from "react";
+import semver from "semver";
+import styled from "styled-components";
+import { Range } from "vscode-languageserver-types";
+import { WebviewModals } from "../ipc/webview.protocol.common";
+import { openModal, setCurrentPullRequest } from "../store/context/actions";
 import {
 	getCurrentProviderPullRequest,
 	getProviderPullRequestRepo,
 } from "../store/providerPullRequests/slice";
-import * as Path from "path-browserify";
-import { Range } from "vscode-languageserver-types";
+import { api } from "../store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
-import { GetReposScmRequestType } from "@codestream/protocols/agent";
-import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
-import semver from "semver";
+import Icon from "./Icon";
+import { ChangesetFile } from "./Review/ChangesetFile";
 
 export const FileWithComments = styled.div`
 	cursor: pointer;
@@ -122,7 +119,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	});
 	const { currentPullRequest } = derivedState;
 	const currentPr = isGitLab
-		? currentPullRequest?.conversations?.mergeRequest ||
+		? currentPullRequest?.conversations?.mergeRequest || // TODO conversations.mergeRequest might not exist - investigate
 		  currentPullRequest?.conversations?.project?.mergeRequest
 		: currentPullRequest?.conversations?.repository?.pullRequest;
 	// For GHE, can only check files in version greater than 3.0.0
@@ -136,7 +133,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 
 	const syncCheckedStatusWithPr = () => {
 		if (currentPr && !isGitLab && supportsViewerViewedState) {
-			const prFiles = currentPr.files.nodes;
+			const prFiles = (currentPr as any).files.nodes; // TODO Fix typing - does this crash on gitlab since it files is only on github?
 			const currentFilepath = fileObject.file;
 
 			const prFile = prFiles.find(pr => pr.path === currentFilepath);

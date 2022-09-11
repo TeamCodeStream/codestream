@@ -1,72 +1,71 @@
-import React, { useState, useReducer, useCallback, useMemo, useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { CodeStreamState } from "../store";
-import { Button } from "../src/components/Button";
-import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
-import { getMyPullRequests } from "../store/providerPullRequests/thunks";
-import Icon from "./Icon";
-import Timestamp from "./Timestamp";
-import Tooltip from "./Tooltip";
-import { PRHeadshot } from "../src/components/Headshot";
-import { PRHeadshotName } from "../src/components/HeadshotName";
-import Tag from "./Tag";
-import { HostApi } from "../webview-api";
 import {
-	MergeMethod,
-	FetchThirdPartyPullRequestPullRequest,
-	DidChangeDataNotificationType,
 	ChangeDataType,
 	CheckRun,
+	DidChangeDataNotificationType,
+	FetchProviderDefaultPullRequestsType,
+	FetchThirdPartyPullRequestPullRequest,
+	MergeMethod,
 	StatusContext,
 } from "@codestream/protocols/agent";
-import {
-	PRContent,
-	PRConversation,
-	PRComment,
-	PRCommentCard,
-	PRCommentHeader,
-	PRError,
-	PRStatusHeadshot,
-	PRIconButton,
-	PRFoot,
-	PRSidebar,
-	PRButtonRow,
-	PRSection,
-	PRBranch,
-	PRTimelineItem,
-	PRAction,
-	PRReviewer,
-	PRCloneURLButtons,
-	PRCloneURL,
-	PRCopyableTerminal,
-	PRCloneURLWrapper,
-	PRHeadshots,
-	PRCommentCardRowsWrapper,
-	PRCommentCardRow,
-} from "./PullRequestComponents";
-import { PullRequestTimelineItems, GHOST } from "./PullRequestTimelineItems";
-import { DropdownButton } from "./DropdownButton";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import styled from "styled-components";
-import { Modal } from "./Modal";
-import { Dialog } from "../src/components/Dialog";
-import { Link } from "./Link";
-import { setUserPreference } from "./actions";
-import copy from "copy-to-clipboard";
-import { PullRequestBottomComment } from "./PullRequestBottomComment";
-import { reduce as _reduce, groupBy as _groupBy, map as _map, pickBy as _pickBy } from "lodash-es";
-import { api } from "../store/providerPullRequests/thunks";
-import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
-import { autoCheckedMergeabilityStatus } from "./PullRequest";
+import { CSMe, PullRequestQuery } from "@codestream/protocols/api";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import cx from "classnames";
+import copy from "copy-to-clipboard";
+import { groupBy as _groupBy, map as _map, pickBy as _pickBy, reduce as _reduce } from "lodash-es";
+import React, { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { shallowEqual, useSelector } from "react-redux";
+import styled from "styled-components";
+import { Button } from "../src/components/Button";
+import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { Dialog } from "../src/components/Dialog";
+import { PRHeadshot } from "../src/components/Headshot";
+import { PRHeadshotName } from "../src/components/HeadshotName";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
+import { api, getMyPullRequests } from "../store/providerPullRequests/thunks";
+import * as providerSelectors from "../store/providers/reducer";
 import { getPRLabel } from "../store/providers/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import * as providerSelectors from "../store/providers/reducer";
-import { FetchProviderDefaultPullRequestsType } from "@codestream/protocols/agent";
+import { HostApi } from "../webview-api";
+import { setUserPreference } from "./actions";
+import { DropdownButton } from "./DropdownButton";
+import Icon from "./Icon";
+import { Link } from "./Link";
+import { Modal } from "./Modal";
+import { autoCheckedMergeabilityStatus } from "./PullRequest";
+import { PullRequestBottomComment } from "./PullRequestBottomComment";
+import {
+	PRAction,
+	PRBranch,
+	PRButtonRow,
+	PRCloneURL,
+	PRCloneURLButtons,
+	PRCloneURLWrapper,
+	PRComment,
+	PRCommentCard,
+	PRCommentCardRow,
+	PRCommentCardRowsWrapper,
+	PRCommentHeader,
+	PRContent,
+	PRConversation,
+	PRCopyableTerminal,
+	PRError,
+	PRFoot,
+	PRHeadshots,
+	PRIconButton,
+	PRReviewer,
+	PRSection,
+	PRSidebar,
+	PRStatusHeadshot,
+	PRTimelineItem,
+} from "./PullRequestComponents";
+import { ColorDonut, PullRequestReviewStatus } from "./PullRequestReviewStatus";
+import { GHOST, PullRequestTimelineItems } from "./PullRequestTimelineItems";
+import Tag from "./Tag";
+import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 const emojiMap: { [key: string]: string } = require("../../agent/emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
@@ -243,11 +242,7 @@ export const PullRequestConversationTab = (props: {
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
 				: undefined,
-			pr:
-				currentPullRequest &&
-				currentPullRequest.conversations &&
-				currentPullRequest.conversations.repository &&
-				currentPullRequest.conversations.repository.pullRequest,
+			pr: currentPullRequest?.conversations?.repository?.pullRequest! as any, // TODO handle undefined / null
 			team,
 			skipGitEmailCheck,
 			addBlameMapEnabled,
@@ -921,7 +916,7 @@ export const PullRequestConversationTab = (props: {
 		pr &&
 		pr.commits &&
 		pr.commits.nodes &&
-		pr.commits.nodes.length &&
+		pr.commits.nodes.length && // TODO pr typed as any since FetchThirdPartyPullRequestPullRequest has this as an object, not array
 		pr.commits.nodes[0] &&
 		pr.commits.nodes[0].commit
 			? pr.commits.nodes[0].commit

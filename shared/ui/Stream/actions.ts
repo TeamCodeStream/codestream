@@ -45,11 +45,12 @@ import {
 import { CSPost, CSReviewStatus, ShareTarget, StreamType } from "@codestream/protocols/api";
 import { createCodeError } from "@codestream/webview/store/codeErrors/thunks";
 import { createCodemark } from "@codestream/webview/store/codemarks/thunks";
+import { createAppAsyncThunk } from "@codestream/webview/store/helper";
 import { createReview } from "@codestream/webview/store/reviews/thunks";
 import { pick } from "lodash-es";
 import React from "react";
 import { logError } from "../logger";
-import { CodeStreamState, createAppAsyncThunk } from "../store";
+import { CodeStreamState } from "../store";
 import { NewCodeErrorAttributes } from "../store/codeErrors/actions";
 import {
 	isLegacyNewCodemarkAttributes,
@@ -629,10 +630,10 @@ export const deletePost =
 
 interface SetUserPreferenceRequest {
 	prefPath: string[];
-	value: any;
+	value: unknown;
 }
 
-// usage: setUserPreference(["favorites", "shoes", "wedges"], "red")
+// usage: setUserPreference( { prefPath: ["favorites", "shoes", "wedges"], value: "red" } )
 export const setUserPreference = createAppAsyncThunk<void, SetUserPreferenceRequest>(
 	"stream/setUserPreferences",
 	async (request, { dispatch }) => {

@@ -1,13 +1,13 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import Icon from "../../Icon";
-import { OutlineBox, FlexRow } from "./PullRequest";
-import styled from "styled-components";
 import { GitLabMergeRequest, GitLabMergeRequestWrapper } from "@codestream/protocols/agent";
-import Tooltip from "../../Tooltip";
-import { Link } from "../../Link";
-import { getCurrentProviderPullRequestRootObject } from "../../../store/providerPullRequests/slice";
 import { CodeStreamState } from "@codestream/webview/store";
+import { useAppSelector } from "@codestream/webview/utilities/hooks";
+import React from "react";
+import styled from "styled-components";
+import { getCurrentProviderPullRequestRootObject } from "../../../store/providerPullRequests/slice";
+import Icon from "../../Icon";
+import { Link } from "../../Link";
+import Tooltip from "../../Tooltip";
+import { FlexRow, OutlineBox } from "./PullRequest";
 
 export const IconButton = styled.div`
 	flex-grow: 0;
@@ -37,9 +37,11 @@ const iconForStatus = {
 export const PipelineBox = (props: { pr: GitLabMergeRequest; setIsLoadingMessage: Function }) => {
 	const pr = props.pr;
 	const pipeline = pr?.headPipeline;
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
-			prRoot: getCurrentProviderPullRequestRootObject(state) as GitLabMergeRequestWrapper,
+			prRoot: getCurrentProviderPullRequestRootObject(
+				state
+			) as unknown as GitLabMergeRequestWrapper, // TODO fix typing
 		};
 	});
 

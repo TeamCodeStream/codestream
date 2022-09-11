@@ -1,39 +1,39 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
+	FetchForkPointRequestType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
-	FetchForkPointRequestType,
 	ReposScm,
 } from "@codestream/protocols/agent";
-import { HostApi } from "@codestream/webview/webview-api";
-import { useSelector } from "react-redux";
-import { CodeStreamState } from "@codestream/webview/store";
-import Icon from "./Icon";
 import {
+	CompareLocalFilesRequest,
+	EditorRevealRangeRequestType,
 	ShowNextChangedFileNotificationType,
 	ShowPreviousChangedFileNotificationType,
-	EditorRevealRangeRequestType,
 } from "@codestream/protocols/webview";
-import { useDidMount } from "../utilities/hooks";
-import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
+import { CodeStreamState } from "@codestream/webview/store";
+import { HostApi } from "@codestream/webview/webview-api";
 import * as path from "path-browserify";
-import { Range } from "vscode-languageserver-types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
+import { Range } from "vscode-languageserver-types";
+import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
 import { parseCodeStreamDiffUri } from "../store/codemarks/actions";
-import { Link } from "./Link";
-import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
-import { MetaIcons } from "./Review";
 import {
+	getCurrentProviderPullRequest,
 	getProviderPullRequestCollaborators,
 	getProviderPullRequestRepo,
 	getPullRequestId,
-	getCurrentProviderPullRequest,
 } from "../store/providerPullRequests/slice";
-import { CompareFilesProps } from "./PullRequestFilesChangedList";
+import { useDidMount } from "../utilities/hooks";
 import { TernarySearchTree } from "../utilities/searchTree";
+import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
+import Icon from "./Icon";
+import { Link } from "./Link";
 import { PRErrorBox, PRErrorBoxSidebar } from "./PullRequestComponents";
 import { PullRequestFilesChangedFileComments } from "./PullRequestFilesChangedFileComments";
-import { isUndefined } from "lodash-es";
+import { CompareFilesProps } from "./PullRequestFilesChangedList";
+import { MetaIcons } from "./Review";
 
 export const Directory = styled.div`
 	cursor: pointer;
@@ -243,7 +243,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				if (index > derivedState.numFiles - 1) index = 0;
 				const f = filesInOrder[index];
 
-				const request = {
+				const request: CompareLocalFilesRequest = {
 					baseBranch: props.baseRefName,
 					baseSha: pr && !props.commitBased ? forkPointSha : props.baseRef,
 					headBranch: props.headRefName,
@@ -256,7 +256,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 								pullRequest: {
 									providerId: pr.providerId,
 									id: derivedState.pullRequestId,
-									collaborators: derivedState.collaborators,
+									collaborators: derivedState.collaborators!,
 								},
 						  }
 						: undefined,

@@ -1,10 +1,13 @@
-import { CSRepository } from "@codestream/protocols/api";
-import { Index } from "../common";
 import {
 	FetchThirdPartyPullRequestCommitsResponse,
+	FetchThirdPartyPullRequestResponse,
 	GetCommitsFilesResponse,
 	GetMyPullRequestsResponse,
+	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
+import { CSRepository } from "@codestream/protocols/api";
+import { Collaborator } from "@codestream/webview/store/providerPullRequests/slice";
+import { Index } from "../common";
 
 export enum ProviderPullRequestActionsTypes {
 	AddPullRequestConversations = "@providerPullRequests/AddConversations",
@@ -19,6 +22,29 @@ export enum ProviderPullRequestActionsTypes {
 	HandleDirectives = "@providerPullRequests/HandleDirectives",
 	UpdatePullRequestTitle = "@providerPullRequests/UpdatePullRequestTitle",
 	UpdatePullRequestFilter = "@providerPullRequests/UpdatePullRequestFilter",
+}
+
+export function isGitLabMergeRequest(mr: any): mr is GitLabMergeRequest {
+	if (mr?.webUrl) {
+		return true;
+	}
+	return mr.hasOwnProperty("author") && mr.hasOwnProperty("baseRefName");
+}
+
+export interface RepoPullRequest {
+	conversations?: FetchThirdPartyPullRequestResponse;
+
+	/**
+	 * Client side date tracking of when this was last added to the redux store
+	 *
+	 * @type {(number | undefined)}
+	 */
+	conversationsLastFetch: number | undefined;
+	files?: { [key: string]: GetCommitsFilesResponse[] };
+	collaborators?: Collaborator[];
+	commits?: FetchThirdPartyPullRequestCommitsResponse[];
+	error?: { message: string };
+	accessRawDiffs?: boolean;
 }
 
 /**
@@ -37,42 +63,8 @@ export enum ProviderPullRequestActionsTypes {
  * 	}
  */
 export type ProviderPullRequestsState = {
-	myPullRequests: GetMyPullRequestsResponse[][];
-	pullRequests: Index<
-		Index<{
-			conversations: any;
-
-			/**
-			 * Client side date tracking of when this was last added to the redux store
-			 *
-			 * @type {(number | undefined)}
-			 */
-			conversationsLastFetch: number | undefined;
-			files?: { [key: string]: GetCommitsFilesResponse[] };
-			collaborators?: any[];
-			commits?: FetchThirdPartyPullRequestCommitsResponse[];
-			error?: { message: string };
-			accessRawDiffs?: boolean;
-		}>
-	>;
-};
-
-export type RepoPullRequest = {
-	conversations: {
-		// github
-		repository?: {
-			repoName: string;
-			url: string;
-		};
-		// gitlab
-		project?: {
-			name: string;
-			repoName: string;
-			mergeRequest: {
-				webUrl: string;
-			};
-		};
-	};
+	myPullRequests: Index<{ data?: GetMyPullRequestsResponse[][] }>;
+	pullRequests: Index<Index<RepoPullRequest>>;
 };
 
 export type RepoMatchReason = "remote" | "repoName" | "matchedOnProviderUrl" | "closestMatch";

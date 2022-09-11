@@ -18,6 +18,7 @@ import { PullRequestQuery } from "@codestream/protocols/api";
 import { PullRequest } from "@codestream/protocols/webview";
 import { logError } from "@codestream/webview/logger";
 import { setProviderError } from "@codestream/webview/store/codeErrors/thunks";
+import { createAppAsyncThunk } from "@codestream/webview/store/helper";
 import {
 	addMyPullRequests,
 	addPullRequestCollaborators,
@@ -32,7 +33,7 @@ import {
 } from "@codestream/webview/store/providerPullRequests/slice";
 import { HostApi } from "@codestream/webview/webview-api";
 import { RequestType } from "vscode-languageserver-protocol";
-import { createAppAsyncThunk } from "..";
+import { CodeStreamState } from "..";
 import { action } from "../common";
 import {
 	setCurrentPullRequest,
@@ -63,12 +64,7 @@ const _getPullRequestConversationsFromProvider = async (
 		response1.repository.repoName
 	) {
 		boardId = `${response1.repository.repoOwner}/${response1.repository.repoName}`;
-	} else if (
-		response1 &&
-		(response1 as any).project &&
-		(response1 as any).project.mergeRequest &&
-		(response1 as any).project.mergeRequest.repository.nameWithOwner
-	) {
+	} else if (response1?.project?.mergeRequest?.repository?.nameWithOwner) {
 		// gitlab requires this to be encoded
 		boardId = encodeURIComponent((response1 as any).project.mergeRequest.repository.nameWithOwner);
 	}
@@ -133,12 +129,12 @@ export const getPullRequestConversationsFromProvider = createAppAsyncThunk<
 });
 
 export const getPullRequestConversations = createAppAsyncThunk<
-	FetchThirdPartyPullRequestResponse | undefined,
+	FetchThirdPartyPullRequestResponse | { error: Error } | undefined,
 	PullRequestIdPayload
 >("providerPullRequests/getPullRequestConversations", async (request, { getState, dispatch }) => {
 	const { providerId, id } = request;
 	try {
-		const state = getState();
+		const state: CodeStreamState = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		if (provider) {
 			const pr = provider[id];

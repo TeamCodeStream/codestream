@@ -1,48 +1,44 @@
 import {
+	FetchThirdPartyPullRequestPullRequest,
+	GetReposScmRequestType,
+} from "@codestream/protocols/agent";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import { CodeStreamState } from "@codestream/webview/store";
+import { HostApi } from "@codestream/webview/webview-api";
+import { prettyPrintOne } from "code-prettify";
+import { isEmpty } from "lodash-es";
+import * as Path from "path-browserify";
+import React, { PropsWithChildren, useEffect, useState } from "react";
+import styled from "styled-components";
+import { Position, Range } from "vscode-languageserver-types";
+import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
+import { EditorScrollToNotificationType } from "../ipc/webview.protocol";
+import { Button } from "../src/components/Button";
+import {
+	getProviderPullRequestCollaborators,
+	getProviderPullRequestRepo,
+	getPullRequestId,
+} from "../store/providerPullRequests/slice";
+import { api } from "../store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { escapeHtml } from "../utils";
+import Icon from "./Icon";
+import { MarkdownText } from "./MarkdownText";
+import { PullRequestCommentMenu } from "./PullRequestCommentMenu";
+import {
 	PRActionIcons,
 	PRButtonRow,
 	PRCodeCommentBody,
 	PRCodeCommentWrapper,
 	PRThreadedCommentHeader,
 } from "./PullRequestComponents";
-import React, { PropsWithChildren, useState, useEffect } from "react";
-import Timestamp from "./Timestamp";
-import Icon from "./Icon";
-import { MarkdownText } from "./MarkdownText";
-import {
-	FetchThirdPartyPullRequestPullRequest,
-	GetReposScmRequestType,
-} from "@codestream/protocols/agent";
 import { PRAuthorBadges } from "./PullRequestConversationTab";
-import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
-import { PullRequestCommentMenu } from "./PullRequestCommentMenu";
-import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
 import { PullRequestEditingComment } from "./PullRequestEditingComment";
+import { PullRequestMinimizedComment } from "./PullRequestMinimizedComment";
+import { PullRequestReactButton, PullRequestReactions } from "./PullRequestReactions";
 import { PullRequestReplyComment } from "./PullRequestReplyComment";
-import { Button } from "../src/components/Button";
-import { api } from "../store/providerPullRequests/thunks";
-import { useDispatch, useSelector } from "react-redux";
 import { GHOST } from "./PullRequestTimelineItems";
-import { prettyPrintOne } from "code-prettify";
-import { escapeHtml } from "../utils";
-import * as Path from "path-browserify";
-import styled from "styled-components";
-import { HostApi } from "@codestream/webview/webview-api";
-import { CodeStreamState } from "@codestream/webview/store";
-import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
-import {
-	getProviderPullRequestCollaborators,
-	getProviderPullRequestRepo,
-	getPullRequestId,
-} from "../store/providerPullRequests/slice";
-import {
-	EditorHighlightRangeRequestType,
-	EditorRevealRangeRequestType,
-} from "@codestream/protocols/webview";
-import { EditorScrollToNotificationType } from "../ipc/webview.protocol";
-import { Range, Position } from "vscode-languageserver-types";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { isEmpty } from "lodash-es";
+import Timestamp from "./Timestamp";
 
 const PRBranchContainer = styled.div`
 	display: inline-block;
@@ -200,7 +196,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 						pullRequest: {
 							providerId: pr.providerId,
 							id: derivedState.pullRequestId,
-							collaborators: derivedState.collaborators,
+							collaborators: derivedState.collaborators!,
 						},
 				  }
 				: undefined,
