@@ -35,7 +35,7 @@ import {
 } from "@codestream/protocols/api";
 import { HostApi } from "../webview-api";
 import { FollowCodemarkRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray, emptyObject } from "../utils";
+import { range, emptyArray } from "../utils";
 import {
 	getUserByCsId,
 	getTeamMembers,
@@ -328,7 +328,7 @@ export class Codemark extends React.Component<Props, State> {
 			tags,
 			codeBlocks,
 			deleteMarkerLocations,
-			sharedTo: this.props.post?.sharedTo
+			sharedTo: this.props.post?.sharedTo,
 		});
 		this.setState({ isEditing: false });
 	};
@@ -1300,7 +1300,7 @@ export class Codemark extends React.Component<Props, State> {
 			marker,
 			isRepositioning,
 			repositionCodemark,
-			post
+			post,
 		} = this.props;
 		const { menuOpen, menuTarget, isInjecting } = this.state;
 
@@ -1325,7 +1325,7 @@ export class Codemark extends React.Component<Props, State> {
 			menuItems.push({
 				label: "Share",
 				key: "share",
-				action: () => this.setState({ shareModalOpen: true })
+				action: () => this.setState({ shareModalOpen: true }),
 			});
 		}
 
@@ -1380,7 +1380,7 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (this.props.moveMarkersEnabled && repositionCodemark) {
+		if (this.props.moveMarkersEnabled) {
 			if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
 				const submenu = codemark.markers.map((m, index) => {
 					let label = "Code Location #" + (index + 1);

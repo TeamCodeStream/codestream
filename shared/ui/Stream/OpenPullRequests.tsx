@@ -400,7 +400,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							throwOnError: true,
 						};
 						const response = await dispatch(getMyPullRequests(prRequest)).unwrap();
-						// const response = eponse.unwrap();
 						if (response && response.length) {
 							count = 0;
 							response.forEach(group => (count! += group.length));

@@ -140,7 +140,7 @@ export function mapFilter<A, B>(array: A[], fn: (item: A) => B | undefined | nul
 // Sort an array of objects based on order of a seperate array
 export function mapOrder(array: any = [], order: string[] = [], key: string = "") {
 	if (array.length > 0 && order.length > 0 && key) {
-		array.sort(function(a, b) {
+		array.sort(function (a, b) {
 			var A = a[key],
 				B = b[key];
 
@@ -166,7 +166,7 @@ export function mapOrder(array: any = [], order: string[] = [], key: string = ""
   will return
   ["a", "c"]
 */
-export function keyFilter<A>(hash: A): string[] {
+export function keyFilter<A extends object>(hash: A): string[] {
 	const result: string[] = [];
 	Object.keys(hash).map(a => {
 		if (hash[a]) result.push(a);
@@ -175,7 +175,7 @@ export function keyFilter<A>(hash: A): string[] {
 }
 
 /* just like keyFilter only returns all the keys for whome the values are falsey */
-export function keyFilterFalsey<A>(hash: A): string[] {
+export function keyFilterFalsey<A extends object>(hash: A): string[] {
 	const result: string[] = [];
 	Object.keys(hash).map(a => {
 		if (!hash[a]) result.push(a);
@@ -206,7 +206,7 @@ export const debounceToAnimationFrame = (fn: Function) => {
 	// const label = `fn[${i}]`;
 	// let resetTimer = true;
 	// console.debug(`${label} registered for debouncing`, fn);
-	return function(...args: any[]) {
+	return function (...args: any[]) {
 		// if (resetTimer) {
 		// 	console.time(label);
 		// 	resetTimer = false;
@@ -250,7 +250,7 @@ export const rAFThrottle = (fn: Function) => {
 	let requestId: number | undefined;
 	let lastArgs: any[] = [];
 
-	const throttledFn = function(...args: any[]) {
+	const throttledFn = function (...args: any[]) {
 		lastArgs = args;
 		if (requestId) {
 			console.debug(`rAFThrottle is throttling a call to ${fn}. new args are`, args);
@@ -270,7 +270,7 @@ export const rAFThrottle = (fn: Function) => {
 };
 
 export function toMapBy<Key extends keyof T, T>(key: Key, entities: T[]): { [key: string]: T } {
-	return entities.reduce(function(map, entity) {
+	return entities.reduce(function (map, entity) {
 		map[entity[key]] = entity;
 		return map;
 	}, Object.create(null));
@@ -361,7 +361,7 @@ export const createRange = (node: any, chars: any, range?: any) => {
 	return range;
 };
 
-export function logDiff<Props, State>(context, prevProps: Props) {
+export function logDiff<Props extends object, State>(context, prevProps: Props) {
 	const name = context.constructor.displayName || context.constructor.name || "Component";
 	console.group(name);
 	console.debug("props", { prevProps, currProps: context.props });
@@ -378,7 +378,7 @@ const htmlEscapeCharMap = {
 	"<": "&lt;",
 	">": "&gt;",
 	'"': "&quot;",
-	"'": "&#039;"
+	"'": "&#039;",
 };
 
 /**
@@ -493,7 +493,7 @@ export function arrayDiff(
 		newArray &&
 		!(
 			originalArray.length === newArray.length &&
-			newArray.sort().every(function(value, index) {
+			newArray.sort().every(function (value, index) {
 				return value === originalArray.sort()[index];
 			})
 		)
@@ -527,7 +527,7 @@ function cssColorToRGB(color): { r: number; g: number; b: number } {
 		return {
 			r: matched[1],
 			g: matched[2],
-			b: matched[3]
+			b: matched[3],
 		};
 	}
 
@@ -535,7 +535,7 @@ function cssColorToRGB(color): { r: number; g: number; b: number } {
 	return {
 		r: hexAsRgb >> 16,
 		g: (hexAsRgb >> 8) & 255,
-		b: hexAsRgb & 255
+		b: hexAsRgb & 255,
 	};
 }
 
