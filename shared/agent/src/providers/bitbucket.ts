@@ -1,5 +1,4 @@
 "use strict";
-import { ConnectionLspLogger } from "agent";
 import { GitRemoteLike } from "git/gitService";
 import { flatten } from "lodash";
 import * as qs from "querystring";
@@ -12,6 +11,7 @@ import {
 	BitbucketCreateCardRequest,
 	BitbucketCreateCardResponse,
 	CreateThirdPartyCardRequest,
+	DidChangePullRequestCommentsNotificationType,
 	FetchAssignableUsersAutocompleteRequest,
 	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
@@ -20,10 +20,8 @@ import {
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
 	FetchThirdPartyCardWorkflowResponse,
-	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
-	FetchThirdPartyPullRequestRepository,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsRequest,
@@ -422,6 +420,7 @@ export class BitbucketProvider
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		this._knownRepos.clear();
 		this._reposWithIssues = [];
+		this._pullRequestCache.clear();
 		return super.onDisconnected(request);
 	}
 
@@ -604,91 +603,113 @@ export class BitbucketProvider
 	): Promise<FetchThirdPartyPullRequestResponse> {
 		await this.ensureConnected();
 
-		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
-
-		const pr = await this.get<BitbucketPullRequest>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
-		);
-
-		const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
-		);
-		// Tree here? ==>  This is working; creates proper structure
-		const listToTree: any = (
-			arr: { id: string; replies: any[]; parent: { id: string } }[] = []
-		) => {
-			let map: any = {};
-			let res: any = [];
-			for (let i = 0; i < arr.length; i++) {
-				if (!arr[i].replies) {
-					arr[i].replies = [];
-				}
-				// console.log((map[arr[i].id] = i));
-				map[arr[i].id] = i;
-				if (!arr[i].parent) {
-					res.push(arr[i]);
-				} else {
-					arr[map[arr[i].parent.id]].replies.push(arr[i]);
-				}
+		if (request.force) {
+			this._pullRequestCache.delete(request.pullRequestId);
+		} else {
+			const cached = this._pullRequestCache.get(request.pullRequestId);
+			if (cached) {
+				return cached;
 			}
-			// console.log("res: ", res);
-			return res;
-		};
-		const filterComments = comments.body.values
-			.filter((_) => !_.deleted)
-			.map((_: BitbucketPullRequestComment) => {
-				return this.mapComment(_);
-			}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment2>;
-		// console.log("comments.body.values: ", comments.body.values);
-		// console.log(JSON.stringify(listToTree(comments.body.values), undefined, 4));
-		const treeComments = listToTree(filterComments);
-		// console.log("treeComments: ", JSON.stringify(treeComments, undefined, 4));
+		}
+		let response: FetchThirdPartyPullRequestResponse;
+		try {
+			const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 
-		const repoWithOwnerSplit = repoWithOwner.split("/");
+			const pr = await this.get<BitbucketPullRequest>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
+			);
 
-		// TODO implementation
+			const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
+			);
+			const listToTree: any = (
+				arr: { id: string; replies: any[]; parent: { id: string } }[] = []
+			) => {
+				let map: any = {};
+				let res: any = [];
+				for (let i = 0; i < arr.length; i++) {
+					if (!arr[i].replies) {
+						arr[i].replies = [];
+					}
+					map[arr[i].id] = i;
+					if (!arr[i].parent) {
+						res.push(arr[i]);
+					} else {
+						arr[map[arr[i].parent.id]].replies.push(arr[i]);
+					}
+				}
 
-		const response: FetchThirdPartyPullRequestResponse = {
-			viewer: {} as any,
-			repository: {
-				id: pr.body.id + "",
-				url: pr.body.source?.repository?.links?.html?.href,
-				// TODO start
-				resourcePath: "",
-				rebaseMergeAllowed: true,
-				squashMergeAllowed: true,
-				mergeCommitAllowed: true,
-				viewerDefaultMergeMethod: "MERGE",
-				viewerPermission: "READ",
-				// TODO end
-				repoOwner: repoWithOwnerSplit[0],
-				repoName: repoWithOwnerSplit[1],
-				providerId: this.providerConfig.id,
+				return res;
+			};
+			const filterComments = comments.body.values
+				.filter((_) => !_.deleted)
+				.map((_: BitbucketPullRequestComment) => {
+					return this.mapComment(_);
+				}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment2>;
 
-				branchProtectionRules: undefined,
-				pullRequest: {
-					baseRefOid: pr.body.destination.commit.hash,
-					headRefOid: pr.body.source.commit.hash,
-					comments: treeComments || [],
-					number: pr.body.id,
-					idComputed: JSON.stringify({
-						id: pr.body.id,
-						pullRequestId: pr.body.id,
-						repoWithOwner: repoWithOwner,
-					}),
+			const treeComments = listToTree(filterComments);
+
+			const repoWithOwnerSplit = repoWithOwner.split("/");
+
+			// TODO implementation
+
+			response = {
+				viewer: {} as any,
+				repository: {
+					id: pr.body.id + "",
+					url: pr.body.source?.repository?.links?.html?.href,
+					// TODO start
+					resourcePath: "",
+					rebaseMergeAllowed: true,
+					squashMergeAllowed: true,
+					mergeCommitAllowed: true,
+					viewerDefaultMergeMethod: "MERGE",
+					viewerPermission: "READ",
+					// TODO end
+					repoOwner: repoWithOwnerSplit[0],
+					repoName: repoWithOwnerSplit[1],
 					providerId: this.providerConfig.id,
-					repository: {
-						name: repoWithOwnerSplit[1],
-						nameWithOwner: repoWithOwner,
-						url: pr.body.source?.repository?.links?.html?.href,
-					},
-					state: pr.body.state,
-				} as any, //TODO: make this work
-			},
-		};
 
-		// TODO fix this any
-		return response as any;
+					branchProtectionRules: undefined,
+					pullRequest: {
+						baseRefOid: pr.body.destination.commit.hash,
+						headRefOid: pr.body.source.commit.hash,
+						comments: treeComments || [],
+						number: pr.body.id,
+						idComputed: JSON.stringify({
+							id: pr.body.id,
+							pullRequestId: pr.body.id,
+							repoWithOwner: repoWithOwner,
+						}),
+						providerId: this.providerConfig.id,
+						repository: {
+							name: repoWithOwnerSplit[1],
+							nameWithOwner: repoWithOwner,
+							url: pr.body.source?.repository?.links?.html?.href,
+						},
+						state: pr.body.state,
+					} as any, //TODO: make this work
+				},
+			};
+
+			this._pullRequestCache.set(request.pullRequestId, response);
+		} catch (ex) {
+			Logger.error(ex, "getPullRequest", {
+				request: request,
+			});
+			return {
+				error: {
+					message: ex.message,
+				},
+			} as any;
+		}
+
+		Logger.log("getPullRequest returning", {
+			id: request.pullRequestId,
+			repository: response.repository.pullRequest.repository,
+		});
+
+		return response;
 	}
 
 	@log()
@@ -1118,12 +1139,7 @@ export class BitbucketProvider
 	}
 
 	async getPullRequestReviewId(request: { pullRequestId: string }): Promise<string | undefined> {
-		// TODO implementation (aka find out if there is an existing PR review for this PR & user combo)
-		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
-		// https://gitlab.com/gitlab-org/gitlab/-/blob/1cb9fe25/doc/api/README.md#id-vs-iid
-		// id - Is unique across all issues and is used for any API call
-		// iid - Is unique only in scope of a single project. When you browse issues or merge requests with the Web UI, you see the iid
-
+		// BB doesn't support review objects
 		return undefined;
 	}
 
@@ -1159,15 +1175,7 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
 			payload
 		);
-		/**
-		 * TODO
-		 * .5) Ensure we have workspace/repo info in the request (check pullRequestId for parsing -- it might be lik {id:6 owner:foo repo: bar})
-		 * 1) call BB PR api to create a PR comment
-		 * 2) check on CS return directives (besides updatePullRequest)
-		 * 3) setup a PR cache (like  github.ts has)
-		 * 4) trigger a DidChangePullRequestCommentsNotificationType notification
-		 * 5) update updatedAt
-		 */
+
 		const directives: Directive[] = [
 			{
 				type: "updatePullRequest",
@@ -1181,6 +1189,14 @@ export class BitbucketProvider
 			},
 		];
 
+		this.updateCache(request.pullRequestId, {
+			directives: directives,
+		});
+
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.path,
+		});
 		return {
 			directives: directives,
 		};
@@ -1225,7 +1241,71 @@ export class BitbucketProvider
 			},
 		];
 
-		return { directives: directives };
+		return this.handleResponse(request.pullRequestId, {
+			directives: directives,
+		});
+	}
+
+	private handleResponse(pullRequestId: string, directives: Directives) {
+		this.updateCache(pullRequestId, directives);
+
+		return directives;
+	}
+
+	private _pullRequestCache: Map<string, FetchThirdPartyPullRequestResponse> = new Map();
+
+	private updateCache(pullRequestId: string, directives: Directives) {
+		if (!directives?.directives) {
+			Logger.warn(`Attempting to update cache without directives. id=${pullRequestId}`);
+			return;
+		}
+		const prWrapper = this._pullRequestCache.get(pullRequestId);
+		if (!prWrapper) {
+			Logger.warn(`Attempting to update cache without PR. id=${pullRequestId}`);
+			return;
+		}
+		const pr = prWrapper.repository?.pullRequest;
+		if (!pr) {
+			Logger.warn(`Attempting to update cache without PR object. id=${pullRequestId}`);
+			return;
+		}
+		/**
+		 *
+		 *  KEEP THIS IN SYNC WITH providerPullReqests/reducer.ts
+		 *
+		 */
+		for (const directive of directives.directives) {
+			if (directive.type === "updatePullRequest") {
+				for (const key in directive.data) {
+					(pr as any)[key] = directive.data[key];
+				}
+			} else if (directive.type === "addNode") {
+				pr.comments = pr.comments || [];
+				pr.comments.push(directive.data);
+			} else if (directive.type === "addReply") {
+				pr.comments = pr.comments || [];
+				const findParent = function (
+					items: { id: number; replies: any[] }[],
+					data: { parent: { id: number } }
+				) {
+					for (const item of items) {
+						if (item.id === data.parent.id) {
+							item.replies = item.replies || [];
+							item.replies.push(data);
+							return;
+						}
+						if (item.replies?.length) {
+							findParent(item.replies, data);
+						}
+					}
+				};
+				if (directive?.data?.parent?.id) {
+					findParent(pr.comments, directive.data);
+				} else {
+					console.warn("missing parent.id", directive);
+				}
+			}
+		}
 	}
 
 	parseId(pullRequestId: string): { id: string; pullRequestId: string; repoWithOwner: string } {
