@@ -31,7 +31,7 @@ import {
 	ProviderGetForkedReposResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
-	ThirdPartyPullRequestComments,
+	ThirdPartyPullRequestComments
 } from "../protocol/agent.protocol";
 import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
@@ -45,7 +45,7 @@ import {
 	ProviderPullRequestInfo,
 	PullRequestComment,
 	ThirdPartyProviderSupportsIssues,
-	ThirdPartyProviderSupportsPullRequests,
+	ThirdPartyProviderSupportsPullRequests
 } from "./provider";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
@@ -368,10 +368,8 @@ interface BitbucketValues<T> {
  * @see https://developer.atlassian.com/bitbucket/api/2/reference/
  */
 @lspProvider("bitbucket")
-export class BitbucketProvider
-	extends ThirdPartyIssueProviderBase<CSBitbucketProviderInfo>
-	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests
-{
+export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketProviderInfo>
+	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _knownRepos = new Map<string, BitbucketRepo>();
 	private _reposWithIssues: BitbucketRepo[] = [];
 
@@ -386,7 +384,7 @@ export class BitbucketProvider
 	get headers() {
 		return {
 			Authorization: `Bearer ${this.accessToken}`,
-			"Content-Type": "application/json",
+			"Content-Type": "application/json"
 		};
 	}
 
@@ -395,19 +393,19 @@ export class BitbucketProvider
 			provider: {
 				name: this.displayName,
 				icon: this.name,
-				id: this.providerConfig.id,
+				id: this.providerConfig.id
 			},
 			subhead: `#${comment.pullRequest.id}`,
 			actions: [
 				{
 					label: "Open Comment",
-					uri: comment.url,
+					uri: comment.url
 				},
 				{
 					label: `Open Merge Request #${comment.pullRequest.id}`,
-					uri: comment.pullRequest.url,
-				},
-			],
+					uri: comment.pullRequest.url
+				}
+			]
 		};
 	}
 
@@ -429,8 +427,8 @@ export class BitbucketProvider
 		void (await this.ensureConnected());
 
 		const openRepos = await getOpenedRepos<BitbucketRepo>(
-			(r) => r.domain === "bitbucket.org",
-			(p) => this.get<BitbucketRepo>(`/repositories/${p}`),
+			r => r.domain === "bitbucket.org",
+			p => this.get<BitbucketRepo>(`/repositories/${p}`),
 			this._knownRepos
 		);
 
@@ -438,42 +436,42 @@ export class BitbucketProvider
 		if (openRepos.size > 0) {
 			const bitbucketRepos = Array.from(openRepos.values());
 			boards = bitbucketRepos
-				.filter((r) => r.has_issues)
-				.map((r) => ({
+				.filter(r => r.has_issues)
+				.map(r => ({
 					id: r.uuid,
 					name: r.full_name,
 					apiIdentifier: r.full_name,
 					path: r.path,
-					singleAssignee: true, // bitbucket issues only allow one assignee
+					singleAssignee: true // bitbucket issues only allow one assignee
 				}));
 		} else {
 			let bitbucketRepos: BitbucketRepo[] = [];
 			try {
 				let apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
 					`/user/permissions/repositories?${qs.stringify({
-						fields: "+values.repository.has_issues",
+						fields: "+values.repository.has_issues"
 					})}`
 				);
-				bitbucketRepos = apiResponse.body.values.map((p) => p.repository);
+				bitbucketRepos = apiResponse.body.values.map(p => p.repository);
 				while (apiResponse.body.next) {
 					apiResponse = await this.get<BitbucketValues<BitbucketPermission[]>>(
 						apiResponse.body.next
 					);
-					bitbucketRepos = bitbucketRepos.concat(apiResponse.body.values.map((p) => p.repository));
+					bitbucketRepos = bitbucketRepos.concat(apiResponse.body.values.map(p => p.repository));
 				}
 			} catch (err) {
 				Logger.error(err);
 				debugger;
 			}
-			bitbucketRepos = bitbucketRepos.filter((r) => r.has_issues);
+			bitbucketRepos = bitbucketRepos.filter(r => r.has_issues);
 			this._reposWithIssues = [...bitbucketRepos];
-			boards = bitbucketRepos.map((r) => {
+			boards = bitbucketRepos.map(r => {
 				return {
 					...r,
 					id: r.uuid,
 					name: r.full_name,
 					apiIdentifier: r.full_name,
-					singleAssignee: true, // bitbucket issues only allow one assignee
+					singleAssignee: true // bitbucket issues only allow one assignee
 				};
 			});
 		}
@@ -495,19 +493,19 @@ export class BitbucketProvider
 		const cards: ThirdPartyProviderCard[] = [];
 		if (this._reposWithIssues.length === 0) await this.getBoards();
 		await Promise.all(
-			this._reposWithIssues.map(async (repo) => {
+			this._reposWithIssues.map(async repo => {
 				const { body } = await this.get<{ uuid: string; [key: string]: any }>(
 					`/repositories/${repo.full_name}/issues`
 				);
 				// @ts-ignore
-				body.values.forEach((card) => {
+				body.values.forEach(card => {
 					cards.push({
 						id: card.id,
 						url: card.links.html.href,
 						title: card.title,
 						modifiedAt: new Date(card.updated_on).getTime(),
 						tokenId: card.id,
-						body: card.content ? card.content.raw : "",
+						body: card.content ? card.content.raw : ""
 					});
 				});
 			})
@@ -524,8 +522,8 @@ export class BitbucketProvider
 			title: data.title,
 			content: {
 				raw: data.description,
-				markup: "markdown",
-			},
+				markup: "markdown"
+			}
 		};
 		if (data.assignee) {
 			cardData.assignee = { uuid: data.assignee.uuid };
@@ -620,7 +618,7 @@ export class BitbucketProvider
 			);
 
 			const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`
 			);
 			const listToTree: any = (
 				arr: { id: string; replies: any[]; parent: { id: string } }[] = []
@@ -642,7 +640,7 @@ export class BitbucketProvider
 				return res;
 			};
 			const filterComments = comments.body.values
-				.filter((_) => !_.deleted)
+				.filter(_ => !_.deleted)
 				.map((_: BitbucketPullRequestComment) => {
 					return this.mapComment(_);
 				}) as ThirdPartyPullRequestComments<BitbucketPullRequestComment2>;
@@ -679,34 +677,34 @@ export class BitbucketProvider
 						idComputed: JSON.stringify({
 							id: pr.body.id,
 							pullRequestId: pr.body.id,
-							repoWithOwner: repoWithOwner,
+							repoWithOwner: repoWithOwner
 						}),
 						providerId: this.providerConfig.id,
 						repository: {
 							name: repoWithOwnerSplit[1],
 							nameWithOwner: repoWithOwner,
-							url: pr.body.source?.repository?.links?.html?.href,
+							url: pr.body.source?.repository?.links?.html?.href
 						},
-						state: pr.body.state,
-					} as any, //TODO: make this work
-				},
+						state: pr.body.state
+					} as any //TODO: make this work
+				}
 			};
 
 			this._pullRequestCache.set(request.pullRequestId, response);
 		} catch (ex) {
 			Logger.error(ex, "getPullRequest", {
-				request: request,
+				request: request
 			});
 			return {
 				error: {
-					message: ex.message,
-				},
+					message: ex.message
+				}
 			} as any;
 		}
 
 		Logger.log("getPullRequest returning", {
 			id: request.pullRequestId,
-			repository: response.repository.pullRequest.repository,
+			repository: response.repository.pullRequest.repository
 		});
 
 		return response;
@@ -721,13 +719,13 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 		);
 
-		const response = items.body.values.map((commit) => {
+		const response = items.body.values.map(commit => {
 			const author = {
 				name: commit.author.display_name,
 				avatarUrl: commit.author.user.avatar?.html?.href,
 				user: {
-					login: commit.author.account_id,
-				},
+					login: commit.author.account_id
+				}
 			};
 			return {
 				abbreviatedOid: commit.hash,
@@ -736,7 +734,7 @@ export class BitbucketProvider
 				message: commit.message,
 				authoredDate: commit.date,
 				oid: commit.hash,
-				url: commit.links.html,
+				url: commit.links.html
 			} as FetchThirdPartyPullRequestCommitsResponse;
 		});
 		return response;
@@ -755,7 +753,7 @@ export class BitbucketProvider
 		// 	`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diff`
 		// );
 
-		const response = items.body.values.map((file) => {
+		const response = items.body.values.map(file => {
 			return {
 				sha: "", //TODO: fix this
 				filename: file.new?.path,
@@ -765,7 +763,7 @@ export class BitbucketProvider
 				additions: file?.lines_added,
 				changes: 0, //TODO: check documentation
 				deletions: file?.lines_removed,
-				patch: "",
+				patch: ""
 				// TODO end
 			} as FetchThirdPartyPullRequestFilesResponse;
 		});
@@ -780,8 +778,8 @@ export class BitbucketProvider
 			bodyText: _.content?.raw,
 			state: _.type,
 			author: {
-				login: _.user.display_name,
-			},
+				login: _.user.display_name
+			}
 		} as BitbucketPullRequestComment2;
 	}
 
@@ -804,7 +802,7 @@ export class BitbucketProvider
 		const name = toRepoName(split[2]);
 		return {
 			owner,
-			name,
+			name
 		};
 	}
 
@@ -825,7 +823,7 @@ export class BitbucketProvider
 		const idComputed = JSON.stringify({
 			id: pullRequestId,
 			pullRequestId: pullRequestId,
-			repoWithOwner: repoWithOwner,
+			repoWithOwner: repoWithOwner
 		});
 		return idComputed;
 	}
@@ -846,7 +844,7 @@ export class BitbucketProvider
 			const repoInfo = await this.getRepoInfo({ remote: request.remote });
 			if (repoInfo && repoInfo.error) {
 				return {
-					error: repoInfo.error,
+					error: repoInfo.error
 				};
 			}
 			const { owner, name } = this.getOwnerFromRemote(request.remote);
@@ -859,17 +857,17 @@ export class BitbucketProvider
 					source: {
 						branch: { name: request.headRefName },
 						repository: {
-							full_name: request.headRefRepoNameWithOwner,
-						},
+							full_name: request.headRefRepoNameWithOwner
+						}
 					},
 					destination: {
 						branch: { name: request.baseRefName },
 						repository: {
-							full_name: request.baseRefRepoNameWithOwner,
-						},
+							full_name: request.baseRefRepoNameWithOwner
+						}
 					},
 					title: request.title,
-					description: this.createDescription(request),
+					description: this.createDescription(request)
 				});
 			} else {
 				createPullRequestResponse = await this.post<
@@ -879,20 +877,20 @@ export class BitbucketProvider
 					source: { branch: { name: request.headRefName } },
 					destination: { branch: { name: request.baseRefName } },
 					title: request.title,
-					description: this.createDescription(request),
+					description: this.createDescription(request)
 				});
 			}
 
 			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
 			return {
 				url: createPullRequestResponse.body.links.html.href,
-				title: title,
+				title: title
 			};
 		} catch (ex) {
 			Logger.error(ex, `${this.displayName}: createPullRequest`, {
 				remote: request.remote,
 				head: request.headRefName,
-				base: request.baseRefName,
+				base: request.baseRefName
 			});
 			let message = ex.message;
 			if (message.indexOf("credentials lack one or more required privilege scopes") > -1) {
@@ -902,8 +900,8 @@ export class BitbucketProvider
 			return {
 				error: {
 					type: "PROVIDER",
-					message: `${this.displayName}: ${message}`,
-				},
+					message: `${this.displayName}: ${message}`
+				}
 			};
 		}
 	}
@@ -918,13 +916,13 @@ export class BitbucketProvider
 			);
 			let pullRequests: ProviderPullRequestInfo[] = [];
 			if (pullRequestResponse && pullRequestResponse.body && pullRequestResponse.body.values) {
-				pullRequests = pullRequestResponse.body.values.map((_) => {
+				pullRequests = pullRequestResponse.body.values.map(_ => {
 					return {
 						id: _.id + "",
 						url: _.links!.html!.href,
 						baseRefName: _.destination.branch.name,
 						headRefName: _.source.branch.name,
-						nameWithOwner: _.source.repository.full_name,
+						nameWithOwner: _.source.repository.full_name
 					} as ProviderPullRequestInfo;
 				});
 			}
@@ -941,7 +939,7 @@ export class BitbucketProvider
 					repoResponse.body.mainbranch.type === "branch"
 						? repoResponse.body.mainbranch.name
 						: undefined,
-				pullRequests: pullRequests,
+				pullRequests: pullRequests
 			};
 		} catch (ex) {
 			return this.handleProviderError(ex, request);
@@ -1034,7 +1032,7 @@ export class BitbucketProvider
 		}
 
 		const username = usernameResponse.body.username;
-		const queriesSafe = request.prQueries.map((query) =>
+		const queriesSafe = request.prQueries.map(query =>
 			query.query.replace(/["']/g, '\\"').replace("@me", username)
 		);
 
@@ -1053,12 +1051,12 @@ export class BitbucketProvider
 
 		const providerId = this.providerConfig?.id;
 		const items = await Promise.all(
-			queriesSafe.map(async (query) => {
+			queriesSafe.map(async query => {
 				// TODO fix below
 				const results = {
 					body: {
-						values: [] as BitbucketPullRequest[],
-					},
+						values: [] as BitbucketPullRequest[]
+					}
 				};
 
 				if (reposWithOwners.length) {
@@ -1080,7 +1078,7 @@ export class BitbucketProvider
 					);
 				}
 			})
-		).catch((ex) => {
+		).catch(ex => {
 			Logger.error(ex, "getMyPullRequests");
 			let errString;
 			if (ex.response) {
@@ -1093,12 +1091,12 @@ export class BitbucketProvider
 		const response: GetMyPullRequestsResponse[][] = [];
 		items.forEach((item, index) => {
 			if (item?.body?.values?.length) {
-				response[index] = item.body.values.map((pr) => {
+				response[index] = item.body.values.map(pr => {
 					const lastEditedString = new Date(pr.updated_on).getTime() + "";
 					return {
 						author: {
 							avatarUrl: pr.author.links.avatar.href,
-							login: username,
+							login: username
 						},
 						baseRefName: pr.destination.branch.name,
 						body: pr.summary.html,
@@ -1107,24 +1105,24 @@ export class BitbucketProvider
 						headRefName: pr.source.branch.name,
 						headRepository: {
 							name: pr.source.repository.name,
-							nameWithOwner: pr.source.repository.full_name,
+							nameWithOwner: pr.source.repository.full_name
 						},
 						id: pr.id + "",
 						idComputed: JSON.stringify({
 							id: pr.id,
 							pullRequestId: pr.id,
-							repoWithOwner: pr.source.repository.full_name,
+							repoWithOwner: pr.source.repository.full_name
 						}),
 						lastEditedAt: lastEditedString,
 						labels: {
-							nodes: [],
+							nodes: []
 						},
 						number: pr.id,
 						providerId: providerId,
 						state: pr.state,
 						title: pr.title,
 						updatedAt: lastEditedString,
-						url: pr.links.html.href,
+						url: pr.links.html.href
 					} as GetMyPullRequestsResponse;
 				});
 				if (!request.prQueries[index].query.match(/\bsort:/)) {
@@ -1157,22 +1155,22 @@ export class BitbucketProvider
 	}): Promise<Directives> {
 		const payload: BitBucketCreateCommentRequest = {
 			content: {
-				raw: request.text,
+				raw: request.text
 			},
 			inline: {
 				to: request.startLine,
-				path: request.path,
-			},
+				path: request.path
+			}
 		};
 
 		Logger.log(`commenting:createCommitComment`, {
 			request: request,
-			payload: payload,
+			payload: payload
 		});
 
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`,
 			payload
 		);
 
@@ -1180,25 +1178,25 @@ export class BitbucketProvider
 			{
 				type: "updatePullRequest",
 				data: {
-					updatedAt: new Date().getTime() as any,
-				},
+					updatedAt: new Date().getTime() as any
+				}
 			},
 			{
 				type: "addNode",
-				data: this.mapComment(response.body),
-			},
+				data: this.mapComment(response.body)
+			}
 		];
 
 		this.updateCache(request.pullRequestId, {
-			directives: directives,
+			directives: directives
 		});
 
 		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
 			pullRequestId: request.pullRequestId,
-			filePath: request.path,
+			filePath: request.path
 		});
 		return {
-			directives: directives,
+			directives: directives
 		};
 	}
 
@@ -1210,21 +1208,21 @@ export class BitbucketProvider
 	}): Promise<Directives> {
 		const payload: BitBucketCreateCommentRequest = {
 			content: {
-				raw: request.text,
+				raw: request.text
 			},
 			parent: {
-				id: request.commentId,
-			},
+				id: request.commentId
+			}
 		};
 
 		Logger.log(`commenting:createCommentReply`, {
 			request: request,
-			payload: payload,
+			payload: payload
 		});
 
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`,
 			payload
 		);
 
@@ -1232,17 +1230,17 @@ export class BitbucketProvider
 			{
 				type: "updatePullRequest",
 				data: {
-					updatedAt: new Date().getTime(),
-				},
+					updatedAt: new Date().getTime()
+				}
 			},
 			{
 				type: "addReply",
-				data: this.mapComment(response.body),
-			},
+				data: this.mapComment(response.body)
+			}
 		];
 
 		return this.handleResponse(request.pullRequestId, {
-			directives: directives,
+			directives: directives
 		});
 	}
 
@@ -1284,7 +1282,7 @@ export class BitbucketProvider
 				pr.comments.push(directive.data);
 			} else if (directive.type === "addReply") {
 				pr.comments = pr.comments || [];
-				const findParent = function (
+				const findParent = function(
 					items: { id: number; replies: any[] }[],
 					data: { parent: { id: number } }
 				) {
@@ -1316,7 +1314,7 @@ export class BitbucketProvider
 		return {
 			id: parsed.id || parsed.pullRequestId,
 			pullRequestId: parsed.pullRequestId,
-			repoWithOwner: parsed.repoWithOwner,
+			repoWithOwner: parsed.repoWithOwner
 		};
 	}
 }
