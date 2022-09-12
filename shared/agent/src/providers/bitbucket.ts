@@ -809,12 +809,15 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	async getPullRequestIdFromUrl(request: { url: string }) {
 		// url string looks like: https://bitbucket.org/{workspace}/{repo_slug}/pull-requests/{pull_request_id}
 
+		const { owner, name } = this.getOwnerFromRemote(request.url);
+		// console.log("owner ", owner); //{workspace}
+		// console.log("name ", name); // {repo_slug}
 		const uri = URI.parse(request.url);
 		const path = uri.path.split("/");
 
 		// path:  [ '', 'workspace', 'repo_slub', 'pull-requests', 'pull_request_id' ]
 		// TODO: Make this better???
-		const repoWithOwner = path[1] + "/" + path[2];
+		const repoWithOwner = owner + "/" + name;
 		const pullRequestId = path[4];
 
 		// console.log("uri: ", uri);
