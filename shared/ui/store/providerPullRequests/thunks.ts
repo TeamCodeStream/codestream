@@ -97,23 +97,19 @@ export const getPullRequestConversationsFromProvider = createAppAsyncThunk<
 >("providerPullRequests/getPullRequestConversationsFromProvider", async (request, { dispatch }) => {
 	const { providerId, id } = request;
 	try {
-		console.info("clearPullRequestError");
 		dispatch(clearPullRequestError(request));
 
-		console.info("_getPullRequestConversationsFromProvider");
 		const responses = await _getPullRequestConversationsFromProvider(
 			providerId,
 			id,
 			"getPullRequestConversationsFromProvider"
 		);
-		console.info("addPullRequestConversations");
 		dispatch(
 			addPullRequestConversations({
 				...request,
 				conversations: responses.conversations,
 			})
 		);
-		console.info("addPullRequestCollaborators");
 		dispatch(
 			addPullRequestCollaborators({
 				...request,
@@ -358,23 +354,20 @@ export const getMyPullRequests = createAppAsyncThunk<
 export const getPullRequestCommitsFromProvider = createAppAsyncThunk<
 	FetchThirdPartyPullRequestCommitsResponse[] | undefined,
 	PullRequestIdPayload
->(
-	"providerPullRequests/getPullRequestCommitsFromProvider",
-	async (request, { getState, dispatch }) => {
-		const { id, providerId } = request;
-		try {
-			const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
-				providerId,
-				pullRequestId: id,
-			});
-			dispatch(addPullRequestCommits({ ...request, pullRequestCommits: response }));
-			return response;
-		} catch (error) {
-			logError(error, { detail: `failed to refresh pullRequest commits`, providerId, id });
-		}
-		return undefined;
+>("providerPullRequests/getPullRequestCommitsFromProvider", async (request, { dispatch }) => {
+	const { id, providerId } = request;
+	try {
+		const response = await HostApi.instance.send(FetchThirdPartyPullRequestCommitsType, {
+			providerId,
+			pullRequestId: id,
+		});
+		dispatch(addPullRequestCommits({ ...request, pullRequestCommits: response }));
+		return response;
+	} catch (error) {
+		logError(error, { detail: `failed to refresh pullRequest commits`, providerId, id });
 	}
-);
+	return undefined;
+});
 
 export interface GetPullRequestCommitsRequest extends PullRequestIdPayload {
 	options?: { force: true };
@@ -439,7 +432,7 @@ export interface OpenPullRequestByUrlResponse {
 export const openPullRequestByUrl = createAppAsyncThunk<
 	OpenPullRequestByUrlResponse | undefined,
 	OpenPullRequestByUrlRequest
->("providerPullReuqests/openPullRequestByUrl", async (request, { getState, dispatch }) => {
+>("providerPullRequests/openPullRequestByUrl", async (request, { dispatch }) => {
 	const { options, url } = request;
 	const prLabel = getPRLabelForProvider(options?.providerId || "");
 	const defaultErrorString = `Enter the URL for a specific ${prLabel.pullrequest}`;
@@ -592,7 +585,6 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 			const state = getState();
 			const currentPullRequest: PullRequest | undefined = state.context.currentPullRequest;
 			if (!currentPullRequest) {
-				console.info("=== setProviderError");
 				dispatch(
 					setProviderError(providerId, pullRequestId, {
 						message: "currentPullRequest not found",
@@ -615,12 +607,10 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 				params: params,
 			})) as any;
 			if (response && (!options || (options && !options.preventClearError))) {
-				console.info("=== clearPullRequestError");
 				dispatch(clearPullRequestError({ providerId, id: pullRequestId }));
 			}
 
 			if (response && response.directives) {
-				console.info("=== handleDirectives");
 				dispatch(
 					handleDirectives({
 						providerId,
@@ -663,7 +653,6 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 					}
 				}
 			}
-			console.info("=== setProviderError 2");
 			dispatch(
 				setProviderError(providerId, pullRequestId, {
 					message: errorString,
