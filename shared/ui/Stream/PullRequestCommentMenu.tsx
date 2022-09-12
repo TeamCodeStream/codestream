@@ -80,7 +80,11 @@ export const PullRequestCommentMenu = (props: CommentMenuProps) => {
 	}
 
 	if (!isPending && quote) {
-		items.push({ label: "Quote Reply", key: "quote", action: () => quote(node.body) });
+		items.push({
+			label: "Quote Reply",
+			key: "quote",
+			action: () => quote(node.body || node.bodyText)
+		});
 	}
 
 	if (

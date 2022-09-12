@@ -601,7 +601,9 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
 		);
 		// Tree here? ==>  This is working; creates proper structure
-		const listToTree: any = (arr: {id: string, replies: any[], parent: {id: string}}[] = []) => {
+		const listToTree: any = (
+			arr: { id: string; replies: any[]; parent: { id: string } }[] = []
+		) => {
 			let map: any = {};
 			let res: any = [];
 			for (let i = 0; i < arr.length; i++) {
@@ -769,19 +771,18 @@ export class BitbucketProvider
 	}
 
 	async getPullRequestIdFromUrl(request: { url: string }) {
-		// url string looks like: https://bitbucket.org/{reneepetit86/bitbucketpractice}/pull-requests/{1}
+		// url string looks like: https://bitbucket.org/{workspace}/{repo_slug}/pull-requests/{pull_request_id}
 
 		const uri = URI.parse(request.url);
 		const path = uri.path.split("/");
 
+		// path:  [ '', 'workspace', 'repo_slub', 'pull-requests', 'pull_request_id' ]
 		// TODO: Make this better???
 		const repoWithOwner = path[1] + "/" + path[2];
 		const pullRequestId = path[4];
 
 		// console.log("uri: ", uri);
 		// console.log("path: ", path);
-
-		// path:  [ '', 'reneepetit86', 'bitbucketpractice', 'pull-requests', '1' ]
 
 		const idComputed = JSON.stringify({
 			id: pullRequestId,
