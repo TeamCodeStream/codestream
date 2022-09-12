@@ -178,6 +178,7 @@ interface ConnectedProps {
 	repos: ReposState;
 	prLabel: LabelHash;
 	codeErrors: CodeErrorsState;
+	currentPullRequestSupportsReview?: boolean;
 }
 
 interface State {
@@ -310,19 +311,21 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (props.isEditing) {
 			const externalAssignees = this.props.editingCodemark!.externalAssignees || [];
 			assignees = externalAssignees
-				.map(a => ({
+				.map((a) => ({
 					value: a.displayName,
 					label: a.displayName,
 				}))
 				.concat(
-					mapFilter(this.props.editingCodemark!.assignees || [], a =>
+					mapFilter(this.props.editingCodemark!.assignees || [], (a) =>
 						state.assignableUsers.find((au: any) => au.value === a)
 					)
 				);
 		} else if (state.assignees === undefined) {
 			assignees = undefined;
 		} else if (Array.isArray(state.assignees)) {
-			assignees = state.assignees.map(a => state.assignableUsers.find((au: any) => au.value === a));
+			assignees = state.assignees.map((a) =>
+				state.assignableUsers.find((au: any) => au.value === a)
+			);
 		} else {
 			assignees = state.assignableUsers.find((au: any) => au.value === state.assignees);
 		}
@@ -333,11 +336,11 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (props.isEditing && props.editingCodemark) {
 			const selectedTags = {};
-			(props.editingCodemark.tags || []).forEach(tag => {
+			(props.editingCodemark.tags || []).forEach((tag) => {
 				selectedTags[tag] = true;
 			});
 			const relatedCodemarkIds = {};
-			(props.editingCodemark.relatedCodemarkIds || []).forEach(id => {
+			(props.editingCodemark.relatedCodemarkIds || []).forEach((id) => {
 				relatedCodemarkIds[id] = getCodemark(props.codemarkState, id);
 			});
 			this.state = {
@@ -520,7 +523,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	}
 
 	getAssignableCSUsers() {
-		return mapFilter(this.props.teamMembers, user => {
+		return mapFilter(this.props.teamMembers, (user) => {
 			if (!user.isRegistered) return;
 			return {
 				value: user.id,
@@ -532,10 +535,10 @@ class CodemarkForm extends React.Component<Props, State> {
 	async loadAssignableUsers(providerId: string, board: ThirdPartyProviderBoard) {
 		if (board.assigneesDisabled) return this.setState({ assigneesDisabled: true });
 		if (board.assigneesRequired) {
-			this.setState(state => (state.assigneesRequired ? null : { assigneesRequired: true }));
+			this.setState((state) => (state.assigneesRequired ? null : { assigneesRequired: true }));
 		}
 		if (board.singleAssignee) {
-			this.setState(state => (state.singleAssignee ? null : { singleAssignee: true }));
+			this.setState((state) => (state.singleAssignee ? null : { singleAssignee: true }));
 		}
 
 		try {
@@ -545,7 +548,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			});
 
 			this.setState({
-				assignableUsers: users.map(u => ({
+				assignableUsers: users.map((u) => ({
 					value: u,
 					label: u.displayName,
 				})),
@@ -572,8 +575,8 @@ class CodemarkForm extends React.Component<Props, State> {
 		const { textEditorUriHasPullRequestContext, textEditorUriContext } = this.props;
 
 		if (textEditorUriHasPullRequestContext) {
-			const isInsidePrChangeSet = changedPrLines.some(changedPrLine => {
-				return codeBlocks.some(codeBlock => {
+			const isInsidePrChangeSet = changedPrLines.some((changedPrLine) => {
+				return codeBlocks.some((codeBlock) => {
 					const codeBlockStart = codeBlock.range.start.line + 1;
 					const codeBlockEnd = codeBlock.range.end.line + 1;
 
@@ -626,14 +629,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		let emailAuthors: { [email: string]: boolean } = {};
 		let mentionAuthors: BlameAuthor[] = [];
 		if (codeBlock.scm && codeBlock.scm.authors) {
-			codeBlock.scm.authors.forEach(author => {
+			codeBlock.scm.authors.forEach((author) => {
 				// don't mention yourself
 				if (author.id && author.id === this.props.currentUser.id) return;
 
 				// see if this email address' code has been assigned to someone else
 				// @ts-ignore
 				const mappedId = blameMap[author.email.replace(".", "*")];
-				const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
+				const mappedPerson = mappedId && this.props.teamMembers.find((t) => t.id === mappedId);
 
 				// found a mapped person, so mention them
 				if (mappedPerson) {
@@ -658,7 +661,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 		if (mentionAuthors.length > 0) {
 			// TODO handle users with no username
-			const usernames: string[] = mentionAuthors.map(u => `@${u.username}`);
+			const usernames: string[] = mentionAuthors.map((u) => `@${u.username}`);
 			// if there's text in the compose area, return without
 			// adding the suggestion
 			if (this.state.text.length > 0) return;
@@ -737,7 +740,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	};
 
 	toggleCrossPostMessage = () => {
-		this.setState(state => ({ crossPostMessage: !state.crossPostMessage }));
+		this.setState((state) => ({ crossPostMessage: !state.crossPostMessage }));
 	};
 
 	handlePullRequestKeyboardSubmit = async (e?: React.SyntheticEvent) => {
@@ -816,20 +819,20 @@ class CodemarkForm extends React.Component<Props, State> {
 				? this.state.assignees
 				: [this.state.assignees];
 
-			csAssignees = mapFilter(assignees, a => {
+			csAssignees = mapFilter(assignees, (a) => {
 				const user = a.value;
 				const codestreamUser = this.props.teamMembers.find(
-					t => Boolean(user.email) && t.email === user.email
+					(t) => Boolean(user.email) && t.email === user.email
 				);
 				if (codestreamUser) return codestreamUser.id;
 				return undefined;
 			});
-			crossPostIssueValues.assignees = assignees.map(a => a.value);
+			crossPostIssueValues.assignees = assignees.map((a) => a.value);
 			crossPostIssueValues.issueProvider = this.props.issueProvider;
 		} else
 			csAssignees = this.props.isEditing
 				? this.props.editingCodemark!.assignees
-				: (this.state.assignees as any[]).map(a => a.value);
+				: (this.state.assignees as any[]).map((a) => a.value);
 
 		if (this.props.currentPullRequestId && this.state.isProviderReview) {
 			this.setState({ isReviewLoading: true });
@@ -1058,7 +1061,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		return invalid;
 	};
 
-	showAlertHelp = event => {
+	showAlertHelp = (event) => {
 		event.stopPropagation();
 	};
 
@@ -1092,7 +1095,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		event.stopPropagation();
 		if (!this.state.channelMenuOpen) {
 			const target = event.target;
-			this.setState(state => ({
+			this.setState((state) => ({
 				channelMenuOpen: !state.channelMenuOpen,
 				channelMenuTarget: target,
 				crossPostMessage: true,
@@ -1154,7 +1157,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	addLocation = () => {
 		const { editingCodemark } = this.props;
 		const markersLength = editingCodemark ? (editingCodemark.markers || []).length : 0;
-		this.setState(state => ({
+		this.setState((state) => ({
 			locationMenuOpen: "closed",
 			addingLocation: true,
 			liveLocation: Math.max(state.codeBlocks.length, markersLength),
@@ -1174,7 +1177,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			else if (file !== newFile) location = "Different File";
 		} catch (e) {}
 
-		this.setState(state => ({
+		this.setState((state) => ({
 			locationMenuOpen: "closed",
 			addingLocation: false,
 			liveLocation: -1,
@@ -1204,7 +1207,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	switchLabel = (event: React.SyntheticEvent) => {
 		event.stopPropagation();
 		const target = event.target;
-		this.setState(state => ({
+		this.setState((state) => ({
 			labelMenuOpen: !state.labelMenuOpen,
 			labelMenuTarget: target,
 		}));
@@ -1230,7 +1233,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			<div className="related">
 				<div className="related-label">Tags</div>
 				<div style={{ marginBottom: "-5px" }}>
-					{this.props.teamTagsArray.map(tag => {
+					{this.props.teamTagsArray.map((tag) => {
 						return selectedTags[tag.id] ? <Tag tag={tag} /> : null;
 					})}
 					<div style={{ clear: "both" }} />
@@ -1296,7 +1299,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				<Checkbox
 					name="change-request"
 					checked={this.state.isChangeRequest}
-					onChange={value => this.setState({ isChangeRequest: value })}
+					onChange={(value) => this.setState({ isChangeRequest: value })}
 				>
 					Change Request (require for approval)
 				</Checkbox>
@@ -1325,13 +1328,13 @@ class CodemarkForm extends React.Component<Props, State> {
 
 				{this.state.sharingDisabled ? (
 					<CSText muted>
-						<SmartFormattedList value={this.state.privacyMembers.map(m => m.label)} /> will be
+						<SmartFormattedList value={this.state.privacyMembers.map((m) => m.label)} /> will be
 						notified via email
 					</CSText>
 				) : (
 					<SharingControls
 						showToggle
-						onChangeValues={values => {
+						onChangeValues={(values) => {
 							this._sharingAttributes = values;
 						}}
 						repoId={repoId}
@@ -1350,7 +1353,7 @@ class CodemarkForm extends React.Component<Props, State> {
 			<div className="related" key="related-codemarks">
 				<div className="related-label">Related</div>
 				<div className="related-codemarks" key="related-codemarks" style={{ margin: "0 0 0 0" }}>
-					{keys.map(key => {
+					{keys.map((key) => {
 						const codemark = relatedCodemarkIds[key];
 						if (!codemark) return null;
 
@@ -1387,7 +1390,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ text, formatCode });
 	};
 
-	handleChangeTag = newTag => {
+	handleChangeTag = (newTag) => {
 		const newTagCopy = { ...newTag };
 		if (newTag.id) {
 			// TAGS.forEach((tag, index) => {
@@ -1399,14 +1402,14 @@ class CodemarkForm extends React.Component<Props, State> {
 		}
 	};
 
-	handleToggleTag = tagId => {
+	handleToggleTag = (tagId) => {
 		if (!tagId) return;
 		let selectedTags = this.state.selectedTags;
 		selectedTags[tagId] = !selectedTags[tagId];
 		this.setState({ selectedTags });
 	};
 
-	handleToggleCodemark = codemark => {
+	handleToggleCodemark = (codemark) => {
 		if (!codemark || !codemark.id) return;
 		let relatedCodemarkIds = this.state.relatedCodemarkIds;
 		if (relatedCodemarkIds[codemark.id]) delete relatedCodemarkIds[codemark.id];
@@ -1420,7 +1423,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		this.setState({ relatedCodemarkIds });
 	};
 
-	handleChangeRelated = codemarkIds => {
+	handleChangeRelated = (codemarkIds) => {
 		this.setState({ relatedCodemarkIds: codemarkIds });
 	};
 
@@ -1547,7 +1550,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					<span className="channel-label" style={{ display: "inline-block" }}>
 						<div
 							className={cx("location", { live: liveLocation == 0 })}
-							onClick={e => this.switchLocation(e, "header")}
+							onClick={(e) => this.switchLocation(e, "header")}
 						>
 							{file} {lines}
 						</div>
@@ -1575,7 +1578,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					title="Comments can refer to multiple blocks of code, even across files."
 					delay={1}
 				>
-					<span onClick={e => this.addLocation()}>
+					<span onClick={(e) => this.addLocation()}>
 						<Icon name="plus" />
 						add range
 					</span>
@@ -1646,7 +1649,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				withTags={!this.props.textEditorUriHasPullRequestContext}
 				toggleTag={this.handleToggleTag}
 				toggleCodemark={this.handleToggleCodemark}
-				shouldShowRelatableCodemark={codemark =>
+				shouldShowRelatableCodemark={(codemark) =>
 					this.props.editingCodemark ? codemark.id !== this.props.editingCodemark.id : true
 				}
 				onSubmit={
@@ -1658,7 +1661,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				relatedCodemarkIds={
 					this.props.textEditorUriHasPullRequestContext ? undefined : this.state.relatedCodemarkIds
 				}
-				setIsPreviewing={isPreviewing => this.setState({ isPreviewing })}
+				setIsPreviewing={(isPreviewing) => this.setState({ isPreviewing })}
 				renderCodeBlock={this.renderCodeBlock}
 				renderCodeBlocks={this.renderCodeBlocks}
 				attachments={this.state.attachments}
@@ -1751,7 +1754,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<div className="codemark-actions-button ok" onClick={this.cementLocation}>
 							OK
 						</div>
-						<div className="codemark-actions-button" onClick={e => this.deleteLocation(index, e)}>
+						<div className="codemark-actions-button" onClick={(e) => this.deleteLocation(index, e)}>
 							Cancel
 						</div>
 					</div>
@@ -1768,7 +1771,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								placement="bottomRight"
 								name="pin"
 								className={blockInjected ? "clickable selected" : "clickable"}
-								onMouseDown={e => this.pinLocation(index, e)}
+								onMouseDown={(e) => this.pinLocation(index, e)}
 							/>
 						)}
 						<Icon
@@ -1776,7 +1779,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							placement="bottomRight"
 							name="link-external"
 							className="clickable"
-							onClick={e => this.jumpToLocation(index, e)}
+							onClick={(e) => this.jumpToLocation(index, e)}
 						/>
 						{commentType !== "link" && (
 							<>
@@ -1785,14 +1788,14 @@ class CodemarkForm extends React.Component<Props, State> {
 									placement="bottomRight"
 									name="select"
 									className="clickable"
-									onClick={e => this.editLocation(index, e)}
+									onClick={(e) => this.editLocation(index, e)}
 								/>
 								<Icon
 									title="Remove Range"
 									placement="bottomRight"
 									name="x"
 									className="clickable"
-									onClick={e => this.deleteLocation(index, e)}
+									onClick={(e) => this.deleteLocation(index, e)}
 								/>
 							</>
 						)}
@@ -1880,7 +1883,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<div className="codemark-actions-button ok" onClick={this.cementLocation}>
 							OK
 						</div>
-						<div className="codemark-actions-button" onClick={e => this.deleteLocation(index, e)}>
+						<div className="codemark-actions-button" onClick={(e) => this.deleteLocation(index, e)}>
 							Cancel
 						</div>
 					</div>
@@ -1897,7 +1900,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								placement="bottomRight"
 								name="pin"
 								className={blockInjected ? "clickable selected" : "clickable"}
-								onMouseDown={e => this.pinLocation(index, e)}
+								onMouseDown={(e) => this.pinLocation(index, e)}
 							/>
 						)}
 						<Icon
@@ -1905,7 +1908,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							placement="bottomRight"
 							name="link-external"
 							className="clickable"
-							onClick={e => this.jumpToLocation(index, e)}
+							onClick={(e) => this.jumpToLocation(index, e)}
 						/>
 						{commentType !== "link" && (
 							<>
@@ -1914,14 +1917,14 @@ class CodemarkForm extends React.Component<Props, State> {
 									placement="bottomRight"
 									name="select"
 									className="clickable"
-									onClick={e => this.editLocation(index, e)}
+									onClick={(e) => this.editLocation(index, e)}
 								/>
 								<Icon
 									title="Remove Range"
 									placement="bottomRight"
 									name="x"
 									className="clickable"
-									onClick={e => this.deleteLocation(index, e)}
+									onClick={(e) => this.deleteLocation(index, e)}
 								/>
 							</>
 						)}
@@ -1983,7 +1986,7 @@ class CodemarkForm extends React.Component<Props, State> {
 								<div
 									className="codemark-actions-button"
 									style={{ margin: "2px 0" }}
-									onClick={e => {
+									onClick={(e) => {
 										this.setState({ addingLocation: false, liveLocation: -1 });
 										this.focus();
 									}}
@@ -2009,7 +2012,7 @@ class CodemarkForm extends React.Component<Props, State> {
 							<div
 								className="codemark-actions-button"
 								style={{ margin: "2px 0" }}
-								onClick={e => {
+								onClick={(e) => {
 									this.setState({ addingLocation: false, liveLocation: -1 });
 									this.focus();
 								}}
@@ -2027,7 +2030,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 	private _getCrossPostIssueContext(): ICrossPostIssueContext {
 		return {
-			setSelectedAssignees: assignees => this.setState({ assignees }),
+			setSelectedAssignees: (assignees) => this.setState({ assignees }),
 			selectedAssignees: this.state.assignees as any,
 			assigneesInputTarget:
 				this._assigneesContainerRef.current ||
@@ -2082,7 +2085,7 @@ class CodemarkForm extends React.Component<Props, State> {
 						<br />
 						<br />
 						<FormattedMessage id="contactSupport" defaultMessage="contact support">
-							{text => <Link href="https://docs.newrelic.com/docs/codestream/">{text}</Link>}
+							{(text) => <Link href="https://docs.newrelic.com/docs/codestream/">{text}</Link>}
 						</FormattedMessage>
 						<div className="button-group one-button">
 							<Button className="control-button" onClick={this.cancelCompose}>
@@ -2202,7 +2205,7 @@ class CodemarkForm extends React.Component<Props, State> {
 		if (isPreviewing) return null;
 		if (unregisteredAuthors.length === 0) return null;
 
-		return unregisteredAuthors.map(author => {
+		return unregisteredAuthors.map((author) => {
 			return (
 				<div className="checkbox-row">
 					<Checkbox
@@ -2329,7 +2332,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				key="two"
 				onDragEnter={this.handleDragEnter}
 				onDrop={this.handleDrop}
-				onDragOver={e => e.preventDefault()}
+				onDragOver={(e) => e.preventDefault()}
 				onDragLeave={this.handleDragLeave}
 			>
 				<fieldset className="form-body">
@@ -2375,9 +2378,9 @@ class CodemarkForm extends React.Component<Props, State> {
 									className="input-text control"
 									tabIndex={this.tabIndex()}
 									value={this.state.title}
-									onChange={e => this.setState({ title: e.target.value })}
+									onChange={(e) => this.setState({ title: e.target.value })}
 									placeholder={titlePlaceholder}
-									ref={ref => (this._titleInput = ref)}
+									ref={(ref) => (this._titleInput = ref)}
 								/>
 							</div>
 						)}
@@ -2544,32 +2547,34 @@ class CodemarkForm extends React.Component<Props, State> {
 										: "Submit"}
 								</Button>
 							</Tooltip>
-							{this.props.textEditorUriHasPullRequestContext && this.state.isInsidePrChangeSet && (
-								<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
-									<Button
-										key="submit-review"
-										loading={this.state.isReviewLoading}
-										disabled={hasError}
-										onClick={e => {
-											this.setState({ isProviderReview: true }, () => {
-												this.handleClickSubmit(e);
-											});
-										}}
-										style={{
-											paddingLeft: "10px",
-											paddingRight: "10px",
-											// fixed width to handle the isReviewLoading case
-											width: "auto",
-											marginRight: 0,
-										}}
-										className="control-button"
-										type="submit"
-									>
-										{hasExistingPullRequestReview && <>Add to review</>}
-										{!hasExistingPullRequestReview && <>Start a review</>}
-									</Button>
-								</Tooltip>
-							)}
+							{this.props.currentPullRequestSupportsReview &&
+								this.props.textEditorUriHasPullRequestContext &&
+								this.state.isInsidePrChangeSet && (
+									<Tooltip title={hasError ? null : reviewTooltip} placement="bottom" delay={1}>
+										<Button
+											key="submit-review"
+											loading={this.state.isReviewLoading}
+											disabled={hasError}
+											onClick={(e) => {
+												this.setState({ isProviderReview: true }, () => {
+													this.handleClickSubmit(e);
+												});
+											}}
+											style={{
+												paddingLeft: "10px",
+												paddingRight: "10px",
+												// fixed width to handle the isReviewLoading case
+												width: "auto",
+												marginRight: 0,
+											}}
+											className="control-button"
+											type="submit"
+										>
+											{hasExistingPullRequestReview && <>Add to review</>}
+											{!hasExistingPullRequestReview && <>Start a review</>}
+										</Button>
+									</Tooltip>
+								)}
 							{/*
 							<span className="hint">Styling with Markdown is supported</span>
 						*/}
@@ -2658,6 +2663,10 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		currentPullRequestId: state.context.currentPullRequest
 			? state.context.currentPullRequest.id
 			: undefined,
+		currentPullRequestSupportsReview:
+			state.context.currentPullRequest && state.context.currentPullRequest.providerId
+				? !state.context.currentPullRequest.providerId.includes("bitbucket")
+				: undefined,
 		providerInfo: (user.providerInfo && user.providerInfo[context.currentTeamId]) || EMPTY_OBJECT,
 		teamProvider: getCurrentTeamProvider(state),
 		currentUser: user,
