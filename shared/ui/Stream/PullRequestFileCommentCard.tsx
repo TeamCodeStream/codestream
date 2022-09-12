@@ -332,9 +332,8 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 		}
 
 		let diffHunk = comment?.diffHunk || review?.diffHunk || comment?.position?.patch || "";
-		let diffHunkNewLineLength = diffHunk.split("\n").length - 1;
 
-		diffHunk.split("\n").map(d => {
+		diffHunk.split("\n").forEach(d => {
 			const matches = d.match(/@@ \-(\d+).*? \+(\d+)/);
 			if (matches) {
 				rightLine = parseInt(matches[2]);
@@ -413,12 +412,15 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 								<Timestamp time={comment.createdAt} relative />
 								<PRActionIcons>
 									<PRAuthorBadges pr={pr} node={comment} isPending={review.state === "PENDING"} />
-									<PullRequestReactButton
-										pr={pr}
-										targetId={comment.id}
-										setIsLoadingMessage={setIsLoadingMessage}
-										reactionGroups={comment.reactionGroups}
-									/>
+									{/* bitbucket doesn't support reactions */}
+									{!pr.providerId.includes("bitbucket") && (
+										<PullRequestReactButton
+											pr={pr}
+											targetId={comment.id}
+											setIsLoadingMessage={setIsLoadingMessage}
+											reactionGroups={comment.reactionGroups}
+										/>
+									)}
 									<PullRequestCommentMenu
 										pr={pr}
 										setIsLoadingMessage={setIsLoadingMessage}
@@ -454,51 +456,52 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 										isHtml={comment.bodyHTML || comment.bodyHtml ? true : false}
 										inline
 									/>
-									<div style={{ marginTop: "10px" }}>
-										<CodeBlockContainerIcons>
-											<div>
-												<Icon name="git-branch" />
-												<PRBranchContainer>{pr.baseRefName}</PRBranchContainer>
-											</div>
-											<div style={{ marginLeft: "auto" }}>
-												<span
-													style={{ color: "var(--text-color-subtle)" }}
-													onClick={e => {
-														handleDiffClick();
-														HostApi.instance.track("PR Jump to Diff", {
-															Host: pr && pr.providerId,
-														});
-													}}
-												>
-													<Icon
-														name="diff"
-														title="Show Comment in Diff"
-														placement="bottom"
-														className="clickable"
-														delay={1}
-													/>
-												</span>
-											</div>
-											<div style={{ marginLeft: "5px" }}>
-												{pr && pr.url && (
+									{!pr.providerId.includes("bitbucket") && (
+										<div style={{ marginTop: "10px" }}>
+											<CodeBlockContainerIcons>
+												<div>
+													<Icon name="git-branch" />
+													<PRBranchContainer>{pr.baseRefName}</PRBranchContainer>
+												</div>
+												<div style={{ marginLeft: "auto" }}>
 													<span
-														onClick={handleOpenFile}
 														style={{ color: "var(--text-color-subtle)" }}
+														onClick={e => {
+															handleDiffClick();
+															HostApi.instance.track("PR Jump to Diff", {
+																Host: pr && pr.providerId
+															});
+														}}
 													>
 														<Icon
-															title="Open Local File"
+															name="diff"
+															title="Show Comment in Diff"
 															placement="bottom"
-															name="goto-file"
 															className="clickable"
 															delay={1}
 														/>
 													</span>
-												)}
-											</div>
-										</CodeBlockContainerIcons>
-										{/* if bitbucket doesn't have diffHunk, skip it - don't render*/}
-										{codeBlock()}
-									</div>
+												</div>
+												<div style={{ marginLeft: "5px" }}>
+													{pr && pr.url && (
+														<span
+															onClick={handleOpenFile}
+															style={{ color: "var(--text-color-subtle)" }}
+														>
+															<Icon
+																title="Open Local File"
+																placement="bottom"
+																name="goto-file"
+																className="clickable"
+																delay={1}
+															/>
+														</span>
+													)}
+												</div>
+											</CodeBlockContainerIcons>
+											{codeBlock()}
+										</div>
+									)}
 								</>
 							)}
 						</>
@@ -531,12 +534,15 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 										{c.includesCreatedEdit ? <> • edited</> : ""}
 										<PRActionIcons>
 											<PRAuthorBadges pr={pr} node={c} />
-											<PullRequestReactButton
-												pr={pr}
-												targetId={c.id}
-												setIsLoadingMessage={setIsLoadingMessage}
-												reactionGroups={c.reactionGroups}
-											/>
+											{/* bitbucket doesn't support reactions */}
+											{!pr.providerId.includes("bitbucket") && (
+												<PullRequestReactButton
+													pr={pr}
+													targetId={c.id}
+													setIsLoadingMessage={setIsLoadingMessage}
+													reactionGroups={c.reactionGroups}
+												/>
+											)}
 											<PullRequestCommentMenu
 												pr={pr}
 												setIsLoadingMessage={setIsLoadingMessage}

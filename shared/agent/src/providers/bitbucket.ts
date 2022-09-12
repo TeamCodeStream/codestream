@@ -601,7 +601,7 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`
 		);
 		// Tree here? ==>  This is working; creates proper structure
-		const listToTree: any = (arr: any = []) => {
+		const listToTree: any = (arr: {id: string, replies: any[], parent: {id: string}}[] = []) => {
 			let map: any = {};
 			let res: any = [];
 			for (let i = 0; i < arr.length; i++) {

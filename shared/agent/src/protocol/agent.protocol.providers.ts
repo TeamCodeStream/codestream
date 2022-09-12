@@ -701,7 +701,7 @@ export interface FetchThirdPartyPullRequestRepository {
 	providerId: string;
 	viewerDefaultMergeMethod?: "MERGE" | "REBASE" | "SQUASH";
 	viewerPermission: "ADMIN" | "MAINTAIN" | "READ" | "TRIAGE" | "WRITE";
-	branchProtectionRules?: BranchProtectionRules;
+	branchProtectionRules?: BranchProtectionRules | undefined;
 }
 
 interface RateLimit {

@@ -177,12 +177,16 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									node={comment}
 									isPending={item.state === "PENDING"}
 								/>
-								<PullRequestReactButton
-									pr={pr}
-									targetId={comment.id}
-									setIsLoadingMessage={setIsLoadingMessage}
-									reactionGroups={comment.reactionGroups}
-								/>
+
+								{/* bitbucket doesn't support reactions */}
+								{!pr.providerId.includes("bitbucket") && (
+									<PullRequestReactButton
+										pr={pr}
+										targetId={comment.id}
+										setIsLoadingMessage={setIsLoadingMessage}
+										reactionGroups={comment.reactionGroups}
+									/>
+								)}
 								<PullRequestCommentMenu
 									pr={pr}
 									setIsLoadingMessage={setIsLoadingMessage}
@@ -232,6 +236,7 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 					if (c.isMinimized && !expandedComments[c.id]) {
 						return (
 							<PullRequestMinimizedComment
+								key={c.id + i}
 								reason={c.minimizedReason}
 								className="threaded"
 								onClick={() => expandComment(c.id)}
@@ -249,12 +254,16 @@ export const PullRequestCodeComment = (props: PropsWithChildren<Props>) => {
 									{c.includesCreatedEdit ? <> • edited</> : ""}
 									<PRActionIcons>
 										<PRAuthorBadges key={`badge_${c.id + i}`} pr={pr} node={c} />
-										<PullRequestReactButton
-											pr={pr}
-											targetId={c.id}
-											setIsLoadingMessage={setIsLoadingMessage}
-											reactionGroups={c.reactionGroups}
-										/>
+
+										{/* bitbucket doesn't support reactions */}
+										{!pr.providerId.includes("bitbucket") && (
+											<PullRequestReactButton
+												pr={pr}
+												targetId={c.id}
+												setIsLoadingMessage={setIsLoadingMessage}
+												reactionGroups={c.reactionGroups}
+											/>
+										)}
 										<PullRequestCommentMenu
 											pr={pr}
 											setIsLoadingMessage={setIsLoadingMessage}
