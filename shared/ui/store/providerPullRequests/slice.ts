@@ -831,17 +831,6 @@ const providerPullRequestsSlice = createSlice({
 							}
 						}
 					}
-				} else if (providerId === "bitbucket*org") {
-					const pr = newState[providerId][id].conversations.repository
-						.pullRequest as FetchThirdPartyPullRequestPullRequest;
-
-					for (const directive of action.payload.data) {
-						if (directive.type === "updatePullRequest") {
-							for (const key in directive.data) {
-								(pr as any)[key] = directive.data[key];
-							}
-						}
-					}
 				}
 			}
 			return;
@@ -951,7 +940,7 @@ export const getCurrentProviderPullRequestObject = createSelector(
 		// TODO merge github and gitlab into single shared type
 		if (providerId) {
 			if (providerId.indexOf("github") > -1 || providerId.indexOf("bitbucket") > -1) {
-				return providerPullRequest.conversations.repository.pullRequest;
+				return providerPullRequest?.conversations?.repository.pullRequest;
 			}
 			if (providerId.indexOf("gitlab") > -1) {
 				return providerPullRequest?.conversations?.project?.mergeRequest;
