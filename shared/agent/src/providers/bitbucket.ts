@@ -775,9 +775,9 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						},
 						state: pr.body.state,
 						viewer: {
-							id: this._currentBitbucketUsers,
-							login: this._currentBitbucketUsers, // the person viewing
-							avatarUrl: this.icon
+							id: (await this.getCurrentUser()).account_id,
+							login: (await this.getCurrentUser()).display_name,
+							avatarUrl: (await this.getCurrentUser()).links.avatar.href
 						}
 					} as any //TODO: make this work
 				}
