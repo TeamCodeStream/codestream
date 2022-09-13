@@ -702,7 +702,12 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 							nameWithOwner: repoWithOwner,
 							url: pr.body.source?.repository?.links?.html?.href
 						},
-						state: pr.body.state
+						state: pr.body.state,
+						viewer: {
+							id: pr.body.state,
+							login: pr.body.state, // the person viewing
+							avatarUrl: this.icon
+						}
 					} as any //TODO: make this work
 				}
 			};
@@ -725,6 +730,65 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		});
 
 		return response;
+	}
+
+	//TODO: implement
+	async createPullRequestComment(request: {
+		pullRequestId: string;
+		sha: string;
+		text: string;
+		path: string;
+		// startLine: number;
+		// use endLine for multi-line comments
+		// endLine?: number;
+		// used for certain old providers
+		position?: number;
+	}): Promise<Directives> {
+		const payload: BitBucketCreateCommentRequest = {
+			content: {
+				raw: request.text
+			}
+			// inline: {
+			// 	to: request.startLine,
+			// 	path: request.path
+			// }
+		};
+
+		Logger.log(`commenting:createPullRequestComment`, {
+			request: request,
+			payload: payload
+		});
+
+		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
+			payload
+		);
+
+		const directives: Directive[] = [
+			{
+				type: "updatePullRequest",
+				data: {
+					updatedAt: new Date().getTime() as any
+				}
+			},
+			{
+				type: "addNode",
+				data: this.mapComment(response.body)
+			}
+		];
+
+		this.updateCache(request.pullRequestId, {
+			directives: directives
+		});
+
+		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
+			pullRequestId: request.pullRequestId,
+			filePath: request.path
+		});
+		return {
+			directives: directives
+		};
 	}
 
 	@log()
@@ -1190,7 +1254,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
 			payload
 		);
 
@@ -1242,7 +1306,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
 		const response = await this.post<BitBucketCreateCommentRequest, BitbucketPullRequestComment>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`,
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`,
 			payload
 		);
 
