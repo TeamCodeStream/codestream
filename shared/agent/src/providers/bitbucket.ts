@@ -82,7 +82,37 @@ interface BitbucketRepo {
 	parent?: any;
 }
 
-interface BitbucketCurrentUser {}
+interface BitbucketCurrentUser {
+	display_name: string;
+	links: {
+		self: {
+			href: string;
+		};
+		avatar: {
+			href: string;
+		};
+		repositories: {
+			href: string;
+		};
+		snippets: {
+			href: string;
+		};
+		html: {
+			href: string;
+		};
+		hooks: {
+			href: string;
+		};
+	};
+	created_on: string;
+	type: string;
+	uuid: string;
+	username: string;
+	is_staff: boolean;
+	account_id: string;
+	nickname: string;
+	account_status: string;
+}
 
 interface BitbucketAuthor {
 	account_id: string;
@@ -400,39 +430,41 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		};
 	}
 
-	async restGet<T extends object>(url: string) {
-		return this.get<T>(url);
-	}
-
-	private toAuthorAbsolutePath(author: any): BitbucketCurrentUser {
-		if (author?.avatarUrl?.indexOf("/") === 0) {
-			// no really great way to handle this...
-			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
-		}
-		return author;
-	}
-
 	async getCurrentUser(): Promise<BitbucketCurrentUser> {
-		let currentUser = this._currentBitbucketUsers.get(this.providerConfig.id);
-		if (currentUser) return currentUser;
+		await this.ensureConnected();
+		const data = await this.get<BitbucketCurrentUser>(`/user`);
 
-		const data = await this.restGet<{
-			id: number;
-			username: string;
-			name: string;
-			avatar_url: string;
-		}>("/user");
-		currentUser = {
-			id: data.body.id,
-			login: data.body.username,
-			name: data.body.name,
-			avatarUrl: data.body.avatar_url
-		} as BitbucketCurrentUser;
-
-		currentUser = this.toAuthorAbsolutePath(currentUser);
-		this._currentBitbucketUsers.set(this.providerConfig.id, currentUser);
-
-		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
+		const currentUser = {
+			display_name: data.body.display_name,
+			links: {
+				self: {
+					href: data.body.links.self.href
+				},
+				avatar: {
+					href: data.body.links.avatar.href
+				},
+				repositories: {
+					href: data.body.links.repositories.href
+				},
+				snippets: {
+					href: data.body.links.snippets.href
+				},
+				html: {
+					href: data.body.links.html.href
+				},
+				hooks: {
+					href: data.body.links.hooks.href
+				}
+			},
+			created_on: data.body.created_on,
+			type: data.body.type,
+			uuid: data.body.uuid,
+			username: data.body.username,
+			is_staff: data.body.is_staff,
+			account_id: data.body.account_id,
+			nickname: data.body.nickname,
+			account_status: data.body.account_status
+		};
 		return currentUser;
 	}
 
