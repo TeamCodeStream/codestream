@@ -200,6 +200,7 @@ interface BitbucketRepoFull extends BitbucketRepo {
 		default_merge_strategy: boolean;
 		branching_model: boolean;
 	};
+	author: BitbucketAuthor;
 }
 
 interface BitbucketPullRequestComment2 {
@@ -296,6 +297,7 @@ interface BitbucketPullRequest {
 				href: string;
 			};
 		};
+		display_name: BitbucketAuthor;
 	};
 	created_on: string;
 	destination: {
@@ -672,6 +674,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 					pullRequest: {
 						baseRefOid: pr.body.destination.commit.hash,
 						headRefOid: pr.body.source.commit.hash,
+						author: pr.body.author.display_name,
 						comments: treeComments || [],
 						number: pr.body.id,
 						idComputed: JSON.stringify({
