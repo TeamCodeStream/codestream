@@ -1,6 +1,8 @@
 "use strict";
+import { User } from "api/extensions";
 import { GitRemoteLike } from "git/gitService";
 import { flatten } from "lodash";
+import { userInfo } from "os";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
 import { toRepoName } from "../git/utils";
@@ -291,6 +293,11 @@ interface BitbucketUser {
 }
 
 interface BitbucketPullRequest {
+	viewer: {
+		id: number;
+		login: string;
+		avatarUrl: string;
+	};
 	author: {
 		links: {
 			avatar: {
@@ -654,7 +661,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			// TODO implementation
 
 			response = {
-				viewer: {} as any,
+				viewer: {
+					id: pr.body.state,
+					login: pr.body.state, // the person viewing
+					avatarUrl: this.icon
+				} as any,
 				repository: {
 					id: pr.body.id + "",
 					url: pr.body.source?.repository?.links?.html?.href,
@@ -674,7 +685,10 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 					pullRequest: {
 						baseRefOid: pr.body.destination.commit.hash,
 						headRefOid: pr.body.source.commit.hash,
-						author: pr.body.author.display_name,
+						author: {
+							login: pr.body.author.display_name,
+							avatarUrl: pr.body.author.links.avatar
+						},
 						comments: treeComments || [],
 						number: pr.body.id,
 						idComputed: JSON.stringify({
