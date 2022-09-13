@@ -82,6 +82,8 @@ interface BitbucketRepo {
 	parent?: any;
 }
 
+interface BitbucketCurrentUser {}
+
 interface BitbucketAuthor {
 	account_id: string;
 	display_name: string;
@@ -381,6 +383,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 	implements ThirdPartyProviderSupportsIssues, ThirdPartyProviderSupportsPullRequests {
 	private _knownRepos = new Map<string, BitbucketRepo>();
 	private _reposWithIssues: BitbucketRepo[] = [];
+	private _currentBitbucketUsers = new Map<string, BitbucketCurrentUser>();
 
 	get displayName() {
 		return "Bitbucket";
@@ -395,6 +398,42 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			Authorization: `Bearer ${this.accessToken}`,
 			"Content-Type": "application/json"
 		};
+	}
+
+	async restGet<T extends object>(url: string) {
+		return this.get<T>(url);
+	}
+
+	private toAuthorAbsolutePath(author: any): BitbucketCurrentUser {
+		if (author?.avatarUrl?.indexOf("/") === 0) {
+			// no really great way to handle this...
+			author.avatarUrl = `${this.baseWebUrl}${author.avatarUrl}`;
+		}
+		return author;
+	}
+
+	async getCurrentUser(): Promise<BitbucketCurrentUser> {
+		let currentUser = this._currentBitbucketUsers.get(this.providerConfig.id);
+		if (currentUser) return currentUser;
+
+		const data = await this.restGet<{
+			id: number;
+			username: string;
+			name: string;
+			avatar_url: string;
+		}>("/user");
+		currentUser = {
+			id: data.body.id,
+			login: data.body.username,
+			name: data.body.name,
+			avatarUrl: data.body.avatar_url
+		} as BitbucketCurrentUser;
+
+		currentUser = this.toAuthorAbsolutePath(currentUser);
+		this._currentBitbucketUsers.set(this.providerConfig.id, currentUser);
+
+		Logger.log(`getCurrentUser ${JSON.stringify(currentUser)} for id=${this.providerConfig.id}`);
+		return currentUser;
 	}
 
 	getPRExternalContent(comment: PullRequestComment) {
@@ -659,13 +698,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			const repoWithOwnerSplit = repoWithOwner.split("/");
 
 			// TODO implementation
+			// require(['bitbucket/util/state'], function(state) {
+			// 	console.log('Current user', state.getCurrentUser());
+			//   });
+			await this.getCurrentUser();
 
 			response = {
-				viewer: {
-					id: pr.body.state,
-					login: pr.body.state, // the person viewing
-					avatarUrl: this.icon
-				} as any,
+				viewer: {} as any,
 				repository: {
 					id: pr.body.id + "",
 					url: pr.body.source?.repository?.links?.html?.href,
@@ -704,8 +743,8 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						},
 						state: pr.body.state,
 						viewer: {
-							id: pr.body.state,
-							login: pr.body.state, // the person viewing
+							id: this._currentBitbucketUsers,
+							login: this._currentBitbucketUsers, // the person viewing
 							avatarUrl: this.icon
 						}
 					} as any //TODO: make this work
