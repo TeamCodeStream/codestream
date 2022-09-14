@@ -276,9 +276,11 @@ const InlineIcon = styled.div`
 `;
 
 const stateMap = {
-	opened: "open",
-	closed: "closed",
-	merged: "merged"
+	OPEN: "open",
+	CLOSED: "closed",
+	MERGED: "merged",
+	DECLINED: "declined",
+	SUPERSEDED: "superseded"
 };
 
 const EMPTY_HASH = {};
@@ -728,11 +730,11 @@ export const PullRequest = () => {
 									variant={
 										pr.isDraft
 											? "neutral"
-											: pr.state === "opened"
+											: pr.state === "OPEN"
 											? "success"
-											: pr.state === "merged"
+											: pr.state === "MERGED"
 											? "merged"
-											: pr.state === "closed"
+											: pr.state === "DECLINED" || pr.state === "SUPERSEDED"
 											? "destructive"
 											: "primary"
 									}
