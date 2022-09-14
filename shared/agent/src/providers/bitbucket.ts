@@ -340,8 +340,6 @@ interface TimelineItem {
 	};
 }
 
-interface TimelineItems extends Array<TimelineItem> {}
-
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -800,79 +798,91 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 			const repoWithOwnerSplit = repoWithOwner.split("/");
 
-			const activitiesResponse = await this.get<TimelineItem[]>(
+			const timeline = await this.get<TimelineItem>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
 			);
 
-			const timelineItems = activitiesResponse.body.map(timeline => {
-				return {
-					pull_request: {
-						type: timeline.pull_request.type,
-						id: timeline.pull_request.id,
-						title: timeline.pull_request.title,
-						links: {
-							self: {
-								href: timeline.pull_request.links.self.href
-							},
-							html: {
-								href: timeline.pull_request.links.html.href
-							}
-						}
+			// console.log("timeline is: ", timeline);
+
+			const timelineItems = [
+				{
+					author: {
+						avatarUrl: timeline?.body?.comment?.user?.links?.avatar,
+						name: timeline?.body?.comment?.user?.display_name,
+						login: timeline?.body?.comment?.user?.account_id
 					},
-					comment: {
-						id: timeline.comment.id,
-						created_on: timeline.comment.created_on,
-						updated_on: timeline.comment.updated_on,
-						content: {
-							type: timeline.comment.content.type,
-							raw: timeline.comment.content.raw,
-							markup: timeline.comment.content.markup,
-							html: timeline.comment.content.html
-						},
-						user: {
-							display_name: timeline.comment.user,
-							links: {
-								self: {
-									href: timeline.comment.user.links.self.href
-								},
-								avatar: {
-									href: timeline.comment.user.links.avatar.href
-								},
-								html: {
-									href: timeline.comment.user.links.html
-								}
-							},
-							type: timeline.comment.user.type,
-							uuid: timeline.comment.user.uuid,
-							account_id: timeline.comment.user.account_id,
-							nickname: timeline.comment.user.nickname
-						},
-						deleted: timeline.comment.deleted,
-						type: timeline.comment.type,
-						links: {
-							self: {
-								href: timeline.comment.links.self.href
-							},
-							html: {
-								href: timeline.comment.links.html.href
-							}
-						},
-						pullrequest: {
-							type: timeline.comment.pullrequest.type,
-							id: timeline.comment.pullrequest.id,
-							title: timeline.comment.pullrequest.title,
-							links: {
-								self: {
-									href: timeline.comment.pullrequest.links.self.href
-								},
-								html: {
-									href: timeline.comment.pullrequest.links.html.href
-								}
-							}
-						}
-					}
-				};
-			});
+					bodyText: timeline?.body?.comment?.content?.raw,
+					createdAt: timeline?.body?.comment?.created_on
+				}
+			];
+			// pull_request: {
+			// 	type: timeline?.body?.pull_request?.type,
+			// 	id: timeline?.body?.pull_request?.id,
+			// 	title: timeline.body.pull_request.title,
+			// 	links: {
+			// 		self: {
+			// 			href: timeline.body.pull_request.links.self.href
+			// 		},
+			// 		html: {
+			// 			href: timeline.body.pull_request.links.html.href
+			// 		}
+			// 	}
+			// },
+			// comment: {
+			// 	id: timeline.body.comment.id,
+			// 	created_on: timeline.body.comment.created_on,
+			// 	updated_on: timeline.body.comment.updated_on,
+			// 	content: {
+			// 		type: timeline.body.comment.content.type,
+			// 		raw: timeline.body.comment.content.raw,
+			// 		markup: timeline.body.comment.content.markup,
+			// 		html: timeline.body.comment.content.html
+			// 	},
+			// 	user: {
+			// 		display_name: timeline.body.comment.user,
+			// 		links: {
+			// 			self: {
+			// 				href: timeline.body.comment.user.links.self.href
+			// 			},
+			// 			avatar: {
+			// 				href: timeline.body.comment.user.links.avatar.href
+			// 			},
+			// 			html: {
+			// 				href: timeline.body.comment.user.links.html
+			// 			}
+			// 		},
+			// 		type: timeline.body.comment.user.type,
+			// 		uuid: timeline.body.comment.user.uuid,
+			// 		account_id: timeline.body.comment.user.account_id,
+			// 		nickname: timeline.body.comment.user.nickname
+			// 	},
+			// 	deleted: timeline.body.comment.deleted,
+			// 	type: timeline.body.comment.type,
+			// 	links: {
+			// 		self: {
+			// 			href: timeline.body.comment.links.self.href
+			// 		},
+			// 		html: {
+			// 			href: timeline.body.comment.links.html.href
+			// 		}
+			// 	},
+			// 	pullrequest: {
+			// 		type: timeline.body.comment.pullrequest.type,
+			// 		id: timeline.body.comment.pullrequest.id,
+			// 		title: timeline.body.comment.pullrequest.title,
+			// 		links: {
+			// 			self: {
+			// 				href: timeline.body.comment.pullrequest.links.self.href
+			// 			},
+			// 			html: {
+			// 				href: timeline.body.comment.pullrequest.links.html.href
+			// 			}
+			// 		}
+			// 	}
+			// }
+			// };
+
+			// console.log("timelineItems is: ", timelineItems);
 
 			const userResponse = await this.getCurrentUser();
 			const viewer = {
@@ -922,7 +932,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						},
 						state: pr.body.state,
 						title: pr.body.title,
-						timelineItems: timelineItems,
+						discussions: timelineItems,
 						viewer: viewer
 					} as any //TODO: make this work
 				}
