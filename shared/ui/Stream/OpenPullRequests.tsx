@@ -262,8 +262,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			context.currentPullRequest.id;
 		const currentPullRequest = getCurrentProviderPullRequest(state);
 		const expandedPullRequestGroupIndex = context.currentPullRequest?.groupIndex;
-		const panePreferences = preferences.sidebarPanes;
-		const settings = panePreferences["open-pull-requests"];
+		const panePreferences = preferences.sidebarPanes || {};
+		const settings = panePreferences["open-pull-requests"] || {};
 		return {
 			repos,
 			teamSettings,

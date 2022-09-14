@@ -5,7 +5,7 @@ import { StreamActionType, StreamsState } from "./types";
 import { includes as _includes, sortBy as _sortBy, sortBy } from "lodash-es";
 import { CodeStreamState } from "..";
 import { emptyArray } from "@codestream/webview/utils";
-import { CSChannelStream, CSStream } from "@codestream/protocols/api";
+import { CSChannelStream } from "@codestream/protocols/api";
 
 type StreamsAction = ActionType<typeof actions>;
 
@@ -62,10 +62,10 @@ export const getStreamForTeam = (state: StreamsState, teamId: string) => {
 
 export const getChannelStreamsForTeam = createSelector(
 	(state: CodeStreamState) => state.streams,
-	(_, teamId: string) => teamId,
+	(state: CodeStreamState, teamId: string) => teamId,
 	(state: CodeStreamState) => state.session.userId!,
-	(streamState, teamId, userId) => {
-		const streams: CSStream[] = streamState.byTeam[teamId]; // TODO why is this not auto-typed
+	(streamState: StreamsState, teamId: string, userId: string): CSChannelStream[] => {
+		const streams = streamState.byTeam[teamId];
 
 		if (streams == null) return emptyArray;
 
