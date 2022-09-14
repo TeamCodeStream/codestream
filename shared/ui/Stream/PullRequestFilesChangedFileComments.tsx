@@ -1,4 +1,7 @@
-import { GetReposScmRequestType } from "@codestream/protocols/agent";
+import {
+	FetchThirdPartyPullRequestPullRequest,
+	GetReposScmRequestType,
+} from "@codestream/protocols/agent";
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "@codestream/webview/store";
 import { orderBy } from "lodash-es";
@@ -133,7 +136,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 
 	const syncCheckedStatusWithPr = () => {
 		if (currentPr && !isGitLab && supportsViewerViewedState) {
-			const prFiles = (currentPr as any).files.nodes; // TODO Fix typing - does this crash on gitlab since it files is only on github?
+			const prFiles = (currentPr as FetchThirdPartyPullRequestPullRequest).files.nodes;
 			const currentFilepath = fileObject.file;
 
 			const prFile = prFiles.find(pr => pr.path === currentFilepath);
