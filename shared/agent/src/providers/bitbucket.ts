@@ -272,6 +272,78 @@ interface BitBucketCreateCommentRequest {
 	};
 }
 
+interface Timeline {
+	values: [
+		{
+			pull_request: {
+				type: string;
+				id: number;
+				title: string;
+				links: {
+					self: {
+						href: string;
+					};
+					html: {
+						href: string;
+					};
+				};
+			};
+			comment: {
+				id: number;
+				created_on: string;
+				updated_on: string;
+				content: {
+					type: string;
+					raw: string;
+					markup: string;
+					html: string;
+				};
+				user: {
+					display_name: string;
+					links: {
+						self: {
+							href: string;
+						};
+						avatar: {
+							href: string;
+						};
+						html: {
+							href: string;
+						};
+					};
+					type: string;
+					uuid: string;
+					account_id: string;
+					nickname: string;
+				};
+				deleted: boolean;
+				type: string;
+				links: {
+					self: {
+						href: string;
+					};
+					html: {
+						href: string;
+					};
+				};
+				pullrequest: {
+					type: string;
+					id: number;
+					title: string;
+					links: {
+						self: {
+							href: string;
+						};
+						html: {
+							href: string;
+						};
+					};
+				};
+			};
+		}
+	];
+}
+
 interface BitbucketPullRequestComment {
 	id: number;
 	content: {
@@ -730,10 +802,85 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 			const repoWithOwnerSplit = repoWithOwner.split("/");
 
-			// TODO implementation
-			// require(['bitbucket/util/state'], function(state) {
-			// 	console.log('Current user', state.getCurrentUser());
-			//   });
+			const activitiesResponse = await this.get<Timeline>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
+			);
+
+			const timeline = activitiesResponse.body.values[0];
+
+			const timeLineItems = {
+				// TODO fill out with activity data
+				nodes: [
+					{
+						pull_request: {
+							type: timeline.pull_request.type,
+							id: timeline.pull_request.id,
+							title: timeline.pull_request.title,
+							links: {
+								self: {
+									href: timeline.pull_request.links.self.href
+								},
+								html: {
+									href: timeline.pull_request.links.html.href
+								}
+							}
+						},
+						comment: {
+							id: timeline.comment.id,
+							created_on: timeline.comment.created_on,
+							updated_on: timeline.comment.updated_on,
+							content: {
+								type: timeline.comment.content.type,
+								raw: timeline.comment.content.raw,
+								markup: timeline.comment.content.markup,
+								html: timeline.comment.content.html
+							},
+							user: {
+								display_name: timeline.comment.user,
+								links: {
+									self: {
+										href: timeline.comment.user.links.self.href
+									},
+									avatar: {
+										href: timeline.comment.user.links.avatar.href
+									},
+									html: {
+										href: timeline.comment.user.links.html
+									}
+								},
+								type: timeline.comment.user.type,
+								uuid: timeline.comment.user.uuid,
+								account_id: timeline.comment.user.account_id,
+								nickname: timeline.comment.user.nickname
+							},
+							deleted: timeline.comment.deleted,
+							type: timeline.comment.type,
+							links: {
+								self: {
+									href: timeline.comment.links.self.href
+								},
+								html: {
+									href: timeline.comment.links.html.href
+								}
+							},
+							pullrequest: {
+								type: timeline.comment.pullrequest.type,
+								id: timeline.comment.pullrequest.id,
+								title: timeline.comment.pullrequest.title,
+								links: {
+									self: {
+										href: timeline.comment.pullrequest.links.self.href
+									},
+									html: {
+										href: timeline.comment.pullrequest.links.html.href
+									}
+								}
+							}
+						}
+					}
+				]
+			};
+
 			const userResponse = await this.getCurrentUser();
 			const viewer = {
 				id: userResponse.account_id,
@@ -782,10 +929,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						},
 						state: pr.body.state,
 						title: pr.body.title,
-						timelineItems: {
-							// TODO fill out with activity data
-							nodes: [{}]
-						},
+						timelineItems: timeLineItems,
 						viewer: viewer
 					} as any //TODO: make this work
 				}
