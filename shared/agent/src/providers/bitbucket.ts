@@ -776,7 +776,11 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 							url: pr.body.source?.repository?.links?.html?.href
 						},
 						state: pr.body.state,
-						title: pr.body.title,
+						title: pr.body.title,						
+						timelineItems: {
+							// TODO fill out with activity data
+							nodes: [{}]
+						},
 						viewer: {
 							id: (await this.getCurrentUser()).account_id,
 							login: (await this.getCurrentUser()).display_name,

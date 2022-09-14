@@ -872,81 +872,7 @@ export const PullRequest = () => {
 									</InlineIcon>
 								</Tab>
 							)}
-
-							{pr.pendingReview ? (
-								<PRSubmitReviewButton style={{ margin: "-10px 0 7px auto" }}>
-									<Button variant="success" onClick={() => setFinishReviewOpen(!finishReviewOpen)}>
-										Finish<span className="wide-text"> review</span>
-										<PRBadge>
-											{pr.pendingReview.comments ? pr.pendingReview.comments.totalCount : 0}
-										</PRBadge>
-										<Icon name="chevron-down" />
-									</Button>
-									{finishReviewOpen && (
-										<PullRequestFinishReview
-											pr={pr}
-											mode="dropdown"
-											setIsLoadingMessage={setIsLoadingMessage}
-											setFinishReviewOpen={setFinishReviewOpen}
-										/>
-									)}
-								</PRSubmitReviewButton>
-							) : unresolvedThreads > 0 ? (
-								<TabActions style={{ margin: "-10px 0 7px auto" }}>
-									<PRSelectorButtons>
-										<Tooltip placement="top" title={`${unresolvedThreads} unresolved threads`}>
-											<span className="label">
-												{unresolvedThreads}
-												<span className="wide-text"> unresolved</span>
-											</span>
-										</Tooltip>
-										<span>
-											<Link
-												href={`${pr.repository.url}/-/issues/new?merge_request_to_resolve_discussions_of=${pr.number}`}
-											>
-												<Icon
-													className="clickable"
-													name="plus"
-													title="Resolve all threads in new issue"
-													placement="top"
-												/>
-											</Link>
-										</span>
-										<span onClick={jumpToNextThread}>
-											<Icon
-												className="clickable"
-												name="comment-go"
-												title="Jump to next unresolved thread"
-												placement="top"
-											/>
-										</span>
-										<span onClick={() => setCollapseAll(!collapseAll)}>
-											<Icon
-												className="clickable"
-												name={collapseAll ? "chevron-down-thin" : "chevron-up-thin"}
-												title={collapseAll ? "Expand all threads" : "Collapse all threads"}
-												placement="top"
-											/>
-										</span>
-									</PRSelectorButtons>
-								</TabActions>
-							) : resolvedThreads > 0 ? (
-								<TabActions style={{ margin: "-10px 0 7px auto" }}>
-									<PRSelectorButtons>
-										<span className="label">
-											<Icon name="check-circle" className="green-color margin-right" />
-											All <span className="wide-text">threads </span>resolved
-										</span>
-										<span onClick={() => setCollapseAll(!collapseAll)}>
-											<Icon
-												name={collapseAll ? "chevron-down-thin" : "chevron-up-thin"}
-												title={collapseAll ? "Expand all threads" : "Collapse all threads"}
-												placement="top"
-											/>
-										</span>
-									</PRSelectorButtons>
-								</TabActions>
-							) : null}
+ 
 						</Tabs>
 					</div>
 					{!derivedState.composeCodemarkActive && (
@@ -962,12 +888,11 @@ export const PullRequest = () => {
 											/>
 										</Description>
 									)}
-									{/* <SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
+									{/* 
+									<SummaryBox pr={pr} openRepos={openRepos} getOpenRepos={getOpenRepos} />
 									<ApproveBox pr={pr} />
-									<PipelineBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
-									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
-									<ReactAndDisplayOptions pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
-									{order === "newest" && bottomComment}
+ 									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
+ 									{order === "newest" && bottomComment}
 									<Timeline
 										pr={pr}
 										order={order}
