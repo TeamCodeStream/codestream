@@ -73,6 +73,7 @@ import CancelButton from "../../CancelButton";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 //import { PipelineBox } from "./PipelineBox";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { Timeline } from "./Timeline";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -893,13 +894,12 @@ export const PullRequest = () => {
 									<ApproveBox pr={pr} />
  									<MergeBox pr={pr} setIsLoadingMessage={setIsLoadingMessage} />
  									{order === "newest" && bottomComment}
+									*/}
 									<Timeline
-										pr={pr}
-										order={order}
-										filter={filter}
+										pr={pr}										 
 										setIsLoadingMessage={setIsLoadingMessage}
 										collapseAll={collapseAll}
-									/> */}
+									/>
 									{order === "oldest" && bottomComment}
 								</>
 							)}
