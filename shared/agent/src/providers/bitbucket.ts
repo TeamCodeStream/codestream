@@ -734,10 +734,15 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			// require(['bitbucket/util/state'], function(state) {
 			// 	console.log('Current user', state.getCurrentUser());
 			//   });
-			await this.getCurrentUser();
+			const userResponse = await this.getCurrentUser();
+			const viewer = {
+				id: userResponse.account_id,
+				login: userResponse.username,
+				avatarUrl: userResponse.links.avatar.href
+			};
 
 			response = {
-				viewer: {} as any,
+				viewer: viewer,
 				repository: {
 					id: pr.body.id + "",
 					url: pr.body.source?.repository?.links?.html?.href,
@@ -776,16 +781,12 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 							url: pr.body.source?.repository?.links?.html?.href
 						},
 						state: pr.body.state,
-						title: pr.body.title,						
+						title: pr.body.title,
 						timelineItems: {
 							// TODO fill out with activity data
 							nodes: [{}]
 						},
-						viewer: {
-							id: (await this.getCurrentUser()).account_id,
-							login: (await this.getCurrentUser()).display_name,
-							avatarUrl: (await this.getCurrentUser()).links.avatar.href
-						}
+						viewer: viewer
 					} as any //TODO: make this work
 				}
 			};
