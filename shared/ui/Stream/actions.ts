@@ -784,10 +784,10 @@ export const createStream =
 			return response.stream;
 		} catch (error) {
 			/* TODO: Handle errors
-                - handle name taken errors
-                - restricted actions
-                - users can't join
-        */
+			handle name taken errors
+			restricted actions
+			users can't join
+			*/
 			logError(error, { ...attributes, detail: `There was an error creating a channel` });
 			return undefined;
 		}
