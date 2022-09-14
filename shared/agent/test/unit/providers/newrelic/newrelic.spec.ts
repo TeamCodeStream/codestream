@@ -7,14 +7,21 @@ import {
 	GetReposScmResponse,
 	ObservabilityRepo,
 	RelatedEntity,
-	RelatedEntityByRepositoryGuidsResult
+	RelatedEntityByRepositoryGuidsResult,
 } from "../../../../src/protocol/agent.protocol";
 import { CSMe } from "../../../../src/protocol/api.protocol.models";
 import { NewRelicProvider } from "../../../../src/providers/newrelic";
 import {
+	GraphqlNrqlError,
+	GraphqlNrqlErrorResponse,
+	GraphqlNrqlTimeoutError,
+	isGetFileLevelTelemetryResponse,
+	isGraphqlNrqlError,
+} from "../../../../src/providers/newrelic.types";
+import {
 	MetricQueryRequest,
 	MetricTimeslice,
-	Span
+	Span,
 } from "../../../../src/providers/newrelic/newrelic.types";
 
 describe("NewRelicProvider", () => {
@@ -29,89 +36,89 @@ describe("NewRelicProvider", () => {
 							filepath: "Logger.kt",
 							formatted: "com.newrelic.common.Logger",
 							line: 67,
-							name: "wrapToBeTraceable"
+							name: "wrapToBeTraceable",
 						},
 						{
 							filepath: "Logger.kt",
 							formatted: "com.newrelic.common.Logger",
 							line: 28,
-							name: "logError"
+							name: "logError",
 						},
 						{
 							filepath: "Logger.kt",
 							formatted: "com.newrelic.common.Logger",
 							line: 18,
-							name: "logError$default"
+							name: "logError$default",
 						},
 						{
 							filepath: "RefreshTokenQuery.kt",
 							formatted: "com.newrelic.login.api.query.RefreshTokenQuery",
 							line: 62,
-							name: "refreshToken"
+							name: "refreshToken",
 						},
 						{
 							formatted: "com.newrelic.login.api.query.RefreshTokenQuery$refreshToken$1",
 							line: 15,
-							name: "invokeSuspend"
+							name: "invokeSuspend",
 						},
 						{
 							filepath: "ContinuationImpl.kt",
 							formatted: "kotlin.coroutines.jvm.internal.BaseContinuationImpl",
 							line: 33,
-							name: "resumeWith"
+							name: "resumeWith",
 						},
 						{
 							filepath: "DispatchedTask.kt",
 							formatted: "kotlinx.coroutines.DispatchedTask",
 							line: 104,
-							name: "run"
+							name: "run",
 						},
 						{
 							filepath: "Handler.java",
 							formatted: "android.os.Handler",
 							line: 883,
-							name: "handleCallback"
+							name: "handleCallback",
 						},
 						{
 							filepath: "Handler.java",
 							formatted: "android.os.Handler",
 							line: 100,
-							name: "dispatchMessage"
+							name: "dispatchMessage",
 						},
 						{
 							filepath: "Looper.java",
 							formatted: "android.os.Looper",
 							line: 224,
-							name: "loop"
+							name: "loop",
 						},
 						{
 							filepath: "ActivityThread.java",
 							formatted: "android.app.ActivityThread",
 							line: 7561,
-							name: "main"
+							name: "main",
 						},
 						{
 							filepath: "Method.java",
 							formatted: "java.lang.reflect.Method",
 							line: -2,
-							name: "invoke"
+							name: "invoke",
 						},
 						{
 							filepath: "RuntimeInit.java",
 							formatted: "com.android.internal.os.RuntimeInit$MethodAndArgsCaller",
 							line: 539,
-							name: "run"
+							name: "run",
 						},
 						{
 							filepath: "ZygoteInit.java",
 							formatted: "com.android.internal.os.ZygoteInit",
 							line: 995,
-							name: "main"
-						}
-					]
-				}
+							name: "main",
+						},
+					],
+				},
 			},
-			name: "Thing for Android - Production"
+			name: "Thing for Android - Production",
 		};
 
 		const results = new NewRelicProvider({} as any, {} as any).tryFormatStack(
@@ -133,7 +140,7 @@ describe("NewRelicProvider", () => {
 			"\tandroid.app.ActivityThread(ActivityThread.java:7561)",
 			"\tjava.lang.reflect.Method",
 			"\tcom.android.internal.os.RuntimeInit$MethodAndArgsCaller(RuntimeInit.java:539)",
-			"\tcom.android.internal.os.ZygoteInit(ZygoteInit.java:995)"
+			"\tcom.android.internal.os.ZygoteInit(ZygoteInit.java:995)",
 		]);
 	});
 
@@ -149,8 +156,8 @@ describe("NewRelicProvider", () => {
 							"code.lineno": 1,
 							"code.namespace": null,
 							"transaction.name": "a",
-							"code.function": "hello_world"
-						}
+							"code.function": "hello_world",
+						},
 					],
 					"Function/routes.app:MyClass.my_method": [
 						{
@@ -159,21 +166,21 @@ describe("NewRelicProvider", () => {
 							"code.lineno": 4,
 							"code.namespace": null,
 							"transaction.name": "d",
-							"code.function": "my_method"
-						}
-					]
+							"code.function": "my_method",
+						},
+					],
 				},
 				[
 					{
 						facet: "Function/routes.app:hello_world",
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:hello_world"
+						metricTimesliceName: "Function/routes.app:hello_world",
 					},
 					{
 						facet: "Function/routes.app:MyClass.my_method",
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:MyClass.my_method"
-					}
+						metricTimesliceName: "Function/routes.app:MyClass.my_method",
+					},
 				],
 				"python"
 			);
@@ -190,9 +197,9 @@ describe("NewRelicProvider", () => {
 						traceId: "123",
 						transactionId: "abc",
 						"code.namespace": null,
-						"code.function": "hello_world"
+						"code.function": "hello_world",
 					},
-					functionName: "hello_world"
+					functionName: "hello_world",
 				},
 				{
 					averageDuration: 3.2,
@@ -205,10 +212,10 @@ describe("NewRelicProvider", () => {
 						traceId: "456",
 						transactionId: "def",
 						"code.namespace": null,
-						"code.function": "my_method"
+						"code.function": "my_method",
 					},
-					functionName: "my_method"
-				}
+					functionName: "my_method",
+				},
 			]);
 		});
 
@@ -222,17 +229,17 @@ describe("NewRelicProvider", () => {
 							"code.function": "bill_credit_payment_item",
 							"code.lineno": 27,
 							"code.namespace": "foo_bar.system.tasks",
-							timestamp: 1647628200280
-						}
-					]
+							timestamp: 1647628200280,
+						},
+					],
 				},
 				[
 					{
 						facet: "OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
 						averageDuration: 3.2,
 						metricTimesliceName:
-							"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item"
-					}
+							"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+					},
 				],
 				"python"
 			);
@@ -250,10 +257,10 @@ describe("NewRelicProvider", () => {
 						"code.namespace": "foo_bar.system.tasks",
 						traceId: undefined,
 						transactionId: undefined,
-						"code.function": "bill_credit_payment_item"
+						"code.function": "bill_credit_payment_item",
 					},
-					functionName: "bill_credit_payment_item"
-				}
+					functionName: "bill_credit_payment_item",
+				},
 			]);
 		});
 
@@ -269,8 +276,8 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651192630939,
 						traceId: "289d61d8564a72ef01bcea7b76b95ca4",
 						"transaction.name": null,
-						transactionId: "5195e0f31cf1fce4"
-					}
+						transactionId: "5195e0f31cf1fce4",
+					},
 				],
 				"Controller/agents/create": [
 					{
@@ -281,8 +288,8 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651192612236,
 						traceId: "67e121ac35ff1cbe191fd1da94e50012",
 						"transaction.name": null,
-						transactionId: "2ac9f995b004df82"
-					}
+						transactionId: "2ac9f995b004df82",
+					},
 				],
 				"Controller/agents/destroy": [
 					{
@@ -293,27 +300,27 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651192599849,
 						traceId: "063c6612799ad82201ee739f4213ff39",
 						"transaction.name": null,
-						transactionId: "43d95607af1fa91f"
-					}
-				]
+						transactionId: "43d95607af1fa91f",
+					},
+				],
 			};
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
 					facet: "Controller/agents/create",
 					metricTimesliceName: "Controller/agents/create",
-					requestsPerMinute: 22.2
+					requestsPerMinute: 22.2,
 				},
 				{
 					facet: "Controller/agents/show",
 					metricTimesliceName: "Controller/agents/show",
-					requestsPerMinute: 22.2
+					requestsPerMinute: 22.2,
 				},
 				{
 					facet: "Controller/agents/destroy",
 					metricTimesliceName: "Controller/agents/destroy",
-					requestsPerMinute: 22.23
-				}
+					requestsPerMinute: 22.23,
+				},
 			];
 
 			const results = newrelic.addMethodName(
@@ -333,9 +340,9 @@ describe("NewRelicProvider", () => {
 						traceId: "67e121ac35ff1cbe191fd1da94e50012",
 						transactionId: "2ac9f995b004df82",
 						"code.namespace": "AgentsController",
-						"code.function": "create"
+						"code.function": "create",
 					},
-					functionName: "create"
+					functionName: "create",
 				},
 				{
 					className: "AgentsController",
@@ -348,9 +355,9 @@ describe("NewRelicProvider", () => {
 						traceId: "289d61d8564a72ef01bcea7b76b95ca4",
 						transactionId: "5195e0f31cf1fce4",
 						"code.namespace": "AgentsController",
-						"code.function": "show"
+						"code.function": "show",
 					},
-					functionName: "show"
+					functionName: "show",
 				},
 				{
 					className: "AgentsController",
@@ -363,10 +370,10 @@ describe("NewRelicProvider", () => {
 						traceId: "063c6612799ad82201ee739f4213ff39",
 						transactionId: "43d95607af1fa91f",
 						"code.namespace": "AgentsController",
-						"code.function": "destroy"
+						"code.function": "destroy",
 					},
-					functionName: "destroy"
-				}
+					functionName: "destroy",
+				},
 			]);
 			// console.info("result", JSON.stringify(result, null, 2));
 		});
@@ -384,7 +391,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1652110848694,
 						traceId: "2d2a1cfae193394b121427ff11df5fc5",
 						"transaction.name": null,
-						transactionId: "5154409dd464aad1"
+						transactionId: "5154409dd464aad1",
 					},
 					{
 						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb",
@@ -395,17 +402,17 @@ describe("NewRelicProvider", () => {
 						timestamp: 1652110782764,
 						traceId: "84ea3aebfc980a997ae65beefad3a208",
 						"transaction.name": null,
-						transactionId: "d120d392b5ab777f"
-					}
-				]
+						transactionId: "d120d392b5ab777f",
+					},
+				],
 			};
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
 					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
 					requestsPerMinute: 24.1,
-					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default"
-				}
+					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+				},
 			];
 
 			const results = newrelic.addMethodName(
@@ -425,10 +432,10 @@ describe("NewRelicProvider", () => {
 						traceId: "2d2a1cfae193394b121427ff11df5fc5",
 						transactionId: "5154409dd464aad1",
 						"code.namespace": "NotifierJob",
-						"code.function": "perform"
+						"code.function": "perform",
 					},
-					functionName: "perform"
-				}
+					functionName: "perform",
+				},
 			]);
 		});
 
@@ -444,7 +451,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700387308,
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						"transaction.name": null,
-						transactionId: "ab968a3e203d2451"
+						transactionId: "ab968a3e203d2451",
 					},
 					{
 						"code.lineno": "11",
@@ -454,8 +461,8 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651699137312,
 						traceId: "ffe331a263b4cc7dd7080ed9f2f5faba",
 						"transaction.name": null,
-						transactionId: "a0627ed02eb626c0"
-					}
+						transactionId: "a0627ed02eb626c0",
+					},
 				],
 				"Custom/CLMtesting/InstanceMethod": [
 					{
@@ -466,7 +473,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700387308,
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						"transaction.name": null,
-						transactionId: "ab968a3e203d2451"
+						transactionId: "ab968a3e203d2451",
 					},
 					{
 						"code.lineno": 33,
@@ -476,8 +483,8 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700356133,
 						traceId: "26d3724a5635120ede570b383ddf5790",
 						"transaction.name": null,
-						transactionId: "2e1a7d60f6a4400d"
-					}
+						transactionId: "2e1a7d60f6a4400d",
+					},
 				],
 				"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method": [
 					{
@@ -488,7 +495,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700387308,
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						"transaction.name": null,
-						transactionId: "ab968a3e203d2451"
+						transactionId: "ab968a3e203d2451",
 					},
 					{
 						"code.lineno": "27",
@@ -498,8 +505,8 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700356133,
 						traceId: "26d3724a5635120ede570b383ddf5790",
 						"transaction.name": null,
-						transactionId: "2e1a7d60f6a4400d"
-					}
+						transactionId: "2e1a7d60f6a4400d",
+					},
 				],
 				"Custom/CLMtesting/ClassMethod": [
 					{
@@ -510,7 +517,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700387308,
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						"transaction.name": null,
-						transactionId: "ab968a3e203d2451"
+						transactionId: "ab968a3e203d2451",
 					},
 					{
 						"code.lineno": 16,
@@ -520,9 +527,9 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651700356133,
 						traceId: "26d3724a5635120ede570b383ddf5790",
 						"transaction.name": null,
-						transactionId: "2e1a7d60f6a4400d"
-					}
-				]
+						transactionId: "2e1a7d60f6a4400d",
+					},
+				],
 			};
 
 			const metricTimesliceNames: MetricTimeslice[] = [
@@ -530,24 +537,24 @@ describe("NewRelicProvider", () => {
 					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
 					averageDuration: 1.1,
 					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method"
+						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
 				},
 				{
 					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
 					averageDuration: 1.2,
 					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method"
+						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
 				},
 				{
 					facet: "Custom/CLMtesting/ClassMethod",
 					averageDuration: 1.3,
-					metricTimesliceName: "Custom/CLMtesting/ClassMethod"
+					metricTimesliceName: "Custom/CLMtesting/ClassMethod",
 				},
 				{
 					facet: "Custom/CLMtesting/InstanceMethod",
 					averageDuration: 1.4,
-					metricTimesliceName: "Custom/CLMtesting/InstanceMethod"
-				}
+					metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
+				},
 			];
 
 			const results = newrelic.addMethodName(
@@ -569,9 +576,9 @@ describe("NewRelicProvider", () => {
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						transactionId: "ab968a3e203d2451",
 						"code.namespace": "Custom",
-						"code.function": "custom_class_method"
+						"code.function": "custom_class_method",
 					},
-					functionName: "custom_class_method"
+					functionName: "custom_class_method",
 				},
 				{
 					className: "Helpers",
@@ -585,9 +592,9 @@ describe("NewRelicProvider", () => {
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						transactionId: "ab968a3e203d2451",
 						"code.namespace": "Custom",
-						"code.function": "custom_instance_method"
+						"code.function": "custom_instance_method",
 					},
-					functionName: "custom_instance_method"
+					functionName: "custom_instance_method",
 				},
 				{
 					facet: "Custom/CLMtesting/ClassMethod",
@@ -601,8 +608,8 @@ describe("NewRelicProvider", () => {
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						transactionId: "ab968a3e203d2451",
 						"code.namespace": "Custom",
-						"code.function": "self.custom_class_method_too"
-					}
+						"code.function": "self.custom_class_method_too",
+					},
 				},
 				{
 					facet: "Custom/CLMtesting/InstanceMethod",
@@ -616,9 +623,9 @@ describe("NewRelicProvider", () => {
 						traceId: "40c7dedd273ee4a475756393a996a03b",
 						transactionId: "ab968a3e203d2451",
 						"code.namespace": "Custom",
-						"code.function": "custom_instance_method_too"
-					}
-				}
+						"code.function": "custom_instance_method_too",
+					},
+				},
 			]);
 		});
 
@@ -635,7 +642,7 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651855258268,
 						traceId: "8c39f01c9e867d5d7179a6a5152a8f8e",
 						"transaction.name": null,
-						transactionId: "90b4cb9daa96f88b"
+						transactionId: "90b4cb9daa96f88b",
 					},
 					{
 						"code.filepath": "/usr/src/app/lib/which_is_which.rb",
@@ -646,22 +653,22 @@ describe("NewRelicProvider", () => {
 						timestamp: 1651855257962,
 						traceId: "8c39f01c9e867d5d7179a6a5152a8f8e",
 						"transaction.name": null,
-						transactionId: "90b4cb9daa96f88b"
-					}
-				]
+						transactionId: "90b4cb9daa96f88b",
+					},
+				],
 			};
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
 					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 					averageDuration: 1.1,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename"
+					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 				},
 				{
 					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 					averageDuration: 1.2,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename"
-				}
+					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+				},
 			];
 
 			const results = newrelic.addMethodName(
@@ -682,9 +689,9 @@ describe("NewRelicProvider", () => {
 						"code.lineno": "20",
 						traceId: "8c39f01c9e867d5d7179a6a5152a8f8e",
 						transactionId: "90b4cb9daa96f88b",
-						"code.namespace": "WhichIsWhich"
+						"code.namespace": "WhichIsWhich",
 					},
-					functionName: "samename"
+					functionName: "samename",
 				},
 				{
 					className: "WhichIsWhich",
@@ -697,10 +704,10 @@ describe("NewRelicProvider", () => {
 						"code.lineno": "20",
 						traceId: "8c39f01c9e867d5d7179a6a5152a8f8e",
 						transactionId: "90b4cb9daa96f88b",
-						"code.namespace": "WhichIsWhich"
+						"code.namespace": "WhichIsWhich",
 					},
-					functionName: "samename"
-				}
+					functionName: "samename",
+				},
 			]);
 		});
 	});
@@ -708,36 +715,36 @@ describe("NewRelicProvider", () => {
 	it("getFileLevelTelemetry", async () => {
 		const serviceLocatorStub = {
 			git: {
-				getRepositoryByFilePath: function(path: string) {
+				getRepositoryByFilePath: function (path: string) {
 					return {
 						id: "123",
 						path: "whatever",
-						getWeightedRemotesByStrategy: function() {
+						getWeightedRemotesByStrategy: function () {
 							return [
 								{
 									name: "foo",
 									repoPath: "foo/bar",
 									remotes: [
 										{
-											rawUrl: "https://"
-										}
-									]
-								}
+											rawUrl: "https://",
+										},
+									],
+								},
 							];
-						}
+						},
 					};
-				}
+				},
 			},
 			users: {
-				getMe: function() {
+				getMe: function () {
 					return {
-						id: "1234"
+						id: "1234",
 					};
-				}
+				},
 			},
 			session: {
-				newRelicApiUrl: ""
-			}
+				newRelicApiUrl: "",
+			},
 		} as any;
 		const provider = new NewRelicProviderStub({} as any, {} as any);
 		provider.sessionServiceContainer = serviceLocatorStub;
@@ -748,9 +755,13 @@ describe("NewRelicProvider", () => {
 			options: {
 				includeAverageDuration: true,
 				includeErrorRate: true,
-				includeThroughput: true
-			}
+				includeThroughput: true,
+			},
 		});
+
+		if (!isGetFileLevelTelemetryResponse(results)) {
+			throw Error(results?.error?.type);
+		}
 
 		expect(results?.throughput?.length).toEqual(2);
 		expect(results?.throughput?.map(_ => _.functionName)).toEqual(["error", "hello_world"]);
@@ -759,36 +770,36 @@ describe("NewRelicProvider", () => {
 	it("getFileLevelTelemetry2", async () => {
 		const serviceLocatorStub = {
 			git: {
-				getRepositoryByFilePath: function(path: string) {
+				getRepositoryByFilePath: function (path: string) {
 					return {
 						id: "123",
 						path: "whatever",
-						getWeightedRemotesByStrategy: function() {
+						getWeightedRemotesByStrategy: function () {
 							return [
 								{
 									name: "foo",
 									repoPath: "foo/bar",
 									remotes: [
 										{
-											rawUrl: "https://"
-										}
-									]
-								}
+											rawUrl: "https://",
+										},
+									],
+								},
 							];
-						}
+						},
 					};
-				}
+				},
 			},
 			users: {
-				getMe: function() {
+				getMe: function () {
 					return {
-						id: "1234"
+						id: "1234",
 					};
-				}
+				},
 			},
 			session: {
-				newRelicApiUrl: ""
-			}
+				newRelicApiUrl: "",
+			},
 		} as any;
 		const provider = new NewRelicProviderStub2({} as any, {} as any);
 		provider.sessionServiceContainer = serviceLocatorStub;
@@ -799,13 +810,17 @@ describe("NewRelicProvider", () => {
 			options: {
 				includeAverageDuration: true,
 				includeErrorRate: true,
-				includeThroughput: true
-			}
+				includeThroughput: true,
+			},
 		});
+
+		if (!isGetFileLevelTelemetryResponse(results)) {
+			throw Error(results?.error?.type);
+		}
 
 		expect(results?.throughput?.length).toEqual(1);
 		expect(results?.throughput?.map(_ => _.functionName)).toEqual([
-			"create_bill_credit_payment_thing"
+			"create_bill_credit_payment_thing",
 		]);
 	});
 
@@ -815,7 +830,7 @@ describe("NewRelicProvider", () => {
 			"name LIKE '%foo-bar_baz%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'",
-			"name LIKE '%baz%'"
+			"name LIKE '%baz%'",
 		]);
 
 		expect(provider.generateEntityQueryStatements("test/foo-bar_baz")).toEqual([
@@ -823,24 +838,24 @@ describe("NewRelicProvider", () => {
 			"name LIKE '%test%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'",
-			"name LIKE '%baz%'"
+			"name LIKE '%baz%'",
 		]);
 
 		expect(provider.generateEntityQueryStatements("foo\\bar\\baz")).toEqual([
 			"name LIKE '%foo\\bar\\baz%'",
 			"name LIKE '%foo%'",
 			"name LIKE '%bar%'",
-			"name LIKE '%baz%'"
+			"name LIKE '%baz%'",
 		]);
 
 		expect(provider.generateEntityQueryStatements("foo/bar")).toEqual([
 			"name LIKE '%foo/bar%'",
 			"name LIKE '%foo%'",
-			"name LIKE '%bar%'"
+			"name LIKE '%bar%'",
 		]);
 
 		expect(provider.generateEntityQueryStatements("not~a$separator")).toEqual([
-			"name LIKE '%not~a$separator%'"
+			"name LIKE '%not~a$separator%'",
 		]);
 
 		expect(provider.generateEntityQueryStatements("")).toEqual(undefined);
@@ -849,7 +864,7 @@ describe("NewRelicProvider", () => {
 	it("getObservabilityRepos", async () => {
 		const serviceLocatorStub = {
 			scm: {
-				getRepos: function(): Promise<GetReposScmResponse> {
+				getRepos: function (): Promise<GetReposScmResponse> {
 					return new Promise(resolve => {
 						resolve({
 							repositories: [
@@ -864,7 +879,7 @@ describe("NewRelicProvider", () => {
 											domain: "yoursourcecode.net",
 											path: "johndoe/foo-account-persister",
 											rawUrl: "git@yoursourcecode.net:johndoe/foo-account-persister.git",
-											webUrl: "//yoursourcecode.net/johndoe/foo-account-persister"
+											webUrl: "//yoursourcecode.net/johndoe/foo-account-persister",
 										},
 										{
 											repoPath: "/Users/johndoe/code/johndoe_foo-account-persister",
@@ -872,15 +887,15 @@ describe("NewRelicProvider", () => {
 											domain: "yoursourcecode.net",
 											path: "biz-enablement/foo-account-persister",
 											rawUrl: "git@yoursourcecode.net:biz-enablement/foo-account-persister.git",
-											webUrl: "//yoursourcecode.net/biz-enablement/foo-account-persister"
-										}
-									]
-								}
-							]
+											webUrl: "//yoursourcecode.net/biz-enablement/foo-account-persister",
+										},
+									],
+								},
+							],
 						});
 					});
-				}
-			}
+				},
+			},
 		} as any;
 
 		const provider = new NewRelicProviderStub2({} as any, {} as any);
@@ -906,16 +921,16 @@ describe("NewRelicProvider", () => {
 						"code.function": "SuperheroBySlug",
 						name: "Function/apis.v2.superheros:superheros_superhero_by_slug",
 						timestamp: 1647612515523,
-						"transaction.name": null
-					}
-				]
+						"transaction.name": null,
+					},
+				],
 			},
 			[
 				{
 					facet: "Function/apis.v2.superheros:superheros_superhero_by_slug",
 					averageDuration: 0.0025880090121565193,
-					metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug"
-				}
+					metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug",
+				},
 			],
 			"python"
 		);
@@ -923,6 +938,59 @@ describe("NewRelicProvider", () => {
 		// console.log(JSON.stringify(results, null, 4));
 		// NOTE: this data is not quite correct, but we're testing to assert that we will use whatever is in `code.function`
 		expect(results[0].functionName).toEqual("SuperheroBySlug");
+	});
+
+	it("throws GraphqlNrqlTimeoutError for matching response", () => {
+		const provider = new NewRelicProvider({} as any, {} as any);
+		const responseBody: GraphqlNrqlErrorResponse = {
+			errors: [
+				{
+					extensions: {
+						errorClass: "TIMEOUT",
+						nrOnly: {},
+					},
+					path: ["path"],
+					message: "error happened",
+				},
+			],
+		};
+		// const error = expect(() => provider.checkGraphqlErrors(responseBody)).toThrow(GraphqlNrqlTimeoutError);
+		try {
+			provider.checkGraphqlErrors(responseBody);
+		} catch (e: unknown) {
+			expect(e instanceof GraphqlNrqlTimeoutError).toBe(true);
+			const error = e as GraphqlNrqlTimeoutError;
+			expect(error.errors.length).toBe(1);
+			expect(error.errors[0].message).toBe("error happened");
+			return;
+		}
+		// TODO use fail after fixed https://github.com/facebook/jest/issues/11698
+		throw new Error("GraphqlNrqlTimeoutError not thrown");
+	});
+
+	it("throws GraphqlNrqlError for other gql errors", () => {
+		const provider = new NewRelicProvider({} as any, {} as any);
+		const responseBody: GraphqlNrqlErrorResponse = {
+			errors: [
+				{
+					extensions: {
+						errorClass: "SOMETHING_BAD",
+						nrOnly: {},
+					},
+					path: ["path"],
+				},
+			],
+		};
+		try {
+			provider.checkGraphqlErrors(responseBody);
+		} catch (e: unknown) {
+			expect(e instanceof GraphqlNrqlError).toBe(true);
+			const error = e as GraphqlNrqlTimeoutError;
+			expect(error.errors.length).toBe(1);
+			return;
+		}
+		// TODO use fail after fixed https://github.com/facebook/jest/issues/11698
+		throw new Error("GraphqlNrqlError not thrown");
 	});
 });
 
@@ -952,11 +1020,11 @@ class NewRelicProviderStubBase extends NewRelicProvider {
 					tags: [
 						{
 							key: "url",
-							values: ["cheese"]
-						}
-					]
-				}
-			]
+							values: ["cheese"],
+						},
+					],
+				},
+			],
 		};
 	}
 
@@ -965,10 +1033,10 @@ class NewRelicProviderStubBase extends NewRelicProvider {
 			actor: {
 				account: {
 					nrql: {
-						results: []
-					}
-				}
-			}
+						results: [],
+					},
+				},
+			},
 		};
 	}
 
@@ -977,10 +1045,10 @@ class NewRelicProviderStubBase extends NewRelicProvider {
 			actor: {
 				account: {
 					nrql: {
-						results: []
-					}
-				}
-			}
+						results: [],
+					},
+				},
+			},
 		};
 	}
 
@@ -992,21 +1060,21 @@ class NewRelicProviderStubBase extends NewRelicProvider {
 					name: "my-entity",
 					account: {
 						id: 1,
-						name: "name"
+						name: "name",
 					},
 					tags: [
 						{
 							key: "accountId",
-							values: ["1"]
+							values: ["1"],
 						},
 						{
 							key: "url",
-							values: ["git@yoursourcecode.net:biz-enablement/foo-account-persister.git"]
-						}
-					]
-				}
+							values: ["git@yoursourcecode.net:biz-enablement/foo-account-persister.git"],
+						},
+					],
+				},
 			] as Entity[],
-			remotes: await this.buildRepoRemoteVariants(remotes)
+			remotes: await this.buildRepoRemoteVariants(remotes),
 		};
 	}
 
@@ -1024,40 +1092,40 @@ class NewRelicProviderStubBase extends NewRelicProvider {
 										entity: {
 											account: {
 												id: 1,
-												name: "name"
+												name: "name",
 											},
 											name: "src-entity",
 											type: "APPLICATION",
 											tags: [
 												{
 													key: "accountId",
-													values: ["1"]
-												}
-											]
-										}
+													values: ["1"],
+												},
+											],
+										},
 									},
 									target: {
 										entity: {
 											account: {
 												id: 1,
-												name: "name"
+												name: "name",
 											},
 											name: "target-entity",
 											type: "REPOSITORY",
 											tags: [
 												{
 													key: "accountId",
-													values: ["1"]
-												}
-											]
-										}
-									}
-								}
-							] as RelatedEntity[]
-						}
-					}
-				]
-			}
+													values: ["1"],
+												},
+											],
+										},
+									},
+								},
+							] as RelatedEntity[],
+						},
+					},
+				],
+			},
 		};
 	}
 }
@@ -1072,7 +1140,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755718,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 1925,
@@ -1081,7 +1149,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755718,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": null,
@@ -1090,7 +1158,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755718,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": null,
@@ -1099,7 +1167,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755718,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 464,
@@ -1108,7 +1176,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755718,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 1363,
@@ -1117,7 +1185,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755717,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 1395,
@@ -1126,7 +1194,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755717,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 1864,
@@ -1135,7 +1203,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755717,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 27,
@@ -1144,7 +1212,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755717,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": null,
@@ -1153,7 +1221,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755716,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 2086,
@@ -1162,7 +1230,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755716,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 1837,
@@ -1171,7 +1239,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755716,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": null,
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": 2086,
@@ -1180,7 +1248,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612755716,
 				traceId: "eeaea27222ebc8bd9620532a39eba2ee",
 				"transaction.name": "WebTransaction/Function/routes.app:error",
-				transactionId: "eeaea27222ebc8bd"
+				transactionId: "eeaea27222ebc8bd",
 			},
 			{
 				"code.lineno": null,
@@ -1189,7 +1257,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669352,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": null,
@@ -1198,7 +1266,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669352,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 464,
@@ -1207,7 +1275,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669352,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1925,
@@ -1216,7 +1284,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669352,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1892,
@@ -1225,7 +1293,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669351,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1395,
@@ -1234,7 +1302,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669351,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1864,
@@ -1243,7 +1311,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669351,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1363,
@@ -1252,7 +1320,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 2086,
@@ -1261,7 +1329,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": "WebTransaction/Function/routes.app:error",
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": null,
@@ -1270,7 +1338,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 2086,
@@ -1279,7 +1347,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 1837,
@@ -1288,7 +1356,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": 27,
@@ -1297,7 +1365,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612669350,
 				traceId: "f6162d7b5374c64014c41ab0629add6c",
 				"transaction.name": null,
-				transactionId: "f6162d7b5374c640"
+				transactionId: "f6162d7b5374c640",
 			},
 			{
 				"code.lineno": null,
@@ -1306,7 +1374,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515523,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": null,
@@ -1315,7 +1383,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515523,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 464,
@@ -1324,7 +1392,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515523,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 1925,
@@ -1333,7 +1401,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515523,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 1892,
@@ -1342,7 +1410,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515522,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 1864,
@@ -1351,7 +1419,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515522,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 464,
@@ -1360,7 +1428,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515521,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": null,
@@ -1369,7 +1437,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515521,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 40,
@@ -1378,7 +1446,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515520,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 1864,
@@ -1387,7 +1455,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515520,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 1892,
@@ -1396,7 +1464,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515520,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 1925,
@@ -1405,7 +1473,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515520,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": null,
@@ -1414,7 +1482,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515520,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 1837,
@@ -1423,7 +1491,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515519,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": null,
@@ -1432,7 +1500,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515519,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 2086,
@@ -1441,7 +1509,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515519,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": 2086,
@@ -1450,7 +1518,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515518,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": "WebTransaction/Function/routes.app:external_source",
-				transactionId: "793a543ef938a9fb"
+				transactionId: "793a543ef938a9fb",
 			},
 			{
 				"code.lineno": null,
@@ -1459,7 +1527,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 2086,
@@ -1468,7 +1536,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": "WebTransaction/Function/routes.app:external_call",
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": null,
@@ -1477,7 +1545,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 2086,
@@ -1486,7 +1554,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 1837,
@@ -1495,7 +1563,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
+				transactionId: "9ecccdf563986be9",
 			},
 			{
 				"code.lineno": 32,
@@ -1504,8 +1572,8 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 				timestamp: 1647612515514,
 				traceId: "9ecccdf563986be9ae6c00b834b90a3e",
 				"transaction.name": null,
-				transactionId: "9ecccdf563986be9"
-			}
+				transactionId: "9ecccdf563986be9",
+			},
 		];
 	}
 
@@ -1534,11 +1602,11 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					tags: [
 						{
 							key: "url",
-							values: ["cheese"]
-						}
-					]
-				}
-			]
+							values: ["cheese"],
+						},
+					],
+				},
+			],
 		};
 	}
 
@@ -1551,17 +1619,17 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 							{
 								facet: "Function/routes.app:error",
 								metricTimesliceName: "Function/routes.app:error",
-								requestsPerMinute: 0.2
+								requestsPerMinute: 0.2,
 							},
 							{
 								facet: "Function/routes.app:hello_world",
 								metricTimesliceName: "Function/routes.app:hello_world",
-								requestsPerMinute: 0.06666666666666667
-							}
-						]
-					}
-				}
-			}
+								requestsPerMinute: 0.06666666666666667,
+							},
+						],
+					},
+				},
+			},
 		};
 	}
 
@@ -1574,17 +1642,17 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 							{
 								facet: "WebTransaction/Function/routes.app:error",
 								averageDuration: 0.0025880090121565193,
-								metricTimesliceName: "WebTransaction/Function/routes.app:error"
+								metricTimesliceName: "WebTransaction/Function/routes.app:error",
 							},
 							{
 								facet: "WebTransaction/Function/routes.app:hello_world",
 								averageDuration: 0.0015958845615386963,
-								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world"
-							}
-						]
-					}
-				}
-			}
+								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world",
+							},
+						],
+					},
+				},
+			},
 		};
 	}
 
@@ -1597,12 +1665,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 							{
 								facet: "Errors/WebTransaction/Function/routes.app:error",
 								errorsPerMinute: 0.48333333333333334,
-								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error"
-							}
-						]
-					}
-				}
-			}
+								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error",
+							},
+						],
+					},
+				},
+			},
 		};
 	}
 }
@@ -1615,8 +1683,8 @@ class NewRelicProviderStub2 extends NewRelicProviderStubBase {
 				name: "Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
 				timestamp: 1647631200451,
 				"transaction.name":
-					"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing"
-			}
+					"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
+			},
 		];
 	}
 
@@ -1631,12 +1699,12 @@ class NewRelicProviderStub2 extends NewRelicProviderStubBase {
 									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
 								metricTimesliceName:
 									"OtherTransaction/Carrot/foo_bar.bills.tasks.create_bill_credit_payment_thing",
-								requestsPerMinute: 0.35
-							}
-						]
-					}
-				}
-			}
+								requestsPerMinute: 0.35,
+							},
+						],
+					},
+				},
+			},
 		};
 	}
 }

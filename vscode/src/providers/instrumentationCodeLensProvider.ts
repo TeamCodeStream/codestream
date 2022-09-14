@@ -98,9 +98,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	}
 
 	private checkJavaPlugin(): vscode.CodeLens[] | undefined {
-		return extensions.getExtension("redhat.java")?.isActive === true
-			? undefined
-			: this.missingJavaExtensionCodelens();
+		// At least for Java isActive is wildly inaccurate
+		const extension = extensions.getExtension("redhat.java");
+		return extension ? undefined : this.missingJavaExtensionCodelens();
 	}
 
 	private checkCsharpPlugin(): vscode.CodeLens[] | undefined {

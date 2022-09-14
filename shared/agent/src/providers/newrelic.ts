@@ -33,6 +33,8 @@ import {
 	ErrorGroupResponse,
 	ErrorGroupsResponse,
 	ErrorGroupStateType,
+	GetAlertViolationsQueryResult,
+	GetAlertViolationsResponse,
 	GetFileLevelTelemetryRequest,
 	GetFileLevelTelemetryRequestType,
 	GetFileLevelTelemetryResponse,
@@ -66,6 +68,9 @@ import {
 	GetObservabilityReposRequest,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetServiceLevelTelemetryRequest,
+	GetServiceLevelTelemetryRequestType,
+	GetServiceLevelTelemetryResponse,
 	GoldenMetricsQueryResult,
 	GoldenMetricsResult,
 	MetricTimesliceNameMapping,
@@ -77,20 +82,22 @@ import {
 	RelatedEntity,
 	RelatedEntityByRepositoryGuidsResult,
 	ReposScm,
+	ServiceGoldenMetricsQueryResult,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
-	ServiceGoldenMetricsQueryResult,
-	GetServiceLevelTelemetryRequest,
-	GetServiceLevelTelemetryRequestType,
-	GetServiceLevelTelemetryResponse,
-	GetAlertViolationsResponse,
-	GetAlertViolationsQueryResult,
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Functions, log, lspHandler, lspProvider } from "../system";
 import { Strings } from "../system/string";
+import {
+	GraphqlNrqlError,
+	GraphqlNrqlTimeoutError,
+	isGraphqlNrqlError,
+	NRErrorResponse,
+	NRErrorType,
+} from "./newrelic.types";
 import { generateMethodAverageDurationQuery } from "./newrelic/methodAverageDurationQuery";
 import { generateMethodErrorRateQuery } from "./newrelic/methodErrorRateQuery";
 import { generateMethodThroughputQuery } from "./newrelic/methodThroughputQuery";
@@ -113,6 +120,8 @@ import {
 	spanQueryTypes,
 } from "./newrelic/spanQuery";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
+
+const ignoredErrors = [GraphqlNrqlTimeoutError];
 
 const supportedLanguages = ["python", "ruby", "csharp", "java", "go"] as const;
 export type LanguageId = typeof supportedLanguages[number];
@@ -370,7 +379,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		let response: any;
 		try {
 			response = await (await this.client()).request<T>(query, variables);
+			// GraphQL returns happy HTTP 200 response for api level errors
+			this.checkGraphqlErrors(response);
 		} catch (ex) {
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 			ContextLogger.error(ex, `query caught:`);
 			const exType = this._isSuppressedException(ex);
 			if (exType !== undefined) {
@@ -1707,9 +1721,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				accountId: request.newRelicAccountId!,
 			});
 		} catch (ex) {
-			Logger.error(ex, "getMethodThroughput", {
+			this.errorLogIfNotIgnored(ex, "getMethodThroughput", {
 				request,
 			});
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 		}
 		return undefined;
 	}
@@ -1726,9 +1743,12 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				accountId: request.newRelicAccountId!,
 			});
 		} catch (ex) {
-			Logger.error(ex, "getMethodAverageDuration", {
+			this.errorLogIfNotIgnored(ex, "getMethodAverageDuration", {
 				request,
 			});
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 		}
 		return undefined;
 	}
@@ -1744,7 +1764,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				accountId: request.newRelicAccountId!,
 			});
 		} catch (ex) {
-			Logger.error(ex, "getMethodErrorRate", { request });
+			this.errorLogIfNotIgnored(ex, "getMethodErrorRate", { request });
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 		}
 		return undefined;
 	}
@@ -1773,7 +1796,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			}
 		} catch (ex) {
-			Logger.error(ex, "getSpans", { request });
+			this.errorLogIfNotIgnored(ex, "getSpans", { request });
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 		}
 		Logger.warn("getSpans none", {
 			locator: request.locator,
@@ -2068,7 +2094,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	@log()
 	async getFileLevelTelemetry(
 		request: GetFileLevelTelemetryRequest
-	): Promise<GetFileLevelTelemetryResponse | undefined> {
+	): Promise<GetFileLevelTelemetryResponse | NRErrorResponse | undefined> {
 		const languageId: LanguageId | undefined = isSupportedLanguage(request.languageId)
 			? request.languageId
 			: undefined;
@@ -2113,13 +2139,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("getFileLevelTelemetry: not connected", {
 				request,
 			});
-			return {
+			return <NRErrorResponse>{
 				isConnected: isConnected,
 				error: {
 					message: "Not connected to New Relic",
 					type: "NOT_CONNECTED",
 				},
-			} as any;
+			};
 		}
 
 		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
@@ -2130,9 +2156,25 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return undefined;
 		}
 
-		const entityCount = await this.getEntityCount();
-		if (entityCount < 1) {
-			ContextLogger.log("getFileLevelTelemetry: no NR1 entities");
+		try {
+			const entityCount = await this.getEntityCount();
+			if (entityCount < 1) {
+				ContextLogger.log("getFileLevelTelemetry: no NR1 entities");
+				return undefined;
+			}
+		} catch (ex) {
+			if (ex instanceof GraphqlNrqlError) {
+				const type = this.errorTypeMapper(ex);
+				Logger.warn(`getFileLevelTelemetry error ${type}`, {
+					request,
+				});
+				return <NRErrorResponse>{
+					error: {
+						message: ex.message,
+						type,
+					},
+				};
+			}
 			return undefined;
 		}
 
@@ -2152,7 +2194,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 		if (!observabilityRepo.entityAccounts?.length) {
 			ContextLogger.warn("getFileLevelTelemetry: no entityAccounts");
-			return {
+			return <NRErrorResponse>{
 				repo: {
 					id: repoForFile.id,
 					name: this.getRepoName(repoForFile),
@@ -2162,7 +2204,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					message: "",
 					type: "NOT_ASSOCIATED",
 				},
-			} as any;
+			};
 		}
 
 		const entity = this.getGoldenSignalsEntity(codeStreamUser!, observabilityRepo);
@@ -2281,6 +2323,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 			return response;
 		} catch (ex) {
+			if (ex instanceof GraphqlNrqlError) {
+				const type = this.errorTypeMapper(ex);
+				Logger.warn(`getFileLevelTelemetry error ${type}`, {
+					request,
+					newRelicEntityGuid,
+					newRelicAccountId,
+				});
+				return <NRErrorResponse>{
+					error: {
+						message: ex.message,
+						type,
+					},
+				};
+			}
 			Logger.error(ex, "getFileLevelTelemetry", {
 				request,
 				newRelicEntityGuid,
@@ -2294,6 +2350,15 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			newRelicAccountId,
 		});
 
+		return undefined;
+	}
+
+	private errorTypeMapper(ex: Error): NRErrorType | undefined {
+		if (ex instanceof GraphqlNrqlTimeoutError) {
+			return "NR_TIMEOUT";
+		} else if (ex instanceof GraphqlNrqlError) {
+			return "NR_UNKNOWN";
+		}
 		return undefined;
 	}
 
@@ -2471,7 +2536,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				filters: [{ repoId: repoId }],
 			});
 		} catch (err) {
-			ContextLogger.warn("getObservabilityEntityRepos", { error: err });
+			this.contextWarnLogIfNotIgnored("getObservabilityEntityRepos", { error: err });
+			if (err instanceof GraphqlNrqlError) {
+				throw err;
+			}
 		}
 		if (!observabilityRepos?.repos?.length) {
 			ContextLogger.warn("observabilityRepos.repos empty", {
@@ -3733,7 +3801,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			return result?.actor?.entitySearch?.count;
 		} catch (ex) {
-			ContextLogger.error(ex, "getEntityCount");
+			this.errorLogIfNotIgnored(ex, "getEntityCount");
+			if (ex instanceof GraphqlNrqlError) {
+				throw ex;
+			}
 		}
 		return 0;
 	}
@@ -3865,6 +3936,28 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 		}
 		return undefined;
+	}
+
+	public checkGraphqlErrors(response: unknown): void {
+		if (isGraphqlNrqlError(response)) {
+			const timeoutError = response.errors.find(err => err.extensions?.errorClass === "TIMEOUT");
+			if (timeoutError) {
+				throw new GraphqlNrqlTimeoutError(response.errors, timeoutError.message);
+			}
+			const firstMessage = response.errors[0].message;
+			throw new GraphqlNrqlError(response.errors, firstMessage);
+		}
+	}
+
+	private errorLogIfNotIgnored(ex: Error, message: string, ...params: any[]): void {
+		const match = ignoredErrors.find(ignored => ex instanceof ignored);
+		if (!match) {
+			ContextLogger.error(ex, message, params);
+		}
+	}
+
+	private contextWarnLogIfNotIgnored(message: string, ...params: any[]) {
+		ContextLogger.warn(message, params);
 	}
 }
 

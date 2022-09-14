@@ -602,7 +602,12 @@ class FileLevelTelemetryResult(
     val relativeFilePath: String?
 )
 
+const val NOT_ASSOCIATED = "NOT_ASSOCIATED"
+const val NR_TIMEOUT = "NR_TIMEOUT"
+const val NOT_CONNECTED = "NOT_CONNECTED"
+
 class FileLevelTelemetryResultError(
+    val message: String?,
     val type: String
 )
 

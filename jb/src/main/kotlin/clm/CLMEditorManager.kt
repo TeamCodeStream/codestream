@@ -7,11 +7,13 @@ import com.codestream.extensions.lspPosition
 import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
+import com.codestream.protocols.agent.FileLevelTelemetryResultError
 import com.codestream.protocols.agent.FunctionLocator
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
 import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
+import com.codestream.protocols.agent.NOT_ASSOCIATED
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
 import com.codestream.sessionService
@@ -23,6 +25,7 @@ import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.event.DocumentEvent
@@ -80,9 +83,12 @@ abstract class CLMEditorManager(
     private val metricsBySymbol = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
     private val inlays = mutableSetOf<Inlay<CLMCustomRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
+    private var currentError: FileLevelTelemetryResultError? = null
     private var analyticsTracked = false
     private val appSettings = ServiceManager.getService(ApplicationSettingsService::class.java)
     private var doPoll = true
+
+    private val logger = Logger.getInstance(CLMEditorManager::class.java)
 
     init {
         pollLoadInlays()
@@ -138,6 +144,21 @@ abstract class CLMEditorManager(
                             )
                         ) ?: return@launch
                         // result guaranteed to be non-null, don't overwrite previous result if we get a NR timeout
+                        if (result.error != null) {
+                            currentError = result.error
+                            if (result.error?.type == NOT_ASSOCIATED) {
+                                metricsBySymbol.clear()
+                                ApplicationManager.getApplication().invokeLater {
+                                    // invokeLater required since we're in coroutine
+                                    updateInlays()
+                                }
+                            }
+                            logger.info("Not updating CLM metrics due to error ${result.error?.type}")
+                            return@launch
+                        } else {
+                            currentError = null
+                        }
+
                         lastResult = result
                         metricsBySymbol.clear()
 
@@ -158,7 +179,7 @@ abstract class CLMEditorManager(
                             updateInlays()
                         }
                     } catch (ex: Exception) {
-                        ex.printStackTrace()
+                        logger.error("Error getting fileLevelTelemetry", ex)
                     }
                 }
 
@@ -175,15 +196,20 @@ abstract class CLMEditorManager(
         }
     }
 
-    private fun _updateInlays() {
+    private fun _clearInlays() {
         inlays.forEach {
             it.dispose()
         }
         inlays.clear()
-        val result = lastResult ?: return
-        if (result.error?.type == "NOT_ASSOCIATED") {
+    }
+
+    private fun _updateInlays() {
+        // For timeout and other transient errors keep showing previous CLM metrics
+        if (currentError?.type == "NOT_ASSOCIATED") {
+            _clearInlays()
             updateInlayNotAssociated()
-        } else {
+        } else if (currentError == null) {
+            _clearInlays()
             updateInlaysCore()
         }
     }
