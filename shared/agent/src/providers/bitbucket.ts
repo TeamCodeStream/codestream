@@ -339,6 +339,7 @@ interface BitbucketPullRequest {
 		display_name: BitbucketAuthor;
 	};
 	created_on: string;
+	description?: string;
 	destination: {
 		branch: {
 			name: string;
@@ -761,6 +762,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 							avatarUrl: pr.body.author.links.avatar
 						},
 						comments: treeComments || [],
+						description: pr.body.description,
 						number: pr.body.id,
 						idComputed: JSON.stringify({
 							id: pr.body.id,
@@ -774,6 +776,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 							url: pr.body.source?.repository?.links?.html?.href
 						},
 						state: pr.body.state,
+						title: pr.body.title,
 						viewer: {
 							id: (await this.getCurrentUser()).account_id,
 							login: (await this.getCurrentUser()).display_name,
