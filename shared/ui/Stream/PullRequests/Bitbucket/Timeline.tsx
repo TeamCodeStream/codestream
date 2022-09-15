@@ -64,8 +64,10 @@ const ToggleThread = styled.span`
 
 const Comment = styled.div`
 	position: relative;
+	padding-left: 15px;
 	&.nth-reply {
 		padding-top: 15px;
+		padding-left: 15px;
 	}
 `;
 
