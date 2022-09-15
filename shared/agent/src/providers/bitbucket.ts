@@ -798,91 +798,23 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 			const repoWithOwnerSplit = repoWithOwner.split("/");
 
-			const timeline = await this.get<TimelineItem>(
+			const timeline = await this.get<BitbucketValues<TimelineItem[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
 			);
 
-			// console.log("timeline is: ", timeline);
-
-			const timelineItems = [
-				{
+			const mappedTimeline = timeline.body.values.map(_ => {
+				return {
 					author: {
-						avatarUrl: timeline?.body?.comment?.user?.links?.avatar,
-						name: timeline?.body?.comment?.user?.display_name,
-						login: timeline?.body?.comment?.user?.account_id
+						avatarUrl: _.comment?.user?.links?.avatar?.href,
+						name: _.comment?.user?.display_name,
+						login: _.comment?.user?.display_name
 					},
-					bodyText: timeline?.body?.comment?.content?.raw,
-					createdAt: timeline?.body?.comment?.created_on
-				}
-			];
-			// pull_request: {
-			// 	type: timeline?.body?.pull_request?.type,
-			// 	id: timeline?.body?.pull_request?.id,
-			// 	title: timeline.body.pull_request.title,
-			// 	links: {
-			// 		self: {
-			// 			href: timeline.body.pull_request.links.self.href
-			// 		},
-			// 		html: {
-			// 			href: timeline.body.pull_request.links.html.href
-			// 		}
-			// 	}
-			// },
-			// comment: {
-			// 	id: timeline.body.comment.id,
-			// 	created_on: timeline.body.comment.created_on,
-			// 	updated_on: timeline.body.comment.updated_on,
-			// 	content: {
-			// 		type: timeline.body.comment.content.type,
-			// 		raw: timeline.body.comment.content.raw,
-			// 		markup: timeline.body.comment.content.markup,
-			// 		html: timeline.body.comment.content.html
-			// 	},
-			// 	user: {
-			// 		display_name: timeline.body.comment.user,
-			// 		links: {
-			// 			self: {
-			// 				href: timeline.body.comment.user.links.self.href
-			// 			},
-			// 			avatar: {
-			// 				href: timeline.body.comment.user.links.avatar.href
-			// 			},
-			// 			html: {
-			// 				href: timeline.body.comment.user.links.html
-			// 			}
-			// 		},
-			// 		type: timeline.body.comment.user.type,
-			// 		uuid: timeline.body.comment.user.uuid,
-			// 		account_id: timeline.body.comment.user.account_id,
-			// 		nickname: timeline.body.comment.user.nickname
-			// 	},
-			// 	deleted: timeline.body.comment.deleted,
-			// 	type: timeline.body.comment.type,
-			// 	links: {
-			// 		self: {
-			// 			href: timeline.body.comment.links.self.href
-			// 		},
-			// 		html: {
-			// 			href: timeline.body.comment.links.html.href
-			// 		}
-			// 	},
-			// 	pullrequest: {
-			// 		type: timeline.body.comment.pullrequest.type,
-			// 		id: timeline.body.comment.pullrequest.id,
-			// 		title: timeline.body.comment.pullrequest.title,
-			// 		links: {
-			// 			self: {
-			// 				href: timeline.body.comment.pullrequest.links.self.href
-			// 			},
-			// 			html: {
-			// 				href: timeline.body.comment.pullrequest.links.html.href
-			// 			}
-			// 		}
-			// 	}
-			// }
-			// };
+					bodyText: _.comment?.content?.raw,
+					createdAt: _.comment?.created_on
+				};
+			});
 
-			// console.log("timelineItems is: ", timelineItems);
+			const timelineItems.nodes = mappedTimeline;
 
 			const userResponse = await this.getCurrentUser();
 			const viewer = {
@@ -957,6 +889,34 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 		return response;
 	}
+
+	// async pullRequestMerge(request: {
+	// 	pullRequestId: string;
+	// 	repoWithOwner: string;
+	// 	message: string;
+	// }): Promise<Directives> {
+	// 	const payload: BitbucketMergeRequest = {
+	// 		message: request.message
+	// 	};
+	// 	Logger.log(`commenting:pullRequestMerge`, {
+	// 		request: request,
+	// 		payload: payload
+	// 	});
+
+	// 	const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+	// 	const response = await this.post<BitbucketMergeRequest>(
+	// 		`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/merge`,
+	// 		payload
+	// 	);
+
+	// 	const directives: Directive[] = [
+	// 		{
+	// 			type: "merge",
+	// 			data: {
+	// 				updatedAt: new Date().getTime() as any
+	// 			}
+	// 		}
+	// }
 
 	//TODO: implement
 	async createPullRequestComment(request: {
