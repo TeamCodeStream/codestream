@@ -61,13 +61,8 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../DropdownButton";
-//import { ApproveBox } from "./ApproveBox";
-//import { MergeBox } from "./MergeBox";
-//import { ReactAndDisplayOptions } from "./ReactAndDisplayOptions";
-//import { SummaryBox } from "./SummaryBox";
-//import { RightActionBar } from "./RightActionBar";
+ 
 import { MarkdownText } from "../../MarkdownText";
-//import { EditPullRequest } from "./EditPullRequest";
 import CancelButton from "../../CancelButton";
 //import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
@@ -417,7 +412,7 @@ export const PullRequest = () => {
 
 		let _didChangeDataNotification;
 		getOpenRepos();
-		initialFetch().then((_: GitLabMergeRequestWrapper | undefined) => {
+		initialFetch().then((_: any | undefined) => {
 			_didChangeDataNotification = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 				if (e.type === ChangeDataType.Commits) {
 					reload("Updating...");
@@ -431,63 +426,64 @@ export const PullRequest = () => {
 		};
 	});
 
-	useEffect(() => {
-		// don't run this until we have mounted
-		if (!didMount) return;
+	// useEffect(() => {
+	// 	// don't run this until we have mounted
+	// 	if (!didMount) return;
 
-		interval && clearInterval(interval);
-		interval = setInterval(async () => {
-			try {
-				if (intervalCounter >= 60) {
-					// two hours
-					interval && clearInterval(interval);
-					intervalCounter = 0;
-					console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
-					return;
-				}
+	// 	interval && clearInterval(interval);
+	// 	interval = setInterval(async () => {
+	// 		try {
+	// 			if (intervalCounter >= 60) {
+	// 				// two hours
+	// 				interval && clearInterval(interval);
+	// 				intervalCounter = 0;
+	// 				console.warn(`stopped getPullRequestLastUpdated interval counter=${intervalCounter}`);
+	// 				return;
+	// 			}
 
-				const response = (await dispatch(
-					api(
-						"getPullRequestLastUpdated",
-						{},
-						{ preventClearError: true, preventErrorReporting: true }
-					)
-				)) as any;
-				if (
-					derivedState.currentPullRequest &&
-					derivedState.currentPullRequestLastUpdated &&
-					response &&
-					response.updatedAt &&
-					derivedState.currentPullRequestLastUpdated &&
-					// if more than 5 seconds "off""
-					(Date.parse(response.updatedAt) -
-						Date.parse(derivedState.currentPullRequestLastUpdated)) /
-						1000 >
-						5
-				) {
-					console.warn(
-						"getPullRequestLastUpdated is updating",
-						response.updatedAt,
-						derivedState.currentPullRequestLastUpdated,
-						intervalCounter
-					);
-					intervalCounter = 0;
-					fetch();
-					clearInterval(interval);
-				} else {
-					intervalCounter++;
-					console.log("incrementing counter", intervalCounter);
-				}
-			} catch (ex) {
-				console.error(ex);
-				interval && clearInterval(interval);
-			}
-		}, 120000); //120000 === 2 minute interval
+	// 			const response = (await dispatch(
+	// 				api(
+	// 					"getPullRequestLastUpdated",
+	// 					{},
+	// 					{ preventClearError: true, preventErrorReporting: true }
+	// 				)
+	// 			)) as any;
+	// 			if (
+	// 				derivedState.currentPullRequest &&
+	// 				derivedState.currentPullRequestLastUpdated &&
+	// 				response &&
+	// 				response.updatedAt &&
+	// 				derivedState.currentPullRequestLastUpdated &&
+	// 				// if more than 5 seconds "off""
+	// 				(Date.parse(response.updatedAt) -
+	// 					Date.parse(derivedState.currentPullRequestLastUpdated)) /
+	// 					1000 >
+	// 					5
+	// 			) {
+	// 				console.warn(
+	// 					"getPullRequestLastUpdated is updating",
+	// 					response.updatedAt,
+	// 					derivedState.currentPullRequestLastUpdated,
+	// 					intervalCounter
+	// 				);
+	// 				intervalCounter = 0;
+	// 				fetch();
+	// 				clearInterval(interval);
+	// 			} else {
+	// 				intervalCounter++;
+	// 				console.log("incrementing counter", intervalCounter);
+	// 			}
+	// 		} catch (ex) {
+	// 			console.error(ex);
+	// 			interval && clearInterval(interval);
+	// 		}
+	// 	}, 120000); //120000 === 2 minute interval
 
-		return () => {
-			interval && clearInterval(interval);
-		};
-	}, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
+	// 	return () => {
+	// 		interval && clearInterval(interval);
+	// 	};
+	// }, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
+
 
 	// TODO fix this thing (need the PR typing here)
 	const pr: any = derivedState.currentPullRequest?.conversations?.repository?.pullRequest;
@@ -820,7 +816,7 @@ export const PullRequest = () => {
 							{pr.title}{" "}
 							<Tooltip title="Open on Bitbucket" placement="top" delay={1}>
 								<span>
-									<Link href={pr.webUrl}>
+									<Link href={pr.url}>
 										!{pr.number}
 										<Icon name="link-external" className="open-external" />
 									</Link>

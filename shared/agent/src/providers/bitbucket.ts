@@ -867,6 +867,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						timelineItems: {
 							nodes: mappedTimelineItems
 						},
+						url: pr.body.links.html.href,
  						viewer: viewer
 					} as any //TODO: make this work
 				}
