@@ -265,7 +265,7 @@ interface BitbucketPullRequestComment2 {
 	parent?: {
 		id: number;
 	};
-	replies?: [BitbucketPullRequestComment2];
+	replies?: BitbucketPullRequestComment2[];
 }
 
 interface BitbucketMergeRequest {
@@ -358,6 +358,7 @@ interface TimelineItem {
 
 interface BitbucketPullRequestComment {
 	id: number;
+	created_on: string;
 	content: {
 		raw: string;
 		html: string;
@@ -365,18 +366,23 @@ interface BitbucketPullRequestComment {
 	user: {
 		display_name: string;
 		nickname: string;
+		links?: {
+			avatar?: {
+				href?: string
+			}
+		}
 	};
 	deleted: boolean;
 	inline?: {
-		from: number | undefined;
-		to: number | undefined;
-		path: string;
+		from?: number | undefined;
+		to?: number | undefined;
+		path?: string;
 	};
 	type: string;
-	file: string;
-	bodyHtml: string;
-	bodyText: string;
-	state: string;
+	file?: string;
+	bodyHtml?: string;
+	bodyText?: string;
+	state?: string;
 	parent?: {
 		id: number;
 	};
@@ -517,6 +523,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 	async getCurrentUser(): Promise<BitbucketCurrentUser> {
 		await this.ensureConnected();
+
 		const data = await this.get<BitbucketCurrentUser>(`/user`);
 
 		const currentUser = {
@@ -785,6 +792,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`
 			);
+
+			const timeline = await this.get<BitbucketValues<TimelineItem[]>>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
+			);
+
+			const userResponse = await this.getCurrentUser();
+
 			const listToTree: any = (
 				arr: { id: string; replies: any[]; parent: { id: string } }[] = []
 			) => {
@@ -804,6 +818,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 				return res;
 			};
+
 			const filterComments = comments.body.values
 				.filter(_ => !_.deleted)
 				.map((_: BitbucketPullRequestComment) => {
@@ -812,29 +827,15 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 
 			const treeComments = listToTree(filterComments);
 
-			const repoWithOwnerSplit = repoWithOwner.split("/");
-
-			const timeline = await this.get<BitbucketValues<TimelineItem[]>>(
-				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
-			);
+			const repoWithOwnerSplit = repoWithOwner.split("/");			 
 
 			const mappedTimelineItems = timeline.body.values
 				.filter(_ => _.comment && !_.comment.deleted && !_.comment.inline)
 				.map(_ => {
-					const comment = _.comment;
-					const user = comment?.user;
-					return {
-						author: {
-							avatarUrl: user?.links?.avatar?.href,
-							name: user?.display_name,
-							login: user?.display_name
-						},
-						bodyText: comment.content?.raw,
-						createdAt: comment.created_on
-					};
+					return this.mapTimelineComment(_.comment);					 
 				});
-
-			const userResponse = await this.getCurrentUser();
+			 mappedTimelineItems.sort((a: { createdAt: string }, b: { createdAt: string }) =>  new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+			 
 			const viewer = {
 				id: userResponse.account_id,
 				login: userResponse.username,
@@ -949,26 +950,16 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		};
 	}
 
-	//TODO: implement
-	async createPullRequestComment(request: {
+ 	async createPullRequestComment(request: {
 		pullRequestId: string;
 		sha: string;
 		text: string;
-		path: string;
-		// startLine: number;
-		// use endLine for multi-line comments
-		// endLine?: number;
-		// used for certain old providers
-		position?: number;
 	}): Promise<Directives> {
 		const payload: BitBucketCreateCommentRequest = {
 			content: {
 				raw: request.text
 			}
-			// inline: {
-			// 	to: request.startLine,
-			// 	path: request.path
-			// }
+		 
 		};
 
 		Logger.log(`commenting:createPullRequestComment`, {
@@ -990,8 +981,8 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				}
 			},
 			{
-				type: "addNode",
-				data: this.mapComment(response.body)
+				type: "addPullRequestComment",
+				data: this.mapTimelineComment(response.body)
 			}
 		];
 
@@ -999,10 +990,6 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			directives: directives
 		});
 
-		this.session.agent.sendNotification(DidChangePullRequestCommentsNotificationType, {
-			pullRequestId: request.pullRequestId,
-			filePath: request.path
-		});
 		return {
 			directives: directives
 		};
@@ -1080,6 +1067,19 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				login: _.user.display_name
 			}
 		} as BitbucketPullRequestComment2;
+	}
+
+	private mapTimelineComment(comment: BitbucketPullRequestComment) {
+ 		const user = comment?.user;
+		return {
+			author: {
+				avatarUrl: user?.links?.avatar?.href,
+				name: user?.display_name,
+				login: user?.display_name
+			},
+			bodyText: comment.content?.raw,
+			createdAt: comment.created_on
+		};
 	}
 
 	async getRemotePaths(repo: any, _projectsByRemotePath: any) {
@@ -1582,7 +1582,13 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 			} else if (directive.type === "addNode") {
 				pr.comments = pr.comments || [];
 				pr.comments.push(directive.data);
-			} else if (directive.type === "addReply") {
+			} 
+			else if (directive.type === "addPullRequestComment") {
+				pr.timelineItems = pr.timelineItems || {};
+				pr.timelineItems.nodes = pr.timelineItems.nodes || []
+				pr.timelineItems.nodes.push(directive.data);
+			}
+			else if (directive.type === "addReply") {
 				pr.comments = pr.comments || [];
 				const findParent = function(
 					items: { id: number; replies: any[] }[],
