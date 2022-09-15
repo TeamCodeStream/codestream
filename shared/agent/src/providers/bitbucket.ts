@@ -112,15 +112,17 @@ interface BitbucketCurrentUser {
 	account_status: string;
 }
 
-interface BitbucketAuthor {
-	account_id: string;
-	display_name: string;
+interface BitbucketAuthor {	 
 	user: {
-		avatar?: {
-			html?: {
-				href?: string;
+		account_id: string;	 
+		display_name: string;
+		links?: { 
+			avatar?: {
+				html?: {
+					href?: string;
+				};
 			};
-		};
+		}
 	};
 }
 interface BitbucketRepoFull extends BitbucketRepo {
@@ -1009,14 +1011,15 @@ export class BitbucketProvider
 
 		const response = items.body.values.map((commit) => {
 			const author = {
-				name: commit.author.display_name,
-				avatarUrl: commit.author.user.avatar?.html?.href,
-				user: {
-					login: commit.author.account_id,
+				name: commit.author.user?.display_name,
+				avatarUrl: commit.author.user.links?.avatar?.html?.href,
+				user: {				 
+					login: commit.author.user?.display_name,	
+					avatarUrl: commit.author.user.links?.avatar?.html?.href			 
 				},
 			};
 			return {
-				abbreviatedOid: commit.hash.substring(0, 7), //TODO: make this shorter
+				abbreviatedOid: commit.hash.substring(0, 7),
 				author: author,
 				committer: author,
 				message: commit.message,

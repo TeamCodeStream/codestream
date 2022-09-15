@@ -751,6 +751,7 @@ export interface FetchThirdPartyPullRequestCommitsResponse {
 		avatarUrl?: string;
 		user?: {
 			login: string;
+			avatarUrl?: string;
 		};
 	};
 	committer: {
