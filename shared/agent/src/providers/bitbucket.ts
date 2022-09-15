@@ -259,6 +259,12 @@ interface BitbucketPullRequestComment2 {
 	replies?: [BitbucketPullRequestComment2];
 }
 
+interface BitbucketMergeRequest {
+	message: string;
+	close_source_branch?: string;
+	merge_strategy: string;
+}
+
 interface BitBucketCreateCommentRequest {
 	content: {
 		raw: string;
@@ -998,7 +1004,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				}
 			};
 			return {
-				abbreviatedOid: commit.hash,
+				abbreviatedOid: commit.hash.substring(0, 7), //TODO: make this shorter
 				author: author,
 				committer: author,
 				message: commit.message,
