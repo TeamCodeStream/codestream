@@ -95,14 +95,11 @@ interface Props {
 	collapseAll?: boolean;
 }
 
-// const EMPTY_HASH = {};
-// const EMPTY_HASH_1 = {};
-// const EMPTY_HASH_2 = {};
+ 
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
-	const isComment = (_: DiscussionNode) =>
-		_.notes?.nodes?.find((n) => !n.system && n.discussion?.id);
+ 
 	const { pr, setIsLoadingMessage } = props;
 	let discussions = pr.timelineItems?.nodes || [];
 

@@ -802,19 +802,19 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity`
 			);
 
-			const mappedTimeline = timeline.body.values.map(_ => {
+			const mappedTimelineItems = timeline.body.values.filter(_ => _.comment && !_.comment.deleted).map(_ => {
+				const comment = _.comment;
+				const user = comment?.user;
 				return {
 					author: {
-						avatarUrl: _.comment?.user?.links?.avatar?.href,
-						name: _.comment?.user?.display_name,
-						login: _.comment?.user?.display_name
+						avatarUrl: user?.links?.avatar?.href,
+						name: user?.display_name,
+						login: user?.display_name
 					},
-					bodyText: _.comment?.content?.raw,
-					createdAt: _.comment?.created_on
+					bodyText: comment.content?.raw,
+					createdAt: comment.created_on
 				};
-			});
-
-			const timelineItems = { nodes: mappedTimeline };
+			});		 
 
 			const userResponse = await this.getCurrentUser();
 			const viewer = {
@@ -864,8 +864,10 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 						},
 						state: pr.body.state,
 						title: pr.body.title,
-						discussions: timelineItems,
-						viewer: viewer
+						timelineItems: {
+							nodes: mappedTimelineItems
+						},
+ 						viewer: viewer
 					} as any //TODO: make this work
 				}
 			};
