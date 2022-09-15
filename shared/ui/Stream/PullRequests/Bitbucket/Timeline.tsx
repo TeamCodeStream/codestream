@@ -95,11 +95,9 @@ interface Props {
 	collapseAll?: boolean;
 }
 
- 
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
- 
 	const { pr, setIsLoadingMessage } = props;
 	let discussions = pr.timelineItems?.nodes || [];
 
@@ -127,7 +125,7 @@ export const Timeline = (props: Props) => {
 		"merge-request-closed": "minus-circle",
 		"merge-request-merged": "git-merge",
 		"merge-request-approved": "check",
-		"merge-request-unapproved": "minus-circle",
+		"merge-request-unapproved": "minus-circle"
 	};
 
 	const quote = (text, id) => {
@@ -319,7 +317,7 @@ export const Timeline = (props: Props) => {
 				style={{
 					height: "1px",
 					background: "var(--base-border-color)",
-					margin: "0 20px 30px 20px",
+					margin: "0 20px 30px 20px"
 				}}
 			/>
 		</>
