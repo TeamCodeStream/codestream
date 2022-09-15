@@ -113,16 +113,25 @@ interface BitbucketCurrentUser {
 }
 
 interface BitbucketAuthor {
+	type: string;
+	raw: string;
 	user: {
 		account_id: string;
 		display_name: string;
 		links?: {
+			self?: {
+				href: string;
+			};
 			avatar?: {
-				html?: {
-					href?: string;
-				};
+				href: string;
+			};
+			html?: {
+				href: string;
 			};
 		};
+		type: string;
+		uuid: string;
+		nickname: string;
 	};
 }
 interface BitbucketRepoFull extends BitbucketRepo {
@@ -1011,10 +1020,10 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 		const response = items.body.values.map(commit => {
 			const author = {
 				name: commit.author.user?.display_name,
-				avatarUrl: commit.author.user.links?.avatar?.html?.href,
+				avatarUrl: commit.author.user.links?.avatar?.href,
 				user: {
 					login: commit.author.user?.display_name,
-					avatarUrl: commit.author.user.links?.avatar?.html?.href
+					avatarUrl: commit.author.user.links?.avatar?.href
 				}
 			};
 			return {
