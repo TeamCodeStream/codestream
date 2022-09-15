@@ -814,7 +814,7 @@ export class BitbucketProvider extends ThirdPartyIssueProviderBase<CSBitbucketPr
 				};
 			});
 
-			const timelineItems.nodes = mappedTimeline;
+			const timelineItems = { nodes: mappedTimeline };
 
 			const userResponse = await this.getCurrentUser();
 			const viewer = {
