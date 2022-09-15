@@ -6,7 +6,7 @@ import {
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
 	getPullRequestExactId,
-	getPullRequestId
+	getPullRequestId,
 } from "../../../store/providerPullRequests/reducer";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
 import { ErrorMessage } from "../../../src/components/ErrorMessage";
@@ -25,7 +25,7 @@ import {
 	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
-	GitLabMergeRequestWrapper
+	GitLabMergeRequestWrapper,
 } from "@codestream/protocols/agent";
 import {
 	PRActionIcons,
@@ -37,7 +37,7 @@ import {
 	PRSelectorButtons,
 	PRStatusButton,
 	PRSubmitReviewButton,
-	PRTitle
+	PRTitle,
 } from "../../PullRequestComponents";
 import { PullRequestFileComments } from "../../PullRequestFileComments";
 import { PullRequestFilesChangedTab } from "../../PullRequestFilesChangedTab";
@@ -50,7 +50,7 @@ import {
 	getPullRequestCommitsFromProvider,
 	getPullRequestConversations,
 	getPullRequestConversationsFromProvider,
-	getPullRequestFilesFromProvider
+	getPullRequestFilesFromProvider,
 } from "../../../store/providerPullRequests/actions";
 import { HostApi } from "../../../webview-api";
 import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
@@ -61,7 +61,7 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../DropdownButton";
- 
+
 import { MarkdownText } from "../../MarkdownText";
 import CancelButton from "../../CancelButton";
 //import { Timeline } from "./Timeline";
@@ -77,7 +77,7 @@ export const PullRequestRoot = styled.div`
 	span.narrow-text {
 		display: none !important;
 	}
-	@media only screen and (max-width: ${props => props.theme.breakpoint}) {
+	@media only screen and (max-width: ${(props) => props.theme.breakpoint}) {
 		.wide-text {
 			display: none;
 		}
@@ -276,7 +276,7 @@ const stateMap = {
 	CLOSED: "closed",
 	MERGED: "merged",
 	DECLINED: "declined",
-	SUPERSEDED: "superseded"
+	SUPERSEDED: "superseded",
 };
 
 const EMPTY_HASH = {};
@@ -322,7 +322,7 @@ export const PullRequest = () => {
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
-			checkoutBranch: state.context.pullRequestCheckoutBranch
+			checkoutBranch: state.context.pullRequestCheckoutBranch,
 		};
 	});
 
@@ -347,11 +347,11 @@ export const PullRequest = () => {
 	const breakpoints = {
 		auto: "630px",
 		"side-by-side": "10px",
-		vertical: "100000px"
+		vertical: "100000px",
 	};
-	const addViewPreferencesToTheme = theme => ({
+	const addViewPreferencesToTheme = (theme) => ({
 		...theme,
-		breakpoint: breakpoints[derivedState.viewPreference]
+		breakpoint: breakpoints[derivedState.viewPreference],
 	});
 
 	const closeFileComments = () => {
@@ -367,7 +367,7 @@ export const PullRequest = () => {
 		}
 	};
 
-	const _assignState = _pr => {
+	const _assignState = (_pr) => {
 		if (!_pr) return;
 		// if (!_pr.project) {
 		// 	console.warn("possible bad request");
@@ -384,10 +384,10 @@ export const PullRequest = () => {
 		const { reposState } = derivedState;
 		const response: GetReposScmResponse = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
-			includeCurrentBranches: true
+			includeCurrentBranches: true,
 		});
 		if (response && response.repositories) {
-			const repos = response.repositories.map(repo => {
+			const repos = response.repositories.map((repo) => {
 				const id = repo.id || "";
 				return { ...repo, name: reposState[id] ? reposState[id].name : "" };
 			});
@@ -484,7 +484,6 @@ export const PullRequest = () => {
 	// 	};
 	// }, [didMount, derivedState.currentPullRequestLastUpdated, derivedState.currentPullRequest]);
 
-
 	// TODO fix this thing (need the PR typing here)
 	const pr: any = derivedState.currentPullRequest?.conversations?.repository?.pullRequest;
 
@@ -551,7 +550,7 @@ export const PullRequest = () => {
 		setDynamicKey(new Date().getTime().toString());
 	};
 
-	const __onDidRender = functions => {
+	const __onDidRender = (functions) => {
 		insertText = functions.insertTextAtCursor;
 		insertNewline = functions.insertNewlineAtCursor;
 		focusOnMessageInput = functions.focus;
@@ -575,7 +574,7 @@ export const PullRequest = () => {
 	// 	return _pr.discussions.nodes.reduce(reducer, 0);
 	// }, [pr, pr?.updatedAt]);
 
-	const scrollToDiv = div => {
+	const scrollToDiv = (div) => {
 		if (!div) return;
 		const modalRoot = document.getElementById("modal-root");
 		if (modalRoot) {
@@ -603,8 +602,8 @@ export const PullRequest = () => {
 		// TODO FIX THIS or remove?? (does bitbucket have notion of resolving comments / discussions??)
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return [0, 0];
 		return [
-			pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length,
-			pr.discussions.nodes.filter(_ => _.resolvable && _.resolved).length
+			pr.discussions.nodes.filter((_) => _.resolvable && !_.resolved).length,
+			pr.discussions.nodes.filter((_) => _.resolvable && _.resolved).length,
 		];
 	})();
 
@@ -613,7 +612,7 @@ export const PullRequest = () => {
 		setIsLoadingMessage(onOff ? "Marking as draft..." : "Marking as ready...");
 		await dispatch(
 			api("setWorkInProgressOnPullRequest", {
-				onOff
+				onOff,
 			})
 		);
 		setIsLoadingMessage("");
@@ -621,15 +620,15 @@ export const PullRequest = () => {
 
 	const edit = () => setIsEditing(true);
 
-	const reopen = async () => {
-		setIsLoadingMessage("Reopening...");
-		await dispatch(api("createPullRequestCommentAndReopen", { text: "" }));
+	const declinePullRequest = async () => {
+		setIsLoadingMessage("Closing...");
+		await dispatch(api("closePullRequest", { text: "" }));
 		setIsLoadingMessage("");
 	};
 
-	const close = async () => {
-		setIsLoadingMessage("Closing...");
-		await dispatch(api("createPullRequestCommentAndClose", { text: "" }));
+	const mergePullRequest = async () => {
+		setIsLoadingMessage("Merging...");
+		await dispatch(api("mergePullRequest", { text: "" }));
 		setIsLoadingMessage("");
 	};
 
@@ -642,7 +641,7 @@ export const PullRequest = () => {
 					display: "flex",
 					height: "100vh",
 					alignItems: "center",
-					background: "var(--sidebar-background)"
+					background: "var(--sidebar-background)",
 				}}
 			>
 				<div style={{ position: "absolute", top: "20px", right: "20px" }}>
@@ -675,7 +674,7 @@ export const PullRequest = () => {
 	const closeRight = () => setRightOpen(false);
 
 	// hijacks links to user profiles which have HREFs like "/ppezaris"
-	const hijackUserLinks = event => {
+	const hijackUserLinks = (event) => {
 		const href: string = event?.target?.getAttribute("HREF");
 		const dataset = event?.target?.dataset;
 		if (href && dataset?.referenceType === "user" && dataset?.user) {
@@ -760,58 +759,30 @@ export const PullRequest = () => {
 								by <PRHeadshotName person={pr.author} fullName />
 								<PRActionIcons>
 									<PRAuthorBadges
-										pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+										pr={pr as unknown as FetchThirdPartyPullRequestPullRequest}
 										node={pr}
 									/>
 								</PRActionIcons>
-								{/* <Role className="ml-5">Maintainer</Role> */}
 							</div>
-							{/* {pr.userPermissions.adminMergeRequest && (
-								<div style={{ marginLeft: "auto" }}>
-									{pr.state === "closed" ? (
-										<DropdownButton
-											variant="secondary"
-											size="compactwide"
-											splitDropdown
-											splitDropdownInstantAction
-											selectedKey="edit"
-											align="dropdownRight"
-											items={[
-												{ label: "Edit", key: "edit", action: edit },
-												{ label: "Reopen", key: "reopen", action: reopen }
-											]}
-										>
-											Edit
-										</DropdownButton>
-									) : (
-										<DropdownButton
-											variant="secondary"
-											size="compactwide"
-											splitDropdown
-											splitDropdownInstantAction
-											align="dropdownRight"
-											items={[
-												{ label: "Edit", key: "edit", action: edit },
-												{
-													label: pr.isDraft ? "Mark as ready" : "Mark as draft",
-													key: "draft",
-													action: () => toggleWorkInProgress()
-												},
-												{ label: "Close", key: "close", action: close }
-											]}
-										>
-											Edit
-										</DropdownButton>
-									)}
-								</div>
-							)} */}
+							{/* needs merge UI */}
+
+							{/* <div style={{ marginLeft: "auto" }}>
+								<DropdownButton
+									variant="secondary"
+									size="compactwide"
+									splitDropdown
+									splitDropdownInstantAction
+									align="dropdownRight"
+									items={[										
+										{ label: "Merge", key: "merge", action: mergePullRequest},
+										// { label: "Edit", key: "edit", action: edit },										 
+										{ label: "Decline", key: "decline", action: declinePullRequest },
+									]}
+								>
+									...
+								</DropdownButton>
+							</div> */}
 						</Header>
-						{/* {!pr.sourceProject && (
-							<PRError>
-								<Icon name="alert" />
-								<div>The source project for this merge request has been removed.</div>
-							</PRError>
-						)} */}
 						<PRTitle>
 							{pr.title}{" "}
 							<Tooltip title="Open on Bitbucket" placement="top" delay={1}>
@@ -839,18 +810,18 @@ export const PullRequest = () => {
 							background: "var(--app-background-color)",
 							zIndex: 20,
 							top: 0,
-							paddingTop: "10px"
+							paddingTop: "10px",
 						}}
 					>
 						<Tabs style={{ margin: "0 20px 10px 20px", display: "flex", flexWrap: "wrap-reverse" }}>
-							<Tab onClick={e => setActiveTab(1)} active={activeTab == 1}>
+							<Tab onClick={(e) => setActiveTab(1)} active={activeTab == 1}>
 								<InlineIcon>
 									<Icon className="narrow-text" name="comment" />
 									<span className="wide-text">Overview</span>
 									<PRBadge>{pr.userDiscussionsCount}</PRBadge>
 								</InlineIcon>
 							</Tab>
-							<Tab onClick={e => setActiveTab(2)} active={activeTab == 2}>
+							<Tab onClick={(e) => setActiveTab(2)} active={activeTab == 2}>
 								<InlineIcon>
 									<Icon className="narrow-text" name="git-commit" />
 									<span className="wide-text">Commits</span>
@@ -858,7 +829,7 @@ export const PullRequest = () => {
 								</InlineIcon>
 							</Tab>
 							{derivedState.isVsIde && (
-								<Tab onClick={e => setActiveTab(4)} active={activeTab == 4}>
+								<Tab onClick={(e) => setActiveTab(4)} active={activeTab == 4}>
 									<InlineIcon>
 										<Icon className="narrow-text" name="plus-minus" />
 										<span className="wide-text">Changes</span>
@@ -869,7 +840,6 @@ export const PullRequest = () => {
 									</InlineIcon>
 								</Tab>
 							)}
- 
 						</Tabs>
 					</div>
 					{!derivedState.composeCodemarkActive && (
@@ -892,7 +862,7 @@ export const PullRequest = () => {
  									{order === "newest" && bottomComment}
 									*/}
 									<Timeline
-										pr={pr}										 
+										pr={pr}
 										setIsLoadingMessage={setIsLoadingMessage}
 										collapseAll={collapseAll}
 									/>
