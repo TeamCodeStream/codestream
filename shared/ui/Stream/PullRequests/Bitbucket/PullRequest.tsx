@@ -61,7 +61,7 @@ import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { DropdownButton } from "../../DropdownButton";
-
+import { Modal } from "../../Modal";
 import { MarkdownText } from "../../MarkdownText";
 import CancelButton from "../../CancelButton";
 //import { Timeline } from "./Timeline";
@@ -69,6 +69,11 @@ import { PRAuthorBadges } from "../../PullRequestConversationTab";
 //import { PipelineBox } from "./PipelineBox";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Timeline } from "./Timeline";
+import { merge } from "lodash-es";
+import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
+import { Dialog } from "@codestream/webview/src/components/Dialog";
+import { UL } from "../../Team";
+import { handleInputChange } from "react-select/src/utils";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -343,6 +348,9 @@ export const PullRequest = () => {
 	const [finishReviewOpen, setFinishReviewOpen] = useState(false);
 	const [dynamicKey, setDynamicKey] = useState("");
 	const [prCommitsRange, setPrCommitsRange] = useState<string[]>([]);
+	const [isMerging, setIsMerging] = useState(false);
+	const [isDeclining, setIsDeclining] = useState(false);
+	const [isMergingStrategy, setIsMergingStrategy] = useState("");
 
 	const breakpoints = {
 		auto: "630px",
@@ -624,12 +632,26 @@ export const PullRequest = () => {
 		setIsLoadingMessage("Closing...");
 		await dispatch(api("closePullRequest", { text: "" }));
 		setIsLoadingMessage("");
+		setIsDeclining(true);
 	};
 
 	const mergePullRequest = async () => {
 		setIsLoadingMessage("Merging...");
 		await dispatch(api("mergePullRequest", { text: "" }));
 		setIsLoadingMessage("");
+		setIsMerging(true);
+		let reason = "";
+		switch (isMergingStrategy) {
+			case "Merge commit":
+				reason = "MERGE_COMMIT";
+				break;
+			case "Squash":
+				reason = "SQUASH";
+				break;
+			case "Fast forward":
+				reason = "FASTFORWARD";
+				break;
+		}
 	};
 
 	const { order } = derivedState;
@@ -764,8 +786,80 @@ export const PullRequest = () => {
 									/>
 								</PRActionIcons>
 							</div>
-							{/* needs merge UI */}
+							{/* TODO: needs to finish merge UI */}
 
+							{/* {isMerging && (
+								<Modal translucent verticallyCenter> */}
+							{/*modal stuff for merging here*/}
+
+							{/* <Dialog
+										title="Merge this pull request"
+										onClose={() => setIsMerging(false)}
+										narrow
+									>
+										<UL>
+											<li>Source</li> */}
+							{/* <li>{pr.baseRefOid}</li> fix this so it shows the branch name */}
+							{/* <li>Destination</li>
+											<li>{pr.headRefOid}</li> */}
+							{/* fix this so it shows the destination branch (master)*/}
+							{/* <li>Commit message</li>
+											<li> */}
+							{/* <input id="merge_message" type="text" value={} onChange={} 
+												/> */}
+							{/*put in a message box here */}
+							{/* </li>
+										</UL>
+										<b>Merge strategy</b>
+										<div style={{ margin: "5px 0" }}>
+											<InlineMenu
+												items={[
+													{
+														label: "Choose a merge strategy",
+														key: "choose",
+														action: () => setIsMergingStrategy("Choose a merge strategy")
+													},
+													{
+														label: "Merge commit",
+														key: "commit",
+														action: () => setIsMergingStrategy("Merge commit")
+													},
+													{
+														label: "Squash",
+														key: "squash",
+														action: () => setIsMergingStrategy("Squash")
+													},
+													{
+														label: "Fast forward",
+														key: "fastforward",
+														action: () => setIsMergingStrategy("Fast forward")
+													}
+												]}
+											>
+												{isMergingStrategy || "Choose a merge strategy"}
+											</InlineMenu>
+										</div>
+										<Button
+											fillParent
+											disabled={
+												!isMergingStrategy || isMergingStrategy === "Choose a merge strategy"
+											}
+											onClick={() => mergePullRequest()} */}
+							{/* // isLoading={isLoadingMerging} */}
+							{/* >
+											Merge this pull request
+										</Button>
+									</Dialog>
+								</Modal>
+							)} */}
+
+							{/* {isDeclining && (
+								<Modal translucent verticallyCenter> */}
+							{/*modal stuff for declining here*/}
+							{/* </Modal>
+							)} */}
+
+							{/* this is the merge/decline drop down*/}
 							{/* <div style={{ marginLeft: "auto" }}>
 								<DropdownButton
 									variant="secondary"
@@ -773,10 +867,10 @@ export const PullRequest = () => {
 									splitDropdown
 									splitDropdownInstantAction
 									align="dropdownRight"
-									items={[										
-										{ label: "Merge", key: "merge", action: mergePullRequest},
-										// { label: "Edit", key: "edit", action: edit },										 
-										{ label: "Decline", key: "decline", action: declinePullRequest },
+									items={[
+										{ label: "Merge", key: "merge", action: mergePullRequest },
+										// { label: "Edit", key: "edit", action: edit },
+										{ label: "Decline", key: "decline", action: declinePullRequest }
 									]}
 								>
 									...
