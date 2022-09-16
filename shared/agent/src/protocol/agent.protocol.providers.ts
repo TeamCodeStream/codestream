@@ -1204,7 +1204,7 @@ export interface FunctionLocator {
 }
 
 export interface GetFileLevelTelemetryRequest {
-	filePath: string;
+	fileUri: string;
 	languageId: string;
 	/** if true, this request will reset the cache */
 	resetCache?: boolean;

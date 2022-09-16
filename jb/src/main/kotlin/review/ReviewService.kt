@@ -36,6 +36,7 @@ val PARENT_POST_ID = Key<String>("PARENT_POST_ID")
 val PULL_REQUEST = Key<CodeStreamDiffUriPullRequest?>("PULL_REQUEST")
 val DIFF_RANGES = Key<List<ScmSha1RangesResultLinesChanged>?>("DIFF_RANGES")
 val PATH = Key<String>("PATH")
+val LOCAL_PATH = Key<String>("LOCAL_PATH")
 
 class ReviewService(private val project: Project) {
 

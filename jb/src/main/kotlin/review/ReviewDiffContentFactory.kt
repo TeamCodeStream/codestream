@@ -81,6 +81,7 @@ fun createDiffContent(
     document.putUserData(PULL_REQUEST, context?.pullRequest)
     document.putUserData(DIFF_RANGES, diffRanges)
     document.putUserData(DiffUserDataKeysEx.FILE_NAME, filePath.name)
+    document.putUserData(LOCAL_PATH, repoRoot?.let{ File(it).resolve(path).path })
 
     val content: DocumentContent =
         DocumentContentImpl(project, document, fileType, document.file, separator, null, null)

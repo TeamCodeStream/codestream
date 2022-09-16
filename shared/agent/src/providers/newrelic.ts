@@ -1,5 +1,7 @@
 "use strict";
 import fs from "fs";
+import * as csUri from "../system/uri";
+import * as path from "path";
 import { GraphQLClient } from "graphql-request";
 import {
 	Dictionary,
@@ -16,10 +18,13 @@ import { URI } from "vscode-uri";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { SessionContainer, SessionServiceContainer } from "../container";
+import { git } from "../git/git";
 import { GitRemoteParser } from "../git/parsers/remoteParser";
 import { Logger } from "../logger";
+import { ReviewsManager } from "../managers/reviewsManager";
 import {
 	BuiltFromResult,
+	CodeStreamDiffUriData,
 	CrashOrException,
 	Entity,
 	EntityAccount,
@@ -2109,6 +2114,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getFileLevelTelemetry(
 		request: GetFileLevelTelemetryRequest
 	): Promise<GetFileLevelTelemetryResponse | NRErrorResponse | undefined> {
+		const { git, users } = SessionContainer.instance();
 		const languageId: LanguageId | undefined = isSupportedLanguage(request.languageId)
 			? request.languageId
 			: undefined;
@@ -2117,15 +2123,36 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			return undefined;
 		}
 
-		if (!request.filePath && !request.locator) {
-			ContextLogger.warn("getFileLevelTelemetry: Missing filePath, or method locator");
+		if (!request.fileUri && !request.locator) {
+			ContextLogger.warn("getFileLevelTelemetry: Missing fileUri, or method locator");
+			return undefined;
+		}
+
+		let filePath = undefined;
+		if (request.fileUri.startsWith("codestream-diff://")) {
+			let parsedUri = undefined;
+			if (csUri.Uris.isCodeStreamDiffUri(request.fileUri)) {
+				parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(request.fileUri);
+			} else {
+				parsedUri = ReviewsManager.parseUri(request.fileUri);
+			}
+			const repo = parsedUri?.repoId && (await git.getRepositoryById(parsedUri?.repoId));
+			filePath = repo && parsedUri?.path && path.join(repo.path, parsedUri.path);
+		} else {
+			const parsedUri = URI.parse(request.fileUri);
+			filePath = parsedUri.fsPath;
+		}
+		if (!filePath) {
+			ContextLogger.warn(
+				`getFileLevelTelemetry: Unable to resolve filePath from URI ${request.fileUri}`
+			);
 			return undefined;
 		}
 
 		const resolutionMethod = this.getResolutionMethod(languageId);
 		const cacheKey =
 			resolutionMethod === "filePath"
-				? [request.filePath, request.languageId].join("-")
+				? [filePath, request.languageId].join("-")
 				: [Object.values(request.locator!).join("-"), request.languageId].join("-");
 
 		if (request.resetCache) {
@@ -2145,7 +2172,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				return cached;
 			}
 		}
-		const { users, git } = this._sessionServiceContainer || SessionContainer.instance();
 		const codeStreamUser = await users.getMe();
 
 		const isConnected = this.isConnected(codeStreamUser);
@@ -2162,7 +2188,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			};
 		}
 
-		const repoForFile = await git.getRepositoryByFilePath(request.filePath);
+		const repoForFile = await git.getRepositoryByFilePath(filePath);
 		if (!repoForFile?.id) {
 			ContextLogger.warn("getFileLevelTelemetry: no repo for file", {
 				request,
@@ -2195,7 +2221,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		const remotes = await repoForFile.getWeightedRemotesByStrategy("prioritizeUpstream", undefined);
 		const remote = remotes.map(_ => _.rawUrl)[0];
 
-		let relativeFilePath = relative(repoForFile.path, request.filePath);
+		let relativeFilePath = relative(repoForFile.path, filePath);
 		if (relativeFilePath[0] !== sep) {
 			relativeFilePath = join(sep, relativeFilePath);
 		}

@@ -1,6 +1,9 @@
 package com.codestream.clm
 
+import com.codestream.extensions.file
 import com.codestream.extensions.uri
+import com.codestream.review.ReviewDiffSide
+import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
@@ -46,7 +49,13 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
         if (!isPsiFileSupported(psiFile)) return
         if (!testMode) {
             // Ignore library sources (eg: files in .jar). Might need extra work to do the same with "node_modules", etc.
-            if (event.editor.document.uri?.startsWith("file://") != true) return
+            val reviewFile = event.editor.document.file as? ReviewDiffVirtualFile
+
+            if (reviewFile != null) {
+                if (!reviewFile.canCreateMarker) return
+            } else {
+                if (event.editor.document.uri?.startsWith("file://") != true) return
+            }
         }
         managersByEditor[event.editor] = editorFactory(event.editor)
     }

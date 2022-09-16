@@ -535,7 +535,7 @@ class FunctionLocator(
 )
 
 class FileLevelTelemetryParams(
-    val filePath: String?,
+    val fileUri: String?,
     val languageId: String,
     val locator: FunctionLocator,
     val newRelicAccountId: Int?,

@@ -84,7 +84,7 @@ import {
 	RepoScmStatus,
 	SwitchBranchRequest,
 	SwitchBranchRequestType,
-	SwitchBranchResponse
+	SwitchBranchResponse,
 } from "../protocol/agent.protocol";
 import { CSMe, FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
@@ -105,7 +105,7 @@ export class ScmManager {
 	async getCommitInfo({
 		revision,
 		repoPath,
-		repoId
+		repoId,
 	}: GetCommitScmInfoRequest): Promise<GetCommitScmInfoResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -149,11 +149,11 @@ export class ScmManager {
 							message: commit.message,
 							shortMessage: commit.shortMessage,
 							author: commit.author,
-							authorDate: commit.authorDate
+							authorDate: commit.authorDate,
 							// committerDate: commit.committerDate,
 					  }
 					: undefined,
-			error: gitError
+			error: gitError,
 		};
 	}
 
@@ -201,7 +201,7 @@ export class ScmManager {
 		}
 
 		const response: GetReposScmResponse = {
-			error: gitError
+			error: gitError,
 		};
 
 		if (request && request.includeConnectedProviders) {
@@ -263,7 +263,7 @@ export class ScmManager {
 							includeStaged: true,
 							includeSaved: true,
 							currentUserEmail: request.currentUserEmail,
-							skipAuthorsCalculation: true
+							skipAuthorsCalculation: true,
 						});
 						return response;
 					})
@@ -284,7 +284,7 @@ export class ScmManager {
 		}
 		return {
 			scm: modifiedRepos,
-			error: gitError
+			error: gitError,
 		};
 	}
 
@@ -323,7 +323,7 @@ export class ScmManager {
 		}
 		return {
 			scm: result ? { ...result, repoId } : { branches: [], current: "", repoId },
-			error: gitError
+			error: gitError,
 		};
 	}
 
@@ -332,7 +332,7 @@ export class ScmManager {
 	async createBranch({
 		uri: documentUri,
 		branch,
-		fromBranch
+		fromBranch,
 	}: CreateBranchRequest): Promise<CreateBranchResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -347,7 +347,7 @@ export class ScmManager {
 				await git.createBranch(repoPath, branch, fromBranch);
 				this.session.agent.sendNotification(DidChangeBranchNotificationType, {
 					repoPath,
-					branch
+					branch,
 				});
 			}
 		} catch (ex) {
@@ -363,7 +363,7 @@ export class ScmManager {
 	async switchBranch({
 		branch,
 		uri: documentUri,
-		repoId
+		repoId,
 	}: SwitchBranchRequest): Promise<SwitchBranchResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -376,7 +376,7 @@ export class ScmManager {
 				if (!repoId) {
 					const missingRepoAndDocument = `A uri or repoId is required`;
 					Logger.error(new Error(missingRepoAndDocument), cc, missingRepoAndDocument, {
-						branch
+						branch,
 					});
 					return { error: missingRepoAndDocument };
 				}
@@ -386,7 +386,7 @@ export class ScmManager {
 					const missingRepo = `No repository could be found for repoId=${repoId}`;
 					Logger.error(new Error(missingRepo), cc, missingRepo, {
 						repoId,
-						branch
+						branch,
 					});
 					return { error: missingRepo };
 				}
@@ -401,14 +401,14 @@ export class ScmManager {
 				await git.switchBranch(repoPath, branch);
 				this.session.agent.sendNotification(DidChangeBranchNotificationType, {
 					repoPath,
-					branch
+					branch,
 				});
 			} else {
 				const errorMessage = "missing repoPath";
 				Logger.error(new Error(errorMessage), cc, errorMessage, {
 					documentUri,
 					branch,
-					repoId
+					repoId,
 				});
 				return { error: errorMessage };
 			}
@@ -433,7 +433,7 @@ export class ScmManager {
 			reviewId,
 			currentUserEmail,
 			skipAuthorsCalculation,
-			includeLatestCommit
+			includeLatestCommit,
 		} = request;
 
 		if (reviewId) {
@@ -575,7 +575,7 @@ export class ScmManager {
 												file,
 												linesAdded: 0,
 												linesRemoved: 0,
-												...statusByFile![file]
+												...statusByFile![file],
 											});
 										} else {
 											modifiedFiles?.push({
@@ -583,7 +583,7 @@ export class ScmManager {
 												file,
 												linesAdded: 0,
 												linesRemoved: 0,
-												...statusByFile![file]
+												...statusByFile![file],
 											});
 										}
 									}
@@ -624,7 +624,7 @@ export class ScmManager {
 					authors.push({
 						email,
 						stomped: authorMap[email].stomped,
-						commits: authorMap[email].commits
+						commits: authorMap[email].commits,
 					});
 				});
 			} catch (ex) {
@@ -649,10 +649,10 @@ export class ScmManager {
 							authors,
 							commits: [...(commits || [])],
 							remotes: remotes || [],
-							totalModifiedLines
+							totalModifiedLines,
 					  }
 					: undefined,
-			error: gitError
+			error: gitError,
 		};
 	}
 
@@ -662,7 +662,7 @@ export class ScmManager {
 		includeStaged,
 		includeSaved,
 		reviewId,
-		endCommit
+		endCommit,
 	}: GetRepoScmStatusRequest): Promise<GetRepoScmStatusResponse> {
 		const cc = Logger.getCorrelationContext();
 		const { git, reviews } = SessionContainer.instance();
@@ -730,7 +730,7 @@ export class ScmManager {
 				error: `Commit ${newestCommitShaInOrBeforeReview.substr(
 					0,
 					8
-				)} was not found in branch ${branch}`
+				)} was not found in branch ${branch}`,
 			};
 		}
 
@@ -820,7 +820,7 @@ export class ScmManager {
 							linesRemoved,
 							status: FileStatus.modified,
 							statusX: FileStatus.modified,
-							statusY: FileStatus.modified
+							statusY: FileStatus.modified,
 						};
 						modifiedFiles.push(numStat);
 					}
@@ -854,9 +854,10 @@ export class ScmManager {
 					includeSaved,
 					includeStaged
 				);
-				const numStatFromNewestCommitShaBeforeFirstCheckpoint = numStatsFromNewestCommitShaBeforeFirstCheckpoint.find(
-					ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
-				);
+				const numStatFromNewestCommitShaBeforeFirstCheckpoint =
+					numStatsFromNewestCommitShaBeforeFirstCheckpoint.find(
+						ns => ns.file === numStatFromNewestCommitShaInOrBeforeReview.file
+					);
 				modifiedFiles.push(numStatFromNewestCommitShaBeforeFirstCheckpoint!);
 			}
 		}
@@ -919,7 +920,7 @@ export class ScmManager {
 						linesRemoved,
 						status: FileStatus.modified,
 						statusX: FileStatus.modified,
-						statusY: FileStatus.modified
+						statusY: FileStatus.modified,
 					};
 					modifiedFiles.push(numStat);
 				}
@@ -930,7 +931,7 @@ export class ScmManager {
 						file,
 						linesAdded: 0,
 						linesRemoved: 0,
-						...statusByFile[file]
+						...statusByFile[file],
 					} as GitNumStat);
 				} else {
 					modifiedFiles.push({
@@ -938,7 +939,7 @@ export class ScmManager {
 						file,
 						linesAdded: 0,
 						linesRemoved: 0,
-						...statusByFile[file]
+						...statusByFile[file],
 					} as GitNumStat);
 				}
 			}
@@ -965,9 +966,9 @@ export class ScmManager {
 				authors: [],
 				commits,
 				remotes,
-				totalModifiedLines
+				totalModifiedLines,
 			},
-			error: undefined
+			error: undefined,
 		};
 	}
 
@@ -1031,11 +1032,11 @@ export class ScmManager {
 							repoId,
 							revision: rev!,
 							remotes: remotes || [],
-							branch
+							branch,
 					  }
 					: undefined,
 			error: gitError,
-			ignored: ignored
+			ignored: ignored,
 		};
 	}
 
@@ -1057,7 +1058,7 @@ export class ScmManager {
 		range,
 		dirty,
 		contents,
-		skipBlame
+		skipBlame,
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		const { git, providerRegistry } = SessionContainer.instance();
 		range = Ranges.ensureStartBeforeEnd(range);
@@ -1099,8 +1100,8 @@ export class ScmManager {
 					method: "getPullRequestReviewId",
 					providerId: codeStreamDiff.context.pullRequest.providerId,
 					params: {
-						pullRequestId: codeStreamDiff.context.pullRequest.id
-					}
+						pullRequestId: codeStreamDiff.context.pullRequest.id,
+					},
 				});
 				context = codeStreamDiff.context;
 				context.pullRequest!.pullRequestReviewId = pullRequestReviewId;
@@ -1120,10 +1121,10 @@ export class ScmManager {
 				authors: [],
 				remotes,
 				branch:
-					codeStreamDiff.side === "left" ? codeStreamDiff.baseBranch : codeStreamDiff.headBranch
+					codeStreamDiff.side === "left" ? codeStreamDiff.baseBranch : codeStreamDiff.headBranch,
 			},
 			context: context,
-			error: undefined
+			error: undefined,
 		};
 	}
 
@@ -1132,7 +1133,7 @@ export class ScmManager {
 		range,
 		dirty,
 		contents,
-		skipBlame
+		skipBlame,
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		const { git, reviews } = SessionContainer.instance();
 		range = Ranges.ensureStartBeforeEnd(range);
@@ -1175,9 +1176,9 @@ export class ScmManager {
 				revision: checkpointDiff.diff.latestCommitSha,
 				authors: [],
 				remotes,
-				branch: changeset.branch
+				branch: changeset.branch,
 			},
-			error: undefined
+			error: undefined,
 		};
 	}
 
@@ -1187,7 +1188,7 @@ export class ScmManager {
 		range,
 		dirty,
 		contents,
-		skipBlame
+		skipBlame,
 	}: GetRangeScmInfoRequest): Promise<GetRangeScmInfoResponse> {
 		const cc = Logger.getCorrelationContext();
 		const { git } = SessionContainer.instance();
@@ -1270,7 +1271,7 @@ export class ScmManager {
 							endLine: range.end.line,
 							ref: gitSha,
 							contents: blameContents,
-							retryWithTrimmedEndOnFailure: true
+							retryWithTrimmedEndOnFailure: true,
 						});
 						const authorEmails = gitAuthors.map(a => a.email);
 
@@ -1302,11 +1303,11 @@ export class ScmManager {
 							fixedGitSha: gitSha != null,
 							authors: authors || [],
 							remotes: remotes || [],
-							branch
+							branch,
 					  }
 					: undefined,
 			error: gitError,
-			ignored: ignored
+			ignored: ignored,
 		};
 	}
 
@@ -1351,12 +1352,12 @@ export class ScmManager {
 			diff?.hunks.map(hunk => ({
 				baseLinesChanged: {
 					start: hunk.oldStart,
-					end: hunk.oldStart + hunk.oldLines - 1
+					end: hunk.oldStart + hunk.oldLines - 1,
 				},
 				headLinesChanged: {
 					start: hunk.newStart,
-					end: hunk.newStart + hunk.newLines - 1
-				}
+					end: hunk.newStart + hunk.newLines - 1,
+				},
 			})) || []
 		);
 	}
@@ -1412,7 +1413,7 @@ export class ScmManager {
 
 		return {
 			scm: committers,
-			error: gitError
+			error: gitError,
 		};
 	}
 
@@ -1464,7 +1465,7 @@ export class ScmManager {
 							title: pr.title,
 							url: pr.url,
 							providerId: providerRepo.providerId,
-							providerName: providerRepo.providerName
+							providerName: providerRepo.providerName,
 						}))
 					);
 				} catch (e) {
@@ -1485,7 +1486,7 @@ export class ScmManager {
 				gravatarUrl: toGravatar(revisionEntry.authorEmail, 16),
 				summary: revisionEntry.summary,
 				reviews: repo?.id ? await reviews.getReviewsContainingSha(repo.id, revisionEntry.sha) : [],
-				prs: prs || []
+				prs: prs || [],
 			});
 		}
 
@@ -1500,17 +1501,17 @@ export class ScmManager {
 			dateFormatted: "",
 			reviews: [],
 			prs: [],
-			summary: "Uncommitted changes"
+			summary: "Uncommitted changes",
 		};
 		const blame = shas
 			.map(sha => commitInfos.get(sha))
 			.map(commitInfo => ({
 				...(commitInfo || uncommittedInfo),
-				diff: "- something\n+ something else"
+				diff: "- something\n+ something else",
 			}));
 
 		return {
-			blame
+			blame,
 		};
 	}
 
@@ -1601,7 +1602,36 @@ export class ScmManager {
 		);
 
 		return {
-			commitsBehindOrigin
+			commitsBehindOrigin,
+		};
+	}
+
+	async getFileContentsForUri(uri: string): Promise<{
+		left: string;
+		right: string;
+	}> {
+		const { scm } = SessionContainer.instance();
+		const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
+		if (!parsedUri) {
+			Logger.warn(`getFileContentsForUri: unable to parse URI ${uri}`);
+			return {
+				left: "",
+				right: "",
+			};
+		}
+		const leftContentsResponse = await scm.getFileContentsAtRevision({
+			repoId: parsedUri.repoId,
+			path: parsedUri.path,
+			sha: parsedUri.rightSha,
+		});
+		const rightContentsResponse = await scm.getFileContentsAtRevision({
+			repoId: parsedUri.repoId,
+			path: parsedUri.path,
+			sha: parsedUri.rightSha,
+		});
+		return {
+			left: leftContentsResponse.content,
+			right: rightContentsResponse.content,
 		};
 	}
 
@@ -1635,7 +1665,7 @@ export class ScmManager {
 		const contents = (await git.getFileContentForRevision(filePath, request.sha)) || "";
 		return {
 			repoRoot: repoPath,
-			content: contents
+			content: contents,
 		};
 	}
 
@@ -1650,7 +1680,7 @@ export class ScmManager {
 
 		const filesChanged = (await git.diffBranches(repoPath, request.baseRef, request.headRef)) || [];
 		return {
-			filesChanged
+			filesChanged,
 		};
 	}
 
@@ -1670,8 +1700,8 @@ export class ScmManager {
 			return {
 				sha: "",
 				error: {
-					type: "REPO_NOT_FOUND"
-				}
+					type: "REPO_NOT_FOUND",
+				},
 			};
 		}
 		if (!request.baseSha) {
@@ -1680,8 +1710,8 @@ export class ScmManager {
 				sha: "",
 				error: {
 					message: "baseSha is required",
-					type: "REPO_NOT_FOUND"
-				}
+					type: "REPO_NOT_FOUND",
+				},
 			};
 		}
 		if (!request.headSha) {
@@ -1690,8 +1720,8 @@ export class ScmManager {
 				sha: "",
 				error: {
 					message: "headSha is required",
-					type: "REPO_NOT_FOUND"
-				}
+					type: "REPO_NOT_FOUND",
+				},
 			};
 		}
 		try {
@@ -1723,8 +1753,8 @@ export class ScmManager {
 						sha: "",
 						error: {
 							message: "ref not found",
-							type: "REPO_NOT_FOUND"
-						}
+							type: "REPO_NOT_FOUND",
+						},
 					};
 				}
 
@@ -1736,13 +1766,13 @@ export class ScmManager {
 				return {
 					sha: "",
 					error: {
-						type: "COMMIT_NOT_FOUND"
-					}
+						type: "COMMIT_NOT_FOUND",
+					},
 				};
 			}
 			if (forkPointSha) {
 				return {
-					sha: forkPointSha
+					sha: forkPointSha,
 				};
 			}
 			return undefined;
@@ -1787,7 +1817,7 @@ export class ScmManager {
 						additions: hunk.additions,
 						changes: hunk.changes,
 						deletions: hunk.deletions,
-						patch: hunk.patch
+						patch: hunk.patch,
 					});
 				});
 			});

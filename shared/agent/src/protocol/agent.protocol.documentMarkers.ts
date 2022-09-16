@@ -3,7 +3,7 @@ import {
 	Range,
 	RequestType,
 	TextDocumentIdentifier,
-	VersionedTextDocumentIdentifier
+	VersionedTextDocumentIdentifier,
 } from "vscode-languageserver-protocol";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import {
@@ -11,7 +11,7 @@ import {
 	CSEntity,
 	CSMarker,
 	CSMarkerIdentifier,
-	CSMarkerLocation
+	CSMarkerLocation,
 } from "./api.protocol";
 
 export interface CreateDocumentMarkerPermalinkRequest {
@@ -84,7 +84,7 @@ export enum MarkerNotLocatedReason {
 	MISSING_ORIGINAL_LOCATION = "missing original location",
 	MISSING_ORIGINAL_COMMIT = "missing original commit",
 	CODEBLOCK_DELETED = "code block deleted",
-	UNKNOWN = "unknown"
+	UNKNOWN = "unknown",
 }
 
 export interface MarkerNotLocated extends CSMarker {
@@ -146,3 +146,20 @@ export const GetDocumentFromMarkerRequestType = new RequestType<
 	void,
 	void
 >("codestream/textDocument/fromMarker");
+
+export interface CalculateNonLocalRangesRequest {
+	ranges: Range[];
+	uri: string;
+}
+
+export interface CalculateNonLocalRangesResponse {
+	rangesLeft: Range[];
+	rangesRight: Range[];
+}
+
+export const CalculateNonLocalRangesRequestType = new RequestType<
+	CalculateNonLocalRangesRequest,
+	CalculateNonLocalRangesResponse,
+	void,
+	void
+>("codestream/textDocument/calculateNonLocalRanges");

@@ -1,10 +1,7 @@
 "use strict";
+import { structuredPatch } from "diff";
 import * as path from "path";
-import {
-	ThirdPartyIssueProvider,
-	ThirdPartyProvider,
-	ThirdPartyProviderSupportsPullRequests
-} from "providers/provider";
+import { ThirdPartyProvider } from "providers/provider";
 import { CodeStreamSession } from "session";
 import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
 import { URI } from "vscode-uri";
@@ -12,8 +9,15 @@ import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import * as gitUtils from "../git/utils";
 import { Logger } from "../logger";
-import { findBestMatchingLine, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
+	calculateRanges,
+	findBestMatchingLine,
+	MAX_RANGE_VALUE,
+} from "../markerLocation/calculator";
+import {
+	CalculateNonLocalRangesRequest,
+	CalculateNonLocalRangesRequestType,
+	CalculateNonLocalRangesResponse,
 	CodeStreamDiffUriData,
 	CreateDocumentMarkerPermalinkRequest,
 	CreateDocumentMarkerPermalinkRequestType,
@@ -30,19 +34,19 @@ import {
 	GetDocumentFromMarkerRequestType,
 	GetDocumentFromMarkerResponse,
 	MarkerNotLocated,
-	MarkerNotLocatedReason
+	MarkerNotLocatedReason,
 } from "../protocol/agent.protocol";
 import {
-	CodemarkStatus,
 	CodemarkType,
 	CSCodemark,
 	CSLocationArray,
 	CSMarker,
 	CSMe,
-	CSUser
+	CSUser,
 } from "../protocol/api.protocol";
 import { Functions, log, lsp, lspHandler, Strings } from "../system";
 import * as csUri from "../system/uri";
+import { xfs } from "../xfs";
 import { GetLocationsResult } from "./markerLocationManager";
 import { compareRemotes } from "./markersBuilder";
 import { ReviewsManager } from "./reviewsManager";
@@ -50,10 +54,10 @@ import { ReviewsManager } from "./reviewsManager";
 const emojiMap: { [key: string]: string } = require("../../emoji/emojis.json");
 const emojiRegex = /:([-+_a-z0-9]+):/g;
 
-const emptyArray = (Object.freeze([]) as any) as any[];
+const emptyArray = Object.freeze([]) as any as any[];
 const emptyResponse = {
 	markers: emptyArray,
-	markersNotLocated: emptyArray
+	markersNotLocated: emptyArray,
 };
 
 @lsp
@@ -149,9 +153,9 @@ export class DocumentMarkerManager {
 				reason === "codemarks" ? 100 : 3000,
 				{
 					maxWait: reason === "codemarks" ? 3000 : 15000,
-					resolver: function(uri: string, reason: "document" | "codemarks") {
+					resolver: function (uri: string, reason: "document" | "codemarks") {
 						return uri;
-					}
+					},
 				}
 			);
 			this._debouncedDocumentMarkersChangedByReason.set(reason, fn);
@@ -163,9 +167,9 @@ export class DocumentMarkerManager {
 	private async fireDidChangeDocumentMarkersCore(uri: string, reason: "document" | "codemarks") {
 		this.session.agent.sendNotification(DidChangeDocumentMarkersNotificationType, {
 			textDocument: {
-				uri: uri
+				uri: uri,
 			},
-			reason: reason
+			reason: reason,
 		});
 	}
 
@@ -175,7 +179,7 @@ export class DocumentMarkerManager {
 		uri,
 		range,
 		privacy,
-		contents
+		contents,
 	}: CreateDocumentMarkerPermalinkRequest): Promise<CreateDocumentMarkerPermalinkResponse> {
 		const { codemarks, git, scm } = SessionContainer.instance();
 
@@ -183,7 +187,7 @@ export class DocumentMarkerManager {
 			uri: uri,
 			range: range,
 			contents: contents,
-			skipBlame: true
+			skipBlame: true,
 		});
 		const remotes = scmResponse.scm && scmResponse.scm.remotes.sort(compareRemotes).map(r => r.url);
 
@@ -227,18 +231,18 @@ export class DocumentMarkerManager {
 					remotes: remotes,
 					commitHash: commitHash,
 					file: scmResponse.scm && scmResponse.scm.file,
-					location: location
-				}
+					location: location,
+				},
 			],
 			remotes: remotes,
 			remoteCodeUrl: remoteCodeUrl,
-			createPermalink: privacy
+			createPermalink: privacy,
 		});
 
 		const telemetry = Container.instance().telemetry;
 		const payload = {
 			Access: privacy === "public" ? "Public" : "Private",
-			"Codemark ID": response.codemark.id
+			"Codemark ID": response.codemark.id,
 		};
 		telemetry.track({ eventName: "Permalink Created", properties: payload });
 
@@ -267,12 +271,12 @@ export class DocumentMarkerManager {
 		return {
 			excludeArchived: !preferences.codemarksShowArchived,
 			excludeResolved: !!preferences.codemarksHideResolved,
-			excludeReviews: !!preferences.codemarksHideReviews
+			excludeReviews: !!preferences.codemarksHideReviews,
 		};
 	}
 
 	private async getDocumentMarkersForPullRequestDiff({
-		textDocument: documentId
+		textDocument: documentId,
 	}: FetchDocumentMarkersRequest) {
 		const { git, providerRegistry } = SessionContainer.instance();
 		const uri = documentId.uri;
@@ -298,8 +302,8 @@ export class DocumentMarkerManager {
 			method: "getPullRequest",
 			providerId,
 			params: {
-				pullRequestId
-			}
+				pullRequestId,
+			},
 		});
 		const documentMarkers: DocumentMarker[] = [];
 
@@ -355,8 +359,8 @@ export class DocumentMarkerManager {
 							externalChildId: comment.id,
 							externalType: "pr",
 							title: comment.body,
-							subhead: ""
-						}
+							subhead: "",
+						},
 					});
 				});
 			}
@@ -431,20 +435,20 @@ export class DocumentMarkerManager {
 							externalChildId: comment.id,
 							externalType: "pr",
 							title: comment.bodyText,
-							subhead: ""
-						}
+							subhead: "",
+						},
 					});
 				});
 			}
 		}
 		return {
 			markers: documentMarkers,
-			markersNotLocated: []
+			markersNotLocated: [],
 		};
 	}
 
 	private async getDocumentMarkersForReviewDiff({
-		textDocument: documentId
+		textDocument: documentId,
 	}: FetchDocumentMarkersRequest) {
 		const { codemarks, files, markers, reviews, users, posts } = SessionContainer.instance();
 
@@ -490,13 +494,13 @@ export class DocumentMarkerManager {
 				location: MarkerLocation.fromArray(canonicalLocation.location, marker.id),
 				summary: summary,
 				summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-				type: codemark.type
+				type: codemark.type,
 			});
 		}
 
 		return {
 			markers: documentMarkers,
-			markersNotLocated: []
+			markersNotLocated: [],
 		};
 	}
 
@@ -527,7 +531,7 @@ export class DocumentMarkerManager {
 
 			return {
 				markers: filteredMarkers,
-				markersNotLocated
+				markersNotLocated,
 			};
 		} catch (ex) {
 			Logger.error(ex, cc);
@@ -564,7 +568,7 @@ export class DocumentMarkerManager {
 		if (doc?.version !== undefined) {
 			this._codemarkDocumentMarkersCache.set(documentUri.toString(), {
 				documentVersion: doc.version,
-				promise
+				promise,
 			});
 		}
 
@@ -573,19 +577,12 @@ export class DocumentMarkerManager {
 
 	private async getCodemarkDocumentMarkersCore({
 		textDocument: documentId,
-		gitSha
+		gitSha,
 	}: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
 		const cc = Logger.getCorrelationContext();
 
-		const {
-			codemarks,
-			files,
-			markers,
-			markerLocations,
-			users,
-			reviews,
-			posts
-		} = SessionContainer.instance();
+		const { codemarks, files, markers, markerLocations, users, reviews, posts } =
+			SessionContainer.instance();
 		const { documents } = Container.instance();
 		const { git } = SessionContainer.instance();
 		const doc = documents.get(documentId.uri);
@@ -685,7 +682,7 @@ export class DocumentMarkerManager {
 									lineStart: line,
 									colStart: 0,
 									lineEnd: line,
-									colEnd: MAX_RANGE_VALUE
+									colEnd: MAX_RANGE_VALUE,
 								};
 							}
 						}
@@ -703,7 +700,7 @@ export class DocumentMarkerManager {
 							...(title ? { title } : {}),
 							summary: summary,
 							summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
-							type: codemark.type
+							type: codemark.type,
 						});
 						Logger.log(
 							cc,
@@ -720,12 +717,13 @@ export class DocumentMarkerManager {
 								creatorName: (creator && creator.username) || "Unknown",
 								codemark: codemark,
 								notLocatedReason: missingLocation.reason,
-								notLocatedDetails: missingLocation.details
+								notLocatedDetails: missingLocation.details,
 							});
 							Logger.log(
 								cc,
-								`MARKERS: ${marker.id}=${missingLocation.details ||
-									"location not found"}, reason: ${missingLocation.reason}`
+								`MARKERS: ${marker.id}=${
+									missingLocation.details || "location not found"
+								}, reason: ${missingLocation.reason}`
 							);
 						} else {
 							markersNotLocated.push({
@@ -735,7 +733,7 @@ export class DocumentMarkerManager {
 								summaryMarkdown: `${Strings.escapeMarkdown(summary, { quoted: false })}`,
 								creatorName: (creator && creator.username) || "Unknown",
 								codemark: codemark,
-								notLocatedReason: MarkerNotLocatedReason.UNKNOWN
+								notLocatedReason: MarkerNotLocatedReason.UNKNOWN,
 							});
 							Logger.log(cc, `MARKERS: ${marker.id}=location not found, reason: unknown`);
 						}
@@ -748,14 +746,14 @@ export class DocumentMarkerManager {
 
 		return {
 			markers: documentMarkers,
-			markersNotLocated
+			markersNotLocated,
 		};
 	}
 
 	@log()
 	@lspHandler(GetDocumentFromKeyBindingRequestType)
 	async getDocumentFromKeyBinding({
-		key
+		key,
 	}: GetDocumentFromKeyBindingRequest): Promise<GetDocumentFromKeyBindingResponse | undefined> {
 		const { codemarks, users } = SessionContainer.instance();
 
@@ -775,7 +773,7 @@ export class DocumentMarkerManager {
 		return this.getDocumentFromMarker({
 			markerId: marker.id,
 			file: marker.file,
-			repoId: marker.repoId
+			repoId: marker.repoId,
 		});
 	}
 
@@ -785,7 +783,7 @@ export class DocumentMarkerManager {
 		markerId,
 		repoId,
 		file,
-		source // for debugging
+		source, // for debugging
 	}: GetDocumentFromMarkerRequest): Promise<GetDocumentFromMarkerResponse | undefined> {
 		const { git, markers, markerLocations, repositoryMappings } = SessionContainer.instance();
 		const { documents } = Container.instance();
@@ -816,7 +814,7 @@ export class DocumentMarkerManager {
 		const response = {
 			textDocument: { uri: documentUri, version },
 			marker: marker,
-			range: range
+			range: range,
 		};
 
 		if (version !== 0) {
@@ -824,5 +822,69 @@ export class DocumentMarkerManager {
 		}
 
 		return response;
+	}
+
+	@lspHandler(CalculateNonLocalRangesRequestType)
+	@log()
+	async calculateNonLocalRanges({
+		ranges,
+		uri,
+	}: CalculateNonLocalRangesRequest): Promise<CalculateNonLocalRangesResponse> {
+		const cc = Logger.getCorrelationContext();
+		const { urls } = Container.instance();
+		const { reviews, scm } = SessionContainer.instance();
+		const { uri: localUri } = await urls.resolveLocalUri({ uri });
+		const originalRanges = {
+			rangesLeft: ranges,
+			rangesRight: ranges,
+		};
+		if (localUri === uri) {
+			return originalRanges;
+		}
+		if (!localUri) {
+			Logger.warn(
+				cc,
+				`CalculateNonLocalRangesRequestType: unable to determine local URI for ${uri}`
+			);
+			return originalRanges;
+		}
+		const parsedLocalUri = URI.parse(localUri);
+		const localPath = parsedLocalUri.fsPath;
+		const localContents = (await xfs.readText(localPath)) || "";
+		let contents;
+		if (uri.startsWith("codestream-diff://")) {
+			if (csUri.Uris.isCodeStreamDiffUri(uri)) {
+				contents = await scm.getFileContentsForUri(uri);
+			} else {
+				contents = await reviews.getContentsForUri(uri);
+			}
+		} else {
+			Logger.warn(
+				cc,
+				"CalculateRangesRequestType: unknown type of non-local URI - returning original ranges"
+			);
+			return originalRanges;
+		}
+
+		const diffLeft = structuredPatch(
+			localPath,
+			localPath,
+			Strings.normalizeFileContents(localContents),
+			Strings.normalizeFileContents(contents.left),
+			"",
+			""
+		);
+		const diffRight = structuredPatch(
+			localPath,
+			localPath,
+			Strings.normalizeFileContents(localContents),
+			Strings.normalizeFileContents(contents.right),
+			"",
+			""
+		);
+		const rangesLeft = await calculateRanges(ranges, diffLeft);
+		const rangesRight = await calculateRanges(ranges, diffRight);
+
+		return { rangesLeft, rangesRight };
 	}
 }

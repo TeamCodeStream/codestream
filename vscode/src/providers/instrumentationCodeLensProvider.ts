@@ -15,6 +15,7 @@ import {
 import { Strings } from "../system";
 import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
+import { Container } from "container";
 
 function allEmpty(arrays: (any[] | undefined)[]) {
 	for (const arr of arrays) {
@@ -41,7 +42,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		private symbolLocator: ISymbolLocator,
 		private observabilityService: {
 			getFileLevelTelemetry(
-				filePath: string,
+				fileUri: string,
 				languageId: string,
 				resetCache?: boolean,
 				locator?: FunctionLocator,
@@ -334,7 +335,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
-				document.fileName,
+				document.uri.toString(),
 				document.languageId,
 				this.resetCache,
 				functionLocator,
@@ -494,6 +495,17 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			});
 
 			codeLenses = lenses.filter(_ => _ != null) as vscode.CodeLens[];
+
+			const localRanges = codeLenses.map(_ => _.range);
+			const uriRanges = await Container.agent.documentMarkers.getRangesForUri(localRanges, document.uri.toString(true));
+			codeLenses.forEach((lens, i) => {
+				const agentRange = uriRanges.rangesRight[i];
+				const start = new vscode.Position(agentRange.start.line, agentRange.start.character);
+				const end = new vscode.Position(agentRange.end.line, agentRange.end.character);
+				const newRange = new vscode.Range(start, end);
+				lens.range = newRange;
+			});
+			codeLenses = codeLenses.filter(_ => _.range.start.line >= 0);
 
 			if (codeLenses.length > 0) {
 				this.tryTrack(

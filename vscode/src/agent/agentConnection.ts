@@ -39,6 +39,7 @@ import {
 	ArchiveStreamRequestType,
 	BaseAgentOptions,
 	BootstrapRequestType,
+	CalculateNonLocalRangesRequestType,
 	CloseStreamRequestType,
 	CodeStreamEnvironmentInfo,
 	CreateChannelStreamRequestType,
@@ -128,6 +129,7 @@ import {
 	RenameStreamRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
+	ResolveLocalUriRequestType,
 	RestartRequiredNotificationType,
 	SetCodemarkStatusRequestType,
 	SetStreamPurposeRequestType,
@@ -493,6 +495,13 @@ export class CodeStreamAgentConnection implements Disposable {
 				repoId: marker.repoId,
 				file: marker.file,
 				markerId: marker.id
+			});
+		}
+
+		getRangesForUri(ranges: Range[], uri: string) {
+			return this._connection.sendRequest(CalculateNonLocalRangesRequestType, {
+				ranges,
+				uri
 			});
 		}
 	})(this);
@@ -912,6 +921,19 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 	})(this);
 
+	get urls() {
+		return this._urls;
+	}
+	private readonly _urls = new (class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		async resolveLocalUri(uri: string) {
+			return this._connection.sendRequest(ResolveLocalUriRequestType, {
+				uri
+			});
+		}
+	})(this);
+
 	get users() {
 		return this._users;
 	}
@@ -968,14 +990,14 @@ export class CodeStreamAgentConnection implements Disposable {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		getFileLevelTelemetry(
-			filePath: string,
+			fileUri: string,
 			languageId: string,
 			resetCache: boolean,
 			locator?: FunctionLocator,
 			options?: FileLevelTelemetryRequestOptions
 		) {
 			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
-				filePath,
+				fileUri,
 				languageId,
 				resetCache,
 				locator,

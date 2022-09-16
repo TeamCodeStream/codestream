@@ -279,6 +279,18 @@ export const TelemetryRequestType = new RequestType<TelemetryRequest, void, void
 	"codestream/telemetry"
 );
 
+export interface ResolveLocalUriRequest {
+	uri: string;
+}
+
+export interface ResolveLocalUriResponse {
+	uri?: string;
+}
+
+export const ResolveLocalUriRequestType = new RequestType<ResolveLocalUriRequest, ResolveLocalUriResponse, void, void>(
+	"codestream/uri/resolveLocal"
+);
+
 export interface AgentOpenUrlRequest {
 	url: string;
 }

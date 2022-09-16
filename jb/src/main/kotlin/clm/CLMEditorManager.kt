@@ -4,6 +4,7 @@ import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
+import com.codestream.extensions.uri
 import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
@@ -16,6 +17,7 @@ import com.codestream.protocols.agent.MethodLevelTelemetryThroughput
 import com.codestream.protocols.agent.NOT_ASSOCIATED
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.MethodLevelTelemetryNotifications
+import com.codestream.review.LOCAL_PATH
 import com.codestream.sessionService
 import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settings.GoldenSignalListener
@@ -78,7 +80,7 @@ abstract class CLMEditorManager(
     private val languageId: String,
     private val lookupByClassName: Boolean
 ) : DocumentListener, GoldenSignalListener, Disposable {
-    private val path = editor.document.file?.path
+    private val path = editor.document.getUserData(LOCAL_PATH) ?: editor.document.file?.path
     private val project = editor.project
     private val metricsBySymbol = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
     private val inlays = mutableSetOf<Inlay<CLMCustomRenderer>>()
@@ -134,7 +136,7 @@ abstract class CLMEditorManager(
                     try {
                         val result = project.agentService?.fileLevelTelemetry(
                             FileLevelTelemetryParams(
-                                path,
+                                editor.document.uri,
                                 languageId,
                                 FunctionLocator(className, null),
                                 null,

@@ -2,6 +2,7 @@ import { CancellationToken, DocumentSymbol, TextDocument } from "vscode";
 import * as vscode from "vscode";
 import { BuiltInCommands } from "../constants";
 import { Logger } from "../logger";
+import { Container } from "../container";
 
 const sleep = async (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -45,6 +46,9 @@ export class SymbolLocator implements ISymbolLocator {
 	): Promise<DocumentSymbol[]> {
 		let symbols: DocumentSymbol[] | undefined = [];
 
+		const { uri: localUriString } = await Container.agent.urls.resolveLocalUri(document.uri.toString(true));
+		const localUri = localUriString && vscode.Uri.parse(localUriString);
+
 		for (const timeout of [0, 750, 1000, 1500, 2000]) {
 			if (token.isCancellationRequested) {
 				Logger.log("SymbolLocator.locateCore isCancellationRequested", { timeout });
@@ -53,7 +57,7 @@ export class SymbolLocator implements ISymbolLocator {
 			try {
 				symbols = await vscode.commands.executeCommand<DocumentSymbol[]>(
 					BuiltInCommands.ExecuteDocumentSymbolProvider,
-					document.uri
+					localUri || document.uri
 				);
 				if (!symbols || symbols.length === 0) {
 					await sleep(timeout);

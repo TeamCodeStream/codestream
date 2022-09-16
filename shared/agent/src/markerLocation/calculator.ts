@@ -3,11 +3,14 @@
 import { ParsedDiff } from "diff";
 import * as diffMatchPatch from "diff-match-patch";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
+import { Range } from "vscode-languageserver";
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
 import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
+import fromRange = MarkerLocation.fromRange;
+import toRange = MarkerLocation.toRange;
 
 export const MAX_RANGE_VALUE = 2147483647;
 const LINE_SIMILARITY_THRESHOLD = 0.5;
@@ -43,6 +46,19 @@ export async function findBestMatchingLine(
 		Logger.warn(`Error calculating location based on content: ${e.message}`);
 		return -1;
 	}
+}
+
+export async function calculateRanges(ranges: Range[], diff: ParsedDiff): Promise<Range[]> {
+	const locations: MarkerLocationsById = {};
+	for (let i = 0; i <= ranges.length; i++) {
+		locations[i.toString()] = fromRange(ranges[i]);
+	}
+	const calculatedLocations = await calculateLocations(locations, diff);
+	const calculatedRanges: Range[] = [];
+	for (let i = 0; i <= ranges.length; i++) {
+		calculatedRanges[i] = toRange(calculatedLocations[i.toString()]);
+	}
+	return calculatedRanges;
 }
 
 export async function calculateLocations(
@@ -204,7 +220,7 @@ class CalculatedLocation {
 			colStart: this.colStartNew,
 			lineEnd: this.lineEndNew,
 			colEnd: this.colEndNew,
-			meta: this.meta
+			meta: this.meta,
 		};
 	}
 }
@@ -528,7 +544,7 @@ class Calculation {
 			if (rating.rating >= CHANGE_SIMILARITY_THRESHOLD) {
 				matches.push({
 					change: this._changes[i],
-					rating: rating
+					rating: rating,
 				});
 			}
 		}
