@@ -46,8 +46,11 @@ export class SymbolLocator implements ISymbolLocator {
 	): Promise<DocumentSymbol[]> {
 		let symbols: DocumentSymbol[] | undefined = [];
 
-		const { uri: localUriString } = await Container.agent.urls.resolveLocalUri(document.uri.toString(true));
-		const localUri = localUriString && vscode.Uri.parse(localUriString);
+		let localUri;
+		if (document.uri.scheme === "codestream-diff") {
+			const { uri: localUriString } = await Container.agent.urls.resolveLocalUri(document.uri.toString(true));
+			localUri = localUriString && vscode.Uri.parse(localUriString);			
+		}
 
 		for (const timeout of [0, 750, 1000, 1500, 2000]) {
 			if (token.isCancellationRequested) {

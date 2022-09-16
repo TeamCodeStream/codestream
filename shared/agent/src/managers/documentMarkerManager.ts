@@ -831,48 +831,53 @@ export class DocumentMarkerManager {
 		uri,
 	}: CalculateNonLocalRangesRequest): Promise<CalculateNonLocalRangesResponse> {
 		const cc = Logger.getCorrelationContext();
-		const { urls } = Container.instance();
-		const { reviews, scm } = SessionContainer.instance();
-		const { uri: localUri } = await urls.resolveLocalUri({ uri });
 		const originalRanges = { ranges };
-		if (localUri === uri) {
-			return originalRanges;
-		}
-		if (!localUri) {
-			Logger.warn(
-				cc,
-				`CalculateNonLocalRangesRequestType: unable to determine local URI for ${uri}`
-			);
-			return originalRanges;
-		}
-		const parsedLocalUri = URI.parse(localUri);
-		const localPath = parsedLocalUri.fsPath;
-		const localContents = (await xfs.readText(localPath)) || "";
-		let contents;
-		if (uri.startsWith("codestream-diff://")) {
-			if (csUri.Uris.isCodeStreamDiffUri(uri)) {
-				contents = await scm.getFileContentsForUri(uri);
-			} else {
-				contents = await reviews.getContentsForUri(uri);
+		try {
+			const { urls } = Container.instance();
+			const { reviews, scm } = SessionContainer.instance();
+			const { uri: localUri } = await urls.resolveLocalUri({ uri });
+			if (localUri === uri) {
+				return originalRanges;
 			}
-		} else {
-			Logger.warn(
-				cc,
-				"CalculateRangesRequestType: unknown type of non-local URI - returning original ranges"
+			if (!localUri) {
+				Logger.warn(
+					cc,
+					`CalculateNonLocalRangesRequestType: unable to determine local URI for ${uri}`
+				);
+				return originalRanges;
+			}
+			const parsedLocalUri = URI.parse(localUri);
+			const localPath = parsedLocalUri.fsPath;
+			const localContents = (await xfs.readText(localPath)) || "";
+			let contents;
+			if (uri.startsWith("codestream-diff://")) {
+				if (csUri.Uris.isCodeStreamDiffUri(uri)) {
+					contents = await scm.getFileContentsForUri(uri);
+				} else {
+					contents = await reviews.getContentsForUri(uri);
+				}
+			} else {
+				Logger.warn(
+					cc,
+					"CalculateRangesRequestType: unknown type of non-local URI - returning original ranges"
+				);
+				return originalRanges;
+			}
+
+			const diff = structuredPatch(
+				localPath,
+				localPath,
+				Strings.normalizeFileContents(localContents),
+				Strings.normalizeFileContents(contents),
+				"",
+				""
 			);
+			const calculatedRanges = await calculateRanges(ranges, diff);
+
+			return { ranges: calculatedRanges };
+		} catch (e) {
+			Logger.error(e, cc);
 			return originalRanges;
 		}
-
-		const diff = structuredPatch(
-			localPath,
-			localPath,
-			Strings.normalizeFileContents(localContents),
-			Strings.normalizeFileContents(contents),
-			"",
-			""
-		);
-		const calculatedRanges = await calculateRanges(ranges, diff);
-
-		return { ranges: calculatedRanges };
 	}
 }

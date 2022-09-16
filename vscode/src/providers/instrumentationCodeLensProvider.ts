@@ -15,7 +15,7 @@ import {
 import { Strings } from "../system";
 import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
-import { Container } from "container";
+import { Container } from "../container";
 
 function allEmpty(arrays: (any[] | undefined)[]) {
 	for (const arr of arrays) {
