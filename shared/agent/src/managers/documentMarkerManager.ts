@@ -834,10 +834,7 @@ export class DocumentMarkerManager {
 		const { urls } = Container.instance();
 		const { reviews, scm } = SessionContainer.instance();
 		const { uri: localUri } = await urls.resolveLocalUri({ uri });
-		const originalRanges = {
-			rangesLeft: ranges,
-			rangesRight: ranges,
-		};
+		const originalRanges = { ranges };
 		if (localUri === uri) {
 			return originalRanges;
 		}
@@ -866,25 +863,16 @@ export class DocumentMarkerManager {
 			return originalRanges;
 		}
 
-		const diffLeft = structuredPatch(
+		const diff = structuredPatch(
 			localPath,
 			localPath,
 			Strings.normalizeFileContents(localContents),
-			Strings.normalizeFileContents(contents.left),
+			Strings.normalizeFileContents(contents),
 			"",
 			""
 		);
-		const diffRight = structuredPatch(
-			localPath,
-			localPath,
-			Strings.normalizeFileContents(localContents),
-			Strings.normalizeFileContents(contents.right),
-			"",
-			""
-		);
-		const rangesLeft = await calculateRanges(ranges, diffLeft);
-		const rangesRight = await calculateRanges(ranges, diffRight);
+		const calculatedRanges = await calculateRanges(ranges, diff);
 
-		return { rangesLeft, rangesRight };
+		return { ranges: calculatedRanges };
 	}
 }

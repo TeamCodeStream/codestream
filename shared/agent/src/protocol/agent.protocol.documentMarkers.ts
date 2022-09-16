@@ -153,8 +153,7 @@ export interface CalculateNonLocalRangesRequest {
 }
 
 export interface CalculateNonLocalRangesResponse {
-	rangesLeft: Range[];
-	rangesRight: Range[];
+	ranges: Range[];
 }
 
 export const CalculateNonLocalRangesRequestType = new RequestType<

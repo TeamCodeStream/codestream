@@ -50,12 +50,15 @@ export async function findBestMatchingLine(
 
 export async function calculateRanges(ranges: Range[], diff: ParsedDiff): Promise<Range[]> {
 	const locations: MarkerLocationsById = {};
-	for (let i = 0; i <= ranges.length; i++) {
-		locations[i.toString()] = fromRange(ranges[i]);
+	for (let i = 0; i < ranges.length; i++) {
+		const location = fromRange(ranges[i]);
+		const id = i.toString();
+		location.id = id;
+		locations[id] = location;
 	}
 	const calculatedLocations = await calculateLocations(locations, diff);
 	const calculatedRanges: Range[] = [];
-	for (let i = 0; i <= ranges.length; i++) {
+	for (let i = 0; i < ranges.length; i++) {
 		calculatedRanges[i] = toRange(calculatedLocations[i.toString()]);
 	}
 	return calculatedRanges;

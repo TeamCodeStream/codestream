@@ -317,10 +317,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		};
 	}
 
-	async getContentsForUri(uri: string): Promise<{
-		left: string;
-		right: string;
-	}> {
+	async getContentsForUri(uri: string): Promise<string> {
 		const parsedUri = ReviewsManager.parseUri(uri);
 		const response = await this.getContents({
 			reviewId: parsedUri.reviewId,
@@ -328,10 +325,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 			path: parsedUri.path,
 			repoId: parsedUri.repoId,
 		});
-		return {
-			left: response.left || "",
-			right: response.right || "",
-		};
+		return (parsedUri.version === "left" ? response.left : response.right) || "";
 	}
 
 	@lspHandler(GetReviewContentsRequestType)

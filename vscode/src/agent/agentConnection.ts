@@ -8,6 +8,7 @@ import {
 	EventEmitter,
 	ExtensionContext,
 	OutputChannel,
+	Range as VSCodeRange,
 	Uri,
 	window,
 	workspace
@@ -160,6 +161,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
 import { getInitializationOptions } from "../extension";
+import { Editor } from "extensions";
 
 export { BaseAgentOptions };
 
@@ -498,9 +500,9 @@ export class CodeStreamAgentConnection implements Disposable {
 			});
 		}
 
-		getRangesForUri(ranges: Range[], uri: string) {
+		getRangesForUri(ranges: VSCodeRange[], uri: string) {
 			return this._connection.sendRequest(CalculateNonLocalRangesRequestType, {
-				ranges,
+				ranges: Editor.toSerializableRange(ranges),
 				uri
 			});
 		}

@@ -1606,33 +1606,20 @@ export class ScmManager {
 		};
 	}
 
-	async getFileContentsForUri(uri: string): Promise<{
-		left: string;
-		right: string;
-	}> {
+	async getFileContentsForUri(uri: string): Promise<string> {
 		const { scm } = SessionContainer.instance();
 		const parsedUri = csUri.Uris.fromCodeStreamDiffUri<CodeStreamDiffUriData>(uri);
 		if (!parsedUri) {
 			Logger.warn(`getFileContentsForUri: unable to parse URI ${uri}`);
-			return {
-				left: "",
-				right: "",
-			};
+			return "";
 		}
-		const leftContentsResponse = await scm.getFileContentsAtRevision({
+		const sha = parsedUri.side === "left" ? parsedUri.leftSha : parsedUri.rightSha;
+		const contentsResponse = await scm.getFileContentsAtRevision({
 			repoId: parsedUri.repoId,
 			path: parsedUri.path,
-			sha: parsedUri.rightSha,
+			sha,
 		});
-		const rightContentsResponse = await scm.getFileContentsAtRevision({
-			repoId: parsedUri.repoId,
-			path: parsedUri.path,
-			sha: parsedUri.rightSha,
-		});
-		return {
-			left: leftContentsResponse.content,
-			right: rightContentsResponse.content,
-		};
+		return contentsResponse.content;
 	}
 
 	@log()
