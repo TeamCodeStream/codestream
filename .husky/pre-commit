@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Skip if running in CI
+[ -n "$TEAMCITY_VERSION" ] && exit 0
+
 pushd shared/agent
 npm run verify:compile
 npx lint-staged
