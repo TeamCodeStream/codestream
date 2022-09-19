@@ -382,6 +382,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of PRConnectedProviders) {
+					if (connectedProvider.id?.includes("bitbucket")) continue;
+
 					const queriesByProvider: PullRequestQuery[] =
 						theQueries[connectedProvider.id] || defaultQueries[connectedProvider.id];
 					if (!queriesByProvider) {
