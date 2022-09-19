@@ -11,16 +11,20 @@ import { ThirdPartyIssueProvider } from "../../../src/providers/provider";
 
 describe("provider", () => {
 	it("supportsViewingPullRequests", async () => {
-		[GitHubProvider, GitHubEnterpriseProvider, GitLabProvider, GitLabEnterpriseProvider].forEach(
-			Provider => {
-				const provider = new Provider({} as any, Provider as any);
-				expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(true);
-			}
-		);
+		[
+			GitHubProvider,
+			GitHubEnterpriseProvider,
+			GitLabProvider,
+			GitLabEnterpriseProvider,
+			BitbucketProvider,
+		].forEach(Provider => {
+			const provider = new Provider({} as any, Provider as any);
+			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(true);
+		});
 	});
 
 	it("does not supportsViewingPullRequests", async () => {
-		[BitbucketProvider, BitbucketServerProvider].forEach(Provider => {
+		[BitbucketServerProvider].forEach(Provider => {
 			const provider = new Provider({} as any, Provider as any);
 			expect(ThirdPartyIssueProvider.supportsViewingPullRequests(provider)).toEqual(false);
 		});
