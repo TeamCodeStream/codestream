@@ -845,8 +845,8 @@ export class ThirdPartyProviderRegistry {
 					providerId: "gitlab/enterprise",
 					name: RECENT,
 					query: `scope=created_by_me&per_page=5`,
-					hidden: false
-				}
+					hidden: false,
+				},
 			],
 			"bitbucket*org": [
 				//https://api.bitbucket.org//2.0/
@@ -861,7 +861,7 @@ export class ThirdPartyProviderRegistry {
 				// 	providerId: "bitbucket*org",
 				// 	name: "Assigned to Me",
 				// 	// TODO - how should this be formatted?
-				// 	query: `repositories/reneepetit86/bitbucketpractice/pullrequests/6?fields=reviewers`, //this is per pullrequest
+				// 	query: `repositories/<foo>>/<bar>/pullrequests/<number>?fields=reviewers`, //this is per pullrequest
 				// 	hidden: false
 				// },
 				{
@@ -875,8 +875,8 @@ export class ThirdPartyProviderRegistry {
 					name: "Recent",
 					query: `sort=updated_on&state=OPEN&state=MERGED&state=DECLINED&state=SUPERSEDED&pagelen=5`,
 					hidden: false,
-				}
-			]
+				},
+			],
 		};
 		try {
 			const user = await SessionContainer.instance().users.getMe();
