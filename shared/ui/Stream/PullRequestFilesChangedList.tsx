@@ -1,31 +1,30 @@
-import React, { useState, useEffect } from "react";
-import { PRSelectorButtons, PRSubmitReviewButton } from "./PullRequestComponents";
-import styled from "styled-components";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { useSelector, useDispatch } from "react-redux";
-import { CodeStreamState } from "../store";
-import { PullRequestFilesChanged } from "./PullRequestFilesChanged";
-import { FileStatus } from "@codestream/protocols/api";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import { setUserPreference } from "./actions";
-import { PRPatchRoot, PullRequestPatch } from "./PullRequestPatch";
-import copy from "copy-to-clipboard";
 import {
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
 	ReadTextFileRequestType,
 	WriteTextFileRequestType,
 } from "@codestream/protocols/agent";
-import Icon from "./Icon";
-import { Button } from "../src/components/Button";
-import { PullRequestFinishReview } from "./PullRequestFinishReview";
-import { Checkbox } from "../src/components/Checkbox";
-import { HostApi } from "../webview-api";
-import { Link } from "./Link";
-import { getProviderPullRequestRepo } from "../store/providerPullRequests/slice";
+import { FileStatus } from "@codestream/protocols/api";
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import copy from "copy-to-clipboard";
 import * as path from "path-browserify";
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
+import { Button } from "../src/components/Button";
+import { Checkbox } from "../src/components/Checkbox";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { CodeStreamState } from "../store";
+import { getProviderPullRequestRepo } from "../store/providerPullRequests/slice";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { setUserPreference } from "./actions";
+import Icon from "./Icon";
+import { Link } from "./Link";
+import { PRSelectorButtons, PRSubmitReviewButton } from "./PullRequestComponents";
+import { PullRequestFilesChanged } from "./PullRequestFilesChanged";
+import { PullRequestFinishReview } from "./PullRequestFinishReview";
+import { PRPatchRoot, PullRequestPatch } from "./PullRequestPatch";
 import Tooltip from "./Tooltip";
 
 export const PRDiffHunks = styled.div`
@@ -140,84 +139,6 @@ interface Props extends CompareFilesProps {
 	setAccessRawDiffs?: Function;
 	initialScrollPosition?: number;
 }
-
-// interface Comment {
-// 	bodyHtml: string;
-// 	bodyText: string;
-// 	content: {
-// 		html: string;
-// 		markup: string;
-// 		raw: string;
-// 		type: string;
-// 	};
-// 	created_on: Date;
-// 	deleted: boolean;
-// 	file: string;
-// 	id: number;
-// 	inline: {
-// 		from: number;
-// 		path: string;
-// 		to: number;
-// 	};
-// 	links: {
-// 		code: {
-// 			href: string;
-// 		};
-// 		html: {
-// 			href: string;
-// 		};
-// 		self: { href: string };
-// 	};
-// 	pullrequest: {
-// 		id: number;
-// 		links: {
-// 			html: {
-// 				href: string;
-// 			};
-// 			self: {
-// 				href: string;
-// 			};
-// 		};
-// 		title: string;
-// 		type: string;
-// 	};
-// 	state: string;
-// 	type: string;
-// 	updated_on: Date;
-// 	user: {
-// 		account_id: string;
-// 		display_name: string;
-// 		links: {
-// 			avatar: {
-// 				href: string;
-// 			};
-// 			html: {
-// 				href: string;
-// 			};
-// 			self: {
-// 				href: string;
-// 			};
-// 		};
-// 		nickname: "Renee Peti";
-// 		type: "user";
-// 		uuid: "{aa5e7a1e-10bd-416f-979c-10a377e767d5}";
-// 	};
-// }
-
-// interface PR {
-// 	baseRefOid: string;
-// 	comments: Array<Comment>;
-// 	headRefOid: string;
-// 	idComputed: string;
-// 	number: number;
-// 	providerId: string;
-// 	repository: {
-// 		name: string;
-// 		repoWithOwner: string;
-// 		url: string;
-// 	};
-// 	state: string;
-// }
 
 export const PullRequestFilesChangedList = (props: Props) => {
 	const { filesChanged, isLoading, pr } = props;
@@ -362,10 +283,10 @@ export const PullRequestFilesChangedList = (props: Props) => {
 					map[comment.inline.path].push({
 						review: {
 							// TODO??
-							state: comment.state
+							state: comment.state,
 						},
 						// TODO? what shape is this
-						comment: comment
+						comment: comment,
 					});
 				}
 			});
