@@ -148,5 +148,10 @@
 	"lint-staged": {
 		"*": "prettier --ignore-unknown --write",
 		"src/*.{js,jsx,ts,tsx}": "eslint"
+	},
+	"overrides": {
+		"degenerator@3.0.1": {
+			"vm2": "3.9.11"
+		}
 	}
 }
