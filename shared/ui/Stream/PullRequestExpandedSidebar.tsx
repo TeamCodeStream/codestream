@@ -1,19 +1,14 @@
-import { useAppDispatch } from "@codestream/webview/utilities/hooks";
-import React, { useState, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { CodeStreamState } from "../store";
-import styled from "styled-components";
-import Icon from "./Icon";
-import { setCurrentPullRequest } from "../store/context/actions";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
-import { getPreferences } from "../store/users/reducer";
-import { Row } from "./CrossPostIssueControls/IssuesPane";
-import { openModal } from "../store/context/actions";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
+import React, { useMemo, useState } from "react";
+import styled from "styled-components";
 import { WebviewModals } from "../ipc/webview.protocol.common";
+import { openModal, setCurrentPullRequest } from "../store/context/actions";
+import { api } from "../store/providerPullRequests/thunks";
 import { HostApi } from "../webview-api";
-import { api } from "../store/providerPullRequests/actions";
-import { ProvidersActionsType } from "../store/providers/types";
+import { Row } from "./CrossPostIssueControls/IssuesPane";
+import Icon from "./Icon";
+import { PullRequestFilesChangedTab } from "./PullRequestFilesChangedTab";
 
 export const ReviewButton = styled.div`
 	color: white;

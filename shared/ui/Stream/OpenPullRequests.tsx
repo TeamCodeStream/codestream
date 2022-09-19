@@ -1239,7 +1239,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									e.preventDefault();
 									e.stopPropagation();
 									HostApi.instance.send(OpenUrlRequestType, {
-										url: pr.url
+										url: pr.url,
 									});
 								}}
 							>
@@ -1306,7 +1306,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									onClick={e => {
 										e.preventDefault();
 										e.stopPropagation();
-										setPrFromUrl({});
+										setPrFromUrl(undefined);
 									}}
 									delay={1}
 								/>

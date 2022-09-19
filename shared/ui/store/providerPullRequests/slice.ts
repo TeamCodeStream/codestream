@@ -831,9 +831,49 @@ const providerPullRequestsSlice = createSlice({
 							}
 						}
 					}
+				} else if (providerId === "bitbucket*org") {
+					const pr = state.pullRequests[providerId][id]?.conversations?.repository
+						.pullRequest as FetchThirdPartyPullRequestPullRequest;
+
+					for (const directive of action.payload.data) {
+						if (directive.type === "updatePullRequest") {
+							for (const key in directive.data) {
+								pr[key] = directive.data[key];
+							}
+						} else if (directive.type === "addNode") {
+							pr.comments = pr.comments || [];
+							pr.comments.push(directive.data);
+						} else if (directive.type === "addPullRequestComment") {
+							pr.timelineItems = pr.timelineItems || {};
+							pr.timelineItems.nodes = pr.timelineItems.nodes || [];
+							pr.timelineItems.nodes.push(directive.data);
+						} else if (directive.type === "addReply") {
+							pr.comments = pr.comments || [];
+							const findParent = function (
+								items: { id: number; replies: any[] }[],
+								data: { parent: { id: number } }
+							) {
+								for (const item of items) {
+									if (item.id === data.parent.id) {
+										item.replies = item.replies || [];
+										item.replies.push(data);
+										return;
+									}
+									if (item.replies?.length) {
+										findParent(item.replies, data);
+									}
+								}
+							};
+							if (directive?.data?.parent?.id) {
+								findParent(pr.comments, directive.data);
+							} else {
+								console.warn("missing parent.id", directive);
+							}
+						}
+					}
 				}
+				return;
 			}
-			return;
 		},
 		reset: _state => {
 			return initialState;
@@ -926,7 +966,7 @@ export const getCurrentProviderPullRequestRootObject = createSelector(
 				return providerPullRequest?.conversations;
 			}
 			if (providerId.indexOf("bitbucket") > -1) {
-				return providerPullRequest.conversations;
+				return providerPullRequest?.conversations;
 			}
 		}
 		return undefined;

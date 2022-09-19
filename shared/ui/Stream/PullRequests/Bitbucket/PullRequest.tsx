@@ -1,32 +1,44 @@
-import { CSMe } from "@codestream/protocols/api";
-import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
-import { Tabs, Tab } from "@codestream/webview/src/components/Tabs";
-import { CodeStreamState } from "@codestream/webview/store";
-import {
-	getCurrentProviderPullRequest,
-	getCurrentProviderPullRequestLastUpdated,
-	getPullRequestExactId,
-	getPullRequestId
-} from "../../../store/providerPullRequests/reducer";
-import { LoadingMessage } from "../../../src/components/LoadingMessage";
-import { ErrorMessage } from "../../../src/components/ErrorMessage";
-import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
-import { getPreferences } from "../../../store/users/reducer";
-import Tooltip from "../../Tooltip";
-import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
-import Icon from "../../Icon";
-import { Button } from "../../../src/components/Button";
-import { Link } from "../../Link";
-import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
 import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
-	GitLabMergeRequestWrapper
 } from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
+import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
+import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
+import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
+import { Tab, Tabs } from "@codestream/webview/src/components/Tabs";
+import { CodeStreamState } from "@codestream/webview/store";
+import { bootstrapReviews } from "@codestream/webview/store/reviews/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import React, { useState } from "react";
+import styled, { ThemeProvider } from "styled-components";
+import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
+import { ErrorMessage } from "../../../src/components/ErrorMessage";
+import { LoadingMessage } from "../../../src/components/LoadingMessage";
+import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
+import {
+	clearPullRequestCommits,
+	clearPullRequestFiles,
+	getCurrentProviderPullRequest,
+	getCurrentProviderPullRequestLastUpdated,
+	getPullRequestExactId,
+	getPullRequestId,
+} from "../../../store/providerPullRequests/slice";
+import {
+	getPullRequestConversations,
+	getPullRequestConversationsFromProvider,
+} from "../../../store/providerPullRequests/thunks";
+import { getPreferences } from "../../../store/users/reducer";
+import { HostApi } from "../../../webview-api";
+import CancelButton from "../../CancelButton";
+import { CreateCodemarkIcons } from "../../CreateCodemarkIcons";
+import Icon from "../../Icon";
+import { Link } from "../../Link";
+import { MarkdownText } from "../../MarkdownText";
+import { PullRequestBottomComment } from "../../PullRequestBottomComment";
+import { PullRequestCommitsTab } from "../../PullRequestCommitsTab";
 import {
 	PRActionIcons,
 	PRBadge,
@@ -34,46 +46,18 @@ import {
 	PRBranchTruncated,
 	PRError,
 	PRHeader,
-	PRSelectorButtons,
 	PRStatusButton,
-	PRSubmitReviewButton,
-	PRTitle
+	PRTitle,
 } from "../../PullRequestComponents";
 import { PullRequestFileComments } from "../../PullRequestFileComments";
 import { PullRequestFilesChangedTab } from "../../PullRequestFilesChangedTab";
-import { PullRequestFinishReview } from "../../PullRequestFinishReview";
 import Timestamp from "../../Timestamp";
-import {
-	api,
-	clearPullRequestCommits,
-	clearPullRequestFiles,
-	getPullRequestCommitsFromProvider,
-	getPullRequestConversations,
-	getPullRequestConversationsFromProvider,
-	getPullRequestFilesFromProvider
-} from "../../../store/providerPullRequests/actions";
-import { HostApi } from "../../../webview-api";
-import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";
-import { useDidMount } from "@codestream/webview/utilities/hooks";
-import { bootstrapReviews } from "@codestream/webview/store/reviews/actions";
-import { PullRequestBottomComment } from "../../PullRequestBottomComment";
-import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
-import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
-import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
-import { DropdownButton } from "../../DropdownButton";
-import { Modal } from "../../Modal";
-import { MarkdownText } from "../../MarkdownText";
-import CancelButton from "../../CancelButton";
+import Tooltip from "../../Tooltip";
 //import { Timeline } from "./Timeline";
 import { PRAuthorBadges } from "../../PullRequestConversationTab";
 //import { PipelineBox } from "./PipelineBox";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { Timeline } from "./Timeline";
-import { merge } from "lodash-es";
-import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
-import { Dialog } from "@codestream/webview/src/components/Dialog";
-import { UL } from "../../Team";
-import { handleInputChange } from "react-select/src/utils";
 
 export const PullRequestRoot = styled.div`
 	position: absolute;
@@ -281,7 +265,7 @@ const stateMap = {
 	CLOSED: "closed",
 	MERGED: "merged",
 	DECLINED: "declined",
-	SUPERSEDED: "superseded"
+	SUPERSEDED: "superseded",
 };
 
 const EMPTY_HASH = {};
@@ -293,8 +277,8 @@ let focusOnMessageInput;
 const GL_404_HELP = "https://docs.newrelic.com/docs/codestream/troubleshooting/reverse-proxy";
 
 export const PullRequest = () => {
-	const dispatch = useDispatch();
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const dispatch = useAppDispatch();
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const team = state.teams[state.context.currentTeamId];
@@ -327,7 +311,7 @@ export const PullRequest = () => {
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
-			checkoutBranch: state.context.pullRequestCheckoutBranch
+			checkoutBranch: state.context.pullRequestCheckoutBranch,
 		};
 	});
 
@@ -355,11 +339,11 @@ export const PullRequest = () => {
 	const breakpoints = {
 		auto: "630px",
 		"side-by-side": "10px",
-		vertical: "100000px"
+		vertical: "100000px",
 	};
 	const addViewPreferencesToTheme = theme => ({
 		...theme,
-		breakpoint: breakpoints[derivedState.viewPreference]
+		breakpoint: breakpoints[derivedState.viewPreference],
 	});
 
 	const closeFileComments = () => {
@@ -392,7 +376,7 @@ export const PullRequest = () => {
 		const { reposState } = derivedState;
 		const response: GetReposScmResponse = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
-			includeCurrentBranches: true
+			includeCurrentBranches: true,
 		});
 		if (response && response.repositories) {
 			const repos = response.repositories.map(repo => {
@@ -499,14 +483,14 @@ export const PullRequest = () => {
 		if (message) setIsLoadingMessage(message);
 		setIsLoadingPR(true);
 
-		const response = (await dispatch(
-			getPullRequestConversations(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as any;
+		const response = await dispatch(
+			getPullRequestConversations({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
+		).unwrap();
 		setGeneralError("");
-		if (response.error && response.error.message) {
+		if (response && response.error && response.error.message) {
 			setIsLoadingPR(false);
 			setIsLoadingMessage("");
 			setGeneralError(response.error.message);
@@ -527,12 +511,12 @@ export const PullRequest = () => {
 		if (message) setIsLoadingMessage(message);
 		setIsLoadingPR(true);
 
-		const response = (await dispatch(
-			getPullRequestConversationsFromProvider(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
-		)) as any;
+		const response = await dispatch(
+			getPullRequestConversationsFromProvider({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
+		).unwrap();
 		_assignState(response);
 	};
 
@@ -542,16 +526,16 @@ export const PullRequest = () => {
 
 		// just clear the files and commits data -- it will be fetched if necessary (since it has its own api call)
 		dispatch(
-			clearPullRequestFiles(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
+			clearPullRequestFiles({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
 		);
 		dispatch(
-			clearPullRequestCommits(
-				derivedState.currentPullRequestProviderId!,
-				derivedState.currentPullRequestId!
-			)
+			clearPullRequestCommits({
+				providerId: derivedState.currentPullRequestProviderId!,
+				id: derivedState.currentPullRequestId!,
+			})
 		);
 		// we can force the child components to update
 		// by changing part of its key attribute
@@ -611,48 +595,37 @@ export const PullRequest = () => {
 		if (!pr || !pr.discussions || !pr.discussions.nodes) return [0, 0];
 		return [
 			pr.discussions.nodes.filter(_ => _.resolvable && !_.resolved).length,
-			pr.discussions.nodes.filter(_ => _.resolvable && _.resolved).length
+			pr.discussions.nodes.filter(_ => _.resolvable && _.resolved).length,
 		];
 	})();
 
-	const toggleWorkInProgress = async () => {
-		const onOff = !pr.isDraft;
-		setIsLoadingMessage(onOff ? "Marking as draft..." : "Marking as ready...");
-		await dispatch(
-			api("setWorkInProgressOnPullRequest", {
-				onOff
-			})
-		);
-		setIsLoadingMessage("");
-	};
+	// const edit = () => setIsEditing(true);
 
-	const edit = () => setIsEditing(true);
+	// const declinePullRequest = async () => {
+	// 	setIsLoadingMessage("Closing...");
+	// 	await dispatch(api("closePullRequest", { text: "" }));
+	// 	setIsLoadingMessage("");
+	// 	setIsDeclining(true);
+	// };
 
-	const declinePullRequest = async () => {
-		setIsLoadingMessage("Closing...");
-		await dispatch(api("closePullRequest", { text: "" }));
-		setIsLoadingMessage("");
-		setIsDeclining(true);
-	};
-
-	const mergePullRequest = async () => {
-		setIsLoadingMessage("Merging...");
-		await dispatch(api("mergePullRequest", { text: "" }));
-		setIsLoadingMessage("");
-		setIsMerging(true);
-		let reason = "";
-		switch (isMergingStrategy) {
-			case "Merge commit":
-				reason = "MERGE_COMMIT";
-				break;
-			case "Squash":
-				reason = "SQUASH";
-				break;
-			case "Fast forward":
-				reason = "FASTFORWARD";
-				break;
-		}
-	};
+	// const mergePullRequest = async () => {
+	// 	setIsLoadingMessage("Merging...");
+	// 	await dispatch(api("mergePullRequest", { text: "" }));
+	// 	setIsLoadingMessage("");
+	// 	setIsMerging(true);
+	// 	let reason = "";
+	// 	switch (isMergingStrategy) {
+	// 		case "Merge commit":
+	// 			reason = "MERGE_COMMIT";
+	// 			break;
+	// 		case "Squash":
+	// 			reason = "SQUASH";
+	// 			break;
+	// 		case "Fast forward":
+	// 			reason = "FASTFORWARD";
+	// 			break;
+	// 	}
+	// };
 
 	const { order } = derivedState;
 
@@ -663,7 +636,7 @@ export const PullRequest = () => {
 					display: "flex",
 					height: "100vh",
 					alignItems: "center",
-					background: "var(--sidebar-background)"
+					background: "var(--sidebar-background)",
 				}}
 			>
 				<div style={{ position: "absolute", top: "20px", right: "20px" }}>
@@ -781,7 +754,7 @@ export const PullRequest = () => {
 								by <PRHeadshotName person={pr.author} fullName />
 								<PRActionIcons>
 									<PRAuthorBadges
-										pr={(pr as unknown) as FetchThirdPartyPullRequestPullRequest}
+										pr={pr as unknown as FetchThirdPartyPullRequestPullRequest}
 										node={pr}
 									/>
 								</PRActionIcons>
@@ -904,7 +877,7 @@ export const PullRequest = () => {
 							background: "var(--app-background-color)",
 							zIndex: 20,
 							top: 0,
-							paddingTop: "10px"
+							paddingTop: "10px",
 						}}
 					>
 						<Tabs style={{ margin: "0 20px 10px 20px", display: "flex", flexWrap: "wrap-reverse" }}>

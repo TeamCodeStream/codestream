@@ -1,22 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import Icon from "../../Icon";
+import React, { useEffect, useState } from "react";
 import { MarkdownText } from "../../MarkdownText";
-import { PullRequestReplyComment } from "../../PullRequestReplyComment";
 import Timestamp from "../../Timestamp";
 
-import { DiscussionNode } from "@codestream/protocols/agent";
-import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import styled from "styled-components";
-import { PRActionIcons, PRCodeCommentReplyInput } from "../../PullRequestComponents";
-import { PRAuthorBadges } from "../../PullRequestConversationTab";
-import { Link } from "../../Link";
+import { PRActionIcons } from "../../PullRequestComponents";
 
-import { PullRequestPatch } from "../../PullRequestPatch";
-import copy from "copy-to-clipboard";
-import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { api } from "../../../store/providerPullRequests/actions";
+import { HostApi } from "@codestream/webview/webview-api";
 
 const BigRoundImg = styled.span`
 	img {
@@ -100,10 +90,8 @@ interface Props {
 const EMPTY_HASH_3 = {};
 
 export const Timeline = (props: Props) => {
-	const { pr, setIsLoadingMessage } = props;
+	const { pr } = props;
 	let discussions = pr.timelineItems?.nodes || [];
-
-	const dispatch = useDispatch();
 
 	const iconMap = {
 		user: "person",
@@ -127,7 +115,7 @@ export const Timeline = (props: Props) => {
 		"merge-request-closed": "minus-circle",
 		"merge-request-merged": "git-merge",
 		"merge-request-approved": "check",
-		"merge-request-unapproved": "minus-circle"
+		"merge-request-unapproved": "minus-circle",
 	};
 
 	const quote = (text, id) => {
@@ -319,7 +307,7 @@ export const Timeline = (props: Props) => {
 				style={{
 					height: "1px",
 					background: "var(--base-border-color)",
-					margin: "0 20px 30px 20px"
+					margin: "0 20px 30px 20px",
 				}}
 			/>
 		</>

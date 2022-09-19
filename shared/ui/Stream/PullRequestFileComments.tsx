@@ -1,16 +1,14 @@
-import React, { PropsWithChildren, useCallback, useEffect, useState } from "react";
-import Icon from "./Icon";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import { getPullRequestFiles } from "../store/providerPullRequests/thunks";
-import { useDispatch, useSelector } from "react-redux";
-import copy from "copy-to-clipboard";
 import { FileStatus } from "@codestream/protocols/api";
-import { CodeStreamState } from "../store";
+import copy from "copy-to-clipboard";
+import { orderBy } from "lodash-es";
+import React, { PropsWithChildren, useEffect, useState } from "react";
 import styled from "styled-components";
+import { CodeStreamState } from "../store";
+import { getPullRequestFiles } from "../store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import Icon from "./Icon";
 import { Modal } from "./Modal";
 import { PullRequestFileCommentCard } from "./PullRequestFileCommentCard";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { orderBy } from "lodash-es";
 
 const Root = styled.div`
 	background: var(--app-background-color);
@@ -123,7 +121,7 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 		(async () => {
 			const data = await dispatch(
 				getPullRequestFiles({ providerId: pr.providerId, id: derivedState.currentPullRequestId! })
-			);
+			).unwrap();
 			_mapData(data);
 		})();
 
@@ -194,10 +192,10 @@ export const PullRequestFileComments = (props: PropsWithChildren<Props>) => {
 					map[comment.inline.path].push({
 						review: {
 							// TODO??
-							state: comment.state
+							state: comment.state,
 						},
 						// TODO? what shape is this (need type)
-						comment: comment
+						comment: comment,
 					});
 					if (comment.id === props.commentId) {
 						setFilename(comment.inline.path);

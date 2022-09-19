@@ -6,6 +6,7 @@ export interface Directive {
 		| "addNode"
 		| "addNodes"
 		| "addPendingReview"
+		| "addPullRequestComment"
 		| "addReaction"
 		| "addReply"
 		| "addReview"
