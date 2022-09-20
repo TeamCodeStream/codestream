@@ -46,7 +46,7 @@ import { PrePRProviderInfoModal, PrePRProviderInfoModalProps } from "../PrePRPro
 import { SmartFormattedList } from "../SmartFormattedList";
 import { EMPTY_STATUS, StartWork } from "../StartWork";
 import Tooltip from "../Tooltip";
-import { PROVIDER_MAPPINGS, ProviderDisplay } from "./types";
+import { ProviderDisplay, PROVIDER_MAPPINGS } from "./types";
 
 interface FetchCardError {
 	provider: string;
@@ -537,11 +537,11 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 		dispatch(setUserPreference({ prefPath: ["startWork", providerId, key], value }));
 	};
 
-	const fetchData = async () => {
+	const fetchData = async (options?: { force?: boolean }) => {
 		if (props.activeProviders.length === 0) return;
 
 		try {
-			dispatch(fetchBoardsAndCardsAction(props.activeProviders));
+			dispatch(fetchBoardsAndCardsAction(props.activeProviders, options?.force));
 		} catch (e) {
 			console.error(e);
 		}
@@ -549,7 +549,7 @@ export const IssueList = React.memo((props: React.PropsWithChildren<IssueListPro
 
 	React.useEffect(() => {
 		console.debug("Reloading issues");
-		fetchData();
+		fetchData({ force: true });
 	}, [derivedState.activeProviderIds, reload]);
 
 	useInterval(async () => {

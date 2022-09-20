@@ -21,6 +21,9 @@ export interface LinearTeam {
 	name: string;
 	archivedAt?: null | string;
 	teamId: string;
+	projects?: {
+		nodes: LinearProject[];
+	};
 }
 
 export interface LinearProject {

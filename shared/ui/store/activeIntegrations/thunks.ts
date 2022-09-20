@@ -21,7 +21,7 @@ const getFilterCustom = (startWorkPreferences: any, providerId: string) => {
 };
 
 export const fetchBoardsAndCardsAction =
-	(activeProviders: ThirdPartyProviderConfig[]): AppThunk =>
+	(activeProviders: ThirdPartyProviderConfig[], force: boolean = false): AppThunk =>
 	async (dispatch, getState) => {
 		console.debug(
 			"Loading boards/cards for providers",
@@ -31,8 +31,8 @@ export const fetchBoardsAndCardsAction =
 		try {
 			const startWorkPreferences = getState().preferences.startWork || {};
 			await Promise.all([
-				dispatch(_fetchBoards(activeProviders)),
-				dispatch(_fetchCards(activeProviders, startWorkPreferences)),
+				dispatch(_fetchBoards(activeProviders, force)),
+				dispatch(_fetchCards(activeProviders, startWorkPreferences, force)),
 			]);
 			dispatch(setLoading({ initialLoadComplete: true }));
 		} finally {
@@ -41,7 +41,11 @@ export const fetchBoardsAndCardsAction =
 	};
 
 const _fetchCards =
-	(activeProviders: ThirdPartyProviderConfig[], startWorkPreferences: any): AppThunk =>
+	(
+		activeProviders: ThirdPartyProviderConfig[],
+		startWorkPreferences: any,
+		force: boolean = false
+	): AppThunk =>
 	async dispatch => {
 		const start = Date.now();
 		try {
@@ -71,7 +75,7 @@ const _fetchCards =
 	};
 
 export const _fetchBoards =
-	(activeProviders: ThirdPartyProviderConfig[]): AppThunk =>
+	(activeProviders: ThirdPartyProviderConfig[], force: boolean = false): AppThunk =>
 	async dispatch => {
 		const start = Date.now();
 		try {
@@ -80,6 +84,7 @@ export const _fetchBoards =
 					try {
 						const response = await HostApi.instance.send(FetchThirdPartyBoardsRequestType, {
 							providerId: provider.id,
+							force: force,
 						});
 						dispatch(updateForProvider(provider.id, { boards: response.boards }));
 					} catch (error) {

@@ -60,6 +60,7 @@ import {
 	ThirdPartyProviderSupportsIssues,
 	ThirdPartyProviderSupportsPullRequests,
 } from "./provider";
+import { QueryLogger, RateLimit } from "./queryLogger";
 import { WAITING_ON_REVIEW } from "./registry";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ProviderVersion } from "./types";
@@ -130,36 +131,6 @@ interface PRResponse {
 				isDraft?: boolean;
 			};
 		}[];
-	};
-}
-
-interface RateLimit {
-	rateLimit: number;
-	rateLimitUsed: number;
-	rateLimitRemaining: number;
-	rateLimitResetTime: Date;
-	rateLimitResource: string;
-}
-
-interface CallStats {
-	count: number;
-	cumulativeCost: number;
-	averageCost: number;
-}
-
-interface QueryLogger {
-	restApi: {
-		rateLimits: Record<string, RateLimit>;
-		fns: Record<string, CallStats>;
-	};
-	graphQlApi: {
-		rateLimit?: {
-			remaining: number;
-			resetAt: string;
-			resetInMinutes: number;
-			last?: { name: string; cost: number };
-		};
-		fns: Record<string, CallStats>;
 	};
 }
 

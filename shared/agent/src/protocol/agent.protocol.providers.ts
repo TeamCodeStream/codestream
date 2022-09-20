@@ -116,6 +116,7 @@ export interface ThirdPartyProviderBoard {
 
 export interface FetchThirdPartyBoardsRequest {
 	providerId: string;
+	force?: boolean | undefined;
 	[key: string]: any;
 }
 
@@ -158,6 +159,8 @@ export interface ThirdPartyProviderCard {
 
 export interface FetchThirdPartyCardsRequest {
 	providerId: string;
+	customFilter?: string;
+	force?: boolean | undefined;
 	[key: string]: any;
 }
 
