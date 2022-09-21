@@ -148,9 +148,9 @@ function Build-Extension {
 	Try-Create-Directory($x64OutputDir)
 
 	Write-Log "Running MSBuild (x86)..."
-	& $msbuild './src/CodeStream.VisualStudio.Vsix.x86/CodeStream.VisualStudio.Vsix.x86.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:OutputPath=$x86OutputDir /p:DeployExtension=$DeployExtension
+	& $msbuild './src/CodeStream.VisualStudio.Vsix.x86/CodeStream.VisualStudio.Vsix.x86.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x86' /p:OutputPath=$x86OutputDir /p:DeployExtension=false
 	Write-Log "Running MSBuild (x64)..."
-	& $msbuild './src/CodeStream.VisualStudio.Vsix.x64/CodeStream.VisualStudio.Vsix.x64.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:OutputPath=$x64OutputDir /p:DeployExtension=$DeployExtension
+	& $msbuild './src/CodeStream.VisualStudio.Vsix.x64/CodeStream.VisualStudio.Vsix.x64.csproj' /t:restore,$target /p:Configuration=$Mode /p:AllowUnsafeBlocks=true /verbosity:$Verbosity /p:Platform='x64' /p:OutputPath=$x64OutputDir /p:DeployExtension=false
 
 	if ($LastExitCode -ne 0) {
 		throw "MSBuild failed"
