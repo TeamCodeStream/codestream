@@ -27,7 +27,6 @@ import {
 	clearPullRequestCommits,
 	getCurrentProviderPullRequest,
 	getCurrentProviderPullRequestLastUpdated,
-	getProviderPullRequestRepoObject,
 	updatePullRequestTitle,
 } from "../store/providerPullRequests/slice";
 import {
@@ -146,7 +145,7 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepoObject: getProviderPullRequestRepoObject(state),
+			currentRepoObject: currentPullRequest?.conversations?.repository?.prRepo,
 			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels,
 		};
 	});
@@ -297,7 +296,7 @@ export const PullRequest = () => {
 
 		setIsLoadingBranch(true);
 
-		const repoId = derivedState.currentRepoObject?.currentRepo?.id || "";
+		const repoId = derivedState.currentRepoObject?.id || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
 			repoId: repoId,

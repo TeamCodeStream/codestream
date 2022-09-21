@@ -586,41 +586,86 @@ export class GitHubProvider
 	async getPullRequestRepo(
 		allRepos: FetchReposResponse,
 		pullRequest: FetchThirdPartyPullRequestPullRequest
-	): Promise<CSRepository | undefined> {
-		let currentRepo: CSRepository | undefined = undefined;
+	): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
+		console.log(
+			`getProviderPullRequestRepoObjectCore arguments: repos, currentPr, providerId?`,
+			allRepos,
+			pullRequest
+		);
+		const result: { reason: string; currentRepo: CSRepository | undefined; error?: any } = {
+			reason: "",
+			currentRepo: undefined,
+		};
+
 		try {
 			const repoName = pullRequest.repository.name.toLowerCase();
 			const repoUrl = pullRequest.repository.url.toLowerCase();
 			const repos = allRepos.repos;
 
-			const matchingRepos = repos.filter(_ =>
-				_.remotes.some(
+			const matchingRepos = repos?.filter(_ =>
+				_?.remotes.some(
 					r =>
-						r.normalizedUrl &&
-						r.normalizedUrl.length > 2 &&
-						r.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-						repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1
+						r?.normalizedUrl &&
+						r?.normalizedUrl.length > 2 &&
+						r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
+						(repoUrl?.includes(r?.normalizedUrl?.toLowerCase() + "/") ||
+							repoUrl?.endsWith(r?.normalizedUrl?.toLowerCase()))
 				)
 			);
+
 			if (matchingRepos.length === 1) {
-				currentRepo = matchingRepos[0];
+				result.currentRepo = matchingRepos[0];
+				result.reason = "remote";
 			} else {
 				let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
-				if (matchingRepos2.length !== 1) {
+				if (matchingRepos2.length != 1) {
 					matchingRepos2 = repos.filter(_ =>
-						_.remotes.some(r => repoUrl.indexOf(r.normalizedUrl.toLowerCase()) > -1)
+						_.remotes.some(r => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
 					);
 					if (matchingRepos2.length === 1) {
-						currentRepo = matchingRepos2[0];
+						result.currentRepo = matchingRepos2[0];
+						result.reason = "matchedOnProviderUrl";
 					} else {
-						Logger.warn(`Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`);
+						// try to match on the best/closet repo
+						const bucket: { repo: CSRepository; points: number }[] = [];
+						const splitRepoUrl = repoUrl?.split("/");
+						for (const repo of repos) {
+							let points = 0;
+							for (const remote of repo.remotes) {
+								const split = remote.normalizedUrl?.split("/");
+								if (split?.length) {
+									for (const s of split) {
+										if (s && splitRepoUrl?.includes(s)) {
+											points++;
+										}
+									}
+								}
+							}
+							bucket.push({ repo: repo, points: points });
+						}
+						if (bucket.length) {
+							bucket.sort((a, b) => b.points - a.points);
+							result.currentRepo = bucket[0].repo;
+							result.currentRepo.repoFoundReason = "closestMatch";
+							result.reason = "closestMatch";
+						} else {
+							result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
+						}
 					}
 				} else {
-					currentRepo = matchingRepos2[0];
+					result.currentRepo = matchingRepos2[0];
+					result.reason = "repoName";
 				}
 			}
-		} catch (error) {}
-		return currentRepo;
+		} catch (ex) {
+			result.error = typeof ex === "string" ? ex : ex.message;
+			console.error(ex);
+		}
+		if (result.error || !result.currentRepo) {
+			Logger.error(result.error, "Could not find currentRepo");
+		}
+		console.log(`getProviderPullRequestRepoObjectCore result`, result);
+		return result;
 	}
 
 	@log()
@@ -712,22 +757,22 @@ export class GitHubProvider
 				response.repository.pullRequest.commits = response2.repository.pullRequest.commits;
 
 				const { repos } = SessionContainer.instance();
-				const prRepo = await this.getPullRequestRepo(
+				const { currentRepo } = await this.getPullRequestRepo(
 					await repos.get(),
 					response.repository.pullRequest
 				);
 
-				if (prRepo?.id) {
+				if (currentRepo?.id) {
 					try {
 						const prForkPointSha = await scmManager.getForkPointRequestType({
-							repoId: prRepo.id,
+							repoId: currentRepo.id,
 							baseSha: response.repository.pullRequest.baseRefOid,
 							headSha: response.repository.pullRequest.headRefOid,
 						});
 
 						response.repository.pullRequest.forkPointSha = prForkPointSha?.sha;
 					} catch (err) {
-						Logger.error(err, `Could not find forkPoint for repoId=${prRepo.id}`);
+						Logger.error(err, `Could not find forkPoint for repoId=${currentRepo.id}`);
 					}
 				}
 
@@ -743,6 +788,9 @@ export class GitHubProvider
 				response.repository.repoOwner = repoOwner!;
 				response.repository.repoName = repoName!;
 
+				response.repository.prRepo = currentRepo;
+
+				console.warn("eric here prRepo", currentRepo);
 				response.repository.pullRequest.providerId = this.providerConfig.id;
 				response.repository.providerId = this.providerConfig.id;
 				response.repository.pullRequest.supports = {
