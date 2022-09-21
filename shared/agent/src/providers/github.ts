@@ -790,7 +790,6 @@ export class GitHubProvider
 
 				response.repository.prRepo = currentRepo;
 
-				console.warn("eric here prRepo", currentRepo);
 				response.repository.pullRequest.providerId = this.providerConfig.id;
 				response.repository.providerId = this.providerConfig.id;
 				response.repository.pullRequest.supports = {
