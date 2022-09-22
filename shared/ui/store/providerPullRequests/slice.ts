@@ -1044,6 +1044,7 @@ export const getProviderPullRequestRepoObject = createSelector(
 	}
 );
 
+// Depreciated, but keeping for now until significant regression tests are made.
 export const getProviderPullRequestRepoObjectCore = (
 	repos: CSRepository[],
 	currentPr?: RepoPullRequest,
