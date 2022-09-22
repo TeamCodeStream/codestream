@@ -118,7 +118,8 @@ export type ViewLocation =
 	| "Open in IDE Flow"
 	| "Open in IDE Pixie"
 	| "Observability Section"
-	| "Pixie Logging";
+	| "Pixie Logging"
+	| "CI/CD Section";
 
 export const sendIssueProviderConnected =
 	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>

@@ -103,6 +103,7 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { Team } from "./Team";
 import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
+import { ConfigureCircleCIPanel } from "./CICD/ConfigureCircleCIPanel";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;

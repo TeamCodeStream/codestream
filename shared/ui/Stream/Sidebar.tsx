@@ -15,6 +15,7 @@ import { getPreferences } from "../store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
+import CICD from "./CICD";
 import Codemarks from "./Codemarks";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import IssuesPane from "./CrossPostIssueControls/IssuesPane";
@@ -63,6 +64,9 @@ _defaultPaneSettings[WebviewPanels.CodemarksForFile] = {};
 _defaultPaneSettings[WebviewPanels.Tasks] = {};
 _defaultPaneSettings[WebviewPanels.Observability] = {};
 // _defaultPaneSettings[WebviewPanels.Team] = {};
+_defaultPaneSettings[WebviewPanels.CICD] = {
+	collapsed: true,
+};
 export const DEFAULT_PANE_SETTINGS = _defaultPaneSettings;
 
 // We default the panes to a different order when users sign up via NR,
@@ -73,6 +77,7 @@ export const AVAILABLE_PANES = [
 	WebviewPanels.OpenReviews,
 	WebviewPanels.CodemarksForFile,
 	WebviewPanels.Tasks,
+	WebviewPanels.CICD,
 ];
 
 export const COLLAPSED_SIZE = 22;
@@ -197,7 +202,7 @@ export const Sidebar = React.memo(function Sidebar() {
 			return {
 				id,
 				removed: settings.removed == null ? defaults.removed : settings.removed,
-				collapsed: settings.collapsed,
+				collapsed: settings.collapsed == null ? defaults.collapsed : settings.collapsed,
 				maximized: settings.maximized,
 				size: sizes[id] || Math.abs(settings.size) || 1,
 			};
@@ -383,6 +388,8 @@ export const Sidebar = React.memo(function Sidebar() {
 				return <Codemarks paneState={paneState} />;
 			case WebviewPanels.Observability:
 				return <Observability paneState={paneState} />;
+			case WebviewPanels.CICD:
+				return <CICD openRepos={openRepos} paneState={paneState} />;
 		}
 		return null;
 	};

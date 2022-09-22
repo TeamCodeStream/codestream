@@ -6,6 +6,7 @@ export * from "./providers/asana";
 export * from "./providers/azuredevops";
 export * from "./providers/bitbucket";
 export * from "./providers/bitbucketServer";
+export * from "./providers/circleci";
 export * from "./providers/github";
 export * from "./providers/githubEnterprise";
 export * from "./providers/gitlab";

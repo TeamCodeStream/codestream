@@ -69,6 +69,7 @@ export enum WebviewPanels {
 	Observability = "observability",
 	PixieDynamicLogging = "pixie-dynamic-logging",
 	MethodLevelTelemetry = "method-level-telemetry",
+	CICD = "ci-cd"
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their

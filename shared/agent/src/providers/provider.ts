@@ -16,6 +16,8 @@ import {
 	FetchAssignableUsersResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyBuildsRequest,
+	FetchThirdPartyBuildsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsResponse,
 	FetchThirdPartyCardWorkflowRequest,
@@ -58,6 +60,7 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["shortcut", "Shortcut"],
 	["linear", "Linear"],
 	["newrelic", "New Relic"],
+	["circleci", "Circle CI"]
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {
@@ -126,6 +129,10 @@ export interface ThirdPartyProviderSupportsViewingPullRequests
 	): Promise<GetMyPullRequestsResponse[][] | undefined>;
 }
 
+export interface ThirdPartyProviderSupportsBuilds {
+	getBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
+}
+
 export namespace ThirdPartyIssueProvider {
 	export function supportsIssues(
 		provider: ThirdPartyProvider
@@ -161,6 +168,14 @@ export namespace ThirdPartyPostProvider {
 		provider: ThirdPartyProvider
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsStatus {
 		return (provider as any).updateStatus !== undefined;
+	}
+}
+
+export namespace ThirdPartyBuildProvider {
+	export function supportsBuilds(
+		provider: ThirdPartyBuildProvider
+	): provider is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds {
+		return (provider as any).getBuilds !== undefined;
 	}
 }
 
@@ -213,6 +228,10 @@ export interface ThirdPartyPostProvider extends ThirdPartyProvider {
 	supportsSharing(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts;
 
 	supportsStatus(): this is ThirdPartyPostProvider & ThirdPartyProviderSupportsStatus;
+}
+
+export interface ThirdPartyBuildProvider extends ThirdPartyProvider {
+	supportsBuilds(): this is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds;
 }
 
 export interface ApiResponse<T> {

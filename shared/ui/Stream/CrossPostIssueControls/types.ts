@@ -244,6 +244,12 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "newrelic",
 		getUrl: "https://newrelic.com",
 	},
+	circleci: {
+		displayName: "CircleCI",
+		icon: "newrelic", // FIXME
+		getUrl: "https://circleci.com",
+		helpUrl: "https://circleci.com/docs/managing-api-tokens"
+	}
 };
 
 const ucFirst = (string = "") => string.charAt(0).toUpperCase() + string.slice(1);
