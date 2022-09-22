@@ -700,7 +700,7 @@ export class GitHubProvider
 				response.repository.repoOwner = repoOwner!;
 				response.repository.repoName = repoName!;
 
-				response.repository.prRepo = currentRepo;
+				response.repository.prRepoId = currentRepo?.id;
 
 				response.repository.pullRequest.providerId = this.providerConfig.id;
 				response.repository.providerId = this.providerConfig.id;

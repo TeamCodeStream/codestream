@@ -117,8 +117,7 @@ export abstract class ThirdPartyIssueProviderBase<
 		repoName: string;
 		repoUrl: string;
 	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
-		console.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
-
+		Logger.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
 		const { repos } = SessionContainer.instance();
 		const allRepos = await repos.get();
 
@@ -189,7 +188,6 @@ export abstract class ThirdPartyIssueProviderBase<
 			}
 		} catch (ex) {
 			result.error = typeof ex === "string" ? ex : ex.message;
-			console.error(ex);
 		}
 		if (result.error || !result.currentRepo) {
 			Logger.error(
@@ -198,7 +196,7 @@ export abstract class ThirdPartyIssueProviderBase<
 				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${repos}`
 			);
 		}
-		console.log(`getProviderPullRequestRepoObjectCore result`, result);
+		Logger.log(`getProviderPullRequestRepoObjectCore result`, result);
 		return result;
 	}
 

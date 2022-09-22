@@ -1369,7 +1369,7 @@ export class GitLabProvider
 					name: response.project.mergeRequest.project.path,
 					nameWithOwner: response.project.mergeRequest.project.fullPath,
 					url: response.project.mergeRequest.project.webUrl,
-					prRepo: currentRepo,
+					prRepoId: currentRepo?.id,
 				},
 				number: parseInt(response.project.mergeRequest.iid, 10),
 				url: response.project.mergeRequest.project.webUrl,

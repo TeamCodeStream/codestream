@@ -1,5 +1,4 @@
 "use strict";
-import { CSRepository } from "./api.protocol.models";
 
 export interface GitLabCreateCardRequest {
 	repoName: string;
@@ -369,7 +368,7 @@ export interface GitLabMergeRequest {
 		name: string;
 		nameWithOwner: string;
 		url: string;
-		prRepo?: CSRepository | undefined;
+		prRepoId?: string;
 	};
 	resolvable: boolean;
 	resolved: boolean;

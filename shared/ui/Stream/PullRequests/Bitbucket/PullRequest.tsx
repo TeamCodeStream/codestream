@@ -313,7 +313,7 @@ export const PullRequest = () => {
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
 			//not currently in use
-			currentRepoObject: currentPullRequest?.conversations?.repository?.prRepo,
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 		};
 	});
 

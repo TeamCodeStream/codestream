@@ -529,7 +529,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		name: string;
 		nameWithOwner: string;
 		url: string;
-		prRepo?: CSRepository | undefined;
+		prRepoId?: string;
 	};
 	locked: any;
 	activeLockReason: "OFF_TOPIC" | "SPAM" | "TOO_HEATED" | "RESOLVED";
@@ -737,7 +737,7 @@ export interface BranchProtectionRules {
 }
 
 export interface FetchThirdPartyPullRequestRepository {
-	prRepo?: CSRepository | undefined;
+	prRepoId?: string;
 	id: string;
 	url: string;
 	resourcePath: string;

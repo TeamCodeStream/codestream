@@ -49,8 +49,7 @@ export const SummaryBox = (props: {
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
 			filter: preferences.pullRequestTimelineFilter || "all",
-			currentRepoObject:
-				currentPullRequest?.conversations?.project?.mergeRequest?.repository?.prRepo,
+			prRepoId: currentPullRequest?.conversations?.project?.mergeRequest?.repository?.prRepoId,
 		};
 	});
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
@@ -102,17 +101,14 @@ export const SummaryBox = (props: {
 		if (!pr) return;
 
 		setIsLoadingBranch(true);
-		const repoId =
-			derivedState.currentRepoObject && derivedState.currentRepoObject
-				? derivedState.currentRepoObject.id
-				: "";
+		const repoId = derivedState.prRepoId ? derivedState.prRepoId : "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
 			repoId: repoId,
 		});
 		if (result.error) {
 			logError(result.error, {
-				...(derivedState.currentRepoObject || {}),
+				prRepoId: derivedState.prRepoId,
 				branch: pr.headRefName,
 				repoId: repoId,
 				prRepository: pr!.repository,

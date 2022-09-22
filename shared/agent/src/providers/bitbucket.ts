@@ -890,7 +890,7 @@ export class BitbucketProvider
 							name: repoWithOwnerSplit[1],
 							nameWithOwner: repoWithOwner,
 							url: pr.body.source?.repository?.links?.html?.href,
-							prRepo: currentRepo,
+							prRepoId: currentRepo?.id,
 						},
 						state: pr.body.state,
 						title: pr.body.title,

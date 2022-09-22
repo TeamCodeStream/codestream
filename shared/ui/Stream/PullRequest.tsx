@@ -145,7 +145,7 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			currentRepoObject: currentPullRequest?.conversations?.repository?.prRepo,
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			labels: currentPullRequest?.conversations?.repository?.pullRequest?.labels,
 		};
 	});
@@ -296,14 +296,14 @@ export const PullRequest = () => {
 
 		setIsLoadingBranch(true);
 
-		const repoId = derivedState.currentRepoObject?.id || "";
+		const repoId = derivedState.prRepoId || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
 			repoId: repoId,
 		});
 		if (result.error) {
 			logError(result.error, {
-				...(derivedState.currentRepoObject || {}),
+				prRepoId: derivedState.prRepoId,
 				branch: pr.headRefName,
 				repoId: repoId,
 				prRepository: pr!.repository,
