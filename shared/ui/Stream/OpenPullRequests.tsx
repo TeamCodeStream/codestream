@@ -49,7 +49,6 @@ import {
 import {
 	getCurrentProviderPullRequest,
 	getMyPullRequests as getMyPullRequestsSelector,
-	getProviderPullRequestRepoObject,
 	getPullRequestExactId,
 	getPullRequestId,
 	removePullRequest,
@@ -306,7 +305,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			currentPullRequestId: getPullRequestId(state),
 			currentPullRequestIdExact: getPullRequestExactId(state),
-			currentRepoObject: getProviderPullRequestRepoObject(state),
 			reposState: state.repos,
 			maximized: settings.maximized,
 			// VS will not use sidebar-diffs currently, uses old method of going directly to
@@ -805,7 +803,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		});
 		if (result.error) {
 			logError(result.error, {
-				...(derivedState.currentRepoObject || {}),
 				branch: prToCheckout.headRefName,
 				repoId: repoId,
 				prRepository: prToCheckout!.repository,
