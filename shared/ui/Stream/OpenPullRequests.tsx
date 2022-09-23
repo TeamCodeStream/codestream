@@ -311,7 +311,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			maximized: settings.maximized,
 			// VS will not use sidebar-diffs currently, uses old method of going directly to
 			// details view when selecting a PR
-			isVS: state.ide?.name?.toUpperCase() === "VS",
+			isVS: false, // state.ide?.name?.toUpperCase() === "VS",
 		};
 	}, shallowEqual);
 
