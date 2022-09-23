@@ -141,7 +141,7 @@ export const PullRequest = () => {
 			currentPullRequest: currentPullRequest,
 			currentPullRequestLastUpdated: providerPullRequestLastUpdated,
 			composeCodemarkActive: state.context.composeCodemarkActive,
-			isVsIde: state.ide.name === "VS",
+			isVsIde: false, // state.ide.name === "VS",
 			team,
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
