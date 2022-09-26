@@ -2,9 +2,46 @@ import { ThirdPartyBuild, ThirdPartyBuildStatus } from "@codestream/protocols/ag
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HostApi } from "@codestream/webview/webview-api";
 import React from "react";
+import styled from "styled-components";
 import Icon from "../Icon";
 
-export const BuildStatus = (props: ThirdPartyBuild) => {
+type Props = ThirdPartyBuild & {
+	providerName: string;
+};
+
+const BuildStatusRow = styled.div`
+	display: flex;
+	&:not(.no-hover) {
+		cursor: pointer;
+	}
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: 100%;
+	padding: 0;
+	> div {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		flex-shrink: 0;
+		&:nth-child(2) {
+			flex-grow: 10;
+		}
+	}
+	.icons {
+		display: none;
+	}
+	.finished {
+		display: inline-block;
+	}
+	&:hover .icons {
+		display: inline-block;
+	}
+	&:hover .finished {
+		display: none;
+	}
+`;
+
+export const BuildStatus = (props: Props) => {
 	let icon: "ok" | "sync" | "x-circle" | "alert" | string;
 	let colorClass: string | undefined = undefined;
 	let iconClass = "";
@@ -30,28 +67,82 @@ export const BuildStatus = (props: ThirdPartyBuild) => {
 	}
 
 	return (
-		<div
-			style={{ display: "flex" }}
-			className={props.url ? "clickable" : ""}
+		<BuildStatusRow
+			style={{ display: "flex", padding: "0" }}
 			onClick={e => {
 				e.preventDefault();
+				e.stopPropagation();
 				if (props.url) HostApi.instance.send(OpenUrlRequestType, { url: props.url });
 			}}
 		>
-			<span style={{ color: colorClass, flexGrow: 0, flexShrink: 0 }}>
+			<div style={{ color: colorClass, flexGrow: 0, flexShrink: 0 }}>
 				<Icon name={icon} className={[colorClass, iconClass].join(" ")} />
-			</span>
-			<span style={{ flexGrow: 10 }}>
+			</div>
+			<div style={{ flexGrow: 10 }}>
 				<span className={colorClass}>{props.message}</span>
 				<span className="gray-color" style={{ paddingLeft: "1em" }}>
 					{props.duration}
 				</span>
-			</span>
+			</div>
 			{props.finishedRelative && (
-				<span className="gray-color" style={{ flexGrow: 0, flexShrink: 0 }}>
+				<div className="gray-color finished" style={{ flexGrow: 0, flexShrink: 0 }}>
 					{props.finishedRelative}
-				</span>
+				</div>
 			)}
-		</div>
+			<div className="icons" style={{ position: "relative" }}>
+				{props.url && (
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							if (props.url) HostApi.instance.send(OpenUrlRequestType, { url: props.url });
+						}}
+					>
+						<Icon
+							name="link-external"
+							className="clickable"
+							title={`View build on ${props.providerName}`}
+							placement="bottomLeft"
+							delay={1}
+						/>
+					</span>
+				)}
+				{props.logsUrl && (
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							if (props.logsUrl) HostApi.instance.send(OpenUrlRequestType, { url: props.logsUrl });
+						}}
+					>
+						<Icon
+							name="file-lines"
+							className="clickable"
+							title={`View logs on ${props.providerName}`}
+							placement="bottomLeft"
+							delay={1}
+						/>
+					</span>
+				)}
+				{props.artifactsUrl && (
+					<span
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							if (props.artifactsUrl)
+								HostApi.instance.send(OpenUrlRequestType, { url: props.artifactsUrl });
+						}}
+					>
+						<Icon
+							name="archive"
+							className="clickable"
+							title={`View artifacts on ${props.providerName}`}
+							placement="bottomLeft"
+							delay={1}
+						/>
+					</span>
+				)}
+			</div>
+		</BuildStatusRow>
 	);
 };

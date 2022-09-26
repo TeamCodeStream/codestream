@@ -450,6 +450,8 @@ export interface ThirdPartyBuild {
 	finished?: Date;
 	finishedRelative?: string;
 	url?: string;
+	artifactsUrl?: string;
+	logsUrl?: string;
 }
 
 export interface FetchThirdPartyBuildsRequest {

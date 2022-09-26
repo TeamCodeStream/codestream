@@ -37,7 +37,7 @@ export const CircleCIBuilds = (props: Props) => {
 										...workflow,
 										title: workflow.id,
 									};
-									return <BuildStatus {...data} />;
+									return <BuildStatus {...data} providerName="CircleCI" />;
 								})}
 						</div>
 					</PaneNode>
