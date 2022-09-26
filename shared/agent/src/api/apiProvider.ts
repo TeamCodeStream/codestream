@@ -76,6 +76,8 @@ import {
 	FetchStreamsResponse,
 	FetchTeamsRequest,
 	FetchTeamsResponse,
+	FetchThirdPartyBuildsRequest,
+	FetchThirdPartyBuildsResponse,
 	FetchUnreadStreamsRequest,
 	FetchUnreadStreamsResponse,
 	FetchUsersRequest,
@@ -559,6 +561,8 @@ export interface ApiProvider {
 	setServerUrl(url: string): void;
 
 	announceHistoryFetch(info: HistoryFetchInfo): void;
+
+	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
 
 	get<R extends object>(url: string, token?: string): Promise<R>;
 	post<RQ extends object, R extends object>(url: string, body: any, token?: string): Promise<R>;

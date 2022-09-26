@@ -24,7 +24,6 @@ import React, { PureComponent } from "react";
 import { connect } from "react-redux";
 import { DelayedRender } from "../Container/DelayedRender";
 import { Loading } from "../Container/Loading";
-import { FinishReview } from "./FinishReview";
 import {
 	EditorSelectRangeRequestType,
 	NewCodemarkNotificationType,
@@ -80,6 +79,7 @@ import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
 import { ExportPanel } from "./ExportPanel";
 import FilterSearchPanel from "./FilterSearchPanel";
+import { FinishReview } from "./FinishReview";
 import { FlowPanel } from "./Flow";
 import { GettingStarted } from "./GettingStarted";
 import { GlobalNav } from "./GlobalNav";
@@ -103,7 +103,6 @@ import { PRInfoModal } from "./SpatialView/PRInfoModal";
 import { Team } from "./Team";
 import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
-import { ConfigureCircleCIPanel } from "./CICD/ConfigureCircleCIPanel";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;

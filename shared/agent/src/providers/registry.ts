@@ -37,6 +37,9 @@ import {
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsRequestType,
 	FetchThirdPartyBoardsResponse,
+	FetchThirdPartyBuildsRequest,
+	FetchThirdPartyBuildsRequestType,
+	FetchThirdPartyBuildsResponse,
 	FetchThirdPartyCardsRequest,
 	FetchThirdPartyCardsRequestType,
 	FetchThirdPartyCardsResponse,
@@ -76,6 +79,7 @@ import {
 	ProviderCreatePullRequestRequest,
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoRequest,
+	ThirdPartyBuildProvider,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
 	ThirdPartyProvider,
@@ -736,6 +740,27 @@ export class ThirdPartyProviderRegistry {
 
 		Logger.log(`queryThirdParty: no matching provider found for ${request.url}`);
 		return undefined;
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyBuildsRequestType)
+	async fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const buildProvider = provider as ThirdPartyBuildProvider;
+		if (
+			buildProvider == null ||
+			typeof buildProvider.supportsBuilds !== "function" ||
+			!buildProvider.supportsBuilds()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support builds`);
+		}
+
+		const response = await buildProvider.fetchBuilds(request);
+		return response;
 	}
 
 	@log()

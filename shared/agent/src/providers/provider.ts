@@ -60,7 +60,7 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["shortcut", "Shortcut"],
 	["linear", "Linear"],
 	["newrelic", "New Relic"],
-	["circleci", "Circle CI"]
+	["circleci", "Circle CI"],
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {
@@ -130,7 +130,7 @@ export interface ThirdPartyProviderSupportsViewingPullRequests
 }
 
 export interface ThirdPartyProviderSupportsBuilds {
-	getBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
+	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
 }
 
 export namespace ThirdPartyIssueProvider {
@@ -175,7 +175,7 @@ export namespace ThirdPartyBuildProvider {
 	export function supportsBuilds(
 		provider: ThirdPartyBuildProvider
 	): provider is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds {
-		return (provider as any).getBuilds !== undefined;
+		return (provider as any).fetchBuilds !== undefined;
 	}
 }
 

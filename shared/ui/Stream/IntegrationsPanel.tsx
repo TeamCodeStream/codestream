@@ -4,22 +4,18 @@ import {
 	removeEnterpriseProvider,
 } from "@codestream/webview/store/providers/actions";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import ScrollBox from "./ScrollBox";
 import styled from "styled-components";
-import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
+import { Button } from "../src/components/Button";
+import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
+import { getConnectedSharingTargets, isConnected } from "../store/providers/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
-import { PanelHeader } from "../src/components/PanelHeader";
-import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import { isConnected, getConnectedSharingTargets } from "../store/providers/reducer";
 import { closePanel } from "./actions";
-import Icon from "./Icon";
-import { Button } from "../src/components/Button";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";
+import Icon from "./Icon";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
-import { Dialog } from "../src/components/Dialog";
 
 export const Provider = styled(Button)`
 	width: 100%;
@@ -114,6 +110,10 @@ export const IntegrationsPanel = () => {
 			.filter(id => providers[id].hasSharing)
 			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id])
 			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
+		const cicdProviders = Object.keys(providers)
+			.filter(id => ["circleci"].includes(providers[id].name))
+			.filter(id => !connectedProviders.includes(id))
+			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const sharingTargets = getConnectedSharingTargets(state);
 
 		return {
@@ -123,6 +123,7 @@ export const IntegrationsPanel = () => {
 			observabilityProviders,
 			issueProviders,
 			messagingProviders,
+			cicdProviders,
 			connectedProviders,
 			sharingTargets,
 			currentTeam: team,
@@ -349,6 +350,15 @@ export const IntegrationsPanel = () => {
 
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
+
+						{derivedState.cicdProviders.length > 0 && (
+							<>
+								<h2>CI/CD Providers</h2>
+								<IntegrationButtons>
+									{renderProviders(derivedState.cicdProviders)}
+								</IntegrationButtons>
+							</>
+						)}
 
 						<h2>Messaging Providers</h2>
 						<IntegrationButtons noBorder>{renderMessagingProviders()}</IntegrationButtons>

@@ -85,6 +85,8 @@ import {
 	FetchReviewsResponse,
 	FetchStreamsRequest,
 	FetchTeamsRequest,
+	FetchThirdPartyBuildsRequest,
+	FetchThirdPartyBuildsResponse,
 	FetchUnreadStreamsRequest,
 	FetchUsersRequest,
 	FollowCodeErrorRequest,
@@ -2497,6 +2499,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (session.announceHistoryFetches()) {
 			this.get<{}>("/history-fetch?" + qs.stringify(queryParams));
 		}
+	}
+
+	async fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse> {
+		throw new Error("Not supported");
 	}
 
 	async delete<R extends object>(url: string, token?: string): Promise<R> {

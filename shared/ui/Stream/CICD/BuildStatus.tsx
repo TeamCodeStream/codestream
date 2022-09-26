@@ -1,41 +1,56 @@
 import { ThirdPartyBuild, ThirdPartyBuildStatus } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { HostApi } from "@codestream/webview/webview-api";
 import React from "react";
 import Icon from "../Icon";
 
 export const BuildStatus = (props: ThirdPartyBuild) => {
-	let icon: "ok" | "sync" | "x" | "i";
-	let color: string | undefined = undefined;
+	let icon: "ok" | "sync" | "x-circle" | "alert" | string;
+	let colorClass: string | undefined = undefined;
+	let iconClass = "";
 	switch (props.status) {
 		case ThirdPartyBuildStatus.Success:
 			icon = "ok";
-			color = "green";
+			colorClass = "green-color";
 			break;
 		case ThirdPartyBuildStatus.Running:
 		case ThirdPartyBuildStatus.Waiting:
 			icon = "sync";
-			color = "green";
+			colorClass = "blue-color";
+			iconClass = "spin";
 			break;
 		case ThirdPartyBuildStatus.Failed:
-			icon = "x";
-			color = "red";
+			icon = "x-circle";
+			colorClass = "red-color";
 			break;
 		case ThirdPartyBuildStatus.Unknown:
 		default:
-			icon = "i";
-			color = "gray";
+			icon = "alert";
+			colorClass = "gray-color";
 	}
 
 	return (
-		<div style={{ display: "flex" }}>
-			<span style={{ color, flexGrow: 0, flexShrink: 0 }}>
-				<Icon name={icon} style={{ color }} />
+		<div
+			style={{ display: "flex" }}
+			className={props.url ? "clickable" : ""}
+			onClick={e => {
+				e.preventDefault();
+				if (props.url) HostApi.instance.send(OpenUrlRequestType, { url: props.url });
+			}}
+		>
+			<span style={{ color: colorClass, flexGrow: 0, flexShrink: 0 }}>
+				<Icon name={icon} className={[colorClass, iconClass].join(" ")} />
 			</span>
 			<span style={{ flexGrow: 10 }}>
-				<span style={{ color }}>{props.message}</span>
-				<span style={{ color: "gray", paddingLeft: "1em" }}>{props.duration}</span>
+				<span className={colorClass}>{props.message}</span>
+				<span className="gray-color" style={{ paddingLeft: "1em" }}>
+					{props.duration}
+				</span>
 			</span>
 			{props.finishedRelative && (
-				<span style={{ color: "gray", flexGrow: 0, flexShrink: 0 }}>{props.finishedRelative}</span>
+				<span className="gray-color" style={{ flexGrow: 0, flexShrink: 0 }}>
+					{props.finishedRelative}
+				</span>
 			)}
 		</div>
 	);

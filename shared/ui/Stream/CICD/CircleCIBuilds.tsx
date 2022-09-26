@@ -10,38 +10,6 @@ interface Props {
 }
 
 export const CircleCIBuilds = (props: Props) => {
-	/*
-	const derivedState = useSelector((state: CodeStreamState) => {
-		const { editorContext, repos } = state;
-
-		return {
-			remotes: editorContext.scmInfo?.scm?.remotes || [],
-		};
-	});
-
-	const [projects, setProjects] = useState<object>();
-	const [loading, setLoading] = useState(true);
-
-	React.useEffect(() => {
-		const fetchProjects = async (remotes: { url: string }[]) => {
-			for (const remote of remotes) {
-				const result = await HostApi.instance.send(FetchThirdPartyBuildsRequestType, {
-					providerId: "circleci*com",
-					remote: remote.url,
-				});
-				if (result.projects) {
-					setProjects(result.projects);
-					break;
-				}
-			}
-			setLoading(false);
-		};
-		if (derivedState.remotes.length > 0) {
-			fetchProjects(derivedState.remotes).catch(() => {});
-		}
-	}, [derivedState.remotes]);
-	*/
-
 	const [projectsCollapsed, toggleProjectCollapsed] = useReducer<
 		Reducer<{ [key: string]: boolean }, string>
 	>(
@@ -74,6 +42,9 @@ export const CircleCIBuilds = (props: Props) => {
 						</div>
 					</PaneNode>
 				))}
+			{Object.keys(props.projects).length === 0 && (
+				<div style={{ padding: "0 20px 0 40px" }}>No builds found for branch on repo.</div>
+			)}
 		</>
 	);
 };

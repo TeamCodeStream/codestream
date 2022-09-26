@@ -439,7 +439,7 @@ export enum ThirdPartyBuildStatus {
 	Running = "Running",
 	Waiting = "Waiting",
 	Failed = "Failed",
-	Unknown = "Unknown"
+	Unknown = "Unknown",
 }
 
 export interface ThirdPartyBuild {
@@ -458,6 +458,7 @@ export interface FetchThirdPartyBuildsRequest {
 		domain: string;
 		path: string;
 	};
+	branch: string;
 }
 
 export interface FetchThirdPartyBuildsResponse {
@@ -472,36 +473,6 @@ export const FetchThirdPartyBuildsRequestType = new RequestType<
 	void,
 	void
 >("codestream/provider/builds");
-
-export interface GetCircleCIPipelinesResponse {
-	pipelines?: string[];
-	error?: string;
-}
-
-export enum CircleCIWorkflowStatus {
-	Success = "success",
-	Running = "running",
-	NotRun = "not_run",
-	Failed = "failed",
-	Error = "error",
-	Failing = "failing",
-	OnHold = "on_hold",
-	Cancelled = "cancelled",
-	Unauthorized = "unauthorized"
-}
-
-export interface CircleCIWorkflow {
-	id: string;
-	name: string;
-	status: CircleCIWorkflowStatus;
-	createdAt: Date;
-	stoppedAt?: Date;
-}
-
-export interface GetCircleCIWorkflowsResponse {
-	workflows?: CircleCIWorkflow[];
-	error?: string;
-}
 
 export type CheckConclusionState =
 	| "ACTION_REQUIRED"

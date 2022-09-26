@@ -1,11 +1,11 @@
 import { configureAndConnectProvider } from "@codestream/webview/store/providers/actions";
+import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
-import { useDispatch } from "react-redux";
 import Icon from "../Icon";
 import { Provider } from "../IntegrationsPanel";
 
 export const ConnectCICD = () => {
-	const dispatch = useDispatch();
+	const dispatch = useAppDispatch();
 	return (
 		<>
 			<div className="filters" style={{ padding: "0 20px 10px 20px" }}>

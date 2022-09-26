@@ -1,25 +1,26 @@
 "use strict";
 
 import {
-	CircleCIWorkflowStatus,
 	FetchThirdPartyBuildsRequest,
-	FetchThirdPartyBuildsRequestType,
 	FetchThirdPartyBuildsResponse,
+	ThirdPartyBuild,
+	ThirdPartyBuildStatus,
+} from "protocol/agent.protocol.providers";
+import { CSCircleCIProviderInfo } from "protocol/api.protocol.models";
+import { Dates, log, lspProvider } from "../system";
+import {
+	CircleCIWorkflow,
+	CircleCIWorkflowStatus,
 	GetCircleCIPipelinesResponse,
 	GetCircleCIWorkflowsResponse,
-	ThirdPartyBuild,
-	ThirdPartyBuildStatus
-} from "protocol/agent.protocol.providers";
-import { CSCircleCIProviderInfo, CSRepository } from "protocol/api.protocol.models";
-import { Dates, log, lspHandler, lspProvider } from "../system";
+} from "./circleci.types";
 import { ThirdPartyBuildProviderBase } from "./thirdPartyBuildProviderBase";
-import { GitRemoteParser } from "../git/parsers/remoteParser";
 import toFormatter = Dates.toFormatter;
 
 const VCS_SLUG_MAPPING = [
 	[/(?:^|\.)github\.com/i, "github"],
 	[/(?:^|\.)gitlab\.com/i, "gitlab"],
-	[/(?:^|\.)bitbucket\.org/i, "bitbucket"]
+	[/(?:^|\.)bitbucket\.org/i, "bitbucket"],
 ];
 
 const SuccessStatuses = [CircleCIWorkflowStatus.Success];
@@ -30,7 +31,7 @@ const ErrorStatuses = [
 	CircleCIWorkflowStatus.Error,
 	CircleCIWorkflowStatus.Failing,
 	CircleCIWorkflowStatus.Cancelled,
-	CircleCIWorkflowStatus.Unauthorized
+	CircleCIWorkflowStatus.Unauthorized,
 ];
 
 const RunningStatuses = [CircleCIWorkflowStatus.Running];
@@ -51,7 +52,7 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 		return {
 			Accept: "application/json",
 			"Circle-Token": `${this.accessToken}`,
-			"Content-Type": "application/json"
+			"Content-Type": "application/json",
 		};
 	}
 
@@ -76,21 +77,23 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 	}
 
 	@log()
-	async getPipelines(projectSlug: string): Promise<GetCircleCIPipelinesResponse> {
+	async getPipelines(projectSlug: string, branch: string): Promise<GetCircleCIPipelinesResponse> {
 		try {
 			const response = await this.get<any>(`/project/${projectSlug}/pipeline`); // FIXME: types
 			if (response.body.items) {
 				return {
-					pipelines: response.body.items.map((x: any) => x.id)
+					pipelines: response.body.items
+						.filter((x: any) => x.vcs.branch === branch)
+						.map((x: any) => x.id),
 				};
 			}
 			return {
-				error: response.body.message
+				error: response.body.message,
 			};
 		} catch (error) {
 			console.log(error);
 			return {
-				error
+				error,
 			};
 		}
 	}
@@ -106,24 +109,44 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 					status: w.status,
 					createdAt: Date.parse(w.created_at),
 					stoppedAt: w.stopped_at ? Date.parse(w.stopped_at) : undefined,
-					url: this.getWorkflowUrl(w.id)
+					url: this.getWorkflowUrl(w.id),
 				}));
 				return { workflows };
 			}
 			return {
-				error: response.body.message
+				error: response.body.message,
 			};
 		} catch (error) {
 			console.log(error);
 			return {
-				error
+				error,
 			};
 		}
 	}
 
 	@log()
-	async getPipelineWorkflows(projectSlug: string): Promise<FetchThirdPartyBuildsResponse> {
-		const pipelinesResult = await this.getPipelines(projectSlug);
+	async getRunningWorkflowMessage(workflow: CircleCIWorkflow): Promise<string> {
+		// TODO: handle pagination
+		try {
+			const response = await this.get<any>(`/workflow/${workflow.id}/job`);
+			if (response.body.items) {
+				const runningJobs = response.body.items.filter((j: any) => j.status === "running").length;
+				const totalJobs = response.body.items.length;
+				return `Running ${runningJobs}/${totalJobs} jobs`;
+			}
+		} catch (error) {
+			console.log(error);
+			return ThirdPartyBuildStatus.Running;
+		}
+		return ThirdPartyBuildStatus.Running;
+	}
+
+	@log()
+	async getPipelineWorkflows(
+		projectSlug: string,
+		branch: string
+	): Promise<FetchThirdPartyBuildsResponse> {
+		const pipelinesResult = await this.getPipelines(projectSlug, branch);
 		const projects: { [key: string]: ThirdPartyBuild[] } = {};
 		if (pipelinesResult.error || !pipelinesResult.pipelines) {
 			return { projects };
@@ -149,7 +172,9 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				} else {
 					status = ThirdPartyBuildStatus.Unknown;
 				}
-				const message = status;
+				const message = RunningStatuses.includes(workflow.status)
+					? await this.getRunningWorkflowMessage(workflow)
+					: status;
 				const duration = workflow.stoppedAt
 					? this.formatDuration(workflow.createdAt, workflow.stoppedAt)
 					: this.formatDuration(workflow.createdAt, new Date());
@@ -163,7 +188,8 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 					message,
 					duration,
 					finished,
-					finishedRelative
+					finishedRelative,
+					url: workflow.url,
 				});
 			}
 		}
@@ -181,24 +207,23 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 	}
 
 	@log()
-	@lspHandler(FetchThirdPartyBuildsRequestType)
-	async getBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse> {
+	async fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse> {
 		const slug = this.getSlug(request.remote);
 		if (!slug) {
 			return { projects: {} };
 		}
-		return await this.getPipelineWorkflows(slug);
+		return await this.getPipelineWorkflows(slug, request.branch);
 	}
 
-	formatDuration(from: number, to: number): string {
-		const totalSeconds = Math.floor((to - from) / 1000);
+	formatDuration(from: Date, to: Date): string {
+		const totalSeconds = Math.floor((+to - +from) / 1000);
 		const hours = Math.floor(totalSeconds / 3600);
 		const minutes = Math.floor((totalSeconds - hours * 3600) / 60);
 		const seconds = totalSeconds - hours * 3600 - minutes * 60;
 		return [
 			hours > 0 ? `${hours}h` : undefined,
 			minutes > 0 ? `${minutes}m` : undefined,
-			seconds > 0 ? `${seconds}s` : undefined
+			seconds > 0 ? `${seconds}s` : undefined,
 		]
 			.filter(Boolean)
 			.join(" ");
