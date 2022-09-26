@@ -335,29 +335,43 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
-			var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+			try
+			{
+				var tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
+				var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
-			var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-			                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
+				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-			CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+				CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
 
-			RemoveTempFileSafe(tempFile1);
-			RemoveTempFileSafe(tempFile2);
+				RemoveTempFileSafe(tempFile1);
+				RemoveTempFileSafe(tempFile2);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, nameof(CompareTempFiles));
+			}
 		}
 
 		public void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title = null)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+			try
+			{
+				var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
-			var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-			CompareFiles(filePath, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+				CompareFiles(filePath, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
 
-			RemoveTempFileSafe(tempFile2);
+				RemoveTempFileSafe(tempFile2);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, nameof(CompareTempFiles));
+			}
 		}
 
 		private void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string markerContent, __VSDIFFSERVICEOPTIONS diffOptions, string title = null) {

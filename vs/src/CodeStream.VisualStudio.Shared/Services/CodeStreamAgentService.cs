@@ -477,7 +477,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			return SendCoreAsync<GetFileLevelTelemetryResponse>(GetFileLevelTelemetryRequestType.MethodName,
 				new GetFileLevelTelemetryRequest {
-					FilePath = filePath,
+					FileUri = filePath,
 					LanguageId = languageId,
 					ResetCache = resetCache,
 					Locator = new FileLevelTelemetryFunctionLocator {
