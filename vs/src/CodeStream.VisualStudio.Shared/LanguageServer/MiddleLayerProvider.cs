@@ -9,13 +9,13 @@ using Microsoft.VisualStudio.LanguageServer.Client;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class MiddleLayerProvider : ILanguageClientMiddleLayer {
-		private ILogger Log;
+		private readonly ILogger _log;
 
 		public MiddleLayerProvider(ILogger log) {
-			Log = log;
+			_log = log;
 		}
 
-		private static HashSet<string> IgnoredMethods = new HashSet<string> {
+		private static readonly HashSet<string> IgnoredMethods = new HashSet<string> {
 			// this throws some bizarro internal exception -- we don't use it anyway
 			// (most likely a versioning issue [aka we're too old])
 			"textDocument/completion",
@@ -30,8 +30,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		/// <returns></returns>
 		public bool CanHandle(string methodName) {
 			var isIgnored = IgnoredMethods.Contains(methodName);
-			if (Log.IsVerboseEnabled()) {
-				Log.Verbose($"{nameof(MiddleLayerProvider)} {methodName} Ignored={isIgnored}");
+			if (_log.IsVerboseEnabled()) {
+				_log.Verbose($"{nameof(MiddleLayerProvider)} {methodName} Ignored={isIgnored}");
 			}
 			return !isIgnored;
 		}
@@ -40,24 +40,24 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			try {
 				// intercept any "temp" file paths that contain codestream-diff info
 				// and do not send them along to the agent
-				if (methodParam != null && methodParam["textDocument"] != null &&
-					methodParam["textDocument"]["uri"] != null &&
-					CodeStreamDiffUri.IsTempFile(methodParam["textDocument"]["uri"].Value<string>())) {
+				if (methodParam?["textDocument"]?["uri"] != null &&
+				    DiffExtensions.IsTempFile(methodParam["textDocument"]["uri"].Value<string>())) {
 					return Task.CompletedTask;
 				}
-				if (Log.IsVerboseEnabled()) {
+
+				if (_log.IsVerboseEnabled()) {
 					LogHandler(methodName, methodParam);
 				}
 			}
 			catch (Exception ex) {
-				Log.Error(ex, nameof(HandleNotificationAsync));
+				_log.Error(ex, nameof(HandleNotificationAsync));
 			}
 
 			return sendNotification(methodParam);
 		}
 
 		public Task<JToken> HandleRequestAsync(string methodName, JToken methodParam, Func<JToken, Task<JToken>> sendRequest) {
-			if (Log.IsVerboseEnabled()) {
+			if (_log.IsVerboseEnabled()) {
 				LogHandler(methodName, methodParam);
 			}
 
@@ -77,7 +77,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			catch {
 				// ignore
 			}
-			Log.Verbose("lsp: " + methodName + " = " + value);
+			_log.Verbose("lsp: " + methodName + " = " + value);
 		}
 	}
 }

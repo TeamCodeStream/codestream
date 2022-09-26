@@ -6,13 +6,16 @@ using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Shared.Models {
 	public class VirtualTextDocument : IVirtualTextDocument {
+
 		private readonly ITextDocument _textDocument;
+		
 		private VirtualTextDocument(ITextDocument textDocument) {
 			_textDocument = textDocument;
-			if (CodeStreamDiffUri.TryParse(_textDocument.FilePath, out CodeStreamDiffUri uri)) {
-				Uri = uri.Uri;
-				Id = uri.Uri.ToLocalPath();
-				FileName = uri.FileName;
+			if (DiffExtensions.IsTempFile(_textDocument.FilePath))
+			{
+				Uri = new Uri(_textDocument.FilePath);
+				Id = new Uri(_textDocument.FilePath).ToLocalPath();
+				FileName = new Uri(_textDocument.FilePath).ToFileName();
 				SupportsMarkers = SupportsMargins = false;
 			}
 			else {

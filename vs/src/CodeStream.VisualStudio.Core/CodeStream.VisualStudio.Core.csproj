@@ -120,7 +120,7 @@
     <Compile Include="Models\CodeLevelMetricsDetail.cs" />
     <Compile Include="Models\CodeLevelMetricsProperties.cs" />
     <Compile Include="Models\CodeLevelMetricsTelemetry.cs" />
-    <Compile Include="Models\CodeStreamDiffUri.cs" />
+    <Compile Include="Models\DiffExtensions.cs" />
     <Compile Include="Models\EntityAccount.cs" />
     <Compile Include="Models\Error.cs" />
     <Compile Include="Models\ErrorRateResponse.cs" />
