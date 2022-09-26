@@ -335,22 +335,27 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
+			var tempFile1 = string.Empty;
+			var tempFile2 = string.Empty;
+
 			try
 			{
-				var tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
-				var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+				tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
+				tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
 				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
 				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
 				CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
-
-				RemoveTempFileSafe(tempFile1);
-				RemoveTempFileSafe(tempFile2);
 			}
 			catch (Exception ex)
 			{
 				Log.Error(ex, nameof(CompareTempFiles));
+			}
+			finally
+			{
+				RemoveTempFileSafe(tempFile1);
+				RemoveTempFileSafe(tempFile2);
 			}
 		}
 
@@ -358,9 +363,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
+			var tempFile2 = string.Empty;
+
 			try
 			{
-				var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+				tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
 				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
@@ -371,6 +378,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			catch (Exception ex)
 			{
 				Log.Error(ex, nameof(CompareTempFiles));
+			}
+			finally
+			{
+				RemoveTempFileSafe(tempFile2);
 			}
 		}
 
@@ -630,8 +641,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		private static void RemoveTempFileSafe(string fileName) {
-			try {
-				System.IO.File.Delete(fileName);
+			try
+			{
+				if (!File.Exists(fileName))
+				{
+					return;
+				}
+
+				File.Delete(fileName);
 				Log.Verbose($"Removed temp file {fileName}");
 			}
 			catch (Exception ex) {
