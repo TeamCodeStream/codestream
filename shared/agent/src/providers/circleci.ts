@@ -1,5 +1,7 @@
 "use strict";
 
+import { InternalError, ServerError } from "agentError";
+import { Response } from "node-fetch";
 import {
 	FetchThirdPartyBuildsRequest,
 	FetchThirdPartyBuildsResponse,
@@ -7,6 +9,7 @@ import {
 	ThirdPartyBuildStatus,
 } from "protocol/agent.protocol.providers";
 import { CSCircleCIProviderInfo } from "protocol/api.protocol.models";
+import { Logger } from "../logger";
 import { Dates, log, lspProvider } from "../system";
 import {
 	CircleCIWorkflow,
@@ -14,6 +17,7 @@ import {
 	GetCircleCIPipelinesResponse,
 	GetCircleCIWorkflowsResponse,
 } from "./circleci.types";
+import { ApiResponse } from "./provider";
 import { ThirdPartyBuildProviderBase } from "./thirdPartyBuildProviderBase";
 import toFormatter = Dates.toFormatter;
 
@@ -40,6 +44,8 @@ const WaitingStatuses = [CircleCIWorkflowStatus.OnHold];
 
 @lspProvider("circleci")
 export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProviderInfo> {
+	delay: Date | undefined;
+
 	get displayName() {
 		return "CircleCI";
 	}
@@ -91,7 +97,7 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				error: response.body.message,
 			};
 		} catch (error) {
-			console.log(error);
+			Logger.error(error);
 			return {
 				error,
 			};
@@ -135,7 +141,7 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				return `Running ${runningJobs}/${totalJobs} jobs`;
 			}
 		} catch (error) {
-			console.log(error);
+			Logger.error(error);
 			return ThirdPartyBuildStatus.Running;
 		}
 		return ThirdPartyBuildStatus.Running;
@@ -227,5 +233,37 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 		]
 			.filter(Boolean)
 			.join(" ");
+	}
+
+	protected async get<R extends object>(
+		url: string,
+		headers?: { [key: string]: string },
+		options?: { [key: string]: any },
+		ensureConnected?: boolean
+	): Promise<ApiResponse<R>> {
+		if (this.delay && +this.delay > Date.now()) {
+			throw new InternalError(
+				`Requests to CircleCI are rate-limited, waiting until ${this.delay.toUTCString()} before making more requests`
+			);
+		}
+		return super.get(url, headers, options, ensureConnected);
+	}
+
+	protected async handleErrorResponse(response: Response): Promise<Error> {
+		const superError = await super.handleErrorResponse(response);
+		if (response.status === 429) {
+			const retryAfter = response.headers.get("retry-after") || 0;
+			const info = {
+				retryAfter: +retryAfter * 1000,
+			};
+			Logger.log(
+				`Rate limiting is in effect for CircleCI; delaying for ${retryAfter} seconds before making further requests`
+			);
+			this.delay = new Date(Math.max(+(this.delay || 0), Date.now() + info.retryAfter));
+			const error = new ServerError(superError.message, info, 429);
+			error.innerError = superError;
+			return error;
+		}
+		return superError;
 	}
 }
