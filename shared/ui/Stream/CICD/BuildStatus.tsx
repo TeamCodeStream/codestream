@@ -66,6 +66,7 @@ export const BuildStatus = (props: Props) => {
 			colorClass = "gray-color";
 	}
 
+	// TODO: add telemetry events for icon clicks
 	return (
 		<BuildStatusRow
 			style={{ display: "flex", padding: "0" }}

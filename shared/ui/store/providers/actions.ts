@@ -95,6 +95,9 @@ export const connectProvider =
 				dispatch(setIssueProvider(providerId));
 				return;
 			}
+			if (provider.hasBuilds) {
+				dispatch(sendBuildProviderConnected(providerId, connectionLocation));
+			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : JSON.stringify(error);
 			logError(`Failed to connect ${provider.name}: ${message}`, {
@@ -122,6 +125,24 @@ export type ViewLocation =
 	| "CI/CD Section";
 
 export const sendIssueProviderConnected =
+	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>
+	async (dispatch, getState) => {
+		const { providers } = getState();
+		const provider = providers[providerId];
+		if (!provider) return;
+		const { name, host, isEnterprise } = provider;
+		const api = HostApi.instance;
+		api.send(TelemetryRequestType, {
+			eventName: "Service Connected",
+			properties: {
+				Service: name,
+				Host: isEnterprise ? host : null,
+				"Connection Location": connectionLocation,
+			},
+		});
+	};
+
+export const sendBuildProviderConnected =
 	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>
 	async (dispatch, getState) => {
 		const { providers } = getState();
@@ -178,6 +199,9 @@ export const configureProvider =
 			if (setConnectedWhenConfigured && provider.hasIssues) {
 				dispatch(sendIssueProviderConnected(providerId, connectionLocation));
 				dispatch(setIssueProvider(providerId));
+			}
+			if (setConnectedWhenConfigured && provider.hasBuilds) {
+				dispatch(sendBuildProviderConnected(providerId, connectionLocation));
 			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : JSON.stringify(error);
