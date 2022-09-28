@@ -8,6 +8,11 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Client;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
+
+	/// <remarks>
+	/// Note that this only catches default LSP methods, and won't
+	/// intercept any of our custom codestream/ methods.
+	/// </remarks>
 	public class MiddleLayerProvider : ILanguageClientMiddleLayer {
 		private readonly ILogger _log;
 
