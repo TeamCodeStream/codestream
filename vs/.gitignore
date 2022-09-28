@@ -346,3 +346,5 @@ stats.json
 src/**/agent/
 src/resources/webview/
 .tsbuildinfo
+
+src/JSON/Schemas/Catalog/

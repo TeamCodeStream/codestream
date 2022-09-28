@@ -6,7 +6,7 @@ namespace CodeStream.VisualStudio.Core.Models {
 	public static class DiffExtensions
 	{
 		// double this up with Path/Path to remove the trailing double slashes
-		private static string TempDirectoryPath
+		public static string TempDirectoryPath
 			=> Path.GetDirectoryName(Path.GetTempPath());
 
 		public static bool IsTempFile(string filePath) 
