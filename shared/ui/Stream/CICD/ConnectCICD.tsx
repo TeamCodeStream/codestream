@@ -22,7 +22,7 @@ export const ConnectCICD = () => {
 					key="circleci"
 					onClick={() => dispatch(configureAndConnectProvider("circleci*com", "CI/CD Section"))}
 				>
-					<Icon name="newrelic" /* FIXME */ />
+					<Icon name="circleci" />
 					Connect to CircleCI
 				</Provider>
 			</div>

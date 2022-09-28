@@ -246,7 +246,7 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 	},
 	circleci: {
 		displayName: "CircleCI",
-		icon: "newrelic", // FIXME
+		icon: "circleci",
 		getUrl: "https://circleci.com",
 		helpUrl: "https://circleci.com/docs/managing-api-tokens",
 	},

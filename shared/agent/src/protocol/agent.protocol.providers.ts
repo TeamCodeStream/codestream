@@ -465,7 +465,7 @@ export interface FetchThirdPartyBuildsRequest {
 
 export interface FetchThirdPartyBuildsResponse {
 	projects: {
-		[key: string]: ThirdPartyBuild[]; // FIXME
+		[key: string]: ThirdPartyBuild[];
 	};
 }
 
