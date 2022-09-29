@@ -19,6 +19,7 @@ const BuildStatusRow = styled.div`
 	text-overflow: ellipsis;
 	width: 100%;
 	padding: 0;
+	gap: 2px;
 	> div {
 		overflow: hidden;
 		text-overflow: ellipsis;
