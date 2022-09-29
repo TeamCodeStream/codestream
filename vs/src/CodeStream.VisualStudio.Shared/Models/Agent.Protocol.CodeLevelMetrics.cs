@@ -10,8 +10,8 @@ namespace CodeStream.VisualStudio.Shared.Models
 	}
 
 	public class GetFileLevelTelemetryRequest {
-		[JsonProperty("fileUri", NullValueHandling = NullValueHandling.Ignore)]
-		public string FileUri { get; set; }
+		[JsonProperty("filePath", NullValueHandling = NullValueHandling.Ignore)]
+		public string FilePath { get; set; }
 		[JsonProperty("languageId", NullValueHandling = NullValueHandling.Ignore)]
 		public string LanguageId { get; set; }
 		[JsonProperty("resetCache", NullValueHandling = NullValueHandling.Ignore)]
