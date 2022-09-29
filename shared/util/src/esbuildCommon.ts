@@ -3,7 +3,6 @@ import { statsPlugin } from "./statsPlugin";
 import { vscShimPlugin } from "./vscShim";
 import { lessLoader } from "esbuild-plugin-less";
 import * as path from "path";
-import cpy, { Options } from "cpy";
 
 export type Mode = "production" | "development";
 

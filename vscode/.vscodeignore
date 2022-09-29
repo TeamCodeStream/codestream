@@ -1,8 +1,8 @@
 .vscode/**
 io/**
 node_modules/**
+.idea/
 src/**
-**/*.map
 bin/**
 sandbox/**
 .babelrc

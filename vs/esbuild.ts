@@ -6,18 +6,23 @@ import { createSymlinks } from "../shared/util/src/symlinks";
 
 const context = path.resolve(__dirname, "src/CodeStream.VisualStudio.Shared/UI/WebViews");
 const target = path.resolve(__dirname, "src/resources/webview");
+const agentDistTarget = path.resolve(__dirname, "../shared/agent/dist");
 
 const copy = copyPlugin({
 	onEnd: [
 		{
 			from: path.resolve(__dirname, "../shared/ui/newrelic-browser.js"),
-			to: path.resolve(__dirname, "src/resources/webview")
+			to: path.resolve(__dirname, "src/resources/webview"),
 		},
 		{
 			from: path.resolve(context, "index.html"),
 			to: target,
-			options: { rename: "webview.html" }
-		}
+			options: { rename: "webview.html" },
+		},
+		{
+			from: path.resolve(target, "index.js.map"),
+			to: agentDistTarget,
+		},
 	]
 });
 

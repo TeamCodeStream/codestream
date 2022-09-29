@@ -104,6 +104,7 @@ class WebViewService(val project: Project) : Disposable {
         extractedHtmlFile = File(tempDir, WEBVIEW_TEMPLATE_HTML)
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js"), File(tempDir, "webview.js"))
+        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/webview.js.map"), File(tempDir, "webview.js.map"))
         FileUtils.copyToFile(
             javaClass.getResourceAsStream("/webview/styles/webview.css"),
             File(tempDir.resolve("styles"), "webview.css")
@@ -126,8 +127,8 @@ class WebViewService(val project: Project) : Disposable {
         return html
             .replace("{bodyClass}", theme.name)
             .replace("{csStyle}", theme.stylesheet)
-
     }
+
     private fun injectTelemetryScript(html: String): String {
         val template = javaClass.getResource("/webview/newrelic-browser.js")?.readText()?.trim() ?: ""
         val script = project.telemetryService?.telemetryOptions?.webviewOptions()?.let {

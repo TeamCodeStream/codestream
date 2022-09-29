@@ -9,14 +9,19 @@ import { statsPlugin } from "../shared/util/src/statsPlugin";
 async function webBuild(args: Args) {
 	const context = path.resolve(__dirname, "src/webviews/app");
 	const target = path.resolve(__dirname, "dist/webview");
+	const dist = path.resolve(__dirname, "dist");
 
 	const webCopy = copyPlugin({
 		onEnd: [
 			{
 				from: path.resolve(context, "index.html"),
 				to: __dirname,
-				options: { rename: "webview.html" }
-			}
+				options: { rename: "webview.html" },
+			},
+			{
+				from: path.resolve(target, "index.js.map"),
+				to: dist,
+			},
 		]
 	});
 

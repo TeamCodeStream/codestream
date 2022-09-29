@@ -6,13 +6,23 @@ import { createSymlinks } from "../shared/util/src/symlinks";
 
 const context = path.resolve(__dirname, "webview");
 const target = path.resolve(__dirname, "src/main/resources/webview");
+const agentTarget = path.resolve(__dirname, "src/main/resources/agent");
+const agentDistTarget = path.resolve(__dirname, "../shared/agent/dist");
 
 const copy = copyPlugin({
 	onEnd: [
 		{
 			from: path.resolve(context, "index.html"),
 			to: target,
-			options: { rename: "webview-template.html" }
+			options: { rename: "webview-template.html" },
+		},
+		{
+			from: path.resolve(target, "index.js.map"),
+			to: agentTarget,
+		},
+		{
+			from: path.resolve(target, "index.js.map"),
+			to: agentDistTarget,
 		}
 	]
 });
@@ -26,7 +36,7 @@ const copy = copyPlugin({
 	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(true, args, [copy]),
 		entryPoints: [
-			path.resolve(context, "webview.ts"),
+			path.resolve(context, "index.ts"),
 			path.resolve(context, "styles", "webview.less")
 		],
 		outdir: target
