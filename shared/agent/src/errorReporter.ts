@@ -73,20 +73,25 @@ class NewRelicErrorReporterProvider
 
 	constructor(private agent: CodeStreamAgent, session: CodeStreamSession) {
 		super(session);
-		const webSourceMap = path.resolve(__dirname, WEB_SOURCE_MAP);
-		if (!fs.existsSync(webSourceMap)) {
-			Logger.warn(`${WEB_SOURCE_MAP} not found at ${webSourceMap}`);
+		try {
+			const webSourceMap = path.resolve(__dirname, WEB_SOURCE_MAP);
+			if (!fs.existsSync(webSourceMap)) {
+				Logger.warn(`${WEB_SOURCE_MAP} not found at ${webSourceMap}`);
+				return;
+			}
+			const sourceMapContents = fs.readFileSync(webSourceMap, "utf8");
+			if (!sourceMapContents) {
+				Logger.warn(`Unable to load ${webSourceMap}`);
+				return;
+			}
+			const theSm = convert.fromJSON(sourceMapContents).sourcemap;
+			theSm.file = WEB_JS_FILENAME;
+			this.stackMapper = StackMapper(theSm);
+			Logger.log(`Loaded ${webSourceMap} mapper`);
+		} catch (e) {
+			Logger.error(e);
 			return;
 		}
-		const sourceMapContents = fs.readFileSync(webSourceMap, "utf8");
-		if (!sourceMapContents) {
-			Logger.warn(`Unable to load ${webSourceMap}`);
-			return;
-		}
-		const theSm = convert.fromJSON(sourceMapContents).sourcemap;
-		theSm.file = WEB_JS_FILENAME;
-		this.stackMapper = StackMapper(theSm);
-		Logger.log(`Loaded ${webSourceMap} mapper`);
 	}
 
 	private parseStackString(stackString: string): StackTraceInfo {
