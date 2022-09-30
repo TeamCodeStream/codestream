@@ -4,6 +4,7 @@ import {
 	ThirdPartyBuild,
 	ThirdPartyBuildStatus,
 } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -24,6 +25,10 @@ interface Projects {
 	[providerId: string]: {
 		[projectId: string]: ThirdPartyBuild[];
 	};
+}
+
+interface DashboardUrls {
+	[providerId: string]: string;
 }
 
 const INACTIVE_REFRESH_INTERVAL = 5 * 60 * 1000; // refresh data every 5 minutes by default
@@ -53,12 +58,13 @@ export const CICD = (props: Props) => {
 	});
 	const [loading, setLoading] = useState(true);
 	const [refresh, setRefresh] = useState(true);
-	const [refreshTimeout, setRefreshTimeout] = useState<any>();
+	const [refreshTimeout, setRefreshTimeout] = useState<number>();
 	const [projects, setProjects] = useState<Projects>({});
+	const [dashboardUrls, setDashboardUrls] = useState<DashboardUrls>({});
 
 	const scheduleRefresh = (active: boolean) => {
 		const timeout = active ? ACTIVE_REFRESH_INTERVAL : INACTIVE_REFRESH_INTERVAL;
-		const id = setTimeout(() => setRefresh(true), timeout);
+		const id = window.setTimeout(() => setRefresh(true), timeout);
 		setRefreshTimeout(id);
 	};
 
@@ -72,6 +78,7 @@ export const CICD = (props: Props) => {
 		}
 		const remotes = derivedState.currentRepo.remotes || [];
 		const projects: Projects = {};
+		const dashboardUrls: DashboardUrls = {};
 		for (const [providerId, provider] of Object.entries(derivedState.providers)) {
 			if (!Object.keys(derivedState.providerInfo).includes(provider.name)) continue;
 			for (const remote of remotes) {
@@ -83,6 +90,9 @@ export const CICD = (props: Props) => {
 					});
 					if (result.projects) {
 						projects[provider.name] = result.projects;
+						if (result.dashboardUrl) {
+							dashboardUrls[provider.name] = result.dashboardUrl;
+						}
 						break;
 					}
 				} catch (error) {
@@ -111,6 +121,7 @@ export const CICD = (props: Props) => {
 		scheduleRefresh(buildsInProgress);
 		setRefresh(false);
 		setProjects(projects);
+		setDashboardUrls(dashboardUrls);
 		setLoading(false);
 	};
 
@@ -166,6 +177,19 @@ export const CICD = (props: Props) => {
 						delay={1}
 						onClick={e => {
 							fetchProjects();
+						}}
+					/>
+				)}
+				{derivedState.bootstrapped && dashboardUrls.circleci && (
+					<Icon
+						name="link-external"
+						title="View Dashboard on CircleCI"
+						placement="bottom"
+						delay={1}
+						onClick={e => {
+							e.preventDefault();
+							e.stopPropagation();
+							HostApi.instance.send(OpenUrlRequestType, { url: dashboardUrls.circleci });
 						}}
 					/>
 				)}

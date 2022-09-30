@@ -449,6 +449,7 @@ export interface ThirdPartyBuild {
 	duration: string;
 	finished?: Date;
 	finishedRelative?: string;
+	builds: ThirdPartyBuild[];
 	url?: string;
 	artifactsUrl?: string;
 	logsUrl?: string;
@@ -467,6 +468,7 @@ export interface FetchThirdPartyBuildsResponse {
 	projects: {
 		[key: string]: ThirdPartyBuild[];
 	};
+	dashboardUrl?: string;
 }
 
 export const FetchThirdPartyBuildsRequestType = new RequestType<

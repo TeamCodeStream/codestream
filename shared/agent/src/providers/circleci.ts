@@ -12,14 +12,17 @@ import { CSCircleCIProviderInfo } from "protocol/api.protocol.models";
 import { Logger } from "../logger";
 import { Dates, log, lspProvider } from "../system";
 import {
+	CircleCIApiJobItem,
+	CircleCIApiWorkflowItem,
+	CircleCIJob,
 	CircleCIJobStatus,
 	CircleCIJobStatusCount,
 	CircleCIWorkflowStatus,
+	GetCircleCIJobsResponse,
 	GetCircleCIPipelinesResponse,
 	GetCircleCIWorkflowsResponse,
 	GetPipelinesResponse,
-	GetPipelineWorkflowsResponse,
-	GetWorkflowJobsResponse,
+	PaginatedCircleCIItemsResponse,
 } from "./circleci.types";
 import { ApiResponse } from "./provider";
 import { ThirdPartyBuildProviderBase } from "./thirdPartyBuildProviderBase";
@@ -101,8 +104,41 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 		return `${this.apiUrl}/${this.apiPath}`;
 	}
 
+	async *getItemsPaginated<R>(url: string): AsyncIterable<R> {
+		let response: ApiResponse<PaginatedCircleCIItemsResponse<R>>;
+		let actualUrl: string | undefined = url;
+		do {
+			response = await this.get<PaginatedCircleCIItemsResponse<R>>(actualUrl);
+			if (response.body.items) {
+				for (const item of response.body.items) {
+					yield item;
+				}
+				if (response.body.next_page_token) {
+					actualUrl = `${url}?page-token=${response.body.next_page_token}`;
+				} else {
+					actualUrl = undefined;
+				}
+			} else {
+				throw new Error(response.body.message);
+			}
+		} while (actualUrl);
+	}
+
+	getDashboardUrl(projectSlug: string, branch: string) {
+		return `${this.appUrl}/pipelines/${projectSlug}?branch=${branch}`;
+	}
+
 	getWorkflowUrl(workflowId: string): string {
 		return `${this.appUrl}/pipelines/workflows/${workflowId}`;
+	}
+
+	getJobUrl(
+		projectSlug: string,
+		pipelineNumber: number,
+		workflowId: string,
+		jobNumber: number
+	): string {
+		return `${this.appUrl}/pipelines/${projectSlug}/${pipelineNumber}/workflows/${workflowId}/jobs/${jobNumber}`;
 	}
 
 	@log()
@@ -128,23 +164,32 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 	@log()
 	async getWorkflowsByPipeline(pipelineId: string): Promise<GetCircleCIWorkflowsResponse> {
 		try {
-			const response = await this.get<GetPipelineWorkflowsResponse>(
+			const workflows = [];
+			const response = this.getItemsPaginated<CircleCIApiWorkflowItem>(
 				`/pipeline/${pipelineId}/workflow`
 			);
-			if (response.body.items) {
-				const workflows = response.body.items.map(w => ({
+			for await (const w of response) {
+				let jobs: CircleCIJob[] = [];
+				let jobCounts: CircleCIJobStatusCount | undefined = undefined;
+				try {
+					const jobsResponse = await this.getJobsByWorkflow(w.id, w.pipeline_number);
+					jobs = jobsResponse.jobs || [];
+					jobCounts = jobsResponse.counts;
+				} catch (error) {
+					console.error(error);
+				}
+				workflows.push({
 					id: w.id,
 					name: w.name,
 					status: w.status,
 					createdAt: new Date(Date.parse(w.created_at)),
 					stoppedAt: w.stopped_at ? new Date(Date.parse(w.stopped_at)) : undefined,
+					jobs,
+					jobCounts,
 					url: this.getWorkflowUrl(w.id),
-				}));
-				return { workflows };
+				});
 			}
-			return {
-				error: response.body.message,
-			};
+			return { workflows };
 		} catch (error) {
 			console.log(error);
 			return {
@@ -154,48 +199,67 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 	}
 
 	@log()
-	async getJobCounts(workflowId: string): Promise<CircleCIJobStatusCount> {
-		// TODO: handle pagination
+	async getJobsByWorkflow(
+		workflowId: string,
+		pipelineNumber: number
+	): Promise<GetCircleCIJobsResponse> {
 		try {
-			const response = await this.get<GetWorkflowJobsResponse>(`/workflow/${workflowId}/job`);
-			if (response.body.items) {
-				const success = response.body.items.filter(j =>
-					JobSuccessStatuses.includes(j.status)
-				).length;
-				const running = response.body.items.filter(j =>
-					JobRunningStatuses.includes(j.status)
-				).length;
-				const waiting = response.body.items.filter(j =>
-					JobWaitingStatuses.includes(j.status)
-				).length;
-				const error = response.body.items.filter(j => JobErrorStatuses.includes(j.status)).length;
-				const total = response.body.items.length;
-				const unknown = total - success - running - waiting - error;
-				return {
-					success,
-					running,
-					waiting,
-					error,
-					unknown,
-					total,
-				};
+			const jobs = [];
+			const response = this.getItemsPaginated<CircleCIApiJobItem>(`/workflow/${workflowId}/job`);
+			for await (const j of response) {
+				jobs.push({
+					id: j.id,
+					name: j.name,
+					status: j.status,
+					createdAt: new Date(Date.parse(j.created_at)),
+					stoppedAt: j.stopped_at ? new Date(Date.parse(j.stopped_at)) : undefined,
+					url: this.getJobUrl(j.project_slug, pipelineNumber, j.id, j.job_number),
+				});
 			}
-			throw new Error(response.body.message);
+			return this.sortJobsByType(jobs);
 		} catch (error) {
-			Logger.error(error);
-			throw error;
+			return {
+				error,
+			};
 		}
+	}
+
+	sortJobsByType(jobs: CircleCIJob[]): GetCircleCIJobsResponse {
+		const success = jobs.filter(j => JobSuccessStatuses.includes(j.status));
+		const running = jobs.filter(j => JobRunningStatuses.includes(j.status));
+		const error = jobs.filter(j => JobErrorStatuses.includes(j.status));
+		const waiting = jobs.filter(j => JobWaitingStatuses.includes(j.status));
+		const unknown = jobs.filter(
+			j =>
+				!JobSuccessStatuses.includes(j.status) &&
+				!JobRunningStatuses.includes(j.status) &&
+				!JobErrorStatuses.includes(j.status) &&
+				!JobWaitingStatuses.includes(j.status)
+		);
+		return {
+			jobs: running.concat(error, waiting, unknown, success),
+			counts: {
+				success: success.length,
+				running: running.length,
+				error: error.length,
+				waiting: waiting.length,
+				unknown: unknown.length,
+				total: jobs.length,
+			},
+		};
 	}
 
 	@log()
 	async getPipelineWorkflows(
 		projectSlug: string,
 		branch: string
-	): Promise<FetchThirdPartyBuildsResponse> {
+	): Promise<{
+		[key: string]: ThirdPartyBuild[];
+	}> {
 		const pipelinesResult = await this.getPipelines(projectSlug, branch);
 		const projects: { [key: string]: ThirdPartyBuild[] } = {};
 		if (pipelinesResult.error || !pipelinesResult.pipelines) {
-			return { projects };
+			return projects;
 		}
 		for (const pipelineId of pipelinesResult.pipelines.slice(0, 5)) {
 			const workflowResult = await this.getWorkflowsByPipeline(pipelineId);
@@ -214,17 +278,18 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				} else if (WorkflowErrorStatuses.includes(workflow.status)) {
 					status = ThirdPartyBuildStatus.Failed;
 					try {
-						const jobCounts = await this.getJobCounts(workflow.id);
-						message = `${jobCounts.error}/${jobCounts.total} jobs failed`;
+						const jobCounts = workflow.jobCounts;
+						message = jobCounts ? `${jobCounts.error}/${jobCounts.total} jobs failed` : "Failed";
 					} catch (error) {
 						message = "Failed";
 					}
 				} else if (WorkflowRunningStatuses.includes(workflow.status)) {
 					status = ThirdPartyBuildStatus.Running;
 					try {
-						const jobCounts = await this.getJobCounts(workflow.id);
-						const count = jobCounts.success + jobCounts.running;
-						message = `Running (${count}/${jobCounts.total})`;
+						const jobCounts = workflow.jobCounts;
+						message = jobCounts
+							? `Running (${jobCounts.success + jobCounts.running}/${jobCounts.total})`
+							: "Running";
 					} catch (error) {
 						message = "Running";
 					}
@@ -242,6 +307,7 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				const finishedRelative = workflow.stoppedAt
 					? toFormatter(workflow.stoppedAt).fromNow()
 					: undefined;
+				const builds = workflow.jobs.map(this.jobToBuild.bind(this));
 				projects[workflow.name].push({
 					id: workflow.id,
 					status,
@@ -249,11 +315,49 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 					duration,
 					finished,
 					finishedRelative,
+					builds,
 					url: workflow.url,
 				});
 			}
 		}
-		return { projects };
+		return projects;
+	}
+
+	jobToBuild(job: CircleCIJob): ThirdPartyBuild {
+		let status: ThirdPartyBuildStatus;
+		let message: string;
+		if (JobSuccessStatuses.includes(job.status)) {
+			status = ThirdPartyBuildStatus.Success;
+			message = `Job "${job.name}" succeeded`;
+		} else if (JobErrorStatuses.includes(job.status)) {
+			status = ThirdPartyBuildStatus.Failed;
+			message = `Job "${job.name}" failed: ${job.status}`;
+		} else if (JobRunningStatuses.includes(job.status)) {
+			status = ThirdPartyBuildStatus.Running;
+			message = `Job "${job.name}" is running`;
+		} else if (JobWaitingStatuses.includes(job.status)) {
+			status = ThirdPartyBuildStatus.Waiting;
+			message = `Job "${job.name}" is waiting`;
+		} else {
+			status = ThirdPartyBuildStatus.Unknown;
+			message = `Job "${job.name}" has unknown status`;
+		}
+		const duration = job.stoppedAt
+			? this.formatDuration(job.createdAt, job.stoppedAt)
+			: this.formatDuration(job.createdAt, new Date());
+		const finished = job.stoppedAt;
+		const finishedRelative = job.stoppedAt ? toFormatter(job.stoppedAt).fromNow() : undefined;
+		return {
+			id: job.id,
+			status,
+			message,
+			duration,
+			finished,
+			finishedRelative,
+			builds: [],
+			url: job.url,
+			artifactsUrl: `${job.url}/artifacts`,
+		};
 	}
 
 	getSlug(remote: { domain: string; path: string }): string | undefined {
@@ -272,7 +376,12 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 		if (!slug) {
 			return { projects: {} };
 		}
-		return await this.getPipelineWorkflows(slug, request.branch);
+		const projects = await this.getPipelineWorkflows(slug, request.branch);
+		const dashboardUrl = this.getDashboardUrl(slug, request.branch);
+		return {
+			projects,
+			dashboardUrl,
+		};
 	}
 
 	formatDuration(from: Date, to: Date): string {

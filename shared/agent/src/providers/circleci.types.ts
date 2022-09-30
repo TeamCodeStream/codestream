@@ -32,18 +32,12 @@ export enum CircleCIJobStatus {
 	Unauthorized = "unauthorized",
 }
 
-export interface CircleCIWorkflow {
+export interface CircleCIStatusObject {
 	id: string;
 	name: string;
-	status: CircleCIWorkflowStatus;
 	createdAt: Date;
 	stoppedAt?: Date;
 	url?: string;
-}
-
-export interface GetCircleCIWorkflowsResponse {
-	workflows?: CircleCIWorkflow[];
-	error?: string;
 }
 
 export interface CircleCIJobStatusCount {
@@ -55,9 +49,31 @@ export interface CircleCIJobStatusCount {
 	total: number;
 }
 
+export type CircleCIWorkflow = CircleCIStatusObject & {
+	status: CircleCIWorkflowStatus;
+	jobs: CircleCIJob[];
+	jobCounts?: CircleCIJobStatusCount;
+};
+
+export type CircleCIJob = CircleCIStatusObject & {
+	status: CircleCIJobStatus;
+};
+
+export interface GetCircleCIWorkflowsResponse {
+	workflows?: CircleCIWorkflow[];
+	error?: string;
+}
+
+export interface GetCircleCIJobsResponse {
+	jobs?: CircleCIJob[];
+	counts?: CircleCIJobStatusCount;
+	error?: string;
+}
+
 export interface GetPipelinesResponse {
 	items?: {
 		id: string;
+		number: number;
 		vcs?: {
 			branch?: string;
 		};
@@ -65,20 +81,27 @@ export interface GetPipelinesResponse {
 	message?: string;
 }
 
-export interface GetPipelineWorkflowsResponse {
-	items?: {
-		id: string;
-		name: string;
-		status: CircleCIWorkflowStatus;
-		created_at: string;
-		stopped_at: string;
-	}[];
-	message?: string;
+export interface CircleCIApiWorkflowItem {
+	id: string;
+	name: string;
+	status: CircleCIWorkflowStatus;
+	created_at: string;
+	stopped_at: string;
+	pipeline_number: number;
 }
 
-export interface GetWorkflowJobsResponse {
-	items?: {
-		status: CircleCIJobStatus;
-	}[];
+export interface CircleCIApiJobItem {
+	id: string;
+	name: string;
+	status: CircleCIJobStatus;
+	created_at: string;
+	stopped_at: string;
+	job_number: number;
+	project_slug: string;
+}
+
+export interface PaginatedCircleCIItemsResponse<R> {
+	items?: R[];
 	message?: string;
+	next_page_token?: string;
 }
