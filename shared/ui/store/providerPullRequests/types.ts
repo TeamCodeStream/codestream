@@ -63,7 +63,7 @@ export interface RepoPullRequest {
  * 	}
  */
 export type ProviderPullRequestsState = {
-	myPullRequests: Index<{ data?: GetMyPullRequestsResponse[][] }>;
+	myPullRequests: Index<GetMyPullRequestsResponse[][]>;
 	pullRequests: Index<Index<RepoPullRequest>>;
 };
 

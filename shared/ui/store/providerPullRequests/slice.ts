@@ -11,6 +11,7 @@ import { CSRepository } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { Directive } from "@codestream/webview/store/providerPullRequests/directives";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { isEmpty } from "lodash-es";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { ContextState } from "../context/types";
@@ -72,6 +73,11 @@ export interface Collaborator {
 	};
 }
 
+interface RemovePullRequestByIndex {
+	providerId: string;
+	index: number;
+}
+
 export interface UpdatePullRequestTitlePayload extends PullRequestIdPayload {
 	pullRequestData: {
 		title: string;
@@ -100,14 +106,16 @@ const providerPullRequestsSlice = createSlice({
 	reducers: {
 		addMyPullRequests: (state, action: PayloadAction<PullRequestPayload>) => {
 			if (!state.myPullRequests[action.payload.providerId]) {
-				state.myPullRequests[action.payload.providerId] = {};
+				state.myPullRequests[action.payload.providerId] = [];
 			}
-			state.myPullRequests[action.payload.providerId].data = action.payload.data;
+			state.myPullRequests[action.payload.providerId] = action.payload.data;
 			return;
 		},
 		updatePullRequestFilter: (state, action: PayloadAction<PullRequestFilterPayload>) => {
-			state.myPullRequests[action.payload.providerId][action.payload.index] = action.payload.data;
-			return;
+			if (!isEmpty(action.payload.data)) {
+				state.myPullRequests[action.payload.providerId][action.payload.index] =
+					action.payload.data[0];
+			}
 		},
 		addPullRequestFiles: (state, action: PayloadAction<AddPullRequestFilesPayload>) => {
 			const id = parseId(action.payload.id);
@@ -140,6 +148,11 @@ const providerPullRequestsSlice = createSlice({
 			state.pullRequests[action.payload.providerId][id].commits = action.payload.pullRequestCommits;
 			return;
 		},
+		removePullRequest: (state, action: PayloadAction<RemovePullRequestByIndex>) => {
+			const { providerId, index } = action.payload;
+			const prs = state.myPullRequests[providerId];
+			prs.splice(index, 1);
+		},
 		clearPullRequestCommits: (state, action: PayloadAction<PullRequestIdPayload>) => {
 			const id = parseId(action.payload.id);
 			if (!id) {
@@ -163,7 +176,7 @@ const providerPullRequestsSlice = createSlice({
 		},
 		updatePullRequestTitle: (state, action: PayloadAction<UpdatePullRequestTitlePayload>) => {
 			const providerPrs: GetMyPullRequestsResponse[][] | undefined =
-				state.myPullRequests?.[action.payload.providerId]?.data;
+				state.myPullRequests?.[action.payload.providerId];
 			if (!providerPrs) {
 				return;
 			}
@@ -1159,6 +1172,7 @@ export const {
 	addPullRequestCommits,
 	addPullRequestConversations,
 	addPullRequestError,
+	removePullRequest,
 	addPullRequestFiles,
 	clearPullRequestCommits,
 	clearPullRequestError,

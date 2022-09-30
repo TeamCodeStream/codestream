@@ -18,7 +18,6 @@ import {
 	ReviewCloseDiffRequestType,
 	WebviewPanels,
 } from "@codestream/protocols/webview";
-import { Index } from "@codestream/webview/store/common";
 import { setPaneMaximized } from "@codestream/webview/Stream/actions";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
@@ -53,6 +52,7 @@ import {
 	getProviderPullRequestRepoObject,
 	getPullRequestExactId,
 	getPullRequestId,
+	removePullRequest,
 } from "../store/providerPullRequests/slice";
 import {
 	getMyPullRequests,
@@ -340,10 +340,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	>();
 	const [prFromUrlProviderId, setPrFromUrlProviderId] = React.useState<string | undefined>();
 
-	const [pullRequestGroups, setPullRequestGroups] = React.useState<{
-		[providerId: string]: GetMyPullRequestsResponse[][];
-	}>({});
-
 	const [isLoadingPRs, setIsLoadingPRs] = React.useState(false);
 	const [isLoadingPRGroup, setIsLoadingPRGroup] = React.useState<number | undefined>(undefined);
 	const [individualLoadingPR, setIndividualLoadingPR] = React.useState("");
@@ -378,7 +374,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			let activePrListedCount = 0;
 			let activePrListedIndex: number | undefined = undefined;
 			try {
-				const newGroups: Index<GetMyPullRequestsResponse[][]> = {};
 				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of PRConnectedProviders) {
@@ -412,15 +407,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 									activePr => activePr.createdAt > twoWeekAgoTimestamp
 								).length;
 							}
-							// console.warn("GOT SOME PULLS BACK: ", response);
-							newGroups[connectedProvider.id] = response;
+							// Previously called setPullRequestGroups(updatedPullRequestGroups);
+							// But derivedState.myPullRequests updates automatically when getMyPullRequests called
 						}
 					} catch (ex) {
 						setPrError(typeof ex === "string" ? ex : ex.message);
 						console.error(ex);
 					}
 				}
-				setPullRequestGroups(newGroups);
 			} catch (ex) {
 				console.error(ex);
 				setPrError(typeof ex === "string" ? ex : ex.message);
@@ -447,7 +441,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				}
 			}
 		},
-		[defaultQueries, editingQuery, PRConnectedProviders, derivedState.allRepos]
+		[
+			defaultQueries,
+			editingQuery,
+			PRConnectedProviders,
+			derivedState.allRepos,
+			derivedState.myPullRequests,
+		]
 	);
 
 	useEffect(() => {
@@ -489,17 +489,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			disposePoll(disposable);
 		};
 	}, [queries, fetchPRs]);
-
-	useEffect(() => {
-		const newGroups: Index<GetMyPullRequestsResponse[][]> = {};
-		for (const connectedProvider of PRConnectedProviders) {
-			const pullRequests = derivedState.myPullRequests[connectedProvider.id]?.data;
-			if (pullRequests) {
-				newGroups[connectedProvider.id] = pullRequests;
-			}
-		}
-		setPullRequestGroups(newGroups);
-	}, [derivedState.myPullRequests]);
 
 	useEffect(() => {
 		HostApi.instance.send(ReviewCloseDiffRequestType, {});
@@ -585,7 +574,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		setIsLoadingPRGroup(index);
 		try {
 			const q = queries[providerId][index];
-			const response = await dispatch(
+			await dispatch(
 				getMyPullRequests({
 					providerId,
 					queries: [q],
@@ -596,11 +585,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					index: index,
 				})
 			).unwrap();
-			if (response && response.length) {
-				const newGroups = { ...pullRequestGroups };
-				newGroups[providerId][index] = response[0];
-				setPullRequestGroups(newGroups);
-			}
+			// No longer calling set`PullRequestGroups - updatePullRequestFilter action already does this
 		} catch (ex) {
 			console.error(ex);
 			// if (ex && ex.indexOf('"message":"Bad credentials"') > -1) {
@@ -611,7 +596,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		}
 	};
 
-	const deleteQuery = (providerId, index) => {
+	const deleteQuery = (providerId: string, index: number) => {
 		confirmPopup({
 			title: "Are you sure?",
 			message: "Do you want to delete this query?",
@@ -625,9 +610,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						const newQueries = [...queries[providerId]];
 						newQueries.splice(index, 1);
 						saveQueries(providerId, newQueries);
-						const newGroups = [...pullRequestGroups[providerId]];
-						newGroups.splice(index, 1);
-						setPullRequestGroups({ ...pullRequestGroups, providerId: newGroups });
+						// Delete of PR query result by index
+						dispatch(removePullRequest({ providerId, index }));
 					},
 				},
 			],
@@ -734,13 +718,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const totalPRs = useMemo(() => {
 		let total = 0;
-		if (pullRequestGroups) {
-			Object.values(pullRequestGroups)?.forEach(group =>
+		const myPullRequests = derivedState.myPullRequests;
+		if (myPullRequests) {
+			Object.values(myPullRequests)?.forEach(group =>
 				group.forEach(list => (total += list.length))
 			);
 		}
 		return total;
-	}, [pullRequestGroups]);
+	}, [derivedState.myPullRequests]);
 
 	const clickPR = (pr, groupIndex, queryName) => {
 		if (!derivedState.maximized) {
@@ -1329,7 +1314,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 					)}
 				</>
 			);
-		} else return undefined;
+		} else {
+			return undefined;
+		}
 	};
 
 	useEffect(() => {
@@ -1536,7 +1523,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				)}
 				{Object.values(providerQueries).map((query: PullRequestQuery, index) => {
 					const groupIndex = index.toString();
-					const providerGroups = pullRequestGroups[providerId];
+					if (isEmpty(derivedState.myPullRequests)) {
+						return;
+					}
+					const providerGroups = derivedState.myPullRequests[providerId];
 					const prGroup = providerGroups && providerGroups[index];
 					const count = prGroup ? prGroup.length : 0;
 					return (

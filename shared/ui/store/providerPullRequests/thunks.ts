@@ -305,9 +305,9 @@ export const getMyPullRequests = createAppAsyncThunk<
 		if (!options || !options.force) {
 			const state = getState();
 			const provider = state.providerPullRequests.myPullRequests[providerId];
-			if (provider && provider.data != null) {
+			if (provider) {
 				console.log(`fetched myPullRequest data from store providerId=${providerId}`);
-				return provider.data;
+				return provider;
 			}
 			// if the data was wiped... set force to get data from the provider api and
 			// bypass our cache
@@ -330,7 +330,7 @@ export const getMyPullRequests = createAppAsyncThunk<
 		});
 		if (index !== undefined) {
 			dispatch(updatePullRequestFilter({ providerId, data: response, index }));
-		} else if (!test) {
+		} else if (!test && response != null) {
 			dispatch(addMyPullRequests({ providerId, data: response }));
 		}
 
