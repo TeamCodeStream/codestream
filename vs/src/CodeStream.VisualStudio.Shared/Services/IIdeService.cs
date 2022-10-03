@@ -16,9 +16,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		FolderBrowserDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);
 
 		// Diff Services
-		void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title = null);
-		void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title = null);
-		void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title = null);
+		void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title);
+		void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title);
+		void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title, params string[] pathParts);
 		void TryCloseDiffs();
 	}
 }

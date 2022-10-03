@@ -196,10 +196,22 @@ namespace CodeStream.VisualStudio.Shared {
 													var span = wpfTextView.ToSpan(documentFromMarker.Range);
 													if (span.HasValue) {
 														if (document.IsDirty) {
-															_ideService.CompareTempFiles(filePath, text, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code);
+															_ideService.CompareTempFiles(
+																filePath, 
+																text, 
+																wpfTextView.TextBuffer, 
+																span.Value, 
+																documentFromMarker.Marker.Code,
+																"Yours vs. Theirs");
 														}
 														else {
-															_ideService.CompareWithRightTempFile(filePath, text, wpfTextView.TextBuffer, span.Value, documentFromMarker.Marker.Code);
+															_ideService.CompareWithRightTempFile(
+																filePath, 
+																text, 
+																wpfTextView.TextBuffer, 
+																span.Value, 
+																documentFromMarker.Marker.Code,
+																"Yours vs. Theirs");
 														}
 													}
 												}
@@ -508,7 +520,14 @@ namespace CodeStream.VisualStudio.Shared {
 															}
 															title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{title}";
 
-															_ideService.DiffTextBlocks(@params.Path, reviewContents.Left, reviewContents.Right, title);
+															_ideService.DiffTextBlocks(
+																@params.Path, 
+																reviewContents.Left, 
+																reviewContents.Right, 
+																title, 
+																@params.ReviewId,
+																@params.Checkpoint?.ToString() ?? "undefined",
+																@params.RepoId);
 														}
 													}
 												}

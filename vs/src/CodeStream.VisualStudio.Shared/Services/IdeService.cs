@@ -25,6 +25,8 @@ using System.Threading;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Models;
 
+using Microsoft.Build.Framework.XamlTypes;
+
 using File = System.IO.File;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
@@ -331,36 +333,57 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Compares the contents of two files. Requires UI thread.
 		/// </summary>
-		public void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title = null)
+		public void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			var tempFile1 = string.Empty;
+			var tempFile2 = string.Empty;
 
-			var tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
-			var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+			try
+			{
+				tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
+				tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
-			var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-			                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
+				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-			CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
-
-			RemoveTempFileSafe(tempFile1);
-			RemoveTempFileSafe(tempFile2);
+				CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, nameof(CompareTempFiles));
+			}
+			finally
+			{
+				RemoveTempFileSafe(tempFile1);
+				RemoveTempFileSafe(tempFile2);
+			}
 		}
 
-		public void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title = null)
+		public void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			var tempFile2 = string.Empty;
 
-			var tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
+			try
+			{
+				tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
-			var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-			CompareFiles(filePath, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
-
-			RemoveTempFileSafe(tempFile2);
+				CompareFiles(filePath, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, nameof(CompareTempFiles));
+			}
+			finally
+			{
+				RemoveTempFileSafe(tempFile2);
+			}
 		}
 
 		private void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string markerContent, __VSDIFFSERVICEOPTIONS diffOptions, string title = null) {
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			try {
 				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
@@ -425,17 +448,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 
 			var originalFileName = Path.GetFileName(originalFilePath);
-			var tempFilePath = Path.GetTempPath();
-			var tempFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
+			var originalDirectory = Path.GetDirectoryName(originalFilePath);
 			
-			var newTempFileForComparison = Path.Combine(tempFilePath, $"{tempFileName}-{direction.ToString().ToLower()}-{originalFileName}");
-			
-			File.WriteAllText(newTempFileForComparison, content.NormalizeLineEndings(), Encoding.UTF8);
+			var comparisonDirectory = Path.Combine(Path.GetTempPath(), "codestream-diff", $"{direction.ToString().ToLower()}", originalDirectory ?? "");
 
-			return newTempFileForComparison;
+			Directory.CreateDirectory(comparisonDirectory);
+
+			var tempFileForComparison = Path.Combine(comparisonDirectory, originalFileName);
+			File.WriteAllText(tempFileForComparison, content.NormalizeLineEndings(), Encoding.UTF8);
+
+			return tempFileForComparison;
 		}
 
-		public void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title = null) {
+		public void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title, params string[] pathParts) {
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var leftFile = CreateTempFileFromData(originalFilePath, leftContent, ComparisonSide.Left);
@@ -445,7 +470,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			{
 				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
-				
+
 				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles |
 				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
 				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
@@ -477,9 +502,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			{
 				Log.Error(ex, nameof(DiffTextBlocks));
 			}
-	
-			RemoveTempFileSafe(leftFile);
-			RemoveTempFileSafe(rightFile);
+			finally
+			{
+				RemoveTempFileSafe(leftFile);
+				RemoveTempFileSafe(rightFile);
+			}
 		}
 
 		/// <summary>
@@ -487,6 +514,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// </summary>
 		public void TryCloseDiffs() {
 			ThreadHelper.ThrowIfNotOnUIThread();
+
 			try {
 				foreach (var iVsWindowFrame in GetDocumentWindowFrames()) {
 					try {
