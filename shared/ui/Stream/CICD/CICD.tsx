@@ -103,21 +103,17 @@ export const CICD = (props: Props) => {
 
 		// if there are any builds in progress, schedule next refresh sooner
 		const buildsInProgress =
-			Object.keys(projects)
-				.reduce(
-					(a: ThirdPartyBuild[], x: string) =>
-						a.concat(
-							Object.keys(projects[x]).reduce(
-								(b: ThirdPartyBuild[], y) => b.concat(projects[x][y]),
-								[]
-							)
-						),
-					[]
+			Object.values(projects)
+				.map(indexedBuild =>
+					Object.values(indexedBuild)
+						.flat()
+						.find(
+							x =>
+								x.status === ThirdPartyBuildStatus.Running ||
+								x.status === ThirdPartyBuildStatus.Waiting
+						)
 				)
-				.filter(
-					x =>
-						x.status === ThirdPartyBuildStatus.Running || x.status === ThirdPartyBuildStatus.Waiting
-				).length > 0;
+				.find(Boolean) !== undefined;
 		scheduleRefresh(buildsInProgress);
 		setRefresh(false);
 		setProjects(projects);
