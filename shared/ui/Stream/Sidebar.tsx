@@ -66,6 +66,7 @@ _defaultPaneSettings[WebviewPanels.Observability] = {};
 // _defaultPaneSettings[WebviewPanels.Team] = {};
 _defaultPaneSettings[WebviewPanels.CICD] = {
 	collapsed: true,
+	placeAtBottom: true,
 };
 export const DEFAULT_PANE_SETTINGS = _defaultPaneSettings;
 
@@ -98,7 +99,13 @@ export const Sidebar = React.memo(function Sidebar() {
 		// represented
 		if (preferences.sidebarPaneOrder) {
 			AVAILABLE_PANES.forEach(pane => {
-				if (!sidebarPaneOrder.includes(pane)) sidebarPaneOrder.unshift(pane);
+				if (!sidebarPaneOrder.includes(pane)) {
+					if (DEFAULT_PANE_SETTINGS[pane].placeAtBottom) {
+						sidebarPaneOrder.push(pane);
+					} else {
+						sidebarPaneOrder.unshift(pane);
+					}
+				}
 			});
 		}
 
