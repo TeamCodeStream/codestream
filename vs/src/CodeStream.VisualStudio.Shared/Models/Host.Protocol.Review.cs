@@ -6,7 +6,16 @@ using CodeStream.VisualStudio.Core.Models;
 using Newtonsoft.Json;
 
 namespace CodeStream.VisualStudio.Shared.Models {
-	
+
+	public class PullRequestCloseDiffRequest { }
+
+	public class PullRequestCloseDiffRequestType : RequestType<PullRequestCloseDiffRequest>
+	{
+		public const string MethodName = "host/files/closeDiff";
+		public override string Method => MethodName;
+	}
+
+
 	public class PullRequestShowDiffRequestType : RequestType<PullRequestShowDiffRequest> {
 		public const string MethodName = "host/files/compare";
 		public override string Method => MethodName;

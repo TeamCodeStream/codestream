@@ -554,6 +554,8 @@ namespace CodeStream.VisualStudio.Shared {
 											}
 											break;
 										}
+
+									case PullRequestCloseDiffRequestType.MethodName:
 									case ReviewCloseDiffRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
