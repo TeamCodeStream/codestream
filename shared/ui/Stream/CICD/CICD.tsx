@@ -196,6 +196,9 @@ export const CICD = (props: Props) => {
 					{derivedState.bootstrapped && projects.circleci && (
 						<CircleCIBuilds projects={projects.circleci} />
 					)}
+					{derivedState.bootstrapped && !loading && Object.keys(projects).length === 0 && (
+						<div style={{ padding: "0 20px 0 40px" }}>No builds found for branch on repo.</div>
+					)}
 				</PaneBody>
 			)}
 		</>
