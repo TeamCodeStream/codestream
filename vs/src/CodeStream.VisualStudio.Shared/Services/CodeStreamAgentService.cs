@@ -430,6 +430,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			});
 		}
 
+		public Task<GetFileContentsAtRevisionResponse> GetFileContentsAtRevisionAsync(
+			string repoId,
+			string path,
+			string sha)
+		{
+			return SendCoreAsync<GetFileContentsAtRevisionResponse>(GetFileContentsAtRevisionRequestType.MethodName,
+				new GetFileContentsAtRevisionRequest {
+					RepoId = repoId,
+					Path = path,
+					Sha = sha
+				});
+		}
+
 		public Task<GetReviewContentsLocalResponse> GetReviewContentsLocalAsync(
 			string repoId,
 			string path,
