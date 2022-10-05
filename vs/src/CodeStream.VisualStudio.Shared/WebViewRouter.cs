@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -190,28 +189,23 @@ namespace CodeStream.VisualStudio.Shared {
 
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
-												var document = wpfTextView?.GetDocument();
-												if (document != null) {
-													var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
-													var span = wpfTextView.ToSpan(documentFromMarker.Range);
-													if (span.HasValue) {
-														if (document.IsDirty) {
-															_ideService.CompareTempFiles(
-																filePath, 
-																text, 
-																wpfTextView.TextBuffer, 
-																span.Value, 
-																documentFromMarker.Marker.Code,
-																"Yours vs. Theirs");
-														}
-														else {
-															_ideService.CompareWithRightTempFile(
-																filePath, 
-																text, 
-																wpfTextView.TextBuffer, 
-																span.Value, 
-																documentFromMarker.Marker.Code,
-																"Yours vs. Theirs");
+												if (wpfTextView != null) {
+													var document = wpfTextView.GetDocument();
+													if (document != null) {
+														var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
+														var span = wpfTextView.ToSpan(documentFromMarker.Range);
+														if (span.HasValue) {
+															if (document?.IsDirty == true) {
+																var tempFile1 = _ideService.CreateTempFile(filePath, text);
+																var tempFile2 = _ideService.CreateTempFile(filePath, text);
+																_ideService.CompareFiles(tempFile1, tempFile2, wpfTextView.TextBuffer, span.Value,
+																	documentFromMarker.Marker.Code, isFile1Temp: true, isFile2Temp: true);
+															}
+															else {
+																var tempFile2 = _ideService.CreateTempFile(filePath, text);
+																_ideService.CompareFiles(filePath, tempFile2, wpfTextView.TextBuffer, span.Value,
+																	documentFromMarker.Marker.Code, isFile1Temp: false, isFile2Temp: true);
+															}
 														}
 													}
 												}
@@ -477,34 +471,6 @@ namespace CodeStream.VisualStudio.Shared {
 											}
 											break;
 										}
-
-									case PullRequestShowDiffRequestType.MethodName: {
-										var @params = message.Params.ToObject<PullRequestShowDiffRequest>();
-										await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-										using (var scope = _browserService.CreateScope(message))
-										{
-											if (@params != null)
-											{
-												var baseContent = await _codeStreamAgent.GetFileContentsAtRevisionAsync(
-													@params.RepoId, @params.FilePath, @params.BaseSha
-												);
-
-												var headContent = await _codeStreamAgent.GetFileContentsAtRevisionAsync(
-													@params.RepoId, @params.FilePath, @params.HeadSha
-												);
-
-												var title = Path.GetFileName(@params.FilePath);
-
-												_ideService.DiffTextBlocks(@params.FilePath, baseContent.Content, headContent.Content, title);
-											}
-
-											scope.FulfillRequest();
-										}
-
-										break;
-									}
-
 									case ReviewShowDiffRequestType.MethodName: {
 											var @params = message.Params.ToObject<ReviewShowDiffRequest>();
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
@@ -514,20 +480,20 @@ namespace CodeStream.VisualStudio.Shared {
 													if (reviewContents != null) {
 														var review = await _codeStreamAgent.GetReviewAsync(@params.ReviewId);
 														if (review != null) {
-															var title = "";
-															if (@params.Checkpoint.HasValue && @params.Checkpoint > 0) {
-																title = $" (Update #{@params.Checkpoint})";
-															}
-															title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{title}";
 
-															_ideService.DiffTextBlocks(
-																@params.Path, 
-																reviewContents.Left, 
-																reviewContents.Right, 
-																title, 
-																@params.ReviewId,
-																@params.Checkpoint?.ToString() ?? "undefined",
-																@params.RepoId);
+															string update = "";
+															if (@params.Checkpoint.HasValue && @params.Checkpoint > 0) {
+																update = $" (Update #{@params.Checkpoint})";
+															}
+															string title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{update}";
+															_ideService.DiffTextBlocks(@params.Path, reviewContents.Left, reviewContents.Right, title, new Data() {
+																Scheme = "codestream-diff",
+																PathParts = new List<string> {
+																	@params.ReviewId,
+																	@params.Checkpoint.HasValue ? @params.Checkpoint.ToString() : "undefined",
+																	@params.RepoId
+																}
+															});
 														}
 													}
 												}
@@ -554,8 +520,6 @@ namespace CodeStream.VisualStudio.Shared {
 											}
 											break;
 										}
-
-									case PullRequestCloseDiffRequestType.MethodName:
 									case ReviewCloseDiffRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);

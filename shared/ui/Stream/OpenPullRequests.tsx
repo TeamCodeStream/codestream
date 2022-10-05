@@ -309,6 +309,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			currentRepoObject: getProviderPullRequestRepoObject(state),
 			reposState: state.repos,
 			maximized: settings.maximized,
+			// VS will not use sidebar-diffs currently, uses old method of going directly to
+			// details view when selecting a PR
+			isVS: state.ide?.name?.toUpperCase() === "VS",
 		};
 	}, shallowEqual);
 
@@ -659,11 +662,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const goPR = async (url: string, providerId: string) => {
 		setPrError("");
 		setPrFromUrlProviderId(providerId);
-		setPrFromUrlLoading(true);
+		if (!derivedState.isVS) {
+			setPrFromUrlLoading(true);
+		}
 		const response = (await dispatch(
 			openPullRequestByUrl({
 				url,
-				options: { providerId, groupIndex: "-1" },
+				options: { providerId, groupIndex: "-1", isVS: derivedState.isVS },
 			})
 		)) as {
 			error?: string;
@@ -678,7 +683,9 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		});
 
 		if (response && response.error) {
-			setPrFromUrlLoading(false);
+			if (!derivedState.isVS) {
+				setPrFromUrlLoading(false);
+			}
 			setPrError(response.error);
 		}
 	};
@@ -732,7 +739,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			// otherwise, either open the PR details or show the diffs,
 			// depending on the user's preference
 			if (pr?.providerId && pr?.id) {
-				const view = derivedState.hideDiffs ? "details" : "sidebar-diffs";
+				const view = derivedState.hideDiffs || derivedState.isVS ? "details" : "sidebar-diffs";
 				let prId;
 				if (
 					pr.providerId === "gitlab*com" ||
@@ -922,11 +929,12 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				derivedState.expandedPullRequestGroupIndex === "-2");
 
 		const isLoadingPR = prId === individualLoadingPR;
-		const chevronIcon = derivedState.hideDiffs ? null : expanded ? (
-			<Icon name="chevron-down-thin" />
-		) : (
-			<Icon name="chevron-right-thin" />
-		);
+		const chevronIcon =
+			derivedState.hideDiffs || derivedState.isVS ? null : expanded ? (
+				<Icon name="chevron-down-thin" />
+			) : (
+				<Icon name="chevron-right-thin" />
+			);
 
 		if (providerId === "github*com" || providerId === "github/enterprise") {
 			const selected = openRepos.find(repo => {
@@ -1043,7 +1051,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							<Timestamp time={pr.createdAt} relative abbreviated />
 						</div>
 					</Row>
-					{expanded && (
+					{expanded && !derivedState.isVS && (
 						<PullRequestExpandedSidebar
 							key={`pr_detail_row_${index}`}
 							pullRequest={pr}
@@ -1293,7 +1301,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							<Timestamp time={pr.createdAt} relative abbreviated />
 						</div>
 					</Row>
-					{expanded && (
+					{expanded && !derivedState.isVS && (
 						<PullRequestExpandedSidebar
 							key={`pr_detail_row_${index}`}
 							pullRequest={pr}
@@ -1336,7 +1344,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	]);
 
 	const expandedPR = useMemo(() => {
-		if (!derivedState.currentPullRequest || derivedState.hideDiffs) {
+		if (!derivedState.currentPullRequest || derivedState.hideDiffs || derivedState.isVS) {
 			return undefined;
 		}
 		const conversations: FetchThirdPartyPullRequestResponse | undefined =
