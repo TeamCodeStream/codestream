@@ -9,7 +9,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { shallowEqual, useSelector } from "react-redux";
 import { WebviewPanels } from "../../ipc/webview.protocol.common";
 import { PaneBody, PaneHeader, PaneState } from "../../src/components/Pane";
 import Icon from "../Icon";
@@ -54,8 +54,9 @@ export const CICD = (props: Props) => {
 			providerInfo,
 			providers,
 			currentRepo,
+			currentBranch: editorContext.scmInfo?.scm?.branch,
 		};
-	});
+	}, shallowEqual);
 	const [loading, setLoading] = useState(true);
 	const [refresh, setRefresh] = useState(true);
 	const [refreshTimeout, setRefreshTimeout] = useState<number>();
@@ -86,7 +87,7 @@ export const CICD = (props: Props) => {
 					const result = await HostApi.instance.send(FetchThirdPartyBuildsRequestType, {
 						providerId,
 						remote,
-						branch: derivedState.currentRepo.currentBranch || "",
+						branch: derivedState.currentBranch || "",
 					});
 					if (result.projects) {
 						projects[provider.name] = result.projects;
@@ -121,6 +122,13 @@ export const CICD = (props: Props) => {
 		setLoading(false);
 	};
 
+	// force a re-fetch if branch changes
+	useEffect(() => {
+		fetchProjects().catch(error => {
+			console.error(error);
+		});
+	}, [derivedState.currentBranch]);
+
 	useEffect(() => {
 		if (!refresh || props.paneState === PaneState.Collapsed) return;
 		fetchProjects().catch(error => {
@@ -128,6 +136,7 @@ export const CICD = (props: Props) => {
 		});
 	}, [
 		derivedState.currentRepo,
+		derivedState.currentBranch,
 		derivedState.providers,
 		derivedState.providerInfo,
 		refresh,
@@ -151,14 +160,14 @@ export const CICD = (props: Props) => {
 								/>
 								{derivedState.currentRepo.folder.name}
 							</span>
-							{derivedState.currentRepo.currentBranch && (
+							{derivedState.currentBranch && (
 								<span>
 									<Icon
 										name="git-branch"
 										className="inline-label"
 										style={{ transform: "scale(0.7)", display: "inline-block" }}
 									/>
-									{derivedState.currentRepo.currentBranch}
+									{derivedState.currentBranch}
 								</span>
 							)}
 						</>
