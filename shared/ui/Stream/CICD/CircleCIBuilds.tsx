@@ -32,7 +32,7 @@ export const CircleCIBuilds = (props: Props) => {
 						></PaneNodeName>
 						<div style={{ padding: "0 20px 0 40px" }}>
 							{!projectsCollapsed[name] &&
-								workflows.map(workflow => {
+								workflows.slice(0, 5).map(workflow => {
 									const data = {
 										...workflow,
 										title: workflow.id,
