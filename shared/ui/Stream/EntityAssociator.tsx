@@ -4,13 +4,13 @@ import {
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import { api } from "@codestream/webview/store/codeErrors/thunks";
+import { HostApi } from "@codestream/webview/webview-api";
 import React, { PropsWithChildren, useState } from "react";
+import { AsyncPaginate } from "react-select-async-paginate";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
-import { useAppDispatch, useRequestType } from "../utilities/hooks";
-import { DropdownButton, DropdownButtonItems } from "./DropdownButton";
-import Icon from "./Icon";
+import { useAppDispatch } from "../utilities/hooks";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 
@@ -19,82 +19,35 @@ interface EntityAssociatorProps {
 	label?: string | React.ReactNode;
 	remote: string;
 	remoteName: string;
-	onSuccess?: Function;
-	onFinally?: Function;
+	onSuccess?: (entityGuid: { entityGuid: string }) => void;
 	servicesToExcludeFromSearch?: EntityAccount[];
 }
 
+type SelectOptionType = { label: string; value: string };
+
+type AdditionalType = { nextCursor?: string };
+
 export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssociatorProps>) => {
 	const dispatch = useAppDispatch();
-	const [selected, setSelected] = useState<{ guid: string; name: string } | undefined>(undefined);
+	const [selected, setSelected] = useState<SelectOptionType | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 
-	const obsEntitiesResult = useRequestType(GetObservabilityEntitiesRequestType, {
-		appName: props.remoteName,
-	});
-
-	if (obsEntitiesResult?.error) {
-		const errorMessage = typeof obsEntitiesResult.error === "string";
-		logError(`Unexpected error during entities fetch for EntityAssociator: ${errorMessage}`, {
-			appName: props.remoteName,
+	async function loadEntities(search: string, _loadedOptions, additional?: AdditionalType) {
+		const result = await HostApi.instance.send(GetObservabilityEntitiesRequestType, {
+			searchCharacters: search,
+			nextCursor: additional?.nextCursor,
 		});
-	}
-
-	let items: DropdownButtonItems[] = [];
-
-	if (obsEntitiesResult?.loading) {
-		items = [
-			{
-				type: "loading",
-				label: (
-					<div>
-						{" "}
-						<Icon
-							style={{
-								marginRight: "5px",
-							}}
-							className="spin"
-							name="sync"
-						/>{" "}
-						Loading...
-					</div>
-				),
-				action: () => {},
-				key: "loading",
+		const options = result.entities.map(e => {
+			return { label: e.name, value: e.guid };
+		});
+		return {
+			options,
+			hasMore: !!result.nextCursor,
+			additional: {
+				nextCursor: result.nextCursor,
 			},
-		];
-	} else {
-		items = obsEntitiesResult?.data?.entities?.length
-			? (
-					[
-						{
-							type: "search",
-							placeholder: "Search...",
-							action: "search",
-							key: "search",
-						},
-					] as any
-			  ).concat(
-					obsEntitiesResult?.data?.entities
-						.filter(_ => {
-							if (props.servicesToExcludeFromSearch) {
-								return !props.servicesToExcludeFromSearch.some(s => s.entityGuid === _.guid);
-							}
-							return true;
-						})
-						.map(_ => {
-							return {
-								key: _.guid,
-								label: _.name,
-								searchLabel: _.name,
-								action: () => {
-									setSelected(_);
-								},
-							};
-						})
-			  )
-			: [];
+		};
 	}
 
 	return (
@@ -102,30 +55,39 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			{props.title && <h3>{props.title}</h3>}
 			{props.label && <p style={{ marginTop: 0 }}>{props.label}</p>}
 			{warningOrErrors && <WarningBox items={warningOrErrors} />}
-			<DropdownButton
-				items={items}
-				selectedKey={selected ? selected.guid : undefined}
-				variant={"secondary"}
-				//size="compact"
-				wrap
-			>
-				{selected ? selected.name : "Select entity"}
-			</DropdownButton>{" "}
+			<div style={{ marginBottom: "15px" }}>
+				<AsyncPaginate
+					id="input-entity-autocomplete"
+					name="entity-autocomplete"
+					classNamePrefix="react-select"
+					loadOptions={loadEntities}
+					value={selected}
+					isClearable
+					debounceTimeout={750}
+					placeholder={`Type to search for entities...`}
+					onChange={newValue => {
+						setSelected(newValue);
+					}}
+				/>
+			</div>
 			<Tooltip placement="bottom" title={`Associate with ${props.remote}`}>
 				<Button
 					isLoading={isLoading}
 					disabled={isLoading || !selected}
 					onClick={e => {
 						e.preventDefault();
+						if (!selected) {
+							return;
+						}
 						setIsLoading(true);
 						setWarningOrErrors(undefined);
 
 						const payload = {
 							url: props.remote,
 							name: props.remoteName,
-							applicationEntityGuid: selected?.guid,
-							entityId: selected?.guid,
-							parseableAccountId: selected?.guid,
+							applicationEntityGuid: selected.value,
+							entityId: selected.value,
+							parseableAccountId: selected.value,
 						};
 						dispatch(api("assignRepository", payload))
 							.then(_ => {

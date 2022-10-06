@@ -1,7 +1,7 @@
-import React, { SyntheticEvent } from "react";
-import Menu from "../../../Stream/Menu";
+import React from "react";
 import styled from "styled-components";
 import Icon from "../../../Stream/Icon";
+import Menu from "../../../Stream/Menu";
 
 export interface MenuItem {
 	label: any;
@@ -88,12 +88,17 @@ export const TextButton = styled.span`
 	}
 `;
 
+type Action = { type: string };
+const toggleMenuReducer = (open: boolean, _action: Action): boolean => {
+	return !open;
+};
+
 export function InlineMenu(props: InlineMenuProps) {
 	const buttonRef = React.useRef<HTMLSpanElement>(null);
-	const [isOpen, toggleMenu] = React.useReducer((open: boolean) => !open, false);
+	const [isOpen, toggleMenu] = React.useReducer(toggleMenuReducer, false);
 
 	const handleKeyPress = (event: React.KeyboardEvent) => {
-		if (event.key == "Enter") return toggleMenu(event);
+		if (event.key == "Enter") return toggleMenu({ type: "TOGGLE" });
 	};
 
 	const maybeToggleMenu = action => {
@@ -137,7 +142,7 @@ export function InlineMenu(props: InlineMenuProps) {
 					} else {
 						e.stopPropagation();
 						if (!isOpen && props.onOpen) props.onOpen();
-						toggleMenu(isOpen);
+						toggleMenu({ type: "TOGGLE" });
 					}
 				}}
 				tabIndex={0}

@@ -1206,13 +1206,15 @@ export const GetObservabilityReposRequestType = new RequestType<
 >("codestream/newrelic/repos");
 
 export interface GetObservabilityEntitiesRequest {
-	appName?: string;
-	appNames?: string[];
-	resetCache?: boolean;
+	searchCharacters: string;
+	nextCursor?: string;
+	limit?: number;
 }
 
 export interface GetObservabilityEntitiesResponse {
+	totalResults: number;
 	entities: { guid: string; name: string }[];
+	nextCursor?: string;
 }
 
 export const GetObservabilityEntitiesRequestType = new RequestType<

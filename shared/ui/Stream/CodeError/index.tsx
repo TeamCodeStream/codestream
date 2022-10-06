@@ -1,76 +1,74 @@
 import {
+	DidChangeObservabilityDataNotificationType,
+	GetNewRelicAssigneesRequestType,
+	NewRelicErrorGroup,
+	ResolveStackTraceResponse,
+} from "@codestream/protocols/agent";
+import { CSCodeError, CSPost, CSUser } from "@codestream/protocols/api";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
+import { Loading } from "@codestream/webview/Container/Loading";
+import { Button } from "@codestream/webview/src/components/Button";
+import { CardFooter, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
+import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { TourTip } from "@codestream/webview/src/components/TourTip";
+import { CodeStreamState } from "@codestream/webview/store";
+import {
+	fetchCodeError,
+	PENDING_CODE_ERROR_ID_PREFIX,
+} from "@codestream/webview/store/codeErrors/actions";
+import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
+import {
 	api,
 	fetchErrorGroup,
 	jumpToStackLine,
 	upgradePendingCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
+import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
+import { isConnected } from "@codestream/webview/store/providers/reducer";
+import {
+	findMentionedUserIds,
+	getTeamMates,
+	getTeamMembers,
+	isCurrentUserInternal,
+} from "@codestream/webview/store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { isSha } from "@codestream/webview/utilities/strings";
+import { emptyArray, replaceHtml } from "@codestream/webview/utils";
+import { HostApi } from "@codestream/webview/webview-api";
 import React, { PropsWithChildren, useEffect } from "react";
-import { CardProps, getCardProps, CardFooter } from "@codestream/webview/src/components/Card";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { getPost } from "../../store/posts/reducer";
+import { createPost, invite, markItemRead } from "../actions";
+import { Attachments } from "../Attachments";
 import {
-	DidChangeObservabilityDataNotificationType,
-	GetNewRelicAssigneesRequestType,
-	ResolveStackTraceResponse,
-} from "@codestream/protocols/agent";
-import {
-	MinimumWidthCard,
+	BigTitle,
 	Header,
-	MetaSection,
+	HeaderActions,
 	Meta,
 	MetaLabel,
+	MetaSection,
 	MetaSectionCollapsed,
-	HeaderActions,
-	BigTitle,
+	MinimumWidthCard,
 } from "../Codemark/BaseCodemark";
-import { CSUser, CSCodeError, CSPost } from "@codestream/protocols/api";
-import { CodeStreamState } from "@codestream/webview/store";
-import { useSelector, useDispatch } from "react-redux";
-import Icon from "../Icon";
-import Tooltip from "../Tooltip";
-import { replaceHtml, emptyArray } from "@codestream/webview/utils";
-import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import { HostApi } from "@codestream/webview/webview-api";
-import {
-	fetchCodeError,
-	PENDING_CODE_ERROR_ID_PREFIX,
-} from "@codestream/webview/store/codeErrors/actions";
-import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
-import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
-import MessageInput, { AttachmentField } from "../MessageInput";
-import styled from "styled-components";
-import {
-	getTeamMates,
-	findMentionedUserIds,
-	isCurrentUserInternal,
-	getTeamMembers,
-} from "@codestream/webview/store/users/reducer";
-import { createPost, markItemRead } from "../actions";
-import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
-import { RepliesToPost } from "../Posts/RepliesToPost";
-import Menu from "../Menu";
-import { confirmPopup } from "../Confirm";
-import { Link } from "../Link";
-import { Dispatch } from "@codestream/webview/store/common";
-import { Loading } from "@codestream/webview/Container/Loading";
-import { getPost } from "../../store/posts/reducer";
-import { AddReactionIcon, Reactions } from "../Reactions";
-import { Attachments } from "../Attachments";
-import { RepoMetadata } from "../Review";
-import Timestamp from "../Timestamp";
-import { Button } from "@codestream/webview/src/components/Button";
-import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { TourTip } from "@codestream/webview/src/components/TourTip";
-import { SharingModal } from "../SharingModal";
-import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
-import { NewRelicErrorGroup } from "@codestream/protocols/agent";
-import { isConnected } from "@codestream/webview/store/providers/reducer";
-import { Modal } from "../Modal";
 import ConfigureNewRelic from "../ConfigureNewRelic";
+import { confirmPopup } from "../Confirm";
+import { PROVIDER_MAPPINGS } from "../CrossPostIssueControls/types";
+import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
+import Icon from "../Icon";
+import { Link } from "../Link";
+import Menu from "../Menu";
+import MessageInput, { AttachmentField } from "../MessageInput";
+import { Modal } from "../Modal";
+import { RepliesToPost } from "../Posts/RepliesToPost";
+import { AddReactionIcon, Reactions } from "../Reactions";
+import { RepoMetadata } from "../Review";
+import { SharingModal } from "../SharingModal";
+import Timestamp from "../Timestamp";
+import Tooltip from "../Tooltip";
 import { ConditionalNewRelic } from "./ConditionalComponent";
-import { invite } from "../actions";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
 
 interface SimpleError {
 	/**
@@ -927,7 +925,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		target: undefined,
 	});
 
-	const [shareModalOpen, setShareModalOpen] = React.useReducer(open => !open, false);
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -1011,7 +1009,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		return items;
 	}, [codeError, collapsed, props.errorGroup]);
 
-	if (shareModalOpen)
+	if (shareModalOpen) {
 		return (
 			<SharingModal
 				codeError={props.codeError!}
@@ -1019,6 +1017,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				onClose={() => setShareModalOpen(false)}
 			/>
 		);
+	}
 
 	if (collapsed) {
 		return (
@@ -1147,8 +1146,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			props.stackFrameClickDisabled ||
 			props.collapsed ||
 			!props.parsedStack?.resolvedStackInfo?.lines
-		)
+		) {
 			return;
+		}
 
 		const lines = props.parsedStack?.resolvedStackInfo?.lines;
 		if (!lines) return;
@@ -1523,7 +1523,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		type: "",
 	});
 	const [isEditing, setIsEditing] = React.useState(false);
-	const [shareModalOpen, setShareModalOpen] = React.useReducer(open => !open, false);
+	const [shareModalOpen, setShareModalOpen] = React.useState(false);
 
 	useDidMount(() => {
 		if (!props.collapsed) {
@@ -1627,20 +1627,22 @@ const CodeErrorForId = (props: PropsWithId) => {
 		};
 	});
 
-	if (notFound)
+	if (notFound) {
 		return (
 			<MinimumWidthCard>
 				This code error was not found. Perhaps it was deleted by the author, or you don't have
 				permission to view it.
 			</MinimumWidthCard>
 		);
+	}
 
-	if (codeError == null)
+	if (codeError == null) {
 		return (
 			<DelayedRender>
 				<Loading />
 			</DelayedRender>
 		);
+	}
 
 	return <CodeErrorForCodeError codeError={codeError} {...otherProps} />;
 };

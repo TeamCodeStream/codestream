@@ -4,7 +4,7 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { EntityAssociator } from "./EntityAssociator";
 import Icon from "./Icon";
 interface Props {
-	onSuccess: Function;
+	onSuccess: (entityGuid: { entityGuid: string }) => void;
 	remote: string;
 	remoteName: string;
 	servicesToExcludeFromSearch?: EntityAccount[];

@@ -152,7 +152,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _entityCountTimedCache: Cache<GetEntityCountResponse>;
 	private _repositoryEntitiesByRepoRemotes: Cache<RepoEntitiesByRemotesResponse>;
 	private _observabilityReposCache: Cache<GetObservabilityReposResponse>;
-	private _applicationEntitiesCache: { [key: string]: GetObservabilityEntitiesResponse } = {};
 
 	constructor(session: CodeStreamSession, config: ThirdPartyProviderConfig) {
 		super(session, config);
@@ -224,7 +223,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		delete this._newRelicUserId;
 		delete this._accountIds;
 		this._mltTimedCache.clear();
-		this._applicationEntitiesCache = {};
 
 		try {
 			// remove these when a user disconnects -- don't want them lingering around
@@ -496,26 +494,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	generateEntityQueryStatements(name: string): string[] | undefined {
-		if (!name) return undefined;
-
-		const statements = [`name LIKE '%${Strings.sanitizeGraphqlValue(name)}%'`];
-		const splitName = name.split(/[\-\_\\/]+/);
-		if (splitName.length > 1) {
-			for (let i = 0; i < splitName.length; i++) {
-				const val = splitName[i];
-				if (val && val.length < 2) continue;
-
-				statements.push(`name LIKE '%${Strings.sanitizeGraphqlValue(val)}%'`);
-			}
-		}
-		return statements;
+	generateEntityQueryStatement(search: string): string {
+		return `name LIKE '%${Strings.sanitizeGraphqlValue(search)}%'`;
 	}
 
 	/**
-	 * Returns a list of entities, using an appName or appNames as query params
-	 * NOTE: we don't get all entities since we're capped at 500 results per, and
-	 * some accounts/orgs have over 20k entities.
+	 * Autocomplete what user has typed up to N matching entities
+	 * Relies on caching in the UI layer (AsyncPaginate)
 	 *
 	 * Can throw errors
 	 *
@@ -524,81 +509,19 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	 * @memberof NewRelicProvider
 	 */
 	@lspHandler(GetObservabilityEntitiesRequestType)
-	@log({
-		timed: true,
-	})
+	@log({ timed: true })
 	async getEntities(
 		request: GetObservabilityEntitiesRequest
 	): Promise<GetObservabilityEntitiesResponse> {
+		const { limit = 50 } = request;
 		try {
-			const key = request.appName
-				? request.appName
-				: request.appNames?.length
-				? request.appNames.join("-")
-				: "";
+			const statement = this.generateEntityQueryStatement(request.searchCharacters);
 
-			if (this._applicationEntitiesCache != null) {
-				if (request.resetCache) {
-					ContextLogger.debug("query entities (resetting cache)", {
-						key: key,
-					});
-					delete this._applicationEntitiesCache[key];
-				} else {
-					const cached = this._applicationEntitiesCache[key];
-					if (cached) {
-						ContextLogger.debug("query entities (from cache)", {
-							key: key,
-						});
-						return cached;
-					}
-				}
-			}
-
-			let results: { guid: string; name: string }[] = [];
-			let statements: string[] = [];
-			if (request.appNames?.length) {
-				for (const appName of request.appNames) {
-					const appStatements = this.generateEntityQueryStatements(appName);
-					if (appStatements?.length) {
-						statements = statements.concat(appStatements);
-					}
-				}
-			}
-
-			if (request.appName != null) {
-				const appStatements = this.generateEntityQueryStatements(request.appName);
-				if (appStatements?.length) {
-					statements = statements.concat(appStatements);
-				}
-			}
-
-			// try to find entities matching our open repos and/or their remote paths
-			const { scm } = SessionContainer.instance();
-			const reposResponse = await scm.getRepos({ inEditorOnly: true, includeRemotes: true });
-			reposResponse?.repositories?.forEach(repo => {
-				if (repo?.folder?.name) {
-					const appStatements = this.generateEntityQueryStatements(repo.folder.name);
-					if (appStatements?.length) {
-						statements = statements.concat(appStatements);
-					}
-				}
-				repo.remotes?.forEach(remote => {
-					if (remote.path) {
-						const appStatements = this.generateEntityQueryStatements(remote.path);
-						if (appStatements?.length) {
-							statements = statements.concat(appStatements);
-						}
-					}
-				});
-			});
-
-			if (statements.length) {
-				// unique them!
-				statements = [...new Set(statements).values()].sort();
-
-				const query = `query search($cursor:String){
+			const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "type='APPLICATION' and (${statements.join(" or ")})") {
+				  entitySearch(query: "type='APPLICATION' and ${statement}", 
+				  sortByWithDirection: { attribute: NAME, direction: ASC },
+				  options: { limit: ${limit} }) {
 					count
 					results(cursor:$cursor) {
 					  nextCursor
@@ -614,71 +537,27 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				  }
 			  }`;
 
-				let nextCursor: undefined | boolean | string = true;
-				while (nextCursor != null) {
-					const response = (await this.query<EntitySearchResult>(query, {
-						cursor: typeof nextCursor === "string" ? nextCursor : null,
-					})) as EntitySearchResult;
-
-					results = results.concat(
-						response.actor.entitySearch.results.entities.map((_: any) => {
-							return {
-								guid: _.guid,
-								name: _.name,
-							};
-						})
-					);
-					nextCursor = response.actor.entitySearch.results.nextCursor;
+			const response: EntitySearchResult = await this.query<EntitySearchResult>(query, {
+				cursor: request.nextCursor ?? null,
+			});
+			const entities = response.actor.entitySearch.results.entities.map(
+				(_: { guid: string; name: string; account: { name: string } }) => {
+					return {
+						guid: _.guid,
+						name: `${_.name} (${_.account.name})`,
+					};
 				}
-			}
-
-			// then find any other relevant apps... try looking for MOST_RELEVANT
-			const response = await this.query<EntitySearchResult>(
-				`query search {
-						actor {
-						  entitySearch(query: "type='APPLICATION'", sortBy:MOST_RELEVANT) {
-							results {
-							  entities {
-								account {
-									name
-								}
-								guid
-								name
-							  }
-							}
-						  }
-						}
-					  }`,
-				{}
 			);
 
-			results = results.concat(
-				response.actor.entitySearch.results.entities.map(
-					(_: { guid: string; name: string; account: { name: String } }) => {
-						return {
-							guid: _.guid,
-							name: `${_.name} (${_.account.name})`,
-						};
-					}
-				)
-			);
-
-			results = [...new Map(results.map(item => [item["guid"], item])).values()];
-
-			if (results.length) {
-				const cachedResults = {
-					entities: results,
-				} as GetObservabilityEntitiesResponse;
-				this._applicationEntitiesCache[key] = cachedResults;
-				return cachedResults;
-			}
+			return {
+				totalResults: response.actor.entitySearch.count,
+				entities,
+				nextCursor: response.actor.entitySearch.results.nextCursor,
+			};
 		} catch (ex) {
 			ContextLogger.error(ex, "getEntities");
 			throw ex;
 		}
-		return {
-			entities: [],
-		};
 	}
 
 	@lspHandler(GetObservabilityErrorGroupMetadataRequestType)

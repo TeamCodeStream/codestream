@@ -826,39 +826,9 @@ describe("NewRelicProvider", () => {
 
 	it("generateEntityQueryStatements", async () => {
 		const provider = new NewRelicProvider({} as any, {} as any);
-		expect(provider.generateEntityQueryStatements("foo-bar_baz")).toEqual([
-			"name LIKE '%foo-bar_baz%'",
-			"name LIKE '%foo%'",
-			"name LIKE '%bar%'",
-			"name LIKE '%baz%'",
-		]);
-
-		expect(provider.generateEntityQueryStatements("test/foo-bar_baz")).toEqual([
-			"name LIKE '%test/foo-bar_baz%'",
-			"name LIKE '%test%'",
-			"name LIKE '%foo%'",
-			"name LIKE '%bar%'",
-			"name LIKE '%baz%'",
-		]);
-
-		expect(provider.generateEntityQueryStatements("foo\\bar\\baz")).toEqual([
-			"name LIKE '%foo\\bar\\baz%'",
-			"name LIKE '%foo%'",
-			"name LIKE '%bar%'",
-			"name LIKE '%baz%'",
-		]);
-
-		expect(provider.generateEntityQueryStatements("foo/bar")).toEqual([
-			"name LIKE '%foo/bar%'",
-			"name LIKE '%foo%'",
-			"name LIKE '%bar%'",
-		]);
-
-		expect(provider.generateEntityQueryStatements("not~a$separator")).toEqual([
-			"name LIKE '%not~a$separator%'",
-		]);
-
-		expect(provider.generateEntityQueryStatements("")).toEqual(undefined);
+		expect(provider.generateEntityQueryStatement("foo-bar_baz")).toEqual(
+			"name LIKE '%foo-bar_baz%'"
+		);
 	});
 
 	it("getObservabilityRepos", async () => {
