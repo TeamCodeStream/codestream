@@ -11,6 +11,9 @@ type Props = ThirdPartyBuild & {
 
 const BuildStatusWrapper = styled.div`
 	display: flex;
+	&.no-hover {
+		cursor: auto;
+	}
 	&:not(.no-hover) {
 		cursor: pointer;
 	}
