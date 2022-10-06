@@ -7,12 +7,27 @@ using CodeStream.VisualStudio.Core.Models;
 namespace CodeStream.VisualStudio.Shared.Models {
 	public class VirtualTextDocument : IVirtualTextDocument {
 		private readonly ITextDocument _textDocument;
+
+		public string Id { get; }
+		public Uri Uri { get; }
+		public bool SupportsMarkers { get; }
+		public bool SupportsMargins { get; }
+		public string FileName { get; }
+
 		private VirtualTextDocument(ITextDocument textDocument) {
 			_textDocument = textDocument;
-			if (CodeStreamDiffUri.TryParse(_textDocument.FilePath, out CodeStreamDiffUri uri)) {
-				Uri = uri.Uri;
-				Id = uri.Uri.ToLocalPath();
-				FileName = uri.FileName;
+
+			if (FeedbackRequestDiffUri.TryParse(_textDocument.FilePath, out var frUri)) {
+				Uri = frUri.Uri;
+				Id = frUri.Uri.ToLocalPath();
+				FileName = frUri.FileName;
+				SupportsMarkers = SupportsMargins = false;
+			}
+			else if (PullRequestDiffUri.TryParse(_textDocument.FilePath, out var prUri))
+			{
+				Uri = prUri.Uri;
+				Id = prUri.Uri.ToLocalPath();
+				FileName = prUri.Path;
 				SupportsMarkers = SupportsMargins = false;
 			}
 			else {
@@ -30,22 +45,10 @@ namespace CodeStream.VisualStudio.Shared.Models {
 			SupportsMarkers = SupportsMargins = uri.Scheme != "codestream-diff";
 		}
 
-		public static VirtualTextDocument FromTextDocument(ITextDocument textDocument) {
-			return new VirtualTextDocument(textDocument);
-		}
+		public static VirtualTextDocument FromTextDocument(ITextDocument textDocument) 
+			=> new VirtualTextDocument(textDocument);
 
-		public static VirtualTextDocument FromUri(Uri uri) {
-			return new VirtualTextDocument(uri);
-		}
-
-		public string Id { get; }
-		public Uri Uri { get; }
-		public bool SupportsMarkers { get; }
-		public bool SupportsMargins { get; }
-
-		/// <summary>
-		/// the name of the file
-		/// </summary>
-		public string FileName { get; }
+		public static VirtualTextDocument FromUri(Uri uri) 
+			=> new VirtualTextDocument(uri);
 	}
 }

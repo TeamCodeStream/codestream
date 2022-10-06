@@ -73,7 +73,6 @@
   <ItemGroup>
     <Compile Include="CompositionTests.cs" />
     <Compile Include="Core\Logging\Sanitizer\SecretsSanitizingFormatRuleTests.cs" />
-    <Compile Include="Core\Models\CodeStreamDiffUriTest.cs" />
     <Compile Include="Events\EventAggregatorTests.cs" />
     <Compile Include="Extensions\ColorExtensionsTest.cs" />
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
@@ -153,6 +152,9 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Core\Models\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

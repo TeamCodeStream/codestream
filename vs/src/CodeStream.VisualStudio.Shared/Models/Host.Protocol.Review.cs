@@ -42,45 +42,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string RepoId { get; set; }
 
 		[JsonProperty("context", NullValueHandling = NullValueHandling.Ignore)]
-		public PullRequestContext Context { get; set; }
+		public PullRequestDiffUri.PullRequestContext Context { get; set; }
 	}
-
-	public class PullRequestContext
-	{
-		[JsonProperty("pullRequest", NullValueHandling = NullValueHandling.Ignore)]
-		public PullRequest PullRequest { get; set; }
-	}
-
-	public class PullRequest
-	{
-		[JsonProperty("providerId", NullValueHandling = NullValueHandling.Ignore)]
-		public string ProviderId { get; set; }
-
-		[JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
-		public string Id { get; set; }
-
-		[JsonProperty("collaborators", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<PullRequestCollaborator> Collaborators { get; set; }
-	}
-
-	public class PullRequestCollaborator
-	{
-		[JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
-		public string Id { get; set; }
-
-		[JsonProperty("username", NullValueHandling = NullValueHandling.Ignore)]
-		public string Username { get; set; }
-
-		[JsonProperty("avatar", NullValueHandling = NullValueHandling.Ignore)]
-		public PullRequestCollaboratorAvatar Avatar { get; set; }
-	}
-
-	public class PullRequestCollaboratorAvatar
-	{
-		[JsonProperty("image", NullValueHandling = NullValueHandling.Ignore)]
-		public string Image { get; set; }
-	}
-
+	
 	public class ReviewShowLocalDiffRequest {
 		public string RepoId { get; set; }
 		public string Path { get; set; }

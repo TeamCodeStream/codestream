@@ -88,6 +88,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				// the arguments might have sensitive data in it -- don't include arguments here
 				using (Log.CriticalOperation($"name=REQ,Method={name}")) {
 
+					// do not send them along to the agent
+					var fileUri = arguments?.ToJToken()?.SelectToken("$..uri")?.Value<string>();
+
+					if (fileUri.IsTempFile())
+					{
+						return Task.FromResult(default(T));
+					}
+
 					return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
 				}
 			}

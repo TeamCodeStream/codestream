@@ -19,7 +19,29 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		// Diff Services
 		void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title);
 		void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title);
-		void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title, params string[] pathParts);
+
+		// Other kinds of Diffs?
+		void DiffTextBlocks(string originalFilePath, string leftContent, string rightContent, string title);
+
+		// for PRs
+		void PullRequestDiff(
+			string originalFilePath,
+			string leftContent,
+			PullRequestDiffUri left,
+			string rightContent,
+			PullRequestDiffUri right,
+			string title);
+
+		// for PRs
+		void FeedbackRequestDiff(
+			string originalFilePath,
+			string leftContent,
+			FeedbackRequestDiffUri leftData,
+			string rightContent,
+			FeedbackRequestDiffUri rightData,
+			string title);
+
+		IDifferenceViewer GetActiveDiffEditor();
 		void TryCloseDiffs();
 		IDifferenceViewer GetActiveDiffEditor();
 	}

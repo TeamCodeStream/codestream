@@ -15,7 +15,15 @@
 		public static string TextViewLayoutChangedSubject = $"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
 		public static string CaretPositionChangedSubject = $"{Prefix}{nameof(CaretPositionChangedSubject)}";
 		public static string TextSelectionChangedSubject = $"{Prefix}{nameof(TextSelectionChangedSubject)}";
-		public static string IsReviewDiff = $"{Prefix}{nameof(IsReviewDiff)}";
 		public const string TextViewCreationListenerLayerName = "CodeStreamHighlightColor";
+
+		public static string IsDiff = $"{Prefix}{nameof(IsDiff)}";
+		public static string IsFRDiff = $"{Prefix}{nameof(IsFRDiff)}";
+		public static string IsPRDiff = $"{Prefix}{nameof(IsPRDiff)}";
+		public static string LeftSideData = $"{Prefix}{nameof(LeftSideData)}";
+		public static string OverrideFileUri = $"{Prefix}{nameof(OverrideFileUri)}";
+		public static string OriginalFilePath = $"{Prefix}{nameof(OriginalFilePath)}";
+		public static string LeftFilePath = $"{Prefix}{nameof(LeftFilePath)}";
+		public static string RightFilePath = $"{Prefix}{nameof(RightFilePath)}";
 	}
 }
