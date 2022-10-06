@@ -31,8 +31,8 @@ interface DashboardUrls {
 	[providerId: string]: string;
 }
 
-const INACTIVE_REFRESH_INTERVAL = 5 * 60 * 1000; // refresh data every 5 minutes by default
-const ACTIVE_REFRESH_INTERVAL = 30 * 1000; // when a build is running/pending, refresh data every 30 seconds
+const INACTIVE_REFRESH_INTERVAL = 60 * 1000; // refresh data every minute by default
+const ACTIVE_REFRESH_INTERVAL = 15 * 1000; // when a build is running/pending, refresh data every 15 seconds
 
 export const CICD = (props: Props) => {
 	const derivedState = useSelector((state: CodeStreamState) => {
