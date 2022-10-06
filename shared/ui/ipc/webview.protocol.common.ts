@@ -69,7 +69,7 @@ export enum WebviewPanels {
 	Observability = "observability",
 	PixieDynamicLogging = "pixie-dynamic-logging",
 	MethodLevelTelemetry = "method-level-telemetry",
-	CICD = "ci-cd"
+	CICD = "ci-cd",
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -95,6 +95,7 @@ export const WebviewPanelNames = {
 	newrelic: "Observability",
 	observability: "Observability",
 	"pixie-dynamic-logging": "Dynamic Logging Using Pixie",
+	"ci-cd": "CI/CD",
 };
 
 export enum WebviewModals {
