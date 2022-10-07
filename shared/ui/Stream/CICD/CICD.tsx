@@ -57,8 +57,8 @@ export const CICD = (props: Props) => {
 			currentBranch: editorContext.scmInfo?.scm?.branch,
 		};
 	}, shallowEqual);
-	const [loading, setLoading] = useState(true);
-	const [refresh, setRefresh] = useState(true);
+	const [loading, setLoading] = useState(false);
+	const [refresh, setRefresh] = useState(false);
 	const [refreshTimeout, setRefreshTimeout] = useState<number>();
 	const [projects, setProjects] = useState<Projects>({});
 	const [dashboardUrls, setDashboardUrls] = useState<DashboardUrls>({});
@@ -71,6 +71,7 @@ export const CICD = (props: Props) => {
 
 	const fetchProjects = async () => {
 		if (refreshTimeout) clearTimeout(refreshTimeout);
+		if (loading) return;
 		setLoading(true);
 		if (!derivedState.currentRepo) {
 			scheduleRefresh(false);
