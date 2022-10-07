@@ -270,6 +270,7 @@ export class CircleCIProvider extends ThirdPartyBuildProviderBase<CSCircleCIProv
 				if (!projects[workflow.name]) {
 					projects[workflow.name] = [];
 				}
+				if (projects[workflow.name].length >= 5) continue;
 				let status: ThirdPartyBuildStatus;
 				let message: string;
 				if (WorkflowSuccessStatuses.includes(workflow.status)) {
