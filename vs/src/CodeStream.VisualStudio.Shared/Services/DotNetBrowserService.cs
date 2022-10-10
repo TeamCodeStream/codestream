@@ -27,6 +27,9 @@ using CodeStream.VisualStudio.Shared.Managers;
 using CodeStream.VisualStudio.Shared.Models;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
+
+using Newtonsoft.Json.Linq;
+
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
 
@@ -95,6 +98,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IHttpClientService _httpClientService;
+		private readonly IIdeService _ideService;
 
 		private readonly List<IDisposable> _disposables;
 		private IDisposable _disposable;
@@ -103,10 +107,12 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public DotNetBrowserService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 				IEventAggregator eventAggregator,
-				IHttpClientService httpClientService) {
+				IHttpClientService httpClientService,
+			IIdeService ideService) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_httpClientService = httpClientService;
+			_ideService = ideService;
 
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
@@ -402,8 +408,33 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return path;
 		}
 
-		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false) {
-			PostMessage(message.AsJson(), canEnqueue);
+		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false)
+		{
+			var messageToken = message.ToJToken();
+			var uriToken = messageToken?.SelectToken("$..uri")?.Value<string>();
+
+			if (uriToken.IsTempFile())
+			{
+				ThreadHelper.JoinableTaskFactory.Run(
+					async delegate
+					{
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+						var diffViewer = _ideService.GetActiveDiffEditor();
+
+						if (diffViewer != null)
+						{	
+							// we must be doing something with a diff review; either PR or FR, etc.
+							if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
+							{
+								messageToken?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
+							}
+						}
+					}
+				);
+			}
+
+			PostMessage(messageToken.ToJson(), canEnqueue);
 		}
 
 		/// <summary>
