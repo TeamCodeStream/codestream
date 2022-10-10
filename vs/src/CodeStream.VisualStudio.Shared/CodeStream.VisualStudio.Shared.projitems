@@ -16,8 +16,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Commands\IVsCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\IVsCommandBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\MenuCommandServiceExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Commands\RequestCodeReviewCommand.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Commands\StartWorkCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\UserCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommandBase.cs" />

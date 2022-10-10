@@ -7,11 +7,14 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Commands;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
+
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -25,6 +28,7 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
 
 		private readonly IComponentModel _componentModel;
+		private readonly IIdeService _ideService;
 		private readonly ITextBuffer _textBuffer;
 		private readonly ITextView _textView;
 		private readonly IVirtualTextDocument _virtualTextDocument;
@@ -32,13 +36,15 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		private readonly object _currentLock = new object();
 		private IEnumerable<SuggestedActionSet> _current;
 		private SnapshotSpan _currentSpan;
-		private ISessionService _sessionService;
+		private readonly ISessionService _sessionService;
 
 		public CodemarkSuggestedActionsSource(IComponentModel componentModel,
+			IIdeService ideService,
 			ITextView textView,
 			ITextBuffer textBuffer,
 			IVirtualTextDocument virtualTextDocument) {
 			_componentModel = componentModel;
+			_ideService = ideService;
 			_textBuffer = textBuffer;
 			_textView = textView;
 			_virtualTextDocument = virtualTextDocument;
@@ -55,22 +61,34 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 #pragma warning restore 0067
 
 		public IEnumerable<SuggestedActionSet> GetSuggestedActions(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-			lock (_currentLock) {
-				if (_currentSpan == range) {
-					if (_sessionService == null || _sessionService.IsReady == false) return Enumerable.Empty<SuggestedActionSet>();
-					return _current;
+			lock (_currentLock)
+			{
+				if (_currentSpan != range)
+				{
+					return null;
 				}
+
+				if (_sessionService == null || _sessionService.IsReady == false)
+				{
+					return Enumerable.Empty<SuggestedActionSet>();
+				}
+
+				return _current;
 			}
-			return null;
 		}
 
 		public async Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {
-			await System.Threading.Tasks.Task.Yield();
+			await Task.Yield();
 
-			if (_sessionService == null || _sessionService.IsReady == false) return false;
+			if (_sessionService == null || _sessionService.IsReady == false)
+			{
+				return false;
+			}
 
-			var wpfTextView = _textView as IWpfTextView;
-			if (wpfTextView == null) return false;
+			if (!(_textView is IWpfTextView wpfTextView))
+			{
+				return false;
+			}
 
 			System.Diagnostics.Debug.WriteLine($"HasSuggestedActions HasEditorSelection={!range.IsEmpty}");
 
@@ -88,18 +106,33 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		}
 
 		private IEnumerable<SuggestedActionSet> GetSuggestedActionsCore(IWpfTextView wpfTextView) {
-			try {
-				if (wpfTextView == null) return Enumerable.Empty<SuggestedActionSet>();
-
+			try
+			{
+				if (wpfTextView == null)
+				{
+					return Enumerable.Empty<SuggestedActionSet>();
+				}
 
 				System.Diagnostics.Debug.WriteLine($"GetSuggestedActions");
-				return new[] {
+
+				var isDiffViewerActive = _ideService.GetActiveDiffEditor() != null;
+
+				var applicableActions = new List<ISuggestedAction>
+				{
+					new CodemarkCommentSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument)
+				};
+
+				// if the diff viewer is NOT active, then a regular code editor is
+				if (!isDiffViewerActive)
+				{
+					applicableActions.Add(new CodemarkIssueSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument));
+					applicableActions.Add(new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument));
+				}
+
+				return new[]
+				{
 					new SuggestedActionSet(
-						actions: new ISuggestedAction[] {
-							new CodemarkCommentSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument),
-							new CodemarkIssueSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument),
-							new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument)
-						},
+						actions: applicableActions.ToArray(),
 						categoryName: null,
 						title: null,
 						priority: SuggestedActionSetPriority.None,
@@ -146,28 +179,36 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		protected IComponentModel ComponentModel { get; private set; }
 		protected abstract CodemarkType CodemarkType { get; }
 
-		protected CodemarkSuggestedActionBase(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument) {
+		protected CodemarkSuggestedActionBase(
+			IComponentModel componentModel, 
+			IWpfTextView wpfTextView, 
+			IVirtualTextDocument virtualTextDocument) {
 			ComponentModel = componentModel;
 			_wpfTextView = wpfTextView;
 			_virtualTextDocument = virtualTextDocument;
 		}
 
-		public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) {
-			return System.Threading.Tasks.Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
-		}
+		public Task<IEnumerable<SuggestedActionSet>> GetActionSetsAsync(CancellationToken cancellationToken) 
+			=> Task.FromResult<IEnumerable<SuggestedActionSet>>(null);
 
 		public void Invoke(CancellationToken cancellationToken) {
-			if (_virtualTextDocument == null) return;
+			if (_virtualTextDocument == null)
+			{
+				return;
+			}
 
 			var codeStreamService = ComponentModel?.GetService<ICodeStreamService>();
-			if (codeStreamService == null) return;
+			if (codeStreamService == null)
+			{
+				return;
+			}
 
 			ThreadHelper.JoinableTaskFactory.Run(async delegate {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				try {
 					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
-					if (!toolWindowProvider.IsVisible(Guids.WebViewToolWindowGuid)) {
+					if (!toolWindowProvider?.IsVisible(Guids.WebViewToolWindowGuid) ?? false) {
 						if (toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid) == true) {
 						}
 						else {
@@ -199,17 +240,8 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 			});
 		}
 
-		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) {
-			// nothing here, but here is an example:
-
-			//var textBlock = new TextBlock
-			//{
-			//    Padding = new Thickness(5)
-			//};
-			//textBlock.Inlines.Add(new Run() { Text = _selectedText.Text });
-
-			return System.Threading.Tasks.Task.FromResult<object>(null);
-		}
+		public Task<object> GetPreviewAsync(CancellationToken cancellationToken) 
+			=> Task.FromResult<object>(null);
 
 		public bool TryGetTelemetryId(out Guid telemetryId) {
 			// This is a sample action and doesn't participate in LightBulb telemetry  

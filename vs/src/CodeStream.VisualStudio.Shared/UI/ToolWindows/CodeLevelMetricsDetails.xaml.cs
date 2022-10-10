@@ -18,7 +18,7 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows {
 	/// Interaction logic for CodeLevelMetricsDetails.xaml
 	/// </summary>
 	public partial class CodeLevelMetricsDetails : UserControl {
-		private static readonly ILogger Log = LogManager.ForContext<RequestCodeReviewCommand>();
+		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricsDetails>();
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamService _codeStreamService;
 

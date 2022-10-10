@@ -42,6 +42,7 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		private ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private List<IDisposable> _disposables;
 		private List<VsCommandBase> _commands;
+		private IIdeService _ideService;
 
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
 			try {
@@ -51,6 +52,7 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				_sessionService = _componentModel.GetService<ISessionService>();
+				_ideService = _componentModel.GetService<IIdeService>();
 
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
 				_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(CommandsPackage));
@@ -77,22 +79,17 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 #if DEBUG
 						new WebViewDevToolsCommand(),
 #endif
-						new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new RequestCodeReviewCommand(_sessionService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
-						new AddCodemarkCommentCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkPermalinkInstantCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new RequestCodeReviewCommand(_sessionService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),
 						new AuthenticationCommand(_componentModel, _sessionService),
-						new StartWorkCommand(_sessionService),
 						userCommand
 					};
 					await JoinableTaskFactory.SwitchToMainThreadAsync();

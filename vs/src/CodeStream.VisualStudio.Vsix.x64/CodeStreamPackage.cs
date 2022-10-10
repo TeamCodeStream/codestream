@@ -58,10 +58,7 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const int AddCodemarkCommentCommandId = 0x0400;
         public const int AddCodemarkIssueCommandId = 0x0401;
         public const int AddCodemarkPermalinkCommandId = 0x0403;
-        public const int AddCodemarkPermalinkInstantCommandId = 0x0413;
-        public const int RequestCodeReviewCommandId = 0x0433;
         public const int CodeStreamShortcutCommands = 0x1023;
-        public const int StartWorkCommandId = 0x0423;
         public const int logo = 0x0001;
         public const int auth = 0x0002;
         public const int user = 0x0003;
@@ -72,7 +69,5 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const int issue = 0x0002;
         public const int bookmark = 0x0003;
         public const int permalink = 0x0004;
-        public const int instantPermalink = 0x0005;
-        public const int review = 0x0006;
     }
 }

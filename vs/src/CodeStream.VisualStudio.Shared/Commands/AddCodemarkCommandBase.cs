@@ -22,9 +22,12 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 	internal abstract class AddCodemarkCommandBase : VsCommandBase {
 		private static readonly ILogger Log = LogManager.ForContext<AddCodemarkCommandBase>();
 		private readonly ISessionService _sessionService;
+		protected readonly IIdeService IdeService;
 
-		protected AddCodemarkCommandBase(ISessionService sessionService, Guid commandSet, int commandId) : base(commandSet, commandId) {
+		protected AddCodemarkCommandBase(ISessionService sessionService, IIdeService ideService, Guid commandSet, int commandId) : base(commandSet, commandId)
+		{
 			_sessionService = sessionService;
+			IdeService = ideService;
 		}
 
 		protected abstract CodemarkType CodemarkType { get; }
@@ -33,11 +36,17 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 			try {
 				var componentModel = (IComponentModel)Package.GetGlobalService(typeof(SComponentModel));
 				var codeStreamService = componentModel?.GetService<ICodeStreamService>();
-				if (codeStreamService == null || !codeStreamService.IsReady) return;
+				if (codeStreamService == null || !codeStreamService.IsReady)
+				{
+					return;
+				}
 
 				var editorService = componentModel.GetService<IEditorService>();
 				var activeTextEditor = editorService.GetActiveTextEditorSelection();
-				if (activeTextEditor == null) return;
+				if (activeTextEditor == null)
+				{
+					return;
+				}
 
 				ThreadHelper.JoinableTaskFactory.Run(async delegate {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();

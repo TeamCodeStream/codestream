@@ -488,15 +488,15 @@
     <Content Include="..\resources\Sprites.png">
       <Link>resources\Sprites.png</Link>
     </Content>
- 	<EmbeddedResource Include="..\..\licenses\Debug\teamdev.licenses" Condition="'$(Configuration)' == 'Debug'">
+    <EmbeddedResource Include="..\..\licenses\Debug\teamdev.licenses" Condition="'$(Configuration)' == 'Debug'">
       <Link>teamdev.licenses</Link>
-    </EmbeddedResource>	
- 	<EmbeddedResource Include="..\..\licenses\Release\teamdev.licenses" Condition="'$(Configuration)' == 'Release'">
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\licenses\Release\teamdev.licenses" Condition="'$(Configuration)' == 'Release'">
       <Link>teamdev.licenses</Link>
-    </EmbeddedResource>	
+    </EmbeddedResource>
     <VSCTCompile Include="CodeStreamPackage.vsct">
-      <Generator>VsctGenerator</Generator>
       <ResourceName>Menus.ctmenu</ResourceName>
+      <Generator>VsctGenerator</Generator>
       <LastGenOutput>CodeStreamPackage.cs</LastGenOutput>
     </VSCTCompile>
     <ContentManifest Include="..\resources\ContentManifest.json">
