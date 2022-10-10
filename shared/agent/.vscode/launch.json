@@ -16,7 +16,7 @@
 			"type": "node",
 			"request": "attach",
 			"name": "Attach to Agent VS",
-			"port": 6010,
+			"port": 6009,
 			"cwd": "${workspaceFolder}",
 			"outFiles": [
 				"${userHome}/AppData/Local/Microsoft/VisualStudio/**/Extensions/New Relic/**/agent/agent.js"
