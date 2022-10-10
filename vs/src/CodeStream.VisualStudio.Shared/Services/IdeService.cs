@@ -600,6 +600,47 @@ public System.Threading.Tasks.Task SetClipboardAsync(string text) {
 				RemoveTempFileSafe(filePath2);
 			}
 		}
+		/// <summary>
+		/// Gets a reference to an open Diff Editor for a CodeStream Diff
+		/// </summary>
+		/// <remarks>
+		/// Switches to Main thread to run
+		/// </remarks>
+		public IDifferenceViewer GetActiveDiffEditor()
+		{
+			return ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+					try
+					{
+						foreach (var iVsWindowFrame in GetDocumentWindowFrames())
+						{
+							try
+							{
+								var diffViewer = GetDiffViewer(iVsWindowFrame);
+
+								if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true)
+								{
+									return diffViewer;
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.Warning(ex, nameof(GetActiveDiffEditor));
+							}
+						}
+					}
+					catch (Exception ex)
+					{
+						Log.Error(ex, nameof(GetActiveDiffEditor));
+					}
+
+					return null;
+				}
+			);
+		}
 
 		/// <summary>
 		/// Tries to close any CodeStream-created diff windows
