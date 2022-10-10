@@ -846,8 +846,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			if (!currentRepo) {
 				return `You don't have the ${prToCheckout.headRepository?.name} repo open in your IDE`;
 			}
+
 			if (currentRepo.currentBranch == prToCheckout.headRefName) {
 				return `You are on the ${prToCheckout.headRefName} branch`;
+			}
+
+			// branch is in a fork
+			if (!prToCheckout.url.includes(prToCheckout.headRepository.nameWithOwner)) {
+				return `The source branch for this PR is located on the ${prToCheckout.headRepository.nameWithOwner} fork`;
 			}
 			return "";
 		} else {
