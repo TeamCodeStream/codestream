@@ -621,7 +621,7 @@ public System.Threading.Tasks.Task SetClipboardAsync(string text) {
 							{
 								var diffViewer = GetDiffViewer(iVsWindowFrame);
 
-								if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true)
+								if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsReviewDiff, out bool result) == true)
 								{
 									return diffViewer;
 								}

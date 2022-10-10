@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Models;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.Shared.Services {
@@ -24,6 +25,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		CurrentTextViews GetCurrentTextViews();
 		FolderBrowserDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false);		
 		void TryCloseDiffs();
+		IDifferenceViewer GetActiveDiffEditor();
 	}
 
 	public interface IPathData {

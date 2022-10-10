@@ -23,6 +23,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 
+using Task = System.Threading.Tasks.Task;
+
 namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 	internal class CodemarkSuggestedActionsSource : ISuggestedActionsSource {
 		private static readonly ILogger Log = LogManager.ForContext<CodemarkSuggestedActionsSource>();
