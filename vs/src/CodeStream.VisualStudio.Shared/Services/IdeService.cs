@@ -681,28 +681,43 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Gets a reference to an open Diff Editor for a CodeStream Diff
 		/// </summary>
-		public IDifferenceViewer GetActiveDiffEditor() {
-			ThreadHelper.ThrowIfNotOnUIThread();
+		/// <remarks>
+		/// Switches to Main thread to run
+		/// </remarks>
+		public IDifferenceViewer GetActiveDiffEditor()
+		{
+			return ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			try {
-				foreach (var iVsWindowFrame in GetDocumentWindowFrames()) {
-					try {
-						var diffViewer = GetDiffViewer(iVsWindowFrame);
-						if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true)
+					try
+					{
+						foreach (var iVsWindowFrame in GetDocumentWindowFrames())
 						{
-							return diffViewer;
+							try
+							{
+								var diffViewer = GetDiffViewer(iVsWindowFrame);
+
+								if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true)
+								{
+									return diffViewer;
+								}
+							}
+							catch (Exception ex)
+							{
+								Log.Warning(ex, nameof(GetActiveDiffEditor));
+							}
 						}
 					}
-					catch (Exception ex) {
-						Log.Warning(ex, nameof(GetActiveDiffEditor));
+					catch (Exception ex)
+					{
+						Log.Error(ex, nameof(GetActiveDiffEditor));
 					}
-				}
-			}
-			catch (Exception ex) {
-				Log.Error(ex, nameof(GetActiveDiffEditor));
-			}
 
-			return null;
+					return null;
+				}
+			);
 		}
 
 		/// <summary>

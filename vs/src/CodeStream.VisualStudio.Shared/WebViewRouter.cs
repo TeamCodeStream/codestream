@@ -87,23 +87,16 @@ namespace CodeStream.VisualStudio.Shared {
 
 					if (uriToken.IsTempFile())
 					{
-						ThreadHelper.JoinableTaskFactory.Run(
-							async delegate
+						var diffViewer = _ideService.GetActiveDiffEditor();
+
+						if (diffViewer != null)
+						{	
+							// we must be doing something with a diff review; either PR or FR, etc.
+							if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
 							{
-								await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-								var diffViewer = _ideService.GetActiveDiffEditor();
-
-								if (diffViewer != null)
-								{	
-									// we must be doing something with a diff review; either PR or FR, etc.
-									if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
-									{
-										message.Params?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
-									}
-								}
+								message.Params?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
 							}
-						);
+						}
 					}
 
 					switch (target) {

@@ -27,6 +27,7 @@ using CodeStream.VisualStudio.Shared.Managers;
 using CodeStream.VisualStudio.Shared.Models;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Language.Intellisense;
 
 using Newtonsoft.Json.Linq;
 
@@ -415,23 +416,16 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			if (uriToken.IsTempFile())
 			{
-				ThreadHelper.JoinableTaskFactory.Run(
-					async delegate
+				var diffViewer = _ideService.GetActiveDiffEditor();
+
+				if (diffViewer != null)
+				{	
+					// we must be doing something with a diff review; either PR or FR, etc.
+					if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
 					{
-						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-						var diffViewer = _ideService.GetActiveDiffEditor();
-
-						if (diffViewer != null)
-						{	
-							// we must be doing something with a diff review; either PR or FR, etc.
-							if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
-							{
-								messageToken?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
-							}
-						}
+						messageToken?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
 					}
-				);
+				}
 			}
 
 			PostMessage(messageToken.ToJson(), canEnqueue);
