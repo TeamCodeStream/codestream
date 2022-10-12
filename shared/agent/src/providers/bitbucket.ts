@@ -854,7 +854,7 @@ export class BitbucketProvider
 			const { currentRepo } = await this.getProviderRepo({
 				repoName: repoWithOwnerSplit[1].toLowerCase(),
 				repoUrl: pr.body.source?.repository?.links?.html?.href.toLowerCase(),
-				allRepos,
+				repos: allRepos.repos,
 			});
 
 			response = {

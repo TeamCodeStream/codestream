@@ -1356,7 +1356,7 @@ export class GitLabProvider
 			const { currentRepo } = await this.getProviderRepo({
 				repoName: response.project.mergeRequest.project.path.toLowerCase(),
 				repoUrl: response.project.mergeRequest.project.webUrl.toLowerCase(),
-				allRepos,
+				repos: allRepos.repos,
 			});
 
 			response.project.mergeRequest = {

@@ -671,11 +671,18 @@ export class GitHubProvider
 
 				const { repos } = SessionContainer.instance();
 				const allRepos = await repos.get();
+				console.warn(
+					"eric response.repository.pullRequest.repository.name",
+					response.repository.pullRequest.repository,
+					allRepos.repos
+				);
 				const { currentRepo } = await this.getProviderRepo({
 					repoName: response.repository.pullRequest.repository.name.toLowerCase(),
 					repoUrl: response.repository.pullRequest.repository.url.toLowerCase(),
-					allRepos,
+					repos: allRepos.repos,
 				});
+
+				console.warn("eric currentRepo", currentRepo);
 
 				if (currentRepo?.id) {
 					try {

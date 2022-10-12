@@ -113,10 +113,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		return request.description;
 	}
 
-	protected async getProviderRepo(request: {
+	async getProviderRepo(request: {
 		repoName: string;
 		repoUrl: string;
-		allRepos: any;
+		repos: any;
 	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
 		Logger.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
 
@@ -128,7 +128,7 @@ export abstract class ThirdPartyIssueProviderBase<
 		try {
 			const repoName = request.repoName;
 			const repoUrl = request.repoUrl;
-			const repos = request.allRepos.repos;
+			const repos = request.repos;
 
 			const matchingRepos = repos?.filter((_: any) =>
 				_?.remotes.some(
@@ -192,7 +192,7 @@ export abstract class ThirdPartyIssueProviderBase<
 			Logger.error(
 				result.error,
 				`Could not find currentRepo.
-				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${request.allRepos.repos}`
+				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${request.repos}`
 			);
 		}
 		Logger.log(`getProviderPullRequestRepoObjectCore result`, result);
