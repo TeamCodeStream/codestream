@@ -1,22 +1,22 @@
-import React, { useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import Icon from "../../Icon";
-import { Button } from "@codestream/webview/src/components/Button";
-import { OutlineBox, FlexRow } from "./PullRequest";
-import { CodeStreamState } from "@codestream/webview/store";
-import { Link } from "../../Link";
-import styled from "styled-components";
-import { DropdownButton } from "../../DropdownButton";
-import { PRBranch, PRBranchTruncated } from "../../PullRequestComponents";
-import copy from "copy-to-clipboard";
-import Tooltip from "../../Tooltip";
-import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { HostApi } from "../../../webview-api";
 import { GitLabMergeRequest, SwitchBranchRequestType } from "@codestream/protocols/agent";
-import { confirmPopup } from "../../Confirm";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { logError } from "@codestream/webview/logger";
+import { Button } from "@codestream/webview/src/components/Button";
+import { CodeStreamState } from "@codestream/webview/store";
 import { getProviderPullRequestRepoObject } from "@codestream/webview/store/providerPullRequests/slice";
 import { pluralize } from "@codestream/webview/utilities/strings";
-import { logError } from "@codestream/webview/logger";
+import copy from "copy-to-clipboard";
+import React, { useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { HostApi } from "../../../webview-api";
+import { confirmPopup } from "../../Confirm";
+import { DropdownButton } from "../../DropdownButton";
+import Icon from "../../Icon";
+import { Link } from "../../Link";
+import { PRBranch, PRBranchTruncated } from "../../PullRequestComponents";
+import Tooltip from "../../Tooltip";
+import { FlexRow, OutlineBox } from "./PullRequest";
 
 export const Root = styled.div`
 	margin: 0 20px 10px 20px;
@@ -59,6 +59,7 @@ export const SummaryBox = (props: {
 					_?.name.toLowerCase() === pr.repository?.name?.toLowerCase() ||
 					_?.folder?.name?.toLowerCase() === pr.repository?.name?.toLowerCase()
 			);
+
 			if (!currentRepo) {
 				// @TODO: this logerror might prove to be too much info/annoying in logs,
 				// look into deleting in future.  That said, because its in useMemo, it should
@@ -75,9 +76,19 @@ export const SummaryBox = (props: {
 				});
 				return `You do not have the ${pr.repository?.name} repo open in your IDE`;
 			}
+
 			if (currentRepo.currentBranch == pr.headRefName) {
 				return `You are on the ${pr.headRefName} branch`;
 			}
+
+			const isFork =
+				pr.sourceProject?.fullPath &&
+				!pr.repository.nameWithOwner.includes(pr.sourceProject!.fullPath);
+
+			if (isFork) {
+				return `The source branch for this PR is located on the ${pr.sourceProject!.fullPath} fork`;
+			}
+
 			return "";
 		} else {
 			return "PR not loaded";

@@ -376,6 +376,12 @@ export const PullRequest = () => {
 			if (currentRepo.currentBranch == pr.headRefName) {
 				return `You are on the ${pr.headRefName} branch`;
 			}
+
+			// branch is in a fork
+			if (pr.headRepository?.isFork) {
+				return `The source branch for this PR is located on the ${pr.headRepositoryOwner?.login}/${pr.headRepository?.name} fork`;
+			}
+
 			return "";
 		} else {
 			return "PR not loaded";
