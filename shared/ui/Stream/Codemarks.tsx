@@ -386,7 +386,7 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 	switchDomain = (value: CodemarkDomainType) => {
 		const { setUserPreference } = this.props;
-		setUserPreference(["codemarkDomain"], value);
+		setUserPreference({ prefPath: ["codemarkDomain"], value });
 	};
 
 	renderCodemarks = () => {
@@ -627,13 +627,14 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 				label: "Wrap multi-line comments",
 				key: "wrap-comments",
 				checked: wrapComments,
-				action: () => setUserPreference(["codemarksWrapComments"], !wrapComments),
+				action: () =>
+					setUserPreference({ prefPath: ["codemarksWrapComments"], value: !wrapComments }),
 			},
 			{
 				label: "Show Tags",
 				key: "show-tags",
 				checked: !hideTags,
-				action: () => setUserPreference(["codemarksHideTags"], !hideTags),
+				action: () => setUserPreference({ prefPath: ["codemarksHideTags"], value: !hideTags }),
 			},
 			{ label: "-" },
 			{
@@ -646,13 +647,18 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 						label: "Date",
 						key: "date",
 						checked: codemarkSortType === CodemarkSortType.CreatedAt,
-						action: () => setUserPreference(["codemarkSortType"], CodemarkSortType.CreatedAt),
+						action: () =>
+							setUserPreference({
+								prefPath: ["codemarkSortType"],
+								value: CodemarkSortType.CreatedAt,
+							}),
 					},
 					{
 						label: "Line Number",
 						key: "file",
 						checked: codemarkSortType === CodemarkSortType.File,
-						action: () => setUserPreference(["codemarkSortType"], CodemarkSortType.File),
+						action: () =>
+							setUserPreference({ prefPath: ["codemarkSortType"], value: CodemarkSortType.File }),
 					},
 				],
 			},
@@ -666,20 +672,23 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 						label: "Feedback Request comments",
 						key: "show-reviews",
 						checked: showReviews,
-						action: () => setUserPreference(["codemarksHideReviews"], showReviews),
+						action: () =>
+							setUserPreference({ prefPath: ["codemarksHideReviews"], value: showReviews }),
 					},
 					{ label: "-" },
 					{
 						label: "Resolved codemarks",
 						key: "show-resolved",
 						checked: showResolved,
-						action: () => setUserPreference(["codemarksHideResolved"], showResolved),
+						action: () =>
+							setUserPreference({ prefPath: ["codemarksHideResolved"], value: showResolved }),
 					},
 					{
 						label: "Archived codemarks",
 						key: "show-hidden",
 						checked: showHidden,
-						action: () => setUserPreference(["codemarksShowArchived"], !showHidden),
+						action: () =>
+							setUserPreference({ prefPath: ["codemarksShowArchived"], value: !showHidden }),
 					},
 				],
 			},

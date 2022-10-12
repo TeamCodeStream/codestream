@@ -245,7 +245,7 @@ export default function IssuesPane(props: Props) {
 			return;
 		}
 
-		// if (setUserPreference) setUserPreference(["skipConnectIssueProviders"], false);
+		// if (setUserPreference) setUserPreference({ prefPath: ["skipConnectIssueProviders"], value: false });
 
 		if (providerIsDisabled(providerId)) {
 			// if it's disabled, enable it
@@ -260,7 +260,7 @@ export default function IssuesPane(props: Props) {
 			dispatch(
 				setUserPreference({ prefPath: ["startWork", "disabledProviders", providerId], value: true })
 			);
-			// setUserPreference(["skipConnectIssueProviders"], false);
+			// setUserPreference({ prefPath: ["skipConnectIssueProviders"], value: false });
 		} else {
 			// otherwise we need to connect
 			const issueProvider = derivedState.providers![providerId];

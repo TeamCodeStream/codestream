@@ -2187,7 +2187,7 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	toggleCreateReviewOnCommitEnabled = (value: boolean) => {
-		this.props.setUserPreference(["reviewCreateOnCommit"], value);
+		this.props.setUserPreference({ prefPath: ["reviewCreateOnCommit"], value });
 		this.setState({ createReviewOnCommit: value });
 	};
 

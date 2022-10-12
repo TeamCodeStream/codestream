@@ -322,7 +322,7 @@ export class SimpleStream extends PureComponent<Props> {
 		if (!this.emailHasBeenCheckedForMismatch) {
 			const response = await HostApi.instance.send(GetUserInfoRequestType, {});
 			if (response?.email === currentUser?.email) {
-				setUserPreference(["skipGitEmailCheck"], true);
+				setUserPreference({ prefPath: ["skipGitEmailCheck"], value: true });
 				this.emailHasBeenCheckedForMismatch = true;
 			} else {
 				const scmEmail = response.email;
@@ -331,7 +331,7 @@ export class SimpleStream extends PureComponent<Props> {
 					this.addBlameMap(scmEmail, currentUser.id);
 					HostApi.instance.track("Git Email Mismatch", { Mapped: true });
 
-					setUserPreference(["skipGitEmailCheck"], true);
+					setUserPreference({ prefPath: ["skipGitEmailCheck"], value: true });
 				}
 				this.emailHasBeenCheckedForMismatch = true;
 			}

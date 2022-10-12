@@ -1138,7 +1138,7 @@ export const Observability = React.memo((props: Props) => {
 									{/* <Tooltip title="Connect later on the Integrations page" placement="top">
 										<Linkish
 											onClick={() =>
-												dispatch(setUserPreference(["skipConnectObservabilityProviders"], true))
+												dispatch(setUserPreference({ prefPath: ["skipConnectObservabilityProviders"], value: true }))
 											}
 										>
 											Skip this step.

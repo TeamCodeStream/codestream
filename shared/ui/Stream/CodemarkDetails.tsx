@@ -143,7 +143,9 @@ export class CodemarkDetails extends React.Component<Props, State> {
 		if (type === "archive") {
 			await this.props.setCodemarkPinned(this.props.codemark, false);
 		}
-		if (this.props.setUserPreference) this.props.setUserPreference(["defaultResolveAction"], type);
+		if (this.props.setUserPreference) {
+			this.props.setUserPreference({ prefPath: ["defaultResolveAction"], value: type });
+		}
 		HostApi.instance.track("Codemark Resolved", {
 			"Codemark ID": this.props.codemark.id,
 			"Codemark Type": this.props.codemark.type,

@@ -26,7 +26,7 @@ export class SimpleEmojiPicker extends Component {
 			},
 
 			setter: (key, value) => {
-				this.props.setUserPreference(["emojiPicker-" + key], value);
+				this.props.setUserPreference({ prefPath: ["emojiPicker-" + key], value });
 			},
 		});
 	}

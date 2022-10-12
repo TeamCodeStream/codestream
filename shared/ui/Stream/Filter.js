@@ -35,7 +35,7 @@ export class SimpleFilter extends Component {
 	menuAction = arg => {
 		const { preferenceId, setUserPreference, onValue, action } = this.props;
 		this.setState({ menuOpen: false });
-		if (preferenceId && arg != null) setUserPreference([preferenceId], arg);
+		if (preferenceId && arg != null) setUserPreference({ prefPath: [preferenceId], value: arg });
 		if (onValue && arg && arg !== "") onValue(arg);
 		if (action) action(arg);
 	};

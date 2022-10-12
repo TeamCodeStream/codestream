@@ -974,10 +974,10 @@ class CodemarkForm extends React.Component<Props, State> {
 							<Checkbox
 								name="skipPostCreationModal"
 								onChange={() => {
-									this.props.setUserPreference(
-										["skipPostCreationModal"],
-										!this.props.skipPostCreationModal
-									);
+									this.props.setUserPreference({
+										prefPath: ["skipPostCreationModal"],
+										value: !this.props.skipPostCreationModal,
+									});
 								}}
 							>
 								Don't show this again
@@ -2192,7 +2192,7 @@ class CodemarkForm extends React.Component<Props, State> {
 	toggleEmail = (email: string) => {
 		const { emailAuthors } = this.state;
 
-		this.props.setUserPreference(["skipEmailingAuthors"], emailAuthors[email]);
+		this.props.setUserPreference({ prefPath: ["skipEmailingAuthors"], value: emailAuthors[email] });
 		this.setState({ emailAuthors: { ...emailAuthors, [email]: !emailAuthors[email] } });
 	};
 

@@ -1430,7 +1430,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		// 	key: "show-diffs",
 		// 	checked: !derivedState.hideDiffs,
 		// 	action: () =>
-		// 		dispatch(setUserPreference(["pullRequestQueryHideDiffs"], !derivedState.hideDiffs))
+		// 		dispatch(setUserPreference({ prefPath: ["pullRequestQueryHideDiffs"], value: !derivedState.hideDiffs }))
 		// }
 	] as any;
 	if (derivedState.isCurrentUserAdmin) {
