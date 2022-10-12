@@ -3,6 +3,7 @@ import { GitRemoteLike } from "git/gitService";
 import { flatten } from "lodash";
 import * as qs from "querystring";
 import { URI } from "vscode-uri";
+import { SessionContainer } from "../container";
 import { toRepoName } from "../git/utils";
 import { Logger } from "../logger";
 import {
@@ -847,9 +848,13 @@ export class BitbucketProvider
 				avatarUrl: userResponse.links.avatar.href,
 			};
 
+			const { repos } = SessionContainer.instance();
+			const allRepos = await repos.get();
+
 			const { currentRepo } = await this.getProviderRepo({
 				repoName: repoWithOwnerSplit[1].toLowerCase(),
 				repoUrl: pr.body.source?.repository?.links?.html?.href.toLowerCase(),
+				allRepos,
 			});
 
 			response = {

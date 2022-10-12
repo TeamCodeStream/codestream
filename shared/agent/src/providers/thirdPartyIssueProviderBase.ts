@@ -116,10 +116,9 @@ export abstract class ThirdPartyIssueProviderBase<
 	protected async getProviderRepo(request: {
 		repoName: string;
 		repoUrl: string;
+		allRepos: any;
 	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
 		Logger.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
-		const { repos } = SessionContainer.instance();
-		const allRepos = await repos.get();
 
 		let result: { reason: string; currentRepo: CSRepository | undefined; error?: any } = {
 			reason: "",
@@ -129,11 +128,11 @@ export abstract class ThirdPartyIssueProviderBase<
 		try {
 			const repoName = request.repoName;
 			const repoUrl = request.repoUrl;
-			const repos = allRepos.repos;
+			const repos = request.allRepos.repos;
 
-			const matchingRepos = repos?.filter(_ =>
+			const matchingRepos = repos?.filter((_: any) =>
 				_?.remotes.some(
-					r =>
+					(r: any) =>
 						r?.normalizedUrl &&
 						r?.normalizedUrl.length > 2 &&
 						r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
@@ -146,10 +145,10 @@ export abstract class ThirdPartyIssueProviderBase<
 				result.currentRepo = matchingRepos[0];
 				result.reason = "remote";
 			} else {
-				let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
+				let matchingRepos2 = repos.filter((_: any) => _.name && _.name.toLowerCase() === repoName);
 				if (matchingRepos2.length != 1) {
-					matchingRepos2 = repos.filter(_ =>
-						_.remotes.some(r => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
+					matchingRepos2 = repos.filter((_: any) =>
+						_.remotes.some((r: any) => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
 					);
 					if (matchingRepos2.length === 1) {
 						result.currentRepo = matchingRepos2[0];
@@ -193,7 +192,7 @@ export abstract class ThirdPartyIssueProviderBase<
 			Logger.error(
 				result.error,
 				`Could not find currentRepo.
-				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${repos}`
+				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${request.allRepos.repos}`
 			);
 		}
 		Logger.log(`getProviderPullRequestRepoObjectCore result`, result);

@@ -669,9 +669,12 @@ export class GitHubProvider
 				response.repository.pullRequest.files = prWithAllFiles;
 				response.repository.pullRequest.commits = response2.repository.pullRequest.commits;
 
+				const { repos } = SessionContainer.instance();
+				const allRepos = await repos.get();
 				const { currentRepo } = await this.getProviderRepo({
 					repoName: response.repository.pullRequest.repository.name.toLowerCase(),
 					repoUrl: response.repository.pullRequest.repository.url.toLowerCase(),
+					allRepos,
 				});
 
 				if (currentRepo?.id) {
