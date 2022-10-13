@@ -10,11 +10,13 @@ using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Threading;
@@ -33,6 +35,7 @@ using Newtonsoft.Json.Linq;
 
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Shared.Services {
 	/// <summary>
@@ -411,24 +414,34 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false)
 		{
-			var messageToken = message.ToJToken();
-			var uriToken = messageToken?.SelectToken("$..uri")?.Value<string>();
+			var messageToken = message?.ToJToken();
 
-			if (uriToken.IsTempFile())
+			var uriTokens = messageToken?
+				.SelectTokens("$..uri")?
+				.ToList() ?? new List<JToken>();
+		
+			var hasTempFiles = uriTokens
+					.Where(x => x is JValue)
+					.Any(x => x.Value<string>().IsTempFile());
+
+			var diffViewer = _ideService.GetActiveDiffEditor();
+
+			if (hasTempFiles && diffViewer != null)
 			{
-				var diffViewer = _ideService.GetActiveDiffEditor();
+				foreach (var uriToken in uriTokens)
+				{
+					var uri = uriToken.Value<string>();
 
-				if (diffViewer != null)
-				{	
-					// we must be doing something with a diff review; either PR or FR, etc.
-					if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
+					if (uri.IsTempFile() && (diffViewer.Properties?.TryGetProperty(
+						    PropertyNames.OverrideFileUri, out string codeStreamDiffUri
+					    ) ?? false))
 					{
-						messageToken?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
+						messageToken?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));
 					}
 				}
 			}
-
-			PostMessage(messageToken.ToJson(), canEnqueue);
+			
+			PostMessage(messageToken?.ToJson(), canEnqueue);
 		}
 
 		/// <summary>

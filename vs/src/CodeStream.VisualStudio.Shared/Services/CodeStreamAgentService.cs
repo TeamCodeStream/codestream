@@ -87,22 +87,25 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			try {
 				// the arguments might have sensitive data in it -- don't include arguments here
 				using (Log.CriticalOperation($"name=REQ,Method={name}")) {
-
-					// do not send them along to the agent
-					var fileUri = arguments?.ToJToken()?.SelectToken("$..uri")?.Value<string>();
-
-					if (fileUri.IsTempFile())
-					{
-						return Task.FromResult(default(T));
-					}
-
-					return _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
+					
+					var uriTokens = arguments?
+						.ToJToken()?
+						.SelectTokens("$..uri")
+						.ToList() ?? new List<JToken>();
+		
+					var hasTempFiles = uriTokens
+						.Where(x => x is JValue)
+						.Any(x => x.Value<string>().IsTempFile());
+					
+					return hasTempFiles
+						? Task.FromResult(default(T))
+						: _rpc.InvokeWithParameterObjectAsync<T>(name, arguments, cancellationToken.Value);
 				}
 			}
 			catch (ObjectDisposedException ex) {
 				Log.Fatal(ex, "SendName={Name}", name);
 #if DEBUG
-				Log.Verbose($"Arguments={(arguments != null ? arguments.ToJson(true) : null)}");
+				Log.Verbose($"Arguments={arguments?.ToJson(true)}");
 #endif
 				throw;
 			}

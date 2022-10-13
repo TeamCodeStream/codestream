@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -83,18 +84,25 @@ namespace CodeStream.VisualStudio.Shared {
 				using (IpcLogger.CriticalOperation(Log, "REC", message)) {
 					var target = message.Target();
 
-					var uriToken = message.Params?.SelectToken("$..uri")?.Value<string>();
+					var uriTokens = message
+						.Params?
+						.SelectTokens("$..uri")?
+						.ToList() ?? new List<JToken>();
 
-					if (uriToken.IsTempFile())
+					var hasTempFiles = uriTokens
+						.Where(x => x is JValue)
+						.Any(x => x.Value<string>().IsTempFile());
+
+					var diffViewer = _ideService.GetActiveDiffEditor();
+
+					if (hasTempFiles && diffViewer != null)
 					{
-						var diffViewer = _ideService.GetActiveDiffEditor();
+						foreach (var uriToken in uriTokens)
+						{
+							var uri = uriToken.Value<string>();
 
-						if (diffViewer != null)
-						{	
-							// we must be doing something with a diff review; either PR or FR, etc.
-							if (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) == true)
-							{
-								message.Params?.SelectToken("$..uri")?.Replace(new JValue(codeStreamDiffUri));
+							if(uri.IsTempFile() && (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) ?? false)){
+								message.Params?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));
 							}
 						}
 					}

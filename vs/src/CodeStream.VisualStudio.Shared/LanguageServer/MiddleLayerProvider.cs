@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core.Extensions;
 
 using Microsoft.VisualStudio.LanguageServer.Client;
+using System.Linq;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class MiddleLayerProvider : ILanguageClientMiddleLayer {
@@ -43,9 +44,16 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			try {
 				// intercept any Temp or Diff-Schemed file paths and
 				// do not send them along to the agent
-				var fileUri = methodParam?.SelectToken("$..uri")?.Value<string>();
-
-				if (fileUri.IsTempFile()) {
+				var uriTokens = methodParam?
+					.SelectTokens("$..uri")
+					.ToList() ?? new List<JToken>();
+		
+				var hasTempFiles = uriTokens
+					.Where(x => x is JValue)
+					.Any(x => x.Value<string>().IsTempFile());
+					
+				if (hasTempFiles)
+				{
 					return Task.CompletedTask;
 				}
 
