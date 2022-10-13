@@ -1350,6 +1350,12 @@ export class GitLabProvider
 					return { content: _, data };
 				}) || [];
 
+			// get current mrRepo
+			const { currentRepo } = await this.getProviderRepo({
+				repoName: response.project.mergeRequest.project.path.toLowerCase(),
+				repoUrl: response.project.mergeRequest.project.webUrl.toLowerCase(),
+			});
+
 			response.project.mergeRequest = {
 				...response.project.mergeRequest,
 				providerId: this.providerConfig?.id,
@@ -1363,6 +1369,7 @@ export class GitLabProvider
 					name: response.project.mergeRequest.project.path,
 					nameWithOwner: response.project.mergeRequest.project.fullPath,
 					url: response.project.mergeRequest.project.webUrl,
+					prRepo: currentRepo,
 				},
 				number: parseInt(response.project.mergeRequest.iid, 10),
 				url: response.project.mergeRequest.project.webUrl,

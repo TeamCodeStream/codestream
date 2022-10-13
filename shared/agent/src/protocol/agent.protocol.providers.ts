@@ -529,6 +529,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		name: string;
 		nameWithOwner: string;
 		url: string;
+		prRepo?: CSRepository | undefined;
 	};
 	locked: any;
 	activeLockReason: "OFF_TOPIC" | "SPAM" | "TOO_HEATED" | "RESOLVED";

@@ -15,7 +15,6 @@ import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
-	FetchReposResponse,
 	FetchThirdPartyBoardsRequest,
 	FetchThirdPartyBoardsResponse,
 	FetchThirdPartyCardsRequest,
@@ -25,7 +24,6 @@ import {
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestFilesResponse,
-	FetchThirdPartyPullRequestPullRequest,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsRequest,
@@ -45,7 +43,7 @@ import {
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig,
 } from "../protocol/agent.protocol";
-import { CSGitHubProviderInfo, CSRepository } from "../protocol/api.protocol";
+import { CSGitHubProviderInfo } from "../protocol/api.protocol";
 import { Dates, Functions, log, lspProvider } from "../system";
 import { TraceLevel } from "../types";
 import { Directive, Directives } from "./directives";
@@ -583,91 +581,6 @@ export class GitHubProvider
 		}
 	}
 
-	async getPullRequestRepo(
-		allRepos: FetchReposResponse,
-		pullRequest: FetchThirdPartyPullRequestPullRequest
-	): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
-		console.log(
-			`getProviderPullRequestRepoObjectCore arguments: repos, currentPr, providerId?`,
-			allRepos,
-			pullRequest
-		);
-		const result: { reason: string; currentRepo: CSRepository | undefined; error?: any } = {
-			reason: "",
-			currentRepo: undefined,
-		};
-
-		try {
-			const repoName = pullRequest.repository.name.toLowerCase();
-			const repoUrl = pullRequest.repository.url.toLowerCase();
-			const repos = allRepos.repos;
-
-			const matchingRepos = repos?.filter(_ =>
-				_?.remotes.some(
-					r =>
-						r?.normalizedUrl &&
-						r?.normalizedUrl.length > 2 &&
-						r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-						(repoUrl?.includes(r?.normalizedUrl?.toLowerCase() + "/") ||
-							repoUrl?.endsWith(r?.normalizedUrl?.toLowerCase()))
-				)
-			);
-
-			if (matchingRepos.length === 1) {
-				result.currentRepo = matchingRepos[0];
-				result.reason = "remote";
-			} else {
-				let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
-				if (matchingRepos2.length != 1) {
-					matchingRepos2 = repos.filter(_ =>
-						_.remotes.some(r => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
-					);
-					if (matchingRepos2.length === 1) {
-						result.currentRepo = matchingRepos2[0];
-						result.reason = "matchedOnProviderUrl";
-					} else {
-						// try to match on the best/closet repo
-						const bucket: { repo: CSRepository; points: number }[] = [];
-						const splitRepoUrl = repoUrl?.split("/");
-						for (const repo of repos) {
-							let points = 0;
-							for (const remote of repo.remotes) {
-								const split = remote.normalizedUrl?.split("/");
-								if (split?.length) {
-									for (const s of split) {
-										if (s && splitRepoUrl?.includes(s)) {
-											points++;
-										}
-									}
-								}
-							}
-							bucket.push({ repo: repo, points: points });
-						}
-						if (bucket.length) {
-							bucket.sort((a, b) => b.points - a.points);
-							result.currentRepo = bucket[0].repo;
-							result.currentRepo.repoFoundReason = "closestMatch";
-							result.reason = "closestMatch";
-						} else {
-							result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
-						}
-					}
-				} else {
-					result.currentRepo = matchingRepos2[0];
-					result.reason = "repoName";
-				}
-			}
-		} catch (ex) {
-			result.error = typeof ex === "string" ? ex : ex.message;
-			console.error(ex);
-		}
-		if (result.error || !result.currentRepo) {
-			Logger.error(result.error, "Could not find currentRepo");
-		}
-		console.log(`getProviderPullRequestRepoObjectCore result`, result);
-		return result;
-	}
-
 	@log()
 	async getPullRequest(
 		request: FetchThirdPartyPullRequestRequest
@@ -756,11 +669,10 @@ export class GitHubProvider
 				response.repository.pullRequest.files = prWithAllFiles;
 				response.repository.pullRequest.commits = response2.repository.pullRequest.commits;
 
-				const { repos } = SessionContainer.instance();
-				const { currentRepo } = await this.getPullRequestRepo(
-					await repos.get(),
-					response.repository.pullRequest
-				);
+				const { currentRepo } = await this.getProviderRepo({
+					repoName: response.repository.pullRequest.repository.name.toLowerCase(),
+					repoUrl: response.repository.pullRequest.repository.url.toLowerCase(),
+				});
 
 				if (currentRepo?.id) {
 					try {

@@ -847,6 +847,11 @@ export class BitbucketProvider
 				avatarUrl: userResponse.links.avatar.href,
 			};
 
+			const { currentRepo } = await this.getProviderRepo({
+				repoName: repoWithOwnerSplit[1].toLowerCase(),
+				repoUrl: pr.body.source?.repository?.links?.html?.href.toLowerCase(),
+			});
+
 			response = {
 				viewer: viewer,
 				repository: {
@@ -885,6 +890,7 @@ export class BitbucketProvider
 							name: repoWithOwnerSplit[1],
 							nameWithOwner: repoWithOwner,
 							url: pr.body.source?.repository?.links?.html?.href,
+							prRepo: currentRepo,
 						},
 						state: pr.body.state,
 						title: pr.body.title,

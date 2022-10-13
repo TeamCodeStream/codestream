@@ -3,7 +3,7 @@ import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { logError } from "@codestream/webview/logger";
 import { Button } from "@codestream/webview/src/components/Button";
 import { CodeStreamState } from "@codestream/webview/store";
-import { getProviderPullRequestRepoObject } from "@codestream/webview/store/providerPullRequests/slice";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/slice";
 import { pluralize } from "@codestream/webview/utilities/strings";
 import copy from "copy-to-clipboard";
 import React, { useMemo, useState } from "react";
@@ -44,10 +44,13 @@ export const SummaryBox = (props: {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { preferences } = state;
+		const currentPullRequest = getCurrentProviderPullRequest(state);
+
 		return {
 			order: preferences.pullRequestTimelineOrder || "oldest",
 			filter: preferences.pullRequestTimelineFilter || "all",
-			currentRepoObject: getProviderPullRequestRepoObject(state),
+			currentRepoObject:
+				currentPullRequest?.conversations?.project?.mergeRequest?.repository?.prRepo,
 		};
 	});
 	const [isLoadingBranch, setIsLoadingBranch] = useState(false);
@@ -100,8 +103,8 @@ export const SummaryBox = (props: {
 
 		setIsLoadingBranch(true);
 		const repoId =
-			derivedState.currentRepoObject && derivedState.currentRepoObject.currentRepo
-				? derivedState.currentRepoObject.currentRepo.id
+			derivedState.currentRepoObject && derivedState.currentRepoObject
+				? derivedState.currentRepoObject.id
 				: "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
 			branch: pr!.headRefName,
