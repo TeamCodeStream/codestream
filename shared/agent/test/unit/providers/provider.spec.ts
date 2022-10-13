@@ -59,14 +59,10 @@ describe("provider", () => {
 		});
 	});
 
-	it("getProviderRepo", async () => {
+	it("gh getProviderRepo url found match", async () => {
 		const repos = stubRepos([
 			{
-				createdAt: 1643217721184,
-				creatorId: "61b001aa98e56e03de785d28",
-				deactivated: false,
 				id: "61f18339968fed340dc7c996",
-				modifiedAt: 1651601403366,
 				name: "gore",
 				remotes: [
 					{
@@ -75,8 +71,6 @@ describe("provider", () => {
 						companyIdentifier: "github.com/teamcodestream",
 					},
 				],
-				teamId: "61ae567beb6b1c0e5d8b4bb2",
-				version: 2,
 			},
 		]);
 
@@ -88,6 +82,117 @@ describe("provider", () => {
 				repos: repos,
 			});
 			expect(currentRepo).toEqual(expect.objectContaining({ name: "gore" }));
+		});
+	});
+	it("gh getProviderRepo pick first one when no match", async () => {
+		const repos = stubRepos([
+			{
+				id: "61f18339968fed340dc7c996",
+				name: "foo",
+				remotes: [
+					{
+						companyIdentifier: "github.com/teamcodestream",
+					},
+				],
+				teamId: "61ae567beb6b1c0e5d8b4bb2",
+			},
+			{
+				id: "61f18339123968fed340dc7c996",
+				name: "bar",
+				remotes: [
+					{
+						companyIdentifier: "github.com/teamcodestream",
+					},
+				],
+			},
+			{
+				id: "61f18339968f123ed35140dc7c996",
+				name: "baz",
+				remotes: [
+					{
+						companyIdentifier: "github.com/teamcodestream",
+					},
+				],
+			},
+		]);
+
+		[GitHubProvider, GitHubEnterpriseProvider].forEach(async Provider => {
+			const provider = new Provider({} as any, Provider as any);
+			const { currentRepo } = await provider.getProviderRepo({
+				repoName: "gore",
+				repoUrl: "https://github.com/TeamCodeStream/gore",
+				repos: repos,
+			});
+			expect(currentRepo).toEqual(expect.objectContaining({ name: "foo" }));
+		});
+	});
+	it("gl getProviderRepo url found match", async () => {
+		const repos = stubRepos([
+			{
+				id: "61f18339968fed340dc7c996",
+				modifiedAt: 1651601403366,
+				name: "my-project-one",
+				remotes: [
+					{
+						normalizedUrl: "my.gitlab.com/pow/my_group_name/my-project-one",
+					},
+				],
+			},
+		]);
+
+		[GitLabProvider, GitLabEnterpriseProvider].forEach(async Provider => {
+			const provider = new Provider({} as any, Provider as any);
+			const { currentRepo } = await provider.getProviderRepo({
+				repoName: "my-project-one",
+				repoUrl: "https://my.gitlab.com/pow/my_group_name/my-project-one/-/merge_requests/55",
+				repos: repos,
+			});
+			expect(currentRepo).toEqual(expect.objectContaining({ name: "my-project-one" }));
+		});
+	});
+
+	it("gl getProviderRepo first repo when no match", async () => {
+		const repos = stubRepos([
+			{
+				id: "61f18339968fed340dc7c996",
+				modifiedAt: 1651601403366,
+				name: "foo",
+				remotes: [
+					{
+						normalizedUrl: "my.gitlab.com/pow/my_group_name/foo",
+					},
+				],
+			},
+			{
+				id: "61f18339968fed340dc7c996",
+				modifiedAt: 1651601403366,
+				name: "bar",
+				remotes: [
+					{
+						normalizedUrl: "my.gitlab.com/pow/my_group_name/bar",
+					},
+				],
+			},
+			{
+				id: "61f18339968fed340dc7c996",
+				modifiedAt: 1651601403366,
+				name: "baz",
+				remotes: [
+					{
+						normalizedUrl: "my.gitlab.com/pow/my_group_name/baz",
+					},
+				],
+			},
+		]);
+
+		[GitLabProvider, GitLabEnterpriseProvider].forEach(async Provider => {
+			const provider = new Provider({} as any, Provider as any);
+			const { currentRepo } = await provider.getProviderRepo({
+				repoName: "my-project-one",
+				repoUrl: "https://my.gitlab.com/pow/my_group_name/my-project-one/-/merge_requests/55",
+				repos: repos,
+			});
+			expect(currentRepo).toEqual(expect.objectContaining({ name: "foo" }));
 		});
 	});
 });
