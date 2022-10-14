@@ -43,6 +43,5 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		IDifferenceViewer GetActiveDiffEditor();
 		void TryCloseDiffs();
-		IDifferenceViewer GetActiveDiffEditor();
 	}
 }
