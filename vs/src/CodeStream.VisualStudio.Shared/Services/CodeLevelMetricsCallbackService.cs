@@ -80,7 +80,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-			var solution = _vsSolution.GetSolutionFile();
+			var solution = new Uri(_vsSolution.GetSolutionFile());
 
 			//example: "avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}"
 			var formatString = GetEditorFormat().ToLower();
@@ -90,7 +90,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			try {
 				var metrics = await _codeStreamAgentService.GetFileLevelTelemetryAsync(
-					solution,
+					solution.AbsoluteUri,
 					"csharp",
 					false,
 					codeNamespace,
