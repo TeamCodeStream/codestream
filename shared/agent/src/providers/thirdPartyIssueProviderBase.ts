@@ -117,10 +117,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		repoName: string;
 		repoUrl: string;
 		repos: CSRepository[];
-	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
+	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: Error }> {
 		Logger.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
 
-		let result: { reason: string; currentRepo: CSRepository | undefined; error?: any } = {
+		let result: { reason: string; currentRepo: CSRepository | undefined; error?: Error } = {
 			reason: "",
 			currentRepo: undefined,
 		};
@@ -130,9 +130,9 @@ export abstract class ThirdPartyIssueProviderBase<
 			const repoUrl = request.repoUrl;
 			const repos = request.repos;
 
-			const matchingRepos = repos?.filter((_: any) =>
+			const matchingRepos = repos?.filter((_: CSRepository) =>
 				_?.remotes.some(
-					(r: any) =>
+					r =>
 						r?.normalizedUrl &&
 						r?.normalizedUrl.length > 2 &&
 						r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
@@ -145,10 +145,12 @@ export abstract class ThirdPartyIssueProviderBase<
 				result.currentRepo = matchingRepos[0];
 				result.reason = "remote";
 			} else {
-				let matchingRepos2 = repos.filter((_: any) => _.name && _.name.toLowerCase() === repoName);
+				let matchingRepos2 = repos.filter(
+					(_: CSRepository) => _.name && _.name.toLowerCase() === repoName
+				);
 				if (matchingRepos2.length != 1) {
-					matchingRepos2 = repos.filter((_: any) =>
-						_.remotes.some((r: any) => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
+					matchingRepos2 = repos.filter((_: CSRepository) =>
+						_.remotes.some(r => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
 					);
 					if (matchingRepos2.length === 1) {
 						result.currentRepo = matchingRepos2[0];
@@ -177,7 +179,10 @@ export abstract class ThirdPartyIssueProviderBase<
 							result.currentRepo.repoFoundReason = "closestMatch";
 							result.reason = "closestMatch";
 						} else {
-							result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
+							result.error = {
+								name: "REPO_NOT_FOUND",
+								message: `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`,
+							};
 						}
 					}
 				} else {
@@ -189,8 +194,14 @@ export abstract class ThirdPartyIssueProviderBase<
 			result.error = typeof ex === "string" ? ex : ex.message;
 		}
 		if (result.error || !result.currentRepo) {
+			if (!result.currentRepo) {
+				result.error = {
+					name: "REPO_NOT_FOUND",
+					message: `Could not find repo for repoName=${request.repoName} repoUrl=${request.repoUrl}`,
+				};
+			}
 			Logger.error(
-				result.error,
+				result.error!,
 				`Could not find currentRepo.
 				repoName: ${request.repoName}, repoUrl: ${request.repoUrl}, repos: ${request.repos}`
 			);
