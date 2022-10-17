@@ -312,7 +312,6 @@ export const PullRequest = () => {
 			textEditorUri: state.editorContext.textEditorUri,
 			reposState: state.repos,
 			checkoutBranch: state.context.pullRequestCheckoutBranch,
-			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 		};
 	});
 
