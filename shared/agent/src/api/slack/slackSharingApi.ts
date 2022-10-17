@@ -53,6 +53,7 @@ import {
 	toSlackPostBlocks,
 	toSlackPostText,
 	toSlackReviewPostBlocks,
+	toSlackStatus,
 	toSlackTextPostBlocks,
 	UserMaps,
 } from "./slackSharingApi.adapters";
@@ -538,9 +539,10 @@ export class SlackSharingApiProvider {
 		request: UpdateThirdPartyStatusRequest
 	): Promise<UpdateThirdPartyStatusResponse> {
 		try {
+			const text = toSlackStatus(request.text);
 			const response = await this.slackApiCall("users.profile.set", {
 				profile: {
-					status_text: request.text,
+					status_text: text,
 					status_emoji: request.icon || ":desktop_computer:",
 					status_expiration: 0,
 				},

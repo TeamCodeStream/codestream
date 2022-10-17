@@ -45,6 +45,7 @@ const slackLinkRegex = /\<((?:https?:\/\/|mailto:).*?)(?:\|(.*?))?\>/g;
 const slackBlockTextMax = 2990;
 // slackBlockTextMax minus 6 backticks
 const slackBlockTextCodeMax = slackBlockTextMax - 6;
+const slackStatusMax = 100;
 type Blocks = KnownBlock[];
 
 export interface UserMaps {
@@ -1302,7 +1303,7 @@ export function toSlackTextSafe(
 	}
 	let wasTruncated = false;
 	if (text.length > maxLength) {
-		text = text.substring(0, slackBlockTextMax - 3) + "...";
+		text = text.substring(0, maxLength - 3) + "...";
 		wasTruncated = true;
 	}
 	return { text: text, wasTruncated: wasTruncated };
@@ -1310,4 +1311,8 @@ export function toSlackTextSafe(
 
 export function toSlackText(text: string, userMaps: UserMaps, mentionedUserIds?: string[]) {
 	return toSlackTextSafe(text, userMaps, mentionedUserIds).text;
+}
+
+export function toSlackStatus(text: string) {
+	return text.length > slackStatusMax ? text.substring(0, slackStatusMax - 3) + "..." : text;
 }
