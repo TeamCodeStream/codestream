@@ -116,7 +116,7 @@ export abstract class ThirdPartyIssueProviderBase<
 	async getProviderRepo(request: {
 		repoName: string;
 		repoUrl: string;
-		repos: any;
+		repos: CSRepository[];
 	}): Promise<{ reason: string; currentRepo: CSRepository | undefined; error?: any }> {
 		Logger.log(`getProviderRepo arguments: repoName, repoUrl`, request.repoName, request.repoUrl);
 

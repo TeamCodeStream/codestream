@@ -8,19 +8,13 @@ import {
 	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
 import { CSRepository } from "@codestream/protocols/api";
-import { logError } from "@codestream/webview/logger";
 import { Directive } from "@codestream/webview/store/providerPullRequests/directives";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { isEmpty } from "lodash-es";
 import { createSelector } from "reselect";
 import { CodeStreamState } from "..";
 import { ContextState } from "../context/types";
-import {
-	CurrentRepoResponse,
-	isGitLabMergeRequest,
-	ProviderPullRequestsState,
-	RepoPullRequest,
-} from "./types";
+import { ProviderPullRequestsState, RepoPullRequest } from "./types";
 
 const initialState: ProviderPullRequestsState = { pullRequests: {}, myPullRequests: {} };
 
@@ -1019,146 +1013,6 @@ export const getCurrentProviderPullRequestLastUpdated = createSelector(
 		return undefined;
 	}
 );
-/**
- *  Attempts to get a CS repo for the current PR
- */
-export const getProviderPullRequestRepo = createSelector(
-	getRepos,
-	getCurrentProviderPullRequest,
-	getPullRequestProviderId,
-	(repos: CSRepository[], currentPr, providerId?: string) => {
-		const result = getProviderPullRequestRepoObjectCore(repos, currentPr, providerId);
-		return result?.currentRepo;
-	}
-);
-
-/**
- *  Attempts to get a CS repo for the current PR
- */
-export const getProviderPullRequestRepoObject = createSelector(
-	getRepos,
-	getCurrentProviderPullRequest,
-	getPullRequestProviderId,
-	(repos: CSRepository[], currentPr, providerId?: string) => {
-		return getProviderPullRequestRepoObjectCore(repos, currentPr, providerId);
-	}
-);
-
-// Depreciated, but keeping for now until significant regression tests are made.
-export const getProviderPullRequestRepoObjectCore = (
-	repos: CSRepository[],
-	currentPr?: RepoPullRequest,
-	providerId?: string
-) => {
-	console.log(
-		`getProviderPullRequestRepoObjectCore arguments: repos, currentPr, providerId?`,
-		repos,
-		currentPr,
-		providerId ? providerId : ""
-	);
-	const result: CurrentRepoResponse = {};
-
-	try {
-		if (!currentPr || !currentPr.conversations) {
-			return {
-				error: "missing current pr or conversations",
-			};
-		}
-		let repoName;
-		let repoUrl;
-		if (
-			providerId &&
-			(providerId.indexOf("github") > -1 || providerId.indexOf("bitbucket") > -1) &&
-			currentPr.conversations &&
-			currentPr.conversations.repository
-		) {
-			// this is the github case
-			repoName = currentPr.conversations.repository.repoName.toLowerCase();
-			repoUrl = currentPr.conversations.repository.url.toLowerCase();
-		} else if (providerId && providerId.indexOf("gitlab") > -1) {
-			if (!currentPr.conversations.project) {
-				result.error = "Missing project name for: " + currentPr;
-			}
-			// this is for gitlab
-			const glMr = currentPr.conversations.project?.mergeRequest;
-			if (isGitLabMergeRequest(glMr)) {
-				repoName = currentPr.conversations.project?.name?.toLowerCase();
-				repoUrl = glMr?.webUrl?.toLowerCase();
-			} else {
-				result.error = "Missing attributes name for: " + currentPr;
-			}
-		}
-		result.repoName = repoName;
-		result.repoUrl = repoUrl;
-		result.repos = repos;
-
-		const matchingRepos = repos.filter(_ =>
-			_.remotes.some(
-				r =>
-					r?.normalizedUrl &&
-					r?.normalizedUrl.length > 2 &&
-					r?.normalizedUrl.match(/([a-zA-Z0-9]+)/) &&
-					(repoUrl?.includes(r?.normalizedUrl?.toLowerCase() + "/") ||
-						repoUrl?.endsWith(r?.normalizedUrl?.toLowerCase()))
-			)
-		);
-
-		if (matchingRepos.length === 1) {
-			result.currentRepo = matchingRepos[0];
-			result.reason = "remote";
-		} else {
-			let matchingRepos2 = repos.filter(_ => _.name && _.name.toLowerCase() === repoName);
-			if (matchingRepos2.length != 1) {
-				matchingRepos2 = repos.filter(_ =>
-					_.remotes.some(r => repoUrl?.includes(r?.normalizedUrl?.toLowerCase()))
-				);
-				if (matchingRepos2.length === 1) {
-					result.currentRepo = matchingRepos2[0];
-					result.reason = "matchedOnProviderUrl";
-				} else {
-					// try to match on the best/closet repo
-					const bucket: { repo: CSRepository; points: number }[] = [];
-					const splitRepoUrl = repoUrl?.split("/");
-					for (const repo of repos) {
-						let points = 0;
-						for (const remote of repo.remotes) {
-							const split = remote.normalizedUrl?.split("/");
-							if (split?.length) {
-								for (const s of split) {
-									if (s && splitRepoUrl?.includes(s)) {
-										points++;
-									}
-								}
-							}
-						}
-						bucket.push({ repo: repo, points: points });
-					}
-					if (bucket.length) {
-						bucket.sort((a, b) => b.points - a.points);
-						result.currentRepo = bucket[0].repo;
-						result.currentRepo.repoFoundReason = "closestMatch";
-						result.reason = "closestMatch";
-					} else {
-						result.error = `Could not find repo for repoName=${repoName} repoUrl=${repoUrl}`;
-					}
-				}
-			} else {
-				result.currentRepo = matchingRepos2[0];
-				result.reason = "repoName";
-			}
-		}
-	} catch (ex) {
-		result.error = typeof ex === "string" ? ex : ex.message;
-		console.error(ex);
-	}
-	if (result.error || !result.currentRepo) {
-		logError(result.error || "Could not find currentRepo", {
-			result,
-		});
-	}
-	console.log(`getProviderPullRequestRepoObjectCore result`, result);
-	return result;
-};
 
 export const getProviderPullRequestCollaborators = createSelector(
 	getCurrentProviderPullRequest,
