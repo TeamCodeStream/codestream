@@ -1,32 +1,33 @@
+import createClassString from "classnames";
+import { debounce, includes as _includes } from "lodash-es";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import createClassString from "classnames";
-import * as reviewSelectors from "../store/reviews/reducer";
-import * as userSelectors from "../store/users/reducer";
-import Menu from "./Menu";
-import Icon from "./Icon";
-import ScrollBox from "./ScrollBox";
-import SearchResult from "./SearchResult";
-import { ProTip } from "./ProTip";
-import { HostApi } from "../webview-api";
-import { includes as _includes, sortBy as _sortBy, debounce } from "lodash-es";
-import { PanelHeader } from "../src/components/PanelHeader";
 import styled from "styled-components";
-import FiltersButton from "../src/components/FiltersButton";
+import { Disposable } from "vscode-languageserver-protocol";
 import { OpenUrlRequestType } from "../ipc/host.protocol";
 import { isCSReview } from "../protocols/agent/api.protocol.models";
-import { Disposable } from "vscode-languageserver-protocol";
-import { CodeStreamState } from "../store";
-import { ReposState } from "../store/repos/types";
-import { AnyObject, lightOrDark } from "../utils";
-import { setUserPreference } from "./actions";
-import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
-import { FilterQuery } from "../store/preferences/types";
-import { getSavedSearchFilters } from "../store/preferences/reducer";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { Button } from "../src/components/Button";
-import { closePanel } from "../store/context/actions";
 import { Dialog } from "../src/components/Dialog";
+import FiltersButton from "../src/components/FiltersButton";
+import { PanelHeader } from "../src/components/PanelHeader";
+import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { closePanel } from "../store/context/actions";
+import { getSavedSearchFilters } from "../store/preferences/reducer";
+import { FilterQuery } from "../store/preferences/types";
+import { ReposState } from "../store/repos/types";
+import * as reviewSelectors from "../store/reviews/reducer";
+import * as userSelectors from "../store/users/reducer";
+import { AnyObject, lightOrDark } from "../utils";
+import { HostApi } from "../webview-api";
+import { setUserPreference } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
+import Icon from "./Icon";
+import Menu from "./Menu";
+import { ProTip } from "./ProTip";
+import ScrollBox from "./ScrollBox";
+import SearchResult from "./SearchResult";
+import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
 
 const SearchBar = styled.div`
 	display: flex;
@@ -144,7 +145,7 @@ const sameDay = (d1, d2) => {
 const RESULTS_PAGE_SIZE = 50;
 
 interface DispatchProps {
-	setUserPreference: (...args: Parameters<typeof setUserPreference>) => Promise<any>;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	closePanel: Function;
 }
 

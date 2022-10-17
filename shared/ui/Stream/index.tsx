@@ -54,6 +54,7 @@ import { getPost } from "../store/posts/reducer";
 import { getStreamForId, getStreamForTeam } from "../store/streams/reducer";
 import { ComponentUpdateEmitter, Disposable } from "../utils";
 import { HostApi } from "../webview-api";
+import { SetUserPreferenceRequest } from "./actions.types";
 import { ActivityPanel } from "./ActivityPanel";
 import { BlameMap } from "./BlameMap";
 import CancelButton from "./CancelButton";
@@ -120,7 +121,7 @@ interface DispatchProps {
 	setIsFirstPageview: typeof setIsFirstPageview;
 	setNewPostEntry: typeof setNewPostEntry;
 	setNewPullRequestOptions: typeof setNewPullRequestOptions;
-	setUserPreference: Function;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 }
 
 interface ConnectedProps {

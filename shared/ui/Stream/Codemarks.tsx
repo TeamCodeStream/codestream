@@ -42,6 +42,7 @@ import { getPRLabel, isConnected, LabelHash } from "../store/providers/reducer";
 import { ReposState } from "../store/repos/types";
 import * as fs from "../utilities/fs";
 import { setUserPreference } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
 import Codemark from "./Codemark";
 import { Link } from "./Link";
 import { PRInfoModal } from "./SpatialView/PRInfoModal";
@@ -107,7 +108,7 @@ interface DispatchProps {
 	setCurrentCodemark: (
 		...args: Parameters<typeof setCurrentCodemark>
 	) => ReturnType<typeof setCurrentCodemark>;
-	setUserPreference: any;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	openPanel: (...args: Parameters<typeof openPanel>) => ReturnType<typeof openPanel>;
 	setNewPostEntry: Function;
 }

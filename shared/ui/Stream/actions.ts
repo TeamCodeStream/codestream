@@ -84,6 +84,7 @@ import { addUsers, updateUser } from "../store/users/actions";
 import { findMentionedUserIds, getTeamMembers } from "../store/users/reducer";
 import { isNotOnDisk, uriToFilePath, uuid } from "../utils";
 import { HostApi } from "../webview-api";
+import { SetUserPreferenceRequest } from "./actions.types";
 import { confirmPopup } from "./Confirm";
 
 export {
@@ -628,11 +629,6 @@ export const deletePost =
 			logError(error, { detail: `There was an error deleting a post`, streamId, postId });
 		}
 	};
-
-interface SetUserPreferenceRequest {
-	prefPath: string[];
-	value: unknown;
-}
 
 // usage: setUserPreference( { prefPath: ["favorites", "shoes", "wedges"], value: "red" } )
 export const setUserPreference = createAppAsyncThunk<void, SetUserPreferenceRequest>(

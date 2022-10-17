@@ -67,6 +67,7 @@ import {
 } from "../utils";
 import { HostApi } from "../webview-api";
 import { createPostAndCodemark, setUserPreference } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
 import { CodeErrorNav } from "./CodeErrorNav";
 import Codemark from "./Codemark";
 import { CodemarkForm } from "./CodemarkForm";
@@ -156,7 +157,7 @@ interface Props {
 	composeCodemarkActive: CodemarkType | undefined;
 	newPostEntryPoint?: string;
 	setNewPostEntry: Function;
-	setUserPreference: any;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 }
 
 interface State {

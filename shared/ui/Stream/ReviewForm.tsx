@@ -87,6 +87,7 @@ import {
 	setCodemarkStatus,
 	setUserPreference,
 } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
 import { Meta, MetaDescriptionForAssignees, MetaLabel } from "./Codemark/BaseCodemark";
@@ -120,7 +121,7 @@ interface Props extends ConnectedProps {
 	openPanel: Function;
 	openModal: Function;
 	closePanel: Function;
-	setUserPreference: Function;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	setCurrentReview: Function;
 	setCurrentRepo: Function;
 	setCodemarkStatus: Function;
@@ -1047,10 +1048,10 @@ class ReviewForm extends React.Component<Props, State> {
 										<Checkbox
 											name="skipPostCreationModal"
 											onChange={() => {
-												this.props.setUserPreference(
-													["skipPostCreationModal"],
-													!this.props.skipPostCreationModal
-												);
+												this.props.setUserPreference({
+													prefPath: ["skipPostCreationModal"],
+													value: !this.props.skipPostCreationModal,
+												});
 											}}
 										>
 											Don't show this again

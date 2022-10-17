@@ -76,6 +76,7 @@ import {
 } from "../utils";
 import { HostApi } from "../webview-api";
 import { markItemRead, openModal, openPanel, setUserPreference } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
 import { getDocumentFromMarker } from "./api-functions";
 import Button from "./Button";
 import CancelButton from "./CancelButton";
@@ -132,7 +133,7 @@ interface Props extends ConnectedProps {
 	openModal: Function;
 	getPullRequestConversationsFromProvider: Function;
 	setCurrentPullRequestNeedsRefresh: Function;
-	setUserPreference: Function;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	markItemRead(
 		...args: Parameters<typeof markItemRead>
 	): ReturnType<ReturnType<typeof markItemRead>>;

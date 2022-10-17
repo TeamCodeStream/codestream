@@ -1,88 +1,89 @@
-import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemarks/thunks";
-import cx from "classnames";
-import React from "react";
-import { connect } from "react-redux";
-import { Range } from "vscode-languageserver-protocol";
 import {
-	fetchThread,
-	setCodemarkStatus,
-	setCodemarkPinned,
-	setUserPreference,
-	createPost,
-} from "./actions";
-import Headshot from "./Headshot";
-import Tag from "./Tag";
-import Icon from "./Icon";
-import Menu from "./Menu";
-import { InjectAsComment } from "./InjectAsComment";
-import { RepositionCodemark } from "./RepositionCodemark";
-import Timestamp from "./Timestamp";
-import CodemarkDetails from "./CodemarkDetails";
-import {
-	DocumentMarker,
-	CodemarkPlus,
 	Capabilities,
+	CodemarkPlus,
+	DocumentMarker,
+	FollowCodemarkRequestType,
 	MarkerNotLocated,
 } from "@codestream/protocols/agent";
 import {
+	CodemarkStatus,
 	CodemarkType,
-	CSUser,
+	CSCodeError,
 	CSMe,
 	CSPost,
 	CSReview,
-	CodemarkStatus,
-	CSCodeError,
+	CSUser,
 } from "@codestream/protocols/api";
-import { HostApi } from "../webview-api";
-import { FollowCodemarkRequestType } from "@codestream/protocols/agent";
-import { range, emptyArray } from "../utils";
 import {
-	getUserByCsId,
-	getTeamMembers,
-	getUsernames,
-	getTeamTagsHash,
-	isUnread,
-} from "../store/users/reducer";
-import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
-import { CodemarkForm } from "./CodemarkForm";
-import { addCodemarks, NewCodemarkAttributes } from "../store/codemarks/actions";
-import { confirmPopup } from "./Confirm";
-import { getPost } from "../store/posts/reducer";
-import { getPosts } from "../store/posts/actions";
-import Tooltip from "./Tooltip";
-import { isNil } from "lodash-es";
-import { CodeStreamState } from "../store";
-import {
-	EditorHighlightRangeRequestType,
 	EditorHighlightRangeRequest,
-	EditorSelectRangeRequestType,
-	EditorSelectRangeRequest,
+	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
+	EditorSelectRangeRequest,
+	EditorSelectRangeRequestType,
 	OpenUrlRequestType,
 } from "@codestream/protocols/webview";
-import {
-	setCurrentCodemark,
-	repositionCodemark,
-	setCurrentReview,
-	setCurrentPullRequest,
-	setCurrentCodeError,
-} from "../store/context/actions";
-import { RelatedCodemark } from "./RelatedCodemark";
-import { addDocumentMarker } from "../store/documentMarkers/actions";
-import { Link } from "./Link";
-import { getDocumentFromMarker } from "./api-functions";
-import { SharingModal } from "./SharingModal";
-import { getReview } from "../store/reviews/reducer";
-import { getCodeError } from "../store/codeErrors/reducer";
-import { DropdownButton } from "./DropdownButton";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemarks/thunks";
+import cx from "classnames";
+import { isNil } from "lodash-es";
+import React from "react";
+import { connect } from "react-redux";
+import { Range } from "vscode-languageserver-protocol";
 import { HeadshotName } from "../src/components/HeadshotName";
+import { CodeStreamState } from "../store";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { getCodeError } from "../store/codeErrors/reducer";
+import { addCodemarks, NewCodemarkAttributes } from "../store/codemarks/actions";
+import {
+	repositionCodemark,
+	setCurrentCodeError,
+	setCurrentCodemark,
+	setCurrentPullRequest,
+	setCurrentReview,
+} from "../store/context/actions";
+import { addDocumentMarker } from "../store/documentMarkers/actions";
+import { getPosts } from "../store/posts/actions";
+import { getPost } from "../store/posts/reducer";
+import { getReview } from "../store/reviews/reducer";
+import {
+	getTeamMembers,
+	getTeamTagsHash,
+	getUserByCsId,
+	getUsernames,
+	isUnread,
+} from "../store/users/reducer";
+import { emptyArray, range } from "../utils";
+import { HostApi } from "../webview-api";
+import {
+	createPost,
+	fetchThread,
+	setCodemarkPinned,
+	setCodemarkStatus,
+	setUserPreference,
+} from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
+import { getDocumentFromMarker } from "./api-functions";
+import { Attachments } from "./Attachments";
+import CodemarkDetails from "./CodemarkDetails";
+import { CodemarkForm } from "./CodemarkForm";
+import { confirmPopup } from "./Confirm";
+import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import { DropdownButton } from "./DropdownButton";
+import Headshot from "./Headshot";
+import Icon from "./Icon";
+import { InjectAsComment } from "./InjectAsComment";
+import { Link } from "./Link";
+import { MarkdownText } from "./MarkdownText";
+import MarkerActions from "./MarkerActions";
+import Menu from "./Menu";
 import { PRCodeCommentPatch } from "./PullRequestComponents";
 import { PullRequestPatch } from "./PullRequestPatch";
-import MarkerActions from "./MarkerActions";
-import { MarkdownText } from "./MarkdownText";
 import { AddReactionIcon, Reactions } from "./Reactions";
-import { Attachments } from "./Attachments";
+import { RelatedCodemark } from "./RelatedCodemark";
+import { RepositionCodemark } from "./RepositionCodemark";
+import { SharingModal } from "./SharingModal";
+import Tag from "./Tag";
+import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 interface State {
 	hover: boolean;
@@ -102,7 +103,7 @@ interface DispatchProps {
 	fetchThread: typeof fetchThread;
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setCodemarkPinned: typeof setCodemarkPinned;
-	setUserPreference: typeof setUserPreference;
+	setUserPreference: (request: SetUserPreferenceRequest) => void;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
 	repositionCodemark: typeof repositionCodemark;

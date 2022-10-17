@@ -25,6 +25,7 @@ import {
 	setCodemarkStatus,
 	setUserPreference,
 } from "./actions";
+import { SetUserPreferenceRequest } from "./actions.types";
 import CodemarkActions from "./CodemarkActions";
 import { DropdownButton } from "./DropdownButton";
 import Icon from "./Icon";
@@ -71,7 +72,7 @@ interface Props {
 	): ReturnType<ReturnType<typeof setCodemarkPinned>>;
 	setCurrentCodemark: Function;
 	postAction?(...args: any[]): any;
-	setUserPreference?: Function;
+	setUserPreference?: (request: SetUserPreferenceRequest) => void;
 }
 
 export class CodemarkDetails extends React.Component<Props, State> {
