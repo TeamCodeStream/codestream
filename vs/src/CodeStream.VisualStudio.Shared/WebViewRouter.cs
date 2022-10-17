@@ -38,6 +38,7 @@ namespace CodeStream.VisualStudio.Shared {
 		private readonly IIdeService _ideService;
 		private readonly IEditorService _editorService;
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
+		private readonly IMessageInterceptorService _messageInterceptorService;
 
 		public WebViewRouter(
 			IComponentModel componentModel,
@@ -50,7 +51,8 @@ namespace CodeStream.VisualStudio.Shared {
 			IBrowserService browserService,
 			IIdeService ideService,
 			IEditorService editorService,
-			IAuthenticationServiceFactory authenticationServiceFactory) {
+			IAuthenticationServiceFactory authenticationServiceFactory,
+			IMessageInterceptorService messageInterceptorService) {
 			_componentModel = componentModel;
 			_codeStreamService = codestreamService;
 			_webviewUserSettingsService = webviewUserSettingsService;
@@ -62,6 +64,7 @@ namespace CodeStream.VisualStudio.Shared {
 			_ideService = ideService;
 			_editorService = editorService;
 			_authenticationServiceFactory = authenticationServiceFactory;
+			_messageInterceptorService = messageInterceptorService;
 		}
 
 		//
@@ -79,33 +82,11 @@ namespace CodeStream.VisualStudio.Shared {
 					return;
 				}
 
-				var message = WebviewIpcMessage.Parse(e.Message);
+				var webViewMessage = WebviewIpcMessage.Parse(e.Message);
 
-				using (IpcLogger.CriticalOperation(Log, "REC", message)) {
+				using (IpcLogger.CriticalOperation(Log, "REC", webViewMessage)) {
+					var message = _messageInterceptorService.InterceptAndModify(webViewMessage);
 					var target = message.Target();
-
-					var uriTokens = message
-						.Params?
-						.SelectTokens("$..uri")?
-						.ToList() ?? new List<JToken>();
-
-					var hasTempFiles = uriTokens
-						.Where(x => x is JValue)
-						.Any(x => x.Value<string>().IsTempFile());
-
-					var diffViewer = _ideService.GetActiveDiffEditor();
-
-					if (hasTempFiles && diffViewer != null)
-					{
-						foreach (var uriToken in uriTokens)
-						{
-							var uri = uriToken.Value<string>();
-
-							if(uri.IsTempFile() && (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) ?? false)){
-								message.Params?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));
-							}
-						}
-					}
 
 					switch (target) {
 						case IpcRoutes.Agent: {

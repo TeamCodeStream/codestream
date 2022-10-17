@@ -125,6 +125,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\ISolutionEventsListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IWebviewUserSettingsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IWpfTextViewCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\MessageInterceptorService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ServiceProviderExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SessionService.cs" />

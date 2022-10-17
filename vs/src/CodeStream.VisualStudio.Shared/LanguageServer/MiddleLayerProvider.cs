@@ -1,22 +1,24 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
+
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using CodeStream.VisualStudio.Core.Extensions;
-
 using Microsoft.VisualStudio.LanguageServer.Client;
-using System.Linq;
+
+using CodeStream.VisualStudio.Shared.Services;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class MiddleLayerProvider : ILanguageClientMiddleLayer {
 		private readonly ILogger _log;
+		private readonly IMessageInterceptorService _messageInterceptorService;
 
-		public MiddleLayerProvider(ILogger log) {
+		public MiddleLayerProvider(ILogger log, IMessageInterceptorService messageInterceptorService)
+		{
 			_log = log;
+			_messageInterceptorService = messageInterceptorService;
 		}
 
 		private static readonly HashSet<string> IgnoredMethods = new HashSet<string> {
@@ -44,13 +46,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			try {
 				// intercept any Temp or Diff-Schemed file paths and
 				// do not send them along to the agent
-				var uriTokens = methodParam?
-					.SelectTokens("$..uri")
-					.ToList() ?? new List<JToken>();
-		
-				var hasTempFiles = uriTokens
-					.Where(x => x is JValue)
-					.Any(x => x.Value<string>().IsTempFile());
+				var uriTokens = _messageInterceptorService.GetUriTokens(methodParam);
+				var hasTempFiles = _messageInterceptorService.DoesMessageContainTempFiles(uriTokens);
 					
 				if (hasTempFiles)
 				{
@@ -77,7 +74,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		}
 
 		private void LogHandler(string methodName, JToken methodParam) {
-			string value = "";
+			var value = "";
 			try {
 				if (methodParam != null) {
 					var textDocument = methodParam.SelectToken("textDocument");

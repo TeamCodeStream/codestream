@@ -103,6 +103,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IHttpClientService _httpClientService;
 		private readonly IIdeService _ideService;
+		private readonly IMessageInterceptorService _messageInterceptorService;
 
 		private readonly List<IDisposable> _disposables;
 		private IDisposable _disposable;
@@ -112,11 +113,13 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 				IEventAggregator eventAggregator,
 				IHttpClientService httpClientService,
-			IIdeService ideService) {
+			IIdeService ideService,
+			IMessageInterceptorService messageInterceptorService) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_httpClientService = httpClientService;
 			_ideService = ideService;
+			_messageInterceptorService = messageInterceptorService;
 
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
@@ -414,33 +417,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false)
 		{
-			var messageToken = message?.ToJToken();
-
-			var uriTokens = messageToken?
-				.SelectTokens("$..uri")?
-				.ToList() ?? new List<JToken>();
-		
-			var hasTempFiles = uriTokens
-					.Where(x => x is JValue)
-					.Any(x => x.Value<string>().IsTempFile());
-
-			var diffViewer = _ideService.GetActiveDiffEditor();
-
-			if (hasTempFiles && diffViewer != null)
-			{
-				foreach (var uriToken in uriTokens)
-				{
-					var uri = uriToken.Value<string>();
-
-					if (uri.IsTempFile() && (diffViewer.Properties?.TryGetProperty(
-						    PropertyNames.OverrideFileUri, out string codeStreamDiffUri
-					    ) ?? false))
-					{
-						messageToken?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));
-					}
-				}
-			}
-			
+			var messageToken = _messageInterceptorService.InterceptAndModify(message);
 			PostMessage(messageToken?.ToJson(), canEnqueue);
 		}
 
