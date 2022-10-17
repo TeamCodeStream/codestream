@@ -15,8 +15,8 @@ import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
 import { EditorScrollToNotificationType } from "../ipc/webview.protocol";
 import { Button } from "../src/components/Button";
 import {
+	getCurrentProviderPullRequest,
 	getProviderPullRequestCollaborators,
-	getProviderPullRequestRepo,
 	getPullRequestId,
 } from "../store/providerPullRequests/slice";
 import { api } from "../store/providerPullRequests/thunks";
@@ -85,6 +85,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 	const myRef = React.useRef(null);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
@@ -94,7 +95,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
 				: undefined,
-			currentRepo: getProviderPullRequestRepo(state),
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			pullRequestId: getPullRequestId(state),
 			documentMarkers: state.documentMarkers[state.editorContext.textEditorUri || ""] || [],
 			textEditorUri: state.editorContext.textEditorUri,
@@ -190,7 +191,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			headSha: pr.headRefOid,
 			filePath: fileInfo?.filename,
 			previousFilePath: fileInfo?.previousFilename,
-			repoId: derivedState.currentRepo!.id!,
+			repoId: derivedState.prRepoId!,
 			context: pr
 				? {
 						pullRequest: {
@@ -223,7 +224,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 			});
 			if (!response.repositories) return;
 
-			const repoIdToCheck = derivedState.currentRepo ? derivedState.currentRepo.id : undefined;
+			const repoIdToCheck = derivedState.prRepoId ? derivedState.prRepoId : undefined;
 			if (repoIdToCheck) {
 				const currentRepoInfo = response.repositories.find(r => r.id === repoIdToCheck);
 				if (currentRepoInfo) {
@@ -469,7 +470,7 @@ export const PullRequestFileCommentCard = (props: PropsWithChildren<Props>) => {
 														onClick={e => {
 															handleDiffClick();
 															HostApi.instance.track("PR Jump to Diff", {
-																Host: pr && pr.providerId
+																Host: pr && pr.providerId,
 															});
 														}}
 													>

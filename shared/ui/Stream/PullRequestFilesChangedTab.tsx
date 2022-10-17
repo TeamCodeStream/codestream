@@ -1,31 +1,27 @@
 import {
-	getProviderPullRequestRepo,
-	getCurrentProviderPullRequest,
-} from "@codestream/webview/store/providerPullRequests/slice";
-import { DropdownButton } from "@codestream/webview/Stream/DropdownButton";
-import { distanceOfTimeInWords } from "@codestream/webview/Stream/Timestamp";
-import React, { useState, useEffect, useMemo } from "react";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
-import { useSelector, useDispatch } from "react-redux";
-import { CodeStreamState } from "../store";
-import { FileStatus } from "@codestream/protocols/api";
-import { LoadingMessage } from "../src/components/LoadingMessage";
-import {
-	getPullRequestCommits,
-	getPullRequestFiles,
-	getPullRequestFilesFromProvider,
-} from "../store/providerPullRequests/thunks";
-import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
-import {
 	ChangeDataType,
 	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestPullRequest,
 	GetCommitsFilesResponse,
 } from "@codestream/protocols/agent";
+import { FileStatus } from "@codestream/protocols/api";
+import { getCurrentProviderPullRequest } from "@codestream/webview/store/providerPullRequests/slice";
+import { DropdownButton } from "@codestream/webview/Stream/DropdownButton";
+import { distanceOfTimeInWords } from "@codestream/webview/Stream/Timestamp";
+import React, { useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
+import { LoadingMessage } from "../src/components/LoadingMessage";
+import { CodeStreamState } from "../store";
+import {
+	getPullRequestCommits,
+	getPullRequestFiles,
+	getPullRequestFilesFromProvider,
+} from "../store/providerPullRequests/thunks";
+import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import Icon from "./Icon";
-import styled from "styled-components";
+import { PullRequestFilesChangedList } from "./PullRequestFilesChangedList";
 import Tooltip from "./Tooltip";
 
 const STATUS_MAP = {
@@ -65,10 +61,11 @@ export const PullRequestFilesChangedTab = (props: {
 	const { prCommitsRange, setPrCommitsRange, pr } = props;
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
 			providerPullRequests: state.providerPullRequests.pullRequests,
 			pullRequestFilesChangedMode: state.preferences.pullRequestFilesChangedMode || "files",
-			currentRepo: getProviderPullRequestRepo(state),
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			currentPullRequest: getCurrentProviderPullRequest(state),
 			currentPullRequestId: state.context.currentPullRequest
 				? state.context.currentPullRequest.id
@@ -177,14 +174,14 @@ export const PullRequestFilesChangedTab = (props: {
 	});
 
 	const getPRFiles = async () => {
-		if (prCommitsRange.length > 0 && derivedState.currentRepo) {
+		if (prCommitsRange.length > 0 && derivedState.prRepoId) {
 			const data =
 				(await dispatch(
 					getPullRequestFiles({
 						providerId: pr.providerId,
 						id: derivedState.currentPullRequestId!,
 						commits: prCommitsRange,
-						repoId: derivedState.currentRepo.id,
+						repoId: derivedState.prRepoId,
 						accessRawDiffs,
 					})
 				).unwrap()) ?? [];
@@ -357,7 +354,7 @@ export const PullRequestFilesChangedTab = (props: {
 			className="files-changed-list"
 			style={{ position: "relative", margin: props.sidebarView ? "0" : "0 0 20px 20px" }}
 		>
-			{derivedState.currentRepo && (
+			{derivedState.prRepoId && (
 				<>
 					{props.sidebarView && (
 						<DirectoryTopLevel

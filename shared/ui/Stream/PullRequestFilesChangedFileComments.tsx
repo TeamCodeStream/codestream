@@ -12,10 +12,7 @@ import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
 import { WebviewModals } from "../ipc/webview.protocol.common";
 import { openModal, setCurrentPullRequest } from "../store/context/actions";
-import {
-	getCurrentProviderPullRequest,
-	getProviderPullRequestRepo,
-} from "../store/providerPullRequests/slice";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
 import { api } from "../store/providerPullRequests/thunks";
 import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -116,9 +113,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	const isBitbucket = pullRequest?.providerId?.includes("bitbucket");
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
-			currentPullRequest: getCurrentProviderPullRequest(state),
-			currentRepo: getProviderPullRequestRepo(state),
+			currentPullRequest,
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 		};
 	});
 	const { currentPullRequest } = derivedState;
@@ -316,7 +314,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			});
 			if (!response.repositories) return;
 
-			const repoIdToCheck = derivedState.currentRepo ? derivedState.currentRepo.id : undefined;
+			const repoIdToCheck = derivedState.prRepoId ? derivedState.prRepoId : undefined;
 			if (repoIdToCheck) {
 				const currentRepoInfo = response.repositories.find(r => r.id === repoIdToCheck);
 				if (currentRepoInfo) {

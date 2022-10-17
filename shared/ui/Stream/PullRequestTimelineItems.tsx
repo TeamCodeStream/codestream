@@ -9,8 +9,8 @@ import {
 	EditorRevealRangeRequestType,
 } from "@codestream/protocols/webview";
 import {
+	getCurrentProviderPullRequest,
 	getProviderPullRequestCollaborators,
-	getProviderPullRequestRepo,
 } from "@codestream/webview/store/providerPullRequests/slice";
 import * as Path from "path-browserify";
 import * as path from "path-browserify";
@@ -114,9 +114,10 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const currentUser = state.users[state.session.userId!] as CSMe;
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
 			currentUser,
-			currentRepo: getProviderPullRequestRepo(state),
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			collaborators: getProviderPullRequestCollaborators(state),
 		};
 	});
@@ -383,7 +384,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													});
 													if (!response.repositories) return;
 													const currentRepoInfo = response.repositories.find(
-														r => r.id === derivedState.currentRepo!.id
+														r => r.id === derivedState.prRepoId
 													);
 													if (currentRepoInfo) {
 														setCurrentRepoRoot(currentRepoInfo.path);
@@ -412,7 +413,7 @@ export const PullRequestTimelineItems = (props: PropsWithChildren<Props>) => {
 													headBranch: props.pr.headRefName,
 													headSha: props.pr.headRefOid,
 													filePath,
-													repoId: derivedState.currentRepo!.id!,
+													repoId: derivedState.prRepoId!,
 													context: props.pr
 														? {
 																pullRequest: {

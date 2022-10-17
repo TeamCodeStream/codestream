@@ -15,7 +15,7 @@ import { Button } from "../src/components/Button";
 import { Checkbox } from "../src/components/Checkbox";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { CodeStreamState } from "../store";
-import { getProviderPullRequestRepo } from "../store/providerPullRequests/slice";
+import { getCurrentProviderPullRequest } from "../store/providerPullRequests/slice";
 import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { setUserPreference } from "./actions";
@@ -146,11 +146,12 @@ export const PullRequestFilesChangedList = (props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const ideName = state.ide?.name?.toUpperCase();
 		const requiresDiffHunkView = ideName === "VS" || ideName === "ATOM";
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 		return {
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
 				: undefined,
-			currentRepo: getProviderPullRequestRepo(state),
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			diffSelectorEnabled: !requiresDiffHunkView,
 			pullRequestFilesChangedMode: requiresDiffHunkView
 				? "hunks"
@@ -313,9 +314,7 @@ export const PullRequestFilesChangedList = (props: Props) => {
 				inEditorOnly: false,
 			});
 			if (!response.repositories) return;
-			const currentRepoInfo = response.repositories.find(
-				r => r.id === derivedState.currentRepo!.id
-			);
+			const currentRepoInfo = response.repositories.find(r => r.id === derivedState.prRepoId);
 			if (currentRepoInfo) {
 				setCurrentRepoRoot(currentRepoInfo.path);
 				repoRoot = currentRepoInfo.path;

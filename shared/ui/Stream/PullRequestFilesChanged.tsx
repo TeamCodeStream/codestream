@@ -18,11 +18,11 @@ import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
 import { CompareLocalFilesRequestType } from "../ipc/host.protocol";
+import { logError } from "../logger";
 import { parseCodeStreamDiffUri } from "../store/codemarks/actions";
 import {
 	getCurrentProviderPullRequest,
 	getProviderPullRequestCollaborators,
-	getProviderPullRequestRepo,
 	getPullRequestId,
 } from "../store/providerPullRequests/slice";
 import { useDidMount } from "../utilities/hooks";
@@ -34,7 +34,6 @@ import { PRErrorBox, PRErrorBoxSidebar } from "./PullRequestComponents";
 import { PullRequestFilesChangedFileComments } from "./PullRequestFilesChangedFileComments";
 import { CompareFilesProps } from "./PullRequestFilesChangedList";
 import { MetaIcons } from "./Review";
-import { logError } from "../logger";
 
 export const Directory = styled.div`
 	cursor: pointer;
@@ -98,17 +97,18 @@ export const PullRequestFilesChanged = (props: Props) => {
 				? state.editorContext.scmInfo.uri
 				: "";
 		const parsedDiffUri = parseCodeStreamDiffUri(matchFile || "");
+		const currentPullRequest = getCurrentProviderPullRequest(state);
 
 		const result = {
 			currentPullRequestProviderId: state.context.currentPullRequest
 				? state.context.currentPullRequest.providerId
 				: undefined,
-			currentPullRequest: getCurrentProviderPullRequest(state),
+			currentPullRequest: currentPullRequest,
 			matchFile,
 			parsedDiffUri,
 			userId,
 			repos: state.repos,
-			currentRepo: getProviderPullRequestRepo(state),
+			prRepoId: currentPullRequest?.conversations?.repository?.prRepoId,
 			numFiles: props.filesChanged.length,
 			isInVscode: state.ide.name === "VSC",
 			pullRequestId: getPullRequestId(state),
@@ -149,10 +149,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 			logError(forkPointResponse?.error?.type || "undefined forkPointResponse", {
 				detail: errorMessageCopy,
-				repoId:
-					derivedState.currentRepo?.repoFoundReason === "closestMatch"
-						? "0"
-						: derivedState.currentRepo!.id!,
+				repoId: derivedState.prRepoId!,
 				baseSha: props?.baseRef,
 				headSha: props?.headRef,
 				baseShaFromPrProp: props?.pr?.baseRefOid,
@@ -200,16 +197,13 @@ export const PullRequestFilesChanged = (props: Props) => {
 	}, [derivedState.currentPullRequestProviderId, props.pr]);
 
 	useDidMount(() => {
-		if (derivedState.currentRepo) {
+		if (derivedState.prRepoId) {
 			(async () => {
 				setLoading(true);
 				let forkPointResponse;
 				try {
 					forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
-						repoId:
-							derivedState.currentRepo?.repoFoundReason === "closestMatch"
-								? "0"
-								: derivedState.currentRepo!.id!,
+						repoId: derivedState.prRepoId!,
 						baseSha: props.baseRef,
 						headSha: props.headRef,
 						ref: getRef,
@@ -218,10 +212,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 				} catch (ex) {
 					logError(ex, {
 						detail: `failed to fetchForkPoint`,
-						repoId:
-							derivedState.currentRepo?.repoFoundReason === "closestMatch"
-								? "0"
-								: derivedState.currentRepo!.id!,
+						repoId: derivedState.prRepoId!,
+
 						baseSha: props.baseRef,
 						headSha: props.headRef,
 						ref: getRef,
@@ -239,14 +231,11 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	useEffect(() => {
 		(async () => {
-			if (isMounted && derivedState.currentRepo && props.pr && !forkPointSha) {
+			if (isMounted && derivedState.prRepoId && props.pr && !forkPointSha) {
 				try {
 					setLoading(true);
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
-						repoId:
-							derivedState.currentRepo?.repoFoundReason === "closestMatch"
-								? "0"
-								: derivedState.currentRepo!.id!,
+						repoId: derivedState.prRepoId!,
 						baseSha: props.pr.baseRefOid,
 						headSha: props.pr.headRefOid,
 						ref: getRef,
@@ -255,10 +244,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				} catch (err) {
 					logError(err, {
 						detail: `failed to fetchForkPoint`,
-						repoId:
-							derivedState.currentRepo?.repoFoundReason === "closestMatch"
-								? "0"
-								: derivedState.currentRepo!.id!,
+						repoId: derivedState.prRepoId!,
 						baseSha: props.pr.baseRefOid,
 						headSha: props.pr.headRefOid,
 						ref: getRef,
@@ -269,7 +255,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				}
 			}
 		})();
-	}, [isMounted, derivedState.currentRepo, pr]);
+	}, [isMounted, derivedState.prRepoId, pr]);
 
 	const goDiff = useCallback(
 		i => {
@@ -286,7 +272,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 					headSha: props.headRef,
 					filePath: f.file,
 					previousFilePath: f.previousFilename,
-					repoId: pr ? derivedState.currentRepo!.id! : props.repoId!,
+					repoId: pr ? derivedState.prRepoId! : props.repoId!,
 					context: pr
 						? {
 								pullRequest: {
@@ -309,7 +295,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				});
 			})(i);
 		},
-		[derivedState.currentRepo, repoId, visitedFiles, forkPointSha, pr, derivedState.pullRequestId]
+		[derivedState.prRepoId, repoId, visitedFiles, forkPointSha, pr, derivedState.pullRequestId]
 	);
 
 	const nextFile = useCallback(() => {
@@ -346,8 +332,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 			if (!response.repositories) return;
 			const repoIdToCheck = props.repoId
 				? props.repoId
-				: derivedState.currentRepo
-				? derivedState.currentRepo.id
+				: derivedState.prRepoId
+				? derivedState.prRepoId
 				: undefined;
 			if (repoIdToCheck) {
 				const currentRepoInfo = response.repositories.find(r => r.id === repoIdToCheck);
@@ -525,7 +511,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 	]);
 
 	React.useEffect(() => {
-		if (pr && !derivedState.currentRepo) {
+		if (pr && !derivedState.prRepoId) {
 			setRepoErrorMessage(
 				<span>
 					Repo <span className="monospace highlight">{pr.repository?.name}</span> not found in your
@@ -554,7 +540,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		} else {
 			setRepoErrorMessage("");
 		}
-	}, [pr, derivedState.currentRepo, accessRawDiffs]);
+	}, [pr, derivedState.prRepoId, accessRawDiffs]);
 
 	const isMacintosh = navigator.appVersion.includes("Macintosh");
 	const nextFileKeyboardShortcut = () => (isMacintosh ? `⌥ F6` : "Alt-F6");
