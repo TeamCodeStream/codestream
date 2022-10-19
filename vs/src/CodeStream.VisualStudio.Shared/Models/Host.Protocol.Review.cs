@@ -1,6 +1,50 @@
-﻿using CodeStream.VisualStudio.Core.Models;
+﻿using System.Collections;
+using System.Collections.Generic;
+
+using CodeStream.VisualStudio.Core.Models;
+
+using Newtonsoft.Json;
 
 namespace CodeStream.VisualStudio.Shared.Models {
+
+	public class PullRequestCloseDiffRequest { }
+
+	public class PullRequestCloseDiffRequestType : RequestType<PullRequestCloseDiffRequest>
+	{
+		public const string MethodName = "host/files/closeDiff";
+		public override string Method => MethodName;
+	}
+
+
+	public class PullRequestShowDiffRequestType : RequestType<PullRequestShowDiffRequest> {
+		public const string MethodName = "host/files/compare";
+		public override string Method => MethodName;
+	}
+
+	public class PullRequestShowDiffRequest
+	{
+		[JsonProperty("baseBranch", NullValueHandling = NullValueHandling.Ignore)]
+		public string BaseBranch { get; set; }
+
+		[JsonProperty("baseSha", NullValueHandling = NullValueHandling.Ignore)]
+		public string BaseSha { get; set; }
+
+		[JsonProperty("headBranch", NullValueHandling = NullValueHandling.Ignore)]
+		public string HeadBranch { get; set; }
+
+		[JsonProperty("headSha", NullValueHandling = NullValueHandling.Ignore)]
+		public string HeadSha { get; set; }
+
+		[JsonProperty("filePath", NullValueHandling = NullValueHandling.Ignore)]
+		public string FilePath { get; set; }
+
+		[JsonProperty("repoId", NullValueHandling = NullValueHandling.Ignore)]
+		public string RepoId { get; set; }
+
+		[JsonProperty("context", NullValueHandling = NullValueHandling.Ignore)]
+		public PullRequestDiffUri.PullRequestContext Context { get; set; }
+	}
+	
 	public class ReviewShowLocalDiffRequest {
 		public string RepoId { get; set; }
 		public string Path { get; set; }

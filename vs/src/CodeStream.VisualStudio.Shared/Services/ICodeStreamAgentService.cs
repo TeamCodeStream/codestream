@@ -31,6 +31,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 		Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL, string environment = null);
 
+		Task<GetFileContentsAtRevisionResponse> GetFileContentsAtRevisionAsync(
+			string repoId,
+			string path,
+			string sha);
+
 		Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId,
 			string path);
 

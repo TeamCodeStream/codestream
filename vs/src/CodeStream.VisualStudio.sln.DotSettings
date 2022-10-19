@@ -2,7 +2,9 @@
 	<s:Boolean x:Key="/Default/CodeInspection/CodeAnnotations/NamespacesWithAnnotations/=CodeStream_002EVisualStudio_002EAnnotations/@EntryIndexedValue">True</s:Boolean>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=EB360D87_002D8769_002D44A4_002DB837_002D8BC3279070C9_002Fd_003AUI_002Fd_003AWebViews_002Fd_003AShared/@EntryIndexedValue">ExplicitlyExcluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=EB360D87_002D8769_002D44A4_002DB837_002D8BC3279070C9_002Fd_003AUI_002Fd_003AWebViews_002Ff_003Atheme_002Ecss/@EntryIndexedValue">ExplicitlyExcluded</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=FR/@EntryIndexedValue">FR</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=NR/@EntryIndexedValue">NR</s:String>
+	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=PR/@EntryIndexedValue">PR</s:String>
 	<s:String x:Key="/Default/CodeStyle/Naming/CSharpNaming/Abbreviations/=SSL/@EntryIndexedValue">SSL</s:String>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Argb/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Codemark/@EntryIndexedValue">True</s:Boolean>

@@ -10,11 +10,13 @@ using DotNetBrowser.WPF;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
+using System.CodeDom;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Threading;
@@ -27,8 +29,13 @@ using CodeStream.VisualStudio.Shared.Managers;
 using CodeStream.VisualStudio.Shared.Models;
 using Microsoft;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Language.Intellisense;
+
+using Newtonsoft.Json.Linq;
+
 using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
+using Task = System.Threading.Tasks.Task;
 
 namespace CodeStream.VisualStudio.Shared.Services {
 	/// <summary>
@@ -95,6 +102,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IHttpClientService _httpClientService;
+		private readonly IIdeService _ideService;
+		private readonly IMessageInterceptorService _messageInterceptorService;
 
 		private readonly List<IDisposable> _disposables;
 		private IDisposable _disposable;
@@ -103,10 +112,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public DotNetBrowserService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 				IEventAggregator eventAggregator,
-				IHttpClientService httpClientService) {
+				IHttpClientService httpClientService,
+			IIdeService ideService,
+			IMessageInterceptorService messageInterceptorService) {
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_httpClientService = httpClientService;
+			_ideService = ideService;
+			_messageInterceptorService = messageInterceptorService;
 
 			try {
 				_messageQueue = new BlockingCollection<string>(new ConcurrentQueue<string>());
@@ -402,8 +415,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return path;
 		}
 
-		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false) {
-			PostMessage(message.AsJson(), canEnqueue);
+		public virtual void PostMessage(IAbstractMessageType message, bool canEnqueue = false)
+		{
+			var messageToken = _messageInterceptorService.InterceptAndModify(message);
+			PostMessage(messageToken?.ToJson(), canEnqueue);
 		}
 
 		/// <summary>

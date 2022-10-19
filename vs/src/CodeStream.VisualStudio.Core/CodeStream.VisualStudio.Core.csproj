@@ -120,7 +120,7 @@
     <Compile Include="Models\CodeLevelMetricsDetail.cs" />
     <Compile Include="Models\CodeLevelMetricsProperties.cs" />
     <Compile Include="Models\CodeLevelMetricsTelemetry.cs" />
-    <Compile Include="Models\CodeStreamDiffUri.cs" />
+    <Compile Include="Models\FeedbackRequestDiffUri.cs" />
     <Compile Include="Models\EntityAccount.cs" />
     <Compile Include="Models\Error.cs" />
     <Compile Include="Models\ErrorRateResponse.cs" />
@@ -130,6 +130,7 @@
     <Compile Include="Models\MetricTimesliceNameMapping.cs" />
     <Compile Include="Models\Placement.cs" />
     <Compile Include="Models\Position.cs" />
+    <Compile Include="Models\PullRequestDiffUri.cs" />
     <Compile Include="Models\RepoInfo.cs" />
     <Compile Include="Models\SessionSignedOutReason.cs" />
     <Compile Include="Models\ThroughputResponse.cs" />

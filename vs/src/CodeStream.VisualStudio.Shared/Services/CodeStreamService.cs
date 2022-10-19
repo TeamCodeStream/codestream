@@ -114,7 +114,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public Task ResetActiveEditorAsync() {
-			if (!IsReady) return Task.CompletedTask;
+			if (!IsReady)
+			{
+				return Task.CompletedTask;
+			}
 
 			try {
 				_ = BrowserService.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
@@ -128,7 +131,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public Task OpenCommentByThreadAsync(string streamId, string threadId, string codemarkId = null) {
-			if (!IsReady) return Task.CompletedTask;
+			if (!IsReady)
+			{
+				return Task.CompletedTask;
+			}
 
 			try {
 				_ = BrowserService.NotifyAsync(new ShowStreamNotificationType {
@@ -160,7 +166,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		public Task EditorSelectionChangedNotificationAsync(Uri uri, EditorState editorState,
 			List<Range> visibleRanges, int? totalLines, CodemarkType codemarkType, CancellationToken? cancellationToken = null) {
-			if (!IsReady) return Task.CompletedTask;
+			if (!IsReady)
+			{
+				return Task.CompletedTask;
+			}
 
 			try {
 				_ = BrowserService.NotifyAsync(new HostDidChangeEditorSelectionNotificationType {

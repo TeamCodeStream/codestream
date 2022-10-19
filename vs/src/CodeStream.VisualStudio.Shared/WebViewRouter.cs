@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -14,6 +15,7 @@ using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
+
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -36,6 +38,7 @@ namespace CodeStream.VisualStudio.Shared {
 		private readonly IIdeService _ideService;
 		private readonly IEditorService _editorService;
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
+		private readonly IMessageInterceptorService _messageInterceptorService;
 
 		public WebViewRouter(
 			IComponentModel componentModel,
@@ -48,7 +51,8 @@ namespace CodeStream.VisualStudio.Shared {
 			IBrowserService browserService,
 			IIdeService ideService,
 			IEditorService editorService,
-			IAuthenticationServiceFactory authenticationServiceFactory) {
+			IAuthenticationServiceFactory authenticationServiceFactory,
+			IMessageInterceptorService messageInterceptorService) {
 			_componentModel = componentModel;
 			_codeStreamService = codestreamService;
 			_webviewUserSettingsService = webviewUserSettingsService;
@@ -60,6 +64,7 @@ namespace CodeStream.VisualStudio.Shared {
 			_ideService = ideService;
 			_editorService = editorService;
 			_authenticationServiceFactory = authenticationServiceFactory;
+			_messageInterceptorService = messageInterceptorService;
 		}
 
 		//
@@ -77,19 +82,21 @@ namespace CodeStream.VisualStudio.Shared {
 					return;
 				}
 
-				var message = WebviewIpcMessage.Parse(e.Message);
+				var webViewMessage = WebviewIpcMessage.Parse(e.Message);
 
-				using (IpcLogger.CriticalOperation(Log, "REC", message)) {
+				using (IpcLogger.CriticalOperation(Log, "REC", webViewMessage)) {
+					var message = _messageInterceptorService.InterceptAndModify(webViewMessage);
 					var target = message.Target();
+
 					switch (target) {
 						case IpcRoutes.Agent: {
 								using (var scope = _browserService.CreateScope(message)) {
 									JToken @params = null;
 									string error = null;
 									ResponseError response = null;
-									try {
-										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method,
-											message.Params);
+									try
+									{
+										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.Params);
 									}
 									catch (RemoteRpcException rex) {
 										// in cases where we don't have a code, hard-code to 10000,
@@ -132,7 +139,7 @@ namespace CodeStream.VisualStudio.Shared {
 											string error = null;
 											try {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-												var request = message.Params.ToObject<ShellPromptFolderRequest>();
+												var request = message.Params?.ToObject<ShellPromptFolderRequest>();
 												var dialog = _ideService.FolderPrompt(request?.Message);
 												if (dialog.ShowDialog() == DialogResult.OK) {
 													if (!dialog.SelectedPath.IsNullOrWhiteSpace()) {
@@ -162,7 +169,7 @@ namespace CodeStream.VisualStudio.Shared {
 										break;
 									}
 									case WebviewDidChangeContextNotificationType.MethodName: {
-										var @params = message.Params.ToObject<WebviewDidChangeContextNotification>();
+										var @params = message.Params?.ToObject<WebviewDidChangeContextNotification>();
 										if (@params != null) {
 											var panelStack = @params.Context?.PanelStack;
 											_sessionService.PanelStack = panelStack;
@@ -180,7 +187,7 @@ namespace CodeStream.VisualStudio.Shared {
 									case CompareMarkerRequestType.MethodName: {
 										using (_browserService.CreateScope(message)) {
 											try {
-												var marker = message.Params["marker"].ToObject<CsMarker>();
+												var marker = message.Params?["marker"]?.ToObject<CsMarker>();
 												var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(
 														new DocumentFromMarkerRequest(marker));
 
@@ -189,23 +196,28 @@ namespace CodeStream.VisualStudio.Shared {
 
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
-												if (wpfTextView != null) {
-													var document = wpfTextView.GetDocument();
-													if (document != null) {
-														var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
-														var span = wpfTextView.ToSpan(documentFromMarker.Range);
-														if (span.HasValue) {
-															if (document?.IsDirty == true) {
-																var tempFile1 = _ideService.CreateTempFile(filePath, text);
-																var tempFile2 = _ideService.CreateTempFile(filePath, text);
-																_ideService.CompareFiles(tempFile1, tempFile2, wpfTextView.TextBuffer, span.Value,
-																	documentFromMarker.Marker.Code, isFile1Temp: true, isFile2Temp: true);
-															}
-															else {
-																var tempFile2 = _ideService.CreateTempFile(filePath, text);
-																_ideService.CompareFiles(filePath, tempFile2, wpfTextView.TextBuffer, span.Value,
-																	documentFromMarker.Marker.Code, isFile1Temp: false, isFile2Temp: true);
-															}
+												var document = wpfTextView?.GetDocument();
+												if (document != null) {
+													var text = wpfTextView.TextBuffer.CurrentSnapshot.GetText();
+													var span = wpfTextView.ToSpan(documentFromMarker.Range);
+													if (span.HasValue) {
+														if (document.IsDirty) {
+															_ideService.CompareTempFiles(
+																filePath, 
+																text, 
+																wpfTextView.TextBuffer, 
+																span.Value, 
+																documentFromMarker.Marker.Code,
+																"Yours vs. Theirs");
+														}
+														else {
+															_ideService.CompareWithRightTempFile(
+																filePath, 
+																text, 
+																wpfTextView.TextBuffer, 
+																span.Value, 
+																documentFromMarker.Marker.Code,
+																"Yours vs. Theirs");
 														}
 													}
 												}
@@ -219,7 +231,7 @@ namespace CodeStream.VisualStudio.Shared {
 									case ApplyMarkerRequestType.MethodName: {
 										using (_browserService.CreateScope(message)) {
 											try {
-												var marker = message.Params["marker"].ToObject<CsMarker>();
+												var marker = message.Params?["marker"]?.ToObject<CsMarker>();
 												var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
 												var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
 
@@ -268,12 +280,12 @@ namespace CodeStream.VisualStudio.Shared {
 											if (_authenticationServiceFactory != null) {
 												var authenticationService = _authenticationServiceFactory.Create();
 												if (authenticationService != null) {
-													var @params = message.Params.ToObject<LogoutRequest>();
+													var @params = message.Params?.ToObject<LogoutRequest>();
 													var reason = @params?.Reason == LogoutReason1.Reauthenticating ?
 														SessionSignedOutReason.ReAuthenticating
 														: SessionSignedOutReason.UserSignedOutFromWebview;
 
-													await authenticationService.LogoutAsync(reason, @params.NewServerUrl, @params.NewEnvironment, null);
+													await authenticationService.LogoutAsync(reason, @params?.NewServerUrl, @params?.NewEnvironment, null);
 												}
 											}
 										}
@@ -289,7 +301,7 @@ namespace CodeStream.VisualStudio.Shared {
 										using (var scope = _browserService.CreateScope(message)) {
 											bool result = false;
 											try {
-												var @params = message.Params.ToObject<EditorSelectRangeRequest>();
+												var @params = message.Params?.ToObject<EditorSelectRangeRequest>();
 												if (@params != null) {
 													var uri = @params.Uri.ToUri();
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
@@ -333,7 +345,7 @@ namespace CodeStream.VisualStudio.Shared {
 											using (var scope = _browserService.CreateScope(message)) {
 												OpenEditorResult openEditorResult = null;
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-												var @params = message.Params.ToObject<EditorRevealRangeRequest>();
+												var @params = message.Params?.ToObject<EditorRevealRangeRequest>();
 												if (@params != null) {
 													openEditorResult = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
 													if (openEditorResult?.Success != true) {
@@ -345,11 +357,11 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case EditorScrollToNotificationType.MethodName: {
-											var @params = message.Params.ToObject<EditorScrollToNotification>();
+											var @params = message.Params?.ToObject<EditorScrollToNotification>();
 #pragma warning disable VSTHRD001
 											System.Windows.Application.Current.Dispatcher.Invoke(() => {
 												try {
-													_ideService.ScrollEditor(@params.Uri.ToUri(), @params.Position.Line, @params.DeltaPixels, @params.AtTop);
+													_ideService.ScrollEditor(@params?.Uri.ToUri(), @params?.Position.Line, @params?.DeltaPixels, @params?.AtTop);
 												}
 												catch (Exception ex) {
 													Log.Warning(ex, nameof(EditorRevealRangeRequestType));
@@ -360,14 +372,15 @@ namespace CodeStream.VisualStudio.Shared {
 										}
 									case InsertTextRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
-												IWpfTextView openEditorResult = null;
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												try {
-													var @params = message.Params.ToObject<InsertTextRequest>();
+													var @params = message.Params?.ToObject<InsertTextRequest>();
 													if (@params != null) {
 														var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(@params.Marker));
-														if (documentFromMarker != null) {
-															openEditorResult = await _ideService.OpenEditorAtLineAsync(documentFromMarker.TextDocument.Uri.ToUri(), documentFromMarker.Range, true);
+														if (documentFromMarker != null)
+														{
+															var openEditorResult = await _ideService.OpenEditorAtLineAsync(documentFromMarker.TextDocument.Uri.ToUri(), documentFromMarker.Range, true);
+
 															if (openEditorResult == null) {
 																Log.Debug($"{nameof(InsertTextRequestType)} could not open editor");
 															}
@@ -414,22 +427,9 @@ namespace CodeStream.VisualStudio.Shared {
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 											using (_browserService.CreateScope(message)) {
-												// NOTE: we're not using the controller here. changing these properties
-												// triggers the OnPropertyChanged, which then uses the ConfigurationController
-												// for added handling
-
-												// Webview no longer sends these updates -- keeping for reference
-#if DEBUG
+												#if DEBUG
 												Log.LocalWarning(message.ToJson());
-#endif
-												//using (var scope = SettingsScope.Create(_codeStreamSettingsManager))
-												//{
-												//    var @params = message.Params.ToObject<UpdateConfigurationRequest>();
-												//    if (@params.Name == "showMarkerGlyphs")
-												//    {
-												//        scope.SettingsService.ShowMarkerGlyphs = @params.Value.AsBool();
-												//    }
-												//}
+												#endif
 											}
 											break;
 										}
@@ -437,14 +437,14 @@ namespace CodeStream.VisualStudio.Shared {
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 											using (var scope = _browserService.CreateScope(message)) {
 												try {
-													var @params = message.Params.ToObject<UpdateServerUrlRequest>();
-													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params.ServerUrl}");
+													var @params = message.Params?.ToObject<UpdateServerUrlRequest>();
+													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params?.ServerUrl}");
 													using (var settingsScope = SettingsScope.Create(_codeStreamSettingsManager, true)) {
-														settingsScope.CodeStreamSettingsManager.ServerUrl = @params.ServerUrl;
-														settingsScope.CodeStreamSettingsManager.DisableStrictSSL = @params.DisableStrictSSL ?? false;
+														settingsScope.CodeStreamSettingsManager.ServerUrl = @params?.ServerUrl;
+														settingsScope.CodeStreamSettingsManager.DisableStrictSSL = @params?.DisableStrictSSL ?? false;
 													}
 
-													await _codeStreamAgent.SetServerUrlAsync(@params.ServerUrl, @params.DisableStrictSSL, @params.Environment);
+													await _codeStreamAgent.SetServerUrlAsync(@params?.ServerUrl, @params?.DisableStrictSSL, @params?.Environment);
 												}
 												catch (Exception ex) {
 													Log.Error(ex, nameof(UpdateServerUrlRequestType));
@@ -462,7 +462,7 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case OpenUrlRequestType.MethodName: {
-											var @params = message.Params.ToObject<OpenUrlRequest>();
+											var @params = message.Params?.ToObject<OpenUrlRequest>();
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
 													_ideService.Navigate(@params.Url);
@@ -471,8 +471,45 @@ namespace CodeStream.VisualStudio.Shared {
 											}
 											break;
 										}
+
+									case PullRequestShowDiffRequestType.MethodName: {
+										var @params = message.Params?.ToObject<PullRequestShowDiffRequest>();
+										await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
+										using (var scope = _browserService.CreateScope(message))
+										{
+											if (@params != null)
+											{
+												var leftContent = await _codeStreamAgent.GetFileContentsAtRevisionAsync(
+													@params.RepoId, @params.FilePath, @params.BaseSha
+												);
+
+												var leftData = new PullRequestDiffUri(
+													@params.FilePath, @params.RepoId, @params.BaseBranch, @params.HeadBranch, @params.BaseSha,
+													@params.HeadSha, "left", @params.Context
+												);
+
+												var rightContent = await _codeStreamAgent.GetFileContentsAtRevisionAsync(
+													@params.RepoId, @params.FilePath, @params.HeadSha
+												);
+
+												var rightData = new PullRequestDiffUri(
+													@params.FilePath, @params.RepoId, @params.BaseBranch, @params.HeadBranch, @params.BaseSha,
+													@params.HeadSha, "right", @params.Context
+												);
+												var title = Path.GetFileName(@params.FilePath);
+
+												_ideService.PullRequestDiff(@params.FilePath, leftContent.Content, leftData, rightContent.Content, rightData, title);
+											}
+
+											scope.FulfillRequest();
+										}
+
+										break;
+									}
+
 									case ReviewShowDiffRequestType.MethodName: {
-											var @params = message.Params.ToObject<ReviewShowDiffRequest>();
+											var @params = message.Params?.ToObject<ReviewShowDiffRequest>();
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
@@ -480,20 +517,35 @@ namespace CodeStream.VisualStudio.Shared {
 													if (reviewContents != null) {
 														var review = await _codeStreamAgent.GetReviewAsync(@params.ReviewId);
 														if (review != null) {
-
-															string update = "";
+															var title = "";
 															if (@params.Checkpoint.HasValue && @params.Checkpoint > 0) {
-																update = $" (Update #{@params.Checkpoint})";
+																title = $" (Update #{@params.Checkpoint})";
 															}
-															string title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{update}";
-															_ideService.DiffTextBlocks(@params.Path, reviewContents.Left, reviewContents.Right, title, new Data() {
-																Scheme = "codestream-diff",
-																PathParts = new List<string> {
-																	@params.ReviewId,
-																	@params.Checkpoint.HasValue ? @params.Checkpoint.ToString() : "undefined",
-																	@params.RepoId
-																}
-															});
+															title = $"{@params.Path} @ {review.Review.Title.Truncate(25)}{title}";
+
+															var leftData = new FeedbackRequestDiffUri(
+																@params.ReviewId,
+																@params.Checkpoint?.ToString() ?? "undefined",
+																@params.RepoId,
+																"left",
+																@params.Path
+															);
+
+															var rightData = new FeedbackRequestDiffUri(
+																@params.ReviewId,
+																@params.Checkpoint?.ToString() ?? "undefined",
+																@params.RepoId,
+																"right",
+																@params.Path
+															);
+															
+															_ideService.FeedbackRequestDiff(
+																@params.Path, 
+																reviewContents.Left, 
+																leftData,
+																reviewContents.Right, 
+																rightData,
+																title);
 														}
 													}
 												}
@@ -502,7 +554,7 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case ReviewShowLocalDiffRequestType.MethodName: {
-											var @params = message.Params.ToObject<ReviewShowLocalDiffRequest>();
+											var @params = message.Params?.ToObject<ReviewShowLocalDiffRequest>();
 
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
@@ -520,6 +572,8 @@ namespace CodeStream.VisualStudio.Shared {
 											}
 											break;
 										}
+
+									case PullRequestCloseDiffRequestType.MethodName:
 									case ReviewCloseDiffRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
