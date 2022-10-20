@@ -42,9 +42,9 @@ namespace CodeStream.VisualStudio.Shared.Services
 
 		public WebviewIpcMessage InterceptAndModify(WebviewIpcMessage message)
 		{
-			var updatedMessage = InterceptAndModify(message.Params);
+			var updatedMessage = InterceptAndModify(message.TParams);
 
-			message.Params = updatedMessage;
+			message.TParams = updatedMessage;
 
 			return message;
 		}

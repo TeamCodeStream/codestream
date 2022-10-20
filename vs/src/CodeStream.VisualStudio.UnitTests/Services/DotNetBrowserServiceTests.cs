@@ -1,197 +1,139 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
+
 using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Shared.Events;
+using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
 using Moq;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services {
 	public class DotNetBrowserServiceTests {
+		
+		private readonly DotNetBrowserServiceStub _browserService;
+		private readonly EventAggregator _eventAggregator;
+
+		public DotNetBrowserServiceTests()
+		{
+			var serviceProviderMock = new Mock<IServiceProvider>();
+			var httpServiceMock = new Mock<IHttpClientService>();
+			var ideServiceMock = new Mock<IIdeService>();
+
+			ideServiceMock.Setup(x => x.GetActiveDiffEditor())
+				.Returns(() => null);
+
+			var messageInterceptorMock = new MessageInterceptorService(ideServiceMock.Object);
+			
+			_eventAggregator = new EventAggregator();
+
+			_browserService = new DotNetBrowserServiceStub(
+				serviceProviderMock.Object,
+				_eventAggregator,
+				httpServiceMock.Object,
+				messageInterceptorMock
+			);
+		}
+
 		[Fact]
 		public void DotNetBrowserServiceTest() {
-			var serviceProviderMock = new Mock<IServiceProvider>();
-			var httpServiceMock = new Mock<IHttpClientService>();
-			var ideServiceMock = new Mock<IIdeService>();
-			var messageInterceptorMock = new Mock<IMessageInterceptorService>();
+			_browserService.Send("lsp1", true);
+			_browserService.Send("lsp2", true);
+			_browserService.Send("lsp3", true);
+			_browserService.Send("bootstrap1");
 
-			var eventAggregator = new EventAggregator();
+			Assert.True(_browserService.QueueCount == 3);
+			Assert.Contains("lsp1", _browserService[0]);
+			Assert.Contains("lsp2", _browserService[1]);
+			Assert.Contains("lsp3", _browserService[2]);
 
-			var browserService = new DotNetBrowserServiceStub(
-				serviceProviderMock.Object,
-				eventAggregator,
-				httpServiceMock.Object,
-				ideServiceMock.Object,
-				messageInterceptorMock.Object
-			);
+			_eventAggregator.Publish(new WebviewDidInitializeEvent());
+			_eventAggregator.Publish(new SessionLogoutEvent());
+			Assert.True(_browserService.QueueCount == 0);
 
-			browserService.PostMessage("lsp1", true);
-			browserService.PostMessage("lsp2", true);
-			browserService.PostMessage("lsp3", true);
-			browserService.PostMessage("bootstrap");
-
-			Assert.True(browserService.QueueCount > 0);
-			Assert.True(browserService.QueueCount < 4);
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			Thread.Sleep(1000);
-			Assert.True(browserService.QueueCount == 0);
-			Assert.True(browserService.Items[0] == "bootstrap");
-			Assert.True(browserService.Items[1] == "lsp1");
-			Assert.True(browserService.Items[2] == "lsp2");
-			Assert.True(browserService.Items[3] == "lsp3");
-
-			eventAggregator.Publish(new SessionLogoutEvent());
-
-			Thread.Sleep(1000);
-			browserService.Items.Clear();
-
-			browserService.PostMessage("lsp1", true);
-			browserService.PostMessage("lsp2", true);
-			browserService.PostMessage("lsp3", true);
-			browserService.PostMessage("bootstrap");
-
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			Thread.Sleep(1000);
-			Assert.True(browserService.QueueCount == 0);
-			Assert.True(browserService.Items[0] == "bootstrap");
-			Assert.True(browserService.Items[1] == "lsp1");
-			Assert.True(browserService.Items[2] == "lsp2");
-			Assert.True(browserService.Items[3] == "lsp3");
-
-			browserService.Dispose();
+			_browserService.Dispose();
 		}
-
-		[Fact]
-		public void DotNetBrowserServiceNormalThenQueuedTest() {
-			var serviceProviderMock = new Mock<IServiceProvider>();
-			var httpServiceMock = new Mock<IHttpClientService>();
-			var ideServiceMock = new Mock<IIdeService>();
-			var messageInterceptorMock = new Mock<IMessageInterceptorService>();
-			var eventAggregator = new EventAggregator();
-
-			var browserService = new DotNetBrowserServiceStub(
-				serviceProviderMock.Object,
-				eventAggregator,
-				httpServiceMock.Object,
-				ideServiceMock.Object,
-				messageInterceptorMock.Object
-			);
-
-			browserService.PostMessage("bootstrap1");
-			browserService.PostMessage("bootstrap2");
-			browserService.PostMessage("lsp1", true);
-			browserService.PostMessage("lsp2", true);
-			browserService.PostMessage("lsp3", true);
-			browserService.PostMessage("bootstrap3");
-			browserService.PostMessage("bootstrap4");
-
-			Assert.True(browserService.QueueCount > 0);
-			Assert.True(browserService.QueueCount < 4);
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			Thread.Sleep(1000);
-			Assert.True(browserService.QueueCount == 0);
-			Assert.True(browserService.Items[0] == "bootstrap1");
-			Assert.True(browserService.Items[1] == "bootstrap2");
-			Assert.True(browserService.Items[2] == "bootstrap3");
-			Assert.True(browserService.Items[3] == "bootstrap4");
-			Assert.True(browserService.Items[4] == "lsp1");
-			Assert.True(browserService.Items[5] == "lsp2");
-			Assert.True(browserService.Items[6] == "lsp3");
-
-			browserService.Dispose();
-		}
+		
 
 		[Fact]
 		public void DotNetBrowserServiceNormalTest() {
-			var serviceProviderMock = new Mock<IServiceProvider>();
-			var httpServiceMock = new Mock<IHttpClientService>();
-			var ideServiceMock = new Mock<IIdeService>();
-			var messageInterceptorMock = new Mock<IMessageInterceptorService>();
-			var eventAggregator = new EventAggregator();
 
-			var browserService = new DotNetBrowserServiceStub(
-				serviceProviderMock.Object,
-				eventAggregator,
-				httpServiceMock.Object,
-				ideServiceMock.Object,
-				messageInterceptorMock.Object
-			);
+			_browserService.Send("bootstrap1");
+			Assert.True(_browserService.QueueCount == 0);
+			_eventAggregator.Publish(new WebviewDidInitializeEvent());
 
-			browserService.PostMessage("bootstrap1");
-			//goes through -- no queue
-			Assert.True(browserService.QueueCount == 0);
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			browserService.PostMessage("bootstrap2");
-			//goes through -- no queue
-			Assert.True(browserService.QueueCount == 0);
-			eventAggregator.Publish(new SessionLogoutEvent());
-			browserService.PostMessage("bootstrap3");
-			Thread.Sleep(1);
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			Thread.Sleep(1);
-			Assert.True(browserService.QueueCount == 0);
-
-			Assert.True(browserService.Items[0] == "bootstrap1");
-			Assert.True(browserService.Items[1] == "bootstrap2");
-			Assert.True(browserService.Items[2] == "bootstrap3");
-			browserService.Dispose();
+			_browserService.Send("bootstrap2");
+			Assert.True(_browserService.QueueCount == 0);
+			_eventAggregator.Publish(new SessionLogoutEvent());
+			
+			_browserService.Send("bootstrap3");
+			Assert.True(_browserService.QueueCount == 0);
+			_eventAggregator.Publish(new WebviewDidInitializeEvent());
+			
+			
+			_browserService.Dispose();
 		}
 
 		[Fact]
 		public void DotNetBrowserServiceReloadTest() {
-			var serviceProviderMock = new Mock<IServiceProvider>();
-			var httpServiceMock = new Mock<IHttpClientService>();
-			var ideServiceMock = new Mock<IIdeService>();
-			var messageInterceptorMock = new Mock<IMessageInterceptorService>();
-			var eventAggregator = new EventAggregator();
 
-			var browserService = new DotNetBrowserServiceStub(
-				serviceProviderMock.Object,
-				eventAggregator,
-				httpServiceMock.Object,
-				ideServiceMock.Object,
-				messageInterceptorMock.Object
-			);
-
-			browserService.PostMessage("bootstrap1");
-			Assert.True(browserService.QueueCount == 0);
+			_browserService.Send("bootstrap1");
+			Assert.True(_browserService.QueueCount == 0);
 			for (var i = 0; i < 200; i++) {
-				browserService.PostMessage($"data{i}", true);
+				_browserService.Send($"data{i}", true);
 			}
-			eventAggregator.Publish(new WebviewDidInitializeEvent());
-			SpinWait.SpinUntil(() => browserService.WasReloaded, 2000);
-			Assert.Equal(true, browserService.WasReloaded);
-			browserService.Dispose();
+
+			Assert.True(_browserService.QueueCount == 200);
+			Assert.Contains("data0", _browserService[0]);
+			Assert.Contains("data199", _browserService[199]);
+
+			_eventAggregator.Publish(new WebviewDidInitializeEvent());
+			SpinWait.SpinUntil(() => _browserService.WasReloaded, 2000);
+			Assert.Equal(true, _browserService.WasReloaded);
+			_browserService.Dispose();
 		}
 	}
 
 	public class DotNetBrowserServiceStub : DotNetBrowserService {
-		public List<string> Items { get; }
-
 		public DotNetBrowserServiceStub(
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IHttpClientService httpClientService,
-			IIdeService ideService,
 			IMessageInterceptorService messageInterceptor
-			) : base(serviceProvider, eventAggregator, httpClientService, ideService, messageInterceptor) {
-			
-			Items = new List<string>();
+			) : base(serviceProvider, eventAggregator, httpClientService, messageInterceptor) {
 		}
 
-		protected override void Send(string message) {
-			Items.Add(message);
-#if DEBUG
-			Console.WriteLine($"processed:{message}");
-#endif
+		public string this[int index]
+		{
+			get => base.Queue.ToArray()[index];
+			set => base.Queue.ToArray()[index] = value;
+		}
+		public void Send(string message, bool canEnqueue = false)
+		{
+			var notification = new StringNotification(message);
+			SendInternal(notification, canEnqueue);
 		}
 
 		public bool WasReloaded { get; private set; }
 		public override void ReloadWebView() {
 			WasReloaded = true;
 		}
+	}
+
+	public class StringNotification : IAbstractMessageType
+	{
+		public StringNotification(string methodName) => Method = methodName;
+
+		public string Id { get; }
+
+		[JsonProperty("method")]
+		public string Method { get; }
+
+		public JToken Error { get; set; }
 	}
 }

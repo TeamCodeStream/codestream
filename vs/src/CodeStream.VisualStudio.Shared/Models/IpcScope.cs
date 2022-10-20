@@ -11,7 +11,10 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		private WebviewIpcMessage _message;
 
 		public IpcScope(IBrowserService browserService, WebviewIpcMessage message) {
-			if (_disposed) throw new ObjectDisposedException($"{nameof(IpcScope)}");
+			if (_disposed)
+			{
+				throw new ObjectDisposedException($"{nameof(IpcScope)}");
+			}
 
 			_browserService = browserService;
 			_message = new WebviewIpcMessage(message.Id);
@@ -23,24 +26,25 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// <param name="ipc"></param>
 		/// <param name="message"></param>
 		/// <returns></returns>
-		public static IpcScope Create(IBrowserService ipc, WebviewIpcMessage message) {
-			return new IpcScope(ipc, message);
-		}
+		public static IpcScope Create(IBrowserService ipc, WebviewIpcMessage message) => new IpcScope(ipc, message);
 
 		/// <summary>
 		/// Attach additional data to the response message
 		/// </summary>
 		public void FulfillRequest(JToken @params, string errorMsg = null, ResponseError responseError = null) {
-			if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			if (_disposed)
+			{
+				throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			}
 
 			if (errorMsg == null && responseError == null) {
-				_message = new WebviewIpcMessage(_message.Id, @params);
+				_message = new WebviewIpcMessage(_message.Id, null,@params, null);
 				return;
 			}
 
 			_message = errorMsg != null
-				? new WebviewIpcMessage(_message.Id, @params, new JValue(errorMsg))
-				: new WebviewIpcMessage(_message.Id, @params, responseError.ToJToken());
+				? new WebviewIpcMessage(_message.Id, null, @params, new JValue(errorMsg))
+				: new WebviewIpcMessage(_message.Id, null, @params, responseError.ToJToken());
 		}
 
 		/// <summary>
@@ -48,18 +52,27 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// </summary>
 		/// <param name="error"></param>
 		public void FulfillRequest(string error) {
-			if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			if (_disposed)
+			{
+				throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			}
 
-			if (error.IsNullOrWhiteSpace()) return;
+			if (error.IsNullOrWhiteSpace())
+			{
+				return;
+			}
 
-			_message = new WebviewIpcMessage(_message.Id, _message.Params, new JValue(error));
+			_message = new WebviewIpcMessage(_message.Id, null, _message.TParams, new JValue(error));
 		}
 
 		/// <summary>
 		/// "Marker" to signify the scope is finished -- no additional data is required
 		/// </summary>
 		public void FulfillRequest() {
-			if (_disposed) throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			if (_disposed)
+			{
+				throw new ObjectDisposedException($"{nameof(FulfillRequest)}");
+			}
 		}
 
 		public void Dispose() {
@@ -68,7 +81,10 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		}
 
 		protected virtual void Dispose(bool disposing) {
-			if (_disposed) return;
+			if (_disposed)
+			{
+				return;
+			}
 
 			if (disposing) {
 				_browserService.Send(_message);

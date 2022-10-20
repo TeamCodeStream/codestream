@@ -651,7 +651,7 @@ namespace CodeStream.VisualStudio.Shared.UI {
 
 				_ = CodeStreamService.BrowserService?.NotifyAsync(
 					new HostDidChangeEditorVisibleRangesNotificationType {
-						Params = new HostDidChangeEditorVisibleRangesNotification(
+						TParams = new HostDidChangeEditorVisibleRangesNotification(
 							uri,
 							EditorService.GetEditorState(wpfTextView)?.ToEditorSelectionsSafe(),
 							wpfTextView.ToVisibleRangesSafe(),

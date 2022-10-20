@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
+
+using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Models;
 
 using Xunit;
@@ -12,8 +14,8 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         [InlineData("foo")]
         public void ToResponseMessageStringsTest(string payload)
         {
-            var response = new WebviewIpcMessage("123", payload);
-            var parsed = JToken.Parse(response.AsJson());
+            var response = new WebviewIpcMessage("123", null, payload, null);
+            var parsed = JToken.Parse(response.ToJson());
             Assert.True(parsed["params"].Value<string>() == payload);
         }
 
@@ -21,8 +23,8 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         [InlineData(10)]
         public void ToResponseMessageNumberTest(int payload)
         {
-            var response = new WebviewIpcMessage("123", payload.ToString());
-            var parsed = JToken.Parse(response.AsJson());
+            var response = new WebviewIpcMessage("123", null, payload.ToString(), null);
+            var parsed = JToken.Parse(response.ToJson());
             Assert.True(parsed["params"].Value<int>() == payload);
         }
 
@@ -31,8 +33,8 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         {
             var value = "value";
             var foo = new { key = value };
-            var response = new WebviewIpcMessage("123", JObject.FromObject(foo), null);
-            var parsed = JToken.Parse(response.AsJson());
+            var response = new WebviewIpcMessage("123", null, JObject.FromObject(foo), null);
+            var parsed = JToken.Parse(response.ToJson());
             Assert.True(parsed["params"]["key"].Value<string>() == value);
         }
 
@@ -40,8 +42,8 @@ namespace CodeStream.VisualStudio.UnitTests.Models
         public void ToResponseMessageArrayTest()
         {
             var foo = new List<object> { new { test = "value1" }, new { test = "value2" } };
-            var response = new WebviewIpcMessage("123", JArray.FromObject(foo), null);
-            var parsed = JToken.Parse(response.AsJson());
+            var response = new WebviewIpcMessage("123", null, JArray.FromObject(foo), null);
+            var parsed = JToken.Parse(response.ToJson());
             Assert.True(parsed["params"][1]["test"].Value<string>() == "value2");
         }
     }

@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using CodeStream.VisualStudio.Core;
-using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Shared.Models {
 	public class DidChangeConnectionStatusNotification {
@@ -11,9 +10,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	}
 
 	public class DidChangeConnectionStatusNotificationType : NotificationType<DidChangeConnectionStatusNotification> {
-		public DidChangeConnectionStatusNotificationType(DidChangeConnectionStatusNotification @params) {
-			Params = @params;
-		}
+		
+		public DidChangeConnectionStatusNotificationType(DidChangeConnectionStatusNotification @params) 
+			=> TParams = @params;
 
 		public const string MethodName = "codestream/didChangeConnectionStatus";
 		public override string Method => MethodName;
@@ -42,22 +41,12 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public DidChangeUnreadsData Data { get; set; }
 	}
 
-	public class DidChangeDataNotificationTypeParams {
-
-	}
-	public class DidChangeDataNotificationType : NotificationType<DidChangeDataNotificationTypeParams> {
-		private readonly JToken _token;
-
-		public DidChangeDataNotificationType(JToken token) {
-			_token = token;
-		}
+	public class DidChangeDataNotificationType : NotificationType {
+		
+		public DidChangeDataNotificationType(JToken token) : base(token){}
 
 		public const string MethodName = "codestream/didChangeData";
 		public override string Method => MethodName;
-
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
 	}
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
@@ -74,16 +63,11 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public CSApiCapabilities MissingCapabilities { get; set; }
 	}
 
-	public class DidChangeApiVersionCompatibilityNotificationType : NotificationType<DidChangeApiVersionCompatibilityNotification> {
-		private readonly JToken _token;
-		public DidChangeApiVersionCompatibilityNotificationType(JToken token) {
-			_token = token;
-		}
+	public class DidChangeApiVersionCompatibilityNotificationType : NotificationType {
+		public DidChangeApiVersionCompatibilityNotificationType(JToken token) : base(token){} 
+
 		public const string MethodName = "codestream/didChangeApiVersionCompatibility";
 		public override string Method => MethodName;
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
 	}
 
 	public class CSApiCapabilities : Dictionary<string, CSApiCapability> {
@@ -109,38 +93,18 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	}
 
 	public class DidChangeDocumentMarkersNotificationType : NotificationType<DidChangeDocumentMarkersNotification> {
+		public DidChangeDocumentMarkersNotificationType(DidChangeDocumentMarkersNotification @params) 
+			=> TParams = @params;
+
 		public const string MethodName = "codestream/didChangeDocumentMarkers";
 		public override string Method => MethodName;
 	}
 
-	//export enum VersionCompatibility
-	//{
-	//    Compatible = "ok",
-	//    CompatibleUpgradeAvailable = "outdated",
-	//    CompatibleUpgradeRecommended = "deprecated",
-	//    UnsupportedUpgradeRequired = "incompatible",
-	//    Unknown = "unknownVersion"
-	//}
-
-	public class DidChangeVersionCompatibilityNotification {
-		public string Compatibility { get; set; }
-		public string DownloadUrl { get; set; }
-		public string Version { get; set; }
-	}
-
-	public class DidChangeVersionCompatibilityNotificationType : NotificationType<DidChangeVersionCompatibilityNotification> {
-		private readonly JToken _token;
-
-		public DidChangeVersionCompatibilityNotificationType(JToken token) {
-			_token = token;
-		}
+	public class DidChangeVersionCompatibilityNotificationType : NotificationType {
+		public DidChangeVersionCompatibilityNotificationType(JToken @params) : base(@params) { }
 
 		public const string MethodName = "codestream/didChangeVersionCompatibility";
 		public override string Method => MethodName;
-
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
 	}
 
 	public class DidLogoutNotification {
@@ -161,21 +125,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public const string MethodName = "codestream/didLogin";
 		public override string Method => MethodName;
 	}
-
-	public class DidStartLoginNotification { }
-
-	public class DidStartLoginNotificationType : NotificationType<DidStartLoginNotification> {
-
-		public const string MethodName = "codestream/didStartLogin";
-		public override string Method => MethodName;
-	}
-
-	public class DidFailLoginNotification { }
-	public class DidFailLoginNotificationType : NotificationType<DidFailLoginNotification> {
-		public const string MethodName = "codestream/didFailLogin";
-		public override string Method => MethodName;
-	}
-
+	
 	public class OtcLoginRequest {
 		[JsonProperty("code", NullValueHandling = NullValueHandling.Ignore)]
 		public string Code { get; set; }
@@ -185,47 +135,25 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public bool? Alias { get; set; }
 	}
 
-	public class RestartRequiredNotification { }
-
-	public class RestartRequiredNotificationType : NotificationType<RestartRequiredNotification> {
+	public class RestartRequiredNotificationType : NotificationType {
 		public const string MethodName = "codestream/restartRequired";
 		public override string Method => MethodName;
+
+		public RestartRequiredNotificationType(JToken @params) : base(@params) {}
 	}
-
-	public class DidEncounterMaintenanceModeNotification { }
-
-	public class DidEncounterMaintenanceModeNotificationType : NotificationType<DidEncounterMaintenanceModeNotification> {
+	
+	public class DidEncounterMaintenanceModeNotificationType : NotificationType {
 		public const string MethodName = "codestream/didEncounterMaintenanceMode";
 		public override string Method => MethodName;
 
-		private readonly JToken _token;
-
-		public DidEncounterMaintenanceModeNotificationType(JToken token) {
-			_token = token;
-		}
-
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
+		public DidEncounterMaintenanceModeNotificationType(JToken @params) : base(@params) {}
 	}
 
-	public class DidChangeServerUrlNotification {
-		public string ServerUrl { get; set; }
-	}
-
-	public class DidChangeServerUrlNotificationType : NotificationType<DidChangeServerUrlNotification> {
+	public class DidChangeServerUrlNotificationType : NotificationType {
 		public const string MethodName = "codestream/didChangeServerUrl";
 		public override string Method => MethodName;
+		public DidChangeServerUrlNotificationType(JToken @params) : base(@params) { }
 
-		private readonly JToken _token;
-
-		public DidChangeServerUrlNotificationType(JToken token) {
-			_token = token;
-		}
-
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
 	}
 
 	public class EnvironmentHost {
@@ -252,18 +180,10 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public List<EnvironmentHost> EnvironmentHosts { get; set; }
 	}
 
-	public class DidSetEnvironmentNotificationType : NotificationType<CodeStreamEnvironmentInfo> {
+	public class DidSetEnvironmentNotificationType : NotificationType {
 		public const string MethodName = "codestream/didSetEnvironment";
 		public override string Method => MethodName;
 
-		private readonly JToken _token;
-
-		public DidSetEnvironmentNotificationType(JToken token) {
-			_token = token;
-		}
-
-		public override string AsJson() {
-			return CustomNotificationPayload.Create(Method, _token);
-		}
+		public DidSetEnvironmentNotificationType(JToken @params) : base(@params) { }
 	}
 }

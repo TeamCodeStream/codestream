@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			Log.Debug($"{nameof(ToggleShowMarkerGlyphs)} Value={value}");
 
 			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
+				TParams = new HostDidChangeConfigNotification {
 					ShowMarkerGlyphs = value
 				}
 			});
@@ -34,7 +34,7 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			Log.Debug($"{nameof(ToggleShowAvatars)} Value={value}");
 
 			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
+				TParams = new HostDidChangeConfigNotification {
 					ShowHeadshots = value
 				}
 			});
@@ -44,7 +44,7 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			Log.Debug($"{nameof(ToggleCodeLens)} Value={value}");
 
 			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
+				TParams = new HostDidChangeConfigNotification {
 					ShowGoldenSignalsInEditor = value
 				}
 			});

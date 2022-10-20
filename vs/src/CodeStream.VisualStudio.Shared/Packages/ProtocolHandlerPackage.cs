@@ -119,7 +119,7 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 				}
 				Log.Debug($"Sending optionValue={optionValue}");
 				_ = browserService.NotifyAsync(new HostDidReceiveRequestNotificationType() {
-					Params = new HostDidReceiveRequestNotification() {
+					TParams = new HostDidReceiveRequestNotification() {
 						Url = optionValue
 					}
 				});

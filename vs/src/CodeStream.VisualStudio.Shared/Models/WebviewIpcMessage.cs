@@ -7,24 +7,15 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	/// <summary>
 	/// Thin wrapper for plucking out certain JToken properties
 	/// </summary>
-	public class WebviewIpcMessage : AbstractMessageType<JToken> {
+	public class WebviewIpcMessage : NotificationType {
 		private static readonly ILogger Log = LogManager.ForContext<WebviewIpcMessage>();
 
-		public WebviewIpcMessage(string id) : this(id, JToken.Parse("{}")) { }
+		public WebviewIpcMessage(string id) : this(id, null, JToken.Parse("{}"), null) { }
 
-		public WebviewIpcMessage(string id, JToken @params) : this(id, @params, null) { }
-
-		public WebviewIpcMessage(string id, JToken @params, JToken error) : this(id, null, @params, error) { }
-
-		public WebviewIpcMessage(string id, string method, JToken @params, JToken error) {
+		public WebviewIpcMessage(string id, string method, JToken @params, JToken error) : base(@params) {
 			Id = id;
 			Method = method;
-			Params = @params;
 			Error = error;
-		}
-
-		public override string AsJson() {
-			return ToResponseMessage(Id, Method, Params, Error);
 		}
 
 		public override string Method { get; }

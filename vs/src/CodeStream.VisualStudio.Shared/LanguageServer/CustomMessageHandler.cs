@@ -11,6 +11,8 @@ using StreamJsonRpc;
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Windows.Controls;
+
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Shared.Controllers;
 using CodeStream.VisualStudio.Shared.Events;
@@ -203,20 +205,12 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			{
 				return;
 			}
-
-			var uriString = @params.TextDocument.Uri;
-			BrowserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
-				Params = new DidChangeDocumentMarkersNotification {
-					TextDocument = new TextDocumentIdentifier {
-						Uri = uriString
-					}
-				}
-			});
+			BrowserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType(@params));
 
 			if (@params.Reason == ChangeReason.Codemarks) {
 				//allow the response to the webview to happen immediately, but do not send
 				//this event always -- it will try to re-render margins, which can be cpu heavy
-				_documentMarkerChangedSubject.OnNext(new DocumentMarkerChangedSubjectArgs(uriString));
+				_documentMarkerChangedSubject.OnNext(new DocumentMarkerChangedSubjectArgs(@params.TextDocument.Uri));
 			}
 		}
 
@@ -255,6 +249,11 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		public async System.Threading.Tasks.Task OnDidLogoutAsync(JToken e) {
 			try {
 				var @params = e.ToObject<DidLogoutNotification>();
+				if (@params == null)
+				{
+					return;
+				}
+
 				using (Log.CriticalOperation($"{nameof(OnDidLogin)} Method={DidLogoutNotificationType.MethodName} Reason={@params?.Reason}", Serilog.Events.LogEventLevel.Information)) {
 					if (@params.Reason == LogoutReason.Token) {
 						await LogoutAsync();
@@ -395,7 +394,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(componentModel);
-
 				var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
 
 				if (authenticationServiceFactory != null) {
