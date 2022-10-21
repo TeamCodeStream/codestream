@@ -2,7 +2,6 @@ package com.codestream.clm
 
 import com.codestream.extensions.file
 import com.codestream.extensions.uri
-import com.codestream.review.ReviewDiffSide
 import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable

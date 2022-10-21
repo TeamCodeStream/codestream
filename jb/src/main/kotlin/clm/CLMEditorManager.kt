@@ -27,6 +27,7 @@ import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -45,6 +46,7 @@ import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SyntaxTraverser
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.util.concurrency.NonUrgentExecutor
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -54,6 +56,7 @@ import java.awt.Point
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.awt.event.MouseEvent
+import java.util.concurrent.CompletableFuture
 
 private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 
@@ -134,7 +137,12 @@ abstract class CLMEditorManager(
                 val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@invokeLater
 
                 val classNames = if (lookupByClassName) {
-                    getLookupClassNames(psiFile) ?: return@invokeLater
+                    val future = CompletableFuture<List<String>?>()
+                    ReadAction.nonBlocking {
+                        val result = getLookupClassNames(psiFile)
+                        future.complete(result)
+                    }.submit(NonUrgentExecutor.getInstance())
+                    future.get() ?: return@invokeLater
                 } else {
                     null
                 }
@@ -229,7 +237,7 @@ abstract class CLMEditorManager(
     }
 
     private fun updateInlays() {
-        ApplicationManager.getApplication().invokeLater() {
+        ApplicationManager.getApplication().invokeLater {
             _updateInlays()
         }
     }
@@ -260,6 +268,33 @@ abstract class CLMEditorManager(
 
     abstract fun findTopLevelFunction(psiFile: PsiFile, functionName: String): PsiElement?
 
+    fun _resolveSymbol(symbolIdentifier: MethodLevelTelemetrySymbolIdentifier, psiFile: PsiFile): PsiElement? {
+        return if (symbolIdentifier.className != null) {
+            findClassFunctionFromFile(
+                psiFile,
+                symbolIdentifier.namespace,
+                symbolIdentifier.className,
+                symbolIdentifier.functionName
+            ) ?:
+            // Metrics can have custom name in which case we don't get Module or Class names - just best effort match function name
+            findTopLevelFunction(psiFile, symbolIdentifier.functionName)
+        } else {
+            findTopLevelFunction(psiFile, symbolIdentifier.functionName)
+        }
+    }
+
+    fun resolveSymbol(
+        symbolIdentifier: MethodLevelTelemetrySymbolIdentifier,
+        psiFile: PsiFile
+    ): CompletableFuture<PsiElement?> {
+        val future = CompletableFuture<PsiElement?>()
+        ReadAction.nonBlocking {
+            val psiElement = _resolveSymbol(symbolIdentifier, psiFile)
+            future.complete(psiElement)
+        }.submit(NonUrgentExecutor.getInstance())
+        return future
+    }
+
     private fun updateInlaysCore() {
         val (result, project, path, editor) = displayDeps() ?: return
         if (project.isDisposed) {
@@ -269,19 +304,7 @@ abstract class CLMEditorManager(
         val presentationFactory = PresentationFactory(editor)
         val since = result.sinceDateFormatted ?: "30 minutes ago"
         metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
-            val symbol = if (symbolIdentifier.className != null) {
-                findClassFunctionFromFile(
-                    psiFile,
-                    symbolIdentifier.namespace,
-                    symbolIdentifier.className,
-                    symbolIdentifier.functionName
-                ) ?:
-                // Metrics can have custom name in which case we don't get Module or Class names - just best effort match function name
-                findTopLevelFunction(psiFile, symbolIdentifier.functionName)
-            } else {
-                findTopLevelFunction(psiFile, symbolIdentifier.functionName)
-            }
-            if (symbol == null) return@forEach
+            val symbol = resolveSymbol(symbolIdentifier, psiFile).get() ?: return@forEach
 
             val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)

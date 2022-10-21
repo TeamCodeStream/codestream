@@ -13,15 +13,14 @@ class CLMKotlinComponent(project: Project) :
     private val logger = Logger.getInstance(CLMKotlinComponent::class.java)
 
     init {
-        logger.info("Initializing code level metrics for Java")
+        logger.info("Initializing code level metrics for Kotlin")
     }
 }
 
 class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "java", true) {
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is KtFile || psiFile.classes.isEmpty()) return null
-        val clazz = psiFile.classes[0]
-        return clazz.qualifiedName?.let { listOf(it) }
+        return psiFile.classes.mapNotNull { it.qualifiedName }
     }
 
     override fun findClassFunctionFromFile(
