@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 
 		public List<JToken> GetUriTokens(JToken messageToken) 
 			=> messageToken?
-				.SelectTokens("$..uri")?
+				.SelectTokens("$..uri")
 				.ToList() ?? new List<JToken>();
 
 		public JToken InterceptAndModify(IAbstractMessageType message)

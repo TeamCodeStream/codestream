@@ -78,6 +78,8 @@
     <Compile Include="Extensions\JsonExtensionsTests.cs" />
     <Compile Include="Extensions\StringExtensionsTest.cs" />
     <Compile Include="Extensions\UriExtensionsTests.cs" />
+    <Compile Include="Fakes\FakeNotificationType.cs" />
+    <Compile Include="Fakes\FakeNotificationTypeWithUri.cs" />
     <Compile Include="LanguageServer\CustomCamelCasePropertyNamesContractResolverTests.cs" />
     <Compile Include="LanguageServer\ExtensionsTest.cs" />
     <Compile Include="Models\CamelCaseStringEnumConverterTests.cs" />
@@ -86,7 +88,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CredentialsServiceTests.cs" />
     <Compile Include="Services\DotNetBrowserServiceTests.cs" />
-    <Compile Include="Services\MessageInterceptorServiceTests.cs" />
+    <Compile Include="Services\MessageInterceptorServiceTests\DoesMessageContainTempFilesTests.cs" />
+    <Compile Include="Services\MessageInterceptorServiceTests\GetUriTokensTests.cs" />
+    <Compile Include="Services\MessageInterceptorServiceTests\InterceptAndModifyTests.cs" />
     <Compile Include="Services\SettingsServiceTests.cs" />
     <Compile Include="Stubs\CredentialsServiceStub.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManagerTests.cs" />
