@@ -453,7 +453,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			var tempFileName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
 			var originalFileExtension = Path.GetExtension(originalFilePath);
 
-			var codeStreamDiffPath = Path.Combine(Path.GetTempPath(), "codestream");
+			var codeStreamDiffPath = UriExtensions.CodeStreamTempPath;
 			Directory.CreateDirectory(codeStreamDiffPath);
 			
 			var tempFileForComparison = Path.Combine(codeStreamDiffPath, $"{tempFileName}-{direction.ToString().ToLower()}{originalFileExtension}");

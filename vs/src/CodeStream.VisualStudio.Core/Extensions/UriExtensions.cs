@@ -16,8 +16,8 @@ namespace CodeStream.VisualStudio.Core.Extensions
 						.ToLowerInvariant()
 				);
 
-		private static string TempPath 
-			=> NormalizePath(Path.GetTempPath());
+		public static string CodeStreamTempPath 
+			=> NormalizePath(Path.Combine(Path.GetTempPath(), "codestream"));
 
 		public static bool IsTempFile(this string filePath) 
 			=> !string.IsNullOrEmpty(filePath) 
@@ -30,7 +30,7 @@ namespace CodeStream.VisualStudio.Core.Extensions
 		public static bool IsTempFile(this Uri filePath) 
 			=> filePath != null
 			   && filePath.IsFile 
-			   && (NormalizePath(filePath.ToString())?.StartsWith(TempPath) ?? false);
+			   && (NormalizePath(filePath.ToString())?.StartsWith(CodeStreamTempPath) ?? false);
 
 		public static bool IsDiffFile(this Uri filePath) 
 			=> filePath != null
