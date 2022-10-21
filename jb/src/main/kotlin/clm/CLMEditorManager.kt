@@ -24,6 +24,7 @@ import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settings.GoldenSignalListener
 import com.codestream.webViewService
 import com.intellij.codeInsight.hints.InlayPresentationFactory
+import com.intellij.codeInsight.hints.presentation.InlayPresentation
 import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -58,6 +59,11 @@ import java.awt.event.FocusListener
 import java.awt.event.MouseEvent
 
 private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
+
+data class RenderElements(
+    val range: TextRange,
+    val referenceOnHoverPresentation: InlayPresentation,
+)
 
 class Metrics {
     var errorRate: MethodLevelTelemetryErrorRate? = null
@@ -137,7 +143,8 @@ abstract class CLMEditorManager(
                 if (project.isDisposed) return@runInBackground
                 // logger.debug("=== ${editor.displayPath} isShowing: ${editor.component.isShowing}")
                 if (!editor.component.isShowing) return@runInBackground
-                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@runInBackground
+                val psiFile =
+                    PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@runInBackground
 
                 val classNames = if (lookupByClassName) {
                     getLookupClassNames(psiFile) ?: return@runInBackground
@@ -286,8 +293,8 @@ abstract class CLMEditorManager(
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
         val presentationFactory = PresentationFactory(editor)
         val since = result.sinceDateFormatted ?: "30 minutes ago"
-        metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
-            val symbol = resolveSymbol(symbolIdentifier, psiFile) ?: return@forEach
+        val toRender: List<RenderElements> = metricsBySymbol.mapNotNull { (symbolIdentifier, metrics) ->
+            val symbol = resolveSymbol(symbolIdentifier, psiFile) ?: return
 
             val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)
@@ -321,12 +328,16 @@ abstract class CLMEditorManager(
                             }
                         }
                     }
-                })
+                }
+                )
+            RenderElements(range, referenceOnHoverPresentation)
+        }
 
-            val renderer = CLMCustomRenderer(referenceOnHoverPresentation)
+        ApplicationManager.getApplication().invokeLaterOnWriteThread {
+            _clearInlays()
+            for ((range, referenceOnHoverPresentation) in toRender) {
+                val renderer = CLMCustomRenderer(referenceOnHoverPresentation)
 
-            ApplicationManager.getApplication().invokeLaterOnWriteThread {
-                _clearInlays()
                 val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
 
                 inlay.let {

@@ -7,6 +7,7 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
 import org.jetbrains.kotlin.asJava.elements.KtLightMethodImpl
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 class CLMKotlinComponent(project: Project) :
@@ -48,8 +49,15 @@ class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin"
         val functions = psiFile.getChildrenOfType<KtLightMethodImpl>()
         val result = functions.find { it.name == functionName }
         if (result != null) {
-            logger.info("Found top level function for $functionName")
+            logger.info("Found top level KtLightMethodImpl function for $functionName")
+            return result
         }
-        return result
+        val functions2 = psiFile.getChildrenOfType<KtFunction>()
+        val result2 = functions2.find { it.name == functionName }
+        if (result2 != null) {
+            logger.info("Found top level KtFunction function for $functionName")
+            return result2
+        }
+        return null
     }
 }
