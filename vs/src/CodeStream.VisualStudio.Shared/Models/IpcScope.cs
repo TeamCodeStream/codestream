@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 				return;
 			}
 
-			_message = new WebviewIpcMessage(_message.Id, null, _message.TParams, new JValue(error));
+			_message = new WebviewIpcMessage(_message.Id, null, _message.Params, new JValue(error));
 		}
 
 		/// <summary>

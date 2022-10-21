@@ -12,7 +12,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	public class DidChangeConnectionStatusNotificationType : NotificationType<DidChangeConnectionStatusNotification> {
 		
 		public DidChangeConnectionStatusNotificationType(DidChangeConnectionStatusNotification @params) 
-			=> TParams = @params;
+			=> Params = @params;
 
 		public const string MethodName = "codestream/didChangeConnectionStatus";
 		public override string Method => MethodName;
@@ -94,7 +94,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 	public class DidChangeDocumentMarkersNotificationType : NotificationType<DidChangeDocumentMarkersNotification> {
 		public DidChangeDocumentMarkersNotificationType(DidChangeDocumentMarkersNotification @params) 
-			=> TParams = @params;
+			=> Params = @params;
 
 		public const string MethodName = "codestream/didChangeDocumentMarkers";
 		public override string Method => MethodName;

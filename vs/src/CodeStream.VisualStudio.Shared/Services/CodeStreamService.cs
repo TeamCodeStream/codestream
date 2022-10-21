@@ -55,7 +55,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					var editorState = editorService.GetEditorState(activeTextEditor.WpfTextView);
 					var fileName = uri.ToFileName() ?? uri.AbsolutePath;
 					_ = BrowserService.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
-						TParams = new HostDidChangeActiveEditorNotification {
+						Params = new HostDidChangeActiveEditorNotification {
 							Editor = new HostDidChangeActiveEditorNotificationEditor(fileName,
 							uri,
 							editorState.ToEditorSelectionsSafe(),
@@ -102,7 +102,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 							Start = new Position(cursorLine, 0), End = new Position(cursorLine, 0) })
 					};
 					_ = BrowserService.NotifyAsync(new HostDidChangeEditorSelectionNotificationType {
-						TParams = new HostDidChangeEditorSelectionNotification(uri, editorSelection, visibleRange, lineCount)
+						Params = new HostDidChangeEditorSelectionNotification(uri, editorSelection, visibleRange, lineCount)
 					});
 				}
 				catch (Exception ex) {
@@ -121,7 +121,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			try {
 				_ = BrowserService.NotifyAsync(new HostDidChangeActiveEditorNotificationType {
-					TParams = new HostDidChangeActiveEditorNotificationBase()
+					Params = new HostDidChangeActiveEditorNotificationBase()
 				});
 			}
 			catch (Exception ex) {
@@ -138,7 +138,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			try {
 				_ = BrowserService.NotifyAsync(new ShowStreamNotificationType {
-					TParams = new ShowStreamNotification {
+					Params = new ShowStreamNotification {
 						StreamId = streamId,
 						ThreadId = threadId,
 						CodemarkId = codemarkId
@@ -155,7 +155,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public async Task ShowCodemarkAsync(string codemarkId, string filePath, CancellationToken? cancellationToken = null) {
 			if (IsReady && !codemarkId.IsNullOrWhiteSpace()) {
 				_ = BrowserService.NotifyAsync(new ShowCodemarkNotificationType {
-					TParams = new ShowCodemarkNotification {
+					Params = new ShowCodemarkNotification {
 						CodemarkId = codemarkId,
 						SourceUri = filePath != null ? LanguageServer.Extensions.ToLspUriString(filePath) : null,
 					}
@@ -173,7 +173,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			try {
 				_ = BrowserService.NotifyAsync(new HostDidChangeEditorSelectionNotificationType {
-					TParams = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelectionsSafe(), visibleRanges, totalLines)
+					Params = new HostDidChangeEditorSelectionNotification(uri, editorState.ToEditorSelectionsSafe(), visibleRanges, totalLines)
 				});
 			}
 			catch (Exception ex) {
@@ -188,7 +188,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			if (IsReady) {
 				try {
 					_ = BrowserService.NotifyAsync(new NewCodemarkNotificationType {
-						TParams = new NewCodemarkNotification(uri, range, codemarkType, source)
+						Params = new NewCodemarkNotification(uri, range, codemarkType, source)
 					});
 				}
 				catch (Exception ex) {
@@ -203,7 +203,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			if (IsReady) {
 				try {
 					_ = BrowserService.NotifyAsync(new StartWorkNotificationType {
-						TParams = new StartWorkNotification(source, uri)
+						Params = new StartWorkNotification(source, uri)
 					});
 				}
 				catch (Exception ex) {
@@ -218,7 +218,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			if (IsReady) {
 				try {
 					_ = BrowserService.NotifyAsync(new NewReviewNotificationType {
-						TParams = new NewReviewNotification(uri, source)
+						Params = new NewReviewNotification(uri, source)
 					});
 				}
 				catch (Exception ex) {
@@ -276,7 +276,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			if (IsReady) {
 				try {
 					_ = BrowserService.NotifyAsync(new ViewMethodLevelTelemetryNotificationType {
-						TParams = new ViewMethodLevelTelemetryNotification() {
+						Params = new ViewMethodLevelTelemetryNotification() {
 							Repo = repo,
 							FunctionName = functionName,
 							NewRelicEntityGuid = newRelicEntityGuid,

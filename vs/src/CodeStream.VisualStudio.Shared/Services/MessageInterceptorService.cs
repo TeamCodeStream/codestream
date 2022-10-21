@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 
@@ -42,9 +42,9 @@ namespace CodeStream.VisualStudio.Shared.Services
 
 		public WebviewIpcMessage InterceptAndModify(WebviewIpcMessage message)
 		{
-			var updatedMessage = InterceptAndModify(message.TParams);
+			var updatedMessage = InterceptAndModify(message.Params);
 
-			message.TParams = updatedMessage;
+			message.Params = updatedMessage;
 
 			return message;
 		}

@@ -96,7 +96,7 @@ namespace CodeStream.VisualStudio.Shared {
 									ResponseError response = null;
 									try
 									{
-										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.TParams);
+										@params = await _codeStreamAgent.SendAsync<JToken>(message.Method, message.Params);
 									}
 									catch (RemoteRpcException rex) {
 										// in cases where we don't have a code, hard-code to 10000,
@@ -139,7 +139,7 @@ namespace CodeStream.VisualStudio.Shared {
 											string error = null;
 											try {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-												var request = message.TParams?.ToObject<ShellPromptFolderRequest>();
+												var request = message.Params?.ToObject<ShellPromptFolderRequest>();
 												var dialog = _ideService.FolderPrompt(request?.Message);
 												if (dialog.ShowDialog() == DialogResult.OK) {
 													if (!dialog.SelectedPath.IsNullOrWhiteSpace()) {
@@ -169,7 +169,7 @@ namespace CodeStream.VisualStudio.Shared {
 										break;
 									}
 									case WebviewDidChangeContextNotificationType.MethodName: {
-										var @params = message.TParams?.ToObject<WebviewDidChangeContextNotification>();
+										var @params = message.Params?.ToObject<WebviewDidChangeContextNotification>();
 										if (@params != null) {
 											var panelStack = @params.Context?.PanelStack;
 											_sessionService.PanelStack = panelStack;
@@ -187,7 +187,7 @@ namespace CodeStream.VisualStudio.Shared {
 									case CompareMarkerRequestType.MethodName: {
 										using (_browserService.CreateScope(message)) {
 											try {
-												var marker = message.TParams?["marker"]?.ToObject<CsMarker>();
+												var marker = message.Params?["marker"]?.ToObject<CsMarker>();
 												var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(
 														new DocumentFromMarkerRequest(marker));
 
@@ -231,7 +231,7 @@ namespace CodeStream.VisualStudio.Shared {
 									case ApplyMarkerRequestType.MethodName: {
 										using (_browserService.CreateScope(message)) {
 											try {
-												var marker = message.TParams?["marker"]?.ToObject<CsMarker>();
+												var marker = message.Params?["marker"]?.ToObject<CsMarker>();
 												var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(marker));
 												var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
 
@@ -280,7 +280,7 @@ namespace CodeStream.VisualStudio.Shared {
 											if (_authenticationServiceFactory != null) {
 												var authenticationService = _authenticationServiceFactory.Create();
 												if (authenticationService != null) {
-													var @params = message.TParams?.ToObject<LogoutRequest>();
+													var @params = message.Params?.ToObject<LogoutRequest>();
 													var reason = @params?.Reason == LogoutReason1.Reauthenticating ?
 														SessionSignedOutReason.ReAuthenticating
 														: SessionSignedOutReason.UserSignedOutFromWebview;
@@ -301,7 +301,7 @@ namespace CodeStream.VisualStudio.Shared {
 										using (var scope = _browserService.CreateScope(message)) {
 											bool result = false;
 											try {
-												var @params = message.TParams?.ToObject<EditorSelectRangeRequest>();
+												var @params = message.Params?.ToObject<EditorSelectRangeRequest>();
 												if (@params != null) {
 													var uri = @params.Uri.ToUri();
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
@@ -325,7 +325,7 @@ namespace CodeStream.VisualStudio.Shared {
 									case EditorHighlightRangeRequestType.MethodName: {
 											using (var scope = _browserService.CreateScope(message)) {
 												bool result = false;
-												var @params = message.TParams.ToObjectSafe<EditorHighlightRangeRequest>();
+												var @params = message.Params.ToObjectSafe<EditorHighlightRangeRequest>();
 												if (@params != null) {
 													var activeTextView = _editorService.GetActiveTextEditorFromUri(@params.Uri.ToUri());
 													if (activeTextView != null) {
@@ -345,7 +345,7 @@ namespace CodeStream.VisualStudio.Shared {
 											using (var scope = _browserService.CreateScope(message)) {
 												OpenEditorResult openEditorResult = null;
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-												var @params = message.TParams?.ToObject<EditorRevealRangeRequest>();
+												var @params = message.Params?.ToObject<EditorRevealRangeRequest>();
 												if (@params != null) {
 													openEditorResult = await _ideService.OpenEditorAndRevealAsync(@params.Uri.ToUri(), @params.Range?.Start?.Line, atTop: @params.AtTop, focus: @params.PreserveFocus == false);
 													if (openEditorResult?.Success != true) {
@@ -357,7 +357,7 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case EditorScrollToNotificationType.MethodName: {
-											var @params = message.TParams?.ToObject<EditorScrollToNotification>();
+											var @params = message.Params?.ToObject<EditorScrollToNotification>();
 #pragma warning disable VSTHRD001
 											System.Windows.Application.Current.Dispatcher.Invoke(() => {
 												try {
@@ -374,7 +374,7 @@ namespace CodeStream.VisualStudio.Shared {
 											using (var scope = _browserService.CreateScope(message)) {
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												try {
-													var @params = message.TParams?.ToObject<InsertTextRequest>();
+													var @params = message.Params?.ToObject<InsertTextRequest>();
 													if (@params != null) {
 														var documentFromMarker = await _codeStreamAgent.GetDocumentFromMarkerAsync(new DocumentFromMarkerRequest(@params.Marker));
 														if (documentFromMarker != null)
@@ -437,7 +437,7 @@ namespace CodeStream.VisualStudio.Shared {
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 											using (var scope = _browserService.CreateScope(message)) {
 												try {
-													var @params = message.TParams?.ToObject<UpdateServerUrlRequest>();
+													var @params = message.Params?.ToObject<UpdateServerUrlRequest>();
 													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params?.ServerUrl}");
 													using (var settingsScope = SettingsScope.Create(_codeStreamSettingsManager, true)) {
 														settingsScope.CodeStreamSettingsManager.ServerUrl = @params?.ServerUrl;
@@ -462,7 +462,7 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case OpenUrlRequestType.MethodName: {
-											var @params = message.TParams?.ToObject<OpenUrlRequest>();
+											var @params = message.Params?.ToObject<OpenUrlRequest>();
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
 													_ideService.Navigate(@params.Url);
@@ -473,7 +473,7 @@ namespace CodeStream.VisualStudio.Shared {
 										}
 
 									case PullRequestShowDiffRequestType.MethodName: {
-										var @params = message.TParams?.ToObject<PullRequestShowDiffRequest>();
+										var @params = message.Params?.ToObject<PullRequestShowDiffRequest>();
 										await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 										using (var scope = _browserService.CreateScope(message))
@@ -509,7 +509,7 @@ namespace CodeStream.VisualStudio.Shared {
 									}
 
 									case ReviewShowDiffRequestType.MethodName: {
-											var @params = message.TParams?.ToObject<ReviewShowDiffRequest>();
+											var @params = message.Params?.ToObject<ReviewShowDiffRequest>();
 											await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
@@ -554,7 +554,7 @@ namespace CodeStream.VisualStudio.Shared {
 											break;
 										}
 									case ReviewShowLocalDiffRequestType.MethodName: {
-											var @params = message.TParams?.ToObject<ReviewShowLocalDiffRequest>();
+											var @params = message.Params?.ToObject<ReviewShowLocalDiffRequest>();
 
 											using (var scope = _browserService.CreateScope(message)) {
 												if (@params != null) {
