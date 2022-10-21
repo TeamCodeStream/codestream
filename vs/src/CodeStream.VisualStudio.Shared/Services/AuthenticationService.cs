@@ -35,7 +35,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		[Import]
 		public ICodeStreamAgentService CodeStreamAgentService { get; set; }
 		[Import]
-		public IBrowserService WebviewIpc { get; set; }
+		public IBrowserService BrowserService { get; set; }
 		[Import]
 		public ISettingsServiceFactory SettingsServiceFactory { get; set; }
 		[Import]
@@ -65,7 +65,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					reason == SessionSignedOutReason.ReAuthenticating) {
 					try {
 						var settingsService = SettingsServiceFactory.GetOrCreate(nameof(AuthenticationService));
-						await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email);
+						await CredentialsService.DeleteAsync(settingsService.ServerUrl.ToUri(), settingsService.Email, settingsService.Team);
 					}
 					catch (Exception ex) {
 						Log.Warning(ex, $"{nameof(LogoutAsync)} - credentials");
@@ -95,7 +95,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
 						// it's possible that this method is called before the webview is ready -- enqueue it
-						WebviewIpc.EnqueueNotification(new HostDidLogoutNotificationType());
+						BrowserService.EnqueueNotification(new HostDidLogoutNotificationType());
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 					}
 					catch (Exception ex) {
@@ -107,7 +107,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
 						// it's possible that this method is called before the webview is ready -- enqueue it
-						WebviewIpc.EnqueueNotification(new DidEncounterMaintenanceModeNotificationType(payload));
+						BrowserService.EnqueueNotification(new DidEncounterMaintenanceModeNotificationType(payload));
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 					}
 					catch (Exception ex) {

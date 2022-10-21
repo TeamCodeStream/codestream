@@ -1,7 +1,7 @@
 ﻿using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
+
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 using System;
@@ -71,21 +71,25 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			DialogPage.LoadSettingsFromStorage();
 		}
 
-		public IOptionsDialogPage DialogPage { get; private set; }
+		public IOptionsDialogPage DialogPage { get; }
 
 		public void SaveSettingsToStorage() {
 			DialogPage.SaveSettingsToStorage();
 		}
 
-		public Settings GetSettings() {
-			return new Settings {
+		public Settings GetSettings() 
+			=> new Settings {
 				Options = this
 			};
-		}
 
 		public string Email {
 			get => DialogPage.Email;
 			set => DialogPage.Email = value;
+		}
+
+		public string Team {
+			get => DialogPage.Team;
+			set => DialogPage.Team = value;
 		}
 
 		public bool ShowAvatars {
@@ -104,12 +108,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public TraceLevel TraceLevel {
-			get {
-				return DialogPage.TraceLevel;
-			}
-			set {
-				DialogPage.TraceLevel = value;
-			}
+			get => DialogPage.TraceLevel;
+			set => DialogPage.TraceLevel = value;
 		}
 
 		public bool AutoSignIn {
@@ -149,38 +149,39 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			set => DialogPage.GoldenSignalsInEditorFormat = value;
 		}
 
-		public Ide GetIdeInfo() {
-			return new Ide {
+		public Ide GetIdeInfo() 
+			=> new Ide {
 				Name = Application.IdeMoniker,
 				Version = Application.VisualStudioVersionString,
 				Detail = Application.VisualStudioDisplayName
 			};
-		}
 
-		public Extension GetExtensionInfo() {
-			return new Extension {
+		public Extension GetExtensionInfo() 
+			=> new Extension {
 				Version = Application.ExtensionVersionShort.ToString(),
 				VersionFormatted = GetEnvironmentVersionFormatted(),
 				Build = Application.BuildNumber.ToString(),
 				BuildEnv = Application.BuildEnv
 			};
-		}
 
-		public CodeStreamEnvironmentInfo GetCodeStreamEnvironmentInfo {
-			get {
-				return _environmentInfo;
-			}
-		}
+		public CodeStreamEnvironmentInfo GetCodeStreamEnvironmentInfo 
+			=> _environmentInfo;
 
 		/// <summary>
 		/// This is the environment dictated by the urls the user is using
 		/// </summary>
 		/// <returns></returns>
 		public string GetEnvironmentName() {
-			if (ServerUrl == null) return "unknown";
+			if (ServerUrl == null)
+			{
+				return "unknown";
+			}
 
 			var match = RegularExpressions.EnvironmentRegex.Match(ServerUrl);
-			if (!match.Success) return "unknown";
+			if (!match.Success)
+			{
+				return "unknown";
+			}
 
 			if (match.Groups[1].Value.EqualsIgnoreCase("localhost")) {
 				return "local";
@@ -213,17 +214,22 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public TraceLevel GetAgentTraceLevel() {
-			if (TraceLevel == TraceLevel.Info)
-				return TraceLevel.Verbose;
-			if (TraceLevel == TraceLevel.Debug || TraceLevel == TraceLevel.Verbose)
-				return TraceLevel.Debug;
-
-			return TraceLevel;
+			switch (TraceLevel)
+			{
+				case TraceLevel.Info:
+					return TraceLevel.Verbose;
+				case TraceLevel.Debug:
+				case TraceLevel.Verbose:
+					return TraceLevel.Debug;
+				case TraceLevel.Silent:
+				case TraceLevel.Errors:
+				default:
+					return TraceLevel;
+			}
 		}
 
-		public TraceLevel GetExtensionTraceLevel() {
-			return TraceLevel;
-		}
+		public TraceLevel GetExtensionTraceLevel() 
+			=> TraceLevel;
 
 		///<inheritdoc/>
 		public void PauseNotifications() {

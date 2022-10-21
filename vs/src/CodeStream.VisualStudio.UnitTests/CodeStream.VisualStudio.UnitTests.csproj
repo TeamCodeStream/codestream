@@ -90,7 +90,6 @@
     <Compile Include="Services\DotNetBrowserServiceTests.cs" />
     <Compile Include="Services\IdeServiceTests.cs" />
     <Compile Include="Services\SettingsServiceTests.cs" />
-    <Compile Include="Stubs\OptionsDialogPageStub.cs" />
     <Compile Include="Stubs\CredentialsServiceStub.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManagerTests.cs" />
     <Compile Include="UI\TextViewCreationListenerTests.cs" />

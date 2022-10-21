@@ -19,6 +19,8 @@ using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Interfaces;
 using CodeStream.VisualStudio.Shared.Models;
+
+using Microsoft;
 #if DEBUG
 using TraceLevel = CodeStream.VisualStudio.Core.Logging.TraceLevel;
 #endif
@@ -29,7 +31,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 	public class CodeStreamAgentService : ICodeStreamAgentService, IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CodeStreamAgentService>();
 		private readonly ISessionService _sessionService;
-		private readonly IEventAggregator _eventAggregator;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 		private readonly IHttpClientService _httpClientService;
 		private readonly IVisualStudioSettingsManager _vsSettingsManager;
@@ -42,15 +43,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			IHttpClientService httpClientService,
 			IVisualStudioSettingsManager vsSettingsManager) {
 
-			_eventAggregator = eventAggregator;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
 			_httpClientService = httpClientService;
 			_vsSettingsManager = vsSettingsManager;
 
 			try {
-				if (_eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
-					Log.Error($"_eventAggregatorIsNull={_eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
+				if (eventAggregator == null || _sessionService == null || settingsServiceFactory == null) {
+					Log.Error($"_eventAggregatorIsNull={eventAggregator == null},_sessionServiceIsNull={_sessionService == null},settingsServiceFactoryIsNull={settingsServiceFactory == null}");
 				}
 			}
 			catch (Exception ex) {
@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		private JsonRpc _rpc;
-		bool _disposed;
+		private bool _disposed;
 
 		public async Task SetRpcAsync(JsonRpc rpc) {
 			Log.Debug(nameof(SetRpcAsync));
@@ -67,10 +67,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			try {
 
-#if X86
+				#if X86
 				var initializationResult = await InitializeAsync();
 				Log.Verbose(initializationResult?.ToString());
-#endif
+				#endif
 
 				_sessionService.SetAgentConnected();
 			}
@@ -94,7 +94,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			catch (ObjectDisposedException ex) {
 				Log.Fatal(ex, "SendName={Name}", name);
 #if DEBUG
-				Log.Verbose($"Arguments={(arguments != null ? arguments.ToJson(true) : null)}");
+				Log.Verbose($"Arguments={arguments?.ToJson(true)}");
 #endif
 				throw;
 			}
@@ -129,9 +129,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			var isAgentReady = _sessionService.IsAgentReady;
 			Log.Debug($"{nameof(ReinitializeAsync)} IsAgentReady={isAgentReady}");
 
-			if (!isAgentReady) return Task.FromResult((JToken)null);
-
-			return InitializeAsync(newServerUrl);
+			return !isAgentReady
+				? Task.FromResult((JToken)null)
+				: InitializeAsync(newServerUrl);
 		}
 
 		private Task<JToken> InitializeAsync(string newServerUrl = null) {
@@ -239,12 +239,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		}
 
-		public Task<JToken> LoginViaTokenAsync(JToken token, string teamId = null) {
-			return SendCoreAsync<JToken>("codestream/login/token", new TokenLoginRequest {
+		public Task<JToken> LoginViaTokenAsync(JToken token, string teamId) 
+			=> SendCoreAsync<JToken>("codestream/login/token", new TokenLoginRequest {
 				Token = token,
 				TeamId = teamId
 			});
-		}
 
 		public Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId) {
 			return SendCoreAsync<JToken>(PasswordLoginRequestType.MethodName, new PasswordLoginRequest {
@@ -268,24 +267,33 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return SendAsync<DocumentFromMarkerResponse>("codestream/textDocument/fromMarker", request);
 		}
 
-		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false) {
-			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug)) {
+		public async Task<JToken> GetBootstrapAsync(Settings settings, JToken state, bool isAuthenticated = false) {
+			using (Log.CriticalOperation(nameof(GetBootstrapAsync), Serilog.Events.LogEventLevel.Debug))
+			{
 				var componentModel = Package.GetGlobalService(typeof(SComponentModel)) as IComponentModel;
+				Assumes.Present(componentModel);
+
 				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(GetBootstrapAsync));
 				// NOTE: this camelCaseSerializer is important because FromObject doesn't
 				// serialize using the global camelCase resolver
 
 				var capabilities = state?["capabilities"] != null
 					? state["capabilities"].ToObject<JObject>()
-					: JObject.FromObject(new { });
-				capabilities.Merge(new Capabilities {
-					CodemarkApply = true,
-					CodemarkCompare = true,
-					EditorTrackVisibleRange = true,
-					Services = new Shared.Models.Services { }
-				}.ToJToken(), new JsonMergeSettings {
-					MergeArrayHandling = MergeArrayHandling.Union
-				});
+					: JObject.FromObject(new {});
+
+				capabilities.Merge(
+					new Capabilities
+					{
+						CodemarkApply = true,
+						CodemarkCompare = true,
+						EditorTrackVisibleRange = true,
+						Services = new Models.Services()
+					}.ToJToken(),
+					new JsonMergeSettings
+					{
+						MergeArrayHandling = MergeArrayHandling.Union
+					}
+				);
 
 				// TODO: Need to separate the agent caps from the IDE ones, so that we don't need to keep the model up to date (i.e. support agent passthrough)
 				var capabilitiesObject = capabilities.ToObject<Capabilities>();
@@ -293,36 +301,48 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				var webViewUserSettingsService = componentModel.GetService<IWebviewUserSettingsService>();
 				WebviewContext webviewContext;
 
-				if (!isAuthenticated) {
-					var userSettings =
-						webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName);
+				var teamId = settingsManager.Team;
 
-					if (userSettings != null) {
+				if (!isAuthenticated)
+				{
+					var userSettings =
+						webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
+
+					if (userSettings != null)
+					{
 						webviewContext = userSettings;
 					}
-					else {
-						webviewContext = new WebviewContext {
+					else
+					{
+						webviewContext = new WebviewContext
+						{
 							HasFocus = true
 						};
 					}
 
-					if (webviewContext.__teamless__ == null || webviewContext.__teamless__.SelectedRegion.IsNullOrWhiteSpace()) {
+					if (webviewContext.Teamless == null || webviewContext.Teamless.SelectedRegion.IsNullOrWhiteSpace())
+					{
 						// not authed, try to find the first selectedRegion (usually US) (somewhat stolen from store/session/actions)
-						webviewContext.__teamless__ = new TeamlessContext() {
+						webviewContext.Teamless = new TeamlessContext()
+						{
 							SelectedRegion = settingsManager.GetCodeStreamEnvironmentInfo?.EnvironmentHosts?
 								.Where(_ => _.ShortName.ToLower().Contains("us")).Select(_ => _.ShortName)
 								.FirstOrDefault()
 						};
-						if (webviewContext.__teamless__.SelectedRegion.IsNullOrWhiteSpace()) {
+
+						if (webviewContext.Teamless.SelectedRegion.IsNullOrWhiteSpace())
+						{
 							// fallback to first if we can't find a match above
-							webviewContext.__teamless__.SelectedRegion = settingsManager.GetCodeStreamEnvironmentInfo
+							webviewContext.Teamless.SelectedRegion = settingsManager.GetCodeStreamEnvironmentInfo
 								?.EnvironmentHosts?.Select(_ => _.ShortName).FirstOrDefault();
 						}
 					}
 
-					var bootstrapAnonymous = new BootstrapPartialResponseAnonymous {
+					var bootstrapAnonymous = new BootstrapPartialResponseAnonymous
+					{
 						Capabilities = capabilitiesObject,
-						Configs = new Configs {
+						Configs = new Configs
+						{
 							Email = settingsManager.Email,
 							ShowAvatars = settingsManager.ShowAvatars,
 							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
@@ -332,28 +352,35 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
 						Version = settingsManager.GetEnvironmentVersionFormatted(),
 						Context = webviewContext,
-						Session = new UserSession() { },
-						Ide = new Ide() {
+						Session = new UserSession() {},
+						Ide = new Ide()
+						{
 							Name = Application.IdeMoniker
 						}
 					}.ToJToken();
-#if DEBUG
+
+					#if DEBUG
 					Log.Debug(bootstrapAnonymous?.ToString());
-#endif
+					#endif
+
 					return bootstrapAnonymous;
 				}
-				else {
+				else
+				{
+					if (state == null)
+					{
+						throw new ArgumentNullException(nameof(state));
+					}
 
-					if (state == null) throw new ArgumentNullException(nameof(state));
 					var bootstrapAuthenticated = await _rpc
 						.InvokeWithParameterObjectAsync<JToken>(BootstrapRequestType.MethodName)
 						.ConfigureAwait(false) as JObject;
 
 					var editorService = componentModel?.GetService<IEditorService>();
 					var editorContext = editorService?.GetEditorContext();
-
- 					var teamId = state["teamId"].ToString();
+					
 					_sessionService.TeamId = teamId;
+					
 					var userSettings =
 						webViewUserSettingsService?.TryGetWebviewContext(_sessionService.SolutionName, teamId);
 					if (userSettings != null) {
@@ -364,14 +391,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 							HasFocus = true
 						};
 					}
-
+					
 					webviewContext.CurrentTeamId = teamId;
-					if (!webviewContext.PanelStack.AnySafe()) {
-						webviewContext.PanelStack = new List<string> {WebviewPanels.LandingRedirect};
+
+					if (!webviewContext.PanelStack.AnySafe())
+					{
+						webviewContext.PanelStack = new List<string> { WebviewPanels.LandingRedirect };
 					}
-					var bootstrapResponse = new BootstrapAuthenticatedResponse {
+
+					var bootstrapResponse = new BootstrapAuthenticatedResponse
+					{
 						Capabilities = capabilitiesObject,
-						Configs = new Configs {
+						Configs = new Configs
+						{
 							Email = (string)state["email"],
 							ShowAvatars = settings.Options.ShowAvatars,
 							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
@@ -380,25 +412,29 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						},
 						Context = webviewContext,
 						EditorContext = editorContext,
-						Session = new UserSession {
+						Session = new UserSession
+						{
 							UserId = state["userId"].ToString()
 						},
 						EnvironmentInfo = settingsManager.GetCodeStreamEnvironmentInfo,
 						Version = settingsManager.GetEnvironmentVersionFormatted(),
-						Ide = new Ide() {
+						Ide = new Ide()
+						{
 							Name = Application.IdeMoniker
 						}
 					};
 
 					var bootstrapResponseJson = bootstrapResponse.ToJToken();
 					bootstrapAuthenticated?.Merge(bootstrapResponseJson);
-#if DEBUG
+					#if DEBUG
 					// only log the non-user bootstrap data -- it's too verbose
-					if (bootstrapAuthenticated == null) {
+					if (bootstrapAuthenticated == null)
+					{
 						System.Diagnostics.Debugger.Break();
 					}
+
 					Log.Debug(bootstrapResponseJson?.ToString());
-#endif
+					#endif
 					return bootstrapAuthenticated;
 				}
 			}
@@ -411,8 +447,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		private void Dispose(bool disposing) {
 			if (_disposed)
+			{
 				return;
-
+			}
 
 			_disposed = true;
 		}

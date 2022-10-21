@@ -31,22 +31,22 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public T TryGetValue<T>(string bucketName, string dataKey) {
 			using (Log.CriticalOperation($"{nameof(TryGetValue)} BucketName={bucketName} DataKey={dataKey}")) {
 				if (bucketName.IsNullOrWhiteSpace() || dataKey.IsNullOrWhiteSpace()) {
-					return default(T);
+					return default;
 				}
 				try {				
 					var settings = Load(bucketName);
-					if (settings == null || settings.Data == null) {
-						return default(T);
+					if (settings?.Data == null) {
+						return default;
 					}
-					if (settings.Data.TryGetValue(dataKey.ToLowerInvariant(), out object value)) {
+
+					if (settings.Data.TryGetValue(dataKey.ToLowerInvariant(), out var value)) {
 
 						if (value != null) {
-							var str = value as string;
-							if (str != null) {
+							if (value is string str) {
 								return (T)Convert.ChangeType(value, typeof(T));
 							}
-							var jObject = value as JObject;
-							if (jObject != null) {
+
+							if (value is JObject jObject) {
 								var data = jObject.ToObject<T>();
 #if DEBUG
 								Log.Verbose($"{nameof(TryGetValue)} to {@data}");
@@ -60,13 +60,13 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				}
 				catch (InvalidCastException ex) {
 					Log.Error(ex, $"{nameof(TryGetValue)} InvalidCastException Key={dataKey}");
-					return default(T);
+					return default;
 				}
 				catch (Exception ex) {
 					Log.Error(ex, $"{nameof(TryGetValue)} Key={dataKey}");
-					return default(T);
+					return default;
 				}
-				return default(T);
+				return default;
 			}
 		}
 
@@ -79,17 +79,15 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <returns></returns>
 		public bool Save(string bucketName, string dataKey, object obj) {
 			using (Log.CriticalOperation($"{nameof(Save)} BucketName={bucketName} DataKey={dataKey}")) {
-				string solutionName = null;
 				string propertyName = null;
 				if (bucketName.IsNullOrWhiteSpace() || dataKey.IsNullOrWhiteSpace()) {
 					return false;
 				}
 				try {
 					propertyName = string.Format(PropertyFormat, bucketName).ToLowerInvariant();
-					var loaded = Load(bucketName);
-					if (loaded == null) {
-						loaded = new UserSettings { Data = new Dictionary<string, object>() };
-					}
+
+					var loaded = 
+						Load(bucketName) ?? new UserSettings { Data = new Dictionary<string, object>() };
 
 					if (loaded.Data.ContainsKey(dataKey) && obj == null) {
 						loaded.Data.Remove(dataKey);
@@ -104,7 +102,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					return true;
 				}
 				catch (Exception ex) {
-					Log.Error(ex, $"{nameof(Save)} Key={dataKey} SolutionName={solutionName} PropertyName={propertyName}");
+					Log.Error(ex, $"{nameof(Save)} Key={dataKey} PropertyName={propertyName}");
 				}
 				return false;
 			}
@@ -118,8 +116,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					};
 				}
 				try {
-					if (_settingsProvider.TryGetString(CollectionName, string.Format(PropertyFormat, bucketName),
-						out string data)) {
+					if (_settingsProvider.TryGetString(CollectionName, string.Format(PropertyFormat, bucketName), out var data)) {
 						Log.Verbose($"{nameof(Load)} Loaded={data}");
 						return JsonConvert.DeserializeObject<UserSettings>(data);
 					}

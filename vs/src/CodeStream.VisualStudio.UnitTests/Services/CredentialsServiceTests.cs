@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+
 using CodeStream.VisualStudio.UnitTests.Stubs;
 
 using Xunit;
@@ -8,23 +10,25 @@ namespace CodeStream.VisualStudio.UnitTests.Services
     public class CredentialsServiceTests
     {
         [Fact]
-        public void AllTest()
+        public async Task AllTest()
         {
-            var email = "a@b.com";
+            const string email = "a@b.com";
+            const string team = "AWESOME";
             var serverUri = new Uri("http://foo.com");
-            var secret = "sEcReT";
+            const string secret = "sEcReT";
 
             var testCredentialsService = new CredentialsServiceStub();
 
-            var saved = testCredentialsService.SaveAsync(serverUri, email, secret);
-            Assert.True(saved.Result);
+            var saved = await testCredentialsService.SaveAsync(serverUri, email, secret,team);
+            Assert.True(saved);
 
-            var exists = testCredentialsService.LoadAsync(serverUri, email);
-            Assert.True(exists.Result.Item1 == email);
-            Assert.True(exists.Result.Item2 == secret);
+            var exists = await testCredentialsService.LoadAsync(serverUri, email, team);
+            Assert.True(exists.Item1 == email);
+            Assert.True(exists.Item2 == secret);
+            Assert.True(exists.Item3 == team);
 
-            var deleted = testCredentialsService.DeleteAsync(serverUri, email);
-            Assert.True(deleted.Result);
+            var deleted = await testCredentialsService.DeleteAsync(serverUri, email, team);
+            Assert.True(deleted);
         }
     }
 }

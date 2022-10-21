@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Credentials;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared.Extensions;
 using Newtonsoft.Json.Linq;
@@ -11,30 +12,28 @@ namespace CodeStream.VisualStudio.Shared.Services {
 	public abstract class CredentialsServiceBase {
 		private static readonly ILogger Log = LogManager.ForContext<CredentialsServiceBase>();
 
-		/// <summary>
+		/// <remarks>
 		/// Normally, ToUpperInvariant is better -- but we should be ok, as this is a 1-way transform
-		/// </summary>
-		/// <param name="keys"></param>
-		/// <remarks>>https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1308-normalize-strings-to-uppercase?view=vs-2017</remarks>
-		/// <returns></returns>
-		protected virtual string FormatKey(params string[] keys) {
-			return string.Join("|", keys).ToLowerInvariant();
-		}
+		/// >https://docs.microsoft.com/en-us/visualstudio/code-quality/ca1308-normalize-strings-to-uppercase?view=vs-2017
+		/// </remarks>
+		protected virtual string FormatKey(string uri, string email, string teamId) 
+			=> $"{uri}|{email}|{teamId}".ToLowerInvariant();
 
-		protected virtual string GetKey(string key) {
-			return $"{Application.Name}|" + key;
-		}
+		protected virtual string GetKey(string key) => $"{Application.Name}|" + key;
 
-		protected Task<Tuple<string, string>> LoadAsync(params string[] keys) {
-			if (keys == null) throw new ArgumentNullException(nameof(keys));
-
+		protected Task<Tuple<string, string, string>> LoadAsync(string uri, string email, string teamId) {
 			Log.Debug(nameof(LoadAsync));
-			Tuple<string, string> result = null;
+
+			Guard.ArgumentNotNull(uri, nameof(uri));
+			Guard.ArgumentNotNull(email, nameof(email));
+			Guard.ArgumentNotNull(teamId, nameof(teamId));
+
+			Tuple<string, string, string> result = null;
 
 			try {
-				using (var credential = Credential.Load(GetKey(FormatKey(keys)))) {
+				using (var credential = Credential.Load(GetKey(FormatKey(uri, email, teamId)))) {
 					if (credential != null) {
-						result = Tuple.Create(credential.Username, credential.Password);
+						result = Tuple.Create(credential.Username, credential.Password, teamId);
 						Log.Verbose(nameof(LoadAsync) + ": found");
 					}
 				}
@@ -46,17 +45,20 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return Task.FromResult(result);
 		}	 
 
-		protected Task<JToken> LoadJsonAsync(params string[] keys) {
-			if (keys == null) throw new ArgumentNullException(nameof(keys));
+		protected Task<JToken> LoadJsonAsync(string uri, string email, string teamId){
+			Log.Debug(nameof(LoadJsonAsync));
 
-			Log.Debug(nameof(LoadAsync));
+			Guard.ArgumentNotNull(uri, nameof(uri));
+			Guard.ArgumentNotNull(email, nameof(email));
+			Guard.ArgumentNotNull(teamId, nameof(teamId));
+
 			JToken result = null;
 
 			try {
-				using (var credential = Credential.Load(GetKey(FormatKey(keys)))) {
+				using (var credential = Credential.Load(GetKey(FormatKey(uri, email, teamId)))) {
 					if (credential != null) {
 						result = JToken.Parse(credential.Password);						
-						Log.Verbose(nameof(LoadAsync) + ": found");
+						Log.Verbose(nameof(LoadJsonAsync) + ": found");
 					}
 				}
 			}
@@ -70,17 +72,18 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return Task.FromResult(result);
 		}
 
-		protected Task<bool> SaveAsync<T>(string userName, T secret, params string[] keys) {
-			return SaveAsync(userName, secret.ToJson(), keys);
-		}
+		protected Task<bool> SaveAsync<T>(string userName, T secret, string uri, string email, string teamId) 
+			=> SaveAsync(userName, secret.ToJson(), uri, email, teamId);
 
-		protected Task<bool> SaveAsync(string userName, string secret, params string[] keys) {
-			if (keys == null) throw new ArgumentNullException(nameof(keys));
-
+		protected Task<bool> SaveAsync(string userName, string secret, string uri, string email, string teamId) {
 			Log.Debug(nameof(SaveAsync));
 
+			Guard.ArgumentNotNull(uri, nameof(uri));
+			Guard.ArgumentNotNull(email, nameof(email));
+			Guard.ArgumentNotNull(teamId, nameof(teamId));
+
 			try {
-				Credential.Save(GetKey(FormatKey(keys)), userName, secret);
+				Credential.Save(GetKey(FormatKey(uri, email, teamId)), userName, secret);
 				return Task.FromResult(true);
 			}
 			catch (Exception ex) {
@@ -90,13 +93,15 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return Task.FromResult(false);
 		}
 
-		protected bool Save(string userName, string secret, params string[] keys) {
-			if (keys == null) throw new ArgumentNullException(nameof(keys));
+		protected bool Save(string userName, string secret, string uri, string email, string teamId) {
+			Log.Debug(nameof(Save));
 
-			Log.Debug(nameof(SaveAsync));
+			Guard.ArgumentNotNull(uri, nameof(uri));
+			Guard.ArgumentNotNull(email, nameof(email));
+			Guard.ArgumentNotNull(teamId, nameof(teamId));
 
 			try {
-				Credential.Save(GetKey(FormatKey(keys)), userName, secret);
+				Credential.Save(GetKey(FormatKey(uri, email, teamId)), userName, secret);
 				return true;
 			}
 			catch (Exception ex) {
@@ -106,13 +111,15 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return false;
 		}
 
-		protected Task<bool> DeleteAsync(params string[] keys) {
-			if (keys == null) throw new ArgumentNullException(nameof(keys));
-
+		protected Task<bool> DeleteAsync(string uri, string email, string teamId) {
 			Log.Debug(nameof(DeleteAsync));
 
+			Guard.ArgumentNotNull(uri, nameof(uri));
+			Guard.ArgumentNotNull(email, nameof(email));
+			Guard.ArgumentNotNull(teamId, nameof(teamId));
+
 			try {
-				Credential.Delete(GetKey(FormatKey(keys)));
+				Credential.Delete(GetKey(FormatKey(uri, email, teamId)));
 				return Task.FromResult(true);
 			}
 			catch (Exception ex) {

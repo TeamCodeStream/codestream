@@ -19,8 +19,6 @@ using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
 
-// ReSharper disable UnusedMember.Global
-
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class CustomMessageHandler : IDisposable {
 		private static readonly ILogger Log = LogManager.ForContext<CustomMessageHandler>();
@@ -64,14 +62,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		}
 
 		private IBrowserService _browserService;
-		private IBrowserService BrowserService {
-			get {
-				if (_browserService == null) {
-					_browserService = _browserServiceFactory.Create();
-				}
-				return _browserService;
-			}
-		}
+		private IBrowserService BrowserService 
+			=> _browserService ?? (_browserService = _browserServiceFactory.Create());
 
 		/// <summary>
 		/// React to the agent requesting that a url be opened
@@ -186,18 +178,17 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		}
 
 		public class DocumentMarkerChangedSubjectArgs {
-			public DocumentMarkerChangedSubjectArgs(string uri) {
-				Uri = uri;
-			}
-			public string Uri { get; private set; }
+			public DocumentMarkerChangedSubjectArgs(string uri) 
+				=> Uri = uri;
+
+			public string Uri { get; }
 			public JToken Token { get; set; }
 		}
 
 		public class UserPreferencesChangedSubjectArgs {
 			public DidChangeUserPreferencesData Data { get; }
-			public UserPreferencesChangedSubjectArgs(DidChangeUserPreferencesData data) {
-				Data = data;
-			}
+			public UserPreferencesChangedSubjectArgs(DidChangeUserPreferencesData data) 
+				=> Data = data;
 		}
 
 		/// <summary>
@@ -208,10 +199,10 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		[JsonRpcMethod(DidChangeDocumentMarkersNotificationType.MethodName)]
 		public void OnDidChangeDocumentMarkers(JToken e) {
 			var @params = e.ToObject<DidChangeDocumentMarkersNotification>();
-			if (@params == null) return;
-
-			//this is too loud...
-			//Log.Verbose($"{nameof(OnDidChangeDocumentMarkers)} {@params?.TextDocument?.Uri}");
+			if (@params == null)
+			{
+				return;
+			}
 
 			var uriString = @params.TextDocument.Uri;
 			BrowserService.EnqueueNotification(new DidChangeDocumentMarkersNotificationType {
@@ -381,9 +372,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			try {
 				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(componentModel);
-				if (componentModel == null) {
-					Log.Error(nameof(componentModel) + " is null");
-				}
 
 				var languageServerClientManager = componentModel.GetService<ILanguageServerClientManager>();
 				if (languageServerClientManager != null) {
@@ -407,9 +395,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 				var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(componentModel);
-				if (componentModel == null) {
-					Log.Error(nameof(componentModel) + " is null");
-				}
+
 				var authenticationServiceFactory = componentModel.GetService<IAuthenticationServiceFactory>();
 
 				if (authenticationServiceFactory != null) {
@@ -427,37 +413,6 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			}
 		}
 
-		// optional messages we could use for better UI notificaitons / messages
-
-		//[JsonRpcMethod(DidStartLoginNotificationType.MethodName)]
-		//public void OnDidStartLogin() {
-		//	using (Log.CriticalOperation($"{nameof(OnDidStartLogin)} Method={DidStartLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
-		//		try {
-		//			var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-		//			Assumes.Present(componentModel);
-
-		//			componentModel.GetService<ISessionService>().SetState(SessionState.UserSigningIn);
-
-		//			_eventAggregator.Publish(new SessionDidStartSignInEvent());
-		//		}
-		//		catch (Exception ex) {
-		//			Log.Error(ex, nameof(OnDidStartLogin));
-		//		}
-		//	}
-		//}
-
-		//[JsonRpcMethod(DidFailLoginNotificationType.MethodName)]
-		//public void OnFailLogin() {
-		//	using (Log.CriticalOperation($"{nameof(OnFailLogin)} Method={DidFailLoginNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug)) {
-		//		try {
-		//			_eventAggregator.Publish(new SessionDidFailSignInEvent());
-		//		}
-		//		catch (Exception ex) {
-		//			Log.Error(ex, nameof(OnFailLogin));
-		//		}
-		//	}
-		//}
-
 		private bool _disposed = false;
 
 		public void Dispose() {
@@ -466,7 +421,10 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		}
 
 		protected virtual void Dispose(bool disposing) {
-			if (_disposed) return;
+			if (_disposed)
+			{
+				return;
+			}
 
 			if (disposing) {
 				_documentMarkerChangedSubscription?.Dispose();

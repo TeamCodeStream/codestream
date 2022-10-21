@@ -8,7 +8,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		bool TryClearContext(string solutionName, string teamId);
 		bool SaveTeamId(string solutionName, string teamId);
 		string TryGetTeamId(string solutionName);
-		WebviewContext TryGetWebviewContext(string solutionName);
 		WebviewContext TryGetWebviewContext(string solutionName, string teamId);
 	}
 }

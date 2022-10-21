@@ -168,20 +168,18 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public bool? IsRepositioning { get; set; }
 		[JsonProperty("hasFocus", NullValueHandling = NullValueHandling.Ignore)]
 		public bool HasFocus { get; set; }
-		// ReSharper disable once IdentifierTypo
 		[JsonProperty("isFirstPageview", NullValueHandling = NullValueHandling.Ignore)]
-		public bool? IsFirstPageview { get; set; }
+		public bool? IsFirstPageView { get; set; }
 		[JsonProperty("panelStack", NullValueHandling = NullValueHandling.Ignore)]
 		public List<string> PanelStack { get; set; }
 		[JsonProperty("forceRegion", NullValueHandling = NullValueHandling.Ignore)]
 		public string ForceRegion { get; set; }
+
 		/// <summary>
 		/// Special property used when user is not authenticated
 		/// </summary>
-		// ReSharper disable once IdentifierTypo
-		// ReSharper disable once InconsistentNaming
 		[JsonProperty("__teamless__", NullValueHandling = NullValueHandling.Ignore)]
-		public TeamlessContext __teamless__ { get; set; }
+		public TeamlessContext Teamless { get; set; }
 	}
 
 	public class EditorContext {

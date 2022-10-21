@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[InstalledProductRegistration("#110", "#112", SolutionInfo.Version, IconResourceID = 400)]
 	[Guid(Guids.CodeStreamSettingsPackageId)]
-	public sealed class SettingsPackage : AsyncPackage, IServiceContainer {
+	public sealed class SettingsPackage : AsyncPackage {
 		private IComponentModel _componentModel;
 		private IOptionsDialogPage _optionsDialogPage;
 		private ICodeStreamSettingsManager _codeStreamSettingsManager;
@@ -71,70 +71,92 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 			return Task.CompletedTask;
 		}
 
-		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args) {
-			if (_codeStreamSettingsManager == null) return;
-
-			if (args.PropertyName == nameof(_codeStreamSettingsManager.TraceLevel)) {
-				LogManager.SetTraceLevel(_codeStreamSettingsManager.GetExtensionTraceLevel());
+		private void DialogPage_PropertyChanged(object sender, PropertyChangedEventArgs args)
+		{
+			if (_codeStreamSettingsManager == null)
+			{
+				return;
 			}
-			else if (args.PropertyName == nameof(_codeStreamSettingsManager.AutoHideMarkers)) {
-				var odp = sender as OptionsDialogPage;
-				if (odp == null) return;
-				var eventAggregator = _componentModel.GetService<IEventAggregator>();
-				eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
-			}
-			else if (args.PropertyName == nameof(_codeStreamSettingsManager.ShowAvatars) ||
-				args.PropertyName == nameof(_codeStreamSettingsManager.ShowMarkerGlyphs)) {
-				var odp = sender as OptionsDialogPage;
-				if (odp == null) return;
 
-				var configurationController = new ConfigurationController(
-					_componentModel.GetService<IEventAggregator>(),
-					_componentModel.GetService<IBrowserService>()
-				);
+			switch (args.PropertyName)
+			{
+				case nameof(_codeStreamSettingsManager.TraceLevel):
+					LogManager.SetTraceLevel(_codeStreamSettingsManager.GetExtensionTraceLevel());
+					break;
 
-				switch (args.PropertyName) {
-					case nameof(_codeStreamSettingsManager.ShowAvatars):
-						configurationController.ToggleShowAvatars(odp.ShowAvatars);
-						break;
-					case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
-						configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
-						break;
-				}
-			}
-			else if (args.PropertyName == nameof(_codeStreamSettingsManager.GoldenSignalsInEditorFormat)) {
-				_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
-			}
-			else if (args.PropertyName == nameof(_codeStreamSettingsManager.ServerUrl) ||
-					 args.PropertyName == nameof(_codeStreamSettingsManager.ProxyStrictSsl) ||
-					 args.PropertyName == nameof(_codeStreamSettingsManager.ProxySupport) ||
-					 args.PropertyName == nameof(_codeStreamSettingsManager.DisableStrictSSL) ||
-					 args.PropertyName == nameof(_codeStreamSettingsManager.ExtraCertificates)) {
-
-				try {
-					var sessionService = _componentModel.GetService<ISessionService>();
-					if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
-						_ = _componentModel.GetService<ICodeStreamService>().ConfigChangeReloadNotificationAsync();
+				case nameof(_codeStreamSettingsManager.AutoHideMarkers):
+				{
+					if (!(sender is OptionsDialogPage odp))
+					{
+						return;
 					}
+
+					var eventAggregator = _componentModel.GetService<IEventAggregator>();
+					eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
+
+					break;
 				}
-				catch {}
+
+				case nameof(_codeStreamSettingsManager.ShowAvatars):
+				case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
+				{
+					if (!(sender is OptionsDialogPage odp))
+					{
+						return;
+					}
+
+					var configurationController = new ConfigurationController(
+						_componentModel.GetService<IEventAggregator>(),
+						_componentModel.GetService<IBrowserService>()
+					);
+
+					switch (args.PropertyName) {
+						case nameof(_codeStreamSettingsManager.ShowAvatars):
+							configurationController.ToggleShowAvatars(odp.ShowAvatars);
+							break;
+						case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
+							configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
+							break;
+					}
+
+					break;
+				}
+				case nameof(_codeStreamSettingsManager.GoldenSignalsInEditorFormat):
+					_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
+					break;
+
+				case nameof(_codeStreamSettingsManager.ServerUrl):
+				case nameof(_codeStreamSettingsManager.ProxyStrictSsl):
+				case nameof(_codeStreamSettingsManager.ProxySupport):
+				case nameof(_codeStreamSettingsManager.DisableStrictSSL):
+				case nameof(_codeStreamSettingsManager.ExtraCertificates):
+					try {
+						var sessionService = _componentModel.GetService<ISessionService>();
+						if (sessionService?.IsAgentReady == true || sessionService?.IsReady == true) {
+							_ = _componentModel.GetService<ICodeStreamService>().ConfigChangeReloadNotificationAsync();
+						}
+					}
+					catch
+					{
+						// ignored
+					}
+
+					break;
 			}
 		}
 
 
-		private object CreateService(IServiceContainer container, Type serviceType) {
-			if (typeof(SSettingsManagerAccessor) == serviceType)
-				return new SettingsManagerAccessor(_codeStreamSettingsManager);
-
-			return null;
-		}
+		private object CreateService(IServiceContainer container, Type serviceType) 
+			=> typeof(SSettingsManagerAccessor) == serviceType
+				? new SettingsManagerAccessor(_codeStreamSettingsManager)
+				: null;
 
 		protected override void Dispose(bool isDisposing) {
 			if (isDisposing) {
 				try {
-#pragma warning disable VSTHRD108
+					#pragma warning disable VSTHRD108
 					ThreadHelper.ThrowIfNotOnUIThread();
-#pragma warning restore VSTHRD108
+					#pragma warning restore VSTHRD108
 
 					if (_codeStreamSettingsManager?.DialogPage != null) {
 						_codeStreamSettingsManager.DialogPage.PropertyChanged -= DialogPage_PropertyChanged;
@@ -149,7 +171,9 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 							OnCodeLensSettingsChangedAsync;
 					}
 				}
-				catch (Exception) {
+				catch (Exception)
+				{
+					// ignored
 				}
 			}
 

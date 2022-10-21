@@ -4,7 +4,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
+
 using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Shared.Models;
 
@@ -13,21 +13,24 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 	public class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
 
 		private string _email;
-		private bool _autoHideMarkers = false;
+		private string _team;
+		private bool _autoSignIn = true;
+
+		private bool _autoHideMarkers;
 		//// not supported yet
 		//private bool _showMarkerCodeLens = false;
 		private bool _showMarkerGlyphs = true;
 		private bool _showAvatars = true;
 		private TraceLevel _traceLevel = TraceLevel.Info;
 		 
-		private string _team;
-		private bool _autoSignIn = true;
+		
+		
 #if DEBUG
 		private string _serverUrl = "https://pd-api.codestream.us";
 #else
         private string _serverUrl = "https://api.codestream.com";
 #endif
-		private bool _disableStrictSsl = false;
+		private bool _disableStrictSsl;
 		private bool _proxyStrictSsl;
 		private string _extraCertificates;
 
@@ -49,13 +52,19 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		public bool PauseNotifyPropertyChanged { get; set; }
 
 		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") {
-			if (PauseNotifyPropertyChanged) return;
+			if (PauseNotifyPropertyChanged)
+			{
+				return;
+			}
 
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
 		private void ProxySetup() {
-			if (ProxySupport == ProxySupport.Off) return;
+			if (ProxySupport == ProxySupport.Off)
+			{
+				return;
+			}
 
 			try {
 				var webProxy = WebRequest.GetSystemWebProxy();
@@ -83,6 +92,19 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 			set {
 				if (_email != value) {
 					_email = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("Authentication")]
+		[DisplayName("Team")]
+		[Description("Specifies the team to use to connect to the CodeStream service")]
+		public string Team {
+			get => _team;
+			set {
+				if (_team != value) {
+					_team = value;
 					NotifyPropertyChanged();
 				}
 			}
@@ -183,19 +205,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 				}
 			}
 		}
-
-		//[Category("UI")]
-		//[DisplayName("Show Marker CodeLens")]
-		//[Description("Specifies whether to show code lens above lines with associated codemarks in the editor")]
-		//public bool ShowMarkerCodeLens
-		//{
-		//    get => _showMarkerCodeLens;
-		//    set
-		//    {
-		//        _showMarkerCodeLens = value;
-		//        NotifyPropertyChanged();
-		//    }
-		//}
 
 		[Category("UI")]
 		[DisplayName("Show Marker Glyphs")]

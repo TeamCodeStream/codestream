@@ -8,28 +8,28 @@ namespace CodeStream.VisualStudio.Core.Credentials
 {
     public class Credential : IDisposable
     {
-        static object _lockObject = new object();
-        bool _disposed;
+	    private static readonly object LockObject = new object();
+	    private static readonly SecurityPermission UnmanagedCodePermission;
 
-        static SecurityPermission _unmanagedCodePermission;
-
-        CredentialType _type;
-        string _target;
-        SecureString _password;
-        string _username;
-        string _description;
-        DateTime _lastWriteTime;
-        PersistanceType _persistanceType;
+	    private bool _disposed;
+	    private CredentialType _type;
+	    private string _target;
+	    private SecureString _password;
+	    private string _username;
+	    private string _description;
+	    private DateTime _lastWriteTime;
+	    private PersistanceType _persistanceType;
 
         static Credential()
         {
-            lock (_lockObject)
+            lock (LockObject)
             {
-                _unmanagedCodePermission = new SecurityPermission(SecurityPermissionFlag.UnmanagedCode);
+                UnmanagedCodePermission = new SecurityPermission(SecurityPermissionFlag.UnmanagedCode);
             }
         }
+
         public Credential()
-            : this(null)
+            : this(null, null)
         {
         }
 
@@ -106,6 +106,7 @@ namespace CodeStream.VisualStudio.Core.Credentials
                 _username = value;
             }
         }
+
         public string Password
         {
             get
@@ -123,7 +124,7 @@ namespace CodeStream.VisualStudio.Core.Credentials
             get
             {
                 CheckNotDisposed();
-                _unmanagedCodePermission.Demand();
+                UnmanagedCodePermission.Demand();
                 return null == _password ? new SecureString() : _password.Copy();
             }
             set
@@ -213,28 +214,31 @@ namespace CodeStream.VisualStudio.Core.Credentials
         public bool Save()
         {
             CheckNotDisposed();
-            _unmanagedCodePermission.Demand();
+            UnmanagedCodePermission.Demand();
 
-            byte[] passwordBytes = Encoding.Unicode.GetBytes(Password);
+            var passwordBytes = Encoding.Unicode.GetBytes(Password);
             if (Password.Length > (512))
             {
                 throw new ArgumentOutOfRangeException("The password has exceeded 512 bytes.");
             }
 
-            NativeMethods.CREDENTIAL credential = new NativeMethods.CREDENTIAL();
-            credential.TargetName = Target;
-            credential.UserName = Username;
-            credential.CredentialBlob = Marshal.StringToCoTaskMemUni(Password);
-            credential.CredentialBlobSize = passwordBytes.Length;
-            credential.Comment = Description;
-            credential.Type = (int)Type;
-            credential.Persist = (int)PersistanceType;
+            var credential = new NativeMethods.CREDENTIAL
+            {
+	            TargetName = Target,
+	            UserName = Username,
+	            CredentialBlob = Marshal.StringToCoTaskMemUni(Password),
+	            CredentialBlobSize = passwordBytes.Length,
+	            Comment = Description,
+	            Type = (int)Type,
+	            Persist = (int)PersistanceType
+            };
 
-            bool result = NativeMethods.CredWrite(ref credential, 0);
+            var result = NativeMethods.CredWrite(ref credential, 0);
             if (!result)
             {
                 return false;
             }
+
             LastWriteTimeUtc = DateTime.UtcNow;
             return true;
         }
@@ -249,15 +253,15 @@ namespace CodeStream.VisualStudio.Core.Credentials
         public bool Delete()
         {
             CheckNotDisposed();
-            _unmanagedCodePermission.Demand();
+            UnmanagedCodePermission.Demand();
 
             if (string.IsNullOrEmpty(Target))
             {
                 throw new InvalidOperationException("Target must be specified to delete a credential.");
             }
 
-            StringBuilder target = string.IsNullOrEmpty(Target) ? new StringBuilder() : new StringBuilder(Target);
-            bool result = NativeMethods.CredDelete(target, Type, 0);
+            var target = string.IsNullOrEmpty(Target) ? new StringBuilder() : new StringBuilder(Target);
+            var result = NativeMethods.CredDelete(target, Type, 0);
             return result;
         }
 
@@ -280,7 +284,7 @@ namespace CodeStream.VisualStudio.Core.Credentials
         public bool Load()
         {
             CheckNotDisposed();
-            _unmanagedCodePermission.Demand();
+            UnmanagedCodePermission.Demand();
 
             IntPtr credPointer;
 
@@ -299,7 +303,7 @@ namespace CodeStream.VisualStudio.Core.Credentials
         public bool Exists()
         {
             CheckNotDisposed();
-            _unmanagedCodePermission.Demand();
+            UnmanagedCodePermission.Demand();
 
             if (string.IsNullOrEmpty(Target))
             {

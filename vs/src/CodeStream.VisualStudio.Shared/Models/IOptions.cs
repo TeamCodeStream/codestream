@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel;
 using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
 
 namespace CodeStream.VisualStudio.Shared.Models {
 	public interface IOptions {
 		string Email { get; set; }
+		string Team { get; set; }
 		bool ShowAvatars { get; set; }
 		bool AutoSignIn { get; set; }
 
