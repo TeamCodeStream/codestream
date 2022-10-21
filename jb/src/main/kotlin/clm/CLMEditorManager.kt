@@ -56,7 +56,6 @@ import java.awt.Point
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
 import java.awt.event.MouseEvent
-import java.util.concurrent.CompletableFuture
 
 private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 
@@ -105,7 +104,7 @@ abstract class CLMEditorManager(
         editor.contentComponent.addFocusListener(this)
         project?.agentService?.onDidStart {
             project.sessionService?.onUserLoggedInChanged {
-                ApplicationManager.getApplication().invokeLater { this.updateInlays() }
+                this.updateInlays()
             }
         }
         appSettings.addGoldenSignalsListener(this)
@@ -124,25 +123,24 @@ abstract class CLMEditorManager(
         }
     }
 
+    fun runInBackground(toExecute: () -> Unit) {
+        ReadAction.nonBlocking { toExecute() }.submit(NonUrgentExecutor.getInstance())
+    }
+
     fun loadInlays(resetCache: Boolean = false) {
         if (path == null) return
         if (editor !is EditorImpl) return
         if (!isStale()) return
 
         project?.agentService?.onDidStart {
-            ApplicationManager.getApplication().invokeLater {
-                if (project.isDisposed) return@invokeLater
+            runInBackground {
+                if (project.isDisposed) return@runInBackground
                 // logger.debug("=== ${editor.displayPath} isShowing: ${editor.component.isShowing}")
-                if (!editor.component.isShowing) return@invokeLater
-                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@invokeLater
+                if (!editor.component.isShowing) return@runInBackground
+                val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@runInBackground
 
                 val classNames = if (lookupByClassName) {
-                    val future = CompletableFuture<List<String>?>()
-                    ReadAction.nonBlocking {
-                        val result = getLookupClassNames(psiFile)
-                        future.complete(result)
-                    }.submit(NonUrgentExecutor.getInstance())
-                    future.get() ?: return@invokeLater
+                    getLookupClassNames(psiFile) ?: return@runInBackground
                 } else {
                     null
                 }
@@ -170,10 +168,7 @@ abstract class CLMEditorManager(
                             currentError = result.error
                             if (result.error?.type == NOT_ASSOCIATED || result.error?.type == NOT_CONNECTED) {
                                 metricsBySymbol.clear()
-                                ApplicationManager.getApplication().invokeLater {
-                                    // invokeLater required since we're in coroutine
-                                    updateInlays()
-                                }
+                                updateInlays()
                             }
                             logger.info("Not updating CLM metrics due to error ${result.error?.type}")
                             return@launch
@@ -204,7 +199,6 @@ abstract class CLMEditorManager(
                         logger.error("Error getting fileLevelTelemetry", ex)
                     }
                 }
-
             }
         }
     }
@@ -228,16 +222,17 @@ abstract class CLMEditorManager(
     private fun _updateInlays() {
         // For timeout and other transient errors keep showing previous CLM metrics
         if (currentError?.type == "NOT_ASSOCIATED") {
-            _clearInlays()
-            updateInlayNotAssociated()
+            ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                _clearInlays()
+                updateInlayNotAssociated()
+            }
         } else if (currentError == null) {
-            _clearInlays()
             updateInlaysCore()
         }
     }
 
     private fun updateInlays() {
-        ApplicationManager.getApplication().invokeLater {
+        runInBackground {
             _updateInlays()
         }
     }
@@ -268,7 +263,7 @@ abstract class CLMEditorManager(
 
     abstract fun findTopLevelFunction(psiFile: PsiFile, functionName: String): PsiElement?
 
-    fun _resolveSymbol(symbolIdentifier: MethodLevelTelemetrySymbolIdentifier, psiFile: PsiFile): PsiElement? {
+    fun resolveSymbol(symbolIdentifier: MethodLevelTelemetrySymbolIdentifier, psiFile: PsiFile): PsiElement? {
         return if (symbolIdentifier.className != null) {
             findClassFunctionFromFile(
                 psiFile,
@@ -283,18 +278,6 @@ abstract class CLMEditorManager(
         }
     }
 
-    fun resolveSymbol(
-        symbolIdentifier: MethodLevelTelemetrySymbolIdentifier,
-        psiFile: PsiFile
-    ): CompletableFuture<PsiElement?> {
-        val future = CompletableFuture<PsiElement?>()
-        ReadAction.nonBlocking {
-            val psiElement = _resolveSymbol(symbolIdentifier, psiFile)
-            future.complete(psiElement)
-        }.submit(NonUrgentExecutor.getInstance())
-        return future
-    }
-
     private fun updateInlaysCore() {
         val (result, project, path, editor) = displayDeps() ?: return
         if (project.isDisposed) {
@@ -304,7 +287,7 @@ abstract class CLMEditorManager(
         val presentationFactory = PresentationFactory(editor)
         val since = result.sinceDateFormatted ?: "30 minutes ago"
         metricsBySymbol.forEach { (symbolIdentifier, metrics) ->
-            val symbol = resolveSymbol(symbolIdentifier, psiFile).get() ?: return@forEach
+            val symbol = resolveSymbol(symbolIdentifier, psiFile) ?: return@forEach
 
             val text = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)
@@ -341,19 +324,23 @@ abstract class CLMEditorManager(
                 })
 
             val renderer = CLMCustomRenderer(referenceOnHoverPresentation)
-            val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
 
-            inlay.let {
-                inlays.add(it)
-                if (!analyticsTracked) {
-                    val params = TelemetryParams(
-                        "MLT Codelenses Rendered", mapOf(
-                            "NR Account ID" to (result.newRelicAccountId ?: 0),
-                            "Language" to languageId
+            ApplicationManager.getApplication().invokeLaterOnWriteThread {
+                _clearInlays()
+                val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
+
+                inlay.let {
+                    inlays.add(it)
+                    if (!analyticsTracked) {
+                        val params = TelemetryParams(
+                            "MLT Codelenses Rendered", mapOf(
+                                "NR Account ID" to (result.newRelicAccountId ?: 0),
+                                "Language" to languageId
+                            )
                         )
-                    )
-                    project.agentService?.agent?.telemetry(params)
-                    analyticsTracked = true
+                        project.agentService?.agent?.telemetry(params)
+                        analyticsTracked = true
+                    }
                 }
             }
         }

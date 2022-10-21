@@ -26,9 +26,9 @@
     <depends optional="true" config-file="com.codestream.jetbrains-codestream-withPhp.xml">
         com.jetbrains.php
     </depends>
-<!--    <depends optional="true" config-file="com.codestream.jetbrains-codestream-withKotlin.xml">-->
-<!--        org.jetbrains.kotlin-->
-<!--    </depends>-->
+    <depends optional="true" config-file="com.codestream.jetbrains-codestream-withKotlin.xml">
+        org.jetbrains.kotlin
+    </depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="right"

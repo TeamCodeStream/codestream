@@ -5,7 +5,9 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import org.jetbrains.kotlin.asJava.elements.KtLightMethodImpl
 import org.jetbrains.kotlin.psi.KtFile
+import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 class CLMKotlinComponent(project: Project) :
     CLMLanguageComponent<CLMKotlinEditorManager>(project, KtFile::class.java, ::CLMKotlinEditorManager) {
@@ -17,7 +19,9 @@ class CLMKotlinComponent(project: Project) :
     }
 }
 
-class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "java", true) {
+class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin", true) {
+
+    private val logger = Logger.getInstance(CLMKotlinEditorManager::class.java)
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is KtFile || psiFile.classes.isEmpty()) return null
         return psiFile.classes.mapNotNull { it.qualifiedName }
@@ -31,11 +35,21 @@ class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "java", 
     ): NavigatablePsiElement? {
         if (psiFile !is KtFile) return null
         val clazz = psiFile.classes.find { it.qualifiedName == className }
-        val result = clazz?.findMethodsByName(functionName, false)?.get(0)
-        return result
+        val result = clazz?.findMethodsByName(functionName, false)
+        return if (!result.isNullOrEmpty()) {
+            result[0]
+        } else {
+            null
+        }
     }
 
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
-        return null
+        if (psiFile !is KtFile) return null
+        val functions = psiFile.getChildrenOfType<KtLightMethodImpl>()
+        val result = functions.find { it.name == functionName }
+        if (result != null) {
+            logger.info("Found top level function for $functionName")
+        }
+        return result
     }
 }

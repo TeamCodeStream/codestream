@@ -133,7 +133,7 @@ import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
-const supportedLanguages = ["python", "ruby", "csharp", "java", "go", "php"] as const;
+const supportedLanguages = ["python", "ruby", "csharp", "java", "kotlin", "go", "php"] as const;
 export type LanguageId = typeof supportedLanguages[number];
 
 export function escapeNrql(nrql: string) {
@@ -1993,6 +1993,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					);
 					break;
 				case "java":
+				case "kotlin":
 				case "go":
 				case "php":
 					functionInfo = {
@@ -2028,6 +2029,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			case "go":
 			case "csharp":
 			case "java":
+			case "kotlin":
 				return "locator";
 			case "php":
 				return "hybrid";
