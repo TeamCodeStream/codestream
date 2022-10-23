@@ -275,9 +275,11 @@ class AgentService(private val project: Project) : Disposable {
 
         val agentJsDestFile = File(agentDir, "agent-$agentVersion.js")
         val webJsMap = File(agentDir, "index.js.map")
+        val agentJsMap = File(agentDir, "agent.js.map")
         deleteAllExcept(agentDir, "agent", agentJsDestFile.name)
 
         FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJsDestFile)
+        FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
         FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/index.js.map"), webJsMap)
 
         getNodeResourcePath()?.let {

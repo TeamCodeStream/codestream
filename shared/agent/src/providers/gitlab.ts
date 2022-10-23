@@ -46,6 +46,7 @@ import { CSGitLabProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { Dates, log, lspProvider, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
+import { customFetch } from "../system/fetchCore";
 import { Directive, Directives } from "./directives";
 import mergeRequestNoteMutation from "./gitlab/createMergeRequestNote.graphql";
 import { GraphqlQueryBuilder } from "./gitlab/graphqlQueryBuilder";
@@ -947,10 +948,10 @@ export class GitLabProvider
 
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
-			const options: { [key: string]: any } = {};
-			if (this._httpsAgent) {
-				options.agent = this._httpsAgent;
-			}
+			const options = {
+				agent: this._httpsAgent ?? undefined,
+				fetch: customFetch,
+			};
 			this._client = new GraphQLClient(this.graphQlBaseUrl, options);
 		}
 		if (!this.accessToken) {

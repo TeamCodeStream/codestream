@@ -1,4 +1,5 @@
 "use strict";
+// tslint:disable:ordered-imports
 import "source-map-support/register";
 import { createConnection, ProposedFeatures } from "vscode-languageserver";
 import { CodeStreamAgent, FileLspLogger } from "./agent";

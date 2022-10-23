@@ -2,13 +2,15 @@
 
 import AbortController from "abort-controller";
 import FormData from "form-data";
+import { promises as fs } from "fs";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
 import { isEmpty, isEqual } from "lodash";
-import fetch, { Headers, RequestInit, Response } from "node-fetch";
+import { Headers, RequestInit, Response } from "node-fetch";
 import * as qs from "querystring";
 import { ParsedUrlQueryInput } from "querystring";
+import sanitize from "sanitize-filename";
 import { URLSearchParams } from "url";
 import { Emitter, Event } from "vscode-languageserver";
 import { ServerError } from "../../agentError";
@@ -304,7 +306,8 @@ import {
 	TriggerMsTeamsProactiveMessageResponse,
 } from "../../protocol/api.protocol";
 import { NewRelicProvider } from "../../providers/newrelic";
-import { Functions, getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
+import { getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
+import { customFetch, fetchCore } from "../../system/fetchCore";
 import { VersionInfo } from "../../types";
 import {
 	ApiProvider,
@@ -2469,7 +2472,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 		// note, this bypasses the built-in fetch wrapper and calls node fetch directly,
 		// because we're not dealing with json data in the request
-		const response = await fetch(url, { method: "post", body: formData, headers });
+		const response = await customFetch(url, { method: "post", body: formData, headers });
 		return await response.json();
 	}
 
@@ -2635,7 +2638,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					if (mw.onProvideResponse === undefined) continue;
 
 					try {
-						json = mw.onProvideResponse(context!);
+						json = mw.onProvideResponse(context);
 						if (json !== undefined) break;
 					} catch (ex) {
 						Logger.error(
@@ -2650,7 +2653,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			let resp;
 			let retryCount = 0;
 			if (json === undefined) {
-				[resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
+				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
 				if (context !== undefined) {
 					context.response = resp;
 				}
@@ -2668,7 +2671,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					if (mw.onResponse === undefined) continue;
 
 					try {
-						await mw.onResponse(context!, json);
+						await mw.onResponse(context, json);
 					} catch (ex) {
 						Logger.error(
 							ex,
@@ -2687,14 +2690,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 				throw await this.handleErrorResponse(resp);
 			}
 
-			const _json = await json!;
+			const _json = await json;
 
 			if (Container.instance().agent.recordRequests && init) {
 				const now = Date.now();
 				const { method, body } = init;
 
-				const fs = require("fs");
-				const sanitize = require("sanitize-filename");
 				const urlForFilename = sanitize(
 					sanitizedUrl.split("?")[0].replace(/\//g, "_").replace("_", "")
 				);
@@ -2707,9 +2708,8 @@ export class CodeStreamApiProvider implements ApiProvider {
 				};
 				const outString = JSON.stringify(out, null, 2);
 
-				fs.writeFile(filename, outString, "utf8", () => {
-					Logger.log(`Written ${filename}`);
-				});
+				await fs.writeFile(filename, outString, { encoding: "utf8" });
+				Logger.log(`Written ${filename}`);
 			}
 
 			return CodeStreamApiProvider.normalizeResponse(_json);
@@ -2719,35 +2719,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 					init && init.body ? ` body=${CodeStreamApiProvider.sanitize(init && init.body)}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
-		}
-	}
-
-	private async fetchCore(
-		count: number,
-		url: string,
-		init?: RequestInit
-	): Promise<[Response, number]> {
-		try {
-			const resp = await fetch(url, init);
-			if (resp.status < 200 || resp.status > 299) {
-				if (resp.status < 400 || resp.status >= 500) {
-					count++;
-					if (count <= 3) {
-						await Functions.wait(250 * count);
-						return this.fetchCore(count, url, init);
-					}
-				}
-			}
-			return [resp, count];
-		} catch (ex) {
-			Logger.error(ex);
-
-			count++;
-			if (count <= 3) {
-				await Functions.wait(250 * count);
-				return this.fetchCore(count, url, init);
-			}
-			throw ex;
 		}
 	}
 
@@ -2811,7 +2782,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return false;
 	}
 
-	static normalizeResponse<R extends object>(obj: { [key: string]: any }): R {
+	static normalizeResponse<R extends object>(obj?: { [key: string]: any }): R {
 		// FIXME maybe the api server should never return arrays with null elements?
 		if (obj != null) {
 			for (const [key, value] of Object.entries(obj)) {
@@ -2864,7 +2835,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		try {
 			Logger.log("Verifying API server connectivity");
 
-			const resp = await fetch(this.baseUrl + "/no-auth/capabilities", {
+			const resp = await customFetch(this.baseUrl + "/no-auth/capabilities", {
 				agent: this._httpsAgent,
 				signal: controller.signal,
 			});

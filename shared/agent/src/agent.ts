@@ -1,5 +1,6 @@
 "use strict";
 // keep this as the first import
+// tslint:disable:ordered-imports
 import * as NewRelic from "newrelic";
 
 import * as fs from "fs";

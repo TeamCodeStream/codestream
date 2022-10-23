@@ -20,6 +20,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSLinearProviderInfo } from "../protocol/api.protocol";
 import { log, lspProvider } from "../system";
+import { customFetch } from "../system/fetchCore";
 import { QueryLogger } from "./queryLogger";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
@@ -74,7 +75,11 @@ export class LinearProvider extends ThirdPartyIssueProviderBase<CSLinearProvider
 	protected _client: GraphQLClient | undefined;
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
-			this._client = new GraphQLClient(this.graphQlBaseUrl);
+			const options = {
+				agent: this._httpsAgent ?? undefined,
+				fetch: customFetch,
+			};
+			this._client = new GraphQLClient(this.graphQlBaseUrl, options);
 		}
 		if (!this.accessToken) {
 			throw new Error("Could not get a Linear access token");

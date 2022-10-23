@@ -45,6 +45,7 @@ import {
 } from "../protocol/agent.protocol";
 import { CSGitHubProviderInfo } from "../protocol/api.protocol";
 import { Dates, Functions, log, lspProvider } from "../system";
+import { customFetch } from "../system/fetchCore";
 import { TraceLevel } from "../types";
 import { Directive, Directives } from "./directives";
 import {
@@ -213,10 +214,10 @@ export class GitHubProvider
 
 	protected async client(): Promise<GraphQLClient> {
 		if (this._client === undefined) {
-			const options: { [key: string]: any } = {};
-			if (this._httpsAgent) {
-				options.agent = this._httpsAgent;
-			}
+			const options = {
+				agent: this._httpsAgent ?? undefined,
+				fetch: customFetch,
+			};
 			this._client = new GraphQLClient(this.graphQlBaseUrl, options);
 		}
 		if (!this.accessToken) {

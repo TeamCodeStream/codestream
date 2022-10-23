@@ -2,7 +2,7 @@ import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
 import { Agent as HttpsAgent } from "https";
 import HttpsProxyAgent from "https-proxy-agent";
-import fetch, { RequestInit, Response } from "node-fetch";
+import { RequestInit, Response } from "node-fetch";
 import url from "url";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { MessageType } from "../api/apiProvider";
@@ -20,7 +20,7 @@ import {
 import { CSMe, CSProviderInfos } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { log } from "../system/decorators/log";
-import { Functions } from "../system/function";
+import { fetchCore } from "../system/fetchCore";
 import { isApiError, isErrnoException } from "../system/object";
 import { Strings } from "../system/string";
 import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from "./provider";
@@ -439,7 +439,7 @@ export abstract class ThirdPartyProviderBase<
 			let resp: Response | undefined;
 			let retryCount = 0;
 			if (json === undefined) {
-				[resp, retryCount] = await this.fetchCore(0, absoluteUrl, init);
+				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
 
 				if (resp.ok) {
 					traceResult = `${this.displayName}: Completed ${method} ${url}`;
@@ -485,35 +485,6 @@ export abstract class ThirdPartyProviderBase<
 					init && init.body ? ` body=${init && init.body}` : ""
 				} \u2022 ${Strings.getDurationMilliseconds(start)} ms`
 			);
-		}
-	}
-
-	private async fetchCore(
-		count: number,
-		url: string,
-		init?: RequestInit
-	): Promise<[Response, number]> {
-		try {
-			const resp = await fetch(url, init);
-			if (resp.status < 200 || resp.status > 299) {
-				if (resp.status < 400 || resp.status >= 500) {
-					count++;
-					if (count <= 3) {
-						await Functions.wait(250 * count);
-						return this.fetchCore(count, url, init);
-					}
-				}
-			}
-			return [resp, count];
-		} catch (ex) {
-			Logger.error(ex);
-
-			count++;
-			if (count <= 3) {
-				await Functions.wait(250 * count);
-				return this.fetchCore(count, url, init);
-			}
-			throw ex;
 		}
 	}
 

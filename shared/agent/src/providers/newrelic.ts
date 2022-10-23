@@ -14,6 +14,7 @@ import { join, relative, sep } from "path";
 import Cache from "timed-cache";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
+import { customFetch } from "../system/fetchCore";
 import * as csUri from "../system/uri";
 
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -273,10 +274,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				"Could not get a New Relic API key"
 			);
 		}
-		const options: { [key: string]: any } = {};
-		if (this._httpsAgent) {
-			options.agent = this._httpsAgent;
-		}
+		const options = {
+			agent: this._httpsAgent ?? undefined,
+			fetch: customFetch,
+		};
 		const client = new GraphQLClient(graphQlBaseUrl, options);
 
 		// set accessToken on a per-usage basis... possible for accessToken
