@@ -8,11 +8,11 @@ using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTests
 {
-	public class GetUriTokensTests
+	public class GetUriTokens
 	{
 		private readonly IMessageInterceptorService _messageInterceptorService;
 
-		public GetUriTokensTests()
+		public GetUriTokens()
 		{
 			var mockIdeService = new Mock<IIdeService>();
 
@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		[InlineData("fileUri")]
 		[InlineData("fileuri")]
 		[InlineData("file_uri")]
-		public void Tokens_With_Uri_As_Substring_Of_Path_Are_Ignored(string tokenName)
+		public void TokensWithUriAsSubstringOfPathAreIgnored(string tokenName)
 		{
 			var token = new JValue("");
 
@@ -43,7 +43,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		[InlineData("uri", true)]
 		[InlineData("URI", false)]
 		[InlineData("UrI", false)]
-		public void Tokens_With_Uri_Of_Path_Are_CaseSensitive(string tokenName, bool expected)
+		public void TokensWithUriOfPathAreCaseSensitive(string tokenName, bool expected)
 		{
 			var token = new JValue("");
 

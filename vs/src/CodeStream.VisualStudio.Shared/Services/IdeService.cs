@@ -25,8 +25,6 @@ using System.Threading;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Models;
 
-using Microsoft.Build.Framework.XamlTypes;
-
 using File = System.IO.File;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
@@ -504,6 +502,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				var diffViewer = GetDiffViewer(frame);
 				diffViewer.Properties.AddProperty(PropertyNames.IsDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.IsPRDiff, true);
+				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
 				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, rightData.Uri.ToString());
 				diffViewer.ViewMode = DifferenceViewMode.SideBySide;
 
@@ -564,6 +563,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 				diffViewer.Properties.AddProperty(PropertyNames.IsDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.IsFRDiff, true);
+				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
 				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, rightData.Uri.ToString());
 
 				frame.Show();
@@ -621,8 +621,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 				diffViewer.Properties.AddProperty(PropertyNames.IsDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.IsFRDiff, true);
-				diffViewer.Properties.AddProperty(PropertyNames.OriginalFilePath, originalFilePath);
-				diffViewer.Properties.AddProperty(PropertyNames.RightFilePath, Path.GetFileName(rightFile));
+				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
+				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, originalFilePath);
 
 
 				frame.Show();

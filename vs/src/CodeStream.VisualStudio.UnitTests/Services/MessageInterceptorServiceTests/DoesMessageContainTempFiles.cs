@@ -13,11 +13,11 @@ using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTests
 {
-	public class DoesMessageContainTempFilesTests
+	public class DoesMessageContainTempFiles
 	{
 		private readonly IMessageInterceptorService _messageInterceptorService;
 
-		public DoesMessageContainTempFilesTests()
+		public DoesMessageContainTempFiles()
 		{
 			var mockIdeService = new Mock<IIdeService>();
 
@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		}
 
 		[Fact]
-		public void JObjects_Are_Ignored()
+		public void JObjectsAreIgnored()
 		{
 			var distractor = new JObject();
 
@@ -35,7 +35,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		}
 
 		[Fact]
-		public void JArrays_Are_Ignored()
+		public void JArraysAreIgnored()
 		{
 			var distractor = new JArray();
 
@@ -46,7 +46,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 
 
 		[Fact]
-		public void JProperties_Are_Ignored()
+		public void JPropertiesAreIgnored()
 		{
 			var distractor = new JProperty("");
 
@@ -57,7 +57,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 
 		[Theory]
 		[ClassData(typeof(TempFileClassData))]
-		public void JValues_Are_Processed(string jValue, bool isTempFile)
+		public void JValuesAreProcessed(string jValue, bool isTempFile)
 		{
 			var distractor = new JValue(jValue);
 
