@@ -198,10 +198,7 @@ abstract class CLMEditorManager(
                             val metrics = metricsBySymbol.getOrPut(throughput.symbolIdentifier) { Metrics() }
                             metrics.throughput = throughput
                         }
-                        ApplicationManager.getApplication().invokeLater {
-                            // invokeLater required since we're in coroutine
-                            updateInlays()
-                        }
+                        updateInlays()
                     } catch (ex: Exception) {
                         logger.error("Error getting fileLevelTelemetry", ex)
                     }
