@@ -133,6 +133,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			descriptionParam: "description",
 			scopesParam: "scopes",
 		},
+		versionMinimum: "3.3",
+		checkVersionUrl: "https://docs.newrelic.com/docs/codestream/troubleshooting/ghe-version/",
 	},
 	gitlab: {
 		displayName: "GitLab",

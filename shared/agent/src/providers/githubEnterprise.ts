@@ -15,7 +15,7 @@ import { ProviderVersion } from "./types";
 
 /**
  * GitHub Enterprise
- * minimum supported version is 2.19.6 https://enterprise.github.com/releases/2.19.6/notes
+ * minimum supported version is 3.3.0
  */
 @lspProvider("github_enterprise")
 export class GitHubEnterpriseProvider extends GitHubProvider {
@@ -91,12 +91,15 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		return (r: GitRemoteLike) => configDomain !== "" && r.domain === configDomain;
 	}
 
+	protected minPRApiVersion(): string {
+		return "3.3.0";
+	}
+
 	private _isPRApiCompatible: boolean | undefined;
 	protected async isPRApiCompatible(): Promise<boolean> {
 		if (this._isPRApiCompatible == null) {
 			const version = await this.getVersion();
-			const [major, minor] = version.asArray;
-			this._isPRApiCompatible = major > 2 || (major === 2 && minor >= 15);
+			this._isPRApiCompatible = semver.gte(version.version, this.minPRApiVersion());
 		}
 
 		return this._isPRApiCompatible;

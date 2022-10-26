@@ -210,6 +210,10 @@ export abstract class ThirdPartyIssueProviderBase<
 		return result;
 	}
 
+	protected minPRApiVersion(): string {
+		return "0.0.0";
+	}
+
 	protected async isPRApiCompatible(): Promise<boolean> {
 		return true;
 	}
