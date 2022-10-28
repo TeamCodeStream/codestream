@@ -27,6 +27,7 @@ export interface ProviderDisplay {
 	supportsPRManagement?: boolean;
 	versionMinimum?: string;
 	checkVersionUrl?: string;
+	checkVersionHover?: string;
 	invalidHosts?: Array<string>;
 
 	helpPATUrl?: string;
@@ -134,7 +135,8 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 			scopesParam: "scopes",
 		},
 		versionMinimum: "3.3",
-		checkVersionUrl: "https://docs.newrelic.com/docs/codestream/troubleshooting/ghe-version/",
+		checkVersionHover:
+			"Open any page in GitHub Enterprise and scroll to the bottom of the page. The version number can be found in the footer.",
 	},
 	gitlab: {
 		displayName: "GitLab",

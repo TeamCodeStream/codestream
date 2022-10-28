@@ -1,5 +1,6 @@
 import { CSProviderInfo } from "@codestream/protocols/api";
 import { CodeStreamState } from "@codestream/webview/store";
+import Tooltip from "@codestream/webview/Stream/Tooltip";
 import UrlInputComponent from "@codestream/webview/Stream/UrlInputComponent";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { normalizeUrl } from "@codestream/webview/utilities/urls";
@@ -132,6 +133,7 @@ export default function ConfigureEnterprisePanel(props: Props) {
 		directPAT,
 		versionMinimum,
 		checkVersionUrl,
+		checkVersionHover,
 		invalidHosts,
 		namePAT = "Personal Access Token",
 		supportsPRManagement,
@@ -159,10 +161,19 @@ export default function ConfigureEnterprisePanel(props: Props) {
 							Not a {displayName} customer yet? <Link href={getUrl}>Get {displayName}</Link>
 						</p>
 					)}
-					{versionMinimum && (
+					{versionMinimum && checkVersionUrl && (
 						<p style={{ textAlign: "center" }} className="explainer">
 							Requires {displayName} {versionMinimum} or later.{" "}
 							<Link href={checkVersionUrl}>Check your version</Link>.
+						</p>
+					)}
+					{versionMinimum && checkVersionHover && (
+						<p style={{ textAlign: "center" }} className="explainer">
+							Requires {displayName} {versionMinimum} or later.{" "}
+							<Tooltip title={checkVersionHover} placement="bottom">
+								<a href="#">Check your version</a>
+							</Tooltip>
+							.
 						</p>
 					)}
 					<br />
