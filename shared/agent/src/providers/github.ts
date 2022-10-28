@@ -3168,12 +3168,7 @@ export class GitHubProvider
 								.reverse()
 								.find(review => review.state !== "COMMENTED")?.state;
 
-							if (
-								!isDefaultQuery ||
-								pullRequest.closed ||
-								pullRequest.isDraft ||
-								pullRequest.viewerDidAuthor
-							) {
+							if (!isDefaultQuery || pullRequest.closed || pullRequest.viewerDidAuthor) {
 								return false;
 							}
 
