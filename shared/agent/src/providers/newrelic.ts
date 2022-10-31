@@ -2434,9 +2434,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 
 		try {
-			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
-				entity?.entityGuid || request.newRelicEntityGuid
-			);
+			let entityIsWeb = true;
+			let serviceLevelGoldenMetrics;
+			if (entityIsWeb) {
+				serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
+					entity?.entityGuid || request.newRelicEntityGuid,
+					true //web entity
+				);
+			} else {
+				serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
+					entity?.entityGuid || request.newRelicEntityGuid,
+					false //non-web entity
+				);
+			}
+
 			return {
 				goldenMetrics: serviceLevelGoldenMetrics,
 				newRelicEntityAccounts: observabilityRepo?.entityAccounts || [],
@@ -2755,40 +2766,81 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	async getServiceGoldenMetrics(entityGuid: string): Promise<GoldenMetricsResult[] | undefined> {
+	async getServiceGoldenMetrics(
+		entityGuid: string,
+		entityIsWeb?: boolean
+	): Promise<GoldenMetricsResult[] | undefined> {
 		try {
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
-			const query = `{
-			actor {			  
-			  account(id: ${parsedId.accountId}) {       
-				throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
-				  results
-				  metadata {
-					timeWindow {
-					  end
+			let query;
+			if (entityIsWeb) {
+				// query for web entities
+				query = `{
+					actor {			  
+					  account(id: ${parsedId.accountId}) {       
+						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.web) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+					  }
 					}
 				  }
-				}
-				errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
-				  results
-				  metadata {
-					timeWindow {
-					  end
+				  `;
+			} else {
+				// query for non-web entities
+				query = `{
+					actor {			  
+					  account(id: ${parsedId.accountId}) {       
+						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'Non-web throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Other') LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'Non-web errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Other') LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.other) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
+							}
+						  }
+						}
+					  }
 					}
 				  }
-				}
-				responseTimeMs: nrql(query: "SELECT average(apm.service.overview.web) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
-				  results
-				  metadata {
-					timeWindow {
-					  end
-					}
-				  }
-				}
-			  }
+				  `;
 			}
-		  }
-		  `;
+
 			const results = await this.query<ServiceGoldenMetricsQueryResult>(query);
 			const account = results?.actor?.account;
 			const response = [
@@ -3510,6 +3562,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	protected async findRelatedEntityByRepositoryGuids(
 		repositoryGuids: string[]
 	): Promise<RelatedEntityByRepositoryGuidsResult> {
+		// eric @todo:
+		// somewhere in this query, modify to capture web vs non-web properties
+		// to use later down the line
 		return this.query(
 			`query fetchRelatedEntities($guids:[EntityGuid]!){
 			actor {
