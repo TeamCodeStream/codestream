@@ -71,9 +71,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		// have to force connection here because we need accessToken to even create our request
 		await this.ensureConnected();
 		const response = await this.get<YouTrackBoard[]>(
-			`/admin/projects?${qs.stringify({
-				fields: "id,name,shortName",
-			})}`
+			`/admin/projects?${qs.stringify({ fields: "id,name,shortName" })}`
 		);
 		return {
 			boards: response.body.map(board => {
@@ -93,7 +91,7 @@ export class YouTrackProvider extends ThirdPartyIssueProviderBase<CSYouTrackProv
 		const response = await this.get<YouTrackCard[]>(
 			`/issues?${qs.stringify({
 				fields: "id,idReadable,modified,summary,description",
-				query: "for: me state:unresolved",
+				query: "assignee: me state:unresolved",
 			})}`
 		);
 		const url =
