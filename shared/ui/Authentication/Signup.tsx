@@ -480,8 +480,21 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
-								<h3>Create a CodeStream account, for free</h3>
-								<br />
+								<h3>Sign into CodeStream with your New Relic account</h3>
+								{!limitAuthentication && (
+									<Button
+										style={{ marginBottom: "40px" }}
+										className="row-button no-top-margin"
+										onClick={onClickNewRelicSignup}
+									>
+										<Icon name="newrelic" />
+										<div className="copy">New Relic</div>
+										<Icon name="chevron-right" />
+									</Button>
+								)}
+								<h3 style={{ marginBottom: regionItems || forceRegionName ? "5px" : "0px" }}>
+									Don't have a New Relic account? Sign up for free.
+								</h3>
 								{regionItems && !forceRegionName && (
 									<>
 										Region:{" "}
@@ -502,15 +515,6 @@ export const Signup = (props: Props) => {
 								)}
 								{forceRegionName && <>Region: {forceRegionName}</>}
 								<SignupButtonsContainer>
-									{!limitAuthentication && (
-										<SignupButtonContainer>
-											<Button className="row-button no-top-margin" onClick={onClickNewRelicSignup}>
-												<Icon name="newrelic" />
-												<div className="copy">New Relic</div>
-												<Icon name="chevron-right" />
-											</Button>
-										</SignupButtonContainer>
-									)}
 									{(!limitAuthentication || authenticationProviders["github*com"]) && (
 										<SignupButtonContainer>
 											<Button className="row-button no-top-margin" onClick={onClickGithubSignup}>
