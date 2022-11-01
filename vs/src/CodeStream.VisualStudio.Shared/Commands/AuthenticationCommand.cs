@@ -15,60 +15,82 @@ using CodeStream.VisualStudio.Shared.Services;
 #endif
 
 namespace CodeStream.VisualStudio.Shared.Commands {
-	internal class AuthenticationCommand : VsCommandBase {
+	internal abstract class AuthenticationCommandBase : VsCommandBase
+	{
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationCommand>();
 
 		private readonly IComponentModel _componentModel;
 		private readonly ISessionService _sessionService;
 
-		public AuthenticationCommand(IComponentModel serviceProvider, ISessionService sessionService) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
-			_componentModel = serviceProvider;
+
+		protected AuthenticationCommandBase(IComponentModel componentModel, ISessionService sessionService, Guid commandSet, int commandId) : base(commandSet, commandId)
+		{
+			_componentModel = componentModel;
 			_sessionService = sessionService;
 		}
 
-		protected override void ExecuteUntyped(object parameter) {
-			try {
+		protected override void ExecuteUntyped(object parameter)
+		{
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 				var session = _componentModel.GetService<ISessionService>();
-				if (session?.IsReady == true) {
+				if (session?.IsReady == true)
+				{
 					ThreadHelper.JoinableTaskFactory.Run(async delegate {
 						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 						var authenticationService = _componentModel.GetService<IAuthenticationService>();
-						if (authenticationService != null) {
+						if (authenticationService != null)
+						{
 							await authenticationService.LogoutAsync(SessionSignedOutReason.UserSignedOutFromExtension);
 						}
 					});
 				}
-				else {
+				else
+				{
 					var toolWindowProvider = Package.GetGlobalService(typeof(SToolWindowProvider)) as IToolWindowProvider;
 					toolWindowProvider?.ShowToolWindowSafe(Guids.WebViewToolWindowGuid);
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(AuthenticationCommand));
 			}
 		}
 
-		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			try {
+		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
+		{
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 				Log.Verbose(nameof(AuthenticationCommand) + " " + nameof(OnBeforeQueryStatus));
 				var isReady = _sessionService?.IsReady == true;
-				if (isReady) {
-					sender.Visible = true;
+				sender.Visible = isReady;
+				
+				if (isReady)
+				{
 					sender.Text = "Sign Out";
 				}
-				else {
-					//we don't want to hide this for debugging purposes
-#if !DEBUG
-					sender.Visible = false;
-#endif
-				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(AuthenticationCommand));
 			}
 		}
+
+
+	}
+	internal class AuthenticationCommand : AuthenticationCommandBase {
+		public AuthenticationCommand(IComponentModel componentModel, ISessionService sessionService) 
+			: base(componentModel, sessionService, PackageGuids.guidWebViewPackageCmdSet, PackageIds.AuthenticationCommandId) {
+		}
 	}
 
+	internal class AuthenticationTopLevelCommand : AuthenticationCommandBase
+	{
+		public AuthenticationTopLevelCommand(IComponentModel componentModel, ISessionService sessionService)
+			: base(componentModel, sessionService, PackageGuids.guidVSPackageCommandTopMenuCmdSet, PackageIds.CodeStreamTopLevelMenuSignOutCommand)
+		{
+		}
+	}
 }

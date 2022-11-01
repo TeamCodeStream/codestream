@@ -15,6 +15,9 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const string guidCodeStreamPackageString = "5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed";
         public static Guid guidCodeStreamPackage = new Guid(guidCodeStreamPackageString);
 
+        public const string guidVSPackageCommandTopMenuCmdSetString = "acf32b59-19bf-4492-b19b-2d359e74a69a";
+        public static Guid guidVSPackageCommandTopMenuCmdSet = new Guid(guidVSPackageCommandTopMenuCmdSetString);
+
         public const string guidWebViewPackageCmdSetString = "8f66deb0-240b-4137-8550-723344e49722";
         public static Guid guidWebViewPackageCmdSet = new Guid(guidWebViewPackageCmdSetString);
 
@@ -38,6 +41,10 @@ namespace CodeStream.VisualStudio.Vsix.x64
     /// </summary>
     internal sealed partial class PackageIds
     {
+        public const int CodeStreamTopLevelMenu = 0x1020;
+        public const int CodeStreamTopLevelMenuCommandGroup = 0x1021;
+        public const int CodeStreamTopLevelMenuToggleCommand = 0x0101;
+        public const int CodeStreamTopLevelMenuSignOutCommand = 0x0102;
         public const int Toolbar = 0x1000;
         public const int ToolbarGroup = 0x1050;
         public const int ToolbarGroup100 = 0x1060;

@@ -13,6 +13,7 @@
 					<LocCanonicalName>CodeStream</LocCanonicalName>
 				</Strings>
 			</Menu>
+
 			<Menu guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" priority="0x0200" type="MenuController">
 				<Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup" />
 				<CommandFlag>IconAndText</CommandFlag>
@@ -26,12 +27,21 @@
 					<LocCanonicalName>CodeStream.ToggleCodeStream</LocCanonicalName>
 				</Strings>
 			</Menu>
+
 			<Menu guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenu" priority="0x0110" type="Menu">		
 				<Strings>
 					<ButtonText>CodeStream</ButtonText>
 				</Strings>
 			</Menu>
+
+			<Menu guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" type="Menu">
+				<Strings>
+					<ButtonText>CodeStream</ButtonText>
+				</Strings>
+			</Menu>
+
 		</Menus>
+
 		<Groups>
 			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenuGroup" />
 			<Group guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup" />			
@@ -51,7 +61,9 @@
 				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuController200" />
 			</Group>
 			<Group guid="guidWebViewPackageShortcutCmdSet" id="CodeStreamShortcutCommands" />
+			<Group guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuCommandGroup"/>
 		</Groups>
+
 		<Buttons>
 			<Button guid="guidWebViewPackageCmdSet" id="WebViewToggleCommandId" priority="0x0101" type="Button">
 				<Parent guid="guidWebViewPackageCmdSet" id="ToolbarGroup100" />
@@ -180,7 +192,31 @@
 					<LocCanonicalName>CodeStream.GetPermalinkShortcut</LocCanonicalName>
 				</Strings>
 			</Button>
+
+
+			<Button guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuToggleCommand" type="Button">
+				<Icon guid="guidImages" id="logo" />
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<Strings>
+					<ButtonText>Toggle CodeStream</ButtonText>
+				</Strings>
+			</Button>
+
+			<Button guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuSignOutCommand" type="Button">
+				<Icon guid="guidImages" id="auth" />
+				<CommandFlag>IconAndText</CommandFlag>
+				<CommandFlag>DontCache</CommandFlag>
+				<CommandFlag>TextChanges</CommandFlag>
+				<CommandFlag>DynamicVisibility</CommandFlag>
+				<CommandFlag>DefaultInvisible</CommandFlag>
+				<Strings>
+					<ButtonText>Sign Out</ButtonText>
+				</Strings>
+			</Button>
 		</Buttons>
+
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="..\resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
 			<Bitmap guid="guidImagesCommands" href="..\resources\CommandsSprites.png" usedList="comment, issue, bookmark, permalink" />
@@ -225,6 +261,22 @@
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
 			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
+
+
+		<CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" priority="775">
+			<Parent guid="guidSHLMainMenu" id="IDG_VS_MM_TOOLSADDINS"/>
+		</CommandPlacement>
+
+		<CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuCommandGroup" priority="0x0001">
+			<Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu"/>
+		</CommandPlacement>
+
+		<CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuToggleCommand" priority="0x0001" >
+			<Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuCommandGroup"/>
+		</CommandPlacement>
+		<CommandPlacement guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuSignOutCommand" priority="0x0002" >
+			<Parent guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuCommandGroup"/>
+		</CommandPlacement>
 	</CommandPlacements>
 
 	<VisibilityConstraints>
@@ -237,6 +289,13 @@
 
 	<Symbols>
 		<GuidSymbol name="guidCodeStreamPackage" value="{5498f07e-2ca1-4d3b-bcfb-5e8a8a082eed}" />
+
+		<GuidSymbol name="guidVSPackageCommandTopMenuCmdSet" value="{acf32b59-19bf-4492-b19b-2d359e74a69a}">
+			<IDSymbol name="CodeStreamTopLevelMenu" value="0x1020" />
+			<IDSymbol name="CodeStreamTopLevelMenuCommandGroup" value="0x1021" />
+			<IDSymbol name="CodeStreamTopLevelMenuToggleCommand" value="0x0101" />
+			<IDSymbol name="CodeStreamTopLevelMenuSignOutCommand" value="0x0102" />
+		</GuidSymbol>
 
 		<GuidSymbol name="guidWebViewPackageCmdSet" value="{8f66deb0-240b-4137-8550-723344e49722}">
 			<IDSymbol name="Toolbar" value="0x1000" />

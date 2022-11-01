@@ -89,7 +89,9 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),
+						new WebViewToggleTopLevelMenuCommand(),
 						new AuthenticationCommand(_componentModel, _sessionService),
+						new AuthenticationTopLevelCommand(_componentModel, _sessionService),
 						userCommand
 					};
 					await JoinableTaskFactory.SwitchToMainThreadAsync();
