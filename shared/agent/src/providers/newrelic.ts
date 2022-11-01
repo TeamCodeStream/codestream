@@ -94,6 +94,9 @@ import {
 	RelatedEntityByRepositoryGuidsResult,
 	ReposScm,
 	ServiceGoldenMetricsQueryResult,
+	ServiceLevelIndicatorQueryResult,
+	ServiceLevelObjectiveQueryResult,
+	ServiceLevelObjectiveResult,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
@@ -2885,6 +2888,99 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 			return undefined;
 		}
+	}
+
+	async getServiceLevelObjectives(
+		entityGuid: string
+	): Promise<ServiceLevelObjectiveResult[] | undefined> {
+		try {
+			const sliQuery = `{
+			  actor {
+				entity(guid: "${entityGuid}") {
+				  serviceLevel {
+					indicators {
+					  name
+					  objectives {
+						target
+						timeWindow {
+						  rolling {
+							count
+							unit
+						  }
+						}
+						resultQueries {
+						  attainment {
+							nrql
+						  }
+						}
+					  }
+					  guid
+					}
+				  }
+				}
+			  }
+			}`;
+
+			const sliResults = await this.query<ServiceLevelIndicatorQueryResult>(sliQuery);
+			const indicators = sliResults?.actor?.entity?.serviceLevel?.indicators;
+
+			if (indicators?.length === 0) {
+				return undefined;
+			}
+
+			let sloQuery = `{
+				actor {
+	    	`;
+
+			indicators.forEach((v: any) => {
+				sloQuery += `
+				${v.guid}: entity(guid: "${v.guid}") {
+					nrdbQuery(nrql: "${v.objectives.at(0).resultQueries.attainment.nrql}", timeout: 10, async: true) {
+						results
+					}
+				}`;
+			});
+
+			sloQuery += `}
+			}`;
+
+			const sloResults = await this.query<ServiceLevelObjectiveQueryResult>(sloQuery);
+
+			let response: ServiceLevelObjectiveResult[] = [];
+			indicators?.forEach((v: any) => {
+				const sliEntityGuid = v.guid;
+				const sliName = v.name;
+				const sliTarget = v.target;
+
+				const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value;
+
+				response.push({
+					guid: sliEntityGuid,
+					name: sliName,
+					target: sliTarget.toPrecision(2),
+					timeWindow: this.formatSLOTimeWindow(v.timeWindow.count, v.timeWindow.unit),
+					actual: actual?.toPrecision(2) ?? "Unknown",
+				});
+			});
+
+			return response;
+		} catch (ex) {
+			ContextLogger.warn("getServiceLevelObjectives failure", {
+				entityGuid,
+			});
+		}
+
+		return undefined;
+	}
+
+	private formatSLOTimeWindow(count: number, unit: string): string {
+		let lowerUnit = unit.toLocaleLowerCase();
+
+		if (count === 0 || count >= 2) {
+			lowerUnit += "s";
+		}
+
+		return `${count} ${lowerUnit}`;
 	}
 
 	@log()
