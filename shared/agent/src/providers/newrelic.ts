@@ -2932,10 +2932,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				actor {
 	    	`;
 
-			indicators.forEach((v: any) => {
+			indicators.forEach(v => {
 				sloQuery += `
 				${v.guid}: entity(guid: "${v.guid}") {
-					nrdbQuery(nrql: "${v.objectives.at(0).resultQueries.attainment.nrql}", timeout: 10, async: true) {
+					nrdbQuery(nrql: "${v.objectives.at(0)?.resultQueries.attainment.nrql}", timeout: 10, async: true) {
 						results
 					}
 				}`;
