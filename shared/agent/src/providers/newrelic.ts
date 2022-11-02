@@ -2946,18 +2946,22 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const sloResults = await this.query<ServiceLevelObjectiveQueryResult>(sloQuery);
 
-			let response: ServiceLevelObjectiveResult[] = indicators?.map((v: any) => {
+			let response: ServiceLevelObjectiveResult[] = indicators?.map(v => {
+				const objective = v.objectives.at(0);
 				const sliEntityGuid = v.guid;
 				const sliName = v.name;
-				const sliTarget = v.target;
+				const sliTarget = objective?.target;
 
 				const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value;
 
 				return {
 					guid: sliEntityGuid,
 					name: sliName,
-					target: sliTarget.toPrecision(2),
-					timeWindow: this.formatSLOTimeWindow(v.timeWindow.count, v.timeWindow.unit),
+					target: sliTarget?.toPrecision(2) ?? "Unknown",
+					timeWindow: this.formatSLOTimeWindow(
+						objective?.timeWindow?.rolling?.count ?? 0,
+						objective?.timeWindow?.rolling?.unit ?? "DAY"
+					),
 					actual: actual?.toPrecision(2) ?? "Unknown",
 				};
 			});
@@ -2973,7 +2977,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	private formatSLOTimeWindow(count: number, unit: string): string {
-		let lowerUnit = unit.toLocaleLowerCase();
+		let lowerUnit = unit?.toLocaleLowerCase();
 
 		if (count === 0 || count >= 2) {
 			lowerUnit += "s";
