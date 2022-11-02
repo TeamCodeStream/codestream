@@ -2959,8 +2959,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					name: sliName,
 					target: sliTarget?.toPrecision(2) ?? "Unknown",
 					timeWindow: this.formatSLOTimeWindow(
-						objective?.timeWindow?.rolling?.count ?? 0,
-						objective?.timeWindow?.rolling?.unit ?? "DAY"
+						objective?.timeWindow?.rolling?.count,
+						objective?.timeWindow?.rolling?.unit
 					),
 					actual: actual?.toPrecision(2) ?? "Unknown",
 				};
@@ -2976,7 +2976,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return undefined;
 	}
 
-	private formatSLOTimeWindow(count: number, unit: string): string {
+	private formatSLOTimeWindow(count: number | undefined, unit: string | undefined): string {
+		if (count === undefined || unit === undefined) {
+			return "Unknown Time Window";
+		}
+
 		let lowerUnit = unit?.toLocaleLowerCase();
 
 		if (count === 0 || count >= 2) {
