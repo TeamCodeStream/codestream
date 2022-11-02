@@ -2946,21 +2946,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const sloResults = await this.query<ServiceLevelObjectiveQueryResult>(sloQuery);
 
-			let response: ServiceLevelObjectiveResult[] = [];
-			indicators?.forEach((v: any) => {
+			let response: ServiceLevelObjectiveResult[] = indicators?.map((v: any) => {
 				const sliEntityGuid = v.guid;
 				const sliName = v.name;
 				const sliTarget = v.target;
 
 				const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value;
 
-				response.push({
+				return {
 					guid: sliEntityGuid,
 					name: sliName,
 					target: sliTarget.toPrecision(2),
 					timeWindow: this.formatSLOTimeWindow(v.timeWindow.count, v.timeWindow.unit),
 					actual: actual?.toPrecision(2) ?? "Unknown",
-				});
+				};
 			});
 
 			return response;
