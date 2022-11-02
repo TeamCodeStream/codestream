@@ -132,11 +132,3 @@ export interface ServiceLevelObjectiveQueryResult {
 		};
 	};
 }
-
-export interface ServiceLevelObjectiveResult {
-	guid: string;
-	name: string;
-	target: string;
-	actual: string;
-	timeWindow: string;
-}

@@ -1750,6 +1750,14 @@ export interface GoldenMetricsResult {
 	extrapolated?: boolean;
 }
 
+export interface ServiceLevelObjectiveResult {
+	guid: string;
+	name: string;
+	target: string;
+	actual: string;
+	timeWindow: string;
+}
+
 export interface RelatedEntityByRepositoryGuidsResult {
 	actor: {
 		entities: {

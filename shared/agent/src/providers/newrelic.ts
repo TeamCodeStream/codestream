@@ -94,6 +94,7 @@ import {
 	RelatedEntityByRepositoryGuidsResult,
 	ReposScm,
 	ServiceGoldenMetricsQueryResult,
+	ServiceLevelObjectiveResult,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
@@ -125,7 +126,6 @@ import {
 	ResolutionMethod,
 	ServiceLevelIndicatorQueryResult,
 	ServiceLevelObjectiveQueryResult,
-	ServiceLevelObjectiveResult,
 	Span,
 	SpanRequest,
 } from "./newrelic/newrelic.types";
