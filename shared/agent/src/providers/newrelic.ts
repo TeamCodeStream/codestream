@@ -79,6 +79,7 @@ import {
 	GetObservabilityReposRequest,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetServiceLevelObjectivesRequestType,
 	GetServiceLevelTelemetryRequest,
 	GetServiceLevelTelemetryRequestType,
 	GetServiceLevelTelemetryResponse,
@@ -1116,7 +1117,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	@lspHandler(GetNewRelicUrlRequestType)
 	@log()
 	async getNewRelicUrl(request: GetNewRelicUrlRequest): Promise<GetNewRelicUrlResponse> {
-		return { newRelicUrl: `${this.productUrl}/redirect/entity/${request.entityGuid}` };
+		return { newRelicUrl: this.productEntityRedirectUrl(request.entityGuid) };
 	}
 
 	@lspHandler(GetNewRelicErrorGroupRequestType)
@@ -2890,7 +2891,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
-	async getServiceLevelObjectives(
+	@lspHandler(GetServiceLevelObjectivesRequestType)
+	@log()
+	protected async getServiceLevelObjectives(
 		entityGuid: string
 	): Promise<ServiceLevelObjectiveResult[] | undefined> {
 		try {
@@ -2946,25 +2949,28 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const sloResults = await this.query<ServiceLevelObjectiveQueryResult>(sloQuery);
 
-			let response: ServiceLevelObjectiveResult[] = indicators?.map(v => {
-				const objective = v.objectives.at(0);
-				const sliEntityGuid = v.guid;
-				const sliName = v.name;
-				const sliTarget = objective?.target;
+			let response: ServiceLevelObjectiveResult[] = indicators
+				?.sort((a, b) => a.name.localeCompare(b.name))
+				?.map(v => {
+					const objective = v.objectives.at(0);
+					const sliEntityGuid = v.guid;
+					const sliName = v.name;
+					const sliTarget = objective?.target || 0;
+					const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value || 0;
 
-				const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value;
-
-				return {
-					guid: sliEntityGuid,
-					name: sliName,
-					target: sliTarget?.toPrecision(2) ?? "Unknown",
-					timeWindow: this.formatSLOTimeWindow(
-						objective?.timeWindow?.rolling?.count,
-						objective?.timeWindow?.rolling?.unit
-					),
-					actual: actual?.toPrecision(2) ?? "Unknown",
-				};
-			});
+					return {
+						guid: sliEntityGuid,
+						name: sliName,
+						target: sliTarget?.toPrecision(2) ?? "Unknown",
+						timeWindow: this.formatSLOTimeWindow(
+							objective?.timeWindow?.rolling?.count,
+							objective?.timeWindow?.rolling?.unit
+						),
+						actual: actual?.toPrecision(2) ?? "Unknown",
+						result: actual < sliTarget ? "UNDER" : "OVER",
+						summaryPageUrl: this.productEntityRedirectUrl(sliEntityGuid),
+					};
+				});
 
 			return response;
 		} catch (ex) {
@@ -4057,6 +4063,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 		}
 		return { entityCount: 0 };
+	}
+
+	private productEntityRedirectUrl(entityGuid: string) {
+		return `${this.productUrl}/redirect/entity/${entityGuid}`;
 	}
 
 	private findBuiltFrom(relatedEntities: RelatedEntity[]): BuiltFromResult | undefined {

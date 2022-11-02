@@ -10,11 +10,13 @@ import {
 	GetObservabilityErrorsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetServiceLevelObjectivesRequestType,
 	GetServiceLevelTelemetryRequestType,
 	GoldenMetricsResult,
 	ObservabilityErrorCore,
 	ObservabilityRepo,
 	ObservabilityRepoError,
+	ServiceLevelObjectiveResult,
 } from "@codestream/protocols/agent";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
@@ -28,6 +30,7 @@ import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
+import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { Button } from "../src/components/Button";
@@ -61,7 +64,6 @@ import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalS
 import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
-import { ObservabilityRelatedWrapper } from "./ObservabilityRelatedWrapper";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
@@ -241,6 +243,12 @@ export const Observability = React.memo((props: Props) => {
 	const [loadingPane, setLoadingPane] = useState<string | null>("");
 	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
 	const [goldenMetricTransactionType, setGoldenMetricTransactionType] = useState<string>("Web");
+	const [serviceLevelObjectives, setServiceLevelObjectives] = useState<
+		ServiceLevelObjectiveResult[]
+	>([]);
+	const [loadingServiceLevelObjectives, setLoadingServiceLevelObjectives] =
+		useState<boolean>(false);
+	const [hasServiceLevelObjectives, setHasServiceLevelObjectives] = useState<boolean>(false);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
 	const [pendingTelemetryCall, setPendingTelemetryCall] = useState<boolean>(false);
@@ -401,6 +409,7 @@ export const Observability = React.memo((props: Props) => {
 					setTimeout(() => {
 						fetchObservabilityErrors(e.data.entityGuid, e.data.repoId);
 						fetchGoldenMetrics(e.data.entityGuid);
+						fetchServiceLevelObjectives(e.data.entityGuid);
 					}, 2500);
 				}
 			}
@@ -470,6 +479,7 @@ export const Observability = React.memo((props: Props) => {
 	// Update golden metrics every 5 minutes
 	useInterval(() => {
 		fetchGoldenMetrics(expandedEntity, true);
+		fetchServiceLevelObjectives(expandedEntity, true);
 	}, 300000);
 
 	const processCurrentEntityAccountIndex = () => {
@@ -610,6 +620,25 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
+	const fetchServiceLevelObjectives = async (
+		entityGuid?: string | null,
+		noLoadingSpinner?: boolean
+	) => {
+		if (entityGuid) {
+			if (!noLoadingSpinner) {
+				setLoadingServiceLevelObjectives(true);
+			}
+			const response = await HostApi.instance.send(GetServiceLevelObjectivesRequestType, {
+				entityGuid: entityGuid,
+			});
+			if (response?.serviceLevelObjectives) {
+				setServiceLevelObjectives(response.serviceLevelObjectives);
+				setHasServiceLevelObjectives(true);
+			}
+			setLoadingServiceLevelObjectives(false);
+		}
+	};
+
 	const handleClickTopLevelService = (e, id, entityGuid) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -719,6 +748,7 @@ export const Observability = React.memo((props: Props) => {
 				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
 					let __entityGuid = _currentEntityAccounts[currentEntityAccountIndex]?.entityGuid;
 					fetchGoldenMetrics(__entityGuid, true);
+					fetchServiceLevelObjectives(__entityGuid, true);
 					setExpandedEntity(__entityGuid);
 					setCurrentEntityAccountIndex(null);
 					// Set user observabilityRepoEntities preference to expanded entity if one doesnt exist
@@ -737,6 +767,7 @@ export const Observability = React.memo((props: Props) => {
 				if (!_isEmpty(_entityGuid)) {
 					fetchObservabilityErrors(_entityGuid, currentRepoId);
 					fetchGoldenMetrics(_entityGuid, true);
+					fetchServiceLevelObjectives(_entityGuid, true);
 				}
 			}
 		}
@@ -1073,10 +1104,16 @@ export const Observability = React.memo((props: Props) => {
 																									recentAlertViolations ? recentAlertViolations : {}
 																								}
 																							/>
-																							<ObservabilityRelatedWrapper
-																								currentRepoId={currentRepoId}
-																								entityGuid={ea.entityGuid}
-																							/>
+																							{hasServiceLevelObjectives && (
+																								<>
+																									<ObservabilityServiceLevelObjectives
+																										serviceLevelObjectives={serviceLevelObjectives}
+																										loadingServiceLevelObjectives={
+																											loadingServiceLevelObjectives
+																										}
+																									/>
+																								</>
+																							)}
 																							{
 																								<>
 																									{observabilityErrors?.find(
@@ -1155,6 +1192,7 @@ export const Observability = React.memo((props: Props) => {
 																	repoForEntityAssociator.repoId
 																);
 																fetchGoldenMetrics(e.entityGuid);
+																fetchServiceLevelObjectives(e.entityGuid);
 															}}
 															remote={repoForEntityAssociator.repoRemote}
 															remoteName={repoForEntityAssociator.repoName}
