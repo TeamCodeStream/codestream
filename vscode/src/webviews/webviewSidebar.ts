@@ -1,5 +1,4 @@
 "use strict";
-import * as fs from "fs";
 import {
 	HostDidChangeFocusNotificationType,
 	isIpcResponseMessage,
@@ -9,6 +8,7 @@ import {
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
 } from "@codestream/protocols/webview";
+import { promises as fs } from "fs";
 import { gate } from "system/decorators/gate";
 import {
 	CancellationToken,
@@ -30,7 +30,6 @@ import { CodeStreamSession, StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";
 import { log } from "../system";
-import { CodeStreamWebviewPanel } from "./webviewPanel";
 import {
 	NotificationParamsOf,
 	RequestParamsOf,
@@ -38,6 +37,7 @@ import {
 	toLoggableIpcMessage,
 	WebviewLike
 } from "./webviewLike";
+import { CodeStreamWebviewPanel } from "./webviewPanel";
 
 let ipcSequence = 0;
 
@@ -105,6 +105,7 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	}
 
 	private _html: string | undefined;
+
 	private async getHtml(): Promise<string> {
 		// NOTE: if you use workspace.openTextDocument, it will put the webview.html into
 		// the lsp document cache, use fs.readFile instead
@@ -112,48 +113,44 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 		if (!Logger.isDebugging && this._html) {
 			return this._html;
 		}
-		this._html = await new Promise<string>((resolve, reject) => {
-			fs.readFile(Container.context.asAbsolutePath("webview.html"), "utf8", (err, data) => {
-				if (err) {
-					reject(err);
-				} else {
-					let html = data.replace(
-						/{{root}}/g,
-						Uri.file(Container.context.asAbsolutePath("."))
-							.with({ scheme: "vscode-resource" })
-							.toString()
-					);
-					if (
-						Container.telemetryOptions &&
-						Container.telemetryOptions.browserIngestKey &&
-						Container.telemetryOptions.accountId &&
-						Container.telemetryOptions.webviewAppId &&
-						Container.telemetryOptions.webviewAgentId
-					) {
-						try {
-							const browserScript = Container.context.asAbsolutePath("dist/newrelic-browser.js");
-							if (browserScript) {
-								const browser = fs
-									.readFileSync(browserScript)
-									.toString()
-									.replace(/{{accountID}}/g, Container.telemetryOptions.accountId!)
-									.replace(/{{applicationID}}/g, Container.telemetryOptions.webviewAppId!)
-									.replace(/{{agentID}}/g, Container.telemetryOptions.webviewAgentId!)
-									.replace(/{{licenseKey}}/g, Container.telemetryOptions.browserIngestKey);
-								html = html.replace(
-									"<head>",
-									`<head><script type="text/javascript">${browser}</script>`
-								);
-							}
-						} catch (ex) {
-							Logger.log("NewRelic telemetry", { error: ex });
-						}
-					}
-					resolve(html);
-				}
-			});
+
+		const webviewPath = Container.context.asAbsolutePath("webview.html");
+
+		const data = await fs.readFile(webviewPath, {
+			encoding: "utf8"
 		});
 
+		if (!this._webviewView) {
+			return "";
+		}
+		// asWebviewUri required for vscode web / codespaces
+		const pathToExt = this._webviewView.webview
+			.asWebviewUri(Uri.file(Container.context.extensionPath))
+			.toString();
+		let html = data.replace(/{{root}}/g, pathToExt);
+		if (
+			Container.telemetryOptions &&
+			Container.telemetryOptions.browserIngestKey &&
+			Container.telemetryOptions.accountId &&
+			Container.telemetryOptions.webviewAppId &&
+			Container.telemetryOptions.webviewAgentId
+		) {
+			try {
+				const browserScript = Container.context.asAbsolutePath("dist/newrelic-browser.js");
+				if (browserScript) {
+					const browser = (await fs.readFile(browserScript))
+						.toString()
+						.replace(/{{accountID}}/g, Container.telemetryOptions.accountId!)
+						.replace(/{{applicationID}}/g, Container.telemetryOptions.webviewAppId!)
+						.replace(/{{agentID}}/g, Container.telemetryOptions.webviewAgentId!)
+						.replace(/{{licenseKey}}/g, Container.telemetryOptions.browserIngestKey);
+					html = html.replace("<head>", `<head><script type="text/javascript">${browser}</script>`);
+				}
+			} catch (ex) {
+				Logger.log("NewRelic telemetry", { error: ex });
+			}
+		}
+		this._html = html;
 		return this._html;
 	}
 
@@ -328,6 +325,7 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	}
 
 	private _flushingPromise: Promise<boolean> | undefined;
+
 	private async flushIpcQueue() {
 		try {
 			if (this._flushingPromise === undefined) {
