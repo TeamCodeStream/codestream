@@ -79,7 +79,9 @@ import {
 	GetObservabilityReposRequest,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
+	GetServiceLevelObjectivesRequest,
 	GetServiceLevelObjectivesRequestType,
+	GetServiceLevelObjectivesResponse,
 	GetServiceLevelTelemetryRequest,
 	GetServiceLevelTelemetryRequestType,
 	GetServiceLevelTelemetryResponse,
@@ -2893,13 +2895,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	@lspHandler(GetServiceLevelObjectivesRequestType)
 	@log()
-	protected async getServiceLevelObjectives(
-		entityGuid: string
-	): Promise<ServiceLevelObjectiveResult[] | undefined> {
+	async getServiceLevelObjectives(
+		request: GetServiceLevelObjectivesRequest
+	): Promise<GetServiceLevelObjectivesResponse | undefined> {
 		try {
 			const sliQuery = `{
 			  actor {
-				entity(guid: "${entityGuid}") {
+				entity(guid: "${request.entityGuid}") {
 				  serviceLevel {
 					indicators {
 					  name
@@ -2949,37 +2951,47 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			const sloResults = await this.query<ServiceLevelObjectiveQueryResult>(sloQuery);
 
-			let response: ServiceLevelObjectiveResult[] = indicators
+			let objectiveResults: ServiceLevelObjectiveResult[] = indicators
 				?.sort((a, b) => a.name.localeCompare(b.name))
 				?.map(v => {
 					const objective = v.objectives.at(0);
 					const sliEntityGuid = v.guid;
 					const sliName = v.name;
 					const sliTarget = objective?.target || 0;
-					const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0)?.value || 0;
+
+					const actual = sloResults?.actor[sliEntityGuid]?.nrdbQuery?.results?.at(0);
+					const actualKeys = actual && Object.keys(actual);
+					const actualValue = (actualKeys && actual[actualKeys[0]]) || 0;
 
 					return {
 						guid: sliEntityGuid,
 						name: sliName,
-						target: sliTarget?.toPrecision(2) ?? "Unknown",
+						target: this.toFixedNoRounding(sliTarget, 2) ?? "Unknown",
 						timeWindow: this.formatSLOTimeWindow(
 							objective?.timeWindow?.rolling?.count,
 							objective?.timeWindow?.rolling?.unit
 						),
-						actual: actual?.toPrecision(2) ?? "Unknown",
-						result: actual < sliTarget ? "UNDER" : "OVER",
+						actual: this.toFixedNoRounding(actualValue, 2) ?? "Unknown",
+						result: actualValue < sliTarget ? "UNDER" : "OVER",
 						summaryPageUrl: this.productEntityRedirectUrl(sliEntityGuid),
 					};
 				});
 
-			return response;
+			return {
+				serviceLevelObjectives: objectiveResults,
+			};
 		} catch (ex) {
 			ContextLogger.warn("getServiceLevelObjectives failure", {
-				entityGuid,
+				request,
 			});
 		}
 
 		return undefined;
+	}
+
+	private toFixedNoRounding(number: number, precision: number = 1): string {
+		const factor = Math.pow(10, precision);
+		return `${Math.floor(number * factor) / factor}`;
 	}
 
 	private formatSLOTimeWindow(count: number | undefined, unit: string | undefined): string {
