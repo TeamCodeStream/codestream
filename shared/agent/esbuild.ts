@@ -64,7 +64,7 @@ const postBuildCopy: CopyStuff[] = [
 		target: "node16.13",
 		outdir: outputDir,
 		sourceRoot: args.ide === "vs" ? path.resolve(__dirname, "../agent/dist") : undefined,
-		sourcesContent: args.mode === "development",
+		sourcesContent: args.mode === "development" && args.ide !== "vs",
 	};
 
 	await build(buildOption);
