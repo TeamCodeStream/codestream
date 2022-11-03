@@ -4,21 +4,19 @@ import { CodeStreamState } from "@codestream/webview/store";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 import { useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
+import cx from "classnames";
 import React, { useState } from "react";
-import { Simulate } from "react-dom/test-utils";
 import { shallowEqual } from "react-redux";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import load = Simulate.load;
 
 interface Props {
 	serviceLevelObjectives: ServiceLevelObjectiveResult[];
-	loadingServiceLevelObjectives: boolean;
 }
 
 export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const { serviceLevelObjectives, loadingServiceLevelObjectives } = props;
+	const { serviceLevelObjectives } = props;
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -35,7 +33,7 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 		<>
 			<Row
 				style={{
-					padding: "2px 10px 2px 18px",
+					padding: "2px 10px 2px 30px",
 				}}
 				className={"pr-row"}
 				onClick={() => setExpanded(!expanded)}
@@ -43,63 +41,60 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Service Level Objectives</span>
-				{showWarningIcon && <Icon name="alert" className="alert" />}
+				{showWarningIcon && (
+					<Icon name="alert" style={{ marginLeft: "2px", color: "red" }} className="alert" />
+				)}
 			</Row>
-			{expanded && loadingServiceLevelObjectives && (
-				<Row
-					style={{
-						padding: "0 10px 0 60px",
-					}}
-					className={"pr-row"}
-				>
-					<Icon
-						style={{
-							marginRight: "5px",
-						}}
-						className="spin"
-						name="sync"
-					/>{" "}
-					Loading...
-				</Row>
-			)}
-			{expanded && !loadingServiceLevelObjectives && (
+			{expanded && (
 				<>
 					{serviceLevelObjectives.map((slo, index) => {
 						return (
 							<Row
 								style={{
-									padding: "0 10px 0 60px",
+									padding: "0 10px 0 42px",
 								}}
 								className={"pr-row"}
 							>
 								<div>
 									<span style={{ marginRight: "5px" }}>{slo.name}</span>
+								</div>
+
+								<div className="icons" style={{ textAlign: "left" }}>
 									{slo.summaryPageUrl && (
-										<span
+										<Icon
 											onClick={e => {
 												e.preventDefault();
 												e.stopPropagation();
 												HostApi.instance.send(OpenUrlRequestType, {
 													url:
 														`${slo.summaryPageUrl}` +
-														`&utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=service_objective_link`,
+														`?utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=service_objective_link`,
 												});
 											}}
-										>
-											<Icon
-												name="globe"
-												className="clickable"
-												title="View on New Relic"
-												placement="bottomLeft"
-												delay={1}
-											/>
-										</span>
+											name="globe"
+											className={cx("clickable", {
+												"icon-override-actions-visible": true,
+											})}
+											style={{ marginLeft: 0 }}
+											title="View on New Relic"
+											placement="bottomLeft"
+											delay={1}
+										/>
 									)}
 								</div>
 
-								<div className="icons">
+								<div>
 									<Tooltip placement="topRight" delay={1}>
-										{slo.timeWindow}
+										{slo.result === "UNDER" && (
+											<span style={{ color: "red" }}>
+												{slo.actual}% last {slo.timeWindow}
+											</span>
+										)}
+										{slo.result === "OVER" && (
+											<span style={{ color: "green" }}>
+												{slo.actual}% last {slo.timeWindow}
+											</span>
+										)}
 									</Tooltip>
 								</div>
 							</Row>
