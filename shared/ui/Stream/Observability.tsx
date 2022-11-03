@@ -246,8 +246,6 @@ export const Observability = React.memo((props: Props) => {
 	const [serviceLevelObjectives, setServiceLevelObjectives] = useState<
 		ServiceLevelObjectiveResult[]
 	>([]);
-	const [loadingServiceLevelObjectives, setLoadingServiceLevelObjectives] =
-		useState<boolean>(false);
 	const [hasServiceLevelObjectives, setHasServiceLevelObjectives] = useState<boolean>(false);
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
@@ -479,7 +477,7 @@ export const Observability = React.memo((props: Props) => {
 	// Update golden metrics every 5 minutes
 	useInterval(() => {
 		fetchGoldenMetrics(expandedEntity, true);
-		fetchServiceLevelObjectives(expandedEntity, true);
+		fetchServiceLevelObjectives(expandedEntity);
 	}, 300000);
 
 	const processCurrentEntityAccountIndex = () => {
@@ -620,23 +618,27 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const fetchServiceLevelObjectives = async (
-		entityGuid?: string | null,
-		noLoadingSpinner?: boolean
-	) => {
+	const fetchServiceLevelObjectives = async (entityGuid?: string | null) => {
 		if (entityGuid) {
-			if (!noLoadingSpinner) {
-				setLoadingServiceLevelObjectives(true);
-			}
 			const response = await HostApi.instance.send(GetServiceLevelObjectivesRequestType, {
 				entityGuid: entityGuid,
 			});
+
 			if (response?.serviceLevelObjectives) {
 				setServiceLevelObjectives(response.serviceLevelObjectives);
 				setHasServiceLevelObjectives(true);
+			} else {
+				setServiceLevelObjectives([]);
+				setHasServiceLevelObjectives(false);
 			}
-			setLoadingServiceLevelObjectives(false);
+		} else {
+			setServiceLevelObjectives([]);
+			setHasServiceLevelObjectives(false);
 		}
+
+		HostApi.instance.track("SLOs Listed", {
+			State: hasServiceLevelObjectives,
+		});
 	};
 
 	const handleClickTopLevelService = (e, id, entityGuid) => {
@@ -748,7 +750,7 @@ export const Observability = React.memo((props: Props) => {
 				if (_isEmpty(_entityGuid) && currentEntityAccountIndex) {
 					let __entityGuid = _currentEntityAccounts[currentEntityAccountIndex]?.entityGuid;
 					fetchGoldenMetrics(__entityGuid, true);
-					fetchServiceLevelObjectives(__entityGuid, true);
+					fetchServiceLevelObjectives(__entityGuid);
 					setExpandedEntity(__entityGuid);
 					setCurrentEntityAccountIndex(null);
 					// Set user observabilityRepoEntities preference to expanded entity if one doesnt exist
@@ -767,7 +769,7 @@ export const Observability = React.memo((props: Props) => {
 				if (!_isEmpty(_entityGuid)) {
 					fetchObservabilityErrors(_entityGuid, currentRepoId);
 					fetchGoldenMetrics(_entityGuid, true);
-					fetchServiceLevelObjectives(_entityGuid, true);
+					fetchServiceLevelObjectives(_entityGuid);
 				}
 			}
 		}
@@ -1108,9 +1110,6 @@ export const Observability = React.memo((props: Props) => {
 																								<>
 																									<ObservabilityServiceLevelObjectives
 																										serviceLevelObjectives={serviceLevelObjectives}
-																										loadingServiceLevelObjectives={
-																											loadingServiceLevelObjectives
-																										}
 																									/>
 																								</>
 																							)}
