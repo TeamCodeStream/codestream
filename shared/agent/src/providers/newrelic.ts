@@ -2938,9 +2938,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	    	`;
 
 			indicators.forEach(v => {
+				const indicatorObjective = v.objectives[0].timeWindow.rolling;
+				const sinceQuery = `SINCE ${indicatorObjective.count} ${indicatorObjective.unit} AGO`;
 				sloQuery += `
 				${v.guid}: entity(guid: "${v.guid}") {
-					nrdbQuery(nrql: "${v.resultQueries.indicator.nrql}", timeout: 10, async: true) {
+					nrdbQuery(nrql: "${v.resultQueries.indicator.nrql} ${sinceQuery}", timeout: 10, async: true) {
 						results
 					}
 				}`;
