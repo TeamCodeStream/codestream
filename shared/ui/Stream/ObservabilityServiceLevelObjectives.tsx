@@ -24,10 +24,14 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 		};
 	}, shallowEqual);
 
-	const showWarningIcon =
-		serviceLevelObjectives.filter(v => {
-			return v.result === "UNDER";
-		})?.length > 0;
+	const unmetObjectives = serviceLevelObjectives.filter(v => {
+		return v.result === "UNDER";
+	});
+	const showWarningIcon = unmetObjectives?.length > 0;
+	const warningTooltip =
+		showWarningIcon && unmetObjectives?.length === 1
+			? "1 non-compliant SLO"
+			: `${unmetObjectives?.length} non-compliant SLOs`;
 
 	return (
 		<>
@@ -42,7 +46,13 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px" }}>Service Level Objectives</span>
 				{showWarningIcon && (
-					<Icon name="alert" style={{ marginLeft: "2px", color: "red" }} className="alert" />
+					<Icon
+						name="alert"
+						style={{ marginLeft: "2px", color: "red" }}
+						className="alert"
+						title={warningTooltip}
+						delay={1}
+					/>
 				)}
 			</Row>
 			{expanded && (
@@ -66,9 +76,7 @@ export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => 
 												e.preventDefault();
 												e.stopPropagation();
 												HostApi.instance.send(OpenUrlRequestType, {
-													url:
-														`${slo.summaryPageUrl}` +
-														`?utm_source=codestream&utm_medium=ide-${derivedState.ideName}&utm_campaign=service_objective_link`,
+													url: `${slo.summaryPageUrl}`,
 												});
 											}}
 											name="globe"
