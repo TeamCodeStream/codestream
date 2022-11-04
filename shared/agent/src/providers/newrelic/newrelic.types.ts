@@ -101,12 +101,12 @@ export interface ServiceLevelIndicatorQueryResult {
 				indicators: {
 					guid: string;
 					name: string;
-					objectives: {
-						resultQueries: {
-							attainment: {
-								nrql: string;
-							};
+					resultQueries: {
+						indicator: {
+							nrql: string;
 						};
+					};
+					objectives: {
 						target: number;
 						timeWindow: {
 							rolling: {

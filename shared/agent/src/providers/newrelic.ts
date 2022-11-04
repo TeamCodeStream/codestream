@@ -2913,13 +2913,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							unit
 						  }
 						}
-						resultQueries {
-						  attainment {
-							nrql
-						  }
-						}
 					  }
 					  guid
+					  resultQueries {
+						indicator {
+						  nrql
+						}
+					  }  
 					}
 				  }
 				}
@@ -2940,7 +2940,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			indicators.forEach(v => {
 				sloQuery += `
 				${v.guid}: entity(guid: "${v.guid}") {
-					nrdbQuery(nrql: "${v.objectives.at(0)?.resultQueries.attainment.nrql}", timeout: 10, async: true) {
+					nrdbQuery(nrql: "${v.resultQueries.indicator.nrql}", timeout: 10, async: true) {
 						results
 					}
 				}`;
