@@ -5,10 +5,10 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.UnitTests.Stubs
 {
-	public class TextViewRoleSet : ITextViewRoleSet {
+	public class FakeTextViewRoleSet : ITextViewRoleSet {
 		private readonly List<string> _roles;
 
-		public TextViewRoleSet(List<string> roles) {
+		public FakeTextViewRoleSet(List<string> roles) {
 			_roles = roles;
 		}
 

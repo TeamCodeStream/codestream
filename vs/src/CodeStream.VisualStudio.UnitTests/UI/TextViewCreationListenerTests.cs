@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 
 			var textView = new Mock<IVsTextView>();
 			var wpfTextViewMock = new Mock<IWpfTextView>();
-			wpfTextViewMock.Setup(_ => _.Roles).Returns(new TextViewRoleSet(TextViewRoles.DefaultDocumentRoles));
+			wpfTextViewMock.Setup(_ => _.Roles).Returns(new FakeTextViewRoleSet(TextViewRoles.DefaultDocumentRoles));
 			wpfTextViewMock.Setup(_ => _.Selection).Returns(new Mock<ITextSelection>().Object);
 			var codeStreamMarginProviderMock = new Mock<ICodeStreamMarginProvider>();
 			codeStreamMarginProviderMock.Setup(_ => _.TextViewMargin).Returns(new Mock<ICodeStreamWpfTextViewMargin>().Object);

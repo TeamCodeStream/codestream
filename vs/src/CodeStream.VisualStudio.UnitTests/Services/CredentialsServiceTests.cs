@@ -17,7 +17,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services
             var serverUri = new Uri("http://foo.com");
             const string secret = "sEcReT";
 
-            var testCredentialsService = new CredentialsServiceStub();
+            var testCredentialsService = new FakeCredentialsService();
 
             var saved = await testCredentialsService.SaveAsync(serverUri, email, secret,team);
             Assert.True(saved);

@@ -1,4 +1,4 @@
-﻿using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 using Microsoft;
@@ -8,6 +8,7 @@ using Serilog;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.IO;
 using System.Threading;
 using CodeStream.VisualStudio.Shared.Managers;
 using CodeStream.VisualStudio.Shared.Models;
@@ -36,14 +37,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public bool IsReady => SessionService?.IsReady == true;
 
 		private IBrowserService _browserService;
-		public IBrowserService BrowserService {
-			get {
-				if (_browserService == null) {
-					_browserService = _browserServiceFactory.Create();
-				}
-				return _browserService;
-			}
-		}
+		public IBrowserService BrowserService 
+			=> _browserService ?? (_browserService = _browserServiceFactory.Create());
 
 		public async Task ChangeActiveEditorAsync(Uri uri, ActiveTextEditor activeTextEditor) {
 			if (IsReady) {

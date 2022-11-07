@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.IO;
 
 namespace CodeStream.VisualStudio.Core.Extensions 
 {
 	public static class UriExtensions
 	{
-		public static string NormalizePath(this string path) 
-			=> NormalizePath(new Uri(path));
-
+		public static string CodeStreamTempPath 
+			=> NormalizePath(new Uri(Path.Combine(Path.GetTempPath(), "codestream")));
+		
 		public static string NormalizePath(this Uri path) 
 			=> 	Path.GetFullPath(
 					path.LocalPath
@@ -15,27 +15,15 @@ namespace CodeStream.VisualStudio.Core.Extensions
 						.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
 						.ToLowerInvariant()
 				);
-
-		public static string CodeStreamTempPath 
-			=> NormalizePath(Path.Combine(Path.GetTempPath(), "codestream"));
-
+		
 		public static bool IsTempFile(this string filePath) 
 			=> !string.IsNullOrEmpty(filePath) 
-			   && new Uri(filePath).IsTempFile();
-
-		public static bool IsDiffFile(this string filePath) 
-			=> !string.IsNullOrEmpty(filePath) 
-			   && new Uri(filePath).IsDiffFile();
+			   && filePath.ToUri().IsTempFile();
 
 		public static bool IsTempFile(this Uri filePath) 
 			=> filePath != null
 			   && filePath.IsFile 
-			   && (NormalizePath(filePath.ToString())?.StartsWith(CodeStreamTempPath) ?? false);
-
-		public static bool IsDiffFile(this Uri filePath) 
-			=> filePath != null
-			   && filePath.Scheme.EqualsIgnoreCase("codestream-diff");
-
+			   && (NormalizePath(filePath)?.StartsWith(CodeStreamTempPath) ?? false);
 
 		/// <summary>
 		/// A case-insensitive Uri comparer
@@ -77,13 +65,6 @@ namespace CodeStream.VisualStudio.Core.Extensions
 
 			return Uri.TryCreate(Uri.UnescapeDataString(uriString), uriKind, out var result) ? result : null;
 		}
-		/// <summary>
-		/// Local path seems to return a string like /c:/foo, this strips the leading forward slash
-		/// </summary>
-		/// <param name="uri"></param>
-		/// <returns></returns>
-		public static string ToLocalPath(this Uri uri) => uri.LocalPath.TrimStart('/');
-
 		/// <summary>
 		/// Returns the name of the file from an absolute Uri
 		/// </summary>

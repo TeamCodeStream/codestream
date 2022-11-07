@@ -77,7 +77,9 @@
     <Compile Include="Extensions\DynamicExtensionsTests.cs" />
     <Compile Include="Extensions\JsonExtensionsTests.cs" />
     <Compile Include="Extensions\StringExtensionsTest.cs" />
-    <Compile Include="Extensions\UriExtensionsTests.cs" />
+    <Compile Include="Extensions\UriExtensionsTests\EqualsIgnoreCase.cs" />
+    <Compile Include="Extensions\UriExtensionsTests\NormalizePath.cs" />
+    <Compile Include="Extensions\UriExtensionsTests\ToUri.cs" />
     <Compile Include="Fakes\FakeJTokenNotificationType.cs" />
     <Compile Include="Fakes\FakeNotificationType.cs" />
     <Compile Include="Fakes\FakeNotificationTypeWithUri.cs" />
@@ -93,11 +95,11 @@
     <Compile Include="Services\MessageInterceptorServiceTests\GetUriTokens.cs" />
     <Compile Include="Services\MessageInterceptorServiceTests\InterceptAndModify.cs" />
     <Compile Include="Services\SettingsServiceTests.cs" />
-    <Compile Include="Stubs\CredentialsServiceStub.cs" />
+    <Compile Include="Fakes\FakeCredentialsService.cs" />
     <Compile Include="UI\Adornments\HighlightAdornmentManagerTests.cs" />
     <Compile Include="UI\TextViewCreationListenerTests.cs" />
     <Compile Include="UI\TextViewExtensionsTests.cs" />
-    <Compile Include="Stubs\TextViewRoleSet.cs" />
+    <Compile Include="Fakes\FakeTextViewRoleSet.cs" />
     <Compile Include="WebViewRouterTests.cs" />
   </ItemGroup>
   <ItemGroup>

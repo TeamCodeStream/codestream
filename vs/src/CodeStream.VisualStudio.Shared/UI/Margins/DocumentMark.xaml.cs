@@ -96,7 +96,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 				var activeEditor = componentModel.GetService<IEditorService>()?.GetActiveTextEditor();
 				var sessionService = componentModel.GetService<ISessionService>();
 				if (sessionService.WebViewDidInitialize == true) {
-					_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
+					_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.NormalizePath());
 					Track(componentModel);
 				}
 				else {
@@ -104,7 +104,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 					IDisposable d = null;
 					d = eventAggregator?.GetEvent<WebviewDidInitializeEvent>().Subscribe(ev => {
 						try {
-							_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.ToLocalPath());
+							_ = codeStreamService.ShowCodemarkAsync(_viewModel.Marker.Codemark.Id, activeEditor?.Uri.NormalizePath());
 							Track(componentModel);
 							d.Dispose();
 						}

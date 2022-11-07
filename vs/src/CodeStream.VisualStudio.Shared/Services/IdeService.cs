@@ -168,7 +168,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				var view = _componentModel.GetService<IEditorService>().GetActiveTextEditor();
 				if (view == null || (!view.Uri.EqualsIgnoreCase(fileUri) && !view.Uri.IsTempFile())) {
 					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-					var localPath = fileUri.ToLocalPath();
+					var localPath = fileUri.NormalizePath();
 					var window = TryOpenFile(localPath);
 					if (window == null)
 					{

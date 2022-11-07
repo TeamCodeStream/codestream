@@ -19,20 +19,20 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 			if (FeedbackRequestDiffUri.TryParse(_textDocument.FilePath, out var frUri)) {
 				Uri = frUri.Uri;
-				Id = frUri.Uri.ToLocalPath();
+				Id = frUri.Uri.NormalizePath();
 				FileName = frUri.FileName;
 				SupportsMarkers = SupportsMargins = false;
 			}
 			else if (PullRequestDiffUri.TryParse(_textDocument.FilePath, out var prUri))
 			{
 				Uri = prUri.Uri;
-				Id = prUri.Uri.ToLocalPath();
+				Id = prUri.Uri.NormalizePath();
 				FileName = prUri.Path;
 				SupportsMarkers = SupportsMargins = false;
 			}
 			else {
 				Uri = _textDocument.FilePath.ToUri();
-				Id = Uri?.ToLocalPath();
+				Id = Uri?.NormalizePath();
 				FileName = Path.GetFileName(_textDocument.FilePath);
 				SupportsMarkers = SupportsMargins = true;
 			}
@@ -40,7 +40,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 		private VirtualTextDocument(Uri uri) {
 			Uri = uri;
-			Id = uri.ToLocalPath();
+			Id = uri.NormalizePath();
 			FileName = Id;
 			SupportsMarkers = SupportsMargins = uri.Scheme != "codestream-diff";
 		}

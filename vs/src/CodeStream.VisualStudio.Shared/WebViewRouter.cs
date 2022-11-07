@@ -192,7 +192,7 @@ namespace CodeStream.VisualStudio.Shared {
 														new DocumentFromMarkerRequest(marker));
 
 												var fileUri = documentFromMarker.TextDocument.Uri.ToUri();
-												var filePath = fileUri.ToLocalPath();
+												var filePath = fileUri.NormalizePath();
 
 												await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 												var wpfTextView = await _ideService.OpenEditorAtLineAsync(fileUri, documentFromMarker.Range, true);
@@ -307,7 +307,7 @@ namespace CodeStream.VisualStudio.Shared {
 													await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 													var editorResponse = await _ideService.OpenEditorAtLineAsync(uri, @params.Selection.ToRange(), true);
 													if (editorResponse != null) {
-														result = new ActiveTextEditor(editorResponse, uri.ToLocalPath(), uri, editorResponse.TextSnapshot?.LineCount)
+														result = new ActiveTextEditor(editorResponse, uri.NormalizePath(), uri, editorResponse.TextSnapshot?.LineCount)
 														  .SelectRange(@params.Selection, @params.PreserveFocus == false);
 														if (!result) {
 															Log.Warning($"SelectRange result is false");
