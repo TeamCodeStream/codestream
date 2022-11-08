@@ -5,6 +5,8 @@ import {
 	Dictionary,
 	flatten as _flatten,
 	groupBy as _groupBy,
+	isEmpty as _isEmpty,
+	isUndefined as _isUndefined,
 	memoize,
 	uniq as _uniq,
 	uniqBy as _uniqBy,
@@ -2433,20 +2435,19 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			recentAlertViolations = await this.getRecentAlertViolations(request.newRelicEntityGuid);
 		}
 
+		let primaryEntityTransactionType = "Web";
+		if (entity?.entityGuid && entity.accountId) {
+			primaryEntityTransactionType = await this.getPrimaryEntityTransactionType(
+				entity.accountId,
+				entity.entityGuid
+			);
+		}
+
 		try {
-			let entityIsWeb = true;
-			let serviceLevelGoldenMetrics;
-			if (entityIsWeb) {
-				serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
-					entity?.entityGuid || request.newRelicEntityGuid,
-					true //web entity
-				);
-			} else {
-				serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
-					entity?.entityGuid || request.newRelicEntityGuid,
-					false //non-web entity
-				);
-			}
+			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
+				entity?.entityGuid || request.newRelicEntityGuid,
+				primaryEntityTransactionType
+			);
 
 			return {
 				goldenMetrics: serviceLevelGoldenMetrics,
@@ -2721,7 +2722,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			);
 
 			const response = queries.actor.entity.goldenMetrics.metrics.map((_, i) => {
-				const account = results[i].actor.account;
+				const account: any = results[i].actor.account;
 				const useExtrapolation =
 					!account.metrics.results.some((r: any) => r[_.title]) &&
 					account.extrapolations?.results?.length > 0;
@@ -2768,17 +2769,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	async getServiceGoldenMetrics(
 		entityGuid: string,
-		entityIsWeb?: boolean
+		transactionType?: string
 	): Promise<GoldenMetricsResult[] | undefined> {
 		try {
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
-			let query;
-			if (entityIsWeb) {
-				// query for web entities
-				query = `{
+			let query = `{
 					actor {			  
 					  account(id: ${parsedId.accountId}) {       
-						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = '${transactionType}') LIMIT MAX SINCE 30 MINUTES AGO") {
 						  results
 						  metadata {
 							timeWindow {
@@ -2786,7 +2784,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							}
 						  }
 						}
-						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Web') LIMIT MAX SINCE 30 MINUTES AGO") {
+						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = '${transactionType}') LIMIT MAX SINCE 30 MINUTES AGO") {
 						  results
 						  metadata {
 							timeWindow {
@@ -2794,7 +2792,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							}
 						  }
 						}
-						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.web) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
+						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.${transactionType?.toLowerCase()}) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
 						  results
 						  metadata {
 							timeWindow {
@@ -2806,40 +2804,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					}
 				  }
 				  `;
-			} else {
-				// query for non-web entities
-				query = `{
-					actor {			  
-					  account(id: ${parsedId.accountId}) {       
-						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'Non-web throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Other') LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
-						  }
-						}
-						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'Non-web errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = 'Other') LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
-						  }
-						}
-						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.other) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
-						  }
-						}
-					  }
-					}
-				  }
-				  `;
-			}
 
 			const results = await this.query<ServiceGoldenMetricsQueryResult>(query);
 			const account = results?.actor?.account;
@@ -2902,6 +2866,63 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				error: ex,
 			});
 			return undefined;
+		}
+	}
+
+	@log()
+	private async getPrimaryEntityTransactionType(
+		accountId: number,
+		entityGuid: string
+	): Promise<string> {
+		try {
+			const query = `{
+				actor {
+					account(id: ${accountId}) {
+						transactionTypeList: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'transactionCount' FROM Metric WHERE (entity.guid = '${entityGuid}') LIMIT MAX SINCE 10 MINUTES AGO TIMESERIES facet transactionType") {
+							results
+							metadata {
+								timeWindow {
+									end
+								}
+							}
+						}
+					}
+				}
+			}
+			`;
+
+			const results = await this.query(query);
+			let transactionTypeArray = results?.actor?.account?.transactionTypeList?.results;
+			let transactionTypeCountObject: any = {};
+			interface TransactionTypeElement {
+				beginTimeSeconds: number;
+				endTimeSeconds: number;
+				facet: string;
+				transactionCount: number;
+				transactionType: string;
+			}
+
+			transactionTypeArray.forEach((_: TransactionTypeElement) => {
+				let transactionType = _.transactionType;
+				if (_isUndefined(transactionTypeCountObject[transactionType])) {
+					transactionTypeCountObject[transactionType] = 0;
+				} else {
+					transactionTypeCountObject[transactionType]++;
+				}
+			});
+
+			const primaryTransactionType = Object.keys(transactionTypeCountObject).reduce((a, b) =>
+				transactionTypeCountObject[a] > transactionTypeCountObject[b] ? a : b
+			);
+
+			return _isEmpty(primaryTransactionType) ? "Web" : primaryTransactionType;
+		} catch (ex) {
+			Logger.warn("getServiceGoldenMetrics no response", {
+				entityGuid,
+				error: ex,
+			});
+			//default value if nothing is parsed from above query
+			return "Web";
 		}
 	}
 
@@ -3562,9 +3583,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	protected async findRelatedEntityByRepositoryGuids(
 		repositoryGuids: string[]
 	): Promise<RelatedEntityByRepositoryGuidsResult> {
-		// eric @todo:
-		// somewhere in this query, modify to capture web vs non-web properties
-		// to use later down the line
 		return this.query(
 			`query fetchRelatedEntities($guids:[EntityGuid]!){
 			actor {
