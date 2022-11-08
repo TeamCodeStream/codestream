@@ -2722,7 +2722,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			);
 
 			const response = queries.actor.entity.goldenMetrics.metrics.map((_, i) => {
-				const account: any = results[i].actor.account;
+				const account = results[i].actor.account;
 				const useExtrapolation =
 					!account.metrics.results.some((r: any) => r[_.title]) &&
 					account.extrapolations?.results?.length > 0;
