@@ -1396,6 +1396,7 @@ export interface GetServiceLevelTelemetryResponse {
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
 	recentAlertViolations?: GetAlertViolationsResponse;
+	goldenMetricTransactionType?: string;
 }
 
 export interface GetAlertViolationsResponse {

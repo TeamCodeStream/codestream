@@ -1,18 +1,18 @@
-import { GoldenMetricsResult } from "@codestream/protocols/agent";
-import { forEach as _forEach, isNil as _isNil, isEmpty as _isEmpty } from "lodash-es";
+import { GetAlertViolationsResponse, GoldenMetricsResult } from "@codestream/protocols/agent";
+import { isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import Tooltip from "./Tooltip";
-import { GetAlertViolationsResponse } from "@codestream/protocols/agent";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
+import Tooltip from "./Tooltip";
 
 interface Props {
 	goldenMetrics: GoldenMetricsResult[];
 	loadingGoldenMetrics: boolean;
 	noDropdown?: boolean;
 	recentAlertViolations?: GetAlertViolationsResponse;
+	goldenMetricTransactionType?: string;
 }
 
 const StyledMetric = styled.div`
@@ -193,7 +193,21 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					>
 						{expanded && <Icon name="chevron-down-thin" />}
 						{!expanded && <Icon name="chevron-right-thin" />}
-						<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>{" "}
+						<span style={{ margin: "0 5px 0 2px" }}>
+							Golden Metrics{" "}
+							{props.goldenMetricTransactionType && (
+								<span
+									className="subtle"
+									style={{
+										fontSize: "11px",
+										paddingLeft: "0",
+										verticalAlign: "bottom",
+									}}
+								>
+									{props.goldenMetricTransactionType}
+								</span>
+							)}
+						</span>{" "}
 						{updatedAt && (
 							<Icon
 								style={{ transform: "scale(0.8)" }}

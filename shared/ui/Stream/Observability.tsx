@@ -246,6 +246,7 @@ export const Observability = React.memo((props: Props) => {
 	const [observabilityRepos, setObservabilityRepos] = useState<ObservabilityRepo[]>([]);
 	const [loadingPane, setLoadingPane] = useState<string | null>("");
 	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
+	const [goldenMetricTransactionType, setGoldenMetricTransactionType] = useState<string>("Web");
 	const [newRelicUrl, setNewRelicUrl] = useState<string | undefined>("");
 	const [expandedEntity, setExpandedEntity] = useState<string | null>(null);
 	const [pendingTelemetryCall, setPendingTelemetryCall] = useState<boolean>(false);
@@ -607,6 +608,7 @@ export const Observability = React.memo((props: Props) => {
 			});
 			if (response?.goldenMetrics) {
 				setGoldenMetrics(response.goldenMetrics);
+				setGoldenMetricTransactionType(response.goldenMetricTransactionType || "Web");
 				setRecentAlertViolations(response.recentAlertViolations);
 				setNewRelicUrl(response.newRelicUrl);
 			}
@@ -1069,6 +1071,9 @@ export const Observability = React.memo((props: Props) => {
 																						<>
 																							<ObservabilityGoldenMetricDropdown
 																								goldenMetrics={goldenMetrics}
+																								goldenMetricTransactionType={
+																									goldenMetricTransactionType
+																								}
 																								loadingGoldenMetrics={loadingGoldenMetrics}
 																								recentAlertViolations={
 																									recentAlertViolations ? recentAlertViolations : {}

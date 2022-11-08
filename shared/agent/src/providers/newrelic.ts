@@ -2451,6 +2451,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			return {
 				goldenMetrics: serviceLevelGoldenMetrics,
+				goldenMetricTransactionType: primaryEntityTransactionType,
 				newRelicEntityAccounts: observabilityRepo?.entityAccounts || [],
 				newRelicAlertSeverity: entity?.alertSeverity,
 				newRelicEntityName: entity?.entityName!,
@@ -2769,7 +2770,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 	async getServiceGoldenMetrics(
 		entityGuid: string,
-		transactionType?: string
+		transactionType: string = "Web"
 	): Promise<GoldenMetricsResult[] | undefined> {
 		try {
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
