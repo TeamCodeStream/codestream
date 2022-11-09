@@ -37,18 +37,18 @@ import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
 
-import { editReview } from "@codestream/webview/store/reviews/thunks";
+import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
+import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import {
 	setCurrentRepo,
 	setCurrentReview,
 	setNewPostEntry,
 } from "@codestream/webview/store/context/actions";
-import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
-import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
-import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
-import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
+import { editReview } from "@codestream/webview/store/reviews/thunks";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { logError } from "../logger";
 import { Checkbox } from "../src/components/Checkbox";
@@ -2410,7 +2410,7 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
+								Reviewerssssssss {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewerEmails.map(email => {
 								const person = this.makePerson(email);
