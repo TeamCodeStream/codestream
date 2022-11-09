@@ -139,6 +139,7 @@ interface ConnectedProps {
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	dontSuggestInvitees: any;
+	isNonCsOrg: boolean;
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
 	autoJoinSupported: boolean;
@@ -567,6 +568,11 @@ class Invite extends React.Component<Props, State> {
 
 		return (
 			<Dialog wide title="Invite" onClose={() => this.props.closeModal()}>
+				{this.props.isNonCsOrg && (
+					<div style={{ marginBottom: "15px" }}>
+						Invite people from your New Relic organization to try out CodeStream.
+					</div>
+				)}
 				<form className="standard-form" onSubmit={this.onSubmit} style={{ padding: "0" }}>
 					{this.renderFieldset()}
 				</form>
@@ -700,6 +706,10 @@ const mapStateToProps = state => {
 		return user;
 	});
 	const currentUser = users[session.userId];
+
+	const eligibleJoinCompanies = currentUser?.eligibleJoinCompanies;
+	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
+
 	const invisible = currentUser.status ? currentUser.status.invisible : false;
 
 	const adminIds = team.adminIds;
@@ -733,6 +743,7 @@ const mapStateToProps = state => {
 		isCurrentUserAdmin,
 		dontSuggestInvitees,
 		repos,
+		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
 		company: company,
 		currentUser: currentUser,
 		currentUserId: currentUser.id,

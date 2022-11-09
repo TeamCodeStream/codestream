@@ -152,6 +152,7 @@ interface ConnectedProps {
 	) => UpdateReviewResponse | undefined;
 	repos: any;
 	shouldShare: boolean;
+	isNonCsOrg: boolean;
 	unsavedFiles: string[];
 	reviewsByCommit: {
 		[commit: string]: CSReview;
@@ -2408,7 +2409,7 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
+								Reviewerssssssss {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewerEmails.map(email => {
 								const person = this.makePerson(email);
@@ -2581,6 +2582,10 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const { context, editorContext, users, teams, session, preferences, repos, documents, ide } =
 		state;
 	const user = users[session.userId!] as CSMe;
+
+	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
+	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
+
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
 		  getStreamForTeam(state.streams, context.currentTeamId)
@@ -2633,6 +2638,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
 		teamId: team.id,
+		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
 		teamMates,
 		teamMembers,
 		activeMemberIds,
