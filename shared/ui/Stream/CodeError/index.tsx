@@ -12,6 +12,7 @@ import { Button } from "@codestream/webview/src/components/Button";
 import { CardFooter, CardProps, getCardProps } from "@codestream/webview/src/components/Card";
 import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { TourTip } from "@codestream/webview/src/components/TourTip";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
@@ -659,18 +660,8 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 							marginBottom: "10px",
 						}}
 					>
-						<div
-							style={{
-								display: "inline-block",
-								width: "10px",
-								height: "10px",
-								border: derivedState.isConnectedToNewRelic
-									? "0px"
-									: `1px solid ${ALERT_SEVERITY_COLORS["NOT_CONFIGURED"]}`,
-								backgroundColor:
-									ALERT_SEVERITY_COLORS[props.errorGroup?.entityAlertingSeverity || "UNKNOWN"],
-								margin: "0 5px 0 6px",
-							}}
+						<HealthIcon
+							color={ALERT_SEVERITY_COLORS[props.errorGroup?.entityAlertingSeverity || "UNKNOWN"]}
 						/>
 
 						<ApmServiceTitle>

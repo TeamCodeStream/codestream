@@ -28,6 +28,7 @@ import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
+import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { Button } from "../src/components/Button";
 import {
@@ -127,13 +128,6 @@ const GenericWrapper = styled.div`
 
 const GenericCopy = styled.div`
 	margin: 5px 0 10px 0;
-`;
-
-const EntityHealth = styled.div<{ backgroundColor: string }>`
-	background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
-	width: 10px;
-	height: 10px;
-	margin-right: 4px;
 `;
 
 export const ErrorRow = (props: {
@@ -957,7 +951,7 @@ export const Observability = React.memo((props: Props) => {
 																					alignItems: "center",
 																				}}
 																			>
-																				<EntityHealth backgroundColor={alertSeverityColor} />
+																				<HealthIcon color={alertSeverityColor} />
 																				<div>
 																					<span>{ea.entityName}</span>
 																					<span
