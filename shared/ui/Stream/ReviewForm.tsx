@@ -513,6 +513,7 @@ class ReviewForm extends React.Component<Props, State> {
 				inviteUsersOnTheFly,
 				blameMap = {},
 				editingReview,
+				isNonCsOrg,
 			} = this.props;
 			const {
 				includeSaved,
@@ -788,7 +789,7 @@ class ReviewForm extends React.Component<Props, State> {
 						default:
 							reviewerEmails = [];
 					}
-
+					if (isNonCsOrg) reviewerEmails = [];
 					this.setState({ reviewerEmails });
 				}
 
@@ -2583,9 +2584,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		state;
 	const user = users[session.userId!] as CSMe;
 
-	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
-	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
-
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
 		  getStreamForTeam(state.streams, context.currentTeamId)
@@ -2605,6 +2603,9 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const team = teams[context.currentTeamId];
 	const activeMemberIds = getActiveMemberIds(team);
 	const blameMap = team.settings ? team.settings.blameMap : {};
+
+	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
+	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
