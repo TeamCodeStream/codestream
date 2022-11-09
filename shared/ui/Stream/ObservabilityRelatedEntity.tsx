@@ -10,7 +10,6 @@ import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { HostApi } from "@codestream/webview/webview-api";
 import cx from "classnames";
 import React, { useEffect, useState } from "react";
-import styled from "styled-components";
 import { PaneNodeName } from "../src/components/Pane";
 import { useDidMount, useInterval } from "../utilities/hooks";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
@@ -34,14 +33,6 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 
 	const { relatedEntity } = props;
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[relatedEntity?.alertSeverity];
-
-	const EntityHealth = styled.div<{ backgroundColor: string }>`
-		background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
-		width: 10px;
-		height: 10px;
-		display: inline-block;
-		margin-right: 4px;
-	`;
 
 	useDidMount(() => {
 		fetchNewRelicUrl(relatedEntity.guid);
