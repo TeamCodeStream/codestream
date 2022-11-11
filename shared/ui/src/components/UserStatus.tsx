@@ -1,14 +1,14 @@
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import styled from "styled-components";
 import React from "react";
 import { CSUser } from "@codestream/protocols/api";
+
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import Icon from "@codestream/webview/Stream/Icon";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "../../ipc/host.protocol";
-import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "@codestream/webview/store";
-import { WebviewPanels } from "@codestream/protocols/webview";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { openPanel } from "@codestream/webview/Stream/actions";
 
 const Root = styled.span`

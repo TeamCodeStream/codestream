@@ -1,5 +1,5 @@
 "use strict";
-import { EditorMetrics, EditorSelection } from "@codestream/protocols/webview";
+import { EditorMetrics, EditorSelection } from "protocols/webview/webview.protocol.common";
 import {
 	commands,
 	DecorationRangeBehavior,
@@ -15,6 +15,7 @@ import {
 	workspace
 } from "vscode";
 import { Position as LspPosition, Range as LspRange } from "vscode-languageclient";
+
 import { configuration } from "../configuration";
 import { BuiltInCommands } from "../constants";
 import { Container } from "../container";

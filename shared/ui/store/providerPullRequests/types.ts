@@ -6,7 +6,8 @@ import {
 	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
 import { CSRepository } from "@codestream/protocols/api";
-import { Collaborator } from "@codestream/webview/store/providerPullRequests/slice";
+
+import { Collaborator } from "@codestream/protocols/webview";
 import { Index } from "../common";
 
 export enum ProviderPullRequestActionsTypes {

@@ -5,9 +5,10 @@ import {
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
-} from "@codestream/protocols/webview";
+} from "protocols/webview/webview.protocol.common";
 import { Event, ViewColumn } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
+
 import { StreamThread } from "../api/session";
 
 export type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;

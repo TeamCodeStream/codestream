@@ -1,5 +1,5 @@
 import { RequestType } from "vscode-jsonrpc";
-import { IpcRoutes } from "./webview.protocol";
+import { IpcRoutes } from "./webview.protocol.common";
 
 export type ReviewCheckpoint = number | undefined;
 

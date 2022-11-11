@@ -5,7 +5,11 @@ import {
 	TransitionsEntity,
 } from "@codestream/protocols/agent";
 import { CSMe, CSTeamSettings } from "@codestream/protocols/api";
-import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
+import React, { useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
+
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { Button } from "@codestream/webview/src/components/Button";
 import { ButtonRow, Dialog } from "@codestream/webview/src/components/Dialog";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
@@ -23,8 +27,6 @@ import {
 } from "@codestream/webview/utilities/hooks";
 import { keyFilter, mapFilter } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import * as codemarkSelectors from "../../store/codemarks/reducer";
 import {
 	openPanel,

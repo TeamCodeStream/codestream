@@ -8,10 +8,12 @@ import {
 	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
 import { CSRepository } from "@codestream/protocols/api";
-import { Directive } from "@codestream/webview/store/providerPullRequests/directives";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { isEmpty } from "lodash-es";
 import { createSelector } from "reselect";
+
+import { Directive } from "@codestream/webview/store/providerPullRequests/directives";
+import { Collaborator } from "@codestream/protocols/webview";
 import { CodeStreamState } from "..";
 import { ContextState } from "../context/types";
 import { ProviderPullRequestsState, RepoPullRequest } from "./types";
@@ -57,14 +59,6 @@ export interface AddPullRequestFilesPayload extends PullRequestIdPayload {
 	pullRequestFiles: GetCommitsFilesResponse[];
 	commits: string;
 	accessRawDiffs?: boolean;
-}
-
-export interface Collaborator {
-	id?: string;
-	username: string;
-	avatar: {
-		image?: string;
-	};
 }
 
 interface RemovePullRequestByIndex {

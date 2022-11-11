@@ -5,7 +5,7 @@
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"incremental": true,
+		"incremental": false,
 		"lib": ["ES2020"],
 		"module": "commonjs",
 		"moduleResolution": "node",
@@ -25,7 +25,6 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2020",
-		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false
 	},
 	"exclude": ["node_modules", "src/webviews/app", ".vscode-test"],

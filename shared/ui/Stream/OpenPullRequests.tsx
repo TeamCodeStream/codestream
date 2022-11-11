@@ -13,19 +13,17 @@ import {
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { PullRequestQuery } from "@codestream/protocols/api";
-import {
-	OpenUrlRequestType,
-	ReviewCloseDiffRequestType,
-	WebviewPanels,
-} from "@codestream/protocols/webview";
-import { setPaneMaximized } from "@codestream/webview/Stream/actions";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
 import copy from "copy-to-clipboard";
 import { isEmpty, isEqual } from "lodash-es";
 import React, { useCallback, useEffect, useMemo, useRef } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
+
+import { OpenUrlRequestType, ReviewCloseDiffRequestType } from "@codestream/protocols/webview";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import { setPaneMaximized } from "@codestream/webview/Stream/actions";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import { disposePoll, fluctuatePoll } from "@codestream/webview/utils";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { InlineMenu } from "../src/components/controls/InlineMenu";

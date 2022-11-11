@@ -3,14 +3,38 @@ module.exports = {
 		es2017: true,
 		node: true
 	},
-	extends: ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+	extends: [
+		"eslint:recommended",
+		"plugin:@typescript-eslint/recommended",
+		"plugin:import/recommended",
+		"plugin:import/typescript"
+	],
 	parser: "@typescript-eslint/parser",
 	parserOptions: {
 		ecmaVersion: "latest",
 		sourceType: "module"
 	},
-	plugins: ["@typescript-eslint"],
+	plugins: ["@typescript-eslint", "unused-imports", "import"],
 	rules: {
+		"@typescript-eslint/no-unused-vars": "off",
+		"unused-imports/no-unused-imports": "warn",
+		"unused-imports/no-unused-vars": [
+			"warn",
+			{ vars: "all", varsIgnorePattern: "^_", args: "after-used", argsIgnorePattern: "^_" }
+		],
+		"import/order": [
+			"warn",
+			{
+				"newlines-between": "always",
+				groups: [
+					"builtin",
+					"external",
+					["internal", "parent", "sibling", "index"],
+					"object",
+					"type"
+				]
+			}
+		],
 		// TODO Goal: Resolve all of these and remove so they go back to being errors
 		"@typescript-eslint/no-namespace": "warn",
 		"no-empty": "warn",
@@ -39,5 +63,17 @@ module.exports = {
 		"no-async-promise-executor": "warn",
 		"no-ex-assign": "warn",
 		"prefer-rest-params": "warn"
+	},
+	settings: {
+		"import/parsers": {
+			"@typescript-eslint/parser": [".ts", ".tsx"]
+		},
+		"import/resolver": {
+			typescript: {
+				alwaysTryTypes: true,
+				project: "tsconfig.json"
+			},
+			node: true
+		}
 	}
 };

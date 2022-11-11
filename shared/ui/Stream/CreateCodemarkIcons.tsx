@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { useSelector, shallowEqual } from "react-redux";
 import cx from "classnames";
+import { Range } from "vscode-languageserver-types";
+import { CodemarkType } from "@codestream/protocols/api";
+
+import {
+	EditorSelection,
+	MaxRangeValue,
+	WebviewPanelNames,
+} from "@codestream/webview/ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { HostApi } from "../webview-api";
-import { Range } from "vscode-languageserver-types";
 import { useAppDispatch, useDidMount } from "../utilities/hooks";
 import {
 	EditorHighlightRangeRequestType,
-	MaxRangeValue,
-	EditorSelection,
 	NewCodemarkNotificationType,
-	WebviewPanelNames,
 } from "../ipc/webview.protocol";
 import { range } from "../utils";
-import { CodemarkType } from "@codestream/protocols/api";
 import {
 	setCurrentCodemark,
 	setComposeCodemarkActive,

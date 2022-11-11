@@ -1,15 +1,7 @@
-import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import Icon from "./Icon";
-import Button from "./Button";
-import Headshot from "./Headshot";
-import { invite, setUserStatus } from "./actions";
-import { mapFilter, keyFilter } from "../utils";
-import { difference as _difference, sortBy as _sortBy } from "lodash-es";
-import { HostApi } from "../webview-api";
-import { WebviewPanels, WebviewModals, OpenUrlRequestType } from "@codestream/protocols/webview";
+import { sortBy as _sortBy } from "lodash-es";
 import {
 	RepoScmStatus,
 	KickUserRequestType,
@@ -18,21 +10,29 @@ import {
 	GetLatestCommittersRequestType,
 } from "@codestream/protocols/agent";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
+import styled from "styled-components";
+import copy from "copy-to-clipboard";
+
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
+import Icon from "./Icon";
+import Button from "./Button";
+import Headshot from "./Headshot";
+import { invite, setUserStatus } from "./actions";
+import { mapFilter } from "../utils";
+import { HostApi } from "../webview-api";
 import { ChangesetFile } from "./Review/ChangesetFile";
-import Tooltip, { TipTitle } from "./Tooltip";
+import Tooltip from "./Tooltip";
 import { CSText } from "../src/components/CSText";
-import cx from "classnames";
 import Timestamp from "./Timestamp";
 import { DropdownButton } from "./DropdownButton";
 import { confirmPopup } from "./Confirm";
-import styled from "styled-components";
 import { getActiveMemberIds } from "../store/users/reducer";
 import { openPanel, openModal, closeModal } from "../store/context/actions";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ProfileLink } from "../src/components/ProfileLink";
-import copy from "copy-to-clipboard";
 import { UserStatus } from "../src/components/UserStatus";
 import { Dialog } from "../src/components/Dialog";
+import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
 
 export const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"

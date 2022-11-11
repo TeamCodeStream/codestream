@@ -25,17 +25,6 @@ import {
 	ShareTarget,
 	StreamType,
 } from "@codestream/protocols/api";
-import { ReviewShowLocalDiffRequestType, WebviewPanels } from "@codestream/protocols/webview";
-import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
-import { Headshot } from "@codestream/webview/src/components/Headshot";
-import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
-import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
-import {
-	setCurrentRepo,
-	setCurrentReview,
-	setNewPostEntry,
-} from "@codestream/webview/store/context/actions";
-import { editReview } from "@codestream/webview/store/reviews/thunks";
 import cx from "classnames";
 // https://github.com/kaelzhang/node-ignore
 import ignore from "ignore";
@@ -46,6 +35,19 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
+
+import { editReview } from "@codestream/webview/store/reviews/thunks";
+import {
+	setCurrentRepo,
+	setCurrentReview,
+	setNewPostEntry,
+} from "@codestream/webview/store/context/actions";
+import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
+import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
+import { Headshot } from "@codestream/webview/src/components/Headshot";
+import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { logError } from "../logger";
 import { DocumentData } from "../protocols/agent/agent.protocol.notifications";

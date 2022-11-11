@@ -31,7 +31,6 @@ import {
 	CompareMarkerRequestType,
 	ConnectToIDEProviderRequestType,
 	DisconnectFromIDEProviderRequestType,
-	EditorContext,
 	EditorHighlightRangeRequestType,
 	EditorRevealRangeRequestType,
 	EditorScrollToNotificationType,
@@ -46,9 +45,6 @@ import {
 	HostDidReceiveRequestNotificationType,
 	HostDidChangeWorkspaceFoldersNotificationType,
 	InsertTextRequestType,
-	IpcRoutes,
-	isIpcRequestMessage,
-	isIpcResponseMessage,
 	LocalFilesCloseDiffRequestType,
 	LogoutRequestType,
 	NewCodemarkNotificationType,
@@ -67,27 +63,19 @@ import {
 	ShowPreviousChangedFileRequestType,
 	ShowReviewNotificationType,
 	StartWorkNotificationType,
-	TeamlessContext,
 	UpdateConfigurationRequestType,
 	UpdateServerUrlRequestType,
-	WebviewContext,
 	WebviewDidChangeContextNotificationType,
 	WebviewDidInitializeNotificationType,
-	WebviewIpcMessage,
-	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage,
 	TraverseDiffsRequestType,
 	CompareLocalFilesRequestType,
 	NewPullRequestNotificationType,
 	ShowPullRequestNotificationType,
-	WebviewPanels,
-	SidebarLocation,
 	HostDidChangeLayoutNotificationType,
 	NewPullRequestBranch,
 	ViewMethodLevelTelemetryNotificationType,
 	RefreshEditorsCodeLensRequestType
 } from "@codestream/protocols/webview";
-import { gate } from "system/decorators/gate";
 import {
 	authentication,
 	commands,
@@ -104,6 +92,21 @@ import {
 	env
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
+import {
+	EditorContext,
+	IpcRoutes,
+	isIpcRequestMessage,
+	isIpcResponseMessage,
+	SidebarLocation,
+	TeamlessContext,
+	WebviewContext,
+	WebviewIpcMessage,
+	WebviewIpcNotificationMessage,
+	WebviewIpcRequestMessage,
+	WebviewPanels
+} from "protocols/webview/webview.protocol.common";
+
+import { gate } from "system/decorators/gate";
 import { Strings } from "system/string";
 import { openUrl } from "urlHandler";
 import { toLoggableIpcMessage, WebviewLike } from "webviews/webviewLike";
@@ -121,7 +124,6 @@ import { Container } from "../container";
 import { Editor } from "../extensions";
 import { Logger } from "../logger";
 import { Functions, log } from "../system";
-
 import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 

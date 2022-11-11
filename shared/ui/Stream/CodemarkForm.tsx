@@ -21,13 +21,6 @@ import {
 	CSUser,
 	StreamType,
 } from "@codestream/protocols/api";
-import {
-	EditorHighlightRangeRequestType,
-	EditorSelection,
-	EditorSelectRangeRequestType,
-	WebviewPanels,
-} from "@codestream/protocols/webview";
-import { upgradePendingCodeError } from "@codestream/webview/store/codeErrors/thunks";
 import cx from "classnames";
 import { prettyPrintOne } from "code-prettify";
 import * as paths from "path-browserify";
@@ -36,6 +29,13 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import Select from "react-select";
 import { Range } from "vscode-languageserver-types";
+
+import { upgradePendingCodeError } from "@codestream/webview/store/codeErrors/thunks";
+import { EditorSelection, WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import {
+	EditorHighlightRangeRequestType,
+	EditorSelectRangeRequestType,
+} from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
 import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { CSText } from "../src/components/CSText";

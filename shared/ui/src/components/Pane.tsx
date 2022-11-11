@@ -1,4 +1,11 @@
-import { WebviewPanels } from "@codestream/protocols/webview";
+import cx from "classnames";
+import { isNil as _isNil } from "lodash-es";
+import React, { PropsWithChildren } from "react";
+import Draggable from "react-draggable";
+import { shallowEqual } from "react-redux";
+import styled from "styled-components";
+
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
 	setPaneCollapsed,
@@ -8,12 +15,6 @@ import {
 import Icon from "@codestream/webview/Stream/Icon";
 import { DragHeaderContext } from "@codestream/webview/Stream/Sidebar";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import cx from "classnames";
-import { isNil as _isNil } from "lodash-es";
-import React, { PropsWithChildren } from "react";
-import Draggable from "react-draggable";
-import { shallowEqual } from "react-redux";
-import styled from "styled-components";
 import ScrollBox from "../../Stream/ScrollBox";
 
 export enum PaneState {

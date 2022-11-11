@@ -1,5 +1,6 @@
 import { CancellationToken, DocumentSymbol, TextDocument } from "vscode";
 import * as vscode from "vscode";
+
 import { BuiltInCommands } from "../constants";
 import { Logger } from "../logger";
 import { Container } from "../container";
@@ -13,11 +14,13 @@ export class InstrumentableSymbol {
 	) {}
 }
 
+export type SymboslLocated = {
+	instrumentableSymbols: InstrumentableSymbol[];
+	allSymbols: DocumentSymbol[];
+};
+
 export interface ISymbolLocator {
-	locate(document: TextDocument, token: vscode.CancellationToken): Promise<{
-		instrumentableSymbols: InstrumentableSymbol[],
-		allSymbols: DocumentSymbol[]
-	}>;
+	locate(document: TextDocument, token: vscode.CancellationToken): Promise<SymboslLocated>;
 }
 
 export class SymbolLocator implements ISymbolLocator {
@@ -25,14 +28,14 @@ export class SymbolLocator implements ISymbolLocator {
 		document: TextDocument,
 		token: vscode.CancellationToken
 	): Promise<{
-		instrumentableSymbols: InstrumentableSymbol[],
-		allSymbols: DocumentSymbol[]
+		instrumentableSymbols: InstrumentableSymbol[];
+		allSymbols: DocumentSymbol[];
 	}> {
 		const instrumentableSymbols: InstrumentableSymbol[] = [];
 		const emptyResult = {
 			instrumentableSymbols: [],
 			allSymbols: []
-		}
+		};
 
 		try {
 			if (token.isCancellationRequested) {

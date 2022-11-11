@@ -1,6 +1,7 @@
 "use strict";
 import { ConfigurationChangeEvent, Disposable, languages, workspace } from "vscode";
-import { SymbolLocator } from "providers/symbolLocator";
+
+import { SymbolLocator } from "../providers/symbolLocator";
 import { Container } from "../container";
 import { configuration } from "../configuration";
 import { InstrumentationCodeLensProvider } from "../providers/instrumentationCodeLensProvider";

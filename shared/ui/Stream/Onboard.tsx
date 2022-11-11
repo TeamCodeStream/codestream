@@ -1,24 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { CodeStreamState } from "../store";
-import { getTeamMembers } from "../store/users/reducer";
-import { useAppDispatch, useAppSelector, useDidMount, usePrevious } from "../utilities/hooks";
-import { HostApi } from "../webview-api";
-import { closePanel, invite, openPanel } from "./actions";
 import {
 	GetLatestCommittersRequestType,
 	GetReposScmRequestType,
 	ReposScm,
 	UpdateCompanyRequestType,
 } from "@codestream/protocols/agent";
+import { FormattedMessage } from "react-intl";
+import { TelemetryRequestType } from "@codestream/protocols/agent";
+
+import { CodeStreamState } from "../store";
+import { getTeamMembers } from "../store/users/reducer";
+import { useAppDispatch, useAppSelector, useDidMount, usePrevious } from "../utilities/hooks";
+import { HostApi } from "../webview-api";
+import { closePanel, invite } from "./actions";
 import { Checkbox } from "../src/components/Checkbox";
 import { CSText } from "../src/components/CSText";
 import { Button } from "../src/components/Button";
 import * as Legacy from "../Stream/Button";
 import { Link } from "./Link";
 import Icon from "./Icon";
-import { confirmPopup } from "./Confirm";
 import { Dialog } from "../src/components/Dialog";
 import { IntegrationButtons, Provider } from "./IntegrationsPanel";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
@@ -27,10 +29,8 @@ import { ComposeKeybindings } from "./ComposeTitles";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { getPRLabel, isConnected } from "../store/providers/reducer";
 import { TextInput } from "../Authentication/TextInput";
-import { FormattedMessage } from "react-intl";
 import { isEmailValid } from "../Authentication/Signup";
-import { OpenUrlRequestType, WebviewPanels } from "@codestream/protocols/webview";
-import { TelemetryRequestType } from "@codestream/protocols/agent";
+import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
 	setOnboardStep,
 	handlePendingProtocolHandlerUrl,

@@ -1,15 +1,15 @@
 "use strict";
 import {
 	HostDidChangeFocusNotificationType,
+	ShowStreamNotificationType
+} from "@codestream/protocols/webview";
+import {
 	isIpcResponseMessage,
-	ShowStreamNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
-} from "@codestream/protocols/webview";
-
-import { gate } from "system/decorators/gate";
+} from "protocols/webview/webview.protocol.common";
 import {
 	Disposable,
 	Event,
@@ -22,6 +22,8 @@ import {
 	WindowState
 } from "vscode";
 import { NotificationType, RequestType, ResponseError } from "vscode-jsonrpc";
+
+import { gate } from "system/decorators/gate";
 import { CodeStreamSession, StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";

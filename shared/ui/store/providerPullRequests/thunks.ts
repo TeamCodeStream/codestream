@@ -15,7 +15,9 @@ import {
 	QueryThirdPartyRequestType,
 } from "@codestream/protocols/agent";
 import { PullRequestQuery } from "@codestream/protocols/api";
-import { PullRequest } from "@codestream/protocols/webview";
+import { RequestType } from "vscode-languageserver-protocol";
+
+import { PullRequest } from "@codestream/webview/ipc/webview.protocol.common";
 import { logError } from "@codestream/webview/logger";
 import { setProviderError } from "@codestream/webview/store/codeErrors/thunks";
 import { createAppAsyncThunk } from "@codestream/webview/store/helper";
@@ -32,7 +34,6 @@ import {
 	updatePullRequestFilter,
 } from "@codestream/webview/store/providerPullRequests/slice";
 import { HostApi } from "@codestream/webview/webview-api";
-import { RequestType } from "vscode-languageserver-protocol";
 import { CodeStreamState } from "..";
 import { action } from "../common";
 import {

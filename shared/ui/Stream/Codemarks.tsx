@@ -11,13 +11,14 @@ import {
 } from "@codestream/protocols/agent";
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { NewCodemarkNotificationType, WebviewPanels } from "../ipc/webview.protocol";
+import { CSMarker } from "@codestream/protocols/api";
+
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import { NewCodemarkNotificationType } from "../ipc/webview.protocol";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { ComponentUpdateEmitter, isNotOnDisk, uriToFilePath } from "../utils";
 import { HostApi } from "../webview-api";
 import Icon from "./Icon";
-
-import { CSMarker } from "@codestream/protocols/api";
 import { setNewPostEntry } from "@codestream/webview/store/context/actions";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import {

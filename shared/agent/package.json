@@ -125,13 +125,17 @@
 		"@types/tmp": "0.1.0",
 		"@types/uuid": "3.4.5",
 		"@types/write-file-atomic": "2.1.2",
-		"@typescript-eslint/eslint-plugin": "5.36.1",
-		"@typescript-eslint/parser": "5.36.1",
+		"@typescript-eslint/eslint-plugin": "5.41.0",
+		"@typescript-eslint/parser": "5.41.0",
 		"cpy": "9.0.1",
 		"cross-env": "5.2.0",
-		"esbuild": "0.15.8",
+		"esbuild": "0.15.12",
 		"esbuild-plugin-ignore": "1.1.1",
-		"eslint": "8.22.0",
+		"eslint": "8.26.0",
+		"eslint-filtered-fix": "0.3.0",
+		"eslint-import-resolver-typescript": "3.5.2",
+		"eslint-plugin-import": "2.26.0",
+		"eslint-plugin-unused-imports": "2.0.0",
 		"esm": "3.2.25",
 		"graphql-tag": "2.12.6",
 		"https-proxy-agent": "3.0.1",
@@ -144,7 +148,6 @@
 		"patch-package": "6.4.7",
 		"pkg": "5.5.2",
 		"prettier": "2.7.1",
-		"prettier-plugin-organize-imports": "3.1.1",
 		"randomstring": "1.2.2",
 		"rimraf": "3.0.2",
 		"sanitize-filename": "1.6.3",
@@ -153,7 +156,10 @@
 		"typescript": "4.8.3"
 	},
 	"lint-staged": {
-		"*": "prettier --ignore-unknown --write",
+		"*": [
+			"prettier --ignore-unknown --write",
+			"eslint-filtered-fix --rule 'unused-imports/no-unused-imports' --rule 'unused-imports/no-unused-vars' --rule 'import/order'"
+		],
 		"src/*.{js,jsx,ts,tsx}": "eslint"
 	},
 	"overrides": {

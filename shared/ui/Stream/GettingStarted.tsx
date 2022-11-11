@@ -1,14 +1,14 @@
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import styled from "styled-components";
-import { useDispatch, useSelector, shallowEqual } from "react-redux";
+import { shallowEqual } from "react-redux";
+import { CSMe } from "@codestream/protocols/api";
+
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { CodeStreamState } from "../store";
-import { Dispatch } from "../store/common";
 import Tooltip from "./Tooltip";
 import { ComposeArea } from "./ReviewNav";
-import { CSMe } from "@codestream/protocols/api";
 import { openPanel, openModal } from "../store/context/actions";
-import { WebviewPanels, WebviewModals } from "@codestream/protocols/webview";
+import { WebviewPanels, WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
 import { isConnected } from "../store/providers/reducer";
 import { setUserPreference } from "./actions";
 import { Button } from "../src/components/Button";
@@ -19,7 +19,6 @@ import { Flow } from "./Flow";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import { PanelHeader } from "../src/components/PanelHeader";
 import ScrollBox from "./ScrollBox";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { getSidebarLocation } from "../store/editorContext/reducer";
 
 const Step = styled.div`

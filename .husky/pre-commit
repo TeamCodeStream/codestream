@@ -6,13 +6,14 @@
 
 AGENT_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/agent/*")
 UI_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/ui/*")
+VSCODE_FILES=$(git diff --cached --name-only --diff-filter=ACM "vscode/*")
 UTIL_FILES=$(git diff --cached --name-only --diff-filter=ACM "shared/util/*")
 
 if [[ -n "$AGENT_FILES" ]] || [[ -n "$UTIL_FILES" ]]; then
     echo "Compile / Lint Agent Files"
     pushd shared/agent
     npm run verify:compile
-    npx lint-staged
+    npx lint-staged --concurrent false
     popd
 fi
 
@@ -20,6 +21,14 @@ if [[ -n "$UI_FILES" ]] || [[ -n "$UTIL_FILES" ]]; then
     echo "Compile / Lint UI Files"
     pushd shared/ui
     npm run verify:compile
-    npx lint-staged
+    npx lint-staged --concurrent false
+    popd
+fi
+
+if [[ -n "$VSCODE_FILES" ]]; then
+    echo "Compile / Lint vscode Files"
+    pushd vscode
+    npm run verify:compile
+    npx lint-staged --concurrent false
     popd
 fi

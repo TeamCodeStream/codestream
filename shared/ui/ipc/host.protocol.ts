@@ -16,9 +16,17 @@ import {
 	CSTeam,
 	CSUser,
 } from "@codestream/protocols/api";
-import { Collaborator } from "@codestream/webview/store/providerPullRequests/slice";
+
 import { RequestType } from "vscode-jsonrpc";
 import { EditorContext, IpcRoutes, SessionState, WebviewContext } from "./webview.protocol.common";
+
+export interface Collaborator {
+	id?: string;
+	username: string;
+	avatar: {
+		image?: string;
+	};
+}
 
 export interface BootstrapInHostResponse {
 	capabilities: Capabilities;

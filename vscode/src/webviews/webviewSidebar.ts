@@ -1,15 +1,10 @@
 "use strict";
+import { promises as fs } from "fs";
+
 import {
 	HostDidChangeFocusNotificationType,
-	isIpcResponseMessage,
-	ShowStreamNotificationType,
-	WebviewIpcMessage,
-	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage,
-	WebviewIpcResponseMessage
+	ShowStreamNotificationType
 } from "@codestream/protocols/webview";
-import { promises as fs } from "fs";
-import { gate } from "system/decorators/gate";
 import {
 	CancellationToken,
 	commands,
@@ -25,7 +20,15 @@ import {
 	WindowState
 } from "vscode";
 import { NotificationType, RequestType, ResponseError } from "vscode-jsonrpc";
+import {
+	isIpcResponseMessage,
+	WebviewIpcMessage,
+	WebviewIpcNotificationMessage,
+	WebviewIpcRequestMessage,
+	WebviewIpcResponseMessage
+} from "protocols/webview/webview.protocol.common";
 
+import { gate } from "system/decorators/gate";
 import { CodeStreamSession, StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";

@@ -21,7 +21,7 @@
 		"@luckycatfactory/esbuild-graphql-loader": "3.7.0",
 		"@types/node": "16.11.35",
 		"cpy": "9.0.1",
-		"esbuild": "0.15.8",
+		"esbuild": "0.15.12",
 		"esbuild-plugin-less": "1.1.9"
 	}
 }

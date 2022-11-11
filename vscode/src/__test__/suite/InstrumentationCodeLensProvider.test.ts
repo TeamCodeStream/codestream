@@ -1,11 +1,10 @@
 import * as assert from "assert";
-import { InstrumentationCodeLensProvider } from "../../providers/instrumentationCodeLensProvider";
-import sinon, { SinonSpy } from "sinon";
+
+import sinon from "sinon";
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from "vscode";
-import { InstrumentableSymbol, ISymbolLocator, SymbolLocator } from "../../providers/symbolLocator";
 import { CancellationTokenSource } from "vscode-languageclient";
 import {
 	FileLevelTelemetryRequestOptions,
@@ -13,24 +12,31 @@ import {
 	GetFileLevelTelemetryResponse
 } from "@codestream/protocols/agent";
 
+import {
+	InstrumentableSymbol,
+	ISymbolLocator,
+	SymboslLocated
+} from "../../providers/symbolLocator";
+import { InstrumentationCodeLensProvider } from "../../providers/instrumentationCodeLensProvider";
+
 class MockSymbolLocator implements ISymbolLocator {
-	locate(
-		document: vscode.TextDocument,
-		token: vscode.CancellationToken
-	): Promise<InstrumentableSymbol[]> {
+	locate(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<SymboslLocated> {
 		return new Promise(resolve => {
-			resolve([
-				new InstrumentableSymbol(
-					new vscode.DocumentSymbol(
-						"hello_world",
-						"",
-						vscode.SymbolKind.Function,
-						new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1)),
-						new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1))
-					),
-					undefined
-				)
-			]);
+			resolve({
+				instrumentableSymbols: [
+					new InstrumentableSymbol(
+						new vscode.DocumentSymbol(
+							"hello_world",
+							"",
+							vscode.SymbolKind.Function,
+							new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1)),
+							new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1))
+						),
+						undefined
+					)
+				],
+				allSymbols: []
+			});
 		});
 	}
 }
@@ -52,14 +58,14 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	let stubbedExtension: sinon.SinonStub | undefined;
 	let stubbedConfig: sinon.SinonStub | undefined;
 
-	teardown(function() {
+	teardown(function () {
 		stubbedExtension?.restore();
 		stubbedConfig?.restore();
 	});
 
 	test("Smoke test", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -94,7 +100,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		stubbedExtension = sinon.stub(vscode.extensions, "getExtension").returns((<
@@ -114,7 +120,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NOT_ASSOCIATED", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -145,7 +151,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		stubbedExtension = sinon.stub(vscode.extensions, "getExtension").returns((<
@@ -169,7 +175,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_PYTHON_VSCODE_EXTENSION", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -186,7 +192,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const codeLenses = await provider.provideCodeLenses(
@@ -206,7 +212,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_CSHARP_VSCODE_EXTENSION", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -223,7 +229,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const codeLenses = await provider.provideCodeLenses(
@@ -243,7 +249,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_RUBY_VSCODE_EXTENSION", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -260,7 +266,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const codeLenses = await provider.provideCodeLenses(
@@ -280,7 +286,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("RUBY_PLUGIN_NO_LANGUAGE_SERVER", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -295,7 +301,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const mockGetConfig: Partial<vscode.WorkspaceConfiguration> = {
@@ -331,7 +337,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_JAVA_VSCODE_EXTENSION", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -348,7 +354,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const codeLenses = await provider.provideCodeLenses(
@@ -368,7 +374,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_GO_VSCODE_EXTENSION", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -385,7 +391,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const codeLenses = await provider.provideCodeLenses(
@@ -405,7 +411,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 
 	test("NO_SPANS", async () => {
 		const observabilityService = {
-			getFileLevelTelemetry: function(
+			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
 				resetCache?: boolean,
@@ -434,7 +440,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 			"anythingHere",
 			new MockSymbolLocator(),
 			observabilityService,
-			{ track: function() {} } as any
+			{ track: function () {} } as any
 		);
 
 		const mockGetConfig: Partial<vscode.WorkspaceConfiguration> = {

@@ -1,3 +1,3 @@
-import { WebviewConfigs } from "@codestream/protocols/webview";
+import { WebviewConfigs } from "@codestream/webview/ipc/webview.protocol.common";
 
 export interface ConfigsState extends WebviewConfigs {}

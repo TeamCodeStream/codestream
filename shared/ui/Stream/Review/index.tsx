@@ -8,12 +8,17 @@ import {
 	FollowReviewRequestType,
 } from "@codestream/protocols/agent";
 import { CodemarkStatus, CodemarkType, CSPost, CSReview, CSUser } from "@codestream/protocols/api";
+import cx from "classnames";
+import React, { PropsWithChildren } from "react";
+import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import styled from "styled-components";
+
 import {
 	OpenUrlRequestType,
 	ShowNextChangedFileRequestType,
 	ShowPreviousChangedFileRequestType,
-	WebviewPanels,
 } from "@codestream/protocols/webview";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { Loading } from "@codestream/webview/Container/Loading";
 import {
@@ -47,10 +52,6 @@ import {
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import { capitalize, emptyArray, mapFilter, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import cx from "classnames";
-import React, { PropsWithChildren } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
 import { getPost } from "../../store/posts/reducer";
 import { createPost, markItemRead, setCodemarkStatus, setReviewStatus } from "../actions";
 import { Attachments } from "../Attachments";
