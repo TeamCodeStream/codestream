@@ -6,14 +6,15 @@ import {
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
-import { WebviewModals } from "@codestream/protocols/webview";
-import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import copy from "copy-to-clipboard";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import styled from "styled-components";
+
+import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import { CSText } from "../src/components/CSText";
 import { Dialog } from "../src/components/Dialog";
 import { ProfileLink } from "../src/components/ProfileLink";
