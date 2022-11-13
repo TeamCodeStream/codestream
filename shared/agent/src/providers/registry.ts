@@ -2,6 +2,7 @@
 import { differenceWith } from "lodash";
 import semver from "semver";
 import { URI } from "vscode-uri";
+
 import { SessionContainer } from "../container";
 import { Logger } from "../logger";
 import {
@@ -370,7 +371,16 @@ export class ThirdPartyProviderRegistry {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) return {};
 
+		const subProviders = provider.getConfig().subProviders;
 		await provider.disconnect(request);
+		if (subProviders && subProviders.length > 0) {
+			for (const subProvider of subProviders) {
+				await this.disconnect({
+					providerId: subProvider.id,
+					providerTeamId: request.providerTeamId,
+				});
+			}
+		}
 		return {};
 	}
 

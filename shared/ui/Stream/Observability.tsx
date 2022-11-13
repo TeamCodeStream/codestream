@@ -24,14 +24,16 @@ import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
+import { ObservabilityRelatedWrapper } from "@codestream/webview/Stream/ObservabilityRelatedWrapper";
+import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
+import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import {
 	HostDidChangeWorkspaceFoldersNotificationType,
 	OpenUrlRequestType,
+	RefreshEditorsCodeLensRequestType,
 } from "@codestream/protocols/webview";
-import { RefreshEditorsCodeLensRequestType } from "@codestream/webview/ipc/host.protocol";
-import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
-import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { ObservabilityRelatedWrapper } from "@codestream/webview/Stream/ObservabilityRelatedWrapper";
+import { SecurityIssuesWrapper } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 import { ObservabilityServiceLevelObjectives } from "@codestream/webview/Stream/ObservabilityServiceLevelObjectives";
 import { WebviewPanels } from "../ipc/webview.protocol.common";
 import { Button } from "../src/components/Button";
@@ -218,6 +220,7 @@ export const Observability = React.memo((props: Props) => {
 				{}) as CurrentMethodLevelTelemetry,
 			textEditorUri: state.editorContext.textEditorUri,
 			scmInfo: state.editorContext.scmInfo,
+			showVulnerabilityManagement: isFeatureEnabled(state, "showVulnerabilityManagement"),
 		};
 	}, shallowEqual);
 
@@ -1119,6 +1122,13 @@ export const Observability = React.memo((props: Props) => {
 																										serviceLevelObjectives={serviceLevelObjectives}
 																									/>
 																								</>
+																							)}
+																							{derivedState.showVulnerabilityManagement && (
+																								<SecurityIssuesWrapper
+																									currentRepoId={currentRepoId}
+																									entityGuid={ea.entityGuid}
+																									accountId={ea.accountId}
+																								/>
 																							)}
 																							{
 																								<>

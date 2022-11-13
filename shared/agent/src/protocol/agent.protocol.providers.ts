@@ -25,6 +25,7 @@ export interface ThirdPartyProviderConfig {
 	oauthData?: { [key: string]: any };
 	scopes?: string[];
 	canFilterByAssignees?: boolean;
+	subProviders?: ThirdPartyProviderConfig[];
 }
 
 export interface ThirdPartyDisconnect {
@@ -118,6 +119,7 @@ export interface ThirdPartyProviderBoard {
 export interface FetchThirdPartyBoardsRequest {
 	providerId: string;
 	force?: boolean | undefined;
+
 	[key: string]: any;
 }
 
@@ -162,6 +164,7 @@ export interface FetchThirdPartyCardsRequest {
 	providerId: string;
 	customFilter?: string;
 	force?: boolean | undefined;
+
 	[key: string]: any;
 }
 
@@ -182,6 +185,7 @@ export const FetchThirdPartyCardsRequestType = new RequestType<
 export interface FetchThirdPartyCardWorkflowRequest {
 	providerId: string;
 	cardId: string;
+
 	[key: string]: any;
 }
 
@@ -297,6 +301,7 @@ export const FetchThirdPartyChannelsRequestType = new RequestType<
 export interface FetchThirdPartyChannelsRequest {
 	providerId: string;
 	providerTeamId: string;
+
 	[key: string]: any;
 }
 
@@ -375,6 +380,7 @@ export interface ProviderConfigurationData {
 	baseUrl?: string;
 	accessToken?: string;
 	pendingVerification?: boolean;
+
 	[key: string]: any;
 }
 
@@ -1001,6 +1007,7 @@ export interface GetNewRelicRelatedEntitiesRequest {
 	entityGuid: string;
 	direction: string;
 }
+
 export interface GetNewRelicUrlRequest {
 	entityGuid: string;
 }
@@ -1087,12 +1094,14 @@ export interface GetNewRelicErrorGroupResponse {
 		};
 	};
 }
+
 export interface GetNewRelicRelatedEntitiesResponse extends Array<RelatedEntityByType> {
 	error?: {
 		message: string;
 	};
 	message?: string;
 }
+
 export interface GetNewRelicUrlResponse {
 	newRelicUrl: string;
 }
@@ -1310,6 +1319,7 @@ export interface GetEntityCountRequest {
 export interface GetEntityCountResponse {
 	entityCount: number;
 }
+
 export interface GetServiceLevelTelemetryRequest {
 	/** CodeStream repoId */
 	repoId: string;
@@ -1585,6 +1595,7 @@ export interface RelatedEntityByType {
 export interface RelatedEntitiesByType extends Array<RelatedEntityByType> {}
 
 export interface RelatedEntities extends Array<RelatedEntity> {}
+
 export interface EntitySearchResponse {
 	actor: {
 		entitySearch: {
@@ -1829,3 +1840,96 @@ export interface RelatedEntityByRepositoryGuidsResult {
 		}[];
 	};
 }
+
+export type VulnerabilityStatus =
+	| "ASSIGNED"
+	| "NEW"
+	| "MITIGATED"
+	| "REMEDIATED"
+	| "IGNORED"
+	| "NO_LONGER_DETECTED";
+
+export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "INFO"] as const;
+
+export type RiskSeverity = typeof riskSeverityList[number];
+
+// /v1/issues/ response
+// https://source.datanerd.us/incubator/nrsec-workflow-api/blob/dacb63f32aa836a4b90f6345a83e0ae95f7d3463/src/main/java/com/newrelic/nrsecworkflowapi/api/SecurityIssueSummary.java
+export type SecurityIssueSummary = {
+	issueId: string;
+	title: string;
+	sources: Array<string>;
+	issueType: string;
+	severity: RiskSeverity;
+	status: VulnerabilityStatus;
+	entityCount: number;
+	issueCount: number;
+	assignedCount: number;
+	uniqueUserCount: number;
+	assignedUsers: Array<number>;
+	accountId?: number;
+	firstSeen: string;
+	lastSeen: string;
+};
+
+export type SecurityIssueSummaryResponse = Array<SecurityIssueSummary>;
+
+export type GetSecurityIssuesForEntityRequest = {
+	entityGuid: string;
+	accountId: number;
+	severityFilter?: Array<RiskSeverity>;
+	rows?: number | "all";
+};
+
+export type GetSecurityIssuesForEntityResponse = {
+	securityIssues: SecurityIssueSummaryResponse;
+	recordCount: number;
+	totalRecords: number;
+};
+
+export const GetSecurityIssuesForEntityType = new RequestType<
+	GetSecurityIssuesForEntityRequest,
+	GetSecurityIssuesForEntityResponse,
+	void,
+	void
+>("codestream/newrelic/securityIssues");
+
+export type GetLibraryDetailsRequest = {
+	entityGuid: string;
+	accountId: number;
+	severityFilter?: Array<RiskSeverity>;
+	rows?: number | "all";
+};
+
+export type Vuln = {
+	remediation: Array<string>;
+	issueId: string; // cve
+	title: string;
+	url: string;
+	source: string;
+	vector: string;
+	description: string;
+	score: number;
+	criticality: string; // TODO mebe enum
+};
+
+export type LibraryDetails = {
+	name: string;
+	version: string;
+	highestScore: number;
+	language?: string;
+	vulns: Array<Vuln>;
+};
+
+export type GetLibraryDetailsResponse = {
+	libraries: Array<LibraryDetails>;
+	recordCount: number;
+	totalRecords: number;
+};
+
+export const GetLibraryDetailsType = new RequestType<
+	GetLibraryDetailsRequest,
+	GetLibraryDetailsResponse,
+	void,
+	void
+>("codestream/newrelic/libraryDetails");

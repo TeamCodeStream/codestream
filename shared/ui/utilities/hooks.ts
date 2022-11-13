@@ -1,5 +1,5 @@
-import { AppDispatch, CodeStreamState } from "@codestream/webview/store";
 import {
+	DependencyList,
 	EffectCallback,
 	useCallback,
 	useEffect,
@@ -9,6 +9,8 @@ import {
 	useState,
 } from "react";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+
+import { AppDispatch, CodeStreamState } from "@codestream/webview/store";
 import { RequestType } from "vscode-jsonrpc";
 import { noop } from "../utils";
 import { HostApi, RequestParamsOf, RequestResponseOf } from "../webview-api";
@@ -54,36 +56,43 @@ export function useInterval(callback: Fn, delay = 1000) {
 	}, [delay]);
 }
 
-interface UseRequestTypeResult<T> {
+interface UseRequestTypeResult<T, E = T> {
 	data: T | undefined;
 	loading: boolean;
-	error: T | undefined;
+	error: E | undefined;
 }
 
 /**
  * @param requestType<Req, Resp>
  * @param payload
  * @param dependencies
+ * @param enabled Controls whether to make the request
  * @returns { loading, data, error }
  */
-export function useRequestType<RT extends RequestType<any, any, any, any>>(
+export function useRequestType<RT extends RequestType<any, any, any, any>, E = RT>(
 	requestType: RT,
 	payload: RequestParamsOf<RT>,
-	dependencies = []
-): UseRequestTypeResult<RequestResponseOf<RT>> {
+	dependencies: DependencyList = [],
+	enabled = true
+): UseRequestTypeResult<RequestResponseOf<RT>, E> {
 	const [loading, setLoading] = useState(true);
 	const [data, setData] = useState<RequestResponseOf<RT> | undefined>(undefined);
-	const [error, setError] = useState<undefined>(undefined);
+	const [error, setError] = useState<E | undefined>(undefined);
 
 	const fetch = async () => {
-		try {
-			setLoading(true);
-			const response = (await HostApi.instance.send(requestType, payload)) as RequestResponseOf<RT>;
-			setData(response);
-			setLoading(false);
-		} catch (error) {
-			setLoading(false);
-			setError(error);
+		if (enabled) {
+			try {
+				setLoading(true);
+				const response = (await HostApi.instance.send(
+					requestType,
+					payload
+				)) as RequestResponseOf<RT>;
+				setData(response);
+				setLoading(false);
+			} catch (error) {
+				setLoading(false);
+				setError(error);
+			}
 		}
 	};
 
@@ -91,7 +100,7 @@ export function useRequestType<RT extends RequestType<any, any, any, any>>(
 		fetch();
 	}, dependencies);
 
-	return { loading, data, error } as UseRequestTypeResult<RequestResponseOf<RT>>;
+	return { loading, data, error } as UseRequestTypeResult<RequestResponseOf<RT>, E>;
 }
 
 export function useTimeout(callback: Fn, delay: number) {

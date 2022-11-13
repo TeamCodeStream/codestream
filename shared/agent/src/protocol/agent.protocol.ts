@@ -1,6 +1,7 @@
 "use strict";
 import { RequestInit } from "node-fetch";
 import { InitializeResult, RequestType, WorkspaceFolder } from "vscode-languageserver-protocol";
+
 import { LoginResponse } from "./agent.protocol.auth";
 import { CreateCompanyRequest, CreateCompanyResponse } from "./agent.protocol.companies";
 import { Unreads } from "./agent.protocol.notifications";
@@ -98,6 +99,7 @@ export interface CodeStreamEnvironmentInfo {
 	isProductionCloud: boolean;
 	newRelicLandingServiceUrl?: string;
 	newRelicApiUrl?: string;
+	newRelicSecApiUrl?: string;
 	environmentHosts?: EnvironmentHost[];
 }
 
@@ -188,6 +190,7 @@ export interface VerifyConnectivityResponse {
 	isProductionCloud?: boolean;
 	newRelicLandingServiceUrl?: string;
 	newRelicApiUrl?: string;
+	newRelicSecApiUrl?: string;
 	environmentHosts?: EnvironmentHost[];
 }
 

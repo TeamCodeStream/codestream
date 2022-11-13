@@ -1,18 +1,20 @@
 "use strict";
 
-import AbortController from "abort-controller";
-import FormData from "form-data";
 import { promises as fs } from "fs";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
-import { isEmpty, isEqual } from "lodash";
-import { Headers, RequestInit, Response } from "node-fetch";
 import * as qs from "querystring";
 import { ParsedUrlQueryInput } from "querystring";
-import sanitize from "sanitize-filename";
 import { URLSearchParams } from "url";
+
+import { isEmpty, isEqual } from "lodash";
+import { Headers, RequestInit, Response } from "node-fetch";
+import sanitize from "sanitize-filename";
+import FormData from "form-data";
+import AbortController from "abort-controller";
 import { Emitter, Event } from "vscode-languageserver";
+
+import HttpsProxyAgent from "https-proxy-agent";
 import { ServerError } from "../../agentError";
 import { Team, User } from "../../api/extensions";
 import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
@@ -2880,6 +2882,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				response.isProductionCloud = json.isProductionCloud;
 				response.newRelicLandingServiceUrl = json.newRelicLandingServiceUrl;
 				response.newRelicApiUrl = json.newRelicApiUrl;
+				response.newRelicSecApiUrl = json.newRelicSecApiUrl;
 				response.environmentHosts = json.environmentHosts;
 			}
 		} catch (err) {

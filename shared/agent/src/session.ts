@@ -1,12 +1,12 @@
 "use strict";
 
-import glob from "glob-promise";
 import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
-import { isEmpty, isEqual, omit, uniq } from "lodash";
 import * as path from "path";
 import * as url from "url";
+
+import { isEmpty, isEqual, omit, uniq } from "lodash";
+import glob from "glob-promise";
 import {
 	CancellationToken,
 	Connection,
@@ -15,6 +15,8 @@ import {
 	MessageActionItem,
 	WorkspaceFolder,
 } from "vscode-languageserver";
+
+import HttpsProxyAgent from "https-proxy-agent";
 import { CodeStreamAgent } from "./agent";
 import { AgentError, ServerError } from "./agentError";
 import {
@@ -779,6 +781,11 @@ export class CodeStreamSession {
 		return this.environmentInfo.newRelicApiUrl;
 	}
 
+	// For vulnerability management
+	get newRelicSecApiUrl() {
+		return this.environmentInfo.newRelicSecApiUrl;
+	}
+
 	get disableStrictSSL(): boolean {
 		return this._options.disableStrictSSL != null ? this._options.disableStrictSSL : false;
 	}
@@ -914,6 +921,7 @@ export class CodeStreamSession {
 			isProductionCloud: response.isProductionCloud || false,
 			newRelicLandingServiceUrl: response.newRelicLandingServiceUrl,
 			newRelicApiUrl: response.newRelicApiUrl,
+			newRelicSecApiUrl: response.newRelicSecApiUrl,
 			environmentHosts: response.environmentHosts,
 		};
 		Logger.log("Got environment from connectivity response:", this._environmentInfo);
@@ -1143,9 +1151,10 @@ export class CodeStreamSession {
 		}
 
 		this._providers = currentTeam.providerHosts || {};
+		const combinedProviders = { ...currentTeam.providerHosts };
 		registerProviders(
-			currentTeam.providerHosts
-				? omit(currentTeam.providerHosts, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
+			{ combinedProviders }
+				? omit(combinedProviders, Object.keys(PROVIDERS_TO_REGISTER_BEFORE_SIGNIN))
 				: {},
 			this,
 			false
@@ -1641,7 +1650,6 @@ export class CodeStreamSession {
 	async updateProviders() {
 		const currentTeam = await SessionContainer.instance().teams.getByIdFromCache(this.teamId);
 		if (currentTeam) {
-			this._providers = currentTeam.providerHosts || {};
 			registerProviders(this._providers, this);
 			this.agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Providers,

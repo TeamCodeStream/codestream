@@ -1,5 +1,6 @@
 "use strict";
 import { RequestHandler0, RequestType } from "vscode-languageserver-protocol";
+
 import { CodeStreamAgent } from "../../agent";
 import { ThirdPartyProviders } from "../../protocol/agent.protocol.providers";
 import { ThirdPartyProvider } from "../../providers/provider";
@@ -77,6 +78,23 @@ export function lspProvider<T extends object>(name: string): Function {
 	};
 }
 
+function mergeLocalProviders(providers: ThirdPartyProviders): ThirdPartyProviders {
+	const localProviders: ThirdPartyProviders = {};
+	const newrelicProvider = providers?.["newrelic*com"];
+
+	if (newrelicProvider) {
+		const newrelicVulnProvider = {
+			id: "newrelic-vulnerabilities*com",
+			name: "newrelic-vulnerabilities",
+			host: "", // Provided in apiCapabilities
+		};
+		localProviders[newrelicVulnProvider.id] = newrelicVulnProvider;
+		newrelicProvider.subProviders = [newrelicVulnProvider];
+	}
+
+	return { ...providers, ...localProviders };
+}
+
 export function registerProviders(
 	providers: ThirdPartyProviders,
 	session: CodeStreamSession,
@@ -85,8 +103,9 @@ export function registerProviders(
 	if (clear) {
 		providerRegistry.clear();
 	}
-	for (const providerId in providers) {
-		const provider = providers[providerId];
+	const mergedProviders = mergeLocalProviders(providers);
+	for (const providerId in mergedProviders) {
+		const provider = mergedProviders[providerId];
 		const type = providerTypeRegistry.get(provider.name);
 		if (type) {
 			const providerConfig = new (lsp(type) as any)(session, provider);

@@ -165,10 +165,20 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
-	private _mltTimedCache: Cache<GetFileLevelTelemetryResponse | null>;
-	private _entityCountTimedCache: Cache<GetEntityCountResponse>;
-	private _repositoryEntitiesByRepoRemotes: Cache<RepoEntitiesByRemotesResponse>;
-	private _observabilityReposCache: Cache<GetObservabilityReposResponse>;
+	// 2 minute cache
+	private _mltTimedCache = new Cache<GetFileLevelTelemetryResponse | null>({
+		defaultTtl: 120 * 1000,
+	});
+	// 30 second cache
+	private _entityCountTimedCache = new Cache<GetEntityCountResponse>({ defaultTtl: 30 * 1000 });
+	// 30 second cache
+	private _repositoryEntitiesByRepoRemotes = new Cache<RepoEntitiesByRemotesResponse>({
+		defaultTtl: 30 * 10000,
+	});
+	// 30 second cache
+	private _observabilityReposCache = new Cache<GetObservabilityReposResponse>({
+		defaultTtl: 30 * 1000,
+	});
 
 	constructor(session: CodeStreamSession, config: ThirdPartyProviderConfig) {
 		super(session, config);
@@ -176,14 +186,6 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			this.buildRepoRemoteVariants,
 			(remotes: string[]) => remotes
 		);
-		// 2 minute cache
-		this._mltTimedCache = new Cache({ defaultTtl: 120 * 1000 });
-		// 30 second cache
-		this._entityCountTimedCache = new Cache({ defaultTtl: 30 * 1000 });
-		// 30 second cache
-		this._repositoryEntitiesByRepoRemotes = new Cache({ defaultTtl: 30 * 10000 });
-		// 30 second cache
-		this._observabilityReposCache = new Cache({ defaultTtl: 30 * 1000 });
 	}
 
 	get displayName() {
@@ -233,13 +235,22 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return `${this.baseUrl}/graphql`;
 	}
 
+	private clearAllCaches() {
+		const properties = Object.values(this);
+		for (const prop of properties) {
+			if (prop && prop instanceof Cache) {
+				prop.clear();
+			}
+		}
+	}
+
 	@log()
 	async onDisconnected(request?: ThirdPartyDisconnect) {
 		// delete the graphql client so it will be reconstructed if a new token is applied
 		delete this._client;
 		delete this._newRelicUserId;
 		delete this._accountIds;
-		this._mltTimedCache.clear();
+		this.clearAllCaches();
 
 		try {
 			// remove these when a user disconnects -- don't want them lingering around
@@ -259,6 +270,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	protected async client(): Promise<GraphQLClient> {
 		const client =
 			this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+
 		client.setHeaders({
 			"Api-Key": this.accessToken!,
 			"Content-Type": "application/json",
@@ -3010,6 +3022,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const results = await this.query(query);
 			let transactionTypeArray = results?.actor?.account?.transactionTypeList?.results;
 			let transactionTypeCountObject: any = {};
+
 			interface TransactionTypeElement {
 				beginTimeSeconds: number;
 				endTimeSeconds: number;
