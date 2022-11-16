@@ -1,5 +1,6 @@
 "use strict";
 import { RequestType } from "vscode-languageserver-protocol";
+
 import { CrossPostIssueValues, GitLabMergeRequest } from "./agent.protocol";
 import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
@@ -1596,7 +1597,11 @@ export interface ErrorGroup {
 	name: string;
 	entityGuid: string;
 	url: string;
+	/**
+	 * Returns a query for fetching TransactionError results
+	 */
 	eventsQuery?: string;
+	lastSeenAt?: number;
 	assignment?: {
 		email: string;
 		userInfo: {

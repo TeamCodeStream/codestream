@@ -1,5 +1,8 @@
 "use strict";
 import fs from "fs";
+import * as path from "path";
+import { join, relative, sep } from "path";
+
 import { GraphQLClient } from "graphql-request";
 import {
 	Dictionary,
@@ -11,14 +14,12 @@ import {
 	uniq as _uniq,
 	uniqBy as _uniqBy,
 } from "lodash";
-import * as path from "path";
-import { join, relative, sep } from "path";
 import Cache from "timed-cache";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
+
 import { customFetch } from "../system/fetchCore";
 import * as csUri from "../system/uri";
-
 import { InternalError, ReportSuppressedMessages } from "../agentError";
 import { SessionContainer, SessionServiceContainer } from "../container";
 import { GitRemoteParser } from "../git/parsers/remoteParser";
@@ -3161,6 +3162,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 							state
 							entityGuid
 							eventsQuery
+							lastSeenAt
 						  }
 						}
 					  }
@@ -3923,7 +3925,18 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			}
 
 			const entityGuid = errorGroupResponse.entityGuid;
-			const eventsQuery = `${errorGroupResponse.eventsQuery} LIMIT 1`;
+			const now = new Date().getTime();
+			// We need an `id` (aka occurrenceId) from ErrorTrace to get the most recent instance of this ErrorGroup.
+			// To do do we use the TransactionError query and modify it to query ErrorTrace.
+
+			// NOTE: we need to add the date range or we risk missing results.
+			const errorTraceQuery = `${errorGroupResponse.eventsQuery?.replace(
+				" TransactionError ",
+				" ErrorTrace "
+			)} SINCE ${(errorGroupResponse.lastSeenAt || now) - 100000} until ${
+				(errorGroupResponse.lastSeenAt || now) + 100000
+			} ORDER BY timestamp DESC LIMIT 1`;
+
 			const errorTraceResponse = await this.query<{
 				actor: {
 					account: {
@@ -3936,10 +3949,10 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					};
 				};
 			}>(
-				`query getTransactionError($accountId: Int!) {
+				`query getErrorTrace($accountId: Int!) {
 						actor {
 						  account(id: $accountId) {
-							nrql(query: "${eventsQuery}") {
+							nrql(query: "${errorTraceQuery}") {
 							  results
 							}
 						  }
@@ -3953,7 +3966,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			if (errorTraceResponse) {
 				const errorTraceResult = errorTraceResponse.actor.account.nrql.results[0];
 				if (!errorTraceResult) {
-					ContextLogger.warn("getMetric missing errorTraceResult", {
+					ContextLogger.warn("getMetricData missing errorTraceResult", {
 						accountId: accountId,
 						errorGroupGuid: errorGroupGuid,
 						metricResult: errorGroupResponse,
@@ -3970,7 +3983,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				}
 			}
 		} catch (ex) {
-			ContextLogger.error(ex, "getMetric", {
+			ContextLogger.error(ex, "getMetricData", {
 				errorGroupGuid: errorGroupGuid,
 			});
 		}
