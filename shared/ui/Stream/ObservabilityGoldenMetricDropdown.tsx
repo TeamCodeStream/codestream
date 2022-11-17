@@ -1,7 +1,6 @@
 import { EntityGoldenMetrics, GetAlertViolationsResponse } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useState } from "react";
-import styled from "styled-components";
 
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -15,31 +14,12 @@ interface Props {
 	recentAlertViolations?: GetAlertViolationsResponse;
 }
 
-const StyledMetric = styled.div`
-	color: var(--text-color-subtle);
-	font-weight: normal;
-	padding-left: 5px;
-	&.no-padding {
-		padding-left: 0;
-	}
-	// details isn't used in relative timestamps
-	.details {
-		padding-left: 5px;
-		transition: opacity 0.4s;
-	}
-`;
-
-interface TooltipMappings {
-	[name: string]: string;
-}
-
 interface UnitMappings {
 	[name: string]: string;
 }
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
-	const [updatedAt, setUpdatedAt] = useState<string>("");
 	const { entityGoldenMetrics, loadingGoldenMetrics, noDropdown, recentAlertViolations } = props;
 
 	const unitMappings: UnitMappings = {
@@ -48,9 +28,9 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		BITS_PER_SECOND: "bits/s",
 		BYTES: "bytes",
 		BYTES_PER_SECOND: "bytes/s",
-		CELSIUS: "c",
+		CELSIUS: "C",
 		COUNT: "",
-		HERTZ: "hz",
+		HERTZ: "Hz",
 		MESSAGES_PER_SECOND: "messages/s",
 		MS: "ms",
 		OPERATIONS_PER_SECOND: "operations/s",
@@ -75,23 +55,22 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							}}
 							className={"pr-row"}
 						>
-							<div>
-								<span style={{ marginRight: "5px" }}>{gm.title}</span>
+							<div style={{ flexShrink: "unset" }}>
+								<Tooltip placement="topRight" title={gm.title} delay={1}>
+									<span style={{ marginRight: "5px" }}>{gm.title}</span>
+								</Tooltip>
 							</div>
 
-							<div className="icons">
-								<Tooltip placement="topRight" title={gm.displayValue} delay={1}>
-									<StyledMetric>
-										{gm.value || gm.value === 0 ? (
-											<>
-												{gm.displayValue}{" "}
-												{goldenMetricDisplayUnit && <>{goldenMetricDisplayUnit}</>}
-											</>
-										) : (
-											<>No Data</>
-										)}
-									</StyledMetric>
-								</Tooltip>
+							<div className="icons" style={{ overflow: "initial" }}>
+								<span className={"details"}>
+									{gm.value || gm.value === 0 ? (
+										<>
+											{gm.displayValue} {goldenMetricDisplayUnit && <>{goldenMetricDisplayUnit}</>}
+										</>
+									) : (
+										<>No Data</>
+									)}
+								</span>
 							</div>
 						</Row>
 					);
@@ -113,8 +92,8 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 					>
 						{expanded && <Icon name="chevron-down-thin" />}
 						{!expanded && <Icon name="chevron-right-thin" />}
-						<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>{" "}
-						<span className="subtle-tight"> (last 30 minutes)</span>
+						<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>
+						<span className="subtle-tight">(last 30 minutes)</span>
 					</Row>
 				</>
 			)}
