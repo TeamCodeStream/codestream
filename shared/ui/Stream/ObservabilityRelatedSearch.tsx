@@ -1,13 +1,14 @@
 import {
+	EntityGoldenMetrics,
 	GetServiceLevelTelemetryRequestType,
-	GoldenMetricsResult,
 	RelatedEntitiesByType,
 } from "@codestream/protocols/agent";
-import { HostApi } from "@codestream/webview/webview-api";
 import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import styled from "styled-components";
+
+import { HostApi } from "@codestream/webview/webview-api";
 import { useInterval } from "../utilities/hooks";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -24,7 +25,7 @@ interface SelectedOption {
 export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
-	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
+	const [entityGoldenMetrics, setEntityGoldenMetrics] = useState<EntityGoldenMetrics>();
 	const [selectedOption, setSelectedOption] = useState<SelectedOption | undefined>(undefined);
 	const [selectOptions, setSelectOptions] = useState<SelectedOption[]>([]);
 	const { searchItems } = props;
@@ -110,8 +111,8 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 				repoId: props.currentRepoId,
 				skipRepoFetch: true,
 			});
-			if (response?.goldenMetrics) {
-				setGoldenMetrics(response.goldenMetrics);
+			if (response?.entityGoldenMetrics) {
+				setEntityGoldenMetrics(response.entityGoldenMetrics);
 			}
 			setLoadingGoldenMetrics(false);
 		}
@@ -120,7 +121,7 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 	const handleChange = option => {
 		setSelectedOption(option);
 		if (!option) {
-			setGoldenMetrics([]);
+			setEntityGoldenMetrics(undefined);
 		}
 	};
 
@@ -156,7 +157,7 @@ export const ObservabilityRelatedSearch = React.memo((props: Props) => {
 					</SelectContainer>
 					{loadingGoldenMetrics && <div style={{ marginTop: "2px" }}> </div>}
 					<ObservabilityGoldenMetricDropdown
-						goldenMetrics={goldenMetrics}
+						entityGoldenMetrics={entityGoldenMetrics}
 						loadingGoldenMetrics={loadingGoldenMetrics}
 						noDropdown={true}
 					/>

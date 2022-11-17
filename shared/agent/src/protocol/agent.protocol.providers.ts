@@ -1404,12 +1404,11 @@ export interface GetMethodLevelTelemetryResponse {
 export interface GetServiceLevelTelemetryResponse {
 	newRelicEntityGuid: string;
 	newRelicUrl?: string;
-	goldenMetrics?: GoldenMetricsResult[];
+	entityGoldenMetrics?: EntityGoldenMetrics;
 	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
 	recentAlertViolations?: GetAlertViolationsResponse;
-	goldenMetricTransactionType?: string;
 }
 
 export interface GetAlertViolationsResponse {
@@ -1512,9 +1511,23 @@ export interface StackTraceResponse {
 }
 
 export type EntityType =
+	| "APM_APPLICATION_ENTITY"
+	| "APM_DATABASE_INSTANCE_ENTITY"
+	| "APM_EXTERNAL_SERVICE_ENTITY"
 	| "BROWSER_APPLICATION_ENTITY"
+	| "DASHBOARD_ENTITY"
+	| "EXTERNAL_ENTITY"
 	| "GENERIC_ENTITY"
-	| "MOBILE_APPLICATION_ENTITY";
+	| "GENERIC_INFRASTRUCTURE_ENTITY"
+	| "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY"
+	| "INFRASTRUCTURE_HOST_ENTITY"
+	| "KEY_TRANSACTION_ENTITY"
+	| "MOBILE_APPLICATION_ENTITY"
+	| "SECURE_CREDENTIAL_ENTITY"
+	| "SYNTHETIC_MONITOR_ENTITY"
+	| "THIRD_PARTY_SERVICE_ENTITY"
+	| "UNAVAILABLE_ENTITY"
+	| "WORKLOAD_ENTITY";
 
 export interface Entity {
 	account?: {
@@ -1738,6 +1751,51 @@ export interface ServiceGoldenMetricsQueryResult {
 			};
 		};
 	};
+}
+
+export interface EntityGoldenMetricsQueries {
+	actor: {
+		entity: {
+			goldenMetrics: {
+				metrics: {
+					definition: {
+						from: string;
+						select: string;
+						where?: string;
+					};
+					name: string;
+					title: string;
+					unit: string;
+				}[];
+			};
+		};
+	};
+}
+
+export interface EntityGoldenMetricsResults {
+	actor: {
+		entity: {
+			[name: string]: {
+				results: {
+					result:
+						| number
+						| {
+								[name: string]: number;
+						  };
+				}[];
+			};
+		};
+	};
+}
+
+export interface EntityGoldenMetrics {
+	metrics: {
+		name: string;
+		title: string;
+		unit: string;
+		value: number;
+		displayValue: string;
+	}[];
 }
 
 export interface GoldenMetricsResult {

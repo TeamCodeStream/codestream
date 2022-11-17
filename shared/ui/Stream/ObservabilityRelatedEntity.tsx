@@ -1,15 +1,16 @@
 import {
+	EntityGoldenMetrics,
 	GetAlertViolationsResponse,
 	GetNewRelicUrlRequestType,
 	GetServiceLevelTelemetryRequestType,
-	GoldenMetricsResult,
 	RelatedEntityByType,
 } from "@codestream/protocols/agent";
+import cx from "classnames";
+import React, { useEffect, useState } from "react";
+
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { HealthIcon } from "@codestream/webview/src/components/HealthIcon";
 import { HostApi } from "@codestream/webview/webview-api";
-import cx from "classnames";
-import React, { useEffect, useState } from "react";
 import { PaneNodeName } from "../src/components/Pane";
 import { useDidMount, useInterval } from "../utilities/hooks";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
@@ -25,7 +26,7 @@ interface Props {
 export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(true);
-	const [goldenMetrics, setGoldenMetrics] = useState<GoldenMetricsResult[]>([]);
+	const [entityGoldenMetrics, setEntityGoldenMetrics] = useState<EntityGoldenMetrics>();
 	const [newRelicUrl, setNewRelicUrl] = useState<string>("");
 	const [recentAlertViolations, setRecentAlertViolations] = useState<
 		GetAlertViolationsResponse | undefined
@@ -72,8 +73,8 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				skipRepoFetch: true,
 				fetchRecentAlertViolations: true,
 			});
-			if (response?.goldenMetrics) {
-				setGoldenMetrics(response.goldenMetrics);
+			if (response?.entityGoldenMetrics) {
+				setEntityGoldenMetrics(response.entityGoldenMetrics);
 				setRecentAlertViolations(response.recentAlertViolations);
 			}
 			setLoadingGoldenMetrics(false);
@@ -129,7 +130,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 			{expanded && (
 				<>
 					<ObservabilityGoldenMetricDropdown
-						goldenMetrics={goldenMetrics}
+						entityGoldenMetrics={entityGoldenMetrics}
 						loadingGoldenMetrics={loadingGoldenMetrics}
 						noDropdown={true}
 					/>

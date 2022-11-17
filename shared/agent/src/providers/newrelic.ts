@@ -97,11 +97,13 @@ import {
 	RelatedEntity,
 	RelatedEntityByRepositoryGuidsResult,
 	ReposScm,
-	ServiceGoldenMetricsQueryResult,
 	ServiceLevelObjectiveResult,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
+	EntityGoldenMetricsQueries,
+	EntityGoldenMetricsResults,
+	EntityGoldenMetrics,
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -2410,7 +2412,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 
 		try {
-			const goldenMetrics = await this.getGoldenMetrics(
+			const goldenMetrics = await this.getMethodLevelGoldenMetrics(
 				entity.entityGuid!,
 				request.metricTimesliceNameMapping
 			);
@@ -2457,23 +2459,13 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			recentAlertViolations = await this.getRecentAlertViolations(request.newRelicEntityGuid);
 		}
 
-		let primaryEntityTransactionType = "Web";
-		if (entity?.entityGuid && entity.accountId) {
-			primaryEntityTransactionType = await this.getPrimaryEntityTransactionType(
-				entity.accountId,
-				entity.entityGuid
-			);
-		}
-
 		try {
-			const serviceLevelGoldenMetrics = await this.getServiceGoldenMetrics(
-				entity?.entityGuid || request.newRelicEntityGuid,
-				primaryEntityTransactionType
+			const entityGoldenMetrics = await this.getEntityLevelGoldenMetrics(
+				entity?.entityGuid || request.newRelicEntityGuid
 			);
 
 			return {
-				goldenMetrics: serviceLevelGoldenMetrics,
-				goldenMetricTransactionType: primaryEntityTransactionType,
+				entityGoldenMetrics: entityGoldenMetrics,
 				newRelicEntityAccounts: observabilityRepo?.entityAccounts || [],
 				newRelicAlertSeverity: entity?.alertSeverity,
 				newRelicEntityName: entity?.entityName!,
@@ -2692,14 +2684,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 	}
 
-	async getGoldenMetrics(
+	async getMethodLevelGoldenMetrics(
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping
 	): Promise<GoldenMetricsResult[] | undefined> {
 		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
 
 		if (queries?.actor?.entity?.goldenMetrics) {
-			Logger.log("getGoldenMetrics has goldenMetrics", {
+			Logger.log("getMethodLevelGoldenMetrics has goldenMetrics", {
 				entityGuid,
 			});
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
@@ -2778,113 +2770,100 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					extrapolated: useExtrapolation,
 				};
 			});
-			Logger.log("getGoldenMetrics has response?", {
+			Logger.log("getMethodLevelGoldenMetrics has response?", {
 				entityGuid,
 				responseLength: response?.length,
 			});
 			return response;
 		}
-		Logger.log("getGoldenMetrics no response", {
+		Logger.log("getMethodLevelGoldenMetrics no response", {
 			entityGuid,
 		});
 		return undefined;
 	}
 
-	async getServiceGoldenMetrics(
-		entityGuid: string,
-		transactionType: string = "Web"
-	): Promise<GoldenMetricsResult[] | undefined> {
+	async getEntityLevelGoldenMetrics(entityGuid: string): Promise<EntityGoldenMetrics | undefined> {
 		try {
-			const parsedId = NewRelicProvider.parseId(entityGuid)!;
-			let query = `{
-					actor {			  
-					  account(id: ${parsedId.accountId}) {       
-						throughput: nrql(query: "SELECT rate(count(apm.service.transaction.duration), 1 minute) as 'throughput' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = '${transactionType}') LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
-						  }
-						}
-						errorRate: nrql(query: "SELECT count(apm.service.error.count) / count(apm.service.transaction.duration) as 'errors' FROM Metric WHERE (entity.guid = '${entityGuid}') AND (transactionType = '${transactionType}') LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
-						  }
-						}
-						responseTimeMs: nrql(query: "SELECT average(apm.service.overview.${transactionType?.toLowerCase()}) * 1000 as 'data' FROM Metric WHERE (entity.guid = '${entityGuid}') FACET \`segmentName\` LIMIT MAX SINCE 30 MINUTES AGO") {
-						  results
-						  metadata {
-							timeWindow {
-							  end
-							}
+			const entityGoldenMetricsQuery = `
+				{
+				  actor {
+					entity(guid: "${entityGuid}") {
+					  goldenMetrics {
+						metrics {
+						  title
+						  name
+						  unit
+						  definition {
+							from
+							where
+							select
 						  }
 						}
 					  }
 					}
 				  }
-				  `;
+				}
+			`;
 
-			const results = await this.query<ServiceGoldenMetricsQueryResult>(query);
-			const account = results?.actor?.account;
-			const response = [
-				{
-					name: "responseTimeMs",
-					result: [
-						{
-							// response times are reported for each "segment" of a request.
-							// "web" | "cache" | "db" | "etc" -- we need to add them up
-							// to get the total response times
-							responseTimeMs: account?.responseTimeMs?.results
-								? account.responseTimeMs.results.reduce(
-										(
-											sum: number,
-											item: {
-												facet: string;
-												data: number;
-												segmentName: string;
-											}
-										) => {
-											return sum + item.data;
-										},
-										0
-								  ) || 0
-								: 0,
-						},
-					],
-					timeWindow: account?.responseTimeMs?.metadata?.timeWindow?.end || 0,
-				},
-				{
-					name: "throughput",
-					result: [
-						{
-							throughput: account?.throughput?.results
-								? account.throughput.results[0]?.throughput || 0
-								: 0,
-						},
-					],
-					timeWindow: account?.throughput?.metadata?.timeWindow?.end || 0,
-				},
-				{
-					name: "errorRate",
-					result: [
-						{
-							// errors is a decimal here -- return it as a % with a * 100
-							errorRate: account?.errorRate?.results
-								? account.errorRate.results[0]?.errors * 100 || 0
-								: 0,
-						},
-					],
-					timeWindow: account?.errorRate?.metadata?.timeWindow?.end || 0,
-				},
-			];
+			const entityGoldenMetricsQueryResults = await this.query<EntityGoldenMetricsQueries>(
+				entityGoldenMetricsQuery
+			);
+			const metricDefinitions =
+				entityGoldenMetricsQueryResults?.actor?.entity?.goldenMetrics?.metrics;
 
-			return response;
+			if (metricDefinitions?.length == 0) {
+				return undefined;
+			}
+
+			let gmQuery = `
+				{
+					actor {
+						entity(guid: "${entityGuid}") {
+	    	`;
+
+			metricDefinitions.forEach(md => {
+				const whereClause = md.definition.where ? `WHERE ${md.definition.where}` : "";
+				gmQuery += `
+					${md.name}: nrdbQuery(nrql: "SELECT ${md.definition.select} AS 'result' FROM ${md.definition.from} ${whereClause} SINCE 30 MINUTES AGO", timeout: 10, async: true) {
+						results
+					}
+				`;
+			});
+
+			gmQuery += `}
+				}
+			}`;
+
+			const entityGoldenMetricsResults = await this.query<EntityGoldenMetricsResults>(gmQuery);
+			const metricResults = entityGoldenMetricsResults?.actor?.entity;
+
+			const metrics = metricDefinitions.map(md => {
+				const metricResult = metricResults[md.name]?.results[0].result;
+
+				let metricValue: number = NaN;
+
+				if (typeof metricResult === "number") {
+					metricValue = metricResult;
+				}
+				if (typeof metricResult === "object") {
+					const keys = Object.keys(metricResult);
+					metricValue = metricResult[keys[0]];
+				}
+
+				return {
+					name: md.name,
+					title: md.title,
+					unit: md.unit,
+					value: metricValue,
+					displayValue: this.toFixedNoRounding(metricValue, 2) ?? "Unknown",
+				};
+			});
+
+			return {
+				metrics: metrics,
+			};
 		} catch (ex) {
-			Logger.warn("getServiceGoldenMetrics no response", {
+			Logger.warn("getEntityGoldenMetrics no response", {
 				entityGuid,
 				error: ex,
 			});
@@ -3307,6 +3286,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						name
 						guid
 						type
+						entityType
 					  }
 					}
 					target {
@@ -3314,6 +3294,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						name
 						guid
 						type
+						entityType
 						tags {
 						  key
 						  values
@@ -3740,6 +3721,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						name
 						guid
 						type
+						entityType
 					  }
 					}
 					target {
@@ -3747,6 +3729,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						name
 						guid
 						type
+						entityType
 						tags {
 							key
 							values
