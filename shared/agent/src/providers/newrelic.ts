@@ -86,7 +86,7 @@ import {
 	GetServiceLevelTelemetryRequest,
 	GetServiceLevelTelemetryRequestType,
 	GetServiceLevelTelemetryResponse,
-	GoldenMetricsQueryResult,
+	MethodLevelGoldenMetricQueryResult,
 	GoldenMetricsResult,
 	MetricTimesliceNameMapping,
 	NewRelicErrorGroup,
@@ -2628,158 +2628,143 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		return repo;
 	}
 
-	private async getGoldenMetricsQueries(
+	private async getMethodLevelGoldenMetricQueries(
 		entityGuid: string,
 		metricTimesliceNameMapping?: MetricTimesliceNameMapping
-	): Promise<GoldenMetricsQueryResult> {
-		if (metricTimesliceNameMapping) {
-			return {
-				actor: {
-					entity: {
-						goldenMetrics: {
-							metrics: [
-								// duration
-								{
-									query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
-									extrapolationQuery: `SELECT average(duration) * 1000 AS 'Response time (ms)' FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["d"]}' FACET name EXTRAPOLATE TIMESERIES`,
-									title: "Response time (ms)",
-									name: "responseTimeMs",
-								},
-								// throughput
-								{
-									query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
-									extrapolationQuery: `SELECT rate(count(*), 1 minute) AS 'Throughput' FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["t"]}' FACET name EXTRAPOLATE TIMESERIES`,
-									title: "Throughput",
-									name: "throughput",
-								},
-								// error
-								{
-									query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}' AND metricTimesliceName='${metricTimesliceNameMapping["e"]}' FACET metricTimesliceName TIMESERIES`,
-									extrapolationQuery: `SELECT rate(count(*), 1 minute) AS \`errorsPerMinute\` FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["e"]}' AND \`error.group.guid\` IS NOT NULL FACET name EXTRAPOLATE TIMESERIES`,
-									title: "Error rate",
-									name: "errorRate",
-								},
-							],
-						},
-					},
-				},
-			};
-		} else {
-			return this.query(
-				`query getGoldenMetricsQueries($entityGuid:EntityGuid!) {
-					actor {
-						entity(guid: $entityGuid) {
-							goldenMetrics {
-								metrics {
-									query
-									title
-									name
-								}
-							}
-						}
-					}
-				}`,
-				{ entityGuid: entityGuid }
-			);
+	): Promise<MethodLevelGoldenMetricQueryResult | undefined> {
+		if (!metricTimesliceNameMapping) {
+			return undefined;
 		}
+
+		return {
+			metricQueries: [
+				// duration
+				{
+					query: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Response time (ms)' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["d"]}' TIMESERIES`,
+					extrapolationQuery: `SELECT average(duration) * 1000 AS 'Response time (ms)' FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["d"]}' FACET name EXTRAPOLATE TIMESERIES`,
+					title: "Response time (ms)",
+					name: "responseTimeMs",
+				},
+				// throughput
+				{
+					query: `SELECT count(newrelic.timeslice.value) AS 'Throughput' FROM Metric WHERE entity.guid IN ('${entityGuid}') AND metricTimesliceName='${metricTimesliceNameMapping["t"]}' TIMESERIES`,
+					extrapolationQuery: `SELECT rate(count(*), 1 minute) AS 'Throughput' FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["t"]}' FACET name EXTRAPOLATE TIMESERIES`,
+					title: "Throughput",
+					name: "throughput",
+				},
+				// error
+				{
+					query: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS \`errorsPerMinute\` FROM Metric WHERE \`entity.guid\` = '${entityGuid}' AND metricTimesliceName='${metricTimesliceNameMapping["e"]}' FACET metricTimesliceName TIMESERIES`,
+					extrapolationQuery: `SELECT rate(count(*), 1 minute) AS \`errorsPerMinute\` FROM Span WHERE entity.guid IN ('${entityGuid}') AND name='${metricTimesliceNameMapping["e"]}' AND \`error.group.guid\` IS NOT NULL FACET name EXTRAPOLATE TIMESERIES`,
+					title: "Error rate",
+					name: "errorRate",
+				},
+			],
+		};
 	}
 
 	async getMethodLevelGoldenMetrics(
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping
 	): Promise<GoldenMetricsResult[] | undefined> {
-		const queries = await this.getGoldenMetricsQueries(entityGuid, metricTimesliceNames);
+		const queries = await this.getMethodLevelGoldenMetricQueries(entityGuid, metricTimesliceNames);
 
-		if (queries?.actor?.entity?.goldenMetrics) {
-			Logger.log("getMethodLevelGoldenMetrics has goldenMetrics", {
+		if (!queries?.metricQueries) {
+			Logger.log("getMethodLevelGoldenMetrics no response", {
 				entityGuid,
 			});
-			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+			return undefined;
+		}
 
-			const results = await Promise.all(
-				queries.actor.entity.goldenMetrics.metrics.map(_ => {
-					let _query = _.query;
+		Logger.log("getMethodLevelGoldenMetrics has goldenMetrics", {
+			entityGuid,
+		});
 
-					// if no metricTimesliceNames, then we don't need TIMESERIES in query
-					if (!metricTimesliceNames) {
-						_query = _query.replace(/TIMESERIES/, "");
-					}
+		const parsedId = NewRelicProvider.parseId(entityGuid)!;
 
-					const q = `query getMetric($accountId: Int!) {
-						actor {
-						  account(id: $accountId) {
-							metrics: nrql(query: "${escapeNrql(_query)}") {
-							  results
-							  metadata {
-								timeWindow {
-								  end
-								}
-							  }
+		const results = await Promise.all(
+			queries.metricQueries.map(_ => {
+				let _query = _.query;
+
+				// if no metricTimesliceNames, then we don't need TIMESERIES in query
+				if (!metricTimesliceNames) {
+					_query = _query.replace(/TIMESERIES/, "");
+				}
+
+				// TODO: 1 query / api call per metric - combine into a single query / call and parse results.
+
+				const q = `query getMetric($accountId: Int!) {
+					actor {
+					  account(id: $accountId) {
+						metrics: nrql(query: "${escapeNrql(_query)}") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
 							}
-							extrapolations: nrql(query: "${escapeNrql(_.extrapolationQuery || "")}") {
-							  results
-							  metadata {
-								timeWindow {
-								  end
-								}
-							  }
+						  }
+						}
+						extrapolations: nrql(query: "${escapeNrql(_.extrapolationQuery || "")}") {
+						  results
+						  metadata {
+							timeWindow {
+							  end
 							}
 						  }
 						}
 					  }
-					  `;
-					return this.query(q, {
-						accountId: parsedId.accountId,
-					}).catch(ex => {
-						Logger.warn(ex);
-					});
-				})
-			);
+					}
+				  }
+				  `;
+				return this.query(q, {
+					accountId: parsedId.accountId,
+				}).catch(ex => {
+					Logger.warn(ex);
+				});
+			})
+		);
 
-			const response = queries.actor.entity.goldenMetrics.metrics.map((_, i) => {
-				const account = results[i].actor.account;
-				const useExtrapolation =
-					!account.metrics.results.some((r: any) => r[_.title]) &&
-					account.extrapolations?.results?.length > 0;
-				const metricsOrExtrapolations = useExtrapolation ? account.extrapolations : account.metrics;
-				if (i === 2) {
-					// TODO this isn't great
-					// fix up the title for this one since the element title != the parent's title
-					_.title = "Error rate";
-					metricsOrExtrapolations.results.forEach((element: any) => {
-						element["Error rate"] = element["errorsPerMinute"]
-							? element["errorsPerMinute"].toFixed(2)
-							: null;
-					});
-				}
-				return {
-					..._,
-					result: metricsOrExtrapolations.results.map((r: any) => {
-						const ms = r.endTimeSeconds * 1000;
-						const date = new Date(ms);
+		const response = queries.metricQueries.map((_, i) => {
+			const account = results[i].actor.account;
+			const useExtrapolation =
+				!account.metrics.results.some((r: any) => r[_.title]) &&
+				account.extrapolations?.results?.length > 0;
+			const metricsOrExtrapolations = useExtrapolation ? account.extrapolations : account.metrics;
+			if (i === 2) {
+				// TODO this isn't great
+				// fix up the title for this one since the element title != the parent's title
+				_.title = "Error rate";
+				metricsOrExtrapolations.results.forEach((element: any) => {
+					element["Error rate"] = element["errorsPerMinute"]
+						? element["errorsPerMinute"].toFixed(2)
+						: null;
+				});
+			}
+			return {
+				..._,
+				result: metricsOrExtrapolations.results.map((r: any) => {
+					const ms = r.endTimeSeconds * 1000;
+					const date = new Date(ms);
 
-						return {
-							...r,
-							["Response time (ms)"]: r["Response time (ms)"]
-								? r["Response time (ms)"].toFixed(2)
-								: null,
-							endDate: date,
-						};
-					}),
-					timeWindow: metricsOrExtrapolations.metadata?.timeWindow?.end,
-					extrapolated: useExtrapolation,
-				};
-			});
-			Logger.log("getMethodLevelGoldenMetrics has response?", {
-				entityGuid,
-				responseLength: response?.length,
-			});
-			return response;
-		}
-		Logger.log("getMethodLevelGoldenMetrics no response", {
-			entityGuid,
+					return {
+						...r,
+						["Response time (ms)"]: r["Response time (ms)"]
+							? r["Response time (ms)"].toFixed(2)
+							: null,
+						endDate: date,
+					};
+				}),
+				timeWindow: metricsOrExtrapolations.metadata?.timeWindow?.end,
+				extrapolated: useExtrapolation,
+			};
 		});
-		return undefined;
+
+		Logger.log("getMethodLevelGoldenMetrics has response?", {
+			entityGuid,
+			responseLength: response?.length,
+		});
+
+		return response;
 	}
 
 	async getEntityLevelGoldenMetrics(entityGuid: string): Promise<EntityGoldenMetrics | undefined> {

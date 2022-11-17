@@ -1,7 +1,4 @@
-import {
-	EntityGoldenMetrics,
-	GetAlertViolationsResponse,
-} from "@codestream/protocols/agent";
+import { EntityGoldenMetrics, GetAlertViolationsResponse } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useState } from "react";
 import styled from "styled-components";
@@ -48,29 +45,21 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const unitMappings: UnitMappings = {
 		APDEX: "apdex",
 		BITS: "bits",
-		BITS_PER_SECOND: "bits ps",
+		BITS_PER_SECOND: "bits/s",
 		BYTES: "bytes",
-		BYTES_PER_SECOND: "bytes ps",
+		BYTES_PER_SECOND: "bytes/s",
 		CELSIUS: "c",
 		COUNT: "",
 		HERTZ: "hz",
-		MESSAGES_PER_SECOND: "mps",
+		MESSAGES_PER_SECOND: "messages/s",
 		MS: "ms",
-		OPERATIONS_PER_SECOND: "ops",
-		PAGES_PER_SECOND: "ppm",
+		OPERATIONS_PER_SECOND: "operations/s",
+		PAGES_PER_SECOND: "pages/s",
 		PERCENTAGE: "%",
-		REQUESTS_PER_MINUTE: "rpm",
-		REQUESTS_PER_SECOND: "rps",
+		REQUESTS_PER_MINUTE: "req/m",
+		REQUESTS_PER_SECOND: "req/s",
 		SECONDS: "s",
 		TIMESTAMP: "time",
-	};
-
-	const tooltipMappings: TooltipMappings = {
-		responseTimeMs: "This shows the average time this service spends processing web requests.",
-		throughput:
-			"Throughput measures how many requests this service processes per minute. It will help you find your busiest service.",
-		errorRate:
-			"Error rate is the percentage of transactions that result in an error during a particular time range.",
 	};
 
 	const goldenMetricOutput = () => {
@@ -78,7 +67,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			<>
 				{entityGoldenMetrics?.metrics.map(gm => {
 					const goldenMetricDisplayUnit = unitMappings[gm?.unit];
-					const goldenMetricTooltip = tooltipMappings[gm?.name];
 
 					return (
 						<Row
@@ -89,16 +77,6 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						>
 							<div>
 								<span style={{ marginRight: "5px" }}>{gm.title}</span>
-								{goldenMetricTooltip && (
-									<Icon
-										style={{ transform: "scale(0.9)" }}
-										name="info"
-										className="clickable"
-										title={goldenMetricTooltip}
-										placement="bottomRight"
-										delay={1}
-									/>
-								)}
 							</div>
 
 							<div className="icons">

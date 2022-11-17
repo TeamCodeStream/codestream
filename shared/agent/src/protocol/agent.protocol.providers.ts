@@ -1679,19 +1679,13 @@ export interface ProviderGetForkedReposResponse {
 	error?: { message?: string; type: string };
 }
 
-export interface GoldenMetricsQueryResult {
-	actor: {
-		entity: {
-			goldenMetrics: {
-				metrics: {
-					query: string;
-					extrapolationQuery?: string;
-					title: string;
-					name: string;
-				}[];
-			};
-		};
-	};
+export interface MethodLevelGoldenMetricQueryResult {
+	metricQueries: {
+		query: string;
+		extrapolationQuery?: string;
+		title: string;
+		name: string;
+	}[];
 }
 
 export interface GetAlertViolationsQueryResult {
