@@ -1124,7 +1124,7 @@ export const Observability = React.memo((props: Props) => {
 																									/>
 																								</>
 																							}
-																							{
+																							{ea.domain === "APM" && (
 																								<>
 																									{observabilityErrors?.find(
 																										oe => oe?.repoId === _observabilityRepo?.repoId
@@ -1142,7 +1142,7 @@ export const Observability = React.memo((props: Props) => {
 																										</>
 																									)}
 																								</>
-																							}
+																							)}
 																						</>
 																					)}
 																				</>
