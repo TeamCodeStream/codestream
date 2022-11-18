@@ -2849,7 +2849,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 
 			return {
-				lastUpdated: `Updated at: ${new Date().toLocaleString()}`,
+				lastUpdated: `Updated at ${new Date().toLocaleString()}`,
 				metrics: metrics,
 			};
 		} catch (ex) {
