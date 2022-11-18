@@ -1708,45 +1708,6 @@ export interface RecentAlertViolation {
 	violationUrl: string;
 }
 
-export interface ServiceGoldenMetricsQueryResult {
-	actor: {
-		account: {
-			throughput: {
-				results: {
-					throughput: number;
-				}[];
-				metadata: {
-					timeWindow: {
-						end: number;
-					};
-				};
-			};
-			errorRate: {
-				results: {
-					errors: number;
-				}[];
-				metadata: {
-					timeWindow: {
-						end: number;
-					};
-				};
-			};
-			responseTimeMs: {
-				results: {
-					facet: string;
-					data: number;
-					segmentName: string;
-				}[];
-				metadata: {
-					timeWindow: {
-						end: number;
-					};
-				};
-			};
-		};
-	};
-}
-
 export interface EntityGoldenMetricsQueries {
 	actor: {
 		entity: {
@@ -1771,7 +1732,7 @@ export interface EntityGoldenMetricsResults {
 		entity: {
 			[name: string]: {
 				results: {
-					result:
+					result?:
 						| number
 						| {
 								[name: string]: number;
@@ -1792,7 +1753,7 @@ export interface EntityGoldenMetrics {
 	}[];
 }
 
-export interface GoldenMetricsResult {
+export interface MethodGoldenMetrics {
 	/** the NR query we are running */
 	query?: string;
 	/** this name is more like a "key" */

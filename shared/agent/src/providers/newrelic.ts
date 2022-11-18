@@ -87,7 +87,7 @@ import {
 	GetServiceLevelTelemetryRequestType,
 	GetServiceLevelTelemetryResponse,
 	MethodLevelGoldenMetricQueryResult,
-	GoldenMetricsResult,
+	MethodGoldenMetrics,
 	MetricTimesliceNameMapping,
 	NewRelicErrorGroup,
 	ObservabilityError,
@@ -2666,7 +2666,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getMethodLevelGoldenMetrics(
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping
-	): Promise<GoldenMetricsResult[] | undefined> {
+	): Promise<MethodGoldenMetrics[] | undefined> {
 		const queries = await this.getMethodLevelGoldenMetricQueries(entityGuid, metricTimesliceNames);
 
 		if (!queries?.metricQueries) {
@@ -2827,14 +2827,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 				let metricValue: number = NaN;
 
-				if (typeof metricResult === "number") {
-					metricValue = metricResult;
-				}
-				if (typeof metricResult === "object") {
-					const keys = Object.keys(metricResult);
-					metricValue = metricResult[keys[0]];
-				}
+				if (metricResult !== null && metricResult !== undefined) {
+					if (typeof metricResult === "number") {
+						metricValue = metricResult;
+					}
 
+					if (typeof metricResult === "object") {
+						const keys = Object.keys(metricResult);
+						metricValue = metricResult[keys[0]];
+					}
+				}
 				return {
 					name: md.name,
 					title: md.title,

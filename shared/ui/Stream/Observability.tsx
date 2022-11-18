@@ -608,11 +608,11 @@ export const Observability = React.memo((props: Props) => {
 				repoId: currentRepoId,
 				fetchRecentAlertViolations: true,
 			});
-			if (response?.entityGoldenMetrics) {
-				setEntityGoldenMetrics(response.entityGoldenMetrics);
-				setRecentAlertViolations(response.recentAlertViolations);
-				setNewRelicUrl(response.newRelicUrl);
-			}
+
+			setEntityGoldenMetrics(response.entityGoldenMetrics);
+			setRecentAlertViolations(response.recentAlertViolations);
+			setNewRelicUrl(response.newRelicUrl);
+
 			setLoadingGoldenMetrics(false);
 		}
 	};
