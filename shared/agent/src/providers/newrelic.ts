@@ -2838,9 +2838,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						metricValue = metricResult[keys[0]];
 					}
 				}
+
+				// Given a title like "Throughput (ppm)", remove the "(ppm)" part only
+				// Given a title like "First input delay (75 percentile) (ms)", remove the "(ms)" part only
+				const title = md.title.replace(/\(.{1,3}?\)/, "").trim();
+
 				return {
 					name: md.name,
-					title: md.title,
+					title: title,
 					unit: md.unit,
 					displayUnit: GoldenMetricUnitMappings[md.unit],
 					value: metricValue,
@@ -2849,7 +2854,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			});
 
 			return {
-				lastUpdated: `Updated at ${new Date().toLocaleString()}`,
+				lastUpdated: new Date().toLocaleString(),
 				metrics: metrics,
 			};
 		} catch (ex) {
