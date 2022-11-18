@@ -1,11 +1,8 @@
 import { ServiceLevelObjectiveResult } from "@codestream/protocols/agent";
 import React, { useState } from "react";
-import { shallowEqual } from "react-redux";
 
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { CodeStreamState } from "@codestream/webview/store";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
-import { useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -24,7 +21,7 @@ export const ObjectiveRow = (props: {
 	const sloColor = props.objectiveResult === "UNDER" ? "rgb(188,20,24)" : "#6a6";
 
 	return (
-		<Row className={"pr-row"} style={{ padding: "0 10px 0 40px" }}>
+		<Row className={"pr-row no-shrink"} style={{ padding: "0 10px 0 40px" }}>
 			<div>
 				<Tooltip delay={1} placement="bottom" title={props.objectiveName}>
 					<span>{props.objectiveName}</span>
@@ -60,12 +57,6 @@ export const ObjectiveRow = (props: {
 export const ObservabilityServiceLevelObjectives = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const { serviceLevelObjectives } = props;
-
-	const derivedState = useAppSelector((state: CodeStreamState) => {
-		return {
-			ideName: encodeURIComponent(state.ide.name || ""),
-		};
-	}, shallowEqual);
 
 	const unmetObjectives = serviceLevelObjectives.filter(v => {
 		return v.result === "UNDER";

@@ -1387,10 +1387,22 @@ export const Row = styled.div`
 			display: none;
 		}
 	}
+
 	&:not(.disabled):not(.no-hover):hover {
 		background: var(--app-background-color-hover);
 		color: var(--text-color-highlight);
 	}
+
+	&.no-shrink > div,
+	&.no-shrink:hover > div {
+		&:nth-child(1) {
+			flex-shrink: unset;
+		}
+		&:nth-child(2) {
+			overflow: initial;
+		}
+	}
+
 	span.subtle {
 		display: inline-block;
 		padding-left: 15px;

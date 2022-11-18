@@ -1743,11 +1743,37 @@ export interface EntityGoldenMetricsResults {
 	};
 }
 
+interface UnitMappings {
+	[name: string]: string;
+}
+
+export const GoldenMetricUnitMappings: UnitMappings = {
+	APDEX: "apdex",
+	BITS: "bits",
+	BITS_PER_SECOND: "bits/s",
+	BYTES: "bytes",
+	BYTES_PER_SECOND: "bytes/s",
+	CELSIUS: "C",
+	COUNT: "",
+	HERTZ: "Hz",
+	MESSAGES_PER_SECOND: "messages/s",
+	MS: "ms",
+	OPERATIONS_PER_SECOND: "operations/s",
+	PAGES_PER_SECOND: "pages/s",
+	PERCENTAGE: "%",
+	REQUESTS_PER_MINUTE: "req/m",
+	REQUESTS_PER_SECOND: "req/s",
+	SECONDS: "s",
+	TIMESTAMP: "time",
+};
+
 export interface EntityGoldenMetrics {
+	lastUpdated: string;
 	metrics: {
 		name: string;
 		title: string;
 		unit: string;
+		displayUnit: string;
 		value: number;
 		displayValue: string;
 	}[];

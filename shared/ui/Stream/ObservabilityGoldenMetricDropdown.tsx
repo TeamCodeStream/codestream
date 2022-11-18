@@ -14,58 +14,32 @@ interface Props {
 	recentAlertViolations?: GetAlertViolationsResponse;
 }
 
-interface UnitMappings {
-	[name: string]: string;
-}
-
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const { entityGoldenMetrics, loadingGoldenMetrics, noDropdown, recentAlertViolations } = props;
-
-	const unitMappings: UnitMappings = {
-		APDEX: "apdex",
-		BITS: "bits",
-		BITS_PER_SECOND: "bits/s",
-		BYTES: "bytes",
-		BYTES_PER_SECOND: "bytes/s",
-		CELSIUS: "C",
-		COUNT: "",
-		HERTZ: "Hz",
-		MESSAGES_PER_SECOND: "messages/s",
-		MS: "ms",
-		OPERATIONS_PER_SECOND: "operations/s",
-		PAGES_PER_SECOND: "pages/s",
-		PERCENTAGE: "%",
-		REQUESTS_PER_MINUTE: "req/m",
-		REQUESTS_PER_SECOND: "req/s",
-		SECONDS: "s",
-		TIMESTAMP: "time",
-	};
 
 	const goldenMetricOutput = () => {
 		return (
 			<>
 				{entityGoldenMetrics?.metrics.map(gm => {
-					const goldenMetricDisplayUnit = unitMappings[gm?.unit];
-
 					return (
 						<Row
 							style={{
 								padding: noDropdown ? "0 10px 0 60px" : "0 10px 0 42px",
 							}}
-							className={"pr-row"}
+							className={"pr-row no-shrink"}
 						>
-							<div style={{ flexShrink: "unset" }}>
+							<div>
 								<Tooltip placement="topRight" title={gm.title} delay={1}>
 									<span style={{ marginRight: "5px" }}>{gm.title}</span>
 								</Tooltip>
 							</div>
 
-							<div className="icons" style={{ overflow: "initial" }}>
+							<div className="icons">
 								<span className={"details"}>
 									{gm.value || gm.value === 0 ? (
 										<>
-											{gm.displayValue} {goldenMetricDisplayUnit && <>{goldenMetricDisplayUnit}</>}
+											{gm.displayValue} {gm.displayUnit && <>{gm.displayUnit}</>}
 										</>
 									) : (
 										<>No Data</>
@@ -93,7 +67,15 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 						{expanded && <Icon name="chevron-down-thin" />}
 						{!expanded && <Icon name="chevron-right-thin" />}
 						<span style={{ margin: "0 5px 0 2px" }}>Golden Metrics</span>
-						<span className="subtle-tight">(last 30 minutes)</span>
+						{entityGoldenMetrics?.lastUpdated && (
+							<Icon
+								style={{ transform: "scale(0.8)" }}
+								name="clock"
+								className="clickable"
+								title={entityGoldenMetrics?.lastUpdated}
+								delay={1}
+							/>
+						)}
 					</Row>
 				</>
 			)}

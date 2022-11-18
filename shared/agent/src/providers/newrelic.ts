@@ -104,6 +104,7 @@ import {
 	EntityGoldenMetricsQueries,
 	EntityGoldenMetricsResults,
 	EntityGoldenMetrics,
+	GoldenMetricUnitMappings,
 } from "../protocol/agent.protocol";
 import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
@@ -2841,12 +2842,14 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					name: md.name,
 					title: md.title,
 					unit: md.unit,
+					displayUnit: GoldenMetricUnitMappings[md.unit],
 					value: metricValue,
 					displayValue: this.toFixedNoRounding(metricValue, 2) ?? "Unknown",
 				};
 			});
 
 			return {
+				lastUpdated: `Updated at: ${new Date().toLocaleString()}`,
 				metrics: metrics,
 			};
 		} catch (ex) {
