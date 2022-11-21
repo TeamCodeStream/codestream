@@ -1622,7 +1622,9 @@ export class CodeStreamSession {
 						key => `${key}|${company.testGroups![key]}`
 					);
 				}
-				props["NR Connected Org"] = !!company.isNRConnected;
+				props["CodeStream Only"] = !!company.codestreamOnly;
+				props["Org Origination"] = company.orgOrigination || "";
+				props["NR Organization ID"] = company.linkedNROrgId || "";
 			}
 		}
 
@@ -1637,20 +1639,6 @@ export class CodeStreamSession {
 		props["First Session"] =
 			!!user.firstSessionStartedAt &&
 			user.firstSessionStartedAt <= Date.now() + FIRST_SESSION_TIMEOUT;
-
-		if (user.providerInfo) {
-			const data =
-				(team && user.providerInfo[team.id]?.newrelic?.data) || user.providerInfo.newrelic?.data;
-			if (data) {
-				if (data.userId) {
-					props["NR User ID"] = data.userId;
-					props["NR Connected Org"] = true;
-				}
-				if (data?.orgIds && data.orgIds?.length) {
-					props["NR Organization ID"] = data?.orgIds[0];
-				}
-			}
-		}
 
 		let userId = this._codestreamUserId || user.id;
 
@@ -1680,7 +1668,6 @@ export class CodeStreamSession {
 		return this.addSuperProps({
 			"NR User ID": userId,
 			"NR Organization ID": orgId,
-			"NR Connected Org": true,
 		});
 	}
 

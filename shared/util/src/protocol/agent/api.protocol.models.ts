@@ -488,6 +488,8 @@ export interface CSCompany extends CSEntity {
 	switchToServerUrl?: string;
 	memberCount?: number;
 	codestreamOnly?: boolean;
+	orgOrigination?: string;
+	linkedNROrgId?: string;
 }
 
 export interface CSTeam extends CSEntity {

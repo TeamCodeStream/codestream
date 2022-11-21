@@ -367,6 +367,7 @@ export class NewRelicProvider
 
 	@log()
 	async configure(config: ProviderConfigurationData, verify?: boolean): Promise<boolean> {
+		// FIXME: this whole method of configuring New Relic by key should go away with Unified Identity
 		if (verify) {
 			if (!(await super.configure(config, true))) return false;
 		}
