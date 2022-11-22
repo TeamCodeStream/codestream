@@ -374,9 +374,8 @@ export const MethodLevelTelemetryPanel = () => {
 											telemetryResponse.goldenMetrics &&
 											telemetryResponse.goldenMetrics.map((_, index) => {
 												// hide charts with no data.
-												if (_.result?.length === 0) return null;
+												if (!_?.result || _.result?.length === 0) return null;
 												const title = _.title + (_.extrapolated ? " (extrapolated)" : "");
-
 												return (
 													<div
 														key={"chart-" + index}
