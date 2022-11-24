@@ -29,8 +29,8 @@ SOFTWARE.
  */
 import { Logger } from "../../logger";
 import { LogCorrelationContext, TraceLevel } from "../../types";
-import { Functions } from "./../function";
-import { Strings } from "./../string";
+import { Functions } from "../function";
+import { Strings } from "../../system";
 
 const correlationContext = new Map<number, LogCorrelationContext>();
 let correlationCounter = 0;

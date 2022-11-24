@@ -1,9 +1,10 @@
 "use strict";
+import { ReportingMessageType } from "@codestream/protocols/agent";
+import { CSEntity, CSMarkerLocations } from "@codestream/protocols/api";
+
 import { RawRTMessage } from "../api/apiProvider";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
-import { ReportingMessageType } from "../protocol/agent.protocol";
-import { CSEntity, CSMarkerLocations } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
 import { debug, log } from "../system";
 import { IndexParams } from "./cache";

@@ -619,7 +619,7 @@
 		"lint": "eslint --fix --ext .ts \"src/{**!(webviews)/*,*}\"",
 		"pack": "vsce package",
 		"postinstall": "patch-package",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
 		"pretty": "prettier  --write \"./src/**/*.ts\" \"./src/**/*.js\" ./package.json ./.prettierrc.js",
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"test": "npm run agent:test && npm run webview:test && npm run vscode:test",
@@ -633,7 +633,7 @@
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:test:ci": "pushd \"../shared/ui\" && npm run test:ci && popd",
 		"webview:test": "pushd \"../shared/ui\" && npm run test && popd",
-		"webview:verify": "tsx esbuild.ts --only-symlinks && pushd \"../shared/ui\" && npm run verify:compile && popd",
+		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd",
 		"webview:watch": "tsx esbuild.ts --watch --config-name webview"
 	},
 	"dependencies": {
@@ -663,7 +663,7 @@
 		"@vscode/test-electron": "2.1.2",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "9.0.1",
-		"esbuild": "0.15.12",
+		"esbuild": "0.16.12",
 		"eslint": "8.26.0",
 		"eslint-filtered-fix": "0.3.0",
 		"eslint-import-resolver-typescript": "3.5.2",
@@ -674,12 +674,12 @@
 		"lint-staged": "13.0.3",
 		"mocha": "9.2.1",
 		"patch-package": "6.4.7",
-		"prettier": "2.7.1",
+		"prettier": "2.8.1",
 		"rimraf": "3.0.2",
 		"sinon": "14.0.0",
 		"tsc-alias": "1.7.0",
-		"tsx": "3.9.0",
-		"typescript": "4.8.4",
+		"tsx": "3.12.1",
+		"typescript": "4.9.4",
 		"vsce": "2.6.7"
 	},
 	"lint-staged": {

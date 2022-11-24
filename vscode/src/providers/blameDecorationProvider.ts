@@ -1,6 +1,7 @@
 "use strict";
 
-import { GetBlameLineInfo } from "protocols/agent/agent.protocol.scm";
+import { GetBlameLineInfo } from "@codestream/protocols/agent";
+import { Functions } from "system";
 import {
 	ConfigurationChangeEvent,
 	Disposable,
@@ -16,7 +17,6 @@ import {
 	workspace
 } from "vscode";
 
-import { Functions } from "system";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { NewCodemarkCommandArgs } from "../commands";
 import { configuration } from "../configuration";

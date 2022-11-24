@@ -1,6 +1,6 @@
 "use strict";
 import * as qs from "querystring";
-import { Logger } from "../logger";
+
 import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
@@ -16,8 +16,10 @@ import {
 	ShortcutStory,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
-} from "../protocol/agent.protocol";
-import { CSShortcutProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSShortcutProviderInfo } from "@codestream/protocols/api";
+
+import { Logger } from "../logger";
 import { log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 

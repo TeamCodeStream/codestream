@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
+import { TernarySearchTree } from "@codestream/utils/system/searchTree";
 
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -27,7 +28,6 @@ import {
 	getPullRequestId,
 } from "../store/providerPullRequests/slice";
 import { useDidMount } from "../utilities/hooks";
-import { TernarySearchTree } from "../utilities/searchTree";
 import { Meta, MetaLabel } from "./Codemark/BaseCodemark";
 import Icon from "./Icon";
 import { Link } from "./Link";

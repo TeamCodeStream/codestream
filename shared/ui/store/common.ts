@@ -2,6 +2,7 @@ import {
 	ConnectionStatus,
 	DidChangeConnectionStatusNotificationType,
 } from "@codestream/protocols/agent";
+
 import { errorDismissed, errorOccurred } from "@codestream/webview/store/connectivity/actions";
 import { Disposable } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -45,10 +46,6 @@ export function action<T extends StringType, P = undefined, M = undefined>(
 export interface Action<T> {
 	type: T;
 	[key: string]: any;
-}
-
-export interface Index<T> {
-	[key: string]: T;
 }
 
 type DispatchReturn<ActionOrAsyncCreator extends any> = ActionOrAsyncCreator extends Action<any>

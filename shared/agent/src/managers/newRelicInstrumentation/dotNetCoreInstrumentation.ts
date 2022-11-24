@@ -9,7 +9,8 @@ import {
 	DidChangeProcessBufferNotificationType,
 	InstallNewRelicResponse,
 	Project,
-} from "../../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
 import { CodeStreamSession } from "../../session";
 
 export class DotNetCoreInstrumentation {

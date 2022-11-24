@@ -16,7 +16,7 @@ import {
 	TrelloList,
 	YouTrackBoard,
 } from "@codestream/protocols/agent";
-import { Index } from "../common";
+import { Index } from "@codestream/utils/types";
 
 export interface ActiveIntegrationData<T = ThirdPartyProviderBoard> {
 	isLoading?: boolean;

@@ -10,6 +10,7 @@
 		"url": ""
 	},
 	"scripts": {
+
 		"build": "npm run agent:build && tsx esbuild.ts --prod",
 		"bundle": "npm install --no-save && npm run webview:verify && npm run agent:bundle && npm run agent:pkg && tsx esbuild.ts --prod",
 		"bundle:mac": "npm run agent:bundle && npm run agent:pkg:mac && tsx esbuild.ts --prod",
@@ -26,8 +27,8 @@
 		"agent:test": "pushd \"../shared/agent\" && npm run test && popd",
 		"agent:watch": "pushd \"../shared/agent\" && npm run watch -- --ide jb && popd",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
-		"webview:verify": "tsx esbuild.ts --only-symlinks && pushd \"../shared/ui\" && npm run verify:compile && popd",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd"
+		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/agent\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd  && pushd \"../shared/build\" && npm install --no-save && popd"
 	},
 	"dependencies": {
 		"core-js": "2.6.9"
@@ -41,14 +42,15 @@
 		"@typescript-eslint/eslint-plugin": "5.41.0",
 		"@typescript-eslint/eslint-plugin-tslint": "5.41.0",
 		"@typescript-eslint/parser": "5.41.0",
-		"esbuild": "0.15.12",
+		"esbuild": "0.16.12",
 		"esbuild-plugin-alias": "0.2.1",
-		"esbuild-plugin-less": "1.1.9",
+		"esbuild-plugin-less": "1.1.11",
 		"eslint": "8.26.0",
 		"less": "4.1.2",
-		"prettier": "2.7.1",
+		"prettier": "2.8.1",
 		"tslint": "6.1.3",
-		"tsx": "^3.9.0",
-		"typescript": "4.8.3"
+		"tsx": "^3.12.1",
+		"typescript": "4.9.4",
+		"vscode-languageclient": "5.2.1"
 	}
 }

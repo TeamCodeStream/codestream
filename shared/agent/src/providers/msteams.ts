@@ -1,7 +1,5 @@
 "use strict";
-import { sortBy } from "lodash";
-
-import { SessionContainer } from "../container";
+import { sortBy } from "lodash-es";
 import {
 	AgentOpenUrlRequestType,
 	CreateThirdPartyPostRequest,
@@ -9,8 +7,10 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
 	ThirdPartyDisconnect,
-} from "../protocol/agent.protocol";
-import { CSMSTeamsProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSMSTeamsProviderInfo } from "@codestream/protocols/api";
+
+import { SessionContainer } from "../container";
 import { log, lspProvider } from "../system";
 import { ThirdPartyPostProviderBase } from "./thirdPartyPostProviderBase";
 import { Logger } from "../logger";

@@ -1,6 +1,7 @@
 "use strict";
+import { CSEntity } from "@codestream/protocols/api";
+
 import { RawRTMessage } from "../api/apiProvider";
-import { CSEntity } from "../protocol/api.protocol";
 import { CodeStreamSession } from "../session";
 import { log } from "../system";
 import { ManagerBase } from "./baseManager";

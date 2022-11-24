@@ -9,7 +9,7 @@ import {
 	DidDetectUnreviewedCommitsNotification,
 	FollowReviewRequestType,
 	ReviewPlus
-} from "../protocols/agent/agent.protocol";
+} from "@codestream/protocols/agent";
 import { Functions } from "../system";
 
 type ToastType = "PR" | "Review" | "Codemark";

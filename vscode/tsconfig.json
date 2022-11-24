@@ -1,11 +1,11 @@
 {
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"allowSyntheticDefaultImports": true,
 		"baseUrl": "src",
 		"esModuleInterop": true,
 		"emitDecoratorMetadata": true,
 		"experimentalDecorators": true,
-		"incremental": false,
 		"lib": ["ES2020"],
 		"module": "commonjs",
 		"moduleResolution": "node",
@@ -14,9 +14,10 @@
 		"noUnusedLocals": false,
 		"outDir": "dist",
 		"paths": {
-			"@codestream/protocols/agent": ["protocols/agent/agent.protocol.ts"],
-			"@codestream/protocols/api": ["protocols/agent/api.protocol.ts"],
-			"@codestream/protocols/webview": ["protocols/webview/webview.protocol.ts"]
+			"@codestream/protocols/agent": ["../../shared/util/src/protocol/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["../../shared/util/src/protocol/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["../../shared/ui/ipc/webview.protocol.ts"],
+			"@codestream/utils/*": ["../../shared/util/src/utils/*"]
 		},
 		"preserveSymlinks": true,
 		"rootDir": "../",
@@ -28,5 +29,5 @@
 		"useUnknownInCatchVariables": false
 	},
 	"exclude": ["node_modules", "src/webviews/app", ".vscode-test"],
-	"include": ["src/**/*.ts", "../shared/util/**/*"]
+	"include": ["src/**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*", "esbuild.ts"]
 }

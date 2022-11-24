@@ -1,5 +1,4 @@
 "use strict";
-import { MessageType } from "../api/apiProvider";
 import {
 	ClaimCodeErrorRequest,
 	ClaimCodeErrorRequestType,
@@ -15,8 +14,10 @@ import {
 	UpdateCodeErrorRequest,
 	UpdateCodeErrorRequestType,
 	UpdateCodeErrorResponse,
-} from "../protocol/agent.protocol";
-import { CSCodeError } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSCodeError } from "@codestream/protocols/api";
+
+import { MessageType } from "../api/apiProvider";
 import { log, lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

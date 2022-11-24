@@ -1,10 +1,12 @@
 import { CSCodeError } from "@codestream/protocols/api";
+import { Index } from "@codestream/utils/types";
 import { createSelector } from "reselect";
+
 import { CodeStreamState } from "..";
 import { toMapBy } from "../../utils";
 import * as activeIntegrationsActions from "../activeIntegrations/actions";
 import { ActiveIntegrationsActionType } from "../activeIntegrations/types";
-import { ActionType, Index } from "../common";
+import { ActionType } from "../common";
 import { ContextState } from "../context/types";
 import { getTeamMates } from "../users/reducer";
 import * as actions from "./actions";
@@ -177,7 +179,7 @@ export const getByStatusAndUser = createSelector(
 	(a, b, userId) => userId,
 	(codeErrors, status, userId) => {
 		return Object.values(codeErrors).filter(
-			codeError =>
+			(codeError: any) =>
 				!codeError.deactivated &&
 				codeError.status === status &&
 				(codeError.creatorId === userId ||

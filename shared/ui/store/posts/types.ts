@@ -1,5 +1,5 @@
 import { PostPlus } from "@codestream/protocols/agent";
-import { Index } from "../common";
+import { Index } from "@codestream/utils/types";
 
 export interface PendingPost
 	extends Pick<

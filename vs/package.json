@@ -21,13 +21,13 @@
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"bundle": "npm install --no-save && npm run webview:verify && npm run agent:bundle && tsx esbuild.ts --prod",
 		"clean:ci": "git clean -xdf -e vs/licenses/**/* && npm run webview:clean:ci && npm run agent:clean:ci",
-		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd",
+		"preinstall": "pushd \"../shared/ui\" && npm install --no-save && popd && pushd \"../shared/util\" && npm install --no-save && popd && pushd \"../shared/build\" && npm install --no-save && popd",
 		"rebuild": "npm install --no-save && npm run agent:rebuild && npm run build",
 		"verify:lint": "npx eslint  src/CodeStream.VisualStudio.Shared/UI/WebViews/**/*.ts *.js *.ts",
 		"verify:prettier": "prettier --check src/CodeStream.VisualStudio.Shared/UI/WebViews/** docs/** *.ts *.js *.md package.json .prettierrc",
 		"watch": "tsx esbuild.ts --watch",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
-		"webview:verify": "tsx esbuild.ts --only-symlinks && pushd \"../shared/ui\" && npm run verify:compile && popd"
+		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
 	"dependencies": {
 		"core-js": "2.6.9"
@@ -46,7 +46,7 @@
 		"@babel/runtime": "7.7.2",
 		"@types/keytar": "4.4.2",
 		"@types/lodash-es": "4.17.6",
-		"@types/node": "10.1.4",
+		"@types/node": "16",
 		"@types/node-fetch": "2.6.1",
 		"@types/uuid": "3.4.5",
 		"@typescript-eslint/eslint-plugin": "5.35.1",
@@ -54,11 +54,11 @@
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "9.0.1",
-		"esbuild": "0.15.12",
+		"esbuild": "0.16.12",
 		"eslint": "8.22.0",
 		"less": "4.1.2",
-		"prettier": "2.7.1",
-		"tsx": "3.9.0",
-		"typescript": "4.8.3"
+		"prettier": "2.8.1",
+		"tsx": "3.12.1",
+		"typescript": "4.9.4"
 	}
 }

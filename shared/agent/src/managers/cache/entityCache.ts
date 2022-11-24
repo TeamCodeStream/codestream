@@ -1,6 +1,7 @@
 "use strict";
 
-import { CSEntity } from "../../protocol/api.protocol";
+import { CSEntity } from "@codestream/protocols/api";
+
 import { Id } from "../entityManager";
 import { BaseCache, CacheCfg, UniqueFetchFn } from "./baseCache";
 import { IndexType, makeIndex, UniqueIndex } from "./index";

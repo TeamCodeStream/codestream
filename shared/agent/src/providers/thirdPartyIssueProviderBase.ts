@@ -1,18 +1,16 @@
-import { TernarySearchTree } from "../../../ui/utilities/searchTree";
-import { ReportSuppressedMessages } from "../agentError";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
 import {
 	DocumentMarker,
 	DocumentMarkerExternalContent,
-} from "../protocol/agent.protocol.documentMarkers";
-import {
 	FetchAssignableUsersAutocompleteRequest,
 	FetchAssignableUsersResponse,
 	GetMyPullRequestsRequest,
-} from "../protocol/agent.protocol.providers";
-import { CSRepository } from "../protocol/api.protocol";
-import { CSProviderInfos } from "../protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSProviderInfos, CSRepository } from "@codestream/protocols/api";
+import { TernarySearchTree } from "@codestream/utils/system/searchTree";
+
+import { ReportSuppressedMessages } from "../agentError";
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { log } from "../system/decorators/log";
 import {
 	ProviderCreatePullRequestRequest,

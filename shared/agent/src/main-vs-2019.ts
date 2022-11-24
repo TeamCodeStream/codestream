@@ -10,9 +10,10 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind,
 } from "vscode-languageserver";
+import { AgentOptions, LogoutReason } from "@codestream/protocols/agent";
+
 import { CodeStreamAgent, FileLspLogger } from "./agent";
 import { Logger } from "./logger";
-import { AgentOptions, LogoutReason } from "./protocol/agent.protocol";
 
 export * from "./providers/asana";
 export * from "./providers/azuredevops";

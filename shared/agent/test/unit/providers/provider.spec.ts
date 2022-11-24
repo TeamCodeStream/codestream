@@ -1,8 +1,9 @@
 "use strict";
 
+import { FetchThirdPartyPullRequestResponse } from "@codestream/protocols/agent";
+import { CSRemote, CSRepository } from "@codestream/protocols/api";
 import { describe, expect, it } from "@jest/globals";
-import { FetchThirdPartyPullRequestResponse } from "../../../src/protocol/agent.protocol.providers";
-import { CSRemote, CSRepository } from "../../../src/protocol/api.protocol.models";
+
 import { BitbucketProvider } from "../../../src/providers/bitbucket";
 import { BitbucketServerProvider } from "../../../src/providers/bitbucketServer";
 import { GitHubProvider } from "../../../src/providers/github";

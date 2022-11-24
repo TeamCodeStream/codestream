@@ -1,19 +1,6 @@
 "use strict";
-import {
-	Block,
-	KnownBlock,
-	LogLevel,
-	WebAPICallOptions,
-	WebAPICallResult,
-	WebClient,
-	WebClientEvent,
-} from "@slack/web-api";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
-import { orderBy, take, uniq } from "lodash";
-import asyncPool from "tiny-async-pool";
-import { Container, SessionContainer } from "../../container";
-import { Logger } from "../../logger";
+
 import {
 	Capabilities,
 	CreatePostResponse,
@@ -25,7 +12,7 @@ import {
 	FetchUsersResponse,
 	UpdateThirdPartyStatusRequest,
 	UpdateThirdPartyStatusResponse,
-} from "../../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
 	CSDirectStream,
@@ -35,11 +22,26 @@ import {
 	CSUser,
 	ProviderType,
 	StreamType,
-} from "../../protocol/api.protocol";
-import { debug, Functions, log, Strings } from "../../system";
+} from "@codestream/protocols/api";
+import {
+	Block,
+	KnownBlock,
+	LogLevel,
+	WebAPICallOptions,
+	WebAPICallResult,
+	WebClient,
+	WebClientEvent,
+} from "@slack/web-api";
+import { orderBy, take, uniq } from "lodash-es";
+import asyncPool from "tiny-async-pool";
+import * as Strings from "@codestream/utils/system/string";
+
+import HttpsProxyAgent from "https-proxy-agent";
+import { Container, SessionContainer } from "../../container";
+import { Logger } from "../../logger";
+import { debug, Functions, log } from "../../system";
 import { LogCorrelationContext, TraceLevel } from "../../types";
 import { MessageType, StreamsRTMessage } from "../apiProvider";
-
 import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
 import {
 	fromMeMessageSlackPost,
@@ -1314,7 +1316,7 @@ export class SlackSharingApiProvider {
 			is_archived: boolean;
 			is_user_deleted: boolean;
 		}[],
-		limit: number = 50,
+		limit = 50,
 		priorityUsers: string[] = []
 	) {
 		conversations = conversations || [];

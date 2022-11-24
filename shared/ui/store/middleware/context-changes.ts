@@ -1,8 +1,9 @@
 /// <reference path="../../@types/window.d.ts"/>
+import { UIStateRequestType } from "@codestream/protocols/agent";
 import { shallowEqual } from "react-redux";
 import { Dispatch } from "redux";
+
 import { WebviewDidChangeContextNotificationType } from "../../ipc/webview.protocol";
-import { UIStateRequestType } from "../../protocols/agent/agent.protocol";
 import { HostApi } from "../../webview-api";
 import { ContextActionsType } from "../context/types";
 

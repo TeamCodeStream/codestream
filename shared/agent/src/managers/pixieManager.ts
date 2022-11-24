@@ -1,13 +1,8 @@
 "use strict";
 
-import * as grpcLibrary from "@grpc/grpc-js";
-import * as grpcProtoLoader from "@grpc/proto-loader";
-import Long from "long";
 import os from "os";
 import path from "path";
-import * as protobuf from "protobufjs";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
+
 import {
 	PixieCluster,
 	PixieDynamicLoggingCancelRequest,
@@ -25,7 +20,14 @@ import {
 	PixieGetPodsRequest,
 	PixieGetPodsRequestType,
 	PixieGetPodsResponse,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+import * as grpcLibrary from "@grpc/grpc-js";
+import * as grpcProtoLoader from "@grpc/proto-loader";
+import Long from "long";
+import * as protobuf from "protobufjs";
+
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { NewRelicProvider } from "../providers/newrelic";
 import { CodeStreamSession } from "../session";
 import { getProvider, Strings } from "../system";

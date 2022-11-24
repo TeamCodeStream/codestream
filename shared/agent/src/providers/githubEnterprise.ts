@@ -1,14 +1,12 @@
 "use strict";
+import { ProviderConfigurationData, ThirdPartyDisconnect } from "@codestream/protocols/agent";
 import { GraphQLClient } from "graphql-request";
 import semver from "semver";
 import { URI } from "vscode-uri";
+
 import { Container } from "../container";
 import { GitRemoteLike } from "../git/models/remote";
 import { Logger } from "../logger";
-import {
-	ProviderConfigurationData,
-	ThirdPartyDisconnect,
-} from "../protocol/agent.protocol.providers";
 import { lspProvider } from "../system";
 import { GitHubProvider } from "./github";
 import { ProviderVersion } from "./types";

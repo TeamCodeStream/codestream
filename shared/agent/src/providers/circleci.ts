@@ -1,14 +1,15 @@
 "use strict";
 
-import { InternalError, ServerError } from "agentError";
-import { Response } from "node-fetch";
 import {
 	FetchThirdPartyBuildsRequest,
 	FetchThirdPartyBuildsResponse,
 	ThirdPartyBuild,
 	ThirdPartyBuildStatus,
-} from "protocol/agent.protocol.providers";
-import { CSCircleCIProviderInfo } from "protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSCircleCIProviderInfo } from "@codestream/protocols/api";
+import { Response } from "node-fetch";
+
+import { InternalError, ServerError } from "agentError";
 import { Logger } from "../logger";
 import { Dates, log, lspProvider } from "../system";
 import {
@@ -26,6 +27,7 @@ import {
 } from "./circleci.types";
 import { ApiResponse } from "./provider";
 import { ThirdPartyBuildProviderBase } from "./thirdPartyBuildProviderBase";
+
 import toFormatter = Dates.toFormatter;
 
 const VCS_SLUG_MAPPING = [

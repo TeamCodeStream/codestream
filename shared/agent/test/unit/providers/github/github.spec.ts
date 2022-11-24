@@ -1,13 +1,14 @@
 "use strict";
 
+import { FetchThirdPartyPullRequestRequest } from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
 import { describe, expect, it } from "@jest/globals";
 import { ClientError, GraphQLClient } from "graphql-request";
 import { GraphQLError } from "graphql-request/dist/types";
 import { mock, mockDeep } from "jest-mock-extended";
+
 import { User } from "../../../../src/api/extensions";
 import { SessionContainer, SessionServiceContainer } from "../../../../src/container";
-import { FetchThirdPartyPullRequestRequest } from "../../../../src/protocol/agent.protocol.providers";
-import { CSMe } from "../../../../src/protocol/api.protocol.models";
 import { GitHubProvider } from "../../../../src/providers/github";
 
 jest.mock("../../../../src/container");

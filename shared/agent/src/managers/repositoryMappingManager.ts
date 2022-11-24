@@ -1,11 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { CodeStreamSession } from "session";
-import { URI } from "vscode-uri";
-import { SessionContainer } from "../container";
-import { GitRemoteParser } from "../git/parsers/remoteParser";
-import { Logger } from "../logger";
+
 import {
 	MapReposRequest,
 	MapReposRequestType,
@@ -14,7 +10,13 @@ import {
 	NormalizeUrlRequestType,
 	NormalizeUrlResponse,
 	RepoMap,
-} from "../protocol/agent.protocol.repos";
+} from "@codestream/protocols/agent";
+import { URI } from "vscode-uri";
+
+import { CodeStreamSession } from "session";
+import { SessionContainer } from "../container";
+import { GitRemoteParser } from "../git/parsers/remoteParser";
+import { Logger } from "../logger";
 import { log, lsp, lspHandler } from "../system";
 
 interface RepoMapValue {

@@ -13,14 +13,6 @@ import sanitize from "sanitize-filename";
 import FormData from "form-data";
 import AbortController from "abort-controller";
 import { Emitter, Event } from "vscode-languageserver";
-
-import HttpsProxyAgent from "https-proxy-agent";
-import { ServerError } from "../../agentError";
-import { Team, User } from "../../api/extensions";
-import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
-import { Container, SessionContainer } from "../../container";
-import { Logger } from "../../logger";
-import { isDirective, resolve, safeDecode, safeEncode } from "../../managers/operations";
 import {
 	AccessToken,
 	AddBlameMapRequest,
@@ -184,7 +176,7 @@ import {
 	UploadFileRequest,
 	UploadFileRequestType,
 	VerifyConnectivityResponse,
-} from "../../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSAddMarkersRequest,
 	CSAddMarkersResponse,
@@ -309,7 +301,15 @@ import {
 	StreamType,
 	TriggerMsTeamsProactiveMessageRequest,
 	TriggerMsTeamsProactiveMessageResponse,
-} from "../../protocol/api.protocol";
+} from "@codestream/protocols/api";
+
+import HttpsProxyAgent from "https-proxy-agent";
+import { ServerError } from "../../agentError";
+import { Team, User } from "../../api/extensions";
+import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
+import { Container, SessionContainer } from "../../container";
+import { Logger } from "../../logger";
+import { isDirective, resolve, safeDecode, safeEncode } from "../../managers/operations";
 import { NewRelicProvider } from "../../providers/newrelic";
 import { getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import { customFetch, fetchCore } from "../../system/fetchCore";

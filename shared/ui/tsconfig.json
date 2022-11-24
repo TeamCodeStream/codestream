@@ -1,31 +1,24 @@
 {
-	"extends": "./tsconfig.paths.json",
+	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
-		"allowSyntheticDefaultImports": true,
 		"baseUrl": ".",
-		"esModuleInterop": true,
-		"experimentalDecorators": true,
-		"incremental": true,
+		"forceConsistentCasingInFileNames": false,
+		"paths": {
+			"@codestream/protocols/agent": ["../util/src/protocol/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["../util/src/protocol/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["ipc/webview.protocol.ts"],
+			"@codestream/webview/webview-api": ["./webview-api.ts"],
+			"@codestream/webview/*": ["./*"],
+			"@codestream/utils/*": ["../util/src/utils/*"],
+			"vscode-jsonrpc": ["./vscode-jsonrpc.shim.ts"]
+		},
 		"jsx": "react",
-		"lib": ["es2017", "dom", "dom.iterable"],
-		"module": "esnext",
-		"moduleResolution": "node",
-		"noFallthroughCasesInSwitch": true,
+		"lib": ["es2019", "dom", "dom.iterable"],
 		"noImplicitAny": false,
-		"noImplicitReturns": true,
-		"noUnusedLocals": false,
-		"outDir": "dist",
-		"preserveSymlinks": true,
-		"rootDir": ".",
-		"skipDefaultLibCheck": true,
-		"skipLibCheck": true,
-		"sourceMap": true,
-		"strict": true,
-		"target": "es2017",
-		"tsBuildInfoFile": ".tsbuildinfo",
-		"types": ["styled-components", "jest"],
-		"useUnknownInCatchVariables": false
+		"resolveJsonModule": false,
+		"types": ["styled-components", "jest"]
 	},
-	"exclude": ["dist", "node_modules", "coverage"]
+	"exclude": ["dist", "node_modules", "coverage"],
+	"include": ["**/*.tsx?", "**/*.jsx?", "../util/src/**/*"]
 }

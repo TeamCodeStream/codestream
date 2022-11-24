@@ -1,10 +1,11 @@
+import { UpdateUserRequestType } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
 import React, { useCallback, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
+
 import { TextInput } from "../Authentication/TextInput";
 import { logError } from "../logger";
-import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { Headshot } from "../src/components/Headshot";

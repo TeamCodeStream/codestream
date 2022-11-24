@@ -1,6 +1,3 @@
-import { Container } from "../container";
-import { git } from "../git/git";
-import { Logger } from "../logger";
 import {
 	GetUserInfoRequestType,
 	GetUserInfoResponse,
@@ -8,7 +5,11 @@ import {
 	GetWorkspaceAutoJoinInfoResponse,
 	GetWorkspaceRepoInfoRequestType,
 	GetWorkspaceRepoInfoResponse,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
+import { Container } from "../container";
+import { git } from "../git/git";
+import { Logger } from "../logger";
 import { lsp, lspHandler } from "../system";
 
 const os = require("os");

@@ -1,8 +1,4 @@
 "use strict";
-import { Response } from "node-fetch";
-import { SessionContainer } from "../container";
-import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
-import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderResponse,
@@ -38,8 +34,13 @@ import {
 	ThirdPartyProviderConfig,
 	UpdateThirdPartyStatusRequest,
 	UpdateThirdPartyStatusResponse,
-} from "../protocol/agent.protocol";
-import { CSMe, CSProviderInfos } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
+import { Response } from "node-fetch";
+
+import { SessionContainer } from "../container";
+import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
+import { Logger } from "../logger";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],

@@ -14,28 +14,6 @@ import {
 	MessageActionItem,
 	WorkspaceFolder,
 } from "vscode-languageserver";
-
-import HttpsProxyAgent from "https-proxy-agent";
-import { CodeStreamAgent } from "./agent";
-import { AgentError, ServerError } from "./agentError";
-import {
-	ApiProvider,
-	ApiProviderLoginResponse,
-	CodeStreamApiMiddlewareContext,
-	LoginOptions,
-	MessageType,
-	RTMessage,
-} from "./api/apiProvider";
-import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
-import {
-	ApiVersionCompatibilityChangedEvent,
-	VersionCompatibilityChangedEvent,
-	VersionMiddlewareManager,
-} from "./api/middleware/versionMiddleware";
-import { Container, SessionContainer } from "./container";
-import { DocumentEventHandler } from "./documentEventHandler";
-import { GitRepository } from "./git/models/repository";
-import { Logger } from "./logger";
 import {
 	AgentFileSearchRequestType,
 	ApiRequestType,
@@ -98,7 +76,7 @@ import {
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
 	VersionCompatibility,
-} from "./protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
 	CSCodemark,
@@ -116,7 +94,29 @@ import {
 	CSTeam,
 	CSUser,
 	LoginResult,
-} from "./protocol/api.protocol";
+} from "@codestream/protocols/api";
+
+import HttpsProxyAgent from "https-proxy-agent";
+import { CodeStreamAgent } from "./agent";
+import { AgentError, ServerError } from "./agentError";
+import {
+	ApiProvider,
+	ApiProviderLoginResponse,
+	CodeStreamApiMiddlewareContext,
+	LoginOptions,
+	MessageType,
+	RTMessage,
+} from "./api/apiProvider";
+import { CodeStreamApiProvider } from "./api/codestream/codestreamApi";
+import {
+	ApiVersionCompatibilityChangedEvent,
+	VersionCompatibilityChangedEvent,
+	VersionMiddlewareManager,
+} from "./api/middleware/versionMiddleware";
+import { Container, SessionContainer } from "./container";
+import { DocumentEventHandler } from "./documentEventHandler";
+import { GitRepository } from "./git/models/repository";
+import { Logger } from "./logger";
 import { log, memoize, registerDecoratedHandlers, registerProviders, Strings } from "./system";
 import { testGroups } from "./testGroups";
 

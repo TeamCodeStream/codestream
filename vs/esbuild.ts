@@ -1,8 +1,8 @@
 import { build, BuildOptions } from "esbuild";
 import * as path from "path";
-import { copyPlugin } from "../shared/util/src/copyPlugin";
-import { commonEsbuildOptions, processArgs } from "../shared/util/src/esbuildCommon";
-import { createSymlinks } from "../shared/util/src/symlinks";
+import { copyPlugin } from "../shared/build/src/copyPlugin";
+import { commonEsbuildOptions, processArgs } from "../shared/build/src/esbuildCommon";
+import { removeSymlinks } from "../shared/build/src/symlinks";
 
 const context = path.resolve(__dirname, "src/CodeStream.VisualStudio.Shared/UI/WebViews");
 const target = path.resolve(__dirname, "src/resources/webview");
@@ -28,10 +28,7 @@ const copy = copyPlugin({
 
 (async function () {
 	const args = processArgs();
-	createSymlinks(__dirname, args);
-	if (args.onlySymlinks) {
-		return;
-	}
+	removeSymlinks(__dirname);
 	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(true, args, [copy]),
 		entryPoints: [

@@ -10,12 +10,15 @@
 			"windows": {
 				"command": "powershell"
 			},
-			"args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -q -c Debug"],
-			"problemMatcher": ["$msCompile"],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			}
+			"args": [
+				"-NoLogo",
+				"-NoProfile",
+				"${workspaceRoot}/build/build.ps1 -q -c Debug"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build"
 		},
 		{
 			"label": "rebuild",
@@ -24,8 +27,14 @@
 			"windows": {
 				"command": "powershell"
 			},
-			"args": ["-NoLogo", "-NoProfile", "${workspaceRoot}/build/build.ps1 -c Debug"],
-			"problemMatcher": ["$msCompile"],
+			"args": [
+				"-NoLogo",
+				"-NoProfile",
+				"${workspaceRoot}/build/build.ps1 -c Debug"
+			],
+			"problemMatcher": [
+				"$msCompile"
+			],
 			"group": "build"
 		}
 	]

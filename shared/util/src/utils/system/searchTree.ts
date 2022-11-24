@@ -2,43 +2,41 @@
 import { Iterables } from "./iterable";
 
 /**
-Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
+ Portions adapted from https://github.com/Microsoft/vscode/blob/b3e6d5bb039a4a9362b52a2c8726267ca68cf64e/src/vs/base/common/map.ts#L352 which carries this notice:
+ MIT License
 
-MIT License
+ Copyright (c) 2015 - present Microsoft Corporation
 
-Copyright (c) 2015 - present Microsoft Corporation
+ All rights reserved.
 
-All rights reserved.
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
-
-/**
- * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
  */
+
 export interface IKeyIterator {
 	reset(key: string): this;
+
 	next(): this;
-	join(parts: string[]): string;
 
 	hasNext(): boolean;
+
 	cmp(a: string): number;
+
 	value(): string;
 }
 
@@ -76,10 +74,18 @@ export class StringIterator implements IKeyIterator {
 	}
 }
 
-export class PathIterator implements IKeyIterator {
-	private static readonly _fwd = "/".charCodeAt(0);
-	private static readonly _bwd = "\\".charCodeAt(0);
+const enum CharCode {
+	/**
+	 * The `/` character.
+	 */
+	Slash = 47,
+	/**
+	 * The `\` character.
+	 */
+	Backslash = 92,
+}
 
+export class PathIterator implements IKeyIterator {
 	private _value!: string;
 	private _from!: number;
 	private _to!: number;
@@ -105,7 +111,7 @@ export class PathIterator implements IKeyIterator {
 		let justSeps = true;
 		for (; this._to < this._value.length; this._to++) {
 			const ch = this._value.charCodeAt(this._to);
-			if (ch === PathIterator._fwd || ch === PathIterator._bwd) {
+			if (ch === CharCode.Slash || ch === CharCode.Backslash) {
 				if (justSeps) {
 					this._from++;
 				} else {
@@ -134,7 +140,7 @@ export class PathIterator implements IKeyIterator {
 
 		if (aLen === this._to - this._from) {
 			return 0;
-		} else if (aPos < aLen) {
+		} else if (aPos <= aLen) {
 			return -1;
 		} else {
 			return 1;
@@ -147,19 +153,15 @@ export class PathIterator implements IKeyIterator {
 }
 
 class TernarySearchTreeNode<E> {
-	str!: string;
-	element: E | undefined;
+	segment!: string;
+	value: E | undefined;
+	key!: string;
 	left: TernarySearchTreeNode<E> | undefined;
 	mid: TernarySearchTreeNode<E> | undefined;
 	right: TernarySearchTreeNode<E> | undefined;
 
 	isEmpty(): boolean {
-		return (
-			this.left === undefined &&
-			this.mid === undefined &&
-			this.right === undefined &&
-			this.element === undefined
-		);
+		return !this.left && !this.mid && !this.right && !this.value;
 	}
 }
 
@@ -189,24 +191,24 @@ export class TernarySearchTree<E> {
 
 		if (!this._root) {
 			this._root = new TernarySearchTreeNode<E>();
-			this._root.str = iter.value();
+			this._root.segment = iter.value();
 		}
 
 		node = this._root;
 		while (true) {
-			const val = iter.cmp(node.str);
+			const val = iter.cmp(node.segment);
 			if (val > 0) {
 				// left
 				if (!node.left) {
 					node.left = new TernarySearchTreeNode<E>();
-					node.left.str = iter.value();
+					node.left.segment = iter.value();
 				}
 				node = node.left;
 			} else if (val < 0) {
 				// right
 				if (!node.right) {
 					node.right = new TernarySearchTreeNode<E>();
-					node.right.str = iter.value();
+					node.right.segment = iter.value();
 				}
 				node = node.right;
 			} else if (iter.hasNext()) {
@@ -214,15 +216,16 @@ export class TernarySearchTree<E> {
 				iter.next();
 				if (!node.mid) {
 					node.mid = new TernarySearchTreeNode<E>();
-					node.mid.str = iter.value();
+					node.mid.segment = iter.value();
 				}
 				node = node.mid;
 			} else {
 				break;
 			}
 		}
-		const oldElement = node.element;
-		node.element = element;
+		const oldElement = node.value;
+		node.value = element;
+		node.key = key;
 		return oldElement;
 	}
 
@@ -230,7 +233,7 @@ export class TernarySearchTree<E> {
 		const iter = this._iter.reset(key);
 		let node = this._root;
 		while (node) {
-			const val = iter.cmp(node.str);
+			const val = iter.cmp(node.segment);
 			if (val > 0) {
 				// left
 				node = node.left;
@@ -245,7 +248,7 @@ export class TernarySearchTree<E> {
 				break;
 			}
 		}
-		return node ? node.element : undefined;
+		return node ? node.value : undefined;
 	}
 
 	delete(key: string): void {
@@ -255,7 +258,7 @@ export class TernarySearchTree<E> {
 
 		// find and unset node
 		while (node) {
-			const val = iter.cmp(node.str);
+			const val = iter.cmp(node.segment);
 			if (val > 0) {
 				// left
 				stack.push([1, node]);
@@ -271,7 +274,7 @@ export class TernarySearchTree<E> {
 				node = node.mid;
 			} else {
 				// remove element
-				node.element = undefined;
+				node.value = undefined;
 
 				// clean up empty nodes
 				while (stack.length > 0 && node.isEmpty()) {
@@ -299,7 +302,7 @@ export class TernarySearchTree<E> {
 		let node = this._root;
 		let candidate: E | undefined;
 		while (node) {
-			const val = iter.cmp(node.str);
+			const val = iter.cmp(node.segment);
 			if (val > 0) {
 				// left
 				node = node.left;
@@ -309,20 +312,20 @@ export class TernarySearchTree<E> {
 			} else if (iter.hasNext()) {
 				// mid
 				iter.next();
-				candidate = node.element || candidate;
+				candidate = node.value || candidate;
 				node = node.mid;
 			} else {
 				break;
 			}
 		}
-		return (node && node.element) || candidate;
+		return (node && node.value) || candidate;
 	}
 
 	findSuperstr(key: string): TernarySearchTree<E> | undefined {
 		const iter = this._iter.reset(key);
 		let node = this._root;
 		while (node) {
-			const val = iter.cmp(node.str);
+			const val = iter.cmp(node.segment);
 			if (val > 0) {
 				// left
 				node = node.left;
@@ -347,48 +350,46 @@ export class TernarySearchTree<E> {
 	}
 
 	forEach(callback: (value: E, index: string) => any) {
-		this._forEach(this._root!, [], callback);
+		this._forEach(this._root!, callback);
 	}
 
-	private _forEach(
-		node: TernarySearchTreeNode<E>,
-		parts: string[],
-		callback: (value: E, index: string) => any
-	) {
+	private _forEach(node: TernarySearchTreeNode<E>, callback: (value: E, index: string) => any) {
 		if (node === undefined) return;
 
 		// left
-		this._forEach(node.left!, parts, callback);
+		this._forEach(node.left!, callback);
 
 		// node
-		parts.push(node.str);
-		if (node.element) {
-			callback(node.element, this._iter.join(parts));
+		if (node.value) {
+			callback(node.value, node.key);
 		}
+
 		// mid
-		this._forEach(node.mid!, parts, callback);
-		parts.pop();
+		this._forEach(node.mid!, callback);
 
 		// right
-		this._forEach(node.right!, parts, callback);
+		this._forEach(node.right!, callback);
 	}
 
 	any(): boolean {
 		return this._root !== undefined && !this._root.isEmpty();
 	}
 
-	count(): number {
+	count(predicate?: (entry: E) => boolean): number {
 		if (this._root === undefined || this._root.isEmpty()) return 0;
 
-		return Iterables.count(this.entries());
+		return Iterables.count(
+			this.entries(),
+			predicate === undefined ? undefined : ([e]) => predicate(e)
+		);
 	}
 
 	entries(): Iterable<[E, string]> {
-		return this._iterator(this._root!, []);
+		return this._iterator(this._root!);
 	}
 
 	values(): Iterable<E> {
-		return Iterables.map(this.entries(), e => e[0]);
+		return Iterables.map(this.entries(), ([e]) => e);
 	}
 
 	highlander(): [E, string] | undefined {
@@ -413,25 +414,27 @@ export class TernarySearchTree<E> {
 		return value;
 	}
 
-	private *_iterator(
-		node: TernarySearchTreeNode<E> | undefined,
-		parts: string[]
-	): IterableIterator<[E, string]> {
+	some(predicate: (entry: E) => boolean): boolean {
+		if (this._root === undefined || this._root.isEmpty()) return false;
+
+		return Iterables.some(this.entries(), ([e]) => predicate(e));
+	}
+
+	private *_iterator(node: TernarySearchTreeNode<E> | undefined): IterableIterator<[E, string]> {
 		if (node !== undefined) {
 			// left
-			yield* this._iterator(node.left!, parts);
+			yield* this._iterator(node.left!);
 
 			// node
-			parts.push(node.str);
-			if (node.element) {
-				yield [node.element, this._iter.join(parts)];
+			if (node.value) {
+				yield [node.value, node.key];
 			}
+
 			// mid
-			yield* this._iterator(node.mid!, parts);
-			parts.pop();
+			yield* this._iterator(node.mid!);
 
 			// right
-			yield* this._iterator(node.right!, parts);
+			yield* this._iterator(node.right!);
 		}
 	}
 }

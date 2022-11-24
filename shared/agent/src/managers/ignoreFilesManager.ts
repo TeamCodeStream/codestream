@@ -1,9 +1,6 @@
 import * as fs from "fs";
-import ignore from "ignore";
 import * as path from "path";
-import { CodeStreamSession } from "session";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
+
 import {
 	AddIgnoreFileRequest,
 	AddIgnoreFileResponse,
@@ -11,7 +8,13 @@ import {
 	IgnoreFilesRequest,
 	IgnoreFilesRequestType,
 	IgnoreFilesResponse,
-} from "../protocol/agent.protocol.repos";
+} from "@codestream/protocols/agent";
+import ignore from "ignore";
+
+
+import { CodeStreamSession } from "session";
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { log, lsp, lspHandler } from "../system";
 
 @lsp

@@ -5,7 +5,7 @@ import { commands, Disposable, env, Range, Uri, ViewColumn, window, workspace } 
 import {
 	FileLevelTelemetryRequestOptions,
 	MetricTimesliceNameMapping
-} from "protocols/agent/agent.protocol.providers";
+} from "@codestream/protocols/agent";
 
 import { Editor } from "extensions/editor";
 import { openUrl } from "urlHandler";

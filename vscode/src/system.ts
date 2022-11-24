@@ -30,13 +30,11 @@ SOFTWARE.
  */
 export * from "./system/array";
 export * from "./system/crypto";
-export * from "./system/date";
+export * as Dates from "@codestream/utils/system/date";
 export * from "./system/fs";
 export * from "./system/function";
-export * from "./system/iterable";
 export * from "./system/object";
-export * from "./system/searchTree";
-export * from "./system/string";
+export * as Strings from "@codestream/utils/system/string";
 export * from "./system/version";
 
 // Must keep this at the end, since they uses Functions

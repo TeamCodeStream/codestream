@@ -1,8 +1,9 @@
 "use strict";
+import { ApiVersionCompatibility, VersionCompatibility } from "@codestream/protocols/agent";
+import { CSApiCapabilities, CSApiCapability } from "@codestream/protocols/api";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
+
 import { Logger } from "../../logger";
-import { ApiVersionCompatibility, VersionCompatibility } from "../../protocol/agent.protocol";
-import { CSApiCapabilities, CSApiCapability } from "../../protocol/api.protocol.models";
 import { log, Versions } from "../../system";
 import {
 	ApiProvider,

@@ -31,6 +31,7 @@ SOFTWARE.
  */
 import { debug, Strings } from "../../system";
 import { GitCommit } from "../models/commit";
+import { isWindows } from "../shell";
 
 const emptyEntry: LogEntry = {};
 const emptyStr = "";
@@ -83,7 +84,7 @@ export class GitLogParser {
 		if (next.done) return undefined;
 
 		if (repoPath !== undefined) {
-			repoPath = Strings.normalizePath(repoPath);
+			repoPath = Strings.normalizePath(repoPath, isWindows);
 		}
 
 		const commits: Map<string, GitCommit> = new Map();

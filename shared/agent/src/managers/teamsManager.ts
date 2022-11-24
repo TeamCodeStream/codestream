@@ -6,8 +6,9 @@ import {
 	GetTeamRequest,
 	GetTeamRequestType,
 	GetTeamResponse,
-} from "../protocol/agent.protocol";
-import { CSTeam } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSTeam } from "@codestream/protocols/api";
+
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

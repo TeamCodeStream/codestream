@@ -12,14 +12,12 @@ export interface Args {
 	watchMode: boolean;
 	reset: boolean;
 	mode: Mode;
-	onlySymlinks: boolean;
 	ide?: IdeType;
 }
 
 export function processArgs(): Args {
 	const watchMode = process.argv.findIndex((arg) => arg === "--watch") !== -1;
 	const reset = process.argv.findIndex((arg) => arg === "--reset") !== -1;
-	const onlySymlinks = process.argv.findIndex((arg) => arg === "--only-symlinks") !== -1;
 	const mode =
 		process.argv.findIndex((arg) => arg === "--prod") !== -1 ? "production" : "development";
 	const ideIndex = process.argv.findIndex((arg) => arg === "--ide");
@@ -31,7 +29,6 @@ export function processArgs(): Args {
 		watchMode,
 		reset,
 		mode,
-		onlySymlinks,
 		ide,
 	};
 	console.info(JSON.stringify(args));

@@ -1,10 +1,11 @@
-import { Logger } from "../logger";
 import {
 	TelemetryRequest,
 	TelemetryRequestType,
 	TelemetrySetAnonymousIdRequest,
 	TelemetrySetAnonymousIdRequestType,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
+import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { debug, lsp, lspHandler } from "../system";
 import { TelemetryService } from "../telemetry/telemetry";

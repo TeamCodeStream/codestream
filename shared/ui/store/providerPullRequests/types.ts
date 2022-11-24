@@ -6,9 +6,9 @@ import {
 	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
 import { CSRepository } from "@codestream/protocols/api";
+import { Index } from "@codestream/utils/types";
 
 import { Collaborator } from "@codestream/protocols/webview";
-import { Index } from "../common";
 
 export enum ProviderPullRequestActionsTypes {
 	AddPullRequestConversations = "@providerPullRequests/AddConversations",

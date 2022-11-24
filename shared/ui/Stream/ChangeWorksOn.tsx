@@ -1,21 +1,19 @@
-import React, { useState, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import CancelButton from "./CancelButton";
-import { CodeStreamState } from "../store";
-import { HostApi } from "../webview-api";
-import { Button } from "../src/components/Button";
-import styled from "styled-components";
-import { ButtonRow } from "./ChangeUsername";
-import { UpdateUserRequestType } from "../protocols/agent/agent.protocol.users";
-import { logError } from "../logger";
-import { FormattedMessage } from "react-intl";
+import { UpdateUserRequestType } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
-import cx from "classnames";
-import { Link } from "./Link";
+import React, { useState } from "react";
+import { FormattedMessage } from "react-intl";
+import { useDispatch, useSelector } from "react-redux";
+
 import { TextInput } from "../Authentication/TextInput";
+import { logError } from "../logger";
+import { Button } from "../src/components/Button";
 import { CSText } from "../src/components/CSText";
 import { Dialog } from "../src/components/Dialog";
+import { CodeStreamState } from "../store";
+import { HostApi } from "../webview-api";
 import { closeModal } from "./actions";
+import { ButtonRow } from "./ChangeUsername";
+import { Link } from "./Link";
 
 const isNotEmpty = s => s.length > 0;
 

@@ -1,14 +1,16 @@
 "use strict";
 import { Agent as HttpsAgent } from "https";
-import HttpsProxyAgent from "https-proxy-agent";
+
+import { ConnectionStatus } from "@codestream/protocols/agent";
 import { Disposable, Emitter, Event } from "vscode-languageserver";
+
+import HttpsProxyAgent from "https-proxy-agent";
 import {
 	Broadcaster,
 	BroadcasterStatus,
 	BroadcasterStatusType,
 } from "../../broadcaster/broadcaster";
 import { Logger } from "../../logger";
-import { ConnectionStatus } from "../../protocol/agent.protocol";
 import { log } from "../../system";
 import { ConnectionRTMessage, MessageType, RawRTMessage } from "../apiProvider";
 import { CodeStreamApiProvider } from "./codestreamApi";

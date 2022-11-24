@@ -1,5 +1,6 @@
+import { FunctionLocator } from "@codestream/protocols/agent";
+
 import { Logger } from "../../logger";
-import { FunctionLocator } from "../../protocol/agent.protocol.providers";
 import { escapeNrql } from "../newrelic";
 import { ResolutionMethod } from "./newrelic.types";
 

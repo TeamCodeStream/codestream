@@ -1,21 +1,20 @@
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import { CodemarkPlus, ReviewPlus } from "@codestream/protocols/agent";
+import { isCSReview } from "@codestream/protocols/api";
 import React from "react";
 import styled from "styled-components";
-import { useDispatch, useSelector } from "react-redux";
+
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
+import { HeadshotName } from "../src/components/HeadshotName";
+import { CodeStreamState } from "../store";
+import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import * as userSelectors from "../store/users/reducer";
 import Icon from "./Icon";
-import { ReviewPlus } from "../protocols/agent/agent.protocol.reviews";
+import { markdownify } from "./Markdowner";
+import { Marker } from "./Marker";
+import { ChangesetFileList } from "./Review/ChangesetFileList";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
-import { CodeStreamState } from "../store";
-import { markdownify } from "./Markdowner";
-import { setCurrentReview, setCurrentCodemark } from "../store/context/actions";
-import { HeadshotName } from "../src/components/HeadshotName";
-import { CodemarkPlus } from "@codestream/protocols/agent";
-import { isCSReview } from "../protocols/agent/api.protocol.models";
-import { Marker } from "./Marker";
-import { ChangesetFileList } from "./Review/ChangesetFileList";
 
 const RootTR = styled.tr`
 	margin: 0;

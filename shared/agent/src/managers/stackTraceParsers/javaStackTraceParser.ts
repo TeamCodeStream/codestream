@@ -1,8 +1,9 @@
 "use strict";
 
+import { CSStackTraceInfo } from "@codestream/protocols/api";
+
 import { Logger } from "../../logger";
-import { CSStackTraceInfo } from "../../protocol/api.protocol.models";
-import { Strings } from "../../system/string";
+import { Strings } from "../../system";
 
 let regex: RegExp;
 

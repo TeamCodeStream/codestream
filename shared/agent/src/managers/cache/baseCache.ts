@@ -9,10 +9,8 @@ import {
 	makeIndex,
 	UniqueIndex,
 } from "./index";
-
 import { Logger } from "../../logger";
-import { debug } from "../../system";
-import { Strings } from "../../system/string";
+import { debug, Strings } from "../../system";
 import { Id } from "../entityManager";
 
 export type UniqueFetchFn<T> = (criteria: KeyValue<T>[]) => Promise<T | undefined>;

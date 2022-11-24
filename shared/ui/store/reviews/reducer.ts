@@ -1,8 +1,10 @@
 import { CSReview } from "@codestream/protocols/api";
+import { Index } from "@codestream/utils/types";
 import { createSelector } from "reselect";
+
 import { CodeStreamState } from "..";
 import { toMapBy } from "../../utils";
-import { ActionType, Index } from "../common";
+import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ReviewsActionsTypes, ReviewsState } from "./types";
 

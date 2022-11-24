@@ -1,5 +1,5 @@
 import { CSCodeError } from "@codestream/protocols/api";
-import { Index } from "../common";
+import { Index } from "@codestream/utils/types";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",

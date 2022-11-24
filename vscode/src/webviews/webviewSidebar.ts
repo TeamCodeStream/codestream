@@ -3,7 +3,12 @@ import { promises as fs } from "fs";
 
 import {
 	HostDidChangeFocusNotificationType,
-	ShowStreamNotificationType
+	isIpcResponseMessage,
+	ShowStreamNotificationType,
+	WebviewIpcMessage,
+	WebviewIpcNotificationMessage,
+	WebviewIpcRequestMessage,
+	WebviewIpcResponseMessage
 } from "@codestream/protocols/webview";
 import {
 	CancellationToken,
@@ -20,13 +25,6 @@ import {
 	WindowState
 } from "vscode";
 import { NotificationType, RequestType, ResponseError } from "vscode-jsonrpc";
-import {
-	isIpcResponseMessage,
-	WebviewIpcMessage,
-	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage,
-	WebviewIpcResponseMessage
-} from "protocols/webview/webview.protocol.common";
 
 import { gate } from "system/decorators/gate";
 import { CodeStreamSession, StreamThread } from "../api/session";

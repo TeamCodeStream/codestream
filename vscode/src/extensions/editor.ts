@@ -1,5 +1,5 @@
 "use strict";
-import { EditorMetrics, EditorSelection } from "protocols/webview/webview.protocol.common";
+import { EditorMetrics, EditorSelection } from "@codestream/protocols/webview";
 import {
 	commands,
 	DecorationRangeBehavior,

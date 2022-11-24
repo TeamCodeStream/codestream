@@ -1,7 +1,5 @@
 "use strict";
 
-import { describe, expect, it } from "@jest/globals";
-import { Dictionary } from "lodash";
 import {
 	Entity,
 	GetEntityCountResponse,
@@ -9,8 +7,11 @@ import {
 	ObservabilityRepo,
 	RelatedEntity,
 	RelatedEntityByRepositoryGuidsResult,
-} from "../../../../src/protocol/agent.protocol";
-import { CSMe } from "../../../../src/protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSMe } from "@codestream/protocols/api";
+import { describe, expect, it } from "@jest/globals";
+import { Dictionary } from "lodash";
+
 import { NewRelicProvider } from "../../../../src/providers/newrelic";
 import {
 	GraphqlNrqlError,

@@ -89,7 +89,7 @@ are:
 - The code block to which the marker refers to no longer exists in the document.
 
 If the location cannot be determined for a marker, the reason (if known) is specified as
-a [`MissingMarkerReason`](src/protocol/agent.protocol.markers.ts).
+a [`MissingMarkerReason`](shared/util/src/protocol/agent.protocol.markers.ts).
 
 [`MarkerLocationManager.getCurrentLocations()`](src/managers/markerLocationManager.ts) is the method responsible
 for orchestrating the marker location calculation process. The steps of this process are:

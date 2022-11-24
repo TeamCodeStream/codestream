@@ -30,8 +30,9 @@ import {
 	UpdateStatusResponse,
 	UpdateUserRequest,
 	UpdateUserRequestType,
-} from "../protocol/agent.protocol";
-import { CSMe, CSUser } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSMe, CSUser } from "@codestream/protocols/api";
+
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

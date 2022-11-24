@@ -3,9 +3,9 @@ import fs from "fs";
 import * as path from "path";
 import { join, relative, sep } from "path";
 
+import { Index } from "@codestream/utils/types";
 import { GraphQLClient } from "graphql-request";
 import {
-	Dictionary,
 	flatten as _flatten,
 	groupBy as _groupBy,
 	isEmpty as _isEmpty,
@@ -13,18 +13,10 @@ import {
 	memoize,
 	uniq as _uniq,
 	uniqBy as _uniqBy,
-} from "lodash";
+} from "lodash-es";
 import Cache from "timed-cache";
 import { ResponseError } from "vscode-jsonrpc/lib/messages";
 import { URI } from "vscode-uri";
-
-import { customFetch } from "../system/fetchCore";
-import * as csUri from "../system/uri";
-import { InternalError, ReportSuppressedMessages } from "../agentError";
-import { SessionContainer, SessionServiceContainer } from "../container";
-import { GitRemoteParser } from "../git/parsers/remoteParser";
-import { Logger } from "../logger";
-import { ReviewsManager } from "../managers/reviewsManager";
 import {
 	BuiltFromResult,
 	CodeStreamDiffUriData,
@@ -105,11 +97,18 @@ import {
 	EntityGoldenMetricsResults,
 	EntityGoldenMetrics,
 	GoldenMetricUnitMappings,
-} from "../protocol/agent.protocol";
-import { CSMe, CSNewRelicProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSMe, CSNewRelicProviderInfo } from "@codestream/protocols/api";
+
+import * as csUri from "../system/uri";
+import { customFetch } from "../system/fetchCore";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
+import { SessionContainer, SessionServiceContainer } from "../container";
+import { GitRemoteParser } from "../git/parsers/remoteParser";
+import { Logger } from "../logger";
+import { ReviewsManager } from "../managers/reviewsManager";
 import { CodeStreamSession } from "../session";
-import { Functions, log, lspHandler, lspProvider } from "../system";
-import { Strings } from "../system/string";
+import { Functions, log, lspHandler, lspProvider, Strings } from "../system";
 import {
 	GraphqlNrqlError,
 	GraphqlNrqlTimeoutError,
@@ -2006,7 +2005,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	}
 
 	addMethodName(
-		groupedByTransactionName: Dictionary<Span[]>,
+		groupedByTransactionName: Index<Span[]>,
 		metricTimesliceNames: MetricTimeslice[],
 		languageId: LanguageId
 	) {

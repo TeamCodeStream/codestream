@@ -1,4 +1,11 @@
-import { NewRelicOptions, RepoProjectType } from "@codestream/protocols/agent";
+import {
+	CreateNewRelicConfigFileRequestType,
+	CreateNewRelicConfigFileResponse,
+	InstallNewRelicRequestType,
+	InstallNewRelicResponse,
+	NewRelicOptions,
+	RepoProjectType,
+} from "@codestream/protocols/agent";
 import * as path from "path-browserify";
 import React, { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
@@ -9,12 +16,6 @@ import { clearProcessBuffer } from "@codestream/webview/store/editorContext/acti
 import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import { TextInput } from "../../Authentication/TextInput";
 import { logError } from "../../logger";
-import {
-	CreateNewRelicConfigFileRequestType,
-	CreateNewRelicConfigFileResponse,
-	InstallNewRelicRequestType,
-	InstallNewRelicResponse,
-} from "../../protocols/agent/agent.protocol.nr";
 import { Button } from "../../src/components/Button";
 import { Dialog } from "../../src/components/Dialog";
 import { CodeStreamState } from "../../store";

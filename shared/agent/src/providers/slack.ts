@@ -1,8 +1,4 @@
 "use strict";
-import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
-import { flatten, sortBy } from "lodash";
-import { SlackSharingApiProvider } from "../api/slack/slackSharingApi";
-import { SessionContainer } from "../container";
 import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
@@ -13,13 +9,18 @@ import {
 	ThirdPartyDisconnect,
 	UpdateThirdPartyStatusRequest,
 	UpdateThirdPartyStatusResponse,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
 	CSDirectStream,
 	CSSlackProviderInfo,
 	StreamType,
-} from "../protocol/api.protocol";
+} from "@codestream/protocols/api";
+import { flatten, sortBy } from "lodash-es";
+
+import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
+import { SlackSharingApiProvider } from "../api/slack/slackSharingApi";
+import { SessionContainer } from "../container";
 import { log, lspProvider } from "../system";
 import { ThirdPartyProviderSupportsStatus } from "./provider";
 import { ThirdPartyPostProviderBase } from "./thirdPartyPostProviderBase";

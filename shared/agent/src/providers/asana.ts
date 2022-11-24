@@ -1,6 +1,6 @@
 "use strict";
 import * as qs from "querystring";
-import { Logger } from "../logger";
+
 import {
 	AsanaCard,
 	AsanaCreateCardRequest,
@@ -17,8 +17,10 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderBoard,
 	TransitionsEntity,
-} from "../protocol/agent.protocol";
-import { CSAsanaProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSAsanaProviderInfo } from "@codestream/protocols/api";
+
+import { Logger } from "../logger";
 import { log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 

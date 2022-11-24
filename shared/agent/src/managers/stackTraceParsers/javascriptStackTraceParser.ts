@@ -1,7 +1,8 @@
 "use strict";
 
+import { CSStackTraceInfo } from "@codestream/protocols/api";
 import * as StackTraceParser from "stacktrace-parser";
-import { CSStackTraceInfo } from "../../protocol/api.protocol.models";
+
 import { Strings } from "../../system";
 
 export function Parser(stack: string): CSStackTraceInfo {

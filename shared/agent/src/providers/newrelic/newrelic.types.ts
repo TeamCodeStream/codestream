@@ -1,4 +1,4 @@
-import { FunctionLocator } from "../../protocol/agent.protocol.providers";
+import { FunctionLocator } from "@codestream/protocols/agent";
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";

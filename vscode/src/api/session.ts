@@ -20,10 +20,10 @@ import {
 	CSChannelStream,
 	CSDirectStream,
 	LoginResult,
-	CSMe
+	CSMe,
+	CSEligibleJoinCompany
 } from "@codestream/protocols/api";
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from "vscode";
-import { CSEligibleJoinCompany } from "@codestream/protocols/api";
 
 import { openUrl } from "urlHandler";
 import { WorkspaceState } from "../common";
@@ -118,12 +118,14 @@ export class CodeStreamSession implements Disposable {
 	get onDidChangePosts(): Event<PostsChangedEvent> {
 		return this._onDidChangePosts.event;
 	}
+
 	private fireDidChangePosts = createMergableDebouncedEvent(this._onDidChangePosts);
 
 	private _onDidChangeReviews = new EventEmitter<ReviewsChangedEvent>();
 	get onDidChangeReviews(): Event<ReviewsChangedEvent> {
 		return this._onDidChangeReviews.event;
 	}
+
 	private fireDidChangeReviews = createMergableDebouncedEvent(this._onDidChangeReviews);
 
 	private _onDidChangeSessionStatus = new EventEmitter<SessionStatusChangedEvent>();
@@ -135,6 +137,7 @@ export class CodeStreamSession implements Disposable {
 	get onDidChangeUnreads(): Event<UnreadsChangedEvent> {
 		return this._onDidChangeUnreads.event;
 	}
+
 	private fireDidChangeUnreads = Functions.debounce(
 		(e: UnreadsChangedEvent) => this._onDidChangeUnreads.fire(e),
 		250,
@@ -145,6 +148,7 @@ export class CodeStreamSession implements Disposable {
 	get onDidChangePreferences(): Event<PreferencesChangedEvent> {
 		return this._onDidChangePreferences.event;
 	}
+
 	private fireDidChangePreferences = Functions.debounce(
 		(e: PreferencesChangedEvent) => this._onDidChangePreferences.fire(e),
 		250,
@@ -155,9 +159,11 @@ export class CodeStreamSession implements Disposable {
 	get onDidChangePullRequests(): Event<PullRequestsChangedEvent> {
 		return this._onDidChangePullRequests.event;
 	}
+
 	private fireDidChangePullRequests = createMergableDebouncedEvent(this._onDidChangePullRequests);
 
 	private _agentCapabilities: Capabilities | undefined;
+
 	get capabilities() {
 		const ide: Capabilities = {
 			codemarkApply: true,
@@ -336,6 +342,7 @@ export class CodeStreamSession implements Disposable {
 	get serverUrl(): string {
 		return this._serverUrl;
 	}
+
 	setServerUrl(url: string, environment?: string) {
 		this._serverUrl = url;
 		if (environment && this._environmentInfo) {
@@ -351,6 +358,7 @@ export class CodeStreamSession implements Disposable {
 	get status() {
 		return this._status;
 	}
+
 	private setStatus(
 		status: SessionStatus,
 		signedOutReason?: SessionSignedOutReason,

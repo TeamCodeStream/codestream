@@ -1,14 +1,16 @@
 import path from "path";
-import { URI } from "vscode-uri";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
+
 import {
 	AgentOpenUrlRequest,
 	AgentOpenUrlRequestType,
 	CodeStreamDiffUriData,
 	ResolveLocalUriRequest,
 	ResolveLocalUriRequestType,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+import { URI } from "vscode-uri";
+
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { lsp, lspHandler } from "../system";
 import { openUrl } from "../system/openUrl";
 import * as csUri from "../system/uri";

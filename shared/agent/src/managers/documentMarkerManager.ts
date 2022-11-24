@@ -1,19 +1,6 @@
 "use strict";
-import { structuredPatch } from "diff";
 import * as path from "path";
-import { ThirdPartyProvider } from "providers/provider";
-import { CodeStreamSession } from "session";
-import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
-import { URI } from "vscode-uri";
-import { Marker, MarkerLocation, Ranges } from "../api/extensions";
-import { Container, SessionContainer } from "../container";
-import * as gitUtils from "../git/utils";
-import { Logger } from "../logger";
-import {
-	calculateRanges,
-	findBestMatchingLine,
-	MAX_RANGE_VALUE,
-} from "../markerLocation/calculator";
+
 import {
 	CalculateNonLocalRangesRequest,
 	CalculateNonLocalRangesRequestType,
@@ -35,7 +22,7 @@ import {
 	GetDocumentFromMarkerResponse,
 	MarkerNotLocated,
 	MarkerNotLocatedReason,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CodemarkType,
 	CSCodemark,
@@ -43,8 +30,24 @@ import {
 	CSMarker,
 	CSMe,
 	CSUser,
-} from "../protocol/api.protocol";
-import { Functions, log, lsp, lspHandler, Strings } from "../system";
+} from "@codestream/protocols/api";
+import { structuredPatch } from "diff";
+import { Range, TextDocumentChangeEvent } from "vscode-languageserver";
+import { URI } from "vscode-uri";
+import * as Strings from "@codestream/utils/system/string";
+
+import { ThirdPartyProvider } from "providers/provider";
+import { CodeStreamSession } from "session";
+import { Marker, MarkerLocation, Ranges } from "../api/extensions";
+import { Container, SessionContainer } from "../container";
+import * as gitUtils from "../git/utils";
+import { Logger } from "../logger";
+import {
+	calculateRanges,
+	findBestMatchingLine,
+	MAX_RANGE_VALUE,
+} from "../markerLocation/calculator";
+import { Functions, log, lsp, lspHandler } from "../system";
 import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
 import { GetLocationsResult } from "./markerLocationManager";

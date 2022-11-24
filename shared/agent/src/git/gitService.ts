@@ -29,18 +29,21 @@ SOFTWARE.
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
  */
 
-import { createPatch, ParsedDiff, parsePatch } from "diff";
 import * as fs from "fs";
-import { memoize } from "lodash";
 import * as path from "path";
+
+import { CommitsChangedData, WorkspaceChangedData } from "@codestream/protocols/agent";
+import { FileStatus } from "@codestream/protocols/api";
+import { Iterables } from "@codestream/utils/system/iterable";
+import { createPatch, ParsedDiff, parsePatch } from "diff";
+import { memoize } from "lodash-es";
 import { Disposable, Event, Range } from "vscode-languageserver";
 import { URI } from "vscode-uri";
+
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
-import { CommitsChangedData, WorkspaceChangedData } from "../protocol/agent.protocol";
-import { FileStatus } from "../protocol/api.protocol.models";
 import { CodeStreamSession } from "../session";
-import { Iterables, log, Strings } from "../system";
+import { log, Strings } from "../system";
 import { xfs } from "../xfs";
 import { git, GitErrors, GitWarnings } from "./git";
 import { GitServiceLite } from "./gitServiceLite";
@@ -53,6 +56,7 @@ import { GitPatchParser, ParsedDiffPatch } from "./parsers/patchParser";
 import { GitRemoteParser } from "./parsers/remoteParser";
 import { GitRepositories } from "./repositories";
 import { RepositoryLocator } from "./repositoryLocator";
+import { isWindows } from "./shell";
 
 export * from "./models/models";
 
@@ -333,7 +337,10 @@ export class GitService implements IGitService, Disposable {
 			repo.path
 		);
 
-		let fileRelativePath = Strings.normalizePath(path.relative(possiblySymlinkedRepoRoot, fsPath));
+		let fileRelativePath = Strings.normalizePath(
+			path.relative(possiblySymlinkedRepoRoot, fsPath),
+			isWindows
+		);
 		if (fileRelativePath[0] === "/") {
 			fileRelativePath = fileRelativePath.substr(1);
 		}
@@ -469,8 +476,8 @@ export class GitService implements IGitService, Disposable {
 		initialCommitHash: string,
 		finalCommitHash: string,
 		filePath: string,
-		fetchIfCommitNotFound: boolean = false,
-		contextLines: number = 3
+		fetchIfCommitNotFound = false,
+		contextLines = 3
 	): Promise<ParsedDiff | undefined> {
 		const repoAndRelativePath = await this._getRepoAndRelativePath(filePath);
 		if (!repoAndRelativePath) return undefined;
@@ -516,8 +523,8 @@ export class GitService implements IGitService, Disposable {
 		repositoryPath: string,
 		filePath1: string,
 		filePath2: string,
-		fetchIfCommitNotFound: boolean = false,
-		contextLines: number = 3
+		fetchIfCommitNotFound = false,
+		contextLines = 3
 	): Promise<ParsedDiff | undefined> {
 		const repoAndRelativePath = await this._getRepoAndRelativePath(repositoryPath);
 		if (!repoAndRelativePath) return undefined;
@@ -952,7 +959,7 @@ export class GitService implements IGitService, Disposable {
 	async getTrackingBranch(path: string, isDirectory?: boolean): Promise<TrackingBranch | undefined>;
 	async getTrackingBranch(
 		uriOrPath: URI | string,
-		isDirectory: boolean = false
+		isDirectory = false
 	): Promise<TrackingBranch | undefined> {
 		const filePath = typeof uriOrPath === "string" ? uriOrPath : uriOrPath.fsPath;
 		let cwd;
@@ -976,10 +983,7 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async getLog(
-		repo: GitRepository,
-		limit: number = 50
-	): Promise<Map<string, GitCommit> | undefined> {
+	async getLog(repo: GitRepository, limit = 50): Promise<Map<string, GitCommit> | undefined> {
 		try {
 			const commitsData = await git(
 				{ cwd: repo.path },
@@ -1148,7 +1152,7 @@ export class GitService implements IGitService, Disposable {
 	 */
 	async getNumStat(
 		repoPath: string,
-		startCommit: string = "HEAD",
+		startCommit = "HEAD",
 		endCommit: string | undefined,
 		includeSaved: boolean,
 		includeStaged: boolean
@@ -1215,10 +1219,7 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	private parseNumStat(
-		data: string = "",
-		presumedStatus: FileStatus = FileStatus.modified
-	): GitNumStat[] {
+	private parseNumStat(data = "", presumedStatus: FileStatus = FileStatus.modified): GitNumStat[] {
 		const ret: GitNumStat[] = [];
 		data
 			.trim()
@@ -1371,7 +1372,7 @@ export class GitService implements IGitService, Disposable {
 		file: string,
 		includeSaved: boolean,
 		includeStaged: boolean,
-		ref: string = "HEAD"
+		ref = "HEAD"
 	): Promise<GitAuthor[]> {
 		if (ref === EMPTY_TREE_SHA) return [];
 
@@ -1472,7 +1473,7 @@ export class GitService implements IGitService, Disposable {
 	async getRepositoryByFilePath(fileOrFolderPath: string): Promise<GitRepository | undefined> {
 		let repo;
 		if (fs.existsSync(fileOrFolderPath) && fs.lstatSync(fileOrFolderPath).isDirectory()) {
-			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath);
+			const normalizedFsPath = Strings.normalizePath(fileOrFolderPath, isWindows);
 			const allRepos = await this.getRepositories();
 			repo = Array.from(allRepos).find(
 				r => r.path === normalizedFsPath || r.path === fileOrFolderPath
@@ -1689,7 +1690,7 @@ export class GitService implements IGitService, Disposable {
 		repoPath: string,
 		sha: string,
 		limit: number,
-		predicate: (c: GitCommit) => Boolean
+		predicate: (c: GitCommit) => boolean
 	): Promise<GitCommit | undefined> {
 		const commitsData = await git(
 			{ cwd: repoPath },

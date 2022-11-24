@@ -1,8 +1,8 @@
 import { expect } from "@jest/globals";
 import { mockDeep } from "jest-mock-extended";
+import { ReposScm } from "@codestream/protocols/agent";
 
 import { ScmManager } from "../../../src/managers/scmManager";
-import { ReposScm } from "../../../src/protocol/agent.protocol.scm";
 import { CodeStreamSession } from "../../../src/session";
 
 jest.mock("../../../src/session");

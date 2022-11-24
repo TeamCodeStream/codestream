@@ -1,15 +1,15 @@
 "use strict";
-import { GitRemoteLike } from "git/gitService";
-import { URI } from "vscode-uri";
-import { toRepoName } from "../git/utils";
-import { Logger } from "../logger";
 import {
 	ProviderConfigurationData,
 	ProviderGetForkedReposResponse,
-} from "../protocol/agent.protocol";
-import { CSBitbucketProviderInfo } from "../protocol/api.protocol";
-import { log, lspProvider } from "../system";
+} from "@codestream/protocols/agent";
+import { CSBitbucketProviderInfo } from "@codestream/protocols/api";
+import { URI } from "vscode-uri";
 
+import { GitRemoteLike } from "git/gitService";
+import { toRepoName } from "../git/utils";
+import { Logger } from "../logger";
+import { log, lspProvider } from "../system";
 import {
 	getRemotePaths,
 	ProviderCreatePullRequestRequest,
@@ -18,7 +18,6 @@ import {
 	ProviderPullRequestInfo,
 	PullRequestComment,
 } from "./provider";
-
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 interface BitbucketServerRepo {

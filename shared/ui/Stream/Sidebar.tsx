@@ -1,12 +1,12 @@
-import { HostApi } from "@codestream/webview/webview-api";
+import { GetReposScmRequestType, ReposScm } from "@codestream/protocols/agent";
 import cx from "classnames";
 import React, { useEffect, useMemo, useState } from "react";
 import Draggable from "react-draggable";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
-import { HostDidChangeWorkspaceFoldersNotificationType } from "../ipc/host.protocol.notifications";
-import { WebviewPanels } from "../ipc/webview.protocol.common";
-import { GetReposScmRequestType, ReposScm } from "../protocols/agent/agent.protocol.scm";
+
+import { HostApi } from "@codestream/webview/webview-api";
+import { HostDidChangeWorkspaceFoldersNotificationType } from "@codestream/protocols/webview";
 import { Pane, PaneState } from "../src/components/Pane";
 import { CodeStreamState } from "../store";
 import { getConnectedSupportedPullRequestHosts } from "../store/providers/reducer";
@@ -22,6 +22,7 @@ import IssuesPane from "./CrossPostIssueControls/IssuesPane";
 import { Observability } from "./Observability";
 import { OpenPullRequests } from "./OpenPullRequests";
 import { OpenReviews } from "./OpenReviews";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 
 const Root = styled.div`
 	height: 100%;

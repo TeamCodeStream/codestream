@@ -28,8 +28,9 @@
 /**
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
  */
-import { debounce as _debounce, memoize as _memoize } from "lodash";
 import { setInterval } from "timers";
+
+import { debounce as _debounce, memoize as _memoize } from "lodash-es";
 import { CancellationToken } from "vscode-jsonrpc";
 
 export interface IDeferrable {

@@ -1,7 +1,17 @@
 "use strict";
-import { applyPatch, createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
 import * as path from "path";
+
+import { MarkerNotLocatedReason } from "@codestream/protocols/agent";
+import {
+	CSLocationArray,
+	CSMarker,
+	CSMarkerLocation,
+	CSMarkerLocations,
+	CSReferenceLocation,
+} from "@codestream/protocols/api";
+import { applyPatch, createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
 import { URI } from "vscode-uri";
+
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { getCache } from "../cache";
 import { Container, SessionContainer } from "../container";
@@ -12,15 +22,7 @@ import {
 	calculateLocations,
 	MAX_RANGE_VALUE,
 } from "../markerLocation/calculator";
-import { MarkerNotLocatedReason } from "../protocol/agent.protocol";
-import {
-	CSLocationArray,
-	CSMarker,
-	CSMarkerLocation,
-	CSMarkerLocations,
-	CSReferenceLocation,
-} from "../protocol/api.protocol";
-import { Strings } from "../system/string";
+import { Strings } from "../system";
 import { xfs } from "../xfs";
 import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
@@ -537,7 +539,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 						if (!locationsByCommitHash.has(referenceCommitHash)) {
 							locationsByCommitHash.set(referenceCommitHash, {});
 						}
-						const locationsById = locationsByCommitHash.get(referenceCommitHash)!!;
+						const locationsById = locationsByCommitHash.get(referenceCommitHash)!;
 						locationsById[missingMarker.id] = MarkerLocation.fromArray(
 							referenceLocation.location,
 							missingMarker.id
@@ -567,7 +569,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			Logger.log(
 				`MARKERS: calculating locations based on diff from ${referenceCommitHash} to ${commitHash}`
 			);
-			const locationsToCalculate = locationsByCommitHash.get(referenceCommitHash)!!;
+			const locationsToCalculate = locationsByCommitHash.get(referenceCommitHash)!;
 			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
 			Object.assign(currentCommitLocations, calculatedLocations);
 

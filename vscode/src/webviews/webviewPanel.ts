@@ -1,15 +1,13 @@
 "use strict";
 import {
 	HostDidChangeFocusNotificationType,
-	ShowStreamNotificationType
-} from "@codestream/protocols/webview";
-import {
+	ShowStreamNotificationType,
 	isIpcResponseMessage,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
 	WebviewIpcResponseMessage
-} from "protocols/webview/webview.protocol.common";
+} from "@codestream/protocols/webview";
 import {
 	Disposable,
 	Event,

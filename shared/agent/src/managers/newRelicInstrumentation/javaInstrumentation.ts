@@ -2,10 +2,12 @@
 
 import { promises as fsPromises } from "fs";
 import path from "path";
+
 import {
 	CreateNewRelicConfigFileJavaResponse,
 	InstallNewRelicResponse,
-} from "../../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
 import { CodeStreamSession } from "../../session";
 import { execAsync, existsAsync } from "./util";
 

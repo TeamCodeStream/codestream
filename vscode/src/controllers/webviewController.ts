@@ -74,7 +74,18 @@ import {
 	HostDidChangeLayoutNotificationType,
 	NewPullRequestBranch,
 	ViewMethodLevelTelemetryNotificationType,
-	RefreshEditorsCodeLensRequestType
+	RefreshEditorsCodeLensRequestType,
+	EditorContext,
+	IpcRoutes,
+	isIpcRequestMessage,
+	isIpcResponseMessage,
+	SidebarLocation,
+	TeamlessContext,
+	WebviewContext,
+	WebviewIpcMessage,
+	WebviewIpcNotificationMessage,
+	WebviewIpcRequestMessage,
+	WebviewPanels
 } from "@codestream/protocols/webview";
 import {
 	authentication,
@@ -92,22 +103,9 @@ import {
 	env
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
-import {
-	EditorContext,
-	IpcRoutes,
-	isIpcRequestMessage,
-	isIpcResponseMessage,
-	SidebarLocation,
-	TeamlessContext,
-	WebviewContext,
-	WebviewIpcMessage,
-	WebviewIpcNotificationMessage,
-	WebviewIpcRequestMessage,
-	WebviewPanels
-} from "protocols/webview/webview.protocol.common";
 
 import { gate } from "system/decorators/gate";
-import { Strings } from "system/string";
+import { Strings, Functions, log } from "../system";
 import { openUrl } from "urlHandler";
 import { toLoggableIpcMessage, WebviewLike } from "webviews/webviewLike";
 import { toCSGitUri } from "providers/gitContentProvider";
@@ -123,7 +121,6 @@ import { configuration } from "../configuration";
 import { Container } from "../container";
 import { Editor } from "../extensions";
 import { Logger } from "../logger";
-import { Functions, log } from "../system";
 import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 
@@ -530,7 +527,7 @@ export class WebviewController implements Disposable {
 	}
 
 	@log()
-	reload(reset: boolean = false) {
+	reload(reset = false) {
 		if (this._webview === undefined || !this.visible) return;
 
 		if (reset) {

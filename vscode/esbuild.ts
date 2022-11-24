@@ -1,10 +1,11 @@
-import { build, BuildOptions } from "esbuild";
 import * as path from "path";
-import { commonEsbuildOptions, processArgs } from "../shared/util/src/esbuildCommon";
-import { CopyStuff, copyPlugin } from "../shared/util/src/copyPlugin";
-import { createSymlinks } from "../shared/util/src/symlinks";
-import { Args } from "../shared/util/src/esbuildCommon";
-import { statsPlugin } from "../shared/util/src/statsPlugin";
+
+import { build, BuildOptions } from "esbuild";
+
+import { commonEsbuildOptions, processArgs, Args } from "../shared/build/src/esbuildCommon";
+import { CopyStuff, copyPlugin } from "../shared/build/src/copyPlugin";
+import { removeSymlinks } from "../shared/build/src/symlinks";
+import { statsPlugin } from "../shared/build/src/statsPlugin";
 
 async function webBuild(args: Args) {
 	const context = path.resolve(__dirname, "src/webviews/app");
@@ -16,12 +17,12 @@ async function webBuild(args: Args) {
 			{
 				from: path.resolve(context, "index.html"),
 				to: __dirname,
-				options: { rename: "webview.html" },
+				options: { rename: "webview.html" }
 			},
 			{
 				from: path.resolve(target, "index.js.map"),
-				to: dist,
-			},
+				to: dist
+			}
 		]
 	});
 
@@ -31,7 +32,7 @@ async function webBuild(args: Args) {
 			path.resolve(context, "./index.ts"),
 			path.resolve(context, "styles", "webview.less")
 		],
-		sourcemap: args.mode === "production" ?  "linked" : "both",
+		sourcemap: args.mode === "production" ? "linked" : "both",
 		outdir: target
 	};
 
@@ -74,12 +75,9 @@ async function extensionBuild(args: Args) {
 	await build(buildOptions);
 }
 
-(async function() {
+(async function () {
 	const args = processArgs();
-	createSymlinks(__dirname, args);
-	if (args.onlySymlinks) {
-		return;
-	}
+	removeSymlinks(__dirname);
 	console.info("Starting webBuild");
 	await webBuild(args);
 	console.info("Starting extensionBuild");

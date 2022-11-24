@@ -3,12 +3,12 @@ import { promises as fsPromises } from "fs";
 import path from "path";
 
 import { uniq as _uniq } from "lodash";
-
 import {
 	AddNewRelicIncludeResponse,
 	CreateNewRelicConfigFileResponse,
 	InstallNewRelicResponse,
-} from "../../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
 import { CodeStreamSession } from "../../session";
 import { execAsync, existsAsync } from "./util";
 import { Logger } from "../../logger";

@@ -3,17 +3,10 @@ import { performance } from "perf_hooks";
 import * as qs from "querystring";
 
 import { GraphQLClient } from "graphql-request";
-import { isEmpty as _isEmpty } from "lodash";
+import { isEmpty as _isEmpty } from "lodash-es";
 import { Headers, Response } from "node-fetch";
 import semver from "semver";
 import { URI } from "vscode-uri";
-
-import { CodeStreamSession } from "session";
-import { InternalError, ReportSuppressedMessages } from "../agentError";
-import { Container, SessionContainer } from "../container";
-import { GitRemoteLike } from "../git/models/remote";
-import { toRepoName } from "../git/utils";
-import { Logger } from "../logger";
 import {
 	CreateThirdPartyCardRequest,
 	DidChangePullRequestCommentsNotificationType,
@@ -44,8 +37,15 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderCard,
 	ThirdPartyProviderConfig,
-} from "../protocol/agent.protocol";
-import { CSGitHubProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSGitHubProviderInfo } from "@codestream/protocols/api";
+
+import { CodeStreamSession } from "session";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
+import { Container, SessionContainer } from "../container";
+import { GitRemoteLike } from "../git/models/remote";
+import { toRepoName } from "../git/utils";
+import { Logger } from "../logger";
 import { Dates, Functions, log, lspProvider } from "../system";
 import { customFetch } from "../system/fetchCore";
 import { TraceLevel } from "../types";

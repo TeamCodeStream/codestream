@@ -11,6 +11,7 @@ export * from "./host.protocol.notifications";
 export * from "./host.protocol.review";
 export * from "./host.protocol.vsls";
 export * from "./webview.protocol.notifications";
+export * from "./webview.protocol.common";
 
 // TODO: This should be a request to the webview -- not a notification
 export interface ShowCodemarkNotification {

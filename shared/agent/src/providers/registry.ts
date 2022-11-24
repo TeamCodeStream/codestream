@@ -1,10 +1,4 @@
 "use strict";
-import { differenceWith } from "lodash";
-import semver from "semver";
-import { URI } from "vscode-uri";
-
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderRequestType,
@@ -67,12 +61,14 @@ import {
 	UpdateThirdPartyStatusRequest,
 	UpdateThirdPartyStatusRequestType,
 	UpdateThirdPartyStatusResponse,
-} from "../protocol/agent.protocol";
-import {
-	CSMe,
-	CSMePreferences,
-	CSNotificationDeliveryPreference,
-} from "../protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSMe, CSMePreferences, CSNotificationDeliveryPreference } from "@codestream/protocols/api";
+import { differenceWith } from "lodash-es";
+import semver from "semver";
+import { URI } from "vscode-uri";
+
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { Functions, getProvider, getRegisteredProviders, log, lsp, lspHandler } from "../system";
 import { GitLabEnterpriseProvider } from "./gitlabEnterprise";

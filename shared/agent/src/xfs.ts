@@ -2,7 +2,8 @@
 
 import * as fs from "fs";
 import path from "path";
-import { DirectoryTree } from "protocol/agent.protocol.scm";
+
+import { DirectoryTree } from "@codestream/protocols/agent";
 import writeAtomic from "write-file-atomic";
 
 export namespace xfs {

@@ -1,11 +1,13 @@
+import * as path from "path";
+
 import graphqlLoaderPlugin from "@luckycatfactory/esbuild-graphql-loader";
 import { build, BuildOptions } from "esbuild";
 import ignorePlugin from "esbuild-plugin-ignore";
-import * as path from "path";
-import { copyPlugin, CopyStuff } from "../util/src/copyPlugin";
-import { commonEsbuildOptions, processArgs } from "../util/src/esbuildCommon";
-import { nativeNodeModulesPlugin } from "../util/src/nativeNodeModulesPlugin";
-import { statsPlugin } from "../util/src/statsPlugin";
+
+import { copyPlugin, CopyStuff } from "../build/src/copyPlugin";
+import { commonEsbuildOptions, processArgs } from "../build/src/esbuildCommon";
+import { nativeNodeModulesPlugin } from "../build/src/nativeNodeModulesPlugin";
+import { statsPlugin } from "../build/src/statsPlugin";
 
 const outputDir = path.resolve(__dirname, "dist");
 

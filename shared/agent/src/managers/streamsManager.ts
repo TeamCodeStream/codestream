@@ -1,7 +1,4 @@
 "use strict";
-import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
-import { SessionContainer } from "../container";
-import { Logger } from "../logger";
 import {
 	ArchiveStreamRequest,
 	ArchiveStreamRequestType,
@@ -51,14 +48,18 @@ import {
 	UpdateStreamMembershipRequest,
 	UpdateStreamMembershipRequestType,
 	UpdateStreamMembershipResponse,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSChannelStream,
 	CSDirectStream,
 	CSObjectStream,
 	CSStream,
 	StreamType,
-} from "../protocol/api.protocol";
+} from "@codestream/protocols/api";
+
+import { CodeStreamApiProvider } from "../api/codestream/codestreamApi";
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { lsp, lspHandler } from "../system";
 import { KeyValue } from "./cache/baseCache";
 import { CachedEntityManagerBase, Id } from "./entityManager";

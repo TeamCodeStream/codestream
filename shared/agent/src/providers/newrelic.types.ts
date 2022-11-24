@@ -1,4 +1,4 @@
-import { Entity, GetFileLevelTelemetryResponse } from "../protocol/agent.protocol.providers";
+import { Entity, GetFileLevelTelemetryResponse } from "@codestream/protocols/agent";
 
 export class GraphqlNrqlError extends Error {
 	errors: Array<GraphqlNrqlErrorItem>;

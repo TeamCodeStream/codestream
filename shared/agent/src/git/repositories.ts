@@ -1,20 +1,25 @@
 "use strict";
-import * as chokidar from "chokidar";
 import * as fs from "fs";
 import * as path from "path";
-import { Disposable, Emitter, Event, WorkspaceFoldersChangeEvent } from "vscode-languageserver";
-import { URI } from "vscode-uri";
-import { Container, SessionContainer } from "../container";
-import { Logger } from "../logger";
+
 import {
 	CommitsChangedData,
+	MatchReposRequest,
+	RepoMap,
 	ReportingMessageType,
 	WorkspaceChangedData,
-} from "../protocol/agent.protocol";
-import { MatchReposRequest, RepoMap } from "../protocol/agent.protocol.repos";
-import { CSRepository } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSRepository } from "@codestream/protocols/api";
+import { Iterables } from "@codestream/utils/system/iterable";
+import { TernarySearchTree } from "@codestream/utils/system/searchTree";
+import * as chokidar from "chokidar";
+import { Disposable, Emitter, Event, WorkspaceFoldersChangeEvent } from "vscode-languageserver";
+import { URI } from "vscode-uri";
+
+import { Container, SessionContainer } from "../container";
+import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
-import { Iterables, Strings, TernarySearchTree } from "../system";
+import { Strings } from "../system";
 import { Disposables } from "../system/disposable";
 import { TraceLevel } from "../types";
 import { getDriveLetterFromPath, getMappedDrives, mapMountedDriveToUNC } from "../winUtil/winUtil";
@@ -80,25 +85,25 @@ export class GitRepositories {
 	// If we find a Windows mapped drive convert it to UNC path
 	private async normalizeFilePath(filePath: string): Promise<string> {
 		if (!isWindows) {
-			return Strings.normalizePath(filePath);
+			return Strings.normalizePath(filePath, isWindows);
 		}
 
 		const driveLetter = getDriveLetterFromPath(filePath);
 		if (!driveLetter) {
-			return Strings.normalizePath(filePath);
+			return Strings.normalizePath(filePath, isWindows);
 		}
 
 		const mappedDrives = await getMappedDrives();
 		if (mappedDrives.isEmpty) {
-			return Strings.normalizePath(filePath);
+			return Strings.normalizePath(filePath, isWindows);
 		}
 
 		const uncPath = mappedDrives.getUNCForDriveLetter(driveLetter);
 		if (!uncPath) {
-			return Strings.normalizePath(filePath);
+			return Strings.normalizePath(filePath, isWindows);
 		}
 
-		return Strings.normalizePath(mapMountedDriveToUNC(filePath, driveLetter, uncPath));
+		return Strings.normalizePath(mapMountedDriveToUNC(filePath, driveLetter, uncPath), isWindows);
 	}
 
 	async getByFilePath(filePath: string): Promise<GitRepository | undefined> {
@@ -328,7 +333,7 @@ export class GitRepositories {
 						// paths (strings) are normally using a GitRepository.path property
 						// which has gone through git.getRepoRoot which has normalized the path to use
 						// forward slashes
-						repoPath = Strings.normalizePath(fsPath);
+						repoPath = Strings.normalizePath(fsPath, isWindows);
 					} catch {}
 					if (!repoPath) continue;
 

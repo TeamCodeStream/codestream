@@ -22,7 +22,7 @@ import { CodemarkCodeLensProvider } from "./providers/markerCodeLensProvider";
 import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider";
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SelectionDecorationProvider } from "./providers/selectionDecorationProvider";
-import { SetServerUrlRequestType } from "./protocols/agent/agent.protocol";
+import { SetServerUrlRequestType } from "@codestream/protocols/agent";
 import { BlameDecorationProvider } from "./providers/blameDecorationProvider";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 

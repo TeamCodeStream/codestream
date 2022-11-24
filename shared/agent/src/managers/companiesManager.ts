@@ -3,8 +3,9 @@ import {
 	FetchCompaniesRequest,
 	FetchCompaniesRequestType,
 	FetchCompaniesResponse,
-} from "../protocol/agent.protocol";
-import { CSCompany } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSCompany } from "@codestream/protocols/api";
+
 import { lsp, lspHandler } from "../system";
 import { CachedEntityManagerBase, Id } from "./entityManager";
 

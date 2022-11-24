@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { CodeStreamSession } from "session";
-import { Logger } from "../logger";
+
 import {
 	DeleteTextFileRequest,
 	DeleteTextFileResponse,
@@ -12,7 +11,10 @@ import {
 	WriteTextFileRequest,
 	WriteTextFileRequestType,
 	WriteTextFileResponse,
-} from "../protocol/agent.protocol.textFiles";
+} from "@codestream/protocols/agent";
+
+import { CodeStreamSession } from "session";
+import { Logger } from "../logger";
 import { log, lsp, lspHandler } from "../system";
 import { xfs } from "../xfs";
 

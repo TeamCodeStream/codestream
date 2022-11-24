@@ -4,6 +4,12 @@ import {
 	WriteTextFileRequestType,
 } from "@codestream/protocols/agent";
 import { CSReviewChangeset } from "@codestream/protocols/api";
+import { TernarySearchTree } from "@codestream/utils/system/searchTree";
+import * as path from "path-browserify";
+import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Range } from "vscode-languageserver-types";
+
 import {
 	EditorRevealRangeRequestType,
 	ShowNextChangedFileNotificationType,
@@ -14,13 +20,8 @@ import { getById } from "@codestream/webview/store/repos/reducer";
 import { showDiff } from "@codestream/webview/store/reviews/thunks";
 import { getPreferences } from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
-import { TernarySearchTree } from "@codestream/webview/utilities/searchTree";
 import { safe } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import * as path from "path-browserify";
-import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
-import { Range } from "vscode-languageserver-types";
 import { setUserPreference } from "../actions";
 import Icon from "../Icon";
 import { PRSelectorButtons } from "../PullRequestComponents";

@@ -1,12 +1,15 @@
 "use strict";
 import * as fs from "fs";
-import { memoize } from "lodash";
 import * as path from "path";
+
+import { memoize } from "lodash-es";
 import { URI } from "vscode-uri";
+
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { Strings } from "../system";
 import { git, isWslGit } from "./git";
+import { isWindows } from "./shell";
 
 const cygwinRegex = /\/cygdrive\/([a-zA-Z])/;
 const wslUncRegex = /(\\\\wsl\$\\.+?)\\.*/;
@@ -128,7 +131,7 @@ export class GitServiceLite {
 				// /mnt/wsl/docker-desktop-bind-mounts/Distro/8a5edab282632443219e051e4ade2d1d5bbc671c781051bf1437897cbdfea0f1
 				// In this case there's not much we can do, so we just return the Windows path we were given
 				// See: https://github.com/microsoft/WSL/issues/6464
-				repoRoot = Strings.normalizePath(data);
+				repoRoot = Strings.normalizePath(data, isWindows);
 			} else {
 				repoRoot = this._normalizePath(data, wslPrefix);
 			}
@@ -217,13 +220,13 @@ export class GitServiceLite {
 				// wsl git + windows folder perceived as /mnt/c/...
 				const [, drive, rest] = wslMntMatch;
 				const windowsPath = `${drive.toUpperCase()}:${rest}`;
-				const normalized = Strings.normalizePath(windowsPath.trim());
+				const normalized = Strings.normalizePath(windowsPath.trim(), isWindows);
 				Logger.debug(`Windows path (with WSL git) normalized: ${path} -> ${normalized}`);
 				return normalized;
 			}
 		}
 
 		// Make sure to normalize: https://github.com/git-for-windows/git/issues/2478
-		return Strings.normalizePath(path.trim());
+		return Strings.normalizePath(path.trim(), isWindows);
 	}
 }

@@ -1,11 +1,12 @@
 ﻿{
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"jsx": "react",
-		"lib": ["es2017", "dom", "dom.iterable"],
+		"lib": ["es2019", "dom", "dom.iterable"],
 		"module": "esnext",
 		"moduleResolution": "node",
 		"noFallthroughCasesInSwitch": true,
@@ -16,15 +17,15 @@
 		"outDir": "./build/ts",
 		"paths": {
 			"@codestream/protocols/agent": [
-				"../shared/ui/protocols/agent/agent.protocol.ts"
+				"../shared/util/src/protocol/agent/agent.protocol.ts"
 			],
 			"@codestream/protocols/api": [
-				"../shared/ui/protocols/agent/api.protocol.ts"
+				"../shared/util/src/protocol/agent/api.protocol.ts"
 			],
 			"@codestream/protocols/webview": [
 				"../shared/ui/ipc/webview.protocol.ts"
 			],
-			"@codestream/util/*": ["../shared/util/*"],
+			"@codestream/utils/*": ["../shared/util/src/utils/*"],
 			"@codestream/webview/*": ["../shared/ui/*"],
 			"vscode-jsonrpc": ["../shared/ui/vscode-jsonrpc.shim.ts"]
 		},
@@ -36,5 +37,5 @@
 		"target": "es2017",
 		"useUnknownInCatchVariables": false
 	},
-	"include": ["**/*.ts", "../shared/util/**/*"]
+	"include": ["**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
 }

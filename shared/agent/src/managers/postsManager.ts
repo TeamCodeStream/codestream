@@ -1,20 +1,31 @@
 "use strict";
-import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
-import { ParsedDiff } from "diff";
 import * as fs from "fs";
-import { groupBy, last, orderBy } from "lodash";
+import * as path from "path";
+
+import { ParsedDiff } from "diff";
+import { groupBy, last, orderBy } from "lodash-es";
 import { compressToBase64 } from "lz-string";
 import sizeof from "object-sizeof";
-import * as path from "path";
-import { ResponseError } from "vscode-jsonrpc/lib/messages";
-import { TextDocumentIdentifier } from "vscode-languageserver";
-import { URI } from "vscode-uri";
-import { Marker, MarkerLocation } from "../api/extensions";
-import { Container, SessionContainer } from "../container";
-import { EMPTY_TREE_SHA } from "../git/gitService";
-import { GitCommit } from "../git/models/commit";
-import * as gitUtils from "../git/utils";
-import { Logger } from "../logger";
+import {
+	CodemarkType,
+	CSChannelStream,
+	CSCodeError,
+	CSCreateCodemarkResponse,
+	CSDirectStream,
+	CSMarker,
+	CSObjectStream,
+	CSPost,
+	CSRepoChange,
+	CSReview,
+	CSStream,
+	CSTransformedReviewChangeset,
+	FileStatus,
+	isCSCodeError,
+	isCSReview,
+	ModifiedFile,
+	ProviderType,
+	StreamType,
+} from "@codestream/protocols/api";
 import {
 	CodeDelimiterStyles,
 	CodemarkPlus,
@@ -81,31 +92,21 @@ import {
 	UpdatePostSharingDataRequest,
 	UpdatePostSharingDataRequestType,
 	UpdatePostSharingDataResponse,
-} from "../protocol/agent.protocol";
-import {
-	CodemarkType,
-	CSChannelStream,
-	CSCodeError,
-	CSCreateCodemarkResponse,
-	CSDirectStream,
-	CSMarker,
-	CSObjectStream,
-	CSPost,
-	CSRepoChange,
-	CSReview,
-	CSStream,
-	CSTransformedReviewChangeset,
-	FileStatus,
-	isCSCodeError,
-	isCSReview,
-	ModifiedFile,
-	ProviderType,
-	StreamType,
-} from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { ResponseError } from "vscode-jsonrpc/lib/messages";
+import { TextDocumentIdentifier } from "vscode-languageserver";
+import { URI } from "vscode-uri";
+
+import { CodeStreamApiProvider } from "api/codestream/codestreamApi";
+import { Marker, MarkerLocation } from "../api/extensions";
+import { Container, SessionContainer } from "../container";
+import { EMPTY_TREE_SHA } from "../git/gitService";
+import { GitCommit } from "../git/models/commit";
+import * as gitUtils from "../git/utils";
+import { Logger } from "../logger";
 import { Directives } from "../providers/directives";
 import { providerDisplayNamesByNameKey } from "../providers/provider";
-import { Arrays, debug, log, lsp, lspHandler } from "../system";
-import { Strings } from "../system/string";
+import { Arrays, debug, log, lsp, lspHandler, Strings } from "../system";
 import * as csUri from "../system/uri";
 import { BaseIndex, IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";

@@ -1,11 +1,12 @@
+import { isCSReview } from "@codestream/protocols/api";
 import createClassString from "classnames";
 import { debounce, includes as _includes } from "lodash-es";
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { Disposable } from "vscode-languageserver-protocol";
+
 import { OpenUrlRequestType } from "../ipc/host.protocol";
-import { isCSReview } from "../protocols/agent/api.protocol.models";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import FiltersButton from "../src/components/FiltersButton";

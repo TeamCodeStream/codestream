@@ -1,12 +1,14 @@
 import * as qs from "querystring";
 import { ParsedUrlQueryInput } from "querystring";
-import { Logger } from "../logger";
+
 import {
 	CodeStreamApiDeleteRequestType,
 	CodeStreamApiGetRequestType,
 	CodeStreamApiPostRequestType,
 	CodeStreamApiPutRequestType,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
+import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { lsp, lspHandler } from "../system";
 

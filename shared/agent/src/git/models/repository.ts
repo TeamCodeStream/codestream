@@ -1,14 +1,15 @@
 "use strict";
-import { sortBy } from "lodash";
-import { WorkspaceFolder } from "vscode-languageserver";
-import { SessionContainer } from "../../container";
-import { Logger } from "../../logger";
 import {
 	CSBitbucketProviderInfo,
 	CSFileStream,
 	CSMe,
 	CSRepository,
-} from "../../protocol/api.protocol";
+} from "@codestream/protocols/api";
+import { sortBy } from "lodash-es";
+import { WorkspaceFolder } from "vscode-languageserver";
+
+import { SessionContainer } from "../../container";
+import { Logger } from "../../logger";
 import {
 	RepoPullRequestProvider,
 	ThirdPartyProvider,

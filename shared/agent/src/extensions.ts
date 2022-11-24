@@ -1,5 +1,6 @@
+import { ReposScm } from "@codestream/protocols/agent";
+
 import { GitRemote, GitRepository } from "git/models/models";
-import { ReposScm } from "protocol/agent.protocol";
 import { xfs } from "./xfs";
 
 export namespace GitRepositoryExtensions {

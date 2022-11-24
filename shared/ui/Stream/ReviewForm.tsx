@@ -27,6 +27,7 @@ import {
 } from "@codestream/protocols/api";
 import cx from "classnames";
 // https://github.com/kaelzhang/node-ignore
+import { DocumentData } from "@codestream/protocols/agent";
 import ignore from "ignore";
 import { debounce as _debounce } from "lodash-es";
 import * as path from "path-browserify";
@@ -50,7 +51,6 @@ import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
 import { logError } from "../logger";
-import { DocumentData } from "../protocols/agent/agent.protocol.notifications";
 import { Checkbox } from "../src/components/Checkbox";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { CSText } from "../src/components/CSText";

@@ -1,5 +1,6 @@
 "use strict";
 import * as qs from "querystring";
+
 import {
 	CreateThirdPartyCardRequest,
 	FetchThirdPartyBoardsRequest,
@@ -14,8 +15,9 @@ import {
 	YouTrackCreateCardRequest,
 	YouTrackCreateCardResponse,
 	YouTrackUser,
-} from "../protocol/agent.protocol";
-import { CSYouTrackProviderInfo } from "../protocol/api.protocol";
+} from "@codestream/protocols/agent";
+import { CSYouTrackProviderInfo } from "@codestream/protocols/api";
+
 import { log, lspProvider } from "../system";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 

@@ -1,14 +1,16 @@
 "use strict";
 
+import { CSLocationMeta, CSMarkerLocation } from "@codestream/protocols/api";
 import { ParsedDiff } from "diff";
 import * as diffMatchPatch from "diff-match-patch";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { Range } from "vscode-languageserver";
+
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
-import { CSLocationMeta, CSMarkerLocation } from "../protocol/api.protocol";
 import { buildChangeset, Change, Changeset } from "./changeset";
+
 import fromRange = MarkerLocation.fromRange;
 import toRange = MarkerLocation.toRange;
 

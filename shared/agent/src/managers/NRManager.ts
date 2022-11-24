@@ -2,12 +2,6 @@
 
 import path from "path";
 
-import { structuredPatch } from "diff";
-
-import { Container, SessionContainer } from "../container";
-import { isWindows } from "../git/shell";
-import { Logger } from "../logger";
-import { calculateLocation, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import {
 	AddNewRelicIncludeRequest,
 	AddNewRelicIncludeRequestType,
@@ -25,6 +19,7 @@ import {
 	ParseStackTraceRequest,
 	ParseStackTraceRequestType,
 	ParseStackTraceResponse,
+	RepoProjectType,
 	ResolveStackTracePathsRequestType,
 	ResolveStackTracePositionRequest,
 	ResolveStackTracePositionRequestType,
@@ -33,14 +28,19 @@ import {
 	ResolveStackTraceRequestType,
 	ResolveStackTraceResponse,
 	WarningOrError,
-} from "../protocol/agent.protocol";
-import { RepoProjectType } from "../protocol/agent.protocol.scm";
-import { CSStackTraceInfo, CSStackTraceLine } from "../protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSStackTraceInfo, CSStackTraceLine } from "@codestream/protocols/api";
+import { structuredPatch } from "diff";
+
+import { Container, SessionContainer } from "../container";
+import { isWindows } from "../git/shell";
+import { Logger } from "../logger";
+import { calculateLocation, MAX_RANGE_VALUE } from "../markerLocation/calculator";
 import { NewRelicProvider } from "../providers/newrelic";
 import { CodeStreamSession } from "../session";
 import { log } from "../system/decorators/log";
 import { lsp, lspHandler } from "../system/decorators/lsp";
-import { Strings } from "../system/string";
+import { Strings } from "../system";
 import { xfs } from "../xfs";
 import { libraryMatchers } from "./libraryMatcher/libraryMatchers";
 import { DotNetCoreInstrumentation } from "./newRelicInstrumentation/dotNetCoreInstrumentation";
@@ -364,7 +364,7 @@ export class NRManager {
 		}
 
 		const fullPath = path.join(repoPath, filePath);
-		let normalizedPath = Strings.normalizePath(fullPath, {
+		let normalizedPath = Strings.normalizePath(fullPath, isWindows, {
 			addLeadingSlash: isWindows && !fullPath.startsWith("\\\\"),
 		});
 		if (isWindows) {

@@ -1,25 +1,25 @@
-import { setEnvironment } from "@codestream/webview/store/session/thunks";
+import { EnvironmentHost } from "@codestream/protocols/agent";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import Icon from "../Stream/Icon";
-import Button from "../Stream/Button";
-import { authenticate, generateLoginCode, startSSOSignin, startIDESignin } from "./actions";
+
+import { setEnvironment } from "@codestream/webview/store/session/thunks";
 import { CodeStreamState } from "../store";
-import {
-	goToNewUserEntry,
-	goToForgotPassword,
-	goToOktaConfig,
-	clearForceRegion,
-} from "../store/context/actions";
-import { supportsSSOSignIn } from "../store/configs/slice";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
-import Tooltip from "../Stream/Tooltip";
-import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
-import { EnvironmentHost } from "../protocols/agent/agent.protocol";
-import { TooltipIconWrapper } from "./Signup";
-import { Dropdown } from "../Stream/Dropdown";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { supportsSSOSignIn } from "../store/configs/slice";
+import {
+	clearForceRegion,
+	goToForgotPassword,
+	goToNewUserEntry,
+	goToOktaConfig,
+} from "../store/context/actions";
+import Button from "../Stream/Button";
+import { Dropdown } from "../Stream/Dropdown";
+import Icon from "../Stream/Icon";
+import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
+import Tooltip from "../Stream/Tooltip";
+import { authenticate, generateLoginCode, startIDESignin, startSSOSignin } from "./actions";
+import { TooltipIconWrapper } from "./Signup";
 
 const isPasswordInvalid = password => password.length === 0;
 const isEmailInvalid = email => {

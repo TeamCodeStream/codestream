@@ -1,18 +1,22 @@
 "use strict";
 
+import * as path from "path";
+
+import { CodeBlockSource, CreateMarkerRequest } from "@codestream/protocols/agent";
+import {
+	CSMarkerLocation,
+	CSReferenceLocation,
+	CSReviewCheckpoint,
+} from "@codestream/protocols/api";
 import { createPatch, ParsedDiff, parsePatch } from "diff";
 import { decompressFromBase64 } from "lz-string";
-import * as path from "path";
 import { Range, TextDocumentIdentifier } from "vscode-languageserver";
 import { URI } from "vscode-uri";
+
 import { Marker, MarkerLocation, Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { calculateLocation } from "../markerLocation/calculator";
-import { CreateMarkerRequest } from "../protocol/agent.protocol.codemarks";
-import { CodeBlockSource } from "../protocol/agent.protocol.posts";
-import { CSReviewCheckpoint } from "../protocol/api.protocol";
-import { CSMarkerLocation, CSReferenceLocation } from "../protocol/api.protocol.models";
 import { Strings } from "../system";
 import { xfs } from "../xfs";
 import { ReviewsManager } from "./reviewsManager";
@@ -472,7 +476,7 @@ const remoteNameValues = new Map([
 	["origin", 2],
 ]);
 
-export const compareRemotes = (r1: { name: string }, r2: { name: string }) => {
+export const compareRemotes = (r1: { name: string }, r2: { name: string }): number => {
 	const r1Val = remoteNameValues.get(r1.name) || Number.MAX_SAFE_INTEGER;
 	const r2Val = remoteNameValues.get(r2.name) || Number.MAX_SAFE_INTEGER;
 

@@ -3,8 +3,12 @@ import {
 	DidChangeDataNotificationType,
 	FetchThirdPartyPullRequestPullRequest,
 	GetReposScmRequestType,
+	GetReposScmResponse,
 } from "@codestream/protocols/agent";
 import { CSMe } from "@codestream/protocols/api";
+import React, { useState } from "react";
+import styled, { ThemeProvider } from "styled-components";
+
 import { FloatingLoadingMessage } from "@codestream/webview/src/components/FloatingLoadingMessage";
 import { PRHeadshot } from "@codestream/webview/src/components/Headshot";
 import { PRHeadshotName } from "@codestream/webview/src/components/HeadshotName";
@@ -12,9 +16,6 @@ import { Tab, Tabs } from "@codestream/webview/src/components/Tabs";
 import { CodeStreamState } from "@codestream/webview/store";
 import { bootstrapReviews } from "@codestream/webview/store/reviews/thunks";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import React, { useState } from "react";
-import styled, { ThemeProvider } from "styled-components";
-import { GetReposScmResponse } from "../../../protocols/agent/agent.protocol";
 import { ErrorMessage } from "../../../src/components/ErrorMessage";
 import { LoadingMessage } from "../../../src/components/LoadingMessage";
 import { clearCurrentPullRequest, setCurrentPullRequest } from "../../../store/context/actions";

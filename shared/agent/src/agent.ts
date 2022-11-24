@@ -1,10 +1,11 @@
 "use strict";
 // keep this as the first import
 // tslint:disable:ordered-imports
-import * as NewRelic from "newrelic";
 
 import * as fs from "fs";
 import * as os from "os";
+
+import * as NewRelic from "newrelic";
 import {
 	CancellationToken,
 	ClientCapabilities,
@@ -26,16 +27,16 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind,
 } from "vscode-languageserver";
-
-import { DocumentManager } from "./documentManager";
-import { setGitPath } from "./git/git";
-import { Logger } from "./logger";
 import {
 	AgentInitializedNotificationType,
 	BaseAgentOptions,
 	DidChangeDataNotificationType,
 	LogoutReason,
-} from "./protocol/agent.protocol";
+} from "@codestream/protocols/agent";
+
+import { DocumentManager } from "./documentManager";
+import { setGitPath } from "./git/git";
+import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { Disposables, Functions, log, memoize } from "./system";
 

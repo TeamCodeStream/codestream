@@ -1,14 +1,7 @@
 "use strict";
-import { ParsedDiff } from "diff";
 import * as fs from "fs";
-import { flatten } from "lodash";
-import { decompressFromBase64 } from "lz-string";
 import * as path from "path";
-import { URI } from "vscode-uri";
-import { MessageType } from "../api/apiProvider";
-import { Container, SessionContainer, SessionServiceContainer } from "../container";
-import { EMPTY_TREE_SHA, GitCommit, GitRepository } from "../git/gitService";
-import { Logger } from "../logger";
+
 import {
 	CheckPullRequestPreconditionsRequest,
 	CheckPullRequestPreconditionsRequestType,
@@ -58,7 +51,7 @@ import {
 	UpdateReviewRequest,
 	UpdateReviewRequestType,
 	UpdateReviewResponse,
-} from "../protocol/agent.protocol";
+} from "@codestream/protocols/agent";
 import {
 	CSReview,
 	CSReviewChangeset,
@@ -66,7 +59,16 @@ import {
 	CSReviewDiffs,
 	CSTransformedReviewChangeset,
 	FileStatus,
-} from "../protocol/api.protocol";
+} from "@codestream/protocols/api";
+import { ParsedDiff } from "diff";
+import { flatten } from "lodash-es";
+import { decompressFromBase64 } from "lz-string";
+import { URI } from "vscode-uri";
+
+import { MessageType } from "../api/apiProvider";
+import { Container, SessionContainer, SessionServiceContainer } from "../container";
+import { EMPTY_TREE_SHA, GitCommit, GitRepository } from "../git/gitService";
+import { Logger } from "../logger";
 import { log, lsp, lspHandler, Strings } from "../system";
 import { gate } from "../system/decorators/gate";
 import { xfs } from "../xfs";

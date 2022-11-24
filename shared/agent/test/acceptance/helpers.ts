@@ -1,6 +1,7 @@
+import { AgentOptions } from "@codestream/protocols/agent";
 import { Connection, Emitter, Event } from "vscode-languageserver";
+
 import { CodeStreamAgent } from "../../src/agent";
-import { AgentOptions } from "../../src/protocol/agent.protocol";
 import { CodeStreamSession } from "../../src/session";
 import { xfs } from "../../src/xfs";
 

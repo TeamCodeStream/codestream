@@ -1,11 +1,6 @@
-import convert from "convert-source-map";
 import fs from "fs";
-import * as NewRelic from "newrelic";
 import path from "path";
-import StackMapper, { Callsite } from "stack-mapper";
-import { CodeStreamAgent } from "./agent";
-import { Logger } from "./logger";
-import { Parser } from "./managers/stackTraceParsers/javascriptStackTraceParser";
+
 import {
 	ReportBreadcrumbRequest,
 	ReportBreadcrumbRequestType,
@@ -13,10 +8,18 @@ import {
 	ReportMessageRequestType,
 	WebviewErrorRequest,
 	WebviewErrorRequestType,
-} from "./protocol/agent.protocol";
-import { CSStackTraceInfo } from "./protocol/api.protocol.models";
+} from "@codestream/protocols/agent";
+import { CSStackTraceInfo } from "@codestream/protocols/api";
+import convert from "convert-source-map";
+import * as NewRelic from "newrelic";
+import StackMapper, { Callsite } from "stack-mapper";
+
+import { CodeStreamAgent } from "./agent";
+import { Logger } from "./logger";
+import { Parser } from "./managers/stackTraceParsers/javascriptStackTraceParser";
 import { CodeStreamSession } from "./session";
 import { lsp, lspHandler, Strings } from "./system";
+
 import md5 = Strings.md5;
 
 interface IErrorReporterProvider {
