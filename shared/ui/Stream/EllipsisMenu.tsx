@@ -276,8 +276,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	};
 
 	const buildAdminTeamMenuItem = () => {
-		const { team, currentUserId, xraySetting } = derivedState;
+		const { company, team, currentUserId, xraySetting } = derivedState;
 		const { adminIds } = team;
+
+		// TODO: this may be a good place to confirm whether the company is still "CodeStream only",
+		// as it influences whether we can display the Onboarding Settings part of the menu
 
 		if (adminIds && adminIds.includes(currentUserId!)) {
 			const submenu = [
@@ -285,14 +288,19 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: "Change Organization Name",
 					key: "change-company-name",
 					action: () => dispatch(openModal(WebviewModals.ChangeCompanyName)),
+					disabled: false,
 				},
 				{ label: "-" },
-				{
+			];
+			if (company.codestreamOnly) {
+				submenu.push({
 					label: "Onboarding Settings...",
 					key: "onboarding-settings",
 					action: () => dispatch(openModal(WebviewModals.TeamSetup)),
 					disabled: !derivedState.autoJoinSupported,
-				},
+				});
+			}
+			submenu.push.apply(submenu, [
 				{
 					label: "Feedback Request Settings...",
 					key: "feedback-request-settings",
@@ -330,10 +338,20 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				// 	]
 				// },
 				{ label: "-" },
-				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
+				{
+					label: "Export Data",
+					key: "export-data",
+					action: () => go(WebviewPanels.Export),
+					disabled: false,
+				},
 				{ label: "-" },
-				{ label: "Delete Organization", action: deleteOrganization },
-			];
+				{
+					label: "Delete Organization",
+					key: "delete-organization",
+					action: deleteOrganization,
+					disabled: false,
+				},
+			]);
 			return {
 				label: "Organization Admin",
 				key: "admin",
