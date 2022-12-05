@@ -22,6 +22,7 @@ import { useRequestType } from "@codestream/webview/utilities/hooks";
 import { ResponseError } from "vscode-jsonrpc";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
+import Tooltip from "./Tooltip";
 
 interface Props {
 	currentRepoId: string;
@@ -218,6 +219,13 @@ function VulnRow(props: { vuln: Vuln }) {
 function LibraryRow(props: { library: LibraryDetails }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const { library } = props;
+	const subtleText = library.suggestedVersion
+		? `${library.version} -> ${library.suggestedVersion} (${library.vulns.length})`
+		: `${library.version} (${library.vulns.length})`;
+	const tooltipText = library.suggestedVersion
+		? `Recommended fix: upgrade ${library.version} to ${library.suggestedVersion}`
+		: undefined;
+
 	return (
 		<>
 			<Row
@@ -232,7 +240,10 @@ function LibraryRow(props: { library: LibraryDetails }) {
 					{!expanded && <Icon name="chevron-right-thin" />}
 				</div>
 				<div>
-					{library.name} {library.version} ({library.vulns.length})
+					{library.name}{" "}
+					<Tooltip placement="bottom" title={tooltipText} delay={1}>
+						<span className="subtle">{subtleText}</span>
+					</Tooltip>
 				</div>
 				<Severity severity={calculateRisk(library.highestScore)} />
 			</Row>

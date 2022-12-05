@@ -1916,6 +1916,7 @@ export type Vuln = {
 export type LibraryDetails = {
 	name: string;
 	version: string;
+	suggestedVersion?: string;
 	highestScore: number;
 	language?: string;
 	vulns: Array<Vuln>;
