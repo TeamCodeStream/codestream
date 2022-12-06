@@ -173,7 +173,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	private _entityCountTimedCache = new Cache<GetEntityCountResponse>({ defaultTtl: 30 * 1000 });
 	// 30 second cache
 	private _repositoryEntitiesByRepoRemotes = new Cache<RepoEntitiesByRemotesResponse>({
-		defaultTtl: 30 * 10000,
+		defaultTtl: 30 * 1000,
 	});
 	// 30 second cache
 	private _observabilityReposCache = new Cache<GetObservabilityReposResponse>({
