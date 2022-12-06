@@ -59,11 +59,15 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		/// <param name="progress">A provider for progress updates.</param>
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			try {
+			try
+			{
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				Assumes.Present(_componentModel);
 
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+				// gonna toss this, just need it to be instantiated early on in the lifecycle
+				_ = _componentModel.GetService<IVsRunningDocTableEvents>();
 
 				_solutionEventListener = _componentModel.GetService<ISolutionEventsListener>();
 				_solutionEventListener.Opened += SolutionOrFolder_Opened;
