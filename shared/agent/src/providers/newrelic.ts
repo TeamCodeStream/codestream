@@ -1,7 +1,6 @@
 "use strict";
 import fs from "fs";
 import { sep } from "path";
-
 import {
 	BuiltFromResult,
 	RelatedRepoWithRemotes,
