@@ -126,6 +126,7 @@ export interface CSLoginResponse {
 		environment: string;
 		publicApiUrl: string;
 	};
+	forceCreateCompany?: boolean;
 }
 
 export interface CSRegisterRequest {

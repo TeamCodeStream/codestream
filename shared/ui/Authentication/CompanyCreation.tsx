@@ -6,14 +6,15 @@ import {
 	JoinCompanyResponse,
 } from "@codestream/protocols/agent";
 import { CSCompany, CSEligibleJoinCompany, CSUser } from "@codestream/protocols/api";
-import { CodeStreamState } from "@codestream/webview/store";
-import { updateConfigs } from "@codestream/webview/store/configs/slice";
-import { changeRegistrationEmail, setEnvironment } from "@codestream/webview/store/session/thunks";
-import { HostApi } from "@codestream/webview/webview-api";
 import { isUndefined as _isUndefined } from "lodash-es";
 import React, { useCallback, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import styled from "styled-components";
+
+import { CodeStreamState } from "@codestream/webview/store";
+import { updateConfigs } from "@codestream/webview/store/configs/slice";
+import { changeRegistrationEmail, setEnvironment } from "@codestream/webview/store/session/thunks";
+import { HostApi } from "@codestream/webview/webview-api";
 import { logError } from "../logger";
 import { goToLogin } from "../store/context/actions";
 import Button from "../Stream/Button";
@@ -72,6 +73,7 @@ export function CompanyCreation(props: {
 	eligibleJoinCompanies?: CSEligibleJoinCompany[];
 	accountIsConnected?: boolean;
 	nrSignupTestUi?: boolean;
+	forceCreateCompany?: boolean;
 }) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
@@ -128,7 +130,7 @@ export function CompanyCreation(props: {
 		let companiesToJoin: EnhancedCSCompany[] | undefined = undefined;
 		let organizationsByDomain = [] as EnhancedCSCompany[];
 		let organizationsByInvite = [] as EnhancedCSCompany[];
-		if (props.eligibleJoinCompanies || props.companies) {
+		if (!props.forceCreateCompany && (props.eligibleJoinCompanies || props.companies)) {
 			setIsLoading(true);
 			let obj = {};
 			if (props.eligibleJoinCompanies) {

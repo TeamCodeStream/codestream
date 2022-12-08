@@ -1,17 +1,16 @@
-import { CSCompany } from "@codestream/protocols/api";
-import { switchToForeignCompany, switchToTeam } from "@codestream/webview/store/session/thunks";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import { FormattedMessage } from "react-intl";
+
+import { logout, setEnvironment } from "@codestream/webview/store/session/thunks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { TooltipIconWrapper } from "../Authentication/Signup";
 import { TextInput } from "../Authentication/TextInput";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { createCompany, createForeignCompany } from "../store/companies/actions";
+import { goToSignup } from "../store/context/actions";
 import { Dropdown } from "../Stream/Dropdown";
-import { wait } from "../utils";
 import { closeModal } from "./actions";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
@@ -100,22 +99,11 @@ export function CreateCompanyPage() {
 			if (derivedState.environmentHosts && currentHost && region && region !== currentHost.name) {
 				const selectedHost = derivedState.environmentHosts.find(host => host.name === region);
 				if (selectedHost) {
-					// what's not to love about code like this?
-					const company = (await dispatch(
-						createForeignCompany({ name: companyName }, selectedHost)
-					)) as unknown as CSCompany;
-					// artificial delay to ensure analytics from creating the team are actually processed before we logout below
-					await wait(1000);
-					await dispatch(switchToForeignCompany(company.id));
+					await dispatch(setEnvironment(selectedHost.shortName, selectedHost.publicApiUrl));
 				}
-			} else {
-				const team = (await dispatch(createCompany({ name: companyName }))) as unknown as any;
-				// artificial delay to ensure analytics from creating the team are actually processed before we logout below
-				await wait(1000);
-				await dispatch(
-					switchToTeam({ teamId: team.teamId, accessTokenFromEligibleCompany: team?.accessToken })
-				);
 			}
+			await dispatch(logout());
+			await dispatch(goToSignup({ newOrg: true, companyName }));
 		} catch (error) {
 			console.error(error);
 		} finally {

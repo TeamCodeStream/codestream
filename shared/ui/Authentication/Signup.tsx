@@ -19,6 +19,7 @@ import { supportsSSOSignIn } from "../store/configs/slice";
 import {
 	goToCompanyCreation,
 	goToEmailConfirmation,
+	goToOldLogin, // TODO: remove me when New Relic login is fully supported
 	goToNewRelicSignup,
 	goToOktaConfig,
 	goToTeamCreation,
@@ -101,6 +102,9 @@ interface Props {
 	/** the following attributes are for auto-joining teams */
 	repoId?: string;
 	commitHash?: string;
+
+	newOrg?: boolean; // indicates user is signing up with a new org
+	companyName?: string;
 }
 
 export const Signup = (props: Props) => {
@@ -260,6 +264,7 @@ export const Signup = (props: Props) => {
 				password,
 				inviteCode: props.inviteCode,
 				checkForWebmail: checkForWebmailArg,
+				companyName: props.companyName,
 
 				// for auto-joining teams
 				commitHash: props.commitHash,
@@ -480,20 +485,26 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
-								<h3>Sign into CodeStream with your New Relic account</h3>
-								{!limitAuthentication && (
-									<Button
-										style={{ marginBottom: "30px" }}
-										className="row-button no-top-margin"
-										onClick={onClickNewRelicSignup}
-									>
-										<Icon name="newrelic" />
-										<div className="copy">Sign into New Relic</div>
-										<Icon name="chevron-right" />
-									</Button>
+								{props.newOrg && <h2>Create an account</h2>}
+								{!props.newOrg && (
+									<>
+										<h3>Sign into CodeStream with your New Relic account</h3>
+										{!limitAuthentication && (
+											<Button
+												style={{ marginBottom: "30px" }}
+												className="row-button no-top-margin"
+												onClick={onClickNewRelicSignup}
+											>
+												<Icon name="newrelic" />
+												<div className="copy">Sign into New Relic</div>
+												<Icon name="chevron-right" />
+											</Button>
+										)}
+									</>
 								)}
 								<h3 style={{ marginBottom: regionItems || forceRegionName ? "5px" : "0px" }}>
-									Don't have a New Relic account? Sign up for free.
+									{props.newOrg && <>How will you sign into this organization?</>}
+									{!props.newOrg && <>Don't have a New Relic account? Sign up for free.</>}
 								</h3>
 								{regionItems && !forceRegionName && (
 									<>
@@ -694,6 +705,21 @@ export const Signup = (props: Props) => {
 								</FormattedMessage>
 							</small>
 						</div>
+					</div>
+
+					<div>
+						<h2>(Remove me when New Relic sign-in is fully supported)</h2>
+						<p>
+							Already have an account?{" "}
+							<Link
+								onClick={e => {
+									e.preventDefault();
+									dispatch(goToOldLogin());
+								}}
+							>
+								Sign In
+							</Link>
+						</p>
 					</div>
 				</fieldset>
 			</form>

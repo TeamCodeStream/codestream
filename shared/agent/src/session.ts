@@ -1419,6 +1419,7 @@ export class CodeStreamSession {
 				companies: response.companies,
 				accountIsConnected: response.accountIsConnected,
 				isWebmail: response.isWebmail,
+				forceCreateCompany: response.forceCreateCompany,
 			};
 			if (response.setEnvironment) {
 				Logger.log(
