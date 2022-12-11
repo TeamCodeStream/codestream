@@ -1,3 +1,5 @@
+import { CriticalityType } from "../../../protocol/agent.protocol.providers";
+
 export type VersionDetails = {
 	version?: string;
 	criticalVulnerabilities: number;
@@ -29,7 +31,7 @@ export type VulnerabililityDetails = {
 	source?: string;
 	cveJson: string;
 	language: string;
-	criticality: string;
+	criticality: CriticalityType;
 	packages: {
 		remediation: string;
 		artifact: string;

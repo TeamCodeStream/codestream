@@ -1853,6 +1853,10 @@ export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN",
 
 export type RiskSeverity = typeof riskSeverityList[number];
 
+export const criticalityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
+
+export type CriticalityType = typeof criticalityList[number];
+
 // /v1/issues/ response
 // https://source.datanerd.us/incubator/nrsec-workflow-api/blob/dacb63f32aa836a4b90f6345a83e0ae95f7d3463/src/main/java/com/newrelic/nrsecworkflowapi/api/SecurityIssueSummary.java
 export type SecurityIssueSummary = {
@@ -1910,7 +1914,7 @@ export type Vuln = {
 	vector: string;
 	description: string;
 	score: number;
-	criticality: string; // TODO mebe enum
+	criticality: CriticalityType;
 };
 
 export type LibraryDetails = {
@@ -1918,6 +1922,7 @@ export type LibraryDetails = {
 	version: string;
 	suggestedVersion?: string;
 	highestScore: number;
+	highestCriticality: CriticalityType;
 	language?: string;
 	vulns: Array<Vuln>;
 };

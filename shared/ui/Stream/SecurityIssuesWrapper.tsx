@@ -1,4 +1,5 @@
 import {
+	CriticalityType,
 	ERROR_VM_NOT_SETUP,
 	GetLibraryDetailsType,
 	LibraryDetails,
@@ -83,23 +84,19 @@ const severityColorMap: Record<RiskSeverity, string> = {
 	UNKNOWN: "#ee8608",
 };
 
-function calculateRisk(score: number): RiskSeverity {
-	if (score > 9) {
-		return "CRITICAL";
+function criticalityToRiskSeverity(riskSeverity: CriticalityType): RiskSeverity {
+	switch (riskSeverity) {
+		case "CRITICAL":
+			return "CRITICAL";
+		case "HIGH":
+			return "HIGH";
+		case "MODERATE":
+			return "MEDIUM";
+		case "LOW":
+			return "LOW";
+		default:
+			return "LOW";
 	}
-	if (score > 7) {
-		return "HIGH";
-	}
-	if (score > 4) {
-		return "MEDIUM";
-	}
-	// if (score > 5) {
-	//     return "INFO";
-	// }
-	if (score > 0.1) {
-		return "LOW";
-	}
-	return "UNKNOWN";
 }
 
 function Severity(props: { severity: RiskSeverity }) {
@@ -200,7 +197,7 @@ function VulnRow(props: { vuln: Vuln }) {
 					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
 				</div>
 				<div>{props.vuln.title}</div>
-				<Severity severity={calculateRisk(props.vuln.score)} />
+				<Severity severity={criticalityToRiskSeverity(props.vuln.criticality)} />
 			</Row>
 			{expanded && (
 				<Modal
@@ -245,7 +242,7 @@ function LibraryRow(props: { library: LibraryDetails }) {
 						<span className="subtle">{subtleText}</span>
 					</Tooltip>
 				</div>
-				<Severity severity={calculateRisk(library.highestScore)} />
+				<Severity severity={criticalityToRiskSeverity(library.highestCriticality)} />
 			</Row>
 			{expanded && library.vulns.map(vuln => <VulnRow vuln={vuln} />)}
 		</>
