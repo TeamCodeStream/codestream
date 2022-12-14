@@ -5,6 +5,10 @@ import {
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSPost, CSUser } from "@codestream/protocols/api";
+import React, { PropsWithChildren, useEffect } from "react";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import { DelayedRender } from "@codestream/webview/Container/DelayedRender";
 import { Loading } from "@codestream/webview/Container/Loading";
@@ -38,9 +42,6 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { PropsWithChildren, useEffect } from "react";
-import { useSelector } from "react-redux";
-import styled from "styled-components";
 import { getPost } from "../../store/posts/reducer";
 import { createPost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
@@ -1080,6 +1081,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const [currentSelectedLine, setCurrentSelectedLineIndex] = React.useState(
 		derivedState.currentCodeErrorData?.lineIndex || 0
 	);
+	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = React.useState(false);
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1099,7 +1101,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
 
 	useEffect(() => {
-		if (!props.collapsed) {
+		if (!props.collapsed && !didJumpToFirstAvailableLine) {
 			const { stackTraces } = codeError;
 			const stackInfo = (stackTraces && stackTraces[0]) || codeError.stackInfo;
 			if (stackInfo?.lines) {
@@ -1113,6 +1115,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					lineIndex++;
 				}
 				if (lineIndex < len) {
+					setDidJumpToFirstAvailableLine(true);
 					setCurrentSelectedLineIndex(lineIndex);
 
 					try {

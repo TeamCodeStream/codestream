@@ -1,7 +1,9 @@
 "use strict";
 
-import { structuredPatch } from "diff";
 import path from "path";
+
+import { structuredPatch } from "diff";
+
 import { Container, SessionContainer } from "../container";
 import { isWindows } from "../git/shell";
 import { Logger } from "../logger";
@@ -250,31 +252,14 @@ export class NRManager {
 		};
 
 		if (parsedStackInfo.lines) {
-			for (let i = 0; i < parsedStackInfo.lines.length; i++) {
-				const line = parsedStackInfo.lines[i];
-				const resolvedLine = { ...line };
-				resolvedStackInfo.lines.push(resolvedLine);
-				line.fileRelativePath = resolvedLine.fileRelativePath;
-
-				if (!line.error && matchingRepoPath && parsedStackInfo.language) {
-					this.resolveStackTraceLine(line, ref, matchingRepoPath, parsedStackInfo.language).then(
-						resolvedLine => {
-							if (resolvedLine.error) {
-								Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
-							} else {
-								const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
-								Logger.log(`Stack trace line resolved: ${loggableLine}`);
-							}
-							session.agent.sendNotification(DidResolveStackTraceLineNotificationType, {
-								occurrenceId,
-								resolvedLine,
-								index: i,
-								codeErrorId,
-							});
-						}
-					);
-				}
-			}
+			void this.resolveStackTraceLines(
+				parsedStackInfo,
+				resolvedStackInfo,
+				matchingRepoPath,
+				ref,
+				occurrenceId,
+				codeErrorId
+			);
 		}
 
 		return {
@@ -282,6 +267,49 @@ export class NRManager {
 			resolvedStackInfo,
 			parsedStackInfo,
 		};
+	}
+
+	private async resolveStackTraceLines(
+		parsedStackInfo: ParseStackTraceResponse,
+		resolvedStackInfo: CSStackTraceInfo,
+		matchingRepoPath: string | undefined,
+		ref: string,
+		occurrenceId: string,
+		codeErrorId: string
+	) {
+		const { session } = SessionContainer.instance();
+		for (let i = 0; i < parsedStackInfo.lines.length; i++) {
+			Logger.log(`CHUPACABRA resolveStackTraceLines ${i + 1}/${parsedStackInfo.lines.length}`);
+			try {
+				const line = parsedStackInfo.lines[i];
+				const resolvedLine = { ...line };
+				resolvedStackInfo.lines.push(resolvedLine);
+				line.fileRelativePath = resolvedLine.fileRelativePath;
+
+				if (!line.error && matchingRepoPath && parsedStackInfo.language) {
+					const resolvedLine = await this.resolveStackTraceLine(
+						line,
+						ref,
+						matchingRepoPath,
+						parsedStackInfo.language
+					);
+					if (resolvedLine.error) {
+						Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
+					} else {
+						const loggableLine = `${resolvedLine.fileRelativePath}:${resolvedLine.line}:${resolvedLine.column}`;
+						Logger.log(`Stack trace line resolved: ${loggableLine}`);
+					}
+					session.agent.sendNotification(DidResolveStackTraceLineNotificationType, {
+						occurrenceId,
+						resolvedLine,
+						index: i,
+						codeErrorId,
+					});
+				}
+			} catch (e) {
+				Logger.warn("Error resolving stack trace line", { error: e });
+			}
+		}
 	}
 
 	@lspHandler(ResolveStackTracePositionRequestType)
@@ -317,9 +345,9 @@ export class NRManager {
 				column: column,
 			};
 		}
-		const position = await this.getCurrentStackTracePosition(ref, fullPath, line, column);
 		return {
-			...position,
+			line,
+			column,
 			path: uri,
 		};
 	}
@@ -494,21 +522,11 @@ export class NRManager {
 			};
 		}
 
-		const position = await this.getCurrentStackTracePosition(
-			ref,
-			bestMatchingFilePath,
-			line.line!,
-			line.column!
-		);
-		if (position.error) {
-			return { error: position.error };
-		}
-
 		return {
 			fileFullPath: bestMatchingFilePath,
 			fileRelativePath: path.relative(matchingRepoPath, bestMatchingFilePath),
-			line: position.line,
-			column: position.column,
+			line: line.line,
+			column: line.column,
 			resolved: true,
 		};
 	}

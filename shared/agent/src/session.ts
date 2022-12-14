@@ -6,7 +6,6 @@ import * as path from "path";
 import * as url from "url";
 
 import { isEmpty, isEqual, omit, uniq } from "lodash";
-import glob from "glob-promise";
 import {
 	CancellationToken,
 	Connection,
@@ -1819,18 +1818,19 @@ export class CodeStreamSession {
 				files = files.concat(fileSearchResponse);
 			}
 			Logger.log(`onFileSearch: IDE found ${files.length} possible matches for ${path}`);
-			if (!files.length) {
-				for (const path of paths) {
-					Logger.log(`onFileSearch: Searching filesystem for ${path} in ${basePath}`);
-					const globSearchResults = await glob(basePath + "/**/" + path);
-					if (!globSearchResults.length) {
-						// once there are no more results, just stop
-						break;
-					}
-					files = files.concat(globSearchResults);
-				}
-				Logger.log(`onFileSearch: filesystem found ${files.length} possible matches for ${path}`);
-			}
+			// FIXME this is very slow and can't be used as is
+			// if (!files.length) {
+			// 	for (const path of paths) {
+			// 		Logger.log(`onFileSearch: Searching filesystem for ${path} in ${basePath}`);
+			// 		const globSearchResults = await glob(basePath + "/**/" + path);
+			// 		if (!globSearchResults.length) {
+			// 			// once there are no more results, just stop
+			// 			break;
+			// 		}
+			// 		files = files.concat(globSearchResults);
+			// 	}
+			// 	Logger.log(`onFileSearch: filesystem found ${files.length} possible matches for ${path}`);
+			// }
 			// put the most specific files found first (aka greatest number of separators)
 			files = uniq(files).reverse();
 			if (files.length) {

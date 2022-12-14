@@ -26,6 +26,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.concurrency.NonUrgentExecutor
 import git4idea.GitUtil
 import kotlinx.coroutines.GlobalScope
@@ -185,13 +186,16 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         val request = gson.fromJson<FileSearchRequest>(json[0])
 
         val fileFuture = CompletableFuture<FileSearchResponse>()
-        ApplicationManager.getApplication().invokeLater {
-            ReadAction.nonBlocking({
+        // ApplicationManager.getApplication().invokeLater {
+            ReadAction.nonBlocking {
+                val start = System.currentTimeMillis()
                 val files = FilenameIndex.getFilesByName(project, request.path, GlobalSearchScope.projectScope(project))
                     .map { it.virtualFile.path }
+                val end = System.currentTimeMillis()
+                logger.info("fileSearch: ${request.path} ${files.size} results ${end - start}ms")
                 fileFuture.complete(FileSearchResponse(files))
-            }).submit(NonUrgentExecutor.getInstance())
-        }
+            }.submit(AppExecutorUtil.getAppExecutorService())
+        // }
         return fileFuture
     }
 
