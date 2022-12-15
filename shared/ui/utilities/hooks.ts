@@ -262,7 +262,7 @@ export const usePrevious = <T>(value: T, initialValue?: T): T | undefined => {
  From https://stackoverflow.com/questions/55187563/determine-which-dependency-array-variable-caused-useeffect-hook-to-fire
  Temporarily replace useEffect with this and check web console logs
  */
-export const useEffectDebugger = (effectHook, dependencies, dependencyNames = []) => {
+export const useEffectDebugger = (effectHook, dependencies, dependencyNames: string[] = []) => {
 	const previousDeps = usePrevious(dependencies, []);
 
 	const changedDeps = dependencies.reduce((accum, dependency, index) => {

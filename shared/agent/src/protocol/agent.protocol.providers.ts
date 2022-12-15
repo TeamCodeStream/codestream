@@ -1329,6 +1329,7 @@ export interface GetServiceLevelTelemetryRequest {
 	/** related service needs less data, skips redundant call */
 	skipRepoFetch?: boolean;
 	fetchRecentAlertViolations?: boolean;
+	force?: boolean;
 }
 
 export interface GetServiceLevelObjectivesRequest {

@@ -2456,7 +2456,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	async getServiceLevelTelemetry(
 		request: GetServiceLevelTelemetryRequest
 	): Promise<GetServiceLevelTelemetryResponse | undefined> {
-		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
+		const { force } = request;
+		const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId, force);
 		if (!request.skipRepoFetch && (!observabilityRepo || !observabilityRepo.entityAccounts)) {
 			return undefined;
 		}

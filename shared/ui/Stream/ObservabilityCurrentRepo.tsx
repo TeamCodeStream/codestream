@@ -1,7 +1,12 @@
-import { GetFileScmInfoRequestType, GetReposScmRequestType } from "@codestream/protocols/agent";
+import {
+	GetFileScmInfoRequestType,
+	GetReposScmRequestType,
+	ObservabilityRepo,
+} from "@codestream/protocols/agent";
 import React, { useEffect, useState } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+
 import { CodeStreamState } from "../store";
 import { fetchDocumentMarkers } from "../store/documentMarkers/actions";
 import { setEditorContext } from "../store/editorContext/actions";
@@ -12,8 +17,8 @@ import { HostApi } from "../webview-api";
 import Icon from "./Icon";
 
 interface Props {
-	currentRepoCallback: Function;
-	observabilityRepos: any;
+	currentRepoCallback: (repoId?: string) => void;
+	observabilityRepos: ObservabilityRepo[];
 }
 
 const CurrentRepoContainer = styled.span`

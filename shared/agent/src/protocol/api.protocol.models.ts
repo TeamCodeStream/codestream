@@ -1,6 +1,7 @@
 "use strict";
 
 import { ParsedDiff } from "diff";
+
 import {
 	EnvironmentHost,
 	FetchProviderDefaultPullResponse,
@@ -770,6 +771,11 @@ export interface CSMePreferences {
 	};
 	hiddenPaneNodes?: {
 		[nodeId: string]: boolean;
+	};
+
+	// repoId -> o11y entityGuid mapping
+	activeO11y?: {
+		[repoId: string]: string;
 	};
 
 	// which icons to show in the editor gutters
