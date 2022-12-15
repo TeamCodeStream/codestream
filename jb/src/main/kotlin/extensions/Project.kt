@@ -49,7 +49,7 @@ val Project.baseUri: String?
 val Project.projectPaths: Set<String>
     get() {
         var paths = basePath?.let { mutableSetOf(it) } ?: mutableSetOf()
-        val moduleManager = getComponent(ModuleManager::class.java)
+        val moduleManager = ModuleManager.getInstance(this)
         for (module in moduleManager.modules) {
             val roots = (module.moduleContentScope as? ModuleWithDependenciesScope)?.roots ?: continue
             val modulePaths = roots.map { it.path }
