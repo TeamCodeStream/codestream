@@ -8,6 +8,7 @@ import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
 import com.intellij.ide.RecentProjectListActionProvider
 import com.intellij.ide.ReopenProjectAction
+import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.JBProtocolCommand
@@ -19,6 +20,7 @@ import org.apache.commons.io.FileUtils
 import java.io.File
 import java.net.URLDecoder
 import java.nio.charset.Charset
+import java.nio.file.Path
 
 class CodeStreamCommand : JBProtocolCommand("codestream") {
     private val logger = Logger.getInstance(CodeStreamCommand::class.java)
@@ -59,7 +61,10 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                 } else if (repoMapping != null) {
                     try {
                         logger.info("Attempting to open ${repoMapping.defaultPath}")
-                        project = ProjectUtil.openProject(repoMapping.defaultPath, null, true)
+                        project = ProjectUtil.openProject(
+                            Path.of(repoMapping.defaultPath),
+                            OpenProjectTask().withForceOpenInNewFrame(true)
+                        )
                     } catch (ex: Exception) {
                         logger.warn(ex)
                     }
@@ -109,7 +114,10 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
             for (projectPath in recentPaths) {
                 if (file.startsWith(projectPath)) {
                     logger.info("Opening recent project $projectPath")
-                    return ProjectUtil.openProject(projectPath, null, true)
+                    return ProjectUtil.openProject(
+                        Path.of(projectPath),
+                        OpenProjectTask().withForceOpenInNewFrame(true)
+                    )
                 }
             }
         }

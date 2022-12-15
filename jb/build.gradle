@@ -1,7 +1,7 @@
 plugins {
     id "java"
     id "idea"
-    id "org.jetbrains.intellij" version "1.6.0"
+    id "org.jetbrains.intellij" version "1.10.1"
     id "org.jetbrains.kotlin.jvm" version "1.6.10"
     id "de.undercouch.download" version "5.1.0"
 }
@@ -9,7 +9,8 @@ plugins {
 group "com.codestream"
 version "14.11.1"
 
-sourceCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_11
+targetCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
@@ -194,37 +195,3 @@ copyDebugAgent.dependsOn buildDebugDeps
 
 task buildDebugDependencies {}
 buildDebugDependencies.dependsOn buildDebugDeps, copyDebugAgent, copyProtobuf
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
