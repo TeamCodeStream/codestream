@@ -2,15 +2,12 @@ import {
 	DeclineInviteRequest,
 	DeclineInviteRequestType,
 	DeclineInviteResponse,
-	JoinCompanyRequest,
-	JoinCompanyRequestType,
-	JoinCompanyResponse,
 } from "@codestream/protocols/agent";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
 
-import { setEnvironment, switchToTeam } from "@codestream/webview/store/session/thunks";
+import { logout, setEnvironment } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
 import { logError } from "../logger";
@@ -18,7 +15,7 @@ import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { goToLogin } from "../store/context/actions";
+import { goToLogin, goToSignup } from "../store/context/actions";
 import { closeModal } from "./actions";
 
 export function AcceptCompanyInvite() {
@@ -74,14 +71,19 @@ export function AcceptCompanyInvite() {
 				console.log(
 					`Joining company ${currentOrganizationInvite.name} requires switching host to ${currentOrganizationInvite.host.name} at ${currentOrganizationInvite.host.publicApiUrl}`
 				);
-				dispatch(
+				await dispatch(
 					setEnvironment(
 						currentOrganizationInvite.host.shortName,
 						currentOrganizationInvite.host.publicApiUrl
 					)
 				);
 			}
+			await dispatch(logout());
+			await dispatch(
+				goToSignup({ joinCompanyId: currentOrganizationInvite.id, email: derivedState.userEmail })
+			);
 
+			/*
 			const request: JoinCompanyRequest = {
 				companyId: currentOrganizationInvite.id,
 			};
@@ -118,6 +120,7 @@ export function AcceptCompanyInvite() {
 
 				dispatch(closeModal());
 			}, 500);
+			*/
 		} catch (error) {
 			const errorMessage = typeof error === "string" ? error : error.message;
 			logError(`Unexpected error during company join: ${errorMessage}`, {
@@ -162,7 +165,7 @@ export function AcceptCompanyInvite() {
 	return (
 		<Dialog title="Accept Invitation?" onClose={() => dispatch(closeModal())}>
 			<p style={{ wordBreak: "break-word" }}>
-				Do you want to accept your inviation to join {derivedState.currentOrganizationInvite?.name}
+				Do you want to accept your inviation to join {derivedState.currentOrganizationInvite?.name}?
 			</p>
 			<ButtonRow>
 				<Button onClick={handleClickAccept} tabIndex={0}>

@@ -20,6 +20,8 @@ export function CreateCompanyPage() {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { environmentHosts, environment } = state.configs;
 		const { currentTeamId } = state.context;
+		const { userId } = state.session;
+		const currentUser = state.users[userId!];
 		const supportsMultiRegion = isFeatureEnabled(state, "multiRegion");
 
 		return {
@@ -28,6 +30,7 @@ export function CreateCompanyPage() {
 			currentCompanyId: state.teams[currentTeamId].companyId,
 			companies: state.companies,
 			supportsMultiRegion,
+			currentUser,
 		};
 	});
 
@@ -102,8 +105,9 @@ export function CreateCompanyPage() {
 					await dispatch(setEnvironment(selectedHost.shortName, selectedHost.publicApiUrl));
 				}
 			}
+			const email = derivedState.currentUser.email;
 			await dispatch(logout());
-			await dispatch(goToSignup({ newOrg: true, companyName }));
+			await dispatch(goToSignup({ newOrg: true, companyName, email }));
 		} catch (error) {
 			console.error(error);
 		} finally {

@@ -104,7 +104,8 @@ interface Props {
 	commitHash?: string;
 
 	newOrg?: boolean; // indicates user is signing up with a new org
-	companyName?: string;
+	joinCompanyId?: string; // indicates user is joining this org
+	companyName?: string; // user will name the new org from this
 }
 
 export const Signup = (props: Props) => {
@@ -133,6 +134,7 @@ export const Signup = (props: Props) => {
 			selectedRegion,
 			forceRegion,
 			supportsMultiRegion,
+			originalEmail: props.email,
 		};
 	});
 
@@ -265,6 +267,8 @@ export const Signup = (props: Props) => {
 				inviteCode: props.inviteCode,
 				checkForWebmail: checkForWebmailArg,
 				companyName: props.companyName,
+				joinCompanyId: props.joinCompanyId,
+				originalEmail: derivedState.originalEmail,
 
 				// for auto-joining teams
 				commitHash: props.commitHash,
@@ -485,8 +489,8 @@ export const Signup = (props: Props) => {
 					<fieldset className="form-body" style={{ paddingTop: 0, paddingBottom: 0 }}>
 						<div id="controls">
 							<div className="border-bottom-box">
-								{props.newOrg && <h2>Create an account</h2>}
-								{!props.newOrg && (
+								{(props.newOrg || props.joinCompanyId) && <h2>Create an account</h2>}
+								{!props.newOrg && !props.joinCompanyId && (
 									<>
 										<h3>Sign into CodeStream with your New Relic account</h3>
 										{!limitAuthentication && (
@@ -503,8 +507,12 @@ export const Signup = (props: Props) => {
 									</>
 								)}
 								<h3 style={{ marginBottom: regionItems || forceRegionName ? "5px" : "0px" }}>
-									{props.newOrg && <>How will you sign into this organization?</>}
-									{!props.newOrg && <>Don't have a New Relic account? Sign up for free.</>}
+									{(props.newOrg || props.joinCompanyId) && (
+										<>How will you sign into this organization?</>
+									)}
+									{!props.newOrg && !props.joinCompanyId && (
+										<>Don't have a New Relic account? Sign up for free.</>
+									)}
 								</h3>
 								{regionItems && !forceRegionName && (
 									<>

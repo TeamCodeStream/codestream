@@ -136,6 +136,9 @@ export interface CSRegisterRequest {
 	wantLink?: boolean;
 	inviteCode?: string;
 	machineId?: string;
+	companyName?: string;
+	joinCompanyId?: string;
+	originalEmail?: string;
 }
 
 export interface CSRegisterResponse {
