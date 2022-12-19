@@ -1210,14 +1210,21 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				if (errorGroupResponse.eventsQuery) {
 					const timestampRange = this.generateTimestampRange(request.timestamp);
 					if (timestampRange) {
-						const nrql = `${errorGroupResponse.eventsQuery} since ${timestampRange?.startTime} until ${timestampRange?.endTime} LIMIT 1`;
-						const result = await this.runNrql<{
-							"tags.releaseTag": string;
-							"tags.commit": string;
-						}>(accountId, nrql);
-						if (result.length) {
-							errorGroup.releaseTag = result[0]["tags.releaseTag"];
-							errorGroup.commit = result[0]["tags.commit"];
+						const escapedEventsQuery = Strings.escapeNrql(errorGroupResponse.eventsQuery);
+						const nrql = `${escapedEventsQuery} since ${timestampRange?.startTime} until ${timestampRange?.endTime} LIMIT 1`;
+						try {
+							const result = await this.runNrql<{
+								"tags.releaseTag": string;
+								"tags.commit": string;
+							}>(accountId, nrql);
+							if (result.length) {
+								errorGroup.releaseTag = result[0]["tags.releaseTag"];
+								errorGroup.commit = result[0]["tags.commit"];
+							}
+						} catch (e) {
+							// This query is fragile with invalid nrql escape characters - Strings.escapeNrql
+							// catches some but not all of these cases
+							Logger.warn(e);
 						}
 					}
 				}

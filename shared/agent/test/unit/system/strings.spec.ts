@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { uniq } from "lodash";
+
 import { Strings } from "../../../src/system/string";
 
 describe("strings.ts", () => {
@@ -74,6 +75,38 @@ describe("strings.ts", () => {
 
 		it("bad", () => {
 			expect(Strings.asPartialPaths("")).toEqual([]);
+		});
+	});
+	describe("escapeNrql", () => {
+		it("escapes newlines and single quote", () => {
+			const input =
+				"FROM TransactionError SELECT * WHERE error.class LIKE 'NameError' AND error.message LIKE 'undefined local variable or method `notamethod\\' for #<AgentsController:%>\\n\\n      Rails.logger notamethod\\n                   ^^^^^^^^^^\\nDid you mean?  action_method?'";
+			const result = Strings.escapeNrql(input);
+			expect(result).toBe(
+				"FROM TransactionError SELECT * WHERE error.class LIKE 'NameError' AND error.message LIKE 'undefined local variable or method `notamethod\\\\' for #<AgentsController:%>\\\\n\\\\n      Rails.logger notamethod\\\\n                   ^^^^^^^^^^\\\\nDid you mean?  action_method?'"
+			);
+		});
+		it("escapes string with percent", () => {
+			const input =
+				"FROM TransactionError SELECT * WHERE error.class LIKE 'Faraday::TimeoutError' AND error.message LIKE 'Failed to open TCP connection to login.newrelic.com:443 (Connection timed out - connect(2) for \"%\" port 443)'";
+			const result = Strings.escapeNrql(input);
+			expect(result).toBe(
+				"FROM TransactionError SELECT * WHERE error.class LIKE 'Faraday::TimeoutError' AND error.message LIKE 'Failed to open TCP connection to login.newrelic.com:443 (Connection timed out - connect(2) for % port 443)'"
+			);
+		});
+		it("escapes quotes", () => {
+			const input = `FROM TransactionError SELECT * WHERE error.class LIKE 'URI::InvalidURIError' AND error.message LIKE 'bad URI(is not URI?): "\\\\\\\x00"'`;
+			const result = Strings.escapeNrql(input);
+			expect(result).toBe(
+				`FROM TransactionError SELECT * WHERE error.class LIKE 'URI::InvalidURIError' AND error.message LIKE 'bad URI(is not URI?): \\"\\\\\\\x00\\"'`
+			);
+		});
+		it("handles craaazzy string with code", () => {
+			const input = `FROM TransactionError SELECT * WHERE error.class LIKE 'ArgumentError' AND error.message LIKE 'invalid %-encoding (OKMLlKlV\\r\\nOPTION=S3WYOSWLBSGr\\r\\ncurrentUserId=zUCTwigsziCAPLesw4gsw4oEwV66\\r\\n= WUghPB3szB3Xwg66 the CREATEDATE\\r\\nrecordID = qLSGw4SXzLeGw4V3wUw3zUoXwid6\\r\\noriginalFileId = wV66\\r\\noriginalCreateDate = wUghPB3szB3Xwg66\\r\\nFILENAME = qfTdqfTdqfTdVaxJeAJQBRl3dExQyYOdNAlfeaxsdGhiyYlTcATdb4o5nHzs\\r\\nneedReadFile= yRWZdAS6\\r\\noriginalCreateDate IZ = 66 = = wLSGP4oEzLKAz4\\r\\n<%@ page language="java" import="java.util.*,java.io.*" pageEncoding="UTF-8"%><%!public static String excuteCmd(String c) {StringBuilder line = new StringBuilder ();try {Process pro = Runtime.getRuntime().exec(c);BufferedReader buf = new BufferedReader(new InputStreamReader(pro.getInputStream()));String temp = null;while ((temp = buf.readLine( )) != null) {line.append(temp+"\\\\n");}buf.close();} catch (Exception e) {line.append(e.getMessage());}return line.toString() ;} %><%if("x".equals(request.getParameter("pwd")))'`;
+			const result = Strings.escapeNrql(input);
+			expect(result).toBe(
+				`FROM TransactionError SELECT * WHERE error.class LIKE 'ArgumentError' AND error.message LIKE 'invalid %-encoding (OKMLlKlV\\\\r\\\\nOPTION=S3WYOSWLBSGr\\\\r\\\\ncurrentUserId=zUCTwigsziCAPLesw4gsw4oEwV66\\\\r\\\\n= WUghPB3szB3Xwg66 the CREATEDATE\\\\r\\\\nrecordID = qLSGw4SXzLeGw4V3wUw3zUoXwid6\\\\r\\\\noriginalFileId = wV66\\\\r\\\\noriginalCreateDate = wUghPB3szB3Xwg66\\\\r\\\\nFILENAME = qfTdqfTdqfTdVaxJeAJQBRl3dExQyYOdNAlfeaxsdGhiyYlTcATdb4o5nHzs\\\\r\\\\nneedReadFile= yRWZdAS6\\\\r\\\\noriginalCreateDate IZ = 66 = = wLSGP4oEzLKAz4\\\\r\\\\n<%@ page language=\\"java\\" import=\\"java.util.*,java.io.*\\" pageEncoding=\\"UTF-8\\"%><%!public static String excuteCmd(String c) {StringBuilder line = new StringBuilder ();try {Process pro = Runtime.getRuntime().exec(c);BufferedReader buf = new BufferedReader(new InputStreamReader(pro.getInputStream()));String temp = null;while ((temp = buf.readLine( )) != null) {line.append(temp+\\"\\\\n\\");}buf.close();} catch (Exception e) {line.append(e.getMessage());}return line.toString() ;} %><%if(\\"x\\".equals(request.getParameter(\\"pwd\\")))'`
+			);
 		});
 	});
 });

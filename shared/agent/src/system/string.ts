@@ -1,38 +1,40 @@
 "use strict";
 /**
-Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/string.ts which carries this notice:
+ Portions adapted from https://github.com/eamodio/vscode-gitlens/blob/12a93fe5f609f0bb154dca1a8d09ac3e980b9b3b/src/system/string.ts which carries this notice:
 
-The MIT License (MIT)
+ The MIT License (MIT)
 
-Copyright (c) 2016-2021 Eric Amodio
+ Copyright (c) 2016-2021 Eric Amodio
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+ */
 
 /**
  * Modifications Copyright CodeStream Inc. under the Apache 2.0 License (Apache-2.0)
  */
 import { BinaryToTextEncoding, createHash } from "crypto";
-import { applyPatch, ParsedDiff } from "diff";
-import * as eol from "eol";
 import * as path from "path";
 import { URL } from "url";
+
+import { applyPatch, ParsedDiff } from "diff";
+import * as eol from "eol";
+
 import { isWindows } from "../git/shell";
 
 export namespace Strings {
@@ -49,6 +51,17 @@ export namespace Strings {
 
 	export function escapeRegExp(s: string) {
 		return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+	}
+
+	// TODO see if this can be combined with escapeNrql in newrelic.ts (looks like no - newrelic.ts adds too much backslash
+	// Using regex negative lookbehind to prevent double escape
+	export function escapeNrql(str: string): string {
+		return str
+			.replace(/(?<!\\)\\n/g, "\\\\n")
+			.replace(/(?<!\\)\\r/g, "\\\\r")
+			.replace(/(?<!\\)\\'/g, "\\\\'")
+			.replaceAll(`"%"`, "%") // Could not find escape sequence for % so using % as wildcard like matcher
+			.replace(/(?<!\\\\)"/g, `\\"`);
 	}
 
 	export function escapeHtml(s: string) {
@@ -514,6 +527,7 @@ export namespace Strings {
 
 		return str;
 	}
+
 	/**
 	 * Returns an array of partial paths from a file system path
 	 *
@@ -541,9 +555,9 @@ export namespace Strings {
 
 	/** Returns a readable phrase of items. examples:
 	 *
-	 * 		['foo'] = "foo"
-	 * 		['foo','bar'] = "foo and bar"
-	 * 		['foo','bar','baz'] = "foo, bar, and baz"
+	 *        ['foo'] = "foo"
+	 *        ['foo','bar'] = "foo and bar"
+	 *        ['foo','bar','baz'] = "foo, bar, and baz"
 	 *
 	 * @param  {string[]} items
 	 * @returns string
