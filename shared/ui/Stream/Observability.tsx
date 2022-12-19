@@ -456,34 +456,6 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [derivedState.observabilityRepoEntities]);
 
-	useEffect(() => {
-		if (!derivedState.newRelicIsConnected || !currentRepoId) return;
-		const repoId = currentRepoId;
-		loading(repoId, true);
-		HostApi.instance
-			.send(GetObservabilityErrorsRequestType, { filters: buildFilters([repoId]) })
-			.then(response => {
-				if (response?.repos) {
-					const existingObservabilityErrors = observabilityErrors.filter(_ => _.repoId !== repoId);
-					existingObservabilityErrors.push(response.repos[0]);
-					setObservabilityErrors(existingObservabilityErrors);
-				}
-			})
-			.catch(ex => {
-				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityErrors",
-					});
-					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
-				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
-				}
-			})
-			.finally(() => {
-				loading(repoId, false);
-			});
-	}, [currentRepoId]);
-
 	// Update golden metrics every 5 minutes
 	useInterval(() => {
 		fetchGoldenMetrics(expandedEntity, true);
@@ -585,7 +557,6 @@ export const Observability = React.memo((props: Props) => {
 						Query: "GetObservabilityRepos",
 					});
 					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
-					setLoadingEntities(false);
 				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
@@ -593,7 +564,6 @@ export const Observability = React.memo((props: Props) => {
 			.finally(() => {
 				if (repoId) {
 					loading(repoId, false);
-					setLoadingEntities(false);
 				}
 			});
 	}
@@ -608,9 +578,9 @@ export const Observability = React.memo((props: Props) => {
 			})
 			.then(response => {
 				if (response?.repos) {
-					const existingObservabilityErrors = observabilityErrors.filter(_ => _?.repoId !== repoId);
-					existingObservabilityErrors.push(response.repos[0]);
-					setObservabilityErrors(existingObservabilityErrors!);
+					if (response.repos) {
+						setObservabilityErrors(response.repos);
+					}
 				}
 				loading(repoId, false);
 				setLoadingPane(undefined);
