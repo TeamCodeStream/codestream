@@ -577,10 +577,8 @@ export const Observability = React.memo((props: Props) => {
 				filters: [{ repoId: repoId, entityGuid: entityGuid }],
 			})
 			.then(response => {
-				if (response?.repos) {
-					if (response.repos) {
-						setObservabilityErrors(response.repos);
-					}
+				if (response.repos) {
+					setObservabilityErrors(response.repos);
 				}
 				loading(repoId, false);
 				setLoadingPane(undefined);
