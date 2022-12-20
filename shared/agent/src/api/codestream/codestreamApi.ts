@@ -2375,7 +2375,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	})
 	async refreshThirdPartyProvider(request: {
 		providerId: string;
-		refreshToken: string;
 		sharing?: boolean;
 		subId?: string;
 	}): Promise<CSMe> {
@@ -2387,20 +2386,18 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 			const params: { [key: string]: string } = {
 				teamId: this.teamId,
-				token: request.refreshToken,
 			};
 			if (providerConfig.isEnterprise) {
 				params.host = providerConfig.host;
 			}
 
 			const team = `teamId=${this.teamId}`;
-			const token = `refreshToken=${request.refreshToken}`;
 			const host = providerConfig.isEnterprise
 				? `&host=${encodeURIComponent(providerConfig.host!)}`
 				: "";
 			const sharing = request.sharing ? "&sharing=true" : "";
 			const subId = request.subId ? `&subId=${request.subId}` : "";
-			const url = `/provider-refresh/${providerConfig.name}?${team}&${token}${host}${sharing}${subId}`;
+			const url = `/provider-refresh/${providerConfig.name}?${team}${host}${sharing}${subId}`;
 			const response = await this.get<{ user: any }>(url, this._token);
 
 			const user = await SessionContainer.instance().session.resolveUserAndNotify(response.user);

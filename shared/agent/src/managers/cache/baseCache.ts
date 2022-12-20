@@ -122,6 +122,27 @@ export class BaseCache<T> {
 		return entity;
 	}
 
+	// Non-promise version
+	getFromCache(criteria: KeyValue<T>[]): T | undefined {
+		const cc = Logger.getCorrelationContext();
+
+		const keys = getKeys(criteria);
+		const index = this.getIndex<UniqueIndex<T>>(keys);
+		const values = getValues(criteria);
+		if (!index || index.type !== IndexType.Unique) {
+			throw new Error(`No unique index declared for fields ${keys}`);
+		}
+
+		let entity = index.get(values);
+		if (!entity) {
+			if (cc !== undefined) {
+				cc.exitDetails = "(cache miss)";
+			}
+		}
+
+		return entity;
+	}
+
 	/**
 	 * Add or update an entity. All initialized indexes are updated. In order to dissociate an
 	 * updated entity from its old indexed values, #oldEntity must be specified.

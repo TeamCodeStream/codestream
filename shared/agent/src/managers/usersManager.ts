@@ -140,6 +140,15 @@ export class UsersManager extends CachedEntityManagerBase<CSUser> {
 		return cachedMe as CSMe;
 	}
 
+	// Non-promise version from cache
+	getMeCached(): CSMe {
+		const cachedMe = this.cache.getFromCache([["id", this.session.userId]]);
+		if (!cachedMe) {
+			throw new Error(`User's own object (${this.session.userId}) not found in cache`);
+		}
+		return cachedMe as CSMe;
+	}
+
 	@lspHandler(GetUnreadsRequestType)
 	getUnreads(request: GetUnreadsRequest): Promise<GetUnreadsResponse> {
 		return this.session.api.getUnreads(request);

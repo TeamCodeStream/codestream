@@ -1,3 +1,7 @@
+import { RequestInit, Response } from "node-fetch";
+import { Disposable, Event } from "vscode-languageserver";
+
+import { HistoryFetchInfo } from "broadcaster/broadcaster";
 import {
 	AccessToken,
 	AddEnterpriseProviderHostRequest,
@@ -208,10 +212,6 @@ import {
 	TriggerMsTeamsProactiveMessageRequest,
 	TriggerMsTeamsProactiveMessageResponse,
 } from "@codestream/protocols/api";
-import { RequestInit, Response } from "node-fetch";
-import { Disposable, Event } from "vscode-languageserver";
-
-import { HistoryFetchInfo } from "broadcaster/broadcaster";
 
 export type ApiProviderLoginResponse = CSLoginResponse & { token: AccessToken };
 
@@ -548,7 +548,6 @@ export interface ApiProvider {
 	removeEnterpriseProviderHost(request: RemoveEnterpriseProviderHostRequest): Promise<void>;
 	refreshThirdPartyProvider(request: {
 		providerId: string;
-		refreshToken: string;
 		sharing?: boolean;
 		subId?: string;
 	}): Promise<CSMe>;

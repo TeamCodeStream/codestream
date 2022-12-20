@@ -1,6 +1,12 @@
 import { Agent as HttpsAgent } from "https";
 import url from "url";
 
+import { Mutex } from "async-mutex";
+import { GraphQLClient } from "graphql-request";
+import { RequestInit, Response } from "node-fetch";
+
+import HttpsProxyAgent from "https-proxy-agent";
+import { InternalError, ReportSuppressedMessages } from "../agentError";
 import {
 	AddEnterpriseProviderRequest,
 	AddEnterpriseProviderResponse,
@@ -10,13 +16,7 @@ import {
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
 import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
-import { Mutex } from "async-mutex";
-import { GraphQLClient } from "graphql-request";
-import { RequestInit, Response } from "node-fetch";
 
-import HttpsProxyAgent from "https-proxy-agent";
-import { InternalError, ReportSuppressedMessages } from "../agentError";
-import { MessageType } from "../api/apiProvider";
 import { User } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
@@ -35,7 +35,6 @@ export abstract class ThirdPartyProviderBase<
 {
 	private _readyPromise: Promise<void> | undefined;
 	protected _ensuringConnection: Promise<void> | undefined;
-	protected _providerInfo: TProviderInfo | undefined;
 	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	protected _client: GraphQLClient | undefined;
 	private _refreshLock = new Mutex();
@@ -58,6 +57,16 @@ export abstract class ThirdPartyProviderBase<
 
 	get icon() {
 		return this.name;
+	}
+
+	// Use central usersManager store that gets updates from pubnub
+	protected get _providerInfo(): TProviderInfo | undefined {
+		try {
+			const me = SessionContainer.instance().users.getMeCached();
+			return this.getProviderInfo(me);
+		} catch (e) {
+			return undefined;
+		}
 	}
 
 	get accessToken() {
@@ -150,20 +159,8 @@ export abstract class ThirdPartyProviderBase<
 	async connect() {
 		void this.onConnecting();
 
-		// FIXME - this rather sucks as a way to ensure we have the access token
-		this._providerInfo = await new Promise<TProviderInfo>(resolve => {
-			this.session.api.onDidReceiveMessage(e => {
-				if (e.type !== MessageType.Users) return;
-
-				const me = e.data.find((u: any) => u.id === this.session.userId) as CSMe | null | undefined;
-				if (me == null) return;
-
-				const providerInfo = this.getProviderInfo(me);
-				if (!providerInfo) return;
-				if (!this.hasAccessToken(providerInfo)) return;
-				resolve(providerInfo);
-			});
-		});
+		if (!this._providerInfo) return;
+		if (!this.hasAccessToken(this._providerInfo)) return;
 
 		this._readyPromise = this.onConnected(this._providerInfo);
 		await this._readyPromise;
@@ -255,7 +252,7 @@ export abstract class ThirdPartyProviderBase<
 			providerId: this.providerConfig.id,
 			providerTeamId: request && request.providerTeamId,
 		}));
-		this._readyPromise = this._providerInfo = this._ensuringConnection = undefined;
+		this._readyPromise = this._ensuringConnection = undefined;
 		await this.onDisconnected(request);
 	}
 
@@ -285,12 +282,10 @@ export abstract class ThirdPartyProviderBase<
 			if (oneMinuteBeforeExpiration > new Date().getTime()) return;
 
 			try {
-				const me = await this.session.api.refreshThirdPartyProvider({
+				await this.session.api.refreshThirdPartyProvider({
 					providerId: this.providerConfig.id,
-					refreshToken: this._providerInfo.refreshToken,
 					subId: request && request.providerTeamId,
 				});
-				this._providerInfo = this.getProviderInfo(me);
 			} catch (error) {
 				if (isErrnoException(error)) {
 					if (error.code && transitoryErrors.has(error.code)) {
@@ -303,7 +298,7 @@ export abstract class ThirdPartyProviderBase<
 					Might be able to narrow down further - need to check what errors come back for temporary
 					codestream server -> provider server errors vs real disconnect errors
 					(i.e. check error.code is RAPI-1009)
-					 */
+					*/
 					await this.disconnect();
 					return this.ensureConnected();
 				}
@@ -315,13 +310,13 @@ export abstract class ThirdPartyProviderBase<
 
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
 		const user = await SessionContainer.instance().users.getMe();
-		this._providerInfo = this.getProviderInfo(user);
-		if (this._providerInfo === undefined) {
+		const providerInfo = this.getProviderInfo(user);
+		if (providerInfo === undefined) {
 			throw new Error(`You must authenticate with ${this.displayName} first.`);
 		}
 
 		await this.refreshToken(request);
-		this._readyPromise = this.onConnected(this._providerInfo);
+		this._readyPromise = this.onConnected(providerInfo);
 		await this._readyPromise;
 	}
 
