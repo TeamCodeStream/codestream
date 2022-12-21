@@ -2824,10 +2824,11 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						entity(guid: "${entityGuid}") {
 	    	`;
 
+			const since = "30 MINUTES";
 			metricDefinitions.forEach(md => {
 				const whereClause = md.definition.where ? `WHERE ${md.definition.where}` : "";
 				gmQuery += `
-					${md.name}: nrdbQuery(nrql: "SELECT ${md.definition.select} AS 'result' FROM ${md.definition.from} ${whereClause} SINCE 30 MINUTES AGO", timeout: 10, async: true) {
+					${md.name}: nrdbQuery(nrql: "SELECT ${md.definition.select} AS 'result' FROM ${md.definition.from} ${whereClause} SINCE ${since} AGO", timeout: 10, async: true) {
 						results
 					}
 				`;
@@ -2872,6 +2873,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 
 			return {
 				lastUpdated: new Date().toLocaleString(),
+				since: since.toLowerCase().replace("minutes", "min"),
 				metrics: metrics,
 			};
 		} catch (ex) {

@@ -1781,6 +1781,10 @@ export const GoldenMetricUnitMappings: UnitMappings = {
 
 export interface EntityGoldenMetrics {
 	lastUpdated: string;
+	/**
+	 * Adds a timeframe value for the UI to show (30 minutes, 2 days, etc.)
+	 */
+	since: string;
 	metrics: {
 		name: string;
 		title: string;

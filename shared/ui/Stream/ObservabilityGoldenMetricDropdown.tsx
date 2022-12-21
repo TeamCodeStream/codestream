@@ -72,7 +72,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 								style={{ transform: "scale(0.8)" }}
 								name="clock"
 								className="clickable"
-								title={"Updated at " + entityGoldenMetrics.lastUpdated}
+								placement="bottom"
+								title={
+									`Since ${entityGoldenMetrics.since} ago. Updated at ` +
+									entityGoldenMetrics.lastUpdated
+								}
 								delay={1}
 							/>
 						)}
