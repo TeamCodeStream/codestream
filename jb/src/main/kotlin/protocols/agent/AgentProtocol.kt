@@ -752,6 +752,19 @@ class GetBlameResultPR(
     val title: String
 )
 
+class GetCommitParams(
+    val filePath: String,
+    val revision: String
+)
+
+class GetCommitResult(
+    val scm: GetCommitResultScm?
+)
+
+class GetCommitResultScm(
+    val revision: String
+)
+
 class ReportMessageParams(
     val type: String,
     val error: ReportMessageRequestError?,

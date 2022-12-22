@@ -18,6 +18,7 @@ import com.codestream.extensions.visibleRanges
 import com.codestream.git.getCSGitFile
 import com.codestream.protocols.agent.DocumentMarker
 import com.codestream.protocols.agent.DocumentMarkersParams
+import com.codestream.protocols.agent.GetCommitParams
 import com.codestream.protocols.agent.Marker
 import com.codestream.protocols.agent.ReviewCoverageParams
 import com.codestream.protocols.agent.TextDocument
@@ -532,20 +533,24 @@ class EditorService(val project: Project) {
     }
 
     suspend fun reveal(uri: String, ref: String?, range: Range?, atTop: Boolean? = null): Boolean {
-        var success = revealCore(uri, ref, range, atTop)
+        val filePath = URI.create(uri).path
+        val sha = ref?.let {
+            project?.agentService?.getCommit(GetCommitParams(filePath, ref))?.scm?.revision
+        }
+        var success = revealCore(uri, sha, range, atTop)
         if (!success) {
-            success = revealCore(sanitizeURI(uri)!!, ref, range, atTop)
+            success = revealCore(sanitizeURI(uri)!!, sha, range, atTop)
         }
         return success
     }
 
-    private suspend fun revealCore(uri: String, ref: String?, range: Range?, atTop: Boolean? = null): Boolean {
+    private suspend fun revealCore(uri: String, sha: String?, range: Range?, atTop: Boolean? = null): Boolean {
         val future = CompletableDeferred<Boolean>()
 
         ApplicationManager.getApplication().invokeLater {
             try {
-                if (!ref.isNullOrEmpty()) {
-                    val vFile = getCSGitFile(uri, ref, project)
+                if (!sha.isNullOrEmpty()) {
+                    val vFile = getCSGitFile(uri, sha, project)
                     val editorManager = FileEditorManager.getInstance(project)
                     editorManager.openTextEditor(OpenFileDescriptor(project, vFile, range?.start?.line ?: 0, 0), false)
                     future.complete(true)

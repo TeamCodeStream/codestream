@@ -25,6 +25,8 @@ import com.codestream.protocols.agent.GetAllReviewContentsParams
 import com.codestream.protocols.agent.GetAllReviewContentsResult
 import com.codestream.protocols.agent.GetBlameParams
 import com.codestream.protocols.agent.GetBlameResult
+import com.codestream.protocols.agent.GetCommitParams
+import com.codestream.protocols.agent.GetCommitResult
 import com.codestream.protocols.agent.GetFileContentsAtRevisionParams
 import com.codestream.protocols.agent.GetFileContentsAtRevisionResult
 import com.codestream.protocols.agent.GetLocalReviewContentsParams
@@ -631,6 +633,13 @@ class AgentService(private val project: Project) : Disposable {
     suspend fun getBlame(params: GetBlameParams): GetBlameResult {
         val json = remoteEndpoint
             .request("codestream/scm/blame", params)
+            .await() as JsonObject?
+        return gson.fromJson(json!!)
+    }
+
+    suspend fun getCommit(params: GetCommitParams): GetCommitResult {
+        val json = remoteEndpoint
+            .request("codestream/scm/commit", params)
             .await() as JsonObject?
         return gson.fromJson(json!!)
     }

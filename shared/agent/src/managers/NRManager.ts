@@ -25,6 +25,7 @@ import {
 	ParseStackTraceRequest,
 	ParseStackTraceRequestType,
 	ParseStackTraceResponse,
+	ResolveStackTracePathsRequestType,
 	ResolveStackTracePositionRequest,
 	ResolveStackTracePositionRequestType,
 	ResolveStackTracePositionResponse,
@@ -166,7 +167,7 @@ export class NRManager {
 		occurrenceId,
 		codeErrorId,
 	}: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
-		const { git, repos, session } = SessionContainer.instance();
+		const { git, repos } = SessionContainer.instance();
 		const matchingRepo = await git.getRepositoryById(repoId);
 		const matchingRepoPath = matchingRepo?.path;
 		let firstWarning: WarningOrError | undefined = undefined;
@@ -277,9 +278,16 @@ export class NRManager {
 		occurrenceId: string,
 		codeErrorId: string
 	) {
-		const { session } = SessionContainer.instance();
+		const { session, git } = SessionContainer.instance();
+
+		const paths = parsedStackInfo.lines.map(_ => _.fileFullPath);
+		const commitSha = matchingRepoPath && (await git.getCommit(matchingRepoPath, ref));
+		const resolveStackTracePathsResponse = await session.agent.sendRequest(
+			ResolveStackTracePathsRequestType,
+			{ paths }
+		);
+
 		for (let i = 0; i < parsedStackInfo.lines.length; i++) {
-			Logger.log(`CHUPACABRA resolveStackTraceLines ${i + 1}/${parsedStackInfo.lines.length}`);
 			try {
 				const line = parsedStackInfo.lines[i];
 				const resolvedLine = { ...line };
@@ -287,12 +295,27 @@ export class NRManager {
 				line.fileRelativePath = resolvedLine.fileRelativePath;
 
 				if (!line.error && matchingRepoPath && parsedStackInfo.language) {
-					const resolvedLine = await this.resolveStackTraceLine(
-						line,
-						ref,
-						matchingRepoPath,
-						parsedStackInfo.language
-					);
+					let resolvedLine: CSStackTraceLine;
+					const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
+					if (resolvedPath) {
+						resolvedLine = {
+							fileFullPath: resolvedPath,
+							fileRelativePath: path.relative(matchingRepoPath, resolvedPath),
+							line: line.line,
+							column: line.column,
+							resolved: true,
+							warning: commitSha ? undefined : "Missing sha",
+						};
+					} else {
+						resolvedLine = { error: `Unable to find matching file for path ${line.fileFullPath}` };
+					}
+					// const resolvedLine = await this.resolveStackTraceLine(
+					// 	line,
+					// 	ref,
+					// 	matchingRepoPath,
+					// 	parsedStackInfo.language,
+					// 	resolvedPath
+					// );
 					if (resolvedLine.error) {
 						Logger.log(`Stack trace line failed to resolve: ${resolvedLine.error}`);
 					} else {

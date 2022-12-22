@@ -1,5 +1,6 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
+
 import { FetchThirdPartyPullRequestFilesResponse } from "./agent.protocol.providers";
 import { CSRepository, CSReview, CSTeam, CSUser, ModifiedFile } from "./api.protocol";
 
@@ -62,6 +63,7 @@ export interface GetCommitScmInfoRequest {
 	revision: string;
 	repoPath?: string;
 	repoId?: string;
+	filePath?: string;
 }
 export interface GetCommitScmInfoResponse {
 	scm?: {

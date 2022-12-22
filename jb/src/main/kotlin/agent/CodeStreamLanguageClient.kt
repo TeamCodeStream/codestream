@@ -27,7 +27,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.util.concurrency.AppExecutorUtil
-import com.intellij.util.concurrency.NonUrgentExecutor
 import git4idea.GitUtil
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -188,15 +187,65 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         val fileFuture = CompletableFuture<FileSearchResponse>()
         // ApplicationManager.getApplication().invokeLater {
             ReadAction.nonBlocking {
-                val start = System.currentTimeMillis()
                 val files = FilenameIndex.getFilesByName(project, request.path, GlobalSearchScope.projectScope(project))
                     .map { it.virtualFile.path }
-                val end = System.currentTimeMillis()
-                logger.info("fileSearch: ${request.path} ${files.size} results ${end - start}ms")
                 fileFuture.complete(FileSearchResponse(files))
             }.submit(AppExecutorUtil.getAppExecutorService())
         // }
         return fileFuture
+    }
+
+    @JsonRequest("codestream/stackTrace/resolvePaths")
+    fun resolveStackTracePaths(json: JsonElement): CompletableFuture<ResolveStackTracePathsResponse> {
+        val request = gson.fromJson<ResolveStackTracePathsRequest>(json[0])
+        class ResolvedPath(
+            val path: String,
+            val depth: Int,
+            val discardedPath: String,
+            val discardedDepth: Int
+        )
+
+        val future = CompletableFuture<ResolveStackTracePathsResponse>()
+        ReadAction.nonBlocking {
+            val resolvedPaths = mutableListOf<ResolvedPath?>()
+            val projectSearchScope = GlobalSearchScope.projectScope(project)
+            for (path in request.paths) {
+                val parts = path.split("/").toMutableList()
+                val discardedParts = mutableListOf<String>()
+                var found = false
+                val filenameMatches = FilenameIndex.getFilesByName(project, parts.last(), projectSearchScope)
+
+                while (!found && parts.isNotEmpty() && filenameMatches.isNotEmpty()) {
+                    val partial = parts.joinToString("/")
+                    val matchingPaths = filenameMatches.filter { it.virtualFile.path.endsWith(partial) }
+                    if (matchingPaths.isEmpty()) {
+                        discardedParts += parts.removeFirst()
+                    } else {
+                        found = true
+                        if (matchingPaths.size > 1) {
+                            // then what? log, at least
+                        }
+                        val matchingPath = matchingPaths.first()
+                        resolvedPaths += ResolvedPath(matchingPath.virtualFile.path, parts.size, discardedParts.joinToString("/"), discardedParts.size)
+                    }
+                }
+                if (!found) {
+                    resolvedPaths += null
+                }
+            }
+            var maxDepth = 0
+            var discardedPath = ""
+            for (resolvedPath in resolvedPaths) {
+                if (resolvedPath != null && resolvedPath.depth > maxDepth) {
+                    maxDepth = resolvedPath.depth
+                    discardedPath = resolvedPath.discardedPath
+                }
+            }
+
+            val filteredResolvedPaths = resolvedPaths.map { if (it?.discardedPath == discardedPath) it else null }
+            future.complete(ResolveStackTracePathsResponse(filteredResolvedPaths.map { it?.path }))
+        }.submit(AppExecutorUtil.getAppExecutorService())
+        return future
     }
 
     @JsonNotification("codestream/didSetEnvironment")
@@ -319,9 +368,13 @@ class DidChangeApiVersionCompatibilityNotification(
 
 class OpenUrlRequest(val url: String)
 
-class FileSearchRequest(val basePath: String, val path: String)
+class FileSearchRequest(val basePath: String, val path: String, )
 
 class FileSearchResponse(val files: List<String>)
+
+class ResolveStackTracePathsRequest(val paths: List<String>)
+
+class ResolveStackTracePathsResponse(val resolvedPaths: List<String?>)
 
 enum class ApiVersionCompatibility {
     @SerializedName("apiCompatible")

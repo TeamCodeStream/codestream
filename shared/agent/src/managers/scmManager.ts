@@ -1,8 +1,10 @@
+import * as paths from "path";
+
 import { applyPatch, createPatch, ParsedDiff, parsePatch } from "diff";
 import { decompressFromBase64 } from "lz-string";
-import * as paths from "path";
 import { TextDocument } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
+
 import { Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { GitRepositoryExtensions } from "../extensions";
@@ -93,6 +95,7 @@ import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
 import { IgnoreFilesHelper } from "./ignoreFilesManager";
 import { ReviewsManager } from "./reviewsManager";
+
 import toFormatter = Dates.toFormatter;
 import toGravatar = Strings.toGravatar;
 
@@ -106,10 +109,15 @@ export class ScmManager {
 		revision,
 		repoPath,
 		repoId,
+		filePath,
 	}: GetCommitScmInfoRequest): Promise<GetCommitScmInfoResponse> {
 		const cc = Logger.getCorrelationContext();
 
 		const { git } = SessionContainer.instance();
+		if (filePath && !repoPath) {
+			const repo = await git.getRepositoryByFilePath(filePath);
+			repoPath = repo?.path;
+		}
 
 		if (!repoPath) {
 			if (!repoId) {
