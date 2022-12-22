@@ -3,10 +3,12 @@
 import * as childProcess from "child_process";
 import * as fs from "fs";
 import path from "path";
+
 import {
 	CreateNewRelicConfigFileJavaResponse,
 	DidChangeProcessBufferNotificationType,
 	InstallNewRelicResponse,
+	Project,
 } from "../../protocol/agent.protocol";
 import { CodeStreamSession } from "../../session";
 
@@ -26,37 +28,52 @@ export class DotNetCoreInstrumentation {
 				command: string,
 				args: string[],
 				options: childProcess.SpawnOptions,
-				callback: (scriptOutput: string, error: string, code: string) => void
+				callback: (scriptOutput: string, error: string, code: number) => void
 			) {
-				const child = childProcess.spawn(command, args, options);
 				let scriptOutput = "";
 				let error = "";
+				try {
+					const child = childProcess.spawn(command, args, options);
 
-				child.stdout?.setEncoding("utf8");
-				child.stdout?.on("data", function (data: any) {
-					data = data.toString();
-					scriptOutput += data;
+					child.stdout?.setEncoding("utf8");
+					child.stdout?.on("data", function (data: any) {
+						data = data.toString();
+						scriptOutput += data;
 
-					me.session.agent.sendNotification(DidChangeProcessBufferNotificationType, {
-						text: data,
+						me.session.agent.sendNotification(DidChangeProcessBufferNotificationType, {
+							text: data,
+						});
 					});
-				});
 
-				child.stderr?.setEncoding("utf8");
-				child.stderr?.on("data", function (data: any) {
-					error += data.toString();
-				});
+					child.stderr?.setEncoding("utf8");
+					child.stderr?.on("data", function (data: any) {
+						error += data.toString();
+					});
 
-				child.on("close", function (code: any) {
-					callback(scriptOutput, error, code);
-				});
+					child.on("close", function (code: number) {
+						callback(scriptOutput, error, code);
+					});
+					child.on("error", function (error: Error) {
+						callback(scriptOutput, error?.message, 1);
+					});
+				} catch (ex) {
+					callback(scriptOutput, ex?.message, 1);
+				}
 			}
+
+			const isWin = /^win/.test(process.platform);
 
 			run_script(
 				"dotnet",
 				["add", "package", "NewRelic.Agent"],
-				{ cwd: cwd },
-				function (output: string, error: string, exitCode: string) {
+				{
+					cwd: cwd,
+					env: {
+						...process.env,
+						PATH: isWin ? process.env.PATH : process.env.PATH + ":/usr/local/share/dotnet/dotnet",
+					},
+				},
+				function (output: string, error: string, exitCode: number) {
 					if (error) {
 						resolve({ error: error });
 					} else {
@@ -109,25 +126,33 @@ export class DotNetCoreInstrumentation {
 		repoPath: string,
 		filePath: string,
 		licenseKey: string,
-		appName: string
+		appName: string,
+		project?: Project
 	): Promise<CreateNewRelicConfigFileJavaResponse> {
 		const startCmdPath = path.join(filePath, "NrStart.cmd");
 		// TODO get path to BIN with framework version
+
+		// net6.0 has LTS
+		const version = project?.version || "net6.0";
 		fs.writeFileSync(
 			startCmdPath,
 
-			`@REM this file has been automatically ignored by git
+			`@REM this file has been automatically created by CodeStream and is ignored by git
+@REM This is a script to test your New Relic integration
 @REM Do not commit this file, it contains your secret New Relic license key
+
+
 set CORECLR_ENABLE_PROFILING=1
 set CORECLR_PROFILER={36032161-FFC0-4B61-B559-F6C5D41BAE5A}
-set CORECLR_NEWRELIC_HOME=.\\bin\\Debug\\net5.0\\newrelic
-set CORECLR_PROFILER_PATH=.\\bin\\Debug\\net5.0\\newrelic\\NewRelic.Profiler.dll
+set CORECLR_NEWRELIC_HOME=.\\bin\\Debug\\<ENTER-DOTNET-VERSION>\\newrelic
+set CORECLR_PROFILER_PATH=.\\bin\\Debug\\<ENTER-DOTNET-VERSION>\\newrelic\\NewRelic.Profiler.dll
 @REM The following is only needed if there is something else explicitly setting this globally elsewhere
-set CORECLR_PROFILER_PATH_64=.\\bin\\Debug\\net5.0\\newrelic\\NewRelic.Profiler.dll
+set CORECLR_PROFILER_PATH_64=.\\bin\\Debug\\<ENTER-DOTNET-VERSION>\\newrelic\\NewRelic.Profiler.dll
 set NEW_RELIC_LICENSE_KEY=<ENTER-YOUR-NEW_RELIC_LICENSE_KEY-HERE>
 set NEW_RELIC_APP_NAME=<ENTER-YOUR-NEW_RELIC_APP_NAME-HERE>
 dotnet run -c Debug
 `
+				.replace(/<ENTER-DOTNET-VERSION>/g, version)
 				.replace("<ENTER-YOUR-NEW_RELIC_LICENSE_KEY-HERE>", licenseKey)
 				.replace("<ENTER-YOUR-NEW_RELIC_APP_NAME-HERE>", appName),
 			{ encoding: "utf8" }

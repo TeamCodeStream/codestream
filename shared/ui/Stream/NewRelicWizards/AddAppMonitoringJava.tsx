@@ -2,6 +2,8 @@ import { NewRelicOptions, RepoProjectType } from "@codestream/protocols/agent";
 import React, { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
+
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { TextInput } from "../../Authentication/TextInput";
 import { logError } from "../../logger";
 import {
@@ -34,12 +36,11 @@ export const AddAppMonitoringJava = (props: {
 
 	const [appName, setAppName] = useState("");
 	const [licenseKey, setLicenseKey] = useState("");
-	const [selectedFile, setSelectedFile] = useState("");
 	const [installingLibrary, setInstallingLibrary] = useState(false);
 	const [creatingConfig, setCreatingConfig] = useState(false);
 	const [agentJar, setAgentJar] = useState("");
-	const [loading, setLoading] = useState(false);
 	const [unexpectedError, setUnexpectedError] = useState(false);
+	const [specificError, setSpecificError] = useState("");
 	const [step, setStep] = useState(1);
 
 	const { repo, repoPath } = derivedState;
@@ -51,20 +52,12 @@ export const AddAppMonitoringJava = (props: {
 		}
 	}, [repo]);
 
-	const onSubmit = async (event: React.SyntheticEvent) => {
-		setUnexpectedError(false);
-		event.preventDefault();
-
-		setLoading(true);
-		try {
-			dispatch(closeModal());
-		} catch (error) {
-			logError(error, { detail: `Unexpected error during New Relic java installation` });
-			setUnexpectedError(true);
+	useDidMount(() => {
+		if (!repoPath) {
+			setSpecificError("Please ensure you have a git repository open and try again.");
+			setStep(0);
 		}
-		// @ts-ignore
-		setLoading(false);
-	};
+	});
 
 	const onInstallLibrary = async (event: React.SyntheticEvent) => {
 		event.preventDefault();
@@ -117,6 +110,7 @@ export const AddAppMonitoringJava = (props: {
 						<fieldset className="form-body">
 							<div id="controls">
 								<div className="small-spacer" />
+								{specificError && <div className="error-message form-error">{specificError}</div>}
 								{unexpectedError && (
 									<div className="error-message form-error">
 										<FormattedMessage

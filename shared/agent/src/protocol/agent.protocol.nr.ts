@@ -1,7 +1,8 @@
 "use strict";
 
 import { NotificationType, RequestType } from "vscode-languageserver-protocol";
-import { RepoProjectType } from "./agent.protocol.scm";
+
+import { Project, RepoProjectType } from "./agent.protocol.scm";
 import { CSStackTraceInfo, CSStackTraceLine } from "./api.protocol.models";
 
 export interface ParseStackTraceRequest {
@@ -131,6 +132,7 @@ export interface CreateNewRelicConfigFileRequest {
 	repoPath?: string;
 	licenseKey: string;
 	appName: string;
+	project?: Project;
 }
 
 export interface CreateNewRelicConfigFileResponse {

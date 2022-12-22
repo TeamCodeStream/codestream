@@ -1,11 +1,12 @@
 import { NewRelicOptions, RepoProjectType } from "@codestream/protocols/agent";
-import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
-import { clearProcessBuffer } from "@codestream/webview/store/editorContext/actions";
-import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import * as path from "path-browserify";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { Range } from "vscode-languageserver-types";
+
+import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
+import { clearProcessBuffer } from "@codestream/webview/store/editorContext/actions";
+import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
 import { TextInput } from "../../Authentication/TextInput";
 import { logError } from "../../logger";
 import {
@@ -34,18 +35,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 		const { repoId, path } = state.context.wantNewRelicOptions ?? {};
 		const repo = repoId ? state.repos[repoId] : undefined;
 
-		let token;
-		try {
-			token =
-				state.session.userId &&
-				(state.users[state.session.userId] as any).providerInfo &&
-				(state.users[state.session.userId] as any).providerInfo[state.context.currentTeamId][
-					"newrelic"
-				].accessToken;
-		} catch (err) {
-			console.warn(err);
-		}
-		return { repo, repoPath: path, bufferText: state.editorContext.buffer?.text, token };
+		return { repo, repoPath: path, bufferText: state.editorContext.buffer?.text };
 	});
 
 	const [cwd, setCwd] = useState(
@@ -55,17 +45,16 @@ export const AddAppMonitoringDotNetCore = (props: {
 	);
 	const [appName, setAppName] = useState("");
 	const [licenseKey, setLicenseKey] = useState("");
-	const [selectedFile, setSelectedFile] = useState("");
 	const [installingLibrary, setInstallingLibrary] = useState(false);
 	const [creatingConfig, setCreatingConfig] = useState(false);
 	const [agentJar, setAgentJar] = useState("");
-	const [loading, setLoading] = useState(false);
 	const [unexpectedError, setUnexpectedError] = useState(false);
+	const [specificError, setSpecificError] = useState("");
 	const [step, setStep] = useState(1);
 
 	const { repo, repoPath } = derivedState;
 
-	const messagesEndRef = useRef(null);
+	// const messagesEndRef = useRef(null);
 
 	useEffect(() => {
 		// TODO
@@ -76,14 +65,20 @@ export const AddAppMonitoringDotNetCore = (props: {
 	}, [derivedState.bufferText]);
 
 	useDidMount(() => {
+		if (!repoPath) {
+			setSpecificError("Please ensure you have a git repository open and try again.");
+			setStep(0);
+		}
+
 		return () => {
 			dispatch(clearProcessBuffer({}));
 
-			//TODO NrStart.cmd
-			void HostApi.instance.send(EditorRevealRangeRequestType, {
-				uri: path.join("file://", derivedState.repoPath, "NrStart.cmd"),
-				range: Range.create(0, 0, 0, 0),
-			});
+			if (repoPath) {
+				void HostApi.instance.send(EditorRevealRangeRequestType, {
+					uri: path.join("file://", repoPath, "NrStart.cmd"),
+					range: Range.create(0, 0, 0, 0),
+				});
+			}
 		};
 	});
 
@@ -119,7 +114,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 			repoPath: repoPath!,
 			filePath: cwd || repoPath!,
 			appName,
-			licenseKey: derivedState.token,
+			licenseKey: licenseKey,
 		})) as CreateNewRelicConfigFileResponse;
 		if (response.error) {
 			logError(`Unable to create New Relic config file: ${response.error}`);
@@ -146,6 +141,7 @@ export const AddAppMonitoringDotNetCore = (props: {
 						<fieldset className="form-body">
 							<div id="controls">
 								<div className="small-spacer" />
+								{specificError && <div className="error-message form-error">{specificError}</div>}
 								{unexpectedError && (
 									<div className="error-message form-error">
 										<FormattedMessage

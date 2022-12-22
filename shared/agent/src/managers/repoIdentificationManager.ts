@@ -2,7 +2,8 @@
 
 import { promises as fsPromises, readdirSync, readFileSync as fsReadFileSync, statSync } from "fs";
 import path from "path";
-import { IdentifyRepoResult, RepoProjectType, ReposScm } from "../protocol/agent.protocol";
+
+import { IdentifyRepoResult, Project, RepoProjectType, ReposScm } from "../protocol/agent.protocol";
 import { CodeStreamSession } from "../session";
 import { lsp } from "../system/decorators/lsp";
 
@@ -68,7 +69,7 @@ export class RepoIdentificationManager {
 		files: string[]
 	): Promise<
 		| {
-				projects: { path: string; name: string; version?: string }[];
+				projects: Project[];
 		  }
 		| undefined
 	> {

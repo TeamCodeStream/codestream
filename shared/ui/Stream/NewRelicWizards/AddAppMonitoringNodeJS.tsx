@@ -5,6 +5,7 @@ import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
 import { Position, Range } from "vscode-languageserver-types";
 
+import { useDidMount } from "@codestream/webview/utilities/hooks";
 import { TextInput } from "../../Authentication/TextInput";
 import { logError } from "../../logger";
 import {
@@ -67,9 +68,6 @@ export const AddAppMonitoringNodeJS = (props: {
 					setSpecificError("");
 					setStep(1);
 				}
-			} else {
-				setSpecificError("Please ensure you have a git repository open and try again.");
-				setStep(0);
 			}
 		})();
 	}, [repoPath]);
@@ -80,6 +78,13 @@ export const AddAppMonitoringNodeJS = (props: {
 			dispatch(closeModal());
 		}
 	}, [repo]);
+
+	useDidMount(() => {
+		if (!repoPath) {
+			setSpecificError("Please ensure you have a git repository open and try again.");
+			setStep(0);
+		}
+	});
 
 	const onInstallLibrary = async (event: React.SyntheticEvent) => {
 		event.preventDefault();

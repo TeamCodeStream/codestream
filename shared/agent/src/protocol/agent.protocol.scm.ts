@@ -1,5 +1,6 @@
 "use strict";
 import { Range, RequestType } from "vscode-languageserver-protocol";
+
 import { FetchThirdPartyPullRequestFilesResponse } from "./agent.protocol.providers";
 import { CSRepository, CSReview, CSTeam, CSUser, ModifiedFile } from "./api.protocol";
 
@@ -168,9 +169,15 @@ export enum RepoProjectType {
 	*/
 }
 
+export interface Project {
+	path: string;
+	name?: string;
+	version?: string;
+}
+
 export interface IdentifyRepoResult {
 	projectType: RepoProjectType;
-	projects?: { path: string; name?: string }[];
+	projects?: Project[];
 }
 
 export interface NewRelicOptions {
@@ -178,7 +185,7 @@ export interface NewRelicOptions {
 	/**
 	 * Collection of projects (folders)
 	 */
-	projects?: { path: string; name?: string }[];
+	projects?: Project[];
 	repoId?: string;
 	path?: string;
 }
