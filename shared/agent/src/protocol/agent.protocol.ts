@@ -326,6 +326,7 @@ export interface ResolveStackTracePathsRequest {
 
 export interface ResolveStackTracePathsResponse {
 	resolvedPaths: (string | undefined)[];
+	notImplemented: boolean | undefined;
 }
 
 export const ResolveStackTracePathsRequestType = new RequestType<
