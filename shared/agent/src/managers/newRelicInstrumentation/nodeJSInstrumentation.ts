@@ -11,6 +11,7 @@ import {
 } from "../../protocol/agent.protocol";
 import { CodeStreamSession } from "../../session";
 import { execAsync, existsAsync } from "./util";
+import { Logger } from "../../logger";
 
 interface CandidateFiles {
 	mainFile: string | null;
@@ -82,9 +83,19 @@ export class NodeJSInstrumentation {
 
 	async installNewRelic(cwd: string): Promise<InstallNewRelicResponse> {
 		try {
-			await execAsync("npm install --save newrelic", {
+			const isWin = /^win/.test(process.platform);
+			const { stdout, stderr } = await execAsync("npm install --save newrelic", {
 				cwd,
+				env: {
+					...process.env,
+					PATH: isWin ? process.env.PATH : process.env.PATH + ":/usr/local/bin",
+				},
 			});
+
+			Logger.log(`installNewRelic stdout: ${stdout}`);
+			if (stderr) {
+				Logger.warn(`installNewRelic stderr: ${stderr}`);
+			}
 			return {};
 		} catch (error) {
 			return { error: `exception thrown executing npm install: ${error.message}` };
@@ -116,6 +127,7 @@ export class NodeJSInstrumentation {
 
 	async addNewRelicInclude(file: string, dir: string): Promise<AddNewRelicIncludeResponse> {
 		try {
+			Logger.log(`addNewRelicInclude: file:${file} dir:${dir}`);
 			const fullPath = path.join(dir, file);
 			let contents = await fsPromises.readFile(fullPath, "utf8");
 			contents = `require("newrelic");\n\n${contents}`;
