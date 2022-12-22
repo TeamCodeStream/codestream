@@ -210,14 +210,14 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
             val resolvedPaths = mutableListOf<ResolvedPath?>()
             val projectSearchScope = GlobalSearchScope.projectScope(project)
             for (path in request.paths) {
-                val parts = path.split("/").toMutableList()
+                val parts = path.replace("\\", "/").split("/").toMutableList()
                 val discardedParts = mutableListOf<String>()
                 var found = false
                 val filenameMatches = FilenameIndex.getFilesByName(project, parts.last(), projectSearchScope)
 
                 while (!found && parts.isNotEmpty() && filenameMatches.isNotEmpty()) {
                     val partial = parts.joinToString("/")
-                    val matchingPaths = filenameMatches.filter { it.virtualFile.path.endsWith(partial) }
+                    val matchingPaths = filenameMatches.filter { it.virtualFile.path.replace("\\", "/").endsWith(partial) }
                     if (matchingPaths.isEmpty()) {
                         discardedParts += parts.removeFirst()
                     } else {
