@@ -1,8 +1,10 @@
+import * as paths from "path";
+
 import { applyPatch, createPatch, ParsedDiff, parsePatch } from "diff";
 import { decompressFromBase64 } from "lz-string";
-import * as paths from "path";
 import { TextDocument } from "vscode-languageserver-types";
 import { URI } from "vscode-uri";
+
 import { Ranges } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
 import { GitRepositoryExtensions } from "../extensions";
@@ -82,6 +84,7 @@ import {
 	GetShaDiffsRangesRequestType,
 	GetShaDiffsRangesResponse,
 	RepoScmStatus,
+	ReposScm,
 	SwitchBranchRequest,
 	SwitchBranchRequestType,
 	SwitchBranchResponse,
@@ -93,6 +96,7 @@ import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
 import { IgnoreFilesHelper } from "./ignoreFilesManager";
 import { ReviewsManager } from "./reviewsManager";
+
 import toFormatter = Dates.toFormatter;
 import toGravatar = Strings.toGravatar;
 
@@ -236,7 +240,42 @@ export class ScmManager {
 			}
 		}
 
+		response.repositories = this.specialCase(response.repositories);
 		return response;
+	}
+
+	// Handle odd case caused by https://github.com/redhat-developer/vscode-java/issues/634
+	// Given any repos with same remoId - if a repo path ends with `/bin/default` then remove it
+	specialCase(repositories?: ReposScm[]): ReposScm[] | undefined {
+		if (!repositories) {
+			return repositories;
+		}
+		const repoIds = new Set<string>();
+		const dupeRepoIds = new Set<string>();
+		for (const repo of repositories) {
+			if (!repo.id) {
+				continue;
+			}
+			if (repoIds.has(repo.id)) {
+				dupeRepoIds.add(repo.id);
+				continue;
+			}
+			repoIds.add(repo.id);
+		}
+		for (const dupeId of dupeRepoIds) {
+			const dupes = repositories.filter(repo => repo.id === dupeId);
+			for (const dupe of dupes) {
+				if (dupe.path.endsWith("/bin/default")) {
+					const removeIndex = repositories.findIndex(
+						repo => repo.id === dupe.id && repo.path === dupe.path
+					);
+					if (removeIndex != -1) {
+						repositories.splice(removeIndex, 1);
+					}
+				}
+			}
+		}
+		return repositories;
 	}
 
 	@lspHandler(GetRepoScmStatusesRequestType)
