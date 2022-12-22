@@ -363,6 +363,16 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
+		[JsonRpcMethod(ResolveStackTracePathsRequestType.MethodName)]
+		public async System.Threading.Tasks.Task<ResolveStackTracePathsResponse> OnResolveStackTracePathsAsync(JToken e, JToken someOtherPropThatNeedsToBeHereForRequests) {
+			using (Log.CriticalOperation(
+				$"{nameof(OnResolveStackTracePathsAsync)} Method={ResolveStackTracePathsRequestType.MethodName}",
+				Serilog.Events.LogEventLevel.Information)) {
+				
+				return Task.FromResult<ResolveStackTracePathsResponse>(new ResolveStackTracePathsResponse() { NotImplemented = true });				
+			}
+		}
+
 		/// <summary>
 		/// Restarts the LSP agent based on the currently registered LSP manager
 		/// </summary>

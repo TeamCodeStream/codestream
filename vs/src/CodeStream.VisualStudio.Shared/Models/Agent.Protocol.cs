@@ -325,6 +325,24 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public override string Method => MethodName;
 	}
 
+	public class ResolveStackTracePathsRequest  {
+		[JsonProperty("paths", NullValueHandling = NullValueHandling.Ignore)]
+		public List<string> Paths { get; set; }
+	}
+
+	public class ResolveStackTracePathsResponse {
+		[JsonProperty("resolvedPaths", NullValueHandling = NullValueHandling.Ignore)]
+		public List<string> ResolvedPaths { get; set; }
+
+		[JsonProperty("notImplemented", NullValueHandling = NullValueHandling.Ignore)]
+		public bool? NotImplemented { get; set; }
+	}	
+
+	public class ResolveStackTracePathsRequestType : RequestType<ResolveStackTracePathsResponse> {
+		public const string MethodName = "codestream/stackTrace/resolvePaths";
+		public override string Method => MethodName;
+	}
+
 	public class GetReviewContentsRequest {
 		[JsonProperty("reviewId", NullValueHandling = NullValueHandling.Ignore)]
 		public string ReviewId { get; set; }
