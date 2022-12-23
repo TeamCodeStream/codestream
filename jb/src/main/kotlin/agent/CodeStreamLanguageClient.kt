@@ -222,9 +222,6 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
                         discardedParts += parts.removeFirst()
                     } else {
                         found = true
-                        if (matchingPaths.size > 1) {
-                            // then what? log, at least
-                        }
                         val matchingPath = matchingPaths.first()
                         resolvedPaths += ResolvedPath(matchingPath.virtualFile.path, parts.size, discardedParts.joinToString("/"), discardedParts.size)
                     }
