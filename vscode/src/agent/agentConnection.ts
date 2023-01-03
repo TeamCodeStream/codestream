@@ -170,6 +170,8 @@ type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : 
 type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
 type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, any> ? R : never;
 
+export const isWindows = process.platform === "win32";
+
 // ServerOptions is a union type of 3 completely different types - pick the one we're using
 interface CSServerOptions {
 	run: NodeModule;
@@ -1334,7 +1336,7 @@ export class CodeStreamAgentConnection implements Disposable {
 				} = {};
 
 				for (const path of e.paths) {
-					const parts = Strings.normalizePath(path || "").split("/");
+					const parts = Strings.normalizePath(path || "", isWindows).split("/");
 					const discardedParts: string[] = [];
 					let found = false;
 					const filename = parts[parts.length - 1];
@@ -1346,7 +1348,7 @@ export class CodeStreamAgentConnection implements Disposable {
 						const partial = parts.join("/");
 						const matchingPaths = filenameMatches
 							.map(_ => _.fsPath)
-							.filter(_ => Strings.normalizePath(_).endsWith(partial));
+							.filter(_ => Strings.normalizePath(_, isWindows).endsWith(partial));
 
 						if (matchingPaths.length === 0) {
 							discardedParts.push(parts.shift()!!);

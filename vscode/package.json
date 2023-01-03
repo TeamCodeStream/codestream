@@ -663,7 +663,7 @@
 		"@vscode/test-electron": "2.1.2",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "9.0.1",
-		"esbuild": "0.16.12",
+		"esbuild": "0.16.13",
 		"eslint": "8.26.0",
 		"eslint-filtered-fix": "0.3.0",
 		"eslint-import-resolver-typescript": "3.5.2",

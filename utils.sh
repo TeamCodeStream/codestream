@@ -32,6 +32,18 @@ function compile_all () {
 
 }
 
+function test () {
+  # shared/agent temporarily runs shared/utils tests until teamcity is updated
+  # pushd shared/utils
+  # npm run test
+  # popd
+  pushd shared/agent
+  npm run test-unit
+  popd
+  pushd shared/ui
+  npm run test
+}
+
 function show_version () {
   for dir in "${dirs[@]}"; do
       pushd "$dir" || continue
@@ -78,6 +90,8 @@ elif [ "$1" = "explainVersion" ]; then
   explain_version "$@"
 elif [ "$1" = "showVersion" ]; then
   show_version "$@"
+elif [ "$1" = "test" ]; then
+  test
 elif [ "$1" = "compile" ]; then
   compile_all "$@"
 else

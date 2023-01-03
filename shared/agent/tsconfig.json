@@ -4,7 +4,6 @@
 		"baseUrl": "src",
 		"incremental": true,
 		"lib": ["es2017", "es2018.asynciterable"],
-		"outDir": "dist",
 		"paths": {
 			"https-proxy-agent": ["@types/https-proxy-agent"],
 			"opn": ["@types/opn"],

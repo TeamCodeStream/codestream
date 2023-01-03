@@ -42,7 +42,7 @@
 		"@typescript-eslint/eslint-plugin": "5.41.0",
 		"@typescript-eslint/eslint-plugin-tslint": "5.41.0",
 		"@typescript-eslint/parser": "5.41.0",
-		"esbuild": "0.16.12",
+		"esbuild": "0.16.13",
 		"esbuild-plugin-alias": "0.2.1",
 		"esbuild-plugin-less": "1.1.11",
 		"eslint": "8.26.0",

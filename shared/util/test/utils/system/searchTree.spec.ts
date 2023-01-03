@@ -1,5 +1,5 @@
-import { TernarySearchTree } from "@codestream/utils/system/searchTree";
 import { describe, expect, it } from "@jest/globals";
+import { TernarySearchTree } from "../../../src/utils/system/searchTree";
 
 describe("searchTree.ts", () => {
 	describe("TernarySearchTree", () => {

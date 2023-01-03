@@ -18,18 +18,22 @@
 		"node": ">=10.2.0"
 	},
 	"scripts": {
-		"postinstall": "patch-package"
+		"postinstall": "patch-package",
+		"test": "npx jest --testPathPattern=\"test\\/.*\\.spec\\.ts$\""
 	},
 	"devDependencies": {
 		"@luckycatfactory/esbuild-graphql-loader": "3.8.1",
 		"@types/diff": "5.0.2",
+		"@types/lodash-es": "^4.17.6",
 		"@types/node": "16.11.35",
 		"@types/node-fetch": "2.6.1",
 		"@types/vscode": "1.73.1",
 		"cpy": "9.0.1",
 		"diff": "5.0.0",
-		"esbuild": "0.16.12",
+		"esbuild": "0.16.13",
 		"esbuild-plugin-less": "1.1.11",
+		"lodash": "^4.17.21",
+		"lodash-es": "^4.17.21",
 		"node-fetch": "2.6.7",
 		"patch-package": "6.5.0",
 		"typescript": "4.9.4",
@@ -37,7 +41,11 @@
 		"vscode-languageserver-protocol": "3.14.1"
 	},
 	"dependencies": {
+		"@types/jest": "^29.2.5",
 		"date-fns": "1.30.1",
-		"eol": "0.9.1"
+		"eol": "0.9.1",
+		"jest-mock-extended": "^3.0.1",
+		"jest-teamcity": "^1.11.0",
+		"ts-jest": "^29.0.3"
 	}
 }

@@ -54,7 +54,7 @@
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "9.0.1",
-		"esbuild": "0.16.12",
+		"esbuild": "0.16.13",
 		"eslint": "8.22.0",
 		"less": "4.1.2",
 		"prettier": "2.8.1",

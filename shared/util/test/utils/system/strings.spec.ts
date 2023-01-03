@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@jest/globals";
-import { uniq } from "lodash";
+import { uniq } from "lodash-es";
 
-import * as Strings from "../../../../util/src/utils/system/string";
+import * as Strings from "../../../src/utils/system/string";
 
 describe("strings.ts", () => {
 	describe("normalizePath", () => {
