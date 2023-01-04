@@ -26,11 +26,11 @@ export const logout = createAppAsyncThunk<void, void>(
 	"session/logout",
 	async (_request, { dispatch }) => {
 		dispatch(setBootstrapped(false));
-		/*
-    if (ide.name === "VSC") {
-      await HostApi.instance.send(DisconnectFromIDEProviderRequestType, { provider: "github" });
-    }
-    */
+
+		// if (ide.name === "VSC") {
+		// 	await HostApi.instance.send(DisconnectFromIDEProviderRequestType, { provider: "github" });
+		// }
+
 		await HostApi.instance.send(LogoutRequestType, {});
 		dispatch(reset());
 		dispatch(setBootstrapped(true));

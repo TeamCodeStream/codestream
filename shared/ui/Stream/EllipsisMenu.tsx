@@ -25,6 +25,7 @@ import Menu from "./Menu";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
+
 const RegionSubtext = styled.div`
 	font-size: smaller;
 	margin: 0 0 0 21px;
@@ -68,7 +69,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			userCompanies: _sortBy(Object.values(state.companies), "name"),
 			userTeams: _sortBy(
-				Object.values(state.teams).filter(t => t?.deactivated),
+				Object.values(state.teams).filter(t => t.deactivated),
 				"name"
 			),
 			currentCompanyId,
@@ -266,13 +267,51 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 								await HostApi.instance.send(DeleteCompanyRequestType, {
 									companyId: currentCompanyId,
 								});
-								dispatch(logout());
+								handleLogout();
 							},
 						},
 					],
 				},
 			],
 		});
+	};
+
+	const handleLogout = () => {
+		const { currentCompanyId, eligibleJoinCompanies } = derivedState;
+
+		// filter out current company and companies joinable by domain
+		const eligibleJoinCompaniesNoDomain = eligibleJoinCompanies.filter(company => {
+			const isCurrentCompany = company.id === currentCompanyId;
+			const domainJoining = company?.domainJoining;
+			const canJoinByDomain = !_isEmpty(domainJoining);
+			if (canJoinByDomain || isCurrentCompany) return false;
+			return true;
+		});
+
+		let nextSignedInCompany = {};
+
+		// find next available signed in company, if one exists
+		eligibleJoinCompaniesNoDomain.every(_ => {
+			const isSignedIn = !_isEmpty(_.accessToken);
+			nextSignedInCompany = _;
+			if (isSignedIn) {
+				return false;
+			}
+
+			return true;
+		});
+
+		// // @TODO enable  once we have endpoint logout of a specific company
+		// // if we have a signed in company, switch to it,
+		// // else logout of CodeStream
+		// if (!_isEmpty(nextSignedInCompany)) {
+		// 	trackSwitchOrg(false, nextSignedInCompany);
+		// } else {
+		// 	dispatch(logout()); // @TODO logout of a specific company
+		// }
+
+		// @TODO remove once above commented out code is ready
+		dispatch(logout());
 	};
 
 	const buildAdminTeamMenuItem = () => {
@@ -397,7 +436,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				{ label: "-" },
-				{ label: "Sign Out", action: () => dispatch(logout()) },
+				{ label: "Sign Out", action: () => handleLogout() },
 			],
 		},
 		{
