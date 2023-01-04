@@ -2275,7 +2275,7 @@ class ReviewForm extends React.Component<Props, State> {
 		}
 
 		const unregisteredAuthorItems = [] as any;
-		if (this.props.inviteUsersOnTheFly) {
+		if (this.props.inviteUsersOnTheFly && !this.props.isNonCsOrg) {
 			Object.keys(authorsBlameData).forEach(email => {
 				if (this.props.teamMembers.find(p => p.email === email)) return;
 				unregisteredAuthorItems.push({
@@ -2410,7 +2410,7 @@ class ReviewForm extends React.Component<Props, State> {
 							style={{ padding: "0", marginBottom: 0, position: "relative" }}
 						>
 							<div className="related-label">
-								Reviewerssssssss {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
+								Reviewers {reviewerEmails.length > 1 && this.renderMultiReviewSetting()}
 							</div>
 							{reviewerEmails.map(email => {
 								const person = this.makePerson(email);
