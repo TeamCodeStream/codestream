@@ -1052,8 +1052,11 @@ export const Observability = React.memo((props: Props) => {
 										{!hasEntities && !genericError && (
 											<GenericWrapper>
 												<GenericCopy>
-													Set up application performance monitoring for your project so that you can
-													discover and investigate errors with CodeStream
+													Instrument your application with New Relic to see observability data in
+													your IDE, including service-level telemetry and code-level golden metrics.{" "}
+													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring">
+														Learn more.
+													</a>
 												</GenericCopy>
 												<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
 													Set Up Monitoring
