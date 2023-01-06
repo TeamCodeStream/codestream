@@ -1,5 +1,4 @@
 import {
-	DeleteCompanyRequestType,
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty, sortBy as _sortBy } from "lodash-es";
@@ -22,7 +21,6 @@ import { openPanel, setUserPreference } from "./actions";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import Menu from "./Menu";
-import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
 
@@ -245,47 +243,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		});
 	};
 
-	const deleteOrganization = () => {
-		const { currentCompanyId } = derivedState;
-
-		multiStageConfirmPopup({
-			centered: true,
-			stages: [
-				{
-					title: "Confirm Deletion",
-					message: "All of your organization’s codemarks and feedback requests will be deleted.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							advance: true,
-						},
-					],
-				},
-				{
-					title: "Are you sure?",
-					message:
-						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							wait: true,
-							action: async () => {
-								await HostApi.instance.send(DeleteCompanyRequestType, {
-									companyId: currentCompanyId,
-								});
-								handleLogout();
-							},
-						},
-					],
-				},
-			],
-		});
-	};
-
 	const handleLogout = () => {
 		const { currentCompanyId, eligibleJoinCompanies } = derivedState;
 
@@ -391,13 +348,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: "Export Data",
 					key: "export-data",
 					action: () => go(WebviewPanels.Export),
-					disabled: false,
-				},
-				{ label: "-" },
-				{
-					label: "Delete Organization",
-					key: "delete-organization",
-					action: deleteOrganization,
 					disabled: false,
 				},
 			]);

@@ -1,6 +1,6 @@
-import { logout } from "@codestream/webview/store/session/thunks";
-import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
+
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openModal, openPanel } from "./actions";
@@ -13,9 +13,6 @@ import {
 import { CodeStreamState } from "../store";
 import { keyFilter } from "../utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
-import { multiStageConfirmPopup } from "./MultiStageConfirm";
-import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
-import { HostApi } from "../webview-api";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -55,47 +52,6 @@ export function TeamMenu(props: TeamMenuProps) {
 		dispatch(clearCurrentPullRequest());
 		dispatch(setCurrentReview());
 		dispatch(openPanel(panel));
-	};
-
-	const deleteOrganization = () => {
-		const { currentCompanyId } = derivedState;
-
-		multiStageConfirmPopup({
-			centered: true,
-			stages: [
-				{
-					title: "Confirm Deletion",
-					message: "All of your organization’s codemarks and feedback requests will be deleted.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							advance: true,
-						},
-					],
-				},
-				{
-					title: "Are you sure?",
-					message:
-						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							wait: true,
-							action: async () => {
-								await HostApi.instance.send(DeleteCompanyRequestType, {
-									companyId: currentCompanyId,
-								});
-								dispatch(logout());
-							},
-						},
-					],
-				},
-			],
-		});
 	};
 
 	const menuItems = [
@@ -155,13 +111,6 @@ export function TeamMenu(props: TeamMenuProps) {
 				label: "Export Data",
 				key: "export",
 				action: () => goPanel(WebviewPanels.Export),
-			},
-			{ label: "-" },
-			{
-				icon: <Icon name="no-entry" />,
-				label: "Delete Organization",
-				key: "delete",
-				action: () => deleteOrganization(),
 			}
 		);
 	}
