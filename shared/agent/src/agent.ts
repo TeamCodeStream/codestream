@@ -1,38 +1,39 @@
 "use strict";
 // keep this as the first import
-// tslint:disable:ordered-imports
+// tslint:disable-next-line:ordered-imports
+// eslint-disable-next-line import/order
+import * as NewRelic from "newrelic";
 
 import * as fs from "fs";
 import * as os from "os";
 
-import * as NewRelic from "newrelic";
-import {
-	CancellationToken,
-	ClientCapabilities,
-	Connection,
-	DidChangeConfigurationNotification,
-	Disposable,
-	Emitter,
-	Event,
-	InitializedParams,
-	InitializeError,
-	InitializeParams,
-	InitializeResult,
-	NotificationHandler,
-	NotificationType,
-	RequestHandler,
-	RequestHandler0,
-	RequestType,
-	RequestType0,
-	TextDocuments,
-	TextDocumentSyncKind,
-} from "vscode-languageserver";
 import {
 	AgentInitializedNotificationType,
 	BaseAgentOptions,
 	DidChangeDataNotificationType,
 	LogoutReason,
 } from "@codestream/protocols/agent";
+import {
+	Event,
+	CancellationToken,
+	ClientCapabilities,
+	Connection,
+	DidChangeConfigurationNotification,
+	Disposable,
+	Emitter,
+	InitializeError,
+	InitializeParams,
+	InitializeResult,
+	InitializedParams,
+	NotificationHandler,
+	NotificationType,
+	RequestHandler,
+	RequestHandler0,
+	RequestType,
+	RequestType0,
+	TextDocumentSyncKind,
+	TextDocuments,
+} from "vscode-languageserver";
 
 import { DocumentManager } from "./documentManager";
 import { setGitPath } from "./git/git";

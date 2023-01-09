@@ -1,5 +1,7 @@
 "use strict";
-// tslint:disable:ordered-imports
+// keep this as the first import
+// tslint:disable-next-line:ordered-imports
+// eslint-disable-next-line import/order
 import "source-map-support/register";
 import { createConnection, ProposedFeatures } from "vscode-languageserver";
 

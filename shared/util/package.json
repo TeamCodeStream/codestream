@@ -30,7 +30,7 @@
 		"@types/vscode": "1.73.1",
 		"cpy": "9.0.1",
 		"diff": "5.0.0",
-		"esbuild": "0.16.13",
+		"esbuild": "0.16.16",
 		"esbuild-plugin-less": "1.1.11",
 		"lodash": "^4.17.21",
 		"lodash-es": "^4.17.21",

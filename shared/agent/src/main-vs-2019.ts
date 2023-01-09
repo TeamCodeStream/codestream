@@ -1,6 +1,8 @@
 "use strict";
-// tslint:disable:ordered-imports
+// tslint:disable-next-line:ordered-imports
+// eslint-disable-next-line import/order
 import "source-map-support/register";
+import { AgentOptions, LogoutReason } from "@codestream/protocols/agent";
 import {
 	createConnection,
 	InitializedParams,
@@ -10,7 +12,6 @@ import {
 	TextDocuments,
 	TextDocumentSyncKind,
 } from "vscode-languageserver";
-import { AgentOptions, LogoutReason } from "@codestream/protocols/agent";
 
 import { CodeStreamAgent, FileLspLogger } from "./agent";
 import { Logger } from "./logger";

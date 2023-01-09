@@ -32,7 +32,11 @@ module.exports = {
 					["internal", "parent", "sibling", "index"],
 					"object",
 					"type"
-				]
+				],
+				alphabetize: {
+					order: "asc" /* sort in ascending order. Options: ['ignore', 'asc', 'desc'] */,
+					caseInsensitive: true /* ignore case. Options: [true, false] */
+				}
 			}
 		],
 		// TODO Goal: Resolve all of these and remove so they go back to being errors
