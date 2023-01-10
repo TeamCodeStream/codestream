@@ -1,14 +1,16 @@
 import {
 	EntityAccount,
+	EntityType,
 	GetObservabilityEntitiesRequestType,
 	WarningOrError,
 } from "@codestream/protocols/agent";
-import { api } from "@codestream/webview/store/codeErrors/thunks";
-import { HostApi } from "@codestream/webview/webview-api";
 import React, { PropsWithChildren, useState } from "react";
 import { components, OptionProps } from "react-select";
 import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
+
+import { HostApi } from "@codestream/webview/webview-api";
+import { api } from "@codestream/webview/store/codeErrors/thunks";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { NoContent } from "../src/components/Pane";
@@ -31,6 +33,13 @@ type AdditionalType = { nextCursor?: string };
 
 const OptionName = styled.div`
 	color: var(--text-color);
+	white-space: nowrap;
+	overflow: hidden;
+`;
+
+const OptionType = styled.span`
+	color: var(--text-color-subtle);
+	font-size: smaller;
 `;
 
 const OptionAccount = styled.div`
@@ -41,7 +50,9 @@ const OptionAccount = styled.div`
 const Option = (props: OptionProps) => {
 	const children = (
 		<>
-			<OptionName>{props.data?.label}</OptionName>
+			<OptionName>
+				{props.data?.label} <OptionType>{props.data?.labelAppend}</OptionType>
+			</OptionName>
 			<OptionAccount>{props.data?.sublabel}</OptionAccount>
 		</>
 	);
@@ -60,7 +71,22 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 			nextCursor: additional?.nextCursor,
 		});
 		const options = result.entities.map(e => {
-			return { label: e.name, value: e.guid, sublabel: e.account };
+			const typeLabel = (t: EntityType) => {
+				switch (t) {
+					case "BROWSER_APPLICATION_ENTITY":
+						return "Browser";
+					case "MOBILE_APPLICATION_ENTITY":
+						return "Mobile";
+					default:
+						return "APM";
+				}
+			};
+			return {
+				label: e.name,
+				value: e.guid,
+				sublabel: e.account,
+				labelAppend: typeLabel(e.entityType),
+			};
 		});
 		return {
 			options,

@@ -1,5 +1,6 @@
 import { FunctionLocator } from "@codestream/protocols/agent";
 import { LanguageId } from "./clm/clmManager";
+import { EntityType } from "../../protocol/agent.protocol.providers";
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
@@ -82,6 +83,7 @@ export interface EntitySearchResult {
 					};
 					guid: string;
 					name: string;
+					entityType: EntityType;
 				}[];
 			};
 		};
