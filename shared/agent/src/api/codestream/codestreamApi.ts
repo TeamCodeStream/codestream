@@ -2625,6 +2625,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 						init.headers.append("Authorization", `Bearer ${token}`);
 					}
 
+					// for Unified Identity, set this header ... eventually we can remove this,
+					// when all clients are updated to the Unified Identity version
+					init.headers.append("X-CS-Enable-UId", "1");
 					init.headers.append("X-CS-Plugin-IDE", this._version.ide.name);
 					init.headers.append("X-CS-Plugin-IDE-Detail", this._version.ide.detail);
 					init.headers.append(
