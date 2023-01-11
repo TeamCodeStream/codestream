@@ -137,7 +137,6 @@ export interface CodeErrorData {
 	tag?: string;
 	/** caches when the last user session started  */
 	sessionStart?: number;
-	pendingRequiresConnection?: boolean;
 	pendingErrorGroupGuid?: string;
 	pendingEntityId?: string;
 	occurrenceId?: string;
