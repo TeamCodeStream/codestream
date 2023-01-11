@@ -619,14 +619,12 @@ export class SlackSharingApiProvider {
 
 			const [channels, groups] = await Promise.all([
 				this.fetchChannels(
-					// Filter out shared channels for now, until we can convert to the conversation apis
-					conversations.filter(c => c.is_channel && !c.is_mpim && !c.is_shared),
+					conversations.filter(c => c.is_channel && !c.is_mpim),
 					undefined,
 					pendingRequestsQueue
 				),
 				this.fetchGroups(
-					// Filter out shared channels for now, until we can convert to the conversation apis
-					conversations.filter(c => c.is_group && !c.is_mpim && !c.is_shared),
+					conversations.filter(c => c.is_group && !c.is_mpim),
 					userMaps.slackUsernamesById,
 					undefined,
 					pendingRequestsQueue
