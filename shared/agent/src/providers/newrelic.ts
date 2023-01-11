@@ -82,6 +82,9 @@ import {
 	GetServiceLevelTelemetryRequest,
 	GetServiceLevelTelemetryRequestType,
 	GetServiceLevelTelemetryResponse,
+	UpdateAzureFullNameRequest,
+	UpdateAzureFullNameRequestType,
+	UpdateAzureFullNameResponse,
 	GoldenMetricUnitMappings,
 	isNRErrorResponse,
 	MethodGoldenMetrics,
@@ -1769,6 +1772,31 @@ export class NewRelicProvider
 			ContextLogger.error(ex);
 			return undefined;
 		}
+	}
+
+	@lspHandler(UpdateAzureFullNameRequestType)
+	@log()
+	async setFullName(
+		request: UpdateAzureFullNameRequest
+	): Promise<UpdateAzureFullNameResponse | undefined> {
+		try {
+			const userId = (await this.getUserId()) || undefined;
+
+			console.warn("eric userId", userId);
+
+			const response = await this.setFullNameMutation({
+				userId,
+				newFullName: request.fullName!,
+			});
+
+			console.warn("eric response", response);
+
+			return { fullName: response.name };
+		} catch (ex) {
+			ContextLogger.error(ex);
+		}
+
+		return undefined;
 	}
 
 	@log()
@@ -3886,6 +3914,23 @@ export class NewRelicProvider
 			{
 				email: request.emailAddress,
 				errorGroupGuid: request.errorGroupGuid,
+			}
+		);
+	}
+
+	private setFullNameMutation(request: { userId: number | undefined; newFullName: string }) {
+		return this.query(
+			`mutation userManagementUpdateUser($name: String!, $id: ID!) {
+				userManagementUpdateUser(updateUserOptions: {name: $name, id: $id}) {
+				  user {
+					name
+				  }
+				}
+			  }			  
+		  	`,
+			{
+				name: request.newFullName,
+				id: request.userId,
 			}
 		);
 	}

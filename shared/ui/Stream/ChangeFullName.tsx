@@ -3,11 +3,12 @@ import { CSMe } from "@codestream/protocols/api";
 import React, { useCallback, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { useDispatch, useSelector } from "react-redux";
-
 import { TextInput } from "../Authentication/TextInput";
 import { logError } from "../logger";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
+import { UpdateAzureFullNameRequestType } from "@codestream/protocols/agent";
+
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { closeModal } from "./actions";
@@ -45,6 +46,7 @@ export const ChangeFullName = props => {
 
 		setLoading(true);
 		try {
+			await HostApi.instance.send(UpdateAzureFullNameRequestType, { fullName });
 			await HostApi.instance.send(UpdateUserRequestType, { fullName });
 			HostApi.instance.track("fullName Changed", {});
 			dispatch(closeModal());

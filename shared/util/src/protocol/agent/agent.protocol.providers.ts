@@ -1597,6 +1597,10 @@ export interface GetServiceLevelTelemetryRequest {
 	force?: boolean;
 }
 
+export interface UpdateAzureFullNameRequest {
+	fullName: string;
+}
+
 export interface GetServiceLevelObjectivesRequest {
 	/** entity id of the NewRelic entity */
 	entityGuid: string;
@@ -1675,6 +1679,10 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityName: string;
 }
 
+export interface UpdateAzureFullNameResponse {
+	fullName: string;
+}
+
 export interface GetServiceLevelTelemetryResponse {
 	newRelicEntityGuid: string;
 	newRelicUrl?: string;
@@ -1732,6 +1740,13 @@ export const GetServiceLevelTelemetryRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/serviceLevelTelemetry");
+
+export const UpdateAzureFullNameRequestType = new RequestType<
+	UpdateAzureFullNameRequest,
+	UpdateAzureFullNameResponse,
+	void,
+	void
+>("codestream/newrelic/azureFullName");
 
 export const GetServiceLevelObjectivesRequestType = new RequestType<
 	GetServiceLevelObjectivesRequest,
