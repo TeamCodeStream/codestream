@@ -1,9 +1,8 @@
-import {
-	UpdateTeamSettingsRequestType,
-} from "@codestream/protocols/agent";
+import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty, sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
+import { LogoutCompanyRequestType, LogoutCompanyResponse } from "@codestream/protocols/agent";
 
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
@@ -243,7 +242,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		});
 	};
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
 		const { currentCompanyId, eligibleJoinCompanies } = derivedState;
 
 		// filter out current company and companies joinable by domain
@@ -268,17 +267,23 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			return true;
 		});
 
-		// // @TODO enable  once we have endpoint logout of a specific company
-		// // if we have a signed in company, switch to it,
-		// // else logout of CodeStream
-		// if (!_isEmpty(nextSignedInCompany)) {
-		// 	trackSwitchOrg(false, nextSignedInCompany);
-		// } else {
-		// 	dispatch(logout()); // @TODO logout of a specific company
-		// }
+		// if we have a signed in company, logout of current company, and switch to
+		// signed in company, else logout of CodeStream completley.
+		if (!_isEmpty(nextSignedInCompany)) {
+			const result = (await HostApi.instance.send(
+				LogoutCompanyRequestType,
+				{}
+			)) as LogoutCompanyResponse;
 
-		// @TODO remove once above commented out code is ready
-		dispatch(logout());
+			trackSwitchOrg(false, nextSignedInCompany);
+		} else {
+			const result = (await HostApi.instance.send(
+				LogoutCompanyRequestType,
+				{}
+			)) as LogoutCompanyResponse;
+
+			dispatch(logout()); // after company logout, return to the login screen
+		}
 	};
 
 	const buildAdminTeamMenuItem = () => {

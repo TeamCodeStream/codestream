@@ -119,6 +119,8 @@ import {
 	JoinCompanyRequest,
 	JoinCompanyResponse,
 	JoinStreamRequest,
+	LogoutCompanyRequest,
+	LogoutCompanyResponse,
 	KickUserRequest,
 	KickUserResponse,
 	LeaveStreamRequest,
@@ -1963,6 +1965,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async joinCompany(request: JoinCompanyRequest): Promise<JoinCompanyResponse> {
 		return this.put(`/join-company/${request.companyId}`, {}, this._token);
+	}
+
+	async logoutCompany(request: LogoutCompanyRequest): Promise<LogoutCompanyResponse> {
+		return this.put(`/logout`, {}, this._token);
 	}
 
 	async declineInvite(request: DeclineInviteRequest): Promise<DeclineInviteResponse> {

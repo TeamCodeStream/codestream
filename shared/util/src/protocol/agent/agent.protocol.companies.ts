@@ -1,4 +1,5 @@
 import { RequestType } from "vscode-languageserver-protocol";
+
 import { CSCompany, CSTeam } from "./api.protocol";
 import { CSStream, CSUser } from "./api.protocol.models";
 
@@ -67,6 +68,23 @@ export interface JoinCompanyResponse {
 	user: CSUser;
 	teamId: string;
 }
+
+export interface LogoutCompanyRequest {}
+
+export interface LogoutCompanyResponse {
+	accessToken: string;
+	company: CSCompany;
+	team: CSTeam;
+	user: CSUser;
+	teamId: string;
+}
+
+export const LogoutCompanyRequestType = new RequestType<
+	LogoutCompanyRequest,
+	LogoutCompanyResponse,
+	void,
+	void
+>("codestream/companies/logout");
 
 export const JoinCompanyRequestType = new RequestType<
 	JoinCompanyRequest,

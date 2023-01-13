@@ -35,6 +35,8 @@ import {
 	CreateRepoResponse,
 	DeclineInviteRequest,
 	DeclineInviteResponse,
+	LogoutCompanyRequest,
+	LogoutCompanyResponse,
 	DeleteCodeErrorRequest,
 	DeleteCodeErrorResponse,
 	DeleteCodemarkRequest,
@@ -533,6 +535,7 @@ export interface ApiProvider {
 	): Promise<boolean>;
 	joinCompany(request: JoinCompanyRequest): Promise<JoinCompanyResponse>;
 	declineInvite(request: DeclineInviteRequest): Promise<DeclineInviteResponse>;
+	logoutCompany(request: LogoutCompanyRequest): Promise<LogoutCompanyResponse>;
 	joinCompanyFromEnvironment(request: JoinCompanyRequest): Promise<JoinCompanyResponse>;
 
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
