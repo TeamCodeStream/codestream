@@ -185,10 +185,6 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		event.preventDefault();
 		event.stopPropagation();
 
-		if (loading) {
-			return;
-		}
-
 		if (isChecked) {
 			if (!isGitLab && supportsViewerViewedState) unvisitAndUncheckFile();
 			if (isGitLab || !supportsViewerViewedState) {
@@ -392,9 +388,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							/>
 						</span>
 					}
-					noHover={isDisabled || loading}
+					noHover={isDisabled}
 					onClick={
-						isDisabled || loading
+						isDisabled
 							? undefined
 							: async e => {
 									e.preventDefault();
@@ -484,9 +480,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 								</>
 							)
 						}
-						noHover={isDisabled || loading}
+						noHover={isDisabled}
 						onClick={
-							isDisabled || loading
+							isDisabled
 								? undefined
 								: async e => {
 										e.preventDefault();

@@ -152,7 +152,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				);
 
 			logError(forkPointResponse?.error?.type || "undefined forkPointResponse", {
-				detail: errorMessageCopy,
+				detail: forkPointResponse.error.message || forkPointResponse.error.type,
 				repoId: derivedState.prRepoId!,
 				baseSha: props?.baseRef,
 				headSha: props?.headRef,
@@ -161,7 +161,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 				ref: getRef,
 			});
 			setErrorMessage(errorMessageCopy);
-
+			setLoading(false);
 			setIsDisabled(true);
 		} else if (forkPointResponse.sha) {
 			setForkPointSha(forkPointResponse.sha);
@@ -204,9 +204,8 @@ export const PullRequestFilesChanged = (props: Props) => {
 		if (derivedState.prRepoId) {
 			(async () => {
 				setLoading(true);
-				let forkPointResponse;
 				try {
-					forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
+					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
 						repoId: derivedState.prRepoId!,
 						baseSha: props.baseRef,
 						headSha: props.headRef,
@@ -235,7 +234,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 
 	useEffect(() => {
 		(async () => {
-			if (isMounted && derivedState.prRepoId && props.pr && !forkPointSha) {
+			if (isMounted && derivedState.prRepoId && props.pr && !forkPointSha && !loading) {
 				try {
 					setLoading(true);
 					const forkPointResponse = await HostApi.instance.send(FetchForkPointRequestType, {
@@ -384,6 +383,7 @@ export const PullRequestFilesChanged = (props: Props) => {
 		const i = index;
 
 		const hasComments = (props.commentMap[f.file] || []).length > 0;
+
 		return (
 			<PullRequestFilesChangedFileComments
 				key={`${i}_${f.file}`}
