@@ -26,7 +26,7 @@ import {
 } from "vscode";
 import { NotificationType, RequestType, ResponseError } from "vscode-jsonrpc";
 
-import { gate } from "system/decorators/gate";
+import { gate } from "../system/decorators/gate";
 import { CodeStreamSession, StreamThread } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";

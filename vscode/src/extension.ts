@@ -4,8 +4,8 @@ import * as url from "url";
 import HttpsProxyAgent from "https-proxy-agent";
 // import * as vscode from "vscode";
 import fetch, { RequestInit } from "node-fetch";
-import { ProtocolHandler } from "protocolHandler";
-import { ScmTreeDataProvider } from "views/scmTreeDataProvider";
+import { ProtocolHandler } from "./protocolHandler";
+import { ScmTreeDataProvider } from "./views/scmTreeDataProvider";
 import { AbortController } from "node-abort-controller";
 import {
 	Disposable,
@@ -18,8 +18,8 @@ import {
 	window,
 	workspace
 } from "vscode";
-import { WebviewLike } from "webviews/webviewLike";
-import { CodeStreamWebviewSidebar } from "webviews/webviewSidebar";
+import { WebviewLike } from "./webviews/webviewLike";
+import { CodeStreamWebviewSidebar } from "./webviews/webviewSidebar";
 
 import { CodemarkType } from "@codestream/protocols/api";
 
@@ -38,8 +38,8 @@ import { Container, TelemetryOptions } from "./container";
 import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings, Versions } from "./system";
 
-const extension = extensions.getExtension(extensionQualifiedId)!;
-export const extensionVersion = extension.packageJSON.version;
+const extension = extensions.getExtension(extensionQualifiedId);
+export const extensionVersion = extension?.packageJSON?.version ?? "1.0.0";
 
 const gitLensDisposables: Disposable[] = [];
 let gitLensApiLocatorPromise: Promise<GitLensApi> | undefined;
@@ -190,7 +190,7 @@ export async function activate(context: ExtensionContext) {
 				partnerId: "codestream",
 				name: "CodeStream",
 				label: "$(comment) Leave a Comment",
-				run: function(context: HoverCommandsActionContext) {
+				run: function (context: HoverCommandsActionContext) {
 					try {
 						if (!Container.session.signedIn) {
 							// store the last context with a timestamp
@@ -342,7 +342,7 @@ async function registerGitLensIntegration() {
 				partnerId: "codestream",
 				name: "CodeStream",
 				label: "Open Pull Request in VS Code",
-				run: function(context: OpenPullRequestActionContext) {
+				run: function (context: OpenPullRequestActionContext) {
 					try {
 						let providerName;
 						if (typeof (context.pullRequest as any).provider === "string") {
@@ -371,7 +371,7 @@ async function registerGitLensIntegration() {
 				partnerId: "codestream",
 				name: "CodeStream",
 				label: "Create Pull Request in VS Code",
-				run: function(context: CreatePullRequestActionContext) {
+				run: function (context: CreatePullRequestActionContext) {
 					try {
 						if (context.branch) {
 							const editor = window.activeTextEditor;
@@ -415,9 +415,11 @@ export async function gitPath(): Promise<string> {
 		try {
 			const gitExtension = extensions.getExtension("vscode.git");
 			if (gitExtension !== undefined) {
-				const gitApi = ((gitExtension.isActive
-					? gitExtension.exports
-					: await gitExtension.activate()) as GitExtension).getAPI(1);
+				const gitApi = (
+					(gitExtension.isActive
+						? gitExtension.exports
+						: await gitExtension.activate()) as GitExtension
+				).getAPI(1);
 				_gitPath = gitApi.git.path;
 			}
 		} catch {}

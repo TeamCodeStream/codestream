@@ -90,12 +90,14 @@ intellij {
     // plugins = ['java', 'git4idea', 'org.jetbrains.plugins.go:221.6008.13', 'Pythonid:221.6008.17', 'org.jetbrains.plugins.ruby:221.6008.13']
     // 2021.3.1
     plugins = [
-        'java', 'git4idea',
+        'java',
+        'git4idea',
         'org.jetbrains.plugins.go:213.6461.48',
         'Pythonid:213.6461.79',
         'org.jetbrains.plugins.ruby:213.6461.79',
         'com.jetbrains.php:213.6461.83',
-        'org.jetbrains.kotlin:213-1.6.10-release-944-IJ6461.79'
+        'org.jetbrains.kotlin:213-1.6.10-release-944-IJ6461.79',
+        'JavaScript'
     ]
 }
 

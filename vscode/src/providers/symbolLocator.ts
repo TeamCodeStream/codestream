@@ -43,7 +43,7 @@ export class SymbolLocator implements ISymbolLocator {
 			}
 
 			const symbolResult = await this.locateCore(document, token);
-			this.buildLensCollection(undefined, symbolResult, instrumentableSymbols, token);
+			this.buildLensCollection(document, undefined, symbolResult, instrumentableSymbols, token);
 			return {
 				instrumentableSymbols,
 				allSymbols: symbolResult
@@ -97,6 +97,7 @@ export class SymbolLocator implements ISymbolLocator {
 	}
 
 	private buildLensCollection(
+		document: TextDocument,
 		parent: DocumentSymbol | undefined,
 		symbols: DocumentSymbol[],
 		collection: InstrumentableSymbol[],
@@ -108,11 +109,34 @@ export class SymbolLocator implements ISymbolLocator {
 			}
 
 			if (symbol.children && symbol.children.length) {
-				this.buildLensCollection(symbol, symbol.children, collection, token);
+				this.buildLensCollection(document, symbol, symbol.children, collection, token);
 			}
+
 			if (symbol.kind === vscode.SymbolKind.Function || symbol.kind === vscode.SymbolKind.Method) {
 				collection.push(new InstrumentableSymbol(symbol, parent));
 			}
+
+			if (this.isJavascriptFunctionVariable(document, symbol)) {
+				collection.push(new InstrumentableSymbol(symbol, parent));
+			}
 		}
+	}
+
+	public isJavascriptFunctionVariable(document: TextDocument, symbol: DocumentSymbol): boolean {
+		if (document.languageId === "javascript" && symbol.kind === vscode.SymbolKind.Variable) {
+			// Look for variables assigned to functions i.e. myVar = functiion {}
+			const symbolText = document.getText(symbol.range);
+			const functionKeywordRegex = new RegExp(`${symbol.name}\\s*=\\s*function`, "s");
+			if (functionKeywordRegex.test(symbolText)) {
+				return true;
+			}
+
+			// Look for variables assigned to arrow functions i.e. myVar = (req, resp) => {}
+			const anonymousFunctionVarRegex = new RegExp(`${symbol.name}\\s*=\\s*(.*)\\s*=>`, "s");
+			if (anonymousFunctionVarRegex.test(symbolText)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

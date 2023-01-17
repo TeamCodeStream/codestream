@@ -54,7 +54,7 @@ describe("clm query generation", () => {
 			const response = generateSpanQuery("nrGuid", "filePath", "fuzzy", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%/my/file.py%'  SINCE 30 minutes AGO LIMIT 250\")"
+				"nrql(query: \"SELECT name, `transaction.name`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%/my/file.py%' SINCE 30 minutes AGO LIMIT 250\")"
 			);
 		});
 

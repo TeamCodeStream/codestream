@@ -32,6 +32,10 @@ class CLMPhpEditorManager(editor: Editor) : CLMEditorManager(editor, "php", true
         }
     }
 
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
         namespace: String?,

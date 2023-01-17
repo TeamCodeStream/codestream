@@ -25,7 +25,7 @@ import {
 } from "@codestream/protocols/api";
 import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from "vscode";
 
-import { openUrl } from "urlHandler";
+import { openUrl } from "../urlHandler";
 import { WorkspaceState } from "../common";
 import { configuration } from "../configuration";
 import { Container } from "../container";

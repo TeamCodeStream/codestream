@@ -1,4 +1,4 @@
-import { Strings } from "system";
+import { Strings } from "../system";
 import { Disposable, TextDocumentContentProvider, Uri, workspace } from "vscode";
 
 import { Container } from "../container";

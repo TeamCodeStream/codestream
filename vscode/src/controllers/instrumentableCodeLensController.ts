@@ -103,6 +103,7 @@ export class InstrumentableCodeLensController implements Disposable {
 					{ language: "java" },
 					{ language: "go" },
 					{ language: "php" },
+					{ language: "javascript" },
 					{ scheme: "codestream-diff" }
 				],
 				this._provider

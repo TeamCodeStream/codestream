@@ -23,6 +23,10 @@ class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python"
         return null
     }
 
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
         namespace: String?,

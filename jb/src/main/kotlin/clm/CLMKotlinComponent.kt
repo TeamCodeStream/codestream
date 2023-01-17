@@ -23,9 +23,14 @@ class CLMKotlinComponent(project: Project) :
 class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin", true) {
 
     private val logger = Logger.getInstance(CLMKotlinEditorManager::class.java)
+
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is KtFile || psiFile.classes.isEmpty()) return null
         return psiFile.classes.mapNotNull { it.qualifiedName }
+    }
+
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
     }
 
     override fun findClassFunctionFromFile(

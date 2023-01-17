@@ -4,7 +4,7 @@ import { Logger } from "../../logger";
 import { escapeNrql } from "../newrelic";
 import { ResolutionMethod } from "./newrelic.types";
 
-export const spanQueryTypes = ["equals", "like", "fuzzy"] as const;
+export const spanQueryTypes = ["equals", "like", "fuzzy", "desperate"] as const;
 export type SpanQueryType = typeof spanQueryTypes[number];
 const LIMIT = 250;
 
@@ -154,8 +154,17 @@ export function generateSpanQuery(
 		}
 		case "fuzzy": {
 			const fuzzyLookup = `code.filepath like '%/${codeFilePath!.split("/").slice(-2).join("/")}%'`;
+			query = `SELECT name, \`transaction.name\`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzyLookup} SINCE 30 minutes AGO LIMIT ${LIMIT}`;
+			break;
+		}
 
-			query = `SELECT name,\`transaction.name\`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzyLookup}  SINCE 30 minutes AGO LIMIT ${LIMIT}`;
+		case "desperate": {
+			const fuzzierLookup = `code.filepath like '%/${codeFilePath!
+				.split("/")
+				.slice(-1)
+				.join("/")}%'`;
+			query = `SELECT name, \`transaction.name\`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzierLookup} SINCE 30 minutes AGO LIMIT ${LIMIT}`;
+			break;
 		}
 	}
 

@@ -5,6 +5,8 @@ import * as vscode from "vscode";
 import { CancellationTokenSource } from "vscode-languageclient";
 
 import { SymbolLocator } from "../../providers/symbolLocator";
+import { DocumentSymbol, SymbolKind, TextDocument } from "vscode";
+import sinon from "sinon";
 
 suite("SymbolLocator Test Suite", () => {
 	test("python codeLens test", async () => {
@@ -42,4 +44,48 @@ suite("SymbolLocator Test Suite", () => {
 		// console.log(JSON.stringify(result, null, 4));
 		assert.strictEqual(result.instrumentableSymbols.length, 1);
 	}).timeout(45000);
+
+	// Unit tests
+	test("isJavascriptFunctionVariable function keyword returns true", () => {
+		const symbolLocator = new SymbolLocator();
+
+		const mockTextDocument = <TextDocument>{ languageId: "javascript" };
+		mockTextDocument.getText = sinon
+			.stub()
+			.returns('const handler = \n\tfunction (var1, var2) {\n\tconsole.info("blah");\n\t}');
+
+		const mockSymbol = <DocumentSymbol>{ kind: SymbolKind.Variable, name: "handler" };
+		assert.strictEqual(
+			symbolLocator.isJavascriptFunctionVariable(mockTextDocument, mockSymbol),
+			true
+		);
+	});
+
+	test("isJavascriptFunctionVariable arrow function returns true", () => {
+		const symbolLocator = new SymbolLocator();
+
+		const mockTextDocument = <TextDocument>{ languageId: "javascript" };
+		mockTextDocument.getText = sinon
+			.stub()
+			.returns('const whatever = \n\t(var1, var2) => {\n\tconsole.info("blah");\n\t}');
+
+		const mockSymbol = <DocumentSymbol>{ kind: SymbolKind.Variable, name: "whatever" };
+		assert.strictEqual(
+			symbolLocator.isJavascriptFunctionVariable(mockTextDocument, mockSymbol),
+			true
+		);
+	});
+
+	test("isJavascriptFunctionVariable not a function returns false", () => {
+		const symbolLocator = new SymbolLocator();
+
+		const mockTextDocument = <TextDocument>{ languageId: "javascript" };
+		mockTextDocument.getText = sinon.stub().returns('const whatever = "foo";"');
+
+		const mockSymbol = <DocumentSymbol>{ kind: SymbolKind.Variable, name: "whatever" };
+		assert.strictEqual(
+			symbolLocator.isJavascriptFunctionVariable(mockTextDocument, mockSymbol),
+			false
+		);
+	});
 });

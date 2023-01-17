@@ -7,8 +7,8 @@ import {
 	MetricTimesliceNameMapping
 } from "@codestream/protocols/agent";
 
-import { Editor } from "extensions/editor";
-import { openUrl } from "urlHandler";
+import { Editor } from "./extensions/editor";
+import { openUrl } from "./urlHandler";
 import { SessionSignedOutReason, StreamThread } from "./api/session";
 import * as TokenManager from "./api/tokenManager";
 import { WorkspaceState } from "./common";

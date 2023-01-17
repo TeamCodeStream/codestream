@@ -38,6 +38,10 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
         return listOf("${namespaceText}.${classNameNode.text}")
     }
 
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
     @Suppress("UNCHECKED_CAST")
     fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
         val kClass = namespaceNode::class

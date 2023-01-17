@@ -2,7 +2,7 @@ import { AccessToken } from "@codestream/protocols/agent";
 // Using esbuild.ts externals to make sure keytar is not bundled and uses vscode keytar
 import keychain from "keytar";
 
-import { Logger } from "logger";
+import { Logger } from "../logger";
 import { GlobalState } from "../common";
 import { extensionId } from "../constants";
 import { Container } from "../container";

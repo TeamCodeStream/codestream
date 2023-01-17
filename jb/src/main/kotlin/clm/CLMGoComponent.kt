@@ -27,6 +27,10 @@ class CLMGoEditorManager(editor: Editor) : CLMEditorManager(editor, "go", true) 
         return pkg?.identifier?.text?.let { listOf(it) }
     }
 
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
         namespace: String?,

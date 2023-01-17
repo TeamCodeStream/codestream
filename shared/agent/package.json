@@ -73,7 +73,7 @@
 		"ignore": "3.3.10",
 		"lodash-es": "4.17.21",
 		"lz-string": "1.4.4",
-		"newrelic": "8.9.1",
+		"newrelic": "9.7.5",
 		"node-fetch": "2.6.7",
 		"oauth": "0.9.15",
 		"object-sizeof": "1.5.3",

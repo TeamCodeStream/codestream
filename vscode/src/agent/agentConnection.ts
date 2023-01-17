@@ -166,7 +166,7 @@ import { Container } from "../container";
 import { Logger } from "../logger";
 import { Functions, log, Strings } from "../system";
 import { getInitializationOptions } from "../extension";
-import { Editor } from "extensions";
+import { Editor } from "../extensions";
 
 
 export { BaseAgentOptions };

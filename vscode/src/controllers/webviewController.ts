@@ -104,11 +104,11 @@ import {
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
 
-import { gate } from "system/decorators/gate";
+import { gate } from "../system/decorators/gate";
 import { Strings, Functions, log } from "../system";
-import { openUrl } from "urlHandler";
-import { toLoggableIpcMessage, WebviewLike } from "webviews/webviewLike";
-import { toCSGitUri } from "providers/gitContentProvider";
+import { openUrl } from "../urlHandler";
+import { toLoggableIpcMessage, WebviewLike } from "../webviews/webviewLike";
+import { toCSGitUri } from "../providers/gitContentProvider";
 import {
 	CodeStreamSession,
 	SessionSignedOutReason,

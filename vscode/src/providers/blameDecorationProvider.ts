@@ -1,7 +1,7 @@
 "use strict";
 
 import { GetBlameLineInfo } from "@codestream/protocols/agent";
-import { Functions } from "system";
+import { Functions } from "../system";
 import {
 	ConfigurationChangeEvent,
 	Disposable,

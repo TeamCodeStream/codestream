@@ -58,7 +58,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
         every { mockAgentService.onDidStart(capture(slot)) } answers { slot.captured() }
         project.sessionService?.login(
             UserLoggedIn(
-                CSUser("userid", "username", "email", "fullname", null),
+                CSUser("userid", "username", "email", "fullname", null, null),
                 CSTeam("teamid", "companyid", "myteam", null),
                 CSCompany("companyid", "companyname"),
                 LoginState(

@@ -28,6 +28,10 @@ class CLMRubyEditorManager(editor: Editor) : CLMEditorManager(editor, "ruby", fa
         return null
     }
 
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
     override fun findClassFunctionFromFile(
         psiFile: PsiFile,
         namespace: String?,

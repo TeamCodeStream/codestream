@@ -1,0 +1,90 @@
+package com.codestream.clm
+
+import com.intellij.lang.javascript.psi.*
+import com.intellij.lang.javascript.psi.ecmal4.JSClass
+import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.project.Project
+import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiFile
+import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
+import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
+
+val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
+
+class CLMNodeComponent(project: Project) :
+    CLMLanguageComponent<CLMNodeEditorManager>(project, JSFile::class.java, ::CLMNodeEditorManager) {
+
+    private val logger = Logger.getInstance(CLMNodeComponent::class.java)
+
+    init {
+        logger.info("Initializing code level metrics for Node")
+    }
+}
+
+class CLMNodeEditorManager(editor: Editor) : CLMEditorManager(editor, "javascript", false, true) {
+
+    private val logger = Logger.getInstance(CLMNodeEditorManager::class.java)
+    override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
+        return null
+    }
+
+    override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
+        return null
+//        if (psiFile !is JSFile) return null
+//        val callExpressions = psiFile.collectDescendantsOfType<JSCallExpression>()
+//
+//        return callExpressions.mapNotNull { exp ->
+//            val ref = exp.findDescendantOfType<JSReferenceExpression>()
+//            val httpMethod = getHttpMethod(ref?.text)
+//            if (httpMethod != null) {
+//                val args = exp.findDescendantOfType<JSArgumentList>()
+//                val firstArg = args?.findDescendantOfType<JSLiteralExpression>()
+//                if (firstArg != null) {
+//                    "$httpMethod ${firstArg.text}"
+//                } else {
+//                    null
+//                }
+//            } else {
+//                null
+//            }
+//
+//        }
+    }
+
+    override fun findClassFunctionFromFile(
+        psiFile: PsiFile,
+        namespace: String?,
+        className: String,
+        functionName: String
+    ): NavigatablePsiElement? {
+        if (psiFile !is JSFile) return null
+        val clazz = psiFile.children.filterIsInstance<JSClass>().filter { it.node.text == className }
+        val result = clazz.filterIsInstance<JSFunction>().find { it.name == functionName }
+        return result
+    }
+
+    private fun getHttpMethod(arg: String?): String? {
+        if (arg == null) {
+            return null
+        }
+        for (method in httpMethods) {
+            if (arg.endsWith(".${method}")) {
+                return method.uppercase()
+            }
+        }
+        return null
+    }
+
+    override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
+        if (psiFile !is JSFile) return null
+
+        val functions = psiFile.collectDescendantsOfType<JSFunction>()
+        val result = functions.find { it.name == functionName }
+        if (result != null) {
+            logger.info("Found top level JSFunction function for $functionName")
+            return result
+        }
+        return null
+    }
+}

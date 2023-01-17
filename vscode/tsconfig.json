@@ -26,6 +26,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"target": "ES2020",
+		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false
 	},
 	"exclude": ["node_modules", "src/webviews/app", ".vscode-test"],
