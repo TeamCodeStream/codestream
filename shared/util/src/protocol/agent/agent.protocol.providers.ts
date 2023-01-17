@@ -1235,7 +1235,7 @@ export interface GetObservabilityResponseTimesRequest {
 }
 
 export interface GetObservabilityResponseTimesResponse {
-	responseTimes: { name: string, value: number}[];
+	responseTimes: { name: string; value: number }[];
 }
 
 export const GetObservabilityResponseTimesRequestType = new RequestType<
@@ -1257,6 +1257,7 @@ export interface EntityAccount {
 	entityGuid: string;
 	entityName: string;
 	domain?: string;
+	url?: string;
 	tags: {
 		key: string;
 		values: string[];

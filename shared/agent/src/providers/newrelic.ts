@@ -857,6 +857,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 								tags: entity.tags,
 								domain: entity.domain,
 								alertSeverity: entity?.alertSeverity,
+								url: `${this.productUrl}/redirect/entity/${entity.guid}`,
 							} as EntityAccount;
 						})
 						.filter(Boolean)
