@@ -420,9 +420,8 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		// hasComments
 		return (
 			<div onMouseEnter={e => handleMouseEnter(e)} onMouseLeave={e => handleMouseLeave(e)}>
-				<FileWithComments onClick={e => handleClick(e)}>
+				<FileWithComments>
 					<ChangesetFile
-						chevron={<Icon name={showComments ? "chevron-down-thin" : "chevron-right-thin"} />}
 						selected={selected}
 						viewMode={props.viewMode}
 						count={
@@ -505,38 +504,33 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 						customFilenameColor={"var(--text-color-filename-highlight)"}
 					/>
 				</FileWithComments>
-				{showComments && (
-					<>
-						{commentsSortedByLineNumber.map((c, index) => {
-							const isPending = c.comment.state === "PENDING";
-							return (
-								<Comment
-									onClick={e => handleCommentClick(e, c)}
-									style={depth ? { paddingLeft: `${depth * 12}px` } : {}}
-									key={`comment_${c.comment.id}_${index}`}
+				{/* showComments */}
+				{commentsSortedByLineNumber.map((c, index) => {
+					const isPending = c.comment.state === "PENDING";
+					return (
+						<Comment
+							onClick={e => handleCommentClick(e, c)}
+							style={depth ? { paddingLeft: `${depth * 12}px` } : {}}
+							key={`comment_${c.comment.id}_${index}`}
+						>
+							<div style={{ display: "flex" }}>
+								<div
+									style={{
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										width: "calc(100%)",
+										whiteSpace: "nowrap",
+									}}
 								>
-									<div style={{ display: "flex" }}>
-										<div
-											style={{
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-												width: "calc(100%)",
-												whiteSpace: "nowrap",
-											}}
-										>
-											<Icon name="comment" className="type-icon" />{" "}
-											{lineNumber(c) && <span>Line {lineNumber(c)}: </span>}
-											{c.comment.bodyText || c.comment.body || c.comment.content.raw}
-										</div>
-										{isPending && (
-											<PendingCircle onClick={e => handlePendingClick(e)}>P</PendingCircle>
-										)}
-									</div>
-								</Comment>
-							);
-						})}
-					</>
-				)}
+									<Icon name="comment" className="type-icon" />{" "}
+									{lineNumber(c) && <span>Line {lineNumber(c)}: </span>}
+									{c.comment.bodyText || c.comment.body || c.comment.content.raw}
+								</div>
+								{isPending && <PendingCircle onClick={e => handlePendingClick(e)}>P</PendingCircle>}
+							</div>
+						</Comment>
+					);
+				})}
 			</div>
 		);
 	}
