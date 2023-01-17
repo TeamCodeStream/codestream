@@ -204,10 +204,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		}
 	};
 
-	const handleClick = e => {
-		e.preventDefault();
-		setShowComments(!showComments);
-	};
+	// const handleClick = e => {
+	// 	e.preventDefault();
+	// 	setShowComments(!showComments);
+	// };
 
 	/**
 	 * Github/lab makes it difficult to find a comment line number, so we have to
@@ -424,6 +424,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 					<ChangesetFile
 						selected={selected}
 						viewMode={props.viewMode}
+						// This is for the additions & deletions count
 						count={
 							<div style={{ margin: "0 10px 0 auto", display: "flex" }}>
 								{comments.length === 0 || showComments ? null : (
@@ -440,6 +441,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									display: showGoToFileIcon ? "flex" : "none",
 								}}
 							>
+								{/* this is for the open local file icon on the right hand side */}
 								<Icon
 									title="Open Local File"
 									placement="bottom"
@@ -454,6 +456,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 						iconLast={
 							isDisabled ? null : (
 								<>
+									{/* This is for the mark as viewed icon on the right hand side */}
 									{iconIsFlex && (
 										<span
 											style={{
