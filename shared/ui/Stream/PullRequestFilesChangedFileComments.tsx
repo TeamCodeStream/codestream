@@ -204,11 +204,6 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		}
 	};
 
-	// const handleClick = e => {
-	// 	e.preventDefault();
-	// 	setShowComments(!showComments);
-	// };
-
 	/**
 	 * Github/lab makes it difficult to find a comment line number, so we have to
 	 * parse the diffHunk and do some basic math
