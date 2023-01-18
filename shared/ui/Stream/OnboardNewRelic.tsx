@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { shallowEqual, useDispatch, useSelector } from "react-redux";
-import styled from "styled-components";
+import styled, { ThemeContext } from "styled-components";
 import {
 	GetLatestCommittersRequestType,
 	NewRelicOptions,
@@ -49,6 +49,7 @@ import {
 import { AddAppMonitoringNodeJS } from "./NewRelicWizards/AddAppMonitoringNodeJS";
 import { AddAppMonitoringJava } from "./NewRelicWizards/AddAppMonitoringJava";
 import { AddAppMonitoringDotNetCore } from "./NewRelicWizards/AddAppMonitoringDotNetCore";
+import { isDarkTheme } from "../src/themes";
 
 export const StepNumber = styled.div`
 	display: flex;
@@ -103,6 +104,12 @@ export const InstallRow = styled.div`
 		white-space: normal !important;
 	}
 `;
+
+const NewRelicLogo = () => {
+	const themeContext = useContext(ThemeContext);
+	const color = isDarkTheme(themeContext) ? "#fff" : "#000";
+	return <Icon name="newrelic-big" style={{ color }} />;
+};
 
 const EMPTY_ARRAY = [];
 
@@ -318,7 +325,7 @@ export const OnboardNewRelic = React.memo(function OnboardNewRelic() {
 						<Step className={`ease-down ${className(0)}`}>
 							<div className="body">
 								<h1>
-									<Icon name="newrelic-big" />
+									<NewRelicLogo />
 									<br />
 									Welcome to New Relic
 								</h1>
