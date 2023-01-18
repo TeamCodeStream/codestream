@@ -159,6 +159,7 @@ export const ErrorRow = (props: {
 	url?: string;
 	onClick?: Function;
 	customPadding?: any;
+	icon?: "alert" | "thumbsup";
 }) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		return {
@@ -174,7 +175,15 @@ export const ErrorRow = (props: {
 			}}
 			style={{ padding: props.customPadding ? props.customPadding : "0 10px 0 40px" }}
 		>
-			<div>{props.isLoading ? <Icon className="spin" name="sync" /> : <Icon name="alert" />}</div>
+			<div>
+				{props.isLoading ? (
+					<Icon className="spin" name="sync" />
+				) : props.icon === "thumbsup" ? (
+					"👍"
+				) : (
+					<Icon name="alert" />
+				)}
+			</div>
 			<div>
 				<Tooltip title={props.tooltip} delay={1} placement="bottom">
 					<>

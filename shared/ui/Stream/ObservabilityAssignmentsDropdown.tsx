@@ -1,7 +1,7 @@
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 import { ErrorRow } from "./Observability";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -58,7 +58,11 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 				<>
 					{filteredAssignments && filteredAssignments.length == 0 ? (
 						<>
-							<ErrorRow customPadding={"0 10px 0 50px"} title={"No errors to display"}></ErrorRow>
+							<ErrorRow
+								customPadding={"0 10px 0 50px"}
+								title={"No errors assigned to me"}
+								icon="thumbsup"
+							></ErrorRow>
 						</>
 					) : (
 						<>

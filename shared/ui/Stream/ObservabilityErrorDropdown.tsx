@@ -1,8 +1,8 @@
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
+import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useEffect, useState } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 import { ErrorRow } from "./Observability";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
@@ -63,7 +63,11 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 					{(filteredErrors && filteredErrors.length == 0) ||
 					(filteredErrors && _isEmpty(filteredErrors[0])) ? (
 						<>
-							<ErrorRow customPadding={"0 10px 0 50px"} title={"No errors to display"}></ErrorRow>
+							<ErrorRow
+								customPadding={"0 10px 0 50px"}
+								title={"No recent errors"}
+								icon="thumbsup"
+							></ErrorRow>
 						</>
 					) : (
 						<>
