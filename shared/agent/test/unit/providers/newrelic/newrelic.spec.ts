@@ -867,6 +867,9 @@ describe("NewRelicProvider", () => {
 					});
 				},
 			},
+			session: {
+				newRelicApiUrl: "https://api.newrelic.com",
+			},
 		} as any;
 
 		const provider = new NewRelicProviderStub2({} as any, {} as any);
