@@ -350,7 +350,6 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 	if (loading) {
 		displayIcon = "sync";
 	}
-	// const displayIcon = isGitLab || !supportsViewerViewedState ? icon : iconName;
 	const iconIsFlex = showCheckIcon || displayIcon === "ok";
 
 	if (!hasComments) {
