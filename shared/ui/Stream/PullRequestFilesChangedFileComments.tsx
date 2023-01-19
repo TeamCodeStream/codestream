@@ -185,6 +185,10 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		event.preventDefault();
 		event.stopPropagation();
 
+		if (loading) {
+			return;
+		}
+
 		if (isChecked) {
 			if (!isGitLab && supportsViewerViewedState) unvisitAndUncheckFile();
 			if (isGitLab || !supportsViewerViewedState) {
@@ -338,9 +342,15 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			["asc", "comment.body"]
 		);
 	}
-	//@TODO: define these on mount, hook, and/or state so we don't do the
-	//		 calculation every re-render.
-	const displayIcon = isGitLab || !supportsViewerViewedState ? icon : iconName;
+
+	let displayIcon = iconName;
+	if (isGitLab || !supportsViewerViewedState) {
+		displayIcon = icon;
+	}
+	if (loading) {
+		displayIcon = "sync";
+	}
+	// const displayIcon = isGitLab || !supportsViewerViewedState ? icon : iconName;
 	const iconIsFlex = showCheckIcon || displayIcon === "ok";
 
 	if (!hasComments) {
@@ -361,9 +371,15 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									onClick={e => handleIconClick(e)}
 									name={displayIcon}
 									style={{ color: "var(--text-color-subtle)" }}
-									className={"clickable"}
+									className={displayIcon === "sync" ? "spin" : "clickable"}
 									delay={1}
-									title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
+									title={
+										displayIcon === "sync"
+											? "Looking for this repo in your IDE..."
+											: displayIcon === "ok"
+											? "Mark as Not Viewed"
+											: "Mark as Viewed"
+									}
 									placement="bottom"
 								/>
 							</span>
@@ -388,9 +404,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 							/>
 						</span>
 					}
-					noHover={isDisabled}
+					noHover={isDisabled || loading}
 					onClick={
-						isDisabled
+						isDisabled || loading
 							? undefined
 							: async e => {
 									e.preventDefault();
@@ -459,9 +475,15 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 												onClick={e => handleIconClick(e)}
 												name={displayIcon}
 												style={{ color: "var(--text-color-subtle)" }}
-												className={"clickable"}
+												className={displayIcon === "sync" ? "spin" : "clickable"}
 												delay={1}
-												title={displayIcon === "ok" ? "Mark as Not Viewed" : "Mark as Viewed"}
+												title={
+													displayIcon === "sync"
+														? "Looking for this repo in your IDE..."
+														: displayIcon === "ok"
+														? "Mark as Not Viewed"
+														: "Mark as Viewed"
+												}
 												placement="bottom"
 											/>
 										</span>
@@ -480,9 +502,9 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 								</>
 							)
 						}
-						noHover={isDisabled}
+						noHover={isDisabled || loading}
 						onClick={
-							isDisabled
+							isDisabled || loading
 								? undefined
 								: async e => {
 										e.preventDefault();
