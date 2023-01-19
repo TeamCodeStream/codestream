@@ -138,7 +138,6 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			const useLanguageServer = config.get("useLanguageServer");
 			if (!useLanguageServer) {
 				return this.rubyPluginConfigCodelens();
-			} else {
 			}
 			return;
 		}

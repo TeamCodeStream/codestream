@@ -23,6 +23,15 @@ export interface ISymbolLocator {
 	locate(document: TextDocument, token: vscode.CancellationToken): Promise<SymboslLocated>;
 }
 
+function isJavascriptIsh(languageId: string) {
+	return (
+		languageId === "javascript" ||
+		languageId === "typescript" ||
+		languageId === "javascriptreact" ||
+		languageId === "tyspescriptreact"
+	);
+}
+
 export class SymbolLocator implements ISymbolLocator {
 	async locate(
 		document: TextDocument,
@@ -123,7 +132,7 @@ export class SymbolLocator implements ISymbolLocator {
 	}
 
 	public isJavascriptFunctionVariable(document: TextDocument, symbol: DocumentSymbol): boolean {
-		if (document.languageId === "javascript" && symbol.kind === vscode.SymbolKind.Variable) {
+		if (isJavascriptIsh(document.languageId) && symbol.kind === vscode.SymbolKind.Variable) {
 			// Look for variables assigned to functions i.e. myVar = functiion {}
 			const symbolText = document.getText(symbol.range);
 			const functionKeywordRegex = new RegExp(`${symbol.name}\\s*=\\s*function`, "s");

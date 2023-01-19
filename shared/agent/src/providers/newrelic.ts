@@ -161,6 +161,9 @@ const supportedLanguages = [
 	"go",
 	"php",
 	"javascript",
+	"javascriptreact",
+	"typescript",
+	"typescriptreact",
 ] as const;
 export type LanguageId = typeof supportedLanguages[number];
 
@@ -1877,6 +1880,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 					request.newRelicEntityGuid,
 					request.resolutionMethod,
 					queryType,
+					request.languageId,
 					bestMatchingCodeFilePath || request.codeFilePath,
 					bestMatchingCodeFilePath ? undefined : request.locator
 				);
@@ -2149,6 +2153,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				case "go":
 				case "php":
 				case "javascript":
+				case "typescript":
+				case "typescriptreact":
+				case "javascriptreact":
 					functionInfo = {
 						functionName: additionalMetadata["code.function"],
 						className: additionalMetadata["code.namespace"],
@@ -2275,6 +2282,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			// get a list of file-based method telemetry
 			const spanResponse =
 				(await this.getSpans({
+					languageId,
 					newRelicAccountId,
 					newRelicEntityGuid,
 					codeFilePath: relativeFilePath,
@@ -3089,7 +3097,8 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			const sliResults = await this.query<ServiceLevelIndicatorQueryResult>(sliQuery);
 			const indicators = sliResults?.actor?.entity?.serviceLevel?.indicators;
 
-			if (indicators?.length === 0) {
+			if (!indicators || indicators?.length === 0) {
+				Logger.log("getServiceLevelObjectives No indicators found");
 				return undefined;
 			}
 
@@ -3145,6 +3154,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		} catch (ex) {
 			ContextLogger.warn("getServiceLevelObjectives failure", {
 				request,
+				error: ex,
 			});
 		}
 
@@ -3338,6 +3348,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		} catch (ex) {
 			ContextLogger.warn("fetchErrorGroupDataById failure", {
 				errorGroupGuid,
+				error: ex,
 			});
 			const accessTokenError = ex as {
 				message: string;
@@ -3544,6 +3555,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				ContextLogger.warn("fetchErrorGroup (stack trace missing)", {
 					entityGuid: entityGuid,
 					occurrenceId: occurrenceId,
+					error: ex,
 				});
 				stackTracePromise = undefined;
 			}
@@ -3582,6 +3594,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("fetchErrorGroup (stack trace missing upon waiting)", {
 				entityGuid: entityGuid,
 				occurrenceId: occurrenceId,
+				error: ex,
 			});
 		}
 
@@ -4050,6 +4063,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("getErrorsInboxAssignments", {
 				userId: userId,
 				usingEmailAddress: emailAddress != null,
+				error: ex,
 			});
 			return undefined;
 		}
@@ -4326,6 +4340,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		} catch (e) {
 			ContextLogger.warn("" + e.message, {
 				idLike,
+				error: e,
 			});
 		}
 		return undefined;
@@ -4383,6 +4398,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 			ContextLogger.warn("generateTimestampRange failed", {
 				timestampInMilliseconds: timestampInMilliseconds,
 				plusOrMinusInMinutes: plusOrMinusInMinutes,
+				error: ex,
 			});
 		}
 		return undefined;

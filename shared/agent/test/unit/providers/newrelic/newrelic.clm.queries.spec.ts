@@ -35,7 +35,7 @@ describe("clm query generation", () => {
 	});
 	describe("generateSpanQuery", () => {
 		it("generates filePath locator query using equals", () => {
-			const response = generateSpanQuery("nrGuid", "filePath", "equals", "my/file.py");
+			const response = generateSpanQuery("nrGuid", "filePath", "equals", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
 				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath='my/file.py'  SINCE 30 minutes AGO LIMIT 250\")"
@@ -43,7 +43,7 @@ describe("clm query generation", () => {
 		});
 
 		it("generates filePath locator query using like", () => {
-			const response = generateSpanQuery("nrGuid", "filePath", "like", "my/file.py");
+			const response = generateSpanQuery("nrGuid", "filePath", "like", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
 				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py'  SINCE 30 minutes AGO LIMIT 250\""
@@ -51,15 +51,15 @@ describe("clm query generation", () => {
 		});
 
 		it("generates filePath locator query using fuzzy", () => {
-			const response = generateSpanQuery("nrGuid", "filePath", "fuzzy", "my/file.py");
+			const response = generateSpanQuery("nrGuid", "filePath", "fuzzy", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name, `transaction.name`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%/my/file.py%' SINCE 30 minutes AGO LIMIT 250\")"
+				"nrql(query: \"SELECT name, `transaction.name`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py%' SINCE 30 minutes AGO LIMIT 250\")"
 			);
 		});
 
 		it("generates namespace only locator query using equals", () => {
-			const response = generateSpanQuery("nrGuid", "locator", "equals", undefined, {
+			const response = generateSpanQuery("nrGuid", "locator", "equals", "python", undefined, {
 				namespace: "blah",
 			});
 			// console.log(response);
@@ -69,7 +69,7 @@ describe("clm query generation", () => {
 		});
 
 		it("generates namespace only locator query using like", () => {
-			const response = generateSpanQuery("nrGuid", "locator", "like", undefined, {
+			const response = generateSpanQuery("nrGuid", "locator", "like", "python", undefined, {
 				namespace: "blah",
 			});
 			// console.log(response);
@@ -79,7 +79,7 @@ describe("clm query generation", () => {
 		});
 
 		it("generates namespace and function locator query using equals", () => {
-			const response = generateSpanQuery("nrGuid", "locator", "equals", undefined, {
+			const response = generateSpanQuery("nrGuid", "locator", "equals", "python", undefined, {
 				namespace: "blah",
 				functionName: "foo",
 			});
@@ -90,7 +90,7 @@ describe("clm query generation", () => {
 		});
 
 		it("generates namespace and function locator query using like", () => {
-			const response = generateSpanQuery("nrGuid", "locator", "like", undefined, {
+			const response = generateSpanQuery("nrGuid", "locator", "like", "python", undefined, {
 				namespace: "blah",
 				functionName: "foo",
 			});

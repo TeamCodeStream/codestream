@@ -178,9 +178,11 @@ abstract class CLMEditorManager(
                             return@launch
                         }
                         // logger.info("=== Calling fileLevelTelemetry for ${editor.document.uri} resetCache: $resetCache")
+                        // next.js file path is like posts/[id].tsx - IntelliJ won't create an uri for this file name!
+                        val uri = editor.document.uri ?: "file://${editor.document.file?.path}"
                         val result = project.agentService?.fileLevelTelemetry(
                             FileLevelTelemetryParams(
-                                editor.document.uri,
+                                uri,
                                 languageId,
                                 FunctionLocator(classNames, null),
                                 null,

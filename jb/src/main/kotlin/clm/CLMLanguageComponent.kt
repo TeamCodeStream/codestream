@@ -55,7 +55,9 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
             if (reviewFile != null) {
                 if (!reviewFile.canCreateMarker) return
             } else {
-                if (event.editor.document.uri?.startsWith("file://") != true) return
+                // next.js file path is like posts/[id].tsx - IntelliJ won't create an uri for this file name!
+                if (event.editor.document.uri != null &&
+                    event.editor.document.uri?.startsWith("file://") != true) return
             }
         }
         managersByEditor[event.editor] = editorFactory(event.editor)

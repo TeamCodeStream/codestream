@@ -1,12 +1,23 @@
 import { FunctionLocator } from "@codestream/protocols/agent";
 
 import { Logger } from "../../logger";
-import { escapeNrql } from "../newrelic";
+import { escapeNrql, LanguageId } from "../newrelic";
 import { ResolutionMethod } from "./newrelic.types";
 
 export const spanQueryTypes = ["equals", "like", "fuzzy", "desperate"] as const;
 export type SpanQueryType = typeof spanQueryTypes[number];
 const LIMIT = 250;
+
+const removableExtensions = new Set<string>(["tsx", "jsx", "js", "ts", "cjs", "mjs", "mts", "cts"]);
+
+function isJavascriptIsh(languageId: LanguageId) {
+	return (
+		languageId === "javascript" ||
+		languageId === "typescript" ||
+		languageId === "javascriptreact" ||
+		languageId === "typescriptreact"
+	);
+}
 
 function functionLocatorQuery(
 	newRelicEntityGuid: string,
@@ -117,6 +128,7 @@ export function generateSpanQuery(
 	newRelicEntityGuid: string,
 	resolutionMethod: ResolutionMethod,
 	spanQueryType: SpanQueryType,
+	languageId: LanguageId,
 	codeFilePath?: string,
 	locator?: FunctionLocator
 ) {
@@ -139,6 +151,11 @@ export function generateSpanQuery(
 	// 	return hybridQuery(newRelicEntityGuid, codeFilePath!, locator, spanQueryType);
 	// }
 
+	if (!codeFilePath) {
+		// Technically never happens due to check on resolutionMethod but this allows following code to avoid using unsafe nulls
+		throw new Error("No codeFilePath provided for span query");
+	}
+
 	let query: string;
 
 	switch (spanQueryType) {
@@ -153,13 +170,20 @@ export function generateSpanQuery(
 			break;
 		}
 		case "fuzzy": {
-			const fuzzyLookup = `code.filepath like '%/${codeFilePath!.split("/").slice(-2).join("/")}%'`;
+			if (isJavascriptIsh(languageId) && codeFilePath.includes(".")) {
+				const split = codeFilePath.split(".");
+				const extension = split[1];
+				if (removableExtensions.has(extension)) {
+					codeFilePath = split[0];
+				}
+			}
+			const fuzzyLookup = `code.filepath like '%${codeFilePath.split("/").slice(-2).join("/")}%'`;
 			query = `SELECT name, \`transaction.name\`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${fuzzyLookup} SINCE 30 minutes AGO LIMIT ${LIMIT}`;
 			break;
 		}
 
 		case "desperate": {
-			const fuzzierLookup = `code.filepath like '%/${codeFilePath!
+			const fuzzierLookup = `code.filepath like '%/${codeFilePath
 				.split("/")
 				.slice(-1)
 				.join("/")}%'`;

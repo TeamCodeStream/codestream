@@ -1,4 +1,5 @@
 import { FunctionLocator } from "@codestream/protocols/agent";
+import { LanguageId } from "../newrelic";
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";
@@ -64,6 +65,7 @@ export interface SpanRequest {
 	newRelicAccountId: number;
 	newRelicEntityGuid: string;
 	resolutionMethod: ResolutionMethod;
+	languageId: LanguageId;
 	codeFilePath?: string;
 	locator?: FunctionLocator;
 }
