@@ -1175,7 +1175,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			return (
 				<MetaSection>
 					<Meta id="stack-trace" className={props.stackTraceTip ? "pulse" : ""}>
-						<MetaLabel>Stack Traceeeee</MetaLabel>
+						<MetaLabel>Stack Trace</MetaLabel>
 						<TourTip title={props.stackTraceTip} placement="bottom">
 							<ClickLines tabIndex={0} onKeyDown={handleKeyDown} className="code">
 								{(stackTrace || []).map((line, i) => {
