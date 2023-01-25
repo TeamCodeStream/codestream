@@ -19,7 +19,6 @@ import { connectProvider } from "@codestream/webview/store/providers/actions";
 import { CardView } from "@codestream/webview/Stream/CrossPostIssueControls/IssuesPane";
 import React, { useEffect, useMemo, useState } from "react";
 import { FormattedMessage } from "react-intl";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { Checkbox } from "../src/components/Checkbox";
@@ -463,6 +462,7 @@ export const StartWork = (props: Props) => {
 	const [editingBranch, setEditingBranch] = useState(false);
 	const [branches, setBranches] = useState(EMPTY_ARRAY as string[]);
 	const [customBranchName, setCustomBranchName] = useState("");
+	const [customBranchNameTouched, setCustomBranchNameTouched] = useState(false);
 	const [configureBranchNames, setConfigureBranchNames] = useState(false);
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>(EMPTY_ARRAY);
 	const [repoUri, setRepoUri] = useState("");
@@ -1116,13 +1116,26 @@ export const StartWork = (props: Props) => {
 															<input
 																id="branch-input"
 																name="branch"
-																value={customBranchName || branch}
+																// if have touched this field, it will be what the user has input will be the default branch name
+																value={
+																	customBranchNameTouched
+																		? customBranchName
+																		: customBranchName || branch
+																}
 																className="input-text control"
 																autoFocus={true}
 																type="text"
-																onChange={e => setCustomBranchName(e.target.value)}
+																onChange={e => {
+																	setCustomBranchNameTouched(true);
+																	setCustomBranchName(e.target.value);
+																}}
 																placeholder="Enter branch name"
-																onBlur={() => toggleEditingBranch(false)}
+																onBlur={() => {
+																	// if the user has cleared out customBranchName, default back to the branch name on blur
+																	setCustomBranchName(customBranchName || branch);
+
+																	toggleEditingBranch(false);
+																}}
 																onKeyPress={e => {
 																	if (e.key == "Enter") toggleEditingBranch(false);
 																}}
