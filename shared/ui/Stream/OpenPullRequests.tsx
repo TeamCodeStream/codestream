@@ -15,7 +15,7 @@ import {
 import { PullRequestQuery } from "@codestream/protocols/api";
 import copy from "copy-to-clipboard";
 import { isEmpty, isEqual } from "lodash-es";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
@@ -323,7 +323,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	const [defaultQueries, setDefaultQueries] = React.useState<FetchProviderDefaultPullResponse>({});
 	const [loadFromUrlQuery, setLoadFromUrlQuery] = React.useState({});
 	const [loadFromUrlOpen, setLoadFromUrlOpen] = React.useState("");
-	const [prError, setPrError] = React.useState("");
+	const [prError, setPrError] = useReducer(
+		(state, action: { provider: string; error?: string }) => ({
+			...state,
+			[action.provider]: action.error,
+		}),
+		{}
+	);
 	const [prCommitsRange, setPrCommitsRange] = React.useState<string[]>([]);
 	const [openRepos, setOpenRepos] = React.useState<ReposScmPlusName[]>([]);
 	const [currentGroupIndex, setCurrentGroupIndex] = React.useState();
@@ -333,7 +339,16 @@ export const OpenPullRequests = React.memo((props: Props) => {
 	>();
 	const [prFromUrlProviderId, setPrFromUrlProviderId] = React.useState<string | undefined>();
 
-	const [isLoadingPRs, setIsLoadingPRs] = React.useState(false);
+	const [isLoadingPRs, setIsLoadingPRs] = useReducer(
+		(state, action: { provider: string; isLoading: boolean }) => {
+			if (action.provider === "*") return {};
+			return {
+				...state,
+				[action.provider]: action.isLoading,
+			};
+		},
+		{}
+	);
 	const [isLoadingPRGroup, setIsLoadingPRGroup] = React.useState<number | undefined>(undefined);
 	const [individualLoadingPR, setIndividualLoadingPR] = React.useState("");
 
@@ -359,17 +374,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			options?: { force?: boolean; alreadyLoading?: boolean },
 			src: string | undefined = undefined
 		) => {
-			if (!options || options.alreadyLoading !== true) {
-				setIsLoadingPRs(true);
-			}
-
 			let count: number | undefined = undefined;
 			let activePrListedCount = 0;
 			let activePrListedIndex: number | undefined = undefined;
 			try {
-				setPrError("");
 				// console.warn("Loading the PRs...", theQueries);
 				for (const connectedProvider of PRConnectedProviders) {
+					setIsLoadingPRs({ provider: connectedProvider.id, isLoading: true });
+					setPrError({ provider: connectedProvider.id });
 					if (connectedProvider.id?.includes("bitbucket")) continue;
 
 					const queriesByProvider: PullRequestQuery[] =
@@ -404,8 +416,13 @@ export const OpenPullRequests = React.memo((props: Props) => {
 							// But derivedState.myPullRequests updates automatically when getMyPullRequests called
 						}
 					} catch (ex) {
-						setPrError(typeof ex === "string" ? ex : ex.message);
+						setPrError({
+							provider: connectedProvider.id,
+							error: typeof ex === "string" ? ex : ex.message,
+						});
 						console.error(ex);
+					} finally {
+						setIsLoadingPRs({ provider: connectedProvider.id, isLoading: false });
 					}
 				}
 			} catch (ex) {
@@ -415,7 +432,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				// 	// show message about re-authing?
 				// }
 			} finally {
-				setIsLoadingPRs(false);
+				setIsLoadingPRs({ provider: "*", isLoading: false });
 
 				if (!hasRenderedOnce) {
 					HostApi.instance.track("PR List Rendered", {
@@ -445,7 +462,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	useEffect(() => {
 		if (props.paneState === PaneState.Open) {
-			setIsLoadingPRs(true);
 			fetchPRs(queries, { force: true, alreadyLoading: true }, "panelOpened");
 		}
 	}, [props.paneState]);
@@ -454,7 +470,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const disposable = HostApi.instance.on(DidChangeDataNotificationType, (e: any) => {
 			if (e.type === ChangeDataType.PullRequests) {
 				console.warn("OpenPullRequests: ChangeDataType.PullRequests", e);
-				setIsLoadingPRs(true);
 				setTimeout(() => {
 					// kind of a hack to ensure that the provider's search api
 					// has all the latest data after a PR is merged/opened/closed
@@ -653,7 +668,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	// user loads PR/MR from URL
 	const goPR = async (url: string, providerId: string) => {
-		setPrError("");
+		setPrError({ provider: providerId });
 		setPrFromUrlProviderId(providerId);
 		setPrFromUrlLoading(true);
 		const response = (await dispatch(
@@ -675,7 +690,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 		if (response && response.error) {
 			setPrFromUrlLoading(false);
-			setPrError(response.error);
+			setPrError({ provider: providerId, error: response.error });
 		}
 	};
 
@@ -691,12 +706,6 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			);
 		}
 	}, [derivedState.expandedPullRequestGroupIndex, derivedState.currentPullRequestFromContext]);
-
-	useEffect(() => {
-		if (!loadFromUrlOpen) {
-			setPrError("");
-		}
-	}, [loadFromUrlOpen]);
 
 	// Handle case where user opens PR from toast notifcation.
 	useEffect(() => {
@@ -1481,7 +1490,10 @@ export const OpenPullRequests = React.memo((props: Props) => {
 											goPR(loadFromUrlQuery[providerId], providerId);
 										}
 									}}
-									onBlur={e => setLoadFromUrlOpen("")}
+									onBlur={e => {
+										setLoadFromUrlOpen("");
+										setPrError({ provider: providerId });
+									}}
 								/>
 							</div>
 							{(loadFromUrlQuery[providerId] || loadFromUrlOpen === providerId) && (
@@ -1499,7 +1511,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								</div>
 							)}
 						</Row>
-						{prError && (
+						{prError[providerId] && (
 							<Row
 								style={{
 									display: "block",
@@ -1509,7 +1521,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								key="pr-error"
 								className={"no-hover wrap error-message"}
 							>
-								<PrErrorText title={prError}>{prError}</PrErrorText>
+								<PrErrorText title={prError[providerId]}>{prError[providerId]}</PrErrorText>
 							</Row>
 						)}
 						{prFromUrlLoading && prFromUrlProviderId === providerId && (
@@ -1537,7 +1549,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 								title={query?.name || "Unnamed"}
 								collapsed={query.hidden}
 								count={count}
-								isLoading={isLoadingPRs || index === isLoadingPRGroup}
+								isLoading={isLoadingPRs[providerId] || index === isLoadingPRGroup}
 							>
 								<Icon
 									title="Reload Query"
@@ -1584,6 +1596,8 @@ export const OpenPullRequests = React.memo((props: Props) => {
 			: host;
 	};
 
+	const isLoadingAnyPRs = !!Object.values(isLoadingPRs).find(_ => _);
+
 	// console.warn("rendering pr list...");
 	// console.warn("CONNECT: ", PRConnectedProviders);
 	return (
@@ -1605,14 +1619,14 @@ export const OpenPullRequests = React.memo((props: Props) => {
 				<PaneHeader
 					title={prLabel.PullRequests}
 					id={WebviewPanels.OpenPullRequests}
-					isLoading={isLoadingPRs}
+					isLoading={isLoadingAnyPRs}
 					count={totalPRs}
 				>
 					{derivedState.isPRSupportedCodeHostConnected && (
 						<Icon
 							onClick={() => fetchPRs(queries, { force: true }, "refresh")}
 							name="refresh"
-							className={`spinnable ${isLoadingPRs ? "spin" : ""}`}
+							className={`spinnable ${isLoadingAnyPRs ? "spin" : ""}`}
 							title="Refresh"
 							placement="bottom"
 							delay={1}
@@ -1686,7 +1700,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 												title={displayName}
 												collapsed={collapsed}
 												count={0}
-												isLoading={isLoadingPRs || index === isLoadingPRGroup}
+												isLoading={isLoadingPRs[providerId] || index === isLoadingPRGroup}
 											></PaneNodeName>
 											{!collapsed && renderQueryGroup(provider.id)}
 										</PaneNode>

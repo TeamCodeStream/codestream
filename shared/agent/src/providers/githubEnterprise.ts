@@ -1,5 +1,6 @@
 "use strict";
 import { ProviderConfigurationData, ThirdPartyDisconnect } from "@codestream/protocols/agent";
+import { InternalError } from "agentError";
 import { GraphQLClient } from "graphql-request";
 import semver from "semver";
 import { URI } from "vscode-uri";
@@ -78,6 +79,11 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 			}
 		} catch (ex) {
 			Logger.warn(ex.message || ex.toString());
+			if (ex.type === "request-timeout") {
+				throw new InternalError(
+					`Unable to reach ${this.displayName}. Please check your internet or VPN connection.`
+				);
+			}
 			return this.DEFAULT_VERSION;
 		}
 		return this._version;
