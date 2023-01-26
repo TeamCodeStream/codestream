@@ -47,6 +47,7 @@ import { DotNetCoreInstrumentation } from "./newRelicInstrumentation/dotNetCoreI
 import { JavaInstrumentation } from "./newRelicInstrumentation/javaInstrumentation";
 import { NodeJSInstrumentation } from "./newRelicInstrumentation/nodeJSInstrumentation";
 import { Parser as csharpParser } from "./stackTraceParsers/csharpStackTraceParser";
+import { Parser as elixirParser } from "./stackTraceParsers/elixirStackTraceParser";
 import { Parser as goParser } from "./stackTraceParsers/goStackTraceParser";
 import { Parser as javascriptParser } from "./stackTraceParsers/javascriptStackTraceParser";
 import { Parser as javaParser } from "./stackTraceParsers/javaStackTraceParser";
@@ -64,6 +65,8 @@ const ExtensionToLanguageMap: { [key: string]: string } = {
 	kt: "java",
 	java: "java",
 	go: "go",
+	ex: "elixir",
+	exs: "elixir",
 };
 
 type Parser = (stack: string) => CSStackTraceInfo;
@@ -76,6 +79,7 @@ const StackTraceParsers: { [key: string]: Parser } = {
 	python: pythonParser,
 	java: javaParser,
 	go: goParser,
+	elixir: elixirParser,
 };
 
 const MISSING_REF_MESSAGE =
