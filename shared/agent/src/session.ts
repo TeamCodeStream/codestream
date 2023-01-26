@@ -1602,6 +1602,8 @@ export class CodeStreamSession {
 			"IDE Version": this.versionInfo.ide.version,
 			Deployment: this.isOnPrem ? "OnPrem" : "Cloud",
 			Country: user.countryCode,
+			"NR User ID": user.nrUserId,
+			"NR Tier": user.nrUserInfo && user.nrUserInfo.userTier,
 		};
 
 		if (team != null && companies != null) {
