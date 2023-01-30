@@ -1,9 +1,7 @@
-import { setInterval } from "timers";
 import { Logger } from "./logger";
 import { NRErrorType } from "@codestream/protocols/agent";
 import { CodedError } from "./providers/newrelic.types";
-
-const rateLimitByOrigin = new Map<string, number>();
+import { HistoryCounter } from "@codestream/utils/system/historyCounter";
 
 // Time period in seconds in which we evaluate the rate limit
 const RATE_LIMIT_INTERVAL = 15;
@@ -44,10 +42,6 @@ export type Limit = {
 	report?: number;
 };
 
-type Stats = {
-	[key: string]: number;
-};
-
 export class InternalRateError extends CodedError {
 	code: NRErrorType = "INTERNAL_RATE";
 
@@ -56,58 +50,15 @@ export class InternalRateError extends CodedError {
 	}
 }
 
-function padNumber(num: number, padding: number): string {
-	return num.toString(10).padStart(padding, "0");
-}
-
-export function getKeyDatePart(dateTime: Date, bucketSeconds: number): string {
-	const timeBucket = getTimeBucket(dateTime, bucketSeconds);
-	return `${timeBucket.getFullYear()}${padNumber(timeBucket.getMonth() + 1, 2)}${padNumber(
-		timeBucket.getDate(),
-		2
-	)}T${padNumber(timeBucket.getHours(), 2)}${padNumber(timeBucket.getMinutes(), 2)}${padNumber(
-		timeBucket.getSeconds(),
-		2
-	)}`;
-}
-
-export function getTimeBucket(dateTime: Date, seconds: number): Date {
-	const dateSeconds = dateTime.getTime() / 1000;
-	const rounded = Math.floor(dateSeconds / seconds) * seconds;
-	return new Date(rounded * 1000);
-}
-
-// Keep size around 100 records - delete oldest
-function trim() {
-	if (rateLimitByOrigin.size > 100) {
-		const trimCount = rateLimitByOrigin.size - 100;
-		let deleteCount = 0;
-		for (const key of rateLimitByOrigin.keys()) {
-			rateLimitByOrigin.delete(key);
-			if (++deleteCount >= trimCount) {
-				break;
-			}
-		}
-	}
-}
-
-setInterval(() => {
-	trim();
-	if (Logger.isDebugging) {
-		const stats: Stats = {};
-		for (const [key, value] of rateLimitByOrigin.entries()) {
-			stats[key] = value;
-		}
-		Logger.debug(`rateCounts ${JSON.stringify(stats, null, 2)}`);
-	}
-}, 60000);
+const rateLimitByOrigin = new HistoryCounter(
+	RATE_LIMIT_INTERVAL,
+	100,
+	Logger.debug,
+	Logger.isDebugging
+);
 
 function isOverRateLimit(origin: string): RateLimit | undefined {
-	const now = new Date();
-	const keyDatePart = getKeyDatePart(now, RATE_LIMIT_INTERVAL);
-	const key = `${keyDatePart}|${origin}`;
-	const count = (rateLimitByOrigin.get(key) ?? 1) + 1;
-	rateLimitByOrigin.set(key, count);
+	const count = rateLimitByOrigin.countAndGet(origin);
 	const limit = getRateLimit(origin);
 	if (limit.block && count > limit.block) {
 		return { violation: "block", limit: limit.block, count };
@@ -144,8 +95,4 @@ export function handleLimit(origin: string, extra?: { [key: string]: any }) {
 			}
 		}
 	}
-}
-
-export function reset() {
-	rateLimitByOrigin.clear();
 }

@@ -4,6 +4,7 @@
     <exclude-output />
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/shared/agent/dist" />
+      <excludeFolder url="file://$MODULE_DIR$/vscode/dist" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

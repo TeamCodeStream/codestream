@@ -46,6 +46,7 @@
 		"eol": "0.9.1",
 		"jest-mock-extended": "^3.0.1",
 		"jest-teamcity": "^1.11.0",
+		"set-interval-async": "3.0.3",
 		"ts-jest": "^29.0.3"
 	}
 }

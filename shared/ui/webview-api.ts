@@ -22,6 +22,8 @@ import {
 	isIpcResponseMessage,
 	WebviewIpcMessage,
 } from "@codestream/webview/ipc/webview.protocol.common";
+import { HistoryCounter } from "@codestream/utils/system/historyCounter";
+import { logError } from "@codestream/webview/logger";
 
 type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
 export type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
@@ -30,6 +32,10 @@ export type RequestResponseOf<RT> = RT extends RequestType<any, infer R, any, an
 type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>> = (
 	event: NotificationParamsOf<NT>
 ) => void;
+
+const ALERT_THRESHOLD = 20;
+
+const STALE_THRESHOLD = 300; // 5 minutes
 
 const normalizeNotificationsMap = new Map<
 	NotificationType<any, any>,
@@ -125,15 +131,78 @@ class EventEmitter {
 
 let sequence = 0;
 
-export class HostApi extends EventEmitter {
-	private _pendingRequests: Map<
-		string,
-		{
-			method: string;
-			resolve: (value?: any | PromiseLike<any>) => void;
-			reject: (reason?: any) => void;
+export function nextId() {
+	if (sequence === Number.MAX_SAFE_INTEGER) {
+		sequence = 1;
+	} else {
+		sequence++;
+	}
+
+	return `wv:${sequence}:${shortUuid()}:${Date.now()}`;
+}
+
+type WebviewApiRequest = {
+	method: string;
+	providerId?: string;
+	resolve: (value?: any | PromiseLike<any>) => void;
+	reject: (reason?: unknown) => void;
+};
+
+export class RequestApiManager {
+	private pendingRequests = new Map<string, WebviewApiRequest>();
+	private historyCounter = new HistoryCounter(15, 25, console.debug, true);
+
+	constructor(enableStaleReport = true) {
+		if (enableStaleReport) {
+			setInterval(this.reportStaleRequests.bind(this), 60000);
 		}
-	>;
+	}
+
+	private reportStaleRequests() {
+		const report = this.collectStaleRequests();
+		for (const item in report) {
+			logError(item);
+		}
+	}
+
+	public collectStaleRequests(): Array<string> {
+		const now = Date.now();
+		const staleRequests = new Array<string>();
+		for (const [key, value] of this.pendingRequests) {
+			const parts = key.split(":");
+			if (parts.length < 3) {
+				continue;
+			}
+			const timestamp = parseInt(parts[3]);
+			const theDate = new Date(timestamp);
+			const timeAgo = (now - timestamp) / 1000;
+			if (timeAgo > STALE_THRESHOLD) {
+				staleRequests.push(`Found stale request ${value.method} at ${theDate.toISOString()}`);
+			}
+		}
+		return staleRequests;
+	}
+
+	public get(key: string): WebviewApiRequest | undefined {
+		return this.pendingRequests.get(key);
+	}
+
+	public delete(key: string): boolean {
+		return this.pendingRequests.delete(key);
+	}
+
+	public set(key: string, value: WebviewApiRequest): Map<string, WebviewApiRequest> {
+		const identifier = value.providerId ? `${value.method}:${value.providerId}` : value.method;
+		const count = this.historyCounter.countAndGet(identifier);
+		if (count > ALERT_THRESHOLD) {
+			logError(new Error(`${count} calls pending for ${identifier}`));
+		}
+		return this.pendingRequests.set(key, value);
+	}
+}
+
+export class HostApi extends EventEmitter {
+	private apiManager = new RequestApiManager();
 	private port: IpcHost;
 
 	private static _instance: HostApi;
@@ -146,12 +215,11 @@ export class HostApi extends EventEmitter {
 
 	protected constructor(port: any) {
 		super();
-		this._pendingRequests = new Map();
 		this.port = port;
 
 		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
 			if (isIpcResponseMessage(data)) {
-				const pending = this._pendingRequests.get(data.id);
+				const pending = this.apiManager.get(data.id);
 				if (pending == null) {
 					console.debug(
 						`received response from host for ${data.id}; unable to find a pending request`,
@@ -169,7 +237,7 @@ export class HostApi extends EventEmitter {
 					if (!data.error.toString().includes("maintenance mode")) pending.reject(data.error);
 				} else pending.resolve(data.params);
 
-				this._pendingRequests.delete(data.id);
+				this.apiManager.delete(data.id);
 
 				return;
 			}
@@ -199,11 +267,12 @@ export class HostApi extends EventEmitter {
 		params: RequestParamsOf<RT>,
 		options?: { alternateReject?: (error) => {} }
 	): Promise<RequestResponseOf<RT>> {
-		const id = this.nextId();
+		const id = nextId();
 
 		return new Promise((resolve, reject) => {
 			reject = (options && options.alternateReject) || reject;
-			this._pendingRequests.set(id, { resolve, reject, method: type.method });
+			const providerId: string | undefined = params?.providerId ? params.providerId : undefined;
+			this.apiManager.set(id, { resolve, reject, method: type.method, providerId });
 
 			const payload = {
 				id,
@@ -220,16 +289,6 @@ export class HostApi extends EventEmitter {
 			eventName,
 			properties,
 		});
-	}
-
-	private nextId() {
-		if (sequence === Number.MAX_SAFE_INTEGER) {
-			sequence = 1;
-		} else {
-			sequence++;
-		}
-
-		return `wv:${sequence}:${shortUuid()}`;
 	}
 }
 

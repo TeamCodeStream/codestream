@@ -6,9 +6,9 @@
 	"module": "./dist/codestream-components.es.js",
 	"scripts": {
 		"clean:ci": "git clean -xdf",
-		"coverage": "jest --coverage",
-		"test": "jest",
-		"test:ci": "CI=true jest --coverage",
+		"coverage": "jest --forceExit --coverage",
+		"test": "jest --forceExit",
+		"test:ci": "CI=true jest --forceExit --coverage",
 		"test:watch": "jest --watch",
 		"verify": "run-p verify:**",
 		"verify:compile": "npx tsc --noEmit",
