@@ -168,6 +168,7 @@ export function SharingModal(props: SharingModalProps) {
 					review: props.review,
 					codeError: props.codeError,
 					mentionedUserIds,
+					providerServerTokenUserId: valuesRef.current.botUserId,
 				}
 			);
 			if (props.post && ts) {
