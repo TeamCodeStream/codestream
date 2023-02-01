@@ -139,8 +139,8 @@ const Root = styled.div`
 `;
 
 const PrErrorText = styled.small`
-	text-align: right;
 	display: block;
+	padding-left: 16px;
 `;
 
 interface ReposScmPlusName extends ReposScm {

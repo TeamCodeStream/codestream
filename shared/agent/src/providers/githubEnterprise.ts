@@ -55,13 +55,19 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 		await this.getVersion();
 	}
 
+	private _expireVersionCache: number | undefined;
 	protected async getVersion(): Promise<ProviderVersion> {
 		try {
-			if (this._version == null) {
+			if (
+				this._version == null ||
+				(this._expireVersionCache && Date.now() > this._expireVersionCache)
+			) {
+				this._expireVersionCache = undefined;
 				// this GET call should be very fast, so 5s here should be plenty
 				const response = await this.get<{ installed_version: string }>("/meta", undefined, {
 					timeout: 5000,
 				});
+				this._expireVersionCache = Date.now() + 60 * 1000;
 				const installedVersion = response.body.installed_version;
 				this._version = {
 					version: installedVersion,
@@ -78,6 +84,7 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 				});
 			}
 		} catch (ex) {
+			this._expireVersionCache = undefined;
 			Logger.warn(ex.message || ex.toString());
 			if (ex.type === "request-timeout") {
 				throw new InternalError(
@@ -101,8 +108,8 @@ export class GitHubEnterpriseProvider extends GitHubProvider {
 
 	private _isPRApiCompatible: boolean | undefined;
 	protected async isPRApiCompatible(): Promise<boolean> {
+		const version = await this.getVersion();
 		if (this._isPRApiCompatible == null) {
-			const version = await this.getVersion();
 			this._isPRApiCompatible = semver.gte(version.version, this.minPRApiVersion());
 		}
 
