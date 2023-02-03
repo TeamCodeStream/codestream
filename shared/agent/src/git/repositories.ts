@@ -1,6 +1,7 @@
 "use strict";
 import * as fs from "fs";
 import * as path from "path";
+import url from "url";
 
 import {
 	CommitsChangedData,
@@ -487,6 +488,37 @@ export class GitRepositories {
 		this._monitors = [];
 
 		const { git } = SessionContainer.instance();
+
+		// This watches for when a user clones/copies/creates/etc a new repository in
+		// an existing workspace folder so that we can track the repository properly.
+		const workspaceFolders = await this.session.getWorkspaceFolders();
+		if (workspaceFolders && workspaceFolders.length > 0) {
+			const basePaths = workspaceFolders.map(_ => `${url.fileURLToPath(_.uri)}/**/.git`);
+			const newCloneWatcher = chokidar
+				.watch(basePaths, { cwd: "/", ignoreInitial: true })
+				.on("addDir", async gitPath => {
+					const pathElements = gitPath.split("/");
+					if (pathElements[pathElements.length - 1] === ".git") {
+						const name = pathElements[pathElements.length - 2];
+						const uri = url.pathToFileURL(`/${pathElements.slice(0, -1).join("/")}`);
+						await this.onWorkspaceFoldersChanged({
+							added: [
+								{
+									name,
+									uri: uri.toString(),
+								},
+							],
+							removed: [],
+						});
+					}
+				});
+
+			this._monitors.push({
+				dispose() {
+					return newCloneWatcher.close();
+				},
+			});
+		}
 
 		const repos = this._repositoryTree.values();
 		for (const repo of repos) {

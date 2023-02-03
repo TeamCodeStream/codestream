@@ -888,6 +888,12 @@ export const Observability = React.memo((props: Props) => {
 		}
 	}, [derivedState.scmInfo]);
 
+	useEffect(() => {
+		if (!_isEmpty(currentRepoId) && _isEmpty(observabilityRepos)) {
+			doRefresh(true);
+		}
+	}, [currentRepoId, observabilityRepos]);
+
 	const handleSetUpMonitoring = (event: React.SyntheticEvent) => {
 		event.preventDefault();
 		dispatch(openPanel(WebviewPanels.OnboardNewRelic));

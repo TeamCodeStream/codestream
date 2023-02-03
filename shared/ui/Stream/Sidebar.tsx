@@ -117,6 +117,8 @@ export const Sidebar = React.memo(function Sidebar() {
 			currentUserId: state.session.userId!,
 			hasPRProvider: getConnectedSupportedPullRequestHosts(state).length > 0,
 			ideName: state.ide.name,
+			currentRepoId: state.editorContext.scmInfo?.scm?.repoId,
+			textEditorUri: state.editorContext.textEditorUri,
 		};
 	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
@@ -156,6 +158,12 @@ export const Sidebar = React.memo(function Sidebar() {
 			Height: window.innerHeight,
 		});
 	});
+
+	useEffect(() => {
+		if (derivedState.currentRepoId && !openRepos.find(_ => _.id === derivedState.currentRepoId)) {
+			fetchOpenRepos();
+		}
+	}, [derivedState.currentRepoId, derivedState.textEditorUri]);
 
 	// https://usehooks.com/useWindowSize/
 	useEffect(() => {

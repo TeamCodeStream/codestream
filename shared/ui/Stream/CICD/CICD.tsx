@@ -123,12 +123,12 @@ export const CICD = (props: Props) => {
 		setLoading(false);
 	};
 
-	// force a re-fetch if branch changes
+	// force a re-fetch if branch or repo changes
 	useEffect(() => {
 		fetchProjects().catch(error => {
 			console.error(error);
 		});
-	}, [derivedState.currentBranch]);
+	}, [derivedState.currentBranch, derivedState.currentRepo]);
 
 	useEffect(() => {
 		if (!refresh || props.paneState === PaneState.Collapsed) return;
