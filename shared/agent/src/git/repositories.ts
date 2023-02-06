@@ -501,6 +501,9 @@ export class GitRepositories {
 					if (pathElements[pathElements.length - 1] === ".git") {
 						const name = pathElements[pathElements.length - 2];
 						const uri = url.pathToFileURL(`/${pathElements.slice(0, -1).join("/")}`);
+						Logger.log(
+							`add git dir watch: onWorkspaceFoldersChanged name: ${name}, uri: ${uri.toString()}`
+						);
 						await this.onWorkspaceFoldersChanged({
 							added: [
 								{
