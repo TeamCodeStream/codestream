@@ -494,9 +494,11 @@ export class GitRepositories {
 		const workspaceFolders = await this.session.getWorkspaceFolders();
 		if (workspaceFolders && workspaceFolders.length > 0) {
 			const basePaths = workspaceFolders.map(_ => `${url.fileURLToPath(_.uri)}/**/.git`);
+			Logger.debug(`add git dir watch: basePaths: ${basePaths}`);
 			const newCloneWatcher = chokidar
 				.watch(basePaths, { cwd: "/", ignoreInitial: true })
 				.on("addDir", async gitPath => {
+					Logger.debug(`add git dir watch: addDir gitPath: ${gitPath}`);
 					const pathElements = gitPath.split("/");
 					if (pathElements[pathElements.length - 1] === ".git") {
 						const name = pathElements[pathElements.length - 2];
