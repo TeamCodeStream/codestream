@@ -496,13 +496,13 @@ export class GitRepositories {
 			const basePaths = workspaceFolders.map(_ => `${url.fileURLToPath(_.uri)}/**/.git`);
 			Logger.debug(`add git dir watch: basePaths: ${basePaths}`);
 			const newCloneWatcher = chokidar
-				.watch(basePaths, { cwd: "/", ignoreInitial: true })
+				.watch(basePaths, { ignoreInitial: true })
 				.on("addDir", async gitPath => {
 					Logger.debug(`add git dir watch: addDir gitPath: ${gitPath}`);
 					const pathElements = gitPath.split("/");
 					if (pathElements[pathElements.length - 1] === ".git") {
 						const name = pathElements[pathElements.length - 2];
-						const uri = url.pathToFileURL(`/${pathElements.slice(0, -1).join("/")}`);
+						const uri = url.pathToFileURL(`${pathElements.slice(0, -1).join("/")}`);
 						Logger.log(
 							`add git dir watch: onWorkspaceFoldersChanged name: ${name}, uri: ${uri.toString()}`
 						);
