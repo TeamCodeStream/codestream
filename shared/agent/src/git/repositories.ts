@@ -499,7 +499,8 @@ export class GitRepositories {
 				.watch(basePaths, { ignoreInitial: true })
 				.on("addDir", async gitPath => {
 					Logger.debug(`add git dir watch: addDir gitPath: ${gitPath}`);
-					const pathElements = gitPath.split("/");
+					const normalizedGitPath = Strings.normalizePath(gitPath, isWindows);
+					const pathElements = normalizedGitPath.split("/");
 					if (pathElements[pathElements.length - 1] === ".git") {
 						const name = pathElements[pathElements.length - 2];
 						const uri = url.pathToFileURL(`${pathElements.slice(0, -1).join("/")}`);
