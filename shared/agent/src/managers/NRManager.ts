@@ -315,14 +315,24 @@ export class NRManager {
 					} else {
 						const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
 						if (resolvedPath) {
-							resolvedLine = {
-								fileFullPath: resolvedPath,
-								fileRelativePath: path.relative(matchingRepoPath, resolvedPath),
-								line: line.line,
-								column: line.column,
-								resolved: true,
-								warning: commitSha ? undefined : "Missing sha",
-							};
+							const pathExists = await SessionContainer.instance().git.checkFileExistsForRevision(
+								resolvedPath,
+								ref
+							);
+							if (pathExists) {
+								resolvedLine = {
+									fileFullPath: resolvedPath,
+									fileRelativePath: path.relative(matchingRepoPath, resolvedPath),
+									line: line.line,
+									column: line.column,
+									resolved: true,
+									warning: commitSha ? undefined : "Missing sha",
+								};
+							} else {
+								resolvedLine = {
+									error: `Unable to find matching file in revision ${ref} for path ${line.fileFullPath}`,
+								};
+							}
 						} else {
 							resolvedLine = {
 								error: `Unable to find matching file for path ${line.fileFullPath}`,

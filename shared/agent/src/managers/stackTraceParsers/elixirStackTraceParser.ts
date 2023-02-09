@@ -27,7 +27,7 @@ export function Parser(stack: string): CSStackTraceInfo {
 			(\d+) // line number
 			:
 			\s+
-			([^/]+\/\d+) // method name
+			([^/]+(?:\/\d+)?) // method name
 			$
 		`;
 	}
