@@ -1156,6 +1156,21 @@ export const GetNewRelicAccountsRequestType = new RequestType<
 	void
 >("codestream/newrelic/accounts");
 
+export interface UpdateNewRelicOrgIdRequest {
+	teamId: string;
+}
+
+export interface UpdateNewRelicOrgIdResponse {
+	orgId?: number;
+}
+
+export const UpdateNewRelicOrgIdRequestType = new RequestType<
+	UpdateNewRelicOrgIdRequest,
+	UpdateNewRelicOrgIdResponse,
+	void,
+	void
+>("codestream/newrelic/orgid/update");
+
 export interface GetObservabilityErrorsRequest {
 	filters: { repoId: string; entityGuid?: string }[];
 }

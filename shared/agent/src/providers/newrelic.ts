@@ -95,6 +95,9 @@ import {
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
+	UpdateNewRelicOrgIdRequestType,
+	UpdateNewRelicOrgIdRequest,
+	UpdateNewRelicOrgIdResponse,
 } from "@codestream/protocols/agent";
 import { CSMe, CSNewRelicProviderInfo } from "@codestream/protocols/api";
 import { GraphQLClient } from "graphql-request";
@@ -350,15 +353,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		}
 		await this.createClientAndValidateKey(config.accessToken!);
 
-		const orgId = await this.getOrgId();
-		const team = await SessionContainer.instance().teams.getByIdFromCache(this.session.teamId);
-		const company =
-			team && (await SessionContainer.instance().companies.getByIdFromCache(team.companyId));
-
-		if (orgId && company) {
-			ContextLogger.log(`Associating company ${company.id} with NR org ${orgId}`);
-			await this.session.api.addCompanyNewRelicInfo(company.id, undefined, [orgId]);
-		}
+		const { orgId } = await this.updateOrgId({ teamId: this.session.teamId });
 
 		config.data = config.data || {};
 		config.data.userId = this._newRelicUserId;
@@ -368,6 +363,23 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 		// update telemetry super-properties
 		this.session.addNewRelicSuperProps(this._newRelicUserId!, orgId);
 		return true;
+	}
+
+	@lspHandler(UpdateNewRelicOrgIdRequestType)
+	@log()
+	async updateOrgId(request: UpdateNewRelicOrgIdRequest): Promise<UpdateNewRelicOrgIdResponse> {
+		const orgId = await this.getOrgId();
+		const team = await SessionContainer.instance().teams.getByIdFromCache(request.teamId);
+		const company =
+			team && (await SessionContainer.instance().companies.getByIdFromCache(team.companyId));
+		if (orgId && company) {
+			ContextLogger.log(`Associating company ${company.id} with NR org ${orgId}`);
+			await this.session.api.addCompanyNewRelicInfo(company.id, undefined, [orgId]);
+		}
+
+		return {
+			orgId,
+		};
 	}
 
 	private async validateApiKey(client: GraphQLClient): Promise<{

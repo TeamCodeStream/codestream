@@ -12,6 +12,7 @@ import {
 	ProviderTokenRequestType,
 	TokenLoginRequest,
 	TokenLoginRequestType,
+	UpdateNewRelicOrgIdRequestType,
 } from "@codestream/protocols/agent";
 import { CodemarkType, LoginResult } from "@codestream/protocols/api";
 
@@ -343,6 +344,10 @@ export const completeSignup =
 			teamId,
 			setEnvironment: extra.setEnvironment,
 		});
+
+		if (extra.provider === "newrelic") {
+			await HostApi.instance.send(UpdateNewRelicOrgIdRequestType, { teamId });
+		}
 
 		if (isLoginFailResponse(response)) {
 			logError("There was an error completing signup", response);
