@@ -89,7 +89,7 @@ import {
 	clearCurrentPullRequest,
 	closeAllPanels,
 	focus,
-	goToNewRelicSignup,
+	goToSignup,
 	setCurrentCodeError,
 	setCurrentCodemark,
 	setCurrentMethodLevelTelemetry,
@@ -572,7 +572,7 @@ function listenForEvents(store) {
 							store.dispatch(
 								setPendingProtocolHandlerUrl({ url: e.url, query: definedQuery.query })
 							);
-							store.dispatch(goToNewRelicSignup({}));
+							store.dispatch(goToSignup({}));
 						} else {
 							if (definedQuery.query.apiKey) {
 								store.dispatch(
@@ -624,7 +624,7 @@ function listenForEvents(store) {
 									anonymousId: route.query["anonymousId"],
 								});
 							}
-							store.dispatch(goToNewRelicSignup({}));
+							store.dispatch(goToSignup({}));
 							break;
 						}
 

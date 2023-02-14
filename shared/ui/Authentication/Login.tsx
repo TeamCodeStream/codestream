@@ -280,8 +280,11 @@ class Login extends React.Component<Props, State> {
 			e.preventDefault();
 			e.stopPropagation();
 
-			HostApi.instance.track("Provider Auth Selected", {
+			const { email } = this.state;
+
+			HostApi.instance.track("Signup Method Selected", {
 				Provider: "New Relic",
+				Email: email,
 			});
 
 			//@TODO: Change to idp signin page event
