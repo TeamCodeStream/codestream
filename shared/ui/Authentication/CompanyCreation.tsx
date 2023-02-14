@@ -85,7 +85,7 @@ export function CompanyCreation(props: {
 	});
 	const providerName = props.provider
 		? ProviderNames[props.provider.toLowerCase()] || props.provider
-		: "CodeStream";
+		: "Email";
 
 	const onClickTryAnother = useCallback(async (event: React.FormEvent) => {
 		event.preventDefault();
