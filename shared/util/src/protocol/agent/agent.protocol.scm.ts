@@ -466,7 +466,9 @@ export const GetWorkspaceAutoJoinInfoRequestType = new RequestType<
 	void
 >("codestream/scm/workspace/autojoin");
 
-export interface GetLatestCommittersRequest {}
+export interface GetLatestCommittersRequest {
+	includeNoreply?: boolean;
+}
 export interface GetLatestCommittersResponse {
 	scm?: {
 		[email: string]: string;

@@ -52,6 +52,7 @@ import {
 	GetLatestCommitScmRequest,
 	GetLatestCommitScmRequestType,
 	GetLatestCommitScmResponse,
+	GetLatestCommittersRequest,
 	GetLatestCommittersRequestType,
 	GetLatestCommittersResponse,
 	GetRangeRequest,
@@ -1433,7 +1434,9 @@ export class ScmManager {
 	}
 
 	@lspHandler(GetLatestCommittersRequestType)
-	async getLatestCommittersAllRepos(): Promise<GetLatestCommittersResponse> {
+	async getLatestCommittersAllRepos(
+		request: GetLatestCommittersRequest
+	): Promise<GetLatestCommittersResponse> {
 		const cc = Logger.getCorrelationContext();
 		const committers: { [email: string]: string } = {};
 		const { git } = SessionContainer.instance();
@@ -1445,7 +1448,9 @@ export class ScmManager {
 			const { repositories = [] } = openRepos;
 			(
 				await Promise.all(
-					repositories.filter(r => r.id).map(repo => git.getCommittersForRepo(repo.path, since))
+					repositories
+						.filter(r => r.id)
+						.map(repo => git.getCommittersForRepo(repo.path, since, request.includeNoreply))
 				)
 			).map(result => {
 				Object.keys(result).forEach(key => {

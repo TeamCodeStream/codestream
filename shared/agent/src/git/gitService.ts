@@ -1570,7 +1570,8 @@ export class GitService implements IGitService, Disposable {
 
 	async getCommittersForRepo(
 		repoPath: string,
-		since: number
+		since: number,
+		includeNoreply?: boolean
 	): Promise<{ [email: string]: string }> {
 		let data;
 		const result: { [email: string]: string } = {};
@@ -1589,7 +1590,7 @@ export class GitService implements IGitService, Disposable {
 			)
 				.split("\n")
 				.map(line => line.trim())
-				.filter(line => !line.match(/noreply/))
+				.filter(line => includeNoreply || !line.match(/noreply/))
 				.forEach(line => {
 					const [name, email] = line.split(FORMAT_SEPARATOR);
 					result[email.trim()] = name.trim();

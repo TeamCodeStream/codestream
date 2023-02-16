@@ -1456,7 +1456,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 	@log()
 	async getAssignableUsers(request: { boardId: string }) {
 		const { scm } = SessionContainer.instance();
-		const committers = await scm.getLatestCommittersAllRepos();
+		const committers = await scm.getLatestCommittersAllRepos({});
 		let users: any[] = [];
 		if (committers?.scm) {
 			users = users.concat(

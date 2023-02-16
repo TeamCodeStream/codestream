@@ -102,14 +102,17 @@ export function BlameMap() {
 		// for now, suggested invitees are only available to admins
 		// if (!isCurrentUserAdmin) return;
 
-		const result = await HostApi.instance.send(GetLatestCommittersRequestType, {});
+		const result = await HostApi.instance.send(GetLatestCommittersRequestType, {
+			includeNoreply: true,
+		});
 		const committers = result ? result.scm : undefined;
 		if (!committers) return;
 
 		const { members, invited, dontSuggestInvitees } = derivedState;
 		const newSuggested: any[] = [];
 		Object.keys(committers).forEach(email => {
-			if (email.match(/noreply/)) return;
+			// We actually want to include noreply emails here, even if we hide them elsewhere
+			// if (email.match(/noreply/)) return;
 			// If whitespace in domain, invalid email
 			if (email.match(/.*(@.* .+)/)) return;
 			// If contains @ and ends in .local is invalid email
