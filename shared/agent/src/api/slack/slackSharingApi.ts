@@ -312,7 +312,10 @@ export class SlackSharingApiProvider {
 			const meMessage = meMessageRegex.test(text);
 
 			if (!channelId && (!memberIds || !memberIds.length || !request.providerServerTokenUserId)) {
-				throw new Error("No channelId found: cannot create external post");
+				if (!memberIds || !memberIds.length) {
+					throw new Error("No channelId or DM targets found: cannot create external post");
+				}
+				throw new Error("No bot token found: cannot create external post");
 			}
 
 			if (!channelId) {
@@ -509,6 +512,15 @@ export class SlackSharingApiProvider {
 				permalink: thePermalink,
 				channelId: channelId,
 			};
+		} catch (ex) {
+			const telemetry = Container.instance().telemetry;
+			telemetry.track({
+				eventName: "Slack Sharing Error",
+				properties: {
+					Error: ex.message,
+				},
+			});
+			throw ex;
 		} finally {
 			if (createdPostId) {
 				this._codestream.trackProviderPost({

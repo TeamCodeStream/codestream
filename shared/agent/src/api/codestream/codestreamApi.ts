@@ -1349,18 +1349,31 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (!provider) {
 			throw new Error("Invalid providerId");
 		}
-		const response = await this.post<CSProviderShareRequest, CSProviderShareResponse>(
-			`/provider-share/${provider.name}`,
-			{
-				postId: request.postId,
-			},
-			this._token
-		);
-		const [post] = await SessionContainer.instance().posts.resolve({
-			type: MessageType.Streams,
-			data: [response.post],
-		});
-		return { ...response, post };
+		try {
+			const response = await this.post<CSProviderShareRequest, CSProviderShareResponse>(
+				`/provider-share/${provider.name}`,
+				{
+					postId: request.postId,
+				},
+				this._token
+			);
+			const [post] = await SessionContainer.instance().posts.resolve({
+				type: MessageType.Streams,
+				data: [response.post],
+			});
+			return { ...response, post };
+		} catch (ex) {
+			if (provider.name === "slack") {
+				const telemetry = Container.instance().telemetry;
+				telemetry.track({
+					eventName: "Slack Sharing Error",
+					properties: {
+						Error: ex.message,
+					},
+				});
+			}
+			throw ex;
+		}
 	}
 
 	@log()
