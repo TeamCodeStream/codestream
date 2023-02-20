@@ -1,8 +1,18 @@
-﻿namespace CodeStream.VisualStudio.Core.Models
+﻿using Newtonsoft.Json;
+
+namespace CodeStream.VisualStudio.Core.Models
 {
 	public class MetricTimesliceNameMapping {
-		public string D { get; set; }
-		public string T { get; set; }
-		public string E { get; set; }
+		[JsonProperty("duration", NullValueHandling = NullValueHandling.Ignore)]
+		public string Duration { get; set; }
+
+		[JsonProperty("sampleSize", NullValueHandling = NullValueHandling.Ignore)]
+		public string SampleSize { get; set; }
+
+		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]
+		public string ErrorRate { get; set; }
+
+		[JsonProperty("source", NullValueHandling = NullValueHandling.Ignore)]
+		public string Source { get; set; }
 	}
 }

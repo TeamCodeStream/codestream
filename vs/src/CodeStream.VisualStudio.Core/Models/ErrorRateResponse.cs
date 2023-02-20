@@ -3,8 +3,8 @@
 namespace CodeStream.VisualStudio.Core.Models
 {
 	public class ErrorRateResponse {
-		[JsonProperty("errorsPerMinute", NullValueHandling = NullValueHandling.Ignore)]
-		public string ErrorsPerMinute { get; set; }
+		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]
+		public string ErrorRate { get; set; }
 		[JsonProperty("namespace", NullValueHandling = NullValueHandling.Ignore)]
 		public string Namespace { get; set; }
 		[JsonProperty("className", NullValueHandling = NullValueHandling.Ignore)]

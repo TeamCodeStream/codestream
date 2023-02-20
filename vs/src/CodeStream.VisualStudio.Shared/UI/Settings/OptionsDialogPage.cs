@@ -35,7 +35,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private string _extraCertificates;
 
 		private string _goldenSignalsInEditorFormat =
-			"avg duration: ${averageDuration} | throughput: ${throughput} | error rate: ${errorsPerMinute} - since ${since}";
+			"avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}";
 
 		private ProxySupport _proxySupport;
 

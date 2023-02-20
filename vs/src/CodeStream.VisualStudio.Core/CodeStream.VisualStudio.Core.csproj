@@ -126,6 +126,7 @@
     <Compile Include="Models\ErrorRateResponse.cs" />
     <Compile Include="Models\FileLevelTelemetryFunctionLocator.cs" />
     <Compile Include="Models\FileLevelTelemetryRequestOptions.cs" />
+    <Compile Include="Models\SampleSizeResponse.cs" />
     <Compile Include="Models\IVirtualTextDocument.cs" />
     <Compile Include="Models\MetricTimesliceNameMapping.cs" />
     <Compile Include="Models\Placement.cs" />
@@ -133,7 +134,6 @@
     <Compile Include="Models\PullRequestDiffUri.cs" />
     <Compile Include="Models\RepoInfo.cs" />
     <Compile Include="Models\SessionSignedOutReason.cs" />
-    <Compile Include="Models\ThroughputResponse.cs" />
     <Compile Include="Process\Node.cs" />
     <Compile Include="Process\ProcessExtensions.cs" />
     <Compile Include="Process\ProcessFactory.cs" />

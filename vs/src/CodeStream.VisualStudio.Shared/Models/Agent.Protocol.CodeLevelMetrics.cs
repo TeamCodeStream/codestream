@@ -27,8 +27,8 @@ namespace CodeStream.VisualStudio.Shared.Models
 		public RepoInfo Repo { get; set; }
 		[JsonProperty("isConnected", NullValueHandling = NullValueHandling.Ignore)]
 		public bool IsConnected { get; set; }
-		[JsonProperty("throughput", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<ThroughputResponse> Throughput { get; set; } = new List<ThroughputResponse>();
+		[JsonProperty("sampleSize", NullValueHandling = NullValueHandling.Ignore)]
+		public IList<SampleSizeResponse> SampleSize { get; set; }
 		[JsonProperty("averageDuration", NullValueHandling = NullValueHandling.Ignore)]
 		public IList<AverageDurationResponse> AverageDuration { get; set; } = new List<AverageDurationResponse>();
 		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]

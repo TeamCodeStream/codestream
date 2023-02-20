@@ -7,10 +7,11 @@
 			}
 
 			public static class Tokens {
-				public const string Throughput = "${throughput}";
 				public const string AverageDuration = "${averageduration}";
-				public const string ErrorsPerMinute = "${errorsperminute}";
+				public const string ErrorRate = "${errorrate}";
 				public const string Since = "${since}";
+				public const string SampleSize = "${samplesize}";
+
 			}
 		}
 		

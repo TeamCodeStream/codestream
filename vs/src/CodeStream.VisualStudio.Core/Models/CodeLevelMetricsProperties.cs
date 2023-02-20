@@ -8,5 +8,8 @@ namespace CodeStream.VisualStudio.Core.Models
 
 		[JsonProperty("newRelicEntityGuid", NullValueHandling = NullValueHandling.Ignore)]
 		public string NewRelicEntityGuid { get; set; }
+
+		[JsonProperty("sampleSize", NullValueHandling = NullValueHandling.Ignore)]
+		public string SampleSize { get; set; }
 	}
 }
