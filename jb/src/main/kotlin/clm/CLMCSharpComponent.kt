@@ -7,6 +7,7 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.elementType
+import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.functions
 
@@ -31,19 +32,33 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
 
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (!isPsiFileSupported(psiFile)) return null
-        val classLeafPsiElement = traverseForElementType(psiFile, "CLASS_KEYWORD") ?: return null
-        val classNameNode = findFirstSiblingOfType(classLeafPsiElement, "IDENTIFIER") ?: return null
-        val namespaceNode = findParentOfType(classNameNode, "NAMESPACE_DECLARATION") ?: return null
-        val namespaceText = getNamespaceQualifiedName(namespaceNode) ?: return null
-        return listOf("${namespaceText}.${classNameNode.text}")
+        val elements = traverseForElementsOfType(psiFile, "CLASS_KEYWORD")
+        val elementList = mutableListOf<String>();
+        for (element in elements) {
+            val classNameNode = findFirstSiblingOfType(element, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER"))
+                ?: continue
+            val namespaceNode = findParentOfType(classNameNode, "NAMESPACE_DECLARATION") ?: continue
+            val namespaceText = getNamespaceQualifiedName(namespaceNode) ?: continue
+            elementList.add("${namespaceText}.${classNameNode.text}")
+        }
+        return elementList
     }
 
     override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
         return null
     }
 
+    private fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
+        return getNamespaceQualifiedNameMethodOne(namespaceNode) ?: getNamespaceQualifiedNameMethodTwo(namespaceNode)
+    }
+
+    private fun getNamespaceQualifiedNameMethodTwo(namespaceNode: PsiElement): String? {
+        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT"))
+        return elements.joinToString("") { it.text }
+    }
+
     @Suppress("UNCHECKED_CAST")
-    fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
+    private fun getNamespaceQualifiedNameMethodOne(namespaceNode: PsiElement): String? {
         val kClass = namespaceNode::class
         val qualifiedNameProperty = kClass.members.find { it.name == "qualifiedName" } as KProperty1<Any, *>
         // com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpReferenceNameImpl
@@ -57,7 +72,7 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
     }
 
     private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
-        CSHARP_NAMESPACE_CLASS === psiElement::class.qualifiedName
+        "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
 
     private fun findParentOfType(element: PsiElement, elementType: String): PsiElement? {
         var searchNode: PsiElement? = element
@@ -71,39 +86,32 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
         }
     }
 
-    private fun findFirstSiblingOfType(element: PsiElement, elementType: String): PsiElement? {
+    private fun findAllSiblingsOfType(element: PsiElement, elementTypes: Set<String>): List<PsiElement> {
+        var searchNode: PsiElement? = element
+        val elements = mutableListOf<PsiElement>()
+        do {
+            searchNode = searchNode?.nextSibling
+            if (searchNode != null && elementTypes.contains(searchNode.elementType.toString())) {
+                elements.add(searchNode)
+            }
+        } while (searchNode != null)
+        return elements
+    }
+
+    private fun findFirstSiblingOfType(element: PsiElement, elementType: Set<String>): PsiElement? {
         var searchNode: PsiElement? = element
         do {
             searchNode = searchNode?.nextSibling
-        } while (searchNode != null && searchNode.elementType.toString() != elementType)
-        return if (searchNode.elementType.toString() == elementType) {
+        } while (searchNode != null && !elementType.contains(searchNode.elementType.toString()))
+        return if (elementType.contains(searchNode.elementType.toString())) {
             searchNode
         } else {
             null
         }
     }
 
-    private fun traverseForElementType(element: PsiElement, elementType: String): PsiElement? {
-        if (element.elementType.toString() == elementType) {
-            return element
-        }
-        element.children.forEach { child ->
-            if (child.elementType.toString() != "WHITE_SPACE") {
-                println(child.elementType.toString())
-            }
-            if (child.elementType.toString() == elementType) {
-                return child
-            }
-            if (child.children.isNotEmpty()) {
-                child.children.forEach { grandChildren ->
-                    val result = traverseForElementType(grandChildren, elementType)
-                    if (result != null) {
-                        return result
-                    }
-                }
-            }
-        }
-        return null
+    private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
+        return element.collectDescendantsOfType({ true }, { it.elementType.toString() == elementType })
     }
 
     private fun traverseForName(element: PsiElement, name: String): PsiElement? {
@@ -181,25 +189,39 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
     Check if next non-whitespace token is an open paren indicating it is probably a function
      */
     private fun isClassicFunction(element: PsiElement): Boolean {
+        val declarations = setOf("PUBLIC_KEYWORD", "PRIVATE_KEYWORD", "PROTECTED_KEYWORD")
         var searchElement: PsiElement? = element
         do {
+            searchElement = searchElement?.prevSibling
+        } while (searchElement != null && !declarations.contains(searchElement.elementType.toString()))
+
+        val declarationResult = declarations.contains(searchElement?.elementType.toString())
+
+        searchElement = element
+        do {
             searchElement = searchElement?.nextSibling
-        } while (searchElement != null && searchElement.elementType.toString() == "WHITE_SPACE")
-        val result = searchElement?.elementType.toString() == "LPARENTH"
+        } while (searchElement != null &&
+            searchElement.elementType.toString() != "LPARENTH" &&
+            searchElement.firstChild?.elementType.toString() != "LPARENTH")
+
+        val lparenResult = searchElement.elementType.toString() == "LPARENTH" ||
+            searchElement?.firstChild?.elementType.toString() == "LPARENTH"
+
         if (logger.isDebugEnabled) {
-            logger.debug("${element.text} is function: $result")
+            logger.debug("${element.text} is function: $declarationResult && $lparenResult")
         }
-        return result
+        return declarationResult && lparenResult
     }
 
     /*
     Check is previous non-whitespace token is a lambda function arrow =>
      */
     private fun isLambdaFunction(element: PsiElement): Boolean {
+        val ignore = setOf("WHITE_SPACE", "LPARENTH", "RPARENTH")
         var searchElement: PsiElement? = element
         do {
-            searchElement = searchElement?.prevSibling
-        } while (searchElement != null && searchElement.elementType.toString() == "WHITE_SPACE")
+            searchElement = searchElement?.nextSibling
+        } while (searchElement != null && ignore.contains(searchElement.elementType.toString()))
         val result = searchElement?.elementType.toString() == "LAMBDA_ARROW"
         if (logger.isDebugEnabled) {
             logger.debug("${element.text} is function: $result")

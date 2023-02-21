@@ -26,7 +26,6 @@ import com.codestream.webViewService
 import com.codestream.workaround.HintsPresentationWorkaround
 import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.InlayPresentation
-import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
@@ -363,10 +362,10 @@ abstract class CLMEditorManager(
             if (!analyticsTracked && toRender.isNotEmpty()) {
                 val params = TelemetryParams(
                     "MLT Codelenses Rendered", mapOf(
-                        "NR Account ID" to (result.newRelicAccountId ?: 0),
-                        "Language" to languageId,
-                        "Codelense Count" to toRender.size
-                    )
+                    "NR Account ID" to (result.newRelicAccountId ?: 0),
+                    "Language" to languageId,
+                    "Codelense Count" to toRender.size
+                )
                 )
                 project.agentService?.agent?.telemetry(params)
                 analyticsTracked = true
