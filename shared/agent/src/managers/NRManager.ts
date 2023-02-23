@@ -315,10 +315,12 @@ export class NRManager {
 					} else {
 						const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
 						if (resolvedPath) {
-							const pathExists = await SessionContainer.instance().git.checkFileExistsForRevision(
-								resolvedPath,
-								ref
-							);
+							const pathExists = ref
+								? await SessionContainer.instance().git.checkFileExistsForRevision(
+										resolvedPath,
+										ref
+								  )
+								: true;
 							if (pathExists) {
 								resolvedLine = {
 									fileFullPath: resolvedPath,
