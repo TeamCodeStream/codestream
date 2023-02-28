@@ -1,8 +1,16 @@
 ﻿namespace CodeStream.VisualStudio.Core.Models
 {
 	public class CodeLevelMetricsDetail {
-		public int Order { get; set; }
-		public string Header { get; set; }
-		public string Value { get; set; }
+
+		public CodeLevelMetricsDetail(int order, string header, string value)
+		{
+			Order = order;
+			Header = header;
+			Value = value;
+		}
+
+		public int Order { get; }
+		public string Header { get; }
+		public string Value { get; }
 	}
 }

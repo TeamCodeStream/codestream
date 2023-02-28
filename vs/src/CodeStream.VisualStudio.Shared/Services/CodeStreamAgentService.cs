@@ -517,7 +517,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			bool resetCache,
 			string codeNamespace,
 			string functionName,
-			bool includeThroughput,
 			bool includeAverageDuration,
 			bool includeErrorRate) {
 
@@ -533,7 +532,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					Options = new FileLevelTelemetryRequestOptions {
 						IncludeAverageDuration = includeAverageDuration,
 						IncludeErrorRate = includeErrorRate,
-						IncludeThroughput = includeThroughput
+						IncludeThroughput = true // TODO CLM - No longer used, check agent in future
 					}
 				});
 		}

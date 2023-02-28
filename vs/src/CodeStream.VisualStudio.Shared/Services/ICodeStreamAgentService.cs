@@ -54,7 +54,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			bool resetCache,
 			string codeNamespace,
 			string functionName,
-			bool includeThroughput,
 			bool includeAverageDuration,
 			bool includeErrorRate);
 	}

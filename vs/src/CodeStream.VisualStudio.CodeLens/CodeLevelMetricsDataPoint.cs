@@ -86,8 +86,7 @@ namespace CodeStream.VisualStudio.CodeLens
 				_metrics = _metrics ?? new CodeLevelMetricsTelemetry();
 
 				var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
-					$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))
-				?.AverageDuration;
+					$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.AverageDuration;
 				var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
 						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.ErrorRate;
 				var sampleSize = _metrics.SampleSize?.FirstOrDefault(x =>
@@ -97,7 +96,7 @@ namespace CodeStream.VisualStudio.CodeLens
 				var formatted = Regex.Replace(_editorFormatString, Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate), errors is null ? "n/a" : $"{errors.ToFixed(3)}%", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.Properties.SinceDateFormatted, RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize), sampleSize, RegexOptions.IgnoreCase);
+				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize), sampleSize is null ? "0" : $"{sampleSize}", RegexOptions.IgnoreCase);
 
 				return new CodeLensDataPointDescriptor
 				{
@@ -130,31 +129,10 @@ namespace CodeStream.VisualStudio.CodeLens
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
 			var namespaceFunction = $"{codeNamespace}.{functionName}";
 
-			//	var throughput = _metrics.Throughput?.FirstOrDefault(x =>
-			//	$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
 			var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
 			var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
-
-			//Using string positions of the tokens, figure out an "order" of the tokens. Since IndexOf is a positive integer if its there,
-			//we're assuming that will be sufficient
-			var formatString = _editorFormatString.ToLower();
-			//	var throughputPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Throughput, StringComparison.OrdinalIgnoreCase);
-			var averageDurationPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
-			var errorRatePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.ErrorRate, StringComparison.OrdinalIgnoreCase);
-			var sincePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Since, StringComparison.OrdinalIgnoreCase);
-			var sampleSizePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.SampleSize, StringComparison.OrdinalIgnoreCase);
-
-
-			var configuredPositions = new List<Tuple<int, string, string>> {
-			//	new Tuple<int, string, string>(throughputPosition, "Throughput", throughput is null ? "n/a" : $"{throughput.RequestsPerMinute.ToFixed(3)}rpm"),
-				new Tuple<int, string, string>(averageDurationPosition, "avg duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
-				new Tuple<int, string, string>(errorRatePosition, "error rate", errors is null ? "n/a" : $"{errors.ErrorRate.ToFixed(3)}%"),
-				new Tuple<int, string, string>(sincePosition, "since", _metrics.Properties.SinceDateFormatted),
-				new Tuple<int, string, string>(sampleSizePosition, _metrics.Properties.SampleSize == "1" ? "sample": "samples", _metrics.Properties.SampleSize)
-
-			};
 
 			var descriptor = new CodeLensDetailsDescriptor();
 			var data = new CodeLevelMetricsData
@@ -165,26 +143,35 @@ namespace CodeStream.VisualStudio.CodeLens
 				MetricTimeSliceNameMapping = new MetricTimesliceNameMapping
 				{
 					Duration = avgDuration?.MetricTimesliceName ?? "",
-					//T = throughput?.MetricTimesliceName ?? "",
 					ErrorRate = errors?.MetricTimesliceName ?? ""
 				}
 			};
 
-			foreach (var entry in configuredPositions.OrderBy(x => x.Item1))
-			{
+			//Using string positions of the tokens, figure out an "order" of the tokens. Since IndexOf is a positive integer if its there,
+			//we're assuming that will be sufficient
+			var formatString = _editorFormatString.ToLower();
+			var averageDurationPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
+			var errorRatePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.ErrorRate, StringComparison.OrdinalIgnoreCase);
+			var sincePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Since, StringComparison.OrdinalIgnoreCase);
+			var sampleSizePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.SampleSize, StringComparison.OrdinalIgnoreCase);
 
+			var configuredPositions = new List<CodeLevelMetricsDetail>
+			{
+				new CodeLevelMetricsDetail(averageDurationPosition, "avg duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
+				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errors is null ? "n/a" : $"{errors.ErrorRate.ToFixed(3)}%"),
+				new CodeLevelMetricsDetail(sincePosition, "since", _metrics.Properties.SinceDateFormatted),
+				new CodeLevelMetricsDetail(sampleSizePosition, _metrics.Properties.SampleSize == "1" ? "sample": "samples", _metrics.Properties.SampleSize)
+			};
+
+			foreach (var entry in configuredPositions.OrderBy(x => x.Order))
+			{
 				//this was the position in the string of the token - if the token isn't there, we won't add that item to the payload for the XAML view
-				if (entry.Item1 < 1)
+				if (entry.Order < 1)
 				{
 					continue;
 				}
 
-				data.Details.Add(new CodeLevelMetricsDetail
-				{
-					Order = entry.Item1,
-					Header = entry.Item2,
-					Value = entry.Item3
-				});
+				data.Details.Add(entry);
 			}
 
 			descriptor.Headers = new List<CodeLensDetailHeaderDescriptor>();

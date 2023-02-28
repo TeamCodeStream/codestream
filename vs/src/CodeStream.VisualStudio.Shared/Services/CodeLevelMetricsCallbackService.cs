@@ -22,6 +22,7 @@ using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
 using Process = System.Diagnostics.Process;
 using Microsoft;
+using CSConstants = CodeStream.VisualStudio.Core.Constants;
 
 namespace CodeStream.VisualStudio.Shared.Services {
 
@@ -84,10 +85,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			var solution = new Uri(_vsSolution.GetSolutionFile());
 
 			//example: "avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}"
-			//var formatString = GetEditorFormat().ToLower();
-			//var includeThroughput = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.Throughput);
-			//var includeAverageDuration = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.AverageDuration);
-			//var includeErrorRate = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.ErrorsPerMinute);
+			var formatString = GetEditorFormat().ToLower();
+			var includeAverageDuration = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.AverageDuration);
+			var includeErrorRate = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.ErrorRate);
 
 			try {
 				var metrics = await _codeStreamAgentService.GetFileLevelTelemetryAsync(
@@ -96,9 +96,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					false,
 					codeNamespace,
 					functionName,
-					true, 
-					true, 
-					true
+					includeAverageDuration, 
+					includeErrorRate
 				);
 
 				if (metrics is null)

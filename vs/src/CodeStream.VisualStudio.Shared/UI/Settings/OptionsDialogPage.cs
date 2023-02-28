@@ -26,7 +26,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		
 		
 #if DEBUG
-		private string _serverUrl = "https://pd-api.codestream.us";
+		private string _serverUrl = "https://codestream-pd.staging-service.nr-ops.net";
 #else
         private string _serverUrl = "https://api.codestream.com";
 #endif

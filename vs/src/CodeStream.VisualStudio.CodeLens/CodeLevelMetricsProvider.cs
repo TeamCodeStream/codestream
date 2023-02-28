@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.Language.CodeLens;
 using Microsoft.VisualStudio.Language.CodeLens.Remoting;
 using Microsoft.VisualStudio.Utilities;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core;
