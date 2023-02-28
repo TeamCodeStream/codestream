@@ -24,7 +24,12 @@
 		"bundle:ci": "npm run clean:ci && npm run bundle",
 		"clean": "rimraf ../util/src/protocol/*.js",
 		"clean:ci": "git clean -xdf",
-		"extraClientBuildLibs": "scripts/extraLibs.sh",
+		"extraClientBuildLibs": "cross-os xcbl",
+		"xcbl": {
+			"darwin": "scripts/extraLibs.sh",
+			"linux": "scripts/extraLibs.sh",
+			"win32": "echo Skipping extraLibs..."
+		},
 		"pkg": "npm run pkg-vs & npm run pkg-jetbrains",
 		"pkg-jetbrains": "pkg dist/agent.js --targets node16-linux-x64,node16-macos-x64,node16-win-x64 --options max_old_space_size=2048 --out-path dist/",
 		"pkg-jetbrains-mac": "pkg dist/agent.js --targets node16-macos-x64 --options max_old_space_size=2048 --output dist/agent-macos-x64",
@@ -130,6 +135,7 @@
 		"@typescript-eslint/parser": "5.48.1",
 		"cpy": "9.0.1",
 		"cross-env": "5.2.0",
+		"cross-os": "1.5.0",
 		"esbuild": "0.16.16",
 		"esbuild-plugin-ignore": "1.1.1",
 		"eslint": "8.31.0",
