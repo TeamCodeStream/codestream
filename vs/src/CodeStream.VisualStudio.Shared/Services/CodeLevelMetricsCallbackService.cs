@@ -70,11 +70,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			Assumes.Present(_vsSolution);
 		}
 
-		public string GetEditorFormat() {
-			var settings = _settingsServiceFactory.GetOrCreate(nameof(CodeLevelMetricsCallbackService));
-			return settings.GoldenSignalsInEditorFormat;
-		}
-
 		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string functionName) {
 			if (!_sessionService.IsReady)
 			{
@@ -85,7 +80,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			var solution = new Uri(_vsSolution.GetSolutionFile());
 
 			//example: "avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}"
-			var formatString = GetEditorFormat().ToLower();
+			var formatString = CSConstants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
 			var includeAverageDuration = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.AverageDuration);
 			var includeErrorRate = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.ErrorRate);
 

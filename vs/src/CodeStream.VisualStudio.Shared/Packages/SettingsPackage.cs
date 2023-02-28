@@ -121,9 +121,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 					break;
 				}
-				case nameof(_codeStreamSettingsManager.GoldenSignalsInEditorFormat):
-					_ = CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
-					break;
 
 				case nameof(_codeStreamSettingsManager.ServerUrl):
 				case nameof(_codeStreamSettingsManager.ProxyStrictSsl):

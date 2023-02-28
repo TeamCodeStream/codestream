@@ -68,12 +68,7 @@ namespace CodeStream.VisualStudio.CodeLens
 					};
 				}
 
-				_editorFormatString = await _callbackService
-					.InvokeAsync<string>(
-						this,
-						nameof(ICodeLevelMetricsCallbackService.GetEditorFormat),
-						cancellationToken: token)
-					.ConfigureAwait(false);
+				_editorFormatString = Constants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
 
 				_metrics = await _callbackService
 					.InvokeAsync<CodeLevelMetricsTelemetry>(

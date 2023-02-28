@@ -6,7 +6,6 @@ namespace CodeStream.VisualStudio.Core.CodeLevelMetrics {
 	public interface ICodeLevelMetricsCallbackService {
 		CodeLevelMetricStatus GetClmStatus();
 		int GetVisualStudioPid();
-		string GetEditorFormat();
 		Task InitializeRpcAsync(string dataPointId);
 		Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string functionName);
 	}

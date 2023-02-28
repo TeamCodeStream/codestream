@@ -34,9 +34,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private bool _proxyStrictSsl;
 		private string _extraCertificates;
 
-		private string _goldenSignalsInEditorFormat =
-			"avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}";
-
 		private ProxySupport _proxySupport;
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -245,17 +242,5 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 			}
 		}
 
-		[Category("UI")]
-		[DisplayName("Golden Signals Format")]
-		[Description("Specifies how to format the CodeStream golden signals in the editor")]
-		public string GoldenSignalsInEditorFormat {
-			get => _goldenSignalsInEditorFormat;
-			set {
-				if (_goldenSignalsInEditorFormat != value) {
-					_goldenSignalsInEditorFormat = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
 	}
 }

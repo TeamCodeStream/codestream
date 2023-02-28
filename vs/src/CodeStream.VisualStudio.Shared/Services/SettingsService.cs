@@ -144,11 +144,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			set => DialogPage.ExtraCertificates = value;
 		}
 
-		public string GoldenSignalsInEditorFormat {
-			get => DialogPage.GoldenSignalsInEditorFormat;
-			set => DialogPage.GoldenSignalsInEditorFormat = value;
-		}
-
 		public Ide GetIdeInfo() 
 			=> new Ide {
 				Name = Application.IdeMoniker,
