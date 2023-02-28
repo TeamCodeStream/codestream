@@ -9,7 +9,7 @@ import {
 
 import { Editor } from "./extensions/editor";
 import { openUrl } from "./urlHandler";
-import { SessionSignedOutReason, StreamThread } from "./api/session";
+import { SessionSignedOutReason } from "./api/session";
 import * as TokenManager from "./api/tokenManager";
 import { WorkspaceState } from "./common";
 import { BuiltInCommands } from "./constants";
@@ -89,10 +89,6 @@ export interface OpenReviewCommandArgs {
 	reviewId: string;
 	onlyWhenVisible?: boolean;
 	sourceUri?: Uri;
-}
-
-export interface OpenStreamCommandArgs {
-	streamThread: StreamThread;
 }
 
 export interface ViewMethodLevelTelemetryBaseCommandArgs {
@@ -540,13 +536,6 @@ export class Commands implements Disposable {
 
 		const { reviewId: _reviewId, ...options } = args;
 		return Container.webview.openReview(args.reviewId, options);
-	}
-
-	@command("openStream", { showErrorMessage: "Unable to open stream" })
-	async openStream(args: OpenStreamCommandArgs): Promise<StreamThread | undefined> {
-		if (args == null || args.streamThread === undefined) return undefined;
-
-		return Container.webview.show(args.streamThread);
 	}
 
 	@command("signIn", { customErrorHandling: true })

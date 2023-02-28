@@ -125,7 +125,6 @@ import { Logger } from "../logger";
 import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
-import * as console from "console";
 
 const emptyObj = {};
 
@@ -602,15 +601,12 @@ export class WebviewController implements Disposable {
 	@log({
 		args: false
 	})
-	async show(streamThread?: StreamThread) {
-		console.log(`*** calling ensureWebView with streamThread ${streamThread}`);
+	async show() {
 		await this.ensureWebView();
 
-		console.log("*** calling updateState");
 		this.updateState();
-		console.log("*** calling _webview!.show");
-		await this._webview!.show(streamThread);
-		console.log("*** done calling _webview!.show");
+		await this._webview!.show();
+
 		return this.activeStreamThread as StreamThread | undefined;
 	}
 

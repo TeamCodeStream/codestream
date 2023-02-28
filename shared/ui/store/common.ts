@@ -65,7 +65,7 @@ export interface DispatchProp {
 export function withExponentialConnectionRetry<T extends object>(
 	dispatch,
 	fn: () => Promise<T>,
-	fnName = "function"
+	fnName: string = "function"
 ): Promise<T> {
 	const api = HostApi.instance;
 	return new Promise<T>(resolve => {

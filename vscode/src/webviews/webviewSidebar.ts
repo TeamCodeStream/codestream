@@ -1,11 +1,12 @@
 "use strict";
 import { promises as fs } from "fs";
 
+import { Deferred } from "@codestream/utils/system/deferred";
+
 import {
 	HostDidChangeFocusNotificationType,
 	HostDidChangeVisibilityNotificationType,
 	isIpcResponseMessage,
-	ShowStreamNotificationType,
 	WebviewIpcMessage,
 	WebviewIpcNotificationMessage,
 	WebviewIpcRequestMessage,
@@ -28,7 +29,7 @@ import {
 import { NotificationType, RequestType, ResponseError } from "vscode-jsonrpc";
 
 import { gate } from "../system/decorators/gate";
-import { CodeStreamSession, StreamThread } from "../api/session";
+import { CodeStreamSession } from "../api/session";
 import { Container } from "../container";
 import { Logger, TraceLevel } from "../logger";
 import { log } from "../system";
@@ -40,33 +41,8 @@ import {
 	WebviewLike
 } from "./webviewLike";
 import { CodeStreamWebviewPanel } from "./webviewPanel";
-import * as console from "console";
 
 let ipcSequence = 0;
-
-// Credit: https://stackoverflow.com/questions/26150232/resolve-javascript-promise-outside-the-promise-constructor-scope
-class Deferred<T> {
-	private _resolve: ((value: PromiseLike<T> | T) => void) | undefined;
-	private _reject: ((reason?: any) => void) | undefined;
-	constructor(
-		private _promise = new Promise<T>((resolve, reject) => {
-			this._reject = reject;
-			this._resolve = resolve;
-		})
-	) {}
-
-	get promise(): Promise<T> {
-		return this._promise;
-	}
-
-	resolve(value: T) {
-		this._resolve?.(value);
-	}
-
-	reject(error: any) {
-		this._reject?.(error);
-	}
-}
 
 export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, WebviewViewProvider {
 	type = "sidebar";
@@ -74,7 +50,6 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	static readonly IpcQueueThreshold = 100;
 
 	private _onDidClose = new EventEmitter<void>();
-	private _streamThread: StreamThread | undefined;
 	get onDidClose(): Event<void> {
 		return this._onDidClose.event;
 	}
@@ -116,7 +91,6 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 		_token: CancellationToken
 	) {
 		Logger.log("resolveWebviewView starting", context);
-		console.log("*** resolveWebviewView starting", context);
 		this._webviewView = webviewView;
 
 		webviewView.webview.options = {
@@ -128,31 +102,16 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 
 		webviewView.webview.html = await this.getHtml();
 
-		console.log("****** got me some html");
-
 		this._disposable = Disposable.from(
 			webviewView.onDidChangeVisibility(this.onWebviewDidChangeVisibility, this),
 			webviewView.onDidDispose(this.onWebviewDisposed, this),
 			window.onDidChangeWindowState(this.onWindowStateChanged, this)
 		);
 
-		console.log("****** calling onWebviewInitialized");
 		Container.webview.onWebviewInitialized();
-		console.log("****** calling triggerIpc");
 		await this.triggerIpc();
-		Logger.log("*** resolveWebviewView completed");
-		console.log("*** resolveWebviewView completed");
-		console.log("*** reddy");
+		Logger.log("resolveWebviewView completed");
 		await this.reddy();
-		console.log("*** reddy done");
-		// TODO: Convert this to a request vs a notification
-		if (this._streamThread) {
-			console.log("*** webviewSidebar.show this.notify");
-			this.notify(ShowStreamNotificationType, {
-				streamId: this._streamThread.streamId,
-				threadId: this._streamThread.id
-			});
-		}
 	}
 
 	private _html: string | undefined;
@@ -210,10 +169,6 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	}
 
 	private onWebviewDisposed() {
-		// if (this._onIpcReadyResolver !== undefined) {
-		// 	this._onIpcReadyResolver(true);
-		// }
-
 		this._onDidClose.fire();
 	}
 
@@ -289,7 +244,7 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	}
 
 	onIpcReady() {
-		this._ipcReadyDeferred.resolve(true);
+		this._ipcReadyDeferred.resolve(false);
 	}
 
 	notify<NT extends NotificationType<any, any>>(type: NT, params: NotificationParamsOf<NT>): void {
@@ -332,46 +287,20 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 		const cc = Logger.getCorrelationContext();
 		if (!this._ipcReady) {
 			Logger.log(cc, "waiting for WebView ready");
-			console.log(cc, "*** waiting for WebView ready");
 			const cancelled = await this.waitForWebviewIpcReadyNotification();
 			Logger.log(cc, `waiting for WebView complete. cancelled=${cancelled}`);
-			console.log(cc, `*** waiting for WebView complete. cancelled=${cancelled}`);
 			if (cancelled) return;
 		}
 	}
 
-	@log({
-		args: false
-	})
-	async show(streamThread?: StreamThread) {
-		console.log("*** webviewSidebar.show");
-		this._streamThread = streamThread;
-		const cc = Logger.getCorrelationContext();
+	@log({ args: false })
+	async show() {
 		if (!this.visible) {
 			await commands.executeCommand("workbench.view.extension.codestream-activitybar");
 		}
-		// if (!this._ipcReady || !this.visible || streamThread === undefined) {
-		// 	// const allCommands = await commands.getCommands(true);
-		// 	// console.log(`*** allCommands ${JSON.stringify(allCommands)}`);
-		// 	await commands.executeCommand("workbench.view.extension.codestream-activitybar");
-		// 	console.log("*** webviewSidebar.show done executeCommand");
-		// 	// this._ipcReady = true;
-		// 	// this.resumeIpc();
-		//
-		// 	// if (!this._ipcReady) {
-		// 	// 	Logger.log(cc, "waiting for WebView ready");
-		// 	// 	console.log(cc, "*** waiting for WebView ready");
-		// 	// 	const cancelled = await this.waitForWebviewIpcReadyNotification();
-		// 	// 	Logger.log(cc, `waiting for WebView complete. cancelled=${cancelled}`);
-		// 	// 	console.log(cc, `*** waiting for WebView complete. cancelled=${cancelled}`);
-		// 	// 	if (cancelled) return;
-		// 	// }
-		// }
 	}
 
-	@log({
-		args: false
-	})
+	@log({ args: false })
 	async triggerIpc() {
 		const cc = Logger.getCorrelationContext();
 
@@ -548,12 +477,8 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 		// Wait until the webview is ready
 		let timer: NodeJS.Timer | undefined = undefined;
 		if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) {
-			console.warn("*** NOT debuggy");
 			timer = setTimeout(() => {
 				Logger.warn("WebviewPanel: FAILED waiting for webview ready event; closing webview...");
-				console.warn(
-					"*** WebviewPanel: FAILED waiting for webview ready event; closing webview..."
-				);
 				this.dispose();
 				this._ipcReadyDeferred.resolve(true);
 			}, 30000);
@@ -561,17 +486,14 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 
 		const cancelled = await this._ipcReadyDeferred.promise;
 
-		console.log("*** this._ipcReadyDeferred awaited");
 		if (timer !== undefined) {
 			clearTimeout(timer);
 		}
 
 		if (cancelled) {
 			Logger.log("WebviewPanel: CANCELLED waiting for webview ready event");
-			console.log("*** WebviewPanel: CANCELLED waiting for webview ready event");
 			this.clearIpc();
 		} else {
-			console.log("*** WebviewPanel: GAOOOL");
 			this._ipcReady = true;
 			this.resumeIpc();
 		}
