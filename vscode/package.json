@@ -5,6 +5,9 @@
 	"version": "14.15.3",
 	"author": "CodeStream",
 	"publisher": "CodeStream",
+	"extensionKind": [
+		"workspace"
+	],
 	"license": "UNLICENSED",
 	"homepage": "https://codestream.com",
 	"bugs": {
