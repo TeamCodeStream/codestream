@@ -111,7 +111,7 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 		Container.webview.onWebviewInitialized();
 		await this.triggerIpc();
 		Logger.log("resolveWebviewView completed");
-		await this.reddy();
+		await this.triggerIpc();
 	}
 
 	private _html: string | undefined;
@@ -281,16 +281,6 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 			this.postMessage(payload);
 			Logger.log(`Request ${id}:${type.method} sent to webview`, payload);
 		});
-	}
-
-	async reddy() {
-		const cc = Logger.getCorrelationContext();
-		if (!this._ipcReady) {
-			Logger.log(cc, "waiting for WebView ready");
-			const cancelled = await this.waitForWebviewIpcReadyNotification();
-			Logger.log(cc, `waiting for WebView complete. cancelled=${cancelled}`);
-			if (cancelled) return;
-		}
 	}
 
 	@log({ args: false })
