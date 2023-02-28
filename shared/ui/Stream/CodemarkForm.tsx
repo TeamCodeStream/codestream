@@ -634,7 +634,7 @@ class CodemarkForm extends React.Component<Props, State> {
 
 				// see if this email address' code has been assigned to someone else
 				// @ts-ignore
-				const mappedId = blameMap[author.email.replace(".", "*")];
+				const mappedId = blameMap[author.email.replaceAll(".", "*")];
 				const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
 
 				// found a mapped person, so mention them
@@ -647,7 +647,7 @@ class CodemarkForm extends React.Component<Props, State> {
 				} else if (author.id) {
 					// if it's a registered teammate who has not been explicitly removed from the team, mention them
 					if (activeMemberIds.includes(author.id)) mentionAuthors.push(author);
-				} else if (inviteUsersOnTheFly) {
+				} else if (inviteUsersOnTheFly && !author.email.match(/noreply/)) {
 					// else offer to send the person an email
 					unregisteredAuthors.push(author);
 					// @ts-ignore
