@@ -17,7 +17,7 @@ export class Deferred<T> {
   }
 
   resolve(value: T) {
-    if (this.resolved) {
+    if (this.resolved || this.rejected) {
       return;
     }
     this._resolve?.(value);
@@ -25,7 +25,7 @@ export class Deferred<T> {
   }
 
   reject(error: unknown) {
-    if (this.rejected) {
+    if (this.rejected || this.resolved) {
       return;
     }
     this._reject?.(error);
