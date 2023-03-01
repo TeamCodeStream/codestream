@@ -65,6 +65,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string ServerUrl { get; set; }
 		public bool? DisableStrictSSL { get; set; }
 		public string Environment { get; set; }
+		public bool CopyToken { get; set; }
+		public string CurrentTeamId { get; set; }
 	}
 
 	public class UpdateServerUrlResponse { }

@@ -490,6 +490,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 		[JsonProperty("testGroups", NullValueHandling = NullValueHandling.Ignore)]
 		public KeyValuePair<string, string> TestGroups{ get; set; }
+
+		[JsonProperty("switchToServerUrl", NullValueHandling = NullValueHandling.Ignore)]
+		public string SwitchToServerUrl { get; set; }
 	}
 
 	public class CsRemote {

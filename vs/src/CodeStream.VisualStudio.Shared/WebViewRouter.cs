@@ -39,6 +39,7 @@ namespace CodeStream.VisualStudio.Shared {
 		private readonly IEditorService _editorService;
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 		private readonly IMessageInterceptorService _messageInterceptorService;
+		private readonly ICredentialsService _credentialsService;
 
 		public WebViewRouter(
 			IComponentModel componentModel,
@@ -52,7 +53,8 @@ namespace CodeStream.VisualStudio.Shared {
 			IIdeService ideService,
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory,
-			IMessageInterceptorService messageInterceptorService) {
+			IMessageInterceptorService messageInterceptorService,
+			ICredentialsService credentialsService) {
 			_componentModel = componentModel;
 			_codeStreamService = codestreamService;
 			_webviewUserSettingsService = webviewUserSettingsService;
@@ -65,6 +67,7 @@ namespace CodeStream.VisualStudio.Shared {
 			_editorService = editorService;
 			_authenticationServiceFactory = authenticationServiceFactory;
 			_messageInterceptorService = messageInterceptorService;
+			_credentialsService = credentialsService;
 		}
 
 		//
@@ -439,6 +442,26 @@ namespace CodeStream.VisualStudio.Shared {
 												try {
 													var @params = message.Params?.ToObject<UpdateServerUrlRequest>();
 													Log.Debug($"{nameof(UpdateServerUrlRequestType)} ServerUrl={@params?.ServerUrl}");
+
+													if ((@params?.CopyToken ?? false) && @params.CurrentTeamId != null)
+													{
+														var token = await _credentialsService.LoadAsync(
+															_codeStreamSettingsManager.ServerUrl.ToUri(),
+															_codeStreamSettingsManager.Email,
+															@params.CurrentTeamId
+														);
+
+														if (token != null)
+														{
+															await _credentialsService.SaveAsync(
+																@params.ServerUrl.ToUri(),
+																_codeStreamSettingsManager.Email,
+																token.Item2,
+																@params.CurrentTeamId
+															);
+														}
+													}
+
 													using (var settingsScope = SettingsScope.Create(_codeStreamSettingsManager, true)) {
 														settingsScope.CodeStreamSettingsManager.ServerUrl = @params?.ServerUrl;
 														settingsScope.CodeStreamSettingsManager.DisableStrictSSL = @params?.DisableStrictSSL ?? false;
