@@ -16,36 +16,52 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 		public AddCodemarkCommentCommand(
 			ISessionService sessionService, 
 			IIdeService ideService,
-			Guid commandSet) : base(sessionService, ideService, commandSet, PackageIds.AddCodemarkCommentCommandId) { }
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			Guid commandSet) : base(sessionService, ideService, codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkCommentCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
+
+		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
+		{
+			base.OnBeforeQueryStatus(sender, e);
+
+			sender.Visible = CodeStreamSettingsManager.ShowAddCommentContextMenuCommand;
+		}
 	}
 
 	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase {
 		public AddCodemarkIssueCommand(
 			ISessionService sessionService, 
 			IIdeService ideService,
+			ICodeStreamSettingsManager codeStreamSettingsManager,
 			Guid commandSet
-			) : base(sessionService, ideService, commandSet, PackageIds.AddCodemarkIssueCommandId) { }
+			) : base(sessionService, ideService, codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkIssueCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			base.OnBeforeQueryStatus(sender, e);
 
-			sender.Visible = IdeService.GetActiveDiffEditor() == null && sender.Visible;
+			sender.Visible = 
+				CodeStreamSettingsManager.ShowCreateIssueContextMenuCommand 
+				&& IdeService.GetActiveDiffEditor() == null 
+				&& sender.Visible;
 		}
 	}
 
 	internal class AddCodemarkPermalinkCommand : AddCodemarkCommandBase {
 		public AddCodemarkPermalinkCommand(
 			ISessionService sessionService,
-			IIdeService ideService, 
-			Guid commandSet) : base(sessionService, ideService, commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
+			IIdeService ideService,
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			Guid commandSet) : base(sessionService, ideService,codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Link;
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
 			base.OnBeforeQueryStatus(sender, e);
 
-			sender.Visible = IdeService.GetActiveDiffEditor() == null && sender.Visible;
+			sender.Visible =
+				CodeStreamSettingsManager.ShowGetPermalinkContextMenuCommand 
+				&& IdeService.GetActiveDiffEditor() == null 
+				&& sender.Visible;
 		}
 	}
 }

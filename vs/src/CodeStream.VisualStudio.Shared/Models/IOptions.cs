@@ -9,7 +9,6 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		bool AutoSignIn { get; set; }
 
 		bool AutoHideMarkers { get; set; }
-		//bool ShowMarkerCodeLens { get; set; }
 		bool ShowMarkerGlyphs { get; set; }
 
 		string ServerUrl { get; set; }
@@ -17,6 +16,11 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		ProxySupport ProxySupport { get; set; }
 		bool DisableStrictSSL { get; set; }
 		string ExtraCertificates { get; set; }
+
+		bool ShowAddCommentContextMenuCommand { get; set; }
+		bool ShowCreateIssueContextMenuCommand { get; set; }
+		bool ShowGetPermalinkContextMenuCommand { get; set; }
+
 	}
 
 	public interface IOptionsDialogPage : IOptions, INotifyPropertyChanged {

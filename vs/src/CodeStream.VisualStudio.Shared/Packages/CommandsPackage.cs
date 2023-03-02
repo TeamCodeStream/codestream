@@ -79,13 +79,13 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 #if DEBUG
 						new WebViewDevToolsCommand(),
 #endif
-						new AddCodemarkCommentCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
-						new AddCodemarkCommentCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, _ideService, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
+						new AddCodemarkPermalinkCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
 
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),

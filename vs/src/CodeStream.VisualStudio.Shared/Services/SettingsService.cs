@@ -144,6 +144,24 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			set => DialogPage.ExtraCertificates = value;
 		}
 
+		public bool ShowAddCommentContextMenuCommand
+		{
+			get => DialogPage.ShowAddCommentContextMenuCommand; 
+			set => DialogPage.ShowAddCommentContextMenuCommand = value;
+		}
+
+		public bool ShowCreateIssueContextMenuCommand
+		{
+			get => DialogPage.ShowCreateIssueContextMenuCommand;
+			set => DialogPage.ShowCreateIssueContextMenuCommand = value;
+		}
+
+		public bool ShowGetPermalinkContextMenuCommand
+		{
+			get => DialogPage.ShowGetPermalinkContextMenuCommand;
+			set => DialogPage.ShowGetPermalinkContextMenuCommand = value;
+		}
+
 		public Ide GetIdeInfo() 
 			=> new Ide {
 				Name = Application.IdeMoniker,

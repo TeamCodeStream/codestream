@@ -19,13 +19,21 @@ using CodeStream.VisualStudio.Shared.Services;
 #endif
 
 namespace CodeStream.VisualStudio.Shared.Commands {
-	internal abstract class AddCodemarkCommandBase : VsCommandBase {
+	internal abstract class AddCodemarkCommandBase : VsCommandBase
+	{
+		protected readonly ICodeStreamSettingsManager CodeStreamSettingsManager;
 		private static readonly ILogger Log = LogManager.ForContext<AddCodemarkCommandBase>();
 		private readonly ISessionService _sessionService;
 		protected readonly IIdeService IdeService;
 
-		protected AddCodemarkCommandBase(ISessionService sessionService, IIdeService ideService, Guid commandSet, int commandId) : base(commandSet, commandId)
+		protected AddCodemarkCommandBase(
+			ISessionService sessionService, 
+			IIdeService ideService,
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			Guid commandSet, 
+			int commandId) : base(commandSet, commandId)
 		{
+			CodeStreamSettingsManager = codeStreamSettingsManager;
 			_sessionService = sessionService;
 			IdeService = ideService;
 		}

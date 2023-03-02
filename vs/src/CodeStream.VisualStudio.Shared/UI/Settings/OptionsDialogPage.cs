@@ -17,13 +17,9 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private bool _autoSignIn = true;
 
 		private bool _autoHideMarkers;
-		//// not supported yet
-		//private bool _showMarkerCodeLens = false;
 		private bool _showMarkerGlyphs = true;
 		private bool _showAvatars = true;
 		private TraceLevel _traceLevel = TraceLevel.Info;
-		 
-		
 		
 #if DEBUG
 		private string _serverUrl = "https://codestream-pd.staging-service.nr-ops.net";
@@ -33,8 +29,11 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private bool _disableStrictSsl;
 		private bool _proxyStrictSsl;
 		private string _extraCertificates;
-
 		private ProxySupport _proxySupport;
+
+		private bool _showAddCommentContextMenuCommand = true;
+		private bool _showCreateIssueContextMenuCommand = true;
+		private bool _showGetPermalinkContextMenuCommand = true;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -224,6 +223,54 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 			set {
 				if (_showAvatars != value) {
 					_showAvatars = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("UI")]
+		[DisplayName("Show 'Add Comment' Menu Command")]
+		[Description("Specifies whether to show the 'Add Comment' command on the right-click context-menu")]
+		public bool ShowAddCommentContextMenuCommand
+		{
+			get => _showAddCommentContextMenuCommand;
+			set
+			{
+				if (_showAddCommentContextMenuCommand != value)
+				{
+					_showAddCommentContextMenuCommand = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("UI")]
+		[DisplayName("Show 'Create Issue' Menu Command")]
+		[Description("Specifies whether to show the 'Create Issue' command on the right-click context-menu")]
+		public bool ShowCreateIssueContextMenuCommand
+		{
+			get => _showCreateIssueContextMenuCommand;
+			set
+			{
+				if (_showCreateIssueContextMenuCommand != value)
+				{
+					_showCreateIssueContextMenuCommand = value;
+					NotifyPropertyChanged();
+				}
+			}
+		}
+
+		[Category("UI")]
+		[DisplayName("Show 'Get Permalink' Menu Command")]
+		[Description("Specifies whether to show the 'Get Permalink' command on the right-click context-menu")]
+		public bool ShowGetPermalinkContextMenuCommand
+		{
+			get => _showGetPermalinkContextMenuCommand;
+			set
+			{
+				if (_showGetPermalinkContextMenuCommand != value)
+				{
+					_showGetPermalinkContextMenuCommand = value;
 					NotifyPropertyChanged();
 				}
 			}
