@@ -495,6 +495,9 @@ export abstract class ThirdPartyProviderBase<
 		if (response.status >= 400 && response.status < 500) {
 			try {
 				data = await response.json();
+				if (this.isUnauthorizedError(response, data)) {
+					return new InternalError(ReportSuppressedMessages.Unauthorized);
+				}
 				// warn as not to trigger a sentry but still have it be in the user's log
 				try {
 					Logger.warn(`handleErrorResponse:json: ${JSON.stringify(data, null, 4)}`);
@@ -537,5 +540,9 @@ export abstract class ThirdPartyProviderBase<
 			} catch {}
 		}
 		return new Error(message);
+	}
+
+	protected isUnauthorizedError(response: Response, data: any) {
+		return false;
 	}
 }

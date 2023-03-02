@@ -44,6 +44,7 @@ import {
 	JiraProjectsMetaResponse,
 	JiraServerOauthParams,
 } from "./jiraserver.types";
+import { Response } from "node-fetch";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 export type jsonCallback = (
@@ -439,6 +440,12 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 					Logger.error(e);
 					Logger.debug("Jira: Stopping card search");
 					nextPage = undefined;
+					if (e.message === "Unauthorized") {
+						return {
+							cards: [],
+							error: { message: "PAT / access token might be expired" },
+						};
+					}
 				}
 			}
 
@@ -541,5 +548,19 @@ export class JiraServerProvider extends ThirdPartyIssueProviderBase<CSJiraServer
 			})}`
 		)) as JiraUser[];
 		return { users: result.map(u => ({ ...u, id: u.accountId })) };
+	}
+
+	/* For expired jira server PAT it doesn't return a 401, have to check
+	   response status plus specific body message
+	*/
+	isUnauthorizedError(response: Response, data: any): boolean {
+		if (response.status !== 400) {
+			return false;
+		}
+		if (Array.isArray(data.errorMessages)) {
+			const errorMessages = data.errorMessages as Array<string>;
+			return errorMessages.find(_ => _.endsWith("anonymous users.")) !== undefined;
+		}
+		return false;
 	}
 }
