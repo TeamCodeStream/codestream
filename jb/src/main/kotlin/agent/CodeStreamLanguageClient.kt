@@ -225,7 +225,10 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
         ReadAction.nonBlocking {
             val resolvedPaths = mutableListOf<ResolvedPath?>()
             val projectSearchScope = GlobalSearchScope.projectScope(project)
-            for (path in request.paths) {
+            for (path in request.paths ?: arrayListOf()) {
+                if (path == null) {
+                    continue
+                }
                 val parts = path.replace("\\", "/").split("/").toMutableList()
                 val discardedParts = mutableListOf<String>()
                 var found = false
@@ -389,7 +392,7 @@ class FilterNamespacesRequest(val namespaces: List<String>)
 
 class FilterNamespacesResponse(val filteredNamespaces: List<String>)
 
-class ResolveStackTracePathsRequest(val paths: List<String>)
+class ResolveStackTracePathsRequest(val paths: List<String?>?)
 
 class ResolveStackTracePathsResponse(val resolvedPaths: List<String?>)
 

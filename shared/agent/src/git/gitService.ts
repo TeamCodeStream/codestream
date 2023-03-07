@@ -403,9 +403,21 @@ export class GitService implements IGitService, Disposable {
 		}
 	}
 
-	async checkFileExistsForRevision(uri: URI, ref: string): Promise<boolean>;
-	async checkFileExistsForRevision(path: string, ref: string): Promise<boolean>;
-	async checkFileExistsForRevision(uriOrPath: URI | string, ref: string): Promise<boolean> {
+	async checkFileExistsForRevision(
+		uri: URI,
+		ref: string,
+		passException?: boolean
+	): Promise<boolean>;
+	async checkFileExistsForRevision(
+		path: string,
+		ref: string,
+		passException?: boolean
+	): Promise<boolean>;
+	async checkFileExistsForRevision(
+		uriOrPath: URI | string,
+		ref: string,
+		passException?: boolean
+	): Promise<boolean> {
 		const repoAndRelativePath = await this._getRepoAndRelativePath(uriOrPath);
 		if (!repoAndRelativePath) return false;
 		const { repoPath, relativePath } = repoAndRelativePath;
@@ -420,6 +432,9 @@ export class GitService implements IGitService, Disposable {
 			);
 			return true;
 		} catch (ex) {
+			if (passException) {
+				throw ex;
+			}
 			return false;
 		}
 	}

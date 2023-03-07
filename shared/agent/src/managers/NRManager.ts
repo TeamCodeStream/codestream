@@ -54,6 +54,7 @@ import { Parser as javaParser } from "./stackTraceParsers/javaStackTraceParser";
 import { Parser as phpParser } from "./stackTraceParsers/phpStackTraceParser";
 import { Parser as pythonParser } from "./stackTraceParsers/pythonStackTraceParser";
 import { Parser as rubyParser } from "./stackTraceParsers/rubyStackTraceParser";
+import fs from "fs";
 
 const ExtensionToLanguageMap: { [key: string]: string } = {
 	js: "javascript",
@@ -99,6 +100,22 @@ export class NRManager {
 		this._nodeJS = new NodeJSInstrumentation(session);
 		this._java = new JavaInstrumentation(session);
 		this._dotNetCore = new DotNetCoreInstrumentation(session);
+	}
+
+	async resolvePathAtRef(resolvedPath: string, ref?: string): Promise<boolean> {
+		Logger.debug(`resolvePathAtRef ${resolvedPath}`);
+		try {
+			const exists = ref
+				? await SessionContainer.instance().git.checkFileExistsForRevision(resolvedPath, ref, true)
+				: fs.existsSync(resolvedPath);
+			return exists;
+		} catch (e) {
+			// OK if rev doesn't exist - ganbaru!
+			if (e.message && e.message.includes("invalid object name")) {
+				return fs.existsSync(resolvedPath);
+			}
+		}
+		return false;
 	}
 
 	// returns info gleaned from parsing a stack trace
@@ -295,6 +312,10 @@ export class NRManager {
 			{ paths }
 		);
 
+		Logger.debug(
+			`resolveStackTracePathsResponse" ${JSON.stringify(resolveStackTracePathsResponse)}`
+		);
+
 		for (let i = 0; i < parsedStackInfo.lines.length; i++) {
 			try {
 				const line = parsedStackInfo.lines[i];
@@ -315,12 +336,7 @@ export class NRManager {
 					} else {
 						const resolvedPath = resolveStackTracePathsResponse.resolvedPaths[i];
 						if (resolvedPath) {
-							const pathExists = ref
-								? await SessionContainer.instance().git.checkFileExistsForRevision(
-										resolvedPath,
-										ref
-								  )
-								: true;
+							const pathExists = await this.resolvePathAtRef(resolvedPath, ref);
 							if (pathExists) {
 								resolvedLine = {
 									fileFullPath: resolvedPath,
