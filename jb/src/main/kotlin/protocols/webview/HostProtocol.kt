@@ -147,7 +147,9 @@ class MarkerInsertTextRequest(
 class UpdateServerUrlRequest(
     val serverUrl: String,
     val disableStrictSSL: Boolean = false,
-    val environment: String?
+    val environment: String?,
+    val copyToken: Boolean = false,
+    val currentTeamId: String?
 )
 
 enum class LogoutReason {

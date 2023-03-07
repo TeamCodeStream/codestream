@@ -136,7 +136,16 @@ class AuthenticationService(val project: Project) {
         }
     }
 
-    private fun saveAccessToken(accessToken: JsonObject?) {
+    fun copyAccessToken(fromServerUrl: String?, toServerUrl: String?, fromTeamId: String?, toTeamId: String?) {
+        val settings = project.settingsService ?: return
+        val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes(true, fromServerUrl, fromTeamId))
+            ?: PasswordSafe.instance.getPassword(settings.credentialAttributes(false, fromServerUrl))
+            ?: return
+        val token = gson.fromJson<JsonObject>(tokenStr)
+        saveAccessToken(token, toServerUrl, toTeamId)
+    }
+
+    private fun saveAccessToken(accessToken: JsonObject?, serverUrl: String? = null, teamId: String? = null) {
         val settings = project.settingsService ?: return
         if (accessToken != null) {
             logger.info("Saving access token to password safe")
@@ -149,7 +158,7 @@ class AuthenticationService(val project: Project) {
         }
 
         PasswordSafe.instance.set(
-            settings.credentialAttributes(),
+            settings.credentialAttributes(true, serverUrl, teamId),
             credentials
         )
     }

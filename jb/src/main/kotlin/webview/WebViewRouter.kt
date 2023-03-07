@@ -281,8 +281,12 @@ class WebViewRouter(val project: Project) {
     private suspend fun updateServerUrl(message: WebViewMessage) {
         val request = gson.fromJson<UpdateServerUrlRequest>(message.params!!)
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
+        val currentServerUrl = settings.serverUrl
         settings.serverUrl = request.serverUrl
         settings.disableStrictSSL = request.disableStrictSSL
+        if (request.copyToken && request.currentTeamId != null) {
+            project.authenticationService?.copyAccessToken(currentServerUrl, request.serverUrl, request.currentTeamId, request.currentTeamId)
+        }
         project.agentService?.setServerUrl(SetServerUrlParams(request.serverUrl, request.disableStrictSSL, request.environment))
     }
 

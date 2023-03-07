@@ -65,12 +65,13 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         _webViewContextObservers.forEach { it(new) }
     }
 
-    fun credentialAttributes(includeTeam: Boolean = true): CredentialAttributes {
-        val teamId = state.teamId ?: applicationSettings.state.teamId
-        val teamSuffix = if (includeTeam && teamId != null) teamId.let { "|${it}" } else ""
-        val serviceName = generateServiceName("CodeStream", applicationSettings.state.serverUrl + teamSuffix)
-        val userName = applicationSettings.state.email
-        return CredentialAttributes(serviceName, userName)
+    fun credentialAttributes(includeTeam: Boolean = true, serverUrl: String? = null, teamId: String? = null, userName: String? = null): CredentialAttributes {
+        val actualTeamId = teamId ?: state.teamId ?: applicationSettings.state.teamId;
+        val teamSuffix = if (includeTeam && actualTeamId != null) actualTeamId.let { "|${it}" } else ""
+        val actualServerUrl = serverUrl ?: applicationSettings.state.serverUrl;
+        val actualUserName = userName ?: applicationSettings.state.email
+        val serviceName = generateServiceName("CodeStream", actualServerUrl + teamSuffix)
+        return CredentialAttributes(serviceName, actualUserName)
     }
 
     // 💩: I HATE THIS
