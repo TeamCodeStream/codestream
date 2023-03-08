@@ -66,7 +66,7 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
     }
 
     fun credentialAttributes(includeTeam: Boolean = true, serverUrl: String? = null, teamId: String? = null, userName: String? = null): CredentialAttributes {
-        val actualTeamId = teamId ?: state.teamId ?: applicationSettings.state.teamId;
+        val actualTeamId = teamId ?: state.teamId ?: applicationSettings.state.teamId
         val teamSuffix = if (includeTeam && actualTeamId != null) actualTeamId.let { "|${it}" } else ""
         val actualServerUrl = serverUrl ?: applicationSettings.state.serverUrl;
         val actualUserName = userName ?: applicationSettings.state.email
