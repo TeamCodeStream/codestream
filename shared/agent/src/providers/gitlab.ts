@@ -3678,9 +3678,9 @@ export class GitLabProvider
 		result = result.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(\/)/g, (match, group1, group2) => {
 			//href value is a relative path, replace with absolute path derived
 			if (group2[0] === "/") {
-				return `<a href="${this.baseWebUrl}${group2}`;
+				return `<a href=${group1}${this.baseWebUrl}${group2}`;
 			}
-			return `<a href="${group2}`;
+			return `<a href=${group1}${group2}`;
 		});
 
 		return result;
