@@ -294,7 +294,9 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 	const getErrorDetails = React.useCallback(
 		(error: Error): JSX.Element => {
-			const unexpectedError = <ErrorRow title="Unexpected error" customPadding={"0 10px 0 42px"} />;
+			const unexpectedError = (
+				<ErrorRow title="Error fetching data from New Relic" customPadding={"0 10px 0 42px"} />
+			);
 			if (isResponseError(error)) {
 				if (error.code === ERROR_VM_NOT_SETUP) {
 					// TODO per-env URL
