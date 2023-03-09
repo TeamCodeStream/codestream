@@ -3655,7 +3655,7 @@ export class GitLabProvider
 	 * @return {string}
 	 * @memberof GitLabProvider
 	 */
-	private enhanceHtmlBlock(str: string, projectFullPath: string): string {
+	enhanceHtmlBlock(str: string, projectFullPath: string): string {
 		if (!str || !projectFullPath) return str;
 
 		// gitlab's images look like <img src="base64enCoded" data-src="actualImagePath.jpg" />
