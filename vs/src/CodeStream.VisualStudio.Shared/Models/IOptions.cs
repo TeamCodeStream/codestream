@@ -17,9 +17,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		bool DisableStrictSSL { get; set; }
 		string ExtraCertificates { get; set; }
 
-		bool ShowAddCommentContextMenuCommand { get; set; }
-		bool ShowCreateIssueContextMenuCommand { get; set; }
-		bool ShowGetPermalinkContextMenuCommand { get; set; }
+		bool ShowContextMenuCommands { get; set; }
 
 	}
 

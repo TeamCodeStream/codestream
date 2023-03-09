@@ -31,9 +31,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private string _extraCertificates;
 		private ProxySupport _proxySupport;
 
-		private bool _showAddCommentContextMenuCommand = true;
-		private bool _showCreateIssueContextMenuCommand = true;
-		private bool _showGetPermalinkContextMenuCommand = true;
+		private bool _showContextMenuCommands = true;
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -229,48 +227,16 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		}
 
 		[Category("UI")]
-		[DisplayName("Show 'Add Comment' Menu Command")]
-		[Description("Specifies whether to show the 'Add Comment' command on the right-click context-menu")]
-		public bool ShowAddCommentContextMenuCommand
+		[DisplayName("Show Context Menu Commands")]
+		[Description("Specifies whether to show commands on the right-click context-menu")]
+		public bool ShowContextMenuCommands
 		{
-			get => _showAddCommentContextMenuCommand;
+			get => _showContextMenuCommands;
 			set
 			{
-				if (_showAddCommentContextMenuCommand != value)
+				if (_showContextMenuCommands != value)
 				{
-					_showAddCommentContextMenuCommand = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("UI")]
-		[DisplayName("Show 'Create Issue' Menu Command")]
-		[Description("Specifies whether to show the 'Create Issue' command on the right-click context-menu")]
-		public bool ShowCreateIssueContextMenuCommand
-		{
-			get => _showCreateIssueContextMenuCommand;
-			set
-			{
-				if (_showCreateIssueContextMenuCommand != value)
-				{
-					_showCreateIssueContextMenuCommand = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("UI")]
-		[DisplayName("Show 'Get Permalink' Menu Command")]
-		[Description("Specifies whether to show the 'Get Permalink' command on the right-click context-menu")]
-		public bool ShowGetPermalinkContextMenuCommand
-		{
-			get => _showGetPermalinkContextMenuCommand;
-			set
-			{
-				if (_showGetPermalinkContextMenuCommand != value)
-				{
-					_showGetPermalinkContextMenuCommand = value;
+					_showContextMenuCommands = value;
 					NotifyPropertyChanged();
 				}
 			}

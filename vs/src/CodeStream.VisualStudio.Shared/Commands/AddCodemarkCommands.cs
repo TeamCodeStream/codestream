@@ -24,7 +24,7 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 		{
 			base.OnBeforeQueryStatus(sender, e);
 
-			sender.Visible = CodeStreamSettingsManager.ShowAddCommentContextMenuCommand;
+			sender.Visible = CodeStreamSettingsManager.ShowContextMenuCommands;
 		}
 	}
 
@@ -41,7 +41,7 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 			base.OnBeforeQueryStatus(sender, e);
 
 			sender.Visible = 
-				CodeStreamSettingsManager.ShowCreateIssueContextMenuCommand
+				CodeStreamSettingsManager.ShowContextMenuCommands
 				&& sender.Visible
 				&& IdeService.GetActiveDiffEditor() == null;
 		}
@@ -59,7 +59,7 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 			base.OnBeforeQueryStatus(sender, e);
 
 			sender.Visible =
-				CodeStreamSettingsManager.ShowGetPermalinkContextMenuCommand
+				CodeStreamSettingsManager.ShowContextMenuCommands
 				&& sender.Visible
 				&& IdeService.GetActiveDiffEditor() == null;
 		}
