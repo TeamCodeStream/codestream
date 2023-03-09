@@ -3662,7 +3662,7 @@ export class GitLabProvider
 		// we need to adjust them and add an optional base url
 		// we don't care about the original <img> tag since this will later
 		// get converted into markdown which only supports a limited set of <img> attrs
-		const result = str.replace(
+		let result = str.replace(
 			/<img\s[^>]*?data\-src\s*=\s*['\"]([^'\"]*?)['\"][^>]*?>/g,
 			(match, group1) => {
 				if (group1[0] === "/" && group1.indexOf("/uploads/") > -1) {
@@ -3671,6 +3671,17 @@ export class GitLabProvider
 				return `<img src="${group1}" />`;
 			}
 		);
+
+		// gitlab relative paths do not work in vscode, and worse, break JB as JB
+		// appends relative file paths with "file://" resulting in a white screen/infinite loader.
+		// Here we append the base url to relative paths found in href properties
+		result = result.replace(/<a\s+(?:[^>]*?\s+)?href=(["'])(\/)/g, (match, group1, group2) => {
+			//href value is a relative path, replace with absolute path derived
+			if (group2[0] === "/") {
+				return `<a href="${this.baseWebUrl}${group2}`;
+			}
+			return `<a href="${group2}`;
+		});
 
 		return result;
 	}
