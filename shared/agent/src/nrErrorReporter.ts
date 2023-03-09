@@ -153,18 +153,9 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 
 	const cacheKey = hashError(request);
 
-	if (_errorCache.get(cacheKey)) {
-		console.warn("Ignoring duplicate error", {
-			key: cacheKey,
-		});
-		return;
-	}
-
-	_errorCache.put(cacheKey, true);
-
+	let error: Error | undefined = undefined;
+	let stack;
 	try {
-		let error: Error | undefined = undefined;
-		let stack;
 		if (request.error) {
 			if (typeof request.error === "string") {
 				const deserializedError = JSON.parse(request.error as string) as {
@@ -181,12 +172,30 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 		} else if (request.message) {
 			error = new Error(request.message);
 		}
+	} catch (ex) {
+		console.warn("Failed to create error object for reportMessage", {
+			ex,
+			request,
+		});
+		return;
+	}
+
+	try {
 		if (!error) {
-			console.warn("Failed to create error for reportMessage", {
+			console.warn("No error object for reportMessage", {
 				request,
 			});
 			return;
 		}
+
+		if (_errorCache.get(cacheKey)) {
+			console.warn("Ignoring duplicate error", {
+				key: cacheKey,
+				message: error?.message,
+			});
+			return;
+		}
+		_errorCache.put(cacheKey, true);
 
 		NewRelic.noticeError(error, {
 			...attributes,
