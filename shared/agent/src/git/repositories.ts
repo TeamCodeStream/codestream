@@ -501,6 +501,7 @@ export class GitRepositories {
 						ignoreInitial: true,
 						usePolling: false,
 						ignorePermissionErrors: true,
+						depth: 2,
 						ignored: path => path.includes("node_modules"),
 					})
 					.on("addDir", async gitPath => {
@@ -619,6 +620,7 @@ export class GitRepositories {
 						// (fires lots of `add` and `addDir` events that we do not need
 						// as they can cause extensions to overload their ipc message queues)
 						ignoreInitial: true,
+						ignorePermissionErrors: true,
 					})
 					.on("ready", () => {
 						if (Logger.level === TraceLevel.Debug) {
