@@ -497,7 +497,12 @@ export class GitRepositories {
 				const basePaths = workspaceFolders.map(_ => `${url.fileURLToPath(_.uri)}/**/.git`);
 				Logger.log(`add git dir watch: basePaths: ${basePaths}`);
 				const newCloneWatcher = chokidar
-					.watch(basePaths, { ignoreInitial: true, usePolling: false })
+					.watch(basePaths, {
+						ignoreInitial: true,
+						usePolling: false,
+						ignorePermissionErrors: true,
+						ignored: path => path.includes("node_modules"),
+					})
 					.on("addDir", async gitPath => {
 						Logger.debug(`add git dir watch: addDir gitPath: ${gitPath}`);
 						const normalizedGitPath = Strings.normalizePath(gitPath, isWindows);
