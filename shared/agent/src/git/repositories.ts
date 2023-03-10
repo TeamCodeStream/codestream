@@ -504,6 +504,9 @@ export class GitRepositories {
 						depth: 2,
 						ignored: path => path.includes("node_modules"),
 					})
+					.on("error", error => {
+						Logger.log("add git dir watch error", error);
+					})
 					.on("addDir", async gitPath => {
 						Logger.debug(`add git dir watch: addDir gitPath: ${gitPath}`);
 						const normalizedGitPath = Strings.normalizePath(gitPath, isWindows);
