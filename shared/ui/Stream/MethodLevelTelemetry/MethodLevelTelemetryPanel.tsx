@@ -406,7 +406,7 @@ export const MethodLevelTelemetryPanel = () => {
 																		})
 																	}
 																/>
-																<YAxis dataKey={_.title} tick={{ fontSize: 12 }} />
+																<YAxis tick={{ fontSize: 12 }} />
 																<ReTooltip
 																	contentStyle={{ color: "#8884d8", textAlign: "center" }}
 																/>

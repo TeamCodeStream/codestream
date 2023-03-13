@@ -1508,7 +1508,7 @@ export interface GetServiceLevelObjectivesResponse {
 export interface GetMethodLevelTelemetryResponse {
 	newRelicEntityGuid: string;
 	newRelicUrl?: string;
-	goldenMetrics?: any;
+	goldenMetrics?: MethodGoldenMetrics[];
 	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
