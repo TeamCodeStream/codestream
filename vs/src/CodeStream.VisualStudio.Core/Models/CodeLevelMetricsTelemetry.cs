@@ -12,6 +12,7 @@ namespace CodeStream.VisualStudio.Core.Models
 
 		[JsonProperty("sampleSize", NullValueHandling = NullValueHandling.Ignore)]
 		public IList<SampleSizeResponse> SampleSize { get; }
+
 		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]
 		public IList<ErrorRateResponse> ErrorRate { get; }
 

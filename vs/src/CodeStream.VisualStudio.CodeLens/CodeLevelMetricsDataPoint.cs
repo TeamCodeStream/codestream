@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -124,9 +124,11 @@ namespace CodeStream.VisualStudio.CodeLens
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
 			var namespaceFunction = $"{codeNamespace}.{functionName}";
 
-			var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
+			var errorRate = _metrics.ErrorRate?.FirstOrDefault(x =>
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
 			var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
+				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+			var sampleSize = _metrics.SampleSize?.FirstOrDefault(x =>
 				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
 
 			var descriptor = new CodeLensDetailsDescriptor();
@@ -138,7 +140,9 @@ namespace CodeStream.VisualStudio.CodeLens
 				MetricTimeSliceNameMapping = new MetricTimesliceNameMapping
 				{
 					Duration = avgDuration?.MetricTimesliceName ?? "",
-					ErrorRate = errors?.MetricTimesliceName ?? ""
+					ErrorRate = errorRate?.MetricTimesliceName ?? "",
+					SampleSize = sampleSize?.MetricTimesliceName ?? "",
+					Source = sampleSize?.Source ?? ""
 				}
 			};
 
@@ -153,9 +157,9 @@ namespace CodeStream.VisualStudio.CodeLens
 			var configuredPositions = new List<CodeLevelMetricsDetail>
 			{
 				new CodeLevelMetricsDetail(averageDurationPosition, "avg duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
-				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errors is null ? "n/a" : $"{errors.ErrorRate.ToFixed(3)}%"),
+				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errorRate is null ? "n/a" : $"{errorRate.ErrorRate.ToFixed(3)}%"),
 				new CodeLevelMetricsDetail(sincePosition, "since", _metrics.Properties.SinceDateFormatted),
-				new CodeLevelMetricsDetail(sampleSizePosition, _metrics.Properties.SampleSize == "1" ? "sample": "samples", _metrics.Properties.SampleSize)
+				new CodeLevelMetricsDetail(sampleSizePosition, (sampleSize?.SampleSize ?? "0") == "1" ? "sample": "samples", sampleSize?.SampleSize ?? "0")
 			};
 
 			foreach (var entry in configuredPositions.OrderBy(x => x.Order))
