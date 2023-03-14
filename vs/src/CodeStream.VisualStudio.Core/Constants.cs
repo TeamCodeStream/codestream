@@ -3,7 +3,7 @@
 	public static class Constants {
 		public static class CodeLevelMetrics {
 			public static string GoldenSignalsFormat =
-				$"avg duration: {Tokens.AverageDuration} | error rate: {Tokens.ErrorRate} - {Tokens.SampleSize} samples in the last {Tokens.Since}";
+				$"avg duration: {Tokens.AverageDuration} | error rate: {Tokens.ErrorRate} - {Tokens.SampleSize} in the last {Tokens.Since}";
 
 			public static class Provider {
 				public const string Id = "CodeStreamCodeLevelMetrics";
