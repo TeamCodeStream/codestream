@@ -3480,7 +3480,7 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				`query getErrorTrace($accountId: Int!) {
 						actor {
 						  account(id: $accountId) {
-							nrql(query: "${errorTraceQuery}", timeout: 60) {
+							nrql(query: "${escapeNrql(errorTraceQuery)}", timeout: 60) {
 							  results
 							}
 						  }
