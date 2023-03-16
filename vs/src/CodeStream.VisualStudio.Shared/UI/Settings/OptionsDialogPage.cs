@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Runtime.CompilerServices;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -122,7 +123,9 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Description("Specifies the url to use to connect to the CodeStream service")]
 		public string ServerUrl {
 			get => _serverUrl;
-			set {
+			set
+			{
+				value = value?.TrimEnd('/');
 				if (_serverUrl != value) {
 					_serverUrl = value;
 					NotifyPropertyChanged();
