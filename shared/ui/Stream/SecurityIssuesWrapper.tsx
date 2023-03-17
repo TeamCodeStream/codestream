@@ -307,9 +307,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 							}}
 						>
 							<span>Get started with </span>
-							<Link href="https://staging-one.newrelic.com/vulnerability-management">
-								vulnerability management
-							</Link>
+							<Link href="one.newrelic.com/vulnerability-management">vulnerability management</Link>
 						</div>
 					);
 				} else {
