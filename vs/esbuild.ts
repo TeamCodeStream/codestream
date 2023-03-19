@@ -1,7 +1,7 @@
-import { build, BuildOptions } from "esbuild";
+import {  BuildOptions } from "esbuild";
 import * as path from "path";
 import { copyPlugin } from "../shared/build/src/copyPlugin";
-import { commonEsbuildOptions, processArgs } from "../shared/build/src/esbuildCommon";
+import { commonEsbuildOptions, processArgs, startEsbuild } from "../shared/build/src/esbuildCommon";
 import { removeSymlinks } from "../shared/build/src/symlinks";
 
 const context = path.resolve(__dirname, "src/CodeStream.VisualStudio.Shared/UI/WebViews");
@@ -38,5 +38,5 @@ const copy = copyPlugin({
 		outdir: target,
 		target: "chrome69"
 	};
-	await build(buildOptions);
+	await startEsbuild(args, buildOptions);
 })();

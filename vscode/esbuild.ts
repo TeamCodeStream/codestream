@@ -1,8 +1,13 @@
 import * as path from "path";
 
-import { build, BuildOptions } from "esbuild";
+import { BuildOptions } from "esbuild";
 
-import { commonEsbuildOptions, processArgs, Args } from "../shared/build/src/esbuildCommon";
+import {
+	commonEsbuildOptions,
+	processArgs,
+	Args,
+	startEsbuild
+} from "../shared/build/src/esbuildCommon";
 import { CopyStuff, copyPlugin } from "../shared/build/src/copyPlugin";
 import { removeSymlinks } from "../shared/build/src/symlinks";
 import { statsPlugin } from "../shared/build/src/statsPlugin";
@@ -36,7 +41,7 @@ async function webBuild(args: Args) {
 		outdir: target
 	};
 
-	await build(buildOptions);
+	await startEsbuild(args, buildOptions);
 }
 
 async function extensionBuild(args: Args) {
@@ -72,7 +77,7 @@ async function extensionBuild(args: Args) {
 		target: "node16"
 	};
 
-	await build(buildOptions);
+	await startEsbuild(args, buildOptions);
 }
 
 (async function () {

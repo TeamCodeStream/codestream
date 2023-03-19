@@ -71,7 +71,6 @@
 			"name": "Attach to Agent",
 			"port": 6009,
 			"cwd": "${workspaceFolder}/vscode",
-			"outFiles": ["${workspaceFolder}/vscode/dist/agent.js"],
 			"skipFiles": ["<node_internals>/**", "**/node_modules/**", "**/resources/app/out/vs/**"],
 			"smartStep": true,
 			"sourceMaps": true
