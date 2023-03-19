@@ -98,6 +98,3 @@ else
   echo "Invalid command $1"
   exit 1
 fi
-
-
-

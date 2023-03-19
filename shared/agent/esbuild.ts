@@ -1,11 +1,11 @@
 import * as path from "path";
 
 import graphqlLoaderPlugin from "@luckycatfactory/esbuild-graphql-loader";
-import { build, BuildOptions } from "esbuild";
+import { BuildOptions } from "esbuild";
 import ignorePlugin from "esbuild-plugin-ignore";
 
 import { copyPlugin, CopyStuff } from "../build/src/copyPlugin";
-import { commonEsbuildOptions, processArgs } from "../build/src/esbuildCommon";
+import { commonEsbuildOptions, processArgs, startEsbuild } from "../build/src/esbuildCommon";
 import { nativeNodeModulesPlugin } from "../build/src/nativeNodeModulesPlugin";
 import { statsPlugin } from "../build/src/statsPlugin";
 
@@ -48,7 +48,7 @@ const postBuildCopy: CopyStuff[] = [
 
 (async function () {
 	const args = processArgs();
-	const buildOption: BuildOptions = {
+	const buildOptions: BuildOptions = {
 		...commonEsbuildOptions(false, args),
 		entryPoints: {
 			agent: "./src/main.ts",
@@ -70,5 +70,5 @@ const postBuildCopy: CopyStuff[] = [
 		sourcesContent: args.mode === "development" && args.ide !== "vs",
 	};
 
-	await build(buildOption);
+	await startEsbuild(args, buildOptions);
 })();

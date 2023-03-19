@@ -19,10 +19,6 @@ const mockSessionContainer = mock(SessionContainer);
 const mockUser = mock(User);
 const mockSessionServiceContainer = mockDeep<SessionServiceContainer>();
 
-mockSessionServiceContainer.users.getMe.mockResolvedValue({ id: "user1" } as CSMe);
-mockSessionContainer.instance.mockReturnValue(mockSessionServiceContainer);
-mockUser.getProviderInfo.mockReturnValue({ userId: "user1", accessToken: "accessToken1" });
-
 describe("getOwnerFromRemote", () => {
 	const provider = new GitHubProvider({} as any, {} as any);
 
@@ -33,6 +29,12 @@ describe("getOwnerFromRemote", () => {
 });
 
 describe("getPullRequest", () => {
+	beforeEach(() => {
+		mockSessionServiceContainer.users.getMe.mockResolvedValue({ id: "user1" } as CSMe);
+		mockSessionContainer.instance.mockReturnValue(mockSessionServiceContainer);
+		mockUser.getProviderInfo.mockReturnValue({ userId: "user1", accessToken: "accessToken1" });
+	});
+
 	afterEach(() => {
 		jest.restoreAllMocks();
 	});

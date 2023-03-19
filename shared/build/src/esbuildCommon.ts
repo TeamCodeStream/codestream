@@ -1,4 +1,4 @@
-import { BuildOptions, Plugin } from "esbuild";
+import * as esbuild from "esbuild";
 import { statsPlugin } from "./statsPlugin";
 import { vscShimPlugin } from "./vscShim";
 import { lessLoader } from "esbuild-plugin-less";
@@ -38,8 +38,8 @@ export function processArgs(): Args {
 export function commonEsbuildOptions(
 	isWeb: boolean,
 	args: Args,
-	extraPlugins: Plugin[] = []
-): BuildOptions {
+	extraPlugins: esbuild.Plugin[] = []
+): esbuild.BuildOptions {
 	const plugins = isWeb ? [lessLoader(), vscShimPlugin, statsPlugin, ...extraPlugins] : undefined;
 
 	return {
@@ -52,6 +52,15 @@ export function commonEsbuildOptions(
 		keepNames: true,
 		plugins,
 		sourcemap: "linked",
-		watch: args.watchMode,
 	};
+}
+
+export async function startEsbuild(args: Args, buildOptions: esbuild.BuildOptions) {
+	const ctx = await esbuild.context(buildOptions);
+	if (args.watchMode) {
+		await ctx.watch();
+	} else {
+		await esbuild.build(buildOptions);
+		await ctx.dispose();
+	}
 }

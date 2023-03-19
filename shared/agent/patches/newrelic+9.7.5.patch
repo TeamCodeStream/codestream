@@ -1,8 +1,8 @@
 diff --git a/node_modules/newrelic/lib/config/index.js b/node_modules/newrelic/lib/config/index.js
-index 9e1b01e..15fd67d 100644
+index bdc9d49..4476042 100644
 --- a/node_modules/newrelic/lib/config/index.js
 +++ b/node_modules/newrelic/lib/config/index.js
-@@ -28,8 +28,8 @@ const mergeServerConfig = new MergeServerConfig()
+@@ -30,8 +30,8 @@ const configDefinition = definition()
   */
  const AZURE_APP_NAME = 'APP_POOL_ID'
  const DEFAULT_MAX_PAYLOAD_SIZE_IN_BYTES = 1000000

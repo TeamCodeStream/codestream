@@ -237,7 +237,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
 				{(typeof props.count === "string" && props.count.length > 0) ||
-				(props.count && props.count > 0) ? (
+				(typeof props.count === "number" && props.count > 0) ? (
 					<span className="subtle toggle-target"> ({props.count})</span>
 				) : null}
 				{!derivedState.collapsed && props.subtitle ? (

@@ -1,7 +1,7 @@
-import { build, BuildOptions } from "esbuild";
+import * as esbuild from "esbuild";
 import * as path from "path";
 import { copyPlugin } from "../shared/build/src/copyPlugin";
-import { commonEsbuildOptions, processArgs } from "../shared/build/src/esbuildCommon";
+import { commonEsbuildOptions, processArgs, startEsbuild } from "../shared/build/src/esbuildCommon";
 import { removeSymlinks } from "../shared/build/src/symlinks";
 
 const context = path.resolve(__dirname, "webview");
@@ -30,7 +30,7 @@ const copy = copyPlugin({
 (async function() {
 	const args = processArgs();
 	removeSymlinks(__dirname);
-	const buildOptions: BuildOptions = {
+	const buildOptions: esbuild.BuildOptions = {
 		...commonEsbuildOptions(true, args, [copy]),
 		entryPoints: [
 			path.resolve(context, "index.ts"),
@@ -38,5 +38,5 @@ const copy = copyPlugin({
 		],
 		outdir: target
 	};
-	await build(buildOptions);
+	await startEsbuild(args, buildOptions);
 })();

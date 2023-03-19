@@ -13,10 +13,10 @@ import Icon from "./Icon";
 
 interface State {
 	emotion: "happy" | "sad";
-	tweet: String;
+	tweet: string;
 	dialogOpen: boolean;
 	isLoading?: boolean;
-	charsLeft: Number;
+	charsLeft: number;
 }
 interface Props {
 	showFeedbackSmiley?: boolean;
