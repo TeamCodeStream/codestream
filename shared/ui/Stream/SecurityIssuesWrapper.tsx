@@ -256,7 +256,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
-		ResponseError<void>
+		ResponseError<{ url: string }>
 	>(
 		GetLibraryDetailsType,
 		{
@@ -293,13 +293,12 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	}
 
 	const getErrorDetails = React.useCallback(
-		(error: Error): JSX.Element => {
+		(error: ResponseError<{ url: string }>): JSX.Element => {
 			const unexpectedError = (
 				<ErrorRow title="Error fetching data from New Relic" customPadding={"0 10px 0 42px"} />
 			);
 			if (isResponseError(error)) {
 				if (error.code === ERROR_VM_NOT_SETUP) {
-					// TODO per-env URL
 					return (
 						<div
 							style={{
@@ -307,7 +306,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 							}}
 						>
 							<span>Get started with </span>
-							<Link href="one.newrelic.com/vulnerability-management">vulnerability management</Link>
+							<Link href={error.data!.url}>vulnerability management</Link>
 						</div>
 					);
 				} else {
