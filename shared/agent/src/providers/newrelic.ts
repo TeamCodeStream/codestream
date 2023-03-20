@@ -3465,6 +3465,16 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 				(errorGroupResponse.lastSeenAt || now) + 100000
 			} ORDER BY timestamp DESC LIMIT 1`;
 
+			const graphQuery = `query getErrorTrace($accountId: Int!) {
+				actor {
+				  account(id: $accountId) {
+					nrql(query: "${escapeNrql(errorTraceQuery)}", timeout: 60) {
+					  results
+					}
+				  }
+				}
+			  }`;
+
 			const errorTraceResponse = await this.query<{
 				actor: {
 					account: {
@@ -3476,20 +3486,9 @@ export class NewRelicProvider extends ThirdPartyIssueProviderBase<CSNewRelicProv
 						};
 					};
 				};
-			}>(
-				`query getErrorTrace($accountId: Int!) {
-						actor {
-						  account(id: $accountId) {
-							nrql(query: "${errorTraceQuery}", timeout: 60) {
-							  results
-							}
-						  }
-						}
-					  }`,
-				{
-					accountId: accountId,
-				}
-			);
+			}>(graphQuery, {
+				accountId: accountId,
+			});
 
 			if (errorTraceResponse) {
 				const errorTraceResult = errorTraceResponse.actor.account.nrql.results[0];
