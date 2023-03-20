@@ -24,7 +24,7 @@
 	"devDependencies": {
 		"@luckycatfactory/esbuild-graphql-loader": "3.8.1",
 		"@types/diff": "5.0.2",
-		"@types/lodash-es": "^4.17.7",
+		"@types/lodash-es": "4.17.7",
 		"@types/node": "16.11.35",
 		"@types/node-fetch": "2.6.1",
 		"@types/vscode": "1.73.1",
@@ -32,8 +32,8 @@
 		"diff": "5.0.0",
 		"esbuild": "0.17.12",
 		"esbuild-plugin-less": "1.1.13",
-		"lodash": "^4.17.21",
-		"lodash-es": "^4.17.21",
+		"lodash": "4.17.21",
+		"lodash-es": "4.17.21",
 		"node-fetch": "2.6.7",
 		"patch-package": "6.5.1",
 		"typescript": "5.0.2",
@@ -41,12 +41,12 @@
 		"vscode-languageserver-protocol": "3.14.1"
 	},
 	"dependencies": {
-		"@types/jest": "^29.5.0",
+		"@types/jest": "29.5.0",
 		"date-fns": "1.30.1",
 		"eol": "0.9.1",
 		"jest-mock-extended": "github:dsellarsnr/jest-mock-extended",
-		"jest-teamcity": "^1.11.0",
+		"jest-teamcity": "1.11.0",
 		"set-interval-async": "3.0.3",
-		"ts-jest": "^29.0.5"
+		"ts-jest": "29.0.5"
 	}
 }

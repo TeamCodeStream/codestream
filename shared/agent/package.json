@@ -147,7 +147,7 @@
 		"graphql-tag": "2.12.6",
 		"https-proxy-agent": "3.0.1",
 		"husky": "8.0.3",
-		"jest-mock-extended": "github:dsellarsnr/jest-mock-extended",
+		"jest-mock-extended": "github:TeamCodeStream/jest-mock-extended",
 		"jest-teamcity": "1.11.0",
 		"lint-staged": "13.0.3",
 		"lodash": "4.17.21",
