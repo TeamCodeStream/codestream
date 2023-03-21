@@ -6,6 +6,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
@@ -103,6 +104,10 @@ class PhpSymbolResolver : SymbolResolver {
         if (psiFile !is PhpFileImpl) return null
         val entry = psiFile.topLevelDefs.entrySet().find { it.key.substring(1) == functionName && it.value.any { it is FunctionImpl } } ?: return null
         return entry.value.find { it is FunctionImpl }
+    }
+
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return null
     }
 
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {

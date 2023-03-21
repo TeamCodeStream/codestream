@@ -7,6 +7,7 @@ import sinon from "sinon";
 import * as vscode from "vscode";
 import { CancellationTokenSource } from "vscode-languageclient";
 import {
+	ComputeCurrentLocationResponse,
 	FileLevelTelemetryRequestOptions,
 	FunctionLocator,
 	GetFileLevelTelemetryResponse
@@ -18,6 +19,20 @@ import {
 	SymboslLocated
 } from "../../providers/symbolLocator";
 import { InstrumentationCodeLensProvider } from "../../providers/instrumentationCodeLensProvider";
+import { IObservabilityService } from "../../agent/ObservabilityService";
+
+const stubComputeCurrentLocation = (
+	id: string,
+	lineno: number,
+	column: number,
+	commit: string,
+	functionName: string,
+	uri: string
+): Promise<ComputeCurrentLocationResponse> => {
+	return new Promise(resolve => {
+		return resolve({} as ComputeCurrentLocationResponse);
+	});
+};
 
 class MockSymbolLocator implements ISymbolLocator {
 	locate(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<SymboslLocated> {
@@ -64,7 +79,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("Smoke test", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -88,7 +104,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 							{
 								functionName: "hello_world",
 								averageDuration: 3.333,
-								metricTimesliceName: "d"
+								facet: ["d"]
 							}
 						]
 					} as GetFileLevelTelemetryResponse);
@@ -119,7 +135,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NOT_ASSOCIATED", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -174,7 +191,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NO_PYTHON_VSCODE_EXTENSION", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -211,7 +229,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NO_CSHARP_VSCODE_EXTENSION", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -248,7 +267,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NO_RUBY_VSCODE_EXTENSION", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -285,7 +305,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("RUBY_PLUGIN_NO_LANGUAGE_SERVER", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -347,6 +368,18 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 				return new Promise(resolve => {
 					return resolve({} as GetFileLevelTelemetryResponse);
 				});
+			},
+			computeCurrentLocation: function (
+				id: string,
+				lineno: number,
+				column: number,
+				commit: string,
+				functionName: string,
+				uri: string
+			): Promise<ComputeCurrentLocationResponse> {
+				return new Promise(resolve => {
+					return resolve({} as ComputeCurrentLocationResponse);
+				});
 			}
 		};
 
@@ -373,7 +406,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NO_GO_VSCODE_EXTENSION", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,
@@ -410,7 +444,8 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 	});
 
 	test("NO_SPANS", async () => {
-		const observabilityService = {
+		const observabilityService: IObservabilityService = {
+			computeCurrentLocation: stubComputeCurrentLocation,
 			getFileLevelTelemetry: function (
 				filePath: string,
 				languageId: string,

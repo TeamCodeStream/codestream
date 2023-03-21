@@ -12,6 +12,7 @@ import {
 	CSMarker,
 	CSMarkerIdentifier,
 	CSMarkerLocation,
+	CSReferenceLocation,
 } from "./api.protocol";
 
 export interface CreateDocumentMarkerPermalinkRequest {
@@ -106,6 +107,33 @@ export interface FetchDocumentMarkersResponse {
 	markers: DocumentMarker[];
 	markersNotLocated: MarkerNotLocated[];
 }
+
+export type Markerish = {
+	id: string;
+	referenceLocations: CSReferenceLocation[];
+};
+
+export type ComputeCurrentLocationsRequest = {
+	uri: string;
+	commit: string;
+	markers: Markerish[];
+};
+
+export type MarkerLocationsById = {
+	[id: string]: CSMarkerLocation;
+};
+
+export type ComputeCurrentLocationResponse = {
+	locations: MarkerLocationsById;
+};
+
+export const ComputeCurrentLocationsRequestType = new RequestType<
+	ComputeCurrentLocationsRequest,
+	ComputeCurrentLocationResponse,
+	void,
+	void
+>("codestream/textDocument/currentLocation");
+
 export const FetchDocumentMarkersRequestType = new RequestType<
 	FetchDocumentMarkersRequest,
 	FetchDocumentMarkersResponse | undefined,

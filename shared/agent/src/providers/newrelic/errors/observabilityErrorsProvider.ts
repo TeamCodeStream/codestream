@@ -249,6 +249,8 @@ export class ObservabilityErrorsProvider {
 	@log({ timed: true })
 	async getErrorGroupFromNameMessageEntity(name: string, message: string, entityGuid: string) {
 		try {
+
+
 			return this.graphqlClient.query(
 				`query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
 				actor {

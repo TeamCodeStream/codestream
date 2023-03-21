@@ -12,11 +12,11 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiJavaFile
 import com.intellij.psi.PsiMethodCallExpression
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiJavaFileImpl
 import com.intellij.psi.impl.source.tree.java.PsiMethodCallExpressionImpl
 import com.intellij.psi.search.GlobalSearchScope
-import org.jetbrains.kotlin.idea.core.util.range
-import org.jetbrains.kotlin.idea.editor.fixers.range
+import com.intellij.psi.util.findParentOfType
 
 class CLMJavaComponent(project: Project) :
     CLMLanguageComponent<CLMJavaEditorManager>(
@@ -85,6 +85,9 @@ class JavaSymbolResolver : SymbolResolver {
         return null
     }
 
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return psiElement.findParentOfType<PsiMethod>()
+    }
     private val clmElementsProviders: List<CLMElementsProvider> = listOf(
         CLMJavaSpringDatastore()
     )

@@ -6,6 +6,9 @@ import {
 	CalculateNonLocalRangesRequestType,
 	CalculateNonLocalRangesResponse,
 	CodeStreamDiffUriData,
+	ComputeCurrentLocationResponse,
+	ComputeCurrentLocationsRequest,
+	ComputeCurrentLocationsRequestType,
 	CreateDocumentMarkerPermalinkRequest,
 	CreateDocumentMarkerPermalinkRequestType,
 	CreateDocumentMarkerPermalinkResponse,
@@ -50,7 +53,7 @@ import {
 import { Functions, log, lsp, lspHandler } from "../system";
 import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
-import { GetLocationsResult } from "./markerLocationManager";
+import { GetLocationsResult, MarkerLocationManager } from "./markerLocationManager";
 import { compareRemotes } from "./markersBuilder";
 import { ReviewsManager } from "./reviewsManager";
 
@@ -250,6 +253,18 @@ export class DocumentMarkerManager {
 		// telemetry.track({ eventName: "Permalink Created", properties: payload });
 
 		return { linkUrl: response.permalink! };
+	}
+
+	@log()
+	@lspHandler(ComputeCurrentLocationsRequestType)
+	async computeCurrentLocations(
+		request: ComputeCurrentLocationsRequest
+	): Promise<ComputeCurrentLocationResponse> {
+		return MarkerLocationManager.computeCurrentLocations(
+			URI.parse(request.uri),
+			request.commit,
+			request.markers
+		);
 	}
 
 	@log()

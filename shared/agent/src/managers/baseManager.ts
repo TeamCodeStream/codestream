@@ -166,7 +166,7 @@ export abstract class ManagerBase<T> {
 			entities = entities.filter(e => e && !isDirective(e));
 			manager.cache.set(entities);
 		} catch (ex) {
-			Logger.warn("Error caching response entities: " + ex.message);
+			Logger.warn(`Error caching response entities: ${ex.message}\n${ex.stack}`);
 		}
 	}
 

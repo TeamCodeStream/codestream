@@ -33,7 +33,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			);
 			const results = strategy.addMethodName(
 				{
-					"Function/routes.app:hello_world": [
+					"Function/routes.app:hello_world|1|null": [
 						{
 							traceId: "123",
 							transactionId: "abc",
@@ -43,7 +43,7 @@ describe("FLTCodeAttributeStrategy", () => {
 							"code.function": "hello_world",
 						},
 					],
-					"Function/routes.app:MyClass.my_method": [
+					"Function/routes.app:MyClass.my_method|4|null": [
 						{
 							traceId: "456",
 							transactionId: "def",
@@ -56,14 +56,14 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "Function/routes.app:hello_world",
+						facet: ["Function/routes.app:hello_world", "1"],
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:hello_world",
+						// metricTimesliceName: "Function/routes.app:hello_world",
 					},
 					{
-						facet: "Function/routes.app:MyClass.my_method",
+						facet: ["Function/routes.app:MyClass.my_method", "4"],
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:MyClass.my_method",
+						// metricTimesliceName: "Function/routes.app:MyClass.my_method",
 					},
 				]
 			);
@@ -72,30 +72,38 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					averageDuration: 3.2,
 					className: undefined,
-					facet: "Function/routes.app:hello_world",
-					metricTimesliceName: "Function/routes.app:hello_world",
+					facet: ["Function/routes.app:hello_world", "1"],
+					lineno: undefined,
+					column: undefined,
+					commit: undefined,
 					namespace: null,
+					functionName: "hello_world",
 					metadata: {
 						"code.lineno": 1,
+						"code.column": undefined,
 						traceId: "123",
 						transactionId: "abc",
 						"code.namespace": null,
 						"code.function": "hello_world",
+						"tags.commit": undefined,
 					},
-					functionName: "hello_world",
 				},
 				{
 					averageDuration: 3.2,
-					facet: "Function/routes.app:MyClass.my_method",
+					facet: ["Function/routes.app:MyClass.my_method", "4"],
 					className: "MyClass",
-					metricTimesliceName: "Function/routes.app:MyClass.my_method",
+					column: undefined,
+					commit: undefined,
+					lineno: undefined,
 					namespace: null,
 					metadata: {
 						"code.lineno": 4,
+						"column.column": undefined,
 						traceId: "456",
 						transactionId: "def",
 						"code.namespace": null,
 						"code.function": "my_method",
+						"tags.commit": undefined,
 					},
 					functionName: "my_method",
 				},
@@ -117,7 +125,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			);
 			const results = strategy.addMethodName(
 				{
-					"Carrot/foo_bar.system.tasks.bill_credit_payment_item": [
+					"Carrot/foo_bar.system.tasks.bill_credit_payment_item|27|null": [
 						{
 							"code.filepath": "/app/foo_bar/system/tasks.py",
 							"code.function": "bill_credit_payment_item",
@@ -129,10 +137,10 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+						facet: ["OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item", "27"],
 						averageDuration: 3.2,
-						metricTimesliceName:
-							"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+						// metricTimesliceName:
+						// 	"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
 					},
 				]
 			);
@@ -141,12 +149,12 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					averageDuration: 3.2,
 					className: undefined,
-					facet: "OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
-					metricTimesliceName:
-						"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+					facet: ["OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item", "27"],
 					namespace: "foo_bar.system.tasks",
 					metadata: {
 						"code.lineno": 27,
+						"code.column": undefined,
+						"tags.commit": undefined,
 						"code.namespace": "foo_bar.system.tasks",
 						traceId: undefined,
 						transactionId: undefined,
@@ -171,7 +179,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName = {
-				"Controller/agents/show": [
+				"Controller/agents/show|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "AgentsController",
@@ -183,7 +191,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "5195e0f31cf1fce4",
 					},
 				],
-				"Controller/agents/create": [
+				"Controller/agents/create|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "AgentsController",
@@ -195,7 +203,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2ac9f995b004df82",
 					},
 				],
-				"Controller/agents/destroy": [
+				"Controller/agents/destroy|55|null": [
 					{
 						"code.lineno": 55,
 						"code.namespace": "AgentsController",
@@ -211,19 +219,19 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Controller/agents/create",
-					metricTimesliceName: "Controller/agents/create",
-					requestsPerMinute: 22.2,
+					facet: ["Controller/agents/create", "16"],
+					// metricTimesliceName: "Controller/agents/create",
+					// requestsPerMinute: 22.2,
 				},
 				{
-					facet: "Controller/agents/show",
-					metricTimesliceName: "Controller/agents/show",
-					requestsPerMinute: 22.2,
+					facet: ["Controller/agents/show", "16"],
+					// metricTimesliceName: "Controller/agents/show",
+					// requestsPerMinute: 22.2,
 				},
 				{
-					facet: "Controller/agents/destroy",
-					metricTimesliceName: "Controller/agents/destroy",
-					requestsPerMinute: 22.23,
+					facet: ["Controller/agents/destroy", "55"],
+					// metricTimesliceName: "Controller/agents/destroy",
+					// requestsPerMinute: 22.23,
 				},
 			];
 
@@ -231,10 +239,10 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/create",
-					metricTimesliceName: "Controller/agents/create",
+					facet: ["Controller/agents/create", "16"],
+					// metricTimesliceName: "Controller/agents/create",
 					namespace: "AgentsController",
-					requestsPerMinute: 22.2,
+					// requestsPerMinute: 22.2,
 					metadata: {
 						"code.lineno": 16,
 						traceId: "67e121ac35ff1cbe191fd1da94e50012",
@@ -246,9 +254,8 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/show",
-					metricTimesliceName: "Controller/agents/show",
-					requestsPerMinute: 22.2,
+					facet: ["Controller/agents/show", "16"],
+					// requestsPerMinute: 22.2,
 					namespace: "AgentsController",
 					metadata: {
 						"code.lineno": 16,
@@ -261,9 +268,8 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/destroy",
-					metricTimesliceName: "Controller/agents/destroy",
-					requestsPerMinute: 22.23,
+					facet: ["Controller/agents/destroy", "55"],
+					// requestsPerMinute: 22.23,
 					namespace: "AgentsController",
 					metadata: {
 						"code.lineno": 55,
@@ -292,7 +298,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName = {
-				"MessageBroker/ActiveJob::Async/Queue/Produce/Named/default": [
+				"MessageBroker/ActiveJob::Async/Queue/Produce/Named/default|8|null": [
 					{
 						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb",
 						"code.function": "perform",
@@ -305,7 +311,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "5154409dd464aad1",
 					},
 					{
-						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb",
+						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb|8|null",
 						"code.function": "perform",
 						"code.lineno": 8,
 						"code.namespace": "NotifierJob",
@@ -320,9 +326,9 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
-					requestsPerMinute: 24.1,
-					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default", "8"],
+					// requestsPerMinute: 24.1,
+					// metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
 				},
 			];
 
@@ -330,10 +336,9 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "NotifierJob",
-					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
-					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default", "8"],
 					namespace: "NotifierJob",
-					requestsPerMinute: 24.1,
+					// requestsPerMinute: 24.1,
 					metadata: {
 						"code.lineno": 8,
 						traceId: "2d2a1cfae193394b121427ff11df5fc5",
@@ -360,7 +365,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
-				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method": [
+				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method|11|null": [
 					{
 						"code.lineno": "11",
 						"code.namespace": "Custom::Helpers",
@@ -382,7 +387,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "a0627ed02eb626c0",
 					},
 				],
-				"Custom/CLMtesting/InstanceMethod": [
+				"Custom/CLMtesting/InstanceMethod|33|null": [
 					{
 						"code.lineno": 33,
 						"code.namespace": "Custom::Helpers",
@@ -404,7 +409,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2e1a7d60f6a4400d",
 					},
 				],
-				"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method": [
+				"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method|27|null": [
 					{
 						"code.lineno": "27",
 						"code.namespace": "Custom::Helpers",
@@ -426,7 +431,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2e1a7d60f6a4400d",
 					},
 				],
-				"Custom/CLMtesting/ClassMethod": [
+				"Custom/CLMtesting/ClassMethod|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "Custom::Helpers",
@@ -452,26 +457,29 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method", "11"],
 					averageDuration: 1.1,
-					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					// metricTimesliceName:
+					// 	"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
 				},
 				{
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
-					averageDuration: 1.2,
-					metricTimesliceName:
+					facet: [
 						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
+						"27",
+					],
+					averageDuration: 1.2,
+					// metricTimesliceName:
+					// 	"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
 				},
 				{
-					facet: "Custom/CLMtesting/ClassMethod",
+					facet: ["Custom/CLMtesting/ClassMethod", "16"],
 					averageDuration: 1.3,
-					metricTimesliceName: "Custom/CLMtesting/ClassMethod",
+					// metricTimesliceName: "Custom/CLMtesting/ClassMethod",
 				},
 				{
-					facet: "Custom/CLMtesting/InstanceMethod",
+					facet: ["Custom/CLMtesting/InstanceMethod", "33"],
 					averageDuration: 1.4,
-					metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
+					// metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
 				},
 			];
 
@@ -480,9 +488,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "Helpers",
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
-					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method", "11"],
 					averageDuration: 1.1,
 					namespace: "Custom",
 					metadata: {
@@ -496,9 +502,10 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "Helpers",
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
-					metricTimesliceName:
+					facet: [
 						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
+						"27",
+					],
 					averageDuration: 1.2,
 					namespace: "Custom",
 					metadata: {
@@ -511,11 +518,10 @@ describe("FLTCodeAttributeStrategy", () => {
 					functionName: "custom_instance_method",
 				},
 				{
-					facet: "Custom/CLMtesting/ClassMethod",
+					facet: ["Custom/CLMtesting/ClassMethod", "16"],
 					averageDuration: 1.3,
 					className: "Helpers",
 					functionName: "self.custom_class_method_too",
-					metricTimesliceName: "Custom/CLMtesting/ClassMethod",
 					namespace: "Custom",
 					metadata: {
 						"code.lineno": 16,
@@ -526,11 +532,10 @@ describe("FLTCodeAttributeStrategy", () => {
 					},
 				},
 				{
-					facet: "Custom/CLMtesting/InstanceMethod",
+					facet: ["Custom/CLMtesting/InstanceMethod", "33"],
 					averageDuration: 1.4,
 					className: "Helpers",
 					functionName: "custom_instance_method_too",
-					metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
 					namespace: "Custom",
 					metadata: {
 						"code.lineno": 33,
@@ -557,7 +562,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				mockNewRelicGraphqlClient
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
-				"Nested/OtherTransaction/Background/WhichIsWhich/samename": [
+				"Nested/OtherTransaction/Background/WhichIsWhich/samename|20|null": [
 					{
 						"code.filepath": "/usr/src/app/lib/which_is_which.rb",
 						"code.function": "samename",
@@ -569,6 +574,8 @@ describe("FLTCodeAttributeStrategy", () => {
 						"transaction.name": null,
 						transactionId: "90b4cb9daa96f88b",
 					},
+				],
+				"Nested/OtherTransaction/Background/WhichIsWhich/samename|9|null": [
 					{
 						"code.filepath": "/usr/src/app/lib/which_is_which.rb",
 						"code.function": "self.samename",
@@ -585,14 +592,13 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename", "20"],
 					averageDuration: 1.1,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 				},
 				{
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename", "9"],
 					averageDuration: 1.2,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					// metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 				},
 			];
 
@@ -601,8 +607,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "WhichIsWhich",
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename", "20"],
 					averageDuration: 1.1,
 					namespace: "WhichIsWhich",
 					metadata: {
@@ -616,18 +621,17 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "WhichIsWhich",
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename", "9"],
 					averageDuration: 1.2,
 					namespace: "WhichIsWhich",
 					metadata: {
-						"code.function": "samename",
-						"code.lineno": "20",
+						"code.function": "self.samename", // TODO is this right?
+						"code.lineno": "9",
 						traceId: "8c39f01c9e867d5d7179a6a5152a8f8e",
 						transactionId: "90b4cb9daa96f88b",
 						"code.namespace": "WhichIsWhich",
 					},
-					functionName: "samename",
+					functionName: "self.samename", // TODO is this right?
 				},
 			]);
 		});
@@ -648,7 +652,7 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const results = await strategy.addMethodName(
 				{
-					"Function/apis.v2.superheros:superheros_superhero_by_slug": [
+					"Function/apis.v2.superheros:superheros_superhero_by_slug|null|null": [
 						{
 							"code.filepath": "/superheros/apis/v2/superheroes.py",
 							"code.function": "SuperheroBySlug",
@@ -660,9 +664,9 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "Function/apis.v2.superheros:superheros_superhero_by_slug",
+						facet: ["Function/apis.v2.superheros:superheros_superhero_by_slug"],
 						averageDuration: 0.0025880090121565193,
-						metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug",
+						// metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug",
 					},
 				]
 			);

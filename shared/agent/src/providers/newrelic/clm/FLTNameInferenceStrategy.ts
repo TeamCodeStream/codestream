@@ -139,7 +139,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		return {
 			...symbol,
 			averageDuration: record.value,
-			metricTimesliceName: record.name,
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 		};
 	}
 
@@ -172,14 +172,12 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		sampleSizes: FileLevelTelemetrySampleSize[]
 	): FileLevelTelemetryErrorRate {
 		const symbol = this.extractSymbol(record.name);
-		const sampleSize = sampleSizes.find(_ =>
-			this.extractSymbol(_.metricTimesliceName).equals(symbol)
-		);
+		const sampleSize = sampleSizes.find(_ => this.extractSymbol(_.facet[0]).equals(symbol));
 		const errorRate = sampleSize ? record.value / sampleSize.sampleSize : 0;
 		return {
 			...symbol,
 			errorRate,
-			metricTimesliceName: record.name,
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 		};
 	}
 
@@ -207,7 +205,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		return {
 			...symbol,
 			sampleSize: record.value,
-			metricTimesliceName: record.name,
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 			source,
 		};
 	}

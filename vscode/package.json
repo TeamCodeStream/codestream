@@ -396,6 +396,7 @@
 		"node-abort-controller": "3.0.1",
 		"node-fetch": "2.6.7",
 		"source-map-support": "0.5.21",
+		"timed-cache": "2.0.0",
 		"uuid": "3.3.2",
 		"vscode-languageclient": "5.2.1"
 	},
@@ -409,6 +410,7 @@
 		"@types/node": "18",
 		"@types/node-fetch": "2.6.1",
 		"@types/sinon": "10.0.11",
+		"@types/timed-cache": "2.0.2",
 		"@types/uuid": "3.4.5",
 		"@types/vscode": "1.73.1",
 		"@typescript-eslint/eslint-plugin": "6.19.1",

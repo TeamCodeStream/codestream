@@ -1,7 +1,11 @@
 "use strict";
 
-import { FLTStrategy } from "./FLTStrategy";
-import { GetFileLevelTelemetryRequest } from "@codestream/protocols/agent";
+import { FLTResponse, FLTStrategy } from "./FLTStrategy";
+
+import { 	FileLevelTelemetryAverageDuration,
+  FileLevelTelemetryErrorRate,
+  FileLevelTelemetrySampleSize,
+  GetFileLevelTelemetryRequest, } from "@codestream/protocols/agent";
 import { groupBy as _groupBy } from "lodash";
 import {
 	AdditionalMetadataInfo,
@@ -19,6 +23,206 @@ import { generateMethodErrorRateQuery } from "../methodErrorRateQuery";
 import { Index } from "@codestream/utils/types";
 import { NewRelicGraphqlClient } from "../newRelicGraphqlClient";
 
+export type TimeWindow = {
+	begin: number;
+	end: number;
+};
+
+export type DurationsConsolidated = {
+	facet: string[];
+	averageDuration: number;
+};
+
+export type AverageDurationApiResponse = {
+	results: DurationsConsolidated[];
+	metadata: {
+		timeWindow: TimeWindow;
+	};
+};
+
+export type ErrorRateConsolidated = {
+	facet: string[];
+	errorRate: number;
+};
+
+export type SampleSizeConsolidated = {
+	facet: string[];
+	sampleSize: number;
+	source: "metric" | "span";
+};
+
+export type ErrorRateApiResponse = {
+	results: ErrorRateConsolidated[];
+	metadata: {
+		timeWindow: TimeWindow;
+	};
+};
+
+export type SampleSizeApiResponse = {
+	results: SampleSizeConsolidated[];
+	metadata: {
+		timeWindow: TimeWindow;
+	};
+};
+
+export type SampleSizeResponse = {
+	actor: {
+		account: {
+			metrics: {
+				metadata: {
+					timeWindow: TimeWindow;
+				};
+				results: [
+					{
+						facet: string;
+						// metricTimesliceName: string;
+						sampleSize: number;
+					},
+				];
+			};
+			extrapolations: any;
+			spans: {
+				metadata: {
+					timeWindow: TimeWindow;
+				};
+				results: [
+					{
+						facet: string[];
+						sampleSize: number;
+					},
+				];
+			};
+		};
+	};
+};
+
+export type ErrorRateResponse = {
+	actor: {
+		account: {
+			metrics: {
+				metadata: {
+					timeWindow: {
+						begin: number;
+						end: number;
+					};
+				};
+				results: [
+					{
+						facet: string;
+						// metricTimesliceName: string;
+						errorCount: number;
+					},
+				];
+			};
+			extrapolations: any;
+			spans: {
+				metadata: {
+					timeWindow: TimeWindow;
+				};
+				results: [
+					{
+						facet: string[];
+						errorCount: number;
+					},
+				];
+			};
+			// nrql: any; // TODO not any - this is not part of the response so maybe shouldn't be here
+			// extrapolations: any; // TODO not any
+		};
+	};
+};
+
+export type MethodAverageDurationResponse = {
+	actor: {
+		account: {
+			metrics: {
+				metadata: {
+					timeWindow: TimeWindow;
+				};
+				results: [
+					{
+						facet: string;
+						// metricTimesliceName: string;
+						averageDuration: number;
+					},
+				];
+			};
+			extrapolations: any;
+			spans: {
+				metadata: {
+					timeWindow: TimeWindow;
+				};
+				results: [
+					{
+						facet: string[];
+						averageDuration: number;
+					},
+				];
+			};
+		};
+	};
+};
+
+const ANONYMOUS_IDENTIFIER = "<anonymous>";
+
+export function keyFromFacet(facet: string[]) {
+	// Only create a key entry with lineno / colno level detail for non-anonymous functions
+	if (facet.length > 1 && facet[0].endsWith(ANONYMOUS_IDENTIFIER)) {
+		return facet.join("|");
+	}
+	return facet[0];
+}
+
+export function facetFromKey(key: string) {
+	return key.split("|");
+}
+
+export type MetricSpanCount = {
+	metric?: number;
+	span?: number;
+};
+
+class SampleSizeHolder {
+	private sampleSizeMap = new Map<string, MetricSpanCount>();
+
+	set(metricFacet: string[], value: MetricSpanCount) {
+		this.sampleSizeMap.set(keyFromFacet(metricFacet), value);
+	}
+
+	has(metricFacet: string[]): boolean {
+		return this.sampleSizeMap.has(keyFromFacet(metricFacet));
+	}
+
+	// Consider only the metricTimesliceName - no lineno / colno
+	// hasTimesliceName(metricFacet: string): boolean {
+	// 	const keys = this.keys();
+	// 	for (const key of keys) {
+	// 		if (key[0] === metricFacet) {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false;
+	// }
+
+	get(metricFacet: string[]) {
+		return this.sampleSizeMap.get(keyFromFacet(metricFacet));
+	}
+
+	keys(): string[][] {
+		return Array.from(this.sampleSizeMap.keys()).map(key => facetFromKey(key));
+	}
+}
+
+// function coerceToStrig(value: unknown): string | undefined {
+// 	if (typeof value === "string") {
+// 		return value;
+// 	}
+// 	if (typeof value === "number") {
+// 		return value.toString();
+// 	}
+// 	return undefined;
+// }
+
 export class FLTCodeAttributeStrategy implements FLTStrategy {
 	constructor(
 		protected entityGuid: string,
@@ -32,11 +236,15 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 
 	async execute() {
 		// get a list of file-based method telemetry
-		const spanResponse = (await this.getSpans()) || [];
+		const spanResponse = await this.getSpans();
 
 		const spans = this.applyLanguageFilter(spanResponse);
-		const groupedByTransactionName = spans ? _groupBy(spans, _ => _.name) : {};
-		const metricTimesliceNames = Object.keys(groupedByTransactionName);
+		const groupedByTransactionName = _groupBy(
+			spans,
+			// (_: Span) => _.name?.endsWith(ANONYMOUS_IDENTIFIER) ? `${_.name}|${_["code.lineno"]}|${_["code.column"]}` : _.name
+			(_: Span) => `${_.name}|${_["code.lineno"] ?? "null"}|${_["code.column"] ?? "null"}`
+		);
+		const metricTimesliceNames = Array.from(new Set(spans.flatMap(_ => (_.name ? [_.name] : [])))); // Filter out undefined without having to typecast
 		this.request.options = this.request.options || {};
 
 		const [averageDurationResponse, sampleSizeResponse, errorRateResponse] = await Promise.all([
@@ -51,31 +259,31 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		]);
 
 		// Consolidate throughput per method
-		const sampleSizeMap = new Map<string, { metric?: number; span?: number }>();
+		const sampleSizeHolder = new SampleSizeHolder();
 		if (sampleSizeResponse) {
-			sampleSizeResponse.actor.account.spans.results.forEach((e: any) => {
-				sampleSizeMap.set(e.metricTimesliceName, { span: e.sampleSize });
+			sampleSizeResponse.actor.account.spans.results.forEach(e => {
+				sampleSizeHolder.set(e.facet, { span: e.sampleSize });
 			});
-			sampleSizeResponse.actor.account.metrics.results.forEach((e: any) => {
-				if (!sampleSizeMap.has(e.metricTimesliceName)) {
-					sampleSizeMap.set(e.metricTimesliceName, {});
+			sampleSizeResponse.actor.account.metrics.results.forEach(e => {
+				if (!sampleSizeHolder.has([e.facet])) {
+					sampleSizeHolder.set([e.facet], {});
 				}
-				const sampleSize = sampleSizeMap.get(e.metricTimesliceName);
+				const sampleSize = sampleSizeHolder.get([e.facet]);
 				sampleSize!.metric = e.sampleSize;
 			});
 		}
 
 		const durationsMetric = averageDurationResponse?.actor?.account?.metrics;
 		const durationsSpan = averageDurationResponse?.actor?.account?.spans;
-		const durationsConsolidated = [];
+		const durationsConsolidated: DurationsConsolidated[] = [];
 		const errorCountsMetric = errorRateResponse?.actor?.account?.metrics;
 		const errorCountsSpan = errorRateResponse?.actor?.account?.spans;
-		const errorRatesConsolidated = [];
+		const errorRatesConsolidated: ErrorRateConsolidated[] = [];
 		const sampleSizesMetric = sampleSizeResponse?.actor?.account?.metrics;
 		const sampleSizesSpan = sampleSizeResponse?.actor?.account?.spans;
-		const sampleSizesConsolidated = [];
-		for (const methodName of sampleSizeMap.keys()) {
-			const sampleSizeInfo = sampleSizeMap.get(methodName);
+		const sampleSizesConsolidated: SampleSizeConsolidated[] = [];
+		for (const metricTimesliceFacet of sampleSizeHolder.keys()) {
+			const sampleSizeInfo = sampleSizeHolder.get(metricTimesliceFacet);
 			const sampleSizeMetricValue = sampleSizeInfo?.metric || 0;
 			const sampleSizeSpanValue = sampleSizeInfo?.span || 0;
 			const canUseMetric = true; // sampleSizeMetric > 30;
@@ -83,42 +291,45 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			// prefer metric if it can be used (min 1rpm) and it's at least 80% of span throughput
 			const preferMetric = canUseMetric && sampleSizeMetricValue / sampleSizeSpanValue > 0.8;
 
-			let duration;
-			let errorRate;
-			let sampleSize;
+			let duration: DurationsConsolidated | undefined;
+			let errorRate: ErrorRateConsolidated | undefined;
+			let sampleSize: SampleSizeConsolidated | undefined;
 			if (preferMetric && canUseMetric) {
-				const sampleSizeMetric = sampleSizesMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const sampleSizeMetric = sampleSizesMetric?.results?.find(_ =>
+					isSameMethod([_.facet], metricTimesliceFacet)
 				);
-				const durationMetric = durationsMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const durationMetric = durationsMetric?.results?.find(_ =>
+					isSameMethod([_.facet], metricTimesliceFacet)
 				);
-				const errorCountMetric = errorCountsMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const errorCountMetric = errorCountsMetric?.results?.find(_ =>
+					isSameMethod([_.facet], metricTimesliceFacet)
 				);
 				if (sampleSizeMetric) {
 					sampleSize = {
-						...sampleSizeMetric,
+						facet: [sampleSizeMetric.facet],
+						sampleSize: sampleSizeMetric.sampleSize,
 						source: "metric",
 					};
 				}
-				duration = durationMetric;
+				duration = durationMetric
+					? { facet: [durationMetric.facet], averageDuration: durationMetric.averageDuration }
+					: undefined;
 				if (errorCountMetric != undefined) {
 					errorRate = {
-						...errorCountMetric,
+						facet: [errorCountMetric.facet],
 						errorRate: errorCountMetric.errorCount / sampleSizeMetricValue,
 					};
 				}
 			}
 			if (canUseSpan && (!preferMetric || !duration)) {
-				const sampleSizeSpan = sampleSizesSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const sampleSizeSpan = sampleSizesSpan?.results?.find(_ =>
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
-				const durationSpan = durationsSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const durationSpan = durationsSpan?.results?.find(_ =>
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
-				const errorCountSpan = errorCountsSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+				const errorCountSpan = errorCountsSpan?.results?.find(_ =>
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				if (sampleSizeSpan) {
 					sampleSize = {
@@ -145,74 +356,125 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				errorRatesConsolidated.push(errorRate);
 			}
 		}
-
 		// FIXME deduplicate
+		let averageDurationEnhancedTimeslices: EnhancedMetricTimeslice[] = [];
+		let averageDurationApiResponse: AverageDurationApiResponse | undefined = undefined;
 		if (averageDurationResponse) {
-			averageDurationResponse.actor.account.nrql = {
+			averageDurationApiResponse = {
 				results: durationsConsolidated,
 				metadata:
 					averageDurationResponse.actor.account.metrics.metadata ||
 					averageDurationResponse.actor.account.extrapolations.metadata,
 			};
-			averageDurationResponse.actor.account.nrql.results = this.addMethodName(
+			const addedMethodName = this.addMethodName(
 				groupedByTransactionName,
-				averageDurationResponse.actor.account.nrql.results
-			).filter(_ => _ !== null && _.functionName);
+				averageDurationApiResponse.results
+			);
+			averageDurationEnhancedTimeslices = addedMethodName.filter(_ => _ !== null && _.functionName);
 
 			if (this.request?.locator?.functionName) {
-				averageDurationResponse.actor.account.nrql.results =
-					averageDurationResponse.actor.account.nrql.results.filter(
-						(r: any) => r.functionName === this.request?.locator?.functionName
-					);
+				averageDurationEnhancedTimeslices = averageDurationEnhancedTimeslices.filter(
+					r => r.functionName === this.request?.locator?.functionName
+				);
 			}
 		}
 
+		let errorRateApiResponse: ErrorRateApiResponse | undefined = undefined;
+		let errorRateEnhancedTimeslices: EnhancedMetricTimeslice[] = [];
 		if (errorRateResponse) {
-			errorRateResponse.actor.account.nrql = {
+			errorRateApiResponse = {
 				results: errorRatesConsolidated,
 				metadata:
 					errorRateResponse.actor.account.metrics.metadata ||
 					errorRateResponse.actor.account.extrapolations.metadata,
 			};
-			errorRateResponse.actor.account.nrql.results = this.addMethodName(
+			errorRateEnhancedTimeslices = this.addMethodName(
 				groupedByTransactionName,
-				errorRateResponse.actor.account.nrql.results
+				errorRateApiResponse.results
 			).filter(_ => _ !== null && _.functionName);
 			if (this.request?.locator?.functionName) {
-				errorRateResponse.actor.account.nrql.results =
-					errorRateResponse.actor.account.nrql.results.filter(
-						(r: any) => r.functionName === this.request?.locator?.functionName
-					);
+				errorRateEnhancedTimeslices = errorRateEnhancedTimeslices.filter(
+					r => r.functionName === this.request?.locator?.functionName
+				);
 			}
 		}
 
+		let sampleSizeEnhancedTimeslices: EnhancedMetricTimeslice[] = [];
+		let sampleSizeApiResponse: SampleSizeApiResponse | undefined = undefined;
 		if (sampleSizeResponse) {
-			sampleSizeResponse.actor.account.nrql = {
+			sampleSizeApiResponse = {
 				results: sampleSizesConsolidated,
 				metadata:
 					sampleSizeResponse.actor.account.metrics.metadata ||
 					sampleSizeResponse.actor.account.extrapolations.metadata,
 			};
-			sampleSizeResponse.actor.account.nrql.results = this.addMethodName(
+			sampleSizeEnhancedTimeslices = this.addMethodName(
 				groupedByTransactionName,
-				sampleSizeResponse.actor.account.nrql.results
+				sampleSizeApiResponse.results
 			).filter(_ => _ !== null && _.functionName);
 			if (this.request?.locator?.functionName) {
-				sampleSizeResponse.actor.account.nrql.results =
-					sampleSizeResponse.actor.account.nrql.results.filter(
-						(r: any) => r.functionName === this.request?.locator?.functionName
-					);
+				sampleSizeEnhancedTimeslices = sampleSizeEnhancedTimeslices.filter(
+					r => r.functionName === this.request?.locator?.functionName
+				);
 			}
 		}
-		return {
-			averageDuration: averageDurationResponse?.actor?.account?.nrql?.results || [],
-			sampleSize: sampleSizeResponse?.actor?.account?.nrql?.results || [],
-			errorRate: errorRateResponse?.actor?.account?.nrql?.results || [],
+
+		const fileLevelTelemetryAverageDuration: FileLevelTelemetryAverageDuration[] =
+			averageDurationEnhancedTimeslices.map((metric: EnhancedMetricTimeslice) => {
+				const response: FileLevelTelemetryAverageDuration = {
+					facet: metric.facet,
+					namespace: metric.namespace,
+					className: metric.className,
+					lineno: metric.lineno,
+					column: metric.column,
+					functionName: metric.functionName!,
+					commit: metric.commit,
+					averageDuration: metric.averageDuration!,
+				};
+				return response;
+			});
+
+		const fileLevelTelemetryErrorRate: FileLevelTelemetryErrorRate[] =
+			errorRateEnhancedTimeslices.map((metric: EnhancedMetricTimeslice) => {
+				const response: FileLevelTelemetryErrorRate = {
+					facet: metric.facet,
+					namespace: metric.namespace,
+					className: metric.className,
+					lineno: metric.lineno,
+					column: metric.column,
+					functionName: metric.functionName!,
+					commit: metric.commit,
+					errorRate: metric.errorRate!,
+				};
+				return response;
+			});
+
+		const fileLevelTelemetrySampleSize: FileLevelTelemetrySampleSize[] =
+			sampleSizeEnhancedTimeslices.map((metric: EnhancedMetricTimeslice) => {
+				const response: FileLevelTelemetrySampleSize = {
+					facet: metric.facet,
+					namespace: metric.namespace,
+					className: metric.className,
+					lineno: metric.lineno,
+					column: metric.column,
+					functionName: metric.functionName!,
+					commit: metric.commit,
+					sampleSize: metric.sampleSize ?? 0,
+					source: metric.source!,
+				};
+				return response;
+			});
+
+		const response: FLTResponse = {
+			averageDuration: fileLevelTelemetryAverageDuration,
+			sampleSize: fileLevelTelemetrySampleSize,
+			errorRate: fileLevelTelemetryErrorRate,
 		};
+		return response;
 	}
 
-	async getSpans(): Promise<Span[] | undefined> {
-		if (!this.relativeFilePath) return undefined;
+	async getSpans(): Promise<Span[]> {
+		if (!this.relativeFilePath) return [];
 		try {
 			let bestMatchingCodeFilePath;
 			if (this.resolutionMethod === "hybrid") {
@@ -252,7 +514,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			relativeFilePath: this.relativeFilePath,
 			accountId: this.accountId,
 		});
-		return undefined;
+		return [];
 	}
 
 	private async getBestMatchingCodeFilePath(): Promise<string | undefined> {
@@ -291,7 +553,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		return bestMatch?.codeFilePath;
 	}
 
-	async getMethodSampleSize(metricTimesliceNames: string[]) {
+	async getMethodSampleSize(
+		metricTimesliceNames: string[]
+	): Promise<SampleSizeResponse | undefined> {
 		const query = generateMethodSampleSizeQuery(
 			this.languageId,
 			this.entityGuid,
@@ -312,7 +576,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		return undefined;
 	}
 
-	async getMethodAverageDuration(metricTimesliceNames: string[]) {
+	async getMethodAverageDuration(
+		metricTimesliceNames: string[]
+	): Promise<MethodAverageDurationResponse | undefined> {
 		const query = generateMethodAverageDurationQuery(
 			this.languageId,
 			this.entityGuid,
@@ -333,7 +599,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		return undefined;
 	}
 
-	async getMethodErrorCount(metricTimesliceNames: string[]) {
+	async getMethodErrorCount(
+		metricTimesliceNames: string[]
+	): Promise<ErrorRateResponse | undefined> {
 		const query = generateMethodErrorRateQuery(
 			this.languageId,
 			this.entityGuid,
@@ -375,31 +643,51 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 
 	addMethodName(
 		groupedByTransactionName: Index<Span[]>,
-		metricTimesliceNames: MetricTimeslice[]
+		metricTimeslices: MetricTimeslice[]
 	): EnhancedMetricTimeslice[] {
-		return metricTimesliceNames.reduce<EnhancedMetricTimeslice[]>((enhTimslices, _) => {
+		return metricTimeslices.reduce<EnhancedMetricTimeslice[]>((enhTimslices, metricTimeslice) => {
 			const additionalMetadata: AdditionalMetadataInfo = {};
-			const metadata = groupedByTransactionName[this.timesliceNameMap(_.metricTimesliceName)];
+			const facetKey = `${this.timesliceNameMap(metricTimeslice.facet[0])}|${
+				metricTimeslice.facet[1] ?? "null"
+			}|${metricTimeslice.facet[2] ?? "null"}`;
+			let metadata = groupedByTransactionName[facetKey];
+			if (!metadata) {
+				// Search on just the metricTimesliceName without lineno / colno for metrics source
+				const key = Object.keys(groupedByTransactionName).find(facetKeys => {
+					const parts = facetKeys.split("|");
+					return parts[0] === this.timesliceNameMap(metricTimeslice.facet[0]);
+				});
+				if (key) {
+					metadata = groupedByTransactionName[key];
+				}
+			}
 			if (metadata) {
-				["code.lineno", "traceId", "transactionId", "code.namespace", "code.function"].forEach(
-					_ => {
-						// TODO this won't work for lambdas
-						if (_) {
-							additionalMetadata[_ as keyof AdditionalMetadataInfo] = (metadata[0] as any)[_];
-						}
+				[
+					"tags.commit",
+					"code.lineno",
+					"code.column",
+					"traceId",
+					"transactionId",
+					"code.namespace",
+					"code.function",
+				].forEach(_ => {
+					// TODO this won't work for lambdas
+					if (_) {
+						additionalMetadata[_ as keyof AdditionalMetadataInfo] = (metadata[0] as any)[_];
 					}
-				);
+				});
 			}
 
 			let functionInfo: FunctionInfo | undefined = undefined;
 			const codeNamespace = additionalMetadata["code.namespace"];
 			const codeFunction = additionalMetadata["code.function"];
+			const commit = additionalMetadata["tags.commit"];
 			switch (this.languageId) {
 				case "ruby":
-					functionInfo = this.parseRubyFunctionCoordinates(_.metricTimesliceName, codeNamespace);
+					functionInfo = this.parseRubyFunctionCoordinates(metricTimeslice.facet[0], codeNamespace);
 					break;
 				case "python":
-					functionInfo = this.parsePythonFunctionCoordinates(_.metricTimesliceName);
+					functionInfo = this.parsePythonFunctionCoordinates(metricTimeslice.facet[0]);
 					break;
 				case "csharp":
 					if (codeNamespace && codeFunction) {
@@ -417,6 +705,13 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					functionInfo = {
 						functionName: additionalMetadata["code.function"],
 						className: additionalMetadata["code.namespace"],
+						lineno: additionalMetadata["code.lineno"]
+							? Number(additionalMetadata["code.lineno"])
+							: undefined,
+						column: additionalMetadata["code.column"]
+							? Number(additionalMetadata["code.column"])
+							: undefined,
+						commit,
 					};
 					break;
 			}
@@ -425,7 +720,8 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				return enhTimslices;
 			}
 
-			let { className, functionName, namespace } = functionInfo;
+			const { className, namespace, lineno, column } = functionInfo;
+			let functionName = functionInfo.functionName;
 
 			// Use Agent provided function name if available
 			if (additionalMetadata["code.function"] && additionalMetadata["code.function"]?.length > 0) {
@@ -436,13 +732,17 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				additionalMetadata["code.namespace"] = namespace;
 			}
 
-			enhTimslices.push({
-				..._,
+			const enhTimeslice = {
+				...metricTimeslice,
 				metadata: additionalMetadata,
 				namespace: additionalMetadata["code.namespace"],
 				className,
 				functionName,
-			});
+				lineno,
+				column,
+				commit,
+			};
+			enhTimslices.push(enhTimeslice);
 			return enhTimslices;
 		}, []);
 	}
@@ -548,15 +848,20 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 	}
 }
 
-function isSameMethod(
-	method1: string,
-	method2: string,
-	language: LanguageId | undefined = undefined
-) {
-	if (method1 === method2) return true;
+function isSameMethod(method1: string[], method2: string[]) {
+	const method1Key = keyFromFacet(method1);
+	const method2Key = keyFromFacet(method2);
+	// Span name, code.lineno and code.column are same
+	if (method1Key === method2Key) return true;
 
 	// probably need some language-specific logic here
-	const method1Parts = method1.split("/");
-	const method2Parts = method2.split("/");
-	return method1Parts[method1Parts.length - 1] === method2Parts[method2Parts.length - 1];
+	const [spanName1, lineNo1, colNo1] = method1;
+	const [spanName2, lineNo2, colNo2] = method2;
+	const method1Parts = spanName1.split("/");
+	const method2Parts = spanName2.split("/");
+	return (
+		method1Parts[method1Parts.length - 1] === method2Parts[method2Parts.length - 1] &&
+		lineNo1 === lineNo2 &&
+		colNo1 === colNo2
+	);
 }

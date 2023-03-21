@@ -6,11 +6,14 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.search.FilenameIndex
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.findParentOfType
 import com.jetbrains.python.psi.PyFile
+import com.jetbrains.python.psi.PyFunction
 
 class CLMPythonComponent(project: Project) :
     CLMLanguageComponent<CLMPythonEditorManager>(
@@ -94,6 +97,10 @@ class PythonSymbolResolver : SymbolResolver {
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
         if (psiFile !is PyFile) return null
         return psiFile.findTopLevelFunction(functionName)
+    }
+
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return psiElement.findParentOfType<PyFunction>()
     }
 
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {

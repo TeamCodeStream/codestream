@@ -154,7 +154,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		sessionServiceContainer,
 		nrApiConfig,
 		newRelicGraphqlClient,
-		entityAccountResolver
+		entityAccountResolver,
+		deploymentsProvider,
 	);
 
 	disposables.push(clmManager);

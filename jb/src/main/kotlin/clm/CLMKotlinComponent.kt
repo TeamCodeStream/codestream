@@ -5,7 +5,9 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.findParentOfType
 import org.jetbrains.kotlin.asJava.elements.KtLightMethodImpl
 import org.jetbrains.kotlin.psi.KtFile
 import org.jetbrains.kotlin.psi.KtFunction
@@ -68,6 +70,10 @@ class KotlinSymbolResolver : SymbolResolver {
             return result2
         }
         return null
+    }
+
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return  psiElement.findParentOfType<KtLightMethodImpl>() ?: psiElement.findParentOfType<KtFunction>()
     }
 
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {

@@ -6,7 +6,10 @@ import * as NewRelic from "newrelic";
 
 import {
 	CodeStreamDiffUriData,
+	FileLevelTelemetryAverageDuration,
+	FileLevelTelemetryErrorRate,
 	FileLevelTelemetryMetric,
+	FileLevelTelemetrySampleSize,
 	GetFileLevelTelemetryRequest,
 	GetFileLevelTelemetryResponse,
 	NRErrorResponse,
@@ -35,6 +38,9 @@ import { lsp } from "../../../system/decorators/lsp";
 import { errorTypeMapper } from "../utils";
 import { ContextLogger } from "../../contextLogger";
 import { Disposable } from "../../../system/disposable";
+import { isEmpty } from "lodash";
+import { keyFromFacet } from "./FLTCodeAttributeStrategy";
+import { DeploymentsProvider } from "../deployments/deploymentsProvider";
 
 @lsp
 export class ClmManager implements Disposable {
@@ -44,7 +50,8 @@ export class ClmManager implements Disposable {
 		private sessionServiceContainer: SessionServiceContainer,
 		private nrApiConfig: NrApiConfig,
 		private graphqlClient: NewRelicGraphqlClient,
-		private entityAccountResolver: EntityAccountResolver
+		private entityAccountResolver: EntityAccountResolver,
+		private deploymentsProvider: DeploymentsProvider,
 	) {}
 
 	// 2 minute cache
@@ -106,7 +113,7 @@ export class ClmManager implements Disposable {
 			resolutionMethod === "locator" &&
 			!request.locator?.functionName &&
 			!request.locator?.namespace &&
-			!request.locator?.namespaces
+			isEmpty(request.locator?.namespaces)
 		) {
 			ContextLogger.warn("getFileLevelTelemetry: Missing locator for resolutionMethod 'locator'");
 			return undefined;
@@ -191,6 +198,12 @@ export class ClmManager implements Disposable {
 				}
 			}
 
+			const deploymentCommit = await this.getDeploymentCommitIfNeeded(newRelicEntityGuid, {
+				averageDuration,
+				errorRate,
+				sampleSize,
+			});
+
 			const hasAnyData = sampleSize.length || averageDuration.length || errorRate.length;
 			const response: GetFileLevelTelemetryResponse = {
 				codeNamespace: request?.locator?.namespace,
@@ -213,6 +226,7 @@ export class ClmManager implements Disposable {
 				},
 				relativeFilePath: relativeFilePath,
 				newRelicUrl: `${this.nrApiConfig.productUrl}/redirect/entity/${newRelicEntityGuid}`,
+        deploymentCommit,
 			};
 
 			if (sampleSize?.length > 0) {
@@ -288,8 +302,9 @@ export class ClmManager implements Disposable {
 		const consolidated = new Map<string, T>();
 		for (const resultSet of averageDurationResultSets) {
 			for (const result of resultSet) {
-				if (!consolidated.has(result.metricTimesliceName)) {
-					consolidated.set(result.metricTimesliceName, result);
+				const metricTimesliceKey = keyFromFacet(result.facet);
+				if (!consolidated.has(metricTimesliceKey)) {
+					consolidated.set(metricTimesliceKey, result);
 				}
 			}
 		}
@@ -304,7 +319,7 @@ export class ClmManager implements Disposable {
 			// is also based) is the name of the concrete class
 			const parts = anomaly.metricTimesliceName.split("/");
 			const altClassName = parts[parts.length - 2];
-			const metricMatch1 = metrics.find(_ => _.metricTimesliceName === anomaly.metricTimesliceName);
+			const metricMatch1 = metrics.find(_ => _.facet[0] === anomaly.metricTimesliceName[0]);
 			const metricMatch2 = metrics.find(
 				_ =>
 					(_.className === anomaly.codeAttrs?.codeNamespace || _.className === altClassName) &&
@@ -314,24 +329,45 @@ export class ClmManager implements Disposable {
 				(metricMatch1 || metricMatch2)!.anomaly = anomaly;
 			} else {
 				const metric: FileLevelTelemetryMetric = {
-					metricTimesliceName: anomaly.metricTimesliceName,
-					functionName: anomaly.codeAttrs?.codeFunction,
-					className: anomaly.codeAttrs?.codeNamespace,
-					namespace: anomaly.codeAttrs?.codeNamespace,
-					anomaly: anomaly,
+					facet: [anomaly.metricTimesliceName],
+          functionName: anomaly.codeAttrs?.codeFunction,
+          className: anomaly.codeAttrs?.codeNamespace,
+          namespace: anomaly.codeAttrs?.codeNamespace,
+          anomaly: anomaly,
 				};
 				metrics.push(metric);
 			}
 		}
 	}
 
-	/*
-	Not actually used - agent is restarted at logout but keeping for
-	possible future use
-  */
-	dispose(): void {
-		this._mltTimedCache.clear();
+	private async getDeploymentCommitIfNeeded(
+		newRelicEntityGuid: string,
+		results: {
+			errorRate: FileLevelTelemetryErrorRate[];
+			sampleSize: FileLevelTelemetrySampleSize[];
+			averageDuration: FileLevelTelemetryAverageDuration[];
+		}
+	) {
+		const missingCommit =
+			results.errorRate.find(_ => !_.commit) !== undefined ||
+			results.sampleSize.find(_ => !_.commit) !== undefined ||
+			results.averageDuration.find(_ => !_.commit) !== undefined;
+		if (!missingCommit) return undefined;
+		Logger.log("getDeploymentCommitIfNeeded: missing commit - calling getLatestDeployment");
+		const result = await this.deploymentsProvider.getLatestDeployment({ entityGuid: newRelicEntityGuid });
+		Logger.log(
+			`getDeploymentCommitIfNeeded: getLatestDeployment found commit ${result?.deployment.commit}`
+		);
+		return result?.deployment.commit;
 	}
+
+  /*
+Not actually used - agent is restarted at logout but keeping for
+possible future use
+*/
+  dispose(): void {
+    this._mltTimedCache.clear();
+  }
 }
 
 // Use type guard so that list of languages can be defined once and shared with union type LanguageId
@@ -359,6 +395,9 @@ export type LanguageId = (typeof supportedLanguages)[number];
 export type EnhancedMetricTimeslice = MetricTimeslice & {
 	className?: string;
 	functionName?: string;
+	lineno?: number;
+	column?: number;
 	metadata: AdditionalMetadataInfo;
 	namespace?: string;
+	commit?: string;
 };

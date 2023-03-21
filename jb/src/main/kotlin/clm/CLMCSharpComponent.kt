@@ -86,6 +86,10 @@ class CSharpSymbolResolver : SymbolResolver {
         return null
     }
 
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+       return findParentOfPredicate(psiElement, ::isFunction)
+    }
+
     private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
         return element.descendants(true).filter { it.elementType.toString() == elementType }.toList()
     }
@@ -226,6 +230,18 @@ class CSharpSymbolResolver : SymbolResolver {
             searchNode = searchNode?.parent
         } while (searchNode != null && searchNode !is PsiFile && !searchElements.contains(searchNode.elementType.toString()))
         return if (searchElements.contains(searchNode.elementType.toString())) {
+            searchNode
+        } else {
+            null
+        }
+    }
+
+    private fun findParentOfPredicate(element: PsiElement, predicate: (element: PsiElement) -> Boolean): PsiElement? {
+        var searchNode: PsiElement? = element
+        do {
+            searchNode = searchNode?.parent
+        } while (searchNode != null && searchNode !is PsiFile && !predicate(searchNode))
+        return if (searchNode != null && predicate(searchNode)) {
             searchNode
         } else {
             null

@@ -30,10 +30,9 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import org.junit.BeforeClass
 
-    @Suppress("UnstableApiUsage")
-    @TestDataPath("csTestData/simple")
+@Suppress("UnstableApiUsage")
+@TestDataPath("csTestData/simple")
 class CLMLanguageComponentTest : BasePlatformTestCase() {
     val mockAgentService = mockk<AgentService>(relaxed = true)
     val mockJxBrowserEngineService = mockk<JxBrowserEngineService>(relaxed = true)
@@ -91,6 +90,9 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     functionName = "hello_world",
                     metricTimesliceName = "d",
                     averageDuration = 3.333f,
+                    lineno = null,
+                    column = null,
+                    commit = null,
                     anomaly = null,
                 ),
             ),
@@ -101,6 +103,9 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                 metricTimesliceName = "t",
                 sampleSize = 5,
                 source = "span",
+                lineno = null,
+                column = null,
+                commit = null,
                 anomaly = null,
             )),
             errorRate = null,
@@ -114,6 +119,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
             sinceDateFormatted = null,
             newRelicEntityName = null,
             newRelicUrl = null,
+            deploymentCommit = null,
         )
 
         coEvery { mockAgentService.fileLevelTelemetry(any()) } coAnswers {
@@ -149,16 +155,22 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     sampleSize = 100,
                     namespace = null,
                     source = "span",
+                    lineno = null,
+                    column = null,
+                    commit = null,
                     anomaly = null,
                 ), MethodLevelTelemetrySampleSize(
-                    className = "Controller",
-                    functionName = "postSomething",
-                    metricTimesliceName = "t",
-                    sampleSize = 150,
-                    namespace = null,
-                    source = "span",
+                className = "Controller",
+                functionName = "postSomething",
+                metricTimesliceName = "t",
+                sampleSize = 150,
+                namespace = null,
+                source = "span",
+                lineno = null,
+                column = null,
+                commit = null,
                 anomaly = null,
-                )
+            )
             ),
             averageDuration = listOf(
                 MethodLevelTelemetryAverageDuration(
@@ -167,15 +179,21 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     metricTimesliceName = "d",
                     averageDuration = 200.0f,
                     namespace = null,
+                    lineno = null,
+                    column = null,
+                    commit = null,
                     anomaly = null,
                 ), MethodLevelTelemetryAverageDuration(
-                    namespace = null,
-                    className = "Controller",
-                    functionName = "postSomething",
-                    metricTimesliceName = "d",
-                    averageDuration = 220.0f,
-                    anomaly = null,
-                )
+                namespace = null,
+                className = "Controller",
+                functionName = "postSomething",
+                metricTimesliceName = "d",
+                averageDuration = 220.0f,
+                lineno = null,
+                column = null,
+                commit = null,
+                anomaly = null,
+            )
             ),
             errorRate = null,
             newRelicEntityGuid = "abcd-1234",
@@ -187,7 +205,8 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
             sinceDateFormatted = null,
             newRelicEntityName = null,
             newRelicUrl = null,
-            relativeFilePath = null
+            relativeFilePath = null,
+            deploymentCommit = null,
         )
 
         coEvery { mockAgentService.fileLevelTelemetry(any()) } coAnswers {

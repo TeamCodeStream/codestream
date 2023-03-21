@@ -1,7 +1,11 @@
 "use strict";
 import * as path from "path";
 
-import { MarkerNotLocatedReason } from "@codestream/protocols/agent";
+import {
+	Markerish,
+	MarkerLocationsById,
+	MarkerNotLocatedReason,
+} from "@codestream/protocols/agent";
 import {
 	CSLocationArray,
 	CSMarker,
@@ -12,7 +16,7 @@ import {
 import { applyPatch, createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
 import { URI } from "vscode-uri";
 
-import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
+import { MarkerLocation } from "../api/extensions";
 import { getStorage } from "../storage";
 import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";
@@ -28,11 +32,6 @@ import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
-
-export interface Markerish {
-	id: string;
-	referenceLocations: CSReferenceLocation[];
-}
 
 export interface MissingLocationsById {
 	[id: string]: {
@@ -113,7 +112,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			streamId,
 			commitHash,
 		});
-		this.cacheResponse(response);
+		this.cacheResponse([response]);
 		return response.markerLocations;
 	}
 
@@ -688,11 +687,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return "MarkerLocation";
 	}
 
-	static async computeCurrentLocations(uri: URI, markersByCommit: Map<string, Markerish[]>) {
+	static async computeCurrentLocations(uri: URI, commit: string, markers: Markerish[]) {
 		const locations: MarkerLocationsById = Object.create(null);
 		const orphans: MissingLocationsById = Object.create(null);
 
-		if (markersByCommit.size === 0) {
+		if (markers.length === 0) {
 			return { locations, orphans };
 		}
 
@@ -708,43 +707,34 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			return { locations, orphans };
 		}
 
-		let fetchIfCommitNotFound = true;
-		for (const [revision, markers] of markersByCommit.entries()) {
-			const diff = await git.getDiffBetweenCommits(
-				revision,
-				currentFileRevision,
-				filePath,
-				fetchIfCommitNotFound
-			);
-			fetchIfCommitNotFound = false;
-			if (!diff) {
-				const details = `cannot obtain diff - skipping calculation from ${revision} to ${currentFileRevision}`;
-				for (const marker of markers) {
-					orphans[marker.id] = {
-						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
-						details,
-					};
-				}
-
-				continue;
-			}
-
-			const locationsToCalculate: MarkerLocationsById = Object.create(null);
+		const parsedDiff = await git.getDiffBetweenCommits(commit, currentFileRevision, filePath, true);
+		if (!parsedDiff) {
+			const details = `cannot obtain diff - skipping calculation from ${commit} to ${currentFileRevision}`;
 			for (const marker of markers) {
-				const location = marker.referenceLocations[0].location;
-				locationsToCalculate[marker.id] = {
-					id: marker.id,
-					lineStart: location[0],
-					colStart: location[1],
-					lineEnd: location[2],
-					colEnd: location[3],
+				orphans[marker.id] = {
+					reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
+					details,
 				};
 			}
 
-			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
-			for (const [id, location] of Object.entries(calculatedLocations)) {
-				locations[id] = location;
-			}
+			return { locations, orphans };
+		}
+
+		const locationsToCalculate: MarkerLocationsById = Object.create(null);
+		for (const marker of markers) {
+			const location = marker.referenceLocations[0].location;
+			locationsToCalculate[marker.id] = {
+				id: marker.id,
+				lineStart: location[0],
+				colStart: location[1],
+				lineEnd: location[2],
+				colEnd: location[3],
+			};
+		}
+
+		const calculatedLocations = await calculateLocations(locationsToCalculate, parsedDiff);
+		for (const [id, location] of Object.entries(calculatedLocations)) {
+			locations[id] = location;
 		}
 
 		const locationsInCurrentCommit = {

@@ -1,4 +1,3 @@
-"use strict";
 import { ConfigurationChangeEvent, Disposable, languages, workspace } from "vscode";
 
 import { SymbolLocator } from "../providers/symbolLocator";
@@ -6,12 +5,13 @@ import { Container } from "../container";
 import { configuration } from "../configuration";
 import { InstrumentationCodeLensProvider } from "../providers/instrumentationCodeLensProvider";
 import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
+import { observabilityService } from "../agent/ObservabilityService";
 
 export class InstrumentableCodeLensController implements Disposable {
 	private _disposable: Disposable | undefined;
 	private _provider: InstrumentationCodeLensProvider | undefined;
 	private _providerDisposable: Disposable | undefined;
-	private _status: any;
+	private _status: SessionStatus | undefined = undefined;
 
 	constructor() {
 		this._disposable = Disposable.from(
@@ -33,7 +33,7 @@ export class InstrumentableCodeLensController implements Disposable {
 	}
 
 	private onAnyChanged() {
-		const cfg = configuration.get<Boolean>(configuration.name("goldenSignalsInEditor").value);
+		const cfg = configuration.get<boolean>(configuration.name("goldenSignalsInEditor").value);
 		if (cfg) {
 			if (this._status === SessionStatus.SignedIn) {
 				this.ensureProvider();
@@ -91,7 +91,7 @@ export class InstrumentableCodeLensController implements Disposable {
 		this._provider = new InstrumentationCodeLensProvider(
 			template,
 			new SymbolLocator(),
-			Container.agent.observability!,
+			observabilityService,
 			Container.agent.telemetry!
 		);
 		this._providerDisposable = Disposable.from(

@@ -15,18 +15,23 @@ export interface NewRelicId {
 }
 
 export interface MetricTimeslice {
-	facet: string;
-	metricTimesliceName: string;
+	facet: string[];
+	// metricTimesliceName: string;
 	averageDuration?: number;
-	requestsPerMinute?: number;
+	errorRate?: number; // TODO WHY
+	sampleSize?: number;
+	source?: "metric" | "span";
+	// requestsPerMinute?: number;
 }
 
 export interface AdditionalMetadataInfo {
 	traceId?: string;
 	"code.lineno"?: string;
+	"code.column"?: string;
 	transactionId?: string;
 	"code.namespace"?: string;
 	"code.function"?: string;
+	"tags.commit"?: string;
 }
 
 export class AccessTokenError extends Error {
@@ -44,7 +49,9 @@ export interface Span {
 	"code.function"?: string | null;
 	"code.namespace"?: string | null;
 	"code.lineno"?: number | string | null;
+	"code.column"?: number | string | null;
 	"transaction.name"?: string | null;
+	"tags.commit"?: string | null;
 	name?: string;
 	traceId?: string;
 	transactionId?: string;
@@ -94,6 +101,9 @@ export interface FunctionInfo {
 	namespace?: string;
 	className?: string;
 	functionName?: string;
+	lineno?: number;
+	column?: number;
+	commit?: string;
 }
 
 export type ResolutionMethod = "filePath" | "locator" | "hybrid";

@@ -98,15 +98,12 @@ import {
 	FetchTeamsRequestType,
 	FetchUnreadStreamsRequestType,
 	FetchUsersRequestType,
-	FileLevelTelemetryRequestOptions,
-	FunctionLocator,
 	GetDocumentFromKeyBindingRequestType,
 	GetDocumentFromKeyBindingResponse,
 	GetDocumentFromMarkerRequestType,
 	GetDocumentFromMarkerResponse,
 	GetFileContentsAtRevisionRequestType,
 	GetFileContentsAtRevisionResponse,
-	GetFileLevelTelemetryRequestType,
 	GetFileScmInfoRequestType,
 	GetFileStreamRequestType,
 	GetFileStreamResponse,
@@ -1009,29 +1006,6 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		preferences() {
 			return this._connection.sendRequest(GetPreferencesRequestType, undefined);
-		}
-	})(this);
-
-	get observability() {
-		return this._observability;
-	}
-	private readonly _observability = new (class {
-		constructor(private readonly _connection: CodeStreamAgentConnection) {}
-
-		getFileLevelTelemetry(
-			fileUri: string,
-			languageId: string,
-			resetCache: boolean,
-			locator?: FunctionLocator,
-			options?: FileLevelTelemetryRequestOptions
-		) {
-			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
-				fileUri,
-				languageId,
-				resetCache,
-				locator,
-				options
-			});
 		}
 	})(this);
 

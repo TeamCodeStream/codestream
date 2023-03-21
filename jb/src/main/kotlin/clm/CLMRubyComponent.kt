@@ -104,6 +104,10 @@ class RubySymbolResolver : SymbolResolver {
         return findAnyFunction(psiFile, justFunctionName)
     }
 
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return psiElement.findParentOfType<RMethodImpl>()
+    }
+
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
         if (psiFile !is RFileImpl) return listOf()
         if (clmResult == null) return listOf()

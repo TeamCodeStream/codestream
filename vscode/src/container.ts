@@ -25,6 +25,7 @@ import { EditorController } from "./controllers/editorController";
 import { NrqlCodeLensController } from "./controllers/nrqlCodeLensController";
 import { PanelController } from "./controllers/panelController";
 import { NrqlDocumentSymbolProvider } from "./providers/nrqlDocumentSymbolProvider";
+import { CodeStreamInlayHintsProvider } from "providers/inlayHintProvider";
 
 export class Container {
 	static telemetryOptions?: TelemetryOptions;
@@ -61,7 +62,7 @@ export class Container {
 		context.subscriptions.push(
 			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
 		);
-
+		context.subscriptions.push((this._inlayHintsProvider = new CodeStreamInlayHintsProvider()));
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
@@ -170,6 +171,11 @@ export class Container {
 	private static _agent: CodeStreamAgentConnection;
 	static get agent() {
 		return this._agent;
+	}
+
+	private static _inlayHintsProvider: CodeStreamInlayHintsProvider;
+	static get inlayHintsProvider() {
+		return this._inlayHintsProvider;
 	}
 
 	private static _codeActions: CodeStreamCodeActionProvider;

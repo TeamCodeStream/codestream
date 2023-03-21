@@ -4,14 +4,15 @@ import com.codestream.protocols.agent.ClmResult
 import com.intellij.lang.javascript.psi.JSFile
 import com.intellij.lang.javascript.psi.JSFunction
 import com.intellij.lang.javascript.psi.ecmal4.JSClass
+import com.intellij.lang.javascript.psi.impl.JSFunctionExpressionImpl
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.descendantsOfType
-
-val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
+import com.intellij.psi.util.findParentOfType
 
 class CLMNodeComponent(project: Project) :
     CLMLanguageComponent<CLMNodeEditorManager>(
@@ -36,25 +37,6 @@ class NodeSymbolResolver : SymbolResolver {
 
     override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
         return null
-//        if (psiFile !is JSFile) return null
-//        val callExpressions = psiFile.collectDescendantsOfType<JSCallExpression>()
-//
-//        return callExpressions.mapNotNull { exp ->
-//            val ref = exp.findDescendantOfType<JSReferenceExpression>()
-//            val httpMethod = getHttpMethod(ref?.text)
-//            if (httpMethod != null) {
-//                val args = exp.findDescendantOfType<JSArgumentList>()
-//                val firstArg = args?.findDescendantOfType<JSLiteralExpression>()
-//                if (firstArg != null) {
-//                    "$httpMethod ${firstArg.text}"
-//                } else {
-//                    null
-//                }
-//            } else {
-//                null
-//            }
-//
-//        }
     }
 
     override fun findClassFunctionFromFile(
@@ -67,18 +49,6 @@ class NodeSymbolResolver : SymbolResolver {
         val clazz = psiFile.children.filterIsInstance<JSClass>().filter { it.node.text == className }
         val result = clazz.filterIsInstance<JSFunction>().find { it.name == functionName }
         return result
-    }
-
-    private fun getHttpMethod(arg: String?): String? {
-        if (arg == null) {
-            return null
-        }
-        for (method in httpMethods) {
-            if (arg.endsWith(".${method}")) {
-                return method.uppercase()
-            }
-        }
-        return null
     }
 
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
@@ -95,6 +65,10 @@ class NodeSymbolResolver : SymbolResolver {
 
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
         return listOf()
+    }
+
+    override fun findParentFunction(psiElement: PsiElement): PsiElement? {
+        return psiElement.findParentOfType<JSFunctionExpressionImpl<*>>()
     }
 }
 

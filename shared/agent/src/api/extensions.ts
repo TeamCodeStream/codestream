@@ -99,10 +99,10 @@ export namespace MarkerLocation {
 	): MarkerLocationsById {
 		if (markerLocations == null || markerLocations.locations == null) return {};
 
-		return Object.entries(markerLocations.locations).reduce((m, [id, array]) => {
-			m[id] = fromArray(array, id);
-			return m;
-		}, Object.create(null));
+		return Object.entries(markerLocations.locations).reduce((markerLocations, [id, csLocation]) => {
+			markerLocations[id] = fromArray(csLocation, id);
+			return markerLocations;
+		}, {} as MarkerLocationsById);
 	}
 
 	export function toRange(location: CSMarkerLocation): Range {
@@ -128,7 +128,7 @@ const remoteProviders: [
 	string,
 	string,
 	RegExp,
-	(remote: string, ref: string, file: string, start: number, end: number) => string
+	(remote: string, ref: string, file: string, start: number, end: number) => string,
 ][] = [
 	[
 		"github",

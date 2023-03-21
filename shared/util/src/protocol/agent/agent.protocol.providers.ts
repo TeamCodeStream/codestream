@@ -1753,24 +1753,28 @@ export type MetricTimesliceNameMapping = {
 };
 
 export interface FileLevelTelemetryMetric {
-	metricTimesliceName: string;
+	// metricTimesliceName: string;
+	facet: string[];
 	namespace?: string;
 	className?: string;
+	lineno?: number;
+	column?: number;
+	commit?: string;
 	functionName?: string;
 	anomaly?: ObservabilityAnomaly;
 }
 
 export interface FileLevelTelemetryAverageDuration extends FileLevelTelemetryMetric {
-	averageDuration: any;
+	averageDuration: number;
 }
 
 export interface FileLevelTelemetrySampleSize extends FileLevelTelemetryMetric {
-	sampleSize: any;
+	sampleSize: number;
 	source: string;
 }
 
 export interface FileLevelTelemetryErrorRate extends FileLevelTelemetryMetric {
-	errorRate: any;
+	errorRate: number;
 }
 
 export interface GetFileLevelTelemetryResponse {
@@ -1794,6 +1798,7 @@ export interface GetFileLevelTelemetryResponse {
 	newRelicAlertSeverity?: string;
 	codeNamespace?: string;
 	relativeFilePath: string;
+	deploymentCommit?: string;
 	error?: {
 		message?: string;
 		type?: "NOT_CONNECTED" | "NOT_ASSOCIATED";
@@ -1896,6 +1901,7 @@ export const GetSpanChartDataRequestType = new RequestType<
 export interface Deployment {
 	seconds: number;
 	version: string;
+	commit?: string;
 }
 
 export interface GetDeploymentsRequest {
@@ -1913,6 +1919,15 @@ export const GetDeploymentsRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/deployments");
+
+// Not yet LSP but might be someday
+export interface GetLatestDeploymentRequest {
+	entityGuid: string;
+}
+
+export interface GetLatestDeploymentResponse {
+	deployment: Deployment;
+}
 
 export const GetFileLevelTelemetryRequestType = new RequestType<
 	GetFileLevelTelemetryRequest,

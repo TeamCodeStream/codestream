@@ -6,13 +6,14 @@ import * as diffMatchPatch from "diff-match-patch";
 import { compareTwoStrings, findBestMatch, Rating } from "string-similarity";
 import { Range } from "vscode-languageserver";
 
-import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
+import { MarkerLocation } from "../api/extensions";
 import { Logger } from "../logger";
 import { Id } from "../managers/entityManager";
 import { buildChangeset, Change, Changeset } from "./changeset";
 
 import fromRange = MarkerLocation.fromRange;
 import toRange = MarkerLocation.toRange;
+import { MarkerLocationsById } from "@codestream/protocols/agent";
 
 export const MAX_RANGE_VALUE = 2147483647;
 const LINE_SIMILARITY_THRESHOLD = 0.5;
@@ -620,6 +621,7 @@ class Calculation {
 // 1st attempt: " bar)" => found, with mid "r" at columns 19 and 36
 //
 // Therefore, since specificIndex is 1, newCol = 36
+// TODO pass boolean beginning or end
 function calculateColumn(oldCol: number, oldContent: string, newContent: string) {
 	if (!oldContent || !newContent || oldContent === newContent) {
 		return oldCol;

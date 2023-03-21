@@ -1,11 +1,8 @@
 package com.codestream.settings
 
-import com.codestream.agentService
-import com.codestream.protocols.agent.TelemetryParams
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.options.SearchableConfigurable
-import com.intellij.openapi.project.ProjectManager
 import javax.swing.JComponent
 
 data class RestartOpts(
@@ -32,7 +29,6 @@ class CodeStreamConfigurable : SearchableConfigurable {
     }
 
     override fun apply() {
-        val state = settingsService.state
         val gui = _gui
         gui?.let {
             val serverUrl =

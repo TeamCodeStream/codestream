@@ -11,6 +11,8 @@ import com.codestream.gson
 import com.codestream.protocols.agent.CSUser
 import com.codestream.protocols.agent.ClmParams
 import com.codestream.protocols.agent.ClmResult
+import com.codestream.protocols.agent.ComputeCurrentLocationsRequest
+import com.codestream.protocols.agent.ComputeCurrentLocationsResult
 import com.codestream.protocols.agent.CreatePermalinkParams
 import com.codestream.protocols.agent.CreatePermalinkResult
 import com.codestream.protocols.agent.CreateShareableCodemarkParams
@@ -546,6 +548,14 @@ class AgentService(private val project: Project) : Disposable {
             project.workspaceFolders,
             project.telemetryService?.telemetryOptions?.agentOptions() != null
         )
+    }
+
+    suspend fun computeCurrentLocations(request: ComputeCurrentLocationsRequest): ComputeCurrentLocationsResult {
+        val json = remoteEndpoint
+            .request("codestream/textDocument/currentLocation", request)
+            .await() as JsonObject
+        val result = gson.fromJson<ComputeCurrentLocationsResult>(json)
+        return result
     }
 
     suspend fun documentMarkers(params: DocumentMarkersParams): DocumentMarkersResult {
