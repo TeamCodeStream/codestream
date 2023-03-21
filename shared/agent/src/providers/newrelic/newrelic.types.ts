@@ -27,9 +27,11 @@ export interface MetricTimeslice {
 export interface AdditionalMetadataInfo {
 	traceId?: string;
 	"code.lineno"?: string;
+	"code.column"?: string;
 	transactionId?: string;
 	"code.namespace"?: string;
 	"code.function"?: string;
+	"tags.commit"?: string;
 }
 
 export class AccessTokenError extends Error {
@@ -43,6 +45,7 @@ export interface Span {
 	"code.function"?: string | null;
 	"code.namespace"?: string | null;
 	"code.lineno"?: number | string | null;
+	"code.column"?: number | string | null;
 	"transaction.name"?: string | null;
 	name?: string;
 	traceId?: string;
@@ -93,6 +96,9 @@ export interface FunctionInfo {
 	namespace?: string;
 	className?: string;
 	functionName?: string;
+	lineno?: number;
+	column?: number;
+	commit?: string;
 }
 
 export type ResolutionMethod = "filePath" | "locator" | "hybrid";

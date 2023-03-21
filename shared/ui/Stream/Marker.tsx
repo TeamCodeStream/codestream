@@ -145,7 +145,7 @@ function Marker(props: Props) {
 	}
 
 	let startLine = 1;
-	if (marker.locationWhenCreated && marker.locationWhenCreated.length)
+	if (marker.locationWhenCreated && marker.locationWhenCreated.coordinates.length)
 		startLine = marker.locationWhenCreated[0];
 	else if (marker.referenceLocations && marker.referenceLocations.length)
 		startLine = marker.referenceLocations[0].location[0];

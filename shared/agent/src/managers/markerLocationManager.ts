@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { MarkerNotLocatedReason } from "@codestream/protocols/agent";
 import {
-	CSLocationArray,
+	CSLocation,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -28,11 +28,6 @@ import { ManagerBase } from "./baseManager";
 import { IndexParams, IndexType } from "./cache";
 import { getValues, KeyValue } from "./cache/baseCache";
 import { Id } from "./entityManager";
-
-export interface Markerish {
-	id: string;
-	referenceLocations: CSReferenceLocation[];
-}
 
 export interface MissingLocationsById {
 	[id: string]: {
@@ -75,8 +70,8 @@ function compareReferenceLocations(a: CSReferenceLocation, b: CSReferenceLocatio
 		return canonicalComparison;
 	}
 
-	const aIsEntirelyDeleted = Number(!!a.location[4]?.entirelyDeleted);
-	const bIsEntirelyDeleted = Number(!!b.location[4]?.entirelyDeleted);
+	const aIsEntirelyDeleted = Number(!!a.location.locationMeta?.entirelyDeleted);
+	const bIsEntirelyDeleted = Number(!!b.location.locationMeta?.entirelyDeleted);
 
 	return aIsEntirelyDeleted - bIsEntirelyDeleted;
 }
@@ -298,7 +293,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				location.colStart === location.colEnd
 			) {
 				const [lineStartWhenCreated, colStartWhenCreated, lineEndWhenCreated, colEndWhenCreated] =
-					marker.referenceLocations[0].location;
+					marker.referenceLocations[0].location.coordinates;
 				if (
 					lineStartWhenCreated !== lineEndWhenCreated ||
 					colStartWhenCreated !== colEndWhenCreated
@@ -471,13 +466,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
 				const referenceCommitHash = referenceLocation.commitHash;
-				if (referenceLocation.location[2] === -1) {
+				if (referenceLocation.location.coordinates[2] === -1) {
 					// This should never happen, but we have some faulty reference locations
 					// in the database with lineEnd === -1 because the end of the marker range
 					// was deleted but not properly trimmed to the edge of the preserved region.
 					// In this case we pretend it ends at the end of its lineStart.
-					referenceLocation.location[2] = referenceLocation.location[0];
-					referenceLocation.location[3] = MAX_RANGE_VALUE;
+					referenceLocation.location.coordinates[2] = referenceLocation.location.coordinates[0];
+					referenceLocation.location.coordinates[3] = MAX_RANGE_VALUE;
 				}
 				if (referenceCommitHash == null) {
 					const { baseCommit, diff: diffToCanonicalContents } = referenceLocation.flags || {};
@@ -641,7 +636,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				continue;
 			}
 			const locationArraysById = {} as {
-				[id: string]: CSLocationArray;
+				[id: string]: CSLocation;
 			};
 			locationArraysById[id] = MarkerLocation.toArray(location);
 			Logger.log(
@@ -688,11 +683,11 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		return "MarkerLocation";
 	}
 
-	static async computeCurrentLocations(uri: URI, markersByCommit: Map<string, Markerish[]>) {
+	static async computeCurrentLocations(uri: URI, commit: string, markers: Markerish[]) {
 		const locations: MarkerLocationsById = Object.create(null);
 		const orphans: MissingLocationsById = Object.create(null);
 
-		if (markersByCommit.size === 0) {
+		if (markers.length === 0) {
 			return { locations, orphans };
 		}
 
@@ -709,16 +704,16 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 		}
 
 		let fetchIfCommitNotFound = true;
-		for (const [revision, markers] of markersByCommit.entries()) {
+		for (const marker of markers) {
 			const diff = await git.getDiffBetweenCommits(
-				revision,
+				commit,
 				currentFileRevision,
 				filePath,
 				fetchIfCommitNotFound
 			);
 			fetchIfCommitNotFound = false;
 			if (!diff) {
-				const details = `cannot obtain diff - skipping calculation from ${revision} to ${currentFileRevision}`;
+				const details = `cannot obtain diff - skipping calculation from ${commit} to ${currentFileRevision}`;
 				for (const marker of markers) {
 					orphans[marker.id] = {
 						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
@@ -734,10 +729,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const location = marker.referenceLocations[0].location;
 				locationsToCalculate[marker.id] = {
 					id: marker.id,
-					lineStart: location[0],
-					colStart: location[1],
-					lineEnd: location[2],
-					colEnd: location[3],
+					lineStart: location.coordinates[0],
+					colStart: location.coordinates[1],
+					lineEnd: location.coordinates[2],
+					colEnd: location.coordinates[3],
 				};
 			}
 

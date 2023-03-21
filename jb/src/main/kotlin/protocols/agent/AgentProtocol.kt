@@ -209,6 +209,36 @@ class ReviewCoverageParams(val textDocument: TextDocument)
 
 class ReviewCoverageResult(val reviewIds: List<String?>)
 
+class CSLocationMeta(val createdAtCurrentCommit: Boolean?,
+                     val startWasDeleted: Boolean?,
+                     val endWasDeleted: Boolean?,
+                     val entirelyDeleted: Boolean?,
+                     val contentChanged: Boolean?,
+                     val isAncestor: Boolean?,
+                     val isDescendant: Boolean?,
+                     val canonicalCommitDoesNotExist: Boolean?)
+
+class CSLocation(val coordinates: Array<Long>, locationMeta: CSLocationMeta?);
+
+class CSReferenceLocation(val commitHash: String?, val location: CSLocation)
+
+class Markerish(val id: String, val referenceLocations: Array<CSReferenceLocation>)
+
+class CSMarkerLocation(
+    id: String,
+    lineStart: Long,
+    colStart: Long,
+    lineEnd: Long,
+    colEnd: Long,
+    meta: CSLocationMeta?,
+)
+
+typealias MarkerLocationsById = Map<String, CSMarkerLocation>
+
+class ComputeCurrentLocationsRequest(val uri: String, val commit: String, val markers: Array<Markerish>)
+
+class ComputeCurrentLocationsResult(locations: MarkerLocationsById)
+
 class DocumentMarkersParams(val textDocument: TextDocument, val gitSha: String?, val applyFilters: Boolean)
 
 class DocumentMarkersResult(val markers: List<DocumentMarker>, val markersNotLocated: Any)
@@ -593,7 +623,10 @@ open class MethodLevelTelemetryData(
     val className: String?,
     val functionName: String?,
     val metricTimesliceName: String,
-    val anomaly: ObservabilityAnomaly?
+    val anomaly: ObservabilityAnomaly?,
+    val lineno: Long?,
+    val column: Long?,
+    val commit: String?,
 ) {
     val symbolIdentifier: MethodLevelTelemetrySymbolIdentifier
         get() = MethodLevelTelemetrySymbolIdentifier(namespace, className, functionName)
@@ -603,29 +636,38 @@ class MethodLevelTelemetrySampleSize (
     namespace: String?,
     className: String?,
     functionName: String,
+    lineno: Long?,
+    column: Long?,
+    commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
     val sampleSize: Int,
     val source: String
-) : MethodLevelTelemetryData(namespace, className, functionName, metricTimesliceName, anomaly)
+) : MethodLevelTelemetryData(namespace, className, functionName, lineno, column, commit, metricTimesliceName, anomaly,)
 
 class MethodLevelTelemetryAverageDuration(
     namespace: String?,
     className: String?,
     functionName: String,
+    lineno: Long?,
+    column: Long?,
+    commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
     val averageDuration: Float
-) : MethodLevelTelemetryData(namespace, className, functionName, metricTimesliceName, anomaly)
+) : MethodLevelTelemetryData(namespace, className, functionName, lineno, column, commit, metricTimesliceName, anomaly)
 
 class MethodLevelTelemetryErrorRate(
     namespace: String?,
     className: String?,
     functionName: String,
+    lineno: Long?,
+    column: Long?,
+    commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
     val errorRate: Float
-) : MethodLevelTelemetryData(namespace, className, functionName, metricTimesliceName, anomaly)
+) : MethodLevelTelemetryData(namespace, className, functionName, lineno, column, commit, metricTimesliceName, anomaly)
 
 class FileLevelTelemetryResult(
     var error: FileLevelTelemetryResultError?,

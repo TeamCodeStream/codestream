@@ -235,10 +235,10 @@ export class CodemarksManager extends CachedEntityManagerBase<CSCodemark> {
 					const diffs = diff.trim().split("\n");
 					diffs.splice(0, 5);
 					let startLine = 1;
-					if (marker.locationWhenCreated && marker.locationWhenCreated.length) {
-						startLine = marker.locationWhenCreated[0];
+					if (marker.locationWhenCreated && marker.locationWhenCreated.coordinates.length) {
+						startLine = marker.locationWhenCreated.coordinates[0];
 					} else if (marker.referenceLocations && marker.referenceLocations.length) {
-						startLine = marker.referenceLocations[0].location[0];
+						startLine = marker.referenceLocations[0].location.coordinates[0];
 					}
 					const newHeader = `@@ -${startLine},${marker.code.split("\n").length} +${
 						range.start.line + 1

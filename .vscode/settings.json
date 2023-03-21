@@ -6,5 +6,6 @@
 	},
 	"eslint.alwaysShowStatus": true,
 	"eslint.codeActionsOnSave.mode": "problems",
-	"gitdoc.enabled": false
+	"gitdoc.enabled": false,
+	"codestream.serverUrl": "https://staging-api.codestream.us"
 }

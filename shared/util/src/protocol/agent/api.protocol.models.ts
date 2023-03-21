@@ -157,7 +157,7 @@ export interface CSMarker extends CSEntity, CSMarkerIdentifier {
 	providerType?: ProviderType;
 	commitHashWhenCreated: string;
 	branchWhenCreated?: string;
-	locationWhenCreated: CSLocationArray;
+	locationWhenCreated: CSLocation;
 	code: string;
 	referenceLocations: CSReferenceLocation[];
 	supersededByMarkerId: string;
@@ -175,11 +175,16 @@ export interface CSLocationMeta {
 	canonicalCommitDoesNotExist?: boolean;
 }
 
-export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
+// export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
+
+export type CSLocation = {
+	coordinates: [number, number, number, number];
+	locationMeta?: CSLocationMeta
+}
 
 export interface CSReferenceLocation {
 	commitHash?: string;
-	location: CSLocationArray;
+	location: CSLocation;
 	flags?: {
 		canonical?: boolean;
 		uncommitted?: boolean;
@@ -194,7 +199,7 @@ export interface CSMarkerLocations {
 	teamId: string;
 	streamId: string;
 	commitHash: string;
-	locations: { [id: string]: CSLocationArray };
+	locations: { [id: string]: CSLocation };
 }
 
 export interface CSMarkerLocation {

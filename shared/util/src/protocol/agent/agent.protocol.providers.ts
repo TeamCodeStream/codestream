@@ -1714,6 +1714,8 @@ export interface FileLevelTelemetryMetric {
 	metricTimesliceName: string;
 	namespace?: string;
 	className?: string;
+	lineno?: number;
+	column?: number;
 	functionName?: string;
 	anomaly?: ObservabilityAnomaly;
 }

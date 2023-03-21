@@ -13,8 +13,7 @@ import {
 	CSCodemark,
 	CSCompany,
 	CSDirectStream,
-	CSFileStream,
-	CSLocationArray,
+	CSFileStream, CSLocation,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -31,7 +30,7 @@ import {
 	CSUser,
 	ProviderType,
 	ReviewChangesetFileInfo,
-	StreamType,
+	StreamType
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";
@@ -205,7 +204,7 @@ export interface CSCreateMarkerLocationRequest {
 	streamId: string;
 	commitHash: string;
 	locations: {
-		[id: string]: CSLocationArray;
+		[id: string]: CSLocation;
 	};
 }
 
@@ -216,7 +215,7 @@ export interface CSCreatePostRequestCodeBlock {
 	preContext?: string;
 	postContext?: string;
 
-	location?: CSLocationArray;
+	location?: CSLocation;
 	commitHash?: string;
 
 	streamId?: string;
@@ -570,7 +569,7 @@ export interface CSCreateMarkerRequest {
 	remotes?: string[];
 	file?: string;
 	commitHash?: string;
-	location?: CSLocationArray;
+	location?: CSLocation;
 }
 
 export interface CSCreateMarkerResponse {
@@ -829,7 +828,7 @@ export interface CSGetReviewCheckpointDiffsResponse
 
 export interface CSAddReferenceLocationRequest {
 	commitHash: string;
-	location: CSLocationArray;
+	location: CSLocation;
 	flags: { [id: string]: boolean };
 }
 

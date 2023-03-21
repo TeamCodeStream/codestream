@@ -6,6 +6,9 @@ import {
 	CalculateNonLocalRangesRequestType,
 	CalculateNonLocalRangesResponse,
 	CodeStreamDiffUriData,
+	ComputeCurrentLocationResponse,
+	ComputeCurrentLocationsRequest,
+	ComputeCurrentLocationsRequestType,
 	CreateDocumentMarkerPermalinkRequest,
 	CreateDocumentMarkerPermalinkRequestType,
 	CreateDocumentMarkerPermalinkResponse,
@@ -26,7 +29,7 @@ import {
 import {
 	CodemarkType,
 	CSCodemark,
-	CSLocationArray,
+	CSLocation,
 	CSMarker,
 	CSMe,
 	CSUser,
@@ -50,7 +53,7 @@ import {
 import { Functions, log, lsp, lspHandler } from "../system";
 import * as csUri from "../system/uri";
 import { xfs } from "../xfs";
-import { GetLocationsResult } from "./markerLocationManager";
+import { GetLocationsResult, MarkerLocationManager } from "./markerLocationManager";
 import { compareRemotes } from "./markersBuilder";
 import { ReviewsManager } from "./reviewsManager";
 
@@ -253,6 +256,18 @@ export class DocumentMarkerManager {
 	}
 
 	@log()
+	@lspHandler(ComputeCurrentLocationsRequestType)
+	async computeCurrentLocations(
+		request: ComputeCurrentLocationsRequest
+	): Promise<ComputeCurrentLocationResponse> {
+		return MarkerLocationManager.computeCurrentLocations(
+			URI.parse(request.uri),
+			request.commit,
+			request.markers
+		);
+	}
+
+	@log()
 	@lspHandler(FetchDocumentMarkersRequestType)
 	async get(request: FetchDocumentMarkersRequest): Promise<FetchDocumentMarkersResponse> {
 		const uri = request.textDocument.uri;
@@ -324,7 +339,7 @@ export class DocumentMarkerManager {
 
 					const gotoLine = comment.position.newLine;
 
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
 					documentMarkers.push({
 						createdAt: +new Date(comment.createdAt),
 						modifiedAt: +new Date(comment.createdAt),
@@ -451,7 +466,7 @@ export class DocumentMarkerManager {
 						return;
 					}
 
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
 					documentMarkers.push({
 						createdAt: +new Date(comment.createdAt),
 						modifiedAt: +new Date(comment.createdAt),
@@ -712,7 +727,7 @@ export class DocumentMarkerManager {
 							const line = await findBestMatchingLine(
 								contents,
 								marker.code,
-								marker.locationWhenCreated ? marker.locationWhenCreated[0] : 0
+								marker.locationWhenCreated ? marker.locationWhenCreated.coordinates[0] : 0
 							);
 							if (line > 0) {
 								locations[marker.id] = {

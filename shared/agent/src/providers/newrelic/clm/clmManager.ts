@@ -459,6 +459,9 @@ export type LanguageId = (typeof supportedLanguages)[number];
 export type EnhancedMetricTimeslice = MetricTimeslice & {
 	className?: string;
 	functionName?: string;
+	lineno?: number;
+	column?: number;
 	metadata: AdditionalMetadataInfo;
 	namespace?: string;
+	commit?: string;
 };

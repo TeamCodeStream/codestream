@@ -11,8 +11,6 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.util.descendantsOfType
 
-val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
-
 class CLMNodeComponent(project: Project) :
     CLMLanguageComponent<CLMNodeEditorManager>(project, JSFile::class.java, ::CLMNodeEditorManager, NodeSymbolResolver()) {
 
@@ -31,25 +29,6 @@ class NodeSymbolResolver : SymbolResolver {
 
     override fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>? {
         return null
-//        if (psiFile !is JSFile) return null
-//        val callExpressions = psiFile.collectDescendantsOfType<JSCallExpression>()
-//
-//        return callExpressions.mapNotNull { exp ->
-//            val ref = exp.findDescendantOfType<JSReferenceExpression>()
-//            val httpMethod = getHttpMethod(ref?.text)
-//            if (httpMethod != null) {
-//                val args = exp.findDescendantOfType<JSArgumentList>()
-//                val firstArg = args?.findDescendantOfType<JSLiteralExpression>()
-//                if (firstArg != null) {
-//                    "$httpMethod ${firstArg.text}"
-//                } else {
-//                    null
-//                }
-//            } else {
-//                null
-//            }
-//
-//        }
     }
 
     override fun findClassFunctionFromFile(
@@ -62,18 +41,6 @@ class NodeSymbolResolver : SymbolResolver {
         val clazz = psiFile.children.filterIsInstance<JSClass>().filter { it.node.text == className }
         val result = clazz.filterIsInstance<JSFunction>().find { it.name == functionName }
         return result
-    }
-
-    private fun getHttpMethod(arg: String?): String? {
-        if (arg == null) {
-            return null
-        }
-        for (method in httpMethods) {
-            if (arg.endsWith(".${method}")) {
-                return method.uppercase()
-            }
-        }
-        return null
     }
 
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
