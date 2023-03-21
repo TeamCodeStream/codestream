@@ -43,7 +43,7 @@ class JxBrowserEngineService : Disposable {
                     val dir = createTempDir()
                     logger.info("JxBrowser work dir: $dir")
                     val licenseKey = try {
-                        javaClass.getResource("/jxbrowser.license").readText().trim()
+                        JxBrowserEngineService::class.java.getResource("/jxbrowser.license").readText().trim()
                     } catch (e: Exception) {
                         logger.error(e)
                         ""
