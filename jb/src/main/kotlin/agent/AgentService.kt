@@ -287,9 +287,9 @@ class AgentService(private val project: Project) : Disposable {
         val agentJsMap = File(agentDir, "agent.js.map")
         deleteAllExcept(agentDir, "agent", agentJsDestFile.name)
 
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJsDestFile)
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/index.js.map"), webJsMap)
+        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js"), agentJsDestFile)
+        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
+        FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webview/index.js.map"), webJsMap)
 
         if (platform == Platform.MAC_X64 || platform == Platform.MAC_ARM64) {
             try {
@@ -306,7 +306,7 @@ class AgentService(private val project: Project) : Disposable {
                     if (!dest.parentFile.exists()) {
                         Files.createDirectories(dest.parentFile.toPath())
                     }
-                    FileUtils.copyToFile(javaClass.getResourceAsStream("/$it"), dest)
+                    FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/$it"), dest)
                     if (platform.isPosix && it.endsWith(".node")) {
                         val executable = PosixFilePermissions.fromString("rwxr-xr-x")
                         Files.setPosixFilePermissions(dest.toPath(), executable)
@@ -322,7 +322,7 @@ class AgentService(private val project: Project) : Disposable {
             deleteAllExcept(agentDir, "node", nodeDestFile.name)
 
             if (!nodeDestFile.exists()) {
-                FileUtils.copyToFile(javaClass.getResourceAsStream(it), nodeDestFile)
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream(it), nodeDestFile)
                 if (platform.isPosix) {
                     Files.setPosixFilePermissions(nodeDestFile.toPath(), posixPermissions)
                 }
@@ -330,7 +330,7 @@ class AgentService(private val project: Project) : Disposable {
 
                 if (platform == Platform.LINUX_X64) {
                     val xdgOpen = File(agentDir, "xdg-open")
-                    FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/xdg-open"), xdgOpen)
+                    FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/xdg-open"), xdgOpen)
                     Files.setPosixFilePermissions(xdgOpen.toPath(), posixPermissions)
                     logger.info("xdg-open extracted to ${xdgOpen.absolutePath}")
                 }
@@ -365,10 +365,10 @@ class AgentService(private val project: Project) : Disposable {
         val webJsMap = File(agentDir, "index.js.map")
 
         if (AGENT_PATH == null) {
-            FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js"), agentJs)
+            FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js"), agentJs)
             try {
-                FileUtils.copyToFile(javaClass.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
-                FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/index.js.map"), webJsMap)
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webview/index.js.map"), webJsMap)
             } catch (ex: Exception) {
                 logger.warn("Could not extract agent.js.map", ex)
             }

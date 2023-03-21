@@ -104,13 +104,13 @@ class WebViewService(val project: Project) : Disposable {
         tempDir.deleteOnExit()
         extractedHtmlFile = File(tempDir, WEBVIEW_TEMPLATE_HTML)
 
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/index.js"), File(tempDir, "index.js"))
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/index.js.map"), File(tempDir, "index.js.map"))
+        FileUtils.copyToFile(WebViewService::class.java.getResourceAsStream("/webview/index.js"), File(tempDir, "index.js"))
+        FileUtils.copyToFile(WebViewService::class.java.getResourceAsStream("/webview/index.js.map"), File(tempDir, "index.js.map"))
         FileUtils.copyToFile(
-            javaClass.getResourceAsStream("/webview/styles/webview.css"),
+            WebViewService::class.java.getResourceAsStream("/webview/styles/webview.css"),
             File(tempDir.resolve("styles"), "webview.css")
         )
-        FileUtils.copyToFile(javaClass.getResourceAsStream("/webview/${WEBVIEW_TEMPLATE_HTML}"), File(tempDir,
+        FileUtils.copyToFile(WebViewService::class.java.getResourceAsStream("/webview/${WEBVIEW_TEMPLATE_HTML}"), File(tempDir,
             WEBVIEW_TEMPLATE_HTML
         ))
     }
@@ -131,7 +131,7 @@ class WebViewService(val project: Project) : Disposable {
     }
 
     private fun injectTelemetryScript(html: String): String {
-        val template = javaClass.getResource("/webview/newrelic-browser.js")?.readText()?.trim() ?: ""
+        val template = WebViewService::class.java.getResource("/webview/newrelic-browser.js")?.readText()?.trim() ?: ""
         val script = project.telemetryService?.telemetryOptions?.webviewOptions()?.let {
             template
                 .replace("{{accountID}}", it.accountId)

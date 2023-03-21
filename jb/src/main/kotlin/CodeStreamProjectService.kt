@@ -82,7 +82,7 @@ class CodeStreamProjectService(val project: Project) : Disposable {
                 if (!dest.parentFile.exists()) {
                     Files.createDirectories(dest.parentFile.toPath())
                 }
-                FileUtils.copyToFile(javaClass.getResourceAsStream("/$it"), dest)
+                FileUtils.copyToFile(CodeStreamProjectService::class.java.getResourceAsStream("/$it"), dest)
             }
         } catch (e: Exception) {
             logger.error(e)

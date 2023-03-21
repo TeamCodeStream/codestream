@@ -152,7 +152,7 @@ class GutterIconRendererImpl(val editor: Editor, val marker: DocumentMarker) : G
             color = "light"
         }
 
-        return this.javaClass.getResource("/images/icon14/marker-$type-$color.png").toString()
+        return GutterIconRendererImpl::class.java.getResource("/images/icon14/marker-$type-$color.png").toString()
     }
 
     fun serializeRange(range: Range): String{
