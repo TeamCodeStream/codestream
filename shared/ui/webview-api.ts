@@ -161,7 +161,7 @@ export class RequestApiManager {
 
 	private reportStaleRequests() {
 		const report = this.collectStaleRequests();
-		for (const item in report) {
+		for (const item of report) {
 			logError(item);
 		}
 	}

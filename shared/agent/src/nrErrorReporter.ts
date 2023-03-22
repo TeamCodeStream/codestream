@@ -197,6 +197,11 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 		}
 		_errorCache.put(cacheKey, true);
 
+		if (!isNaN(+error.message) || error.message.length <= 1) {
+			const err = new Error();
+			console.log(`*** Number error ${err.stack}`);
+		}
+
 		NewRelic.noticeError(error, {
 			...attributes,
 			extra:
