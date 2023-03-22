@@ -24,6 +24,7 @@ import {
 } from "@codestream/webview/ipc/webview.protocol.common";
 import { HistoryCounter } from "@codestream/utils/system/historyCounter";
 import { logError } from "@codestream/webview/logger";
+import { roundDownExponentially } from "@codestream/utils/system/math";
 
 type NotificationParamsOf<NT> = NT extends NotificationType<infer N, any> ? N : never;
 export type RequestParamsOf<RT> = RT extends RequestType<infer R, any, any, any> ? R : never;
@@ -194,8 +195,10 @@ export class RequestApiManager {
 	public set(key: string, value: WebviewApiRequest): Map<string, WebviewApiRequest> {
 		const identifier = value.providerId ? `${value.method}:${value.providerId}` : value.method;
 		const count = this.historyCounter.countAndGet(identifier);
-		if (count > ALERT_THRESHOLD) {
-			logError(new Error(`${count} calls pending for ${identifier}`));
+		// A rounded error allows the count to stay the same and the duplicate error suppression to work in the agent
+		const rounded = roundDownExponentially(count, ALERT_THRESHOLD);
+		if (count > ALERT_THRESHOLD && identifier != "codestream/reporting/message") {
+			logError(new Error(`More than ${rounded} calls pending for ${identifier}`));
 		}
 		return this.pendingRequests.set(key, value);
 	}

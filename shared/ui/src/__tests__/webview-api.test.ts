@@ -49,7 +49,40 @@ describe("RequestApiManager", () => {
 			});
 		}
 		expect(spyLogError).toHaveBeenCalledTimes(1);
-		expect(spyLogError).toHaveBeenLastCalledWith(new Error("21 calls pending for /whatever"));
+		expect(spyLogError).toHaveBeenLastCalledWith(
+			new Error("More than 20 calls pending for /whatever")
+		);
+	});
+
+	it("should round down to nearest exponent of 10 same method > ALERT_THRESHOLD", () => {
+		const subject = new RequestApiManager(false);
+		const spyLogError = jest.spyOn(Logger, "logError").mockImplementation(() => {});
+		for (let i = 0; i < 1999; i++) {
+			const id = nextId();
+			subject.set(id, {
+				method: "/whatever",
+				reject: _reason => {},
+				resolve: _value => {},
+			});
+		}
+		expect(spyLogError.mock.calls.length).toBeGreaterThan(1970);
+		expect(spyLogError).toHaveBeenLastCalledWith(
+			new Error("More than 1000 calls pending for /whatever")
+		);
+	});
+
+	it("should not alert when requests are for logError message", () => {
+		const subject = new RequestApiManager(false);
+		const spyLogError = jest.spyOn(Logger, "logError").mockImplementation(() => {});
+		for (let i = 0; i < 21; i++) {
+			const id = nextId();
+			subject.set(id, {
+				method: "codestream/reporting/message",
+				reject: _reason => {},
+				resolve: _value => {},
+			});
+		}
+		expect(spyLogError).toHaveBeenCalledTimes(0);
 	});
 
 	it("should not alert when requests to same method < ALERT_THRESHOLD", () => {
