@@ -41,6 +41,19 @@ function isResponseError<T>(obj: unknown): obj is ResponseError<T> {
 	);
 }
 
+function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
+	if (!obj) {
+		return false;
+	}
+	const anyobj = obj as any;
+	return (
+		Object.prototype.hasOwnProperty.call(obj, "code") &&
+		Object.prototype.hasOwnProperty.call(obj, "message") &&
+		Object.prototype.hasOwnProperty.call(obj, "data") &&
+		Object.prototype.hasOwnProperty.call(anyobj.data, "url")
+	);
+}
+
 const CardTitle = styled.div`
 	font-size: 16px;
 	line-height: 20px;
@@ -256,7 +269,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
-		ResponseError<{ url: string }>
+		ResponseError<{ void }>
 	>(
 		GetLibraryDetailsType,
 		{
@@ -293,11 +306,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	}
 
 	const getErrorDetails = React.useCallback(
-		(error: ResponseError<{ url: string }>): JSX.Element => {
+		(error: Error): JSX.Element => {
 			const unexpectedError = (
 				<ErrorRow title="Error fetching data from New Relic" customPadding={"0 10px 0 42px"} />
 			);
-			if (isResponseError(error)) {
+			if (isResponseUrlError(error)) {
 				if (error.code === ERROR_VM_NOT_SETUP) {
 					return (
 						<div
