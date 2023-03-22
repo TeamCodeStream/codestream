@@ -2,7 +2,7 @@ import { HistoryCounter } from "../../../src/utils/system/historyCounter";
 
 describe("getKeyDatePart", () => {
 	it("should return correct time buckets with 5 seconds intervals", async () => {
-		const subject = new HistoryCounter(5, 50, console.debug, false);
+		const subject = new HistoryCounter("test", 5, 50, console.debug, false);
 		const dateKey1 = subject.getKeyDatePart(new Date("2023-01-21T01:00:02"));
 		expect(dateKey1).toBe("20230121T010000");
 		const dateKey2 = subject.getKeyDatePart(new Date("2023-01-21T01:00:04"));
@@ -15,7 +15,7 @@ describe("getKeyDatePart", () => {
 	});
 
 	it("should return correct time buckets with 15 seconds intervals", async () => {
-		const subject = new HistoryCounter(15, 50, console.debug, false);
+		const subject = new HistoryCounter("test", 15, 50, console.debug, false);
 		const dateKey1 = subject.getKeyDatePart(new Date("2023-01-21T01:00:02"));
 		expect(dateKey1).toBe("20230121T010000");
 		const dateKey2 = subject.getKeyDatePart(new Date("2023-01-21T01:00:13"));

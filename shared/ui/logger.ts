@@ -12,10 +12,6 @@ function serializeError(error: Error) {
  * @param extra anything else
  */
 export function logError(error: string | Error, extra?: any) {
-	if (!isNaN(+error)) {
-		const err = new Error();
-		console.log(`*** Number error ${err.stack}`);
-	}
 	try {
 		console.error(error, extra);
 		const isInstanceOfError = error instanceof Error;
