@@ -269,7 +269,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
-		ResponseError<{ void }>
+		ResponseError<void>
 	>(
 		GetLibraryDetailsType,
 		{
