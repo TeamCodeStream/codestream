@@ -151,7 +151,7 @@ type WebviewApiRequest = {
 
 export class RequestApiManager {
 	private pendingRequests = new Map<string, WebviewApiRequest>();
-	private historyCounter = new HistoryCounter(15, 25, console.debug, true);
+	private historyCounter = new HistoryCounter("webview", 15, 25, console.debug, true);
 
 	constructor(enableStaleReport = true) {
 		if (enableStaleReport) {

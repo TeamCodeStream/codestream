@@ -1,10 +1,10 @@
 import { Logger } from "./logger";
 import { NRErrorType } from "@codestream/protocols/agent";
 import { CodedError } from "./providers/newrelic.types";
-import { HistoryCounter } from "@codestream/utils/system/historyCounter";
+import { Container } from "./container";
 
 // Time period in seconds in which we evaluate the rate limit
-const RATE_LIMIT_INTERVAL = 15;
+export const RATE_LIMIT_INTERVAL = 15;
 
 // Tried to extend SessionContainer.instance().session to to notify when session loaded
 // on callback and read current api url but it failed in the most inexplicable way.
@@ -50,14 +50,14 @@ export class InternalRateError extends CodedError {
 	}
 }
 
-const rateLimitByOrigin = new HistoryCounter(
-	RATE_LIMIT_INTERVAL,
-	100,
-	Logger.debug.bind(Logger),
-	Logger.isDebugging
-);
-
 function isOverRateLimit(origin: string): RateLimit | undefined {
+	if (!Container.isInitialized()) {
+		return undefined;
+	}
+	const rateLimitByOrigin = Container.instance().agent.httpHistoryByOrigin;
+	if (!rateLimitByOrigin) {
+		return undefined;
+	}
 	const count = rateLimitByOrigin.countAndGet(origin);
 	const limit = getRateLimit(origin);
 	if (limit.block && count > limit.block) {

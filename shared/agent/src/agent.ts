@@ -14,25 +14,25 @@ import {
 	LogoutReason,
 } from "@codestream/protocols/agent";
 import {
-	Event,
 	CancellationToken,
 	ClientCapabilities,
 	Connection,
 	DidChangeConfigurationNotification,
 	Disposable,
 	Emitter,
+	Event,
+	InitializedParams,
 	InitializeError,
 	InitializeParams,
 	InitializeResult,
-	InitializedParams,
 	NotificationHandler,
 	NotificationType,
 	RequestHandler,
 	RequestHandler0,
 	RequestType,
 	RequestType0,
-	TextDocumentSyncKind,
 	TextDocuments,
+	TextDocumentSyncKind,
 } from "vscode-languageserver";
 
 import { DocumentManager } from "./documentManager";
@@ -40,6 +40,8 @@ import { setGitPath } from "./git/git";
 import { Logger } from "./logger";
 import { CodeStreamSession } from "./session";
 import { Disposables, Functions, log, memoize } from "./system";
+import { HistoryCounter } from "@codestream/utils/system/historyCounter";
+import { RATE_LIMIT_INTERVAL } from "./rateLimits";
 
 export type ErrorAttributes = {
 	csEnvironment: string;
@@ -120,6 +122,16 @@ export class CodeStreamAgent implements Disposable {
 		return this._recordRequests;
 	}
 
+	private _httpHistoryByOrigin: HistoryCounter | undefined = undefined;
+	get httpHistoryByOrigin() {
+		return this._httpHistoryByOrigin;
+	}
+
+	private _lspHistory: HistoryCounter | undefined = undefined;
+	get lspHistory() {
+		return this._lspHistory;
+	}
+
 	get signedIn() {
 		return this._signedIn;
 	}
@@ -159,6 +171,22 @@ export class CodeStreamAgent implements Disposable {
 			if (agentOptions.isDebugging) {
 				Logger.overrideIsDebugging();
 			}
+
+			this._httpHistoryByOrigin = new HistoryCounter(
+				"apiCall",
+				RATE_LIMIT_INTERVAL,
+				100,
+				Logger.debug.bind(Logger),
+				Logger.isDebugging
+			);
+
+			this._lspHistory = new HistoryCounter(
+				"lspCall",
+				RATE_LIMIT_INTERVAL,
+				100,
+				Logger.debug.bind(Logger),
+				Logger.isDebugging
+			);
 
 			// Pause for a bit to give the debugger a window of time to connect -- mainly for startup issues
 			if (Logger.isDebugging) {
@@ -240,6 +268,18 @@ export class CodeStreamAgent implements Disposable {
 		timed: false,
 	})
 	registerHandler(type: any, handler: any): void {
+		const that = this;
+
+		const wrappedHandler = function (...args: any[]) {
+			let addition = "";
+			const arg = args[0] || {};
+			if (type?.method === "codestream/provider/generic") {
+				addition = `/${arg.method}`;
+			}
+			that.lspHistory?.countAndGet(type.method + addition);
+			return handler.apply(null, args);
+		};
+
 		if (this.recordRequests) {
 			this._connection.onRequest(type, async function () {
 				const now = Date.now();
@@ -248,7 +288,7 @@ export class CodeStreamAgent implements Disposable {
 				const sanitizedURL = sanitize(type.method.replace(/\//g, "_"));
 				const method = type.method;
 
-				let result = handler.apply(null, arguments);
+				let result = wrappedHandler.apply(null, arguments as any);
 				if (typeof result.then === "function") {
 					result = await result;
 				}
@@ -268,7 +308,6 @@ export class CodeStreamAgent implements Disposable {
 			});
 		} else {
 			if (this._agentOptions?.newRelicTelemetryEnabled) {
-				const that = this;
 				return this._connection.onRequest(type, function () {
 					const args = arguments;
 					let addition = "";
@@ -283,11 +322,11 @@ export class CodeStreamAgent implements Disposable {
 							providerId: arg?.providerId,
 							messageType: "request",
 						});
-						return handler.apply(null, args);
+						return wrappedHandler.apply(null, args as any);
 					});
 				});
 			} else {
-				return this._connection.onRequest(type, handler);
+				return this._connection.onRequest(type, wrappedHandler);
 			}
 		}
 	}

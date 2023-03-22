@@ -16,6 +16,7 @@ export class HistoryCounter {
 	private readonly interval: SetIntervalAsyncTimer<never>;
 
 	constructor(
+		private name: string,
 		private bucketSizeSeconds: number,
 		private maxLength: number,
 		private log: Logger,
@@ -30,7 +31,7 @@ export class HistoryCounter {
 				for (const [key, value] of this.rateLimitHistogram.entries()) {
 					stats[key] = value;
 				}
-				log(`history ${JSON.stringify(stats, null, 2)}`);
+				log(`${this.name} history ${JSON.stringify(stats, null, 2)}`);
 			}
 		}, 60000);
 	}
