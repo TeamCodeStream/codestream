@@ -98,4 +98,38 @@ describe("RequestApiManager", () => {
 		}
 		expect(spyLogError).toHaveBeenCalledTimes(0);
 	});
+
+	it("should collect stale requests", () => {
+		const subject = new RequestApiManager(false);
+		jest.spyOn(Logger, "logError").mockImplementation(() => {});
+		const theNow = 1679529102000;
+		const someTimeAgo = theNow - 10 * 60 * 1000;
+		jest.spyOn(Date, "now").mockImplementation(() => someTimeAgo);
+		for (let i = 0; i < 5; i++) {
+			const id = nextId();
+			subject.set(id, {
+				method: "/whatever",
+				reject: _reason => {},
+				resolve: _value => {},
+			});
+		}
+		for (let i = 0; i < 2; i++) {
+			const id = nextId();
+			subject.set(id, {
+				method: "/whenever",
+				reject: _reason => {},
+				resolve: _value => {},
+			});
+		}
+
+		jest.spyOn(Date, "now").mockImplementation(() => theNow);
+		const staleRequests = subject.collectStaleRequests();
+		// expect(spyDateNow).toHaveBeenCalledTimes(6);
+		expect(staleRequests.sort()).toStrictEqual(
+			[
+				"Found 2 stale requests for /whenever with oldest at 2023-03-22T23:41:42.000Z",
+				"Found 5 stale requests for /whatever with oldest at 2023-03-22T23:41:42.000Z",
+			].sort()
+		);
+	});
 });

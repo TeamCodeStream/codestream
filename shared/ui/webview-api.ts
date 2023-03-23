@@ -168,20 +168,34 @@ export class RequestApiManager {
 
 	public collectStaleRequests(): Array<string> {
 		const now = Date.now();
-		const staleRequests = new Array<string>();
+		const staleRequests = new Map<string, { count: number; oldestDate: number }>();
 		for (const [key, value] of this.pendingRequests) {
 			const parts = key.split(":");
 			if (parts.length < 3) {
 				continue;
 			}
 			const timestamp = parseInt(parts[3]);
-			const theDate = new Date(timestamp);
 			const timeAgo = (now - timestamp) / 1000;
 			if (timeAgo > STALE_THRESHOLD) {
-				staleRequests.push(`Found stale request ${value.method} at ${theDate.toISOString()}`);
+				const existing = staleRequests.get(value.method);
+				if (!existing) {
+					staleRequests.set(value.method, { count: 1, oldestDate: timestamp });
+				} else if (existing) {
+					existing.count = existing.count + 1;
+					if (timestamp < existing.oldestDate) {
+						existing.oldestDate = timestamp;
+					}
+				}
 			}
 		}
-		return staleRequests;
+		const stales = new Array<string>();
+		for (const [key, value] of staleRequests) {
+			const theDate = new Date(value.oldestDate);
+			stales.push(
+				`Found ${value.count} stale requests for ${key} with oldest at ${theDate.toISOString()}`
+			);
+		}
+		return stales;
 	}
 
 	public get(key: string): WebviewApiRequest | undefined {
