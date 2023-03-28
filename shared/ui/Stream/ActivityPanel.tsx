@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from "react";
+import React from "react";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import Icon from "./Icon";
 import ScrollBox from "./ScrollBox";
@@ -6,7 +6,7 @@ import Timestamp from "./Timestamp";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as userSelectors from "../store/users/reducer";
 import styled from "styled-components";
-import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
+import { last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
 import {
 	setCurrentCodemark,
@@ -555,6 +555,9 @@ export const ActivityPanel = () => {
 										HostApi.instance.track("Codemark Clicked", {
 											"Codemark ID": codemark.id,
 											"Codemark Location": "Activity Feed",
+											Following: (codemark.followerIds || []).includes(
+												derivedState.currentUserId || ""
+											),
 										});
 										dispatch(setCurrentCodemark(codemark.id));
 									}}

@@ -626,6 +626,7 @@ export class Codemark extends React.Component<Props, State> {
 			HostApi.instance.track("Codemark Clicked", {
 				"Codemark ID": this.props.codemark!.id,
 				"Codemark Location": this.props.contextName ? this.props.contextName : undefined,
+				Following: (this.props.codemark!.followerIds || []).includes(this.props.currentUser.id),
 			});
 		}
 

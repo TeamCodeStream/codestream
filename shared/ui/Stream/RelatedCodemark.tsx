@@ -12,6 +12,7 @@ export function RelatedCodemark(props: { id: string; className?: string }) {
 	const codemark = useSelector((state: CodeStreamState) => {
 		return getCodemark(state.codemarks, props.id);
 	});
+	const currentUserId = useSelector((state: CodeStreamState) => state.session.userId || "");
 
 	// React.useEffect(() => {
 	// 	if (!codemark) {
@@ -26,6 +27,7 @@ export function RelatedCodemark(props: { id: string; className?: string }) {
 			HostApi.instance.track("Codemark Clicked", {
 				"Codemark ID": props.id,
 				"Codemark Location": "Related List",
+				Following: (codemark?.followerIds || []).includes(currentUserId),
 			});
 
 			dispatch(setCurrentCodemark(codemark!.id));

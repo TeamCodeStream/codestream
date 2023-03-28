@@ -614,9 +614,13 @@ function trackPostCreation(
 								telemetry.track({ eventName: "Reply Created", properties: postProperties });
 							} else if (parentPost.codemarkId) {
 								// reply to a standard codemark
+								const codemark = await SessionContainer.instance().codemarks.getById(
+									parentPost.codemarkId
+								);
 								const postProperties = {
 									"Parent ID": parentPost.codemarkId,
 									"Parent Type": "Codemark",
+									Following: (codemark.followerIds || []).includes(session.userId),
 								};
 								telemetry.track({ eventName: "Reply Created", properties: postProperties });
 							}
