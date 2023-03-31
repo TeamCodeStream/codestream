@@ -6,6 +6,7 @@ import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ReviewPlus } from "./agent.protocol.reviews";
 import { CSRepository, PullRequestQuery } from "./api.protocol.models";
+import { TrunkCheckResults } from "./agent.protocol.trunk";
 
 export interface ThirdPartyProviderConfig {
 	id: string;
@@ -2062,3 +2063,19 @@ export const GetLibraryDetailsType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/libraryDetails");
+
+export interface CheckTrunkRequest { 
+	cwd: string,
+	forceCheck: boolean
+}
+
+export interface CheckTrunkResponse { 
+	results: TrunkCheckResults
+}
+
+export const CheckTrunkRequestType = new RequestType<
+	CheckTrunkRequest,
+	CheckTrunkResponse,
+	void,
+	void
+>("codestream/trunk/check");

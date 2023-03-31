@@ -26,6 +26,7 @@ export * from "./providers/okta";
 export * from "./providers/shortcut";
 export * from "./providers/slack";
 export * from "./providers/trello";
+export * from "./providers/trunk";
 export * from "./providers/youtrack";
 
 process.title = "CodeStream";
