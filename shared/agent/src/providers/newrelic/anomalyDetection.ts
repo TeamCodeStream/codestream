@@ -1,7 +1,9 @@
-import { SessionContainer } from "../../container";
+import { Container, SessionContainer } from "../../container";
 import {
 	AgentFilterNamespacesRequestType,
+	DetectionMethod,
 	GetObservabilityAnomaliesRequest,
+	GetObservabilityAnomaliesResponse,
 	ObservabilityAnomaly,
 } from "@codestream/protocols/agent";
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
@@ -35,12 +37,10 @@ export class AnomalyDetector {
 	private readonly _accountId;
 	private _totalDays = 0;
 
-	async execute(): Promise<{
-		responseTime: ObservabilityAnomaly[];
-		errorRate: ObservabilityAnomaly[];
-	}> {
+	async execute(): Promise<GetObservabilityAnomaliesResponse> {
 		this._totalDays =
 			parseInt(this._request.sinceDaysAgo as any) + parseInt(this._request.baselineDays as any);
+		let detectionMethod: DetectionMethod = "Time Based";
 		if (this._request.sinceReleaseAtLeastDaysAgo) {
 			const deployments = (
 				await this._provider.getDeployments({
@@ -50,6 +50,7 @@ export class AnomalyDetector {
 			).deployments;
 			const deployment = deployments[deployments.length - 1];
 			if (deployment) {
+				detectionMethod = "Release Based";
 				const deploymentDate = new Date(deployment.seconds * 1000);
 				const now = new Date();
 				const timeDifference = now.getTime() - deploymentDate.getTime();
@@ -72,11 +73,13 @@ export class AnomalyDetector {
 			? metricRoots.map(_ => `\`metricTimesliceName\` LIKE '%${_}%'`).join(" OR ")
 			: undefined;
 
+		let totalSpans = 0;
 		let sampleRatesSpan: NameValue[] = [];
 		let spanLookup = undefined;
 		if (includeSpans) {
 			const sampleRatesSpanLookup = "(name LIKE 'Java/%' OR name LIKE 'Custom/%')";
 			sampleRatesSpan = await this.getSampleRateSpan(sampleRatesSpanLookup);
+			totalSpans = sampleRatesSpan.length;
 			const spanRoots = this.getCommonRoots(sampleRatesSpan.map(_ => _.name));
 			spanLookup = spanRoots.length
 				? spanRoots.map(_ => `name LIKE '${_}%'`).join(" OR ")
@@ -111,9 +114,22 @@ export class AnomalyDetector {
 			minimumSampleRate
 		);
 
+		const telemetry = Container.instance().telemetry;
+
+		const event = {
+			"Total Methods": totalSpans,
+			"Anomalous Error Methods": responseTimeAnomalies.length,
+			"Anomalous Duration Methods": errorRateAnomalies.length,
+		};
+		telemetry?.track({
+			eventName: "CLM Anomalies Calculated",
+			properties: event,
+		});
+
 		return {
 			responseTime: responseTimeAnomalies,
 			errorRate: errorRateAnomalies,
+			detectionMethod,
 		};
 	}
 

@@ -13,13 +13,20 @@ import {
 	setCurrentObservabilityAnomaly,
 } from "@codestream/webview/store/context/actions";
 import Tooltip from "./Tooltip";
+import {
+	DetectionMethod,
+	ObservabilityAnomaly,
+	ObservabilityRepo,
+} from "@codestream/protocols/agent";
 
 interface Props {
-	observabilityAnomalies?: any;
-	observabilityRepo?: any;
+	observabilityAnomalies: ObservabilityAnomaly[];
+	observabilityRepo: ObservabilityRepo;
+	detectionMethod?: DetectionMethod;
 	entityGuid?: string;
 	title?: string;
 }
+
 export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
@@ -68,6 +75,25 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	const primaryAnomalies = props.observabilityAnomalies?.slice(0, 5);
 	const secondaryAnomalies = props.observabilityAnomalies?.slice(5, 10);
 
+	function handleClickTelemetry() {
+		const event = {
+			"Detection Method": props.detectionMethod ?? "<unknown>",
+		};
+
+		HostApi.instance.track("CLM Anomaly Clicked", event);
+	}
+
+	function handleClick(anomaly: ObservabilityAnomaly) {
+		handleClickTelemetry();
+		HostApi.instance.send(EditorRevealSymbolRequestType, {
+			className: anomaly.className,
+			functionName: anomaly.functionName,
+		});
+		dispatch(closeAllPanels());
+		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!));
+		dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
+	}
+
 	return (
 		<>
 			<Row
@@ -99,13 +125,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 										}}
 										className={"pr-row"}
 										onClick={e => {
-											HostApi.instance.send(EditorRevealSymbolRequestType, {
-												className: anomaly.className,
-												functionName: anomaly.functionName,
-											});
-											dispatch(closeAllPanels());
-											dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!));
-											dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
+											handleClick(anomaly);
 										}}
 									>
 										<Tooltip

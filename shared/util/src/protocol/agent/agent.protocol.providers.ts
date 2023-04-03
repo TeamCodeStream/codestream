@@ -1244,9 +1244,12 @@ export interface ObservabilityAnomaly {
 	totalDays: number;
 }
 
+export type DetectionMethod = "Release Based" | "Time Based";
+
 export interface GetObservabilityAnomaliesResponse {
 	responseTime: ObservabilityAnomaly[];
 	errorRate: ObservabilityAnomaly[];
+	detectionMethod?: DetectionMethod;
 	error?: string;
 }
 

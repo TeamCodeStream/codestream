@@ -562,11 +562,17 @@ export const Observability = React.memo((props: Props) => {
 			)?.errors;
 			let filteredCurrentRepoErrors = currentRepoErrors?.filter(_ => _.entityId === expandedEntity);
 			let filteredAssigments = observabilityAssignments?.filter(_ => _.entityId === expandedEntity);
+			const hasAnomalies =
+				observabilityAnomalies.errorRate.length > 0 ||
+				observabilityAnomalies.responseTime.length > 0;
 
-			HostApi.instance.track("NR Service Clicked", {
+			const event = {
 				"Errors Listed": !_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssigments),
 				"SLOs Listed": hasServiceLevelObjectives,
-			});
+				"CLM Anomalies Listed": hasAnomalies,
+			};
+
+			HostApi.instance.track("NR Service Clicked", event);
 			setPendingTelemetryCall(false);
 		} catch (ex) {
 			console.error(ex);
@@ -853,14 +859,15 @@ export const Observability = React.memo((props: Props) => {
 			// Checks if any value in loadingErrors object is false
 			Object.keys(loadingErrors).some(k => !loadingErrors[k]) &&
 			!loadingAssigments &&
-			hasLoadedOnce === false &&
+			!hasLoadedOnce &&
+			!calculatingAnomalies &&
 			!loadingEntities
 		) {
 			hasLoadedOnce = true;
 
 			callObservabilityTelemetry();
 		}
-	}, [loadingErrors, loadingAssigments, loadingEntities]);
+	}, [loadingErrors, loadingAssigments, loadingEntities, calculatingAnomalies]);
 
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {

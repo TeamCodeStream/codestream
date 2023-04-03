@@ -5,9 +5,9 @@ import Icon from "./Icon";
 import { Link } from "./Link";
 import { ObservabilityAnomaliesGroup } from "./ObservabilityAnomaliesGroup";
 import { ErrorRow } from "@codestream/webview/Stream/Observability";
-import { useAppDispatch, useAppSelector } from "../utilities/hooks";
+import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { openModal } from "../store/context/actions";
-import { WebviewModals } from "../ipc/webview.protocol.common";
+import { WebviewModals } from "@codestream/protocols/webview";
 import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 
@@ -151,12 +151,14 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 									observabilityRepo={props.observabilityRepo}
 									entityGuid={props.entityGuid}
 									title="Error Rate"
+									detectionMethod={props.observabilityAnomalies.detectionMethod}
 								/>
 								<ObservabilityAnomaliesGroup
 									observabilityAnomalies={filteredResponseTimeAnomalies}
 									observabilityRepo={props.observabilityRepo}
 									entityGuid={props.entityGuid}
 									title="Average Duration"
+									detectionMethod={props.observabilityAnomalies.detectionMethod}
 								/>
 							</>
 						)}
