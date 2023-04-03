@@ -2064,13 +2064,13 @@ export const GetLibraryDetailsType = new RequestType<
 	void
 >("codestream/newrelic/libraryDetails");
 
-export interface CheckTrunkRequest { 
-	cwd: string,
-	forceCheck: boolean
+export interface CheckTrunkRequest {
+	cwd: string;
+	forceCheck: boolean;
 }
 
-export interface CheckTrunkResponse { 
-	results: TrunkCheckResults
+export interface CheckTrunkResponse {
+	results: TrunkCheckResults;
 }
 
 export const CheckTrunkRequestType = new RequestType<

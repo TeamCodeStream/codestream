@@ -135,13 +135,6 @@ const PROVIDERS_TO_REGISTER_BEFORE_SIGNIN = {
 		name: "newrelic",
 		needsConfigure: true,
 	},
-	[`trunk*io`]:{
-		host: "trunk.io",
-		name: "trunk",
-		id: "trunk*io",
-		isEnterprise: false,
-		needsConfigure: false,
-	}
 };
 
 export const loginApiErrorMappings: { [k: string]: LoginResult } = {

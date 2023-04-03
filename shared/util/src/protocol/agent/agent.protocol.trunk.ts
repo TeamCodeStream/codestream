@@ -8,7 +8,7 @@ export interface TrunkIssue {
 	line: string;
 	message: string;
 	code: string;
-	column?: string
+	column?: string;
 	level: string;
 	linter: string;
 	issueUrl: string;
@@ -23,7 +23,7 @@ export interface TrunkIssue {
 export interface TrunkUnformattedFile {
 	file: string;
 	line: string;
-	column?: string
+	column?: string;
 	message: string;
 	level: string;
 	issueClass: string;
