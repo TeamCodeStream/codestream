@@ -88,6 +88,16 @@ export class TrunkProvider extends ThirdPartyProviderBase {
 				});
 			}
 
+			// TODO: Need an option on the request to check *SPECIFIC* files
+			// An array of file paths relative to repo-root
+			// Trunk command for that is:
+			// await execAsync(
+			//     `${fullyQualifiedExecutable} check <FILES> --no-fix --output-file="<MAYBE DIFFERENT OUTPUT FILE?>" --no-progress`,
+			//     {
+			//        cwd: request.cwd,
+			//     }
+			// );
+
 			// run the actual check - or re-check if requested
 			if (request.forceCheck || !fs.existsSync(fullyQualifiedOutputStateFile)) {
 				try {
