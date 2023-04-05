@@ -75,6 +75,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 
 interface Props {
 	paneState: PaneState;
@@ -252,6 +253,7 @@ export const Observability = React.memo((props: Props) => {
 			scmInfo: state.editorContext.scmInfo,
 			anomaliesNeedRefresh: state.context.anomaliesNeedRefresh,
 			clmSettings,
+			showAnomalies: isFeatureEnabled(state, "showAnomalies"),
 		};
 	}, shallowEqual);
 
@@ -649,6 +651,9 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const fetchAnomalies = (entityGuid: string, repoId) => {
+		if (!derivedState.showAnomalies) {
+			return;
+		}
 		setCalculatingAnomalies(true);
 
 		HostApi.instance
@@ -1135,13 +1140,15 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 																							)}
 
-																							<ObservabilityAnomaliesWrapper
-																								observabilityAnomalies={observabilityAnomalies}
-																								observabilityRepo={_observabilityRepo}
-																								entityGuid={ea.entityGuid}
-																								noAccess={noErrorsAccess}
-																								calculatingAnomalies={calculatingAnomalies}
-																							/>
+																							{derivedState.showAnomalies && (
+																								<ObservabilityAnomaliesWrapper
+																									observabilityAnomalies={observabilityAnomalies}
+																									observabilityRepo={_observabilityRepo}
+																									entityGuid={ea.entityGuid}
+																									noAccess={noErrorsAccess}
+																									calculatingAnomalies={calculatingAnomalies}
+																								/>
+																							)}
 
 																							{ea.domain === "APM" && (
 																								<>
