@@ -57,6 +57,7 @@ import {
 	useAppSelector,
 	useDidMount,
 	useInterval,
+	useMemoizedState,
 	usePrevious,
 } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -224,7 +225,6 @@ export const ErrorRow = (props: {
 	);
 };
 
-const EMPTY_HASH = {};
 const EMPTY_ARRAY = [];
 let hasLoadedOnce = false;
 
@@ -259,17 +259,18 @@ export const Observability = React.memo((props: Props) => {
 	const GENERIC_ERROR_MESSAGE = "There was an error loading this data.";
 
 	const [noErrorsAccess, setNoErrorsAccess] = useState<string | undefined>(undefined);
-	const [loadingErrors, setLoadingErrors] = useState<{ [repoId: string]: boolean } | undefined>(
-		undefined
-	);
+	const [loadingObservabilityErrors, setLoadingObservabilityErrors] = useState<boolean>(false);
 	const [genericError, setGenericError] = useState<string | undefined>(undefined);
 	const [loadingAssignmentErrorsClick, setLoadingAssignmentErrorsClick] = useState<{
 		[errorGroupGuid: string]: boolean;
 	}>({});
-	const [loadingAssigments, setLoadingAssigments] = useState<boolean>(false);
+	const [loadingAssignments, setLoadingAssignments] = useState<boolean>(false);
 	const [hasEntities, setHasEntities] = useState<boolean>(false);
-	const [repoForEntityAssociator, setRepoForEntityAssociator] = useState<any>({});
+	const [repoForEntityAssociator, setRepoForEntityAssociator] = useState<
+		ObservabilityRepo | undefined
+	>(undefined);
 	const [loadingEntities, setLoadingEntities] = useState<boolean>(false);
+	const [didMount, setDidMount] = useState<boolean>(false);
 	const [observabilityAnomalies, setObservabilityAnomalies] =
 		useState<GetObservabilityAnomaliesResponse>({
 			responseTime: [],
@@ -291,9 +292,11 @@ export const Observability = React.memo((props: Props) => {
 	const [serviceLevelObjectiveError, setServiceLevelObjectiveError] = useState<string>();
 	const [hasServiceLevelObjectives, setHasServiceLevelObjectives] = useState<boolean>(false);
 	const [expandedEntity, setExpandedEntity] = useState<string | undefined>();
-	const [pendingTelemetryCall, setPendingTelemetryCall] = useState<boolean>(false);
-	const [currentRepoId, setCurrentRepoId] = useState<string>();
+	const [pendingTelemetryCall, setPendingTelemetryCall] = useState<boolean>(true);
+	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
 	const [loadingGoldenMetrics, setLoadingGoldenMetrics] = useState<boolean>(false);
+	const [loadingServiceLevelObjectives, setLoadingServiceLevelObjectives] =
+		useState<boolean>(false);
 	const [showCodeLevelMetricsBroadcastIcon, setShowCodeLevelMetricsBroadcastIcon] =
 		useState<boolean>(false);
 	const [currentEntityAccounts, setCurrentEntityAccounts] = useState<EntityAccount[] | undefined>(
@@ -325,35 +328,18 @@ export const Observability = React.memo((props: Props) => {
 		dispatch(setUserPreference({ prefPath: ["activeO11y", repoId], value: entityGuid }));
 	}
 
-	//@TODO: probably depreciated/candidate for deletion and cleanup
-	const loading = (repoIdOrRepoIds: string | string[], isLoading: boolean) => {
-		if (Array.isArray(repoIdOrRepoIds)) {
-			setLoadingErrors(
-				repoIdOrRepoIds.reduce(function (map, obj) {
-					map[obj] = isLoading;
-					return map;
-				}, {})
-			);
-		} else {
-			setLoadingErrors({
-				...loadingErrors,
-				[repoIdOrRepoIds]: isLoading,
-			});
-		}
-	};
+	const loadAssignments = async () => {
+		setLoadingAssignments(true);
 
-	const loadAssignments = () => {
-		setLoadingAssigments(true);
-
-		HostApi.instance
+		return HostApi.instance
 			.send(GetObservabilityErrorAssignmentsRequestType, {})
 			.then((_: GetObservabilityErrorAssignmentsResponse) => {
 				setObservabilityAssignments(_.items);
-				setLoadingAssigments(false);
+				setLoadingAssignments(false);
 				setNoErrorsAccess(undefined);
 			})
 			.catch(ex => {
-				setLoadingAssigments(false);
+				setLoadingAssignments(false);
 				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityErrorAssignments",
@@ -370,26 +356,26 @@ export const Observability = React.memo((props: Props) => {
 	const doRefresh = async (force: boolean = false) => {
 		if (!derivedState.newRelicIsConnected) return;
 
+		console.debug(`o11y: doRefresh called`);
+
 		setGenericError(undefined);
 		setLoadingEntities(true);
-		loadAssignments();
 
 		try {
-			await fetchObservabilityRepos(force);
-			await getEntityCount();
+			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount()]);
 		} finally {
 			setLoadingEntities(false);
 		}
 
 		await getObservabilityErrors();
 		if (expandedEntity && currentRepoId) {
-			fetchAnomalies(expandedEntity!, currentRepoId);
+			fetchAnomalies(expandedEntity, currentRepoId);
 		}
 	};
 
 	const getObservabilityErrors = async () => {
 		if (currentRepoId) {
-			loading(currentRepoId, true);
+			setLoadingObservabilityErrors(true);
 			try {
 				const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
 					filters: buildFilters([currentRepoId]),
@@ -416,7 +402,7 @@ export const Observability = React.memo((props: Props) => {
 					setGenericError(err.message || GENERIC_ERROR_MESSAGE);
 				}
 			} finally {
-				loading(currentRepoId, false);
+				setLoadingObservabilityErrors(false);
 			}
 		}
 	};
@@ -424,20 +410,24 @@ export const Observability = React.memo((props: Props) => {
 	const getEntityCount = async () => {
 		try {
 			const { entityCount } = await HostApi.instance.send(GetEntityCountRequestType, {});
+			console.debug(`o11y: entityCount ${entityCount}`);
 			setHasEntities(entityCount > 0);
 		} catch (err) {
 			setGenericError(err?.message || GENERIC_ERROR_MESSAGE);
-		} finally {
-			setLoadingEntities(false);
 		}
 	};
 
 	const _useDidMount = async (force = false) => {
 		if (!derivedState.newRelicIsConnected) return;
 		setGenericError(undefined);
-		loadAssignments();
-		await fetchObservabilityRepos(force);
-		await getEntityCount();
+		setLoadingEntities(true);
+		try {
+			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount()]);
+			console.debug(`o11y: Promise.all finished`);
+		} finally {
+			setLoadingEntities(false);
+			setDidMount(true);
+		}
 	};
 
 	useDidMount(() => {
@@ -510,6 +500,7 @@ export const Observability = React.memo((props: Props) => {
 	 */
 	useEffect(() => {
 		if (hasLoadedOnce) {
+			console.debug("o11y: callObservabilityTelemetry from useEffect currentEntityAccounts");
 			callObservabilityTelemetry();
 		}
 	}, [currentEntityAccounts]);
@@ -522,40 +513,43 @@ export const Observability = React.memo((props: Props) => {
 		// than having this call be reliant on multiple variables to be set given the
 		// complicated nature of this component, and since its telemetry tracking, the delay
 		// is not user facing.
-		setTimeout(() => {
-			let telemetryStateValue;
-			// "No Entities" - We don’t find any entities on NR and are showing the instrument-your-app message.
-			if (!hasEntities && !genericError) {
-				telemetryStateValue = "No Entities";
-			}
-			// "No Services" - There are entities but the current repo isn’t associated with one, so we’re
-			// 				   displaying the repo-association prompt.
-			if (hasEntities && !_isEmpty(repoForEntityAssociator)) {
-				telemetryStateValue = "No Services";
-			}
-			// "Services" - We’re displaying one or more services for the current repo.
-			if (currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities) {
-				telemetryStateValue = "Services";
-			}
+		let telemetryStateValue;
+		// "No Entities" - We don’t find any entities on NR and are showing the instrument-your-app message.
+		console.debug(
+			`o11y: hasEntities ${hasEntities} and repoForEntityAssociator ${
+				repoForEntityAssociator !== null
+			} and currentEntityAccounts ${!_isEmpty(
+				currentEntityAccounts
+			)} and genericError ${JSON.stringify(genericError)}`
+		);
+		if (!hasEntities && !genericError) {
+			telemetryStateValue = "No Entities";
+		}
+		// "No Services" - There are entities but the current repo isn’t associated with one, so we’re
+		//  displaying the repo-association prompt.
+		if (hasEntities && !_isEmpty(repoForEntityAssociator)) {
+			telemetryStateValue = "No Services";
+		}
+		// "Services" - We’re displaying one or more services for the current repo.
+		if (currentEntityAccounts && currentEntityAccounts?.length !== 0 && hasEntities) {
+			telemetryStateValue = "Services";
+		}
 
-			// "Not Connected" - not connected to NR, this goes away with UID completion
-			if (!derivedState.newRelicIsConnected) {
-				telemetryStateValue = "Not Connected";
-			}
+		// "Not Connected" - not connected to NR, this goes away with UID completion
+		if (!derivedState.newRelicIsConnected) {
+			telemetryStateValue = "Not Connected";
+		}
 
-			if (!isEmpty(telemetryStateValue)) {
-				HostApi.instance.track("O11y Rendered", {
-					State: telemetryStateValue,
-				});
-			}
-
-			if (expandedEntity) {
-				callServiceClickedTelemetry();
-			}
-		}, 3000);
+		if (!isEmpty(telemetryStateValue)) {
+			console.debug("o11y: O11y Rendered", telemetryStateValue);
+			HostApi.instance.track("O11y Rendered", {
+				State: telemetryStateValue,
+			});
+		}
 	};
 
 	const callServiceClickedTelemetry = () => {
+		console.debug("o11y: callServiceClickedTelemetry");
 		try {
 			let currentRepoErrors = observabilityErrors?.find(
 				_ => _ && _.repoId === currentRepoId
@@ -572,6 +566,8 @@ export const Observability = React.memo((props: Props) => {
 				"CLM Anomalies Listed": hasAnomalies,
 			};
 
+			console.debug(`o11y: NR Service Clicked`, event);
+
 			HostApi.instance.track("NR Service Clicked", event);
 			setPendingTelemetryCall(false);
 		} catch (ex) {
@@ -580,10 +576,10 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	async function fetchObservabilityRepos(force: boolean, repoId?: string, entityGuid?: string) {
-		if (repoId) {
-			loading(repoId, true);
-		}
 		setLoadingEntities(true);
+		console.debug(
+			`o11y: fetchObservabilityRepos started force ${force} repoId ${repoId} entityGuid ${entityGuid}`
+		);
 
 		const hasFilter = entityGuid && repoId;
 		const filters = hasFilter ? [{ repoId, entityGuid }] : undefined;
@@ -598,13 +594,16 @@ export const Observability = React.memo((props: Props) => {
 					if (hasFilter) {
 						const existingObservabilityRepos = observabilityRepos.filter(_ => _.repoId !== repoId);
 						existingObservabilityRepos.push(response.repos[0]);
+						console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (existing)`);
 						setObservabilityRepos(existingObservabilityRepos);
 					} else {
+						console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (response)`);
 						setObservabilityRepos(response.repos);
 					}
 				}
 			})
 			.catch(ex => {
+				console.debug(`o11y: fetchObservabilityRepos nope`, ex);
 				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
 					HostApi.instance.track("NR Access Denied", {
 						Query: "GetObservabilityRepos",
@@ -613,16 +612,11 @@ export const Observability = React.memo((props: Props) => {
 				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 				}
-			})
-			.finally(() => {
-				if (repoId) {
-					loading(repoId, false);
-				}
 			});
 	}
 
 	const fetchObservabilityErrors = (entityGuid: string, repoId) => {
-		loading(repoId, true);
+		setLoadingObservabilityErrors(true);
 		setLoadingPane(expandedEntity);
 
 		HostApi.instance
@@ -638,13 +632,14 @@ export const Observability = React.memo((props: Props) => {
 				if (response.repos) {
 					setObservabilityErrors(response.repos);
 				}
-				loading(repoId, false);
 				setLoadingPane(undefined);
 			})
 			.catch(_ => {
 				console.warn(_);
-				loading(repoId, false);
 				setLoadingPane(undefined);
+			})
+			.finally(() => {
+				setLoadingObservabilityErrors(false);
 			});
 	};
 
@@ -742,29 +737,36 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const fetchServiceLevelObjectives = async (entityGuid?: string | null) => {
-		if (entityGuid) {
-			const response = await HostApi.instance.send(GetServiceLevelObjectivesRequestType, {
-				entityGuid: entityGuid,
-			});
+		setLoadingServiceLevelObjectives(true);
+		try {
+			if (entityGuid) {
+				const response = await HostApi.instance.send(GetServiceLevelObjectivesRequestType, {
+					entityGuid: entityGuid,
+				});
 
-			if (isNRErrorResponse(response?.error)) {
-				setServiceLevelObjectiveError(
-					response.error?.error?.message ?? response.error?.error?.type
-				);
-			} else {
-				setServiceLevelObjectiveError(undefined);
-			}
+				if (isNRErrorResponse(response?.error)) {
+					setServiceLevelObjectiveError(
+						response.error?.error?.message ?? response.error?.error?.type
+					);
+				} else {
+					setServiceLevelObjectiveError(undefined);
+				}
 
-			if (response?.serviceLevelObjectives) {
-				setServiceLevelObjectives(response.serviceLevelObjectives);
-				setHasServiceLevelObjectives(true);
+				if (response?.serviceLevelObjectives) {
+					setServiceLevelObjectives(response.serviceLevelObjectives);
+					setHasServiceLevelObjectives(true);
+				} else {
+					console.debug(`o11y: no service level objectives`);
+					setServiceLevelObjectives([]);
+					setHasServiceLevelObjectives(false);
+				}
 			} else {
+				console.debug(`o11y: no service level objectives (no entityGuid)`);
 				setServiceLevelObjectives([]);
 				setHasServiceLevelObjectives(false);
 			}
-		} else {
-			setServiceLevelObjectives([]);
-			setHasServiceLevelObjectives(false);
+		} finally {
+			setLoadingServiceLevelObjectives(false);
 		}
 	};
 
@@ -799,16 +801,35 @@ export const Observability = React.memo((props: Props) => {
 
 	// Telemetry calls post clicking service and loading of errors
 	useEffect(() => {
+		console.debug(`o11y: useEffect (callServiceClickedTelemetry) 
+		didMount: ${didMount} 
+		pendingTelemetryCall: ${pendingTelemetryCall} 
+		expandedEntity: ${expandedEntity}
+		loadingObservabilityErrors: ${loadingObservabilityErrors} 
+		loadingAssignments: ${loadingAssignments}
+		calculatingAnomalies: ${calculatingAnomalies}
+		loadingServiceLevelObjectives: ${loadingServiceLevelObjectives}
+		`);
 		if (
+			didMount &&
 			pendingTelemetryCall &&
 			expandedEntity &&
-			!_isNil(loadingErrors) &&
-			Object.keys(loadingErrors).some(k => !loadingErrors[k]) &&
-			!loadingAssigments
+			!loadingObservabilityErrors &&
+			!loadingAssignments &&
+			!calculatingAnomalies &&
+			!loadingServiceLevelObjectives
 		) {
+			console.debug(`o11y: useEffect calling callServiceClickedTelemetry`);
 			callServiceClickedTelemetry();
 		}
-	}, [loadingErrors, loadingAssigments]);
+	}, [
+		didMount,
+		// pendingTelemetryCall, // Not enabled on purpose
+		loadingObservabilityErrors,
+		loadingAssignments,
+		calculatingAnomalies,
+		loadingServiceLevelObjectives,
+	]);
 
 	const handleClickCLMBroadcast = (entityGuid, e?) => {
 		if (e) {
@@ -838,6 +859,7 @@ export const Observability = React.memo((props: Props) => {
 	// Separate useEffect to prevent duplicate requests
 	useEffect(() => {
 		if (expandedEntity && currentRepoId) {
+			console.debug(`o11y: useEffect for expandedEntity`);
 			fetchGoldenMetrics(expandedEntity, true);
 			fetchServiceLevelObjectives(expandedEntity);
 			fetchObservabilityErrors(expandedEntity, currentRepoId);
@@ -874,20 +896,15 @@ export const Observability = React.memo((props: Props) => {
 	 *  and a user is connected to NR, fire off a tracking event
 	 */
 	useEffect(() => {
-		if (
-			!_isNil(loadingErrors) &&
-			// Checks if any value in loadingErrors object is false
-			Object.keys(loadingErrors).some(k => !loadingErrors[k]) &&
-			!loadingAssigments &&
-			!hasLoadedOnce &&
-			!calculatingAnomalies &&
-			!loadingEntities
-		) {
+		console.debug(
+			`o11y: useEffect didMount: ${didMount} hasLoadedOnce: ${hasLoadedOnce} loadingEntities: ${loadingEntities}`
+		);
+		if (!hasLoadedOnce && didMount && !loadingEntities && currentEntityAccounts) {
 			hasLoadedOnce = true;
-
+			console.debug("o11y: callObservabilityTelemetry from useEffect main");
 			callObservabilityTelemetry();
 		}
-	}, [loadingErrors, loadingAssigments, loadingEntities, calculatingAnomalies]);
+	}, [loadingEntities, didMount, currentEntityAccounts]);
 
 	useEffect(() => {
 		if (!_isEmpty(currentRepoId) && !_isEmpty(observabilityRepos)) {
@@ -903,7 +920,7 @@ export const Observability = React.memo((props: Props) => {
 			) {
 				setRepoForEntityAssociator(currentRepo);
 			} else {
-				setRepoForEntityAssociator({});
+				setRepoForEntityAssociator(undefined);
 			}
 
 			if (currentRepo) {
@@ -920,14 +937,19 @@ export const Observability = React.memo((props: Props) => {
 				HostApi.instance
 					.send(GetObservabilityReposRequestType, { force: true })
 					.then((_: GetObservabilityReposResponse) => {
+						console.debug(
+							`o11y: useEffect on scmInfo calling setObservabilityRepos ${JSON.stringify(_.repos)}`
+						);
 						setObservabilityRepos(_.repos || []);
+						// updateCurrentEntityAccounts();
 					});
 			}
 		}
 	}, [derivedState.scmInfo]);
 
 	useEffect(() => {
-		if (!_isEmpty(currentRepoId) && _isEmpty(observabilityRepos)) {
+		if (!_isEmpty(currentRepoId) && _isEmpty(observabilityRepos) && didMount) {
+			console.debug(`o11y: useEffect [currentRepoId, observabilityRepos] calling doRefresh(force)`);
 			doRefresh(true);
 		}
 	}, [currentRepoId, observabilityRepos]);
@@ -1037,7 +1059,7 @@ export const Observability = React.memo((props: Props) => {
 											)}
 										{observabilityRepos.length == 0 && (
 											<>
-												{loadingErrors && Object.keys(loadingErrors).length > 0 && (
+												{!loadingObservabilityErrors && !loadingEntities && (
 													<>
 														<PaneNodeName
 															title="Recent errors"
@@ -1215,6 +1237,9 @@ export const Observability = React.memo((props: Props) => {
 														{currentObsRepo && (
 															<ObservabilityAddAdditionalService
 																onSuccess={async e => {
+																	console.debug(
+																		`o11y: ObservabilityAddAdditionalService calling doRefresh(force)`
+																	);
 																	doRefresh(true);
 																}}
 																remote={currentObsRepo.repoRemote}
@@ -1227,7 +1252,7 @@ export const Observability = React.memo((props: Props) => {
 											)}
 										{hasEntities && (
 											<>
-												{!_isEmpty(repoForEntityAssociator) && (
+												{repoForEntityAssociator && (
 													<>
 														<EntityAssociator
 															label={

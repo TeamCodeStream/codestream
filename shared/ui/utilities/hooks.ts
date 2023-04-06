@@ -9,6 +9,7 @@ import {
 	useState,
 } from "react";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+import { isEqual } from "lodash";
 
 import { AppDispatch, CodeStreamState } from "@codestream/webview/store";
 import { RequestType } from "vscode-jsonrpc";
@@ -285,6 +286,23 @@ export const useEffectDebugger = (effectHook, dependencies, dependencyNames: str
 	}
 
 	useEffect(effectHook, dependencies);
+};
+
+// Credit: https://stackoverflow.com/questions/59721035/usestate-only-update-component-when-values-in-object-change
+export const useMemoizedState = <T>(initialValue: T): [T, (val: T) => void] => {
+	const [state, _setState] = useState<T>(initialValue);
+
+	const setState = (newState: T) => {
+		_setState(prev => {
+			if (!isEqual(newState, prev)) {
+				return newState;
+			} else {
+				return prev;
+			}
+		});
+	};
+
+	return [state, setState];
 };
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
