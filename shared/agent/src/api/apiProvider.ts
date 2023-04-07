@@ -408,8 +408,9 @@ export interface ApiProvider {
 
 	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
 	generateLoginCode(request: GenerateLoginCodeRequest): Promise<void>;
-	generateMSTeamsConnectCode(request: GenerateMSTeamsConnectCodeRequest): Promise<GenerateMSTeamsConnectCodeResponse>;
-
+	generateMSTeamsConnectCode(
+		request: GenerateMSTeamsConnectCodeRequest
+	): Promise<GenerateMSTeamsConnectCodeResponse>;
 	subscribe(types?: MessageType[]): Promise<void>;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;

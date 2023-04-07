@@ -84,21 +84,6 @@ export const GenerateLoginCodeRequestType = new RequestType<
 	void
 >("codestream/login/generate-code");
 
-export interface GenerateMSTeamsConnectCodeRequest {
-	email: string;
-}
-
-export interface GenerateMSTeamsConnectCodeResponse {
-	connectCode: string;
-}
-
-export const GenerateMSTeamsConnectCodeRequestType = new RequestType<
-	GenerateMSTeamsConnectCodeRequest,
-	GenerateMSTeamsConnectCodeResponse,
-	void,
-	void
->("codestream/msteams/generate-connect-code");
-
 export interface ConfirmLoginCodeRequest {
 	email: string;
 	code: string;

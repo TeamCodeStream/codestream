@@ -22,6 +22,7 @@ export * from "./agent.protocol.gitlab";
 export * from "./agent.protocol.jira";
 export * from "./agent.protocol.linear";
 export * from "./agent.protocol.markers";
+export * from "./agent.protocol.msteams";
 export * from "./agent.protocol.newrelic";
 export * from "./agent.protocol.notifications";
 export * from "./agent.protocol.nr";
