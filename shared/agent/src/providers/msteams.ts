@@ -9,6 +9,7 @@ import {
 	GenerateMSTeamsConnectCodeRequestType,
 	GenerateMSTeamsConnectCodeRequest,
 	GenerateMSTeamsConnectCodeResponse,
+	AgentOpenUrlRequestType,
 } from "@codestream/protocols/agent";
 import { CSMSTeamsProviderInfo } from "@codestream/protocols/api";
 
@@ -46,9 +47,9 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<CSMSTeamsProvide
 			Logger.log(`Environment ${env} did not match EU, connecting to US-based MSTeams app`);
 			appId = "7cf49ab7-8b65-4407-b494-f02b525eef2b";
 		}
-		// void SessionContainer.instance().session.agent.sendRequest(AgentOpenUrlRequestType, {
-		// 	url: `https://teams.microsoft.com/l/app/${appId}`,
-		// });
+		void SessionContainer.instance().session.agent.sendRequest(AgentOpenUrlRequestType, {
+			url: `https://teams.microsoft.com/l/app/${appId}`,
+		});
 	}
 
 	@log()

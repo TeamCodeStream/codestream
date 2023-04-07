@@ -1,7 +1,7 @@
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useRef, useState } from "react";
-import { configureProvider, ViewLocation } from "../store/providers/actions";
+import { configureProvider, connectProvider, ViewLocation } from "../store/providers/actions";
 import { Link } from "./Link";
 import { closePanel } from "./actions";
 import Button from "./Button";
@@ -47,14 +47,8 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 		e.preventDefault();
 		const { providerId } = props;
 
-		// configuring is as good as connecting
-		await dispatch(
-			configureProvider(
-				providerId,
-				{},
-				{ setConnectedWhenConfigured: true, connectionLocation: props.originLocation }
-			)
-		);
+		await dispatch(configureProvider(providerId, {}));
+		await dispatch(connectProvider(providerId, props.originLocation));
 		await dispatch(closePanel());
 	};
 
@@ -99,7 +93,7 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 								className="control-button cancel"
 								tabIndex={tabIndex()}
 								type="button"
-								onClick={() => dispatch(closePanel())}
+								onClick={e => onSubmit(e)}
 							>
 								Connect to Teams
 							</Button>
