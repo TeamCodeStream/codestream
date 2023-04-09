@@ -80,6 +80,8 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			"Detection Method": props.detectionMethod ?? "<unknown>",
 		};
 
+		console.debug("CLM Anomaly Clicked", event);
+
 		HostApi.instance.track("CLM Anomaly Clicked", event);
 	}
 

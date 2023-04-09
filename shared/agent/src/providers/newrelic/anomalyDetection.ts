@@ -139,8 +139,8 @@ export class AnomalyDetector {
 
 		const event = {
 			"Total Methods": symbolStrs.size,
-			"Anomalous Error Methods": durationAnomalies.length,
-			"Anomalous Duration Methods": errorRateAnomalies.length,
+			"Anomalous Error Methods": errorRateAnomalies.length,
+			"Anomalous Duration Methods": durationAnomalies.length,
 		};
 		telemetry?.track({
 			eventName: "CLM Anomalies Calculated",

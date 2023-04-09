@@ -762,7 +762,7 @@ export const Observability = React.memo((props: Props) => {
 					setServiceLevelObjectiveError(undefined);
 				}
 
-				if (response?.serviceLevelObjectives) {
+				if (response?.serviceLevelObjectives && response.serviceLevelObjectives.length > 0) {
 					setServiceLevelObjectives(response.serviceLevelObjectives);
 					setHasServiceLevelObjectives(true);
 				} else {

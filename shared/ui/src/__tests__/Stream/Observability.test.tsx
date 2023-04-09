@@ -44,14 +44,17 @@ import {
 	GetServiceLevelObjectivesResponse,
 	RemoteType,
 } from "@codestream/protocols/agent";
-import "@testing-library/jest-dom";
 import { afterEach, beforeEach, describe, it, jest } from "@jest/globals";
 import { IntlProvider } from "react-intl";
 import translations from "@codestream/webview/translations/en";
 import { ConfigsState } from "@codestream/webview/store/configs/types";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 
+jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
 jest.mock("@codestream/webview/store/providers/reducer");
+
+const mockIsFeatureEnabled = jest.mocked(isFeatureEnabled);
 
 const wrapIntl = (children: any) => (
 	<IntlProvider locale="en" messages={translations}>
@@ -205,6 +208,7 @@ describe("Observability", () => {
 							totalDays: 14,
 							errorMetricTimesliceName: "errorMetricTimesliceName",
 							metricTimesliceName: "metricTimesliceName",
+							sinceText: "some text",
 						},
 					],
 					errorRate: [],
@@ -215,7 +219,7 @@ describe("Observability", () => {
 
 		mockGetObservabilityErrors.mockImplementation(
 			(_params: GetObservabilityErrorsRequest): GetObservabilityErrorsResponse => {
-				const response: GetObservabilityErrorsResponse = {
+				return {
 					repos: [
 						{
 							repoId: "repoid",
@@ -236,7 +240,6 @@ describe("Observability", () => {
 						},
 					],
 				};
-				return response;
 			}
 		);
 	}
@@ -245,6 +248,8 @@ describe("Observability", () => {
 		container = document.createElement("div");
 		container.id = "modal-root";
 		document.body.appendChild(container);
+
+		mockIsFeatureEnabled.mockReturnValue(true);
 
 		mockGetReposScmRequest.mockImplementation(
 			(_params: GetReposScmRequest): GetReposScmResponse => {
@@ -346,31 +351,33 @@ describe("Observability", () => {
 			return response;
 		});
 
-		mockHostApi.send.mockImplementation((type, params: any) => {
+		mockHostApi.send.mockImplementation((type, params) => {
 			switch (type) {
 				case GetReposScmRequestType: {
-					return mockGetReposScmRequest(params);
+					return mockGetReposScmRequest(params as GetReposScmRequest);
 				}
 				case GetFileScmInfoRequestType: {
-					return mockGetFileScmInfo(params);
+					return mockGetFileScmInfo(params as GetFileScmInfoRequest);
 				}
 				case GetObservabilityReposRequestType: {
-					return mockGetObservabilityRepos(params);
+					return mockGetObservabilityRepos(params as GetObservabilityReposRequest);
 				}
 				case GetEntityCountRequestType: {
-					return mockGetEntityCount(params);
+					return mockGetEntityCount(params as GetEntityCountRequest);
 				}
 				case GetObservabilityErrorAssignmentsRequestType: {
-					return mockGetObservabilityErrorAssignments(params);
+					return mockGetObservabilityErrorAssignments(
+						params as GetObservabilityErrorAssignmentsRequest
+					);
 				}
 				case GetServiceLevelObjectivesRequestType: {
-					return mockGetServiceLevelObjectives(params);
+					return mockGetServiceLevelObjectives(params as GetServiceLevelObjectivesRequest);
 				}
 				case GetObservabilityAnomaliesRequestType: {
-					return mockGetObservabilityAnomalies(params);
+					return mockGetObservabilityAnomalies(params as GetObservabilityAnomaliesRequest);
 				}
 				case GetObservabilityErrorsRequestType: {
-					return mockGetObservabilityErrors(params);
+					return mockGetObservabilityErrors(params as GetObservabilityErrorsRequest);
 				}
 			}
 			return undefined;
@@ -400,16 +407,11 @@ describe("Observability", () => {
 			);
 		});
 
-		await waitFor(
-			() => {
-				expect(screen.queryByTestId("observability-label-title")).toHaveTextContent(
-					"Observability"
-				);
-				expect(mockTrack).toHaveBeenCalledTimes(2);
-				expect(mockTrack).toHaveBeenCalledWith("O11y Rendered", { State: "Services" });
-			},
-			{ timeout: 2000 }
-		);
+		await waitFor(() => {
+			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenCalledWith("O11y Rendered", { State: "Services" });
+		});
 	});
 
 	it("should trigger O11y rendered with No Entities getEntities returns 0", async () => {
@@ -523,6 +525,116 @@ describe("Observability", () => {
 				"Errors Listed": true,
 				"SLOs Listed": true,
 				"CLM Anomalies Listed": true,
+			});
+		});
+	});
+
+	it("should trigger service clicked without errors listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
+
+		mockGetObservabilityErrors.mockImplementation(_params => {
+			return {
+				repos: [],
+			};
+		});
+
+		const mockStore = configureStore(middlewares);
+
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
+
+		await waitFor(() => {
+			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+				"Errors Listed": false,
+				"SLOs Listed": true,
+				"CLM Anomalies Listed": true,
+			});
+		});
+	});
+
+	it("should trigger service clicked without SLOs listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
+
+		mockGetServiceLevelObjectives.mockImplementation(_params => {
+			return {
+				serviceLevelObjectives: [],
+			};
+		});
+
+		const mockStore = configureStore(middlewares);
+
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
+
+		await waitFor(() => {
+			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+				"Errors Listed": true,
+				"CLM Anomalies Listed": true,
+				"SLOs Listed": false,
+			});
+		});
+	});
+
+	it("should trigger service clicked without anomalies listed", async () => {
+		mockProviderSelectors.isConnected.mockReturnValue(true);
+		mockServiceClickedMethods();
+
+		mockGetObservabilityAnomalies.mockImplementation(_params => {
+			return {
+				errorRate: [],
+				responseTime: [],
+				isSupported: true,
+			};
+		});
+
+		const mockStore = configureStore(middlewares);
+
+		await act(async () => {
+			render(
+				wrapIntl(
+					<Provider store={mockStore(createState())}>
+						<ThemeProvider theme={lightTheme}>
+							<Observability paneState={PaneState.Open} />
+						</ThemeProvider>
+					</Provider>
+				),
+				{ container }
+			);
+		});
+
+		await waitFor(() => {
+			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
+				"Errors Listed": true,
+				"CLM Anomalies Listed": false,
+				"SLOs Listed": true,
 			});
 		});
 	});

@@ -49,16 +49,16 @@
 		"@types/node": "16",
 		"@types/node-fetch": "2.6.1",
 		"@types/uuid": "3.4.5",
-		"@typescript-eslint/eslint-plugin": "5.55.0",
-		"@typescript-eslint/parser": "5.55.0",
+		"@typescript-eslint/eslint-plugin": "5.57.1",
+		"@typescript-eslint/parser": "5.57.1",
 		"babel-loader": "8.2.3",
 		"babel-plugin-styled-components": "2.0.2",
 		"cpy": "9.0.1",
-		"esbuild": "0.17.12",
-		"eslint": "8.36.0",
+		"esbuild": "0.17.15",
+		"eslint": "8.38.0",
 		"less": "4.1.2",
-		"prettier": "2.8.4",
+		"prettier": "2.8.7",
 		"tsx": "3.12.5",
-		"typescript": "5.0.2"
+		"typescript": "5.0.4"
 	}
 }

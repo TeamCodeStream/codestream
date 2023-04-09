@@ -131,17 +131,17 @@
 		"@types/tmp": "0.1.0",
 		"@types/uuid": "3.4.5",
 		"@types/write-file-atomic": "2.1.2",
-		"@typescript-eslint/eslint-plugin": "5.55.0",
-		"@typescript-eslint/parser": "5.55.0",
+		"@typescript-eslint/eslint-plugin": "5.57.1",
+		"@typescript-eslint/parser": "5.57.1",
 		"cpy": "9.0.1",
 		"cross-env": "5.2.0",
 		"cross-os": "1.5.0",
-		"esbuild": "0.17.12",
+		"esbuild": "0.17.15",
 		"esbuild-plugin-ignore": "1.1.1",
-		"eslint": "8.36.0",
+		"eslint": "8.38.0",
 		"eslint-filtered-fix": "0.3.0",
-		"eslint-import-resolver-typescript": "3.5.2",
-		"eslint-plugin-import": "2.26.0",
+		"eslint-import-resolver-typescript": "3.5.5",
+		"eslint-plugin-import": "2.27.5",
 		"eslint-plugin-unused-imports": "2.0.0",
 		"esm": "3.2.25",
 		"graphql-tag": "2.12.6",
@@ -149,18 +149,18 @@
 		"husky": "8.0.3",
 		"jest-mock-extended": "3.0.4",
 		"jest-teamcity": "1.11.0",
-		"lint-staged": "13.0.3",
+		"lint-staged": "13.2.1",
 		"lodash": "4.17.21",
 		"npm-run-all": "4.1.5",
 		"patch-package": "6.4.7",
 		"pkg": "5.5.2",
-		"prettier": "2.8.4",
+		"prettier": "2.8.7",
 		"randomstring": "1.2.2",
 		"rimraf": "3.0.2",
 		"sanitize-filename": "1.6.3",
 		"ts-jest": "29.0.5",
 		"tsx": "3.12.5",
-		"typescript": "5.0.2"
+		"typescript": "5.0.4"
 	},
 	"lint-staged": {
 		"*": [
@@ -171,7 +171,7 @@
 	},
 	"overrides": {
 		"degenerator@3.0.1": {
-			"vm2": "3.9.11"
+			"vm2": "3.9.15"
 		}
 	}
 }
