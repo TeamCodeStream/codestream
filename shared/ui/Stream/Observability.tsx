@@ -8,7 +8,6 @@ import {
 	GetEntityCountRequestType,
 	GetObservabilityAnomaliesRequestType,
 	GetObservabilityErrorAssignmentsRequestType,
-	GetObservabilityErrorAssignmentsResponse,
 	GetObservabilityErrorsRequestType,
 	GetObservabilityReposRequestType,
 	GetObservabilityReposResponse,
@@ -77,6 +76,7 @@ import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
+
 interface Props {
 	paneState: PaneState;
 }
@@ -227,10 +227,10 @@ export const ErrorRow = (props: {
 };
 
 const EMPTY_ARRAY = [];
-let hasLoadedOnce = false;
 
 export const Observability = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
+	let hasLoadedOnce = false;
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers = {}, preferences } = state;
 		const newRelicIsConnected =
@@ -332,27 +332,26 @@ export const Observability = React.memo((props: Props) => {
 
 	const loadAssignments = async () => {
 		setLoadingAssignments(true);
-
-		return HostApi.instance
-			.send(GetObservabilityErrorAssignmentsRequestType, {})
-			.then((_: GetObservabilityErrorAssignmentsResponse) => {
-				setObservabilityAssignments(_.items);
-				setLoadingAssignments(false);
-				setNoErrorsAccess(undefined);
-			})
-			.catch(ex => {
-				setLoadingAssignments(false);
-				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityErrorAssignments",
-					});
-					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
-				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
-				} else {
-					setGenericError(ex.message || GENERIC_ERROR_MESSAGE);
-				}
-			});
+		try {
+			const response = await HostApi.instance.send(GetObservabilityErrorAssignmentsRequestType, {});
+			setObservabilityAssignments(response.items);
+			setLoadingAssignments(false);
+			setNoErrorsAccess(undefined);
+		} catch (ex) {
+			setLoadingAssignments(false);
+			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
+				HostApi.instance.track("NR Access Denied", {
+					Query: "GetObservabilityErrorAssignments",
+				});
+				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
+			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
+			} else {
+				setGenericError(ex.message || GENERIC_ERROR_MESSAGE);
+			}
+		} finally {
+			setLoadingAssignments(false);
+		}
 	};
 
 	const doRefresh = async (force: boolean = false) => {
@@ -420,7 +419,10 @@ export const Observability = React.memo((props: Props) => {
 	};
 
 	const _useDidMount = async (force = false) => {
-		if (!derivedState.newRelicIsConnected) return;
+		if (!derivedState.newRelicIsConnected) {
+			setDidMount(true);
+			return;
+		}
 		setGenericError(undefined);
 		setLoadingEntities(true);
 		try {
@@ -519,7 +521,7 @@ export const Observability = React.memo((props: Props) => {
 		// "No Entities" - We don’t find any entities on NR and are showing the instrument-your-app message.
 		console.debug(
 			`o11y: hasEntities ${hasEntities} and repoForEntityAssociator ${
-				repoForEntityAssociator !== null
+				repoForEntityAssociator !== undefined
 			} and currentEntityAccounts ${!_isEmpty(
 				currentEntityAccounts
 			)} and genericError ${JSON.stringify(genericError)}`
@@ -586,74 +588,69 @@ export const Observability = React.memo((props: Props) => {
 		const hasFilter = entityGuid && repoId;
 		const filters = hasFilter ? [{ repoId, entityGuid }] : undefined;
 
-		return HostApi.instance
-			.send(GetObservabilityReposRequestType, {
+		try {
+			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
 				force,
-			})
-			.then(response => {
-				if (response.repos) {
-					if (hasFilter) {
-						const existingObservabilityRepos = observabilityRepos.filter(_ => _.repoId !== repoId);
-						existingObservabilityRepos.push(response.repos[0]);
-						console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (existing)`);
-						setObservabilityRepos(existingObservabilityRepos);
-					} else {
-						console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (response)`);
-						setObservabilityRepos(response.repos);
-					}
-				}
-			})
-			.catch(ex => {
-				console.debug(`o11y: fetchObservabilityRepos nope`, ex);
-				if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
-					HostApi.instance.track("NR Access Denied", {
-						Query: "GetObservabilityRepos",
-					});
-					setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
-				} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
-					setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
-				}
 			});
+			if (response.repos) {
+				if (hasFilter) {
+					const existingObservabilityRepos = observabilityRepos.filter(_ => _.repoId !== repoId);
+					existingObservabilityRepos.push(response.repos[0]);
+					console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (existing)`);
+					setObservabilityRepos(existingObservabilityRepos);
+				} else {
+					console.debug(`o11y: fetchObservabilityRepos calling setObservabilityRepos (response)`);
+					setObservabilityRepos(response.repos);
+				}
+			}
+		} catch (ex) {
+			console.debug(`o11y: fetchObservabilityRepos nope`, ex);
+			if (ex.code === ERROR_NR_INSUFFICIENT_API_KEY) {
+				HostApi.instance.track("NR Access Denied", {
+					Query: "GetObservabilityRepos",
+				});
+				setNoErrorsAccess(NO_ERRORS_ACCESS_ERROR_MESSAGE);
+			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
+				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
+			}
+		}
 	}
 
-	const fetchObservabilityErrors = (entityGuid: string, repoId) => {
+	const fetchObservabilityErrors = async (entityGuid: string, repoId) => {
 		setLoadingObservabilityErrors(true);
 		setLoadingPane(expandedEntity);
 
-		HostApi.instance
-			.send(GetObservabilityErrorsRequestType, {
+		try {
+			const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
 				filters: [{ repoId: repoId, entityGuid: entityGuid }],
-			})
-			.then(response => {
-				if (isNRErrorResponse(response.error)) {
-					setObservabilityErrorsError(response.error.error.message ?? response.error.error.type);
-				} else {
-					setObservabilityErrorsError(undefined);
-				}
-				if (response.repos) {
-					setObservabilityErrors(response.repos);
-				}
-				setLoadingPane(undefined);
-			})
-			.catch(_ => {
-				console.warn(_);
-				setLoadingPane(undefined);
-			})
-			.finally(() => {
-				setLoadingObservabilityErrors(false);
 			});
+			if (isNRErrorResponse(response.error)) {
+				setObservabilityErrorsError(response.error.error.message ?? response.error.error.type);
+			} else {
+				setObservabilityErrorsError(undefined);
+			}
+			if (response.repos) {
+				setObservabilityErrors(response.repos);
+			}
+		} catch (ex) {
+			console.warn(ex);
+			setLoadingPane(undefined);
+		} finally {
+			setLoadingObservabilityErrors(false);
+			setLoadingPane(undefined);
+		}
 	};
 
-	const fetchAnomalies = (entityGuid: string, repoId) => {
+	const fetchAnomalies = async (entityGuid: string, repoId) => {
 		dispatch(setRefreshAnomalies(false));
 		if (!derivedState.showAnomalies) {
 			return;
 		}
 		setCalculatingAnomalies(true);
 
-		HostApi.instance
-			.send(GetObservabilityAnomaliesRequestType, {
+		try {
+			const response = await HostApi.instance.send(GetObservabilityAnomaliesRequestType, {
 				entityGuid,
 				sinceDaysAgo: !_isNil(derivedState?.clmSettings?.compareDataLastValue)
 					? derivedState?.clmSettings?.compareDataLastValue
@@ -685,24 +682,22 @@ export const Observability = React.memo((props: Props) => {
 							? derivedState?.clmSettings?.minimumChangeValue
 							: 0
 					) /
-						100 +
+					100 +
 					1,
-			})
-			.then(response => {
-				if (response && response.isSupported === false) {
-					setAnomalyDetectionSupported(false);
-				} else {
-					setObservabilityAnomalies(response);
-					dispatch(setRefreshAnomalies(false));
-				}
-			})
-			.catch(_ => {
-				console.error("Failed to fetch anomalies", _);
-				dispatch(setRefreshAnomalies(false));
-			})
-			.finally(() => {
-				setCalculatingAnomalies(false);
 			});
+
+			if (response && response.isSupported === false) {
+				setAnomalyDetectionSupported(false);
+			} else {
+				setObservabilityAnomalies(response);
+				dispatch(setRefreshAnomalies(false));
+			}
+		} catch (ex) {
+			console.error("Failed to fetch anomalies", ex);
+			dispatch(setRefreshAnomalies(false));
+		} finally {
+			setCalculatingAnomalies(false);
+		}
 	};
 
 	const fetchGoldenMetrics = async (
@@ -893,6 +888,11 @@ export const Observability = React.memo((props: Props) => {
 				return or.repoId === currentRepoId;
 			})?.entityAccounts;
 
+			console.debug(
+				`o11y: useEffect [currentRepoId, observabilityRepos] calling setCurrentEntityAccounts ${JSON.stringify(
+					_currentEntityAccounts
+				)}`
+			);
 			setCurrentEntityAccounts(_currentEntityAccounts);
 
 			if (_currentEntityAccounts && _currentEntityAccounts.length > 0 && currentRepoId) {
@@ -912,7 +912,11 @@ export const Observability = React.memo((props: Props) => {
 	 */
 	useEffect(() => {
 		console.debug(
-			`o11y: useEffect didMount: ${didMount} hasLoadedOnce: ${hasLoadedOnce} loadingEntities: ${loadingEntities}`
+			`o11y: useEffect (callObservabilityTelemetry)
+			didMount: ${didMount} 
+			hasLoadedOnce: ${hasLoadedOnce} 
+			loadingEntities: ${loadingEntities} 
+			currentEntityAccounts: ${JSON.stringify(currentEntityAccounts)}`
 		);
 		if (!hasLoadedOnce && didMount && !loadingEntities && currentEntityAccounts) {
 			hasLoadedOnce = true;

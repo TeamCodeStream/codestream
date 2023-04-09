@@ -191,6 +191,18 @@ export interface NewRelicOptions {
 	path?: string;
 }
 
+export type RemoteType = {
+	repoPath: string;
+	name?: string;
+	path: string;
+	uri?: any;
+	domain: string;
+	webUrl: string;
+	remoteWeight?: number;
+	types?: { url: string; type: string }[];
+	rawUrl?: string;
+};
+
 export interface ReposScm {
 	id?: string;
 	path: string;
@@ -210,17 +222,7 @@ export interface ReposScm {
 	/**
 	 * this has a subset of what GitRemote has
 	 */
-	remotes?: {
-		repoPath: string;
-		name?: string;
-		path: string;
-		uri?: any;
-		domain: string;
-		webUrl: string;
-		remoteWeight?: number;
-		types?: { url: string; type: string }[];
-		rawUrl?: string;
-	}[];
+	remotes?: RemoteType[];
 	/**
 	 * If this repo has a remote that is managed and connected to a provider,
 	 * return the providerId
@@ -301,16 +303,19 @@ export const GetReposScmRequestType = new RequestType<
 export interface GetFileScmInfoRequest {
 	uri: string;
 }
+
+export type ScmType = {
+	file: string;
+	repoPath: string;
+	repoId?: string;
+	revision: string;
+	remotes: { name: string; url: string }[];
+	branch?: string;
+};
+
 export interface GetFileScmInfoResponse {
 	uri: string;
-	scm?: {
-		file: string;
-		repoPath: string;
-		repoId?: string;
-		revision: string;
-		remotes: { name: string; url: string }[];
-		branch?: string;
-	};
+	scm?: ScmType;
 	error?: string;
 	/**
 	 * set if the uri is not of a file scheme

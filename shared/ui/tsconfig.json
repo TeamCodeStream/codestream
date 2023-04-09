@@ -20,5 +20,5 @@
 		"types": ["styled-components", "jest"]
 	},
 	"exclude": ["dist", "node_modules", "coverage"],
-	"include": ["**/*.tsx?", "**/*.jsx?", "../util/src/**/*"]
+	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "../util/src/**/*"]
 }

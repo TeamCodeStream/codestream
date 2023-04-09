@@ -34,7 +34,7 @@ export interface BaseCodemarkProps extends CardProps {
 	tags?: { id: string }[];
 	assignees?: Partial<CSUser>[];
 	currentUserEmail?: string;
-	providerDisplay?: typeof PROVIDER_MAPPINGS[string];
+	providerDisplay?: (typeof PROVIDER_MAPPINGS)[string];
 	relatedCodemarks?: any[];
 	pinnedReplies?: any;
 	onChangeStatus?(status: CodemarkStatus): void;
@@ -537,7 +537,7 @@ const LinkForExternalUrl = styled(Link)`
 	}
 `;
 
-export const StyledMarker = styled(Marker)`
+export const StyledMarker = styled(props => <Marker {...props} />)`
 	.code {
 		margin: 5px 0 !important;
 	}

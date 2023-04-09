@@ -20,13 +20,14 @@ import { CardView } from "@codestream/webview/Stream/CrossPostIssueControls/Issu
 import { StartWork } from "@codestream/webview/Stream/StartWork";
 import { HostApi } from "@codestream/webview/webview-api";
 import "@testing-library/jest-dom";
-import { fireEvent, render, RenderResult, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
 import { ThemeProvider } from "styled-components";
+import { jest, beforeEach, afterEach, describe, it } from "@jest/globals";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
@@ -101,7 +102,8 @@ const baseState: Partial<CodeStreamState> = {
 	},
 };
 
-let container: HTMLDivElement = null!;
+let container: HTMLDivElement | undefined = undefined;
+
 beforeEach(() => {
 	const container = document.createElement("div");
 	container.id = "modal-root";
@@ -110,7 +112,7 @@ beforeEach(() => {
 
 afterEach(() => {
 	container && document.body.removeChild(container);
-	container = null!;
+	container = undefined;
 });
 
 const baseCard: CardView = {
@@ -152,7 +154,7 @@ describe("Issue State Change", () => {
 	const mockStore = configureStore(middlewares);
 	mockProviderSelectors.getConnectedSharingTargets.mockReturnValue([]);
 	const onClose = jest.fn();
-	mockHostApi.send.mockImplementation((type, options) => {
+	mockHostApi.send.mockImplementation((type, _options) => {
 		switch (type) {
 			case FetchBranchCommitsStatusRequestType: {
 				return 0;
@@ -335,10 +337,8 @@ describe("Issue State Change", () => {
 			},
 		};
 
-		let component: RenderResult;
-
 		await act(async () => {
-			component = render(
+			render(
 				<Provider store={mockStore(state)}>
 					<ThemeProvider theme={lightTheme}>
 						<StartWork card={card} onClose={onClose} />

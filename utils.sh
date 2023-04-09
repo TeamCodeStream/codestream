@@ -75,7 +75,7 @@ function explain_version () {
 function clean () {
   cleanFiles=("node_modules" "jb/node_modules" "vscode/node_modules" "vs/node_modules" "shared/agent/node_modules" "shared/ui/node_modules" "shared/util/node_modules")
   for path in "${cleanFiles[@]}"; do
-    if test -d "$path"; then
+    if [ -d "$path" ]; then
       echo "deleting $path"
       rm -r -f  "$path"
     else

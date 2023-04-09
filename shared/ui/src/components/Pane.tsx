@@ -233,7 +233,7 @@ export const PaneHeader = React.memo((props: PropsWithChildren<PaneHeaderProps>)
 			})}
 			tabIndex={1}
 		>
-			<div className="label">
+			<div className="label" data-testid={props.id + "-label-title"}>
 				<Icon name={derivedState.stateIcon} className="expander" />
 				{props.title}
 				{(typeof props.count === "string" && props.count.length > 0) ||
