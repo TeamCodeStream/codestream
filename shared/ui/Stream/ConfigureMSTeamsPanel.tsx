@@ -13,6 +13,8 @@ import {
 	GenerateMSTeamsConnectCodeResponse,
 } from "@codestream/protocols/agent";
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
+import Icon from "./Icon";
+import copy from "copy-to-clipboard";
 
 interface Props {
 	providerId: string;
@@ -45,6 +47,12 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 			.finally(() => {
 				setIsLoading(false);
 			});
+	};
+
+	const handleClickCopy = (e, contentToCopy) => {
+		e.stopPropagation();
+		e.preventDefault();
+		copy(contentToCopy);
 	};
 
 	const onSubmit = async e => {
@@ -88,7 +96,18 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 									marginBottom: "20px",
 								}}
 							>
-								<strong>{connectCode}</strong>
+								<span>
+									<strong>{connectCode}</strong>
+									<Icon
+										title="Copy"
+										placement="bottom"
+										name="copy"
+										className="clickable"
+										onClick={e => handleClickCopy(e, connectCode)}
+										delay={1}
+										style={{ marginLeft: "2px" }}
+									/>
+								</span>
 							</div>
 
 							<label>
