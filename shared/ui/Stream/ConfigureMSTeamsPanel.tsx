@@ -1,6 +1,6 @@
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import { configureProvider, connectProvider, ViewLocation } from "../store/providers/actions";
 import { Link } from "./Link";
 import { closePanel } from "./actions";
@@ -20,8 +20,8 @@ interface Props {
 }
 
 export default function ConfigureMSTeamsPanel(props: Props) {
-	const initialInput = useRef<HTMLInputElement>(null);
 	const [connectCode, setConnectCode] = useState<string>("");
+	const [isLoading, setIsLoading] = useState(false);
 
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { providers } = state;
@@ -36,10 +36,14 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 	});
 
 	const generateConnectCode = () => {
+		setIsLoading(true);
 		HostApi.instance
 			.send(GenerateMSTeamsConnectCodeRequestType, {})
 			.then((response: GenerateMSTeamsConnectCodeResponse) => {
 				setConnectCode(response.connectCode);
+			})
+			.finally(() => {
+				setIsLoading(false);
 			});
 	};
 
@@ -62,7 +66,7 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 
 	return (
 		<div className="panel configure-provider-panel">
-			<form className="standard-form vscroll" onSubmit={onSubmit}>
+			<form className="standard-form vscroll">
 				<div className="panel-header">
 					<CancelButton onClick={() => dispatch(closePanel())} />
 					<span className="panel-title">Connect {displayName}</span>
@@ -70,30 +74,35 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 				<fieldset className="form-body" disabled={inactive}>
 					{renderError()}
 					<div id="controls">
-						<div key="token" id="configure-enterprise-controls-token" className="control-group">
+						<div key="token" id="configure-msteams-connection-token" className="control-group">
 							<label>
-								<strong>Connect to Microsoft Teams</strong>
+								Copy the follwing sign-in code and then click the button below to install the
+								CodeStream app in your Teams organization.
 							</label>
-							<label>
-								In your Microsoft Teams account, send a private message to the CodeStream bot with
-								the `signin` command. Copy and paste the code below into the response to the bot.
-								Once the bot has validated your token, you can click "Connect to Teams" to complete
-								the process.
-							</label>
-							<label>
+
+							<div
+								style={{
+									alignContent: "center",
+									textAlign: "center",
+									marginTop: "20px",
+									marginBottom: "20px",
+								}}
+							>
 								<strong>{connectCode}</strong>
-							</label>
+							</div>
+
 							<label>
-								Code expired? <Link>Generate a new one</Link>
+								Code expired? <Link onClick={() => generateConnectCode()}>Generate a new one</Link>
 							</label>
 						</div>
 						<div className="button-group">
 							<Button
-								id="discard-button"
-								className="control-button cancel"
+								id="save-button"
+								className="control-button"
 								tabIndex={tabIndex()}
 								type="button"
 								onClick={e => onSubmit(e)}
+								loading={isLoading}
 							>
 								Connect to Teams
 							</Button>
