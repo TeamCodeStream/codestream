@@ -1,6 +1,6 @@
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
-import React, { useState } from "react";
+import React, { SyntheticEvent, useState } from "react";
 import { configureProvider, connectProvider, ViewLocation } from "../store/providers/actions";
 import { Link } from "./Link";
 import { closePanel } from "./actions";
@@ -15,6 +15,7 @@ import {
 import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import Icon from "./Icon";
 import copy from "copy-to-clipboard";
+import { shallowEqual } from "react-redux";
 
 interface Props {
 	providerId: string;
@@ -30,7 +31,8 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 		const provider = providers[props.providerId];
 		const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 		return { provider, providerDisplay };
-	});
+	}, shallowEqual);
+
 	const dispatch = useAppDispatch();
 
 	useDidMount(() => {
@@ -49,13 +51,13 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 			});
 	};
 
-	const handleClickCopy = (e, contentToCopy) => {
+	const handleClickCopy = (e: SyntheticEvent, contentToCopy: string) => {
 		e.stopPropagation();
 		e.preventDefault();
 		copy(contentToCopy);
 	};
 
-	const onSubmit = async e => {
+	const onSubmit = async (e: SyntheticEvent) => {
 		e.preventDefault();
 		const { providerId } = props;
 
@@ -66,9 +68,6 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 
 	const renderError = () => {};
 
-	const tabIndex = (): any => {};
-
-	const inactive = false;
 	const { providerDisplay } = derivedState;
 	const { displayName } = providerDisplay;
 
@@ -79,7 +78,7 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 					<CancelButton onClick={() => dispatch(closePanel())} />
 					<span className="panel-title">Connect {displayName}</span>
 				</div>
-				<fieldset className="form-body" disabled={inactive}>
+				<fieldset className="form-body">
 					{renderError()}
 					<div id="controls">
 						<div key="token" id="configure-msteams-connection-token" className="control-group">
@@ -118,7 +117,6 @@ export default function ConfigureMSTeamsPanel(props: Props) {
 							<Button
 								id="save-button"
 								className="control-button"
-								tabIndex={tabIndex()}
 								type="button"
 								onClick={e => onSubmit(e)}
 								loading={isLoading}
