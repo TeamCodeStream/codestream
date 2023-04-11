@@ -63,6 +63,9 @@ export function escapeNrql(str: string): string {
         .replace(/(?<!\\\\)"/g, `\\"`);
 }
 
+export function escapeNrqlWithFilePaths(nrql: string) {
+	return nrql.replace(/\\[^\\]/g, "\\$&");
+}
 
 export function escapeHtml(s: string) {
     return s

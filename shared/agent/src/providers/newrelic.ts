@@ -3529,7 +3529,7 @@ export class NewRelicProvider
 			const graphQuery = `query getErrorTrace($accountId: Int!) {
 				actor {
 				  account(id: $accountId) {
-					nrql(query: "${escapeNrql(errorTraceQuery)}", timeout: 60) {
+					nrql(query: "${Strings.escapeNrqlWithFilePaths(errorTraceQuery)}", timeout: 60) {
 					  results
 					}
 				  }
