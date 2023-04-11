@@ -383,6 +383,11 @@ export const MethodLevelTelemetryPanel = () => {
 												// hide charts with no data.
 												if (!_?.result || _.result?.length === 0) return null;
 												const title = _.title + (_.extrapolated ? " (extrapolated)" : "");
+												const yValues = _.result.map(o => o[_.title as any]);
+												const sanitizedYValues = (yValues as (number | undefined)[]).map(_ =>
+													_ != undefined ? _ : 0
+												);
+												const maxY = Math.max(...sanitizedYValues);
 												return (
 													<div
 														key={"chart-" + index}
@@ -412,7 +417,7 @@ export const MethodLevelTelemetryPanel = () => {
 																		})
 																	}
 																/>
-																<YAxis tick={{ fontSize: 12 }} />
+																<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
 																<ReTooltip
 																	content={<CustomTooltip />}
 																	contentStyle={{ color: colorLine, textAlign: "center" }}
