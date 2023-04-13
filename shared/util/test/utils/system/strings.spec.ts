@@ -121,10 +121,10 @@ describe("strings.ts", () => {
 
 		it("If there is no Windows path in the string, leave other escaped sequences alone", () => {
 			const input =
-				"FROM ErrorTrace SELECT * WHERE error.class LIKE 'TypeError' AND error.message LIKE 'Cannot read properties of undefined (reading 'find')' SINCE 1681396857577 until 1681397057577 ORDER BY timestamp DESC LIMIT 1";
+				"FROM ErrorTrace SELECT * WHERE error.class LIKE 'TypeError' AND error.message LIKE 'Cannot read properties of undefined (reading \\'find\\')' SINCE 1681396857577 until 1681397057577 ORDER BY timestamp DESC LIMIT 1";
 			const result = Strings.escapeNrqlWithFilePaths(input);
 			expect(result).toBe(
-				"FROM ErrorTrace SELECT * WHERE error.class LIKE 'TypeError' AND error.message LIKE 'Cannot read properties of undefined (reading 'find')' SINCE 1681396857577 until 1681397057577 ORDER BY timestamp DESC LIMIT 1"
+				"FROM ErrorTrace SELECT * WHERE error.class LIKE 'TypeError' AND error.message LIKE 'Cannot read properties of undefined (reading \\'find\\')' SINCE 1681396857577 until 1681397057577 ORDER BY timestamp DESC LIMIT 1"
 			);
 		});
 	});
