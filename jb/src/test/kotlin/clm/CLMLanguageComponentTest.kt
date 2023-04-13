@@ -95,7 +95,8 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     className = null,
                     functionName = "hello_world",
                     metricTimesliceName = "d",
-                    averageDuration = 3.333f
+                    averageDuration = 3.333f,
+                    anomaly = null,
                 ),
             ),
             sampleSize = null,
@@ -144,14 +145,16 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     metricTimesliceName = "t",
                     sampleSize = 100,
                     namespace = null,
-                    source = "span"
+                    source = "span",
+                    anomaly = null,
                 ), MethodLevelTelemetrySampleSize(
                     className = "Controller",
                     functionName = "postSomething",
                     metricTimesliceName = "t",
                     sampleSize = 150,
                     namespace = null,
-                    source = "span"
+                    source = "span",
+                anomaly = null,
                 )
             ),
             averageDuration = listOf(
@@ -161,12 +164,14 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     metricTimesliceName = "d",
                     averageDuration = 200.0f,
                     namespace = null,
+                    anomaly = null,
                 ), MethodLevelTelemetryAverageDuration(
                     namespace = null,
                     className = "Controller",
                     functionName = "postSomething",
                     metricTimesliceName = "d",
-                    averageDuration = 220.0f
+                    averageDuration = 220.0f,
+                    anomaly = null,
                 )
             ),
             errorRate = null,

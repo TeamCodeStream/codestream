@@ -118,6 +118,8 @@ private val posixPermissions = setOf(
     PosixFilePermission.OWNER_EXECUTE
 )
 
+val serverUrlMigrations = hashMapOf("https://staging-api.codestream.us" to "https://codestream-stg.staging-service.newrelic.com")
+
 class AgentService(private val project: Project) : Disposable {
 
     companion object {
@@ -461,6 +463,11 @@ class AgentService(private val project: Project) : Disposable {
 
     private fun initializationOptions(newServerUrl: String?): InitializationOptions? {
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
+        val migratedServer = serverUrlMigrations[settings.serverUrl]
+        if (migratedServer != null) {
+            project.authenticationService?.copyInternalAccessToken(settings.serverUrl, migratedServer)
+            settings.serverUrl = migratedServer
+        }
         val gitProjectSettings = GitVcsSettings.getInstance(project)
         val gitApplicationSettings = GitVcsApplicationSettings.getInstance()
         val gitApplicationDetectedPath = GitExecutableManager.getInstance().pathToGit

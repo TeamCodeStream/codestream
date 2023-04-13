@@ -74,6 +74,10 @@ class SettingsService(val project: Project) : PersistentStateComponent<SettingsS
         return CredentialAttributes(serviceName, actualUserName)
     }
 
+    fun storedTeamId(): String? {
+        return state.teamId ?: applicationSettings.state.teamId
+    }
+
     // 💩: I HATE THIS
     fun set(name: String, value: String?) {
         if (state.webViewConfig.containsKey(name)) {

@@ -18,6 +18,7 @@ import com.codestream.settings.ApplicationSettingsService
 import com.codestream.settingsService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
+import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
@@ -136,12 +137,19 @@ class AuthenticationService(val project: Project) {
         }
     }
 
+    fun copyInternalAccessToken(fromServerUrl: String?, toServerUrl: String?) {
+        project.settingsService?.storedTeamId()?.let {
+            copyAccessToken(fromServerUrl, toServerUrl, it, it)
+        }
+    }
+
     fun copyAccessToken(fromServerUrl: String?, toServerUrl: String?, fromTeamId: String?, toTeamId: String?) {
         val settings = project.settingsService ?: return
         val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes(true, fromServerUrl, fromTeamId))
             ?: PasswordSafe.instance.getPassword(settings.credentialAttributes(false, fromServerUrl))
             ?: return
         val token = gson.fromJson<JsonObject>(tokenStr)
+        token["url"] = toServerUrl
         saveAccessToken(token, toServerUrl, toTeamId)
     }
 
