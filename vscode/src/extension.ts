@@ -52,6 +52,10 @@ interface BuildInfoMetadata {
 
 export const IDE_NAME = "VS Code";
 
+const serverUrlMigrations: { [url: string]: string } = {
+	"https://staging-api.codestream.us": "https://codestream-stg.staging-service.newrelic.com"
+};
+
 export async function activate(context: ExtensionContext) {
 	const start = process.hrtime();
 	Configuration.configure(context);
@@ -85,6 +89,19 @@ export async function activate(context: ExtensionContext) {
 			cfg.serverUrl.substr(0, cfg.serverUrl.length - 1)
 		);
 
+		cfg = configuration.get<Config>();
+	}
+	let updatedServerUrl;
+	for (const key of Object.keys(serverUrlMigrations)) {
+		if (cfg.serverUrl === key) {
+			await configuration.updateEffective(
+				configuration.name("serverUrl").value,
+				serverUrlMigrations[key]
+			);
+			updatedServerUrl = true;
+		}
+	}
+	if (updatedServerUrl) {
 		cfg = configuration.get<Config>();
 	}
 	let telemetryOptions: TelemetryOptions | undefined = undefined;
