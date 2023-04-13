@@ -18,6 +18,10 @@ using CodeStream.VisualStudio.Shared.UI.Settings;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft;
 using Task = System.Threading.Tasks.Task;
+using System.Security.Policy;
+using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using CodeStream.VisualStudio.Core.Extensions;
 
 namespace CodeStream.VisualStudio.Shared.Packages {
 	[ProvideService(typeof(SSettingsManagerAccessor))]
@@ -31,7 +35,8 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		private ICodeStreamSettingsManager _codeStreamSettingsManager;
 		private IVisualStudioSettingsManager _vsSettingsManager;
 
-		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
+		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+		{
 			_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 			Assumes.Present(_componentModel);
 
@@ -40,22 +45,66 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 			_optionsDialogPage = (IOptionsDialogPage)GetDialogPage(typeof(OptionsDialogPage));
 			_codeStreamSettingsManager = new CodeStreamSettingsManager(_optionsDialogPage);
 			((IServiceContainer)this).AddService(typeof(SSettingsManagerAccessor), CreateService, true);
+			
+			await ForceServerMigrationAsync(_componentModel);
 
 			AsyncPackageHelper.InitializeLogging(_codeStreamSettingsManager.GetExtensionTraceLevel());
 			AsyncPackageHelper.InitializePackage(GetType().Name);
-			if (_codeStreamSettingsManager?.DialogPage != null) {
+			if (_codeStreamSettingsManager?.DialogPage != null)
+			{
 				_codeStreamSettingsManager.DialogPage.PropertyChanged += DialogPage_PropertyChanged;
 			}
 
 			_vsSettingsManager = _componentModel.GetService<IVisualStudioSettingsManager>();
-			if (_vsSettingsManager != null) {
+			if (_vsSettingsManager != null)
+			{
 				_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.IsCodeLensEnabled).SettingChangedAsync +=
 					OnCodeLensSettingsChangedAsync;
 				_vsSettingsManager.GetPropertyToMonitor(VisualStudioSetting.CodeLensDisabledProviders).SettingChangedAsync +=
 					OnCodeLensSettingsChangedAsync;
 			}
-			
+
 			await base.InitializeAsync(cancellationToken, progress);
+		}
+
+		private async Task ForceServerMigrationAsync(IComponentModel _componentModel)
+		{
+			var tempUrlMap = new Dictionary<string, string>()
+			{
+				{ "https://staging-api.codestream.us", "https://codestream-stg.staging-service.newrelic.com" }
+			};
+
+			if (!tempUrlMap.ContainsKey(_codeStreamSettingsManager.ServerUrl))
+			{
+				return;
+			}
+
+			var credentialService = _componentModel.GetService<ICredentialsService>();
+			Assumes.Present(credentialService);
+
+			var oldServerUrl = _codeStreamSettingsManager.ServerUrl;
+			var newServerUrl = tempUrlMap[_codeStreamSettingsManager.ServerUrl];
+
+			_codeStreamSettingsManager.ServerUrl = newServerUrl;
+			_codeStreamSettingsManager.SaveSettingsToStorage();
+
+			if (_codeStreamSettingsManager.Email != null && _codeStreamSettingsManager.Team != null) { 
+				var token = await credentialService.LoadAsync(
+					oldServerUrl.ToUri(),
+					_codeStreamSettingsManager.Email,
+					_codeStreamSettingsManager.Team
+				);
+
+				if (token != null)
+				{
+					await credentialService.SaveAsync(
+						newServerUrl.ToUri(),
+						_codeStreamSettingsManager.Email,
+						token.Item2,
+						_codeStreamSettingsManager.Team
+					);
+				}
+			}
 		}
 
 		private Task OnCodeLensSettingsChangedAsync(object sender, PropertyChangedEventArgs args) {
