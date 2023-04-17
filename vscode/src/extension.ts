@@ -31,12 +31,13 @@ import {
 	OpenPullRequestActionContext
 } from "./@types/gitlens";
 import { SessionStatus, SessionStatusChangedEvent } from "./api/session";
-import { ContextKeys, GlobalState, setContext } from "./common";
+import { ContextKeys, GlobalState, setContext, WorkspaceState } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
 import { Container, TelemetryOptions } from "./container";
 import { Logger, TraceLevel } from "./logger";
 import { FileSystem, Strings, Versions } from "./system";
+import * as TokenManager from "./api/tokenManager";
 
 const extension = extensions.getExtension(extensionQualifiedId);
 export const extensionVersion = extension?.packageJSON?.version ?? "1.0.0";
@@ -98,6 +99,19 @@ export async function activate(context: ExtensionContext) {
 				configuration.name("serverUrl").value,
 				serverUrlMigrations[key]
 			);
+
+			const teamId = await Container.context.workspaceState.get(WorkspaceState.TeamId, undefined);
+			const oldToken = await TokenManager.get(cfg.serverUrl, cfg.email, teamId);
+
+			if (oldToken) {
+				await TokenManager.addOrUpdate(
+					serverUrlMigrations[key],
+					oldToken.email,
+					oldToken.teamId,
+					oldToken
+				);
+			}
+
 			updatedServerUrl = true;
 		}
 	}
