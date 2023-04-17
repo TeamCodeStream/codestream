@@ -95,24 +95,28 @@ export async function activate(context: ExtensionContext) {
 	let updatedServerUrl;
 	for (const key of Object.keys(serverUrlMigrations)) {
 		if (cfg.serverUrl === key) {
-			await configuration.updateEffective(
-				configuration.name("serverUrl").value,
-				serverUrlMigrations[key]
-			);
-
-			const teamId = await Container.context.workspaceState.get(WorkspaceState.TeamId, undefined);
-			const oldToken = await TokenManager.get(cfg.serverUrl, cfg.email, teamId);
-
-			if (oldToken) {
-				await TokenManager.addOrUpdate(
-					serverUrlMigrations[key],
-					oldToken.email,
-					oldToken.teamId,
-					oldToken
+			try {
+				await configuration.updateEffective(
+					configuration.name("serverUrl").value,
+					serverUrlMigrations[key]
 				);
-			}
+				updatedServerUrl = true;
 
-			updatedServerUrl = true;
+				const teamId = Container.context.workspaceState.get(WorkspaceState.TeamId, undefined);
+				if (teamId) {
+					const oldToken = await TokenManager.get(cfg.serverUrl, cfg.email, teamId);
+					if (oldToken) {
+						await TokenManager.addOrUpdate(
+							serverUrlMigrations[key],
+							oldToken.email,
+							oldToken.teamId,
+							oldToken
+						);
+					}
+				}
+			} catch (ex) {
+				Logger.warn(`FAILED to update ${key}  - ${ex.message}`);
+			}
 		}
 	}
 	if (updatedServerUrl) {
