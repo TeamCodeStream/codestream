@@ -938,6 +938,170 @@ export class NewRelicProvider
 		return tracingValue === "standard" || tracingValue === "infinite";
 	}
 
+	/**
+	 * Get a list of recent error traces associated with a given method
+	 *
+	 * @param entityGuid entity guid for span data
+	 * @param metricTimesliceNames names to use in the NRQL subquery
+	 * @param remote the git remote for the error
+	 * @param since value to use in the SINCE statement in the NRQL query
+	 * @returns list of most recent error traces for each unique fingerprint
+	 */
+	@log()
+	async getMethodLevelErrors(
+		entityGuid: string,
+		metricTimesliceNames: MetricTimesliceNameMapping,
+		remote: string,
+		since?: string,
+		functionIdentifiers?: {
+			codeNamespace?: string;
+			functionName?: string;
+			relativeFilePath?: string;
+		}
+	): Promise<ObservabilityError[]> {
+		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const query = this.getMethodLevelErrorsQuery(
+			entityGuid,
+			metricTimesliceNames,
+			since,
+			functionIdentifiers
+		);
+		if (!query) return [];
+
+		const response = await this.query<{
+			actor: {
+				account: {
+					nrql: {
+						results: {
+							lastOccurrence: number;
+							occurrenceId: string;
+							appName: string;
+							errorClass: string;
+							message: string;
+							entityGuid: string;
+							length: number;
+						}[];
+					};
+				};
+			};
+		}>(
+			`query fetchMethodLevelErrors($accountId:Int!) {
+				actor {
+					account(id: $accountId) {
+						nrql(query: "${query}", timeout: 60) { nrql results }
+					}
+				}
+			}`,
+			{
+				accountId: parsedId.accountId,
+			}
+		);
+		const result = response.actor.account.nrql.results?.length
+			? await Promise.all(
+					response.actor.account.nrql.results.map(async errorTrace => {
+						const response = await this.getErrorGroupFromNameMessageEntity(
+							errorTrace.errorClass,
+							errorTrace.message,
+							errorTrace.entityGuid
+						);
+
+						return {
+							entityId: errorTrace.entityGuid,
+							appName: errorTrace.appName,
+							errorClass: errorTrace.errorClass,
+							message: errorTrace.message,
+							remote: remote,
+							errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
+							occurrenceId: errorTrace.occurrenceId,
+							count: errorTrace.length,
+							lastOccurrence: errorTrace.lastOccurrence,
+							errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
+						};
+					})
+			  )
+			: [];
+		return result;
+	}
+
+	private getMethodLevelErrorsQuery(
+		entityGuid: string,
+		metricTimesliceNames: MetricTimesliceNameMapping,
+		since?: string,
+		functionIdentifiers?: {
+			codeNamespace?: string;
+			functionName?: string;
+			relativeFilePath?: string;
+		}
+	) {
+		const transactionNameMatch = metricTimesliceNames.errorRate.match(/Errors\/(.*)/);
+		if (
+			(!transactionNameMatch || transactionNameMatch.length < 2) &&
+			!functionIdentifiers?.functionName
+		) {
+			return undefined;
+		}
+		let transactionNameSubquery = "";
+		if (transactionNameMatch && transactionNameMatch.length >= 2) {
+			const transactionName = transactionNameMatch[1];
+			transactionNameSubquery = [
+				"(",
+				`transactionName = '${transactionName}'`,
+				"AND",
+				`entityGuid = '${entityGuid}'`,
+				")",
+			].join(" ");
+		}
+		since = since || "30 minutes ago";
+		let codeClause = "";
+		let spanSubquery = "";
+		if (functionIdentifiers?.functionName) {
+			codeClause = `code.function = '${functionIdentifiers.functionName}'`;
+			if (functionIdentifiers.codeNamespace) {
+				codeClause += ` AND code.namespace = '${functionIdentifiers.codeNamespace}'`;
+			}
+			if (functionIdentifiers.relativeFilePath) {
+				codeClause += ` AND code.filepath = '${functionIdentifiers.relativeFilePath}'`;
+			}
+			spanSubquery =
+				functionIdentifiers && functionIdentifiers.functionName
+					? [
+							"guid IN (",
+							"SELECT",
+							"transactionId",
+							"FROM Span",
+							`WHERE entity.guid = '${entityGuid}'`,
+							"WHERE (",
+							"error.class IS NOT NULL",
+							"OR",
+							"error.group.guid",
+							")",
+							"AND (",
+							codeClause,
+							")",
+							")",
+					  ].join(" ")
+					: "";
+		}
+		const whereClause = [transactionNameSubquery, spanSubquery].filter(_ => _ !== "").join(" OR ");
+		return [
+			"SELECT",
+			"count(id) AS 'length',", // first field is used to sort with FACET
+			"latest(timestamp) AS 'lastOccurrence',",
+			"latest(id) AS 'occurrenceId',",
+			"latest(appName) AS 'appName',",
+			"latest(error.class) AS 'errorClass',",
+			"latest(message) AS 'message',",
+			"latest(entityGuid) AS 'entityGuid'",
+			"FROM ErrorTrace",
+			"WHERE ",
+			whereClause,
+			"WHERE fingerprint IS NOT NULL",
+			"FACET fingerprint AS 'fingerPrintId'",
+			`SINCE ${since}`,
+			"LIMIT 10",
+		].join(" ");
+	}
+
 	private async checkHasCodeLevelMetricSpanData(
 		hasRepoAssociation: boolean,
 		uniqueEntities: Entity[]
@@ -1957,11 +2121,12 @@ export class NewRelicProvider
 	async getMethodLevelTelemetry(
 		request: GetMethodLevelTelemetryRequest
 	): Promise<GetMethodLevelTelemetryResponse | undefined> {
+		let observabilityRepo: ObservabilityRepo | undefined;
 		let entity: EntityAccount | undefined;
 		let entityAccounts: EntityAccount[] = [];
 
 		if (request.repoId) {
-			const observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
+			observabilityRepo = await this.getObservabilityEntityRepos(request.repoId);
 			if (!observabilityRepo || !observabilityRepo.entityAccounts) {
 				return undefined;
 			}
@@ -1996,10 +2161,22 @@ export class NewRelicProvider
 				).deployments;
 			}
 
+			const errors =
+				request.includeErrors && request.metricTimesliceNameMapping
+					? await this.getMethodLevelErrors(
+							request.newRelicEntityGuid || entity!.entityGuid!,
+							request.metricTimesliceNameMapping,
+							observabilityRepo?.repoRemote || "",
+							request.since,
+							request.functionIdentifiers
+					  )
+					: [];
+
 			const entityGuid = entity?.entityGuid || request.newRelicEntityGuid;
 			return {
 				goldenMetrics: goldenMetrics,
 				deployments,
+				errors,
 				newRelicEntityAccounts: entityAccounts,
 				newRelicAlertSeverity: entity?.alertSeverity,
 				newRelicEntityName: entity?.entityName || "",

@@ -13,6 +13,8 @@ import {
 	DidChangeObservabilityDataNotificationType,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
+	GetObservabilityErrorGroupMetadataRequestType,
+	GetObservabilityErrorGroupMetadataResponse,
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import styled from "styled-components";
@@ -26,7 +28,10 @@ import {
 } from "@codestream/webview/ipc/host.protocol";
 import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 import { CodeStreamState } from "@codestream/webview/store";
-import { closeAllPanels } from "@codestream/webview/store/context/actions";
+import {
+	closeAllPanels,
+	setCurrentMethodLevelTelemetry,
+} from "@codestream/webview/store/context/actions";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
 import { useDidMount, usePrevious } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -48,6 +53,8 @@ import {
 	RubyPluginLanguageServer,
 } from "./MissingExtension";
 import { MetaLabel } from "../Codemark/BaseCodemark";
+import { ErrorRow } from "../Observability";
+import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
 
 const Root = styled.div``;
 
@@ -84,6 +91,7 @@ export const MethodLevelTelemetryPanel = () => {
 			observabilityRepoEntities:
 				(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
 				EMPTY_ARRAY,
+			sessionStart: state.context.sessionStart,
 		};
 	});
 
@@ -118,8 +126,15 @@ export const MethodLevelTelemetryPanel = () => {
 				newRelicEntityGuid: newRelicEntityGuid,
 				metricTimesliceNameMapping:
 					derivedState.currentMethodLevelTelemetry.metricTimesliceNameMapping,
+				functionIdentifiers: {
+					functionName: derivedState.currentMethodLevelTelemetry.functionName,
+					codeNamespace: derivedState.currentMethodLevelTelemetry.codeNamespace,
+					relativeFilePath: derivedState.currentMethodLevelTelemetry.filePath,
+				},
 				repoId: derivedState.currentMethodLevelTelemetry.repo.id,
+				includeErrors: true,
 			});
+
 			setTelemetryResponse(response);
 		} catch (ex) {
 			setWarningOrErrors([{ message: ex.toString() }]);
@@ -258,7 +273,12 @@ export const MethodLevelTelemetryPanel = () => {
 					></PanelHeader>
 				</div>
 			)}
-			<CancelButton onClick={() => dispatch(closePanel())} />
+			<CancelButton
+				onClick={() => {
+					dispatch(setCurrentMethodLevelTelemetry(undefined));
+					dispatch(closePanel());
+				}}
+			/>
 
 			<div className="plane-container" style={{ padding: "5px 20px 0px 10px" }}>
 				<div className="standard-form vscroll">
@@ -372,6 +392,48 @@ export const MethodLevelTelemetryPanel = () => {
 									{derivedState?.currentMethodLevelTelemetry.relativeFilePath && (
 										<div>
 											<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}
+										</div>
+									)}
+									{telemetryResponse?.errors && telemetryResponse.errors.length > 0 && (
+										<div>
+											<br />
+											<MetaLabel>Errors</MetaLabel>
+											<div>
+												{telemetryResponse.errors.map((_, index) => (
+													<ErrorRow
+														key={`observability-error-${index}`}
+														title={_.errorClass}
+														tooltip={_.message}
+														subtle={_.message}
+														alternateSubtleRight={`${_.count}`} // we want to show count instead of timestamp
+														url={_.errorGroupUrl}
+														customPadding={"0"}
+														onClick={async e => {
+															try {
+																const response = (await HostApi.instance.send(
+																	GetObservabilityErrorGroupMetadataRequestType,
+																	{ errorGroupGuid: _.errorGroupGuid }
+																)) as GetObservabilityErrorGroupMetadataResponse;
+																dispatch(
+																	openErrorGroup(_.errorGroupGuid, _.occurrenceId, {
+																		multipleRepos: response?.relatedRepos?.length > 1,
+																		relatedRepos: response?.relatedRepos || undefined,
+																		timestamp: _.lastOccurrence,
+																		sessionStart: derivedState.sessionStart,
+																		pendingEntityId: response?.entityId || _.entityId,
+																		occurrenceId: response?.occurrenceId || _.occurrenceId,
+																		pendingErrorGroupGuid: _.errorGroupGuid,
+																		openType: "CLM Details",
+																	})
+																);
+															} catch (ex) {
+																console.error(ex);
+															} finally {
+															}
+														}}
+													/>
+												))}
+											</div>
 										</div>
 									)}
 									<div>

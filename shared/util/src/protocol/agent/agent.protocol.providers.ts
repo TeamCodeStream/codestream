@@ -1,7 +1,11 @@
 "use strict";
 import { NotificationType, RequestType } from "vscode-languageserver-protocol";
 
-import { CrossPostIssueValues, DidResolveStackTraceLineNotification, GitLabMergeRequest } from "./agent.protocol";
+import {
+	CrossPostIssueValues,
+	DidResolveStackTraceLineNotification,
+	GitLabMergeRequest,
+} from "./agent.protocol";
 import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ReviewPlus } from "./agent.protocol.reviews";
@@ -1245,8 +1249,8 @@ export interface ObservabilityAnomaly {
 	metricTimesliceName: string;
 	errorMetricTimesliceName: string;
 	chartHeaderTexts: {
-		[key: string]: string
-	}
+		[key: string]: string;
+	};
 }
 
 export type DetectionMethod = "Release Based" | "Time Based";
@@ -1393,9 +1397,16 @@ export interface GetMethodLevelTelemetryRequest {
 	newRelicEntityGuid: string;
 	/** contains the specific formatting of a metricTimesliceName for a golden metric type */
 	metricTimesliceNameMapping?: MetricTimesliceNameMapping;
+	/** contains identifiers used to find method level errors */
+	functionIdentifiers?: {
+		codeNamespace?: string;
+		functionName?: string;
+		relativeFilePath?: string;
+	};
 	since?: string;
 	timeseriesGroup?: string;
 	includeDeployments?: boolean;
+	includeErrors?: boolean;
 }
 
 export interface GetEntityCountRequest {
@@ -1475,7 +1486,7 @@ export interface FileLevelTelemetryMetric {
 	namespace?: string;
 	className?: string;
 	functionName: string;
-	anomaly?:  ObservabilityAnomaly;
+	anomaly?: ObservabilityAnomaly;
 }
 
 export interface FileLevelTelemetryAverageDuration extends FileLevelTelemetryMetric {
@@ -1528,6 +1539,7 @@ export interface GetMethodLevelTelemetryResponse {
 	newRelicUrl?: string;
 	goldenMetrics?: MethodGoldenMetrics[];
 	deployments?: Deployment[];
+	errors?: ObservabilityError[];
 	newRelicAlertSeverity?: string;
 	newRelicEntityAccounts: EntityAccount[];
 	newRelicEntityName: string;
@@ -2119,7 +2131,6 @@ export const CheckTrunkRequestType = new RequestType<
 	void
 >("codestream/trunk/check");
 
-export const DidChangeCodelensesNotificationType = new NotificationType<
-	void,
-	void
->("codestream/didChangeCodelenses");
+export const DidChangeCodelensesNotificationType = new NotificationType<void, void>(
+	"codestream/didChangeCodelenses"
+);

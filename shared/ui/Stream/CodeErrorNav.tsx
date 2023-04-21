@@ -24,7 +24,10 @@ import {
 	setErrorGroup,
 	updateCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
-import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
+import {
+	closeAllPanels,
+	setCurrentCodeError,
+} from "@codestream/webview/store/context/actions";
 import {
 	useAppDispatch,
 	useAppSelector,
@@ -164,6 +167,8 @@ export function CodeErrorNav(props: Props) {
 			codeErrorStateBootstrapped: state.codeErrors.bootstrapped,
 			currentCodeErrorId: state.context.currentCodeErrorId,
 			currentCodeErrorData: state.context.currentCodeErrorData,
+			currentMethodLevelTelemetry: state.context.currentMethodLevelTelemetry,
+			currentObservabilityAnomaly: state.context.currentObservabilityAnomaly,
 			sessionStart: state.context.sessionStart,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			codeError: codeError,
@@ -219,7 +224,6 @@ export function CodeErrorNav(props: Props) {
 	const exit = async () => {
 		// clear out the current code error (set to blank) in the webview
 		await dispatch(setCurrentCodeError(undefined, undefined));
-		dispatch(closeAllPanels());
 	};
 
 	const unreadEnabled = useSelector((state: CodeStreamState) =>

@@ -155,11 +155,21 @@ const GenericCopy = styled.div`
 	margin: 5px 0 10px 0;
 `;
 
+const SubtleRight = styled.time`
+	color: var(--text-color-subtle);
+	font-weight: normal;
+	padding-left: 5px;
+	&.no-padding {
+		padding-left: 0;
+	}
+`;
+
 export const ErrorRow = (props: {
 	title: string;
 	subtle?: string;
 	tooltip?: string;
 	timestamp?: number;
+	alternateSubtleRight?: string;
 	isLoading?: boolean;
 	url?: string;
 	onClick?: Function;
@@ -221,6 +231,9 @@ export const ErrorRow = (props: {
 				)}
 
 				{props.timestamp && <Timestamp time={props.timestamp} relative abbreviated />}
+				{!props.timestamp && props.alternateSubtleRight && (
+					<SubtleRight>{props.alternateSubtleRight}</SubtleRight>
+				)}
 			</div>
 		</Row>
 	);
