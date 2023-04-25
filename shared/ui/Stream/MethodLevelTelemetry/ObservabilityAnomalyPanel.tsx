@@ -93,6 +93,7 @@ export const ObservabilityAnomalyPanel = () => {
 	>(undefined);
 	const [remappedDeployments, setRemappedDeployments] = useState({});
 	const [loading, setLoading] = useState<boolean>(true);
+	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState("");
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previousCurrentObservabilityAnomaly = usePrevious(derivedState.currentObservabilityAnomaly);
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
@@ -442,8 +443,10 @@ export const ObservabilityAnomalyPanel = () => {
 														alternateSubtleRight={`${_.count}`} // we want to show count instead of timestamp
 														url={_.errorGroupUrl}
 														customPadding={"0"}
+														isLoading={isLoadingErrorGroupGuid === _.errorGroupGuid}
 														onClick={async e => {
 															try {
+																setIsLoadingErrorGroupGuid(_.errorGroupGuid);
 																const response = (await HostApi.instance.send(
 																	GetObservabilityErrorGroupMetadataRequestType,
 																	{ errorGroupGuid: _.errorGroupGuid }
@@ -463,6 +466,7 @@ export const ObservabilityAnomalyPanel = () => {
 															} catch (ex) {
 																console.error(ex);
 															} finally {
+																setIsLoadingErrorGroupGuid("");
 															}
 														}}
 													/>

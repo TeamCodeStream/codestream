@@ -99,6 +99,7 @@ export const MethodLevelTelemetryPanel = () => {
 		GetMethodLevelTelemetryResponse | undefined
 	>(undefined);
 	const [loading, setLoading] = useState<boolean>(true);
+	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState("");
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previouscurrentMethodLevelTelemetry = usePrevious(derivedState.currentMethodLevelTelemetry);
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
@@ -408,8 +409,10 @@ export const MethodLevelTelemetryPanel = () => {
 														alternateSubtleRight={`${_.count}`} // we want to show count instead of timestamp
 														url={_.errorGroupUrl}
 														customPadding={"0"}
+														isLoading={isLoadingErrorGroupGuid === _.errorGroupGuid}
 														onClick={async e => {
 															try {
+																setIsLoadingErrorGroupGuid(_.errorGroupGuid);
 																const response = (await HostApi.instance.send(
 																	GetObservabilityErrorGroupMetadataRequestType,
 																	{ errorGroupGuid: _.errorGroupGuid }
@@ -429,6 +432,7 @@ export const MethodLevelTelemetryPanel = () => {
 															} catch (ex) {
 																console.error(ex);
 															} finally {
+																setIsLoadingErrorGroupGuid("");
 															}
 														}}
 													/>
