@@ -487,7 +487,7 @@ export const createPost =
 		}
 	};
 
-export const retryPost = pendingId => async (dispatch, getState) => {
+export const retryPost = (pendingId: string) => async (dispatch, getState) => {
 	const { posts } = getState();
 	const pendingPost = posts.pending.find(post => post.id === pendingId);
 	if (pendingPost) {

@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import * as Path from "path-browserify";
-import { connect, useDispatch, useSelector } from "react-redux";
+import { connect } from "react-redux";
 import { prettyPrintOne } from "code-prettify";
 import { CSMarker } from "@codestream/protocols/api";
 import { escapeHtml, safe } from "../utils";
@@ -270,7 +270,7 @@ const mapStateToProps = (state: CodeStreamState, props: Props) => {
 	//console.log(ownState);
 
 	const repoName =
-		(props.marker && safe(() => getById(state.repos, props.marker.repoId).name)) || "";
+		(props.marker && safe(() => getById(state.repos, props.marker.repoId)?.name)) || "";
 
 	return { repoName };
 };

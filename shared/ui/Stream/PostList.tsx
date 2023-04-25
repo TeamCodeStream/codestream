@@ -4,7 +4,7 @@ import React from "react";
 import { findLast, rAFThrottle, safe } from "../utils";
 import Icon from "./Icon";
 import infiniteLoadable from "./infiniteLoadable";
-import Post from "./Post";
+import { Post } from "./Post";
 
 interface State {}
 export interface Props {
@@ -25,8 +25,8 @@ export interface Props {
 	teammates?: CSUser[];
 	threadId: string;
 	disableEdits: boolean;
-	onCancelEdit?: Function;
-	onDidSaveEdit?: Function;
+	onCancelEdit?: () => void;
+	onDidSaveEdit?: () => void;
 	renderHeaderIfPostsExist?: string;
 	reverse?: boolean;
 
@@ -288,7 +288,7 @@ export default infiniteLoadable(
 							<React.Fragment key={post.id}>
 								<Post
 									id={post.id}
-									teammates={this.props.teammates}
+									teammates={this.props.teammates ?? []}
 									currentUserId={this.props.currentUserId}
 									currentUserName={this.props.currentUserName}
 									newMessageIndicator={hasNewMessageLine}

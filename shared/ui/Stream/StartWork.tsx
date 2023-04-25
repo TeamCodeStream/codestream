@@ -22,7 +22,7 @@ import { FormattedMessage } from "react-intl";
 import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { Checkbox } from "../src/components/Checkbox";
-import { InlineMenu } from "../src/components/controls/InlineMenu";
+import { InlineMenu, MenuItem } from "../src/components/controls/InlineMenu";
 import { ButtonRow } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
@@ -860,7 +860,7 @@ export const StartWork = (props: Props) => {
 		);
 	}
 
-	const baseBranchMenuItems = branches.map(branch => {
+	const baseBranchMenuItems: MenuItem[] = branches.map(branch => {
 		const iconName = branch == currentBranch ? "arrow-right" : "blank";
 		return {
 			label: <span className="monospace">{branch}</span>,

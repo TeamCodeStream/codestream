@@ -1,10 +1,11 @@
-import React from "react";
+import React, { ReactElement } from "react";
 import styled from "styled-components";
 import Icon from "../../../Stream/Icon";
 import Menu from "../../../Stream/Menu";
 
 export interface MenuItem {
-	label: any;
+	label?: string | ReactElement;
+	fragment?: ReactElement;
 	action?: string | (() => void);
 	dontCloseOnSelect?: boolean;
 	key?: string;

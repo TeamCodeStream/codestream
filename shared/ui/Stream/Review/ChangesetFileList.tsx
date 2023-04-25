@@ -304,7 +304,7 @@ export const ChangesetFileList = (props: {
 		}
 		for (let changeset of derivedState.changesets) {
 			if (props.showRepoLabels) {
-				const repoName = safe(() => getById(derivedState.repos, changeset!.repoId).name) || "";
+				const repoName = safe(() => getById(derivedState.repos, changeset!.repoId)?.name) || "";
 				if (repoName) {
 					lines.push(
 						<div style={{ marginBottom: "5px" }}>

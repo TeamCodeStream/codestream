@@ -1,4 +1,4 @@
-import { PostPlus } from "@codestream/protocols/agent";
+import { CodemarkPlus, PostPlus } from "@codestream/protocols/agent";
 import { Index } from "@codestream/utils/types";
 
 export interface PendingPost
@@ -14,14 +14,14 @@ export interface PendingPost
 		| "files"
 	> {
 	pending: true;
-	codemark: {};
+	codemark: CodemarkPlus;
 	error?: boolean;
 	hasBeenEdited?: boolean;
 }
 
 export type Post = PendingPost | PostPlus;
 
-export function isPending(post: Post): post is PendingPost {
+export function isPending(post: Object | undefined): post is PendingPost {
 	return (post as PendingPost).pending;
 }
 

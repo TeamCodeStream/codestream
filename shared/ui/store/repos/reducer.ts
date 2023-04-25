@@ -4,6 +4,7 @@ import { toMapBy } from "../../utils";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { ReposActionsType, ReposState } from "./types";
+import { CSRepository } from "@codestream/protocols/api";
 
 type ReposActions = ActionType<typeof actions>;
 
@@ -22,7 +23,7 @@ export function reduceRepos(state = initialState, action: ReposActions) {
 	}
 }
 
-export const getById = (state, id) => {
+export const getById = (state: ReposState, id: string): CSRepository | undefined => {
 	return state[id];
 };
 
