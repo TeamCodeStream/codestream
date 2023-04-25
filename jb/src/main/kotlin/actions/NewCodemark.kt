@@ -15,6 +15,7 @@ import com.codestream.settingsService
 import com.codestream.webViewService
 import com.intellij.codeInsight.intention.IntentionAction
 import com.intellij.codeInsight.intention.LowPriorityAction
+import com.intellij.model.SideEffectGuard.SideEffectNotAllowedException
 import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -35,32 +36,39 @@ abstract class NewCodemark(val name: String, val type: CodemarkType) : AnAction(
     var telemetrySource: String? = null
 
     private fun execute(project: Project, source: String) {
-        ApplicationManager.getApplication().invokeLater {
-            project.editorService?.activeEditor?.run {
-                val line = selectionOrCurrentLine.start.line
-                if (!this.selectionModel.hasSelection()) {
-                    val startOffset = this.document.getLineStartOffset(line)
-                    val endOffset = this.document.getLineEndOffset(line)
-                    this.selectionModel.setSelection(startOffset, endOffset)
-                }
+        try {
+            ApplicationManager.getApplication().invokeLater {
+                project.editorService?.activeEditor?.run {
+                    val line = selectionOrCurrentLine.start.line
+                    if (!this.selectionModel.hasSelection()) {
+                        val startOffset = this.document.getLineStartOffset(line)
+                        val endOffset = this.document.getLineEndOffset(line)
+                        this.selectionModel.setSelection(startOffset, endOffset)
+                    }
 
-                val isReview = isPullRequest() && isSelectionWithinDiffRange()
-                appDispatcher.launch {
-                    inlineTextFieldManager?.showTextField(isReview, line, getDefaultPrCommentText())
-                        ?: project.codeStream?.show {
-                            project.webViewService?.postNotification(
-                                CodemarkNotifications.New(
-                                    document.uri,
-                                    selectionOrCurrentLine,
-                                    type,
-                                    telemetrySource ?: source
+                    val isReview = isPullRequest() && isSelectionWithinDiffRange()
+                    appDispatcher.launch {
+                        inlineTextFieldManager?.showTextField(isReview, line, getDefaultPrCommentText())
+                            ?: project.codeStream?.show {
+                                project.webViewService?.postNotification(
+                                    CodemarkNotifications.New(
+                                        document.uri,
+                                        selectionOrCurrentLine,
+                                        type,
+                                        telemetrySource ?: source
+                                    )
                                 )
-                            )
-                        }
+                            }
+
+                    }
 
                 }
-
             }
+        } catch (e: SideEffectNotAllowedException) {
+            // When using new UI (Beta) the intention is executed once in "preview" via IntentionPreviewComputable
+            // and uses a copy of the editor and is called with computeWithoutSideEffects. None of this makes sense.
+            // The intention is invoked again without the preview mode so we can ignore this exception.
+            return
         }
     }
 

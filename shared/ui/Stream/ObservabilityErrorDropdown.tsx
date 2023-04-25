@@ -29,6 +29,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const [filteredErrors, setFilteredErrors] = useState<any>([]);
+	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState<string>("");
 
 	useEffect(() => {
 		let _filteredErrorsByRepo = props.observabilityErrors.filter(
@@ -43,7 +44,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 		setFilteredErrors(_filteredErrors || []);
 	}, [props.observabilityErrors]);
 
-	const { observabilityErrors, observabilityRepo } = props;
+	const { observabilityRepo } = props;
 
 	return (
 		<>
@@ -81,13 +82,15 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 											timestamp={err.lastOccurrence}
 											url={err.errorGroupUrl}
 											customPadding={"0 10px 0 50px"}
+											isLoading={isLoadingErrorGroupGuid === err.errorGroupGuid}
 											onClick={async e => {
 												try {
+													setIsLoadingErrorGroupGuid(err.errorGroupGuid);
 													const response = (await HostApi.instance.send(
 														GetObservabilityErrorGroupMetadataRequestType,
 														{ errorGroupGuid: err.errorGroupGuid }
 													)) as GetObservabilityErrorGroupMetadataResponse;
-													dispatch(
+													await dispatch(
 														openErrorGroup(err.errorGroupGuid, err.occurrenceId, {
 															multipleRepos: response?.relatedRepos?.length > 1,
 															relatedRepos: response?.relatedRepos || undefined,
@@ -102,6 +105,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 												} catch (ex) {
 													console.error(ex);
 												} finally {
+													setIsLoadingErrorGroupGuid("");
 												}
 											}}
 										/>

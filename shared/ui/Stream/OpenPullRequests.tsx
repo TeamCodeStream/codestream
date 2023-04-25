@@ -11,6 +11,7 @@ import {
 	ReposScm,
 	SwitchBranchRequestType,
 	UpdateTeamSettingsRequestType,
+	RemoteType,
 } from "@codestream/protocols/agent";
 import { PullRequestQuery } from "@codestream/protocols/api";
 import copy from "copy-to-clipboard";
@@ -776,16 +777,45 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		}
 	};
 
+	const parseRawUrlFromRemote = (remotes: RemoteType[]) => {
+		return remotes?.map(_ => {
+			if (!_?.rawUrl) return;
+			const lastDotIndex = _.rawUrl?.lastIndexOf(".");
+			let rawUrlWithoutDot: string;
+			if (lastDotIndex === -1) {
+				rawUrlWithoutDot = _.rawUrl || "";
+			} else {
+				rawUrlWithoutDot = _.rawUrl?.substring(0, lastDotIndex) || "";
+			}
+			const splitRawUrlWithoutDot = rawUrlWithoutDot.split("/");
+			return splitRawUrlWithoutDot[splitRawUrlWithoutDot.length - 1];
+		});
+	};
+
+	const getCurrentRepo = pr => {
+		return openRepos.find(_ => {
+			const nameFromPr = pr.headRepository?.name?.toLowerCase();
+			if (!nameFromPr) return false;
+			let nameFoundInPrToCheckout: string | undefined;
+			if (_?.remotes && !isEmpty(_?.remotes)) {
+				const parsedRemoteNamesFromRawUrl = parseRawUrlFromRemote(_.remotes).filter(Boolean);
+				nameFoundInPrToCheckout =
+					parsedRemoteNamesFromRawUrl?.find(_ => _ === nameFromPr) || undefined;
+			}
+			return (
+				_?.name?.toLowerCase() === nameFromPr ||
+				_?.folder?.name?.toLowerCase() === nameFromPr ||
+				!isEmpty(nameFoundInPrToCheckout)
+			);
+		});
+	};
+
 	const checkout = async (event, prToCheckout, cantCheckoutReason) => {
 		event.preventDefault();
 		event.stopPropagation();
 		if (!prToCheckout || cantCheckoutReason) return;
 
-		const currentRepo = openRepos.find(
-			_ =>
-				_?.name?.toLowerCase() === prToCheckout.headRepository?.name?.toLowerCase() ||
-				_?.folder?.name?.toLowerCase() === prToCheckout.headRepository?.name?.toLowerCase()
-		);
+		const currentRepo = getCurrentRepo(prToCheckout);
 
 		const repoId = currentRepo?.id || "";
 		const result = await HostApi.instance.send(SwitchBranchRequestType, {
@@ -825,11 +855,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 
 	const cantCheckoutReason = prToCheckout => {
 		if (prToCheckout) {
-			const currentRepo = openRepos.find(
-				_ =>
-					_?.name?.toLowerCase() === prToCheckout.headRepository?.name?.toLowerCase() ||
-					_?.folder?.name?.toLowerCase() === prToCheckout.headRepository?.name?.toLowerCase()
-			);
+			const currentRepo = getCurrentRepo(prToCheckout);
 
 			if (!currentRepo) {
 				return `You don't have the ${prToCheckout.headRepository?.name} repo open in your IDE`;
@@ -894,6 +920,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		const response = await HostApi.instance.send(GetReposScmRequestType, {
 			inEditorOnly: true,
 			includeCurrentBranches: true,
+			includeRemotes: true,
 		});
 		if (response && response.repositories) {
 			const repos = response.repositories.map(repo => {

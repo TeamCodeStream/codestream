@@ -201,10 +201,10 @@ export const ErrorRow = (props: {
 			</div>
 			<div>
 				<Tooltip title={props.tooltip} delay={1} placement="bottom">
-					<>
+					<div>
 						<span>{props.title}</span>
 						{props.subtle && <span className="subtle-tight"> {props.subtle}</span>}
-					</>
+					</div>
 				</Tooltip>
 			</div>
 			<div className="icons">

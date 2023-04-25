@@ -28,6 +28,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 
 	const [expanded, setExpanded] = useState<boolean>(true);
 	const [filteredAssignments, setFilteredAssignments] = useState<any>([]);
+	const [isLoadingErrorGroupGuid, setIsLoadingErrorGroupGuid] = useState<string>("");
 
 	// Only show assigments that correlate to the entityId prop
 	useEffect(() => {
@@ -75,14 +76,16 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 										tooltip={_.message}
 										url={_.errorGroupUrl}
 										customPadding={"0 10px 0 50px"}
+										isLoading={isLoadingErrorGroupGuid === _.errorGroupGuid}
 										onClick={async e => {
 											try {
+												setIsLoadingErrorGroupGuid(_.errorGroupGuid);
 												const response = (await HostApi.instance.send(
 													GetObservabilityErrorGroupMetadataRequestType,
 													{ errorGroupGuid: _.errorGroupGuid }
 												)) as GetObservabilityErrorGroupMetadataResponse;
 												if (response) {
-													dispatch(
+													await dispatch(
 														openErrorGroup(_.errorGroupGuid, response.occurrenceId, {
 															multipleRepos: response?.relatedRepos?.length > 1,
 															relatedRepos: response?.relatedRepos,
@@ -99,6 +102,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 											} catch (ex) {
 												console.error(ex);
 											} finally {
+												setIsLoadingErrorGroupGuid("");
 											}
 										}}
 									></ErrorRow>

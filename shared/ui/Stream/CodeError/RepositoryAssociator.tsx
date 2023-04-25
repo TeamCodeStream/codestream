@@ -183,7 +183,7 @@ export function RepositoryAssociator(props: {
 	const handleOnSubmitWithOneItemInDropdown = async repo => {
 		setIsLoading(true);
 
-		await props.onSubmit(repo);
+		await props.onSubmit(repo, true);
 		if (!props.disableEmitDidChangeObservabilityDataNotification) {
 			HostApi.instance.emit(DidChangeObservabilityDataNotificationType.method, {
 				type: "RepositoryAssociation",

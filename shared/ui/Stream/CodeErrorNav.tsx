@@ -801,16 +801,18 @@ export function CodeErrorNav(props: Props) {
 				}}
 				isLoadingCallback={setIsLoading}
 				isLoadingParent={isLoading}
-				onSubmit={r => {
+				onSubmit={(r, skipTracking: boolean = false) => {
 					setIsLoading(true);
 					return new Promise((resolve, reject) => {
 						const payload = {
 							url: r.remote,
 							errorGroupGuid: derivedState.codeError?.objectId || pendingErrorGroupGuid!,
 						};
-						HostApi.instance.track("NR Multi Repo Selected", {
-							"Error Group ID": payload.errorGroupGuid,
-						});
+						if (!skipTracking) {
+							HostApi.instance.track("NR Multi Repo Selected", {
+								"Error Group ID": payload.errorGroupGuid,
+							});
+						}
 						onConnected(undefined, r.remote);
 					});
 				}}
