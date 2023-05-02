@@ -1,6 +1,5 @@
-import { FunctionLocator } from "@codestream/protocols/agent";
+import { EntityType, FunctionLocator } from "@codestream/protocols/agent";
 import { LanguageId } from "./clm/clmManager";
-import { EntityType } from "../../protocol/agent.protocol.providers";
 
 export interface Directive {
 	type: "assignRepository" | "removeAssignee" | "setAssignee" | "setState";

@@ -19,8 +19,7 @@ import { supportsSSOSignIn } from "../store/configs/slice";
 import {
 	goToCompanyCreation,
 	goToEmailConfirmation,
-	goToOldLogin, // TODO: remove me when New Relic login is fully supported
-	goToNewRelicSignup,
+	goToOldLogin,
 	goToOktaConfig,
 	goToTeamCreation,
 } from "../store/context/actions";
@@ -408,7 +407,8 @@ export const Signup = (props: Props) => {
 				Email: email,
 			});
 			//@TODO: Change to idp signup page event
-			dispatch(goToNewRelicSignup({}));
+			dispatch(startSSOSignin("newrelicidp", buildSignupInfo()));
+			//dispatch(goToNewRelicSignup({}));
 		},
 		[props.type]
 	);

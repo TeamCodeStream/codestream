@@ -112,6 +112,8 @@ export const startSSOSignin =
 		if (session.machineId) {
 			query.machineId = session.machineId;
 		}
+		query.enableUId = "1"; // operating under Unified Identity
+
 		const queryString = Object.keys(query)
 			.map(key => `${key}=${query[key]}`)
 			.join("&");

@@ -223,10 +223,20 @@ export class NewRelicProvider
 	}
 
 	get headers() {
-		return {
-			"Api-Key": this.accessToken!,
+		const headers: { [key: string]: string } = {
 			"Content-Type": "application/json",
+			"newrelic-requesting-services": "CodeStream",
 		};
+
+		const token = this.accessToken;
+		if (token) {
+			if (this._providerInfo?.bearerToken) {
+				headers["Authorization"] = `Bearer ${token}`;
+			} else {
+				headers["Api-Key"] = token;
+			}
+		}
+		return headers;
 	}
 
 	get apiUrl() {
@@ -263,7 +273,11 @@ export class NewRelicProvider
 	}
 
 	get graphQlBaseUrl() {
-		return `${this.baseUrl}/graphql`;
+		if (this._providerInfo?.bearerToken) {
+			return `${this.coreUrl}/graphql`;
+		} else {
+			return `${this.baseUrl}/graphql`;
+		}
 	}
 
 	private clearAllCaches() {
@@ -301,12 +315,7 @@ export class NewRelicProvider
 	protected async client(): Promise<GraphQLClient> {
 		const client =
 			this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
-
-		client.setHeaders({
-			"Api-Key": this.accessToken!,
-			"Content-Type": "application/json",
-			"NewRelic-Requesting-Services": "CodeStream",
-		});
+		client.setHeaders(this.headers);
 		ContextLogger.setData({
 			nrUrl: this.graphQlBaseUrl,
 			versionInfo: {
@@ -334,15 +343,7 @@ export class NewRelicProvider
 			fetch: customFetch,
 		};
 		const client = new GraphQLClient(graphQlBaseUrl, options);
-
-		// set accessToken on a per-usage basis... possible for accessToken
-		// to be revoked from the source (github.com) and a stale accessToken
-		// could be cached in the _client instance.
-		client.setHeaders({
-			"Api-Key": accessToken!,
-			"Content-Type": "application/json",
-			"NewRelic-Requesting-Services": "CodeStream",
-		});
+		client.setHeaders(this.headers);
 
 		return client;
 	}

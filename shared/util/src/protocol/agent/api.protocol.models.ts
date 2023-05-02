@@ -568,6 +568,7 @@ export interface CSProviderInfo {
 	expiresAt?: number;
 	userId?: string;
 	isApiToken?: boolean;
+	bearerToken?: boolean;
 	hosts?: { [host: string]: CSProviderInfos };
 	orgIds?: number[];
 	data?: {
