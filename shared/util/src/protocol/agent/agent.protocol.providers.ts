@@ -1255,12 +1255,26 @@ export interface ObservabilityAnomaly {
 
 export type DetectionMethod = "Release Based" | "Time Based";
 
+export interface Named {
+	name: string;
+}
+export interface NameValue extends Named {
+	value: number;
+}
+
+export interface Comparison extends Named {
+	oldValue: number;
+	newValue: number;
+	ratio: number;
+}
+
 export interface GetObservabilityAnomaliesResponse {
 	responseTime: ObservabilityAnomaly[];
 	errorRate: ObservabilityAnomaly[];
 	detectionMethod?: DetectionMethod;
 	error?: string;
 	isSupported?: boolean;
+	allOtherAnomalies?: ObservabilityAnomaly[];
 }
 
 export const GetObservabilityAnomaliesRequestType = new RequestType<
@@ -1431,7 +1445,7 @@ export const NRErrorTypes = [
 	"INTERNAL_RATE",
 ] as const;
 
-export type NRErrorType = typeof NRErrorTypes[number];
+export type NRErrorType = (typeof NRErrorTypes)[number];
 
 export interface NRErrorResponse {
 	isConnected?: boolean;
@@ -2026,11 +2040,11 @@ export type VulnerabilityStatus =
 
 export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "INFO"] as const;
 
-export type RiskSeverity = typeof riskSeverityList[number];
+export type RiskSeverity = (typeof riskSeverityList)[number];
 
 export const criticalityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
 
-export type CriticalityType = typeof criticalityList[number];
+export type CriticalityType = (typeof criticalityList)[number];
 
 // /v1/issues/ response
 // https://source.datanerd.us/incubator/nrsec-workflow-api/blob/dacb63f32aa836a4b90f6345a83e0ae95f7d3463/src/main/java/com/newrelic/nrsecworkflowapi/api/SecurityIssueSummary.java

@@ -218,14 +218,23 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 									observabilityAnomalies={filteredErrorRateAnomalies}
 									observabilityRepo={props.observabilityRepo}
 									entityGuid={props.entityGuid}
-									title="Error Rate"
+									title="Error Rate Increase"
 									detectionMethod={props.observabilityAnomalies.detectionMethod}
 								/>
 								<ObservabilityAnomaliesGroup
 									observabilityAnomalies={filteredResponseTimeAnomalies}
 									observabilityRepo={props.observabilityRepo}
 									entityGuid={props.entityGuid}
-									title="Average Duration"
+									title="Average Duration Increase"
+									detectionMethod={props.observabilityAnomalies.detectionMethod}
+								/>
+								<ObservabilityAnomaliesGroup
+									observabilityAnomalies={props.observabilityAnomalies.allOtherAnomalies || []}
+									observabilityRepo={props.observabilityRepo}
+									entityGuid={props.entityGuid}
+									title="All other methods"
+									noPercentage={true}
+									collapseDefault={true}
 									detectionMethod={props.observabilityAnomalies.detectionMethod}
 								/>
 							</>

@@ -5,22 +5,12 @@ import {
 	GetObservabilityAnomaliesRequest,
 	GetObservabilityAnomaliesResponse,
 	ObservabilityAnomaly,
+	Named,
+	NameValue,
+	Comparison,
 } from "@codestream/protocols/agent";
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
-
-interface Named {
-	name: string;
-}
-interface NameValue extends Named {
-	value: number;
-}
-
-interface Comparison extends Named {
-	oldValue: number;
-	newValue: number;
-	ratio: number;
-}
 
 export class AnomalyDetector {
 	constructor(
@@ -109,23 +99,42 @@ export class AnomalyDetector {
 			};
 		}
 
-		const { comparisons: durationComparisons, metricTimesliceNames } =
-			await this.getAnomalousDurationComparisons(
-				metricRoots,
-				benchmarkSampleSizes,
-				this._request.minimumResponseTime,
-				this._request.minimumSampleRate,
-				this._request.minimumRatio
-			);
+		const {
+			comparisons: durationComparisons,
+			allOtherComparisons: allOtherDurationComparisons,
+			metricTimesliceNames,
+		} = await this.getAnomalousDurationComparisons(
+			metricRoots,
+			benchmarkSampleSizes,
+			this._request.minimumResponseTime,
+			this._request.minimumSampleRate,
+			this._request.minimumRatio
+		);
 
-		const { comparisons: errorRateComparisons, metricTimesliceNames: errorMetricTimesliceNames } =
-			await this.getErrorRateAnomalies(
-				metricRoots,
-				benchmarkSampleSizes,
-				this._request.minimumErrorRate,
-				this._request.minimumSampleRate,
-				this._request.minimumRatio
-			);
+		const {
+			comparisons: errorRateComparisons,
+			allOtherComparisons: allOtherErrorComparisons,
+			metricTimesliceNames: errorMetricTimesliceNames,
+		} = await this.getErrorRateAnomalies(
+			metricRoots,
+			benchmarkSampleSizes,
+			this._request.minimumErrorRate,
+			this._request.minimumSampleRate,
+			this._request.minimumRatio
+		);
+
+		const allOtherDurationAnomalies = allOtherDurationComparisons.map(_ =>
+			this.durationComparisonToAnomaly(_, errorMetricTimesliceNames)
+		);
+
+		const allOtherErrorAnomalies = allOtherErrorComparisons.map(_ =>
+			this.errorRateComparisonToAnomaly(_, metricTimesliceNames)
+		);
+
+		const allOtherAnomalies: ObservabilityAnomaly[] = [
+			...allOtherDurationAnomalies,
+			...allOtherErrorAnomalies,
+		];
 
 		const durationAnomalies = durationComparisons.map(_ =>
 			this.durationComparisonToAnomaly(_, errorMetricTimesliceNames)
@@ -170,6 +179,7 @@ export class AnomalyDetector {
 		return {
 			responseTime: durationAnomalies,
 			errorRate: errorRateAnomalies,
+			allOtherAnomalies: allOtherAnomalies,
 			detectionMethod,
 			isSupported: true,
 		};
@@ -200,10 +210,15 @@ export class AnomalyDetector {
 		minimumDuration: number,
 		minimumSampleRate: number,
 		minimumRatio: number
-	): Promise<{ comparisons: Comparison[]; metricTimesliceNames: string[] }> {
+	): Promise<{
+		comparisons: Comparison[];
+		allOtherComparisons: Comparison[];
+		metricTimesliceNames: string[];
+	}> {
 		if (!metricRoots.length) {
 			return {
 				comparisons: [],
+				allOtherComparisons: [],
 				metricTimesliceNames: [],
 			};
 		}
@@ -225,14 +240,22 @@ export class AnomalyDetector {
 		const baselineFiltered = baseline.filter(baselineFilter);
 
 		const allComparisons = this.compareData(data, baselineFiltered, false);
-
+		let allOtherComparisons: Comparison[] = [];
 		const filteredComparisons = this.filterComparisonsByBenchmarkSampleSizes(
 			benchmarkSampleSizes,
 			allComparisons
-		).filter(_ => _.ratio > minimumRatio && _.newValue > minimumDuration);
+		).filter(_ => {
+			if (_.ratio > minimumRatio && _.newValue > minimumDuration) {
+				return true;
+			} else {
+				allOtherComparisons.push(_);
+				return false;
+			}
+		});
 
 		return {
 			comparisons: filteredComparisons,
+			allOtherComparisons: allOtherComparisons,
 			metricTimesliceNames: baseline.map(_ => _.name),
 		};
 	}
@@ -245,11 +268,13 @@ export class AnomalyDetector {
 		minimumRatio: number
 	): Promise<{
 		comparisons: Comparison[];
+		allOtherComparisons: Comparison[];
 		metricTimesliceNames: string[];
 	}> {
 		if (!metricRoots.length) {
 			return {
 				comparisons: [],
+				allOtherComparisons: [],
 				metricTimesliceNames: [],
 			};
 		}
@@ -287,17 +312,26 @@ export class AnomalyDetector {
 		const baselineErrorRate = baselineErrorCount.map(baselineTransformer);
 
 		const allComparisons = this.compareData(dataErrorRate, baselineErrorRate, true);
+		let allOtherComparisons: Comparison[] = [];
 
 		const baselineFilter = this.getSampleRateFilterPredicate(baselineSampleRate, minimumSampleRate);
 		const filteredComparison = this.filterComparisonsByBenchmarkSampleSizes(
 			benchmarkSampleSizes,
 			allComparisons
 		)
-			.filter(_ => _.ratio > minimumRatio && _.newValue > minimumErrorRate)
+			.filter(_ => {
+				if (_.ratio > minimumRatio && _.newValue > minimumErrorRate) {
+					return true;
+				} else {
+					allOtherComparisons.push(_);
+					return false;
+				}
+			})
 			.filter(baselineFilter);
 
 		return {
 			comparisons: filteredComparison,
+			allOtherComparisons: allOtherComparisons,
 			metricTimesliceNames: baselineErrorCount.map(_ => _.name),
 		};
 	}

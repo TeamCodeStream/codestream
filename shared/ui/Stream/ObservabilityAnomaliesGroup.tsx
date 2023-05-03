@@ -25,6 +25,8 @@ interface Props {
 	detectionMethod?: DetectionMethod;
 	entityGuid?: string;
 	title?: string;
+	collapseDefault?: boolean;
+	noPercentage?: boolean;
 }
 
 export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
@@ -35,8 +37,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			clmSettings,
 		};
 	}, shallowEqual);
-	const [expanded, setExpanded] = useState<boolean>(true);
-	const [showMoreExpanded, setShowMoreExpanded] = useState<boolean>(false);
+	const [expanded, setExpanded] = useState<boolean>(props.collapseDefault ? false : true);
 	const [numToShow, setNumToShow] = useState(5);
 
 	const getRoundedPercentage = ratio => {
@@ -46,6 +47,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	};
 
 	const getRoundedPercentageOutput = ratio => {
+		if (props.noPercentage) return <div></div>;
 		const roundedPercentage = getRoundedPercentage(ratio);
 		let roundedPercentageText =
 			roundedPercentage > 0 ? `${roundedPercentage}%+` : `${roundedPercentage}%+`;
