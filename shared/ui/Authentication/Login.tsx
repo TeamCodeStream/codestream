@@ -14,12 +14,9 @@ import {
 	goToOktaConfig,
 } from "../store/context/actions";
 import Button from "../Stream/Button";
-import { Dropdown } from "../Stream/Dropdown";
 import Icon from "../Stream/Icon";
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
-import Tooltip from "../Stream/Tooltip";
 import { authenticate, generateLoginCode, startIDESignin, startSSOSignin } from "./actions";
-import { TooltipIconWrapper } from "./Signup";
 import { HostApi } from "../webview-api";
 
 const isPasswordInvalid = password => password.length === 0;
@@ -288,7 +285,8 @@ class Login extends React.Component<Props, State> {
 			});
 
 			//@TODO: Change to idp signin page event
-			this.props.goToNewRelicSignup({});
+			//this.props.goToNewRelicSignup({});
+			this.props.startSSOSignin("newrelicidp");
 		};
 
 		return (
