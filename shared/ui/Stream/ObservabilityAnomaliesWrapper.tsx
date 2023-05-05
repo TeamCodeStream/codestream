@@ -233,7 +233,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 									observabilityRepo={props.observabilityRepo}
 									entityGuid={props.entityGuid}
 									title="All other methods"
-									noPercentage={true}
+									noAnomaly={true}
 									collapseDefault={true}
 									detectionMethod={props.observabilityAnomalies.detectionMethod}
 								/>

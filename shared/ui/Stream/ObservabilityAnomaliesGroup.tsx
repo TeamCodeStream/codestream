@@ -26,7 +26,7 @@ interface Props {
 	entityGuid?: string;
 	title?: string;
 	collapseDefault?: boolean;
-	noPercentage?: boolean;
+	noAnomaly?: boolean;
 }
 
 export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
@@ -47,7 +47,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	};
 
 	const getRoundedPercentageOutput = ratio => {
-		if (props.noPercentage) return <div></div>;
+		if (props.noAnomaly) return <div></div>;
 		const roundedPercentage = getRoundedPercentage(ratio);
 		let roundedPercentageText =
 			roundedPercentage > 0 ? `${roundedPercentage}%+` : `${roundedPercentage}%+`;
@@ -93,9 +93,11 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			className: anomaly.className,
 			functionName: anomaly.functionName,
 		});
-		dispatch(closeAllPanels());
-		dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!));
-		dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
+		if (!props.noAnomaly) {
+			dispatch(closeAllPanels());
+			dispatch(setCurrentObservabilityAnomaly(anomaly, props.entityGuid!));
+			dispatch(openPanel(WebviewPanels.ObservabilityAnomaly));
+		}
 	}
 
 	return (
