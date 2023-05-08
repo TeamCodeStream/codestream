@@ -2580,8 +2580,18 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
-	const { context, editorContext, users, teams, session, preferences, repos, documents, ide } =
-		state;
+	const {
+		context,
+		editorContext,
+		users,
+		teams,
+		companies,
+		session,
+		preferences,
+		repos,
+		documents,
+		ide,
+	} = state;
 	const user = users[session.userId!] as CSMe;
 
 	const channel = context.currentStreamId
@@ -2603,9 +2613,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const team = teams[context.currentTeamId];
 	const activeMemberIds = getActiveMemberIds(team);
 	const blameMap = team.settings ? team.settings.blameMap : {};
-
-	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
-	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
+	const company = companies[team.companyId];
 
 	const skipPostCreationModal = preferences ? preferences.skipPostCreationModal : false;
 
@@ -2639,7 +2647,7 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,
 		channel,
 		teamId: team.id,
-		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
+		isNonCsOrg: !company.codestreamOnly,
 		teamMates,
 		teamMembers,
 		activeMemberIds,

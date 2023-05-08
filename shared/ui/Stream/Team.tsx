@@ -5,7 +5,7 @@ import {
 	UpdateTeamAdminRequestType,
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
-import { CSTeam, CSUser } from "@codestream/protocols/api";
+import { CSCompany, CSTeam, CSUser } from "@codestream/protocols/api";
 import copy from "copy-to-clipboard";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
@@ -131,7 +131,7 @@ interface ConnectedProps {
 	// companyMemberCount: number;
 	members: CSUser[];
 	repos: any;
-	company: any;
+	company: CSCompany;
 	currentUser: CSUser;
 	currentUserInvisible: false;
 	currentUserEmail: string;
@@ -151,7 +151,6 @@ interface ConnectedProps {
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
 	autoJoinSupported: boolean;
-	isNonCsOrg: boolean;
 	blameMap: { [email: string]: string };
 	serverUrl: string;
 	isOnPrem: boolean;
@@ -647,7 +646,7 @@ class Team extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { currentUserId, isNonCsOrg, teamId, userTeams, blameMap, collisions, xraySetting } =
+		const { currentUserId, company, teamId, userTeams, blameMap, collisions, xraySetting } =
 			this.props;
 		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 
@@ -660,7 +659,7 @@ class Team extends React.Component<Props, State> {
 			: "teamMemberSelection.getInviteCode";
 		return (
 			<Dialog wide title="My Organization" onClose={() => this.props.closeModal()}>
-				{isNonCsOrg && (
+				{!company.codestreamOnly && (
 					<div style={{ marginBottom: "15px" }}>
 						The following people from your New Relic organization are on CodeStream. Note that
 						admins are specific to CodeStream.
@@ -778,8 +777,6 @@ const mapStateToProps = state => {
 	const team = teams[context.currentTeamId];
 	const company = companies[team.companyId];
 	const user = state.users[state.session.userId!];
-	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
-	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
 
 	const memberIds = getActiveMemberIds(team);
 	const teammates = mapFilter(memberIds, id => {
@@ -836,7 +833,6 @@ const mapStateToProps = state => {
 		isCurrentUserAdmin,
 		dontSuggestInvitees,
 		repos,
-		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
 		company: company,
 		currentUser: currentUser,
 		currentUserId: currentUser.id,

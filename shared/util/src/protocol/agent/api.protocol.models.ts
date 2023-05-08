@@ -487,6 +487,7 @@ export interface CSCompany extends CSEntity {
 	host?: EnvironmentHost;
 	switchToServerUrl?: string;
 	memberCount?: number;
+	codestreamOnly?: boolean;
 }
 
 export interface CSTeam extends CSEntity {

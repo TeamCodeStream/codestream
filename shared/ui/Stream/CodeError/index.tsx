@@ -280,8 +280,11 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		const user = state.users[state.session.userId!];
 		const teamId = state.context.currentTeamId;
 		const team = state.teams[teamId];
+
 		const eligibleJoinCompanies = user?.eligibleJoinCompanies;
 		const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
+
+		const company = state.companies[team.companyId];
 
 		return {
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
@@ -292,7 +295,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : "",
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			isPDIdev: isFeatureEnabled(state, "PDIdev"),
-			isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
+			isNonCsOrg: !company.codestreamOnly,
 		};
 	});
 

@@ -2653,6 +2653,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		editorContext,
 		users,
 		teams,
+		companies,
 		session,
 		preferences,
 		providers,
@@ -2661,9 +2662,6 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		codeErrors,
 	} = state;
 	const user = users[session.userId!] as CSMe;
-
-	const eligibleJoinCompanies = user?.eligibleJoinCompanies;
-	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
 
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -2687,6 +2685,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 	const inviteUsersOnTheFly =
 		isFeatureEnabled(state, "emailSupport") && isFeatureEnabled(state, "inviteUsersOnTheFly");
 	const textEditorUriContext = parseCodeStreamDiffUri(editorContext.textEditorUri!);
+	const company = companies[team.companyId];
 
 	return {
 		repos,
@@ -2697,7 +2696,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 		currentTeamId: state.context.currentTeamId,
 		blameMap: blameMap || EMPTY_OBJECT,
 		isCurrentUserAdmin,
-		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
+		isNonCsOrg: !company.codestreamOnly,
 		activePanel: context.panelStack[0] as WebviewPanels,
 		shouldShare:
 			safe(() => state.preferences[state.context.currentTeamId].shareCodemarkEnabled) || false,

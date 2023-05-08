@@ -7,7 +7,6 @@ import {
 	UpdateTeamSettingsRequestType,
 } from "@codestream/protocols/agent";
 import { CSTeam, CSUser } from "@codestream/protocols/api";
-import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import copy from "copy-to-clipboard";
 import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
@@ -15,6 +14,8 @@ import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
 import { AsyncPaginate } from "react-select-async-paginate";
 import styled from "styled-components";
+
+import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import { CSText } from "../src/components/CSText";
 import { Dialog } from "../src/components/Dialog";
 import { UserStatus } from "../src/components/UserStatus";
@@ -143,7 +144,6 @@ interface ConnectedProps {
 	isCurrentUserAdmin: boolean;
 	adminIds: string[];
 	dontSuggestInvitees: any;
-	isNonCsOrg: boolean;
 	multipleReviewersApprove: boolean;
 	emailSupported: boolean;
 	autoJoinSupported: boolean;
@@ -223,7 +223,7 @@ class Invite extends React.Component<Props, State> {
 	}
 
 	getNRUsers = async (search: string, _loadedOptions, additional?: { nextCursor?: string }) => {
-		if (!this.props.isNonCsOrg) {
+		if (this.props.company.codestreamOnly) {
 			return {
 				options: [],
 				hasMore: false,
@@ -266,7 +266,7 @@ class Invite extends React.Component<Props, State> {
 	getSuggestedInvitees = async () => {
 		// for now, suggested invitees are only available to admins
 		if (!this.props.isCurrentUserAdmin) return;
-		if (this.props.isNonCsOrg) return;
+		if (!this.props.company.codestreamOnly) return;
 
 		const result = await HostApi.instance.send(GetLatestCommittersRequestType, {});
 		const committers = result ? result.scm : undefined;
@@ -644,7 +644,7 @@ class Invite extends React.Component<Props, State> {
 
 		return (
 			<Dialog wide title="Invite" onClose={() => this.props.closeModal()}>
-				{this.props.isNonCsOrg ? (
+				{!this.props.company.codestreamOnly ? (
 					<>
 						<div style={{ marginBottom: "15px" }}>
 							Invite people from your New Relic organization to try out CodeStream.
@@ -809,9 +809,6 @@ const mapStateToProps = state => {
 	});
 	const currentUser = users[session.userId];
 
-	const eligibleJoinCompanies = currentUser?.eligibleJoinCompanies;
-	const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
-
 	const invisible = currentUser.status ? currentUser.status.invisible : false;
 
 	const adminIds = team.adminIds;
@@ -845,7 +842,6 @@ const mapStateToProps = state => {
 		isCurrentUserAdmin,
 		dontSuggestInvitees,
 		repos,
-		isNonCsOrg: true, //@TODO when available, use eligibleCompany.isNonCsOrg
 		company: company,
 		currentUser: currentUser,
 		currentUserId: currentUser.id,

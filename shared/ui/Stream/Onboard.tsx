@@ -1068,6 +1068,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			state.teams && state.context.currentTeamId
 				? state.teams[state.context.currentTeamId]
 				: undefined;
+		const company = team ? state.companies && state.companies[team.companyId] : undefined;
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 		const currentUserIsAdmin = currentUserIsAdminSelector(state);
@@ -1084,7 +1085,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			webviewFocused: state.context.hasFocus,
 			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl,
 			currentUserIsAdmin,
-			isNonCsOrg: true, //@TODO when available, use state.companies[team.companyId]?.isNonCsOrg
+			isNonCsOrg: company && !company.codestreamOnly,
 		};
 	}, shallowEqual);
 
