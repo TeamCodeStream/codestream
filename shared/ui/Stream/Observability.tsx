@@ -21,7 +21,7 @@ import {
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
-import { head as _head, isEmpty, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
+import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
@@ -565,7 +565,7 @@ export const Observability = React.memo((props: Props) => {
 			telemetryStateValue = "Not Connected";
 		}
 
-		if (!isEmpty(telemetryStateValue)) {
+		if (!_isEmpty(telemetryStateValue)) {
 			console.debug("o11y: O11y Rendered", telemetryStateValue);
 			HostApi.instance.track("O11y Rendered", {
 				State: telemetryStateValue,

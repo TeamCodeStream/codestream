@@ -140,10 +140,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const buildSubmenu = () => {
 			const items = eligibleJoinCompanies
 				.filter(company => {
-					// Skip companys eligible to join by domain
+					// Skip companys eligible to join by domain and are signed out with no invite
 					const domainJoining = company?.domainJoining;
 					const canJoinByDomain = !_isEmpty(domainJoining);
-					if (canJoinByDomain) return false;
+					const isSignedOut = !company.byInvite && !company.accessToken;
+					if (canJoinByDomain || isSignedOut) return false;
 					return true;
 				})
 				.map(company => {
@@ -188,6 +189,15 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: "Create New Organization",
 					action: () => {
 						dispatch(openModal(WebviewModals.CreateCompany));
+					},
+				},
+				//@TODO: change action to idp signin
+				{
+					key: "sign-in-other",
+					icon: <Icon name="plus" />,
+					label: "Sign In to Another Organization",
+					action: () => {
+						console.warn("sign in action for idp goes here");
 					},
 				}
 			);

@@ -1,10 +1,11 @@
+import React, { useState } from "react";
+import styled from "styled-components";
+
 import {
 	configureAndConnectProvider,
 	disconnectProvider,
 	removeEnterpriseProvider,
 } from "@codestream/webview/store/providers/actions";
-import React, { useState } from "react";
-import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
@@ -336,14 +337,17 @@ export const IntegrationsPanel = () => {
 								</IntegrationButtons>
 							</>
 						)}
-						{derivedState.observabilityProviders.length > 0 && (
-							<>
-								<h2>Observability</h2>
-								<IntegrationButtons>
-									{renderProviders(derivedState.observabilityProviders)}
-								</IntegrationButtons>
-							</>
-						)}
+
+						{/* 
+							{derivedState.observabilityProviders.length > 0 && (
+								<>
+									<h2>Observability</h2>
+									<IntegrationButtons>
+										{renderProviders(derivedState.observabilityProviders)}
+									</IntegrationButtons>
+								</>
+							)}
+						*/}
 
 						<h2>Code Host &amp; Issue Providers</h2>
 						<IntegrationButtons>

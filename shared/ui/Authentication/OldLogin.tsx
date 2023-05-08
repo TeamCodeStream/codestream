@@ -18,7 +18,7 @@ import {
 import { supportsSSOSignIn } from "../store/configs/slice";
 import Tooltip from "../Stream/Tooltip";
 import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this component is NOT the right way
-import { EnvironmentHost } from "../protocols/agent/agent.protocol";
+import { EnvironmentHost } from "@codestream/protocols/agent";
 import { TooltipIconWrapper } from "./Signup";
 import { Dropdown } from "../Stream/Dropdown";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
