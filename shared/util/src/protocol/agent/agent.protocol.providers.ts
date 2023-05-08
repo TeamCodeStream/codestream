@@ -1272,6 +1272,26 @@ export const UpdateNewRelicOrgIdRequestType = new RequestType<
 	void
 >("codestream/newrelic/orgid/update");
 
+export interface GetNewRelicUsersRequest {
+	search?: string;
+	nextCursor?: string;
+}
+
+export interface GetNewRelicUsersResponse {
+	users: {
+		email: string;
+		name: string;
+	}[];
+	nextCursor?: string;
+}
+
+export const GetNewRelicUsersRequestType = new RequestType<
+	GetNewRelicUsersRequest,
+	GetNewRelicUsersResponse,
+	void,
+	void
+>("codestream/newrelic/users");
+
 export interface GetObservabilityErrorsRequest {
 	filters: { repoId: string; entityGuid?: string }[];
 	timeWindow?: string;

@@ -56,6 +56,9 @@ import {
 	GetObservabilityAnomaliesRequest,
 	GetObservabilityAnomaliesRequestType,
 	GetObservabilityAnomaliesResponse,
+	GetNewRelicUsersRequest,
+	GetNewRelicUsersRequestType,
+	GetNewRelicUsersResponse,
 	GetObservabilityEntitiesRequest,
 	GetObservabilityEntitiesRequestType,
 	GetObservabilityEntitiesResponse,
@@ -1382,6 +1385,41 @@ export class NewRelicProvider
 			return response.actor;
 		} catch (e) {
 			ContextLogger.error(e, "getAccounts");
+			throw e;
+		}
+	}
+
+	@lspHandler(GetNewRelicUsersRequestType)
+	@log()
+	async getUsers(request: GetNewRelicUsersRequest): Promise<GetNewRelicUsersResponse> {
+		try {
+			const query = request.search ? `search: "${request.search}"` : "";
+			const cursor = request.nextCursor || "null";
+			const response = await this.query<{
+				actor: {
+					users: {
+						userSearch: {
+							users: { email: string; name: string }[];
+							nextCursor?: string;
+						};
+					};
+				};
+			}>(`{
+				actor {
+					users {
+						userSearch(query: {scope: {${query}}}, cursor: ${cursor}) {
+							users {
+								email
+								name
+							}
+							nextCursor
+						}
+					}
+				}
+			}`);
+			return response.actor.users.userSearch;
+		} catch (e) {
+			ContextLogger.error(e, "getUsers");
 			throw e;
 		}
 	}
