@@ -18,7 +18,7 @@ const ReloadButtonCopy = styled.b`
 	padding: 10px;
 `;
 
-const SERVER_URL_ON_RELOAD = "https://staging-api.codestream.us";
+const SERVER_URL_ON_RELOAD = "https://codestream-stg.staging-service.newrelic.com";
 
 interface ReloadAllWindowsProps {
 	handleClose: Function;

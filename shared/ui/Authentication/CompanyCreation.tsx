@@ -50,8 +50,6 @@ const NrUserButtonWrapper = styled.div`
 
 const isTeamNameValid = (name: string) => name.length > 0;
 
-const PRODUCTION_SERVER_URL = "https://api.codestream.com";
-
 interface EnhancedCSCompany {
 	id: string;
 	memberCount?: number;
@@ -79,6 +77,7 @@ export function CompanyCreation(props: {
 		const { configs } = state;
 		return {
 			serverUrl: configs.serverUrl,
+			isProductionCloud: state.configs.isProductionCloud,
 		};
 	});
 	const providerName = props.provider
@@ -285,11 +284,7 @@ export function CompanyCreation(props: {
 	};
 
 	const isNewRelicStaffOnProductionEnvironment = () => {
-		return (
-			props.email &&
-			/@newrelic\.com$/.test(props.email) &&
-			derivedState.serverUrl === PRODUCTION_SERVER_URL
-		);
+		return props.email && /@newrelic\.com$/.test(props.email) && derivedState.isProductionCloud;
 	};
 
 	const handleClickSwitchStagingEnvironment = (event: React.SyntheticEvent) => {
