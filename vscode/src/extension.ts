@@ -54,7 +54,9 @@ interface BuildInfoMetadata {
 export const IDE_NAME = "VS Code";
 
 const serverUrlMigrations: { [url: string]: string } = {
-	"https://staging-api.codestream.us": "https://codestream-stg.staging-service.newrelic.com"
+	"https://staging-api.codestream.us": "https://codestream-stg.staging-service.newrelic.com",
+	"https://api.codestream.com//": "https://codestream-us1.service.newrelic.com",
+	"https://eu-api.codestream.com": "https://codestream-eu1.service.eu.newrelic.com"
 };
 
 export async function activate(context: ExtensionContext) {
