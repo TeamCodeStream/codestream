@@ -149,6 +149,21 @@ export const findMentionedUserIds = (members: CSUser[], text: string) => {
 	return mentionedUserIds;
 };
 
+export const currentUserIsAdminSelector = createSelector(
+	(state: CodeStreamState) => state.users,
+	(state: CodeStreamState) => state.teams,
+	(state: CodeStreamState) => state.session,
+	(state: CodeStreamState) => state.context,
+	(users, teams, session, context) => {
+		if (!session.userId) {
+			return false;
+		}
+		const team = teams[context.currentTeamId];
+		const user = users[session.userId];
+		return (team.adminIds || []).includes(user.id);
+	}
+);
+
 export const getStreamMembers = createSelector(
 	state => state.users,
 	(state: CodeStreamState, streamOrId: CSStream | string) => {

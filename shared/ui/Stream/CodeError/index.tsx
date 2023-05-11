@@ -6,7 +6,7 @@ import {
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSPost, CSUser } from "@codestream/protocols/api";
 import React, { PropsWithChildren, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
 
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
@@ -33,6 +33,7 @@ import {
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import {
+	currentUserIsAdminSelector,
 	findMentionedUserIds,
 	getTeamMates,
 	getTeamMembers,
@@ -43,7 +44,7 @@ import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
 import { getPost } from "../../store/posts/reducer";
-import { createPost, invite, markItemRead } from "../actions";
+import { createPost, deletePost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
 	BigTitle,
@@ -950,6 +951,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 				: [],
 		};
 	});
+	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
 		open: false,
@@ -961,7 +963,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
 
 	const menuItems = React.useMemo(() => {
-		let items: any[] = [];
+		const items: DropdownButtonItems[] = [];
 
 		if (props.errorGroup) {
 			items.push({
@@ -984,6 +986,39 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 					if (permalinkRef && permalinkRef.current) {
 						permalinkRef.current.select();
 						document.execCommand("copy");
+					}
+				},
+			});
+		}
+
+		if (currentUserIsAdmin) {
+			items.push({
+				label: "Delete All",
+				icon: <Icon name="trash" />,
+				key: "deleteAll-permalink",
+				action: () => {
+					if (derivedState.post) {
+						confirmPopup({
+							title: "Are you sure?",
+							message:
+								"This will delete all posts in this conversation. Deleting a post cannot be undone.",
+							centered: true,
+							buttons: [
+								{ label: "Go Back", className: "control-button" },
+								{
+									label: "Delete Post",
+									className: "delete",
+									wait: true,
+									action: () => {
+										const post = derivedState.post;
+										if (!post) return;
+										// Deleting the parent post will (soft) delete the codeError
+										// and all the child posts
+										dispatch(deletePost(post.streamId, post.id, post.sharedTo));
+									},
+								},
+							],
+						});
 					}
 				},
 			});
@@ -1444,7 +1479,7 @@ const ReplyInput = (props: { codeError: CSCodeError }) => {
 
 		const actualCodeError = (await dispatch(
 			upgradePendingCodeError(props.codeError.id, "Comment")
-		)) as any as {
+		)) as {
 			codeError: CSCodeError;
 		};
 		dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
@@ -1550,7 +1585,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
 			isPDIdev: isFeatureEnabled(state, "PDIdev"),
 		};
-	});
+	}, shallowEqual);
 
 	const [preconditionError, setPreconditionError] = React.useState<SimpleError>({
 		message: "",

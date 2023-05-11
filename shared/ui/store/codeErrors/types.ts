@@ -1,5 +1,6 @@
 import { CSCodeError } from "@codestream/protocols/api";
 import { Index } from "@codestream/utils/types";
+import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
@@ -21,18 +22,6 @@ export type CodeErrorsState = {
 		id: string;
 		error?: string;
 		isLoading?: boolean;
-		errorGroup: {
-			id: string;
-			// TODO fix me get the real object type
-			assignee?: any;
-			state?: any;
-			repo?: string;
-			entity?: {
-				repo?: {
-					urls: string[];
-					name: string;
-				};
-			};
-		};
+		errorGroup: NewRelicErrorGroup;
 	}>;
 };

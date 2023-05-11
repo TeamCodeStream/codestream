@@ -1,5 +1,4 @@
 import { CSCodeError } from "@codestream/protocols/api";
-import { Index } from "@codestream/utils/types";
 import { createSelector } from "reselect";
 
 import { CodeStreamState } from "..";
@@ -11,6 +10,7 @@ import { ContextState } from "../context/types";
 import { getTeamMates } from "../users/reducer";
 import * as actions from "./actions";
 import { CodeErrorsActionsTypes, CodeErrorsState } from "./types";
+import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 
 type CodeErrorsActions = ActionType<typeof actions>;
 type ActiveIntegrationsActions = ActionType<typeof activeIntegrationsActions>;
@@ -26,10 +26,19 @@ export function reduceCodeErrors(
 			return {
 				bootstrapped: true,
 				errorGroups: state.errorGroups,
-				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
+				codeErrors: {
+					...state.codeErrors,
+					...toMapBy(
+						"id",
+						action.payload.filter(_ => !_.deactivated)
+					),
+				},
 			};
-		case CodeErrorsActionsTypes.AddCodeErrors:
-			const newCodeErrors = toMapBy("id", action.payload);
+		case CodeErrorsActionsTypes.AddCodeErrors: {
+			const newCodeErrors = toMapBy(
+				"id",
+				action.payload.filter(_ => !_.deactivated)
+			);
 			for (const id in newCodeErrors) {
 				const existingCodeError = state.codeErrors[id];
 				if (existingCodeError) {
@@ -42,6 +51,7 @@ export function reduceCodeErrors(
 				errorGroups: state.errorGroups,
 				codeErrors: { ...state.codeErrors, ...newCodeErrors },
 			};
+		}
 		case CodeErrorsActionsTypes.UpdateCodeErrors:
 		case CodeErrorsActionsTypes.SaveCodeErrors: {
 			return {
@@ -110,7 +120,7 @@ export function reduceCodeErrors(
 							break;
 						}
 						case "removeAssignee": {
-							errorGroupWrapper.errorGroup.assignee = null;
+							errorGroupWrapper.errorGroup.assignee = undefined;
 							break;
 						}
 						case "setAssignee": {
@@ -141,15 +151,15 @@ export function getCodeError(state: CodeErrorsState, id: string): CSCodeError | 
 export function getErrorGroup(
 	state: CodeErrorsState,
 	codeError: CSCodeError | undefined
-): any | undefined {
-	if (!codeError || codeError.objectType !== "errorGroup" || !codeError.objectId) return undefined;
+): NewRelicErrorGroup | undefined {
+	if (
+		!codeError ||
+		codeError.objectType !== "errorGroup" ||
+		!codeError.objectId ||
+		codeError.deactivated
+	)
+		return undefined;
 	return state.errorGroups[codeError.objectId!]?.errorGroup;
-}
-
-export function getByStatus(state: CodeStreamState, status?: string): CSCodeError[] {
-	if (!status) return getAllCodeErrors(state);
-
-	return getAllCodeErrors(state).filter(codeError => codeError.status === status);
 }
 
 const getCodeErrors = (state: CodeStreamState) => state.codeErrors.codeErrors;
@@ -170,57 +180,5 @@ export const getCodeErrorCreator = createSelector(
 		const codeError = codeErrors[id];
 		if (!codeError || !codeError.creatorId) return undefined;
 		return teamMates.find(_ => _.id === codeError.creatorId);
-	}
-);
-
-export const getByStatusAndUser = createSelector(
-	getCodeErrors,
-	(a, status) => status,
-	(a, b, userId) => userId,
-	(codeErrors, status, userId) => {
-		return Object.values(codeErrors).filter(
-			(codeError: any) =>
-				!codeError.deactivated &&
-				codeError.status === status &&
-				(codeError.creatorId === userId ||
-					(codeError.assignees || []).includes(userId) ||
-					(codeError.codeAuthorIds || []).includes(userId) ||
-					(codeError.followerIds || []).includes(userId))
-		);
-	}
-);
-
-export const getAllCodeErrors = createSelector(getCodeErrors, (codeErrors: Index<CSCodeError>) =>
-	Object.values(codeErrors).filter(codeError => !codeError.deactivated)
-);
-
-export const getAllCodeErrorLinks = createSelector(
-	getCodeErrors,
-	(codeErrors: Index<CSCodeError>) =>
-		Object.values(codeErrors)
-			.filter(codeError => !codeError.deactivated && codeError.permalink)
-			.map(_ => {
-				return {
-					id: _.id,
-					permalink: _.permalink,
-				};
-			})
-);
-
-export const teamHasCodeErrors = createSelector(getCodeErrors, (codeErrors: Index<CSCodeError>) => {
-	return Object.keys(codeErrors).length > 0;
-});
-
-export const teamCodeErrorCount = createSelector(
-	getCodeErrors,
-	(codeErrors: Index<CSCodeError>) => {
-		return Object.keys(codeErrors).length;
-	}
-);
-
-export const getCodeErrorsUnread = createSelector(
-	getCodeErrors,
-	(codeErrors: Index<CSCodeError>) => {
-		let ret = {};
 	}
 );

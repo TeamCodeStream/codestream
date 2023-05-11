@@ -11,7 +11,7 @@ import { FormattedMessage } from "react-intl";
 import { TelemetryRequestType } from "@codestream/protocols/agent";
 
 import { CodeStreamState } from "../store";
-import { getTeamMembers } from "../store/users/reducer";
+import { currentUserIsAdminSelector, getTeamMembers } from "../store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount, usePrevious } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
 import { closePanel, invite } from "./actions";
@@ -1070,7 +1070,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 				: undefined;
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
-		const currentUserIsAdmin = (team?.adminIds || []).includes(user.id);
+		const currentUserIsAdmin = currentUserIsAdminSelector(state);
 		const domain = user.email?.split("@")[1].toLowerCase();
 
 		return {

@@ -1,8 +1,7 @@
-import React, { useCallback, useState } from "react";
-import cx from "classnames";
+import React from "react";
 import { CodeStreamState } from "../store";
-import { useDispatch, useSelector } from "react-redux";
-import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import { shallowEqual } from "react-redux";
+import { useAppDispatch, useAppSelector } from "../utilities/hooks";
 import { Button } from "../src/components/Button";
 import styled from "styled-components";
 import { Checkbox } from "../src/components/Checkbox";
@@ -10,6 +9,7 @@ import { Link } from "../Stream/Link";
 import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
 import { setUserPreference } from "../Stream/actions";
+import { currentUserIsAdminSelector } from "@codestream/webview/store/users/reducer";
 
 const Root = styled.div`
 	display: flex;
@@ -95,13 +95,12 @@ const DownloadLink = styled.div`
 export const PresentPrereleaseTOS = () => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const { teams, context, session, users } = state;
+		const { teams, context } = state;
 		const team = teams[context.currentTeamId];
-		const user = users[session.userId!];
-		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
+		const currentUserIsAdmin = currentUserIsAdminSelector(state);
 
 		return { currentUserIsAdmin, team };
-	});
+	}, shallowEqual);
 
 	const [inAgreement, setInAgreement] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(false);
