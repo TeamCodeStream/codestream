@@ -120,7 +120,11 @@ private val posixPermissions = setOf(
 
 val TEST_MODE = System.getenv("TEST_MODE") == "true"
 
-val serverUrlMigrations = hashMapOf("https://staging-api.codestream.us" to "https://codestream-stg.staging-service.newrelic.com")
+val serverUrlMigrations = hashMapOf(
+    "https://staging-api.codestream.us" to "https://codestream-stg.staging-service.newrelic.com",
+    "https://api.codestream.com" to "https://codestream-us1.service.newrelic.com",
+    "https://eu-api.codestream.com" to "https://codestream-eu1.service.eu.newrelic.com"
+)
 
 class AgentService(private val project: Project) : Disposable {
 
