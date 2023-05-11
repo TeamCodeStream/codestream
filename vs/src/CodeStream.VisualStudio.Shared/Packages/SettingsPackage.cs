@@ -71,7 +71,9 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		{
 			var tempUrlMap = new Dictionary<string, string>()
 			{
-				{ "https://staging-api.codestream.us", "https://codestream-stg.staging-service.newrelic.com" }
+				{ "https://staging-api.codestream.us", "https://codestream-stg.staging-service.newrelic.com" },
+				{ "https://api.codestream.com", "https://codestream-us1.service.newrelic.com" },
+				{ "https://eu-api.codestream.com", "https://codestream-eu1.service.eu.newrelic.com" }
 			};
 
 			if (!tempUrlMap.ContainsKey(_codeStreamSettingsManager.ServerUrl))
@@ -82,7 +84,7 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 			var credentialService = _componentModel.GetService<ICredentialsService>();
 			Assumes.Present(credentialService);
 
-			var oldServerUrl = _codeStreamSettingsManager.ServerUrl;
+			var oldServerUrl = _codeStreamSettingsManager.ServerUrl.Trim();
 			var newServerUrl = tempUrlMap[_codeStreamSettingsManager.ServerUrl];
 
 			_codeStreamSettingsManager.ServerUrl = newServerUrl;
