@@ -55,29 +55,6 @@ class CLMJavaComponent(project: Project) :
     }
 
     override fun findSymbolInFile(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? {
-        // TODO convert uri
-//        val uriObj = URL(uri)
-//        val uriPath = uriObj.path
-
-//        val virtFile = VfsUtil.findFileByURL(uriObj)
-//        if (virtFile == null) {
-//            logger.warn("Could not find file for uri $uri")
-//            return null
-//        }
-
-//        val projectFileIndex = ProjectFileIndex.getInstance(project)
-//        val root = projectFileIndex.getContentRootForFile(virtFile)
-//
-//        if (root == null) {
-//            logger.warn("Could not find root for file $virtFile")
-//            return null
-//        }
-//
-//
-//        val projectScope = GlobalSearchScope.projectScope(project)
-//        val filenameMatchesResponse = FilenameIndex.getVirtualFilesByName(uriPath, projectScope)
-//        if (filenameMatchesResponse.isEmpty()) return null
-//        for (file in filenameMatchesResponse) {
 
         val virtFile = if (ref != null)  getCSGitFile(uri, ref, project) else VfsUtil.findFileByURL(URL(uri))
 
