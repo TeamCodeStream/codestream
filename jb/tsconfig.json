@@ -37,5 +37,6 @@
 		"target": "es2017",
 		"useUnknownInCatchVariables": false
 	},
-	"include": ["**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"]
+	"include": ["**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*"],
+	"exclude": ["csTestData/**"]
 }

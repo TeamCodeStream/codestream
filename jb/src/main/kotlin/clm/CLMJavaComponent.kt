@@ -1,14 +1,24 @@
 package com.codestream.clm
 
+import com.codestream.extensions.lspPosition
+import com.codestream.git.getCSGitFile
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiMethod
 import com.intellij.psi.impl.source.PsiJavaFileImpl
 import com.intellij.psi.impl.source.tree.java.PsiMethodCallExpressionImpl
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.descendantsOfType
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.Range
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.idea.inspections.findExistingEditor
+import java.net.URL
 
 class CLMJavaComponent(project: Project) :
     CLMLanguageComponent<CLMJavaEditorManager>(project, PsiJavaFileImpl::class.java, ::CLMJavaEditorManager) {
@@ -41,6 +51,61 @@ class CLMJavaComponent(project: Project) :
             val methods = clazz.findMethodsByName(functionName, true)
             return methods.firstOrNull()
         }
+        return null
+    }
+
+    override fun findSymbolInFile(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? {
+        // TODO convert uri
+//        val uriObj = URL(uri)
+//        val uriPath = uriObj.path
+
+//        val virtFile = VfsUtil.findFileByURL(uriObj)
+//        if (virtFile == null) {
+//            logger.warn("Could not find file for uri $uri")
+//            return null
+//        }
+
+//        val projectFileIndex = ProjectFileIndex.getInstance(project)
+//        val root = projectFileIndex.getContentRootForFile(virtFile)
+//
+//        if (root == null) {
+//            logger.warn("Could not find root for file $virtFile")
+//            return null
+//        }
+//
+//
+//        val projectScope = GlobalSearchScope.projectScope(project)
+//        val filenameMatchesResponse = FilenameIndex.getVirtualFilesByName(uriPath, projectScope)
+//        if (filenameMatchesResponse.isEmpty()) return null
+//        for (file in filenameMatchesResponse) {
+
+        val virtFile = if (ref != null)  getCSGitFile(uri, ref, project) else VfsUtil.findFileByURL(URL(uri))
+
+        if (virtFile == null) {
+            logger.warn("Could not find file for uri $uri")
+            return null
+        }
+
+        val psiFile = virtFile.toPsiFile(project)
+        if (psiFile !is PsiJavaFileImpl) return null
+        // TODO handle name conflicts in different inner classes, static methods
+        val functions = psiFile.descendantsOfType<PsiMethod>()
+        val split = functionName.split(".")
+        val function = split.last()
+//        val className = split.dropLast(1).joinToString(".")
+        val targetFunction = functions.find { it.name == function }
+        if (targetFunction != null) {
+            val document = targetFunction.findExistingEditor()?.document
+            if (document == null) {
+                // When document is null we will return a bogus range of 0,0 to 0,0
+                logger.warn("Document null")
+            }
+            val start = document?.lspPosition(targetFunction.textRange.startOffset) ?: Position(0, 0)
+            val end = document?.lspPosition(targetFunction.textRange.endOffset) ?: Position(0, 0)
+            val range = Range(start, end)
+            return FindSymbolInFileResponse(targetFunction.text, range)
+        }
+//        }
         return null
     }
 }

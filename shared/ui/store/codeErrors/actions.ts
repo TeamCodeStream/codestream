@@ -9,7 +9,7 @@ import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 import { logError } from "@codestream/webview/logger";
 import { HostApi } from "@codestream/webview/webview-api";
 import { action } from "../common";
-import { CodeErrorsActionsTypes } from "./types";
+import { CodeErrorsActionsTypes, FunctionToEdit } from "./types";
 
 export const reset = () => action("RESET");
 
@@ -31,6 +31,9 @@ export const saveCodeErrors = (codeErrors: CSCodeError[]) =>
 
 export const _updateCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.UpdateCodeErrors, codeErrors);
+
+export const setFunctionToEdit = (functionToEdit: FunctionToEdit | undefined) =>
+	action(CodeErrorsActionsTypes.SetFunctionToEdit, functionToEdit);
 
 export interface NewCodeErrorAttributes {
 	accountId?: number;

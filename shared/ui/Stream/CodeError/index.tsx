@@ -4,7 +4,7 @@ import {
 	NewRelicErrorGroup,
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
-import { CSCodeError, CSPost, CSUser } from "@codestream/protocols/api";
+import { CSCodeError, CSPost, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
 import React, { PropsWithChildren, useEffect } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -1134,7 +1134,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const codeError = state.codeErrors[props.codeError.id] || props.codeError;
+		const codeError: CSCodeError = state.codeErrors[props.codeError.id] || props.codeError;
 		const codeAuthorId = (props.codeError.codeAuthorIds || [])[0];
 
 		return {
@@ -1144,7 +1144,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			codeAuthor: state.users[codeAuthorId || props.codeError?.creatorId],
 			codeError,
 			errorGroup: props.errorGroup,
-			errorGroupIsLoading: (state.codeErrors.errorGroups[codeError.objectId] as any)?.isLoading,
+			errorGroupIsLoading: codeError.objectId
+				? state.codeErrors.errorGroups[codeError.objectId]?.isLoading
+				: false,
 			currentCodeErrorData: state.context.currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 		};
@@ -1152,7 +1154,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup } = derivedState;
 
-	const [currentSelectedLine, setCurrentSelectedLineIndex] = React.useState(
+	const [currentSelectedLine, setCurrentSelectedLineIndex] = React.useState<number>(
 		derivedState.currentCodeErrorData?.lineIndex || 0
 	);
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = React.useState(false);
@@ -1161,7 +1163,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		event && event.preventDefault();
 		if (props.collapsed) return;
 		const { stackTraces } = codeError;
-		const stackInfo = (stackTraces && stackTraces[0]) || codeError.stackInfo;
+		const stackInfo = stackTraces?.[0];
 		if (stackInfo && stackInfo.lines[lineIndex] && stackInfo.lines[lineIndex].line !== undefined) {
 			setCurrentSelectedLineIndex(lineIndex);
 			dispatch(
@@ -1174,31 +1176,38 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const stackTrace = stackTraces && stackTraces[0] && stackTraces[0].lines;
 	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
 
+	function extractMethodName(lines: CSStackTraceLine[]): string | undefined {
+		for (const line of lines) {
+			if (line.method && line.method !== "<unknown>" && line.fileFullPath !== "<anonymous>") {
+				return line.method;
+			}
+		}
+		return undefined;
+	}
+
 	useEffect(() => {
 		if (!props.collapsed && !didJumpToFirstAvailableLine) {
 			const { stackTraces } = codeError;
-			const stackInfo = (stackTraces && stackTraces[0]) || codeError.stackInfo;
+			const stackInfo = stackTraces?.[0];
 			if (stackInfo?.lines) {
 				let lineIndex = currentSelectedLine;
 				const len = stackInfo.lines.length;
-				while (
-					lineIndex < len &&
-					// stackInfo.lines[lineNum].line !== undefined &&
-					stackInfo.lines[lineIndex].error
-				) {
+				while (lineIndex < len && !stackInfo.lines[lineIndex].resolved) {
 					lineIndex++;
 				}
 				if (lineIndex < len) {
 					setDidJumpToFirstAvailableLine(true);
 					setCurrentSelectedLineIndex(lineIndex);
+					const methodName = extractMethodName([stackInfo.lines[lineIndex]]);
 
 					try {
 						dispatch(
 							jumpToStackLine(
 								lineIndex,
 								stackInfo.lines[lineIndex],
-								stackInfo.sha,
-								stackInfo.repoId!
+								stackInfo.sha!,
+								stackInfo.repoId!,
+								methodName
 							)
 						);
 					} catch (ex) {

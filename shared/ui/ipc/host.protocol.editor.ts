@@ -45,6 +45,42 @@ export const EditorHighlightRangeRequestType = new RequestType<
 	void
 >(`${IpcRoutes.Host}/editor/range/highlight`);
 
+export interface EditorReplaceSymbolRequest {
+	uri: string;
+	symbolName: string;
+	codeBlock: string;
+}
+
+export interface EditorReplaceSymbolResponse {
+	success: boolean;
+}
+
+export const EditorReplaceSymbolType = new RequestType<
+	EditorReplaceSymbolRequest,
+	EditorCopySymbolResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editor/symbol/replace`);
+
+export interface EditorCopySymbolRequest {
+	uri: string;
+	symbolName: string;
+	ref: string;
+}
+
+export interface EditorCopySymbolResponse {
+	success: boolean;
+	text?: string;
+	range?: Range;
+}
+
+export const EditorCopySymbolType = new RequestType<
+	EditorCopySymbolRequest,
+	EditorCopySymbolResponse,
+	void,
+	void
+>(`${IpcRoutes.Host}/editor/symbol/copy`);
+
 export interface EditorRevealRangeRequest {
 	uri: string;
 	ref?: string;

@@ -9,6 +9,8 @@ import com.codestream.gson
 import com.codestream.protocols.agent.SetServerUrlParams
 import com.codestream.protocols.webview.ActiveEditorContextResponse
 import com.codestream.protocols.webview.CompareLocalFilesRequest
+import com.codestream.protocols.webview.EditorCopySymbolRequest
+import com.codestream.protocols.webview.EditorCopySymbolResponse
 import com.codestream.protocols.webview.EditorRangeHighlightRequest
 import com.codestream.protocols.webview.EditorRangeRevealRequest
 import com.codestream.protocols.webview.EditorRangeRevealResponse
@@ -127,6 +129,7 @@ class WebViewRouter(val project: Project) {
             "host/editor/range/select" -> editorRangeSelect(message)
             "host/editor/scrollTo" -> editorScrollTo(message)
             "host/editor/symbol/reveal" -> editorSymbolReveal(message)
+            "host/editor/symbol/copy" -> editorSymbolCopy(message)
             "host/editors/codelens/refresh" -> editorsCodelensRefresh(message)
             "host/shell/prompt/folder" -> shellPromptFolder(message)
             "host/review/showDiff" -> reviewShowDiff(message)
@@ -212,11 +215,18 @@ class WebViewRouter(val project: Project) {
             ?: false
         return EditorRangeRevealResponse(success)
     }
+
     private suspend fun editorSymbolReveal(message: WebViewMessage): EditorSymbolRevealResponse {
         val request = gson.fromJson<EditorSymbolRevealRequest>(message.params!!)
         val success = project.clmService?.revealSymbol(request.className, request.functionName)
             ?: false
         return EditorSymbolRevealResponse(success)
+    }
+
+    private suspend fun editorSymbolCopy(message: WebViewMessage): EditorCopySymbolResponse {
+        val request = gson.fromJson<EditorCopySymbolRequest>(message.params!!)
+        val response = project.clmService?.copySymbol(request.uri, request.symbolName, request.ref)
+        return EditorCopySymbolResponse(response != null, response?.functionText, response?.range)
     }
 
     private suspend fun editorRangeSelect(message: WebViewMessage): EditorRangeSelectResponse {

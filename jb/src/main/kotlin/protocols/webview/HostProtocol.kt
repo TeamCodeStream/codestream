@@ -79,6 +79,18 @@ class EditorSymbolRevealResponse(
     val success: Boolean
 )
 
+class EditorCopySymbolRequest (
+    val uri: String,
+    val symbolName: String,
+    val ref: String?,
+)
+
+class EditorCopySymbolResponse (
+    val success: Boolean,
+    val text: String?,
+    val range: Range?,
+)
+
 class EditorRangeHighlightRequest(
     val uri: String?,
     val range: Range?,

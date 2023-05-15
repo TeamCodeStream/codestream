@@ -50,6 +50,7 @@ export function reduceCodeErrors(
 				bootstrapped: state.bootstrapped,
 				errorGroups: state.errorGroups,
 				codeErrors: { ...state.codeErrors, ...newCodeErrors },
+				functionToEdit: state.functionToEdit,
 			};
 		}
 		case CodeErrorsActionsTypes.UpdateCodeErrors:
@@ -58,7 +59,12 @@ export function reduceCodeErrors(
 				bootstrapped: state.bootstrapped,
 				errorGroups: state.errorGroups,
 				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
+				functionToEdit: state.functionToEdit,
 			};
+		}
+		case CodeErrorsActionsTypes.SetFunctionToEdit: {
+			console.log(`===--- functionToEdit: ${JSON.stringify(action.payload)}`);
+			return { ...state, functionToEdit: action.payload };
 		}
 		case CodeErrorsActionsTypes.Delete: {
 			const nextCodeErrors = { ...state.codeErrors };
@@ -67,6 +73,7 @@ export function reduceCodeErrors(
 				bootstrapped: state.bootstrapped,
 				codeErrors: nextCodeErrors,
 				errorGroups: state.errorGroups,
+				functionToEdit: state.functionToEdit,
 			};
 		}
 		case CodeErrorsActionsTypes.SetErrorGroup: {

@@ -11,11 +11,18 @@ import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.EditorFactoryEvent
 import com.intellij.openapi.editor.event.EditorFactoryListener
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiFile
+import org.eclipse.lsp4j.Range
 
 val testMode: Boolean = System.getProperty("idea.system.path")?.endsWith("system-test") ?: false
+
+class FindSymbolInFileResponse(
+    val functionText: String,
+    val range: Range
+)
 
 abstract class CLMLanguageComponent<T : CLMEditorManager>(
     val project: Project, private val fileType: Class<out PsiFile>, val editorFactory: (editor: Editor) -> T
@@ -77,4 +84,6 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
     open fun filterNamespaces(namespaces: List<String>): List<String> = emptyList()
 
     open fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? = null
+
+    open fun findSymbolInFile(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? = null
 }

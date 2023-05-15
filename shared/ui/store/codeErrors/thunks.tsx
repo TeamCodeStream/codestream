@@ -9,7 +9,11 @@ import {
 	UpdateCodeErrorRequestType,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceLine } from "@codestream/protocols/api";
-import { EditorRevealRangeRequestType } from "@codestream/protocols/webview";
+import {
+	EditorCopySymbolType,
+	EditorReplaceSymbolType,
+	EditorRevealRangeRequestType,
+} from "@codestream/protocols/webview";
 import { logError } from "@codestream/webview/logger";
 import { CodeStreamState } from "@codestream/webview/store";
 import {
@@ -26,6 +30,7 @@ import {
 	_isLoadingErrorGroup,
 	_setErrorGroup,
 	_updateCodeErrors,
+	setFunctionToEdit,
 	_deleteCodeError,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
@@ -130,7 +135,6 @@ export const processCodeErrorsMessage =
 		for (const deleteCodeError of deleteCodeErrors) {
 			dispatch(_deleteCodeError(deleteCodeError.id));
 			if (context.currentCodeErrorId === deleteCodeError.id) {
-				console.log("===--- setting current code error to null");
 				dispatch(setCurrentCodeError());
 			}
 		}
@@ -221,6 +225,7 @@ export const setErrorGroup =
 export const openErrorGroup =
 	(errorGroupGuid: string, occurrenceId?: string, data: any = {}) =>
 	async (dispatch, getState: () => CodeStreamState) => {
+		dispatch(setFunctionToEdit(undefined));
 		const { environment } = getState().configs;
 		let message, response;
 		if (data.environment && data.environment !== environment) {
@@ -475,8 +480,24 @@ export const api =
 		}
 	};
 
+export const replaceSymbol =
+	(uri: string, symbol: string, codeBlock: string) =>
+	async (dispatch, getState: () => CodeStreamState) => {
+		await HostApi.instance.send(EditorReplaceSymbolType, {
+			uri,
+			symbolName: symbol,
+			codeBlock,
+		});
+	};
+
 export const jumpToStackLine =
-	(lineIndex: number, stackLine: CSStackTraceLine, ref: string, repoId: string) =>
+	(
+		lineIndex: number,
+		stackLine: CSStackTraceLine,
+		ref: string,
+		repoId: string,
+		symbolName?: string
+	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		const state = getState();
 		dispatch(
@@ -527,6 +548,24 @@ export const jumpToStackLine =
 				highlight: true,
 				ref,
 			});
+		}
+
+		if (symbolName) {
+			const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
+				uri: path!,
+				symbolName,
+				ref,
+			});
+
+			if (symbolDetails.success && symbolDetails.range && symbolDetails.text) {
+				dispatch(
+					setFunctionToEdit({
+						codeBlock: symbolDetails.text,
+						symbol: symbolName, // TODO no hardcode
+						uri: path!,
+					})
+				);
+			}
 		}
 	};
 

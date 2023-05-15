@@ -88,6 +88,8 @@ import {
 	WebviewIpcRequestMessage,
 	WebviewPanels,
 	EditorRevealSymbolRequestType,
+	EditorCopySymbolType,
+	EditorReplaceSymbolType,
 	ViewAnomalyNotificationType,
 	ViewAnomalyNotification
 } from "@codestream/protocols/webview";
@@ -130,6 +132,7 @@ import { Logger } from "../logger";
 import { BuiltInCommands } from "../constants";
 import * as csUri from "../system/uri";
 import * as TokenManager from "../api/tokenManager";
+import { copySymbol, replaceSymbol } from "./symbolEditController";
 
 const emptyObj = {};
 
@@ -991,6 +994,18 @@ export class WebviewController implements Disposable {
 					return { success: success };
 				});
 
+				break;
+			}
+			case EditorCopySymbolType.method: {
+				webview.onIpcRequest(EditorCopySymbolType, e, async (_type, params) => {
+					return await copySymbol(params);
+				});
+				break;
+			}
+			case EditorReplaceSymbolType.method: {
+				webview.onIpcRequest(EditorReplaceSymbolType, e, async (_type, params) => {
+					return await replaceSymbol(params);
+				});
 				break;
 			}
 			case EditorSelectRangeRequestType.method: {

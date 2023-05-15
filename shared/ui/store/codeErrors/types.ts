@@ -5,6 +5,7 @@ import { NewRelicErrorGroup } from "@codestream/protocols/agent";
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
 	SaveCodeErrors = "@codeErrors/SaveCodeErrors",
+	SetFunctionToEdit = "@codeErrors/SetFunctionToEdit",
 	UpdateCodeErrors = "@codeErrors/UpdateCodeErrors",
 	Delete = "@codeErrors/Delete",
 	Bootstrap = "@codeErrors/Bootstrap",
@@ -15,6 +16,12 @@ export enum CodeErrorsActionsTypes {
 	IsLoadingErrorGroup = "@codeError/IsLoadingErrorGroup",
 }
 
+export type FunctionToEdit = {
+	codeBlock: string;
+	symbol: string;
+	uri: string;
+};
+
 export type CodeErrorsState = {
 	bootstrapped: boolean;
 	codeErrors: Index<CSCodeError>;
@@ -24,4 +31,5 @@ export type CodeErrorsState = {
 		isLoading?: boolean;
 		errorGroup: NewRelicErrorGroup;
 	}>;
+	functionToEdit?: FunctionToEdit;
 };
