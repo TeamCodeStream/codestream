@@ -25,7 +25,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 #if DEBUG
 		private string _serverUrl = "https://codestream-pd.staging-service.nr-ops.net";
 #else
-        private string _serverUrl = "https://api.codestream.com";
+        private string _serverUrl = "https://codestream-us1.service.newrelic.com";
 #endif
 		private bool _disableStrictSsl;
 		private bool _proxyStrictSsl;

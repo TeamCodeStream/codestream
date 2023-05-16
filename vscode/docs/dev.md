@@ -214,7 +214,7 @@ When you need to switch between environments not covered by one of the existing 
 Use the following settings:
 
 ```json
-"codestream.serverUrl": "https://api.codestream.com",
+"codestream.serverUrl": "https://codestream-us1.service.newrelic.com",
 "codestream.email": "<email>",
 "codestream.team": "<team>", // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 ```
@@ -229,7 +229,7 @@ Example workspace file &mdash; save as pd.code-workspace
 		}
 	],
 	"settings": {
-		"codestream.serverUrl": "https://api.codestream.com",
+		"codestream.serverUrl": "https://codestream-us1.service.newrelic.com",
 		"codestream.email": "<email>",
 		"codestream.team": "<team>" // Shouldn't really be needed unless there are issues and you belong to more than 1 team
 	}

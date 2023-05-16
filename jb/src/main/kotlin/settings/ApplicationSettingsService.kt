@@ -14,9 +14,9 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.util.io.encodeUrlQueryParameter
 import com.intellij.util.net.HttpConfigurable
 
-const val API_PD = "https://pd-api.codestream.us"
-const val API_QA = "https://qa-api.codestream.us"
-const val API_PROD = "https://api.codestream.com"
+const val API_PD = "https://codestream-pd.staging-service.nr-ops.net"
+const val API_QA = "https://codestream-qa.staging-service.nr-ops.net"
+const val API_PROD = "https://codestream-us1.service.newrelic.com"
 const val DEFAULT_GOLDEN_SIGNALS_FORMAT =
     "avg duration: \${averageDuration} | error rate: \${errorRate} - \${sampleSize} samples in the last \${since}"
 

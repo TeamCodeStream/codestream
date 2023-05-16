@@ -8,7 +8,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services
     {
 		//[Fact]
 		//[InlineData("https://localhost.codestream.us", "local")]
-		//[InlineData("https://api.codestream.com", "prod")]
+		//[InlineData("https://codestream-us1.service.newrelic.com", "prod")]
 		//[InlineData("https://api.codestream.co.uk", "unknown")]
 		//[InlineData("", "unknown")]
 		//[InlineData("https://foo-api.codestream.us:123", "foo")]

@@ -127,7 +127,7 @@
 				},
 				"codestream.serverUrl": {
 					"type": "string",
-					"default": "https://api.codestream.com",
+					"default": "https://codestream-us1.service.newrelic.com",
 					"description": "Specifies the url to use to connect to the CodeStream service",
 					"scope": "window"
 				},
