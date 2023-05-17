@@ -63,7 +63,7 @@ export function reduceCodeErrors(
 			};
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
-			console.log(`===--- functionToEdit: ${JSON.stringify(action.payload)}`);
+			console.debug(`grokFunctionToEdit: ${JSON.stringify(action.payload)}`);
 			return { ...state, functionToEdit: action.payload };
 		}
 		case CodeErrorsActionsTypes.Delete: {

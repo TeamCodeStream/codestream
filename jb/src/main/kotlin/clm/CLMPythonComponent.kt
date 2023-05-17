@@ -8,7 +8,7 @@ import com.intellij.psi.PsiFile
 import com.jetbrains.python.psi.PyFile
 
 class CLMPythonComponent(project: Project) :
-    CLMLanguageComponent<CLMPythonEditorManager>(project, PyFile::class.java, ::CLMPythonEditorManager) {
+    CLMLanguageComponent<CLMPythonEditorManager>(project, PyFile::class.java, ::CLMPythonEditorManager, PythonSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMPythonComponent::class.java)
 
@@ -17,8 +17,7 @@ class CLMPythonComponent(project: Project) :
     }
 }
 
-class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python", false) {
-
+class PythonSymbolResolver : SymbolResolver {
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         return null
     }
@@ -42,4 +41,8 @@ class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python"
         if (psiFile !is PyFile) return null
         return psiFile.findTopLevelFunction(functionName)
     }
+}
+
+class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python", false, false, PythonSymbolResolver()) {
+
 }

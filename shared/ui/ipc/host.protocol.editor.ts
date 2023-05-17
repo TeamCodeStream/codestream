@@ -64,6 +64,7 @@ export const EditorReplaceSymbolType = new RequestType<
 
 export interface EditorCopySymbolRequest {
 	uri: string;
+	className?: string;
 	symbolName: string;
 	ref: string;
 }

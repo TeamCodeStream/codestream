@@ -11,7 +11,7 @@ import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.psiUtil.getChildrenOfType
 
 class CLMKotlinComponent(project: Project) :
-    CLMLanguageComponent<CLMKotlinEditorManager>(project, KtFile::class.java, ::CLMKotlinEditorManager) {
+    CLMLanguageComponent<CLMKotlinEditorManager>(project, KtFile::class.java, ::CLMKotlinEditorManager, KotlinSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMKotlinComponent::class.java)
 
@@ -20,9 +20,8 @@ class CLMKotlinComponent(project: Project) :
     }
 }
 
-class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin", true) {
-
-    private val logger = Logger.getInstance(CLMKotlinEditorManager::class.java)
+class KotlinSymbolResolver : SymbolResolver {
+    private val logger = Logger.getInstance(KotlinSymbolResolver::class.java)
 
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is KtFile || psiFile.classes.isEmpty()) return null
@@ -65,4 +64,8 @@ class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin"
         }
         return null
     }
+}
+
+class CLMKotlinEditorManager(editor: Editor) : CLMEditorManager(editor, "kotlin", true, false, KotlinSymbolResolver()) {
+
 }

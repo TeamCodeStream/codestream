@@ -10,7 +10,7 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 
 class CLMGoComponent(project: Project) :
-    CLMLanguageComponent<CLMGoEditorManager>(project, GoFile::class.java, ::CLMGoEditorManager) {
+    CLMLanguageComponent<CLMGoEditorManager>(project, GoFile::class.java, ::CLMGoEditorManager, GoSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMGoComponent::class.java)
 
@@ -19,8 +19,7 @@ class CLMGoComponent(project: Project) :
     }
 }
 
-class CLMGoEditorManager(editor: Editor) : CLMEditorManager(editor, "go", true) {
-
+class GoSymbolResolver : SymbolResolver {
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is GoFile) return null
         val pkg = psiFile.children.find { it is GoPackageClause } as GoPackageClause?
@@ -50,5 +49,9 @@ class CLMGoEditorManager(editor: Editor) : CLMEditorManager(editor, "go", true) 
         val function = psiFile.children.find { it is GoFunctionDeclaration && it.name == functionName }
         return function
     }
+}
+
+class CLMGoEditorManager(editor: Editor) : CLMEditorManager(editor, "go", true, false, GoSymbolResolver()) {
+
 
 }

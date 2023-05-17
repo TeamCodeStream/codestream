@@ -1181,7 +1181,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	// An alternate approach would be to resolve with language symbols in the IDE and bubble up to the
 	// appropriate scope to find the best code segment to send. (i.e. up to the method of a class, but
 	// not all the way up to the class itself)
-	function extractMethodName(lines: CSStackTraceLine[]): string | undefined {
+	function extractMethodName(
+		lines: CSStackTraceLine[]
+	): { namespace?: string; functionName: string } | undefined {
 		for (const line of lines) {
 			if (
 				line.method &&
@@ -1189,7 +1191,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				line.method !== "<unknown>" &&
 				line.fileFullPath !== "<anonymous>"
 			) {
-				return line.method;
+				return { namespace: line.namespace, functionName: line.method };
 			}
 		}
 		return undefined;
@@ -1210,7 +1212,11 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					setCurrentSelectedLineIndex(lineIndex);
 					// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
 					// This also might not be the best approach, but it's a start
-					const methodName = extractMethodName(stackInfo.lines);
+
+					// TODO probable race condition with resolved stack trace lines since it happens line by line -
+					// didJumpToFirstAvailableLine gets set before extractMethodName has a resolved line to find :(
+					// Seen on vscode (slower stack trace resolution)
+					const functionInfo = extractMethodName(stackInfo.lines);
 
 					try {
 						dispatch(
@@ -1219,7 +1225,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 								stackInfo.lines[lineIndex],
 								stackInfo.sha!,
 								stackInfo.repoId!,
-								methodName
+								functionInfo?.namespace,
+								functionInfo?.functionName
 							)
 						);
 					} catch (ex) {

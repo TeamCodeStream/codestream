@@ -225,7 +225,7 @@ class WebViewRouter(val project: Project) {
 
     private suspend fun editorSymbolCopy(message: WebViewMessage): EditorCopySymbolResponse {
         val request = gson.fromJson<EditorCopySymbolRequest>(message.params!!)
-        val response = project.clmService?.copySymbol(request.uri, request.symbolName, request.ref)
+        val response = project.clmService?.copySymbol(request.uri, request.className, request.symbolName, request.ref)
         return EditorCopySymbolResponse(response != null, response?.functionText, response?.range)
     }
 

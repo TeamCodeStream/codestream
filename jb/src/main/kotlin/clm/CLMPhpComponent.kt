@@ -11,7 +11,7 @@ import com.jetbrains.php.lang.psi.elements.PhpNamespace
 import com.jetbrains.php.lang.psi.elements.impl.FunctionImpl
 
 class CLMPhpComponent(project: Project) :
-    CLMLanguageComponent<CLMPhpEditorManager>(project, PhpFileImpl::class.java, ::CLMPhpEditorManager) {
+    CLMLanguageComponent<CLMPhpEditorManager>(project, PhpFileImpl::class.java, ::CLMPhpEditorManager, PhpSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMPhpComponent::class.java)
 
@@ -20,7 +20,7 @@ class CLMPhpComponent(project: Project) :
     }
 }
 
-class CLMPhpEditorManager(editor: Editor) : CLMEditorManager(editor, "php", true) {
+class PhpSymbolResolver : SymbolResolver {
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         if (psiFile !is PhpFileImpl) return null
         val namespaceAndClasses = psiFile.topLevelDefs.entrySet().filter { it.value.any { it is PhpClass || it is PhpNamespace } }
@@ -54,4 +54,8 @@ class CLMPhpEditorManager(editor: Editor) : CLMEditorManager(editor, "php", true
         val entry = psiFile.topLevelDefs.entrySet().find { it.key.substring(1) == functionName && it.value.any { it is FunctionImpl } } ?: return null
         return entry.value.find { it is FunctionImpl }
     }
+}
+
+class CLMPhpEditorManager(editor: Editor) : CLMEditorManager(editor, "php", true, false, PhpSymbolResolver()) {
+
 }

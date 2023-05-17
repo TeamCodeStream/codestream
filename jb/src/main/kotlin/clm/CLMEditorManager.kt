@@ -13,8 +13,8 @@ import com.codestream.protocols.agent.FileLevelTelemetryResultError
 import com.codestream.protocols.agent.FunctionLocator
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
-import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
 import com.codestream.protocols.agent.MethodLevelTelemetrySampleSize
+import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
 import com.codestream.protocols.agent.NOT_ASSOCIATED
 import com.codestream.protocols.agent.NOT_CONNECTED
 import com.codestream.protocols.agent.TelemetryParams
@@ -114,6 +114,7 @@ abstract class CLMEditorManager(
     private val languageId: String,
     private val lookupByClassName: Boolean,
     private val lookupBySpan: Boolean = false,
+    private val symbolResolver: SymbolResolver,
 ) : DocumentListener, GoldenSignalListener, Disposable, FocusListener {
     private val tasksCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.EDT)
     private val path = editor.document.getUserData(LOCAL_PATH) ?: editor.document.file?.path
@@ -140,10 +141,6 @@ abstract class CLMEditorManager(
         }
         appSettings.addGoldenSignalsListener(this)
     }
-
-    abstract fun getLookupClassNames(psiFile: PsiFile): List<String>?
-
-    abstract fun getLookupSpanSuffixes(psiFile: PsiFile): List<String>?
 
     fun pollLoadInlays() {
         tasksCoroutineScope.launch {
@@ -174,13 +171,13 @@ abstract class CLMEditorManager(
                     PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@launch
 
                 val classNames = if (lookupByClassName) {
-                    getLookupClassNames(psiFile) ?: return@launch
+                    symbolResolver.getLookupClassNames(psiFile) ?: return@launch
                 } else {
                     null
                 }
 
                 val spanSuffixes = if (lookupBySpan) {
-                    getLookupSpanSuffixes(psiFile)
+                    symbolResolver.getLookupSpanSuffixes(psiFile)
                 } else {
                     null
                 }
@@ -308,27 +305,18 @@ abstract class CLMEditorManager(
         return mapOf<String, String>()
     }
 
-    abstract fun findClassFunctionFromFile(
-        psiFile: PsiFile,
-        namespace: String?,
-        className: String,
-        functionName: String
-    ): PsiElement?
-
-    abstract fun findTopLevelFunction(psiFile: PsiFile, functionName: String): PsiElement?
-
     fun resolveSymbol(symbolIdentifier: MethodLevelTelemetrySymbolIdentifier, psiFile: PsiFile): PsiElement? {
         return if (symbolIdentifier.className != null) {
-            findClassFunctionFromFile(
+            symbolResolver.findClassFunctionFromFile(
                 psiFile,
                 symbolIdentifier.namespace,
                 symbolIdentifier.className,
                 symbolIdentifier.functionName
             ) ?:
             // Metrics can have custom name in which case we don't get Module or Class names - just best effort match function name
-            findTopLevelFunction(psiFile, symbolIdentifier.functionName)
+            symbolResolver.findTopLevelFunction(psiFile, symbolIdentifier.functionName)
         } else {
-            findTopLevelFunction(psiFile, symbolIdentifier.functionName)
+            symbolResolver.findTopLevelFunction(psiFile, symbolIdentifier.functionName)
         }
     }
 

@@ -36,11 +36,11 @@ class CLMService(val project: Project) {
         return future.await()
     }
 
-     suspend fun copySymbol(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? {
+     suspend fun copySymbol(uri: String, className: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
         val future = CompletableFuture<FindSymbolInFileResponse?>()
         DumbService.getInstance(project).smartInvokeLater {
             for (component in _languageComponents) {
-                val response = component.findSymbolInFile(uri, functionName, ref)
+                val response = component.copySymbolInFile(uri, className, functionName, ref)
                 response?.let {
                     future.complete(it)
                 }

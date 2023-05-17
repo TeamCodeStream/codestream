@@ -1,6 +1,7 @@
 package com.codestream.clm
 
-import com.intellij.lang.javascript.psi.*
+import com.intellij.lang.javascript.psi.JSFile
+import com.intellij.lang.javascript.psi.JSFunction
 import com.intellij.lang.javascript.psi.ecmal4.JSClass
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
@@ -12,7 +13,7 @@ import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
 
 class CLMNodeComponent(project: Project) :
-    CLMLanguageComponent<CLMNodeEditorManager>(project, JSFile::class.java, ::CLMNodeEditorManager) {
+    CLMLanguageComponent<CLMNodeEditorManager>(project, JSFile::class.java, ::CLMNodeEditorManager, NodeSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMNodeComponent::class.java)
 
@@ -21,8 +22,7 @@ class CLMNodeComponent(project: Project) :
     }
 }
 
-class CLMNodeEditorManager(editor: Editor) : CLMEditorManager(editor, "javascript", false, true) {
-
+class NodeSymbolResolver : SymbolResolver {
     private val logger = Logger.getInstance(CLMNodeEditorManager::class.java)
     override fun getLookupClassNames(psiFile: PsiFile): List<String>? {
         return null
@@ -86,4 +86,8 @@ class CLMNodeEditorManager(editor: Editor) : CLMEditorManager(editor, "javascrip
         }
         return null
     }
+}
+
+class CLMNodeEditorManager(editor: Editor) : CLMEditorManager(editor, "javascript", false, true, NodeSymbolResolver()) {
+
 }

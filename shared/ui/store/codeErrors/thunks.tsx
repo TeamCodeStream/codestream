@@ -496,6 +496,7 @@ export const jumpToStackLine =
 		stackLine: CSStackTraceLine,
 		ref: string,
 		repoId: string,
+		className?: string,
 		symbolName?: string
 	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
@@ -545,6 +546,7 @@ export const jumpToStackLine =
 		if (symbolName) {
 			const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
 				uri: path!,
+				className,
 				symbolName,
 				ref,
 			});

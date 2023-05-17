@@ -16,7 +16,7 @@ const val CSHARP_NAMESPACE_CLASS =
     "com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpNamespaceDeclarationImpl"
 
 class CLMCSharpComponent(project: Project) :
-    CLMLanguageComponent<CLMCSharpEditorManager>(project, CSHARP_FILE_CLASS, ::CLMCSharpEditorManager) {
+    CLMLanguageComponent<CLMCSharpEditorManager>(project, CSHARP_FILE_CLASS, ::CLMCSharpEditorManager, CSharpSymbolResolver()) {
 
     private val logger = Logger.getInstance(CLMCSharpComponent::class.java)
 
@@ -25,8 +25,9 @@ class CLMCSharpComponent(project: Project) :
     }
 }
 
-class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp", true) {
-    private val logger = Logger.getInstance(CLMCSharpEditorManager::class.java)
+class CSharpSymbolResolver : SymbolResolver {
+    private val logger = Logger.getInstance(CSharpSymbolResolver::class.java)
+
     private val fileTypeClass =
         CLMCSharpComponent::class.java.classLoader.loadClass(CSHARP_FILE_CLASS) as Class<PsiFile>
 
@@ -48,54 +49,39 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
         return null
     }
 
-    private fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
-        return getNamespaceQualifiedNameMethodOne(namespaceNode) ?: getNamespaceQualifiedNameMethodTwo(namespaceNode)
-    }
-
-    private fun getNamespaceQualifiedNameMethodTwo(namespaceNode: PsiElement): String? {
-        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT"))
-        return elements.joinToString("") { it.text }
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    private fun getNamespaceQualifiedNameMethodOne(namespaceNode: PsiElement): String? {
-        val kClass = namespaceNode::class
-        val qualifiedNameProperty = kClass.members.find { it.name == "qualifiedName" } as KProperty1<Any, *>
-        // com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpReferenceNameImpl
-        val cSharpReferenceName = qualifiedNameProperty.get(namespaceNode) ?: return null
-        val getTextFunction = cSharpReferenceName::class.functions.find { it.name == "getText" } ?: return null
-        return getTextFunction.call(cSharpReferenceName) as String?
-    }
-
-    private fun isPsiFileSupported(psiFile: PsiFile): Boolean {
-        return fileTypeClass.isAssignableFrom(psiFile::class.java)
-    }
-
-    private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
-        "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
-
-    private fun findParentOfType(element: PsiElement, elementType: String): PsiElement? {
-        var searchNode: PsiElement? = element
-        do {
-            searchNode = searchNode?.parent
-        } while (searchNode != null && searchNode.elementType.toString() != elementType)
-        return if (searchNode.elementType.toString() == elementType) {
-            searchNode
-        } else {
-            null
-        }
-    }
-
-    private fun findAllSiblingsOfType(element: PsiElement, elementTypes: Set<String>): List<PsiElement> {
-        var searchNode: PsiElement? = element
-        val elements = mutableListOf<PsiElement>()
-        do {
-            searchNode = searchNode?.nextSibling
-            if (searchNode != null && elementTypes.contains(searchNode.elementType.toString())) {
-                elements.add(searchNode)
+    override fun findClassFunctionFromFile(
+        psiFile: PsiFile, namespace: String?, className: String, functionName: String
+    ): PsiElement? {
+        if (!isPsiFileSupported(psiFile)) return null
+        var searchNode: PsiElement? = null
+        if (namespace != null) {
+            val namespaceNode = traverseForNamespace(psiFile, namespace)
+            if (namespaceNode != null) {
+                searchNode = namespaceNode.lastChild // TODO search instead of assume lastChild
             }
-        } while (searchNode != null)
-        return elements
+        }
+        if (searchNode == null) {
+            searchNode = psiFile
+        }
+
+        val classNode = traverseForName(searchNode, className)
+        if (classNode != null && classNode.parent != null) {
+            searchNode = classNode.parent
+        }
+        val result = traverseForFunctionByName(searchNode!!, functionName)
+        if (logger.isDebugEnabled) {
+            logger.debug("findClassFunctionFromFile: $result")
+        }
+        return result
+    }
+
+    override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
+        // No top level methods in C#?
+        return null
+    }
+
+    private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
+        return element.collectDescendantsOfType({ true }, { it.elementType.toString() == elementType })
     }
 
     private fun findFirstSiblingOfType(element: PsiElement, elementType: Set<String>): PsiElement? {
@@ -108,10 +94,6 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
         } else {
             null
         }
-    }
-
-    private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
-        return element.collectDescendantsOfType({ true }, { it.elementType.toString() == elementType })
     }
 
     private fun traverseForName(element: PsiElement, name: String): PsiElement? {
@@ -186,8 +168,8 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
     private fun isFunction(element: PsiElement) = isClassicFunction(element) || isLambdaFunction(element)
 
     /*
-    Check if next non-whitespace token is an open paren indicating it is probably a function
-     */
+   Check if next non-whitespace token is an open paren indicating it is probably a function
+    */
     private fun isClassicFunction(element: PsiElement): Boolean {
         val declarations = setOf("PUBLIC_KEYWORD", "PRIVATE_KEYWORD", "PROTECTED_KEYWORD")
         var searchElement: PsiElement? = element
@@ -229,34 +211,58 @@ class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp"
         return result
     }
 
-    override fun findClassFunctionFromFile(
-        psiFile: PsiFile, namespace: String?, className: String, functionName: String
-    ): PsiElement? {
-        if (!isPsiFileSupported(psiFile)) return null
-        var searchNode: PsiElement? = null
-        if (namespace != null) {
-            val namespaceNode = traverseForNamespace(psiFile, namespace)
-            if (namespaceNode != null) {
-                searchNode = namespaceNode.lastChild // TODO search instead of assume lastChild
+    private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
+        "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
+
+    private fun findParentOfType(element: PsiElement, elementType: String): PsiElement? {
+        var searchNode: PsiElement? = element
+        do {
+            searchNode = searchNode?.parent
+        } while (searchNode != null && searchNode.elementType.toString() != elementType)
+        return if (searchNode.elementType.toString() == elementType) {
+            searchNode
+        } else {
+            null
+        }
+    }
+
+    private fun getNamespaceQualifiedName(namespaceNode: PsiElement): String? {
+        return getNamespaceQualifiedNameMethodOne(namespaceNode) ?: getNamespaceQualifiedNameMethodTwo(namespaceNode)
+    }
+
+    private fun getNamespaceQualifiedNameMethodTwo(namespaceNode: PsiElement): String? {
+        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT"))
+        return elements.joinToString("") { it.text }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun getNamespaceQualifiedNameMethodOne(namespaceNode: PsiElement): String? {
+        val kClass = namespaceNode::class
+        val qualifiedNameProperty = kClass.members.find { it.name == "qualifiedName" } as KProperty1<Any, *>
+        // com.jetbrains.rider.ideaInterop.fileTypes.csharp.psi.impl.CSharpReferenceNameImpl
+        val cSharpReferenceName = qualifiedNameProperty.get(namespaceNode) ?: return null
+        val getTextFunction = cSharpReferenceName::class.functions.find { it.name == "getText" } ?: return null
+        return getTextFunction.call(cSharpReferenceName) as String?
+    }
+
+    private fun isPsiFileSupported(psiFile: PsiFile): Boolean {
+        return fileTypeClass.isAssignableFrom(psiFile::class.java)
+    }
+
+    private fun findAllSiblingsOfType(element: PsiElement, elementTypes: Set<String>): List<PsiElement> {
+        var searchNode: PsiElement? = element
+        val elements = mutableListOf<PsiElement>()
+        do {
+            searchNode = searchNode?.nextSibling
+            if (searchNode != null && elementTypes.contains(searchNode.elementType.toString())) {
+                elements.add(searchNode)
             }
-        }
-        if (searchNode == null) {
-            searchNode = psiFile
-        }
-
-        val classNode = traverseForName(searchNode, className)
-        if (classNode != null && classNode.parent != null) {
-            searchNode = classNode.parent
-        }
-        val result = traverseForFunctionByName(searchNode!!, functionName)
-        if (logger.isDebugEnabled) {
-            logger.debug("findClassFunctionFromFile: $result")
-        }
-        return result
+        } while (searchNode != null)
+        return elements
     }
 
-    override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
-        // No top level methods in C#?
-        return null
-    }
+}
+
+class CLMCSharpEditorManager(editor: Editor) : CLMEditorManager(editor, "csharp", true, false, CSharpSymbolResolver()) {
+
 }
