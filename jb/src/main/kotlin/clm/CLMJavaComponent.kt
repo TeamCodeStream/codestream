@@ -55,7 +55,6 @@ class CLMJavaComponent(project: Project) :
     }
 
     override fun findSymbolInFile(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? {
-
         val virtFile = if (ref != null)  getCSGitFile(uri, ref, project) else VfsUtil.findFileByURL(URL(uri))
 
         if (virtFile == null) {

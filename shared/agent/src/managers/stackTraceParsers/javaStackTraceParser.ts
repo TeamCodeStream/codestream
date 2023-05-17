@@ -59,7 +59,9 @@ export function Parser(stack: string): CSStackTraceInfo {
 		}
 
 		info.lines.push({
-			method: `${packageName}.${className}.${methodName}`,
+			method: `${methodName}`,
+			namespace: `${packageName}.${className}`,
+			fullMethod: `${packageName}.${className}.${methodName}`,
 			fileFullPath: fileFromClass,
 			line: lineNum,
 		});

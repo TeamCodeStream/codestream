@@ -4,6 +4,7 @@ import { CSStackTraceInfo } from "@codestream/protocols/api";
 import * as StackTraceParser from "stacktrace-parser";
 
 import { Strings } from "../../system";
+import { extractDotNamespace } from "./utils";
 
 export function Parser(stack: string): CSStackTraceInfo {
 	const info: CSStackTraceInfo = { text: stack, lines: [], language: "javascript" };
@@ -28,9 +29,13 @@ export function Parser(stack: string): CSStackTraceInfo {
 				fileFullPath = fileFullPath.slice(0, questionIndex);
 			}
 		}
+		const { namespace, method } = extractDotNamespace(line.methodName);
+
 		return {
 			fileFullPath: fileFullPath,
-			method: line.methodName,
+			method,
+			namespace,
+			fullMethod: line.methodName,
 			arguments: line.arguments,
 			line: line.lineNumber === null ? undefined : line.lineNumber,
 			column: line.column === null ? undefined : line.column,

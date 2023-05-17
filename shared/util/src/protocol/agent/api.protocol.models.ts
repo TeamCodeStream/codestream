@@ -302,7 +302,9 @@ export type CSCodeErrorStatus = "resolved" | "open";
 export interface CSStackTraceLine {
 	fileRelativePath?: string;
 	fileFullPath?: string;
+	fullMethod?: string;
 	method?: string;
+	namespace?: string;
 	arguments?: string[];
 	line?: number;
 	column?: number;

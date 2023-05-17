@@ -3,6 +3,7 @@
 import { CSStackTraceInfo } from "@codestream/protocols/api";
 
 import { Strings } from "../../system";
+import { extractDotNamespace } from "./utils";
 
 let regex: RegExp;
 
@@ -43,7 +44,7 @@ export function Parser(stack: string): CSStackTraceInfo {
 	}
 
 	// first line didn't contain Exception information. Try second.
-	if(!firstLineMatch){
+	if (!firstLineMatch) {
 		const secondLine = split[1];
 		const secondLineMatch = secondLine.match(/Exception: (.*)$/);
 
@@ -67,10 +68,12 @@ export function Parser(stack: string): CSStackTraceInfo {
 		// 	console.log(`Found match(${m.length}), group ${groupIndex}: ${match}`);
 		// });
 
-		let nameParts = m[1].split(".");
+		const { namespace, method } = extractDotNamespace(m[1]);
 
 		info.lines.push({
-			method: nameParts[nameParts.length - 1],
+			namespace,
+			method,
+			fullMethod: m[1],
 			arguments: m[2] != null ? m[2].split(",").map(_ => _.trim()) : undefined,
 			fileFullPath: m[4],
 			line: parseInt(m[6], 10),

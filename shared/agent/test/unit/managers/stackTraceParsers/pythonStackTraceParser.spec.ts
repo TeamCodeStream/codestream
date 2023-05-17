@@ -28,6 +28,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/bin/gunicorn",
 						line: 8,
 						method: "<module>",
+						fullMethod: "<module>",
 					},
 					{
 						arguments: undefined,
@@ -35,6 +36,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/app/wsgiapp.py",
 						line: 58,
 						method: "run",
+						fullMethod: "run",
 					},
 					{
 						arguments: undefined,
@@ -42,6 +44,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/app/base.py",
 						line: 228,
 						method: "run",
+						fullMethod: "run",
 					},
 					{
 						arguments: undefined,
@@ -49,6 +52,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/app/base.py",
 						line: 72,
 						method: "run",
+						fullMethod: "run",
 					},
 					{
 						arguments: undefined,
@@ -56,6 +60,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/arbiter.py",
 						line: 211,
 						method: "run",
+						fullMethod: "run",
 					},
 					{
 						arguments: undefined,
@@ -63,6 +68,7 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/arbiter.py",
 						line: 545,
 						method: "manage_workers",
+						fullMethod: "manage_workers",
 					},
 					{
 						arguments: undefined,
@@ -70,20 +76,25 @@ describe("pythonStackTraceParser", () => {
 						fileFullPath: "/usr/local/lib/python3.7/sitepackages/gunicorn/arbiter.py",
 						line: 616,
 						method: "spawn_workers",
+						fullMethod: "spawn_workers",
 					},
 					{
 						arguments: undefined,
 						column: undefined,
 						fileFullPath: "pyarrow/table.pxi",
 						line: 1394,
-						method: "pyarrow.lib.Table.from_pandas",
+						namespace: "pyarrow.lib.Table",
+						method: "from_pandas",
+						fullMethod: "pyarrow.lib.Table.from_pandas",
 					},
 					{
 						arguments: undefined,
 						column: undefined,
 						fileFullPath: "pyarrow/array.pxi",
 						line: 83,
-						method: "pyarrow.lib._ndarray_to_array",
+						namespace: "pyarrow.lib",
+						method: "_ndarray_to_array",
+						fullMethod: "pyarrow.lib._ndarray_to_array",
 					},
 				],
 				text: str,

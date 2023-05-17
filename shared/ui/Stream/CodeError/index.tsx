@@ -1176,9 +1176,19 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const stackTrace = stackTraces && stackTraces[0] && stackTraces[0].lines;
 	const stackTraceText = stackTraces && stackTraces[0] && stackTraces[0].text;
 
+	// This can be incredibly complex with nested anonymous inner functions. For the current approach
+	// we rely on the stack trace having a named method for us to latch on to send for error analysis.
+	// An alternate approach would be to resolve with language symbols in the IDE and bubble up to the
+	// appropriate scope to find the best code segment to send. (i.e. up to the method of a class, but
+	// not all the way up to the class itself)
 	function extractMethodName(lines: CSStackTraceLine[]): string | undefined {
 		for (const line of lines) {
-			if (line.method && line.method !== "<unknown>" && line.fileFullPath !== "<anonymous>") {
+			if (
+				line.method &&
+				line.resolved &&
+				line.method !== "<unknown>" &&
+				line.fileFullPath !== "<anonymous>"
+			) {
 				return line.method;
 			}
 		}
@@ -1198,7 +1208,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				if (lineIndex < len) {
 					setDidJumpToFirstAvailableLine(true);
 					setCurrentSelectedLineIndex(lineIndex);
-					const methodName = extractMethodName([stackInfo.lines[lineIndex]]);
+					// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
+					// This also might not be the best approach, but it's a start
+					const methodName = extractMethodName(stackInfo.lines);
 
 					try {
 						dispatch(
@@ -1275,7 +1287,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 										>
 											<DisabledClickLine key={"disabled-line" + i} className="monospace">
 												<span>
-													<span style={{ opacity: ".6" }}>{line.method}</span>({mline}:
+													<span style={{ opacity: ".6" }}>{line.fullMethod}</span>({mline}:
 													<strong>{line.line}</strong>
 													{line.column ? `:${line.column}` : null})
 												</span>

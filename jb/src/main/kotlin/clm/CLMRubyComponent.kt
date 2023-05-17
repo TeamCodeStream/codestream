@@ -1,16 +1,24 @@
 package com.codestream.clm
 
+import com.codestream.extensions.lspPosition
+import com.codestream.git.getCSGitFile
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import org.eclipse.lsp4j.Position
+import org.eclipse.lsp4j.Range
+import org.jetbrains.kotlin.idea.core.util.toPsiFile
+import org.jetbrains.kotlin.idea.inspections.findExistingEditor
 import org.jetbrains.plugins.ruby.ruby.lang.psi.holders.RContainer
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.RFileImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.classes.RClassImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.methods.RMethodImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.methods.RSingletonMethodImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.modules.RModuleImpl
+import java.net.URL
 
 class CLMRubyComponent(project: Project) :
     CLMLanguageComponent<CLMRubyEditorManager>(project, RFileImpl::class.java, ::CLMRubyEditorManager) {
@@ -19,6 +27,30 @@ class CLMRubyComponent(project: Project) :
 
     init {
         logger.info("Initializing code level metrics for Ruby")
+    }
+
+    override fun findSymbolInFile(uri: String, functionName: String, ref: String?): FindSymbolInFileResponse? {
+        val virtFile = if (ref != null) getCSGitFile(uri, ref, project) else VfsUtil.findFileByURL(URL(uri))
+
+        if (virtFile == null) {
+            logger.warn("Could not find file for uri $uri")
+            return null
+        }
+
+        val psiFile = virtFile.toPsiFile(project) ?: return null
+        val editor = psiFile.findExistingEditor() ?: return null
+        val clmRubyEditorManager = this.editorFactory(editor)
+        // TODO Try findClassFunctionFromFile before findTopLevelFunction
+        val element = clmRubyEditorManager.findTopLevelFunction(psiFile, functionName) ?: return null
+        val document = element.findExistingEditor()?.document
+        if (document == null) {
+            // When document is null we will return a bogus range of 0,0 to 0,0
+            logger.warn("Document null")
+        }
+        val start = document?.lspPosition(element.textRange.startOffset) ?: Position(0, 0)
+        val end = document?.lspPosition(element.textRange.endOffset) ?: Position(0, 0)
+        val range = Range(start, end)
+        return FindSymbolInFileResponse(element.text, range)
     }
 }
 
@@ -72,10 +104,14 @@ class CLMRubyEditorManager(editor: Editor) : CLMEditorManager(editor, "ruby", fa
                 }
             } else {
                 if (element is RContainer) {
-                    return findAnyFunction(element, functionName)
+                    val result = findAnyFunction(element, functionName)
+                    if (result != null) {
+                        return result
+                    }
                 }
             }
         }
         return null
     }
+
 }

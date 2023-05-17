@@ -20,8 +20,11 @@ export async function copySymbol(
 		return { success: false };
 	}
 	const symbols = await symbolLocator.locate(editor?.document, new CancellationTokenSource().token);
-	for (const symbol of symbols.allSymbols) {
-		if (symbol.name === params.symbolName) {
+	const fullList = [...symbols.allSymbols, ...symbols.instrumentableSymbols.map(s => s.symbol)];
+	for (const symbol of fullList) {
+		// Strip () out of method name .i.e getVets() becomes getVets
+		const simpleSymbolName = symbol.name.replace(/\(.*?\)$/, "");
+		if (simpleSymbolName === params.symbolName) {
 			// Logger.warn(`Found symbol ${JSON.stringify(symbol)}`);
 			const theText = editor.document.getText(symbol.range);
 			return {

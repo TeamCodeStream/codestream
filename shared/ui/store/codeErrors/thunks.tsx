@@ -541,14 +541,6 @@ export const jumpToStackLine =
 			range,
 			ref,
 		});
-		if (revealResponse?.success) {
-			highlightRange({
-				uri: path!,
-				range,
-				highlight: true,
-				ref,
-			});
-		}
 
 		if (symbolName) {
 			const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
@@ -561,11 +553,23 @@ export const jumpToStackLine =
 				dispatch(
 					setFunctionToEdit({
 						codeBlock: symbolDetails.text,
-						symbol: symbolName, // TODO no hardcode
+						symbol: symbolName,
 						uri: path!,
 					})
 				);
 			}
+		}
+
+		// EditorCopySymbolType undoes the highlightRange so postpone it
+		if (revealResponse?.success) {
+			setTimeout(() => {
+				highlightRange({
+					uri: path!,
+					range,
+					highlight: true,
+					ref,
+				});
+			}, 1);
 		}
 	};
 

@@ -4,6 +4,7 @@ import { CSStackTraceInfo } from "@codestream/protocols/api";
 
 import { Logger } from "../../logger";
 import { Strings } from "../../system";
+import { extractDotNamespace } from "./utils";
 
 let regex: RegExp;
 
@@ -49,14 +50,17 @@ export function Parser(stack: string): CSStackTraceInfo {
 			regex.lastIndex++;
 		}
 
-		const [, packageName, file, lineText, method] = m;
+		const [, packageName, file, lineText, fullMethod] = m;
+		const { namespace, method } = extractDotNamespace(fullMethod);
 		let line: number | undefined = parseInt(lineText, 10);
 		if (isNaN(line)) line = undefined;
 
 		const fileFullPath = `${packageName}/${file}`;
 
 		info.lines.push({
+			namespace,
 			method,
+			fullMethod,
 			fileFullPath,
 			line,
 		});

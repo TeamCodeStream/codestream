@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/csharpStackTraceParser";
+import { CSStackTraceLine } from "@codestream/protocols/api";
 
 describe("csharpStackTraceParser", () => {
 	describe(".net framework", () => {
@@ -18,32 +19,40 @@ describe("csharpStackTraceParser", () => {
 			const result = Parser(str);
 			expect(result).toEqual({
 				language: "csharp",
-				lines: [
+				lines: <CSStackTraceLine>[
 					{
 						arguments: undefined,
 						fileFullPath: "/Users/jdoe/code/dotnet_console/Program.cs",
+						namespace: "Somethingelse.Baz",
 						method: "Initialize",
+						fullMethod: "Somethingelse.Baz.Initialize",
 						line: 37,
 						column: undefined,
 					},
 					{
 						arguments: undefined,
 						fileFullPath: "/Users/jdoe/code/dotnet_console/Program.cs",
+						namespace: "dotnet_console.Bar",
 						method: "Execute",
+						fullMethod: "dotnet_console.Bar.Execute",
 						line: 26,
 						column: undefined,
 					},
 					{
 						arguments: undefined,
 						fileFullPath: "/Users/jdoe/code/dotnet_console/Program.cs",
+						namespace: "dotnet_console.Foo",
 						method: "Go",
+						fullMethod: "dotnet_console.Foo.Go",
 						line: 20,
 						column: undefined,
 					},
 					{
 						arguments: ["String[] args"],
 						fileFullPath: "/Users/jdoe/code/dotnet_console/Program.cs",
+						namespace: "dotnet_console.Program",
 						method: "Main",
+						fullMethod: "dotnet_console.Program.Main",
 						line: 10,
 						column: undefined,
 					},
@@ -84,14 +93,18 @@ describe("csharpStackTraceParser", () => {
 			expect(result.lines[0]).toEqual({
 				arguments: undefined,
 				fileFullPath: "/Users/jdoe/code/dotnet_mvc/Views/Home/Index.cshtml",
+				namespace: "AspNetCore.Views_Home_Index",
 				method: "ExecuteAsync",
+				fullMethod: "AspNetCore.Views_Home_Index.ExecuteAsync",
 				line: 5,
 				column: undefined,
 			});
 			expect(result.lines[1]).toEqual({
 				arguments: ["IRazorPage page", "ViewContext context"],
 				fileFullPath: undefined,
+				namespace: "Microsoft.AspNetCore.Mvc.Razor.RazorView",
 				method: "RenderPageCoreAsync",
+				fullMethod: "Microsoft.AspNetCore.Mvc.Razor.RazorView.RenderPageCoreAsync",
 				line: NaN,
 				column: undefined,
 			});
@@ -109,14 +122,18 @@ describe("csharpStackTraceParser", () => {
 			at System.Web.Mvc.ControllerActionInvoker.InvokeAction(ControllerContext controllerContext, String actionName)`;
 
 			const result = Parser(str);
-			expect(result.header).toEqual("System.NullReferenceException: Object reference not set to an instance of an object.");
+			expect(result.header).toEqual(
+				"System.NullReferenceException: Object reference not set to an instance of an object."
+			);
 			expect(result.error).toEqual("Object reference not set to an instance of an object.");
 			expect(result.lines?.length).toBeGreaterThanOrEqual(6);
 
 			expect(result.lines[0]).toEqual({
 				arguments: undefined,
 				fileFullPath: undefined,
+				namespace: "Company.Public.Web.Controllers.Components.Controller",
 				method: "SomeMethodInTheStack",
+				fullMethod: "Company.Public.Web.Controllers.Components.Controller.SomeMethodInTheStack",
 				line: NaN,
 				column: undefined,
 			});
@@ -124,15 +141,23 @@ describe("csharpStackTraceParser", () => {
 			expect(result.lines[1]).toEqual({
 				arguments: ["Closure", "ControllerBase", "Object[]"],
 				fileFullPath: undefined,
+				namespace: undefined,
 				method: "lambda_method",
+				fullMethod: "lambda_method",
 				line: NaN,
 				column: undefined,
 			});
 
 			expect(result.lines[2]).toEqual({
-				arguments: ["ControllerContext controllerContext", "ActionDescriptor actionDescriptor", "IDictionary\`2 parameters"],
+				arguments: [
+					"ControllerContext controllerContext",
+					"ActionDescriptor actionDescriptor",
+					"IDictionary`2 parameters",
+				],
 				fileFullPath: undefined,
+				namespace: "System.Web.Mvc.ControllerActionInvoker",
 				method: "InvokeActionMethod",
+				fullMethod: "System.Web.Mvc.ControllerActionInvoker.InvokeActionMethod",
 				line: NaN,
 				column: undefined,
 			});
@@ -140,7 +165,10 @@ describe("csharpStackTraceParser", () => {
 			expect(result.lines[3]).toEqual({
 				arguments: undefined,
 				fileFullPath: undefined,
+				namespace: "System.Web.Mvc.ControllerActionInvoker.<>c__DisplayClass24_0",
 				method: "<InvokeActionMethodWithFilters>b__0",
+				fullMethod:
+					"System.Web.Mvc.ControllerActionInvoker.<>c__DisplayClass24_0.<InvokeActionMethodWithFilters>b__0",
 				line: NaN,
 				column: undefined,
 			});

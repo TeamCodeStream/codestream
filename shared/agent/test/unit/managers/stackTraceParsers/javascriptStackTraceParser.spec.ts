@@ -2,6 +2,7 @@
 
 import { describe, expect, it } from "@jest/globals";
 import { Parser } from "../../../../src/managers/stackTraceParsers/javascriptStackTraceParser";
+import { CSStackTraceLine } from "@codestream/protocols/api";
 
 describe("javascriptStackTraceParser", () => {
 	it("stack1", () => {
@@ -21,7 +22,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/Users/cstryker/dev/sandboxes/csdemo/codestream-server/api_server/modules/web/link_newrelic_request.js",
-					method: "LinkNewRelicRequest.createLauncherModel",
+					method: "createLauncherModel",
+					namespace: "LinkNewRelicRequest",
+					fullMethod: "LinkNewRelicRequest.createLauncherModel",
 					arguments: [],
 					line: 81,
 					column: 23,
@@ -29,7 +32,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/Users/cstryker/dev/sandboxes/csdemo/codestream-server/api_server/modules/web/link_newrelic_request.js",
-					method: "LinkNewRelicRequest.render",
+					method: "render",
+					namespace: "LinkNewRelicRequest",
+					fullMethod: "LinkNewRelicRequest.render",
 					arguments: [],
 					line: 39,
 					column: 33,
@@ -37,7 +42,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/Users/cstryker/dev/sandboxes/csdemo/codestream-server/api_server/modules/web/link_newrelic_request.js",
-					method: "LinkNewRelicRequest.process",
+					method: "process",
+					namespace: "LinkNewRelicRequest",
+					fullMethod: "LinkNewRelicRequest.process",
 					arguments: [],
 					line: 23,
 					column: 16,
@@ -45,7 +52,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/Users/cstryker/dev/sandboxes/csdemo/codestream-server/api_server/lib/api_server/api_request.js",
-					method: "LinkNewRelicRequest.executePhase",
+					method: "executePhase",
+					namespace: "LinkNewRelicRequest",
+					fullMethod: "LinkNewRelicRequest.executePhase",
 					arguments: [],
 					line: 62,
 					column: 20,
@@ -53,7 +62,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/Users/cstryker/dev/sandboxes/csdemo/codestream-server/api_server/lib/api_server/api_request.js",
-					method: "LinkNewRelicRequest.fulfill",
+					method: "fulfill",
+					namespace: "LinkNewRelicRequest",
+					fullMethod: "LinkNewRelicRequest.fulfill",
 					arguments: [],
 					line: 138,
 					column: 16,
@@ -61,6 +72,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath: "<anonymous>",
 					method: "runMicrotasks",
+					fullMethod: "runMicrotasks",
 					arguments: [],
 					line: undefined,
 					column: undefined,
@@ -68,6 +80,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath: "internal/process/task_queues.js",
 					method: "processTicksAndRejections",
+					fullMethod: "processTicksAndRejections",
 					arguments: [],
 					line: 94,
 					column: 5,
@@ -119,11 +132,12 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 
 		expect(result).toEqual({
 			language: "javascript",
-			lines: [
+			lines: <CSStackTraceLine>[
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
 					method: "createRouterError",
+					fullMethod: "createRouterError",
 					arguments: [],
 					line: 2066,
 					column: 15,
@@ -132,6 +146,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
 					method: "createNavigationDuplicatedError",
+					fullMethod: "createNavigationDuplicatedError",
 					arguments: [],
 					line: 2036,
 					column: 15,
@@ -139,7 +154,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
-					method: "AbstractHistory.confirmTransition",
+					namespace: "AbstractHistory",
+					method: "confirmTransition",
+					fullMethod: "AbstractHistory.confirmTransition",
 					arguments: [],
 					line: 2329,
 					column: 18,
@@ -147,7 +164,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
-					method: "AbstractHistory.transitionTo",
+					namespace: "AbstractHistory",
+					method: "transitionTo",
+					fullMethod: "AbstractHistory.transitionTo",
 					arguments: [],
 					line: 2261,
 					column: 8,
@@ -155,7 +174,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
-					method: "AbstractHistory.replace",
+					namespace: "AbstractHistory",
+					method: "replace",
+					fullMethod: "AbstractHistory.replace",
 					arguments: [],
 					line: 2839,
 					column: 10,
@@ -164,6 +185,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
 					method: "eval",
+					fullMethod: "eval",
 					arguments: [],
 					line: 3040,
 					column: 22,
@@ -171,6 +193,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath: "<anonymous>",
 					method: "new Promise",
+					fullMethod: "new Promise",
 					arguments: [],
 					column: undefined,
 					line: undefined,
@@ -178,21 +201,27 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue-router/dist/vue-router.esm.js",
-					method: "VueRouter.replace",
+					namespace: "VueRouter",
+					method: "replace",
+					fullMethod: "VueRouter.replace",
 					arguments: [],
 					line: 3039,
 					column: 12,
 				},
 				{
 					fileFullPath: "/src/app/modules/searchResults/components/ProductResults.vue",
-					method: "VueComponent.redirectToPdpOnOneResult",
+					namespace: "VueComponent",
+					method: "redirectToPdpOnOneResult",
+					fullMethod: "VueComponent.redirectToPdpOnOneResult",
 					arguments: [],
 					line: 340,
 					column: 30,
 				},
 				{
 					fileFullPath: "/src/app/modules/searchResults/components/ProductResults.vue",
-					method: "VueComponent.$route",
+					namespace: "VueComponent",
+					method: "$route",
+					fullMethod: "VueComponent.$route",
 					arguments: [],
 					line: 209,
 					column: 18,
@@ -201,6 +230,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue/dist/vue.esm.js",
 					method: "invokeWithErrorHandling",
+					fullMethod: "invokeWithErrorHandling",
 					arguments: [],
 					line: 1871,
 					column: 26,
@@ -208,7 +238,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue/dist/vue.esm.js",
-					method: "Watcher.run",
+					namespace: "Watcher",
+					method: "run",
+					fullMethod: "Watcher.run",
 					arguments: [],
 					line: 4587,
 					column: 9,
@@ -217,6 +249,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue/dist/vue.esm.js",
 					method: "flushSchedulerQueue",
+					fullMethod: "flushSchedulerQueue",
 					arguments: [],
 					line: 4329,
 					column: 13,
@@ -224,7 +257,9 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue/dist/vue.esm.js",
-					method: "Array.eval",
+					namespace: "Array",
+					method: "eval",
+					fullMethod: "Array.eval",
 					arguments: [],
 					line: 1997,
 					column: 12,
@@ -233,6 +268,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 					fileFullPath:
 						"/builds/acmefoo.com/develop/clientside/monorepo/node_modules/vue/dist/vue.esm.js",
 					method: "flushCallbacks",
+					fullMethod: "flushCallbacks",
 					arguments: [],
 					line: 1923,
 					column: 14,
@@ -240,6 +276,7 @@ at processTicksAndRejections (internal/process/task_queues.js:94:5)`;
 				{
 					fileFullPath: "<anonymous>",
 					method: "runMicrotasks",
+					fullMethod: "runMicrotasks",
 					arguments: [],
 					column: undefined,
 					line: undefined,
