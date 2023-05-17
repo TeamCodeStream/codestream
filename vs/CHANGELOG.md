@@ -1,5 +1,25 @@
 # Change Log
 
+## [14.20.0] - 2023-5-17
+
+### Added
+
+- Adds "All other methods" node to Code-Level Metrics observability section 
+- Adds abillity for admins to mass delete all posts on an error and individually deleting posts
+- Adds error section to code-level-metrics view, including the error rate chart to be the first among the charts show
+
+### Changed
+
+- Changed repo association help text, botton, and section text
+- Changed default position the plugin to be on the left instead of right side
+
+### Fixed
+
+- Fixes for BitBucket support
+- Fixes for code-level-metrics charts not loading
+- Addresses [#1317](https://github.com/TeamCodeStream/codestream/issues/1317) &mdash; Error gpg bad revision
+- Addresses [#1459](https://github.com/TeamCodeStream/codestream/issues/1459) &mdash; Jetbrains plugins crash: Property must not be null: uri
+
 ## [14.19.0] - 2023-5-4
 
 ### Added
