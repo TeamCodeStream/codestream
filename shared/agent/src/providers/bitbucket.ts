@@ -2758,40 +2758,44 @@ export class BitbucketProvider
 
 	private _setUpResponse(array: BitbucketPullRequest[]) {
 		const providerId = this.providerConfig?.id;
-		const response = array.map(item => {
-			return {
-				author: {
-					avatarUrl: item.author.links.avatar.href,
-					login: item.author.display_name,
-				},
-				baseRefName: item.destination.branch.name,
-				body: item.summary.html,
-				bodyText: item.summary.raw,
-				createdAt: new Date(item.created_on).getTime(),
-				headRefName: item.source.branch.name,
-				headRepository: {
-					name: item.source.repository.name,
-					nameWithOwner: item.source.repository.full_name,
-				},
-				id: item.id + "",
-				idComputed: JSON.stringify({
-					id: item.id,
-					pullRequestId: item.id,
-					repoWithOwner: item.source.repository.full_name,
-				}),
-				lastEditedAt: item.updated_on,
-				labels: {
-					nodes: [],
-				},
-				number: item.id,
-				providerId: providerId,
-				state: item.state,
-				title: item.title,
-				updatedAt: item.updated_on,
-				url: item.links.html.href,
-			} as GetMyPullRequestsResponse;
-		});
-		return response;
+		if (array.length) {
+			const response = array.map(item => {
+				return {
+					author: {
+						avatarUrl: item.author.links.avatar.href,
+						login: item.author.display_name,
+					},
+					baseRefName: item.destination.branch.name,
+					body: item.summary.html,
+					bodyText: item.summary.raw,
+					createdAt: new Date(item.created_on).getTime(),
+					headRefName: item.source.branch.name,
+					headRepository: {
+						name: item.source.repository.name,
+						nameWithOwner: item.source.repository.full_name,
+					},
+					id: item.id + "",
+					idComputed: JSON.stringify({
+						id: item.id,
+						pullRequestId: item.id,
+						repoWithOwner: item.source.repository.full_name,
+					}),
+					lastEditedAt: item.updated_on,
+					labels: {
+						nodes: [],
+					},
+					number: item.id,
+					providerId: providerId,
+					state: item.state,
+					title: item.title,
+					updatedAt: item.updated_on,
+					url: item.links.html.href,
+				} as GetMyPullRequestsResponse;
+			});
+			return response;
+		} else {
+			return [];
+		}
 	}
 
 	private async _getDefaultReviewers(
@@ -2834,7 +2838,7 @@ export class BitbucketProvider
 		fullnameArr: { fullname: string }[],
 		query: string
 	): Promise<GetMyPullRequestsResponse[]> {
-		let array = [];
+		let array: any[] = [];
 		for (let i = 0; i < fullnameArr.length; i++) {
 			const recents = await this.get<BitbucketValues<BitbucketPullRequests[]>>(
 				`/repositories/${fullnameArr[i].fullname}/pullrequests?${query}`
@@ -2847,6 +2851,7 @@ export class BitbucketProvider
 			} else if (recents.body.values.length === 1) {
 				if (recents.body.values[0]) {
 					array.push(recents.body.values);
+					array = flatten(array);
 				}
 			}
 		}
