@@ -159,7 +159,8 @@ export function escapeNrql(nrql: string) {
 }
 
 const ENTITY_CACHE_KEY = "entityCache";
-
+const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
+const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
 export interface INewRelicProvider {
 	getProductUrl: () => string;
 	query: <T = any>(query: string, variables: any) => Promise<T>;
@@ -190,6 +191,7 @@ export class NewRelicProvider
 	private _newRelicUserId: number | undefined = undefined;
 	private _accountIds: number[] | undefined = undefined;
 	private _memoizedBuildRepoRemoteVariants: any;
+	private _clientUrlNeedsUpdate: boolean = false;
 	private _clmSpanDataExistsCache = new Cache<ClmSpanData>({
 		defaultTtl: 120 * 1000,
 	});
@@ -312,9 +314,30 @@ export class NewRelicProvider
 		return super.onDisconnected(request);
 	}
 
-	protected async client(): Promise<GraphQLClient> {
-		const client =
-			this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+	protected async client(useOtherRegion?: boolean): Promise<GraphQLClient> {
+		let client;
+		// if (useOtherRegion && this.session.isProductionCloud) {
+		if (useOtherRegion) {
+			let newGraphQlBaseUrl = this.graphQlBaseUrl;
+			if (newGraphQlBaseUrl === PRODUCTION_US_GRAPHQL_URL) {
+				client = this._client = this.createClient(PRODUCTION_EU_GRAPHQL_URL, this.accessToken);
+			} else if (newGraphQlBaseUrl === PRODUCTION_EU_GRAPHQL_URL) {
+				client = this._client = this.createClient(PRODUCTION_US_GRAPHQL_URL, this.accessToken);
+			} else {
+				client =
+					this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+			}
+			this._clientUrlNeedsUpdate = true;
+		} else {
+			if (this._clientUrlNeedsUpdate) {
+				client = this._client = this.createClient(this.graphQlBaseUrl, this.accessToken);
+				this._clientUrlNeedsUpdate = false;
+			} else {
+				client =
+					this._client || (this._client = this.createClient(this.graphQlBaseUrl, this.accessToken));
+			}
+		}
+
 		client.setHeaders(this.headers);
 		ContextLogger.setData({
 			nrUrl: this.graphQlBaseUrl,
@@ -460,7 +483,8 @@ export class NewRelicProvider
 	async query<T = any>(
 		query: string,
 		variables: any = undefined,
-		tryCount: number = 3
+		tryCount: number = 3,
+		isMultiRegion: boolean = false
 	): Promise<T> {
 		await this.ensureConnected();
 
@@ -470,13 +494,31 @@ export class NewRelicProvider
 		}
 
 		let response: any;
+		let responseOther: any;
 		let ex: Error | undefined;
 		const fn = async () => {
 			try {
-				const potentialResponse = await (await this.client()).request<T>(query, variables);
+				let potentialResponse, potentialOtherResponse;
+				if (isMultiRegion) {
+					const currentRegionPromise = (await this.client(false)).request<T>(query, variables);
+					const otherRegionPromise = (await this.client(true)).request<T>(query, variables);
+					[potentialResponse, potentialOtherResponse] = await Promise.all([
+						currentRegionPromise,
+						otherRegionPromise,
+					]);
+				} else {
+					potentialResponse = await (await this.client(false)).request<T>(query, variables);
+				}
 				// GraphQL returns happy HTTP 200 response for api level errors
-				this.checkGraphqlErrors(potentialResponse);
-				response = potentialResponse;
+				if (potentialOtherResponse) {
+					this.checkGraphqlErrors(potentialResponse);
+					this.checkGraphqlErrors(potentialOtherResponse);
+					response = potentialResponse;
+					responseOther = potentialOtherResponse;
+				} else {
+					this.checkGraphqlErrors(potentialResponse);
+					response = potentialResponse;
+				}
 				return true;
 			} catch (potentialEx) {
 				Logger.warn(potentialEx.message);
@@ -485,6 +527,33 @@ export class NewRelicProvider
 			}
 		};
 		await Functions.withExponentialRetryBackoff(fn, tryCount, 1000);
+
+		// If multiRegion, and we are doing an entitySearch query, add region values
+		if (responseOther) {
+			let responseRegion, responseRegionOther;
+			if (this.graphQlBaseUrl === PRODUCTION_US_GRAPHQL_URL) {
+				responseRegion = "US";
+				responseRegionOther = "EU";
+			} else {
+				responseRegion = "EU";
+				responseRegionOther = "US";
+			}
+			for (let i = 0; i < response.actor.entitySearch.results.entities.length; i++) {
+				response.actor.entitySearch.results.entities[i].region = responseRegion;
+			}
+			for (let i = 0; i < responseOther.actor.entitySearch.results.entities.length; i++) {
+				responseOther.actor.entitySearch.results.entities[i].region = responseRegionOther;
+			}
+
+			const combinedArray = [
+				...responseOther.actor.entitySearch.results.entities,
+				...response.actor.entitySearch.results.entities,
+			].filter((obj, index, self) => self.findIndex(o => o.guid === obj.guid) === index);
+
+			if (!_isEmpty(combinedArray)) {
+				response.actor.entitySearch.results.entities = combinedArray;
+			}
+		}
 
 		if (!response && ex) {
 			if (ex instanceof GraphqlNrqlError) {
@@ -753,7 +822,7 @@ export class NewRelicProvider
 	async getObservabilityRepos(
 		request: GetObservabilityReposRequest
 	): Promise<GetObservabilityReposResponse> {
-		const { force = false } = request;
+		const { force = false, isMultiRegion } = request;
 		const cacheKey = JSON.stringify(request);
 		if (!force) {
 			const cached = this._observabilityReposCache.get(cacheKey);
@@ -801,7 +870,8 @@ export class NewRelicProvider
 				// find REPOSITORY entities tied to a remote
 				const repositoryEntitiesResponse = await this.findRepositoryEntitiesByRepoRemotes(
 					remotes,
-					force
+					force,
+					isMultiRegion
 				);
 
 				if (isNRErrorResponse(repositoryEntitiesResponse)) {
@@ -3363,7 +3433,8 @@ export class NewRelicProvider
 	 */
 	protected async findRepositoryEntitiesByRepoRemotes(
 		remotes: string[],
-		force = false
+		force = false,
+		isMultiRegion = false
 	): Promise<RepoEntitiesByRemotesResponse | NRErrorResponse> {
 		const cacheKey = JSON.stringify(remotes);
 		if (!force) {
@@ -3403,7 +3474,12 @@ export class NewRelicProvider
 	}
   }
   `;
-			const queryResponse = await this.query<EntitySearchResponse>(query);
+			const queryResponse = await this.query<EntitySearchResponse>(
+				query,
+				undefined,
+				3,
+				isMultiRegion
+			);
 			const response = {
 				entities: queryResponse.actor.entitySearch.results.entities,
 				remotes: remoteVariants,

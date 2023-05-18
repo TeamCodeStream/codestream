@@ -490,6 +490,7 @@ export interface CSCompany extends CSEntity {
 	codestreamOnly?: boolean;
 	orgOrigination?: string;
 	linkedNROrgId?: string;
+	isMultiRegion?: boolean;
 }
 
 export interface CSTeam extends CSEntity {

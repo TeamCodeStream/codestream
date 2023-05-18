@@ -256,6 +256,7 @@ export const Observability = React.memo((props: Props) => {
 			providers["newrelic*com"] && isConnected(state, { id: "newrelic*com" });
 		const activeO11y = preferences.activeO11y;
 		const clmSettings = state.preferences.clmSettings || {};
+		const team = state.teams[state.context.currentTeamId] || {};
 
 		return {
 			sessionStart: state.context.sessionStart,
@@ -273,6 +274,7 @@ export const Observability = React.memo((props: Props) => {
 			clmSettings,
 			showAnomalies: isFeatureEnabled(state, "showAnomalies"),
 			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
+			company: state.companies[team.companyId] || {},
 		};
 	}, shallowEqual);
 
@@ -613,6 +615,7 @@ export const Observability = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
 				force,
+				isMultiRegion: derivedState.company?.isMultiRegion,
 			});
 			if (response.repos) {
 				if (hasFilter) {

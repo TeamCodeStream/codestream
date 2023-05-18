@@ -1418,6 +1418,7 @@ export const GetObservabilityResponseTimesRequestType = new RequestType<
 export interface GetObservabilityReposRequest {
 	filters?: { repoId: string; entityGuid?: string }[];
 	force?: boolean;
+	isMultiRegion?: boolean;
 }
 
 export interface EntityAccount {
@@ -1905,6 +1906,7 @@ export interface EntitySearchResponse {
 			};
 		};
 	};
+	region?: string;
 }
 
 export interface BuiltFromResult {
