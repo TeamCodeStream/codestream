@@ -206,6 +206,8 @@ export const PullRequestConversationTab = (props: {
 							setReviewerSelection(_.user.display_name);
 						},
 					};
+				} else {
+					return [];
 				}
 			});
 			if (itemsMap.length) {
@@ -213,8 +215,9 @@ export const PullRequestConversationTab = (props: {
 			} else {
 				return [];
 			}
+		} else {
+			return [];
 		}
-		return [];
 	};
 
 	const addItems = addReviewerItems();
@@ -238,6 +241,8 @@ export const PullRequestConversationTab = (props: {
 							setReviewerSelection(_.user.display_name);
 						},
 					};
+				} else {
+					return [];
 				}
 			});
 			if (items.length) {
@@ -245,8 +250,9 @@ export const PullRequestConversationTab = (props: {
 			} else {
 				return [];
 			}
+		} else {
+			return [];
 		}
-		return [];
 	};
 
 	const removeItems = addReviewerItems();
