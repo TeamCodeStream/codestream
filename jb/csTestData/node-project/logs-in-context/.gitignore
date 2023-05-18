@@ -1,0 +1,5 @@
+newrelic_agent.log
+node_modules
+.env
+logs/lic.pos
+logs/*.log

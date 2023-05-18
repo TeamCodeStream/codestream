@@ -118,6 +118,8 @@ private val posixPermissions = setOf(
     PosixFilePermission.OWNER_EXECUTE
 )
 
+val TEST_MODE = System.getenv("TEST_MODE") == "true"
+
 val serverUrlMigrations = hashMapOf("https://staging-api.codestream.us" to "https://codestream-stg.staging-service.newrelic.com")
 
 class AgentService(private val project: Project) : Disposable {
@@ -150,7 +152,7 @@ class AgentService(private val project: Project) : Disposable {
     }
 
     init {
-        if (System.getProperty("TEST_MODE") != "true") {
+        if (!TEST_MODE) {
             appDispatcher.launch {
                 initAgent()
             }

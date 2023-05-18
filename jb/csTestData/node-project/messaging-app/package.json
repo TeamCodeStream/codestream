@@ -1,0 +1,24 @@
+{
+  "name": "messaging-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r ./instrumentation index.js",
+    "debug": "node --inspect-brk -r ./instrumentation index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "New Relic",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "newrelic": "^9.7.0"
+  },
+  "devDependencies": {
+    "@newrelic/eslint-config": "^0.2.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=8"
+  }
+}

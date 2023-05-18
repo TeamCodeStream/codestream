@@ -150,7 +150,9 @@ export class NRManager {
 						Language: lang || "Not Detected",
 					},
 				});
-			} catch (ex) {}
+			} catch (ex) {
+				// ignore
+			}
 			Logger.error(new Error("GuessStackLanguageFailed"), "language guess failed", {
 				languageGuess: lang,
 			});
@@ -284,7 +286,8 @@ export class NRManager {
 				matchingRepoPath,
 				ref,
 				occurrenceId,
-				codeErrorId
+				codeErrorId,
+				parsedStackInfo.language
 			);
 		}
 
@@ -295,21 +298,39 @@ export class NRManager {
 		};
 	}
 
+	// Pre-filter out libraries so that IDE file looks can skip cruft
+	private getFilteredStackTraceLines(
+		parsedStackInfo: ParseStackTraceResponse,
+		language?: string
+	): (string | undefined)[] {
+		const libraryMatcher = language ? libraryMatchers[language] : undefined;
+		if (!libraryMatcher) {
+			return parsedStackInfo.lines.map(_ => _.fileFullPath);
+		}
+		return parsedStackInfo.lines.map(_ => {
+			if (_.fileFullPath && libraryMatcher(_.fileFullPath)) {
+				return undefined;
+			}
+			return _.fileFullPath;
+		});
+	}
+
 	private async resolveStackTraceLines(
 		parsedStackInfo: ParseStackTraceResponse,
 		resolvedStackInfo: CSStackTraceInfo,
 		matchingRepoPath: string | undefined,
 		ref: string,
 		occurrenceId: string,
-		codeErrorId: string
+		codeErrorId: string,
+		language?: string
 	) {
 		const { session, git } = SessionContainer.instance();
 
-		const paths = parsedStackInfo.lines.map(_ => _.fileFullPath);
+		const paths = this.getFilteredStackTraceLines(parsedStackInfo, language);
 		const commitSha = matchingRepoPath && (await git.getCommit(matchingRepoPath, ref));
 		const resolveStackTracePathsResponse = await session.agent.sendRequest(
 			ResolveStackTracePathsRequestType,
-			{ paths }
+			{ paths, language }
 		);
 
 		Logger.debug(

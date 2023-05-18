@@ -34,7 +34,7 @@
     </depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="right"
+        <toolWindow id="CodeStream" icon="/images/codestream.svg" anchor="left"
                     factoryClass="com.codestream.webview.CodeStreamToolWindowFactory"/>
 
         <statusBarWidgetFactory implementation="com.codestream.widgets.CodeStreamStatusBarWidgetFactory"/>

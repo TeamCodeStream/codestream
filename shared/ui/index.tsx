@@ -34,7 +34,11 @@ import { Range } from "vscode-languageserver-types";
 
 import { logError } from "@codestream/webview/logger";
 import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
-import { openErrorGroup, resolveStackTraceLine } from "@codestream/webview/store/codeErrors/thunks";
+import {
+	openErrorGroup,
+	processCodeErrorsMessage,
+	resolveStackTraceLine,
+} from "@codestream/webview/store/codeErrors/thunks";
 import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import { fetchReview } from "@codestream/webview/store/reviews/thunks";
 import { switchToTeam } from "@codestream/webview/store/session/thunks";
@@ -260,6 +264,9 @@ function listenForEvents(store) {
 				break;
 			case ChangeDataType.ApiCapabilities:
 				store.dispatch(apiCapabilitiesUpdated(data as CSApiCapabilities));
+				break;
+			case ChangeDataType.CodeErrors:
+				store.dispatch(processCodeErrorsMessage(data as CSCodeError[]));
 				break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });

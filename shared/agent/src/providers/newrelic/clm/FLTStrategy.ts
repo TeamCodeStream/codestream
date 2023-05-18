@@ -10,6 +10,7 @@ import {
 import { FLTNameInferenceJavaStrategy } from "./FLTNameInferenceJavaStrategy";
 import { INewRelicProvider } from "../../newrelic";
 import { FLTCodeAttributeStrategy } from "./FLTCodeAttributeStrategy";
+import { FLTNameInferenceKotlinStrategy } from "./FLTNameInferenceKotlinStrategy";
 
 export interface FLTStrategy {
 	execute(): Promise<{
@@ -45,6 +46,17 @@ export class FLTStrategyFactory {
 		if (languageId === "java") {
 			strategies.push(
 				new FLTNameInferenceJavaStrategy(entityGuid, accountId, relativeFilePath, request, provider)
+			);
+		}
+		if (languageId === "kotlin") {
+			strategies.push(
+				new FLTNameInferenceKotlinStrategy(
+					entityGuid,
+					accountId,
+					relativeFilePath,
+					request,
+					provider
+				)
 			);
 		}
 

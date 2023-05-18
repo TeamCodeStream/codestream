@@ -26,6 +26,7 @@ import {
 	_isLoadingErrorGroup,
 	_setErrorGroup,
 	_updateCodeErrors,
+	_deleteCodeError,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
@@ -117,6 +118,21 @@ export const setProviderError =
 				providerId,
 				errorGroupGuid,
 			});
+		}
+	};
+
+export const processCodeErrorsMessage =
+	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
+		const newCodeErrors = codeErrors.filter(_ => !_.deactivated);
+		const deleteCodeErrors = codeErrors.filter(_ => _.deactivated);
+		dispatch(addCodeErrors(newCodeErrors));
+		const context = getState().context;
+		for (const deleteCodeError of deleteCodeErrors) {
+			dispatch(_deleteCodeError(deleteCodeError.id));
+			if (context.currentCodeErrorId === deleteCodeError.id) {
+				console.log("===--- setting current code error to null");
+				dispatch(setCurrentCodeError());
+			}
 		}
 	};
 

@@ -3706,13 +3706,18 @@ export class NewRelicProvider
 				return undefined;
 			}
 
+			if (!errorGroupResponse.eventsQuery) {
+				ContextLogger.warn("fetchErrorGroupDataById missing eventsQuery");
+				return undefined;
+			}
+
 			const entityGuid = errorGroupResponse.entityGuid;
 			const now = new Date().getTime();
 			// We need an `id` (aka occurrenceId) from ErrorTrace to get the most recent instance of this ErrorGroup.
 			// To do do we use the TransactionError query and modify it to query ErrorTrace.
 
 			// NOTE: we need to add the date range or we risk missing results.
-			const errorTraceQuery = `${errorGroupResponse.eventsQuery?.replace(
+			const errorTraceQuery = `${errorGroupResponse.eventsQuery.replace(
 				" TransactionError ",
 				" ErrorTrace "
 			)} SINCE ${(errorGroupResponse.lastSeenAt || now) - 100000} until ${

@@ -1,0 +1,25 @@
+version: "3.0"
+
+services:
+  fluentd:
+    container_name: nr-fluentd
+    env_file: .env
+    build:
+      context: ./fluentd
+    volumes:
+      - "./logs:/fluentd/log"
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+  sample-app:
+    container_name: nr-sample-app
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+    build:
+      context: ./app
+    volumes:
+      - "./logs:/app/logs"
+    ports:
+      - "3000:3000"
+

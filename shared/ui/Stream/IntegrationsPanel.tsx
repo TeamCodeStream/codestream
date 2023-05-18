@@ -16,6 +16,8 @@ import { PROVIDER_MAPPINGS } from "./CrossPostIssueControls/types";
 import { DropdownButton } from "./DropdownButton";
 import Icon from "./Icon";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
+import { currentUserIsAdminSelector } from "@codestream/webview/store/users/reducer";
+import { shallowEqual } from "react-redux";
 
 export const Provider = styled(Button)`
 	width: 100%;
@@ -78,7 +80,7 @@ export const IntegrationsPanel = () => {
 		const teamIssuesProviders = teamSettings.issuesProviders || {};
 		const teamMessagingProviders = teamSettings.messagingProviders || {};
 		const user = users[session.userId!];
-		const currentUserIsAdmin = (team.adminIds || []).includes(user.id);
+		const currentUserIsAdmin = currentUserIsAdminSelector(state);
 
 		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
 		const observabilityProviders = Object.keys(providers)
@@ -131,7 +133,7 @@ export const IntegrationsPanel = () => {
 			currentUserIsAdmin,
 			isOnPrem: configs.isOnPrem,
 		};
-	});
+	}, shallowEqual);
 
 	const [propsForPrePRProviderInfoModal, setPropsForPrePRProviderInfoModal] = useState<any>();
 

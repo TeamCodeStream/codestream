@@ -4,6 +4,7 @@ export type LibraryMatcher = (line: string) => boolean;
 
 const pythonLibRegex = new RegExp(/\/usr(\/local)?\/lib\/python\d/);
 const rubyLibRegex = [new RegExp(/ruby\/gems\/\d/), new RegExp(/vendor\/bundle\/ruby\/\d/)];
+const javascriptLibRegex = [new RegExp(/\/node_modules\//)];
 
 // TODO Python venv https://docs.python.org/3/library/venv.html
 const pythonLibraryMatcher: LibraryMatcher = (line: string) => {
@@ -25,6 +26,17 @@ const rubyLibraryMatcher: LibraryMatcher = (line: string) => {
 	return false;
 };
 
+const javascriptLibraryMatcher: LibraryMatcher = (line: string) => {
+	for (const regex of javascriptLibRegex) {
+		const result = regex.test(line);
+		if (result) {
+			Logger.warn(`Skipping ${line} as it is a library`);
+			return true;
+		}
+	}
+	return false;
+};
+
 interface LibraryMap {
 	[language: string]: LibraryMatcher;
 }
@@ -32,4 +44,5 @@ interface LibraryMap {
 export const libraryMatchers: LibraryMap = {
 	python: pythonLibraryMatcher,
 	ruby: rubyLibraryMatcher,
+	javascript: javascriptLibraryMatcher,
 };

@@ -32,20 +32,15 @@ import io.mockk.mockk
 import io.mockk.slot
 import org.junit.BeforeClass
 
-@Suppress("UnstableApiUsage")
-@TestDataPath("csTestData")
+    @Suppress("UnstableApiUsage")
+    @TestDataPath("csTestData/simple")
 class CLMLanguageComponentTest : BasePlatformTestCase() {
     val mockAgentService = mockk<AgentService>(relaxed = true)
     val mockJxBrowserEngineService = mockk<JxBrowserEngineService>(relaxed = true)
     val mockWebViewService = mockk<WebViewService>(relaxed = true)
 
-    @BeforeClass
-    fun init() {
-        System.setProperty("TEST_MODE", "true")
-    }
-
     override fun getTestDataPath(): String {
-        return "csTestData"
+        return "csTestData/simple"
     }
 
     fun initMocks() {
@@ -99,7 +94,15 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
                     anomaly = null,
                 ),
             ),
-            sampleSize = null,
+            sampleSize = listOf(MethodLevelTelemetrySampleSize(
+                namespace = null,
+                className = null,
+                functionName = "hello_world",
+                metricTimesliceName = "t",
+                sampleSize = 5,
+                source = "span",
+                anomaly = null,
+            )),
             errorRate = null,
             newRelicEntityGuid = "abcd-1234",
             codeNamespace = "fooNamespace",
@@ -119,7 +122,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
 
         myFixture.configureByFile("app.py")
 
-        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.g
+        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.gradle
 
         val inlayBlock = myFixture.editor.inlayModel.getBlockElementsInRange(
             0, 1000
@@ -130,7 +133,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
         lineNo shouldBe 13
 
         val textPresentation = extractTextFromInlay(inlayBlock)
-        textPresentation shouldBe "avg duration: 3.333ms | throughput: n/a | error rate: n/a - since 30 minutes ago"
+        textPresentation shouldBe "avg duration: 3.333ms | error rate: 0.0% - 5 samples in the last 30 minutes"
     }
 
     fun `test java method`() {
@@ -203,14 +206,14 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
 
         item1LineNo shouldBe 1
         val item1Text = extractTextFromInlay(inlayBlocks[0])
-        item1Text shouldBe "avg duration: 200.000ms | throughput: 100.000rpm | error rate: n/a - since 30 minutes ago"
+        item1Text shouldBe "avg duration: 200.000ms | error rate: 0.0% - 100 samples in the last 30 minutes"
 
         val inlayBlock2 = inlayBlocks[1]
         val item2LineNo = myFixture.editor.document.getLineNumber(inlayBlock2.offset)
 
         item2LineNo shouldBe 9
         val item2Text = extractTextFromInlay(inlayBlock2)
-        item2Text shouldBe "avg duration: 220.000ms | throughput: 150.000rpm | error rate: n/a - since 30 minutes ago"
+        item2Text shouldBe "avg duration: 220.000ms | error rate: 0.0% - 150 samples in the last 30 minutes"
     }
 
     private fun extractTextFromInlay(inlayBlock: Inlay<*>): String {

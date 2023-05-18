@@ -337,6 +337,7 @@ export const AgentFileSearchRequestType = new RequestType<
 
 export interface ResolveStackTracePathsRequest {
 	paths: (string | undefined)[];
+	language?: string;
 }
 
 export interface ResolveStackTracePathsResponse {

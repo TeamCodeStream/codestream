@@ -1,0 +1,23 @@
+version: '3'
+
+services:
+  app:
+    image: sequelize-example:latest
+    build: .
+    env_file: .env
+    environment:
+      HOST: 0.0.0.0
+      DB_CONNECTION_URL: "postgresql://postgres:newrelic@db/sequelize"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    expose:
+      - "5432"
+    # Let's show the SQL queries, for illustrative purposes
+    command: ["postgres", "-c", "log_statement=all"]
+    environment:
+      - POSTGRES_PASSWORD=newrelic
+      - POSTGRES_DB=sequelize

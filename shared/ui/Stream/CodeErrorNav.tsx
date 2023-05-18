@@ -3,7 +3,6 @@ import {
 	GetNewRelicErrorGroupResponse,
 	MatchReposRequestType,
 	MatchReposResponse,
-	NewRelicErrorGroup,
 	NormalizeUrlRequestType,
 	NormalizeUrlResponse,
 	ResolveStackTraceResponse,
@@ -24,10 +23,7 @@ import {
 	setErrorGroup,
 	updateCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
-import {
-	closeAllPanels,
-	setCurrentCodeError,
-} from "@codestream/webview/store/context/actions";
+import { closeAllPanels, setCurrentCodeError } from "@codestream/webview/store/context/actions";
 import {
 	useAppDispatch,
 	useAppSelector,
@@ -37,7 +33,7 @@ import {
 import { isSha } from "@codestream/webview/utilities/strings";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { shallowEqual, useSelector } from "react-redux";
 import styled from "styled-components";
 import { DelayedRender } from "../Container/DelayedRender";
 import { logError, logWarning } from "../logger";
@@ -158,9 +154,9 @@ export function CodeErrorNav(props: Props) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const codeError = state.context.currentCodeErrorId
-			? (getCodeError(state.codeErrors, state.context.currentCodeErrorId) as CSCodeError)
+			? getCodeError(state.codeErrors, state.context.currentCodeErrorId)
 			: undefined;
-		const errorGroup = getErrorGroup(state.codeErrors, codeError) as NewRelicErrorGroup;
+		const errorGroup = getErrorGroup(state.codeErrors, codeError);
 
 		const result = {
 			demoMode: state.preferences.demoMode,
@@ -179,7 +175,7 @@ export function CodeErrorNav(props: Props) {
 			sidebarLocation: getSidebarLocation(state),
 		};
 		return result;
-	});
+	}, shallowEqual);
 
 	const [requiresConnection, setRequiresConnection] = React.useState<boolean | undefined>(
 		undefined
@@ -231,7 +227,6 @@ export function CodeErrorNav(props: Props) {
 	);
 
 	const markRead = () => {
-		// @ts-ignore
 		if (derivedState.codeError && unreadEnabled)
 			dispatch(markItemRead(derivedState.codeError.id, derivedState.codeError.numReplies || 0));
 	};

@@ -54,6 +54,7 @@ import {
 	DeletePostRequestType,
 	DidChangeApiVersionCompatibilityNotification,
 	DidChangeApiVersionCompatibilityNotificationType,
+	DidChangeCodelensesNotificationType,
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotification,
@@ -69,8 +70,6 @@ import {
 	DidChangeServerUrlNotification,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
-	RefreshMaintenancePollNotification,
-	RefreshMaintenancePollNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidDetectUnreviewedCommitsNotification,
 	DidDetectUnreviewedCommitsNotificationType,
@@ -132,6 +131,8 @@ import {
 	MuteStreamRequestType,
 	OpenStreamRequestType,
 	ReactToPostRequestType,
+	RefreshMaintenancePollNotification,
+	RefreshMaintenancePollNotificationType,
 	RenameStreamRequestType,
 	ReportingMessageType,
 	ReportMessageRequestType,
@@ -150,8 +151,7 @@ import {
 	UpdateUserRequest,
 	UpdateUserRequestType,
 	UserDidCommitNotification,
-	UserDidCommitNotificationType,
-	DidChangeCodelensesNotificationType
+	UserDidCommitNotificationType
 } from "@codestream/protocols/agent";
 import {
 	ChannelServiceType,
@@ -167,9 +167,10 @@ import { BuiltInCommands } from "../constants";
 import { SessionSignedOutReason } from "../api/session";
 import { Container } from "../container";
 import { Logger } from "../logger";
-import { Functions, log, Strings } from "../system";
+import { Functions, log } from "../system";
 import { getInitializationOptions } from "../extension";
 import { Editor } from "../extensions";
+import { resolveStackTracePaths } from "./resolveStackTracePathsHandler";
 
 export { BaseAgentOptions };
 
@@ -1346,77 +1347,9 @@ export class CodeStreamAgentConnection implements Disposable {
 				};
 			}
 		});
-		this._client.onRequest(ResolveStackTracePathsRequestType, async e => {
-			try {
-				const resolvedPaths: (
-					| {
-							path: string;
-							depth: number;
-							discardedPath: string;
-					  }
-					| undefined
-				)[] = [];
-				const cache: {
-					[key: string]: Uri[];
-				} = {};
 
-				for (const path of e.paths) {
-					if (!path) {
-						resolvedPaths.push(undefined);
-						continue;
-					}
-					const parts = Strings.normalizePath(path || "", isWindows).split("/");
-					const discardedParts: string[] = [];
-					let found = false;
-					const filename = parts[parts.length - 1];
-					// workspace.findFiles is slow (100ms+), so do it only once per line and cache it
-					const filenameMatches =
-						cache[filename] || (cache[filename] = await workspace.findFiles(`**/${filename}`));
-
-					while (!found && parts.length && filenameMatches.length) {
-						const partial = parts.join("/");
-						const matchingPaths = filenameMatches
-							.map(_ => _.fsPath)
-							.filter(_ => Strings.normalizePath(_, isWindows).endsWith(partial));
-
-						if (matchingPaths.length === 0) {
-							discardedParts.push(parts.shift()!!);
-						} else {
-							found = true;
-							const matchingPath = matchingPaths[0];
-							resolvedPaths.push({
-								path: matchingPath,
-								depth: parts.length,
-								discardedPath: discardedParts.join("/")
-							});
-						}
-					}
-					if (!found) {
-						resolvedPaths.push(undefined);
-					}
-				}
-
-				let maxDepth = 0;
-				let discardedPath = "";
-				for (const resolvedPath of resolvedPaths) {
-					if (resolvedPath && resolvedPath.depth > maxDepth) {
-						maxDepth = resolvedPath.depth;
-						discardedPath = resolvedPath.discardedPath;
-					}
-				}
-				const filteredResolvedPaths = resolvedPaths.map(_ =>
-					_?.discardedPath === discardedPath ? _ : undefined
-				);
-
-				return {
-					resolvedPaths: filteredResolvedPaths.map(_ => _?.path)
-				};
-			} catch (ex) {
-				Logger.error(ex);
-				return {
-					resolvedPaths: []
-				};
-			}
+		this._client.onRequest(ResolveStackTracePathsRequestType, async request => {
+			return resolveStackTracePaths(request);
 		});
 		this._client.onRequest(AgentFilterNamespacesRequestType, async e => {
 			const filteredNamespaces = [];

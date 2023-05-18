@@ -120,6 +120,10 @@ runIde {
     }
 }
 
+tasks.withType(Test) {
+    environment 'TEST_MODE', 'true'
+}
+
 import org.gradle.internal.os.OperatingSystem
 
 task buildDeps(type: Exec) {

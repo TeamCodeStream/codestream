@@ -1,0 +1,23 @@
+{
+  "name": "error-fingerprinting",
+  "version": "1.0.0",
+  "description": "Application demoing how to use newrelic.setErrorGroupCallback()",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r newrelic index.js",
+    "traffic:expected": "artillery quick http://localhost:3000/error/expected",
+    "traffic:unexpected": "artillery quick http://localhost:3000/error/unexpected",
+    "traffic": "npm run traffic:unexpected && npm run traffic:expected"
+  },
+  "author": "Jessica Lopatta <jlopatta@newrelic.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "artillery": "^2.0.0-31",
+    "express": "^4.18.2",
+    "newrelic": "^9.13.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@newrelic/eslint-config": "^0.3.0"
+  }
+}

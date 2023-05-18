@@ -1,7 +1,11 @@
 import { PostPlus } from "@codestream/protocols/agent";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
-import { findMentionedUserIds, getTeamMates } from "@codestream/webview/store/users/reducer";
+import {
+	currentUserIsAdminSelector,
+	findMentionedUserIds,
+	getTeamMates,
+} from "@codestream/webview/store/users/reducer";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { mapFilter, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
@@ -14,6 +18,7 @@ import { confirmPopup } from "../Confirm";
 import Menu from "../Menu";
 import MessageInput, { AttachmentField } from "../MessageInput";
 import { Reply } from "./Reply";
+import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 
 const ComposeWrapper = styled.div.attrs(() => ({
 	className: "compose codemark-compose",
@@ -43,7 +48,8 @@ export const RepliesToPost = (props: {
 	const currentUserId = useAppSelector((state: CodeStreamState) => state.session.userId!);
 	const replies = useAppSelector((state: CodeStreamState) =>
 		getThreadPosts(state, props.streamId, props.parentPostId, true)
-	);
+	) as PostPlus[];
+	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
 	const nestedRepliesByParent = React.useMemo(() => {
 		const nestedReplies = replies.filter(r => r.parentPostId !== props.parentPostId);
 		return groupBy(nestedReplies, "parentPostId");
@@ -58,8 +64,8 @@ export const RepliesToPost = (props: {
 
 	const contextValue = React.useMemo(
 		() => ({
-			setReplyingToPostId: setReplyingToPostId as any,
-			setEditingPostId: setEditingPostId as any,
+			setReplyingToPostId: setReplyingToPostId,
+			setEditingPostId: setEditingPostId,
 		}),
 		[]
 	);
@@ -91,11 +97,13 @@ export const RepliesToPost = (props: {
 	};
 
 	const getMenuItems = (reply: PostPlus) => {
-		const menuItems: any[] = [];
+		const menuItems: MenuItem[] = [];
 
 		menuItems.push({ label: "Reply", key: "reply", action: () => setReplyingToPostId(reply.id) });
 		if (reply.creatorId === currentUserId) {
 			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
+		}
+		if (reply.creatorId === currentUserId || currentUserIsAdmin) {
 			menuItems.push({
 				label: "Delete",
 				key: "delete",
@@ -125,17 +133,17 @@ export const RepliesToPost = (props: {
 
 	return (
 		<RepliesToPostContext.Provider value={contextValue}>
-			{mapFilter(replies, reply => {
+			{mapFilter(replies, (reply: PostPlus) => {
 				if (reply.parentPostId != null && nestedRepliesByParent.hasOwnProperty(reply.parentPostId))
 					return null;
-				const menuItems = getMenuItems(reply as any);
+				const menuItems = getMenuItems(reply);
 				return (
 					<React.Fragment key={reply.id}>
 						<Reply
 							author={allUsers[reply.creatorId]}
 							post={reply}
 							editingPostId={editingPostId}
-							nestedReplies={nestedRepliesByParent[reply.id] as any}
+							nestedReplies={nestedRepliesByParent[reply.id]}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
 							)}

@@ -1,5 +1,6 @@
 package com.codestream.clm
 
+import com.codestream.agent.TEST_MODE
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.file
@@ -167,8 +168,8 @@ abstract class CLMEditorManager(
         project?.agentService?.onDidStart {
             tasksCoroutineScope.launch {
                 if (project.isDisposed) return@launch
-                // logger.debug("=== ${editor.displayPath} isShowing: ${editor.component.isShowing}")
-                if (!editor.component.isShowing) return@launch
+                if (!TEST_MODE && !editor.component.isShowing) return@launch
+                logger.info("loadInlays $path didStart launch isShowing")
                 val psiFile =
                     PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@launch
 

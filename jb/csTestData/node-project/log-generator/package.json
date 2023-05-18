@@ -1,0 +1,16 @@
+{
+  "dependencies": {
+    "faker": "^5.5.3",
+    "newrelic": "^8.17.1",
+    "pino": "^7.11.0",
+    "winston": "^3.8.1",
+    "yargs": "^17.6.2"
+  },
+  "devDependencies": {
+    "@newrelic/eslint-config": "^0.0.4"
+  },
+  "scripts": {
+    "lint": "eslint ./*.js",
+    "lint:fix": "eslint --fix, ./*.js"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "name": "express-main-example",
+  "version": "0.0.0",
+  "description": "This is an example of how to setup Sequelize and Express together in a project for NodeJS 10 and above.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r newrelic index.js",
+    "setup-example-db": "node sqlite-example-database/setup.js"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "dotenv": "^16.0.3",
+    "express": "^4.17.1",
+    "newrelic": "^9.7.4",
+    "pg": "^8.8.0",
+    "sequelize": "^6.29.0",
+    "sqlite3": "^5.1.5"
+  }
+}
