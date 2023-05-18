@@ -1516,6 +1516,21 @@ export class BitbucketProvider
 		return filteredParticipants;
 	};
 
+	//reviewers array needs to be participants wtih status and all those marked as reviewer
+	private reviewers2 = (participants: BitbucketUnfilteredParticipants[]) => {
+		const array: BitbucketUnfilteredParticipants[] = [];
+		participants.filter(_ => {
+			if (_.role === BitbucketParticipantRole.Participant) {
+				if (_.state !== null) {
+					array.push(_);
+				}
+			} else {
+				array.push(_);
+			}
+		});
+		return array;
+	};
+
 	private separateReviewers = (participants: BitbucketUnfilteredParticipants[]) => {
 		const reviewers = participants.filter(
 			(_: { role: BitbucketParticipantRole }) => _.role !== BitbucketParticipantRole.Participant
@@ -1668,7 +1683,8 @@ export class BitbucketProvider
 			};
 
 			const newParticipantsArray = this.excludeNonActiveParticipants(pr.body.participants);
-			const newReviewersArray = this.separateReviewers(pr.body.participants);
+			// const newReviewersArray = this.separateReviewers(pr.body.participants);
+			const newReviewersArray = this.reviewers2(pr.body.participants);
 
 			const isApproved = this.isPRApproved(newParticipantsArray);
 

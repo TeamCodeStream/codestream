@@ -149,6 +149,8 @@ export const PullRequestConversationTab = (props: {
 	const [isAddReviewer, setIsAddReviewer] = useState(false);
 	const [isEmpty, setIsEmpty] = useState(false);
 	const [isMerged, setIsMerged] = useState(false);
+	const [reviewerSelection, setReviewerSelection] = useState("Select reviewer");
+	const [reviewerId, setReviewerId] = useState("");
 
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
@@ -192,6 +194,70 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
+	const addReviewerItems = () => {
+		if (pr.members?.nodes.length) {
+			const itemsMap = pr.members.nodes.map(_ => {
+				if (_.user.account_id !== pr.author.id) {
+					return {
+						label: _.user.display_name,
+						key: _.user.account_id,
+						action: () => {
+							setReviewerId(_.user.account_id);
+							setReviewerSelection(_.user.display_name);
+						},
+					};
+				}
+			});
+			if (itemsMap.length) {
+				return itemsMap;
+			} else {
+				return [];
+			}
+		}
+		return [];
+	};
+
+	const addItems = addReviewerItems();
+	const isAddItems = () => {
+		if (addItems.length) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
+	const removeRevieweritems = () => {
+		if (pr.participants.nodes.length) {
+			const items = pr.participants.nodes.map(_ => {
+				if (_.state === null) {
+					return {
+						label: _.user.display_name,
+						key: _.user.account_id,
+						action: () => {
+							setReviewerId(_.user.account_id);
+							setReviewerSelection(_.user.display_name);
+						},
+					};
+				}
+			});
+			if (items.length) {
+				return items;
+			} else {
+				return [];
+			}
+		}
+		return [];
+	};
+
+	const removeItems = addReviewerItems();
+	const isRemoveItems = () => {
+		if (removeItems.length) {
+			return true;
+		} else {
+			return false;
+		}
+	};
+
 	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
 	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 	const prAuthorLogin = pr?.author?.login || GHOST;
@@ -223,7 +289,7 @@ export const PullRequestConversationTab = (props: {
 				<PRSection>
 					<h1>{reviewersLabel}</h1>
 					<PRHeadshots>
-						{pr.reviewers &&
+						{pr.reviewers.nodes.length &&
 							pr.reviewers.nodes.map((_: any) => {
 								let iconName = "circle";
 								let color = "gray";
@@ -252,6 +318,8 @@ export const PullRequestConversationTab = (props: {
 							})}
 						{isOpen ? (
 							<BitbucketParticipantEditScreen
+								addItems={addReviewerItems}
+								removeItems={removeRevieweritems}
 								pr={pr}
 								isAddReviewer={isAddReviewer}
 								onClose={() => {
@@ -263,64 +331,37 @@ export const PullRequestConversationTab = (props: {
 						) : (
 							<>
 								<br></br>
-								<Button
-									style={{ width: "50px", marginRight: "2.5px" }}
-									variant="secondary"
-									size="subcompact"
-									disabled={isMerged}
-									onClick={() => {
-										setIsOpen(true);
-										setIsAddReviewer(true);
-									}}
-								>
-									Add
-								</Button>
-								<Button
-									style={{ width: "60px", marginLeft: "2.5px" }}
-									variant="secondary"
-									size="subcompact"
-									disabled={isEmpty || isMerged}
-									onClick={() => {
-										setIsOpen(true);
-										setIsAddReviewer(false);
-									}}
-								>
-									Remove
-								</Button>
+								{isAddItems() ? (
+									<Button
+										style={{ width: "50px", marginRight: "2.5px" }}
+										variant="secondary"
+										size="subcompact"
+										disabled={isMerged}
+										onClick={() => {
+											setIsOpen(true);
+											setIsAddReviewer(true);
+										}}
+									>
+										Add
+									</Button>
+								) : null}
+
+								{isRemoveItems() ? (
+									<Button
+										style={{ width: "60px", marginLeft: "2.5px" }}
+										variant="secondary"
+										size="subcompact"
+										disabled={isEmpty || isMerged}
+										onClick={() => {
+											setIsOpen(true);
+											setIsAddReviewer(false);
+										}}
+									>
+										Remove
+									</Button>
+								) : null}
 							</>
 						)}
-					</PRHeadshots>
-				</PRSection>
-				<PRSection>
-					<h1>{participantsLabel}</h1>
-					<PRHeadshots>
-						{pr.participants &&
-							pr.participants.nodes.map((_: any) => {
-								let iconName = "circle";
-								let color = "gray";
-								if (_.state === "changes_requested") {
-									iconName = "no-entry";
-									color = "orange";
-								} else if (_.state === "approved") {
-									iconName = "checked-checkbox";
-									color = "green";
-								}
-								const person = { avatarUrl: _.user.links.avatar.href, login: _.user.nickname };
-								return (
-									<>
-										<PRHeadshot
-											display="inline-block"
-											key={_.user.links.avatar.href}
-											person={person}
-											size={20}
-										/>
-										<Icon
-											style={{ verticalAlign: "25%", marginRight: "10px", color: color }}
-											name={iconName}
-										/>
-									</>
-								);
-							})}
 					</PRHeadshots>
 				</PRSection>
 			</PRSidebar>
