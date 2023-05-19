@@ -956,6 +956,9 @@ export class CodeStreamSession {
 		};
 		Logger.log("Got environment from connectivity response:", this._environmentInfo);
 		this.agent.sendNotification(DidSetEnvironmentNotificationType, this._environmentInfo);
+		if (response.capabilities.serviceGatewayAuth) {
+			this._api.setUsingServiceGatewayAuth();
+		}
 		return response;
 	}
 
@@ -1174,6 +1177,7 @@ export class CodeStreamSession {
 
 		const token = response.token;
 		this._codestreamAccessToken = token.value;
+		this.api.setAccessToken(token.value);
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		this._userId = response.user.id;

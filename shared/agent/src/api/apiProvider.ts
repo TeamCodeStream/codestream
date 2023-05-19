@@ -409,6 +409,7 @@ export interface ApiProvider {
 	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
 	generateLoginCode(request: GenerateLoginCodeRequest): Promise<void>;
 	subscribe(types?: MessageType[]): Promise<void>;
+	setAccessToken(token: string): void;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 
@@ -580,6 +581,8 @@ export interface ApiProvider {
 	announceHistoryFetch(info: HistoryFetchInfo): void;
 
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
+
+	setUsingServiceGatewayAuth(): void;
 
 	get<R extends object>(url: string, token?: string): Promise<R>;
 	post<RQ extends object, R extends object>(url: string, body: any, token?: string): Promise<R>;

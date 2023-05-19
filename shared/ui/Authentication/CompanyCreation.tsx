@@ -192,7 +192,7 @@ export function CompanyCreation(props: {
 			setIsCreatingOrg(true);
 			setInitialLoad(false);
 			try {
-				const { team } = await HostApi.instance.send(CreateCompanyRequestType, {
+				const { team, accessToken } = await HostApi.instance.send(CreateCompanyRequestType, {
 					name: organizationSettings.companyName!,
 				});
 				HostApi.instance.track("New Organization Created", {
@@ -201,7 +201,7 @@ export function CompanyCreation(props: {
 				});
 
 				dispatch(
-					completeSignup(props.email!, props.token!, team.id, {
+					completeSignup(props.email!, accessToken || props.token!, team.id, {
 						createdTeam: true,
 						provider: props.provider,
 						nrSignupTestUi: props.nrSignupTestUi,

@@ -43,6 +43,7 @@ export interface CreateCompanyResponse {
 	company: CSCompany;
 	team: CSTeam;
 	streams?: CSStream[];
+	accessToken?: string;
 }
 
 export const CreateCompanyRequestType = new RequestType<
