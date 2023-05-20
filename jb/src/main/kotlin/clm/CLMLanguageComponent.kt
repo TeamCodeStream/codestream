@@ -1,10 +1,12 @@
 package com.codestream.clm
 
+import com.codestream.agentService
 import com.codestream.clmService
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.uri
 import com.codestream.git.getCSGitFile
+import com.codestream.protocols.agent.GetCommitParams
 import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable
@@ -13,16 +15,17 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.event.EditorFactoryEvent
 import com.intellij.openapi.editor.event.EditorFactoryListener
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
-import org.eclipse.lsp4j.Position
 import org.eclipse.lsp4j.Range
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
-import org.jetbrains.kotlin.idea.inspections.findExistingEditor
+import java.net.URI
 import java.net.URL
 
 val testMode: Boolean = System.getProperty("idea.system.path")?.endsWith("system-test") ?: false
@@ -111,8 +114,12 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
 
     open fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? = null
 
-    open fun copySymbolInFile(uri: String, className: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
-        val virtFile = if (ref != null) getCSGitFile(uri, ref, project) else VfsUtil.findFileByURL(URL(uri))
+    open fun copySymbolInFile(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
+        val filePath = URI.create(uri).path
+        val sha = ref?.let {
+            project.agentService?.getCommit(GetCommitParams(filePath, ref))?.scm?.revision
+        }
+        val virtFile = if (sha != null) getCSGitFile(uri, sha, project) else VfsUtil.findFileByURL(URL(uri))
 
         if (virtFile == null) {
             logger.warn("Could not find file for uri $uri")
@@ -121,12 +128,14 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
 
         val psiFile = virtFile.toPsiFile(project) ?: return null
         if (!isPsiFileSupported(psiFile)) return null
-        val editor = psiFile.findExistingEditor() ?: return null
-        val element = (if (className != null) symbolResolver.findClassFunctionFromFile(psiFile, null, className, functionName) else symbolResolver.findTopLevelFunction(psiFile, functionName))
+        val editorManager = FileEditorManager.getInstance(project)
+        val editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtFile), false) ?: return null
+//        val editor = psiFile.findExistingEditor() ?: return null
+        val element = (if (namespace != null) symbolResolver.findClassFunctionFromFile(psiFile, null, namespace, functionName) else symbolResolver.findTopLevelFunction(psiFile, functionName))
             ?: return null
         val document = editor.document
-        val start = document.lspPosition(element.textRange.startOffset) ?: Position(0, 0)
-        val end = document.lspPosition(element.textRange.endOffset) ?: Position(0, 0)
+        val start = document.lspPosition(element.textRange.startOffset)
+        val end = document.lspPosition(element.textRange.endOffset)
         val range = Range(start, end)
         return FindSymbolInFileResponse(element.text, range)
     }

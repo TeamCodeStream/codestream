@@ -81,7 +81,7 @@ class EditorSymbolRevealResponse(
 
 class EditorCopySymbolRequest (
     val uri: String,
-    val className: String?,
+    val namespace: String?,
     val symbolName: String,
     val ref: String?,
 )

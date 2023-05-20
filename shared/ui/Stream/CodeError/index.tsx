@@ -26,6 +26,7 @@ import {
 import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
 import {
 	api,
+	copySymbolFromIde,
 	fetchErrorGroup,
 	jumpToStackLine,
 	upgradePendingCodeError,
@@ -1158,6 +1159,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		derivedState.currentCodeErrorData?.lineIndex || 0
 	);
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = React.useState(false);
+	const [didCopyMethod, setDidCopyMethod] = React.useState(false);
+	const [jumpLocation, setJumpLocation] = React.useState<number | undefined>();
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1181,9 +1184,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	// An alternate approach would be to resolve with language symbols in the IDE and bubble up to the
 	// appropriate scope to find the best code segment to send. (i.e. up to the method of a class, but
 	// not all the way up to the class itself)
-	function extractMethodName(
-		lines: CSStackTraceLine[]
-	): { namespace?: string; functionName: string } | undefined {
+	function extractMethodName(lines: CSStackTraceLine[]): CSStackTraceLine | undefined {
 		for (const line of lines) {
 			if (
 				line.method &&
@@ -1191,11 +1192,51 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				line.method !== "<unknown>" &&
 				line.fileFullPath !== "<anonymous>"
 			) {
-				return { namespace: line.namespace, functionName: line.method };
+				return line;
 			}
 		}
 		return undefined;
 	}
+
+	useEffect(() => {
+		if (!props.collapsed && jumpLocation && didJumpToFirstAvailableLine && !didCopyMethod) {
+			const { stackTraces } = codeError;
+			const stackInfo = stackTraces?.[0];
+			// console.debug(`===--- symbol useEffect`);
+			if (stackInfo?.lines) {
+				// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
+				// This also might not be the best approach, but it's a start
+				const line = extractMethodName(stackInfo.lines);
+				if (line?.fileRelativePath) {
+					const { stackTraces } = codeError;
+					const stackInfo = stackTraces?.[0];
+					// console.debug(`===--- symbol useEffect`, line.method);
+					try {
+						// console.debug(`===--- symbol useEffect calling copySymbolFromIde`);
+						dispatch(copySymbolFromIde(line, stackInfo.sha!, stackInfo.repoId!));
+					} catch (ex) {
+						console.warn(ex);
+					}
+					setDidCopyMethod(true);
+					setTimeout(() => {
+						try {
+							// console.debug(`===--- symbol useEffect calling jumpToStackLine`);
+							dispatch(
+								jumpToStackLine(
+									jumpLocation,
+									stackInfo.lines[jumpLocation],
+									stackInfo.sha!,
+									stackInfo.repoId!
+								)
+							);
+						} catch (ex) {
+							console.warn(ex);
+						}
+					}, 100);
+				}
+			}
+		}
+	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
 
 	useEffect(() => {
 		if (!props.collapsed && !didJumpToFirstAvailableLine) {
@@ -1209,29 +1250,8 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				}
 				if (lineIndex < len) {
 					setDidJumpToFirstAvailableLine(true);
+					setJumpLocation(lineIndex);
 					setCurrentSelectedLineIndex(lineIndex);
-					// This might be different from the jumpToLine lineIndex if jumpToLine is an anonymous function
-					// This also might not be the best approach, but it's a start
-
-					// TODO probable race condition with resolved stack trace lines since it happens line by line -
-					// didJumpToFirstAvailableLine gets set before extractMethodName has a resolved line to find :(
-					// Seen on vscode (slower stack trace resolution)
-					const functionInfo = extractMethodName(stackInfo.lines);
-
-					try {
-						dispatch(
-							jumpToStackLine(
-								lineIndex,
-								stackInfo.lines[lineIndex],
-								stackInfo.sha!,
-								stackInfo.repoId!,
-								functionInfo?.namespace,
-								functionInfo?.functionName
-							)
-						);
-					} catch (ex) {
-						console.warn(ex);
-					}
 				}
 			}
 		}

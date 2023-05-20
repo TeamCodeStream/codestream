@@ -490,15 +490,51 @@ export const replaceSymbol =
 		});
 	};
 
+export const copySymbolFromIde =
+	(stackLine: CSStackTraceLine, ref: string, repoId: string) =>
+	async (dispatch, getState: () => CodeStreamState) => {
+		if (!stackLine.method) {
+			return;
+		}
+		const currentPosition = await HostApi.instance.send(ResolveStackTracePositionRequestType, {
+			ref,
+			repoId,
+			filePath: stackLine.fileRelativePath!,
+			line: stackLine.line!,
+			column: stackLine.column!,
+		});
+		if (currentPosition.error) {
+			logError(`Unable to copySymbolFromIde: ${currentPosition.error}`);
+			return;
+		}
+
+		const { path } = currentPosition;
+		if (!path) {
+			return;
+		}
+
+		// console.debug(`===--- EditorCopySymbolType uri: ${path}, ref: ${ref}`);
+
+		const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
+			uri: path,
+			namespace: stackLine.namespace,
+			symbolName: stackLine.method,
+			ref,
+		});
+
+		if (symbolDetails.success && symbolDetails.range && symbolDetails.text) {
+			dispatch(
+				setFunctionToEdit({
+					codeBlock: symbolDetails.text,
+					symbol: stackLine.method,
+					uri: path,
+				})
+			);
+		}
+	};
+
 export const jumpToStackLine =
-	(
-		lineIndex: number,
-		stackLine: CSStackTraceLine,
-		ref: string,
-		repoId: string,
-		className?: string,
-		symbolName?: string
-	) =>
+	(lineIndex: number, stackLine: CSStackTraceLine, ref: string, repoId: string) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		const state = getState();
 		dispatch(
@@ -542,36 +578,13 @@ export const jumpToStackLine =
 			range,
 			ref,
 		});
-
-		if (symbolName) {
-			const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
+		if (revealResponse?.success) {
+			highlightRange({
 				uri: path!,
-				className,
-				symbolName,
+				range,
+				highlight: true,
 				ref,
 			});
-
-			if (symbolDetails.success && symbolDetails.range && symbolDetails.text) {
-				dispatch(
-					setFunctionToEdit({
-						codeBlock: symbolDetails.text,
-						symbol: symbolName,
-						uri: path!,
-					})
-				);
-			}
-		}
-
-		// EditorCopySymbolType undoes the highlightRange so postpone it
-		if (revealResponse?.success) {
-			setTimeout(() => {
-				highlightRange({
-					uri: path!,
-					range,
-					highlight: true,
-					ref,
-				});
-			}, 1);
 		}
 	};
 

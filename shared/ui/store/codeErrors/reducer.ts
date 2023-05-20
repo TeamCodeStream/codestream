@@ -63,7 +63,9 @@ export function reduceCodeErrors(
 			};
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
-			console.debug(`grokFunctionToEdit: ${JSON.stringify(action.payload)}`);
+			if (action.payload) {
+				console.debug(`grokFunctionToEdit: ${JSON.stringify(action.payload).substring(0, 100)}`);
+			}
 			return { ...state, functionToEdit: action.payload };
 		}
 		case CodeErrorsActionsTypes.Delete: {
