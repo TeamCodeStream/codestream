@@ -1055,11 +1055,7 @@ export class NewRelicProvider
 		let codeClause = "";
 		let spanSubquery = "";
 		if (functionIdentifiers?.functionName) {
-			const fnSet = new Set([
-				functionIdentifiers.functionName,
-				functionIdentifiers.functionName.replace(/\(.*?\)$/, ""),
-			]);
-			codeClause = "(" + Array.from(fnSet, _ => `code.function = '${_}'`).join(" OR ") + ")";
+			codeClause = `code.function = '${functionIdentifiers.functionName}'`;
 			const codeClauseSubClauses = [];
 			if (functionIdentifiers.codeNamespace) {
 				codeClauseSubClauses.push(`code.namespace = '${functionIdentifiers.codeNamespace}'`);

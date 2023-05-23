@@ -570,7 +570,8 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					relativeFilePath: fileLevelTelemetryResponse.relativeFilePath,
 					languageId: document.languageId,
 					range: _.symbol.range,
-					functionName: _.symbol.name,
+					// Strip off any trailing () for function (csharp and java) - undo this if we get types in agent
+					functionName: _.symbol.name.replace(/\(.*?\)$/, ""),
 					newRelicAccountId: fileLevelTelemetryResponse.newRelicAccountId,
 					newRelicEntityGuid: fileLevelTelemetryResponse.newRelicEntityGuid,
 					methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions,
