@@ -106,7 +106,7 @@ export const createCodeError =
 				codeBlock: attributes.codeBlock,
 				analyze: attributes.analyze,
 			});
-			if (response) {
+			if (response.codeError) {
 				dispatch(addCodeErrors([response.codeError]));
 				dispatch(addStreams([response.stream]));
 				dispatch(addPosts([response.post]));
@@ -357,6 +357,18 @@ export const upgradePendingCodeError =
 					analyze: analyze === true,
 				};
 				const response = (await dispatch(createPostAndCodeError(newCodeError))) as any;
+				if (!response.codeError) {
+					if (response.exception) {
+						logError(JSON.stringify(response.exception), {
+							codeErrorId: codeErrorId,
+						});
+					} else {
+						logError("no codeError returned", {
+							codeErrorId: codeErrorId,
+						});
+					}
+					return undefined;
+				}
 				HostApi.instance.track("Error Created", {
 					"Error Group ID": "",
 					"NR Account ID": newCodeError.accountId,
@@ -508,32 +520,36 @@ export const replaceSymbol =
 	};
 
 export const copySymbolFromIde =
-	(stackLine: CSStackTraceLine, ref: string, repoId: string) =>
-	async (dispatch, getState: () => CodeStreamState) => {
-		if (!stackLine.method) {
+	(stackLine: CSStackTraceLine, repoId?: string, ref?: string) => async dispatch => {
+		if (!stackLine.method || !stackLine.fileRelativePath) {
 			return;
 		}
-		const currentPosition = await HostApi.instance.send(ResolveStackTracePositionRequestType, {
-			ref,
-			repoId,
-			filePath: stackLine.fileRelativePath!,
-			line: stackLine.line!,
-			column: stackLine.column!,
-		});
-		if (currentPosition.error) {
+		const currentPosition =
+			ref && repoId && stackLine.fileRelativePath
+				? await HostApi.instance.send(ResolveStackTracePositionRequestType, {
+						ref,
+						repoId,
+						filePath: stackLine.fileRelativePath,
+						line: stackLine.line,
+						column: stackLine.column,
+				  })
+				: undefined;
+		if (currentPosition?.error) {
 			logError(`Unable to copySymbolFromIde: ${currentPosition.error}`);
-			return;
 		}
 
-		const { path } = currentPosition;
-		if (!path) {
-			return;
-		}
+		const currentPositionPath = currentPosition?.path;
 
 		// console.debug(`===--- EditorCopySymbolType uri: ${path}, ref: ${ref}`);
 
+		const lookupPath =
+			currentPositionPath ??
+			new URL(stackLine.fileFullPath ?? stackLine.fileRelativePath).toString();
+
+		console.debug("===--- copySymbolFromIde lookupPath: ", lookupPath);
+
 		const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
-			uri: path,
+			uri: lookupPath,
 			namespace: stackLine.namespace,
 			symbolName: stackLine.method,
 			ref,
@@ -544,7 +560,7 @@ export const copySymbolFromIde =
 				setFunctionToEdit({
 					codeBlock: symbolDetails.text,
 					symbol: stackLine.method,
-					uri: path,
+					uri: lookupPath,
 				})
 			);
 		}

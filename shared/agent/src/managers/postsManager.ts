@@ -1016,9 +1016,7 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			}
 
 			if (providerId === "bitbucket*org") {
-				let result: Promise<Directives>;
-
-				result = await providerRegistry.executeMethod({
+				const result: Promise<Directives> = await providerRegistry.executeMethod({
 					method: "createCommitComment",
 					providerId: parsedUri.context.pullRequest.providerId,
 					params: {

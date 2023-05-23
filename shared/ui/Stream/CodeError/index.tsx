@@ -33,7 +33,11 @@ import {
 	startGrokLoading,
 	upgradePendingCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
-import { getGrokPostLength, getThreadPosts } from "@codestream/webview/store/posts/reducer";
+import {
+	getGrokPostLength,
+	getThreadPosts,
+	getPost,
+} from "@codestream/webview/store/posts/reducer";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import {
 	currentUserIsAdminSelector,
@@ -46,7 +50,6 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { isSha } from "@codestream/webview/utilities/strings";
 import { emptyArray, replaceHtml } from "@codestream/webview/utils";
 import { HostApi } from "@codestream/webview/webview-api";
-import { getPost } from "../../store/posts/reducer";
 import { createPost, deletePost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
@@ -1195,14 +1198,18 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	useEffect(() => {
 		const submitGrok = async (codeBlock: string) => {
-			console.info("---=== submitGrok start ===---");
 			dispatch(startGrokLoading(props.codeError));
 			const actualCodeError = (await dispatch(
 				upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
-			)) as {
-				codeError: CSCodeError;
-			};
-			console.info("---=== submitGrok complete ===---");
+			)) as
+				| {
+						codeError: CSCodeError | undefined;
+				  }
+				| undefined;
+
+			if (!actualCodeError || !actualCodeError.codeError) {
+				return;
+			}
 
 			dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
 
@@ -1270,7 +1277,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 					// console.debug(`===--- symbol useEffect`, line.method);
 					try {
 						// console.debug(`===--- symbol useEffect calling copySymbolFromIde`);
-						dispatch(copySymbolFromIde(line, stackInfo.sha!, stackInfo.repoId!));
+						dispatch(copySymbolFromIde(line, stackInfo.repoId, stackInfo.sha));
 					} catch (ex) {
 						console.warn(ex);
 					}
@@ -1768,7 +1775,13 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								<DelayedRender>
 									<ReplyBody style={{ marginTop: 13 }}>
 										<AuthorInfo style={{ fontWeight: 700 }}>
-											<Headshot size={20} person={{ username: "Grok" }} />
+											<Headshot
+												size={20}
+												person={{
+													username: "Grok",
+													avatar: { image: "https://images.codestream.com/icons/grok-green.png" },
+												}}
+											/>
 											<span>Grok</span>
 										</AuthorInfo>
 									</ReplyBody>

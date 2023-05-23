@@ -67,8 +67,8 @@ export interface ResolveStackTracePositionRequest {
 	ref: string;
 	repoId: string;
 	filePath: string;
-	line: number;
-	column: number;
+	line?: number;
+	column?: number;
 }
 
 export interface ResolveStackTracePositionResponse {
