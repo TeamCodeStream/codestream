@@ -32,6 +32,12 @@ export const saveCodeErrors = (codeErrors: CSCodeError[]) =>
 export const _updateCodeErrors = (codeErrors: CSCodeError[]) =>
 	action(CodeErrorsActionsTypes.UpdateCodeErrors, codeErrors);
 
+export const setGrokLoading = (loading: boolean) =>
+	action(CodeErrorsActionsTypes.SetGrokLoading, loading);
+
+export const setGrokRepliesLength = (length: number) =>
+	action(CodeErrorsActionsTypes.SetGrokRepliesLength, length);
+
 export const setFunctionToEdit = (functionToEdit: FunctionToEdit | undefined) =>
 	action(CodeErrorsActionsTypes.SetFunctionToEdit, functionToEdit);
 
@@ -51,6 +57,8 @@ export interface NewCodeErrorAttributes {
 		mentionedUserIds?: string[];
 	};
 	providerUrl?: string;
+	codeBlock?: string;
+	analyze: boolean;
 }
 
 export const _deleteCodeError = (id: string) => action(CodeErrorsActionsTypes.Delete, id);

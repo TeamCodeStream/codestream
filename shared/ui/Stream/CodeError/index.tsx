@@ -5,8 +5,8 @@ import {
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSPost, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
-import React, { PropsWithChildren, useEffect } from "react";
-import { shallowEqual, useSelector } from "react-redux";
+import React, { PropsWithChildren, RefObject, useEffect } from "react";
+import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
@@ -22,6 +22,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import {
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
+	setGrokLoading,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
 import {
@@ -29,9 +30,10 @@ import {
 	copySymbolFromIde,
 	fetchErrorGroup,
 	jumpToStackLine,
+	startGrokLoading,
 	upgradePendingCodeError,
 } from "@codestream/webview/store/codeErrors/thunks";
-import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
+import { getGrokPostLength, getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { isConnected } from "@codestream/webview/store/providers/reducer";
 import {
 	currentUserIsAdminSelector,
@@ -48,6 +50,7 @@ import { getPost } from "../../store/posts/reducer";
 import { createPost, deletePost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
+	AuthorInfo,
 	BigTitle,
 	Header,
 	HeaderActions,
@@ -74,6 +77,8 @@ import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
 import { ConditionalNewRelic } from "./ConditionalComponent";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
+import { ReplyBody } from "@codestream/webview/Stream/Posts/Reply";
+import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 
 interface SimpleError {
 	/**
@@ -1150,8 +1155,11 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				: false,
 			currentCodeErrorData: state.context.currentCodeErrorData,
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
+			replies: props.collapsed
+				? emptyArray
+				: getThreadPosts(state, codeError.streamId, codeError.postId),
 		};
-	});
+	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup } = derivedState;
 
@@ -1161,6 +1169,55 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = React.useState(false);
 	const [didCopyMethod, setDidCopyMethod] = React.useState(false);
 	const [jumpLocation, setJumpLocation] = React.useState<number | undefined>();
+
+	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
+	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
+	const grokMarkRepliesLength = useAppSelector(state => state.codeErrors.grokRepliesLength);
+	const currentGrokRepliesLength = useAppSelector(state =>
+		getGrokPostLength(state, codeError.streamId, codeError.postId)
+	);
+
+	useEffect(() => {
+		// console.debug(
+		// 	`===--- grok loading useEffect loading ${isGrokLoading} currentGrokRepliesLength: ${currentGrokRepliesLength} grokRepliesLength: ${grokMarkRepliesLength}`
+		// );
+		if (
+			grokMarkRepliesLength !== undefined &&
+			isGrokLoading &&
+			currentGrokRepliesLength > grokMarkRepliesLength
+		) {
+			// console.debug(
+			// 	`===--- setGrokLoading false ${currentGrokRepliesLength} > ${grokMarkRepliesLength}`
+			// );
+			dispatch(setGrokLoading(false));
+		}
+	}, [isGrokLoading, currentGrokRepliesLength]);
+
+	useEffect(() => {
+		const submitGrok = async (codeBlock: string) => {
+			console.info("---=== submitGrok start ===---");
+			dispatch(startGrokLoading(props.codeError));
+			const actualCodeError = (await dispatch(
+				upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
+			)) as {
+				codeError: CSCodeError;
+			};
+			console.info("---=== submitGrok complete ===---");
+
+			dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+
+			// setIsLoading(false);
+			// setText("");
+			// setAttachments([]);
+		};
+		// if (derivedState.replies?.length === 0 && functionToEdit) {
+		if (codeError.numReplies === 0 && functionToEdit) {
+			// setIsLoading(true);
+			submitGrok(functionToEdit.codeBlock).catch(e => {
+				console.error("submitGrok failed", e);
+			});
+		}
+	}, [functionToEdit]);
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1517,13 +1574,16 @@ const ReplyInput = (props: { codeError: CSCodeError }) => {
 	const [text, setText] = React.useState("");
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
-	const teamMates = useSelector((state: CodeStreamState) => getTeamMates(state));
+	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
 
 	const submit = async () => {
 		// don't create empty replies
 		if (text.length === 0) return;
 
 		setIsLoading(true);
+		if (text.match(/@Grok/gim)) {
+			dispatch(startGrokLoading(props.codeError));
+		}
 
 		const actualCodeError = (await dispatch(
 			upgradePendingCodeError(props.codeError.id, "Comment")
@@ -1615,7 +1675,7 @@ export type CodeErrorProps = PropsWithId | PropsWithCodeError;
 
 const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const { codeError, ...baseProps } = props;
-	const derivedState = useSelector((state: CodeStreamState) => {
+	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const post =
 			codeError && codeError.postId
 				? getPost(state.posts, codeError!.streamId, codeError.postId)
@@ -1635,12 +1695,43 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		};
 	}, shallowEqual);
 
+	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
+
 	const [preconditionError, setPreconditionError] = React.useState<SimpleError>({
 		message: "",
 		type: "",
 	});
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+
+	const [scrollNewTarget, setScrollNewTarget] = React.useState<RefObject<HTMLElement> | undefined>(
+		undefined
+	);
+	const currentGrokRepliesLength = useAppSelector(state =>
+		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
+	);
+
+	function scrollToNew() {
+		const target = scrollNewTarget?.current;
+		if (target) {
+			// console.debug("===--- scrollToNew ", target);
+			target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
+		} else {
+			// console.debug("===--- scrollToNew no target", scrollNewTarget);
+		}
+	}
+
+	useEffect(() => {
+		if (currentGrokRepliesLength > 0) {
+			// console.debug("---=== useEffect calling scrollToNew ===---");
+			scrollToNew();
+		}
+	}, [currentGrokRepliesLength]);
+
+	function scrollNewTargetCallback(ref: RefObject<HTMLElement>) {
+		// console.debug("===--- scrollNewTargetCallback setScrollNewTarget ", ref);
+		setScrollNewTarget(ref);
+	}
 
 	useDidMount(() => {
 		if (!props.collapsed) {
@@ -1651,6 +1742,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		}
 	});
 
+	const grokMessage =
+		currentGrokRepliesLength === 0
+			? "Hold on while I analyze this error for you..."
+			: "Hold on while I think about that...";
+
 	const renderFooter =
 		props.renderFooter ||
 		((Footer, InputContainer) => {
@@ -1660,13 +1756,25 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
 					{props.codeError.postId && (
 						<>
-							{derivedState.replies?.length > 0 && <MetaLabel>Activity</MetaLabel>}
+							{<MetaLabel>Activity</MetaLabel>}
 							<RepliesToPost
 								streamId={props.codeError.streamId}
 								parentPostId={props.codeError.postId}
 								itemId={props.codeError.id}
 								numReplies={props.codeError.numReplies}
+								scrollNewTargetCallback={scrollNewTargetCallback}
 							/>
+							{isGrokLoading && (
+								<DelayedRender>
+									<ReplyBody style={{ marginTop: 13 }}>
+										<AuthorInfo style={{ fontWeight: 700 }}>
+											<Headshot size={20} person={{ username: "Grok" }} />
+											<span>Grok</span>
+										</AuthorInfo>
+									</ReplyBody>
+									<LoadingMessage align={"left"}>{grokMessage}</LoadingMessage>
+								</DelayedRender>
+							)}
 						</>
 					)}
 

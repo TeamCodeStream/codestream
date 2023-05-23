@@ -5,6 +5,7 @@ import { CodeStreamState } from "..";
 import { ActionType } from "../common";
 import * as actions from "./actions";
 import { isPending, Post, PostsActionsType, PostsState } from "./types";
+import { PostPlus } from "@codestream/protocols/agent";
 
 type PostsActions = ActionType<typeof actions>;
 
@@ -110,6 +111,15 @@ export const getPostsForStream = createSelector(
 	}
 );
 
+export function isPostPlus(object: unknown): object is PostPlus {
+	const maybeCodeError = object as PostPlus;
+	return (
+		maybeCodeError.text !== undefined &&
+		maybeCodeError.teamId !== undefined &&
+		maybeCodeError.streamId !== undefined
+	);
+}
+
 export const getThreadPosts = createSelector(
 	getPostsForStream,
 	(_, __, threadId: string) => threadId,
@@ -119,7 +129,7 @@ export const getThreadPosts = createSelector(
 
 		// HACK: 💩 don't keep this around
 		// if replying to a reply, we need to include nested replies in the thread
-		for (let post of posts) {
+		for (const post of posts) {
 			if (excludePending && isPending(post)) continue;
 			if (post.parentPostId === threadId) result.push(post);
 			// if this post is a reply to one of the replies already seen, include it too
@@ -129,6 +139,12 @@ export const getThreadPosts = createSelector(
 		return result;
 	}
 );
+
+export const getGrokPostLength = createSelector(getThreadPosts, posts => {
+	const grokPostLength = posts.filter(post => isPostPlus(post) && post.forGrok).length;
+	// console.debug(`===--- getGrokPostLength: ${grokPostLength}`);
+	return grokPostLength;
+});
 
 export const getPost = ({ byStream, pending }: PostsState, streamId: string, postId: string) => {
 	const post = (byStream[streamId] || {})[postId];

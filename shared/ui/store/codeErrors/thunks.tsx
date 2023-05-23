@@ -32,6 +32,8 @@ import {
 	_updateCodeErrors,
 	setFunctionToEdit,
 	_deleteCodeError,
+	setGrokLoading,
+	setGrokRepliesLength,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
@@ -43,6 +45,7 @@ import { confirmPopup } from "@codestream/webview/Stream/Confirm";
 import { HostApi } from "@codestream/webview/webview-api";
 import { Position, Range } from "vscode-languageserver-types";
 import React from "react";
+import { getGrokPostLength } from "@codestream/webview/store/posts/reducer";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -93,12 +96,15 @@ export interface CreateCodeErrorError {
 
 export const createCodeError =
 	(attributes: NewCodeErrorAttributes) => async (dispatch, getState: () => CodeStreamState) => {
+		// console.debug("===--- createCodeError ---===", attributes);
 		try {
 			const response = await HostApi.instance.send(CreateShareableCodeErrorRequestType, {
 				attributes,
 				entryPoint: attributes.entryPoint,
 				addedUsers: attributes.addedUsers,
 				replyPost: attributes.replyPost,
+				codeBlock: attributes.codeBlock,
+				analyze: attributes.analyze,
 			});
 			if (response) {
 				dispatch(addCodeErrors([response.codeError]));
@@ -318,16 +324,25 @@ export const openErrorGroup =
  *
  * a pending codeError has an ide that begins with PENDING, and fully looks like `PENDING-${errorGroupGuid}`.
  *
- * @param {string} codeErrorId
  */
 export const upgradePendingCodeError =
-	(codeErrorId: string, source: "Comment" | "Status Change" | "Assignee Change") =>
+	(
+		codeErrorId: string,
+		source: "Comment" | "Status Change" | "Assignee Change",
+		codeBlock?: string,
+		analyze?: boolean
+	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
-		console.log("upgradePendingCodeError", { codeErrorId: codeErrorId });
+		// console.debug("===--- upgradePendingCodeError ===---", { codeErrorId: codeErrorId, source });
 		try {
 			const state = getState();
-			let existingCodeError = getCodeError(state.codeErrors, codeErrorId) as CSCodeError;
+			const existingCodeError = getCodeError(state.codeErrors, codeErrorId);
+			if (!existingCodeError) {
+				console.warn(`upgradePendingCodeError: no codeError found for ${codeErrorId}`);
+				return;
+			}
 			if (codeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0) {
+				// console.debug("===--- PENDING_CODE_ERROR_ID_PREFIX ===---")
 				const { accountId, objectId, objectType, title, text, stackTraces, objectInfo } =
 					existingCodeError;
 				const newCodeError: NewCodeErrorAttributes = {
@@ -338,6 +353,8 @@ export const upgradePendingCodeError =
 					text,
 					stackTraces,
 					objectInfo,
+					codeBlock,
+					analyze: analyze === true,
 				};
 				const response = (await dispatch(createPostAndCodeError(newCodeError))) as any;
 				HostApi.instance.track("Error Created", {
@@ -347,7 +364,7 @@ export const upgradePendingCodeError =
 				});
 
 				// remove the pending codeError
-				dispatch(removeCodeError(codeErrorId!));
+				dispatch(removeCodeError(codeErrorId));
 
 				dispatch(
 					setCurrentCodeError(response.codeError.id, {
@@ -599,3 +616,13 @@ export const fetchNewRelicErrorGroup =
 	(request: GetNewRelicErrorGroupRequest) => async dispatch => {
 		return HostApi.instance.send(GetNewRelicErrorGroupRequestType, request);
 	};
+
+export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, getState) => {
+	const state: CodeStreamState = getState();
+	const grokPostLength = getGrokPostLength(state, codeError.streamId, codeError.postId);
+	// console.debug(
+	// 	`===--- startGrokLoading called, grokPostLength: ${grokPostLength}`
+	// );
+	dispatch(setGrokRepliesLength(grokPostLength));
+	dispatch(setGrokLoading(true));
+};

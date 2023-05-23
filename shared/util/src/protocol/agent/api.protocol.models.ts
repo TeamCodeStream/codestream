@@ -334,7 +334,7 @@ export interface CSCodeError extends CSEntity {
 	text?: string;
 	stackTraces: CSStackTraceInfo[]; // (CSStackTraceInfo | CSStackTraceError)[];
 	providerUrl?: string;
-	assignees: string[];
+	assignees?: string[];
 
 	// an array of people who have resolved the code error
 	resolvedBy?: CSCodeErrorResolutions;
@@ -382,6 +382,7 @@ export interface CSPost extends CSEntity {
 	files?: Attachment[];
 	sharedTo?: ShareTarget[];
 	codeErrorId?: string;
+	forGrok?: boolean;
 }
 
 export interface CSRemote {

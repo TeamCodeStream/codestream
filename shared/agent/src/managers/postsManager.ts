@@ -694,7 +694,7 @@ export function trackCodeErrorPostCreation(
 			} = {
 				"Code Error ID": codeError.id,
 				"Entry Point": entryPoint,
-				Assignees: codeError.assignees.length,
+				Assignees: codeError.assignees?.length ?? 0,
 				// rounds to 4 places
 				"Invitee Assignees": addedUsers ? addedUsers.length : 0,
 			};
@@ -1505,6 +1505,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			dontSendEmail: false,
 			mentionedUserIds: request.mentionedUserIds,
 			addedUsers: request.addedUsers,
+			codeBlock: request.codeBlock,
+			analyze: request.analyze,
 		});
 
 		codeError = response.codeError!;

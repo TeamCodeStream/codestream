@@ -11,6 +11,7 @@ import {
 	CreatePostWithMarkerRequestType,
 	CreateTeamTagRequestType,
 	CreateThirdPartyPostRequestType,
+	CrossPostIssueValues,
 	DeletePostRequestType,
 	DeleteTeamTagRequestType,
 	DeleteThirdPartyPostRequestType,
@@ -42,7 +43,13 @@ import {
 	UpdateStreamMembershipRequestType,
 	UpdateTeamTagRequestType,
 } from "@codestream/protocols/agent";
-import { CSPost, CSReviewStatus, ShareTarget, StreamType } from "@codestream/protocols/api";
+import {
+	Attachment,
+	CSPost,
+	CSReviewStatus,
+	ShareTarget,
+	StreamType,
+} from "@codestream/protocols/api";
 import { pick } from "lodash-es";
 import React from "react";
 
@@ -295,6 +302,15 @@ export const createPostAndCodeError =
 		);
 	};
 
+export type CreatePostExtras = {
+	analyze?: boolean;
+	codeBlock?: string;
+	files?: Attachment[];
+	entryPoint?: string;
+	reviewCheckpoint?: number;
+	crossPostIssueValues?: CrossPostIssueValues;
+};
+
 export const createPost =
 	(
 		streamId: string,
@@ -302,7 +318,7 @@ export const createPost =
 		text: string,
 		codemark?: any,
 		mentions?: string[],
-		extra: any = {}
+		extra: CreatePostExtras = {}
 	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		const { session, context, posts } = getState();
@@ -387,6 +403,8 @@ export const createPost =
 					entryPoint: extra.entryPoint,
 					reviewCheckpoint: extra.reviewCheckpoint,
 					files: extra.files,
+					codeBlock: extra.codeBlock,
+					analyze: extra.analyze === true,
 				});
 			}
 			const response = await responsePromise;

@@ -6,6 +6,8 @@ export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
 	SaveCodeErrors = "@codeErrors/SaveCodeErrors",
 	SetFunctionToEdit = "@codeErrors/SetFunctionToEdit",
+	SetGrokLoading = "@codeErrors/SetGrokLoading",
+	SetGrokRepliesLength = "@codeErrors/SetGrokRepliesLength",
 	UpdateCodeErrors = "@codeErrors/UpdateCodeErrors",
 	Delete = "@codeErrors/Delete",
 	Bootstrap = "@codeErrors/Bootstrap",
@@ -32,4 +34,6 @@ export type CodeErrorsState = {
 		errorGroup: NewRelicErrorGroup;
 	}>;
 	functionToEdit?: FunctionToEdit;
+	grokLoading: boolean;
+	grokRepliesLength: number;
 };

@@ -15,7 +15,7 @@ import {
 import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import { escapeHtml, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
-import React from "react";
+import React, { forwardRef, Ref } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { deletePost, editPost } from "../actions";
@@ -115,7 +115,7 @@ const Root = styled.div`
 	}
 `;
 
-const ReplyBody = styled.span`
+export const ReplyBody = styled.span`
 	display: flex;
 	flex-direction: column;
 	position: relative;
@@ -199,7 +199,7 @@ const ComposeWrapper = styled.div.attrs(() => ({
 	}
 `;
 
-export const Reply = (props: ReplyProps) => {
+export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 	const dispatch = useAppDispatch();
 	const { setEditingPostId, setReplyingToPostId } = React.useContext(RepliesToPostContext);
 	const [menuState, setMenuState] = React.useState<{
@@ -302,7 +302,7 @@ export const Reply = (props: ReplyProps) => {
 	const author = props.author || { username: "???" };
 
 	return (
-		<Root className={props.className}>
+		<Root ref={ref} className={props.className}>
 			{props.threadId && !props.lastNestedReply && <div className="bar-left-not-last-child" />}
 			{props.threadId && props.lastNestedReply && <div className="bar-left-last-child" />}
 			{props.threadId && <div className="bar-left-connector" />}
@@ -447,7 +447,7 @@ export const Reply = (props: ReplyProps) => {
 				))}
 		</Root>
 	);
-};
+});
 
 const NestedReply = (props: {
 	post: Post;

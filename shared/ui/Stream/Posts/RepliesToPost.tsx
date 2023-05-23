@@ -10,7 +10,7 @@ import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview
 import { mapFilter, replaceHtml } from "@codestream/webview/utils";
 import cx from "classnames";
 import { groupBy } from "lodash-es";
-import React from "react";
+import React, { RefObject, useEffect } from "react";
 import styled from "styled-components";
 import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
 import Button from "../Button";
@@ -43,6 +43,7 @@ export const RepliesToPost = (props: {
 	parentPostId: string;
 	itemId: string;
 	numReplies: number;
+	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
 }) => {
 	const dispatch = useAppDispatch();
 	const currentUserId = useAppSelector((state: CodeStreamState) => state.session.userId!);
@@ -61,6 +62,7 @@ export const RepliesToPost = (props: {
 	const [newReplyText, setNewReplyText] = React.useState("");
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
+	const lastCommentRef = React.useRef<HTMLElement>(null);
 
 	const contextValue = React.useMemo(
 		() => ({
@@ -73,6 +75,13 @@ export const RepliesToPost = (props: {
 	useDidMount(() => {
 		dispatch(fetchThread(props.streamId, props.parentPostId));
 	});
+
+	useEffect(() => {
+		if (props.scrollNewTargetCallback) {
+			// console.debug(`====> setting scrollNewTargetCallback`, lastCommentRef);
+			props.scrollNewTargetCallback(lastCommentRef);
+		}
+	}, [lastCommentRef]);
 
 	const submit = async () => {
 		// don't create empty replies
@@ -131,15 +140,18 @@ export const RepliesToPost = (props: {
 		return menuItems;
 	};
 
+	let idx = 0;
 	return (
 		<RepliesToPostContext.Provider value={contextValue}>
 			{mapFilter(replies, (reply: PostPlus) => {
+				idx++;
 				if (reply.parentPostId != null && nestedRepliesByParent.hasOwnProperty(reply.parentPostId))
 					return null;
 				const menuItems = getMenuItems(reply);
 				return (
 					<React.Fragment key={reply.id}>
 						<Reply
+							ref={idx === replies.length ? lastCommentRef : null}
 							author={allUsers[reply.creatorId]}
 							post={reply}
 							editingPostId={editingPostId}
