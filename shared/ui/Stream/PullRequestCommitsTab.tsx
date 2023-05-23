@@ -210,7 +210,7 @@ export const PullRequestCommitsTab = props => {
 	const order = derivedState.providerName === "GitLab" ? "desc" : "asc";
 
 	const getCommitUrl = commit => {
-		if (commit.url.href) {
+		if (commit?.url?.href) {
 			return commit.url.href;
 		} else if (!commit.url) {
 			return `${pr.url}/commits/${commit.abbreviatedOid}`;

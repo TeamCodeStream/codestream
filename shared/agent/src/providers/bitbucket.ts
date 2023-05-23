@@ -595,7 +595,12 @@ interface BitbucketPullRequestCommit {
 	date: string;
 	hash: string;
 	links: {
-		html: string;
+		html: {
+			href: string;
+		};
+		patch: {
+			href: string;
+		};
 	};
 }
 
@@ -2058,12 +2063,18 @@ export class BitbucketProvider
 		);
 
 		const response = items.body.values.map(commit => {
+			let alternateName = commit.author?.raw?.split(" ");
 			const author = {
-				name: commit.author.user?.display_name,
-				avatarUrl: commit.author.user.links?.avatar?.href,
+				name: commit.author?.user?.display_name || alternateName[0],
+
+				avatarUrl:
+					//@ts-ignore
+					commit.author?.user?.links?.avatar?.href || commit.repository?.links?.avatar?.href,
 				user: {
-					login: commit.author.user?.display_name,
-					avatarUrl: commit.author.user.links?.avatar?.href,
+					login: commit.author?.user?.display_name || alternateName[0],
+					avatarUrl:
+						//@ts-ignore
+						commit.author?.user?.links?.avatar?.href || commit.repository?.links?.avatar?.href,
 				},
 			};
 			return {
@@ -2073,7 +2084,7 @@ export class BitbucketProvider
 				message: commit.message,
 				authoredDate: commit.date,
 				oid: commit.hash,
-				url: commit.links.html,
+				url: commit.links?.html?.href,
 			} as FetchThirdPartyPullRequestCommitsResponse;
 		});
 		return response;
@@ -2378,19 +2389,25 @@ export class BitbucketProvider
 			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 		);
 
+		const commits = await this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
+			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
+		);
+
 		const response = items.body.values.map(file => {
-			return {
-				sha: "", //TODO: fix this
-				filename: file.new?.path,
-				previousFilename: file.old?.path,
-				status: file.status,
-				additions: file?.lines_added,
-				changes: 0, //TODO: check documentation
-				deletions: file?.lines_removed,
-				patch: "",
-			} as FetchThirdPartyPullRequestFilesResponse;
+			return commits.body.values.map(commit => {
+				return {
+					sha: commit.hash,
+					filename: file.new?.path,
+					previousFilename: file.old?.path,
+					status: file.status,
+					additions: file?.lines_added,
+					changes: 0, //TODO: check documentation
+					deletions: file?.lines_removed,
+					patch: commit.links?.patch?.href,
+				};
+			});
 		});
-		return response;
+		return flatten(response);
 	}
 
 	private mapComment(
