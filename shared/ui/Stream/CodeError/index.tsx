@@ -1161,6 +1161,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			replies: props.collapsed
 				? emptyArray
 				: getThreadPosts(state, codeError.streamId, codeError.postId),
+			showGrok: isFeatureEnabled(state, "showGrok"),
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
@@ -1196,35 +1197,37 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		}
 	}, [isGrokLoading, currentGrokRepliesLength]);
 
-	useEffect(() => {
-		const submitGrok = async (codeBlock: string) => {
-			dispatch(startGrokLoading(props.codeError));
-			const actualCodeError = (await dispatch(
-				upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
-			)) as
-				| {
-						codeError: CSCodeError | undefined;
-				  }
-				| undefined;
+	if (derivedState.showGrok) {
+		useEffect(() => {
+			const submitGrok = async (codeBlock: string) => {
+				dispatch(startGrokLoading(props.codeError));
+				const actualCodeError = (await dispatch(
+					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
+				)) as
+					| {
+							codeError: CSCodeError | undefined;
+					  }
+					| undefined;
 
-			if (!actualCodeError || !actualCodeError.codeError) {
-				return;
+				if (!actualCodeError || !actualCodeError.codeError) {
+					return;
+				}
+
+				dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
+
+				// setIsLoading(false);
+				// setText("");
+				// setAttachments([]);
+			};
+			// if (derivedState.replies?.length === 0 && functionToEdit) {
+			if (codeError.numReplies === 0 && functionToEdit) {
+				// setIsLoading(true);
+				submitGrok(functionToEdit.codeBlock).catch(e => {
+					console.error("submitGrok failed", e);
+				});
 			}
-
-			dispatch(markItemRead(props.codeError.id, actualCodeError.codeError.numReplies + 1));
-
-			// setIsLoading(false);
-			// setText("");
-			// setAttachments([]);
-		};
-		// if (derivedState.replies?.length === 0 && functionToEdit) {
-		if (codeError.numReplies === 0 && functionToEdit) {
-			// setIsLoading(true);
-			submitGrok(functionToEdit.codeBlock).catch(e => {
-				console.error("submitGrok failed", e);
-			});
-		}
-	}, [functionToEdit]);
+		}, [functionToEdit]);
+	}
 
 	const onClickStackLine = async (event, lineIndex) => {
 		event && event.preventDefault();
@@ -1582,13 +1585,14 @@ const ReplyInput = (props: { codeError: CSCodeError }) => {
 	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = React.useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
+	const showGrok = useAppSelector(state => isFeatureEnabled(state, "showGrok"));
 
 	const submit = async () => {
 		// don't create empty replies
 		if (text.length === 0) return;
 
 		setIsLoading(true);
-		if (text.match(/@Grok/gim)) {
+		if (showGrok && text.match(/@Grok/gim)) {
 			dispatch(startGrokLoading(props.codeError));
 		}
 
