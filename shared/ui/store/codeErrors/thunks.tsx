@@ -46,6 +46,7 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { Position, Range } from "vscode-languageserver-types";
 import React from "react";
 import { getGrokPostLength } from "@codestream/webview/store/posts/reducer";
+import { URI } from "vscode-uri";
 
 export const updateCodeErrors =
 	(codeErrors: CSCodeError[]) => async (dispatch, getState: () => CodeStreamState) => {
@@ -544,9 +545,9 @@ export const copySymbolFromIde =
 
 		const lookupPath =
 			currentPositionPath ??
-			new URL(stackLine.fileFullPath ?? stackLine.fileRelativePath).toString();
+			URI.file(stackLine.fileFullPath ?? stackLine.fileRelativePath).toString();
 
-		console.debug("===--- copySymbolFromIde lookupPath: ", lookupPath);
+		// console.debug("===--- copySymbolFromIde lookupPath: ", lookupPath);
 
 		const symbolDetails = await HostApi.instance.send(EditorCopySymbolType, {
 			uri: lookupPath,

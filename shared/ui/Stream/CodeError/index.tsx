@@ -1200,6 +1200,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	if (derivedState.showGrok) {
 		useEffect(() => {
 			const submitGrok = async (codeBlock: string) => {
+				// console.debug("===--- useEffect startGrokLoading");
 				dispatch(startGrokLoading(props.codeError));
 				const actualCodeError = (await dispatch(
 					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
@@ -1220,7 +1221,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				// setAttachments([]);
 			};
 			// if (derivedState.replies?.length === 0 && functionToEdit) {
-			if (codeError.numReplies === 0 && functionToEdit) {
+			if (currentGrokRepliesLength === 0 && functionToEdit) {
 				// setIsLoading(true);
 				submitGrok(functionToEdit.codeBlock).catch(e => {
 					console.error("submitGrok failed", e);
@@ -1734,7 +1735,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	useEffect(() => {
 		if (currentGrokRepliesLength > 0) {
-			// console.debug("---=== useEffect calling scrollToNew ===---");
+			// console.debug(`---=== useEffect calling scrollToNew ${currentGrokRepliesLength} ===---`);
 			scrollToNew();
 		}
 	}, [currentGrokRepliesLength]);
@@ -1753,15 +1754,17 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		}
 	});
 
-	const grokMessage =
-		currentGrokRepliesLength === 0
-			? "Hold on while I analyze this error for you..."
-			: "Hold on while I think about that...";
-
 	const renderFooter =
 		props.renderFooter ||
 		((Footer, InputContainer) => {
 			if (props.collapsed) return null;
+
+			const grokMessage =
+				currentGrokRepliesLength === 0
+					? "Hold on while I analyze this error for you..."
+					: "Hold on while I think about that...";
+
+			// console.debug(`===--- length: ${currentGrokRepliesLength} message: ${grokMessage} isGrokLoading: ${isGrokLoading} ---===`);
 
 			return (
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
