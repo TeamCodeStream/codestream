@@ -192,6 +192,7 @@ import {
 	CSAsyncError,
 } from "@codestream/protocols/agent";
 import {
+	CSAccessTokenInfo,
 	CSApiCapabilities,
 	CSApiFeatures,
 	CSChannelStream,
@@ -409,7 +410,7 @@ export interface ApiProvider {
 	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
 	generateLoginCode(request: GenerateLoginCodeRequest): Promise<void>;
 	subscribe(types?: MessageType[]): Promise<void>;
-	setAccessToken(token: string): void;
+	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo): void;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 

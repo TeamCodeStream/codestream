@@ -1177,7 +1177,7 @@ export class CodeStreamSession {
 
 		const token = response.token;
 		this._codestreamAccessToken = token.value;
-		this.api.setAccessToken(token.value);
+		this.api.setAccessToken(token.value, response.accessTokenInfo);
 		this._teamId = (this._options as any).teamId = token.teamId;
 		this._codestreamUserId = response.user.id;
 		this._userId = response.user.id;

@@ -101,9 +101,15 @@ export interface CSEligibleJoinCompany {
 	teamId?: string;
 }
 
+export interface CSAccessTokenInfo {
+	refreshToken: string;
+	expiresAt: number;
+}
+
 export interface CSLoginResponse {
 	user: CSMe;
 	accessToken: string;
+	accessTokenInfo?: CSAccessTokenInfo;
 	pubnubKey: string;
 	pubnubToken: string;
 	broadcasterToken?: string;

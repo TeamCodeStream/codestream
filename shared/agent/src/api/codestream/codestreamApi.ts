@@ -181,6 +181,7 @@ import {
 	VerifyConnectivityResponse,
 } from "@codestream/protocols/agent";
 import {
+	CSAccessTokenInfo,
 	CSAddMarkersRequest,
 	CSAddMarkersResponse,
 	CSAddProviderHostRequest,
@@ -353,6 +354,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _teamId: string | undefined;
 	private _team: CSTeam | undefined;
 	private _token: string | undefined;
+	private _tokenInfo: CSAccessTokenInfo | undefined;
 	private _unreads: CodeStreamUnreads | undefined;
 	private _userId: string | undefined;
 	private _preferences: CodeStreamPreferences | undefined;
@@ -685,8 +687,9 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return this.get<CSGetInviteInfoResponse>(`/no-auth/invite-info?code=${request.code}`);
 	}
 
-	setAccessToken(token: string) {
+	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo) {
 		this._token = token;
+		this._tokenInfo = tokenInfo;
 	}
 
 	@log()
