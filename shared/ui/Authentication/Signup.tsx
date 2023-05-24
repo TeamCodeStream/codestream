@@ -377,8 +377,8 @@ export const Signup = (props: Props) => {
 	// 	[props.type]
 	// );
 
-	const buildSignupInfo = () => {
-		const info: any = { fronSignup: true };
+	const buildSignupInfo = (fromSignup = true) => {
+		const info: any = {};
 
 		if (props.inviteCode) {
 			info.type = SignupType.JoinTeam;
@@ -394,7 +394,7 @@ export const Signup = (props: Props) => {
 			info.type = SignupType.CreateTeam;
 		}
 
-		info.fromSignup = true;
+		info.fromSignup = fromSignup;
 
 		return info;
 	};
@@ -407,7 +407,7 @@ export const Signup = (props: Props) => {
 				Email: email,
 			});
 			//@TODO: Change to idp signup page event
-			dispatch(startSSOSignin("newrelicidp", buildSignupInfo()));
+			dispatch(startSSOSignin("newrelicidp", buildSignupInfo(false)));
 			//dispatch(goToNewRelicSignup({}));
 		},
 		[props.type]
