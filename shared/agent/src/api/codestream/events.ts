@@ -29,6 +29,7 @@ const messageToType: {
 		| MessageType.Teams
 		| MessageType.Users
 		| MessageType.Echo
+		| MessageType.AsyncError
 		| undefined;
 } = {
 	codemark: MessageType.Codemarks,
@@ -53,6 +54,7 @@ const messageToType: {
 	user: MessageType.Users,
 	users: MessageType.Users,
 	echo: MessageType.Echo,
+	asyncError: MessageType.AsyncError,
 };
 
 export interface BroadcasterEventsInitializer {

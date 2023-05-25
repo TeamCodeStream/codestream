@@ -18,16 +18,14 @@ import {
 	NormalizeUrlRequestType,
 	PixieDynamicLoggingResultNotification,
 	TelemetrySetAnonymousIdRequestType,
-	ThirdPartyProviders,
 	VerifyConnectivityRequestType,
 	PollForMaintenanceModeRequestType,
 	VersionCompatibility,
 	VerifyConnectivityResponse,
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
-	CSGrokError,
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSApiCapabilities, CSCodeError, CSMe } from "@codestream/protocols/api";
+import { CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
 import React from "react";
 import * as path from "path-browserify";
 import { render } from "react-dom";
@@ -126,7 +124,6 @@ import { confirmPopup } from "./Stream/Confirm";
 import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
-import { isArray, isEmpty } from "lodash-es";
 // import translationsEs from "./translations/es";
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
@@ -135,10 +132,6 @@ export function setupCommunication(host: { postMessage: (message: any) => void }
 			return host;
 		},
 	});
-}
-
-function isCSGrokError(obj: any): obj is CSGrokError {
-	return obj && obj.codeErrorId && obj.topmostPostId && obj.errorMessage;
 }
 
 export async function initialize(selector: string) {
@@ -253,34 +246,31 @@ function listenForEvents(store) {
 				store.dispatch(resetDocuments());
 				break;
 			case ChangeDataType.Documents:
-				if ((data as any).reason === "removed") {
-					store.dispatch(removeDocument((data as any).document));
+				if (data.reason === "removed") {
+					store.dispatch(removeDocument(data.document));
 				} else {
-					store.dispatch(updateDocument((data as any).document));
+					store.dispatch(updateDocument(data.document));
 				}
 				break;
 			case ChangeDataType.Preferences:
 				store.dispatch(updatePreferences(data));
 				break;
 			case ChangeDataType.Unreads:
-				store.dispatch(updateUnreads(data as any)); // TODO: Not sure why we need the any here
+				store.dispatch(updateUnreads(data));
 				break;
 			case ChangeDataType.Providers:
-				store.dispatch(updateProviders(data as ThirdPartyProviders));
+				store.dispatch(updateProviders(data));
 				break;
 			case ChangeDataType.ApiCapabilities:
-				store.dispatch(apiCapabilitiesUpdated(data as CSApiCapabilities));
+				store.dispatch(apiCapabilitiesUpdated(data));
 				break;
 			case ChangeDataType.CodeErrors:
-				store.dispatch(processCodeErrorsMessage(data as CSCodeError[]));
+				store.dispatch(processCodeErrorsMessage(data));
 				break;
-			// @ts-expect-error - fallthrough ok
-			case ChangeDataType.Posts: {
-				if (isArray(data) && !isEmpty(data) && isCSGrokError(data[0])) {
-					store.dispatch(handleGrokError(data[0]));
-					break;
-				}
-			}
+			case ChangeDataType.AsyncError:
+				// Only 1 error type right now
+				store.dispatch(handleGrokError(data[0]));
+				break;
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}

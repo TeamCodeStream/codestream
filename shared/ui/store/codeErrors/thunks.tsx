@@ -1,6 +1,6 @@
 import {
 	CreateShareableCodeErrorRequestType,
-	CSGrokError,
+	CSAsyncError,
 	DidResolveStackTraceLineNotification,
 	ExecuteThirdPartyTypedType,
 	GetNewRelicErrorGroupRequest,
@@ -647,7 +647,7 @@ export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, get
 	dispatch(setGrokLoading(true));
 };
 
-export const handleGrokError = (grokError: CSGrokError) => async dispatch => {
+export const handleGrokError = (grokError: CSAsyncError) => async dispatch => {
 	dispatch(setGrokLoading(false));
 	dispatch(setGrokError(grokError));
 };

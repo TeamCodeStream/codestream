@@ -187,6 +187,7 @@ import {
 	UpdateUserResponse,
 	VerifyConnectivityResponse,
 	PollForMaintenanceModeResponse,
+	CSAsyncError,
 } from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
@@ -270,6 +271,7 @@ export enum MessageType {
 	Unreads = "unreads",
 	Users = "users",
 	Echo = "echo",
+	AsyncError = "asyncError",
 }
 
 export interface CompaniesRTMessage {
@@ -320,6 +322,11 @@ export interface ReviewsRTMessage {
 export interface CodeErrorsRTMessage {
 	type: MessageType.CodeErrors;
 	data: CSCodeError[];
+}
+
+export interface AsyncErrorRTMessage {
+	type: MessageType.AsyncError;
+	data: CSAsyncError[];
 }
 
 export interface StreamsRTMessage {
@@ -379,6 +386,7 @@ export type RTMessage =
 	| TeamsRTMessage
 	| UnreadsRTMessage
 	| UsersRTMessage
+	| AsyncErrorRTMessage
 	| EchoMessage;
 
 export interface ApiProvider {

@@ -72,6 +72,7 @@ export enum ChangeDataType {
 	Providers = "providers",
 	ApiCapabilities = "apiCapabilities",
 	Workspace = "workspace",
+	AsyncError = "asyncError",
 }
 
 export interface CodemarksChangedNotification {
@@ -94,10 +95,12 @@ export interface MarkersChangedNotification {
 	data: CSMarker[];
 }
 
-export interface CSGrokError {
-	codeErrorId: string;
-	topmostPostId: string;
+export interface CSAsyncError {
+	type: string;
 	errorMessage: string;
+	extra: {
+		[key: string]: string;
+	}
 }
 
 export interface PostsChangedNotification {
@@ -133,6 +136,11 @@ export interface ReviewsChangedNotification {
 export interface CodeErrorsChangedNotification {
 	type: ChangeDataType.CodeErrors;
 	data: CSCodeError[];
+}
+
+export interface GrokExceptionChangedNotification {
+	type: ChangeDataType.AsyncError;
+	data: CSAsyncError[];
 }
 
 export interface StreamsChangedNotification {
@@ -230,7 +238,8 @@ export type DidChangeDataNotification =
 	| ApiCapabilitiesChangedNotification
 	| DocumentsChangedNotification
 	| CommitsChangedNotification
-	| WorkspaceChangedNotification;
+	| WorkspaceChangedNotification
+	| GrokExceptionChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"

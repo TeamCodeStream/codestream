@@ -1,6 +1,6 @@
 import { CSCodeError } from "@codestream/protocols/api";
 import { Index } from "@codestream/utils/types";
-import { CSGrokError, NewRelicErrorGroup } from "@codestream/protocols/agent";
+import { CSAsyncError, NewRelicErrorGroup } from "@codestream/protocols/agent";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
@@ -37,5 +37,5 @@ export type CodeErrorsState = {
 	functionToEdit?: FunctionToEdit;
 	grokLoading: boolean;
 	grokRepliesLength: number;
-	grokError: CSGrokError | undefined;
+	grokError: CSAsyncError | undefined;
 };
