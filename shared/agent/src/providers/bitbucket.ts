@@ -1531,36 +1531,56 @@ export class BitbucketProvider
 			const repoSplit = repoWithOwner.split("/");
 			const workspace = repoSplit[0];
 
-			const pr = await this.get<BitbucketPullRequest>(
+			const prResponse = this.get<BitbucketPullRequest>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}`
 			);
 
-			const comments = await this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
+			const commentsResponse = this.get<BitbucketValues<BitbucketPullRequestComment[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments?pagelen=100`
 			);
 
-			const timeline = await this.get<BitbucketValues<TimelineItem[]>>(
+			const timelineResponse = this.get<BitbucketValues<TimelineItem[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/activity?pagelen=50`
 			);
 
-			const commits = await this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
+			const commitsResponse = this.get<BitbucketValues<BitbucketPullRequestCommit[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/commits`
 			);
 
-			const diffstat = await this.get<BitbucketValues<BitbucketDiffStat[]>>(
+			const diffstatResponse = this.get<BitbucketValues<BitbucketDiffStat[]>>(
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 			);
 
-			const members = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
+			const membersResponse = this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
 				`/workspaces/${workspace}/members`
 			);
 
 			//get all users who have a permission of greater than read
-			const permissions = await this.get<BitbucketValues<BitbucketUserPermissionsRequest[]>>(
+			const permissionsResponse = this.get<BitbucketValues<BitbucketUserPermissionsRequest[]>>(
 				`/user/permissions/repositories?q=permission>"read"`
 			);
 
-			const userResponse = await this.getCurrentUser();
+			const userResponseResponse = this.getCurrentUser();
+
+			const allResponses = await Promise.all([
+				prResponse,
+				commentsResponse,
+				timelineResponse,
+				commitsResponse,
+				diffstatResponse,
+				membersResponse,
+				permissionsResponse,
+				userResponseResponse,
+			]);
+
+			const pr = allResponses[0];
+			const comments = allResponses[1];
+			const timeline = allResponses[2];
+			const commits = allResponses[3];
+			const diffstat = allResponses[4];
+			const members = allResponses[5];
+			const permissions = allResponses[6];
+			const userResponse = allResponses[7];
 
 			const isViewerCanUpdate = () => {
 				return !!permissions.body.values.find(
