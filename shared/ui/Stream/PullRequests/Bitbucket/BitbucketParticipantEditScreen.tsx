@@ -11,8 +11,8 @@ interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	onClose: Function;
 	isAddReviewer: boolean;
-	addItems: {};
-	removeItems: {};
+	addItems: any; //TODO
+	removeItems: any;
 }
 
 export const BitbucketParticipantEditScreen = (props: Props) => {
@@ -69,7 +69,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 									<div style={{ margin: "20px 0" }}>
 										<div className="controls">
 											<>
-												<InlineMenu items={[props.removeItems]}></InlineMenu>
+												<InlineMenu items={props.removeItems}></InlineMenu>
 												<div style={{ height: "10px" }} />
 											</>
 										</div>
@@ -97,7 +97,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 									{/* {reviewerError && <WarningBox items={[{ message: reviewerError }]}></WarningBox>} */}
 									<div style={{ margin: "20px 0" }}>
 										<div className="controls">
-											<InlineMenu items={[props.addItems]}></InlineMenu>
+											<InlineMenu items={props.addItems}></InlineMenu>
 											<div style={{ height: "10px" }} />
 										</div>
 									</div>

@@ -44,7 +44,6 @@ export const MergeScreen = (props: Props) => {
 					mergeMethod: mergeMethod,
 					mergeMessage: mergeMessage,
 					closeSourceBranch: isCloseSourceBranch,
-					prParticipants: props.pr.participants,
 				},
 			})
 		)) as any;

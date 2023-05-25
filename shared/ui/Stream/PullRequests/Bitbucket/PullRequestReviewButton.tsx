@@ -219,8 +219,8 @@ export const PullRequestReviewButton = (props: Props) => {
 
 	const currentUser = props.pullRequest.viewer.id;
 
-	if (props.pullRequest.participantsUnfiltered.nodes.length !== 0) {
-		const currentUserInfo = props.pullRequest.participantsUnfiltered.nodes.find(
+	if (props.pullRequest.participants.nodes.length !== 0) {
+		const currentUserInfo = props.pullRequest.participants.nodes.find(
 			_ => _.user.account_id === currentUser
 		);
 		viewerRole = currentUserInfo?.role;
@@ -247,7 +247,6 @@ export const PullRequestReviewButton = (props: Props) => {
 					eventType: value,
 					pullRequestId: props.pullRequest.id,
 					userId: props.pullRequest.viewer.id,
-					participants: props.pullRequest.participantsUnfiltered.nodes,
 					repoWithOwner: props.pullRequest.repository.nameWithOwner,
 					viewerRole: viewerRole,
 				},

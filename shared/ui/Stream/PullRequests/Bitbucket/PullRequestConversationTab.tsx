@@ -179,7 +179,7 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const checkIfEmpty = () => {
-		if (!pr.reviewers.nodes.length) {
+		if (!pr.reviewers?.nodes.length) {
 			setIsEmpty(true);
 		} else {
 			setIsEmpty(false);
@@ -194,30 +194,51 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
+	const createLabels = items => {
+		console.log(items);
+		const newItems = items.map(_ => {
+			return {
+				label: _.user.display_name,
+				key: _.user.account_id,
+				action: () => {
+					setReviewerId(_.user.account_id);
+					setReviewerSelection(_.user.display_name);
+				},
+			};
+		});
+		if (newItems.length) {
+			return newItems;
+		} else {
+			return [];
+		}
+	};
+
 	const addReviewerItems = () => {
-		if (pr.members?.nodes.length) {
-			const itemsMap = pr.members.nodes.map(_ => {
-				if (_.user.account_id !== pr.author.id) {
-					return {
-						label: _.user.display_name,
-						key: _.user.account_id,
-						action: () => {
-							setReviewerId(_.user.account_id);
-							setReviewerSelection(_.user.display_name);
-						},
-					};
+		let newLabels;
+		//check if there are any reviewers already
+		if (pr.reviewers?.nodes.length) {
+			//if yes, get an array of all reviewer ids
+			const reviewerIds = pr.reviewers?.nodes.map(reviewer => reviewer.user.account_id);
+			//filter membersList to exclude reviewers
+			const itemsMap = pr.members.nodes.flatMap(member => {
+				if (!reviewerIds.includes(member.user.account_id)) {
+					if (member.user.account_id !== pr.viewer.id) {
+						return member;
+					}
+					return [];
 				} else {
 					return [];
 				}
 			});
 			if (itemsMap.length) {
-				return itemsMap;
-			} else {
-				return [];
+				//if there are items, create labels
+				newLabels = createLabels(itemsMap);
 			}
 		} else {
-			return [];
+			//if no reviewers, use all members
+			newLabels = createLabels(pr.members.nodes);
 		}
+		return newLabels;
 	};
 
 	const addItems = addReviewerItems();
@@ -230,32 +251,27 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const removeRevieweritems = () => {
-		if (pr.participants.nodes.length) {
-			const items = pr.participants.nodes.map(_ => {
-				if (_.state === null) {
-					return {
-						label: _.user.display_name,
-						key: _.user.account_id,
-						action: () => {
-							setReviewerId(_.user.account_id);
-							setReviewerSelection(_.user.display_name);
-						},
-					};
+		let newLabels;
+		//if there are reviewers
+		if (pr.reviewers?.nodes.length) {
+			//filter out the ones with status (state)
+			const items = pr.reviewers.nodes.flatMap(reviewer => {
+				if (reviewer.state === null) {
+					return reviewer;
 				} else {
 					return [];
 				}
 			});
+			//if there are items
 			if (items.length) {
-				return items;
-			} else {
-				return [];
+				//create labels
+				newLabels = createLabels(items);
 			}
-		} else {
-			return [];
 		}
+		return newLabels;
 	};
 
-	const removeItems = addReviewerItems();
+	const removeItems = removeRevieweritems();
 	const isRemoveItems = () => {
 		if (removeItems.length) {
 			return true;
@@ -264,11 +280,11 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
-	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length;
+	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length; //all participants & reviewers regardless of status
 	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 	const prAuthorLogin = pr?.author?.login || GHOST;
 
-	const numReviewers = ((pr.reviewers && pr.reviewers.nodes) || []).length;
+	const numReviewers = ((pr.reviewers && pr.reviewers.nodes) || []).length; //participants with status & all reviewers
 	const reviewersLabel = `${numReviewers} Reviewer${numReviewers == 1 ? "" : "s"}`;
 
 	return (
@@ -295,8 +311,8 @@ export const PullRequestConversationTab = (props: {
 				<PRSection>
 					<h1>{reviewersLabel}</h1>
 					<PRHeadshots>
-						{pr.reviewers.nodes.length &&
-							pr.reviewers.nodes.map((_: any) => {
+						{pr.reviewers?.nodes.length &&
+							pr.reviewers?.nodes.map((_: any) => {
 								let iconName = "circle";
 								let color = "gray";
 								if (_.state === "changes_requested") {
@@ -324,8 +340,8 @@ export const PullRequestConversationTab = (props: {
 							})}
 						{isOpen ? (
 							<BitbucketParticipantEditScreen
-								addItems={addReviewerItems}
-								removeItems={removeRevieweritems}
+								addItems={addItems}
+								removeItems={removeItems}
 								pr={pr}
 								isAddReviewer={isAddReviewer}
 								onClose={() => {

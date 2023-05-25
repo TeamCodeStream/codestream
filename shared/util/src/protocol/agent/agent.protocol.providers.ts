@@ -700,7 +700,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 		nodes: {
 			//gitlab
 			avatarUrl?: string;
-			//bitbucket
+			//bitbucket ALL participants & reviewers regardless of status
 			type?: string;
 			user: {
 				display_name: string;
@@ -720,7 +720,8 @@ export interface FetchThirdPartyPullRequestPullRequest {
 			participated_on: string;
 		}[];
 	};
-	participantsUnfiltered: {
+	//Bitbucket participants with status & reviewers
+	reviewers?: {
 		nodes: {
 			type?: string;
 			user: {
@@ -741,27 +742,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 			participated_on: string;
 		}[];
 	};
-	reviewers: {
-		nodes: {
-			type?: string;
-			user: {
-				display_name: string;
-				links: {
-					avatar: {
-						href: string;
-					};
-				};
-				type?: string;
-				uuid?: string;
-				account_id: string;
-				nickname: string;
-			};
-			role: BitbucketParticipantRole;
-			approved: boolean;
-			state?: string;
-			participated_on: string;
-		}[];
-	};
+	//Bitbucket all members of the workspace
 	members: {
 		nodes: {
 			type: string;
@@ -807,11 +788,6 @@ export interface FetchThirdPartyPullRequestPullRequest {
 			};
 		}[];
 	};
-	//bitbucket
-	isApproved: boolean;
-	// isRequested: boolean;
-	// approvalStatus: string;
-	// requestStatus: string;
 	assignees: {
 		nodes: {
 			avatarUrl: string;
