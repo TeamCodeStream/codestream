@@ -5,7 +5,7 @@ import {
 	ResolveStackTraceResponse,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSPost, CSStackTraceLine, CSUser } from "@codestream/protocols/api";
-import React, { PropsWithChildren, RefObject, useEffect } from "react";
+import React, { PropsWithChildren, RefObject, useEffect, useMemo, useRef, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 
@@ -114,6 +114,7 @@ export interface BaseCodeErrorProps extends CardProps {
 	stackFrameClickDisabled?: boolean;
 	stackTraceTip?: any;
 	resolutionTip?: any;
+	setGrokRequested: () => void;
 }
 
 export interface BaseCodeErrorHeaderProps {
@@ -284,11 +285,11 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		};
 	});
 
-	const [items, setItems] = React.useState<DropdownButtonItems[]>([]);
-	const [states, setStates] = React.useState<DropdownButtonItems[] | undefined>(undefined);
-	const [openConnectionModal, setOpenConnectionModal] = React.useState(false);
-	const [isStateChanging, setIsStateChanging] = React.useState(false);
-	const [isAssigneeChanging, setIsAssigneeChanging] = React.useState(false);
+	const [items, setItems] = useState<DropdownButtonItems[]>([]);
+	const [states, setStates] = useState<DropdownButtonItems[] | undefined>(undefined);
+	const [openConnectionModal, setOpenConnectionModal] = useState(false);
+	const [isStateChanging, setIsStateChanging] = useState(false);
+	const [isAssigneeChanging, setIsAssigneeChanging] = useState(false);
 
 	const notify = (emailAddress?: string) => {
 		// if no email address or it's you
@@ -961,17 +962,17 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 		};
 	});
 	const currentUserIsAdmin = useAppSelector(currentUserIsAdminSelector);
-	const [isLoading, setIsLoading] = React.useState(false);
-	const [menuState, setMenuState] = React.useState<{ open: boolean; target?: any }>({
+	const [isLoading, setIsLoading] = useState(false);
+	const [menuState, setMenuState] = useState<{ open: boolean; target?: any }>({
 		open: false,
 		target: undefined,
 	});
 
-	const [shareModalOpen, setShareModalOpen] = React.useState(false);
+	const [shareModalOpen, setShareModalOpen] = useState(false);
 
-	const permalinkRef = React.useRef<HTMLTextAreaElement>(null);
+	const permalinkRef = useRef<HTMLTextAreaElement>(null);
 
-	const menuItems = React.useMemo(() => {
+	const menuItems = useMemo(() => {
 		const items: DropdownButtonItems[] = [];
 
 		if (props.errorGroup) {
@@ -1167,12 +1168,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup } = derivedState;
 
-	const [currentSelectedLine, setCurrentSelectedLineIndex] = React.useState<number>(
+	const [currentSelectedLine, setCurrentSelectedLineIndex] = useState<number>(
 		derivedState.currentCodeErrorData?.lineIndex || 0
 	);
-	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = React.useState(false);
-	const [didCopyMethod, setDidCopyMethod] = React.useState(false);
-	const [jumpLocation, setJumpLocation] = React.useState<number | undefined>();
+	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = useState(false);
+	const [didCopyMethod, setDidCopyMethod] = useState(false);
+	const [jumpLocation, setJumpLocation] = useState<number | undefined>();
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
@@ -1201,6 +1202,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		useEffect(() => {
 			const submitGrok = async (codeBlock: string) => {
 				// console.debug("===--- useEffect startGrokLoading");
+				props.setGrokRequested();
 				dispatch(startGrokLoading(props.codeError));
 				const actualCodeError = (await dispatch(
 					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
@@ -1580,17 +1582,19 @@ const renderMetaSectionCollapsed = (props: BaseCodeErrorProps) => {
 	);
 };
 
-const ReplyInput = (props: { codeError: CSCodeError }) => {
+const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => void }) => {
 	const dispatch = useAppDispatch();
-	const [text, setText] = React.useState("");
-	const [attachments, setAttachments] = React.useState<AttachmentField[]>([]);
-	const [isLoading, setIsLoading] = React.useState(false);
+	const [text, setText] = useState("");
+	const [attachments, setAttachments] = useState<AttachmentField[]>([]);
+	const [isLoading, setIsLoading] = useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
 	const showGrok = useAppSelector(state => isFeatureEnabled(state, "showGrok"));
 
 	const submit = async () => {
 		// don't create empty replies
 		if (text.length === 0) return;
+
+		props.setGrokRequested();
 
 		setIsLoading(true);
 		if (showGrok && text.match(/@Grok/gim)) {
@@ -1709,19 +1713,25 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
 
-	const [preconditionError, setPreconditionError] = React.useState<SimpleError>({
-		message: "",
-		type: "",
-	});
-	const [isEditing, setIsEditing] = React.useState(false);
-	const [shareModalOpen, setShareModalOpen] = React.useState(false);
-
-	const [scrollNewTarget, setScrollNewTarget] = React.useState<RefObject<HTMLElement> | undefined>(
+	const [headerError, setHeaderError] = useState<SimpleError>();
+	const [isEditing, setIsEditing] = useState(false);
+	const [shareModalOpen, setShareModalOpen] = useState(false);
+	const [scrollNewTarget, setScrollNewTarget] = useState<RefObject<HTMLElement> | undefined>(
 		undefined
 	);
+	const [isGrokRequested, setIsGrokRequested] = useState(false);
 	const currentGrokRepliesLength = useAppSelector(state =>
 		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
+	const grokError = useAppSelector(state => state.codeErrors.grokError);
+
+	useEffect(() => {
+		const simpleError = grokError
+			? { message: grokError.errorMessage, type: "warning" }
+			: undefined;
+		setHeaderError(simpleError);
+		console.debug("===--- headerError set ", simpleError);
+	}, [grokError]);
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
@@ -1734,7 +1744,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	}
 
 	useEffect(() => {
-		if (currentGrokRepliesLength > 0) {
+		if (isGrokRequested && currentGrokRepliesLength > 0) {
 			// console.debug(`---=== useEffect calling scrollToNew ${currentGrokRepliesLength} ===---`);
 			scrollToNew();
 		}
@@ -1743,6 +1753,10 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	function scrollNewTargetCallback(ref: RefObject<HTMLElement>) {
 		// console.debug("===--- scrollNewTargetCallback setScrollNewTarget ", ref);
 		setScrollNewTarget(ref);
+	}
+
+	function setGrokRequested() {
+		setIsGrokRequested(true);
 	}
 
 	useDidMount(() => {
@@ -1800,14 +1814,14 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 
 					{InputContainer && !derivedState.isPDIdev && (
 						<InputContainer>
-							<ReplyInput codeError={codeError} />
+							<ReplyInput codeError={codeError} setGrokRequested={setGrokRequested} />
 						</InputContainer>
 					)}
 				</Footer>
 			);
 		});
 
-	const repoInfo = React.useMemo(() => {
+	const repoInfo = useMemo(() => {
 		const { stackTraces } = codeError;
 		let stackInfo = stackTraces && stackTraces[0]; // TODO deal with multiple stacks
 		if (!stackInfo) stackInfo = (codeError as any).stackInfo; // this is for old code, maybe can remove after a while?
@@ -1840,7 +1854,8 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 				currentUserId={derivedState.currentUser.id}
 				renderFooter={renderFooter}
 				setIsEditing={setIsEditing}
-				headerError={preconditionError}
+				headerError={headerError}
+				setGrokRequested={setGrokRequested}
 			/>
 		</>
 	);
@@ -1853,7 +1868,7 @@ const CodeErrorForId = (props: PropsWithId) => {
 	const codeError = useAppSelector((state: CodeStreamState) => {
 		return getCodeError(state.codeErrors, id);
 	});
-	const [notFound, setNotFound] = React.useState(false);
+	const [notFound, setNotFound] = useState(false);
 
 	useDidMount(() => {
 		let isValid = true;

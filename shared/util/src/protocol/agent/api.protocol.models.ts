@@ -383,7 +383,6 @@ export interface CSPost extends CSEntity {
 	sharedTo?: ShareTarget[];
 	codeErrorId?: string;
 	forGrok?: boolean;
-	promptRole?: string;
 }
 
 export interface CSRemote {

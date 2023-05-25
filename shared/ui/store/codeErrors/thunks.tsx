@@ -1,5 +1,6 @@
 import {
 	CreateShareableCodeErrorRequestType,
+	CSGrokError,
 	DidResolveStackTraceLineNotification,
 	ExecuteThirdPartyTypedType,
 	GetNewRelicErrorGroupRequest,
@@ -34,6 +35,7 @@ import {
 	_deleteCodeError,
 	setGrokLoading,
 	setGrokRepliesLength,
+	setGrokError,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
@@ -640,6 +642,12 @@ export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, get
 	// console.debug(
 	// 	`===--- startGrokLoading called, grokPostLength: ${grokPostLength}`
 	// );
+	dispatch(setGrokError(undefined));
 	dispatch(setGrokRepliesLength(grokPostLength));
 	dispatch(setGrokLoading(true));
+};
+
+export const handleGrokError = (grokError: CSGrokError) => async dispatch => {
+	dispatch(setGrokLoading(false));
+	dispatch(setGrokError(grokError));
 };

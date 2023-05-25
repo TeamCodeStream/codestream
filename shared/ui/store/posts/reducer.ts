@@ -141,10 +141,7 @@ export const getThreadPosts = createSelector(
 );
 
 export const getGrokPostLength = createSelector(getThreadPosts, posts => {
-	// const grokPostLength = posts.filter(post => isPostPlus(post) && post.forGrok).length;
-	const grokPostLength = posts.filter(
-		post => isPostPlus(post) && post.promptRole === "assistant"
-	).length;
+	const grokPostLength = posts.filter(post => isPostPlus(post) && post.forGrok).length;
 	// console.debug(`===--- getThreadPosts: ${JSON.stringify(posts)}`);
 	// console.debug(`===--- getGrokPostLength: ${grokPostLength}`);
 	return grokPostLength;

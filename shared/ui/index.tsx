@@ -25,6 +25,7 @@ import {
 	VerifyConnectivityResponse,
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
+	CSGrokError,
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSApiCapabilities, CSCodeError, CSMe } from "@codestream/protocols/api";
 import React from "react";
@@ -32,9 +33,10 @@ import * as path from "path-browserify";
 import { render } from "react-dom";
 import { Range } from "vscode-languageserver-types";
 
-import { logError } from "@codestream/webview/logger";
+import { logError, logWarning } from "@codestream/webview/logger";
 import { setBootstrapped } from "@codestream/webview/store/bootstrapped/actions";
 import {
+	handleGrokError,
 	openErrorGroup,
 	processCodeErrorsMessage,
 	resolveStackTraceLine,
@@ -71,7 +73,6 @@ import {
 	ViewAnomalyNotificationType,
 } from "./ipc/webview.protocol";
 import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
-import { logWarning } from "./logger";
 import { store } from "./store";
 import { bootstrap, reset } from "./store/actions";
 import {
@@ -125,6 +126,7 @@ import { confirmPopup } from "./Stream/Confirm";
 import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
 import { HostApi } from "./webview-api";
+import { isArray, isEmpty } from "lodash-es";
 // import translationsEs from "./translations/es";
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
@@ -133,6 +135,10 @@ export function setupCommunication(host: { postMessage: (message: any) => void }
 			return host;
 		},
 	});
+}
+
+function isCSGrokError(obj: any): obj is CSGrokError {
+	return obj && obj.codeErrorId && obj.topmostPostId && obj.errorMessage;
 }
 
 export async function initialize(selector: string) {
@@ -268,6 +274,13 @@ function listenForEvents(store) {
 			case ChangeDataType.CodeErrors:
 				store.dispatch(processCodeErrorsMessage(data as CSCodeError[]));
 				break;
+			// @ts-expect-error - fallthrough ok
+			case ChangeDataType.Posts: {
+				if (isArray(data) && !isEmpty(data) && isCSGrokError(data[0])) {
+					store.dispatch(handleGrokError(data[0]));
+					break;
+				}
+			}
 			default:
 				store.dispatch({ type: `ADD_${type.toUpperCase()}`, payload: data });
 		}

@@ -1,11 +1,12 @@
 import { CSCodeError } from "@codestream/protocols/api";
 import { Index } from "@codestream/utils/types";
-import { NewRelicErrorGroup } from "@codestream/protocols/agent";
+import { CSGrokError, NewRelicErrorGroup } from "@codestream/protocols/agent";
 
 export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
 	SaveCodeErrors = "@codeErrors/SaveCodeErrors",
 	SetFunctionToEdit = "@codeErrors/SetFunctionToEdit",
+	SetGrokError = "@codeErrors/SetGrokError",
 	SetGrokLoading = "@codeErrors/SetGrokLoading",
 	SetGrokRepliesLength = "@codeErrors/SetGrokRepliesLength",
 	UpdateCodeErrors = "@codeErrors/UpdateCodeErrors",
@@ -36,4 +37,5 @@ export type CodeErrorsState = {
 	functionToEdit?: FunctionToEdit;
 	grokLoading: boolean;
 	grokRepliesLength: number;
+	grokError: CSGrokError | undefined;
 };

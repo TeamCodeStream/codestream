@@ -4,7 +4,7 @@ import {
 	EditorCopySymbolResponse,
 	EditorReplaceSymbolRequest,
 	EditorReplaceSymbolResponse
-} from "../../../shared/ui/ipc/host.protocol.editor";
+} from "@codestream/protocols/webview";
 import { Editor } from "extensions";
 import { Uri, commands, Range } from "vscode";
 import { CancellationTokenSource } from "vscode-languageclient";
@@ -44,7 +44,6 @@ export async function replaceSymbol(
 ): Promise<EditorReplaceSymbolResponse> {
 	const uri = Uri.parse(params.uri);
 	const editor = await Editor.findOrOpenEditor(uri);
-	const symbolLocator = new SymbolLocator();
 	if (!editor?.document) {
 		return { success: false };
 	}

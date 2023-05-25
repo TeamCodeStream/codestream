@@ -94,6 +94,12 @@ export interface MarkersChangedNotification {
 	data: CSMarker[];
 }
 
+export interface CSGrokError {
+	codeErrorId: string;
+	topmostPostId: string;
+	errorMessage: string;
+}
+
 export interface PostsChangedNotification {
 	type: ChangeDataType.Posts;
 	data: CSPost[];
