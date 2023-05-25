@@ -243,7 +243,7 @@ export const PullRequestConversationTab = (props: {
 
 	const addItems = addReviewerItems();
 	const isAddItems = () => {
-		if (addItems.length) {
+		if (addItems && addItems.length) {
 			return true;
 		} else {
 			return false;
@@ -273,7 +273,7 @@ export const PullRequestConversationTab = (props: {
 
 	const removeItems = removeRevieweritems();
 	const isRemoveItems = () => {
-		if (removeItems.length) {
+		if (removeItems && removeItems.length) {
 			return true;
 		} else {
 			return false;
