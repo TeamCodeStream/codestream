@@ -257,6 +257,7 @@ export abstract class ThirdPartyIssueProviderBase<
 		else if (
 			(ex.response && ex.response.message === "Bad credentials") ||
 			(ex.response &&
+				ex.response.errors &&
 				ex.response.errors instanceof Array &&
 				ex.response.errors.find((e: any) => e.type === "FORBIDDEN"))
 		) {
