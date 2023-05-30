@@ -5,6 +5,7 @@ export type VersionDetails = {
 	criticalVulnerabilities: number;
 	highVulnerabilities: number;
 	otherVulnerabilities: number;
+	vulnerabilities: Array<VulnerabililityDetails>;
 };
 
 export type VulnerableLibrary = {
