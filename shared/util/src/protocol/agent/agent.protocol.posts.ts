@@ -97,7 +97,8 @@ export interface CreatePostRequest {
 	reviewCheckpoint?: number;
 	files?: Attachment[];
 	codeBlock?: string;
-	analyze?: boolean
+	analyze?: boolean;
+	reinitialize?: boolean;
 }
 
 export interface CrossPostIssueValues {

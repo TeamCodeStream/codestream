@@ -1269,7 +1269,12 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}
 
 	useEffect(() => {
-		if (!props.collapsed && jumpLocation && didJumpToFirstAvailableLine && !didCopyMethod) {
+		if (
+			!props.collapsed &&
+			jumpLocation !== undefined &&
+			didJumpToFirstAvailableLine &&
+			!didCopyMethod
+		) {
 			const { stackTraces } = codeError;
 			const stackInfo = stackTraces?.[0];
 			// console.debug(`===--- symbol useEffect`);
@@ -1712,6 +1717,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	}, shallowEqual);
 
 	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
+	const grokError = useAppSelector(state =>
+		state.codeErrors.grokError
+			? { message: state.codeErrors.grokError.errorMessage, type: "warning" }
+			: undefined
+	);
 
 	const [headerError, setHeaderError] = useState<SimpleError>();
 	const [isEditing, setIsEditing] = useState(false);
@@ -1723,15 +1733,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	const currentGrokRepliesLength = useAppSelector(state =>
 		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
-	const grokError = useAppSelector(state => state.codeErrors.grokError);
-
-	useEffect(() => {
-		const simpleError = grokError
-			? { message: grokError.errorMessage, type: "warning" }
-			: undefined;
-		setHeaderError(simpleError);
-		console.debug("===--- headerError set ", simpleError);
-	}, [grokError]);
 
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
@@ -1792,6 +1793,13 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
 							/>
+							{grokError && (
+								<DelayedRender>
+									<div className="color-warning">
+										<div>{grokError.message}</div>
+									</div>
+								</DelayedRender>
+							)}
 							{isGrokLoading && (
 								<DelayedRender>
 									<ReplyBody style={{ marginTop: 13 }}>

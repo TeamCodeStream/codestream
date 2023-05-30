@@ -1505,6 +1505,8 @@ export class PostsManager extends EntityManagerBase<CSPost> {
 			addedUsers: request.addedUsers,
 			codeBlock: request.codeBlock,
 			analyze: request.analyze,
+			reinitialize: request.reinitialize,
+			parentPostId: request.parentPostId, // For grok reinitialization
 		});
 
 		codeError = response.codeError!;

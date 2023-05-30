@@ -19,15 +19,15 @@ export const activityFeedMiddleware: Middleware = store => next => async action 
 
 			// if this is a new post
 			if (post.version === 1) {
-				if (post.parentPostId != null) {
+				if (post.parentPostId) {
 					// ensure we have the parent post
 					// @ts-ignore
 					store.dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
-				} else if (post.codemark != null && post.codemark.reviewId == null) {
+				} else if (post.codemark && !post.codemark.reviewId) {
 					store.dispatch(addNewActivity("codemark", [post.codemark]));
-				} else if (post.review != null) {
+				} else if (post.review) {
 					store.dispatch(addNewActivity("review", [post.review]));
-				} else if (post.codeError != null) {
+				} else if (post.codeError) {
 					store.dispatch(addNewActivity("codeError", [post.codeError]));
 				}
 			}
@@ -57,7 +57,7 @@ const fetchPostForActivity =
 			}
 		}
 
-		if (post.parentPostId != null) {
+		if (post.parentPostId) {
 			return dispatch(fetchPostForActivity(post.parentPostId, post.streamId));
 		}
 

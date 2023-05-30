@@ -63,6 +63,8 @@ export interface NewCodeErrorAttributes {
 	providerUrl?: string;
 	codeBlock?: string;
 	analyze: boolean;
+	reinitialize: boolean;
+	parentPostId?: string;
 }
 
 export const _deleteCodeError = (id: string) => action(CodeErrorsActionsTypes.Delete, id);

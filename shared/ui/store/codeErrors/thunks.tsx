@@ -108,6 +108,8 @@ export const createCodeError =
 				replyPost: attributes.replyPost,
 				codeBlock: attributes.codeBlock,
 				analyze: attributes.analyze,
+				reinitialize: attributes.reinitialize,
+				parentPostId: attributes.parentPostId,
 			});
 			if (response.codeError) {
 				dispatch(addCodeErrors([response.codeError]));
@@ -333,7 +335,7 @@ export const upgradePendingCodeError =
 		codeErrorId: string,
 		source: "Comment" | "Status Change" | "Assignee Change",
 		codeBlock?: string,
-		analyze?: boolean
+		analyze = false
 	) =>
 	async (dispatch, getState: () => CodeStreamState) => {
 		// console.debug("===--- upgradePendingCodeError ===---", { codeErrorId: codeErrorId, source });
@@ -344,9 +346,10 @@ export const upgradePendingCodeError =
 				console.warn(`upgradePendingCodeError: no codeError found for ${codeErrorId}`);
 				return;
 			}
-			if (codeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0) {
+			const isPending = codeErrorId?.indexOf(PENDING_CODE_ERROR_ID_PREFIX) === 0;
+			if (isPending || analyze) {
 				// console.debug("===--- PENDING_CODE_ERROR_ID_PREFIX ===---")
-				const { accountId, objectId, objectType, title, text, stackTraces, objectInfo } =
+				const { accountId, objectId, objectType, title, text, stackTraces, objectInfo, postId } =
 					existingCodeError;
 				const newCodeError: NewCodeErrorAttributes = {
 					accountId,
@@ -357,9 +360,11 @@ export const upgradePendingCodeError =
 					stackTraces,
 					objectInfo,
 					codeBlock,
-					analyze: analyze === true,
+					analyze,
+					reinitialize: !isPending && analyze,
+					parentPostId: postId,
 				};
-				const response = (await dispatch(createPostAndCodeError(newCodeError))) as any;
+				const response = await dispatch(createPostAndCodeError(newCodeError));
 				if (!response.codeError) {
 					if (response.exception) {
 						logError(JSON.stringify(response.exception), {
