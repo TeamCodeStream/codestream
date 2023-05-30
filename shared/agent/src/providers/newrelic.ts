@@ -3434,7 +3434,6 @@ export class NewRelicProvider
 			"latest(crashMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
 			"count(occurrenceId) as 'length'",
-			"1 AS 'count'",
 			"FROM MobileCrash",
 			`WHERE entityGuid='${applicationGuid}'`,
 			"FACET crashFingerprint", // group the results by fingerprint
@@ -3452,7 +3451,6 @@ export class NewRelicProvider
 			"latest(exceptionMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
 			"count(handledExceptionUuid) as 'length'",
-			"1 AS 'count'",
 			"FROM MobileHandledException",
 			`WHERE entityGuid='${applicationGuid}'`,
 			"FACET handledExceptionUuid", // group the results by fingerprint
