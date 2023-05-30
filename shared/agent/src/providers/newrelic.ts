@@ -1206,7 +1206,8 @@ export class NewRelicProvider
 								const errorTraces = await this.findFingerprintedErrorTraces(
 									application.source.entity.account.id,
 									application.source.entity.guid,
-									application.source.entity.entityType
+									application.source.entity.entityType,
+									request.timeWindow
 								);
 								for (const errorTrace of errorTraces) {
 									try {
@@ -1225,7 +1226,7 @@ export class NewRelicProvider
 												remote: urlValue!,
 												errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
 												occurrenceId: errorTrace.occurrenceId,
-												count: errorTrace.length,
+												count: errorTrace.count,
 												lastOccurrence: errorTrace.lastOccurrence,
 												errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
 											});
@@ -3385,11 +3386,14 @@ export class NewRelicProvider
 
 	private getFingerprintedErrorTraceQueries(
 		applicationGuid: String,
-		entityType?: EntityType
+		entityType?: EntityType,
+		timeWindow?: string
 	): String[] {
+		const since = timeWindow ? `${timeWindow} ago` : "3 days ago";
 		const apmNrql = [
 			"SELECT",
-			"latest(timestamp) AS 'lastOccurrence',", // first field is used to sort with FACET
+			"sum(count) AS 'count',", // first field is used to sort with FACET
+			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(id) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
 			"latest(error.class) AS 'errorClass',",
@@ -3399,13 +3403,14 @@ export class NewRelicProvider
 			"FROM ErrorTrace",
 			`WHERE fingerprint IS NOT NULL and entityGuid='${applicationGuid}'`,
 			"FACET fingerprint AS 'fingerPrintId'", // group the results by fingerprint
-			"SINCE 3 days ago",
+			`SINCE ${since}`,
 			"LIMIT MAX",
 		].join(" ");
 
 		const browserNrql = [
 			"SELECT",
-			"latest(timestamp) AS 'lastOccurrence',", // first field is used to sort with FACET
+			"count(guid) as 'count',", // first field is used to sort with FACET
+			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(stackHash) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
 			"latest(errorClass) AS 'errorClass',",
@@ -3415,39 +3420,43 @@ export class NewRelicProvider
 			"FROM JavaScriptError",
 			`WHERE stackHash IS NOT NULL AND entityGuid='${applicationGuid}'`,
 			"FACET stackTrace", // group the results by fingerprint
-			"SINCE 3 days ago",
+			`SINCE ${since}`,
 			"LIMIT MAX",
 		].join(" ");
 
 		const mobileNrql1 = [
 			"SELECT",
-			"latest(timestamp) AS 'lastOccurrence',", // first field is used to sort with FACET
+			"count(occurrenceId) as 'count',", // first field is used to sort with FACET
+			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(occurrenceId) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
 			"latest(crashLocationClass) AS 'errorClass',",
 			"latest(crashMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
 			"count(occurrenceId) as 'length'",
+			"1 AS 'count'",
 			"FROM MobileCrash",
 			`WHERE entityGuid='${applicationGuid}'`,
 			"FACET crashFingerprint", // group the results by fingerprint
-			"SINCE 3 days ago",
+			`SINCE ${since}`,
 			"LIMIT MAX",
 		].join(" ");
 
 		const mobileNrql2 = [
 			"SELECT",
-			"latest(timestamp) AS 'lastOccurrence',", // first field is used to sort with FACET
+			"count(handledExceptionUuid) as 'count',", // first field is used to sort with FACET
+			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(handledExceptionUuid) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
 			"latest(exceptionLocationClass) AS 'errorClass',",
 			"latest(exceptionMessage) AS 'message',",
 			"latest(entityGuid) AS 'entityGuid',",
 			"count(handledExceptionUuid) as 'length'",
+			"1 AS 'count'",
 			"FROM MobileHandledException",
 			`WHERE entityGuid='${applicationGuid}'`,
 			"FACET handledExceptionUuid", // group the results by fingerprint
-			"SINCE 3 days ago",
+			`SINCE ${since}`,
 			"LIMIT MAX",
 		].join(" ");
 
@@ -3472,9 +3481,10 @@ export class NewRelicProvider
 	private async findFingerprintedErrorTraces(
 		accountId: number,
 		applicationGuid: string,
-		entityType?: EntityType
+		entityType?: EntityType,
+		timeWindow?: string
 	) {
-		const queries = this.getFingerprintedErrorTraceQueries(applicationGuid, entityType);
+		const queries = this.getFingerprintedErrorTraceQueries(applicationGuid, entityType, timeWindow);
 
 		const results = [];
 		for (const query of queries) {

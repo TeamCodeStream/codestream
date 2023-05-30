@@ -748,6 +748,17 @@ export interface FetchRequestQuery {
 	limit?: number;
 }
 
+export enum CodeErrorTimeWindow {
+	"HalfHour" = "30 minutes",
+	"Hour" = "1 hour",
+	"ThreeHours" = "3 hours",
+	"SixHours" = "6 hours",
+	"TwelveHours" = "12 hours",
+	"OneDay" = "24 hours",
+	"ThreeDays" = "3 days",
+	"SevenDays" = "7 days",
+}
+
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
 	telemetryOptOut?: boolean;
@@ -809,6 +820,7 @@ export interface CSMePreferences {
 	issueMru?: {
 		[providerId: string]: { [currentState: string]: string };
 	};
+	codeErrorTimeWindow?: CodeErrorTimeWindow;
 }
 
 export interface RepoSetting {

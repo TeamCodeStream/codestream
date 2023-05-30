@@ -268,6 +268,7 @@ export const Observability = React.memo((props: Props) => {
 			anomaliesNeedRefresh: state.context.anomaliesNeedRefresh,
 			clmSettings,
 			showAnomalies: isFeatureEnabled(state, "showAnomalies"),
+			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
 		};
 	}, shallowEqual);
 
@@ -395,6 +396,7 @@ export const Observability = React.memo((props: Props) => {
 			try {
 				const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
 					filters: buildFilters([currentRepoId]),
+					timeWindow: derivedState.recentErrorsTimeWindow,
 				});
 
 				if (isNRErrorResponse(response.error)) {
@@ -639,6 +641,7 @@ export const Observability = React.memo((props: Props) => {
 		try {
 			const response = await HostApi.instance.send(GetObservabilityErrorsRequestType, {
 				filters: [{ repoId: repoId, entityGuid: entityGuid }],
+				timeWindow: derivedState.recentErrorsTimeWindow,
 			});
 			if (isNRErrorResponse(response.error)) {
 				setObservabilityErrorsError(response.error.error.message ?? response.error.error.type);
@@ -892,6 +895,12 @@ export const Observability = React.memo((props: Props) => {
 			handleClickCLMBroadcast(expandedEntity);
 		}
 	}, [expandedEntity]);
+
+	useEffect(() => {
+		if (derivedState.recentErrorsTimeWindow && expandedEntity && currentRepoId) {
+			fetchObservabilityErrors(expandedEntity, currentRepoId);
+		}
+	}, [derivedState.recentErrorsTimeWindow]);
 
 	/*
 	 *	When current repo changes in IDE, set new entity accounts
