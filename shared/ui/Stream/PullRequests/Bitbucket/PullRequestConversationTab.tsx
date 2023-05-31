@@ -201,7 +201,7 @@ export const PullRequestConversationTab = (props: {
 			//filter membersList to exclude reviewers
 			const itemsMap = pr.members.nodes.flatMap(member => {
 				if (!reviewerIds.includes(member.user.account_id)) {
-					if (member.user.account_id !== pr.viewer.id) {
+					if (member.user.account_id !== pr.author.id) {
 						return member;
 					}
 					return [];
