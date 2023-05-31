@@ -954,16 +954,18 @@ const providerPullRequestsSlice = createSlice({
 								}
 							});
 						} else if (directive.type === "removeRequestedReviewer") {
-							directive.data.participants.filter(_ => {
-								if (_.role === BitbucketParticipantRole.Participant) {
-									if (_.state !== null) {
-										pr.reviewers?.nodes.push(_);
-									}
-								} else {
-									pr.reviewers?.nodes.push(_);
-								}
-							});
-							pr.participants.nodes = directive.data.participants;
+							const uuid = directive.data.user.account_id;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+							if (foundUser != -1) {
+								pr.participants.nodes[foundUser].state = directive.data.state;
+								pr.participants.nodes[foundUser].approved = directive.data.approved;
+								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
+								pr.participants.nodes[foundUser].role = directive.data.role;
+							}
+							if (foundReviewer != 1) {
+								pr.reviewers?.nodes.splice(foundReviewer, 1);
+							}
 						} else if (directive.type === "updateReviewers") {
 							const uuid = directive.data.user.account_id;
 							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);

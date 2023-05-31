@@ -2113,6 +2113,10 @@ export class BitbucketProvider
 			payload
 		);
 
+		const selectedParticipant = response.body.participants.find(
+			_ => _.user.account_id === request.reviewerId
+		);
+
 		const directives: Directive[] = [
 			{
 				type: "updatePullRequest",
@@ -2123,7 +2127,20 @@ export class BitbucketProvider
 			{
 				type: "removeRequestedReviewer",
 				data: {
-					participants: response.body.participants, //all participants & reviewers regardless of status
+					user: {
+						display_name: selectedParticipant?.user.display_name,
+						account_id: selectedParticipant?.user.account_id,
+						nickname: selectedParticipant?.user.nickname,
+						links: {
+							avatar: {
+								href: selectedParticipant?.user.links.avatar.href,
+							},
+						},
+					},
+					approved: selectedParticipant?.approved,
+					state: selectedParticipant?.state,
+					participated_on: selectedParticipant?.participated_on,
+					role: selectedParticipant?.role,
 				},
 			},
 		];
