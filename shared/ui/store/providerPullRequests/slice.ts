@@ -988,14 +988,10 @@ const providerPullRequestsSlice = createSlice({
 							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
 							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
 							if (foundUser != -1) {
-								pr.participants.nodes[foundUser].state = directive.data.state;
+								pr.participants.nodes[foundUser].state = directive.data?.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
-								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
-								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
-								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
-								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 							} else {
 								pr.participants.nodes.push({
 									user: {
@@ -1008,11 +1004,18 @@ const providerPullRequestsSlice = createSlice({
 											},
 										},
 									},
-									state: directive.data.state,
+									state: directive.data?.state,
 									approved: directive.data.approved,
 									participated_on: directive.data.participated_on,
 									role: directive.data.role,
 								});
+							}
+							if (foundReviewer != -1) {
+								pr.reviewers!.nodes[foundReviewer].state = directive.data?.state;
+								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+							} else {
 								pr.reviewers?.nodes.push({
 									user: {
 										account_id: uuid,
@@ -1024,7 +1027,7 @@ const providerPullRequestsSlice = createSlice({
 											},
 										},
 									},
-									state: directive.data.state,
+									state: directive.data?.state,
 									approved: directive.data.approved,
 									participated_on: directive.data.participated_on,
 									role: directive.data.role,
