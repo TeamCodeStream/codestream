@@ -126,7 +126,11 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 											</>
 										</div>
 									</div>
-									<Button style={{ padding: "0 5px 0 5px" }} onClick={removeReviewer}>
+									<Button
+										disabled={reviewerSelection === "Select reviewer"}
+										style={{ padding: "0 5px 0 5px" }}
+										onClick={removeReviewer}
+									>
 										Remove
 									</Button>
 								</div>
@@ -166,7 +170,11 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 											<div style={{ height: "10px" }} />
 										</div>
 									</div>
-									<Button style={{ padding: "0 5px 0 5px" }} onClick={addReviewer}>
+									<Button
+										disabled={reviewerSelection === "Select reviewer"}
+										style={{ padding: "0 5px 0 5px" }}
+										onClick={addReviewer}
+									>
 										Add
 									</Button>
 								</div>
