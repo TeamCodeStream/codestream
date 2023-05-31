@@ -10,6 +10,9 @@ import com.codestream.protocols.agent.GetCommitParams
 import com.codestream.review.ReviewDiffVirtualFile
 import com.codestream.sessionService
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.EDT
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.asContextElement
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorFactory
@@ -23,6 +26,8 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Range
 import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.net.URI
@@ -114,10 +119,10 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
 
     open fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? = null
 
-    open fun copySymbolInFile(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
+    open suspend fun copySymbolInFile(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
         val filePath = URI.create(uri).path
         val sha = ref?.let {
-            project.agentService?.getCommit(GetCommitParams(filePath, ref))?.scm?.revision
+            withContext(Dispatchers.EDT) { project.agentService?.getCommit(GetCommitParams(filePath, ref))?.scm?.revision }
         }
         val virtFile = if (sha != null) getCSGitFile(uri, sha, project) else VfsUtil.findFileByURL(URL(uri))
 
@@ -126,17 +131,24 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
             return null
         }
 
-        val psiFile = virtFile.toPsiFile(project) ?: return null
+        val psiFile = withContext(Dispatchers.EDT) { virtFile.toPsiFile(project) } ?: return null
         if (!isPsiFileSupported(psiFile)) return null
         val editorManager = FileEditorManager.getInstance(project)
-        val editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtFile), false) ?: return null
+        val result = withContext<FindSymbolInFileResponse?>(Dispatchers.EDT + ModalityState.current().asContextElement()) {
+            val editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtFile), false)
+                ?: return@withContext null
 //        val editor = psiFile.findExistingEditor() ?: return null
-        val element = (if (namespace != null) symbolResolver.findClassFunctionFromFile(psiFile, null, namespace, functionName) else symbolResolver.findTopLevelFunction(psiFile, functionName))
-            ?: return null
-        val document = editor.document
-        val start = document.lspPosition(element.textRange.startOffset)
-        val end = document.lspPosition(element.textRange.endOffset)
-        val range = Range(start, end)
-        return FindSymbolInFileResponse(element.text, range)
+            val element =
+                (if (namespace != null)
+                    symbolResolver.findClassFunctionFromFile(psiFile, null, namespace, functionName)
+                else symbolResolver.findTopLevelFunction(psiFile, functionName))
+                    ?: return@withContext null
+            val document = editor.document
+            val start = document.lspPosition(element.textRange.startOffset)
+            val end = document.lspPosition(element.textRange.endOffset)
+            val range = Range(start, end)
+            FindSymbolInFileResponse(element.text, range)
+        }
+        return result
     }
 }

@@ -690,10 +690,10 @@ class AgentService(private val project: Project) : Disposable {
         return gson.fromJson(json!!)
     }
 
-    fun getCommit(params: GetCommitParams): GetCommitResult {
+    suspend fun getCommit(params: GetCommitParams): GetCommitResult {
         val json = remoteEndpoint
             .request("codestream/scm/commit", params)
-            .get() as JsonObject?
+            .await() as JsonObject?
         return gson.fromJson(json!!)
     }
 
