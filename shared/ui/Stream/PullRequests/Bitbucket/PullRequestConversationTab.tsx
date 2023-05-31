@@ -149,8 +149,6 @@ export const PullRequestConversationTab = (props: {
 	const [isAddReviewer, setIsAddReviewer] = useState(false);
 	const [isEmpty, setIsEmpty] = useState(false);
 	const [isMerged, setIsMerged] = useState(false);
-	const [reviewerSelection, setReviewerSelection] = useState("Select reviewer");
-	const [reviewerId, setReviewerId] = useState("");
 
 	const __onDidRender = functions => {
 		insertText = functions.insertTextAtCursor;
@@ -194,25 +192,6 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
-	const createLabels = items => {
-		console.log(items);
-		const newItems = items.map(_ => {
-			return {
-				label: _.user.display_name,
-				key: _.user.account_id,
-				action: () => {
-					setReviewerId(_.user.account_id);
-					setReviewerSelection(_.user.display_name);
-				},
-			};
-		});
-		if (newItems.length) {
-			return newItems;
-		} else {
-			return [];
-		}
-	};
-
 	const addReviewerItems = () => {
 		let newLabels;
 		//check if there are any reviewers already
@@ -232,11 +211,11 @@ export const PullRequestConversationTab = (props: {
 			});
 			if (itemsMap.length) {
 				//if there are items, create labels
-				newLabels = createLabels(itemsMap);
+				newLabels = itemsMap;
 			}
 		} else {
 			//if no reviewers, use all members
-			newLabels = createLabels(pr.members.nodes);
+			newLabels = pr.members.nodes;
 		}
 		return newLabels;
 	};
@@ -265,7 +244,7 @@ export const PullRequestConversationTab = (props: {
 			//if there are items
 			if (items.length) {
 				//create labels
-				newLabels = createLabels(items);
+				newLabels = items;
 			}
 		}
 		return newLabels;

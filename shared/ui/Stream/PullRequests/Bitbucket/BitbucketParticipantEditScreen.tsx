@@ -29,7 +29,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 				method: "removeReviewerFromPullRequest",
 				params: {
 					reviewerId: reviewerId,
-					pullRequestId: props.pr.id,
+					pullRequestId: props.pr.number,
 					fullname: props.pr.repository.nameWithOwner,
 				},
 			})
@@ -43,7 +43,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 				method: "addReviewerToPullRequest",
 				params: {
 					reviewerId: reviewerId,
-					pullRequestId: props.pr.id,
+					pullRequestId: props.pr.number,
 					fullname: props.pr.repository.nameWithOwner,
 				},
 			})
@@ -69,7 +69,20 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 									<div style={{ margin: "20px 0" }}>
 										<div className="controls">
 											<>
-												<InlineMenu items={props.removeItems}></InlineMenu>
+												<InlineMenu
+													items={props.removeItems.map(_ => {
+														return {
+															label: _.user.display_name,
+															key: _.user.account_id,
+															action: () => {
+																setReviewerId(_.user.account_id);
+																setReviewerSelection(_.user.display_name);
+															},
+														};
+													})}
+												>
+													{reviewerSelection}
+												</InlineMenu>
 												<div style={{ height: "10px" }} />
 											</>
 										</div>
@@ -97,7 +110,20 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 									{/* {reviewerError && <WarningBox items={[{ message: reviewerError }]}></WarningBox>} */}
 									<div style={{ margin: "20px 0" }}>
 										<div className="controls">
-											<InlineMenu items={props.addItems}></InlineMenu>
+											<InlineMenu
+												items={props.addItems.map(_ => {
+													return {
+														label: _.user.display_name,
+														key: _.user.account_id,
+														action: () => {
+															setReviewerId(_.user.account_id);
+															setReviewerSelection(_.user.display_name);
+														},
+													};
+												})}
+											>
+												{reviewerSelection}
+											</InlineMenu>
 											<div style={{ height: "10px" }} />
 										</div>
 									</div>
