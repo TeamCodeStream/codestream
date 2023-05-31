@@ -185,7 +185,7 @@ export const PullRequestConversationTab = (props: {
 	};
 
 	const checkIfMerged = () => {
-		if (pr.state === "MERGED") {
+		if (pr.state === "MERGED" || pr.state === "DECLINED") {
 			setIsMerged(true);
 		} else {
 			setIsMerged(false);
