@@ -196,15 +196,15 @@ export const PullRequestReviewButton = (props: Props) => {
 	};
 
 	const mapping = {
-		approve: { icon: "thumbsup", text: "Unapprove", requestedState: "unapprove" }, //this pullrequest is approved
-		unapprove: { icon: "thumbsdown", text: "Approve", requestedState: "approve" }, //this pullrequest is unapproved
+		approve: { icon: "thumbsup", text: "Approve", requestedState: "approve" }, //this pullrequest is unapproved, clicking this will approve it
+		unapprove: { icon: "thumbsdown", text: "Unapprove", requestedState: "unapprove" }, //this pullrequest is approved, clicking this will unapprove it
 		"request-changes": {
-			icon: "question",
+			icon: "review",
 			text: "Request Changes",
 			requestedState: "request-changes", //this pull request doesn't already have changes requested
 		},
 		"changes-requested": {
-			icon: "question",
+			icon: "review",
 			text: "Changes Requested",
 			requestedState: "changes-requested", //this really mean un-request changes (bitbucket button on their UI says changes-requested)
 		},
@@ -225,9 +225,9 @@ export const PullRequestReviewButton = (props: Props) => {
 		);
 		viewerRole = currentUserInfo?.role;
 		if (currentUserInfo?.approved) {
-			approvalStatus = mapping["approve"];
-		} else {
 			approvalStatus = mapping["unapprove"];
+		} else {
+			approvalStatus = mapping["approve"];
 		}
 		if (currentUserInfo?.state === "changes_requested") {
 			requestStatus = mapping["changes-requested"];
@@ -235,7 +235,7 @@ export const PullRequestReviewButton = (props: Props) => {
 			requestStatus = mapping["request-changes"];
 		}
 	} else {
-		approvalStatus = mapping["unapprove"];
+		approvalStatus = mapping["approve"];
 		requestStatus = mapping["request-changes"];
 	}
 
@@ -245,7 +245,7 @@ export const PullRequestReviewButton = (props: Props) => {
 				method: "submitReview",
 				params: {
 					eventType: value,
-					pullRequestId: props.pullRequest.id,
+					pullRequestId: props.pullRequest.number,
 					userId: props.pullRequest.viewer.id,
 					repoWithOwner: props.pullRequest.repository.nameWithOwner,
 					viewerRole: viewerRole,
