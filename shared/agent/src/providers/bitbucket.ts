@@ -2144,25 +2144,24 @@ export class BitbucketProvider
 		const repoSplit = request.fullname.split("/");
 		const workspace = repoSplit[0];
 
+		//access workspace members in order to get add new reviewer info
 		const members = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
 			`/workspaces/${workspace}/members`
 		);
 
 		//get user info from members
-		let userInfo = pr.body.reviewers;
-		const selectedUser = request.reviewerId;
-		if (userInfo) {
-			members.body.values.find(_ => {
-				if (_.user.account_id === selectedUser) {
-					userInfo?.push(_.user);
-				}
-			});
-		}
 
-		const newReviewers = userInfo;
+		let reviewers = pr.body.reviewers || [];
+		const selectedUser = request.reviewerId;
+
+		members.body.values.map(member => {
+			if (member.user.account_id === selectedUser) {
+				reviewers.push(member.user);
+			}
+		});
 
 		const payload = {
-			reviewers: newReviewers ?? [],
+			reviewers: reviewers,
 		};
 		Logger.log(`commenting:addRequestedReviewer`, {
 			request: request,
@@ -2172,6 +2171,10 @@ export class BitbucketProvider
 		const response = await this.put<BitbucketUpdateReviewerRequest, BitbucketPullRequest>(
 			`/repositories/${request.fullname}/pullrequests/${request.pullRequestId}`,
 			payload
+		);
+
+		const selectedParticipant = response.body.participants.find(
+			_ => _.user.account_id === selectedUser
 		);
 
 		const directives: Directive[] = [
@@ -2184,7 +2187,20 @@ export class BitbucketProvider
 			{
 				type: "updateReviewers",
 				data: {
-					participants: response.body.participants, //all participants & reviewers regardless of status
+					user: {
+						display_name: selectedParticipant?.user.display_name,
+						account_id: selectedParticipant?.user.account_id,
+						nickname: selectedParticipant?.user.nickname,
+						links: {
+							avatar: {
+								href: selectedParticipant?.user.links.avatar.href,
+							},
+						},
+					},
+					approved: selectedParticipant?.approved,
+					state: selectedParticipant?.state,
+					participated_on: selectedParticipant?.participated_on,
+					role: selectedParticipant?.role,
 				},
 			},
 		];
