@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { Modal } from "../../Modal";
-import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
+import {
+	BitbucketParticipantRole,
+	FetchThirdPartyPullRequestPullRequest,
+} from "@codestream/protocols/agent";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
 import { InlineMenu } from "@codestream/webview/src/components/controls/InlineMenu";
 import Button from "../../Button";
@@ -11,8 +14,44 @@ interface Props {
 	pr: FetchThirdPartyPullRequestPullRequest;
 	onClose: Function;
 	isAddReviewer: boolean;
-	addItems: any; //TODO
-	removeItems: any;
+	addItems: {
+		type?: string;
+		user: {
+			display_name: string;
+			links: {
+				avatar: {
+					href: string;
+				};
+			};
+			type?: string;
+			uuid: string;
+			account_id: string;
+			nickname: string;
+		};
+		role: BitbucketParticipantRole;
+		approved: boolean;
+		state?: string; //"approved" | "changes_requested"
+		participated_on: string;
+	}[];
+	removeItems: {
+		type?: string;
+		user: {
+			display_name: string;
+			links: {
+				avatar: {
+					href: string;
+				};
+			};
+			type?: string;
+			uuid: string;
+			account_id: string;
+			nickname: string;
+		};
+		role: BitbucketParticipantRole;
+		approved: boolean;
+		state?: string; //"approved" | "changes_requested"
+		participated_on: string;
+	}[];
 }
 
 export const BitbucketParticipantEditScreen = (props: Props) => {
