@@ -229,7 +229,7 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
-	const removeRevieweritems = () => {
+	const removeReviewerItems = () => {
 		let newLabels;
 		//if there are reviewers
 		if (pr.reviewers?.nodes.length) {
@@ -250,7 +250,7 @@ export const PullRequestConversationTab = (props: {
 		return newLabels;
 	};
 
-	const removeItems = removeRevieweritems();
+	const removeItems = removeReviewerItems();
 	const isRemoveItems = () => {
 		if (removeItems && removeItems.length) {
 			return true;
