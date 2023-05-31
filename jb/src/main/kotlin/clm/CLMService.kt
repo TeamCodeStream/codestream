@@ -1,8 +1,10 @@
 package com.codestream.clm
 
+import com.codestream.appDispatcher
 import com.intellij.openapi.project.DumbService
 import com.intellij.openapi.project.Project
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.launch
 import java.util.concurrent.CompletableFuture
 
 class CLMService(val project: Project) {
@@ -37,6 +39,21 @@ class CLMService(val project: Project) {
     }
 
     suspend fun copySymbol(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
+        val future = CompletableFuture<FindSymbolInFileResponse?>()
+        DumbService.getInstance(project).smartInvokeLater {
+            appDispatcher.launch {
+                val result = copySymbolInternal(uri, namespace, functionName, ref)
+                if (result != null) {
+                    future.complete(result)
+                } else
+                    future.complete(null)
+
+            }
+        }
+        return future.await()
+    }
+
+    private suspend fun copySymbolInternal(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
         for (component in _languageComponents) {
             val response = component.copySymbolInFile(uri, namespace, functionName, ref)
             if (response != null) {
