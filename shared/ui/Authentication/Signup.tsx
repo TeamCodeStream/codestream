@@ -721,21 +721,22 @@ export const Signup = (props: Props) => {
 							</small>
 						</div>
 					</div>
-
-					<div>
-						<h2>(Remove me when New Relic sign-in is fully supported)</h2>
-						<p>
-							Already have an account?{" "}
-							<Link
-								onClick={e => {
-									e.preventDefault();
-									dispatch(goToOldLogin());
-								}}
-							>
-								Sign In
-							</Link>
-						</p>
-					</div>
+					{false && ( // enable me if you need CodeStream login
+						<div>
+							<h2>(Remove me when New Relic sign-in is fully supported)</h2>
+							<p>
+								Already have an account?{" "}
+								<Link
+									onClick={e => {
+										e.preventDefault();
+										dispatch(goToOldLogin());
+									}}
+								>
+									Sign In
+								</Link>
+							</p>
+						</div>
+					)}
 				</fieldset>
 			</form>
 		</div>
