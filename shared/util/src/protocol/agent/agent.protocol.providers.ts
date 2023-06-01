@@ -2186,26 +2186,6 @@ export type SecurityIssueSummary = {
 
 export type SecurityIssueSummaryResponse = Array<SecurityIssueSummary>;
 
-export type GetSecurityIssuesForEntityRequest = {
-	entityGuid: string;
-	accountId: number;
-	severityFilter?: Array<RiskSeverity>;
-	rows?: number | "all";
-};
-
-export type GetSecurityIssuesForEntityResponse = {
-	securityIssues: SecurityIssueSummaryResponse;
-	recordCount: number;
-	totalRecords: number;
-};
-
-export const GetSecurityIssuesForEntityType = new RequestType<
-	GetSecurityIssuesForEntityRequest,
-	GetSecurityIssuesForEntityResponse,
-	void,
-	void
->("codestream/newrelic/securityIssues");
-
 export type GetLibraryDetailsRequest = {
 	entityGuid: string;
 	accountId: number;
