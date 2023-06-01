@@ -290,7 +290,7 @@ export const PullRequestConversationTab = (props: {
 				<PRSection>
 					<h1>{reviewersLabel}</h1>
 					<PRHeadshots>
-						{pr.reviewers?.nodes.length &&
+						{pr.reviewers?.nodes.length ? (
 							pr.reviewers?.nodes.map((_: any) => {
 								let iconName = "circle";
 								let color = "gray";
@@ -316,7 +316,10 @@ export const PullRequestConversationTab = (props: {
 										/>
 									</>
 								);
-							})}
+							})
+						) : (
+							<></>
+						)}
 						{isOpen ? (
 							<BitbucketParticipantEditScreen
 								addItems={addItems}

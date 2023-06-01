@@ -980,7 +980,7 @@ const providerPullRequestsSlice = createSlice({
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
 							}
-							if (foundReviewer != 1) {
+							if (foundReviewer != -1) {
 								pr.reviewers?.nodes.splice(foundReviewer, 1); //the ui won't let you remove a reviewer with status, so this is OK here
 							}
 						} else if (directive.type === "updateReviewers") {
