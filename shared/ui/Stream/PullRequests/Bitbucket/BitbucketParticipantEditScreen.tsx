@@ -114,7 +114,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 															label: _.user.display_name,
 															key: _.user.account_id,
 															action: () => {
-																setReviewerId(_.user.account_id);
+																setReviewerId(_.user.uuid);
 																setReviewerSelection(_.user.display_name);
 															},
 														};

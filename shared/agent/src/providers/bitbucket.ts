@@ -2094,7 +2094,7 @@ export class BitbucketProvider
 		} else {
 			//remove that reviewer
 			pr.body.reviewers?.filter(_ => {
-				if (_.account_id !== request.reviewerId) {
+				if (_.uuid !== request.reviewerId) {
 					newReviewers.push(_);
 				}
 			});
@@ -2113,9 +2113,7 @@ export class BitbucketProvider
 			payload
 		);
 
-		const selectedParticipant = response.body.participants.find(
-			_ => _.user.account_id === request.reviewerId
-		);
+		const selectedParticipant = pr.body.participants.find(_ => _.user.uuid === request.reviewerId);
 
 		const directives: Directive[] = [
 			{
@@ -2130,6 +2128,7 @@ export class BitbucketProvider
 					user: {
 						display_name: selectedParticipant?.user.display_name,
 						account_id: selectedParticipant?.user.account_id,
+						uuid: selectedParticipant?.user.uuid,
 						nickname: selectedParticipant?.user.nickname,
 						links: {
 							avatar: {

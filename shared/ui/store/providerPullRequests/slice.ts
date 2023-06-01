@@ -971,9 +971,9 @@ const providerPullRequestsSlice = createSlice({
 								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 							}
 						} else if (directive.type === "removeRequestedReviewer") {
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
 							if (foundUser != -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
