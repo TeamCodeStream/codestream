@@ -710,7 +710,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 					};
 				};
 				type?: string;
-				uuid?: string;
+				uuid: string;
 				account_id: string;
 				nickname: string;
 			};
@@ -732,7 +732,7 @@ export interface FetchThirdPartyPullRequestPullRequest {
 					};
 				};
 				type?: string;
-				uuid?: string;
+				uuid: string;
 				account_id: string;
 				nickname: string;
 			};

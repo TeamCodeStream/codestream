@@ -221,7 +221,7 @@ export const PullRequestReviewButton = (props: Props) => {
 
 	if (props.pullRequest.participants.nodes.length !== 0) {
 		const currentUserInfo = props.pullRequest.participants.nodes.find(
-			_ => _.user.account_id === currentUser
+			_ => _.user.uuid === currentUser
 		);
 		viewerRole = currentUserInfo?.role;
 		if (currentUserInfo?.approved) {

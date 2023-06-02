@@ -844,22 +844,19 @@ const providerPullRequestsSlice = createSlice({
 						} else if (directive.type === "addApprovedBy") {
 							//this is for approve
 							// go through the array of participants, match the uuid, then do update
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-							if (foundUser != -1) {
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
-								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
-								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
-								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
-								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 							} else {
 								pr.participants.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {
@@ -873,10 +870,17 @@ const providerPullRequestsSlice = createSlice({
 									participated_on: directive.data.participated_on,
 									role: directive.data.role,
 								});
-
+							}
+							if (foundReviewer !== -1) {
+								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
+								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+							} else {
 								pr.reviewers?.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {
@@ -893,14 +897,16 @@ const providerPullRequestsSlice = createSlice({
 							}
 						} else if (directive.type === "removeApprovedBy") {
 							//this is for unapprove
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-							if (foundUser != -1) {
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
+							}
+							if (foundReviewer !== -1) {
 								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
 								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
 								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
@@ -908,22 +914,19 @@ const providerPullRequestsSlice = createSlice({
 							}
 						} else if (directive.type === "addRequestChanges") {
 							//This is for request changes
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
 							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
-								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
-								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
-								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
-								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 							} else {
 								pr.participants.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {
@@ -937,10 +940,17 @@ const providerPullRequestsSlice = createSlice({
 									participated_on: directive.data.participated_on,
 									role: directive.data.role,
 								});
-
+							}
+							if (foundReviewer !== -1) {
+								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
+								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+								pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+							} else {
 								pr.reviewers?.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {
@@ -957,14 +967,17 @@ const providerPullRequestsSlice = createSlice({
 							}
 						} else if (directive.type === "removePendingReview") {
 							//removing the requested changes
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
 							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
+							}
+
+							if (foundReviewer !== -1) {
 								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
 								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
 								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
@@ -974,20 +987,20 @@ const providerPullRequestsSlice = createSlice({
 							const uuid = directive.data.user.uuid;
 							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
 							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
-							if (foundUser != -1) {
+							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 								pr.participants.nodes[foundUser].role = directive.data.role;
 							}
-							if (foundReviewer != -1) {
+							if (foundReviewer !== -1) {
 								pr.reviewers?.nodes.splice(foundReviewer, 1); //the ui won't let you remove a reviewer with status, so this is OK here
 							}
 						} else if (directive.type === "updateReviewers") {
-							const uuid = directive.data.user.account_id;
-							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-							if (foundUser != -1) {
+							const uuid = directive.data.user.uuid;
+							const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+							const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+							if (foundUser !== -1) {
 								pr.participants.nodes[foundUser].state = directive.data.state;
 								pr.participants.nodes[foundUser].approved = directive.data.approved;
 								pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
@@ -995,7 +1008,8 @@ const providerPullRequestsSlice = createSlice({
 							} else {
 								pr.participants.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {
@@ -1010,7 +1024,7 @@ const providerPullRequestsSlice = createSlice({
 									role: directive.data.role,
 								});
 							}
-							if (foundReviewer != -1) {
+							if (foundReviewer !== -1) {
 								pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
 								pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
 								pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
@@ -1018,7 +1032,8 @@ const providerPullRequestsSlice = createSlice({
 							} else {
 								pr.reviewers?.nodes.push({
 									user: {
-										account_id: uuid,
+										account_id: directive.data.user.account_id,
+										uuid: directive.data.user.uuid,
 										nickname: directive.data.user.nickname,
 										display_name: directive.data.user.display_name,
 										links: {

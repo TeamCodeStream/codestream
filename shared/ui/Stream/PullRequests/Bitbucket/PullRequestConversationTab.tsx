@@ -197,11 +197,11 @@ export const PullRequestConversationTab = (props: {
 		//check if there are any reviewers already
 		if (pr.reviewers?.nodes.length) {
 			//if yes, get an array of all reviewer ids
-			const reviewerIds = pr.reviewers?.nodes.map(reviewer => reviewer.user.account_id);
+			const reviewerIds = pr.reviewers?.nodes.map(reviewer => reviewer.user.uuid);
 			//filter membersList to exclude reviewers
 			const itemsMap = pr.members.nodes.flatMap(member => {
-				if (!reviewerIds.includes(member.user.account_id)) {
-					if (member.user.account_id !== pr.author.id) {
+				if (!reviewerIds.includes(member.user.uuid)) {
+					if (member.user.uuid !== pr.author.id) {
 						return member;
 					}
 					return [];
@@ -215,7 +215,7 @@ export const PullRequestConversationTab = (props: {
 			}
 		} else {
 			//if no reviewers, use all members
-			newLabels = pr.members.nodes.filter(member => member.user.account_id !== pr.author.id);
+			newLabels = pr.members.nodes.filter(member => member.user.uuid !== pr.author.id);
 		}
 		return newLabels;
 	};
@@ -259,8 +259,8 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
-	const numParticpants = ((pr.participants && pr.participants.nodes) || []).length; //all participants & reviewers regardless of status
-	const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
+	// const numParticpants = ((pr.participants && pr.participants.nodes) || []).length; //all participants & reviewers regardless of status
+	// const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 	const prAuthorLogin = pr?.author?.login || GHOST;
 
 	const numReviewers = ((pr.reviewers && pr.reviewers.nodes) || []).length; //participants with status & all reviewers

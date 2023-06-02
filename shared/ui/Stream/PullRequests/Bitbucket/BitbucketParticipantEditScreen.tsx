@@ -112,7 +112,7 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 													items={props.removeItems.map(_ => {
 														return {
 															label: _.user.display_name,
-															key: _.user.account_id,
+															key: _.user.uuid,
 															action: () => {
 																setReviewerId(_.user.uuid);
 																setReviewerSelection(_.user.display_name);
@@ -157,9 +157,9 @@ export const BitbucketParticipantEditScreen = (props: Props) => {
 												items={props.addItems.map(_ => {
 													return {
 														label: _.user.display_name,
-														key: _.user.account_id,
+														key: _.user.uuid,
 														action: () => {
-															setReviewerId(_.user.account_id);
+															setReviewerId(_.user.uuid);
 															setReviewerSelection(_.user.display_name);
 														},
 													};

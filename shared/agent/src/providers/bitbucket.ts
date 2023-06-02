@@ -424,6 +424,8 @@ interface BitbucketPullRequestComment2 {
 	id: number;
 	author: {
 		login: string;
+		account_id?: string;
+		uuid?: string;
 	};
 	deleted: boolean;
 	inline: {
@@ -561,6 +563,7 @@ interface BitbucketPullRequestComment {
 	};
 	user: {
 		account_id: string;
+		uuid: string;
 		display_name: string;
 		nickname: string;
 		links?: {
@@ -1476,12 +1479,12 @@ export class BitbucketProvider
 				}
 
 				return {
-					users: members.map(u => ({ ...u, id: u.account_id, displayName: u.display_name })),
+					users: members.map(u => ({ ...u, id: u.uuid, displayName: u.display_name })),
 				};
 			} else {
 				const userResponse = await this.get<BitbucketUser>("/user");
 				const user = userResponse.body;
-				return { users: [{ ...user, id: user.account_id, displayName: user.display_name }] };
+				return { users: [{ ...user, id: user.uuid, displayName: user.display_name }] };
 			}
 		} catch (ex) {
 			Logger.error(ex);
@@ -1584,7 +1587,7 @@ export class BitbucketProvider
 
 			const isViewerCanUpdate = () => {
 				return !!permissions.body.values.find(
-					(_: { user: { account_id: string } }) => _.user.account_id === userResponse.account_id
+					(_: { user: { uuid: string } }) => _.user.uuid === userResponse.uuid
 				);
 			};
 
@@ -1620,10 +1623,10 @@ export class BitbucketProvider
 			};
 
 			const viewer = {
-				id: userResponse.account_id,
+				id: userResponse.uuid,
 				login: userResponse.display_name,
 				avatarUrl: userResponse.links.avatar.href,
-				viewerDidAuthor: userResponse.account_id === pr.body.author.account_id,
+				viewerDidAuthor: userResponse.uuid === pr.body.author.uuid,
 			};
 
 			const filterComments = comments.body.values
@@ -1656,7 +1659,7 @@ export class BitbucketProvider
 			});
 
 			const isViewerDidAuthor = () => {
-				if (userResponse.account_id === pr.body.author.account_id) {
+				if (userResponse.uuid === pr.body.author.uuid) {
 					return true;
 				} else {
 					return false;
@@ -1695,7 +1698,7 @@ export class BitbucketProvider
 						author: {
 							login: pr.body.author.display_name,
 							avatarUrl: pr.body.author.links.avatar,
-							id: pr.body.author.account_id,
+							id: pr.body.author.uuid,
 						},
 						comments: treeComments || [],
 						description: pr.body.description,
@@ -1984,7 +1987,7 @@ export class BitbucketProvider
 			},
 			{
 				type: "updateNode",
-				data: this.mapTimelineComment(response.body, response.body.user.account_id),
+				data: this.mapTimelineComment(response.body, response.body.user.uuid),
 			},
 		];
 
@@ -2028,7 +2031,7 @@ export class BitbucketProvider
 			},
 			{
 				type: "addPullRequestComment",
-				data: this.mapTimelineComment(response.body, response.body.user.account_id),
+				data: this.mapTimelineComment(response.body, response.body.user.uuid),
 			},
 		];
 
@@ -2054,7 +2057,7 @@ export class BitbucketProvider
 			let alternateName = commit.author?.raw?.split(" ");
 			const author = {
 				name: commit.author?.user?.display_name || alternateName[0],
-
+				id: commit.author?.user?.uuid,
 				avatarUrl:
 					//@ts-ignore
 					commit.author?.user?.links?.avatar?.href || commit.repository?.links?.avatar?.href,
@@ -2063,6 +2066,7 @@ export class BitbucketProvider
 					avatarUrl:
 						//@ts-ignore
 						commit.author?.user?.links?.avatar?.href || commit.repository?.links?.avatar?.href,
+					id: commit.author?.user?.uuid,
 				},
 			};
 			return {
@@ -2171,7 +2175,7 @@ export class BitbucketProvider
 		const selectedUser = request.reviewerId;
 
 		members.body.values.map(member => {
-			if (member.user.account_id === selectedUser) {
+			if (member.user.uuid === selectedUser) {
 				reviewers.push(member.user);
 			}
 		});
@@ -2189,9 +2193,7 @@ export class BitbucketProvider
 			payload
 		);
 
-		const selectedParticipant = response.body.participants.find(
-			_ => _.user.account_id === selectedUser
-		);
+		const selectedParticipant = response.body.participants.find(_ => _.user.uuid === selectedUser);
 
 		const directives: Directive[] = [
 			{
@@ -2206,6 +2208,7 @@ export class BitbucketProvider
 					user: {
 						display_name: selectedParticipant?.user.display_name,
 						account_id: selectedParticipant?.user.account_id,
+						uuid: selectedParticipant?.user.uuid,
 						nickname: selectedParticipant?.user.nickname,
 						links: {
 							avatar: {
@@ -2265,7 +2268,7 @@ export class BitbucketProvider
 						type: "removePendingReview",
 						data: {
 							user: {
-								account_id: request.userId,
+								uuid: request.userId,
 							},
 							state: null,
 							participated_on: toUtcIsoNow(),
@@ -2300,6 +2303,7 @@ export class BitbucketProvider
 							user: {
 								display_name: response.body.user.display_name,
 								account_id: response.body.user.account_id,
+								uuid: response.body.user.uuid,
 								nickname: response.body.user.nickname,
 								links: {
 									avatar: {
@@ -2334,7 +2338,7 @@ export class BitbucketProvider
 						type: "removeApprovedBy",
 						data: {
 							user: {
-								account_id: request.userId,
+								uuid: request.userId,
 							},
 							state: null,
 							participated_on: toUtcIsoNow(),
@@ -2369,6 +2373,7 @@ export class BitbucketProvider
 							user: {
 								display_name: response.body.user.display_name,
 								account_id: response.body.user.account_id,
+								uuid: response.body.user.uuid,
 								nickname: response.body.user.nickname,
 								links: {
 									avatar: {
@@ -2434,7 +2439,7 @@ export class BitbucketProvider
 		viewerId: string
 	): BitbucketPullRequestComment2 {
 		const viewerCanUpdate = () => {
-			if (_.user.account_id === viewerId) {
+			if (_.user.uuid === viewerId) {
 				return true;
 			} else {
 				return false;
@@ -2454,7 +2459,7 @@ export class BitbucketProvider
 			author: {
 				login: _.user.display_name,
 				name: _.user.display_name,
-				id: _.user.account_id,
+				id: _.user.uuid,
 				avatarUrl: _.user.links?.avatar?.href,
 			},
 		} as BitbucketPullRequestComment2;
@@ -2463,7 +2468,7 @@ export class BitbucketProvider
 	private mapTimelineComment(comment: BitbucketPullRequestComment, viewerId: string) {
 		const user = comment?.user;
 		const viewerCanUpdate = () => {
-			if (user.account_id === viewerId) {
+			if (user.uuid === viewerId) {
 				return true;
 			} else {
 				return false;
@@ -2475,7 +2480,7 @@ export class BitbucketProvider
 				avatarUrl: user?.links?.avatar?.href,
 				name: user?.display_name,
 				login: user?.display_name,
-				id: user.account_id,
+				id: user.uuid,
 			},
 			viewerCanUpdate: bool,
 			viewerCanDelete: bool,
@@ -2800,6 +2805,7 @@ export class BitbucketProvider
 					author: {
 						avatarUrl: item.author.links.avatar.href,
 						login: item.author.display_name,
+						id: item.author.uuid,
 					},
 					baseRefName: item.destination.branch.name,
 					body: item.summary.html,
@@ -2854,7 +2860,7 @@ export class BitbucketProvider
 				if (individualPRs.body.reviewers?.length) {
 					//@ts-ignore
 					const foundSelf = individualPRs.body.reviewers?.find(
-						(_: { account_id: string }) => _.account_id === usernameResponse.body.account_id
+						(_: { uuid: string }) => _.uuid === usernameResponse.body.uuid
 					);
 					if (foundSelf) {
 						array.push(pullrequests.body.values[j]);
@@ -2923,8 +2929,7 @@ export class BitbucketProvider
 				`/repositories/${fullNames[i].fullname}/pullrequests?${query}` //note this is hardcoded
 			);
 			const foundSelf = pullrequests.body.values.find(
-				(_: { author: { account_id: string } }) =>
-					_.author.account_id === usernameResponse.body.account_id
+				(_: { author: { uuid: string } }) => _.author.uuid === usernameResponse.body.uuid
 			);
 			if (foundSelf) {
 				array.push(foundSelf);
@@ -3066,7 +3071,7 @@ export class BitbucketProvider
 			},
 			{
 				type: "addNode",
-				data: this.mapComment(response.body, response.body.user.account_id),
+				data: this.mapComment(response.body, response.body.user.uuid),
 			},
 		];
 
@@ -3118,7 +3123,7 @@ export class BitbucketProvider
 			},
 			{
 				type: "addReply",
-				data: this.mapComment(response.body, response.body.user.account_id),
+				data: this.mapComment(response.body, response.body.user.uuid),
 			},
 		];
 
@@ -3163,22 +3168,19 @@ export class BitbucketProvider
 			} else if (directive.type === "addApprovedBy") {
 				//this is for approve
 				// go through the array of participants, match the uuid, then do update
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-				if (foundUser != -1) {
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 					pr.participants.nodes[foundUser].role = directive.data.role;
-					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
-					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
-					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
-					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 				} else {
 					pr.participants.nodes.push({
 						user: {
-							account_id: uuid,
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
 							nickname: directive.data.user.nickname,
 							display_name: directive.data.user.display_name,
 							links: {
@@ -3192,10 +3194,17 @@ export class BitbucketProvider
 						participated_on: directive.data.participated_on,
 						role: directive.data.role,
 					});
-
+				}
+				if (foundReviewer !== -1) {
+					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
+					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+				} else {
 					pr.reviewers?.nodes.push({
 						user: {
-							account_id: uuid,
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
 							nickname: directive.data.user.nickname,
 							display_name: directive.data.user.display_name,
 							links: {
@@ -3212,14 +3221,16 @@ export class BitbucketProvider
 				}
 			} else if (directive.type === "removeApprovedBy") {
 				//this is for unapprove
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-				if (foundUser != -1) {
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 					pr.participants.nodes[foundUser].role = directive.data.role;
+				}
+				if (foundReviewer !== -1) {
 					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
 					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
 					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
@@ -3227,22 +3238,19 @@ export class BitbucketProvider
 				}
 			} else if (directive.type === "addRequestChanges") {
 				//This is for request changes
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
 				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 					pr.participants.nodes[foundUser].role = directive.data.role;
-					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
-					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
-					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
-					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 				} else {
 					pr.participants.nodes.push({
 						user: {
-							account_id: uuid,
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
 							nickname: directive.data.user.nickname,
 							display_name: directive.data.user.display_name,
 							links: {
@@ -3256,10 +3264,17 @@ export class BitbucketProvider
 						participated_on: directive.data.participated_on,
 						role: directive.data.role,
 					});
-
+				}
+				if (foundReviewer !== -1) {
+					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
+					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+				} else {
 					pr.reviewers?.nodes.push({
 						user: {
-							account_id: uuid,
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
 							nickname: directive.data.user.nickname,
 							display_name: directive.data.user.display_name,
 							links: {
@@ -3276,36 +3291,40 @@ export class BitbucketProvider
 				}
 			} else if (directive.type === "removePendingReview") {
 				//removing the requested changes
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
 				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 					pr.participants.nodes[foundUser].role = directive.data.role;
+				}
+
+				if (foundReviewer !== -1) {
 					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
 					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
 					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
 					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
 				}
 			} else if (directive.type === "removeRequestedReviewer") {
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.account_id === uuid);
-				if (foundUser != -1) {
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
 					pr.participants.nodes[foundUser].role = directive.data.role;
 				}
-				if (foundReviewer != 1) {
+				if (foundReviewer !== -1) {
 					pr.reviewers?.nodes.splice(foundReviewer, 1); //the ui won't let you remove a reviewer with status, so this is OK here
 				}
 			} else if (directive.type === "updateReviewers") {
-				const uuid = directive.data.user.account_id;
-				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.account_id === uuid);
-				if (foundUser != -1) {
+				const uuid = directive.data.user.uuid;
+				const foundUser = pr.participants.nodes.findIndex(_ => _.user?.uuid === uuid);
+				const foundReviewer = pr.reviewers!.nodes.findIndex(e => e.user?.uuid === uuid);
+				if (foundUser !== -1) {
 					pr.participants.nodes[foundUser].state = directive.data.state;
 					pr.participants.nodes[foundUser].approved = directive.data.approved;
 					pr.participants.nodes[foundUser].participated_on = directive.data.participated_on;
@@ -3313,7 +3332,8 @@ export class BitbucketProvider
 				} else {
 					pr.participants.nodes.push({
 						user: {
-							account_id: uuid,
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
 							nickname: directive.data.user.nickname,
 							display_name: directive.data.user.display_name,
 							links: {
@@ -3328,21 +3348,30 @@ export class BitbucketProvider
 						role: directive.data.role,
 					});
 				}
-				pr.participants.nodes.filter(participant => {
-					if (
-						pr.reviewers?.nodes.find(
-							reviewer => reviewer.user.account_id !== participant.user.account_id
-						)
-					) {
-						if (participant.role === BitbucketParticipantRole.Participant) {
-							if (participant.state !== null) {
-								pr.reviewers?.nodes.push(participant);
-							}
-						} else {
-							pr.reviewers?.nodes.push(participant);
-						}
-					}
-				});
+				if (foundReviewer !== -1) {
+					pr.reviewers!.nodes[foundReviewer].state = directive.data.state;
+					pr.reviewers!.nodes[foundReviewer].approved = directive.data.approved;
+					pr.reviewers!.nodes[foundReviewer].participated_on = directive.data.participated_on;
+					pr.reviewers!.nodes[foundReviewer].role = directive.data.role;
+				} else {
+					pr.reviewers?.nodes.push({
+						user: {
+							account_id: directive.data.user.account_id,
+							uuid: directive.data.user.uuid,
+							nickname: directive.data.user.nickname,
+							display_name: directive.data.user.display_name,
+							links: {
+								avatar: {
+									href: directive.data.user.links.avatar.href,
+								},
+							},
+						},
+						state: directive.data.state,
+						approved: directive.data.approved,
+						participated_on: directive.data.participated_on,
+						role: directive.data.role,
+					});
+				}
 			} else if (directive.type === "addNode") {
 				pr.comments = pr.comments || [];
 				pr.comments.push(directive.data);
