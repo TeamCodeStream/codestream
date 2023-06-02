@@ -257,6 +257,8 @@ export const Observability = React.memo((props: Props) => {
 		const activeO11y = preferences.activeO11y;
 		const clmSettings = state.preferences.clmSettings || {};
 		const team = state.teams[state.context.currentTeamId] || {};
+		const company =
+			!_isEmpty(state.companies) && !_isEmpty(team) ? state.companies[team.companyId] : undefined;
 
 		return {
 			sessionStart: state.context.sessionStart,
@@ -274,7 +276,7 @@ export const Observability = React.memo((props: Props) => {
 			clmSettings,
 			showAnomalies: isFeatureEnabled(state, "showAnomalies"),
 			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
-			company: state.companies[team.companyId] || {},
+			company,
 		};
 	}, shallowEqual);
 
@@ -615,7 +617,9 @@ export const Observability = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
 				force,
-				isMultiRegion: derivedState.company?.isMultiRegion,
+				isMultiRegion: !_isEmpty(derivedState?.company)
+					? derivedState?.company?.isMultiRegion
+					: undefined,
 			});
 			if (response.repos) {
 				if (hasFilter) {
