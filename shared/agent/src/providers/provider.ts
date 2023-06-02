@@ -7,6 +7,7 @@ import {
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
 	DeleteThirdPartyPostRequest,
+	DeleteThirdPartyPostResponse,
 	FetchAssignableUsersAutocompleteRequest,
 	FetchAssignableUsersRequest,
 	FetchAssignableUsersResponse,
@@ -86,7 +87,7 @@ export interface ThirdPartyProviderSupportsIssues {
 
 export interface ThirdPartyProviderSupportsPosts {
 	createPost(request: CreateThirdPartyPostRequest): Promise<CreateThirdPartyPostResponse>;
-	deletePost(request: DeleteThirdPartyPostRequest): Promise<DeleteThirdPartyPostRequest>;
+	deletePost(request: DeleteThirdPartyPostRequest): Promise<DeleteThirdPartyPostResponse>;
 
 	getChannels(request: FetchThirdPartyChannelsRequest): Promise<FetchThirdPartyChannelsResponse>;
 }
