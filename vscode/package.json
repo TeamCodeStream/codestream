@@ -635,8 +635,8 @@
 		"watch": "tsx esbuild.ts --watch",
 		"webview:build": "tsx esbuild.ts --config-name webview",
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
-		"webview:test:ci": "echo 'ignoring webview tests'",
-		"webview:test": "echo 'ignoring webview tests'",
+		"webview:test:ci": "pushd \"../shared/ui\" && npm run test:ci && popd",
+		"webview:test": "pushd \"../shared/ui\" && npm run test && popd",
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd",
 		"webview:watch": "tsx esbuild.ts --watch --config-name webview"
 	},
