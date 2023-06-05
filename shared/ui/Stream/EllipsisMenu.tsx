@@ -1,9 +1,12 @@
-import { UpdateTeamSettingsRequestType } from "@codestream/protocols/agent";
+import {
+	UpdateTeamSettingsRequestType,
+	DeleteCompanyRequestType,
+} from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty, sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
 import { LogoutCompanyRequestType, LogoutCompanyResponse } from "@codestream/protocols/agent";
-
+import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
 	logout,
@@ -22,6 +25,7 @@ import { MarkdownText } from "./MarkdownText";
 import Menu from "./Menu";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
+import { getDomainFromEmail } from "@codestream/webview/utils";
 
 const RegionSubtext = styled.div`
 	font-size: smaller;
@@ -41,6 +45,8 @@ export const MailHighlightedIconWrapper = styled.div`
 	display: inline;
 	background: var(--text-color-info-muted);
 `;
+
+export const VALID_DELETE_ORG_EMAIL_DOMAINS = ["codestream.com", "newrelic.com", "testinator.com"];
 
 interface EllipsisMenuProps {
 	menuTarget: any;
@@ -123,6 +129,48 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		}, 500);
 
 		return;
+	};
+
+	const deleteOrganization = () => {
+		const { currentCompanyId } = derivedState;
+
+		multiStageConfirmPopup({
+			centered: true,
+			stages: [
+				{
+					title: "Confirm Deletion",
+					message:
+						"Note that this only deletes the CodeStream organization and does NOT delete the corresponding New Relic organization.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							advance: true,
+						},
+					],
+				},
+				{
+					title: "Are you sure?",
+					message:
+						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							wait: true,
+							action: async () => {
+								await HostApi.instance.send(DeleteCompanyRequestType, {
+									companyId: currentCompanyId,
+								});
+								handleLogout();
+							},
+						},
+					],
+				},
+			],
+		});
 	};
 
 	const buildSwitchTeamMenuItem = () => {
@@ -287,7 +335,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	};
 
 	const buildAdminTeamMenuItem = () => {
-		const { company, team, currentUserId, xraySetting } = derivedState;
+		const { company, team, currentUserId, currentUserEmail } = derivedState;
 		const { adminIds } = team;
 
 		// TODO: this may be a good place to confirm whether the company is still "CodeStream only",
@@ -356,6 +404,20 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					disabled: false,
 				},
 			]);
+
+			const emailDomain = getDomainFromEmail(currentUserEmail!);
+			if (emailDomain && VALID_DELETE_ORG_EMAIL_DOMAINS.includes(emailDomain)) {
+				submenu.push.apply(submenu, [
+					{ label: "-" },
+					{
+						label: "Delete Organization",
+						key: "delete-organization",
+						action: deleteOrganization,
+						disabled: false,
+					},
+				]);
+			}
+
 			return {
 				label: "Organization Admin",
 				key: "admin",

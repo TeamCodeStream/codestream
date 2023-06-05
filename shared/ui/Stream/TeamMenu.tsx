@@ -1,5 +1,5 @@
 import React from "react";
-
+import { logout } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
@@ -11,8 +11,12 @@ import {
 	setCreatePullRequest,
 } from "../store/context/actions";
 import { CodeStreamState } from "../store";
-import { keyFilter } from "../utils";
+import { keyFilter, getDomainFromEmail } from "../utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { multiStageConfirmPopup } from "./MultiStageConfirm";
+import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
+import { HostApi } from "../webview-api";
+import { VALID_DELETE_ORG_EMAIL_DOMAINS } from "./EllipsisMenu";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -25,13 +29,14 @@ export function TeamMenu(props: TeamMenuProps) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
-
+		const user = state.users[state.session.userId!];
 		const adminIds = team.adminIds || [];
 		const isCurrentUserAdmin = adminIds.includes(state.session.userId!);
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const mappedBlame = keyFilter(blameMap || EMPTY_HASH);
 		const currentCompanyId = team.companyId;
 		return {
+			currentUserEmail: user.email,
 			isCurrentUserAdmin,
 			mappedBlame,
 			team,
@@ -39,6 +44,48 @@ export function TeamMenu(props: TeamMenuProps) {
 			autoJoinSupported: isFeatureEnabled(state, "autoJoin"),
 		};
 	});
+
+	const deleteOrganization = () => {
+		const { currentCompanyId } = derivedState;
+
+		multiStageConfirmPopup({
+			centered: true,
+			stages: [
+				{
+					title: "Confirm Deletion",
+					message:
+						"Note that this only deletes the CodeStream organization and does NOT delete the corresponding New Relic organization.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							advance: true,
+						},
+					],
+				},
+				{
+					title: "Are you sure?",
+					message:
+						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							wait: true,
+							action: async () => {
+								await HostApi.instance.send(DeleteCompanyRequestType, {
+									companyId: currentCompanyId,
+								});
+								dispatch(logout());
+							},
+						},
+					],
+				},
+			],
+		});
+	};
 
 	const go = modal => {
 		dispatch(setCreatePullRequest());
@@ -113,6 +160,19 @@ export function TeamMenu(props: TeamMenuProps) {
 				action: () => goPanel(WebviewPanels.Export),
 			}
 		);
+
+		const emailDomain = getDomainFromEmail(derivedState.currentUserEmail!);
+		if (emailDomain && VALID_DELETE_ORG_EMAIL_DOMAINS.includes(emailDomain)) {
+			menuItems.push(
+				{ label: "-" },
+				{
+					label: "Delete Organization",
+					key: "delete-organization",
+					action: deleteOrganization,
+					disabled: false,
+				}
+			);
+		}
 	}
 
 	return (
