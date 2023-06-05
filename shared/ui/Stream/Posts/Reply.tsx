@@ -314,7 +314,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 							<Headshot size={20} person={props.author} />{" "}
 						</ProfileLink>
 					)}
-					<span>
+					<span className="reply-author">
 						{props.author.username}
 						{emote}
 						{checkpoint && (
@@ -415,8 +415,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				)}
 				{emote || isEditing ? null : (
 					<>
-						<Content>
-							<MarkdownText text={postText} />
+						<Content className="reply-content-container">
+							<MarkdownText text={postText} className="reply-markdown-content" />
 							<Attachments post={props.post as CSPost} />
 							{hasTags && (
 								<MetaDescriptionForTags>

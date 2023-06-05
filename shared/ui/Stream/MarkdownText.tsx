@@ -5,7 +5,7 @@ import { useMarkdownifyToHtml } from "./Markdowner";
 export const MarkdownText = styled(
 	(props: {
 		text: string;
-		as?: "string" | React.ElementType | React.Component;
+		as?: "string" | React.ElementType | React.FunctionComponent;
 		className?: string;
 		inline?: boolean;
 		excludeOnlyEmoji?: boolean;
@@ -15,7 +15,7 @@ export const MarkdownText = styled(
 
 		return React.createElement(
 			// casting to `any` on the next line because of a terrible type declaration for React.createElement that hardcodes the string 'input' as the first argument
-			props.as || ("span" as any),
+			props.as ?? "span",
 			{
 				className: props.className,
 				dangerouslySetInnerHTML: {

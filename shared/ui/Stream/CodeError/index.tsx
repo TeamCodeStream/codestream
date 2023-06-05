@@ -902,7 +902,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 									delay={1}
 								>
 									{props.errorGroup?.errorGroupUrl && props.codeError.title ? (
-										<span>
+										<span data-testid="code-error-title">
 											<Link
 												href={
 													props.errorGroup.errorGroupUrl! +
@@ -913,7 +913,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 											</Link>
 										</span>
 									) : (
-										<span>{title}</span>
+										<span data-testid="code-error-title">{title}</span>
 									)}
 								</Tooltip>
 							}
@@ -1484,6 +1484,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			)}
 			{codeError?.text && (
 				<Message
+					data-testid="code-error-text"
 					style={{
 						opacity: derivedState.hideCodeErrorInstructions ? "1" : ".25",
 					}}
@@ -1518,13 +1519,13 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 						})}
 
 					{props.repoInfo && (
-						<DataRow>
+						<DataRow data-testid="code-error-repo">
 							<DataLabel>Repo:</DataLabel>
 							<DataValue>{props.repoInfo.repoName}</DataValue>
 						</DataRow>
 					)}
 					{repoRef && (
-						<DataRow>
+						<DataRow data-testid="code-error-ref">
 							<DataLabel>Build:</DataLabel>
 							<DataValue>{repoRef}</DataValue>
 						</DataRow>
@@ -1814,7 +1815,9 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 											<span>Grok</span>
 										</AuthorInfo>
 									</ReplyBody>
-									<LoadingMessage align={"left"}>{grokMessage}</LoadingMessage>
+									<LoadingMessage data-testid="grok-loading-message" align={"left"}>
+										{grokMessage}
+									</LoadingMessage>
 								</DelayedRender>
 							)}
 						</>

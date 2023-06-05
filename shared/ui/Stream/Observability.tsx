@@ -186,7 +186,7 @@ export const ErrorRow = (props: {
 
 	return (
 		<Row
-			className="pr-row"
+			className="pr-row error-row"
 			onClick={e => {
 				props.onClick && props.onClick();
 			}}
