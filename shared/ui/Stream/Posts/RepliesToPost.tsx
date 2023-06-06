@@ -43,6 +43,7 @@ export const RepliesToPost = (props: {
 	parentPostId: string;
 	itemId: string;
 	numReplies: number;
+	codeErrorId?: string;
 	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
 }) => {
 	const dispatch = useAppDispatch();
@@ -156,6 +157,7 @@ export const RepliesToPost = (props: {
 							post={reply}
 							editingPostId={editingPostId}
 							nestedReplies={nestedRepliesByParent[reply.id]}
+							codeErrorId={props.codeErrorId}
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
 							)}

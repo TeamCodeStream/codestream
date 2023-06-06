@@ -32,10 +32,12 @@ import { AddReactionIcon, Reactions } from "../Reactions";
 import Tag from "../Tag";
 import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
+import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
 	post: Post;
+	codeErrorId?: string;
 	nestedReplies?: PostPlus[];
 	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
 	className?: string;
@@ -47,11 +49,13 @@ export interface ReplyProps {
 
 const AuthorInfo = styled.div`
 	display: flex;
-	align-items: top;
+	align-items: flex-start;
+
 	${Headshot} {
 		margin-right: 7px;
 		flex-shrink: 0;
 	}
+
 	.emote {
 		font-weight: normal;
 		padding-left: 4px;
@@ -70,19 +74,23 @@ const Root = styled.div`
 	// too little padding between the reply and the one below
 	// since the other reply has a 5px extra padding from that body
 	min-height: 35px;
+
 	${AuthorInfo} {
 		font-weight: 700;
 	}
+
 	.icon.reply {
 		margin-left: 5px;
 		margin-right: 10px;
 		vertical-align: -2px;
 	}
+
 	${AddReactionIcon} {
 		vertical-align: -2px;
 		margin-left: 5px;
 		margin-right: 5px;
 	}
+
 	.bar-left-not-last-child {
 		width: 2px;
 		height: 100%;
@@ -92,6 +100,7 @@ const Root = styled.div`
 		background: var(--text-color);
 		opacity: 0.25;
 	}
+
 	.bar-left-last-child {
 		width: 2px;
 		height: 27px;
@@ -101,6 +110,7 @@ const Root = styled.div`
 		background: var(--text-color);
 		opacity: 0.25;
 	}
+
 	.bar-left-connector {
 		width: 19px;
 		height: 2px;
@@ -110,6 +120,7 @@ const Root = styled.div`
 		background: var(--text-color);
 		opacity: 0.25;
 	}
+
 	.related {
 		margin: 10px 0;
 	}
@@ -131,14 +142,17 @@ export const ReplyBody = styled.span`
 	:hover ${AddReactionIcon} {
 		visibility: visible;
 	}
+
 	:hover .icon.reply,
 	:hover ${AddReactionIcon} {
 		opacity: 0.6;
 	}
+
 	:hover .icon.reply:hover,
 	:hover ${AddReactionIcon}:hover {
 		opacity: 1;
 	}
+
 	.bar-left-parent {
 		width: 2px;
 		height: calc(100% - 20px);
@@ -162,6 +176,7 @@ const Content = styled.div`
 	margin-left: 27px;
 	display: flex;
 	flex-direction: column;
+
 	> *:not(:last-child) {
 		margin-bottom: 10px;
 	}
@@ -169,18 +184,22 @@ const Content = styled.div`
 
 const ReviewMarkerActionsWrapper = styled.div`
 	margin-left: 13px;
+
 	.code {
 		margin: 5px 0 !important;
 	}
+
 	.file-info {
 		font-size: 11px;
 		display: flex;
 		flex-flow: row wrap;
 	}
+
 	.file-info .monospace {
 		display: block;
 		white-space: nowrap;
 	}
+
 	.icon {
 		vertical-align: 2px;
 	}
@@ -433,6 +452,9 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 					</>
 				)}
 				{!isPending(props.post) && <Reactions post={props.post} />}
+				{!isPending(props.post) && props.codeErrorId && props.post.forGrok && (
+					<GrokFeedback postId={props.post.id} errorId={props.codeErrorId} />
+				)}
 			</ReplyBody>
 			{props.nestedReplies &&
 				props.nestedReplies.length > 0 &&

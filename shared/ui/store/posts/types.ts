@@ -21,7 +21,7 @@ export interface PendingPost
 
 export type Post = PendingPost | PostPlus;
 
-export function isPending(post: Object | undefined): post is PendingPost {
+export function isPending(post: object | undefined): post is PendingPost {
 	return (post as PendingPost).pending;
 }
 

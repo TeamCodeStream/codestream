@@ -1793,6 +1793,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								itemId={props.codeError.id}
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
+								codeErrorId={props.codeError.id}
 							/>
 							{grokError && (
 								<DelayedRender>
