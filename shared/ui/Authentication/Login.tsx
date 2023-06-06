@@ -298,10 +298,10 @@ class Login extends React.Component<Props, State> {
 						<div id="controls">
 							{this.props.supportsSSOSignIn && (
 								<div className="border-bottom-box">
-									<h3>Sign into CodeStream with your New Relic account</h3>
+									<h3>Sign in to CodeStream with your New Relic account</h3>
 									<Button className="row-button no-top-margin" onClick={handleClickNewRelicSignup}>
 										<Icon name="newrelic" />
-										<div className="copy">Sign into New Relic</div>
+										<div className="copy">Sign in to New Relic</div>
 										<Icon name="chevron-right" />
 									</Button>
 								</div>
