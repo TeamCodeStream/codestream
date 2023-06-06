@@ -15,12 +15,18 @@ import {
 import { CodeErrorTimeWindow } from "../../util/src/protocol/agent/api.protocol.models";
 import { InlineMenu } from "../src/components/controls/InlineMenu";
 import { setUserPreference } from "./actions";
+import styled from "styled-components";
 
 interface Props {
 	observabilityErrors?: any;
 	observabilityRepo?: any;
 	entityGuid?: string;
 }
+
+const SubtleDropdown = styled.span`
+	color: var(--text-color-subtle);
+	font-size: 11px;
+`;
 
 export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
@@ -73,17 +79,16 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 			>
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px" }}>Last {derivedState.timeWindow}</span>
-				<div className="icons" style={{ padding: 0 }}>
-					<InlineMenu
-						noFocusOnSelect
-						items={timeWindowItems}
-						title="Configure Recent Errors Time Window"
-						noChevronDown
-					>
-						<Icon name="gear" className="clickable" />
-					</InlineMenu>
-				</div>
+				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Recent</span>
+				<InlineMenu
+					title="Time Range"
+					noFocusOnSelect
+					items={timeWindowItems}
+					align="bottomRight"
+					className="dropdown"
+				>
+					<SubtleDropdown>{derivedState.timeWindow}</SubtleDropdown>
+				</InlineMenu>
 			</Row>
 			{expanded && (
 				<>
