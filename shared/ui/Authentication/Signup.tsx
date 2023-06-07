@@ -591,21 +591,6 @@ export const Signup = (props: Props) => {
 										</SignupButtonContainer>
 									)}
 								</SignupButtonsContainer>
-								<OnPremWrapper id={`on-prem-wrapper`}>
-									Codestream supports on-prem code hosts as well. {` `}
-									<Tooltip
-										key="on-prem"
-										title={`CodeStream supports both cloud and on-prem versions of GitHub, 
-										GitLab and Bitbucket. However, only the cloud versions are available 
-										to use for CodeStream authentication. If you use an on-prem version of 
-										these services, sign up for CodeStream using a different method and then 
-										connect to your code host from the Integrations page in CodeStream.`}
-										placement="bottom"
-									>
-										<OnPremTooltipCopy>Learn More</OnPremTooltipCopy>
-									</Tooltip>
-								</OnPremWrapper>
-
 								{showOr && showEmailForm && (
 									<div className="separator-label">
 										<span className="or">
@@ -725,6 +710,12 @@ export const Signup = (props: Props) => {
 							</small>
 						</div>
 					</div>
+
+					<p style={{ opacity: 0.5, fontSize: ".9em", textAlign: "center" }}>
+						CodeStream Version {derivedState.pluginVersion}
+						<br />
+						Connected to {derivedState.whichServer}.
+					</p>
 					{false && ( // enable me if you need CodeStream login
 						<div>
 							<h2>(Remove me when New Relic sign-in is fully supported)</h2>
