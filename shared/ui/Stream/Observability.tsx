@@ -1059,8 +1059,8 @@ export const Observability = React.memo((props: Props) => {
 										{!hasEntities && !genericError && (
 											<GenericWrapper>
 												<GenericCopy>
-													Instrument your application with New Relic to see observability data in
-													your IDE, including service-level telemetry and code-level golden metrics.{" "}
+													Instrument your application with New Relic to see performance data in
+													your IDE, including service-level telemetry and code-level metrics.{" "}
 													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring">
 														Learn more.
 													</a>

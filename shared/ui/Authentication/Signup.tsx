@@ -499,7 +499,7 @@ export const Signup = (props: Props) => {
 								{(props.newOrg || props.joinCompanyId) && <h2>Create an account</h2>}
 								{!props.newOrg && !props.joinCompanyId && (
 									<>
-										<h3>Sign into CodeStream with your New Relic account</h3>
+										<h3>Sign in to CodeStream with your New Relic account</h3>
 										{!limitAuthentication && (
 											<Button
 												style={{ marginBottom: "30px" }}
@@ -507,7 +507,7 @@ export const Signup = (props: Props) => {
 												onClick={onClickNewRelicSignup}
 											>
 												<Icon name="newrelic" />
-												<div className="copy">Sign into New Relic</div>
+												<div className="copy">Sign in to New Relic</div>
 												<Icon name="chevron-right" />
 											</Button>
 										)}
