@@ -1332,10 +1332,8 @@ export interface GetObservabilityAnomaliesRequest {
 	minimumRatio: number;
 }
 
-export interface ObservabilityAnomaly {
+export interface ObservabilityAnomaly extends CodeAttributes {
 	name: string;
-	className: string;
-	functionName: string;
 	oldValue: number;
 	newValue: number;
 	ratio: number;
@@ -1363,6 +1361,14 @@ export interface Comparison extends Named {
 	newValue: number;
 	ratio: number;
 }
+
+export interface CodeAttributes {
+	codeFilepath?: string,
+	codeNamespace: string,
+	codeFunction: string
+}
+
+export interface SpanWithCodeAttrs extends NameValue, CodeAttributes {}
 
 export interface GetObservabilityAnomaliesResponse {
 	responseTime: ObservabilityAnomaly[];

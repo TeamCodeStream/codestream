@@ -309,7 +309,7 @@ export const ObservabilityAnomalyPanel = () => {
 						textOverflow: "ellipsis",
 					}}
 				>
-					<PanelHeader title={derivedState.currentObservabilityAnomaly.functionName}></PanelHeader>
+					<PanelHeader title={derivedState.currentObservabilityAnomaly.codeFunction}></PanelHeader>
 				</div>
 			)}
 			<CancelButton onClick={() => dispatch(closePanel())} />

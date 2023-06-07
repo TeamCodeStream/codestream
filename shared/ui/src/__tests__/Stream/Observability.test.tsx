@@ -199,8 +199,8 @@ describe("Observability", () => {
 					responseTime: [
 						{
 							name: "responsename",
-							className: "myclassname",
-							functionName: "myfunctionname",
+							codeNamespace: "myclassname",
+							codeFunction: "myfunctionname",
 							newValue: 500,
 							oldValue: 300,
 							ratio: 1,

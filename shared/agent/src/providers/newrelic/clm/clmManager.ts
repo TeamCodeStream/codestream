@@ -403,8 +403,8 @@ export class ClmManager {
 			const altClassName = parts[parts.length - 2];
 			const anomaly = anomalies.find(
 				_ =>
-					(_.className === duration.className || _.className === altClassName) &&
-					_.functionName === duration.functionName
+					(_.codeNamespace === duration.className || _.codeNamespace === altClassName) &&
+					_.codeFunction === duration.functionName
 			);
 			duration.anomaly = anomaly;
 		}

@@ -89,8 +89,8 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	function handleClick(anomaly: ObservabilityAnomaly) {
 		handleClickTelemetry();
 		HostApi.instance.send(EditorRevealSymbolRequestType, {
-			className: anomaly.className,
-			functionName: anomaly.functionName,
+			className: anomaly.codeNamespace,
+			functionName: anomaly.codeFunction,
 		});
 		if (!props.noAnomaly) {
 			dispatch(closeAllPanels());

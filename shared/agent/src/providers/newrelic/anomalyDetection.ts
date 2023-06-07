@@ -8,6 +8,8 @@ import {
 	Named,
 	NameValue,
 	Comparison,
+	SpanWithCodeAttrs,
+	CodeAttributes,
 } from "@codestream/protocols/agent";
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
@@ -17,12 +19,14 @@ export class AnomalyDetector {
 		private _request: GetObservabilityAnomaliesRequest,
 		private _provider: INewRelicProvider
 	) {
-		this._dataTimeFrame = `SINCE ${_request.sinceDaysAgo} days AGO`;
+		const sinceDaysAgo = parseInt(_request.sinceDaysAgo as any);
+		const baselineDays = parseInt(_request.baselineDays as any);
+		this._dataTimeFrame = `SINCE ${sinceDaysAgo} days AGO`;
 		this._baselineTimeFrame = `SINCE ${
-			_request.sinceDaysAgo + _request.baselineDays
-		} days AGO UNTIL ${_request.sinceDaysAgo} days AGO`;
+			sinceDaysAgo + baselineDays
+		} days AGO UNTIL ${sinceDaysAgo} days AGO`;
 		this._accountId = NewRelicProvider.parseId(_request.entityGuid)!.accountId;
-		this._sinceDaysAgo = _request.sinceDaysAgo;
+		this._sinceDaysAgo = sinceDaysAgo;
 	}
 
 	private _dataTimeFrame;
@@ -36,20 +40,21 @@ export class AnomalyDetector {
 	private _releaseBased = false;
 
 	async execute(): Promise<GetObservabilityAnomaliesResponse> {
-		const benchmarkSampleSizesMetric = await this.getBenchmarkSampleSizesMetric();
-		const javaMetrics = benchmarkSampleSizesMetric.filter(_ => _.name.indexOf("Java/") >= 0);
-		if (!javaMetrics.length) {
+		const benchmarkMetrics = await this.getBenchmarkSampleSizesMetric();
+		const languageSupport = this.getLanguageSupport(benchmarkMetrics);
+		if (!languageSupport) {
 			return {
-				isSupported: false,
 				responseTime: [],
 				errorRate: [],
+				isSupported: false,
 			};
 		}
-		const benchmarkSampleSizesSpan = await this.getBenchmarkSampleSizesSpan();
+
+		const benchmarkSpans = await this.getBenchmarkSampleSizesSpans();
 		// Used to determine metric validity
 		const benchmarkSampleSizes = this.consolidateBenchmarkSampleSizes(
-			benchmarkSampleSizesMetric,
-			benchmarkSampleSizesSpan
+			benchmarkMetrics,
+			benchmarkSpans
 		);
 
 		const sinceDaysAgo = parseInt(this._request.sinceDaysAgo as any);
@@ -89,19 +94,19 @@ export class AnomalyDetector {
 			}
 		}
 
-		const metricRoots = this.getCommonRoots(
-			benchmarkSampleSizesMetric.map(_ => this.extractSymbolStr(_.name))
-		);
-		if (!metricRoots || !metricRoots.length) {
-			return {
-				responseTime: [],
-				errorRate: [],
-			};
-		}
+		// const metricRoots = this.getCommonRoots(
+		// 	benchmarkSampleSizesMetric.map(_ => this.extractSymbolStr(_.name))
+		// );
+		// if (!metricRoots || !metricRoots.length) {
+		// 	return {
+		// 		responseTime: [],
+		// 		errorRate: [],
+		// 	};
+		// }
 
 		const { comparisons: durationComparisons, metricTimesliceNames } =
 			await this.getAnomalousDurationComparisons(
-				metricRoots,
+				languageSupport,
 				benchmarkSampleSizes,
 				this._request.minimumResponseTime,
 				this._request.minimumSampleRate,
@@ -109,8 +114,8 @@ export class AnomalyDetector {
 			);
 
 		const { comparisons: errorRateComparisons, metricTimesliceNames: errorMetricTimesliceNames } =
-			await this.getErrorRateAnomalies(
-				metricRoots,
+			await this.getAnomalousErrorRateComparisons(
+				languageSupport,
 				benchmarkSampleSizes,
 				this._request.minimumErrorRate,
 				this._request.minimumSampleRate,
@@ -118,10 +123,15 @@ export class AnomalyDetector {
 			);
 
 		const durationAnomalies = durationComparisons.map(_ =>
-			this.durationComparisonToAnomaly(_, errorMetricTimesliceNames)
+			this.durationComparisonToAnomaly(
+				_,
+				languageSupport,
+				benchmarkSpans,
+				errorMetricTimesliceNames
+			)
 		);
 		const errorRateAnomalies = errorRateComparisons.map(_ =>
-			this.errorRateComparisonToAnomaly(_, metricTimesliceNames)
+			this.errorRateComparisonToAnomaly(_, languageSupport, benchmarkSpans, metricTimesliceNames)
 		);
 
 		this.addChartHeaderTexts(durationAnomalies, errorRateAnomalies);
@@ -143,11 +153,11 @@ export class AnomalyDetector {
 			const symbolStr = this.extractSymbolStr(name);
 			if (anomalousSymbolStrs.find(_ => _ === symbolStr)) continue;
 
-			const symbol = this.extractSymbol(name);
+			const codeAttrs = languageSupport.extractCodeAttrs(name);
 			const anomaly: ObservabilityAnomaly = {
 				name,
 				text: name,
-				...symbol,
+				...codeAttrs,
 				oldValue: 0,
 				newValue: 0,
 				ratio: 1,
@@ -192,56 +202,43 @@ export class AnomalyDetector {
 		};
 	}
 
-	private async getBenchmarkSampleSizesSpan() {
-		const benchmarkSampleSizesSpanLookup = "(name LIKE 'Java/%.%/%' OR name LIKE 'Custom/%.%/%')";
-		const benchmarkSampleSizesSpan = await this.getSampleSizeSpan(
-			benchmarkSampleSizesSpanLookup,
-			this._benchmarkSampleSizeTimeFrame
-		);
-		return benchmarkSampleSizesSpan;
+	private async getBenchmarkSampleSizesSpans() {
+		const query =
+			`SELECT ` +
+			`  count(*) AS 'value', latest(\`code.filepath\`) as codeFilepath, ` +
+			`  latest(\`code.function\`) as codeFunction, ` +
+			`  latest(\`code.namespace\`) as codeNamespace ` +
+			`FROM Span ` +
+			`WHERE \`entity.guid\` = '${this._request.entityGuid}' ` +
+			`FACET name ` +
+			`${this._benchmarkSampleSizeTimeFrame} LIMIT MAX`;
+
+		return this.runNrql<SpanWithCodeAttrs>(query);
 	}
 
 	private async getBenchmarkSampleSizesMetric() {
-		const benchmarkSampleSizesMetricLookup =
-			"(metricTimesliceName LIKE 'Java/%.%/%' OR metricTimesliceName LIKE 'Custom/%.%/%')";
 		const benchmarkSampleSizesMetric = await this.getSampleSizeMetric(
-			benchmarkSampleSizesMetricLookup,
 			this._benchmarkSampleSizeTimeFrame
 		);
 		return benchmarkSampleSizesMetric;
 	}
 
 	private async getAnomalousDurationComparisons(
-		metricRoots: string[],
+		languageSupport: LanguageSupport,
 		benchmarkSampleSizes: Map<string, { span?: NameValue; metric?: NameValue }>,
 		minimumDuration: number,
 		minimumSampleRate: number,
 		minimumRatio: number
 	): Promise<{ comparisons: Comparison[]; metricTimesliceNames: string[] }> {
-		if (!metricRoots.length) {
-			return {
-				comparisons: [],
-				metricTimesliceNames: [],
-			};
-		}
+		const data = await this.getDurationMetric(this._dataTimeFrame);
+		const dataFiltered = languageSupport.filterMetrics(data);
 
-		const lookup = metricRoots
-			.map(
-				_ => `metricTimesliceName LIKE 'Java/%${_}%' OR metricTimesliceName LIKE 'Custom/%${_}%'`
-			)
-			.join(" OR ");
-
-		const data = await this.getDurationMetric(lookup, this._dataTimeFrame);
-
-		const baseline = await this.getDurationMetric(lookup, this._baselineTimeFrame);
-		const baselineSampleRate = await this.getSampleRateMetricFiltered(
-			lookup,
-			this._baselineTimeFrame
-		);
+		const baseline = await this.getDurationMetric(this._baselineTimeFrame);
+		const baselineSampleRate = await this.getSampleRateMetricFiltered(this._baselineTimeFrame);
 		const baselineFilter = this.getSampleRateFilterPredicate(baselineSampleRate, minimumSampleRate);
 		const baselineFiltered = baseline.filter(baselineFilter);
 
-		const allComparisons = this.compareData(data, baselineFiltered, false);
+		const allComparisons = this.compareData(dataFiltered, baselineFiltered, false);
 
 		const filteredComparisons = this.filterComparisonsByBenchmarkSampleSizes(
 			benchmarkSampleSizes,
@@ -254,8 +251,8 @@ export class AnomalyDetector {
 		};
 	}
 
-	private async getErrorRateAnomalies(
-		metricRoots: string[],
+	private async getAnomalousErrorRateComparisons(
+		languageSupport: LanguageSupport,
 		benchmarkSampleSizes: Map<string, { span?: NameValue; metric?: NameValue }>,
 		minimumErrorRate: number,
 		minimumSampleRate: number,
@@ -264,42 +261,19 @@ export class AnomalyDetector {
 		comparisons: Comparison[];
 		metricTimesliceNames: string[];
 	}> {
-		if (!metricRoots.length) {
-			return {
-				comparisons: [],
-				metricTimesliceNames: [],
-			};
-		}
-
-		const errorCountLookup = metricRoots
-			.map(_ => `metricTimesliceName LIKE 'Errors/%${_}%'`)
-			.join(" OR ");
-		const sampleLookup = metricRoots
-			.map(
-				_ => `metricTimesliceName LIKE 'Java/%${_}%' OR metricTimesliceName LIKE 'Custom/%${_}%'`
-			)
-			.join(" OR ");
-
+		const errorCountLookup = `metricTimesliceName LIKE 'Errors/%'`;
 		const dataErrorCount = await this.getErrorCountMetric(errorCountLookup, this._dataTimeFrame);
-		const dataSampleSize = await this.getSampleSizeMetric(sampleLookup, this._dataTimeFrame);
-		// const dataSampleRate = await this.getSampleRateMetric(lookup, this._dataTimeFrame);
-		// const dataFilter = this.getSampleRateFilterPredicate(dataSampleRate, minimumSampleRate);
+		const dataErrorCountFiltered = languageSupport.filterMetrics(dataErrorCount);
+		const dataSampleSize = await this.getSampleSizeMetric(this._dataTimeFrame);
 		const dataTransformer = this.getErrorRateTransformer(dataSampleSize);
-		// const dataErrorRate = dataErrorCount.filter(dataFilter).map(dataTransformer);
-		const dataErrorRate = dataErrorCount.map(dataTransformer);
+		const dataErrorRate = dataErrorCountFiltered.map(dataTransformer);
 
 		const baselineErrorCount = await this.getErrorCountMetric(
 			errorCountLookup,
 			this._baselineTimeFrame
 		);
-		const baselineSampleSize = await this.getSampleSizeMetric(
-			sampleLookup,
-			this._baselineTimeFrame
-		);
-		const baselineSampleRate = await this.getSampleRateMetricFiltered(
-			sampleLookup,
-			this._baselineTimeFrame
-		);
+		const baselineSampleSize = await this.getSampleSizeMetric(this._baselineTimeFrame);
+		const baselineSampleRate = await this.getSampleRateMetricFiltered(this._baselineTimeFrame);
 		const baselineTransformer = this.getErrorRateTransformer(baselineSampleSize);
 		const baselineErrorRate = baselineErrorCount.map(baselineTransformer);
 
@@ -500,26 +474,10 @@ export class AnomalyDetector {
 		return map;
 	}
 
-	private getResponseTimeSpan(lookup: string, timeFrame: string): Promise<NameValue[]> {
-		const query =
-			`SELECT average(duration) * 1000 AS 'value' ` +
-			`FROM Span WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET name ` +
-			`${timeFrame} LIMIT MAX`;
-		return this.runNrql(query);
-	}
-
-	getDurationMetric(lookup: string, timeFrame: string): Promise<NameValue[]> {
+	getDurationMetric(timeFrame: string): Promise<NameValue[]> {
 		const query =
 			`SELECT average(newrelic.timeslice.value) * 1000 AS 'value' ` +
-			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET metricTimesliceName AS name ` +
-			`${timeFrame} LIMIT MAX`;
-		return this.runNrql(query);
-	}
-
-	private getErrorCountSpan(lookup: string, timeFrame: string): Promise<NameValue[]> {
-		const query =
-			`SELECT count(*) AS 'value' ` +
-			`FROM Span WHERE \`entity.guid\` = '${this._request.entityGuid}' AND \`error.group.guid\` IS NOT NULL AND (${lookup}) FACET name ` +
+			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' FACET metricTimesliceName AS name ` +
 			`${timeFrame} LIMIT MAX`;
 		return this.runNrql(query);
 	}
@@ -530,15 +488,6 @@ export class AnomalyDetector {
 			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET metricTimesliceName AS name ` +
 			`${timeFrame} LIMIT MAX`;
 		return this.runNrql(query);
-	}
-
-	private async getSampleSizeSpan(lookup: string, timeFrame: string): Promise<NameValue[]> {
-		const query =
-			`SELECT count(*) AS 'value' ` +
-			`FROM Span WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET name ` +
-			`${timeFrame} LIMIT MAX`;
-
-		return this.runNrql<NameValue>(query);
 	}
 
 	private async filterSampleRates(sampleRates: NameValue[]) {
@@ -560,23 +509,21 @@ export class AnomalyDetector {
 		return filteredSampleRates;
 	}
 
-	private async getSampleRateMetricFiltered(
-		lookup: string,
-		timeFrame: string
-	): Promise<NameValue[]> {
+	private async getSampleRateMetricFiltered(timeFrame: string): Promise<NameValue[]> {
 		const query =
 			`SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'value' ` +
-			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET metricTimesliceName AS name ` +
+			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' FACET metricTimesliceName AS name ` +
 			`${timeFrame} LIMIT MAX`;
 		const sampleRates = await this.runNrql<NameValue>(query);
-		const filteredSampleRates = await this.filterSampleRates(sampleRates);
-		return filteredSampleRates;
+		// const filteredSampleRates = await this.filterSampleRates(sampleRates);
+		// return filteredSampleRates;
+		return sampleRates;
 	}
 
-	private async getSampleSizeMetric(lookup: string, timeFrame: string): Promise<NameValue[]> {
+	private async getSampleSizeMetric(timeFrame: string): Promise<NameValue[]> {
 		const query =
 			`SELECT count(newrelic.timeslice.value) AS 'value' ` +
-			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' AND (${lookup}) FACET metricTimesliceName AS name ` +
+			`FROM Metric WHERE \`entity.guid\` = '${this._request.entityGuid}' FACET metricTimesliceName AS name ` +
 			`${timeFrame} LIMIT MAX`;
 		return this.runNrql<NameValue>(query);
 	}
@@ -614,12 +561,14 @@ export class AnomalyDetector {
 			newValue: number;
 			ratio: number;
 		},
+		languageSupport: LanguageSupport,
+		benchmarkSpans: SpanWithCodeAttrs[],
 		errorMetricTimesliceNames: string[]
 	): ObservabilityAnomaly {
-		const symbol = this.extractSymbol(comparison.name);
+		const codeAttrs = languageSupport.getCodeAttrs(comparison.name, benchmarkSpans);
 		return {
 			...comparison,
-			...symbol,
+			...codeAttrs,
 			text: this.extractSymbolStr(comparison.name),
 			totalDays: this._totalDays,
 			metricTimesliceName: comparison.name,
@@ -639,12 +588,14 @@ export class AnomalyDetector {
 			newValue: number;
 			ratio: number;
 		},
+		languageSupport: LanguageSupport,
+		benchmarkSpans: SpanWithCodeAttrs[],
 		metricTimesliceNames: string[]
 	): ObservabilityAnomaly {
-		const symbol = this.extractSymbol(comparison.name);
+		const codeAttrs = languageSupport.getCodeAttrs(comparison.name, benchmarkSpans);
 		return {
 			...comparison,
-			...symbol,
+			...codeAttrs,
 			text: this.extractSymbolStr(comparison.name),
 			totalDays: this._totalDays,
 			sinceText: this._sinceText,
@@ -674,7 +625,7 @@ export class AnomalyDetector {
 		}
 		for (const anomaly of durationAnomalies) {
 			const counterpart = errorRateAnomalies.find(
-				_ => _.className === anomaly.className && _.functionName === anomaly.functionName
+				_ => _.codeNamespace === anomaly.codeNamespace && _.codeFunction === anomaly.codeFunction
 			);
 			if (counterpart) {
 				anomaly.chartHeaderTexts = {
@@ -685,7 +636,7 @@ export class AnomalyDetector {
 		}
 		for (const anomaly of errorRateAnomalies) {
 			const counterpart = durationAnomalies.find(
-				_ => _.className === anomaly.className && _.functionName === anomaly.functionName
+				_ => _.codeNamespace === anomaly.codeNamespace && _.codeFunction === anomaly.codeFunction
 			);
 			if (counterpart) {
 				anomaly.chartHeaderTexts = {
@@ -694,5 +645,121 @@ export class AnomalyDetector {
 				};
 			}
 		}
+	}
+
+	private getLanguageSupport(benchmarkMetrics: NameValue[]): LanguageSupport | undefined {
+		for (const metric of benchmarkMetrics) {
+			if (metric.name.indexOf("Java/") === 0) {
+				return new JavaLanguageSupport();
+			}
+			if (metric.name.indexOf("Ruby/") === 0) {
+				return new RubyLanguageSupport();
+			}
+			if (metric.name.indexOf("CSharp/") === 0) {
+				return new RubyLanguageSupport();
+			}
+		}
+
+		return undefined;
+	}
+}
+
+interface LanguageSupport {
+	filterMetrics(data: NameValue[]): NameValue[];
+
+	extractCodeAttrs(name: string): CodeAttributes;
+
+	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes;
+}
+
+class JavaLanguageSupport implements LanguageSupport {
+	filterMetrics(data: NameValue[]): NameValue[] {
+		return data.filter(
+			_ =>
+				_.name.startsWith("Java/") || _.name.startsWith("Custom/") || _.name.startsWith("Errors/")
+		);
+	}
+
+	extractCodeAttrs(name: string): CodeAttributes {
+		const parts = name.split("/");
+		const codeFunction = parts[parts.length - 1];
+		const codeNamespace = parts[parts.length - 2];
+		return {
+			codeNamespace,
+			codeFunction,
+		};
+	}
+
+	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+		const span = benchmarkSpans.find(_ => _.name === name);
+		if (span) {
+			return {
+				codeFilepath: span.codeFilepath,
+				codeNamespace: span.codeNamespace,
+				codeFunction: span.codeFunction,
+			};
+		}
+		return this.extractCodeAttrs(name);
+	}
+}
+
+class RubyLanguageSupport implements LanguageSupport {
+	filterMetrics(data: NameValue[]): NameValue[] {
+		return data.filter(
+			_ =>
+				_.name.startsWith("Controller/") ||
+				_.name.startsWith("Nested/Controller/") ||
+				_.name.startsWith("Errors/")
+		);
+	}
+
+	extractCodeAttrs(name: string): CodeAttributes {
+		const parts = name.split("/");
+		const codeFunction = parts[parts.length - 1];
+		const codeNamespace = parts[parts.length - 2];
+		return {
+			codeNamespace,
+			codeFunction,
+		};
+	}
+
+	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+		const span = benchmarkSpans.find(_ => _.name === name);
+		if (span) {
+			return {
+				codeFilepath: span.codeFilepath,
+				codeNamespace: span.codeNamespace,
+				codeFunction: span.codeFunction,
+			};
+		}
+		return this.extractCodeAttrs(name);
+	}
+}
+
+class CSharpLanguageSupport implements LanguageSupport {
+	filterMetrics(data: NameValue[]): NameValue[] {
+		return [];
+	}
+
+	extractCodeAttrs(name: string): CodeAttributes {
+		const parts = name.split("/");
+		const codeFunction = parts[parts.length - 1];
+		const codeNamespace = parts[parts.length - 2];
+		return {
+			codeNamespace,
+			codeFunction,
+		};
+	}
+
+	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+		const span = benchmarkSpans.find(_ => _.name === name);
+		if (span) {
+			return {
+				codeFilepath: span.codeFilepath,
+				codeNamespace: span.codeNamespace,
+				codeFunction: span.codeFunction,
+			};
+		}
+		return this.extractCodeAttrs(name);
 	}
 }
