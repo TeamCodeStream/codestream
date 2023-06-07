@@ -105,6 +105,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\DotNetBrowserService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EditorService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EventAggregator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SolutionFileEnumerationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\HttpClientService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IAuthenticationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IAuthenticationServiceFactory.cs" />

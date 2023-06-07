@@ -328,6 +328,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	public class ResolveStackTracePathsRequest  {
 		[JsonProperty("paths", NullValueHandling = NullValueHandling.Ignore)]
 		public List<string> Paths { get; set; }
+
+		[JsonProperty("language", NullValueHandling = NullValueHandling.Ignore)]
+		public string Language { get; set; }
 	}
 
 	public class ResolveStackTracePathsResponse {

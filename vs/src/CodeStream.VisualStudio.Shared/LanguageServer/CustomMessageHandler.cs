@@ -368,7 +368,20 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			using (Log.CriticalOperation(
 				$"{nameof(OnResolveStackTracePathsAsync)} Method={ResolveStackTracePathsRequestType.MethodName}",
 				Serilog.Events.LogEventLevel.Information)) {
-				
+
+				// TODO: NR-113487
+				// Get all files under the currently opened solution / folder and cache them
+				// For each path in `e.paths`, find a matching file.
+				//
+				// -OR-
+				//
+				// Get some reference to the solution / projects / files, using DTE and do it that way
+				//
+				// Q: What do the paths look like coming into `e.paths`?
+				//    Are the relative or full?
+				//	     Relative from where?
+				// Q: How to handle nested files?
+				// Q: How to handle projects / files in "Solution Folders"?
 				return System.Threading.Tasks.Task.FromResult(new ResolveStackTracePathsResponse() { NotImplemented = true });				
 			}
 		}
