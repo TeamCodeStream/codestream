@@ -465,6 +465,10 @@ export const Signup = (props: Props) => {
 	const onClickEmailSignup = useCallback(
 		(event: React.SyntheticEvent) => {
 			event.preventDefault();
+			HostApi.instance.track("Signup Method Selected", {
+				Provider: "Email",
+				Email: email,
+			});
 			setShowEmailForm(true);
 		},
 		[props.type]
