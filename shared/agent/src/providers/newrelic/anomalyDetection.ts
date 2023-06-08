@@ -141,11 +141,12 @@ export class AnomalyDetector {
 			...errorRateAnomalies.map(_ => this.extractSymbolStr(_.name)),
 		];
 		const allOtherAnomalies: ObservabilityAnomaly[] = [];
-		for (const [name] of benchmarkSampleSizes) {
+		const allMetrics = languageSupport.filterMetrics(benchmarkMetrics, benchmarkSpans);
+		for (const { name } of allMetrics) {
 			const symbolStr = this.extractSymbolStr(name);
 			if (anomalousSymbolStrs.find(_ => _ === symbolStr)) continue;
 
-			const codeAttrs = languageSupport.extractCodeAttrs(name);
+			const codeAttrs = languageSupport.getCodeAttrs(name, benchmarkSpans);
 			const anomaly: ObservabilityAnomaly = {
 				name,
 				text: name,
