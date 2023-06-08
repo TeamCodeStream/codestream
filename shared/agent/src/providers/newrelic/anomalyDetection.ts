@@ -94,20 +94,11 @@ export class AnomalyDetector {
 			}
 		}
 
-		// const metricRoots = this.getCommonRoots(
-		// 	benchmarkSampleSizesMetric.map(_ => this.extractSymbolStr(_.name))
-		// );
-		// if (!metricRoots || !metricRoots.length) {
-		// 	return {
-		// 		responseTime: [],
-		// 		errorRate: [],
-		// 	};
-		// }
-
 		const { comparisons: durationComparisons, metricTimesliceNames } =
 			await this.getAnomalousDurationComparisons(
 				languageSupport,
 				benchmarkSampleSizes,
+				benchmarkSpans,
 				this._request.minimumResponseTime,
 				this._request.minimumSampleRate,
 				this._request.minimumRatio
@@ -117,6 +108,7 @@ export class AnomalyDetector {
 			await this.getAnomalousErrorRateComparisons(
 				languageSupport,
 				benchmarkSampleSizes,
+				benchmarkSpans,
 				this._request.minimumErrorRate,
 				this._request.minimumSampleRate,
 				this._request.minimumRatio
@@ -226,12 +218,13 @@ export class AnomalyDetector {
 	private async getAnomalousDurationComparisons(
 		languageSupport: LanguageSupport,
 		benchmarkSampleSizes: Map<string, { span?: NameValue; metric?: NameValue }>,
+		benchmarkSpans: SpanWithCodeAttrs[],
 		minimumDuration: number,
 		minimumSampleRate: number,
 		minimumRatio: number
 	): Promise<{ comparisons: Comparison[]; metricTimesliceNames: string[] }> {
 		const data = await this.getDurationMetric(this._dataTimeFrame);
-		const dataFiltered = languageSupport.filterMetrics(data);
+		const dataFiltered = languageSupport.filterMetrics(data, benchmarkSpans);
 
 		const baseline = await this.getDurationMetric(this._baselineTimeFrame);
 		const baselineSampleRate = await this.getSampleRateMetricFiltered(this._baselineTimeFrame);
@@ -254,6 +247,7 @@ export class AnomalyDetector {
 	private async getAnomalousErrorRateComparisons(
 		languageSupport: LanguageSupport,
 		benchmarkSampleSizes: Map<string, { span?: NameValue; metric?: NameValue }>,
+		benchmarkSpans: SpanWithCodeAttrs[],
 		minimumErrorRate: number,
 		minimumSampleRate: number,
 		minimumRatio: number
@@ -263,7 +257,7 @@ export class AnomalyDetector {
 	}> {
 		const errorCountLookup = `metricTimesliceName LIKE 'Errors/%'`;
 		const dataErrorCount = await this.getErrorCountMetric(errorCountLookup, this._dataTimeFrame);
-		const dataErrorCountFiltered = languageSupport.filterMetrics(dataErrorCount);
+		const dataErrorCountFiltered = languageSupport.filterMetrics(dataErrorCount, benchmarkSpans);
 		const dataSampleSize = await this.getSampleSizeMetric(this._dataTimeFrame);
 		const dataTransformer = this.getErrorRateTransformer(dataSampleSize);
 		const dataErrorRate = dataErrorCountFiltered.map(dataTransformer);
@@ -656,7 +650,7 @@ export class AnomalyDetector {
 				return new RubyLanguageSupport();
 			}
 			if (metric.name.indexOf("CSharp/") === 0) {
-				return new RubyLanguageSupport();
+				return new CSharpLanguageSupport();
 			}
 		}
 
@@ -665,7 +659,7 @@ export class AnomalyDetector {
 }
 
 interface LanguageSupport {
-	filterMetrics(data: NameValue[]): NameValue[];
+	filterMetrics(data: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[];
 
 	extractCodeAttrs(name: string): CodeAttributes;
 
@@ -673,10 +667,16 @@ interface LanguageSupport {
 }
 
 class JavaLanguageSupport implements LanguageSupport {
-	filterMetrics(data: NameValue[]): NameValue[] {
-		return data.filter(
-			_ =>
-				_.name.startsWith("Java/") || _.name.startsWith("Custom/") || _.name.startsWith("Errors/")
+	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
+		const javaRE = /^Java\/(.+)\.(.+)\/(.+)/;
+		const customRE = /^Custom\/(.+)\.(.+)\/(.+)/;
+		const errorsRE = /^Errors\/(.+)\.(.+)\/(.+)/;
+		return metrics.filter(
+			m =>
+				benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
+				javaRE.test(m.name) ||
+				customRE.test(m.name) ||
+				errorsRE.test(m.name)
 		);
 	}
 
@@ -692,7 +692,7 @@ class JavaLanguageSupport implements LanguageSupport {
 
 	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
 		const span = benchmarkSpans.find(_ => _.name === name);
-		if (span) {
+		if (span && span.codeFunction) {
 			return {
 				codeFilepath: span.codeFilepath,
 				codeNamespace: span.codeNamespace,
@@ -704,12 +704,16 @@ class JavaLanguageSupport implements LanguageSupport {
 }
 
 class RubyLanguageSupport implements LanguageSupport {
-	filterMetrics(data: NameValue[]): NameValue[] {
-		return data.filter(
-			_ =>
-				_.name.startsWith("Controller/") ||
-				_.name.startsWith("Nested/Controller/") ||
-				_.name.startsWith("Errors/")
+	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
+		const controllerRE = /^Controller\/(.+)\/(.+)/;
+		const nestedControllerRE = /^Nested\/Controller\/(.+)\/(.+)/;
+		const errorsRE = /^Errors\/(.+)\/(.+)/;
+		return metrics.filter(
+			m =>
+				benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
+				controllerRE.test(m.name) ||
+				nestedControllerRE.test(m.name) ||
+				errorsRE.test(m.name)
 		);
 	}
 
@@ -725,7 +729,7 @@ class RubyLanguageSupport implements LanguageSupport {
 
 	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
 		const span = benchmarkSpans.find(_ => _.name === name);
-		if (span) {
+		if (span && span.codeFunction) {
 			return {
 				codeFilepath: span.codeFilepath,
 				codeNamespace: span.codeNamespace,
@@ -737,8 +741,17 @@ class RubyLanguageSupport implements LanguageSupport {
 }
 
 class CSharpLanguageSupport implements LanguageSupport {
-	filterMetrics(data: NameValue[]): NameValue[] {
-		return [];
+	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
+		const dotNetRE = /^DotNet\/(.+)\.(.+)\/(.+)/;
+		const customRE = /^Custom\/(.+)\.(.+)\/(.+)/;
+		const errorsRE = /^Errors\/(.+)\.(.+)\/(.+)/;
+		return metrics.filter(
+			m =>
+				benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
+				dotNetRE.test(m.name) ||
+				customRE.test(m.name) ||
+				errorsRE.test(m.name)
+		);
 	}
 
 	extractCodeAttrs(name: string): CodeAttributes {
