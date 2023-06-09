@@ -153,29 +153,26 @@ task copyProtobuf(type: Copy) {
     into "$projectDir/src/main/resources/protobuf"
 }
 
-def createDownloadNodeTask(String platform, String executableName) {
-    String taskName = "downloadNode-" + platform
-    String assetsRoot = 'http://assets.codestream.us/artifacts/node'
+def createCopyNodeTask(String platform) {
+    String taskName = "copyNode-" + platform
+    String supplementalSoftwarePath = System.getenv("TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH")
     String nodeVersion = 'v16.13.2'
-    return tasks.create(taskName, Download) {
-        src([
-                "$assetsRoot/node-$nodeVersion-${platform}/${executableName}",
-                "$assetsRoot/node-$nodeVersion-${platform}/LICENSE",
-        ])
-        dest "$projectDir/src/main/resources/agent/node-${platform}"
-        onlyIfModified true
+    return tasks.create(taskName, Copy) {
+        from "$supplementalSoftwarePath/node/node-$nodeVersion-${platform}"
+        include "**/*"
+        into "$projectDir/src/main/resources/agent/node-${platform}"
         onlyIf {
             System.getenv("TCBUILD_BYPASS_SUPPLEMENTAL_SOFTWARE") == null
         }
     }
 }
 
-task downloadNode {}
-downloadNode.dependsOn (
-    createDownloadNodeTask("darwin-arm64", "node"),
-    createDownloadNodeTask("darwin-x64", "node"),
-    createDownloadNodeTask("linux-x64", "node"),
-    createDownloadNodeTask("win-x64", "node.exe")
+task copyNode {}
+copyNode.dependsOn (
+    createCopyNodeTask("darwin-arm64", "node"),
+    createCopyNodeTask("darwin-x64", "node"),
+    createCopyNodeTask("linux-x64", "node"),
+    createCopyNodeTask("win-x64", "node.exe")
 )
 
 task buildDependencies {}
@@ -184,7 +181,7 @@ buildDependencies.dependsOn buildDeps, copyAgent, copyProtobuf
 task buildDependenciesMac {}
 buildDependenciesMac.dependsOn buildDepsMac, copyAgent, copyProtobuf
 
-buildPlugin.dependsOn downloadNode, buildDependencies
+buildPlugin.dependsOn copyNode, buildDependencies
 
 tasks {
     buildPlugin {
