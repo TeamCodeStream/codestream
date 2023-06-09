@@ -162,7 +162,7 @@ def createCopyNodeTask(String platform) {
         include "**/*"
         into "$projectDir/src/main/resources/agent/node-${platform}"
         onlyIf {
-            System.getenv("TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH") != null
+            System.getenv("TCBUILD_BYPASS_SUPPLEMENTAL_SOFTWARE") == null
         }
     }
 }
