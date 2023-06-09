@@ -237,6 +237,7 @@ class Invite extends React.Component<Props, State> {
 		const invitedEmails = this.props.invited.map(u => u.email);
 		const options = result.users
 			.filter(u => !invitedEmails.includes(u.email))
+			.filter(u => u.email !== this.props.currentUserEmail)
 			.map(u => ({
 				label: `${u.name} (${u.email})`,
 				value: u.email,
@@ -664,6 +665,7 @@ class Invite extends React.Component<Props, State> {
 								onChange={selectedNRUsers => {
 									this.setState({ selectedNRUsers });
 								}}
+								components={{ ClearIndicator: () => null, IndicatorSeparator: () => null }}
 							/>
 							<Button
 								style={{ width: "60px", margin: "10px 0 0" }}
