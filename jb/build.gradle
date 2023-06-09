@@ -169,10 +169,10 @@ def createCopyNodeTask(String platform) {
 
 task copyNode {}
 copyNode.dependsOn (
-    createCopyNodeTask("darwin-arm64", "node"),
-    createCopyNodeTask("darwin-x64", "node"),
-    createCopyNodeTask("linux-x64", "node"),
-    createCopyNodeTask("win-x64", "node.exe")
+    createCopyNodeTask("darwin-arm64"),
+    createCopyNodeTask("darwin-x64"),
+    createCopyNodeTask("linux-x64"),
+    createCopyNodeTask("win-x64")
 )
 
 task buildDependencies {}
