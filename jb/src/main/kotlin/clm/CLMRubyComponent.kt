@@ -5,12 +5,15 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.classes.RClass
 import org.jetbrains.plugins.ruby.ruby.lang.psi.holders.RContainer
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.RFileImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.classes.RClassImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.methods.RMethodImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.methods.RSingletonMethodImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.modules.RModuleImpl
+import org.jetbrains.plugins.ruby.ruby.lang.psi.indexes.RubyClassModuleNameIndex
 
 class CLMRubyComponent(project: Project) :
     CLMLanguageComponent<CLMRubyEditorManager>(project, RFileImpl::class.java, ::CLMRubyEditorManager, RubySymbolResolver()) {
@@ -19,6 +22,17 @@ class CLMRubyComponent(project: Project) :
 
     init {
         logger.info("Initializing code level metrics for Ruby")
+    }
+
+    override fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? {
+        if (className == null || functionName == null) return null
+        val projectScope = GlobalSearchScope.allScope(project)
+        val clazz = RubyClassModuleNameIndex.findOne(project, className, projectScope) { true }
+        (clazz as? RClass)?.let {
+            val method = it.findMethodByName(functionName)
+            return method
+        }
+        return null
     }
 }
 

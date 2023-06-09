@@ -147,9 +147,10 @@ export class AnomalyDetector {
 			if (anomalousSymbolStrs.find(_ => _ === symbolStr)) continue;
 
 			const codeAttrs = languageSupport.getCodeAttrs(name, benchmarkSpans);
+
 			const anomaly: ObservabilityAnomaly = {
 				name,
-				text: name,
+				text: this.getCodeAttrsName(codeAttrs) || name,
 				...codeAttrs,
 				oldValue: 0,
 				newValue: 0,
@@ -564,7 +565,7 @@ export class AnomalyDetector {
 		return {
 			...comparison,
 			...codeAttrs,
-			text: this.extractSymbolStr(comparison.name),
+			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			metricTimesliceName: comparison.name,
 			sinceText: this._sinceText,
@@ -591,7 +592,7 @@ export class AnomalyDetector {
 		return {
 			...comparison,
 			...codeAttrs,
-			text: this.extractSymbolStr(comparison.name),
+			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			sinceText: this._sinceText,
 			metricTimesliceName:
@@ -656,6 +657,14 @@ export class AnomalyDetector {
 		}
 
 		return undefined;
+	}
+
+	private getCodeAttrsName(codeAttrs: CodeAttributes | undefined) {
+		if (!codeAttrs?.codeFunction) return null;
+		const parts = [];
+		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
+		parts.push(codeAttrs.codeFunction);
+		return parts.join("/");
 	}
 }
 
