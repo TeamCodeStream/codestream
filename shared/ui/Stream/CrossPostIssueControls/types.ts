@@ -57,6 +57,14 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		listLabel: "list",
 		cardLabel: "issue",
 		supportsStartWork: true,
+		customFilterHelp:
+			'See <a href="https://developer.atlassian.com/cloud/bitbucket/rest/intro/#filtering">bitbucket</a> for more information. ',
+		customPullRequestFilterHelpLink:
+			'See <a href="https://developer.atlassian.com/cloud/bitbucket/rest/intro/#filtering">bitbucket</a> for more information. ',
+		customFilterExample: "Example: <code>q=id<3</code>",
+		hasCustomFilters: true,
+		customPullRequestFilterExample:
+			'See <a href="https://developer.atlassian.com/cloud/bitbucket/rest/intro/#filtering">bitbucket</a> for more information.',
 	},
 	bitbucket_server: {
 		displayName: "Bitbucket Server",
