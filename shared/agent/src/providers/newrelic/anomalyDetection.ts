@@ -651,7 +651,7 @@ export class AnomalyDetector {
 			if (metric.name.indexOf("Ruby/") === 0) {
 				return new RubyLanguageSupport();
 			}
-			if (metric.name.indexOf("CSharp/") === 0) {
+			if (metric.name.indexOf("DotNet/") === 0) {
 				return new CSharpLanguageSupport();
 			}
 		}
