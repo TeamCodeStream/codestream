@@ -55,7 +55,7 @@ import { localStore } from "../utilities/storage";
 import { emptyObject, uuid } from "../utils";
 import { HostApi } from "../webview-api";
 import { setUserPreferences } from "../Stream/actions";
-
+import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 export enum SignupType {
 	JoinTeam = "joinTeam",
 	CreateTeam = "createTeam",
@@ -511,7 +511,19 @@ export const validateSignup =
 				case LoginResult.ExpiredToken:
 					dispatch(setSession({ otc: uuid() }));
 				default:
-					throw response.error;
+					if (
+						response.error === LoginResult.Unknown &&
+						response?.extra?.url &&
+						response?.extra?.code &&
+						response?.extra?.code === "USRC-1032"
+					) {
+						HostApi.instance.send(UpdateServerUrlRequestType, {
+							serverUrl: response?.extra?.url,
+						});
+						return;
+					} else {
+						throw response.error;
+					}
 			}
 		}
 
