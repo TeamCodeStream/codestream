@@ -13,7 +13,6 @@ import {
 } from "@codestream/protocols/agent";
 
 import {
-	DocumentsLocatedBySymbols,
 	InstrumentableSymbol,
 	ISymbolLocator,
 	SymboslLocated
@@ -37,28 +36,6 @@ class MockSymbolLocator implements ISymbolLocator {
 					)
 				],
 				allSymbols: []
-			});
-		});
-	}
-
-	locateDocumentBySymbolSearch(
-		namespace: string,
-		functionName: string,
-		token: vscode.CancellationToken
-	): Promise<DocumentsLocatedBySymbols> {
-		return new Promise(resolve => {
-			resolve({
-				symbolMatches: [
-					new vscode.SymbolInformation(
-						"hello_world",
-						vscode.SymbolKind.Function,
-						"",
-						new vscode.Location(
-							vscode.Uri.parse("file:///hello/foo.py"),
-							new vscode.Range(new vscode.Position(0, 0), new vscode.Position(1, 1))
-						)
-					)
-				]
 			});
 		});
 	}
