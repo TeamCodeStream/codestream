@@ -1,4 +1,4 @@
-import { CancellationToken, DocumentSymbol, TextDocument } from "vscode";
+import { CancellationToken, DocumentSymbol, TextDocument, SymbolInformation } from "vscode";
 import * as vscode from "vscode";
 
 import { BuiltInCommands } from "../constants";
@@ -19,8 +19,18 @@ export type SymboslLocated = {
 	allSymbols: DocumentSymbol[];
 };
 
+export type DocumentsLocatedBySymbols = {
+	symbolMatches: SymbolInformation[];
+};
+
 export interface ISymbolLocator {
 	locate(document: TextDocument, token: vscode.CancellationToken): Promise<SymboslLocated>;
+
+	locateDocumentBySymbolSearch(
+		namespace: string,
+		functionName: string,
+		token: vscode.CancellationToken
+	): Promise<DocumentsLocatedBySymbols>;
 }
 
 function isJavascriptIsh(languageId: string) {
@@ -33,6 +43,67 @@ function isJavascriptIsh(languageId: string) {
 }
 
 export class SymbolLocator implements ISymbolLocator {
+	async locateDocumentBySymbolSearch(
+		namespace: string,
+		functionName: string,
+		token: vscode.CancellationToken
+	): Promise<DocumentsLocatedBySymbols> {
+		let symbols: SymbolInformation[];
+
+		const emptyResult = {
+			symbolMatches: []
+		};
+
+		try {
+			if (token.isCancellationRequested) {
+				return emptyResult;
+			}
+
+			// copied these timeouts from the file symbol locator, but this may take even longer....
+			for (const timeout of [0, 750, 1000, 1500, 2000]) {
+				if (token.isCancellationRequested) {
+					Logger.log("SymbolLocator.locateDocumentBySymbolSearch isCancellationRequested", {
+						timeout
+					});
+					return emptyResult;
+				}
+				try {
+					// this is more of a "search" than a true "find single", so we'll send back all matches
+					// and let the caller decide what to do with them. Prompt the user to select the correct one?
+					symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>(
+						BuiltInCommands.ExecuteWorkspaceSymbolprovider,
+						`${namespace}.${functionName}`
+					);
+					if (!symbols || symbols.length === 0) {
+						await sleep(timeout);
+					} else {
+						Logger.log(`SymbolLocator.locateDocumentBySymbolSearch found ${symbols.length}`, {
+							timeout
+						});
+
+						return {
+							symbolMatches: symbols
+						};
+					}
+				} catch (ex) {
+					Logger.warn(
+						"SymbolLocator.locateDocumentBySymbolSearch failed to ExecuteWorkspaceSymbolprovider",
+						{ ex }
+					);
+				}
+			}
+
+			return emptyResult;
+		} catch (ex) {
+			Logger.warn("SymbolLocator.locateDocumentBySymbolSearch", {
+				error: ex,
+				namespace: namespace,
+				functionName: functionName
+			});
+		}
+		return emptyResult;
+	}
+
 	async locate(
 		document: TextDocument,
 		token: vscode.CancellationToken
