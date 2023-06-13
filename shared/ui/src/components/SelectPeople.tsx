@@ -110,7 +110,10 @@ class SelectPeople extends React.Component<Props, State> {
 }
 
 const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
-	return { teamMembers: getTeamMembers(state) };
+	const allTeamMembers = getTeamMembers(state);
+
+	const teamMembers = allTeamMembers.filter(_ => _.username !== "Grok");
+	return { teamMembers };
 };
 
 const ConnectedSelectPeople = connect(mapStateToProps, {})(SelectPeople);
