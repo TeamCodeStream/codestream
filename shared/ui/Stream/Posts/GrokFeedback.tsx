@@ -6,6 +6,7 @@ import { Button } from "@codestream/webview/src/components/Button";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { HostApi } from "@codestream/webview/webview-api";
+import { Modal } from "../Modal";
 
 const Container = styled.div`
 	display: flex;
@@ -19,6 +20,11 @@ const Root = styled.div`
 
 const Controls = styled.div`
 	margin-top: 10px;
+`;
+
+const FeedbackCompleted = styled.div`
+	margin-top: 10px;
+	color: green;
 `;
 
 export interface GrokFeedbackProps {
@@ -46,11 +52,13 @@ export function GrokFeedback(props: GrokFeedbackProps) {
 	return (
 		<div>
 			{showForm && type && (
-				<Dialog wide={true} onClose={() => setShowForm(false)}>
-					<Root>
-						<GrokFeedbackForm {...props} feedbackType={type} onSuccess={onSuccessHandler} />
-					</Root>
-				</Dialog>
+				<Modal translucent>
+					<Dialog title={"Grok Feedback"} wide={true} onClose={() => setShowForm(false)}>
+						<Root>
+							<GrokFeedbackForm {...props} feedbackType={type} onSuccess={onSuccessHandler} />
+						</Root>
+					</Dialog>
+				</Modal>
 			)}
 
 			<Container>
@@ -64,7 +72,7 @@ export function GrokFeedback(props: GrokFeedbackProps) {
 						</div>
 					</>
 				)}
-				{success && <div style={{ color: "green" }}>Thank you for your feedback</div>}
+				{success && <FeedbackCompleted>Thank you for your feedback</FeedbackCompleted>}
 			</Container>
 		</div>
 	);
@@ -98,10 +106,19 @@ export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
 			"Post ID": props.postId,
 			Direction: thumbMap.get(props.feedbackType),
 			Feedback: text,
-			ResponseNotTrue: notTrue,
-			ResponseNotHelpful: notHelpful,
-			ResponseHarmful: isHarmful,
 		};
+
+		// Only want these telemetry parameters if true, otherwise exclude them from payload
+		if (notTrue) {
+			telemetryPayload["ResponseNotTrue"] = notTrue;
+		}
+		if (notHelpful) {
+			telemetryPayload["ResponseNotHelpful"] = notHelpful;
+		}
+		if (isHarmful) {
+			telemetryPayload["ResponseHarmful"] = isHarmful;
+		}
+
 		console.debug(`Grok feedback ${JSON.stringify(telemetryPayload)}`);
 		await HostApi.instance.track("Grok Feedback Submitted", telemetryPayload);
 		setIsLoading(false);
@@ -120,7 +137,6 @@ export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
 
 	return (
 		<div>
-			<h2>Grok Feedback</h2>
 			<textarea
 				className="input-text"
 				placeholder={feedbackText}
