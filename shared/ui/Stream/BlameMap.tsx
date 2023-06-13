@@ -57,7 +57,9 @@ export function BlameMap() {
 		const teammates = mapFilter(memberIds, id => {
 			const user = state.users[id as string];
 			if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
-
+			if (user.username === "Grok") {
+				return;
+			}
 			if (!user.fullName) {
 				let email = user.email;
 				if (email) user.fullName = email.replace(/@.*/, "");
@@ -71,6 +73,9 @@ export function BlameMap() {
 		const invited = mapFilter(memberIds, id => {
 			const user = state.users[id as string];
 			if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
+			if (user.username === "Grok") {
+				return;
+			}
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
 			return user;

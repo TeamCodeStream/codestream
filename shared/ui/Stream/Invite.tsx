@@ -686,7 +686,9 @@ const mapStateToProps = state => {
 	const teammates = mapFilter(memberIds, id => {
 		const user = users[id as string];
 		if (!user || !user.isRegistered || user.deactivated || user.externalUserId) return;
-
+		if (user.username === "Grok") {
+			return;
+		}
 		if (!user.fullName) {
 			let email = user.email;
 			if (email) user.fullName = email.replace(/@.*/, "");
@@ -706,6 +708,9 @@ const mapStateToProps = state => {
 	const invited = mapFilter(memberIds, id => {
 		const user = users[id as string];
 		if (!user || user.isRegistered || user.deactivated || user.externalUserId) return;
+		if (user.username === "Grok") {
+			return;
+		}
 		let email = user.email;
 		if (email) user.fullName = email.replace(/@.*/, "");
 		return user;
