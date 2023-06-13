@@ -52,9 +52,13 @@ export function ConfigurePullRequestQuery(props: Props) {
 		};
 	});
 
+	const filteredPrConnectedProviders = props.prConnectedProviders.filter(
+		_ => _.id !== "bitbucket*org"
+	);
+
 	const defaultProviderId = React.useMemo(() => {
 		if (props.query && props.query.providerId) return props.query.providerId;
-		if (props.prConnectedProviders[0]) return props.prConnectedProviders[0].id;
+		if (filteredPrConnectedProviders[0]) return filteredPrConnectedProviders[0].id;
 		return "";
 	}, [props]);
 
@@ -217,11 +221,11 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<span dangerouslySetInnerHTML={{ __html: customPullRequestFilterExample || "" }} />
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
-								{!query?.providerId && props.prConnectedProviders.length > 1 && (
+								{!query?.providerId && filteredPrConnectedProviders.length > 1 && (
 									<>
 										<label>PR Provider: &nbsp;</label>
 										<InlineMenu
-											items={props.prConnectedProviders.map(provider => {
+											items={filteredPrConnectedProviders.map(provider => {
 												const providerDisplay = PROVIDER_MAPPINGS[provider.name];
 												return {
 													key: provider.id,

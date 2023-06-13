@@ -1706,7 +1706,7 @@ export class BitbucketProvider
 						deletions: lines_removed_total,
 						number: pr.body.id,
 						idComputed: JSON.stringify({
-							id: pr.body.id,
+							id: `${repoWithOwner}/${pr.body.id}`,
 							pullRequestId: pr.body.id,
 							repoWithOwner: repoWithOwner,
 						}),
@@ -1738,7 +1738,7 @@ export class BitbucketProvider
 						viewer: viewer,
 						viewerDidAuthor: viewerDidAuthor,
 						viewerCanUpdate: viewerCanUpdate,
-						id: pr.body.id,
+						id: `${repoWithOwner}/${pr.body.id}`,
 						updatedAt: pr.body.updated_on,
 					} as any, //TODO: make this work
 				},
@@ -2527,9 +2527,10 @@ export class BitbucketProvider
 
 		const repoWithOwner = owner + "/" + name;
 		const pullRequestId = path[4];
+		const id = `${repoWithOwner}/${pullRequestId}`;
 
 		const idComputed = JSON.stringify({
-			id: pullRequestId,
+			id: id,
 			pullRequestId: pullRequestId,
 			repoWithOwner: repoWithOwner,
 		});
@@ -2592,7 +2593,7 @@ export class BitbucketProvider
 			const title = `#${createPullRequestResponse.body.id} ${createPullRequestResponse.body.title}`;
 			return {
 				id: JSON.stringify({
-					id: createPullRequestResponse.body.id,
+					id: `${owner}/${name}/${createPullRequestResponse.body.id}`,
 					pullRequestId: createPullRequestResponse.body.id,
 					repoWithOwner: `${owner}/${name}`,
 				}),
@@ -2816,9 +2817,9 @@ export class BitbucketProvider
 						name: item.source.repository.name,
 						nameWithOwner: item.source.repository.full_name,
 					},
-					id: item.id + "",
+					id: `${item.source.repository.full_name}/${item.id}`,
 					idComputed: JSON.stringify({
-						id: item.id,
+						id: `${item.source.repository.full_name}/${item.id}`,
 						pullRequestId: item.id,
 						repoWithOwner: item.source.repository.full_name,
 					}),
@@ -3432,7 +3433,7 @@ export class BitbucketProvider
 	parseId(pullRequestId: string): { id: string; pullRequestId: string; repoWithOwner: string } {
 		const parsed = JSON.parse(pullRequestId);
 		return {
-			id: parsed.id || parsed.pullRequestId,
+			id: `${parsed.repoWithOwner}/${parsed.pullRequestId}`,
 			pullRequestId: parsed.pullRequestId,
 			repoWithOwner: parsed.repoWithOwner,
 		};
