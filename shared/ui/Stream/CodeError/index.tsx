@@ -272,13 +272,17 @@ const STATES_TO_DISPLAY_STRINGS = {
 export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeaderProps>) => {
 	const { codeError, collapsed } = props;
 	const dispatch = useAppDispatch();
+
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const allTeamMembers = getTeamMembers(state);
+		const teamMembers = allTeamMembers.filter(_ => _.username !== "Grok");
+
 		return {
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
 			codeErrorCreator: getCodeErrorCreator(state),
 			isCurrentUserInternal: isCurrentUserInternal(state),
 			ideName: encodeURIComponent(state.ide.name || ""),
-			teamMembers: getTeamMembers(state),
+			teamMembers: teamMembers,
 			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : "",
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			isPDIdev: isFeatureEnabled(state, "PDIdev"),
@@ -529,6 +533,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				// if we have an assignee don't re-include them here
 				usersFromCodeStream = usersFromCodeStream.filter(_ => _.email !== assigneeEmail);
 			}
+
 			if (usersFromCodeStream.length) {
 				assigneeItems.push({ label: "-", key: "sep-nr" });
 				assigneeItems.push({
