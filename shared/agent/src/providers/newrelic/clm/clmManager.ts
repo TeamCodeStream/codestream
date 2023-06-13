@@ -120,6 +120,7 @@ export class ClmManager {
 		if (error) return error;
 		if (!result) return undefined;
 		const { entity, relativeFilePath, observabilityRepo, repoForFile, remote } = result;
+		const normalizedRelativeFilePath = relativeFilePath.replace(/\\/g, "/");
 
 		const newRelicAccountId = entity.accountId;
 		const newRelicEntityGuid = entity.entityGuid;
@@ -131,7 +132,7 @@ export class ClmManager {
 				newRelicEntityGuid,
 				newRelicAccountId,
 				languageId,
-				relativeFilePath,
+				normalizedRelativeFilePath,
 				request,
 				resolutionMethod,
 				this.provider
