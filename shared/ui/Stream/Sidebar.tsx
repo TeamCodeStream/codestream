@@ -17,6 +17,7 @@ import { findLastIndex } from "../utils";
 import { setUserPreference } from "./actions";
 import CICD from "./CICD";
 import Codemarks from "./Codemarks";
+import Fossa from "./CodeAnalyzers";
 import { CreateCodemarkIcons } from "./CreateCodemarkIcons";
 import IssuesPane from "./CrossPostIssueControls/IssuesPane";
 import { Observability } from "./Observability";
@@ -65,6 +66,7 @@ _defaultPaneSettings[WebviewPanels.CodemarksForFile] = {};
 // default this one to not show
 _defaultPaneSettings[WebviewPanels.Tasks] = {};
 _defaultPaneSettings[WebviewPanels.Observability] = {};
+_defaultPaneSettings[WebviewPanels.Fossa] = {};
 // _defaultPaneSettings[WebviewPanels.Team] = {};
 _defaultPaneSettings[WebviewPanels.CICD] = {
 	collapsed: true,
@@ -80,6 +82,7 @@ export const AVAILABLE_PANES = [
 	WebviewPanels.OpenReviews,
 	WebviewPanels.CodemarksForFile,
 	WebviewPanels.Tasks,
+	WebviewPanels.Fossa,
 	WebviewPanels.CICD,
 ];
 
@@ -407,6 +410,8 @@ export const Sidebar = React.memo(function Sidebar() {
 				return <Observability paneState={paneState} />;
 			case WebviewPanels.CICD:
 				return <CICD openRepos={openRepos} paneState={paneState} />;
+			case WebviewPanels.Fossa:
+				return <Fossa openRepos={openRepos} paneState={paneState} />;
 		}
 		return null;
 	};
