@@ -44,6 +44,7 @@ export const RepliesToPost = (props: {
 	itemId: string;
 	numReplies: number;
 	codeErrorId?: string;
+	noReply?: boolean;
 	scrollNewTargetCallback?: (target: RefObject<HTMLElement>) => void;
 }) => {
 	const dispatch = useAppDispatch();
@@ -109,7 +110,9 @@ export const RepliesToPost = (props: {
 	const getMenuItems = (reply: PostPlus) => {
 		const menuItems: MenuItem[] = [];
 
-		menuItems.push({ label: "Reply", key: "reply", action: () => setReplyingToPostId(reply.id) });
+		if (!props.noReply) {
+			menuItems.push({ label: "Reply", key: "reply", action: () => setReplyingToPostId(reply.id) });
+		}
 		if (reply.creatorId === currentUserId) {
 			menuItems.push({ label: "Edit", key: "edit", action: () => setEditingPostId(reply.id) });
 		}

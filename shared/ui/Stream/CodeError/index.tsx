@@ -1008,7 +1008,7 @@ export const BaseCodeErrorMenu = (props: BaseCodeErrorMenuProps) => {
 
 		if (currentUserIsAdmin) {
 			items.push({
-				label: "Delete All",
+				label: "Delete All Replies",
 				icon: <Icon name="trash" />,
 				key: "deleteAll-permalink",
 				action: () => {
@@ -1799,6 +1799,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 								numReplies={props.codeError.numReplies}
 								scrollNewTargetCallback={scrollNewTargetCallback}
 								codeErrorId={props.codeError.id}
+								noReply={true}
 							/>
 							{grokError && (
 								<DelayedRender>

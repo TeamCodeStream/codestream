@@ -1607,7 +1607,7 @@ export class NewRelicProvider
 					errorGroupFullResponse.actor.entity.relatedEntities.results
 				);
 				if (errorGroup.entity && relatedRepos) {
-					errorGroup.entity.relatedRepos;
+					errorGroup.entity["relatedRepos"] = relatedRepos;
 				}
 
 				ContextLogger.log("ErrorGroup found", {

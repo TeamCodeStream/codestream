@@ -1149,7 +1149,7 @@ export interface NewRelicErrorGroup {
 			name: string;
 			urls: string[];
 		};
-		relatedRepos?: RelatedRepository[];
+		relatedRepos?: RelatedRepository[] | BuiltFromResult[];
 		relationship?: {
 			error?: { message?: string };
 		};
@@ -1764,7 +1764,7 @@ export interface ErrorGroupResponse {
 			relatedEntities: {
 				results: any[];
 			};
-			relatedRepos: RelatedRepository[];
+			relatedRepos: RelatedRepository[] | BuiltFromResult[];
 		};
 		errorsInbox: {
 			errorGroupStateTypes?: ErrorGroupStateType[];
