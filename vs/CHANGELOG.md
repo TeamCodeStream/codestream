@@ -1,5 +1,21 @@
 # Change Log
 
+## [14.23.0] - 2023-06-15
+
+### Added
+- Expanded the Errors subsection in the observability panel to include a greater numbers of errors in the 30-minute time range
+
+### Changed
+- Removed custom queries for Bitbucket
+- Altered CodeStream loading UI to show a skeleton animation instead of loading text
+- Altered styling on buttons across CodeStream
+- Renamed the option to "Delete All" to "Delete All Replies" for comment threads in errors
+
+### Fixed
+- Fixed error with Slack integration that prevented deletion of posts from CodeStream from synchronizing with Slack channels and direct messages
+- Fixed a bug that showed the repo selection prompt after opening an error from the observability section
+- Fixed a bug with Bitbucket pull requests all being expanded if there are any with the same numerical name
+
 ## [14.22.0] - 2023-6-01
 
 ### Changed
