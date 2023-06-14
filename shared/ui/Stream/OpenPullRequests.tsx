@@ -1678,9 +1678,18 @@ export const OpenPullRequests = React.memo((props: Props) => {
 						placement="bottom"
 						delay={1}
 					/>
-					{derivedState.isPRSupportedCodeHostConnected && (
-						<Icon onClick={addQuery} name="filter" title="Add Query" placement="bottom" delay={1} />
-					)}
+					{derivedState.PRConnectedProvidersCount === 1 &&
+					derivedState.PRConnectedProviders[0].id === "bitbucket*org"
+						? null
+						: derivedState.isPRSupportedCodeHostConnected && (
+								<Icon
+									onClick={addQuery}
+									name="filter"
+									title="Add Query"
+									placement="bottom"
+									delay={1}
+								/>
+						  )}
 					<InlineMenu
 						key="settings-menu"
 						className="subtle no-padding"
