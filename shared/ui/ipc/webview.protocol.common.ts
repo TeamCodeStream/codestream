@@ -73,6 +73,7 @@ export enum WebviewPanels {
 	MethodLevelTelemetry = "method-level-telemetry",
 	ObservabilityAnomaly = "observability-anomaly",
 	CICD = "ci-cd",
+	Fossa = "fossa",
 }
 
 // this is for mixpanel and maps the values from WebviewPanels to their
@@ -99,6 +100,7 @@ export const WebviewPanelNames = {
 	observability: "Observability",
 	"pixie-dynamic-logging": "Dynamic Logging Using Pixie",
 	"ci-cd": "CI/CD",
+	fossa: "Fossa",
 };
 
 export enum WebviewModals {
