@@ -221,7 +221,7 @@ export function ConfigurePullRequestQuery(props: Props) {
 						<span dangerouslySetInnerHTML={{ __html: customPullRequestFilterExample || "" }} />
 						<div id="controls">
 							<div style={{ margin: "20px 0" }}>
-								{!query?.providerId && filteredPrConnectedProviders.length > 1 && (
+								{!query?.providerId && filteredPrConnectedProviders.length && (
 									<>
 										<label>PR Provider: &nbsp;</label>
 										<InlineMenu
