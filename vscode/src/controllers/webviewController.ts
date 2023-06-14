@@ -108,7 +108,8 @@ import {
 	Uri,
 	ViewColumn,
 	window,
-	workspace
+	workspace,
+	SymbolInformation
 } from "vscode";
 import { NotificationType, RequestType } from "vscode-languageclient";
 
@@ -879,35 +880,64 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private async goToClassMethodDefinition(className: string, methodName: string) {
-		// Convert the fully qualified class name to a relative file path.
-		const relativeFilePath = className.replace(/\./g, "/") + ".java";
+	private async goToClassMethodDefinition(
+		codeFilepath: string | undefined,
+		codeNamespace: string | undefined,
+		codeFunction: string,
+		language: string
+	) {
+		if (language === "ruby") {
+			const symbols: SymbolInformation[] = await commands.executeCommand(
+				"vscode.executeWorkspaceSymbolProvider",
+				codeNamespace + "#" + codeFunction
+			);
+			if (symbols?.length) {
+				const symbol = symbols[0];
 
-		// Find the file in the workspace.
-		const fileUri = await workspace.findFiles(`**/${relativeFilePath}`, null, 1);
-
-		if (fileUri.length === 0) {
-			Logger.warn(`Java class ${className} not found.`);
-			return;
+				void (await Editor.revealRange(
+					symbol.location.uri,
+					Editor.fromSerializableRange(symbol.location.range),
+					this._lastEditor,
+					{
+						preserveFocus: false,
+						atTop: false
+					}
+				));
+			}
 		}
 
-		// Open the file in the editor.
-		const document = await workspace.openTextDocument(fileUri[0]);
-		const editor = await window.showTextDocument(document);
+		if (language === "java") {
+			if (!codeNamespace) return;
 
-		// Find method definition within the class
-		const methodPattern = new RegExp(
-			`\\b(?:public|private|protected)?\\s+(?:static\\s+)?(?:[\\w<>\\[\\]]+\\s+)?${methodName}\\s*\\(`
-		);
-		const text = document.getText();
-		const match = methodPattern.exec(text);
+			// Convert the fully qualified class name to a relative file path.
+			const relativeFilePath = codeNamespace.replace(/\./g, "/") + ".java";
 
-		if (match) {
-			const position = document.positionAt(match.index);
-			editor.selection = new Selection(position, position);
-			editor.revealRange(new Range(position, position));
-		} else {
-			Logger.warn(`Method ${methodName} not found in class ${className}.`);
+			// Find the file in the workspace.
+			const fileUri = await workspace.findFiles(`**/${relativeFilePath}`, null, 1);
+
+			if (fileUri.length === 0) {
+				Logger.warn(`Java class ${codeNamespace} not found.`);
+				return;
+			}
+
+			// Open the file in the editor.
+			const document = await workspace.openTextDocument(fileUri[0]);
+			const editor = await window.showTextDocument(document);
+
+			// Find method definition within the class
+			const methodPattern = new RegExp(
+				`\\b(?:public|private|protected)?\\s+(?:static\\s+)?(?:[\\w<>\\[\\]]+\\s+)?${codeFunction}\\s*\\(`
+			);
+			const text = document.getText();
+			const match = methodPattern.exec(text);
+
+			if (match) {
+				const position = document.positionAt(match.index);
+				editor.selection = new Selection(position, position);
+				editor.revealRange(new Range(position, position));
+			} else {
+				Logger.warn(`Method ${codeFunction} not found in class ${codeNamespace}.`);
+			}
 		}
 	}
 
@@ -1250,7 +1280,12 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			case EditorRevealSymbolRequestType.method: {
-				void this.goToClassMethodDefinition(e.params.className, e.params.functionName);
+				void this.goToClassMethodDefinition(
+					e.params.codeFilepath,
+					e.params.codeNamespace,
+					e.params.codeFunction,
+					e.params.language
+				);
 				break;
 			}
 			default: {

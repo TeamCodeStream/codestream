@@ -73,7 +73,8 @@ class ActiveEditorContextResponse(val editorContext: EditorContext? = EditorCont
 class EditorSymbolRevealRequest(
     val codeFilepath: String?,
     val codeNamespace: String?,
-    val codeFunction: String?
+    val codeFunction: String?,
+    val language: String
 )
 
 class EditorSymbolRevealResponse(

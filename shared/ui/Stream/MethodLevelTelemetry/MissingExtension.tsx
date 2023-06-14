@@ -48,7 +48,8 @@ export function MissingRubyExtension({ sidebarView = false }) {
 			<br />
 			<p>
 				<Link href={"vscode:extension/rebornix.Ruby"}>Ruby</Link> - Be sure to add{" "}
-				<pre>"ruby.useLanguageServer": true</pre> to your settings file.
+				<pre>"ruby.useLanguageServer": true</pre> and <pre>"ruby.intellisense": "rubyLocate"</pre>{" "}
+				to your settings file.
 			</p>
 			<p>
 				<Link href={"vscode:extension/castwide.solargraph"}>Ruby Solargraph</Link> - Be sure to have
@@ -67,7 +68,8 @@ export function RubyPluginLanguageServer({ sidebarView = false }) {
 				To see code-level metrics you'll need to enable the language server in your Ruby extension.
 			</p>
 			<p style={{ marginTop: 0 }}>
-				To do so, add <pre>"ruby.useLanguageServer": true</pre> to your settings file.
+				To do so, add <pre>"ruby.useLanguageServer": true</pre> and{" "}
+				<pre>"ruby.intellisense": "rubyLocate"</pre> to your settings file.
 			</p>
 		</MissingExtensionBase>
 	);

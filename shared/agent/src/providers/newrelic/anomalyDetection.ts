@@ -152,6 +152,7 @@ export class AnomalyDetector {
 				name,
 				text: this.getCodeAttrsName(codeAttrs) || name,
 				...codeAttrs,
+				language: languageSupport.language,
 				oldValue: 0,
 				newValue: 0,
 				ratio: 1,
@@ -565,6 +566,7 @@ export class AnomalyDetector {
 		return {
 			...comparison,
 			...codeAttrs,
+			language: languageSupport.language,
 			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			metricTimesliceName: comparison.name,
@@ -592,6 +594,7 @@ export class AnomalyDetector {
 		return {
 			...comparison,
 			...codeAttrs,
+			language: languageSupport.language,
 			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			sinceText: this._sinceText,
@@ -669,6 +672,8 @@ export class AnomalyDetector {
 }
 
 interface LanguageSupport {
+	get language(): string;
+
 	filterMetrics(data: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[];
 
 	extractCodeAttrs(name: string): CodeAttributes;
@@ -677,6 +682,10 @@ interface LanguageSupport {
 }
 
 class JavaLanguageSupport implements LanguageSupport {
+	get language() {
+		return "java";
+	}
+
 	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
 		const javaRE = /^Java\/(.+)\.(.+)\/(.+)/;
 		const customRE = /^Custom\/(.+)\.(.+)\/(.+)/;
@@ -714,6 +723,9 @@ class JavaLanguageSupport implements LanguageSupport {
 }
 
 class RubyLanguageSupport implements LanguageSupport {
+	get language() {
+		return "ruby";
+	}
 	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
 		const controllerRE = /^Controller\/(.+)\/(.+)/;
 		const nestedControllerRE = /^Nested\/Controller\/(.+)\/(.+)/;
@@ -751,6 +763,10 @@ class RubyLanguageSupport implements LanguageSupport {
 }
 
 class CSharpLanguageSupport implements LanguageSupport {
+	get language() {
+		return "csharp";
+	}
+
 	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
 		const dotNetRE = /^DotNet\/(.+)\.(.+)\/(.+)/;
 		const customRE = /^Custom\/(.+)\.(.+)\/(.+)/;

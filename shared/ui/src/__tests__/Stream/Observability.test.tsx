@@ -201,6 +201,7 @@ describe("Observability", () => {
 							name: "responsename",
 							codeNamespace: "myclassname",
 							codeFunction: "myfunctionname",
+							language: "java",
 							newValue: 500,
 							oldValue: 300,
 							ratio: 1,

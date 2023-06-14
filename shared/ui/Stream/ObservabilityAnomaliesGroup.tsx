@@ -92,6 +92,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 			codeFilepath: anomaly.codeFilepath,
 			codeNamespace: anomaly.codeNamespace,
 			codeFunction: anomaly.codeFunction,
+			language: anomaly.language,
 		});
 		if (!props.noAnomaly) {
 			dispatch(closeAllPanels());

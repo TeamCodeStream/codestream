@@ -1333,6 +1333,7 @@ export interface GetObservabilityAnomaliesRequest {
 }
 
 export interface ObservabilityAnomaly extends CodeAttributes {
+	language: string;
 	name: string;
 	oldValue: number;
 	newValue: number;
