@@ -497,7 +497,7 @@ class Team extends React.Component<Props, State> {
 		const promoteAdmin = { label: "Make Admin", action: () => this.promote(user) };
 		const kickUser = { label: "Remove from Org", action: () => this.confirmKick(user) };
 
-		const isUserAdmin = adminIds.includes(user.id);
+		const isUserAdmin = adminIds?.includes(user.id);
 		if (isCurrentUserAdmin && user.id !== this.props.currentUserId) {
 			if (isUserAdmin) {
 				return (
