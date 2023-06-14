@@ -164,7 +164,9 @@ export const RepliesToPost = (props: {
 							renderMenu={(target, close) => (
 								<Menu target={target} action={close} items={menuItems} />
 							)}
+							noReply={props.noReply}
 						/>
+
 						{reply.id === replyingToPostId && (
 							<InlineMessageContainer>
 								<ComposeWrapper>

@@ -45,6 +45,7 @@ export interface ReplyProps {
 	editingPostId?: string;
 	threadId?: string; // only set for nested replies
 	lastNestedReply?: boolean;
+	noReply?: boolean;
 }
 
 const AuthorInfo = styled.div`
@@ -360,13 +361,15 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 						<Timestamp relative time={props.post.createdAt} edited={props.post.hasBeenEdited} />
 					</span>
 					<div style={{ marginLeft: "auto", whiteSpace: "nowrap" }}>
-						<Icon
-							title="Reply"
-							name="reply"
-							placement="top"
-							className="reply clickable"
-							onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
-						/>
+						{!props.noReply && (
+							<Icon
+								title="Reply"
+								name="reply"
+								placement="top"
+								className="reply clickable"
+								onClick={() => setReplyingToPostId(props.threadId || props.post.id)}
+							/>
+						)}
 						{!isPending(props.post) && <AddReactionIcon post={props.post} />}
 						{renderedMenu}
 						{props.renderMenu && (
