@@ -21,8 +21,8 @@ export const CodeAnalyzers = (props: Props) => {
 		for (const provider of ["fossa*com"]) {
 			const name = providers[provider]?.name;
 			if (name) {
-				const p = getUserProviderInfoFromState(name, state);
-				if (p) providerInfo[name] = p;
+				const userProvider = getUserProviderInfoFromState(name, state);
+				if (userProvider) providerInfo[name] = userProvider;
 			}
 		}
 		const currentRepoId = editorContext.scmInfo?.scm?.repoId;
