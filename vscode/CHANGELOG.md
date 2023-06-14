@@ -3,13 +3,12 @@
 ## [14.23.0] - 2023-06-15
 
 ### Added
-- Expanded the Errors subsection in the observability panel to include a greater numbers of errors in the 30-minute time range
+- Added the abillity to select a time range for viewing all errors of a service instead of showing the 5 most recent
 
 ### Changed
 - Removed custom queries for Bitbucket
 - Altered CodeStream loading UI to show a skeleton animation instead of loading text
 - Altered styling on buttons across CodeStream
-- Renamed the option to "Delete All" to "Delete All Replies" for comment threads in errors
 
 ### Fixed
 - Fixed error with Slack integration that prevented deletion of posts from CodeStream from synchronizing with Slack channels and direct messages

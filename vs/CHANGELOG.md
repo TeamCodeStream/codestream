@@ -3,7 +3,7 @@
 ## [14.23.0] - 2023-06-15
 
 ### Added
-- Expanded the Errors subsection in the observability panel to include a greater numbers of errors in the 30-minute time range
+- Added the abillity to select a time range for viewing all errors of a service instead of showing the 5 most recent
 
 ### Changed
 - Removed custom queries for Bitbucket
