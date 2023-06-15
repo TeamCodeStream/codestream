@@ -147,10 +147,12 @@ export class AnomalyDetector {
 			if (anomalousSymbolStrs.find(_ => _ === symbolStr)) continue;
 
 			const codeAttrs = languageSupport.getCodeAttrs(name, benchmarkSpans);
+			const text = languageSupport.getCodeAttrsName(codeAttrs) || name;
+			if (allOtherAnomalies.find(_ => _.text === text)) continue;
 
 			const anomaly: ObservabilityAnomaly = {
 				name,
-				text: this.getCodeAttrsName(codeAttrs) || name,
+				text,
 				...codeAttrs,
 				language: languageSupport.language,
 				oldValue: 0,
@@ -567,7 +569,7 @@ export class AnomalyDetector {
 			...comparison,
 			...codeAttrs,
 			language: languageSupport.language,
-			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
+			text: languageSupport.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			metricTimesliceName: comparison.name,
 			sinceText: this._sinceText,
@@ -595,7 +597,7 @@ export class AnomalyDetector {
 			...comparison,
 			...codeAttrs,
 			language: languageSupport.language,
-			text: this.getCodeAttrsName(codeAttrs) || comparison.name,
+			text: languageSupport.getCodeAttrsName(codeAttrs) || comparison.name,
 			totalDays: this._totalDays,
 			sinceText: this._sinceText,
 			metricTimesliceName:
@@ -651,7 +653,7 @@ export class AnomalyDetector {
 			if (metric.name.indexOf("Java/") === 0) {
 				return new JavaLanguageSupport();
 			}
-			if (metric.name.indexOf("Ruby/") === 0) {
+			if (metric.name.indexOf("Ruby/") === 0 || metric.name.indexOf("RubyVM/") === 0) {
 				return new RubyLanguageSupport();
 			}
 			if (metric.name.indexOf("DotNet/") === 0) {
@@ -660,14 +662,6 @@ export class AnomalyDetector {
 		}
 
 		return undefined;
-	}
-
-	private getCodeAttrsName(codeAttrs: CodeAttributes | undefined) {
-		if (!codeAttrs?.codeFunction) return null;
-		const parts = [];
-		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
-		parts.push(codeAttrs.codeFunction);
-		return parts.join("/");
 	}
 }
 
@@ -679,6 +673,8 @@ interface LanguageSupport {
 	extractCodeAttrs(name: string): CodeAttributes;
 
 	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes;
+
+	getCodeAttrsName(codeAttrs: CodeAttributes): string | null;
 }
 
 class JavaLanguageSupport implements LanguageSupport {
@@ -720,6 +716,14 @@ class JavaLanguageSupport implements LanguageSupport {
 		}
 		return this.extractCodeAttrs(name);
 	}
+
+	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
+		if (!codeAttrs?.codeFunction) return null;
+		const parts = [];
+		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
+		parts.push(codeAttrs.codeFunction);
+		return parts.join("/");
+	}
 }
 
 class RubyLanguageSupport implements LanguageSupport {
@@ -732,10 +736,15 @@ class RubyLanguageSupport implements LanguageSupport {
 		const errorsRE = /^Errors\/(.+)\/(.+)/;
 		return metrics.filter(
 			m =>
-				benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
-				controllerRE.test(m.name) ||
-				nestedControllerRE.test(m.name) ||
-				errorsRE.test(m.name)
+				!(
+					m.name.indexOf("Nested/Controller/") === 0 &&
+					metrics.find(another => "Nested/" + another.name === m.name)
+				) &&
+				!(m.name.indexOf("Nested/Controller/Rack/") === 0) &&
+				(benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
+					controllerRE.test(m.name) ||
+					nestedControllerRE.test(m.name) ||
+					errorsRE.test(m.name))
 		);
 	}
 
@@ -743,10 +752,25 @@ class RubyLanguageSupport implements LanguageSupport {
 		const parts = name.split("/");
 		const codeFunction = parts[parts.length - 1];
 		const codeNamespace = parts[parts.length - 2];
-		return {
-			codeNamespace,
-			codeFunction,
-		};
+
+		if (
+			(parts[0] === "Nested" && parts[1] === "Controller") ||
+			(parts[0] === "Errors" && parts[1] === "Controller") ||
+			parts[0] === "Controller"
+		) {
+			const parts = codeNamespace.split("_");
+			const camelCaseParts = parts.map(_ => _.charAt(0).toUpperCase() + _.slice(1));
+			const controllerName = camelCaseParts.join("") + "Controller";
+			return {
+				codeNamespace: controllerName,
+				codeFunction,
+			};
+		} else {
+			return {
+				codeNamespace,
+				codeFunction,
+			};
+		}
 	}
 
 	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
@@ -759,6 +783,14 @@ class RubyLanguageSupport implements LanguageSupport {
 			};
 		}
 		return this.extractCodeAttrs(name);
+	}
+
+	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
+		if (!codeAttrs?.codeFunction) return null;
+		const parts = [];
+		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
+		parts.push(codeAttrs.codeFunction);
+		return parts.join("#");
 	}
 }
 
@@ -800,5 +832,13 @@ class CSharpLanguageSupport implements LanguageSupport {
 			};
 		}
 		return this.extractCodeAttrs(name);
+	}
+
+	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
+		if (!codeAttrs?.codeFunction) return null;
+		const parts = [];
+		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
+		parts.push(codeAttrs.codeFunction);
+		return parts.join("/");
 	}
 }

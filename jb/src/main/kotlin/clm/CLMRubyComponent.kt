@@ -6,7 +6,11 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.findParentOfType
+import org.jetbrains.kotlin.psi.psiUtil.findDescendantOfType
 import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.classes.RClass
+import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.methods.RMethod
+import org.jetbrains.plugins.ruby.ruby.lang.psi.controlStructures.modules.RModule
 import org.jetbrains.plugins.ruby.ruby.lang.psi.holders.RContainer
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.RFileImpl
 import org.jetbrains.plugins.ruby.ruby.lang.psi.impl.controlStructures.classes.RClassImpl
@@ -27,10 +31,20 @@ class CLMRubyComponent(project: Project) :
     override fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? {
         if (className == null || functionName == null) return null
         val projectScope = GlobalSearchScope.allScope(project)
-        val clazz = RubyClassModuleNameIndex.findOne(project, className, projectScope) { true }
+        val clazz = if (className.contains("::")) {
+            val parts = className.split("::")
+            RubyClassModuleNameIndex.findOne(project, parts[1], projectScope) { psiElement ->
+                (psiElement as? RClass)?.let {
+                    val module = it.findParentOfType<RModule>()
+                    module?.moduleName?.name == parts[0]
+                } ?: false
+            }
+        } else {
+            RubyClassModuleNameIndex.findOne(project, className, projectScope) { true }
+        }
         (clazz as? RClass)?.let {
-            val method = it.findMethodByName(functionName)
-            return method
+            val method = it.findDescendantOfType<RMethod> { method -> method.methodName?.name == functionName }
+            return method ?: clazz
         }
         return null
     }
