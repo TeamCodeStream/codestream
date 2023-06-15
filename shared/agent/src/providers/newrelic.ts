@@ -1860,7 +1860,7 @@ export class NewRelicProvider
 				newFullName: request.fullName!,
 			});
 
-			return { fullName: response.name };
+			return { fullName: response?.userManagementUpdateUser?.user?.name };
 		} catch (ex) {
 			ContextLogger.error(ex);
 		}
