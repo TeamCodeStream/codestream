@@ -2394,8 +2394,19 @@ export class CodeStreamApiProvider implements ApiProvider {
 		const cc = Logger.getCorrelationContext();
 
 		try {
-			const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${providerInfo.refreshToken}`;
-			const response = await this.get<{ user: any }>(url, this._token);
+			// For refresh of token behind Service Gateway, use a separate no-auth request to pass through
+			// Service Gateway without authentication
+			let response;
+			if (providerId === "newrelic" && this._usingServiceGatewayAuth) {
+				const url = "/no-auth/provider-refresh/newrelic";
+				response = await this.put<{ teamId: string; refreshToken: string }, { user: any }>(url, {
+					teamId: this.teamId,
+					refreshToken: providerInfo.refreshToken,
+				});
+			} else {
+				const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${providerInfo.refreshToken}`;
+				response = await this.get<{ user: any }>(url, this._token);
+			}
 
 			// Since we are dealing with identity auth don't try to resolve this with the users
 			// The "me" user will get updated via the pubnub message
