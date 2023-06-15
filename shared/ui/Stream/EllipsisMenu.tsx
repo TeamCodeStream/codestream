@@ -338,27 +338,27 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const { company, team, currentUserId, currentUserEmail } = derivedState;
 		const { adminIds } = team;
 
-		// TODO: this may be a good place to confirm whether the company is still "CodeStream only",
-		// as it influences whether we can display the Onboarding Settings part of the menu
-
 		if (adminIds && adminIds.includes(currentUserId!)) {
-			const submenu = [
-				{
-					label: "Change Organization Name",
-					key: "change-company-name",
-					action: () => dispatch(openModal(WebviewModals.ChangeCompanyName)),
-					disabled: false,
-				},
-				{ label: "-" },
-			];
+			const submenu: { label: string; key?: string; action?: Function; disabled?: boolean }[] = [];
+
 			if (company.codestreamOnly) {
-				submenu.push({
-					label: "Onboarding Settings...",
-					key: "onboarding-settings",
-					action: () => dispatch(openModal(WebviewModals.TeamSetup)),
-					disabled: !derivedState.autoJoinSupported,
-				});
+				submenu.push.apply(submenu, [
+					{
+						label: "Change Organization Name",
+						key: "change-company-name",
+						action: () => dispatch(openModal(WebviewModals.ChangeCompanyName)),
+						disabled: false,
+					},
+					{ label: "-" },
+					{
+						label: "Onboarding Settings...",
+						key: "onboarding-settings",
+						action: () => dispatch(openModal(WebviewModals.TeamSetup)),
+						disabled: !derivedState.autoJoinSupported,
+					},
+				]);
 			}
+
 			submenu.push.apply(submenu, [
 				{
 					label: "Feedback Request Settings...",
