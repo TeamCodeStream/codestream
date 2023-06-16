@@ -741,6 +741,8 @@ class RubyLanguageSupport implements LanguageSupport {
 					metrics.find(another => "Nested/" + another.name === m.name)
 				) &&
 				!(m.name.indexOf("Nested/Controller/Rack/") === 0) &&
+				!(m.name.indexOf("Controller/Sinatra/") === 0) &&
+				!(m.name.indexOf("Nested/Controller/Sinatra/") === 0) &&
 				(benchmarkSpans.find(s => s.name === m.name && s.codeFunction) ||
 					controllerRE.test(m.name) ||
 					nestedControllerRE.test(m.name) ||

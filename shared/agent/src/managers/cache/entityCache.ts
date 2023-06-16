@@ -5,6 +5,7 @@ import { CSEntity } from "@codestream/protocols/api";
 import { Id } from "../entityManager";
 import { BaseCache, CacheCfg, UniqueFetchFn } from "./baseCache";
 import { IndexType, makeIndex, UniqueIndex } from "./index";
+import { Logger } from "../../logger";
 
 export interface EntityCacheCfg<T> extends CacheCfg<T> {
 	fetchFn: UniqueFetchFn<T>;
@@ -56,7 +57,9 @@ export class EntityCache<T extends CSEntity> extends BaseCache<T> {
 	async getById(id: Id): Promise<T> {
 		const entity = await this.get([["id", id]]);
 		if (!entity) {
-			throw new Error(`Could not find entity with ID ${id}`);
+			const err = new Error(`Could not find entity with ID ${id}`);
+			Logger.error(err);
+			throw err;
 		}
 		return entity;
 	}

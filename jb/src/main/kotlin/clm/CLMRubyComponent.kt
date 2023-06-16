@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.psi.util.findParentOfType
@@ -31,16 +32,9 @@ class CLMRubyComponent(project: Project) :
     override fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? {
         if (className == null || functionName == null) return null
         val projectScope = GlobalSearchScope.allScope(project)
-        val clazz = if (className.contains("::")) {
-            val parts = className.split("::")
-            RubyClassModuleNameIndex.findOne(project, parts[1], projectScope) { psiElement ->
-                (psiElement as? RClass)?.let {
-                    val module = it.findParentOfType<RModule>()
-                    module?.moduleName?.name == parts[0]
-                } ?: false
-            }
-        } else {
-            RubyClassModuleNameIndex.findOne(project, className, projectScope) { true }
+        val reversedParts = className.split("::").reversed()
+        val clazz = RubyClassModuleNameIndex.findOne(project, reversedParts[0], projectScope) { it ->
+            (it as? RClass)?.matchesModuleHierarchy(reversedParts.drop(1)) ?: false
         }
         (clazz as? RClass)?.let {
             val method = it.findDescendantOfType<RMethod> { method -> method.methodName?.name == functionName }
@@ -48,6 +42,18 @@ class CLMRubyComponent(project: Project) :
         }
         return null
     }
+}
+
+private fun RClass.matchesModuleHierarchy(modules: List<String>): Boolean {
+    var psiElement: PsiElement = this
+    for (moduleName in modules) {
+        val module = psiElement.findParentOfType<RModule>()
+        if (module?.moduleName?.name != moduleName) {
+            return false
+        }
+        psiElement = module
+    }
+    return true
 }
 
 class RubySymbolResolver : SymbolResolver {
