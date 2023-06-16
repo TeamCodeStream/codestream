@@ -8,7 +8,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
-import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
+import com.intellij.psi.util.descendantsOfType
 
 val httpMethods = arrayOf("post", "patch", "put", "get", "delete")
 
@@ -78,7 +78,7 @@ class NodeSymbolResolver : SymbolResolver {
     override fun findTopLevelFunction(psiFile: PsiFile, functionName: String): NavigatablePsiElement? {
         if (psiFile !is JSFile) return null
 
-        val functions = psiFile.collectDescendantsOfType<JSFunction>()
+        val functions = psiFile.descendantsOfType<JSFunction>()
         val result = functions.find { it.name == functionName }
         if (result != null) {
             logger.info("Found top level JSFunction function for $functionName")

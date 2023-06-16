@@ -25,10 +25,10 @@ import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
 import com.intellij.util.concurrency.annotations.RequiresEdt
 import kotlinx.coroutines.future.await
 import org.eclipse.lsp4j.Range
-import org.jetbrains.kotlin.idea.core.util.toPsiFile
 import java.net.URI
 import java.net.URL
 import java.util.concurrent.CompletableFuture
@@ -140,7 +140,7 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
 
     @RequiresEdt
     private fun copySymbolEdtOperations(virtFile: VirtualFile, namespace: String?, functionName: String): FindSymbolInFileResponse? {
-        val psiFile = virtFile.toPsiFile(project) ?: return null
+        val psiFile = virtFile?.let { PsiManager.getInstance(project).findFile(it) } ?: return null
         if (!isPsiFileSupported(psiFile)) return null
         val editorManager = FileEditorManager.getInstance(project)
         val editor = editorManager.openTextEditor(OpenFileDescriptor(project, virtFile), false)

@@ -6,8 +6,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.util.descendants
 import com.intellij.psi.util.elementType
-import org.jetbrains.kotlin.psi.psiUtil.collectDescendantsOfType
 import kotlin.reflect.KProperty1
 import kotlin.reflect.full.functions
 
@@ -81,7 +81,7 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 
     private fun traverseForElementsOfType(element: PsiElement, elementType: String): List<PsiElement> {
-        return element.collectDescendantsOfType({ true }, { it.elementType.toString() == elementType })
+        return element.descendants(true).filter { it.elementType.toString() == elementType }.toList()
     }
 
     private fun findFirstSiblingOfType(element: PsiElement, elementType: Set<String>): PsiElement? {
