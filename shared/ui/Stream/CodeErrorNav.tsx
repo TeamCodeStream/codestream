@@ -556,11 +556,12 @@ export function CodeErrorNav(props: Props) {
 								id: derivedState.currentCodeErrorId!,
 								createdAt: new Date().getTime(),
 								modifiedAt: new Date().getTime(),
+								// @ts-ignore
+								postId: undefined,
 								// these don't matter
 								assignees: [],
 								teamId: "",
 								streamId: "",
-								postId: "",
 								fileStreamIds: [],
 								status: "open",
 								numReplies: 0,
