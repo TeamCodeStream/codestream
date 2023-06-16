@@ -1,6 +1,6 @@
 # Change Log
 
-## [14.23.0] - 2023-06-15
+## [14.23.0] - 2023-06-16
 
 ### Added
 - Added the abillity to select a time range for viewing all errors of a service instead of showing the 5 most recent
