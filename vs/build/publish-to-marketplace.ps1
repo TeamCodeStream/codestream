@@ -3,8 +3,8 @@ param([string] $checkoutDir = $pwd, [string] $assetEnv = "", [string] $buildNumb
 
 Write-Host '**** The script is running in directory' (Get-Location)
 
+$computer = 'teamcity.cdstrm.dev'
 $username = 'web'
-$computer = 'teamcity.codestream.us'
 $keyfile = 'C:\Users\Administrator\.ssh\id_rsa'
 $localVSCETokenFile = "$env:TEMP\codestream.vsce"
 $remoteVSCETokenFile = '/home/web/.codestream/microsoft/vsce-credentials'
