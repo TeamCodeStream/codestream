@@ -5,7 +5,6 @@ import {
 import { isEmpty as _isEmpty, sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
-import { LogoutCompanyRequestType, LogoutCompanyResponse } from "@codestream/protocols/agent";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
@@ -291,47 +290,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	};
 
 	const handleLogout = async () => {
-		const { currentCompanyId, eligibleJoinCompanies } = derivedState;
-
-		// filter out current company and companies joinable by domain
-		const eligibleJoinCompaniesNoDomain = eligibleJoinCompanies.filter(company => {
-			const isCurrentCompany = company.id === currentCompanyId;
-			const domainJoining = company?.domainJoining;
-			const canJoinByDomain = !_isEmpty(domainJoining);
-			if (canJoinByDomain || isCurrentCompany) return false;
-			return true;
-		});
-
-		let nextSignedInCompany = {};
-
-		// find next available signed in company, if one exists
-		eligibleJoinCompaniesNoDomain.every(_ => {
-			const isSignedIn = !_isEmpty(_.accessToken);
-			nextSignedInCompany = _;
-			if (isSignedIn) {
-				return false;
-			}
-
-			return true;
-		});
-
-		// if we have a signed in company, logout of current company, and switch to
-		// signed in company, else logout of CodeStream completley.
-		if (!_isEmpty(nextSignedInCompany)) {
-			const result = (await HostApi.instance.send(
-				LogoutCompanyRequestType,
-				{}
-			)) as LogoutCompanyResponse;
-
-			trackSwitchOrg(false, nextSignedInCompany);
-		} else {
-			const result = (await HostApi.instance.send(
-				LogoutCompanyRequestType,
-				{}
-			)) as LogoutCompanyResponse;
-
-			dispatch(logout()); // after company logout, return to the login screen
-		}
+		dispatch(logout());
 	};
 
 	const buildAdminTeamMenuItem = () => {
