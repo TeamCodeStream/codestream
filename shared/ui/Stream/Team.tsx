@@ -1,38 +1,38 @@
+import {
+	GetLatestCommittersRequestType,
+	KickUserRequestType,
+	RepoScmStatus,
+	UpdateTeamAdminRequestType,
+	UpdateTeamSettingsRequestType,
+} from "@codestream/protocols/agent";
+import { CSCompany, CSTeam, CSUser } from "@codestream/protocols/api";
+import copy from "copy-to-clipboard";
+import { sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
-import { sortBy as _sortBy } from "lodash-es";
-import {
-	RepoScmStatus,
-	KickUserRequestType,
-	UpdateTeamSettingsRequestType,
-	UpdateTeamAdminRequestType,
-	GetLatestCommittersRequestType,
-} from "@codestream/protocols/agent";
-import { CSTeam, CSUser } from "@codestream/protocols/api";
 import styled from "styled-components";
-import copy from "copy-to-clipboard";
 
+import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
 import { switchToTeam } from "@codestream/webview/store/session/thunks";
-import Icon from "./Icon";
-import Button from "./Button";
-import Headshot from "./Headshot";
-import { invite, setUserStatus } from "./actions";
-import { mapFilter } from "../utils";
-import { HostApi } from "../webview-api";
-import { ChangesetFile } from "./Review/ChangesetFile";
-import Tooltip from "./Tooltip";
 import { CSText } from "../src/components/CSText";
-import Timestamp from "./Timestamp";
-import { DropdownButton } from "./DropdownButton";
-import { confirmPopup } from "./Confirm";
-import { getActiveMemberIds } from "../store/users/reducer";
-import { openPanel, openModal, closeModal } from "../store/context/actions";
-import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { Dialog } from "../src/components/Dialog";
 import { ProfileLink } from "../src/components/ProfileLink";
 import { UserStatus } from "../src/components/UserStatus";
-import { Dialog } from "../src/components/Dialog";
-import { WebviewModals } from "@codestream/webview/ipc/webview.protocol.common";
+import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { closeModal, openModal, openPanel } from "../store/context/actions";
+import { getActiveMemberIds } from "../store/users/reducer";
+import { mapFilter } from "../utils";
+import { HostApi } from "../webview-api";
+import { invite, setUserStatus } from "./actions";
+import Button from "./Button";
+import { confirmPopup } from "./Confirm";
+import { DropdownButton } from "./DropdownButton";
+import Headshot from "./Headshot";
+import Icon from "./Icon";
+import { ChangesetFile } from "./Review/ChangesetFile";
+import Timestamp from "./Timestamp";
+import Tooltip from "./Tooltip";
 
 export const EMAIL_REGEX = new RegExp(
 	"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
@@ -131,7 +131,7 @@ interface ConnectedProps {
 	// companyMemberCount: number;
 	members: CSUser[];
 	repos: any;
-	company: any;
+	company: CSCompany;
 	currentUser: CSUser;
 	currentUserInvisible: false;
 	currentUserEmail: string;
@@ -646,7 +646,8 @@ class Team extends React.Component<Props, State> {
 	};
 
 	render() {
-		const { currentUserId, teamId, userTeams, blameMap, collisions, xraySetting } = this.props;
+		const { currentUserId, company, teamId, userTeams, blameMap, collisions, xraySetting } =
+			this.props;
 		const { invitingEmails, loadingStatus, addingBlameMap } = this.state;
 
 		const suggested = this.state.suggested
@@ -658,6 +659,12 @@ class Team extends React.Component<Props, State> {
 			: "teamMemberSelection.getInviteCode";
 		return (
 			<Dialog wide title="My Organization" onClose={() => this.props.closeModal()}>
+				{!company.codestreamOnly && (
+					<div style={{ marginBottom: "15px" }}>
+						The following people from your New Relic organization are on CodeStream. Note that
+						admins are specific to CodeStream.
+					</div>
+				)}
 				<div style={{ margin: "0 -20px" }}>
 					<UL>
 						{this.props.members.map(user => (
@@ -769,6 +776,7 @@ const mapStateToProps = state => {
 	const { users, context, teams, companies, repos, session, configs, preferences } = state;
 	const team = teams[context.currentTeamId];
 	const company = companies[team.companyId];
+	const user = state.users[state.session.userId!];
 
 	const memberIds = getActiveMemberIds(team);
 	const teammates = mapFilter(memberIds, id => {

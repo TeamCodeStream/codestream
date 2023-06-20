@@ -1,11 +1,12 @@
 import {
-	DeleteCompanyRequestType,
 	UpdateTeamSettingsRequestType,
+	DeleteCompanyRequestType,
 } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty, sortBy as _sortBy } from "lodash-es";
 import React from "react";
 import styled from "styled-components";
-
+import { LogoutCompanyRequestType, LogoutCompanyResponse } from "@codestream/protocols/agent";
+import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
 import {
 	logout,
@@ -22,9 +23,10 @@ import { openPanel, setUserPreference } from "./actions";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import Menu from "./Menu";
-import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
+import { getDomainFromEmail } from "@codestream/webview/utils";
+
 const RegionSubtext = styled.div`
 	font-size: smaller;
 	margin: 0 0 0 21px;
@@ -43,6 +45,8 @@ export const MailHighlightedIconWrapper = styled.div`
 	display: inline;
 	background: var(--text-color-info-muted);
 `;
+
+export const VALID_DELETE_ORG_EMAIL_DOMAINS = ["codestream.com", "newrelic.com", "testinator.com"];
 
 interface EllipsisMenuProps {
 	menuTarget: any;
@@ -68,7 +72,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			sidebarPaneOrder: state.preferences.sidebarPaneOrder || AVAILABLE_PANES,
 			userCompanies: _sortBy(Object.values(state.companies), "name"),
 			userTeams: _sortBy(
-				Object.values(state.teams).filter(t => !t.deactivated),
+				Object.values(state.teams).filter(t => t.deactivated),
 				"name"
 			),
 			currentCompanyId,
@@ -127,6 +131,48 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		return;
 	};
 
+	const deleteOrganization = () => {
+		const { currentCompanyId } = derivedState;
+
+		multiStageConfirmPopup({
+			centered: true,
+			stages: [
+				{
+					title: "Confirm Deletion",
+					message:
+						"Note that this only deletes the CodeStream organization and does NOT delete the corresponding New Relic organization.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							advance: true,
+						},
+					],
+				},
+				{
+					title: "Are you sure?",
+					message:
+						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
+					buttons: [
+						{ label: "Cancel", className: "control-button" },
+						{
+							label: "Delete Organization",
+							className: "delete",
+							wait: true,
+							action: async () => {
+								await HostApi.instance.send(DeleteCompanyRequestType, {
+									companyId: currentCompanyId,
+								});
+								handleLogout();
+							},
+						},
+					],
+				},
+			],
+		});
+	};
+
 	const buildSwitchTeamMenuItem = () => {
 		const {
 			eligibleJoinCompanies,
@@ -139,10 +185,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		const buildSubmenu = () => {
 			const items = eligibleJoinCompanies
 				.filter(company => {
-					// Skip companys eligible to join by domain
+					// Skip companys eligible to join by domain and are signed out with no invite
 					const domainJoining = company?.domainJoining;
 					const canJoinByDomain = !_isEmpty(domainJoining);
-					if (canJoinByDomain) return false;
+					const isSignedOut = !company.byInvite && !company.accessToken;
+					if (canJoinByDomain || isSignedOut) return false;
 					return true;
 				})
 				.map(company => {
@@ -187,6 +234,15 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					label: "Create New Organization",
 					action: () => {
 						dispatch(openModal(WebviewModals.CreateCompany));
+					},
+				},
+				//@TODO: change action to idp signin
+				{
+					key: "sign-in-other",
+					icon: <Icon name="plus" />,
+					label: "Sign In to Another Organization",
+					action: () => {
+						console.warn("sign in action for idp goes here");
 					},
 				}
 			);
@@ -234,65 +290,76 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		});
 	};
 
-	const deleteOrganization = () => {
-		const { currentCompanyId } = derivedState;
+	const handleLogout = async () => {
+		const { currentCompanyId, eligibleJoinCompanies } = derivedState;
 
-		multiStageConfirmPopup({
-			centered: true,
-			stages: [
-				{
-					title: "Confirm Deletion",
-					message: "All of your organization’s codemarks and feedback requests will be deleted.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							advance: true,
-						},
-					],
-				},
-				{
-					title: "Are you sure?",
-					message:
-						"Your CodeStream organization will be permanently deleted. This cannot be undone.",
-					buttons: [
-						{ label: "Cancel", className: "control-button" },
-						{
-							label: "Delete Organization",
-							className: "delete",
-							wait: true,
-							action: async () => {
-								await HostApi.instance.send(DeleteCompanyRequestType, {
-									companyId: currentCompanyId,
-								});
-								dispatch(logout());
-							},
-						},
-					],
-				},
-			],
+		// filter out current company and companies joinable by domain
+		const eligibleJoinCompaniesNoDomain = eligibleJoinCompanies.filter(company => {
+			const isCurrentCompany = company.id === currentCompanyId;
+			const domainJoining = company?.domainJoining;
+			const canJoinByDomain = !_isEmpty(domainJoining);
+			if (canJoinByDomain || isCurrentCompany) return false;
+			return true;
 		});
+
+		let nextSignedInCompany = {};
+
+		// find next available signed in company, if one exists
+		eligibleJoinCompaniesNoDomain.every(_ => {
+			const isSignedIn = !_isEmpty(_.accessToken);
+			nextSignedInCompany = _;
+			if (isSignedIn) {
+				return false;
+			}
+
+			return true;
+		});
+
+		// if we have a signed in company, logout of current company, and switch to
+		// signed in company, else logout of CodeStream completley.
+		if (!_isEmpty(nextSignedInCompany)) {
+			const result = (await HostApi.instance.send(
+				LogoutCompanyRequestType,
+				{}
+			)) as LogoutCompanyResponse;
+
+			trackSwitchOrg(false, nextSignedInCompany);
+		} else {
+			const result = (await HostApi.instance.send(
+				LogoutCompanyRequestType,
+				{}
+			)) as LogoutCompanyResponse;
+
+			dispatch(logout()); // after company logout, return to the login screen
+		}
 	};
 
 	const buildAdminTeamMenuItem = () => {
-		const { team, currentUserId, xraySetting } = derivedState;
+		const { company, team, currentUserId, currentUserEmail } = derivedState;
 		const { adminIds } = team;
 
 		if (adminIds && adminIds.includes(currentUserId!)) {
-			const submenu = [
-				{
-					label: "Change Organization Name",
-					key: "change-company-name",
-					action: () => dispatch(openModal(WebviewModals.ChangeCompanyName)),
-				},
-				{ label: "-" },
-				{
-					label: "Onboarding Settings...",
-					key: "onboarding-settings",
-					action: () => dispatch(openModal(WebviewModals.TeamSetup)),
-					disabled: !derivedState.autoJoinSupported,
-				},
+			const submenu: { label: string; key?: string; action?: Function; disabled?: boolean }[] = [];
+
+			if (company.codestreamOnly) {
+				submenu.push.apply(submenu, [
+					{
+						label: "Change Organization Name",
+						key: "change-company-name",
+						action: () => dispatch(openModal(WebviewModals.ChangeCompanyName)),
+						disabled: false,
+					},
+					{ label: "-" },
+					{
+						label: "Onboarding Settings...",
+						key: "onboarding-settings",
+						action: () => dispatch(openModal(WebviewModals.TeamSetup)),
+						disabled: !derivedState.autoJoinSupported,
+					},
+				]);
+			}
+
+			submenu.push.apply(submenu, [
 				{
 					label: "Feedback Request Settings...",
 					key: "feedback-request-settings",
@@ -330,10 +397,27 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				// 	]
 				// },
 				{ label: "-" },
-				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
-				{ label: "-" },
-				{ label: "Delete Organization", action: deleteOrganization },
-			];
+				{
+					label: "Export Data",
+					key: "export-data",
+					action: () => go(WebviewPanels.Export),
+					disabled: false,
+				},
+			]);
+
+			const emailDomain = getDomainFromEmail(currentUserEmail!);
+			if (emailDomain && VALID_DELETE_ORG_EMAIL_DOMAINS.includes(emailDomain)) {
+				submenu.push.apply(submenu, [
+					{ label: "-" },
+					{
+						label: "Delete Organization",
+						key: "delete-organization",
+						action: deleteOrganization,
+						disabled: false,
+					},
+				]);
+			}
+
 			return {
 				label: "Organization Admin",
 				key: "admin",
@@ -379,7 +463,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				{ label: "-" },
-				{ label: "Sign Out", action: () => dispatch(logout()) },
+				{ label: "Sign Out", action: () => handleLogout() },
 			],
 		},
 		{

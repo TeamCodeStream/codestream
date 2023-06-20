@@ -1,6 +1,6 @@
+import React from "react";
 import { logout } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import React from "react";
 import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openModal, openPanel } from "./actions";
@@ -11,11 +11,12 @@ import {
 	setCreatePullRequest,
 } from "../store/context/actions";
 import { CodeStreamState } from "../store";
-import { keyFilter } from "../utils";
+import { keyFilter, getDomainFromEmail } from "../utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
+import { VALID_DELETE_ORG_EMAIL_DOMAINS } from "./EllipsisMenu";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -28,13 +29,14 @@ export function TeamMenu(props: TeamMenuProps) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const team = state.teams[state.context.currentTeamId];
-
+		const user = state.users[state.session.userId!];
 		const adminIds = team.adminIds || [];
 		const isCurrentUserAdmin = adminIds.includes(state.session.userId!);
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const mappedBlame = keyFilter(blameMap || EMPTY_HASH);
 		const currentCompanyId = team.companyId;
 		return {
+			currentUserEmail: user.email,
 			isCurrentUserAdmin,
 			mappedBlame,
 			team,
@@ -42,20 +44,6 @@ export function TeamMenu(props: TeamMenuProps) {
 			autoJoinSupported: isFeatureEnabled(state, "autoJoin"),
 		};
 	});
-
-	const go = modal => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
-		dispatch(setCurrentReview());
-		dispatch(openModal(modal));
-	};
-
-	const goPanel = panel => {
-		dispatch(setCreatePullRequest());
-		dispatch(clearCurrentPullRequest());
-		dispatch(setCurrentReview());
-		dispatch(openPanel(panel));
-	};
 
 	const deleteOrganization = () => {
 		const { currentCompanyId } = derivedState;
@@ -65,7 +53,8 @@ export function TeamMenu(props: TeamMenuProps) {
 			stages: [
 				{
 					title: "Confirm Deletion",
-					message: "All of your organization’s codemarks and feedback requests will be deleted.",
+					message:
+						"Note that this only deletes the CodeStream organization and does NOT delete the corresponding New Relic organization.",
 					buttons: [
 						{ label: "Cancel", className: "control-button" },
 						{
@@ -96,6 +85,20 @@ export function TeamMenu(props: TeamMenuProps) {
 				},
 			],
 		});
+	};
+
+	const go = modal => {
+		dispatch(setCreatePullRequest());
+		dispatch(clearCurrentPullRequest());
+		dispatch(setCurrentReview());
+		dispatch(openModal(modal));
+	};
+
+	const goPanel = panel => {
+		dispatch(setCreatePullRequest());
+		dispatch(clearCurrentPullRequest());
+		dispatch(setCurrentReview());
+		dispatch(openPanel(panel));
 	};
 
 	const menuItems = [
@@ -155,15 +158,21 @@ export function TeamMenu(props: TeamMenuProps) {
 				label: "Export Data",
 				key: "export",
 				action: () => goPanel(WebviewPanels.Export),
-			},
-			{ label: "-" },
-			{
-				icon: <Icon name="no-entry" />,
-				label: "Delete Organization",
-				key: "delete",
-				action: () => deleteOrganization(),
 			}
 		);
+
+		const emailDomain = getDomainFromEmail(derivedState.currentUserEmail!);
+		if (emailDomain && VALID_DELETE_ORG_EMAIL_DOMAINS.includes(emailDomain)) {
+			menuItems.push(
+				{ label: "-" },
+				{
+					label: "Delete Organization",
+					key: "delete-organization",
+					action: deleteOrganization,
+					disabled: false,
+				}
+			);
+		}
 	}
 
 	return (

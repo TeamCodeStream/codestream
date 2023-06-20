@@ -257,6 +257,11 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "newrelic",
 		getUrl: "https://newrelic.com",
 	},
+	newrelicidp: {
+		displayName: "New Relic",
+		icon: "newrelic",
+		getUrl: "https://newrelic.com",
+	},
 	circleci: {
 		displayName: "CircleCI",
 		icon: "circleci",

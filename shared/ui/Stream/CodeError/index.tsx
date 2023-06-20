@@ -277,6 +277,15 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 		const allTeamMembers = getTeamMembers(state);
 		const teamMembers = allTeamMembers.filter(_ => _.username !== "Grok");
 
+		const user = state.users[state.session.userId!];
+		const teamId = state.context.currentTeamId;
+		const team = state.teams[teamId];
+
+		const eligibleJoinCompanies = user?.eligibleJoinCompanies;
+		const eligibleCompany = eligibleJoinCompanies?.find(_ => team.companyId === _.id);
+
+		const company = state.companies[team.companyId];
+
 		return {
 			isConnectedToNewRelic: isConnected(state, { id: "newrelic*com" }),
 			codeErrorCreator: getCodeErrorCreator(state),
@@ -286,6 +295,7 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 			emailAddress: state.session.userId ? state.users[state.session.userId]?.email : "",
 			hideCodeErrorInstructions: state.preferences.hideCodeErrorInstructions,
 			isPDIdev: isFeatureEnabled(state, "PDIdev"),
+			isNonCsOrg: !company.codestreamOnly,
 		};
 	});
 
@@ -503,15 +513,17 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				// take no more than 5
 				usersFromGitNotOnTeam = usersFromGitNotOnTeam.slice(0, 5);
 				assigneeItems.push({ label: "-", key: "sep-git" });
-				assigneeItems.push({
-					label: (
-						<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
-							SUGGESTIONS FROM GIT
-						</span>
-					),
-					noHover: true,
-					disabled: true,
-				});
+				if (!derivedState.isNonCsOrg) {
+					assigneeItems.push({
+						label: (
+							<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
+								SUGGESTIONS FROM GIT
+							</span>
+						),
+						noHover: true,
+						disabled: true,
+					});
+				}
 				assigneeItems = assigneeItems.concat(
 					usersFromGitNotOnTeam.map(_ => {
 						const label = _.displayName || _.email;

@@ -1068,6 +1068,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			state.teams && state.context.currentTeamId
 				? state.teams[state.context.currentTeamId]
 				: undefined;
+		const company = team ? state.companies && state.companies[team.companyId] : undefined;
 		const dontSuggestInvitees =
 			team && team.settings ? team.settings.dontSuggestInvitees || {} : {};
 		const currentUserIsAdmin = currentUserIsAdminSelector(state);
@@ -1084,6 +1085,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 			webviewFocused: state.context.hasFocus,
 			pendingProtocolHandlerUrl: state.context.pendingProtocolHandlerUrl,
 			currentUserIsAdmin,
+			isNonCsOrg: company && !company.codestreamOnly,
 		};
 	}, shallowEqual);
 
@@ -1101,6 +1103,10 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 	const [suggestedInvitees, setSuggestedInvitees] = useState<any[]>([]);
 
 	useDidMount(() => {
+		if (derivedState.isNonCsOrg) {
+			props.skip();
+			return;
+		}
 		if (derivedState.webviewFocused)
 			HostApi.instance.track("Page Viewed", { "Page Name": "Invite Teammates - Onboarding" });
 		getSuggestedInvitees();
@@ -1225,6 +1231,7 @@ export const InviteTeammates = (props: { className: string; skip: Function; unwr
 
 	const component = () => {
 		const { domain } = derivedState;
+		if (derivedState.isNonCsOrg) return <div></div>;
 
 		return (
 			<div className="body">

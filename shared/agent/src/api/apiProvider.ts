@@ -35,6 +35,8 @@ import {
 	CreateRepoResponse,
 	DeclineInviteRequest,
 	DeclineInviteResponse,
+	LogoutCompanyRequest,
+	LogoutCompanyResponse,
 	DeleteCodeErrorRequest,
 	DeleteCodeErrorResponse,
 	DeleteCodemarkRequest,
@@ -190,6 +192,7 @@ import {
 	CSAsyncError,
 } from "@codestream/protocols/agent";
 import {
+	CSAccessTokenInfo,
 	CSApiCapabilities,
 	CSApiFeatures,
 	CSChannelStream,
@@ -407,6 +410,7 @@ export interface ApiProvider {
 	login(options: LoginOptions): Promise<ApiProviderLoginResponse>;
 	generateLoginCode(request: GenerateLoginCodeRequest): Promise<void>;
 	subscribe(types?: MessageType[]): Promise<void>;
+	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo): void;
 
 	grantBroadcasterChannelAccess(token: string, channel: string): Promise<{}>;
 
@@ -533,6 +537,7 @@ export interface ApiProvider {
 	): Promise<boolean>;
 	joinCompany(request: JoinCompanyRequest): Promise<JoinCompanyResponse>;
 	declineInvite(request: DeclineInviteRequest): Promise<DeclineInviteResponse>;
+	logoutCompany(request: LogoutCompanyRequest): Promise<LogoutCompanyResponse>;
 	joinCompanyFromEnvironment(request: JoinCompanyRequest): Promise<JoinCompanyResponse>;
 
 	fetchUsers(request: FetchUsersRequest): Promise<FetchUsersResponse>;
@@ -577,6 +582,8 @@ export interface ApiProvider {
 	announceHistoryFetch(info: HistoryFetchInfo): void;
 
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
+
+	setUsingServiceGatewayAuth(): void;
 
 	get<R extends object>(url: string, token?: string): Promise<R>;
 	post<RQ extends object, R extends object>(url: string, body: any, token?: string): Promise<R>;

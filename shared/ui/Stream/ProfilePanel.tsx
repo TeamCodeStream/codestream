@@ -1,9 +1,7 @@
 import { logout } from "@codestream/webview/store/session/thunks";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import ScrollBox from "./ScrollBox";
 import styled from "styled-components";
-import { includes as _includes, sortBy as _sortBy, last as _last } from "lodash-es";
 import { CodeStreamState } from "../store";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi } from "../webview-api";
@@ -18,7 +16,6 @@ import { UserStatus } from "../src/components/UserStatus";
 import { UpdateUserRequestType, DeleteUserRequestType } from "@codestream/protocols/agent";
 import Menu from "./Menu";
 import { confirmPopup } from "./Confirm";
-import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { isCurrentUserInternal } from "../store/users/reducer";
 
@@ -304,13 +301,6 @@ export const ProfilePanel = () => {
 							<MetaLabel>Currently Working On</MetaLabel>
 							<StyledUserStatus user={person} />
 						</Row>
-					)}
-					{isMe && (
-						<div style={{ marginTop: "75px" }}>
-							<Button variant="destructive" onClick={cancelAccount}>
-								Delete your account
-							</Button>
-						</div>
 					)}
 				</div>
 			</Root>

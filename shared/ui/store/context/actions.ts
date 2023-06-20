@@ -319,7 +319,7 @@ export const goToNewUserEntry = (params = {}) =>
 export const goToForgotPassword = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.ForgotPassword, params });
 
-export type SupportedSSOProvider = "github" | "gitlab" | "bitbucket" | "okta";
+export type SupportedSSOProvider = "github" | "gitlab" | "bitbucket" | "okta" | "newrelicidp";
 
 export const goToSSOAuth = (
 	provider: SupportedSSOProvider,
@@ -331,6 +331,7 @@ export const goToSSOAuth = (
 		case "gitlab":
 		case "bitbucket":
 		case "okta":
+		case "newrelicidp":
 			return action(ContextActionsType.SetRoute, { name: Route.ProviderAuth, params });
 		default:
 			throw Error("An invalid auth provider was specified");
@@ -345,6 +346,10 @@ export const goToSignup = (params = {}) =>
 
 export const goToLogin = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.Login, params });
+
+// TODO: remove this when New Relic login is fully supported
+export const goToOldLogin = (params = {}) =>
+	action(ContextActionsType.SetRoute, { name: Route.OldLogin, params });
 
 export const goToJoinTeam = (params = {}) =>
 	action(ContextActionsType.SetRoute, { name: Route.JoinTeam, params });

@@ -601,3 +601,12 @@ export function fluctuatePoll(handler: Function, timeout: number): number {
 export function disposePoll(pollId: number) {
 	activePolls.delete(pollId);
 }
+
+export function getDomainFromEmail(email: string): string | null {
+	const regex = /@([A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)$/;
+	const matches = email.match(regex);
+	if (matches && matches.length > 1) {
+		return matches[1];
+	}
+	return null;
+}

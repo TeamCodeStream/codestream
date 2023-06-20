@@ -9,6 +9,7 @@ import {
 	WarningOrError,
 } from "@codestream/protocols/agent";
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
+
 import {
 	addCodeErrors,
 	bootstrapCodeErrors,
@@ -50,7 +51,6 @@ import { markItemRead, setUserPreference } from "./actions";
 import { BaseCodeErrorHeader, CodeError, Description, ExpandedAuthor } from "./CodeError";
 import { RepositoryAssociator } from "./CodeError/RepositoryAssociator";
 import { BigTitle, Header, Meta } from "./Codemark/BaseCodemark";
-import ConfigureNewRelic from "./ConfigureNewRelic";
 import Dismissable from "./Dismissable";
 import Icon from "./Icon";
 import { ClearModal, ComposeArea, Step, Subtext, Tip } from "./ReviewNav";
@@ -177,9 +177,6 @@ export function CodeErrorNav(props: Props) {
 		return result;
 	}, shallowEqual);
 
-	const [requiresConnection, setRequiresConnection] = React.useState<boolean | undefined>(
-		undefined
-	);
 	const [isEditing, setIsEditing] = React.useState(false);
 	const [isLoading, setIsLoading] = React.useState(true);
 	const [error, setError] = React.useState<
@@ -215,8 +212,6 @@ export function CodeErrorNav(props: Props) {
 
 	const previousIsConnectedToNewRelic = usePrevious(derivedState.isConnectedToNewRelic);
 
-	const pendingRequiresConnection = derivedState.currentCodeErrorData?.pendingRequiresConnection;
-
 	const exit = async () => {
 		// clear out the current code error (set to blank) in the webview
 		await dispatch(setCurrentCodeError(undefined, undefined));
@@ -246,9 +241,7 @@ export function CodeErrorNav(props: Props) {
 			return;
 		}
 
-		if (pendingRequiresConnection) {
-			setRequiresConnection(pendingRequiresConnection);
-		} else if (pendingErrorGroupGuid) {
+		if (pendingErrorGroupGuid) {
 			onConnected(undefined);
 		} else {
 			const onDidMount = () => {
@@ -641,7 +634,6 @@ export function CodeErrorNav(props: Props) {
 				entityGuid: entityIdToUse,
 			});
 		} finally {
-			setRequiresConnection(false);
 			setIsLoading(false);
 		}
 		return true;
@@ -884,57 +876,6 @@ export function CodeErrorNav(props: Props) {
 		);
 	}
 
-	if (requiresConnection) {
-		return (
-			<Root>
-				<div
-					style={{
-						display: "flex",
-						alignItems: "center",
-						width: "100%",
-					}}
-				>
-					<div
-						style={{ marginLeft: "auto", marginRight: "13px", whiteSpace: "nowrap", flexGrow: 0 }}
-					>
-						<Icon
-							className="clickable"
-							name="x"
-							onClick={exit}
-							title="Close View"
-							placement="bottomRight"
-							delay={1}
-						/>
-					</div>
-				</div>
-
-				<div className="embedded-panel">
-					<ConfigureNewRelic
-						headerChildren={
-							<>
-								<div className="panel-header" style={{ background: "none" }}>
-									<span className="panel-title">Connect to New Relic</span>
-								</div>
-								<div style={{ textAlign: "center" }}>
-									Working with errors requires a connection to your New Relic account.
-								</div>
-							</>
-						}
-						disablePostConnectOnboarding={true}
-						showSignupUrl={false}
-						providerId={"newrelic*com"}
-						onClose={e => {
-							dispatch(closeAllPanels());
-						}}
-						onSubmited={e => {
-							return onConnected(undefined, undefined, true);
-						}}
-						originLocation={"Open in IDE Flow"}
-					/>
-				</div>
-			</Root>
-		);
-	}
 	if (isLoading) {
 		return (
 			<DelayedRender>

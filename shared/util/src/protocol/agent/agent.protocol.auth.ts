@@ -1,4 +1,5 @@
 import { RequestType } from "vscode-languageserver-protocol";
+
 import { AccessToken, AgentState } from "./agent.protocol";
 import {
 	CSConfirmRegistrationRequest,
@@ -157,6 +158,7 @@ export interface ConfirmRegistrationResponse {
 		environment: string;
 		serverUrl: string;
 	};
+	forceCreateCompany?: boolean;
 }
 
 export const ConfirmRegistrationRequestType = new RequestType<

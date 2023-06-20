@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { FormattedMessage } from "react-intl";
 import { connect } from "react-redux";
+
 import { DispatchProp } from "../store/common";
 import { goToLogin, goToSignup } from "../store/context/actions";
 import Button from "../Stream/Button";
@@ -14,6 +15,7 @@ const isHostUrlValid = (hostUrl: string) => hostUrl.length > 0;
 interface ConnectedProps {
 	fromSignup?: boolean;
 	inviteCode?: string;
+	email?: string;
 }
 
 export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchProp) => {
@@ -41,8 +43,9 @@ export const OktaConfig = (connect() as any)((props: ConnectedProps & DispatchPr
 			setIsLoading(true);
 			try {
 				if (props.fromSignup) {
-					HostApi.instance.track("Provider Auth Selected", {
+					HostApi.instance.track("Signup Method Selected", {
 						Provider: "Okta",
+						Email: props?.email,
 					});
 				}
 				const info: SSOAuthInfo = props.fromSignup ? { fromSignup: true } : {};

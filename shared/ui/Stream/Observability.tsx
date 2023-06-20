@@ -21,7 +21,7 @@ import {
 	isNRErrorResponse,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
-import { head as _head, isEmpty, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
+import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import { shallowEqual } from "react-redux";
 import styled from "styled-components";
@@ -256,6 +256,9 @@ export const Observability = React.memo((props: Props) => {
 			providers["newrelic*com"] && isConnected(state, { id: "newrelic*com" });
 		const activeO11y = preferences.activeO11y;
 		const clmSettings = state.preferences.clmSettings || {};
+		const team = state.teams[state.context.currentTeamId] || {};
+		const company =
+			!_isEmpty(state.companies) && !_isEmpty(team) ? state.companies[team.companyId] : undefined;
 
 		return {
 			sessionStart: state.context.sessionStart,
@@ -273,6 +276,7 @@ export const Observability = React.memo((props: Props) => {
 			clmSettings,
 			showAnomalies: isFeatureEnabled(state, "showAnomalies"),
 			recentErrorsTimeWindow: state.preferences.codeErrorTimeWindow,
+			company,
 		};
 	}, shallowEqual);
 
@@ -565,7 +569,7 @@ export const Observability = React.memo((props: Props) => {
 			telemetryStateValue = "Not Connected";
 		}
 
-		if (!isEmpty(telemetryStateValue)) {
+		if (!_isEmpty(telemetryStateValue)) {
 			console.debug("o11y: O11y Rendered", telemetryStateValue);
 			HostApi.instance.track("O11y Rendered", {
 				State: telemetryStateValue,
@@ -613,6 +617,9 @@ export const Observability = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetObservabilityReposRequestType, {
 				filters,
 				force,
+				isMultiRegion: !_isEmpty(derivedState?.company)
+					? derivedState?.company?.isMultiRegion
+					: undefined,
 			});
 			if (response.repos) {
 				if (hasFilter) {
@@ -1052,8 +1059,11 @@ export const Observability = React.memo((props: Props) => {
 										{!hasEntities && !genericError && (
 											<GenericWrapper>
 												<GenericCopy>
-													Set up application performance monitoring for your project so that you can
-													discover and investigate errors with CodeStream
+													Instrument your application with New Relic to see performance data in
+													your IDE, including service-level telemetry and code-level metrics.{" "}
+													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring">
+														Learn more.
+													</a>
 												</GenericCopy>
 												<Button style={{ width: "100%" }} onClick={handleSetUpMonitoring}>
 													Set Up Monitoring

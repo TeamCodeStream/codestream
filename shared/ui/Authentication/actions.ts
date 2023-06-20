@@ -55,7 +55,7 @@ import { localStore } from "../utilities/storage";
 import { emptyObject, uuid } from "../utils";
 import { HostApi } from "../webview-api";
 import { setUserPreferences } from "../Stream/actions";
-
+import { UpdateServerUrlRequestType } from "../ipc/host.protocol";
 export enum SignupType {
 	JoinTeam = "joinTeam",
 	CreateTeam = "createTeam",
@@ -112,6 +112,8 @@ export const startSSOSignin =
 		if (session.machineId) {
 			query.machineId = session.machineId;
 		}
+		query.enableUId = "1"; // operating under Unified Identity
+
 		const queryString = Object.keys(query)
 			.map(key => `${key}=${query[key]}`)
 			.join("&");
@@ -392,7 +394,7 @@ export const completeSignup =
 
 		const providerName = extra.provider
 			? ProviderNames[extra.provider.toLowerCase()] || extra.provider
-			: "CodeStream";
+			: "Email";
 		HostApi.instance.track("Signup Completed", {
 			"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
 			"Auth Provider": providerName,
@@ -440,7 +442,7 @@ export const completeAcceptInvite =
 
 		const providerName = extra.provider
 			? ProviderNames[extra.provider.toLowerCase()] || extra.provider
-			: "CodeStream";
+			: "Email";
 		HostApi.instance.track("Signup Completed", {
 			"Signup Type": extra.byDomain ? "Domain" : extra.createdTeam ? "Organic" : "Viral",
 			"Auth Provider": providerName,
@@ -457,9 +459,7 @@ export const validateSignup =
 			errorGroupGuid: context.pendingProtocolHandlerQuery?.errorGroupGuid,
 		});
 
-		const providerName = provider
-			? ProviderNames[provider.toLowerCase()] || provider
-			: "CodeStream";
+		const providerName = provider ? ProviderNames[provider.toLowerCase()] || provider : "Email";
 
 		if (isLoginFailResponse(response)) {
 			if (session.inMaintenanceMode && response.error !== LoginResult.MaintenanceMode) {
@@ -511,7 +511,19 @@ export const validateSignup =
 				case LoginResult.ExpiredToken:
 					dispatch(setSession({ otc: uuid() }));
 				default:
-					throw response.error;
+					if (
+						response.error === LoginResult.Unknown &&
+						response?.extra?.url &&
+						response?.extra?.code &&
+						response?.extra?.code === "USRC-1032"
+					) {
+						HostApi.instance.send(UpdateServerUrlRequestType, {
+							serverUrl: response?.extra?.url,
+						});
+						return;
+					} else {
+						throw response.error;
+					}
 			}
 		}
 
