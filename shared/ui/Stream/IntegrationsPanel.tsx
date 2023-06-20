@@ -116,6 +116,10 @@ export const IntegrationsPanel = () => {
 			.filter(id => providers[id].hasSharing)
 			.filter(id => !teamSettings.limitMessaging || teamMessagingProviders[id])
 			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
+		const codeAnalyzersProviders = Object.keys(providers)
+			.filter(id => ["fossa"].includes(providers[id].name))
+			.filter(id => !connectedProviders.includes(id))
+			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const cicdProviders = Object.keys(providers)
 			.filter(id => ["circleci"].includes(providers[id].name))
 			.filter(id => !connectedProviders.includes(id))
@@ -129,6 +133,7 @@ export const IntegrationsPanel = () => {
 			observabilityProviders,
 			issueProviders,
 			messagingProviders,
+			codeAnalyzersProviders,
 			cicdProviders,
 			connectedProviders,
 			sharingTargets,
@@ -212,9 +217,11 @@ export const IntegrationsPanel = () => {
 			if (!display) return null;
 
 			const displayHost = renderDisplayHost(host);
-			const displayName = isEnterprise
+			let displayName = isEnterprise
 				? `${display.displayName} - ${displayHost}`
 				: display.displayName;
+			displayName = display.hideDisplayName ? "" : display.displayName;
+
 			const action = () => dispatch(configureAndConnectProvider(providerId, "Integrations Panel"));
 			/*
 
@@ -360,6 +367,11 @@ export const IntegrationsPanel = () => {
 
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
+
+						<h2>Code Analyzers</h2>
+						<IntegrationButtons>
+							{renderProviders(derivedState.codeAnalyzersProviders)}
+						</IntegrationButtons>
 
 						{derivedState.cicdProviders.length > 0 && (
 							<>

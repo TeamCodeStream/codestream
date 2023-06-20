@@ -1,6 +1,7 @@
 export interface ProviderDisplay {
 	displayName: string;
 	shortDisplayName?: string;
+	hideDisplayName?: boolean;
 	icon: string;
 	getUrl?: string;
 	urlPlaceholder?: string;
@@ -266,6 +267,13 @@ export const PROVIDER_MAPPINGS: { [provider: string]: ProviderDisplay } = {
 		icon: "circleci",
 		getUrl: "https://circleci.com",
 		helpUrl: "https://circleci.com/docs/managing-api-tokens",
+	},
+	fossa: {
+		displayName: "FOSSA",
+		icon: "fossa",
+		getUrl: "https://fossa.com",
+		helpUrl: "https://docs.fossa.com/docs/authentication",
+		hideDisplayName: true,
 	},
 };
 
