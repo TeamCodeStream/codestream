@@ -75,6 +75,8 @@ export const bootstrap = (data?: SignedInBootstrapData) => async (dispatch, getS
 
 	if (
 		data.configs.serverUrl &&
+		data.companies &&
+		data.companies.length &&
 		data.companies[0].switchToServerUrl &&
 		data.configs.serverUrl !== data.companies[0].switchToServerUrl
 	) {

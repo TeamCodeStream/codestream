@@ -277,7 +277,7 @@ export const EmailConfirmation = (connect() as any)((props: Props) => {
 								<div className="form-error">
 									<span className="error-message">
 										<FormattedMessage
-											id={errorToMessageId[error]}
+											id={errorToMessageId[error] || "unexpectedError"}
 											defaultMessage="An unexpected error has occurred"
 										/>
 									</span>
