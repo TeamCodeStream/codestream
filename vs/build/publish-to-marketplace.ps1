@@ -31,22 +31,29 @@ $x64Asset = $x64AssetDir + '\codestream-vs-' + $buildNumber + '-x64.vsix'
 Write-Host 'Here is the x86 VSIX file (' $x86Asset '):'
 Get-ChildItem $x86Asset
 if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
-    deleteTokenFile($localVSCETokenFile)
+    if(Test-Path $tokenPath){
+        Remove-Item $tokenPath
+    }
     exit 1
 }
 
 Write-Host 'Here is the x64 VSIX file (' $x64Asset '):'
 Get-ChildItem $x64Asset
 if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
-    deleteTokenFile($localVSCETokenFile)
+    if(Test-Path $tokenPath){
+        Remove-Item $tokenPath
+    }
     exit 1
 }
 
 $pat = (Get-Content -Raw -Path $localVSCETokenFile | ConvertFrom-Json).publishers.Where({$_.Name -eq "CodeStream"}).pat
 if ($LastExitCode -ne $null -and $LastExitCode -ne 0) {
-    deleteTokenFile($localVSCETokenFile)
+    if(Test-Path $tokenPath){
+        Remove-Item $tokenPath
+    }
     exit 1
 }
+
 Write-Host "Got PAT Length=$($pat.Length)"
 
 $path = (& "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -products 'Microsoft.VisualStudio.Product.BuildTools' -latest -property installationPath)
@@ -79,7 +86,9 @@ else {
     }
     finally{
         # Clean up the token file so it doesn't hang around longer than necessary
-        deleteTokenFile($localVSCETokenFile)
+        if(Test-Path $tokenPath){
+            Remove-Item $tokenPath
+        }
     }
 
     if($exception -eq $True){
@@ -87,8 +96,3 @@ else {
     }
 }
 
-function deleteTokenFile($tokenPath){
-    if(Test-Path $tokenPath){
-        Remove-Item $tokenPath
-    }
-}
