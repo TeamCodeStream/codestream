@@ -2586,8 +2586,8 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		  getStreamForTeam(state.streams, context.currentTeamId)
 		: getStreamForTeam(state.streams, context.currentTeamId);
 
-	const teamMates = getTeamMates(state).filter(_ => !_.email.match(/noreply/));
-	const teamMembers = getTeamMembers(state).filter(_ => !_.email.match(/noreply/));
+	const teamMates = getTeamMates(state).filter(_ => !_.email?.match(/noreply/));
+	const teamMembers = getTeamMembers(state).filter(_ => !_.email?.match(/noreply/));
 	const teamTagsArray = getTeamTagsArray(state);
 
 	let unsavedFiles: string[] = [];
