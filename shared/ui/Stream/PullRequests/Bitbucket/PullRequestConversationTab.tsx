@@ -235,7 +235,7 @@ export const PullRequestConversationTab = (props: {
 		if (pr.reviewers?.nodes.length) {
 			//filter out the ones with status (state)
 			const items = pr.reviewers.nodes.flatMap(reviewer => {
-				if (reviewer.state === null) {
+				if (reviewer.state === null || reviewer.state === undefined) {
 					return reviewer;
 				} else {
 					return [];
@@ -259,8 +259,6 @@ export const PullRequestConversationTab = (props: {
 		}
 	};
 
-	// const numParticpants = ((pr.participants && pr.participants.nodes) || []).length; //all participants & reviewers regardless of status
-	// const participantsLabel = `${numParticpants} Participant${numParticpants == 1 ? "" : "s"}`;
 	const prAuthorLogin = pr?.author?.login || GHOST;
 
 	const numReviewers = ((pr.reviewers && pr.reviewers.nodes) || []).length; //participants with status & all reviewers
@@ -335,7 +333,7 @@ export const PullRequestConversationTab = (props: {
 						) : (
 							<>
 								<br></br>
-								{isAddItems() ? (
+								{isAddItems() && (
 									<Button
 										style={{ width: "50px", marginRight: "2.5px" }}
 										variant="secondary"
@@ -348,9 +346,9 @@ export const PullRequestConversationTab = (props: {
 									>
 										Add
 									</Button>
-								) : null}
+								)}
 
-								{isRemoveItems() ? (
+								{isRemoveItems() && (
 									<Button
 										style={{ width: "60px", marginLeft: "2.5px" }}
 										variant="secondary"
@@ -363,7 +361,7 @@ export const PullRequestConversationTab = (props: {
 									>
 										Remove
 									</Button>
-								) : null}
+								)}
 							</>
 						)}
 					</PRHeadshots>
