@@ -668,17 +668,17 @@ interface BitbucketReviewers {
 	//This is the reviewer from the bitbucket API, NOT our version of reviewer
 	display_name: string;
 	links: {
-		self: {
+		self?: {
 			href: string;
 		};
 		avatar: {
 			href: string;
 		};
-		html: {
+		html?: {
 			href: string;
 		};
 	};
-	type: string;
+	type?: string;
 	uuid: string;
 	account_id: string;
 	nickname: string;
@@ -1554,10 +1554,6 @@ export class BitbucketProvider
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 			);
 
-			const membersResponse = this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
-				`/workspaces/${workspace}/members`
-			);
-
 			//get all users who have a permission of greater than read
 			const permissionsResponse = this.get<BitbucketValues<BitbucketUserPermissionsRequest[]>>(
 				`/user/permissions/repositories?q=permission>"read"`
@@ -1571,7 +1567,6 @@ export class BitbucketProvider
 				timelineResponse,
 				commitsResponse,
 				diffstatResponse,
-				membersResponse,
 				permissionsResponse,
 				userResponseResponse,
 			]);
@@ -1581,9 +1576,25 @@ export class BitbucketProvider
 			const timeline = allResponses[2];
 			const commits = allResponses[3];
 			const diffstat = allResponses[4];
-			const members = allResponses[5];
-			const permissions = allResponses[6];
-			const userResponse = allResponses[7];
+			const permissions = allResponses[5];
+			const userResponse = allResponses[6];
+
+			let members: BitbucketWorkspaceMembers[] | BitbucketParticipants[];
+			let membersResponse;
+
+			try {
+				membersResponse = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
+					`/workspaces/${workspace}/members`
+				);
+			} catch (ex) {
+				Logger.log(ex);
+			}
+
+			if (membersResponse && membersResponse.body.values.length) {
+				members = membersResponse.body.values;
+			} else {
+				members = pr.body.participants;
+			}
 
 			const isViewerCanUpdate = () => {
 				return !!permissions.body.values.find(
@@ -1732,7 +1743,7 @@ export class BitbucketProvider
 							nodes: newReviewersArray, //participants wtih status and all those marked as reviewer
 						},
 						members: {
-							nodes: members.body.values, //all members in the workspace
+							nodes: members, //all members in the workspace OR all participants on the PR (depending on permissions)
 						},
 						url: pr.body.links.html.href,
 						viewer: viewer,
@@ -2164,21 +2175,33 @@ export class BitbucketProvider
 		const repoSplit = request.fullname.split("/");
 		const workspace = repoSplit[0];
 
+		let members;
+
 		//access workspace members in order to get add new reviewer info
-		const members = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
-			`/workspaces/${workspace}/members`
-		);
+		try {
+			members = await this.get<BitbucketValues<BitbucketWorkspaceMembers[]>>(
+				`/workspaces/${workspace}/members`
+			);
+		} catch (ex) {
+			Logger.log(ex);
+		}
+		const reviewers = pr.body.reviewers || [];
+		const selectedUser = request.reviewerId;
+		if (members && members.body.values.length) {
+			members.body.values.map(member => {
+				if (member.user.uuid === selectedUser) {
+					reviewers.push(member.user);
+				}
+			});
+		} else {
+			pr.body.participants.map(participant => {
+				if (participant.user.uuid === selectedUser) {
+					reviewers.push(participant.user);
+				}
+			});
+		}
 
 		//get user info from members
-
-		let reviewers = pr.body.reviewers || [];
-		const selectedUser = request.reviewerId;
-
-		members.body.values.map(member => {
-			if (member.user.uuid === selectedUser) {
-				reviewers.push(member.user);
-			}
-		});
 
 		const payload = {
 			reviewers: reviewers,
