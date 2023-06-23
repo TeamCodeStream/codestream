@@ -147,7 +147,8 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows {
 									_componentModel.GetService<IEditorService>(),
 									_componentModel.GetService<IAuthenticationServiceFactory>(),
 									_componentModel.GetService<IMessageInterceptorService>(),
-									_componentModel.GetService<ICredentialsService>());
+									_componentModel.GetService<ICredentialsService>(),
+									_componentModel.GetService<ISymbolService>());
 
 								_browserService.AddWindowMessageEvent(
 									async delegate (object sender, WindowEventArgs ea) { await router.HandleAsync(ea); });

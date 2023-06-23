@@ -16,7 +16,10 @@ using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
+using EnvDTE;
+
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
 using Newtonsoft.Json.Linq;
@@ -40,6 +43,7 @@ namespace CodeStream.VisualStudio.Shared {
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 		private readonly IMessageInterceptorService _messageInterceptorService;
 		private readonly ICredentialsService _credentialsService;
+		private readonly ISymbolService _symbolService;
 
 		public WebViewRouter(
 			IComponentModel componentModel,
@@ -54,7 +58,8 @@ namespace CodeStream.VisualStudio.Shared {
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory,
 			IMessageInterceptorService messageInterceptorService,
-			ICredentialsService credentialsService) {
+			ICredentialsService credentialsService,
+			ISymbolService symbolService) {
 			_componentModel = componentModel;
 			_codeStreamService = codestreamService;
 			_webviewUserSettingsService = webviewUserSettingsService;
@@ -68,6 +73,7 @@ namespace CodeStream.VisualStudio.Shared {
 			_authenticationServiceFactory = authenticationServiceFactory;
 			_messageInterceptorService = messageInterceptorService;
 			_credentialsService = credentialsService;
+			_symbolService = symbolService;
 		}
 
 		//
@@ -123,6 +129,23 @@ namespace CodeStream.VisualStudio.Shared {
 							}
 						case IpcRoutes.Host: {
 								switch (message.Method) {
+									case EditorRevealSymbolRequestType.MethodName: {
+											using (var scope = _browserService.CreateScope(message))
+											{
+												var request = message.Params?.ToObject<EditorRevealSymbolRequest>();
+
+												_symbolService.RevealSymbol($"{request.CodeNamespace}.{request.CodeFunction}");
+
+												var response = new EditorRevealSymbolResponse
+												{
+													Success = true,
+												};
+
+												scope.FulfillRequest(response.ToJToken());
+											}
+
+											break;
+										}
 									case RefreshEditorsCodeLensRequestType.MethodName: {
 										using (var scope = _browserService.CreateScope(message)) {
 

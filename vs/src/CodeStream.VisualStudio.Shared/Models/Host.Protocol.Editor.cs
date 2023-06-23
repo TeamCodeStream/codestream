@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Models;
 
@@ -33,6 +33,23 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// </summary>
 		public Range Range { get; }
 		public bool Highlight { get; }
+	}
+
+	public class EditorRevealSymbolRequestType : RequestType<EditorRevealSymbolRequest>
+	{
+		public const string MethodName = "host/editor/symbol/reveal";
+		public override string Method => MethodName;
+	}
+
+	public class EditorRevealSymbolRequest {
+		public string CodeFilepath { get; set; }
+		public string CodeNamespace { get; set; }
+		public string CodeFunction { get; set; }
+		public string Language { get; set; }
+	}
+
+	public class EditorRevealSymbolResponse {
+		public bool Success { get; set; }
 	}
 
 	public class EditorHighlightRangeRequestType : RequestType<EditorHighlightRangeRequest> {

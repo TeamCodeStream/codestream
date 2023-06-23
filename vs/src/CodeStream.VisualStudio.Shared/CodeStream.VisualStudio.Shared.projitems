@@ -133,6 +133,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\SessionService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SolutionEventsListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SymbolService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ThemeEventsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\UserSettingsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\VisualStudioSettingsManager.cs" />
