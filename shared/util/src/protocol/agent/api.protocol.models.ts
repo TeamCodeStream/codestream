@@ -646,6 +646,8 @@ export interface CSNewRelicProviderInfo extends CSProviderInfo {}
 
 export interface CSCircleCIProviderInfo extends CSProviderInfo {}
 
+export interface CSFossaProviderInfo extends CSProviderInfo {}
+
 export type CSProviderInfos =
 	| CSAsanaProviderInfo
 	| CSBitbucketProviderInfo
@@ -662,7 +664,8 @@ export type CSProviderInfos =
 	| CSShortcutProviderInfo
 	| CSLinearProviderInfo
 	| CSNewRelicProviderInfo
-	| CSCircleCIProviderInfo;
+	| CSCircleCIProviderInfo
+	| CSFossaProviderInfo;
 
 type Filter<T, U> = T extends U ? T : never;
 export type CSRefreshableProviderInfos = Filter<CSProviderInfos, { refreshToken: string }>;

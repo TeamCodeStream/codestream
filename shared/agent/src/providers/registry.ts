@@ -47,6 +47,9 @@ import {
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
+	FetchThirdPartyCodeAnalyzersRequest,
+	FetchThirdPartyCodeAnalyzersRequestType,
+	FetchThirdPartyCodeAnalyzersResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
@@ -80,6 +83,7 @@ import {
 	ProviderCreatePullRequestResponse,
 	ProviderGetRepoInfoRequest,
 	ThirdPartyBuildProvider,
+	ThirdPartyCodeAnalyzerProvider,
 	ThirdPartyIssueProvider,
 	ThirdPartyPostProvider,
 	ThirdPartyProvider,
@@ -793,6 +797,29 @@ export class ThirdPartyProviderRegistry {
 		}
 
 		const response = await buildProvider.fetchBuilds(request);
+		return response;
+	}
+
+	@log()
+	@lspHandler(FetchThirdPartyCodeAnalyzersRequestType)
+	async fetchCodeAnalysis(
+		request: FetchThirdPartyCodeAnalyzersRequest
+	): Promise<FetchThirdPartyCodeAnalyzersResponse> {
+		const provider = getProvider(request.providerId);
+		if (provider === undefined) {
+			throw new Error(`No registered provider for '${request.providerId}'`);
+		}
+
+		const codeAnalyzersProvider = provider as ThirdPartyCodeAnalyzerProvider;
+		if (
+			codeAnalyzersProvider == null ||
+			typeof codeAnalyzersProvider.supportsCodeAnalysis !== "function" ||
+			!codeAnalyzersProvider.supportsCodeAnalysis()
+		) {
+			throw new Error(`Provider(${provider.name}) doesn't support code analyzers`);
+		}
+
+		const response = await codeAnalyzersProvider.fetchCodeAnalysis(request);
 		return response;
 	}
 
