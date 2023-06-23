@@ -886,6 +886,26 @@ export class WebviewController implements Disposable {
 		codeFunction: string,
 		language: string
 	) {
+		if (language === "csharp") {
+			const symbols = await commands.executeCommand<SymbolInformation[]>(
+				BuiltInCommands.ExecuteWorkspaceSymbolprovider,
+				`${codeNamespace}.${codeFunction}`
+			);
+			if (symbols?.length) {
+				const symbol = symbols[0];
+
+				void (await Editor.revealRange(
+					symbol.location.uri,
+					Editor.fromSerializableRange(symbol.location.range),
+					this._lastEditor,
+					{
+						preserveFocus: false,
+						atTop: false
+					}
+				));
+			}
+		}
+
 		if (language === "ruby") {
 			const symbols: SymbolInformation[] = await commands.executeCommand(
 				"vscode.executeWorkspaceSymbolProvider",
