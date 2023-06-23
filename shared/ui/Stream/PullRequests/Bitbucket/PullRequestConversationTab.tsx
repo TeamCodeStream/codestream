@@ -338,7 +338,7 @@ export const PullRequestConversationTab = (props: {
 										style={{ width: "50px", marginRight: "2.5px" }}
 										variant="secondary"
 										size="subcompact"
-										disabled={isMerged}
+										disabled={isMerged || !pr.viewerCanUpdate}
 										onClick={() => {
 											setIsOpen(true);
 											setIsAddReviewer(true);
@@ -353,7 +353,7 @@ export const PullRequestConversationTab = (props: {
 										style={{ width: "60px", marginLeft: "2.5px" }}
 										variant="secondary"
 										size="subcompact"
-										disabled={isEmpty || isMerged}
+										disabled={isEmpty || isMerged || !pr.viewerCanUpdate}
 										onClick={() => {
 											setIsOpen(true);
 											setIsAddReviewer(false);

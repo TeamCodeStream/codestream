@@ -1554,7 +1554,7 @@ export class BitbucketProvider
 				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/diffstat`
 			);
 
-			//get all users who have a permission of greater than read
+			//get all repos where the user has a permission of greater than read
 			const permissionsResponse = this.get<BitbucketValues<BitbucketUserPermissionsRequest[]>>(
 				`/user/permissions/repositories?q=permission>"read"`
 			);
@@ -1596,11 +1596,26 @@ export class BitbucketProvider
 				members = pr.body.participants;
 			}
 
+			const filteredRepos = permissions.body.values.filter(
+				_ => _.repository.full_name === repoWithOwner
+			);
+
 			const isViewerCanUpdate = () => {
-				return !!permissions.body.values.find(
-					(_: { user: { uuid: string } }) => _.user.uuid === userResponse.uuid
-				);
+				return !!filteredRepos.find(item => item.user.uuid === userResponse.uuid);
 			};
+
+			const getViewerPermissions = () => {
+				if (filteredRepos.find(e => e.permission === "admin")) {
+					return "ADMIN";
+				} else if (filteredRepos.find(f => f.permission === "write")) {
+					return "WRITE";
+				} else {
+					return "READ";
+				}
+			};
+
+			const viewerPermissions = getViewerPermissions();
+			const viewerCanUpdate = isViewerCanUpdate();
 
 			let lines_added_total = 0;
 			let lines_removed_total = 0;
@@ -1608,8 +1623,6 @@ export class BitbucketProvider
 				lines_added_total += diff.lines_added;
 				lines_removed_total += diff.lines_removed;
 			});
-
-			const viewerCanUpdate = isViewerCanUpdate();
 
 			const commit_count = commits.body.values.length;
 
@@ -1694,7 +1707,7 @@ export class BitbucketProvider
 					squashMergeAllowed: true,
 					mergeCommitAllowed: true,
 					viewerDefaultMergeMethod: "MERGE",
-					viewerPermission: "READ",
+					viewerPermission: viewerPermissions,
 					// TODO end
 					repoOwner: repoWithOwnerSplit[0],
 					repoName: repoWithOwnerSplit[1],
