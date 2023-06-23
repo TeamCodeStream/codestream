@@ -491,6 +491,19 @@ export const FetchThirdPartyBuildsRequestType = new RequestType<
 	void
 >("codestream/provider/builds");
 
+export interface FetchThirdPartyCodeAnalyzersRequest {
+	providerId: string;
+}
+
+export interface FetchThirdPartyCodeAnalyzersResponse {}
+
+export const FetchThirdPartyCodeAnalyzersRequestType = new RequestType<
+	FetchThirdPartyCodeAnalyzersRequest,
+	FetchThirdPartyCodeAnalyzersResponse,
+	void,
+	void
+>("codestream/provider/codeAnalyzers");
+
 export type CheckConclusionState =
 	| "ACTION_REQUIRED"
 	| "TIMED_OUT"

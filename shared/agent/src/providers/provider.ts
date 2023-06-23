@@ -21,6 +21,8 @@ import {
 	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	FetchThirdPartyCodeAnalyzersRequest,
+	FetchThirdPartyCodeAnalyzersResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestRequest,
@@ -63,6 +65,7 @@ export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["linear", "Linear"],
 	["newrelic", "New Relic"],
 	["circleci", "Circle CI"],
+	["fossa", "FOSSA"],
 ]);
 
 export interface ThirdPartyProviderSupportsIssues {
@@ -135,6 +138,12 @@ export interface ThirdPartyProviderSupportsBuilds {
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
 }
 
+export interface ThirdPartyProviderSupportsCodeAnalyzers {
+	fetchCodeAnalysis(
+		request: FetchThirdPartyCodeAnalyzersRequest
+	): Promise<FetchThirdPartyCodeAnalyzersResponse>;
+}
+
 export namespace ThirdPartyIssueProvider {
 	export function supportsIssues(
 		provider: ThirdPartyProvider
@@ -178,6 +187,14 @@ export namespace ThirdPartyBuildProvider {
 		provider: ThirdPartyBuildProvider
 	): provider is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds {
 		return (provider as any).fetchBuilds !== undefined;
+	}
+}
+
+export namespace ThirdPartyCodeAnalyzerProvider {
+	export function supportsCodeAnalysis(
+		provider: ThirdPartyCodeAnalyzerProvider
+	): provider is ThirdPartyCodeAnalyzerProvider & ThirdPartyProviderSupportsCodeAnalyzers {
+		return (provider as any).fetchCodeAnalysis !== undefined;
 	}
 }
 
@@ -234,6 +251,11 @@ export interface ThirdPartyPostProvider extends ThirdPartyProvider {
 
 export interface ThirdPartyBuildProvider extends ThirdPartyProvider {
 	supportsBuilds(): this is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds;
+}
+
+export interface ThirdPartyCodeAnalyzerProvider extends ThirdPartyProvider {
+	supportsCodeAnalysis(): this is ThirdPartyCodeAnalyzerProvider &
+		ThirdPartyProviderSupportsCodeAnalyzers;
 }
 
 export interface ApiResponse<T> {
