@@ -54,6 +54,8 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	async fetchCodeAnalysis(
 		request: FetchThirdPartyCodeAnalyzersRequest
 	): Promise<FetchThirdPartyCodeAnalyzersResponse> {
-		return {};
+		return {
+			message: "HELLO WORLD",
+		};
 	}
 }

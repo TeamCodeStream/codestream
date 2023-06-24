@@ -495,7 +495,9 @@ export interface FetchThirdPartyCodeAnalyzersRequest {
 	providerId: string;
 }
 
-export interface FetchThirdPartyCodeAnalyzersResponse {}
+export interface FetchThirdPartyCodeAnalyzersResponse {
+	message: string;
+}
 
 export const FetchThirdPartyCodeAnalyzersRequestType = new RequestType<
 	FetchThirdPartyCodeAnalyzersRequest,
