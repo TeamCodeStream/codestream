@@ -202,7 +202,7 @@ export const IntegrationsPanel = () => {
 			return (
 				<ProviderDropdown key={providerId} items={items} variant="success">
 					{display.icon && <Icon name={display.icon} />}
-					{displayName}
+					{display.hideDisplayName ? "" : displayName}
 				</ProviderDropdown>
 			);
 		});
