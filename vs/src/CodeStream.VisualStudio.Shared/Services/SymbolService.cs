@@ -1,98 +1,113 @@
 using CodeStream.VisualStudio.Core.Logging;
 
-using Microsoft;
-using Microsoft.VisualStudio;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 using Serilog;
 
 using System;
 using System.ComponentModel.Composition;
-using System.Reactive;
-using System.Runtime.Serialization;
+using System.Threading;
+using Task = System.Threading.Tasks.Task;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
+using CodeStream.VisualStudio.Core.Extensions;
+using EnvDTE;
+using Microsoft.CodeAnalysis.MSBuild;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace CodeStream.VisualStudio.Shared.Services
 {
 
 	public interface ISymbolService
 	{
-		void RevealSymbol(string fullyQualifiedMethodName);
+		Task RevealSymbolAsync(string fullyQualifiedMethodName, CancellationToken cancellationToken);
 	}
 
 	[Export(typeof(ISymbolService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	public class SymbolService : ISymbolService
 	{
-		public Guid CSharpLibrary = new Guid("58f1bad0-2288-45b9-ac3a-d56398f7781d");
-
-		// here for completeness, but we don't currently support this anyway
-		public Guid VBLibrary = new Guid("414AC972-9829-4B6A-A8D7-A08152FEB8AA");
-
-
 		private static readonly ILogger Log = LogManager.ForContext<SymbolService>();
-		private readonly IVsObjectManager2 _objectManager;
-		private readonly IVsSimpleLibrary2 _library;
+		private readonly IVsSolution _vsSolution;
+		private readonly DTE _dte;
 
 		[ImportingConstructor]
 		public SymbolService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			if (serviceProvider == null)
-			{
-				throw new ArgumentNullException(nameof(serviceProvider));
-			}
-
-			_objectManager = serviceProvider.GetService(typeof(SVsObjectManager)) as IVsObjectManager2;
-			Assumes.Present(_objectManager);
-
-			if (_objectManager.FindLibrary(ref CSharpLibrary, out var library) == VSConstants.S_OK)
-			{
-				_library = (IVsSimpleLibrary2)library;
-			}
-
-			Log.Error($"Unable to acquire C# Library Metadata");
+			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+			_dte = serviceProvider.GetService(typeof(DTE)) as DTE;
 		}
 
-		public void RevealSymbol(string fullyQualifiedMethodName)
+		public async Task RevealSymbolAsync(string fullyQualifiedMethodName, CancellationToken cancellationToken)
 		{
-			if(_library == null)
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+
+			// Load the solution using MSBuildWorkspace
+			var workspace = MSBuildWorkspace.Create();
+			var solutionPath = _vsSolution.GetSolutionFile();
+			var solution = await workspace.OpenSolutionAsync(solutionPath);
+
+			foreach (var project in solution.Projects)
 			{
-				return;
-			}
-
-			ThreadHelper.ThrowIfNotOnUIThread();
-
-			var searchCriteria = CreateSearchCriteria(fullyQualifiedMethodName);
-			var searchResult = _library.GetList2(
-				(uint)_LIB_LISTTYPE.LLT_MEMBERS,
-					(uint)_LIB_LISTFLAGS.LLF_USESEARCHFILTER,
-					searchCriteria,
-					out var list);
-
-			if (searchResult == VSConstants.S_OK && list != null)
-			{
-				list.CanGoToSource(0, VSOBJGOTOSRCTYPE.GS_DEFINITION, out var canGoOkay);
-
-				if (canGoOkay == 0)
+				foreach (var document in project.Documents)
 				{
-					list.GoToSource(0, VSOBJGOTOSRCTYPE.GS_DEFINITION);
+					var root = await document.GetSyntaxRootAsync();
+					
+					var namespaceDeclaration = root
+						.DescendantNodes()
+						.OfType<NamespaceDeclarationSyntax>()
+						.FirstOrDefault(ns => fullyQualifiedMethodName.StartsWith(ns.Name.ToString(), StringComparison.OrdinalIgnoreCase));
+
+					if(namespaceDeclaration is null)
+					{
+						continue;
+					}
+
+					var classDeclaration = namespaceDeclaration
+						.DescendantNodes()
+						.OfType<ClassDeclarationSyntax>()
+						.FirstOrDefault(cls => fullyQualifiedMethodName.StartsWith($"{namespaceDeclaration.Name}.{cls.Identifier.ValueText}", StringComparison.OrdinalIgnoreCase));
+
+					if(classDeclaration is null)
+					{
+						continue;
+					}
+
+					var methodDeclaration = classDeclaration
+						.DescendantNodes()
+						.OfType<MethodDeclarationSyntax>()
+						.FirstOrDefault(method => fullyQualifiedMethodName.EqualsIgnoreCase($"{namespaceDeclaration.Name}.{classDeclaration.Identifier.ValueText}.{method.Identifier.ValueText}"));
+
+					if (methodDeclaration is null)
+					{
+						continue;
+					}
+
+
+					var semanticModel = await document.GetSemanticModelAsync();
+					ISymbol methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
+
+					// Get the definition of the symbol
+					var definitionLocation = methodSymbol?.Locations.FirstOrDefault();
+
+					if(definitionLocation is null)
+					{
+						continue;
+					}
+
+
+					var filePath = definitionLocation.SourceTree?.FilePath;
+					var lineNumber = definitionLocation.GetLineSpan().StartLinePosition.Line + 1;
+
+					var window = _dte.ItemOperations.OpenFile(filePath);
+					var textDocument = (EnvDTE.TextDocument)window.Document.Object("TextDocument");
+
+					textDocument.Selection.MoveToLineAndOffset(lineNumber, 1, false);
+					textDocument.Selection.GotoLine(lineNumber, true);
 				}
 			}
-		}
-
-		private static VSOBSEARCHCRITERIA2[] CreateSearchCriteria(string fullyQualifiedMethodName)
-		{
-			return new[]
-			{
-				new VSOBSEARCHCRITERIA2
-				{
-					eSrchType = VSOBSEARCHTYPE.SO_PRESTRING,
-                    grfOptions = (uint)_VSOBSEARCHOPTIONS.VSOBSO_LOOKINREFS,
-					szName = fullyQualifiedMethodName
-				}
-			};
 		}
 	}
 }

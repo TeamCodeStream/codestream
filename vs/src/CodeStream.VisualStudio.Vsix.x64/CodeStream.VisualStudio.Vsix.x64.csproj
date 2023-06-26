@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <TargetVsixContainerName>codestream-vs-22.vsix</TargetVsixContainerName>
@@ -584,6 +584,15 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces">
       <Version>6.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
+      <Version>4.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
+      <Version>4.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild">
+      <Version>4.6.0</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection">
       <Version>6.0.0</Version>

@@ -45,7 +45,10 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows {
 
 					_eventAggregator = _componentModel.GetService<IEventAggregator>();
 					_sessionService = _componentModel.GetService<ISessionService>();
-					_browserService = _componentModel.GetService<IBrowserService>();					
+					_browserService = _componentModel.GetService<IBrowserService>();
+
+					
+
 					_ = _browserService.InitializeAsync().ContinueWith(_ => {
 						ThreadHelper.JoinableTaskFactory.Run(async delegate {
 							await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();

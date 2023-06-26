@@ -129,12 +129,13 @@ namespace CodeStream.VisualStudio.Shared {
 							}
 						case IpcRoutes.Host: {
 								switch (message.Method) {
-									case EditorRevealSymbolRequestType.MethodName: {
+									case EditorRevealSymbolRequestType.MethodName:
+										{
 											using (var scope = _browserService.CreateScope(message))
 											{
 												var request = message.Params?.ToObject<EditorRevealSymbolRequest>();
 
-												_symbolService.RevealSymbol($"{request.CodeNamespace}.{request.CodeFunction}");
+												await _symbolService.RevealSymbolAsync($"{request.CodeNamespace}.{request.CodeFunction}", CancellationToken.None);
 
 												var response = new EditorRevealSymbolResponse
 												{
