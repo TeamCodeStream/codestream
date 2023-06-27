@@ -14,7 +14,9 @@ export const ConnectFossa = () => {
 				<Provider
 					appendIcon
 					key="fossa"
-					onClick={() => dispatch(configureAndConnectProvider("fossa*com", "FOSSA Section"))}
+					onClick={() =>
+						dispatch(configureAndConnectProvider("fossa*com", "Code Analyzers Section"))
+					}
 				>
 					<Icon name="fossa" />
 				</Provider>

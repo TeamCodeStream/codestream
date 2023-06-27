@@ -84,7 +84,7 @@ export const CodeAnalyzers = (props: Props) => {
 		<>
 			<PaneHeader
 				title="Code Analyzers"
-				id={WebviewPanels.Fossa}
+				id={WebviewPanels.CodeAnalyzers}
 				subtitle={
 					derivedState.currentRepo && (
 						<>
