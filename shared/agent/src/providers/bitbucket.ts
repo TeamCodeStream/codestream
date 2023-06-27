@@ -141,285 +141,6 @@ interface BitbucketAuthor {
 	};
 }
 
-interface BitbucketWorkspacesRequestResponse {
-	type: string;
-	user: {
-		display_name: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-		};
-		type: string;
-		uuid: string;
-		account_id: string;
-		nickname: string;
-	};
-	workspace: {
-		type: string;
-		uuid: string;
-		name: string;
-		slug: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-		};
-	};
-	links: {
-		self: {
-			href: string;
-		};
-	};
-	added_on: string;
-	permission: string;
-	last_accessed: string;
-}
-[];
-
-interface BitbucketReposInWorkspace {
-	type: string;
-	full_name: string;
-	links: {
-		self: {
-			href: string;
-		};
-		html: {
-			href: string;
-		};
-		avatar: {
-			href: string;
-		};
-		pullrequests: {
-			href: string;
-		};
-		commits: {
-			href: string;
-		};
-		forks: {
-			href: string;
-		};
-		watchers: {
-			href: string;
-		};
-		branches: {
-			href: string;
-		};
-		tags: {
-			href: string;
-		};
-		downloads: {
-			href: string;
-		};
-		source: {
-			href: string;
-		};
-		clone: [
-			{
-				name: string;
-				href: string;
-			},
-			{
-				name: string;
-				href: string;
-			}
-		];
-		hooks: {
-			href: string;
-		};
-	};
-	name: string;
-	slug: string;
-	description: string;
-	scm: string;
-	website: null;
-	owner: {
-		display_name: string;
-		links: {
-			self: {
-				href: string;
-			};
-			avatar: {
-				href: string;
-			};
-			html: {
-				href: string;
-			};
-		};
-		type: string;
-		uuid: string;
-		account_id: string;
-		nickname: string;
-	};
-	workspace: {
-		type: string;
-		uuid: string;
-		name: string;
-		slug: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-			html: {
-				href: string;
-			};
-			self: {
-				href: string;
-			};
-		};
-	};
-	is_private: false;
-	project: {
-		type: string;
-		key: string;
-		uuid: string;
-		name: string;
-		links: {
-			self: {
-				href: string;
-			};
-			html: {
-				href: string;
-			};
-			avatar: {
-				href: string;
-			};
-		};
-	};
-	fork_policy: string;
-	created_on: string;
-	updated_on: string;
-	size: number;
-	language: string;
-	has_issues: boolean;
-	has_wiki: boolean;
-	uuid: string;
-	mainbranch: {
-		name: string;
-		type: string;
-	};
-	override_settings: {
-		default_merge_strategy: boolean;
-		branching_model: boolean;
-	};
-}
-
-interface BitbucketRepoFull extends BitbucketRepo {
-	type?: string;
-	full_name: string;
-	isApproved?: boolean;
-	isRequested?: boolean;
-	links: {
-		self: {
-			href: string;
-		};
-		html: {
-			href: string;
-		};
-		avatar: {
-			href: string;
-		};
-		pullrequests: {
-			href: string;
-		};
-		commits: {
-			href: string;
-		};
-		forks: {
-			href: string;
-		};
-		watchers: {
-			href: string;
-		};
-		branches: {
-			href: string;
-		};
-		tags: {
-			href: string;
-		};
-		downloads: {
-			href: string;
-		};
-		source: {
-			href: string;
-		};
-		clone: [
-			{
-				name: string;
-				href: string;
-			},
-			{
-				name: string;
-				href: string;
-			}
-		];
-		hooks: {
-			href: string;
-		};
-	};
-	/* The name of the repository */
-	name: string;
-	slug: string;
-	description: string;
-	scm: string;
-	website: string;
-
-	workspace: {
-		type: string;
-		uuid: string;
-		name: string;
-		slug: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-			html: {
-				href: string;
-			};
-			self: {
-				href: string;
-			};
-		};
-	};
-	is_private: boolean;
-	project: {
-		type: string;
-		key: string;
-		uuid: string;
-		name: string;
-		links: {
-			self: {
-				href: string;
-			};
-			html: {
-				href: string;
-			};
-			avatar: {
-				href: string;
-			};
-		};
-	};
-	fork_policy: string;
-	created_on: Date;
-	updated_on: Date;
-	size: number;
-	language: string;
-	has_issues: boolean;
-	has_wiki: boolean;
-	uuid: string;
-	mainbranch: {
-		name: string;
-		type: string;
-	};
-	override_settings: {
-		default_merge_strategy: boolean;
-		branching_model: boolean;
-	};
-	author: BitbucketAuthor;
-	participants: BitbucketParticipants[];
-	reviewers?: BitbucketReviewers[]; //this is bitbucket API reviewer array, not OUR version (our version includes participants with status & reviewers)
-}
-
 interface BitbucketPullRequestComment2 {
 	id: number;
 	author: {
@@ -871,22 +592,36 @@ interface BitbucketUserPermissionsRequest {
 }
 [];
 
-interface BitbucketRepositoriesRequestResponse {
-	type: string;
-	full_name: string;
-	links: {
-		avatar: {
-			href: string;
+interface BitbucketRepositoryPermissionsResponse {
+	repository: {
+		type: string;
+		full_name: string;
+		links: {
+			self: {
+				href: string;
+			};
+			html: {
+				href: string;
+			};
+			avatar: {
+				href: string;
+			};
 		};
+		name: string;
+		uuid: string;
 	};
-	name: string;
-	slug: string;
-	description: string;
-	scm: string;
-	owner: {
+	type: string;
+	permission: string;
+	user: {
 		display_name: string;
 		links: {
+			self: {
+				href: string;
+			};
 			avatar: {
+				href: string;
+			};
+			html: {
 				href: string;
 			};
 		};
@@ -894,45 +629,6 @@ interface BitbucketRepositoriesRequestResponse {
 		uuid: string;
 		account_id: string;
 		nickname: string;
-	};
-	workspace: {
-		type: string;
-		uuid: string;
-		name: string;
-		slug: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-		};
-	};
-	is_private: boolean;
-	project: {
-		type: string;
-		key: string;
-		uuid: string;
-		name: string;
-		links: {
-			avatar: {
-				href: string;
-			};
-		};
-	};
-	fork_policy: string;
-	created_on: string;
-	updated_on: string;
-	size: number;
-	language: string;
-	has_issues: boolean;
-	has_wiki: boolean;
-	uuid: string;
-	mainbranch: {
-		name: string;
-		type: string;
-	};
-	override_settings: {
-		default_merge_strategy: boolean;
-		branching_model: boolean;
 	};
 }
 [];
@@ -2803,34 +2499,29 @@ export class BitbucketProvider
 	}
 
 	private async _getFullNames(): Promise<{ fullname: string }[]> {
-		//get all workspaces for a user: user/permissions/workspaces
+		//get all repositories for a user: user/permissions/repositories
 		let array: { fullname: string }[] = [];
-		const reposInWorkspace = await this.get<BitbucketValues<BitbucketWorkspacesRequestResponse[]>>(
-			`/user/permissions/workspaces`
-		);
-		//values.workspace.slug
-		const repoSlugs = reposInWorkspace.body.values.map(
-			(workspace: { workspace: { slug: string } }) => {
-				return { slug: workspace.workspace.slug };
-			}
-		); //array of the workspace slugs for current user
-
-		for (let i = 0; i < repoSlugs.length; i++) {
-			const response = await this.get<BitbucketValues<BitbucketRepositoriesRequestResponse[]>>(
-				`/repositories/${repoSlugs[i].slug}`
+		let response;
+		try {
+			response = await this.get<BitbucketValues<BitbucketRepositoryPermissionsResponse[]>>(
+				`/user/permissions/repositories`
 			);
+			//values.workspace.slug
+		} catch (ex) {
+			Logger.log(ex);
+		}
 
-			//if response.body.values is more than 1, there are more than one repos.
-			if (response.body.values.length > 1) {
-				response.body.values.forEach((repo: { full_name: string }) => {
-					array.push({ fullname: repo.full_name });
-				});
-			} else if (response.body.values.length === 1) {
-				if (response.body.values[0].full_name) {
-					array.push({ fullname: response.body.values[0].full_name });
-				}
+		//if response.body.values is more than 1, there are more than one repos.
+		if (response && response.body.values.length > 1) {
+			response.body.values.forEach((_: { repository: { full_name: string } }) => {
+				array.push({ fullname: _.repository.full_name });
+			});
+		} else if (response && response.body.values.length === 1) {
+			if (response.body.values[0].repository.full_name) {
+				array.push({ fullname: response.body.values[0].repository.full_name });
 			}
 		}
+
 		return array;
 	}
 
