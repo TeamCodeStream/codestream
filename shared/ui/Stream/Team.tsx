@@ -754,15 +754,17 @@ class Team extends React.Component<Props, State> {
 							</UL>
 						</>
 					)}
-					<div style={{ margin: "20px 0 0 20px" }}>
-						<a
-							onClick={() => {
-								this.props.openModal(WebviewModals.Invite);
-							}}
-						>
-							Invite Teammates
-						</a>
-					</div>
+					{company.codestreamOnly && (
+						<div style={{ margin: "20px 0 0 20px" }}>
+							<a
+								onClick={() => {
+									this.props.openModal(WebviewModals.Invite);
+								}}
+							>
+								Invite Teammates
+							</a>
+						</div>
+					)}
 				</div>
 			</Dialog>
 		);

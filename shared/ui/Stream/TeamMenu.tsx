@@ -35,12 +35,14 @@ export function TeamMenu(props: TeamMenuProps) {
 		const blameMap = team.settings ? team.settings.blameMap : EMPTY_HASH;
 		const mappedBlame = keyFilter(blameMap || EMPTY_HASH);
 		const currentCompanyId = team.companyId;
+		const company = state.companies[currentCompanyId];
 		return {
 			currentUserEmail: user.email,
 			isCurrentUserAdmin,
 			mappedBlame,
 			team,
 			currentCompanyId,
+			company,
 			autoJoinSupported: isFeatureEnabled(state, "autoJoin"),
 		};
 	});
@@ -109,15 +111,19 @@ export function TeamMenu(props: TeamMenuProps) {
 			action: () => go(WebviewModals.Team),
 			key: "team",
 		},
-		{ label: "-" },
-		{
-			icon: <Icon name="add-user" />,
-			label: "Invite Teammates",
-			subtextWide: "Share CodeStream with your team",
-			action: () => go(WebviewModals.Invite),
-			key: "invite",
-		},
 	] as any;
+	if (derivedState.company.codestreamOnly) {
+		menuItems.push(
+			{ label: "-" },
+			{
+				icon: <Icon name="add-user" />,
+				label: "Invite Teammates",
+				subtextWide: "Share CodeStream with your team",
+				action: () => go(WebviewModals.Invite),
+				key: "invite",
+			}
+		);
+	}
 	menuItems.push(
 		{ label: "-" },
 		{
