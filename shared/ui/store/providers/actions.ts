@@ -123,7 +123,7 @@ export type ViewLocation =
 	| "Observability Section"
 	| "Pixie Logging"
 	| "CI/CD Section"
-	| "FOSSA Section";
+	| "Code Analyzers Section";
 
 export const sendIssueProviderConnected =
 	(providerId: string, connectionLocation: ViewLocation | string = "Compose Modal") =>
