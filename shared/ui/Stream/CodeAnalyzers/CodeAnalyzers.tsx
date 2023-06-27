@@ -105,9 +105,7 @@ export const CodeAnalyzers = (props: Props) => {
 					{!derivedState.bootstrapped && <ConnectFossa />}
 					{derivedState.bootstrapped && <FossaResults message={message} />}
 					{derivedState.bootstrapped && !derivedState.currentRepo && (
-						<div style={{ padding: "0 20px 0 40px" }}>
-							Please open a repo to start your Fossa Code Analysis.
-						</div>
+						<div style={{ padding: "0 20px 0 40px" }}>Open a source file to see FOSSA results.</div>
 					)}
 					{derivedState.bootstrapped &&
 						!loading &&
