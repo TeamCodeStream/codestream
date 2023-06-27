@@ -1,7 +1,7 @@
 import React from "react";
 import { logout } from "@codestream/webview/store/session/thunks";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import { WebviewPanels, WebviewModals } from "../ipc/webview.protocol.common";
+import { WebviewModals } from "../ipc/webview.protocol.common";
 import Icon from "./Icon";
 import { openModal, openPanel } from "./actions";
 import Menu from "./Menu";
@@ -11,12 +11,11 @@ import {
 	setCreatePullRequest,
 } from "../store/context/actions";
 import { CodeStreamState } from "../store";
-import { keyFilter, getDomainFromEmail } from "../utils";
+import { keyFilter } from "../utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
 import { DeleteCompanyRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "../webview-api";
-import { VALID_DELETE_ORG_EMAIL_DOMAINS } from "./EllipsisMenu";
 
 interface TeamMenuProps {
 	menuTarget: any;
@@ -128,52 +127,6 @@ export function TeamMenu(props: TeamMenuProps) {
 			key: "blame",
 		}
 	);
-
-	if (derivedState.isCurrentUserAdmin) {
-		menuItems.push(
-			{ label: "-" },
-			{
-				icon: <Icon name="pencil" />,
-				label: "Change Organization Name",
-				key: "change-team-name",
-				action: () => go(WebviewModals.ChangeCompanyName),
-			},
-			{ label: "-" },
-			{
-				icon: <Icon name="gear" />,
-				label: "Onboarding Settings...",
-				key: "onboarding-settings",
-				action: () => go(WebviewModals.TeamSetup),
-				disabled: !derivedState.autoJoinSupported,
-			},
-			{
-				icon: <Icon name="gear" />,
-				label: "Feedback Request Settings...",
-				key: "review-settings",
-				action: () => go(WebviewModals.ReviewSettings),
-			},
-			{ label: "-" },
-			{
-				icon: <Icon name="download" />,
-				label: "Export Data",
-				key: "export",
-				action: () => goPanel(WebviewPanels.Export),
-			}
-		);
-
-		const emailDomain = getDomainFromEmail(derivedState.currentUserEmail!);
-		if (emailDomain && VALID_DELETE_ORG_EMAIL_DOMAINS.includes(emailDomain)) {
-			menuItems.push(
-				{ label: "-" },
-				{
-					label: "Delete Organization",
-					key: "delete-organization",
-					action: deleteOrganization,
-					disabled: false,
-				}
-			);
-		}
-	}
 
 	return (
 		<Menu
