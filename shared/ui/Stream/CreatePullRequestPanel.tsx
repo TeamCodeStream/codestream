@@ -394,7 +394,12 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 
 				if (newHeadRefName === newBaseRefName) {
 					if (!isFork) {
-						setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
+						setPreconditionError({
+							type: "BRANCHES_MUST_NOT_MATCH",
+							message: "",
+							url: "",
+							id: "",
+						});
 					}
 					setFormState({ type: "", message: "", url: "", id: "" });
 				} else if (result.warning && result.warning.type) {
@@ -599,13 +604,23 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 	const checkPullRequestBranchPreconditions = async (localPrBranch, localReviewBranch) => {
 		if (acrossForks) {
 			if (baseForkedRepo.id === headForkedRepo.id && localPrBranch === localReviewBranch) {
-				setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
+				setPreconditionError({
+					type: "BRANCHES_MUST_NOT_MATCH",
+					message: "",
+					url: "",
+					id: "",
+				});
 				setFormState({ type: "", message: "", url: "", id: "" });
 				setFilesChanged([]);
 				return;
 			}
 		} else if (localPrBranch === localReviewBranch) {
-			setPreconditionError({ type: "BRANCHES_MUST_NOT_MATCH", message: "", url: "", id: "" });
+			setPreconditionError({
+				type: "BRANCHES_MUST_NOT_MATCH",
+				message: "",
+				url: "",
+				id: "",
+			});
 			setFormState({ type: "", message: "", url: "", id: "" });
 			setFilesChanged([]);
 			return;
@@ -673,7 +688,9 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 					setFormState({ type: "", message: "", url: "", id: "" });
 				}
 				// is there a way to fetch diffs across forks w/provider APIs?
-				if (!acrossForks) fetchFilesChanged(result.repo!.id!, localPrBranch, localReviewBranch);
+				if (!acrossForks && result.repo && result.repo.id) {
+					fetchFilesChanged(result.repo.id, localPrBranch, localReviewBranch);
+				}
 				setIsLoadingBranchInfo(false);
 			})
 			.catch(error => {
