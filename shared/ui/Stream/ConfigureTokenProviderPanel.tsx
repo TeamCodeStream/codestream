@@ -1,7 +1,6 @@
 import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import React, { useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { configureProvider, ViewLocation } from "../store/providers/actions";
 import { Link } from "../Stream/Link";
 import { closePanel } from "./actions";
@@ -97,6 +96,8 @@ export default function ConfigureTokenProviderPanel(props: Props) {
 							<label>
 								Please provide an <Link href={helpUrl}>API Token</Link> we can use to access your{" "}
 								{providerShortName} projects and issues.
+								{props.providerId === "fossa*com" &&
+									' Make sure the token is NOT a "Push Only" token.'}
 								{scopes && scopes.length && (
 									<span>
 										&nbsp;Your API Token should have the following scopes:{" "}
