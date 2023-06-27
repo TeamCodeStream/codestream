@@ -368,10 +368,14 @@ export const IntegrationsPanel = () => {
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
 
-						<h2>Code Analyzers</h2>
-						<IntegrationButtons>
-							{renderProviders(derivedState.codeAnalyzersProviders)}
-						</IntegrationButtons>
+						{derivedState.codeAnalyzersProviders.length > 0 && (
+							<>
+								<h2>Code Analyzers</h2>
+								<IntegrationButtons>
+									{renderProviders(derivedState.codeAnalyzersProviders)}
+								</IntegrationButtons>
+							</>
+						)}
 
 						{derivedState.cicdProviders.length > 0 && (
 							<>
