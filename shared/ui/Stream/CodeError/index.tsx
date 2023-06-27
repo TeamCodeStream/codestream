@@ -509,21 +509,19 @@ export const BaseCodeErrorHeader = (props: PropsWithChildren<BaseCodeErrorHeader
 				return !derivedState.teamMembers.some(tm => tm.email === ufg.email) && ufg.group === "GIT";
 			});
 
-			if (usersFromGitNotOnTeam.length) {
+			if (usersFromGitNotOnTeam.length && !derivedState.isNonCsOrg) {
 				// take no more than 5
 				usersFromGitNotOnTeam = usersFromGitNotOnTeam.slice(0, 5);
 				assigneeItems.push({ label: "-", key: "sep-git" });
-				if (!derivedState.isNonCsOrg) {
-					assigneeItems.push({
-						label: (
-							<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
-								SUGGESTIONS FROM GIT
-							</span>
-						),
-						noHover: true,
-						disabled: true,
-					});
-				}
+				assigneeItems.push({
+					label: (
+						<span style={{ fontSize: "10px", fontWeight: "bold", opacity: 0.7 }}>
+							SUGGESTIONS FROM GIT
+						</span>
+					),
+					noHover: true,
+					disabled: true,
+				});
 				assigneeItems = assigneeItems.concat(
 					usersFromGitNotOnTeam.map(_ => {
 						const label = _.displayName || _.email;
