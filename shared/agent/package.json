@@ -85,7 +85,7 @@
 		"object-sizeof": "1.5.3",
 		"opn": "5.4.0",
 		"pubnub": "4.37.0",
-		"semver": "7.3.5",
+		"semver": "7.5.2",
 		"socketcluster-client": "16.0.1",
 		"source-map-support": "0.5.21",
 		"stack-mapper": "0.2.2",
