@@ -1214,7 +1214,20 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 										)
 									) {
 										dispatch(closeAllPanels());
-										dispatch(setCurrentPullRequest(model.provider.id, id));
+										if (model.provider.id === "bitbucket*org") {
+											dispatch(
+												setCurrentPullRequest(
+													model.provider.id,
+													JSON.stringify({
+														id: `${model.provider.repo?.nameWithOwner}/${id}`,
+														pullRequestId: id,
+														repoWithOwner: model.provider.repo?.nameWithOwner,
+													})
+												)
+											);
+										} else {
+											dispatch(setCurrentPullRequest(model.provider.id, id));
+										}
 									} else {
 										HostApi.instance.send(OpenUrlRequestType, { url: url! });
 									}
