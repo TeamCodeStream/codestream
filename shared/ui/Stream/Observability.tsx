@@ -73,7 +73,7 @@ import Icon from "./Icon";
 import { Provider } from "./IntegrationsPanel";
 import { Link } from "./Link";
 import { ObservabilityAddAdditionalService } from "./ObservabilityAddAdditionalService";
-import { ObservabilityCurrentRepo } from "./ObservabilityCurrentRepo";
+import { CurrentRepoContext } from "./CurrentRepoContext";
 import { ObservabilityErrorWrapper } from "./ObservabilityErrorWrapper";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
 import Timestamp from "./Timestamp";
@@ -1021,7 +1021,7 @@ export const Observability = React.memo((props: Props) => {
 				title="Observability"
 				id={WebviewPanels.Observability}
 				subtitle={
-					<ObservabilityCurrentRepo
+					<CurrentRepoContext
 						observabilityRepos={observabilityRepos}
 						currentRepoCallback={setCurrentRepoId}
 					/>
@@ -1059,8 +1059,8 @@ export const Observability = React.memo((props: Props) => {
 										{!hasEntities && !genericError && (
 											<GenericWrapper>
 												<GenericCopy>
-													Instrument your application with New Relic to see performance data in
-													your IDE, including service-level telemetry and code-level metrics.{" "}
+													Instrument your application with New Relic to see performance data in your
+													IDE, including service-level telemetry and code-level metrics.{" "}
 													<a href="https://docs.newrelic.com/docs/codestream/how-use-codestream/performance-monitoring">
 														Learn more.
 													</a>

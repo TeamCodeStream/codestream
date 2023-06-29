@@ -4,11 +4,13 @@ import { ReposScm, FetchThirdPartyCodeAnalyzersRequestType } from "@codestream/p
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
-import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
-import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
+import { useMemoizedState } from "@codestream/webview/utilities/hooks";
+import { WebviewPanels } from "../../ipc/webview.protocol.common";
+import { PaneBody, PaneHeader, PaneState } from "../../src/components/Pane";
 import Icon from "../Icon";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaResults } from "./FossaResults";
+import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
 
 interface Props {
 	openRepos: ReposScm[];
@@ -40,6 +42,7 @@ export const CodeAnalyzers = (props: Props) => {
 			providers,
 		};
 	}, shallowEqual);
+	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
 
 	useEffect(() => {
 		if (props.paneState === PaneState.Collapsed) return;
@@ -85,20 +88,7 @@ export const CodeAnalyzers = (props: Props) => {
 			<PaneHeader
 				title="Code Analyzers"
 				id={WebviewPanels.CodeAnalyzers}
-				subtitle={
-					derivedState.currentRepo && (
-						<>
-							<span>
-								<Icon
-									name="repo"
-									className="inline-label"
-									style={{ transform: "scale(0.7)", display: "inline-block" }}
-								/>
-								{derivedState.currentRepo.folder.name}
-							</span>
-						</>
-					)
-				}
+				subtitle={<CurrentRepoContext currentRepoCallback={setCurrentRepoId} />}
 			></PaneHeader>
 			{props.paneState != PaneState.Collapsed && (
 				<PaneBody key="fossa">

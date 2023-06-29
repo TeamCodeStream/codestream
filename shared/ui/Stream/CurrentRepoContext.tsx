@@ -19,14 +19,14 @@ import { useAppDispatch } from "../utilities/hooks";
 
 interface Props {
 	currentRepoCallback: (repoId?: string) => void;
-	observabilityRepos: ObservabilityRepo[];
+	observabilityRepos?: ObservabilityRepo[];
 }
 
 const CurrentRepoContainer = styled.span`
 	color: var(--text-color-subtle);
 `;
 
-export const ObservabilityCurrentRepo = React.memo((props: Props) => {
+export const CurrentRepoContext = React.memo((props: Props) => {
 	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
 		return {
