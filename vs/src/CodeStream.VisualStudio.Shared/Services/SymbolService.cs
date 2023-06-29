@@ -18,6 +18,9 @@ using Microsoft.CodeAnalysis.MSBuild;
 using Microsoft.VisualStudio.Shell.Interop;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
+using Microsoft.VisualStudio.LanguageServices;
+using Microsoft.CodeAnalysis.FindSymbols;
+using VSLangProj80;
 
 namespace CodeStream.VisualStudio.Shared.Services
 {
@@ -32,90 +35,40 @@ namespace CodeStream.VisualStudio.Shared.Services
 	public class SymbolService : ISymbolService
 	{
 		private static readonly ILogger Log = LogManager.ForContext<SymbolService>();
-		private readonly IVsSolution _vsSolution;
-		private readonly DTE _dte;
+		private readonly VisualStudioWorkspace _workspace;
 
 		[ImportingConstructor]
-		public SymbolService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
+		public SymbolService(VisualStudioWorkspace workspace)
 		{
-			_vsSolution = serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-			_dte = serviceProvider.GetService(typeof(DTE)) as DTE;
+			_workspace = workspace;
 		}
 
 		public async Task RevealSymbolAsync(string fullyQualifiedMethodName, CancellationToken cancellationToken)
 		{
+			var parts = fullyQualifiedMethodName.Split('.');
+			var methodName = parts[parts.Length - 1];
 
-			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			var solutionPath = _vsSolution.GetSolutionFile();
-
-			await ThreadHelper.JoinableTaskFactory.RunAsync(async () =>
+			if (_workspace?.CurrentSolution != null)
 			{
-				var workspace = MSBuildWorkspace.Create();
-								
-				var solution = await workspace.OpenSolutionAsync(solutionPath);
 
-				var documents = solution.Projects.SelectMany(p => p.Documents);
-
-				foreach (var document in documents)
+				foreach (var project in _workspace.CurrentSolution.Projects)
 				{
-					var root = await document.GetSyntaxRootAsync();
-
-					var namespaceDeclaration = root
-						.DescendantNodes()
-						.OfType<NamespaceDeclarationSyntax>()
-						.FirstOrDefault(ns => fullyQualifiedMethodName.StartsWith(ns.Name.ToString(), StringComparison.OrdinalIgnoreCase));
-
-					if (namespaceDeclaration is null)
+					if (project.SupportsCompilation)
 					{
-						continue;
+						var symbols = (await SymbolFinder
+							.FindDeclarationsAsync(project, methodName, true))
+							.Where(x => x.ToDisplayString().EqualsIgnoreCase($"{fullyQualifiedMethodName}()"));
+						
+						if (symbols != null && symbols.Any())
+						{
+							var symbol = symbols.FirstOrDefault();
+							await _workspace.TryGoToDefinitionAsync(symbol, project, cancellationToken);
+							break;
+						}
 					}
-
-					var classDeclaration = namespaceDeclaration
-						.DescendantNodes()
-						.OfType<ClassDeclarationSyntax>()
-						.FirstOrDefault(cls => fullyQualifiedMethodName.StartsWith($"{namespaceDeclaration.Name}.{cls.Identifier.ValueText}", StringComparison.OrdinalIgnoreCase));
-
-					if (classDeclaration is null)
-					{
-						continue;
-					}
-
-					var methodDeclaration = classDeclaration
-						.DescendantNodes()
-						.OfType<MethodDeclarationSyntax>()
-						.FirstOrDefault(method => fullyQualifiedMethodName.EqualsIgnoreCase($"{namespaceDeclaration.Name}.{classDeclaration.Identifier.ValueText}.{method.Identifier.ValueText}"));
-
-					if (methodDeclaration is null)
-					{
-						continue;
-					}
-
-					var semanticModel = await document.GetSemanticModelAsync();
-					ISymbol methodSymbol = semanticModel.GetDeclaredSymbol(methodDeclaration);
-
-					var definitionLocation = methodSymbol?.Locations.FirstOrDefault();
-
-					if (definitionLocation is null)
-					{
-						continue;
-					}
-
-					// if we got this far, we found a matching symbol. Switch back to main thread and open file
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-					var filePath = definitionLocation.SourceTree?.FilePath;
-					var lineNumber = definitionLocation.GetLineSpan().StartLinePosition.Line + 1;
-
-					var window = _dte.ItemOperations.OpenFile(filePath);
-					var textDocument = (EnvDTE.TextDocument)window.Document.Object("TextDocument");
-
-					textDocument.Selection.MoveToLineAndOffset(lineNumber, 1, false);
-					textDocument.Selection.GotoLine(lineNumber, true);
-
-					break;
 				}
-			});
+
+			}
 		}
 	}
 }
