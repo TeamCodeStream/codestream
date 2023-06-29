@@ -7,6 +7,7 @@ import { getUserProviderInfoFromState } from "@codestream/webview/store/provider
 import { useMemoizedState } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
+import Icon from "../Icon";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaResults } from "./FossaResults";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
