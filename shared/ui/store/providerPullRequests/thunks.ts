@@ -134,7 +134,15 @@ export const getPullRequestConversations = createAppAsyncThunk<
 		const state: CodeStreamState = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		if (provider) {
-			const pr = provider[id];
+			let pr = provider[id];
+			if (!pr) {
+				try {
+					const parsed = JSON.parse(id);
+					pr = provider[parsed.id];
+				} catch (ex) {
+					console.log(ex);
+				}
+			}
 			if (pr && pr.conversations) {
 				if (isAnHourOld(pr.conversationsLastFetch)) {
 					console.warn(
