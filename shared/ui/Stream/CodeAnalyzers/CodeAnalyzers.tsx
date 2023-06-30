@@ -109,6 +109,7 @@ export const CodeAnalyzers = (props: Props) => {
 					)}
 					{derivedState.bootstrapped &&
 						!loading &&
+						message &&
 						message.length === 0 &&
 						derivedState.currentRepo && (
 							<div style={{ padding: "0 20px 0 40px" }}>No code analysis found for this repo.</div>
