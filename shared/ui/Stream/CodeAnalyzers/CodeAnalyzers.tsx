@@ -16,6 +16,9 @@ interface Props {
 }
 
 export const CodeAnalyzers = (props: Props) => {
+	const [loading, setLoading] = useState(false);
+	const [message, setMessage] = useState("");
+
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { editorContext, providers } = state;
 
@@ -49,9 +52,6 @@ export const CodeAnalyzers = (props: Props) => {
 		derivedState.providerInfo,
 		props.paneState,
 	]);
-
-	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState("");
 
 	const fetchCodeAnalysis = async () => {
 		if (loading) return;
