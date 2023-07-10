@@ -58,7 +58,7 @@
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "1.8.8",
-		"@grpc/proto-loader": "0.6.4",
+		"@grpc/proto-loader": "0.7.7",
 		"@microsoft/microsoft-graph-client": "2.0.0",
 		"@slack/web-api": "6.7.0",
 		"abort-controller": "3.0.0",
