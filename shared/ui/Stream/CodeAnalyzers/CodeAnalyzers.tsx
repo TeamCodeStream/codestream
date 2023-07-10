@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import { ReposScm, FetchThirdPartyCodeAnalyzersRequestType } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
 import { useMemoizedState } from "@codestream/webview/utilities/hooks";
-import { WebviewPanels } from "../../ipc/webview.protocol.common";
-import { PaneBody, PaneHeader, PaneState } from "../../src/components/Pane";
-import Icon from "../Icon";
+import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
+import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaResults } from "./FossaResults";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
@@ -20,6 +19,7 @@ interface Props {
 export const CodeAnalyzers = (props: Props) => {
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState("");
+	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { editorContext, providers } = state;
@@ -42,19 +42,24 @@ export const CodeAnalyzers = (props: Props) => {
 			providers,
 		};
 	}, shallowEqual);
-	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
+
+	// The way providerInfo is created is causing useEffect
+	// to run in an infinite loop. Any new providers should be
+	// added to this memoized object.
+	const { fossa } = derivedState.providerInfo;
+	const memoizedProviderInfo = useMemo(
+		() => ({
+			fossa,
+		}),
+		[fossa]
+	);
 
 	useEffect(() => {
 		if (props.paneState === PaneState.Collapsed) return;
 		fetchCodeAnalysis().catch(error => {
 			console.error(error);
 		});
-	}, [
-		derivedState.currentRepo,
-		derivedState.providers,
-		derivedState.providerInfo,
-		props.paneState,
-	]);
+	}, [derivedState.currentRepo, derivedState.providers, memoizedProviderInfo, props.paneState]);
 
 	const fetchCodeAnalysis = async () => {
 		if (loading) return;
