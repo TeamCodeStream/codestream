@@ -13,7 +13,7 @@
     "@newrelic/pino-enricher": "^1.1.0",
     "@newrelic/winston-enricher": "^4.0.0",
     "fastify": "^3.29.4",
-    "newrelic": "^9.5.0",
+    "newrelic": "^9.15.0",
     "pino": "^7.11.0",
     "winston": "^3.8.1"
   },
