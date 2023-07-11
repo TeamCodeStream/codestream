@@ -1531,33 +1531,68 @@ export class BitbucketProvider
 		pullRequestId: string;
 		text: string;
 	}): Promise<Directives> {
-		const directives: any = [];
 		const { pullRequestId, repoWithOwner } = this.parseId(request.pullRequestId);
+		let directives: Directive[];
 
 		if (request.text) {
-			this.createPullRequestComment(request);
+			const payload1 = {
+				content: {
+					raw: request.text,
+				},
+			};
+			const responseComment = await this.post<
+				BitBucketCreateCommentRequest,
+				BitbucketPullRequestComment
+			>(`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/comments`, payload1);
+
+			const payload2: { type: string } = {
+				type: "pullrequest",
+			};
+
+			const response2 = await this.post<BitbucketDeclinePullRequest, BitbucketMergeRequestResponse>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/decline`,
+				payload2
+			);
+
+			directives = [
+				{
+					type: "updatePullRequest",
+					data: {
+						state: response2.body.state,
+						updatedAt: response2.body.updated_on,
+					},
+				},
+				{
+					type: "addPullRequestComment",
+					data: this.mapTimelineComment(responseComment.body, responseComment.body.user.uuid),
+				},
+			];
+			return this.handleResponse(request.pullRequestId, {
+				directives: directives,
+			});
+		} else {
+			const payload: { type: string } = {
+				type: "pullrequest",
+			};
+
+			const response = await this.post<BitbucketDeclinePullRequest, BitbucketMergeRequestResponse>(
+				`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/decline`,
+				payload
+			);
+
+			directives = [
+				{
+					type: "updatePullRequest",
+					data: {
+						state: response.body.state,
+						updatedAt: response.body.updated_on,
+					},
+				},
+			];
+			return this.handleResponse(request.pullRequestId, {
+				directives: directives,
+			});
 		}
-
-		const payload: { type: string } = {
-			type: "pullrequest",
-		};
-
-		const response2 = await this.post<BitbucketDeclinePullRequest, BitbucketMergeRequestResponse>(
-			`/repositories/${repoWithOwner}/pullrequests/${pullRequestId}/decline`,
-			payload
-		);
-
-		directives.push({
-			type: "updatePullRequest",
-			data: {
-				state: response2.body.state,
-				updatedAt: response2.body.updated_on,
-			},
-		});
-
-		return this.handleResponse(request.pullRequestId, {
-			directives: directives,
-		});
 	}
 
 	async updatePullRequestBody(request: {
