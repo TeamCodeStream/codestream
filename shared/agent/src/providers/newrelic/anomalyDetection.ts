@@ -802,20 +802,20 @@ class PythonLanguageSupport implements LanguageSupport {
 		return "python";
 	}
 	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
-		const functionRE = /^Function\/(.+)\:(.+)/;
-		const errorsRE = /^Errors\/(.+)\/(.+)/;
-		return metrics.filter(
-			m =>
-				!m.name.startsWith("Function/flask.app:Flask.") &&
-				(benchmarkSpans.find(
+		const errorPrefixRe = /^Errors\/WebTransaction\//;
+		return metrics.filter(m => {
+			const name = m.name.replace(errorPrefixRe, "");
+			return (
+				!name.startsWith("Function/flask.app:Flask.") &&
+				benchmarkSpans.find(
 					s =>
-						s.name === m.name &&
+						s.name === name &&
 						s.name.endsWith(s.codeFunction) &&
 						s.codeFunction &&
 						s.codeFilepath != "<builtin>"
-				) ||
-					errorsRE.test(m.name))
-		);
+				)
+			);
+		});
 	}
 
 	codeAttrsFromName(name: string): CodeAttributes {
@@ -836,6 +836,8 @@ class PythonLanguageSupport implements LanguageSupport {
 	}
 
 	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+		const errorPrefixRe = /^Errors\/WebTransaction\//;
+		name = name.replace(errorPrefixRe, "");
 		const span = benchmarkSpans.find(_ => _.name === name && _.name.endsWith(_.codeFunction));
 		if (span && span.codeFunction) {
 			return {
@@ -848,7 +850,9 @@ class PythonLanguageSupport implements LanguageSupport {
 	}
 
 	displayName(codeAttrs: CodeAttributes, name: string) {
-		return name;
+		const errorPrefixRe = /^Errors\/WebTransaction\/Function\//;
+		const functionRe = /^Function\//;
+		return name.replace(errorPrefixRe, "").replace(functionRe, "");
 	}
 }
 

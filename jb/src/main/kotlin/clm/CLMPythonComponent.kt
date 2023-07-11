@@ -33,14 +33,15 @@ class CLMPythonComponent(project: Project) :
         }.sortedByDescending {
             it.second
         }
-        return symbolsAndPathScores.first().first
+        return symbolsAndPathScores.firstOrNull()?.first
     }
 
     private fun symbolAndPathScore(virtualFile: VirtualFile, codeFilepath: String, codeNamespace: String?, codeFunction: String): Pair<NavigatablePsiElement?, Int> {
         val pyFile = PsiManager.getInstance(project).findFile(virtualFile) as? PyFile
         val symbol = pyFile?.let {
             if (codeNamespace != null) {
-                val clazz = pyFile.findTopLevelClass(codeNamespace)
+                val className = codeNamespace.split(".").last()
+                val clazz = pyFile.findTopLevelClass(className)
                 clazz?.findMethodByName(codeFunction, false, null) ?: pyFile.findTopLevelFunction(codeFunction)
             } else {
                 pyFile.findTopLevelFunction(codeFunction)
