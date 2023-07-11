@@ -146,8 +146,8 @@ export class AnomalyDetector {
 			const symbolStr = this.extractSymbolStr(name);
 			if (anomalousSymbolStrs.find(_ => _ === symbolStr)) continue;
 
-			const codeAttrs = languageSupport.getCodeAttrs(name, benchmarkSpans);
-			const text = languageSupport.getCodeAttrsName(codeAttrs) || name;
+			const codeAttrs = languageSupport.codeAttrs(name, benchmarkSpans);
+			const text = languageSupport.displayName(codeAttrs, name);
 			if (allOtherAnomalies.find(_ => _.text === text)) continue;
 
 			const anomaly: ObservabilityAnomaly = {
@@ -564,12 +564,12 @@ export class AnomalyDetector {
 		benchmarkSpans: SpanWithCodeAttrs[],
 		errorMetricTimesliceNames: string[]
 	): ObservabilityAnomaly {
-		const codeAttrs = languageSupport.getCodeAttrs(comparison.name, benchmarkSpans);
+		const codeAttrs = languageSupport.codeAttrs(comparison.name, benchmarkSpans);
 		return {
 			...comparison,
 			...codeAttrs,
 			language: languageSupport.language,
-			text: languageSupport.getCodeAttrsName(codeAttrs) || comparison.name,
+			text: languageSupport.displayName(codeAttrs, comparison.name),
 			totalDays: this._totalDays,
 			metricTimesliceName: comparison.name,
 			sinceText: this._sinceText,
@@ -592,12 +592,12 @@ export class AnomalyDetector {
 		benchmarkSpans: SpanWithCodeAttrs[],
 		metricTimesliceNames: string[]
 	): ObservabilityAnomaly {
-		const codeAttrs = languageSupport.getCodeAttrs(comparison.name, benchmarkSpans);
+		const codeAttrs = languageSupport.codeAttrs(comparison.name, benchmarkSpans);
 		return {
 			...comparison,
 			...codeAttrs,
 			language: languageSupport.language,
-			text: languageSupport.getCodeAttrsName(codeAttrs) || comparison.name,
+			text: languageSupport.displayName(codeAttrs, comparison.name),
 			totalDays: this._totalDays,
 			sinceText: this._sinceText,
 			metricTimesliceName:
@@ -659,6 +659,9 @@ export class AnomalyDetector {
 			if (metric.name.indexOf("DotNet/") === 0) {
 				return new CSharpLanguageSupport();
 			}
+			if (metric.name.indexOf("Python/") === 0) {
+				return new PythonLanguageSupport();
+			}
 		}
 
 		return undefined;
@@ -670,11 +673,9 @@ interface LanguageSupport {
 
 	filterMetrics(data: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[];
 
-	extractCodeAttrs(name: string): CodeAttributes;
+	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes;
 
-	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes;
-
-	getCodeAttrsName(codeAttrs: CodeAttributes): string | null;
+	displayName(codeAttrs: CodeAttributes, name: string): string;
 }
 
 class JavaLanguageSupport implements LanguageSupport {
@@ -695,7 +696,7 @@ class JavaLanguageSupport implements LanguageSupport {
 		);
 	}
 
-	extractCodeAttrs(name: string): CodeAttributes {
+	codeAttrsFromName(name: string): CodeAttributes {
 		const parts = name.split("/");
 		const codeFunction = parts[parts.length - 1];
 		const codeNamespace = parts[parts.length - 2];
@@ -705,7 +706,7 @@ class JavaLanguageSupport implements LanguageSupport {
 		};
 	}
 
-	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
 		const span = benchmarkSpans.find(_ => _.name === name);
 		if (span && span.codeFunction) {
 			return {
@@ -714,11 +715,11 @@ class JavaLanguageSupport implements LanguageSupport {
 				codeFunction: span.codeFunction,
 			};
 		}
-		return this.extractCodeAttrs(name);
+		return this.codeAttrsFromName(name);
 	}
 
-	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
-		if (!codeAttrs?.codeFunction) return null;
+	displayName(codeAttrs: CodeAttributes, name: string) {
+		if (!codeAttrs?.codeFunction) return name;
 		const parts = [];
 		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
 		parts.push(codeAttrs.codeFunction);
@@ -750,7 +751,7 @@ class RubyLanguageSupport implements LanguageSupport {
 		);
 	}
 
-	extractCodeAttrs(name: string): CodeAttributes {
+	codeAttrsFromName(name: string): CodeAttributes {
 		const parts = name.split("/");
 		const codeFunction = parts[parts.length - 1];
 		const codeNamespace = parts[parts.length - 2];
@@ -775,7 +776,7 @@ class RubyLanguageSupport implements LanguageSupport {
 		}
 	}
 
-	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
 		const span = benchmarkSpans.find(_ => _.name === name);
 		if (span && span.codeFunction) {
 			return {
@@ -784,15 +785,70 @@ class RubyLanguageSupport implements LanguageSupport {
 				codeFunction: span.codeFunction,
 			};
 		}
-		return this.extractCodeAttrs(name);
+		return this.codeAttrsFromName(name);
 	}
 
-	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
-		if (!codeAttrs?.codeFunction) return null;
+	displayName(codeAttrs: CodeAttributes, name: string) {
+		if (!codeAttrs?.codeFunction) return name;
 		const parts = [];
 		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
 		parts.push(codeAttrs.codeFunction);
 		return parts.join("#");
+	}
+}
+
+class PythonLanguageSupport implements LanguageSupport {
+	get language() {
+		return "python";
+	}
+	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
+		const functionRE = /^Function\/(.+)\:(.+)/;
+		const errorsRE = /^Errors\/(.+)\/(.+)/;
+		return metrics.filter(
+			m =>
+				!m.name.startsWith("Function/flask.app:Flask.") &&
+				(benchmarkSpans.find(
+					s =>
+						s.name === m.name &&
+						s.name.endsWith(s.codeFunction) &&
+						s.codeFunction &&
+						s.codeFilepath != "<builtin>"
+				) ||
+					errorsRE.test(m.name))
+		);
+	}
+
+	codeAttrsFromName(name: string): CodeAttributes {
+		const [prefix, classMethod] = name.split(":");
+		const parts = classMethod.split(".");
+		const codeFunction = parts.pop() || "";
+		const namespacePrefix = prefix.replace("Function/", "");
+		const className = parts.join(".");
+		const codeNamespaceParts = [namespacePrefix];
+		if (className.length) {
+			codeNamespaceParts.push(className);
+		}
+		const codeNamespace = codeNamespaceParts.join(":");
+		return {
+			codeNamespace,
+			codeFunction,
+		};
+	}
+
+	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+		const span = benchmarkSpans.find(_ => _.name === name && _.name.endsWith(_.codeFunction));
+		if (span && span.codeFunction) {
+			return {
+				codeFilepath: span.codeFilepath,
+				codeNamespace: span.codeNamespace,
+				codeFunction: span.codeFunction,
+			};
+		}
+		return this.codeAttrsFromName(name);
+	}
+
+	displayName(codeAttrs: CodeAttributes, name: string) {
+		return name;
 	}
 }
 
@@ -814,7 +870,7 @@ class CSharpLanguageSupport implements LanguageSupport {
 		);
 	}
 
-	extractCodeAttrs(name: string): CodeAttributes {
+	codeAttrsFromName(name: string): CodeAttributes {
 		const parts = name.split("/");
 		const codeFunction = parts[parts.length - 1];
 		const codeNamespace = parts[parts.length - 2];
@@ -824,7 +880,7 @@ class CSharpLanguageSupport implements LanguageSupport {
 		};
 	}
 
-	getCodeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
+	codeAttrs(name: string, benchmarkSpans: SpanWithCodeAttrs[]): CodeAttributes {
 		const span = benchmarkSpans.find(_ => _.name === name);
 		if (span) {
 			return {
@@ -833,11 +889,11 @@ class CSharpLanguageSupport implements LanguageSupport {
 				codeFunction: span.codeFunction,
 			};
 		}
-		return this.extractCodeAttrs(name);
+		return this.codeAttrsFromName(name);
 	}
 
-	getCodeAttrsName(codeAttrs: CodeAttributes | undefined): string | null {
-		if (!codeAttrs?.codeFunction) return null;
+	displayName(codeAttrs: CodeAttributes, name: string) {
+		if (!codeAttrs.codeFunction) return name;
 		const parts = [];
 		if (codeAttrs.codeNamespace) parts.push(codeAttrs.codeNamespace);
 		parts.push(codeAttrs.codeFunction);

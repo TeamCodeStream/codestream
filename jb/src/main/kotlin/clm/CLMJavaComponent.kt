@@ -32,13 +32,13 @@ class CLMJavaComponent(project: Project) :
         return filteredNamespaces
     }
 
-    override fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? {
-        if (className == null || functionName == null) return null
+    override fun findSymbol(codeFilepath: String?, codeNamespace: String?, codeFunction: String?): NavigatablePsiElement? {
+        if (codeNamespace == null || codeFunction == null) return null
         val projectScope = GlobalSearchScope.projectScope(project)
         val psiFacade = JavaPsiFacade.getInstance(project)
-        val clazz = psiFacade.findClass(className, projectScope)
+        val clazz = psiFacade.findClass(codeNamespace, projectScope)
         if (clazz != null) {
-            val methods = clazz.findMethodsByName(functionName, true)
+            val methods = clazz.findMethodsByName(codeFunction, true)
             return methods.firstOrNull()
         }
         return null

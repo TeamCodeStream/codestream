@@ -117,7 +117,7 @@ abstract class CLMLanguageComponent<T : CLMEditorManager>(
 
     open fun filterNamespaces(namespaces: List<String>): List<String> = emptyList()
 
-    open fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? = null
+    open fun findSymbol(codeFilepath: String?, codeNamespace: String?, codeFunction: String?): NavigatablePsiElement? = null
 
     open suspend fun copySymbolInFile(uri: String, namespace: String?, functionName: String, ref: String?): FindSymbolInFileResponse? {
         val filePath = URI.create(uri).path

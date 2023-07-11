@@ -219,7 +219,7 @@ class WebViewRouter(val project: Project) {
 
     private suspend fun editorSymbolReveal(message: WebViewMessage): EditorSymbolRevealResponse {
         val request = gson.fromJson<EditorSymbolRevealRequest>(message.params!!)
-        val success = project.clmService?.revealSymbol(request.codeNamespace, request.codeFunction)
+        val success = project.clmService?.revealSymbol(request.codeFilepath, request.codeNamespace, request.codeFunction)
             ?: false
         return EditorSymbolRevealResponse(success)
     }

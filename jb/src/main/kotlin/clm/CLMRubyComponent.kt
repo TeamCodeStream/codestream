@@ -29,15 +29,15 @@ class CLMRubyComponent(project: Project) :
         logger.info("Initializing code level metrics for Ruby")
     }
 
-    override fun findSymbol(className: String?, functionName: String?): NavigatablePsiElement? {
-        if (className == null || functionName == null) return null
+    override fun findSymbol(codeFilepath: String?, codeNamespace: String?, codeFunction: String?): NavigatablePsiElement? {
+        if (codeNamespace == null || codeFunction == null) return null
         val projectScope = GlobalSearchScope.allScope(project)
-        val reversedParts = className.split("::").reversed()
+        val reversedParts = codeNamespace.split("::").reversed()
         val clazz = RubyClassModuleNameIndex.findOne(project, reversedParts[0], projectScope) { it ->
             (it as? RClass)?.matchesModuleHierarchy(reversedParts.drop(1)) ?: false
         }
         (clazz as? RClass)?.let {
-            val method = it.findDescendantOfType<RMethod> { method -> method.methodName?.name == functionName }
+            val method = it.findDescendantOfType<RMethod> { method -> method.methodName?.name == codeFunction }
             return method ?: clazz
         }
         return null

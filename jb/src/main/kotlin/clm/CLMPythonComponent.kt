@@ -3,8 +3,12 @@ package com.codestream.clm
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.NavigatablePsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiManager
+import com.intellij.psi.search.FilenameIndex
+import com.intellij.psi.search.GlobalSearchScope
 import com.jetbrains.python.psi.PyFile
 
 class CLMPythonComponent(project: Project) :
@@ -14,6 +18,49 @@ class CLMPythonComponent(project: Project) :
 
     init {
         logger.info("Initializing code level metrics for Python")
+    }
+
+    override fun findSymbol(codeFilepath: String?, codeNamespace: String?, codeFunction: String?): NavigatablePsiElement? {
+        if (codeFilepath == null || codeFunction == null) return null
+        val projectSearchScope = GlobalSearchScope.projectScope(project)
+        val parts = codeFilepath.replace("\\", "/").split("/")
+        val search = parts.last()
+        val virtualFiles = FilenameIndex.getVirtualFilesByName(search, projectSearchScope)
+        val symbolsAndPathScores = virtualFiles.map {
+            symbolAndPathScore(it, codeFilepath, codeNamespace, codeFunction)
+        }.filter {
+            it.first != null
+        }.sortedByDescending {
+            it.second
+        }
+        return symbolsAndPathScores.first().first
+    }
+
+    private fun symbolAndPathScore(virtualFile: VirtualFile, codeFilepath: String, codeNamespace: String?, codeFunction: String): Pair<NavigatablePsiElement?, Int> {
+        val pyFile = PsiManager.getInstance(project).findFile(virtualFile) as? PyFile
+        val symbol = pyFile?.let {
+            if (codeNamespace != null) {
+                val clazz = pyFile.findTopLevelClass(codeNamespace)
+                clazz?.findMethodByName(codeFunction, false, null) ?: pyFile.findTopLevelFunction(codeFunction)
+            } else {
+                pyFile.findTopLevelFunction(codeFunction)
+            }
+        } ?: return Pair(null, 0)
+
+        var score = 0;
+        val parts = codeFilepath.replace("\\", "/").split("/").toMutableList()
+        var currentFileOrDir = virtualFile
+        while (currentFileOrDir != null) {
+            val part = parts.removeLastOrNull()
+            if (currentFileOrDir.name == part) {
+                score++
+                currentFileOrDir = currentFileOrDir.parent
+            } else {
+                break;
+            }
+        }
+
+        return Pair(symbol, score)
     }
 }
 

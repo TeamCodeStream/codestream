@@ -13,8 +13,6 @@ function mapTimeslice(languageId: LanguageId, name: string): string {
 	switch (languageId) {
 		case "ruby":
 			return mapRubyTimesliceName(name);
-		case "python":
-			return `WebTransaction/${name}`;
 		default:
 			return name;
 	}

@@ -23,11 +23,11 @@ class CLMService(val project: Project) {
         return filteredNamespaces
     }
 
-    suspend fun revealSymbol(className: String?, functionName: String?): Boolean {
+    suspend fun revealSymbol(codeFilepath: String?, codeNamespace: String?, codeFunction: String?): Boolean {
         val future = CompletableFuture<Boolean>()
         DumbService.getInstance(project).smartInvokeLater {
             for (component in _languageComponents) {
-                val symbol = component.findSymbol(className, functionName)
+                val symbol = component.findSymbol(codeFilepath, codeNamespace, codeFunction)
                 symbol?.let {
                     it.navigate(false)
                     future.complete(true)
