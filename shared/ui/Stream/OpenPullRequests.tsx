@@ -742,7 +742,7 @@ export const OpenPullRequests = React.memo((props: Props) => {
 		// if we have an expanded PR diffs in the sidebar, collapse it
 		if (
 			pr.id === derivedState.expandedPullRequestId ||
-			pr.idComputed === derivedState.expandedPullRequestId
+			(pr.idComputed && pr.idComputed === derivedState.expandedPullRequestId)
 		) {
 			dispatch(clearCurrentPullRequest());
 		} else {
