@@ -495,8 +495,26 @@ export interface FetchThirdPartyCodeAnalyzersRequest {
 	providerId: string;
 }
 
+interface CodeAnalyzerProject {
+	id: string;
+	status: string;
+	depth: number;
+	title: string;
+}
+
+export interface LicenseDependency {
+	id: number;
+	createdAt: string;
+	source: { id: string; name: string; url: string; version: string; packageManager: string };
+	depths: { direct: number; deep: number };
+	statuses: { active: number; ignored: number };
+	projects: CodeAnalyzerProject[];
+	type?: string | null;
+	details?: string | null;
+	license?: string | null;
+}
 export interface FetchThirdPartyCodeAnalyzersResponse {
-	message: string;
+	[issues: string]: LicenseDependency[];
 }
 
 export const FetchThirdPartyCodeAnalyzersRequestType = new RequestType<

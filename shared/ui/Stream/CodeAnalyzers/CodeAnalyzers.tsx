@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { shallowEqual, useSelector } from "react-redux";
-import { ReposScm, FetchThirdPartyCodeAnalyzersRequestType } from "@codestream/protocols/agent";
+import {
+	ReposScm,
+	FetchThirdPartyCodeAnalyzersRequestType,
+	LicenseDependency,
+} from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
@@ -9,7 +13,7 @@ import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
 import Icon from "../Icon";
 import { ConnectFossa } from "./ConnectFossa";
-import { FossaResults } from "./FossaResults";
+import { FossaIssues } from "./FossaIssues";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
 
 interface Props {
@@ -19,7 +23,7 @@ interface Props {
 
 export const CodeAnalyzers = (props: Props) => {
 	const [loading, setLoading] = useState(false);
-	const [message, setMessage] = useState("");
+	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependency[]>([]);
 	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -44,9 +48,6 @@ export const CodeAnalyzers = (props: Props) => {
 		};
 	}, shallowEqual);
 
-	// The way providerInfo is created is causing useEffect
-	// to run in an infinite loop. Any new providers should be
-	// added to this memoized object.
 	const { fossa } = derivedState.providerInfo;
 	const memoizedProviderInfo = useMemo(
 		() => ({
@@ -69,7 +70,7 @@ export const CodeAnalyzers = (props: Props) => {
 			setLoading(false);
 			return;
 		}
-		let msg;
+		let licenseDepIssues: LicenseDependency[] = [];
 		for (const [providerId, provider] of Object.entries(derivedState.providers)) {
 			if (!Object.keys(derivedState.providerInfo).includes(provider.name)) continue;
 
@@ -77,15 +78,15 @@ export const CodeAnalyzers = (props: Props) => {
 				const result = await HostApi.instance.send(FetchThirdPartyCodeAnalyzersRequestType, {
 					providerId,
 				});
-				if (result.message) {
-					msg = result.message;
+				if (result.issues) {
+					licenseDepIssues = result.issues;
 					break;
 				}
 			} catch (error) {
 				console.error(error);
 			}
 		}
-		setMessage(msg);
+		setLicenseDepIssues(licenseDepIssues);
 		setLoading(false);
 	};
 
@@ -99,14 +100,13 @@ export const CodeAnalyzers = (props: Props) => {
 			{props.paneState != PaneState.Collapsed && (
 				<PaneBody key="fossa">
 					{!derivedState.bootstrapped && <ConnectFossa />}
-					{derivedState.bootstrapped && <FossaResults message={message} />}
+					{derivedState.bootstrapped && <FossaIssues issues={licenseDepIssues} />}
 					{derivedState.bootstrapped && !derivedState.currentRepo && (
 						<div style={{ padding: "0 20px 0 40px" }}>Open a source file to see FOSSA results.</div>
 					)}
 					{derivedState.bootstrapped &&
 						!loading &&
-						message &&
-						message.length === 0 &&
+						licenseDepIssues?.length === 0 &&
 						derivedState.currentRepo && (
 							<div style={{ padding: "0 20px 0 40px" }}>No code analysis found for this repo.</div>
 						)}
