@@ -46,7 +46,7 @@
 		"react-select": "3.2.0",
 		"react-select-async-paginate": "0.4.1",
 		"react-slider": "1.0.2",
-		"recharts": "2.1.9",
+		"recharts": "2.1.13",
 		"redux-batched-subscribe": "0.1.6",
 		"reselect": "4.0.0",
 		"styled-components": "5.3.8",
