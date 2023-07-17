@@ -13,7 +13,7 @@ import { applyPatch, createPatch, ParsedDiff, parsePatch, structuredPatch } from
 import { URI } from "vscode-uri";
 
 import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
-import { getCache } from "../cache";
+import { getStorage } from "../storage";
 import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";
 import { Logger } from "../logger";
@@ -344,7 +344,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			futureReferences: {} as ReferenceLocationsById,
 		};
 		Logger.log(`MARKERS: retrieving uncommitted locations from local cache`);
-		const cache = await getCache(repoPath);
+		const cache = await getStorage(repoPath);
 		const cachedUncommittedLocations = cache.getCollection("uncommittedLocations");
 		for (const { id, referenceLocations } of markers) {
 			const canonicalLocation = referenceLocations.sort(compareReferenceLocations)[0];
@@ -606,7 +606,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 	async flushUncommittedLocations(repo: GitRepository) {
 		Logger.log(`MARKERS: flushing uncommitted locations`);
 		const { git, files, markers, session } = SessionContainer.instance();
-		const cache = await getCache(repo.path);
+		const cache = await getStorage(repo.path);
 		const uncommittedLocations = cache.getCollection("uncommittedLocations");
 
 		for (const id of uncommittedLocations.keys()) {

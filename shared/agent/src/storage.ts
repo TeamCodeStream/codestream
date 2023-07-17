@@ -3,15 +3,15 @@ import * as path from "path";
 import { SessionContainer } from "./container";
 import { xfs } from "./xfs";
 
-class Cache {
-	private readonly cachePath: string;
+class Storage {
+	private readonly storagePath: string;
 	private readonly data: {
 		[name: string]: {};
 	};
 	private readonly collections: Map<string, Collection>;
 
-	constructor(cachePath: string, data: any) {
-		this.cachePath = cachePath;
+	constructor(storagePath: string, data: any) {
+		this.storagePath = storagePath;
 		this.data = data;
 		this.collections = new Map();
 	}
@@ -26,7 +26,7 @@ class Cache {
 	}
 
 	async flush() {
-		await xfs.writeJsonAtomic(this.data, this.cachePath);
+		await xfs.writeJsonAtomic(this.data, this.storagePath);
 	}
 }
 
@@ -56,27 +56,27 @@ class Collection {
 	}
 }
 
-const caches = new Map<string, Cache>();
+const storages = new Map<string, Storage>();
 
-export async function getCache(repoPath: string): Promise<Cache> {
-	let cache = caches.get(repoPath);
-	if (!cache) {
-		cache = await load(repoPath);
-		caches.set(repoPath, cache);
+export async function getStorage(repoPath: string): Promise<Storage> {
+	let storage = storages.get(repoPath);
+	if (!storage) {
+		storage = await load(repoPath);
+		storages.set(repoPath, storage);
 	}
-	return cache;
+	return storage;
 }
 
-async function load(repoPath: string): Promise<Cache> {
+async function load(repoPath: string): Promise<Storage> {
 	if (!repoPath.endsWith(".git")) {
 		repoPath = path.join(repoPath, ".git");
 	}
 
-	const cachePath = path.join(
+	const storagePath = path.join(
 		repoPath,
 		`codestream-${SessionContainer.instance().session.userId}.cache`
 	);
-	const data = await xfs.readJson(cachePath);
+	const data = await xfs.readJson(storagePath);
 
-	return new Cache(cachePath, data || {});
+	return new Storage(storagePath, data || {});
 }

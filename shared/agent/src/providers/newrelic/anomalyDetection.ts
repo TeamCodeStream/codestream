@@ -14,7 +14,7 @@ import {
 } from "@codestream/protocols/agent";
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
-import { getCache } from "../../cache";
+import { getStorage } from "../../storage";
 
 export class AnomalyDetector {
 	constructor(
@@ -691,9 +691,9 @@ export class AnomalyDetector {
 		if (!observabilityRepo) return;
 		const gitRepo = await git.getRepositoryById(observabilityRepo.repoId);
 		if (!gitRepo) return;
-		const cache = await getCache(gitRepo.path);
+		const storage = await getStorage(gitRepo.path);
 
-		const anomalyNotificationsCollection = cache.getCollection("anomalyNotifications");
+		const anomalyNotificationsCollection = storage.getCollection("anomalyNotifications");
 		const anomalyNotificationsOld = anomalyNotificationsCollection.get(
 			entityGuid
 		) as AnomalyNotifications;
@@ -730,7 +730,9 @@ export class AnomalyDetector {
 				lastNotified: now,
 			};
 		}
-		await cache.flush();
+
+		anomalyNotificationsCollection.set(entityGuid, anomalyNotificationsNew);
+		await storage.flush();
 
 		Container.instance().agent.sendNotification(DidDetectObservabilityAnomaliesNotificationType, {
 			entityGuid: entityGuid,
