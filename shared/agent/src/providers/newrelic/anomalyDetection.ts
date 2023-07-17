@@ -10,9 +10,11 @@ import {
 	Comparison,
 	SpanWithCodeAttrs,
 	CodeAttributes,
+	DidDetectObservabilityAnomaliesNotificationType,
 } from "@codestream/protocols/agent";
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
+import { getCache } from "../../cache";
 
 export class AnomalyDetector {
 	constructor(
@@ -188,6 +190,12 @@ export class AnomalyDetector {
 			});
 		} catch (e) {
 			Logger.warn("Error generating anomaly detection telemetry", e);
+		}
+
+		try {
+			void (await this.notifyNewAnomalies(durationAnomalies, errorRateAnomalies));
+		} catch (e) {
+			Logger.warn("Error notifying newly detected observability anomalies", e);
 		}
 
 		return {
@@ -666,6 +674,83 @@ export class AnomalyDetector {
 
 		return undefined;
 	}
+
+	private async notifyNewAnomalies(
+		durationAnomalies: ObservabilityAnomaly[],
+		errorRateAnomalies: ObservabilityAnomaly[]
+	) {
+		const { repos: observabilityRepos } = await this._provider.getObservabilityRepos({});
+		const { entityGuid } = this._request;
+		const { git } = SessionContainer.instance();
+		const now = Date.now();
+
+		if (!observabilityRepos) return;
+		const observabilityRepo = observabilityRepos.find(_ =>
+			_.entityAccounts.some(_ => _.entityGuid === entityGuid)
+		);
+		if (!observabilityRepo) return;
+		const gitRepo = await git.getRepositoryById(observabilityRepo.repoId);
+		if (!gitRepo) return;
+		const cache = await getCache(gitRepo.path);
+
+		const anomalyNotificationsCollection = cache.getCollection("anomalyNotifications");
+		const anomalyNotificationsOld = anomalyNotificationsCollection.get(
+			entityGuid
+		) as AnomalyNotifications;
+		const anomalyNotificationsNew: AnomalyNotifications = {
+			duration: {},
+			errorRate: {},
+		};
+
+		const newDurationAnomalies: ObservabilityAnomaly[] = [];
+		for (const anomaly of durationAnomalies) {
+			const lastNotification = anomalyNotificationsOld?.duration[anomaly.name];
+			if (!lastNotification) {
+				newDurationAnomalies.push(anomaly);
+				anomalyNotificationsNew.duration[anomaly.name] = {
+					lastNotified: now,
+				};
+			} else {
+				anomalyNotificationsNew.duration[anomaly.name] = lastNotification;
+			}
+		}
+
+		const newErrorRateAnomalies: ObservabilityAnomaly[] = [];
+		for (const anomaly of errorRateAnomalies) {
+			const lastNotification = anomalyNotificationsOld?.errorRate[anomaly.name];
+			if (!lastNotification) {
+				newErrorRateAnomalies.push(anomaly);
+				anomalyNotificationsNew.errorRate[anomaly.name] = {
+					lastNotified: now,
+				};
+			} else {
+				anomalyNotificationsNew.errorRate[anomaly.name] = lastNotification;
+			}
+			anomalyNotificationsNew.errorRate[anomaly.name] = lastNotification || {
+				lastNotified: now,
+			};
+		}
+		await cache.flush();
+
+		Container.instance().agent.sendNotification(DidDetectObservabilityAnomaliesNotificationType, {
+			entityGuid: entityGuid,
+			duration: newDurationAnomalies,
+			errorRate: newErrorRateAnomalies,
+		});
+	}
+}
+
+interface AnomalyNotifications {
+	duration: {
+		[id: string]: AnomalyNotification;
+	};
+	errorRate: {
+		[id: string]: AnomalyNotification;
+	};
+}
+
+interface AnomalyNotification {
+	lastNotified: number;
 }
 
 interface LanguageSupport {

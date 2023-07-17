@@ -2232,3 +2232,14 @@ export const CheckTrunkRequestType = new RequestType<
 export const DidChangeCodelensesNotificationType = new NotificationType<void, void>(
 	"codestream/didChangeCodelenses"
 );
+
+export interface DidDetectObservabilityAnomaliesNotification {
+	entityGuid: string;
+	duration: ObservabilityAnomaly[];
+	errorRate: ObservabilityAnomaly[];
+}
+
+export const DidDetectObservabilityAnomaliesNotificationType = new NotificationType<DidDetectObservabilityAnomaliesNotification, void>(
+	"codestream/didDetectObservabilityAnomalies"
+);
+

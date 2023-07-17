@@ -175,6 +175,9 @@ export interface INewRelicProvider {
 	errorLogIfNotIgnored: (ex: Error, message: string, ...params: any[]) => void;
 	getDeployments(request: GetDeploymentsRequest): Promise<GetDeploymentsResponse>;
 	getLastObservabilityAnomaliesResponse(): GetObservabilityAnomaliesResponse | undefined;
+	getObservabilityRepos(
+		request: GetObservabilityReposRequest
+	): Promise<GetObservabilityReposResponse>;
 }
 
 @lspProvider("newrelic")
