@@ -40,6 +40,7 @@ import Icon from "../Icon";
 import { PanelHeader } from "../../src/components/PanelHeader";
 import { ErrorRow } from "../Observability";
 import { openErrorGroup } from "@codestream/webview/store/codeErrors/thunks";
+import { CLMSettings } from "@codestream/protocols/api";
 
 const Root = styled.div``;
 
@@ -78,7 +79,7 @@ export const ObservabilityAnomalyPanel = () => {
 			observabilityRepoEntities:
 				(state.users[state.session.userId!].preferences || {}).observabilityRepoEntities ||
 				EMPTY_ARRAY,
-			clmSettings: state.preferences.clmSettings || {},
+			clmSettings: (state.preferences.clmSettings || {}) as CLMSettings,
 			sessionStart: state.context.sessionStart,
 		};
 	});
@@ -97,7 +98,7 @@ export const ObservabilityAnomalyPanel = () => {
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previousCurrentObservabilityAnomaly = usePrevious(derivedState.currentObservabilityAnomaly);
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
-		derivedState.showGoldenSignalsInEditor || false
+		derivedState.showGoldenSignalsInEditor || false,
 	);
 
 	const loadData = async (newRelicEntityGuid: string) => {
@@ -141,7 +142,7 @@ export const ObservabilityAnomalyPanel = () => {
 			const maxReleaseDate = new Date();
 			maxReleaseDate.setHours(0, 0, 0, 0);
 			const nDaysAgoRelease = derivedState?.clmSettings?.compareDataLastReleaseValue || 7;
-			maxReleaseDate.setDate(maxReleaseDate.getDate() - nDaysAgoRelease);
+			maxReleaseDate.setDate(maxReleaseDate.getDate() - parseInt(nDaysAgoRelease as string));
 			let comparisonReleaseSeconds = 0;
 
 			const deploymentsObject = {};
@@ -166,8 +167,8 @@ export const ObservabilityAnomalyPanel = () => {
 				const date = new Date();
 				date.setHours(0, 0, 0, 0);
 				const nDaysAgo = derivedState?.clmSettings?.compareDataLastValue;
-				date.setDate(date.getDate() - nDaysAgo);
-				const isPlural = nDaysAgo > 1 ? "s" : "";
+				date.setDate(date.getDate() - parseInt(nDaysAgo as string));
+				const isPlural = parseInt(nDaysAgo as string) > 1 ? "s" : "";
 
 				deploymentsObject[Math.floor(date.getTime() / 1000)] = [`${nDaysAgo} day${isPlural} ago`];
 			}
@@ -451,7 +452,7 @@ export const ObservabilityAnomalyPanel = () => {
 																	setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
 																	const response = (await HostApi.instance.send(
 																		GetObservabilityErrorGroupMetadataRequestType,
-																		{ errorGroupGuid: _.errorGroupGuid }
+																		{ errorGroupGuid: _.errorGroupGuid },
 																	)) as GetObservabilityErrorGroupMetadataResponse;
 																	dispatch(
 																		openErrorGroup(_.errorGroupGuid, _.occurrenceId, {
@@ -488,7 +489,7 @@ export const ObservabilityAnomalyPanel = () => {
 												const title = _.title + (_.extrapolated ? " (extrapolated)" : "");
 												const yValues = _.result.map(o => o[_.title as any]);
 												const sanitizedYValues = (yValues as (number | undefined)[]).map(_ =>
-													_ != undefined ? _ : 0
+													_ != undefined ? _ : 0,
 												);
 												const maxY = Math.max(...sanitizedYValues);
 												const redHeaderText =
@@ -543,7 +544,7 @@ export const ObservabilityAnomalyPanel = () => {
 																				label={e => renderCustomLabel(e, value.join(", "))}
 																			/>
 																		);
-																	}
+																	},
 																)}
 															</LineChart>
 														</ResponsiveContainer>

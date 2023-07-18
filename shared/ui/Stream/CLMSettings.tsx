@@ -15,6 +15,7 @@ import { GetDeploymentsRequestType, GetDeploymentsResponse } from "@codestream/p
 import { Dropdown } from "../Stream/Dropdown";
 import styled from "styled-components";
 import { Loading } from "../Container/Loading";
+import { CLMSettings as ICLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 
 interface Props {}
 const NumberInput = styled.input`
@@ -24,22 +25,10 @@ const NumberInput = styled.input`
 	}
 `;
 
-export const DEFAULT_CLM_SETTINGS = {
-	isChangeTrackingEnabled: false,
-	changeTrackingRadioValue: "LATEST_RELEASE",
-	compareDataLastValue: "7",
-	compareDataLastReleaseValue: "7",
-	againstDataPrecedingValue: "21",
-	minimumChangeValue: "10",
-	minimumBaselineValue: "30",
-	minimumErrorRateValue: "1",
-	minimumAverageDurationValue: "0.1",
-};
-
 export const CLMSettings = React.memo(function CLMSettings(props: Props) {
 	const dispatch = useAppDispatch();
 	const derivedState = useAppSelector((state: CodeStreamState) => {
-		const clmSettings = state.preferences.clmSettings || {};
+		const clmSettings = state.preferences.clmSettings || ({} as ICLMSettings);
 		const activeO11y = state.preferences.activeO11y;
 		const currentO11yRepoId = state.preferences.currentO11yRepoId;
 		return {
@@ -55,47 +44,47 @@ export const CLMSettings = React.memo(function CLMSettings(props: Props) {
 	const [isChangeTrackingEnabled, setIsChangeTrackingEnabled] = useState<boolean>(
 		!_isNil(clmSettings.isChangeTrackingEnabled)
 			? clmSettings.isChangeTrackingEnabled
-			: DEFAULT_CLM_SETTINGS.isChangeTrackingEnabled
+			: DEFAULT_CLM_SETTINGS.isChangeTrackingEnabled,
 	);
 	const [changeTrackingRadioValue, setChangeTrackingRadioValue] = useState<string>(
 		!_isNil(clmSettings.changeTrackingRadioValue)
 			? clmSettings.changeTrackingRadioValue
-			: "LATEST_RELEASE"
+			: "LATEST_RELEASE",
 	);
 	const [compareDataLastValue, setCompareDataLastValue] = useState<string>(
 		!_isNil(clmSettings.compareDataLastValue)
 			? clmSettings.compareDataLastValue
-			: DEFAULT_CLM_SETTINGS.compareDataLastValue
+			: DEFAULT_CLM_SETTINGS.compareDataLastValue,
 	);
 	const [compareDataLastReleaseValue, setCompareDataLastReleaseValue] = useState<string>(
 		!_isNil(clmSettings.compareDataLastReleaseValue)
 			? clmSettings.compareDataLastReleaseValue
-			: DEFAULT_CLM_SETTINGS.compareDataLastReleaseValue
+			: DEFAULT_CLM_SETTINGS.compareDataLastReleaseValue,
 	);
 	const [againstDataPrecedingValue, setAgainstDataPrecedingValue] = useState<string>(
 		!_isNil(clmSettings.againstDataPrecedingValue)
 			? clmSettings.againstDataPrecedingValue
-			: DEFAULT_CLM_SETTINGS.againstDataPrecedingValue
+			: DEFAULT_CLM_SETTINGS.againstDataPrecedingValue,
 	);
 	const [minimumChangeValue, setMinimumChangeValue] = useState<string>(
 		!_isNil(clmSettings.minimumChangeValue)
 			? clmSettings.minimumChangeValue
-			: DEFAULT_CLM_SETTINGS.minimumChangeValue
+			: DEFAULT_CLM_SETTINGS.minimumChangeValue,
 	);
 	const [minimumBaselineValue, setMinimumBaselineValue] = useState<string>(
 		!_isNil(clmSettings.minimumBaselineValue)
 			? clmSettings.minimumBaselineValue
-			: DEFAULT_CLM_SETTINGS.minimumBaselineValue
+			: DEFAULT_CLM_SETTINGS.minimumBaselineValue,
 	);
 	const [minimumErrorRateValue, setMinimumErrorRateValue] = useState<string>(
 		!_isNil(clmSettings.minimumErrorRateValue)
 			? clmSettings.minimumErrorRateValue
-			: DEFAULT_CLM_SETTINGS.minimumErrorRateValue
+			: DEFAULT_CLM_SETTINGS.minimumErrorRateValue,
 	);
 	const [minimumAverageDurationValue, setMinimumAverageDurationValue] = useState<string>(
 		!_isNil(clmSettings.minimumAverageDurationValue)
 			? clmSettings.minimumAverageDurationValue
-			: DEFAULT_CLM_SETTINGS.minimumAverageDurationValue
+			: DEFAULT_CLM_SETTINGS.minimumAverageDurationValue,
 	);
 	const populateDropdownItems = action => {
 		let options: { label: string; key: string; action: Function }[] = [];
@@ -198,7 +187,7 @@ export const CLMSettings = React.memo(function CLMSettings(props: Props) {
 					["minimumErrorRateValue"]: minimumErrorRateValue,
 					["minimumAverageDurationValue"]: minimumAverageDurationValue,
 				},
-			})
+			}),
 		);
 		dispatch(setRefreshAnomalies(true));
 

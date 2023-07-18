@@ -104,7 +104,7 @@ import {
 	UpdateNewRelicOrgIdResponse,
 	DidChangeCodelensesNotificationType,
 } from "@codestream/protocols/agent";
-import { CSMe, CSNewRelicProviderInfo } from "@codestream/protocols/api";
+import { CSMe, CSNewRelicProviderInfo, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { GraphQLClient } from "graphql-request";
 import {
 	flatten as _flatten,
@@ -166,17 +166,17 @@ export interface INewRelicProvider {
 	getObservabilityEntityRepos: (
 		repoId: string,
 		skipRepoFetch?: boolean,
-		force?: boolean
+		force?: boolean,
 	) => Promise<ObservabilityRepo | undefined>;
 	getGoldenSignalsEntity: (
 		codestreamUser: CSMe,
-		observabilityRepo: ObservabilityRepo
+		observabilityRepo: ObservabilityRepo,
 	) => EntityAccount;
 	errorLogIfNotIgnored: (ex: Error, message: string, ...params: any[]) => void;
 	getDeployments(request: GetDeploymentsRequest): Promise<GetDeploymentsResponse>;
 	getLastObservabilityAnomaliesResponse(): GetObservabilityAnomaliesResponse | undefined;
 	getObservabilityRepos(
-		request: GetObservabilityReposRequest
+		request: GetObservabilityReposRequest,
 	): Promise<GetObservabilityReposResponse>;
 }
 
@@ -203,13 +203,19 @@ export class NewRelicProvider
 	});
 
 	private _clmManager = new ClmManager(this);
+	private _observabilityAnomaliesPollingInterval: NodeJS.Timer | undefined;
 
 	constructor(session: CodeStreamSession, config: ThirdPartyProviderConfig) {
 		super(session, config);
 		this._memoizedBuildRepoRemoteVariants = memoize(
 			this.buildRepoRemoteVariants,
-			(remotes: string[]) => remotes
+			(remotes: string[]) => remotes,
 		);
+		this._observabilityAnomaliesPollingInterval = Functions.repeatInterval(
+			this.pollObservabilityAnomalies.bind(this),
+			60 * 1000,
+			24 * 60 * 60 * 1000,
+		); // every 24 hours
 	}
 
 	get displayName() {
@@ -324,7 +330,7 @@ export class NewRelicProvider
 		if (!accessToken) {
 			throw new ResponseError(
 				ERROR_NR_CONNECTION_MISSING_API_KEY,
-				"Could not get a New Relic API key"
+				"Could not get a New Relic API key",
 			);
 		}
 		const options = {
@@ -419,7 +425,7 @@ export class NewRelicProvider
 						{
 							id: number;
 							name: string;
-						}
+						},
 					];
 				};
 			}>(`{
@@ -442,7 +448,7 @@ export class NewRelicProvider
 			const accessTokenError = this.getAccessTokenError(ex);
 			throw new ResponseError(
 				ERROR_NR_CONNECTION_INVALID_API_KEY,
-				accessTokenError?.message || ex.message || ex.toString()
+				accessTokenError?.message || ex.message || ex.toString(),
 			);
 		}
 	}
@@ -456,7 +462,7 @@ export class NewRelicProvider
 	async query<T = any>(
 		query: string,
 		variables: any = undefined,
-		tryCount: number = 3
+		tryCount: number = 3,
 	): Promise<T> {
 		await this.ensureConnected();
 
@@ -529,7 +535,7 @@ export class NewRelicProvider
 			requestError.response.errors.length
 		) {
 			return requestError.response.errors.find(
-				_ => _.extensions && _.extensions.error_code === "BAD_API_KEY"
+				_ => _.extensions && _.extensions.error_code === "BAD_API_KEY",
 			);
 		}
 		return undefined;
@@ -571,7 +577,7 @@ export class NewRelicProvider
 				_ =>
 					_.extensions &&
 					_.extensions.errorClass === "SERVER_ERROR" &&
-					_.extensions.classification === "DataFetchingException"
+					_.extensions.classification === "DataFetchingException",
 			);
 		}
 		return undefined;
@@ -594,7 +600,7 @@ export class NewRelicProvider
 	@lspHandler(GetObservabilityEntitiesRequestType)
 	@log({ timed: true })
 	async getEntities(
-		request: GetObservabilityEntitiesRequest
+		request: GetObservabilityEntitiesRequest,
 	): Promise<GetObservabilityEntitiesResponse> {
 		const { limit = 50 } = request;
 		try {
@@ -629,7 +635,7 @@ export class NewRelicProvider
 						guid: _.guid,
 						name: `${_.name} (${_.account.name})`,
 					};
-				}
+				},
 			);
 
 			return {
@@ -648,7 +654,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	async getErrorGroupMetadata(
-		request: GetObservabilityErrorGroupMetadataRequest
+		request: GetObservabilityErrorGroupMetadataRequest,
 	): Promise<GetObservabilityErrorGroupMetadataResponse | undefined> {
 		if (_isEmpty(request.errorGroupGuid) && _isEmpty(request.entityGuid)) return undefined;
 
@@ -694,7 +700,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	async getObservabilityErrorAssignments(
-		request: GetObservabilityErrorAssignmentsRequest
+		request: GetObservabilityErrorAssignmentsRequest,
 	): Promise<GetObservabilityErrorAssignmentsResponse> {
 		const response: GetObservabilityErrorAssignmentsResponse = { items: [] };
 
@@ -754,7 +760,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	async getObservabilityRepos(
-		request: GetObservabilityReposRequest
+		request: GetObservabilityReposRequest,
 	): Promise<GetObservabilityReposResponse> {
 		const { force = false } = request;
 		const cacheKey = JSON.stringify(request);
@@ -786,7 +792,7 @@ export class NewRelicProvider
 						"getObservabilityRepos skipping repo with missing id and/or repo.remotes",
 						{
 							repo: repo,
-						}
+						},
 					);
 					continue;
 				}
@@ -804,7 +810,7 @@ export class NewRelicProvider
 				// find REPOSITORY entities tied to a remote
 				const repositoryEntitiesResponse = await this.findRepositoryEntitiesByRepoRemotes(
 					remotes,
-					force
+					force,
 				);
 
 				if (isNRErrorResponse(repositoryEntitiesResponse)) {
@@ -817,13 +823,13 @@ export class NewRelicProvider
 				if (repositoryEntitiesResponse?.entities) {
 					// find RELATED entities that are tied to REPOSITORY entities
 					const entitiesReponse = await this.findRelatedEntityByRepositoryGuids(
-						repositoryEntitiesResponse?.entities?.map(_ => _.guid)
+						repositoryEntitiesResponse?.entities?.map(_ => _.guid),
 					);
 					// find the APPLICATION entities themselves
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(r => r.source?.entity?.type === "APPLICATION")
-								.length
+								.length,
 					);
 					hasRepoAssociation = applicationAssociations?.length > 0;
 
@@ -832,8 +838,8 @@ export class NewRelicProvider
 						_flatten(
 							repositoryEntitiesResponse.entities.map(_ => {
 								return _.tags?.find(t => t.key === "url")?.values;
-							})
-						)
+							}),
+						),
 					).filter(Boolean);
 
 					ContextLogger.log("found repositories matching remotes", {
@@ -883,7 +889,7 @@ export class NewRelicProvider
 									uniqueEntities.find(
 										ue =>
 											ue.guid === relatedResult.source.entity.guid &&
-											ue.account?.id === relatedResult.source.entity.account?.id
+											ue.account?.id === relatedResult.source.entity.account?.id,
 									)
 								) {
 									continue;
@@ -919,7 +925,7 @@ export class NewRelicProvider
 						})
 						.filter(Boolean)
 						.sort((a, b) =>
-							`${a.accountName}-${a.entityName}`.localeCompare(`${b.accountName}-${b.entityName}`)
+							`${a.accountName}-${a.entityName}`.localeCompare(`${b.accountName}-${b.entityName}`),
 						),
 				});
 				ContextLogger.log(`getObservabilityRepos hasRepoAssociation=${hasRepoAssociation}`, {
@@ -970,14 +976,14 @@ export class NewRelicProvider
 			codeNamespace?: string;
 			functionName?: string;
 			relativeFilePath?: string;
-		}
+		},
 	): Promise<ObservabilityError[]> {
 		const parsedId = NewRelicProvider.parseId(entityGuid)!;
 		const query = this.getMethodLevelErrorsQuery(
 			entityGuid,
 			metricTimesliceNames,
 			since,
-			functionIdentifiers
+			functionIdentifiers,
 		);
 		if (!query) return [];
 
@@ -1007,7 +1013,7 @@ export class NewRelicProvider
 			}`,
 			{
 				accountId: parsedId.accountId,
-			}
+			},
 		);
 		const result = response.actor.account.nrql.results?.length
 			? await Promise.all(
@@ -1015,7 +1021,7 @@ export class NewRelicProvider
 						const response = await this.getErrorGroupFromNameMessageEntity(
 							errorTrace.errorClass,
 							errorTrace.message,
-							errorTrace.entityGuid
+							errorTrace.entityGuid,
 						);
 
 						return {
@@ -1030,7 +1036,7 @@ export class NewRelicProvider
 							lastOccurrence: errorTrace.lastOccurrence,
 							errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
 						};
-					})
+					}),
 			  )
 			: [];
 		return result;
@@ -1044,7 +1050,7 @@ export class NewRelicProvider
 			codeNamespace?: string;
 			functionName?: string;
 			relativeFilePath?: string;
-		}
+		},
 	) {
 		const transactionNameMatch = metricTimesliceNames?.errorRate?.match(/Errors\/(.*)/);
 		if (
@@ -1121,13 +1127,13 @@ export class NewRelicProvider
 
 	private async checkHasCodeLevelMetricSpanData(
 		hasRepoAssociation: boolean,
-		uniqueEntities: Entity[]
+		uniqueEntities: Entity[],
 	): Promise<boolean | NRErrorResponse> {
 		if (!hasRepoAssociation || _isEmpty(uniqueEntities)) {
 			return false;
 		}
 		const repoEntitySpanDataExistsResponse = await this.findClmSpanDataExists(
-			uniqueEntities?.map(_ => _.guid)
+			uniqueEntities?.map(_ => _.guid),
 		);
 		if (isNRErrorResponse(repoEntitySpanDataExistsResponse)) {
 			return repoEntitySpanDataExistsResponse;
@@ -1149,7 +1155,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	async getObservabilityErrors(
-		request: GetObservabilityErrorsRequest
+		request: GetObservabilityErrorsRequest,
 	): Promise<GetObservabilityErrorsResponse> {
 		const response: GetObservabilityErrorsResponse = { repos: [] };
 		try {
@@ -1161,7 +1167,7 @@ export class NewRelicProvider
 			if (request?.filters?.length) {
 				filteredRepoIds = request.filters.map(_ => _.repoId);
 				filteredRepos = reposResponse.repositories?.filter(
-					r => r.id && filteredRepoIds.includes(r.id)
+					r => r.id && filteredRepoIds.includes(r.id),
 				)!;
 			}
 			filteredRepos = filteredRepos?.filter(_ => _.id);
@@ -1180,7 +1186,7 @@ export class NewRelicProvider
 					});
 
 					const repositoryEntitiesResponse = await this.findRepositoryEntitiesByRepoRemotes(
-						remotes
+						remotes,
 					);
 					if (isNRErrorResponse(repositoryEntitiesResponse)) {
 						return { error: repositoryEntitiesResponse };
@@ -1203,7 +1209,7 @@ export class NewRelicProvider
 										r.type === "BUILT_FROM" &&
 										(entityFilter?.entityGuid
 											? r.source?.entity.guid === entityFilter.entityGuid
-											: true)
+											: true),
 								);
 
 							const urlValue = entity.tags?.find(_ => _.key === "url")?.values[0];
@@ -1220,14 +1226,14 @@ export class NewRelicProvider
 									application.source.entity.account.id,
 									application.source.entity.guid,
 									application.source.entity.entityType,
-									request.timeWindow
+									request.timeWindow,
 								);
 								for (const errorTrace of errorTraces) {
 									try {
 										const response = await this.getErrorGroupFromNameMessageEntity(
 											errorTrace.errorClass,
 											errorTrace.message,
-											errorTrace.entityGuid
+											errorTrace.entityGuid,
 										);
 
 										if (response && response.actor.errorsInbox.errorGroup) {
@@ -1287,7 +1293,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	getObservabilityResponseTimes(
-		request: GetObservabilityResponseTimesRequest
+		request: GetObservabilityResponseTimesRequest,
 	): Promise<GetObservabilityResponseTimesResponse> {
 		return this._clmManager.getObservabilityResponseTimes(request);
 	}
@@ -1296,6 +1302,40 @@ export class NewRelicProvider
 		defaultTtl: 120 * 1000,
 	});
 	private _lastObservabilityAnomaliesResponse: GetObservabilityAnomaliesResponse | undefined;
+
+	async pollObservabilityAnomalies() {
+		const { repos, error } = await this.getObservabilityRepos({});
+		if (error) {
+			Logger.warn("pollObservabilityAnomalies: " + (error.error.message || error.error.type));
+			return;
+		}
+		if (!repos?.length) {
+			Logger.log("pollObservabilityAnomalies: no observability repos");
+			return;
+		}
+		const entityGuids = new Set<string>();
+		for (const observabilityRepo of repos) {
+			for (const account of observabilityRepo.entityAccounts) {
+				entityGuids.add(account.entityGuid);
+			}
+		}
+
+		const me = await SessionContainer.instance().users.getMe();
+		const clmSettings = me.preferences?.clmSettings || DEFAULT_CLM_SETTINGS;
+		for (const entityGuid of entityGuids) {
+			Logger.log("Getting observability anomalies for entity " + entityGuid);
+			void (await this.getObservabilityAnomalies({
+				entityGuid,
+				sinceDaysAgo: parseInt(clmSettings.compareDataLastValue),
+				baselineDays: parseInt(clmSettings.againstDataPrecedingValue),
+				sinceReleaseAtLeastDaysAgo: parseInt(clmSettings.compareDataLastReleaseValue),
+				minimumErrorRate: parseFloat(clmSettings.minimumErrorRateValue),
+				minimumResponseTime: parseFloat(clmSettings.minimumAverageDurationValue),
+				minimumSampleRate: parseFloat(clmSettings.minimumBaselineValue),
+				minimumRatio: parseFloat(clmSettings.minimumChangeValue) / 100 + 1,
+			}));
+		}
+	}
 
 	getLastObservabilityAnomaliesResponse() {
 		return this._lastObservabilityAnomaliesResponse;
@@ -1306,7 +1346,7 @@ export class NewRelicProvider
 		timed: true,
 	})
 	async getObservabilityAnomalies(
-		request: GetObservabilityAnomaliesRequest
+		request: GetObservabilityAnomaliesRequest,
 	): Promise<GetObservabilityAnomaliesResponse> {
 		const cached = this._observabilityAnomaliesTimedCache.get(request);
 		if (cached) {
@@ -1361,7 +1401,7 @@ export class NewRelicProvider
 			  	`,
 				{
 					accountId: accountId,
-				}
+				},
 			);
 			const token = response.actor.account.pixie.pixieAccessToken;
 
@@ -1402,7 +1442,7 @@ export class NewRelicProvider
 	@lspHandler(GetNewRelicRelatedEntitiesRequestType)
 	@log()
 	async getNewRelicRelatedEntities(
-		request: GetNewRelicRelatedEntitiesRequest
+		request: GetNewRelicRelatedEntitiesRequest,
 	): Promise<GetNewRelicRelatedEntitiesResponse | undefined> {
 		try {
 			const response = await this.query(
@@ -1445,7 +1485,7 @@ export class NewRelicProvider
 			  	`,
 				{
 					entityGuid: request.entityGuid,
-				}
+				},
 			);
 			if (response?.actor?.entity?.relatedEntities?.results) {
 				const results = response.actor.entity.relatedEntities.results.map((_: RelatedEntity) => {
@@ -1478,7 +1518,7 @@ export class NewRelicProvider
 	@lspHandler(GetNewRelicErrorGroupRequestType)
 	@log()
 	async getNewRelicErrorGroupData(
-		request: GetNewRelicErrorGroupRequest
+		request: GetNewRelicErrorGroupRequest,
 	): Promise<GetNewRelicErrorGroupResponse | undefined> {
 		let errorGroup: NewRelicErrorGroup | undefined = undefined;
 		let accountId = 0;
@@ -1498,13 +1538,13 @@ export class NewRelicProvider
 					errorGroupGuid,
 					entityGuid,
 					request.occurrenceId,
-					request.timestamp
+					request.timestamp,
 				);
 			} else {
 				// no entity, look it up
 				const errorGroupPartialResponse = await this.fetchErrorGroupById(
 					errorGroupGuid,
-					request.timestamp
+					request.timestamp,
 				);
 				if (errorGroupPartialResponse?.entityGuid) {
 					entityGuid = errorGroupPartialResponse?.entityGuid;
@@ -1513,7 +1553,7 @@ export class NewRelicProvider
 						errorGroupGuid,
 						entityGuid,
 						request.occurrenceId,
-						request.timestamp
+						request.timestamp,
 					);
 				}
 			}
@@ -1522,7 +1562,7 @@ export class NewRelicProvider
 				`getNewRelicErrorGroupData hasRequest.entityGuid=${request.entityGuid != null}`,
 				{
 					request: request,
-				}
+				},
 			);
 
 			if (errorGroupFullResponse?.actor?.errorsInbox?.errorGroups?.results?.length) {
@@ -1596,7 +1636,7 @@ export class NewRelicProvider
 				let states;
 				if (errorGroupFullResponse.actor.errorsInbox.errorGroupStateTypes) {
 					states = errorGroupFullResponse.actor.errorsInbox.errorGroupStateTypes.map(
-						(_: ErrorGroupStateType) => _.type
+						(_: ErrorGroupStateType) => _.type,
 					);
 				}
 				errorGroup.states =
@@ -1617,7 +1657,7 @@ export class NewRelicProvider
 				}
 
 				const relatedRepos = this.findRelatedReposFromServiceEntity(
-					errorGroupFullResponse.actor.entity.relatedEntities.results
+					errorGroupFullResponse.actor.entity.relatedEntities.results,
 				);
 				if (errorGroup.entity && relatedRepos) {
 					errorGroup.entity["relatedRepos"] = relatedRepos;
@@ -1637,7 +1677,7 @@ export class NewRelicProvider
 						request: request,
 						entityGuid: entityGuid,
 						accountId: accountId,
-					}
+					},
 				);
 				return {
 					accountId: accountId,
@@ -1646,7 +1686,7 @@ export class NewRelicProvider
 						details: (await this.buildErrorDetailSettings(
 							accountId,
 							entityGuid,
-							errorGroupGuid
+							errorGroupGuid,
 						)) as any,
 					},
 				};
@@ -1671,7 +1711,7 @@ export class NewRelicProvider
 			result.details = (await this.buildErrorDetailSettings(
 				accountId,
 				entityGuid,
-				request.errorGroupGuid
+				request.errorGroupGuid,
 			)) as any;
 
 			return {
@@ -1696,7 +1736,7 @@ export class NewRelicProvider
 						email: _,
 						group: "GIT",
 					};
-				})
+				}),
 			);
 		}
 
@@ -1795,7 +1835,7 @@ export class NewRelicProvider
 				{
 					errorGroupGuid: request.errorGroupGuid,
 					state: request.state,
-				}
+				},
 			);
 
 			ContextLogger.log("errorsInboxUpdateErrorGroupState", {
@@ -1874,7 +1914,7 @@ export class NewRelicProvider
 					accountId: accountId,
 					name: name,
 					url: request.url,
-				}
+				},
 			);
 			ContextLogger.log("referenceEntityCreateOrUpdateRepository", {
 				accountId: accountId,
@@ -1908,7 +1948,7 @@ export class NewRelicProvider
 						accountId: accountId,
 						name: name,
 						url: request.url,
-					}
+					},
 				);
 			}
 
@@ -1932,7 +1972,7 @@ export class NewRelicProvider
 					{
 						sourceEntityGuid: entityId,
 						targetEntityGuid: repoEntityId,
-					}
+					},
 				);
 				ContextLogger.log("entityRelationshipUserDefinedCreateOrReplace", {
 					sourceEntityGuid: entityId,
@@ -1977,8 +2017,8 @@ export class NewRelicProvider
 					await Functions.withExponentialRetryBackoff(fn, 5, 1000);
 				ContextLogger.log(
 					`findRepositoryEntitiesByRepoRemotesResult result=${JSON.stringify(
-						findRepositoryEntitiesByRepoRemotesResult
-					)}`
+						findRepositoryEntitiesByRepoRemotesResult,
+					)}`,
 				);
 
 				return {
@@ -2005,7 +2045,7 @@ export class NewRelicProvider
 				};
 			} else {
 				ContextLogger.warn(
-					"entityId needed for entityRelationshipUserDefinedCreateOrReplace is null"
+					"entityId needed for entityRelationshipUserDefinedCreateOrReplace is null",
 				);
 				throw new Error("Could not locate entityId");
 			}
@@ -2042,7 +2082,7 @@ export class NewRelicProvider
 
 	getGoldenSignalsEntity(
 		codestreamUser: CSMe,
-		observabilityRepo: ObservabilityRepo
+		observabilityRepo: ObservabilityRepo,
 	): EntityAccount {
 		let entity: EntityAccount | undefined;
 		if (observabilityRepo.entityAccounts.length > 1) {
@@ -2052,11 +2092,11 @@ export class NewRelicProvider
 					const observabilityRepoEntities =
 						codestreamUser.preferences.observabilityRepoEntities || [];
 					const methodLevelTelemetryRepoEntity = observabilityRepoEntities.find(
-						_ => _.repoId === observabilityRepo.repoId
+						_ => _.repoId === observabilityRepo.repoId,
 					);
 					if (methodLevelTelemetryRepoEntity?.entityGuid) {
 						const foundEntity = observabilityRepo.entityAccounts.find(
-							_ => _.entityGuid === methodLevelTelemetryRepoEntity.entityGuid
+							_ => _.entityGuid === methodLevelTelemetryRepoEntity.entityGuid,
 						);
 						if (foundEntity) {
 							entity = foundEntity;
@@ -2069,7 +2109,7 @@ export class NewRelicProvider
 						// second, try to find something production-like based on name
 						if (
 							["prod", "production", "Production", "PRODUCTION"].find(
-								_ => entityAccount.entityName.indexOf(_) > -1
+								_ => entityAccount.entityName.indexOf(_) > -1,
 							)
 						) {
 							entity = entityAccount;
@@ -2082,7 +2122,7 @@ export class NewRelicProvider
 								if (
 									["env", "environment", "Environment"].includes(tag.key) &&
 									["prod", "production", "Production", "PRODUCTION"].find(value =>
-										tag.values.includes(value)
+										tag.values.includes(value),
 									)
 								) {
 									entity = entityAccount;
@@ -2122,7 +2162,7 @@ export class NewRelicProvider
 	@lspHandler(GetFileLevelTelemetryRequestType)
 	@log()
 	getFileLevelTelemetry(
-		request: GetFileLevelTelemetryRequest
+		request: GetFileLevelTelemetryRequest,
 	): Promise<GetFileLevelTelemetryResponse | NRErrorResponse | undefined> {
 		return this._clmManager.getFileLevelTelemetry(request);
 	}
@@ -2137,7 +2177,7 @@ export class NewRelicProvider
 	@lspHandler(GetMethodLevelTelemetryRequestType)
 	@log()
 	async getMethodLevelTelemetry(
-		request: GetMethodLevelTelemetryRequest
+		request: GetMethodLevelTelemetryRequest,
 	): Promise<GetMethodLevelTelemetryResponse | undefined> {
 		let observabilityRepo: ObservabilityRepo | undefined;
 		let entity: EntityAccount | undefined;
@@ -2151,7 +2191,7 @@ export class NewRelicProvider
 			entityAccounts = observabilityRepo.entityAccounts;
 
 			entity = observabilityRepo.entityAccounts.find(
-				_ => _.entityGuid === request.newRelicEntityGuid
+				_ => _.entityGuid === request.newRelicEntityGuid,
 			);
 			if (!entity) {
 				ContextLogger.warn("Missing entity", {
@@ -2166,7 +2206,7 @@ export class NewRelicProvider
 				request.newRelicEntityGuid || entity!.entityGuid!,
 				request.metricTimesliceNameMapping,
 				request.since,
-				request.timeseriesGroup
+				request.timeseriesGroup,
 			);
 
 			let deployments;
@@ -2186,7 +2226,7 @@ export class NewRelicProvider
 							request.metricTimesliceNameMapping,
 							observabilityRepo?.repoRemote || "",
 							request.since,
-							request.functionIdentifiers
+							request.functionIdentifiers,
 					  )
 					: [];
 
@@ -2213,20 +2253,20 @@ export class NewRelicProvider
 	@lspHandler(GetServiceLevelTelemetryRequestType)
 	@log()
 	async getServiceLevelTelemetry(
-		request: GetServiceLevelTelemetryRequest
+		request: GetServiceLevelTelemetryRequest,
 	): Promise<GetServiceLevelTelemetryResponse | undefined> {
 		const { force } = request;
 		const observabilityRepo = await this.getObservabilityEntityRepos(
 			request.repoId,
 			request.skipRepoFetch === true,
-			force
+			force,
 		);
 		if (!request.skipRepoFetch && (!observabilityRepo || !observabilityRepo.entityAccounts)) {
 			throw new ResponseError(ERROR_SLT_MISSING_OBSERVABILITY_REPOS, "No observabilityRepos");
 		}
 
 		const entity = observabilityRepo?.entityAccounts.find(
-			_ => _.entityGuid === request.newRelicEntityGuid
+			_ => _.entityGuid === request.newRelicEntityGuid,
 		);
 		if (!request.skipRepoFetch && !entity) {
 			ContextLogger.warn("Missing entity", {
@@ -2265,7 +2305,7 @@ export class NewRelicProvider
 	}
 
 	async getRecentAlertViolations(
-		entityGuid: string
+		entityGuid: string,
 	): Promise<GetAlertViolationsResponse | NRErrorResponse> {
 		try {
 			const response = await this.query<GetAlertViolationsQueryResult>(
@@ -2290,13 +2330,13 @@ export class NewRelicProvider
 				`,
 				{
 					entityGuid: entityGuid,
-				}
+				},
 			);
 
 			if (response?.actor?.entity) {
 				const entity = response?.actor?.entity;
 				const recentAlertViolationsArray = entity?.recentAlertViolations.filter(
-					_ => _.closedAt === null
+					_ => _.closedAt === null,
 				);
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = [
@@ -2313,14 +2353,14 @@ export class NewRelicProvider
 
 				// sort based on openedAt time
 				recentAlertViolationsArrayUnique.sort((a, b) =>
-					a.openedAt > b.openedAt ? 1 : b.openedAt > a.openedAt ? -1 : 0
+					a.openedAt > b.openedAt ? 1 : b.openedAt > a.openedAt ? -1 : 0,
 				);
 
 				// sort based on alert serverity defined in ALERT_SEVERITY_SORTING_ORDER
 				const recentAlertViolationsArraySorted = this.mapOrder(
 					recentAlertViolationsArray,
 					ALERT_SEVERITY_SORTING_ORDER,
-					"alertSeverity"
+					"alertSeverity",
 				);
 
 				// take top 2
@@ -2362,7 +2402,7 @@ export class NewRelicProvider
 	async getObservabilityEntityRepos(
 		repoId: string,
 		skipRepoFetch = false,
-		force = false
+		force = false,
 	): Promise<ObservabilityRepo | undefined> {
 		let observabilityRepos: GetObservabilityReposResponse | undefined;
 		try {
@@ -2411,7 +2451,7 @@ export class NewRelicProvider
 
 	private async getMethodLevelGoldenMetricQueries(
 		entityGuid: string,
-		metricTimesliceNameMapping?: MetricTimesliceNameMapping
+		metricTimesliceNameMapping?: MetricTimesliceNameMapping,
 	): Promise<MethodLevelGoldenMetricQueryResult | undefined> {
 		if (!metricTimesliceNameMapping) {
 			return undefined;
@@ -2467,7 +2507,7 @@ export class NewRelicProvider
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping,
 		since?: string,
-		timeseriesGroup?: string
+		timeseriesGroup?: string,
 	): Promise<MethodGoldenMetrics[] | undefined> {
 		const queries = await this.getMethodLevelGoldenMetricQueries(entityGuid, metricTimesliceNames);
 
@@ -2522,7 +2562,7 @@ export class NewRelicProvider
 				}).catch(ex => {
 					Logger.warn(ex);
 				});
-			})
+			}),
 		);
 
 		const response = queries.metricQueries.map((_, i) => {
@@ -2560,7 +2600,7 @@ export class NewRelicProvider
 	}
 
 	async getEntityLevelGoldenMetrics(
-		entityGuid: string
+		entityGuid: string,
 	): Promise<EntityGoldenMetrics | NRErrorResponse | undefined> {
 		try {
 			const entityGoldenMetricsQuery = `
@@ -2585,7 +2625,7 @@ export class NewRelicProvider
 			`;
 
 			const entityGoldenMetricsQueryResults = await this.query<EntityGoldenMetricsQueries>(
-				entityGoldenMetricsQuery
+				entityGoldenMetricsQuery,
 			);
 			const metricDefinitions =
 				entityGoldenMetricsQueryResults?.actor?.entity?.goldenMetrics?.metrics;
@@ -2675,7 +2715,7 @@ export class NewRelicProvider
 	@lspHandler(GetServiceLevelObjectivesRequestType)
 	@log()
 	async getServiceLevelObjectives(
-		request: GetServiceLevelObjectivesRequest
+		request: GetServiceLevelObjectivesRequest,
 	): Promise<GetServiceLevelObjectivesResponse | undefined> {
 		try {
 			const sliQuery = `{
@@ -2752,7 +2792,7 @@ export class NewRelicProvider
 						target: this.toFixedNoRounding(sliTarget, 2) ?? "Unknown",
 						timeWindow: this.formatSLOTimeWindow(
 							objective?.timeWindow?.rolling?.count,
-							objective?.timeWindow?.rolling?.unit
+							objective?.timeWindow?.rolling?.unit,
 						),
 						actual: this.toFixedNoRounding(actualValue, 2) ?? "Unknown",
 						result: actualValue < sliTarget ? "UNDER" : "OVER",
@@ -2792,7 +2832,7 @@ export class NewRelicProvider
 	@log()
 	private async getPrimaryEntityTransactionType(
 		accountId: number,
-		entityGuid: string
+		entityGuid: string,
 	): Promise<string> {
 		try {
 			const query = `{
@@ -2833,7 +2873,7 @@ export class NewRelicProvider
 			});
 
 			const primaryTransactionType = Object.keys(transactionTypeCountObject).reduce((a, b) =>
-				transactionTypeCountObject[a] > transactionTypeCountObject[b] ? a : b
+				transactionTypeCountObject[a] > transactionTypeCountObject[b] ? a : b,
 			);
 
 			return _isEmpty(primaryTransactionType) ? "Web" : primaryTransactionType;
@@ -2903,7 +2943,7 @@ export class NewRelicProvider
 						}
 					}
 				}`,
-				{}
+				{},
 			);
 			return response?.actor?.organization?.id;
 		} catch (ex) {
@@ -2917,7 +2957,7 @@ export class NewRelicProvider
 
 	private async fetchErrorGroupById(
 		errorGroupGuid: string,
-		timestamp?: number
+		timestamp?: number,
 	): Promise<ErrorGroup | undefined> {
 		try {
 			const timestampRange = this.generateTimestampRange(timestamp);
@@ -2953,7 +2993,7 @@ export class NewRelicProvider
 				  }`,
 				{
 					ids: [errorGroupGuid],
-				}
+				},
 			);
 			return response?.actor?.errorsInbox?.errorGroups?.results[0] || undefined;
 		} catch (ex) {
@@ -2977,7 +3017,7 @@ export class NewRelicProvider
 	@log()
 	private async fetchStackTrace(
 		entityGuid: string,
-		occurrenceId: number | string
+		occurrenceId: number | string,
 	): Promise<StackTraceResponse> {
 		let fingerprintId = 0;
 		try {
@@ -3064,7 +3104,7 @@ export class NewRelicProvider
 				entityGuid: entityGuid,
 				occurrenceId: occurrenceId,
 				fingerprintId: fingerprintId,
-			}
+			},
 		);
 	}
 
@@ -3073,7 +3113,7 @@ export class NewRelicProvider
 		accountId: number,
 		errorGroupGuid: string,
 		entityGuid: string,
-		timestamp?: number
+		timestamp?: number,
 	): Promise<ErrorGroupResponse> {
 		const timestampRange = this.generateTimestampRange(timestamp);
 		const q = `query getErrorGroup($accountId: Int!, $errorGroupGuids: [ID!], $entityGuid: EntityGuid!) {
@@ -3155,7 +3195,7 @@ export class NewRelicProvider
 		errorGroupGuid: string,
 		entityGuid: string,
 		occurrenceId?: string,
-		timestamp?: number
+		timestamp?: number,
 	): Promise<ErrorGroupResponse> {
 		let stackTracePromise;
 		if (entityGuid && occurrenceId) {
@@ -3176,7 +3216,7 @@ export class NewRelicProvider
 			accountId,
 			errorGroupGuid,
 			entityGuid,
-			timestamp
+			timestamp,
 		);
 		if (response?.actor?.errorsInbox?.errorGroups?.results?.length === 0) {
 			ContextLogger.warn("fetchErrorGroup (retrying without timestamp)", {
@@ -3193,11 +3233,11 @@ export class NewRelicProvider
 				if (response.actor.entity) {
 					response.actor.entity.crash = this.tryFormatStack(
 						stackTrace.actor.entity.entityType,
-						stackTrace.actor.entity.crash
+						stackTrace.actor.entity.crash,
 					);
 					response.actor.entity.exception = this.tryFormatStack(
 						stackTrace.actor.entity.entityType,
-						stackTrace.actor.entity.exception
+						stackTrace.actor.entity.exception,
 					);
 				}
 			}
@@ -3258,7 +3298,7 @@ export class NewRelicProvider
 	private async buildErrorDetailSettings(
 		accountId: number,
 		entityGuid: string,
-		errorGroupGuid: string
+		errorGroupGuid: string,
 	) {
 		let meUser = undefined;
 		const { users, session } = SessionContainer.instance();
@@ -3293,7 +3333,7 @@ export class NewRelicProvider
 					set.add(v.value);
 				});
 				return true;
-			})
+			}),
 		);
 
 		return Array.from(set);
@@ -3310,7 +3350,7 @@ export class NewRelicProvider
 	 */
 	protected async findRepositoryEntitiesByRepoRemotes(
 		remotes: string[],
-		force = false
+		force = false,
 	): Promise<RepoEntitiesByRemotesResponse | NRErrorResponse> {
 		const cacheKey = JSON.stringify(remotes);
 		if (!force) {
@@ -3366,7 +3406,7 @@ export class NewRelicProvider
 	}
 
 	protected async findClmSpanDataExists(
-		newRelicGuids: string[]
+		newRelicGuids: string[],
 	): Promise<ClmSpanData[] | NRErrorResponse> {
 		try {
 			const results = await Promise.all(
@@ -3387,7 +3427,7 @@ export class NewRelicProvider
 						this._clmSpanDataExistsCache.put(_, spanData);
 					}
 					return spanData;
-				})
+				}),
 			);
 
 			return results;
@@ -3400,7 +3440,7 @@ export class NewRelicProvider
 	private getFingerprintedErrorTraceQueries(
 		applicationGuid: String,
 		entityType?: EntityType,
-		timeWindow?: string
+		timeWindow?: string,
 	): String[] {
 		const since = timeWindow ? `${timeWindow} ago` : "3 days ago";
 		const apmNrql = [
@@ -3494,7 +3534,7 @@ export class NewRelicProvider
 		accountId: number,
 		applicationGuid: string,
 		entityType?: EntityType,
-		timeWindow?: string
+		timeWindow?: string,
 	) {
 		const queries = this.getFingerprintedErrorTraceQueries(applicationGuid, entityType, timeWindow);
 
@@ -3511,7 +3551,7 @@ export class NewRelicProvider
 					  `,
 				{
 					accountId: accountId,
-				}
+				},
 			);
 			if (response.actor.account.nrql.results?.length) {
 				results.push(...response.actor.account.nrql.results);
@@ -3521,7 +3561,7 @@ export class NewRelicProvider
 	}
 
 	protected async findRelatedEntityByRepositoryGuids(
-		repositoryGuids: string[]
+		repositoryGuids: string[],
 	): Promise<RelatedEntityByRepositoryGuidsResult> {
 		return this.query(
 			`query fetchRelatedEntities($guids:[EntityGuid]!){
@@ -3568,7 +3608,7 @@ export class NewRelicProvider
 		  `,
 			{
 				guids: repositoryGuids,
-			}
+			},
 		);
 	}
 
@@ -3623,7 +3663,7 @@ export class NewRelicProvider
 		  `,
 			{
 				guid: repositoryGuid,
-			}
+			},
 		);
 	}
 
@@ -3631,7 +3671,7 @@ export class NewRelicProvider
 	private async getErrorGroupFromNameMessageEntity(
 		name: string,
 		message: string,
-		entityGuid: string
+		entityGuid: string,
 	) {
 		return this.query(
 			`query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
@@ -3650,14 +3690,14 @@ export class NewRelicProvider
 				name: name,
 				message: message,
 				entityGuid: entityGuid,
-			}
+			},
 		);
 	}
 
 	@log({ timed: true })
 	private async getErrorsInboxAssignments(
 		emailAddress: string,
-		userId?: number
+		userId?: number,
 	): Promise<ErrorGroupsResponse | undefined> {
 		try {
 			if (userId == null || userId === 0) {
@@ -3684,7 +3724,7 @@ export class NewRelicProvider
 				{
 					userId: userId,
 					emailAddress: emailAddress,
-				}
+				},
 			);
 		} catch (ex) {
 			ContextLogger.warn("getErrorsInboxAssignments", {
@@ -3745,7 +3785,7 @@ export class NewRelicProvider
 			// NOTE: we need to add the date range or we risk missing results.
 			const errorTraceQuery = `${errorGroupResponse.eventsQuery.replace(
 				" TransactionError ",
-				" ErrorTrace "
+				" ErrorTrace ",
 			)} SINCE ${(errorGroupResponse.lastSeenAt || now) - 100000} until ${
 				(errorGroupResponse.lastSeenAt || now) + 100000
 			} ORDER BY timestamp DESC LIMIT 1`;
@@ -3803,14 +3843,14 @@ export class NewRelicProvider
 	}
 
 	private async findMappedRemoteByEntity(
-		entityGuid: string
+		entityGuid: string,
 	): Promise<RelatedRepoWithRemotes[] | undefined> {
 		if (!entityGuid) return undefined;
 
 		const relatedEntityResponse = await this.findRelatedEntityByRepositoryGuid(entityGuid);
 		if (relatedEntityResponse) {
 			let relatedRepoData = this.findRelatedReposFromServiceEntity(
-				relatedEntityResponse.actor.entity.relatedEntities.results
+				relatedEntityResponse.actor.entity.relatedEntities.results,
 			);
 
 			let relatedRepoDataWithRemotes;
@@ -3819,15 +3859,15 @@ export class NewRelicProvider
 				relatedRepoDataWithRemotes = await Promise.all(
 					relatedRepoData.map(
 						async (
-							_
+							_,
 						): Promise<{ url?: string; remotes?: string[]; error?: any; name?: string }> => {
 							let remotes = await this._memoizedBuildRepoRemoteVariants([_.url]);
 							if (!_isEmpty(remotes)) {
 								return { ..._, remotes };
 							}
 							return { ..._ };
-						}
-					)
+						},
+					),
 				);
 			}
 			Logger.log("findMappedRemoteByEntity", { entityGuid, relatedRepoDataWithRemotes });
@@ -3837,7 +3877,7 @@ export class NewRelicProvider
 		}
 		Logger.warn(
 			"findMappedRemoteByEntity: no response data from findRelatedEntityByRepositoryGuid",
-			entityGuid
+			entityGuid,
 		);
 		return undefined;
 	}
@@ -3861,7 +3901,7 @@ export class NewRelicProvider
 			{
 				email: request.emailAddress,
 				errorGroupGuid: request.errorGroupGuid,
-			}
+			},
 		);
 	}
 
@@ -3883,7 +3923,7 @@ export class NewRelicProvider
 			{
 				errorGroupGuid: request.errorGroupGuid,
 				userId: parseInt(request.userId, 10),
-			}
+			},
 		);
 	}
 
@@ -3933,7 +3973,7 @@ export class NewRelicProvider
 	}
 
 	private findRelatedReposFromServiceEntity(
-		relatedEntities: RelatedEntity[]
+		relatedEntities: RelatedEntity[],
 	): BuiltFromResult[] | undefined {
 		if (!relatedEntities || !relatedEntities.length) return undefined;
 
@@ -4019,7 +4059,7 @@ export class NewRelicProvider
 	 */
 	private generateTimestampRange(
 		timestampInMilliseconds?: number,
-		plusOrMinusInMinutes: number = 5
+		plusOrMinusInMinutes: number = 5,
 	): { startTime: number; endTime: number } | undefined {
 		try {
 			if (!timestampInMilliseconds || isNaN(timestampInMilliseconds)) return undefined;

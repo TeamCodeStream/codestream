@@ -824,7 +824,32 @@ export interface CSMePreferences {
 		[providerId: string]: { [currentState: string]: string };
 	};
 	codeErrorTimeWindow?: CodeErrorTimeWindow;
+	clmSettings?: CLMSettings;
 }
+
+export interface CLMSettings {
+	isChangeTrackingEnabled: boolean;
+	changeTrackingRadioValue: string;
+	compareDataLastValue: string;
+	compareDataLastReleaseValue: string;
+	againstDataPrecedingValue: string;
+	minimumChangeValue: string;
+	minimumBaselineValue: string;
+	minimumErrorRateValue: string;
+	minimumAverageDurationValue: string;
+}
+
+export const DEFAULT_CLM_SETTINGS: CLMSettings = {
+	isChangeTrackingEnabled: false,
+	changeTrackingRadioValue: "LATEST_RELEASE",
+	compareDataLastValue: "7",
+	compareDataLastReleaseValue: "7",
+	againstDataPrecedingValue: "21",
+	minimumChangeValue: "10",
+	minimumBaselineValue: "30",
+	minimumErrorRateValue: "1",
+	minimumAverageDurationValue: "0.1",
+};
 
 export interface RepoSetting {
 	/** repo id */
