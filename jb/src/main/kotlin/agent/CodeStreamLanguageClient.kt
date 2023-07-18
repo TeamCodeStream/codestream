@@ -15,6 +15,7 @@ import com.codestream.lineLevelBlameService
 import com.codestream.notificationComponent
 import com.codestream.protocols.agent.EnvironmentInfo
 import com.codestream.protocols.agent.LoginResult
+import com.codestream.protocols.agent.ObservabilityAnomaly
 import com.codestream.reviewService
 import com.codestream.sessionService
 import com.codestream.webViewService
@@ -171,6 +172,11 @@ class CodeStreamLanguageClient(private val project: Project) : LanguageClient {
     @JsonNotification("codestream/didDetectUnreviewedCommits")
     fun didDetectUnreviewedCommits(notification: DidDetectUnreviewedCommitsNotification) {
         project.notificationComponent?.didDetectUnreviewedCommits(notification.message, notification.sequence, notification.openReviewId)
+    }
+
+    @JsonNotification("codestream/didDetectObservabilityAnomalies")
+    fun didDetectObservabilityAnomalies(notification: DidDetectObservabilityAnomaliesNotification) {
+        project.notificationComponent?.didDetectObservabilityAnomalies(notification.entityGuid, notification.duration, notification.errorRate)
     }
 
     @JsonNotification("codestream/didChangeBranch")
@@ -351,6 +357,8 @@ enum class LogoutReason {
 class UserDidCommitNotification(val sha: String)
 
 class DidDetectUnreviewedCommitsNotification(val message: String, val sequence: Int, val openReviewId: String?)
+
+class DidDetectObservabilityAnomaliesNotification(val entityGuid: String, val duration: List<ObservabilityAnomaly>, val errorRate: List<ObservabilityAnomaly>)
 
 class DidChangeBranchNotification(val repoPath: String, val branch: String)
 

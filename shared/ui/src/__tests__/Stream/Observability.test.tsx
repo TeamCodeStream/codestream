@@ -211,6 +211,7 @@ describe("Observability", () => {
 							metricTimesliceName: "metricTimesliceName",
 							sinceText: "some text",
 							chartHeaderTexts: {},
+							notificationText: "",
 						},
 					],
 					errorRate: [],

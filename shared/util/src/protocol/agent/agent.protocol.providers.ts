@@ -1346,6 +1346,7 @@ export interface ObservabilityAnomaly extends CodeAttributes {
 	chartHeaderTexts: {
 		[key: string]: string;
 	};
+	notificationText: string;
 }
 
 export type DetectionMethod = "Release Based" | "Time Based";

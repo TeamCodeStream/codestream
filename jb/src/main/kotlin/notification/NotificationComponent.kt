@@ -7,6 +7,7 @@ import com.codestream.codeStream
 import com.codestream.protocols.agent.Codemark
 import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsParams
 import com.codestream.protocols.agent.FollowReviewParams
+import com.codestream.protocols.agent.ObservabilityAnomaly
 import com.codestream.protocols.agent.Post
 import com.codestream.protocols.agent.PullRequestNotification
 import com.codestream.protocols.agent.Review
@@ -166,6 +167,34 @@ class NotificationComponent(val project: Project) {
         notification.notify(project)
     }
 
+    fun didDetectObservabilityAnomalies(entityGuid: String, duration: List<ObservabilityAnomaly>, errorRate: List<ObservabilityAnomaly>) {
+        val count = duration.size + errorRate.size
+        val title = "$count code-level performance issues found"
+        val allAnomalies = duration + errorRate
+
+        val content = "Issue #1: " + allAnomalies.first().notificationText
+
+        val notification = notificationGroup.createNotification(title, null, content, NotificationType.INFORMATION)
+        notification.addAction(NotificationAction.createSimple("Details") {
+//            appDispatcher.launch {
+//                if (openReviewId != null) {
+//                    project.agentService?.followReview(FollowReviewParams(openReviewId, true))
+//                    project.webViewService?.postNotification(ReviewNotifications.Show(openReviewId, null, true))
+//                } else {
+//                    val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(sequence))
+//                    result?.reviewIds?.firstOrNull()?.let {
+//                        project.webViewService?.postNotification(ReviewNotifications.Show(it, null, true))
+//                    }
+//                }
+//            }
+            notification.expire()
+//            telemetry(TelemetryEvent.TOAST_CLICKED, "Unreviewed Commit")
+        })
+
+        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Code-level Anomalies")
+        notification.notify(project)
+    }
+
     private suspend fun showNotification(post: Post, codemark: Codemark?, review: Review?) {
         val session = project.sessionService ?: return
         val sender =
@@ -219,5 +248,6 @@ class NotificationComponent(val project: Project) {
         val params = TelemetryParams(event.value, mapOf("Content" to content))
         project.agentService?.agent?.telemetry(params)
     }
+
 }
 

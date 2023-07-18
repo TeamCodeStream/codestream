@@ -128,7 +128,7 @@ export class AnomalyDetector {
 			this.errorRateComparisonToAnomaly(_, languageSupport, benchmarkSpans, metricTimesliceNames)
 		);
 
-		this.addChartHeaderTexts(durationAnomalies, errorRateAnomalies);
+		this.addDisplayTexts(durationAnomalies, errorRateAnomalies);
 
 		const symbolStrs = new Set();
 		for (const name of metricTimesliceNames) {
@@ -165,6 +165,7 @@ export class AnomalyDetector {
 				chartHeaderTexts: {},
 				metricTimesliceName: "",
 				errorMetricTimesliceName: "",
+				notificationText: "",
 			};
 			allOtherAnomalies.push(anomaly);
 		}
@@ -586,6 +587,7 @@ export class AnomalyDetector {
 					_ => this.extractSymbolStr(_) === this.extractSymbolStr(comparison.name)
 				) || comparison.name,
 			chartHeaderTexts: {},
+			notificationText: "",
 		};
 	}
 
@@ -614,10 +616,11 @@ export class AnomalyDetector {
 				) || comparison.name,
 			errorMetricTimesliceName: comparison.name,
 			chartHeaderTexts: {},
+			notificationText: "",
 		};
 	}
 
-	private addChartHeaderTexts(
+	private addDisplayTexts(
 		durationAnomalies: ObservabilityAnomaly[],
 		errorRateAnomalies: ObservabilityAnomaly[]
 	) {
@@ -626,11 +629,13 @@ export class AnomalyDetector {
 			const percentage = ((anomaly.ratio - 1) * 100).toFixed(2);
 			const text = `+${percentage}% since ${anomaly.sinceText}`;
 			anomaly.chartHeaderTexts["Average duration (ms)"] = text;
+			anomaly.notificationText = "Average duration (ms) " + text;
 		}
 		for (const anomaly of errorRateAnomalies) {
 			const percentage = ((anomaly.ratio - 1) * 100).toFixed(2);
 			const text = `+${percentage}% since ${anomaly.sinceText}`;
 			anomaly.chartHeaderTexts["Errors (per minute)"] = text;
+			anomaly.notificationText = "Errors (per minute) " + text;
 		}
 		for (const anomaly of durationAnomalies) {
 			const counterpart = errorRateAnomalies.find(
