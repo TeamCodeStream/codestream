@@ -152,7 +152,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				"gitlab_enterprise",
 				"bitbucket",
 				"bitbucket_server",
-			].includes(providers[id].name)
+			].includes(providers[id].name),
 		);
 		const currentUser = state.users[state.session.userId!] as CSMe;
 		const status =
@@ -312,7 +312,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 						selectedRepo ||
 						(newPullRequestBranch != null &&
 							response.repositories.find(
-								_ => newPullRequestBranch && _.path === newPullRequestBranch.repoPath
+								_ => newPullRequestBranch && _.path === newPullRequestBranch.repoPath,
 							)) ||
 						response.repositories.find(_ => _.providerId) ||
 						response.repositories[0];
@@ -493,7 +493,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				} else if (e.type === ChangeDataType.Workspace) {
 					fetchPreconditionData();
 				}
-			})
+			}),
 		);
 
 		return () => {
@@ -738,7 +738,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 					map[obj.remote] = true;
 				}
 				return map;
-			}, {})
+			}, {}),
 		).length;
 
 		const items = model?.repo?.remoteBranches!.map(_ => {
@@ -1210,7 +1210,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 										model.provider &&
 										model.provider.id &&
 										derivedState.supportedPullRequestViewProviders.find(
-											_ => _ === model.provider!.id
+											_ => _ === model.provider!.id,
 										)
 									) {
 										dispatch(closeAllPanels());
@@ -1219,11 +1219,11 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 												setCurrentPullRequest(
 													model.provider.id,
 													JSON.stringify({
-														id: `${model.provider.repo?.nameWithOwner}/${id}`,
+														id: id,
 														pullRequestId: id,
 														repoWithOwner: model.provider.repo?.nameWithOwner,
-													})
-												)
+													}),
+												),
 											);
 										} else {
 											dispatch(setCurrentPullRequest(model.provider.id, id));
@@ -1328,7 +1328,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 				pending.headRefName
 					.slice(1)
 					.replace("-", " ")
-					.replace(/^(\w+)\//, "$1: ")
+					.replace(/^(\w+)\//, "$1: "),
 		);
 	};
 
@@ -1552,7 +1552,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 																						{
 																							path: `${name}.md`,
 																							baseDir: model?.provider?.pullRequestTemplatePath,
-																						}
+																						},
 																					)) as any;
 
 																					setPending({
@@ -1575,7 +1575,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 																			action: async () => {
 																				setPending({ ...pending!, description: "" });
 																			},
-																		}
+																		},
 																	)}
 															>
 																Select a template
@@ -1738,7 +1738,7 @@ export const CreatePullRequestPanel = (props: { closePanel: MouseEventHandler<El
 										fetchFilesChanged(
 											pending?.repoId!,
 											pending?.baseRefName!,
-											pending?.headRefName!
+											pending?.headRefName!,
 										);
 									}}
 								></PullLatest>
