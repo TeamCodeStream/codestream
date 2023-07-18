@@ -47,7 +47,7 @@ import { ProviderPullRequestActionsTypes } from "./types";
 const _getPullRequestConversationsFromProvider = async (
 	providerId: string,
 	id: string,
-	src: string
+	src: string,
 ) => {
 	const response1 = await HostApi.instance.send(FetchThirdPartyPullRequestRequestType, {
 		providerId: providerId,
@@ -103,19 +103,19 @@ export const getPullRequestConversationsFromProvider = createAppAsyncThunk<
 		const responses = await _getPullRequestConversationsFromProvider(
 			providerId,
 			id,
-			"getPullRequestConversationsFromProvider"
+			"getPullRequestConversationsFromProvider",
 		);
 		dispatch(
 			addPullRequestConversations({
 				...request,
 				conversations: responses.conversations,
-			})
+			}),
 		);
 		dispatch(
 			addPullRequestCollaborators({
 				...request,
 				collaborators: responses.collaborators,
-			})
+			}),
 		);
 
 		return responses.conversations;
@@ -134,7 +134,7 @@ export const getPullRequestConversations = createAppAsyncThunk<
 		const state: CodeStreamState = getState();
 		const provider = state.providerPullRequests.pullRequests[providerId];
 		if (provider) {
-			let pr = provider[id];
+			let pr = provider?.[id];
 			if (!pr) {
 				try {
 					const parsed = JSON.parse(id);
@@ -146,11 +146,11 @@ export const getPullRequestConversations = createAppAsyncThunk<
 			if (pr && pr.conversations) {
 				if (isAnHourOld(pr.conversationsLastFetch)) {
 					console.warn(
-						`stale pullRequest conversations from store providerId=${providerId} id=${id}, re-fetching...`
+						`stale pullRequest conversations from store providerId=${providerId} id=${id}, re-fetching...`,
 					);
 				} else {
 					console.log(
-						`fetched pullRequest conversations from store providerId=${providerId} id=${id}`
+						`fetched pullRequest conversations from store providerId=${providerId} id=${id}`,
 					);
 					return pr.conversations;
 				}
@@ -160,19 +160,19 @@ export const getPullRequestConversations = createAppAsyncThunk<
 		const responses = await _getPullRequestConversationsFromProvider(
 			providerId,
 			id,
-			"getPullRequestConversations"
+			"getPullRequestConversations",
 		);
 		await dispatch(
 			addPullRequestConversations({
 				...request,
 				conversations: responses.conversations,
-			})
+			}),
 		);
 		await dispatch(
 			addPullRequestCollaborators({
 				...request,
 				collaborators: responses.collaborators,
-			})
+			}),
 		);
 		return responses.conversations;
 	} catch (error) {
@@ -239,7 +239,7 @@ export const getPullRequestFiles = createAppAsyncThunk<
 						pullRequestId: id,
 						accessRawDiffs,
 					},
-				})
+				}),
 			).unwrap();
 		}
 
@@ -254,7 +254,7 @@ export const getPullRequestFiles = createAppAsyncThunk<
 				commits: commitsIndex,
 				pullRequestFiles: response,
 				accessRawDiffs,
-			})
+			}),
 		);
 		return response;
 	} catch (error) {
@@ -275,7 +275,7 @@ export const getPullRequestFilesFromProvider = createAppAsyncThunk<
 				params: {
 					pullRequestId: id,
 				},
-			})
+			}),
 		).unwrap();
 		//  as GetCommitsFilesResponse[];
 		// JSON.stringify matches the other use of this call
@@ -285,7 +285,7 @@ export const getPullRequestFilesFromProvider = createAppAsyncThunk<
 				id,
 				commits: JSON.stringify([]),
 				pullRequestFiles: response,
-			})
+			}),
 		);
 		return response;
 	} catch (error) {
@@ -407,7 +407,7 @@ export const getPullRequestCommits = createAppAsyncThunk<
 			const pr = provider[exactId];
 			if (pr && pr.commits && pr.commits.length) {
 				console.log(
-					`fetched pullRequest commits from store providerId=${providerId} id=${exactId}`
+					`fetched pullRequest commits from store providerId=${providerId} id=${exactId}`,
 				);
 				return pr.commits;
 			}
@@ -417,14 +417,14 @@ export const getPullRequestCommits = createAppAsyncThunk<
 			{
 				providerId: providerId,
 				pullRequestId: id,
-			}
+			},
 		);
 		dispatch(
 			addPullRequestCommits({
 				providerId,
 				id,
 				pullRequestCommits: response,
-			})
+			}),
 		);
 		return response;
 	} catch (error) {
@@ -482,8 +482,8 @@ export const openPullRequestByUrl = createAppAsyncThunk<
 						"",
 						options ? options.source : undefined,
 						options?.isVS ? "details" : "sidebar-diffs",
-						options?.groupIndex ? options.groupIndex : undefined
-					)
+						options?.groupIndex ? options.groupIndex : undefined,
+					),
 				);
 				handled = true;
 			}
@@ -607,7 +607,7 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 				dispatch(
 					setProviderError(providerId, pullRequestId, {
 						message: "currentPullRequest not found",
-					})
+					}),
 				);
 				return undefined;
 			}
@@ -635,7 +635,7 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 						providerId,
 						id: pullRequestId,
 						data: response.directives,
-					})
+					}),
 				);
 				return {
 					handled: true,
@@ -675,7 +675,7 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 			dispatch(
 				setProviderError(providerId, pullRequestId, {
 					message: errorString,
-				})
+				}),
 			);
 			logError(error, { providerId, pullRequestId, method, message: errorString });
 
@@ -687,7 +687,7 @@ export const api = createAppAsyncThunk<any, ApiRequest>(
 			});
 			return undefined;
 		}
-	}
+	},
 );
 
 const isAnHourOld = conversationsLastFetch => {
