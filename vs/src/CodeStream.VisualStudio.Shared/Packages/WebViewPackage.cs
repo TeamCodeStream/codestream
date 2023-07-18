@@ -36,7 +36,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		private IComponentModel _componentModel;
 		private ISolutionEventsListener _solutionEventListener;
 		private IThemeEventsListener _themeEventsService;
-		private ISolutionFileEnumerationService _solutionFileEnumerationService;
 		//public WebViewPackage() {
 		//	OptionsDialogPage = GetDialogPage(typeof(OptionsDialogPage)) as OptionsDialogPage;
 		//}
@@ -64,8 +63,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 				Assumes.Present(_componentModel);
 
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
-
-				_solutionFileEnumerationService = _componentModel.GetService<ISolutionFileEnumerationService>();
 
 				_solutionEventListener = _componentModel.GetService<ISolutionEventsListener>();
 				_solutionEventListener.Opened += SolutionOrFolder_Opened;
@@ -145,8 +142,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 			sessionService.SolutionName = null;
 			sessionService.ProjectType = null;
-
-			_solutionFileEnumerationService.ClearCache();
 		}
 
 		private void SolutionOrFolder_Opened(object sender, HostOpenedEventArgs e) {
@@ -166,8 +161,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 
 				sessionService.SolutionName = e.FileName;
 				sessionService.ProjectType = e.ProjectType;
-
-				_solutionFileEnumerationService.GetFilesInSolution();
 			}
 			catch (Exception ex) {
 				Log.Error(ex, nameof(SolutionOrFolder_Opened));

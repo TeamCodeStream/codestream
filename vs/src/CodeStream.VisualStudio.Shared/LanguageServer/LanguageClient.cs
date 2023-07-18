@@ -66,8 +66,9 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory,
 			IHttpClientService httpClientService,
-			IMessageInterceptorService messageInterceptorService)
-			: base(serviceProvider, sessionService, eventAggregator, browserServiceFactory, settingsServiceFactory, httpClientService, Log) {
+			IMessageInterceptorService messageInterceptorService,
+			IFileResolutionService fileResolutionService)
+			: base(serviceProvider, sessionService, eventAggregator, browserServiceFactory, settingsServiceFactory, httpClientService, fileResolutionService, Log) {
 
 			_middleLayerProvider = new MiddleLayerProvider(Log, messageInterceptorService);
 		}

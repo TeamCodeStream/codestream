@@ -20,6 +20,7 @@ using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
+using System.Linq;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class CustomMessageHandler : IDisposable {
@@ -29,7 +30,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserServiceFactory _browserServiceFactory;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
-
+		private readonly IFileResolutionService _fileResolutionService;
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
 		private readonly Subject<UserPreferencesChangedSubjectArgs> _userPreferencesChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
@@ -39,11 +40,14 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IBrowserServiceFactory browserServiceFactory,
-			ISettingsServiceFactory settingsServiceFactory) {
+			ISettingsServiceFactory settingsServiceFactory,
+			IFileResolutionService fileResolutionService) {
+
 			_serviceProvider = serviceProvider;
 			_eventAggregator = eventAggregator;
 			_browserServiceFactory = browserServiceFactory;
 			_settingsServiceFactory = settingsServiceFactory;
+			_fileResolutionService = fileResolutionService;
 
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
 			_userPreferencesChangedSubject = new Subject<UserPreferencesChangedSubjectArgs>();
@@ -369,20 +373,19 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				$"{nameof(OnResolveStackTracePathsAsync)} Method={ResolveStackTracePathsRequestType.MethodName}",
 				Serilog.Events.LogEventLevel.Information)) {
 
-				// TODO: NR-113487
-				// Get all files under the currently opened solution / folder and cache them
-				// For each path in `e.paths`, find a matching file.
-				//
-				// -OR-
-				//
-				// Get some reference to the solution / projects / files, using DTE and do it that way
-				//
-				// Q: What do the paths look like coming into `e.paths`?
-				//    Are the relative or full?
-				//	     Relative from where?
-				// Q: How to handle nested files?
-				// Q: How to handle projects / files in "Solution Folders"?
-				return System.Threading.Tasks.Task.FromResult(new ResolveStackTracePathsResponse() { NotImplemented = true });				
+				var request = e.ToObject<ResolveStackTracePathsRequest>();
+				var response = new ResolveStackTracePathsResponse() { NotImplemented = false };
+
+				foreach(var path in request.Paths.Where(p => p != null))
+				{
+					var resolvedFilePath = _fileResolutionService.CanResolve(path);
+					if (resolvedFilePath != null)
+					{
+						response.ResolvedPaths.Add(resolvedFilePath);
+					}
+				}
+
+				return System.Threading.Tasks.Task.FromResult(response);				
 			}
 		}
 

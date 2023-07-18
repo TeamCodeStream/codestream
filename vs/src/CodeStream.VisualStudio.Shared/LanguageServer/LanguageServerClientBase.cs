@@ -34,6 +34,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory,
 			IHttpClientService httpClientService,
+			IFileResolutionService fileResolutionService,
 			ILogger logger) {
 
 			Log = logger;
@@ -45,7 +46,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				HttpClientService = httpClientService;
 
 				LanguageServerProcess = new LanguageServerClientProcess();
-				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserServiceFactory, SettingsServiceFactory);
+				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserServiceFactory, SettingsServiceFactory, fileResolutionService);
 
 				Log.Ctor();
 			}

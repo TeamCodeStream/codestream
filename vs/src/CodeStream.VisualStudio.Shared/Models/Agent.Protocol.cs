@@ -327,7 +327,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 	public class ResolveStackTracePathsRequest  {
 		[JsonProperty("paths", NullValueHandling = NullValueHandling.Ignore)]
-		public List<string> Paths { get; set; }
+		public List<string> Paths { get; set; } = new List<string>();
 
 		[JsonProperty("language", NullValueHandling = NullValueHandling.Ignore)]
 		public string Language { get; set; }
@@ -335,7 +335,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 	public class ResolveStackTracePathsResponse {
 		[JsonProperty("resolvedPaths", NullValueHandling = NullValueHandling.Ignore)]
-		public List<string> ResolvedPaths { get; set; }
+		public List<string> ResolvedPaths { get; set; } = new List<string>();
 
 		[JsonProperty("notImplemented", NullValueHandling = NullValueHandling.Ignore)]
 		public bool? NotImplemented { get; set; }
