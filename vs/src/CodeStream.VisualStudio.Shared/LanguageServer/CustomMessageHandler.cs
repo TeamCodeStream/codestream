@@ -379,7 +379,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 
 				foreach(var path in request.Paths.Where(p => p != null))
 				{
-					var resolvedFilePath = _fileResolutionService.CanResolve(path);
+					var resolvedFilePath = _fileResolutionService.ResolveLocal(path);
 					if (resolvedFilePath != null)
 					{
 						response.ResolvedPaths.Add(resolvedFilePath);
