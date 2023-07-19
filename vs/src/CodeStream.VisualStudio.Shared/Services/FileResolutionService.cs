@@ -18,7 +18,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 	public interface IFileResolutionService
 	{
 		string CanResolve(string relativeFilePath);
-		void OpenDocument(string relativeFilePath);
 	}
 
 	[Export(typeof(IFileResolutionService))]
@@ -66,16 +65,6 @@ namespace CodeStream.VisualStudio.Shared.Services
 			}
 
 			return null;
-		}
-
-		public void OpenDocument(string relativeFilePath)
-		{
-			var documentId = _visualStudioWorkspace.CurrentSolution.GetDocumentIdsWithFilePath(relativeFilePath).FirstOrDefault();
-
-			if(documentId != null)
-			{
-				_visualStudioWorkspace.OpenDocument(documentId);
-			}
 		}
 	}
 }

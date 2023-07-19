@@ -339,7 +339,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 		[JsonProperty("notImplemented", NullValueHandling = NullValueHandling.Ignore)]
 		public bool? NotImplemented { get; set; }
-	}	
+	}
 
 	public class ResolveStackTracePathsRequestType : RequestType<ResolveStackTracePathsResponse> {
 		public const string MethodName = "codestream/stackTrace/resolvePaths";

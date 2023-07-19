@@ -21,6 +21,7 @@ using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Packages;
 using CodeStream.VisualStudio.Shared.Services;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace CodeStream.VisualStudio.Shared.LanguageServer {
 	public class CustomMessageHandler : IDisposable {
@@ -368,9 +369,9 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		}
 
 		[JsonRpcMethod(ResolveStackTracePathsRequestType.MethodName)]
-		public System.Threading.Tasks.Task<ResolveStackTracePathsResponse> OnResolveStackTracePathsAsync(JToken e, JToken someOtherPropThatNeedsToBeHereForRequests) {
+		public System.Threading.Tasks.Task<ResolveStackTracePathsResponse> OnResolveStackTracePaths(JToken e, JToken someOtherPropThatNeedsToBeHereForRequests) {
 			using (Log.CriticalOperation(
-				$"{nameof(OnResolveStackTracePathsAsync)} Method={ResolveStackTracePathsRequestType.MethodName}",
+				$"{nameof(OnResolveStackTracePaths)} Method={ResolveStackTracePathsRequestType.MethodName}",
 				Serilog.Events.LogEventLevel.Information)) {
 
 				var request = e.ToObject<ResolveStackTracePathsRequest>();
@@ -385,8 +386,25 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 					}
 				}
 
-				return System.Threading.Tasks.Task.FromResult(response);				
+				return System.Threading.Tasks.Task.FromResult(response);
 			}
+		}
+
+		[JsonRpcMethod(DidResolveStackTraceLineNotificationType.MethodName)]
+		public void OnDidResolveStackTraceLine(JToken e)
+		{
+			using (Log.CriticalOperation($"{nameof(OnDidResolveStackTraceLine)} Method={DidResolveStackTraceLineNotificationType.MethodName}", Serilog.Events.LogEventLevel.Debug))
+			{
+				try
+				{
+					BrowserService.EnqueueNotification(new DidResolveStackTraceLineNotificationType(e));
+				}
+				catch (Exception ex)
+				{
+					Log.Error(ex, $"Problem with {nameof(OnDidResolveStackTraceLine)}");
+				}
+			}
+
 		}
 
 		/// <summary>

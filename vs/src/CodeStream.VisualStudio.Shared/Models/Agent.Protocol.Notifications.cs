@@ -156,6 +156,15 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 	}
 
+	public class DidResolveStackTraceLineNotificationType : NotificationType
+	{
+		public const string MethodName = "codestream/nr/didResolveStackTraceLine";
+		public override string Method => MethodName;
+
+		public DidResolveStackTraceLineNotificationType(JToken @params) : base(@params) { }
+
+	}
+
 	public class EnvironmentHost {
 		[JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
 		public string Name { get; set; }
