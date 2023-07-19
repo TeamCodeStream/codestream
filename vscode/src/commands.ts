@@ -403,19 +403,6 @@ export class Commands implements Disposable {
 		return this.newPullRequestRequest(args);
 	}
 
-	@command("scmNewPullRequest", { showErrorMessage: "Unable to create Pull Request" })
-	async scmNewPullRequest() {
-		try {
-			const editor = window.activeTextEditor;
-			await Container.webview.newPullRequestRequest(
-				editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
-				"VSC SCM"
-			);
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	}
-
 	@command("copyPermalink", { showErrorMessage: "Unable to copy permalink" })
 	async copyPermalink(_args?: NewCodemarkCommandArgs) {
 		const editor = window.activeTextEditor;
@@ -588,45 +575,6 @@ export class Commands implements Disposable {
 	async toggle() {
 		try {
 			return await Container.webview.toggle();
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	}
-
-	@command("scmNewReview", { showErrorMessage: "Unable to request a review" })
-	async scmNewReview() {
-		try {
-			return this.newReviewRequest({ source: "VSC SCM" });
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	}
-
-	@command("scmNewComment", { showErrorMessage: "Unable to add comment" })
-	async scmNewComment() {
-		try {
-			const editor = window.activeTextEditor;
-			await Container.webview.newCodemarkRequest(
-				CodemarkType.Comment,
-				editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
-				"VSC SCM",
-				true
-			);
-		} catch (ex) {
-			Logger.error(ex);
-		}
-	}
-
-	@command("scmNewIssue", { showErrorMessage: "Unable to create issue" })
-	async scmNewIssue() {
-		try {
-			const editor = window.activeTextEditor;
-			await Container.webview.newCodemarkRequest(
-				CodemarkType.Issue,
-				editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
-				"VSC SCM",
-				true
-			);
 		} catch (ex) {
 			Logger.error(ex);
 		}

@@ -5,7 +5,6 @@ import HttpsProxyAgent from "https-proxy-agent";
 // import * as vscode from "vscode";
 import fetch, { RequestInit } from "node-fetch";
 import { ProtocolHandler } from "./protocolHandler";
-import { ScmTreeDataProvider } from "./views/scmTreeDataProvider";
 import { AbortController } from "node-abort-controller";
 import {
 	Disposable,
@@ -193,11 +192,6 @@ export async function activate(context: ExtensionContext) {
 		webviewLikeSidebar,
 		telemetryOptions
 	);
-
-	const scmTreeDataProvider = new ScmTreeDataProvider();
-	window.registerTreeDataProvider("scmTreeDataProvider", scmTreeDataProvider);
-
-	context.subscriptions.push(scmTreeDataProvider);
 
 	context.subscriptions.push(Container.session.onDidChangeSessionStatus(onSessionStatusChanged));
 	context.subscriptions.push(new ProtocolHandler());

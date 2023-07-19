@@ -56,31 +56,8 @@
 					"icon": "assets/images/codestream.svg",
 					"contextualTitle": "CodeStream"
 				}
-			],
-			"scm": [
-				{
-					"id": "scmTreeDataProvider",
-					"name": "CodeStream"
-				}
 			]
 		},
-		"viewsWelcome": [
-			{
-				"view": "scmTreeDataProvider",
-				"contents": "[Toggle CodeStream](command:codestream.toggle)",
-				"when": "codestream:status == signedOut"
-			},
-			{
-				"view": "scmTreeDataProvider",
-				"contents": "[Request Feedback](command:codestream.newReview)",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"view": "scmTreeDataProvider",
-				"contents": "Request feedback on your work-in-progress, or final code review.",
-				"when": "codestream:status == signedIn"
-			}
-		],
 		"configuration": {
 			"type": "object",
 			"title": "CodeStream",
@@ -284,38 +261,6 @@
 				"command": "codestream.newPullRequest",
 				"title": "New Pull Request",
 				"category": "CodeStream",
-				"icon": {
-					"light": "assets/images/light/pull-request.svg",
-					"dark": "assets/images/dark/pull-request.svg"
-				}
-			},
-			{
-				"command": "codestream.scmNewReview",
-				"title": "Request Feedback",
-				"icon": {
-					"light": "assets/images/light/review.svg",
-					"dark": "assets/images/dark/review.svg"
-				}
-			},
-			{
-				"command": "codestream.scmNewComment",
-				"title": "New Comment",
-				"icon": {
-					"light": "assets/images/light/comment.svg",
-					"dark": "assets/images/dark/comment.svg"
-				}
-			},
-			{
-				"command": "codestream.scmNewIssue",
-				"title": "New Issue",
-				"icon": {
-					"light": "assets/images/light/issue.svg",
-					"dark": "assets/images/dark/issue.svg"
-				}
-			},
-			{
-				"command": "codestream.scmNewPullRequest",
-				"title": "New Pull Request",
 				"icon": {
 					"light": "assets/images/light/pull-request.svg",
 					"dark": "assets/images/dark/pull-request.svg"
@@ -560,28 +505,6 @@
 					"command": "codestream.newPermalink",
 					"when": "codestream:status == signedIn && resourceScheme == file",
 					"group": "9_zcodestream@4"
-				}
-			],
-			"view/title": [
-				{
-					"command": "codestream.scmNewPullRequest",
-					"when": "view == scmTreeDataProvider && codestream:status == signedIn",
-					"group": "navigation"
-				},
-				{
-					"command": "codestream.scmNewReview",
-					"when": "view == scmTreeDataProvider && codestream:status == signedIn",
-					"group": "navigation"
-				},
-				{
-					"command": "codestream.scmNewComment",
-					"when": "view == scmTreeDataProvider && codestream:status == signedIn",
-					"group": "navigation"
-				},
-				{
-					"command": "codestream.scmNewIssue",
-					"when": "view == scmTreeDataProvider && codestream:status == signedIn",
-					"group": "navigation"
 				}
 			]
 		},
