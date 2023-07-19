@@ -579,7 +579,10 @@ class ObservabilityAnomaly(
     val metricTimesliceName: String,
     val errorMetricTimesliceName: String,
     val chartHeaderTexts: Map<String, String>,
-    val notificationText: String
+    val notificationText: String,
+    val codeFilepath: String?,
+    val codeNamespace: String,
+    val codeFunction: String
 )
 
 open class MethodLevelTelemetryData(

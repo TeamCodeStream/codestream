@@ -48,6 +48,7 @@ export class AnomalyDetector {
 			return {
 				responseTime: [],
 				errorRate: [],
+				didNotifyNewAnomalies: false,
 				isSupported: false,
 			};
 		}
@@ -193,10 +194,13 @@ export class AnomalyDetector {
 			Logger.warn("Error generating anomaly detection telemetry", e);
 		}
 
-		try {
-			void (await this.notifyNewAnomalies(durationAnomalies, errorRateAnomalies));
-		} catch (e) {
-			Logger.warn("Error notifying newly detected observability anomalies", e);
+		let hasNewAnomalies = false;
+		if (this._request.notifyNewAnomalies) {
+			try {
+				hasNewAnomalies = await this.notifyNewAnomalies(durationAnomalies, errorRateAnomalies);
+			} catch (e) {
+				Logger.warn("Error notifying newly detected observability anomalies", e);
+			}
 		}
 
 		return {
@@ -204,6 +208,7 @@ export class AnomalyDetector {
 			errorRate: errorRateAnomalies,
 			allOtherAnomalies: allOtherAnomalies,
 			detectionMethod,
+			didNotifyNewAnomalies: hasNewAnomalies,
 			isSupported: true,
 		};
 	}
@@ -683,19 +688,19 @@ export class AnomalyDetector {
 	private async notifyNewAnomalies(
 		durationAnomalies: ObservabilityAnomaly[],
 		errorRateAnomalies: ObservabilityAnomaly[],
-	) {
+	): Promise<boolean> {
 		const { repos: observabilityRepos } = await this._provider.getObservabilityRepos({});
 		const { entityGuid } = this._request;
 		const { git } = SessionContainer.instance();
 		const now = Date.now();
 
-		if (!observabilityRepos) return;
+		if (!observabilityRepos) return false;
 		const observabilityRepo = observabilityRepos.find(_ =>
 			_.entityAccounts.some(_ => _.entityGuid === entityGuid),
 		);
-		if (!observabilityRepo) return;
+		if (!observabilityRepo) return false;
 		const gitRepo = await git.getRepositoryById(observabilityRepo.repoId);
-		if (!gitRepo) return;
+		if (!gitRepo) return false;
 		const storage = await getStorage(gitRepo.path);
 
 		const anomalyNotificationsCollection = storage.getCollection("anomalyNotifications");
@@ -745,7 +750,10 @@ export class AnomalyDetector {
 				duration: newDurationAnomalies,
 				errorRate: newErrorRateAnomalies,
 			});
+			return true;
 		}
+
+		return false;
 	}
 }
 

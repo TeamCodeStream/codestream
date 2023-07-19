@@ -3,6 +3,7 @@ package com.codestream.notification
 import com.codestream.CODESTREAM_TOOL_WINDOW_ID
 import com.codestream.agentService
 import com.codestream.appDispatcher
+import com.codestream.clmService
 import com.codestream.codeStream
 import com.codestream.protocols.agent.Codemark
 import com.codestream.protocols.agent.CreateReviewsForUnreviewedCommitsParams
@@ -13,6 +14,7 @@ import com.codestream.protocols.agent.PullRequestNotification
 import com.codestream.protocols.agent.Review
 import com.codestream.protocols.agent.TelemetryParams
 import com.codestream.protocols.webview.CodemarkNotifications
+import com.codestream.protocols.webview.ObservabilityAnomalyNotifications
 import com.codestream.protocols.webview.PullRequestNotifications
 import com.codestream.protocols.webview.ReviewNotifications
 import com.codestream.sessionService
@@ -170,25 +172,24 @@ class NotificationComponent(val project: Project) {
     fun didDetectObservabilityAnomalies(entityGuid: String, duration: List<ObservabilityAnomaly>, errorRate: List<ObservabilityAnomaly>) {
         val count = duration.size + errorRate.size
         val title = "$count code-level performance issues found"
-        val allAnomalies = duration + errorRate
+        val allAnomalies = (duration + errorRate).sortedByDescending { it.ratio }
+        val firstAnomaly = allAnomalies.first()
 
-        val content = "Issue #1: " + allAnomalies.first().notificationText
+        val content = "Issue #1: " + firstAnomaly.notificationText
 
         val notification = notificationGroup.createNotification(title, null, content, NotificationType.INFORMATION)
         notification.addAction(NotificationAction.createSimple("Details") {
-//            appDispatcher.launch {
-//                if (openReviewId != null) {
-//                    project.agentService?.followReview(FollowReviewParams(openReviewId, true))
-//                    project.webViewService?.postNotification(ReviewNotifications.Show(openReviewId, null, true))
-//                } else {
-//                    val result = project.agentService?.createReviewsForUnreviewedCommits(CreateReviewsForUnreviewedCommitsParams(sequence))
-//                    result?.reviewIds?.firstOrNull()?.let {
-//                        project.webViewService?.postNotification(ReviewNotifications.Show(it, null, true))
-//                    }
-//                }
-//            }
-            notification.expire()
-//            telemetry(TelemetryEvent.TOAST_CLICKED, "Unreviewed Commit")
+            appDispatcher.launch {
+                project.codeStream?.show {
+                    project.webViewService?.postNotification(ObservabilityAnomalyNotifications.View(
+                        firstAnomaly,
+                        entityGuid
+                    ))
+                    notification.expire()
+                }
+                project.clmService?.revealSymbol(firstAnomaly.codeFilepath, firstAnomaly.codeNamespace, firstAnomaly.codeFunction)
+            }
+            telemetry(TelemetryEvent.TOAST_CLICKED, "Code-level Anomalies")
         })
 
         telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Code-level Anomalies")

@@ -1322,9 +1322,10 @@ export class NewRelicProvider
 
 		const me = await SessionContainer.instance().users.getMe();
 		const clmSettings = me.preferences?.clmSettings || DEFAULT_CLM_SETTINGS;
+		let didNotifyNewAnomalies = false;
 		for (const entityGuid of entityGuids) {
 			Logger.log("Getting observability anomalies for entity " + entityGuid);
-			void (await this.getObservabilityAnomalies({
+			const response = await this.getObservabilityAnomalies({
 				entityGuid,
 				sinceDaysAgo: parseInt(clmSettings.compareDataLastValue),
 				baselineDays: parseInt(clmSettings.againstDataPrecedingValue),
@@ -1333,7 +1334,11 @@ export class NewRelicProvider
 				minimumResponseTime: parseFloat(clmSettings.minimumAverageDurationValue),
 				minimumSampleRate: parseFloat(clmSettings.minimumBaselineValue),
 				minimumRatio: parseFloat(clmSettings.minimumChangeValue) / 100 + 1,
-			}));
+				notifyNewAnomalies: !didNotifyNewAnomalies,
+			});
+			if (response.didNotifyNewAnomalies) {
+				didNotifyNewAnomalies = true;
+			}
 		}
 	}
 
@@ -1377,6 +1382,7 @@ export class NewRelicProvider
 			responseTime: [],
 			errorRate: [],
 			error: lastEx,
+			didNotifyNewAnomalies: false,
 		};
 
 		this._lastObservabilityAnomaliesResponse = response;

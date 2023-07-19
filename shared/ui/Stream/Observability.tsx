@@ -299,6 +299,7 @@ export const Observability = React.memo((props: Props) => {
 		useState<GetObservabilityAnomaliesResponse>({
 			responseTime: [],
 			errorRate: [],
+			didNotifyNewAnomalies: false,
 		});
 	const [observabilityAssignments, setObservabilityAssignments] = useState<
 		ObservabilityErrorCore[]

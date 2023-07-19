@@ -1330,6 +1330,7 @@ export interface GetObservabilityAnomaliesRequest {
 	minimumResponseTime: number;
 	minimumSampleRate: number;
 	minimumRatio: number;
+	notifyNewAnomalies?: boolean;
 }
 
 export interface ObservabilityAnomaly extends CodeAttributes {
@@ -1378,6 +1379,7 @@ export interface GetObservabilityAnomaliesResponse {
 	detectionMethod?: DetectionMethod;
 	error?: string;
 	isSupported?: boolean;
+	didNotifyNewAnomalies: boolean;
 	allOtherAnomalies?: ObservabilityAnomaly[];
 }
 
