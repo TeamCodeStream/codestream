@@ -161,7 +161,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 					onOff: true,
 					path: fileObject.file,
 				},
-			})
+			}),
 		);
 		setIconName("ok");
 		setIsChecked(true);
@@ -175,7 +175,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 					onOff: false,
 					path: fileObject.file,
 				},
-			})
+			}),
 		);
 		setIconName("circle");
 		setIsChecked(false);
@@ -274,8 +274,8 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 				prId,
 				comment?.comment?.id || comment?.review?.id,
 				"",
-				"details"
-			)
+				"details",
+			),
 		);
 
 		HostApi.instance.track("PR Conversation View", {
@@ -310,7 +310,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 		setShowGoToFileIcon(false);
 	};
 
-	const handleOpenFile = async e => {
+	const handleOpenFile = async (e, index) => {
 		e.preventDefault();
 		e.stopPropagation();
 		let repoRoot = currentRepoRoot;
@@ -320,7 +320,11 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			});
 			if (!response.repositories) return;
 
-			const repoIdToCheck = derivedState.prRepoId ? derivedState.prRepoId : undefined;
+			const repoIdToCheck = derivedState.prRepoId
+				? derivedState.prRepoId
+				: response.repositories[index].id
+				? response.repositories[index].id
+				: undefined;
 			if (repoIdToCheck) {
 				const currentRepoInfo = response.repositories.find(r => r.id === repoIdToCheck);
 				if (currentRepoInfo) {
@@ -350,7 +354,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 			//@ts-ignore
 			["asc", "comment.bodyText"],
 			//@ts-ignore
-			["asc", "comment.body"]
+			["asc", "comment.body"],
 		);
 	}
 
@@ -409,7 +413,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 								name="goto-file"
 								className="clickable"
 								style={{ color: "var(--text-color-subtle)" }}
-								onClick={e => handleOpenFile(e)}
+								onClick={e => handleOpenFile(e, index)}
 								delay={1}
 							/>
 						</span>
@@ -464,7 +468,7 @@ export const PullRequestFilesChangedFileComments = (props: Props) => {
 									placement="bottom"
 									name="goto-file"
 									className="clickable"
-									onClick={e => handleOpenFile(e)}
+									onClick={e => handleOpenFile(e, index)}
 									style={{ color: "var(--text-color-subtle)" }}
 									delay={1}
 								/>
