@@ -399,17 +399,24 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			};
 
 			let functionLocator: FunctionLocator | undefined = undefined;
-			if (document.languageId === "csharp" || document.languageId === "java") {
-				const thePackage = instrumentableSymbols.find(_ => _.parent?.kind === SymbolKind.Package);
-				if (thePackage && thePackage?.parent?.name) {
-					functionLocator = { namespace: thePackage.parent.name };
-				}
+			if (document.languageId === "csharp") {
+				// for whatever reason, Omnisharp is naming Namespace with the Module kind
+				// in C# speak, it would really be Namespace
+				const namespace = allSymbols.find(_ => _.kind === SymbolKind.Module);
+
+				functionLocator = {
+					namespace: namespace?.name
+				};
 			}
 
-			if (document.languageId === "java" && functionLocator?.namespace) {
-				functionLocator.namespace = `${this.parseJavaPackage(document.getText())}.${
-					functionLocator.namespace
-				}`;
+			if (document.languageId === "java") {
+				const thePackage = instrumentableSymbols.find(_ => _.parent?.kind === SymbolKind.Package);
+
+				if (thePackage && thePackage?.parent?.name) {
+					functionLocator = {
+						namespace: `${this.parseJavaPackage(document.getText())}.${thePackage.parent.name}`
+					};
+				}
 			}
 
 			if (document.languageId === "go") {
