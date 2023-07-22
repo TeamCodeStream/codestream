@@ -9,6 +9,7 @@ import {
 } from "./agent.protocol";
 import { CodeErrorPlus } from "./agent.protocol.codeErrors";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
+import { IssueParams, LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
 import { ReviewPlus } from "./agent.protocol.reviews";
 import { CSRepository, PullRequestQuery } from "./api.protocol.models";
 import { TrunkCheckResults } from "./agent.protocol.trunk";
@@ -493,36 +494,69 @@ export const FetchThirdPartyBuildsRequestType = new RequestType<
 
 export interface FetchThirdPartyCodeAnalyzersRequest {
 	providerId: string;
-}
-
-interface CodeAnalyzerProject {
-	id: string;
-	status: string;
-	depth: number;
-	title: string;
-}
-
-export interface LicenseDependency {
-	id: number;
-	createdAt: string;
-	source: { id: string; name: string; url: string; version: string; packageManager: string };
-	depths: { direct: number; deep: number };
-	statuses: { active: number; ignored: number };
-	projects: CodeAnalyzerProject[];
-	type?: string | null;
-	details?: string | null;
-	license?: string | null;
+	repoId?: string;
+	params: IssueParams;
 }
 export interface FetchThirdPartyCodeAnalyzersResponse {
-	[issues: string]: LicenseDependency[];
+	issues?: LicenseDependencyIssue[] | VulnerabilityIssue[];
+	error?: string; // CHECK THE TYPE! could be object
 }
 
 export const FetchThirdPartyCodeAnalyzersRequestType = new RequestType<
-	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyCodeAnalyzersResponse,
+	FetchThirdPartyLicenseDependenciesRequest,
+	FetchThirdPartyLicenseDependenciesResponse,
 	void,
 	void
 >("codestream/provider/codeAnalyzers");
+
+export interface FetchThirdPartyLicenseDependenciesRequest {
+	providerId: string;
+	repoId?: string;
+}
+export interface FetchThirdPartyLicenseDependenciesResponse {
+	issues?: LicenseDependencyIssue[];
+	error?: string; // CHECK THE TYPE! could be object
+}
+
+export const FetchThirdPartyLicenseDependenciesRequestType = new RequestType<
+	FetchThirdPartyLicenseDependenciesRequest,
+	FetchThirdPartyLicenseDependenciesResponse,
+	void,
+	void
+>("codestream/provider/licenseDependencies");
+
+export { LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
+
+export interface FetchThirdPartyVulnerabilitiesRequest {
+	providerId: string;
+	repoId?: string;
+}
+export interface FetchThirdPartyVulnerabilitiesResponse {
+	issues?: VulnerabilityIssue[];
+	error?: string; // CHECK THE TYPE! could be object
+}
+
+export const FetchThirdPartyVulnerabilitiesRequestType = new RequestType<
+	FetchThirdPartyVulnerabilitiesRequest,
+	FetchThirdPartyVulnerabilitiesResponse,
+	void,
+	void
+>("codestream/provider/vulnerablitlies");
+
+export interface FetchThirdPartyRepoMatchToFossaProjectRequest {
+	providerId: string;
+	repoId?: string;
+}
+export interface FetchThirdPartyRepoMatchToFossaProjectResponse {
+	matchedRepoToFossaProject: boolean;
+}
+
+export const FetchThirdPartyRepoMatchToFossaProjectRequestType = new RequestType<
+	FetchThirdPartyRepoMatchToFossaProjectRequest,
+	FetchThirdPartyRepoMatchToFossaProjectResponse,
+	void,
+	void
+>("codestream/provider/fossaRepoMatch");
 
 export type CheckConclusionState =
 	| "ACTION_REQUIRED"
@@ -2170,6 +2204,10 @@ export type VulnerabilityStatus =
 export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "INFO"] as const;
 
 export type RiskSeverity = (typeof riskSeverityList)[number];
+
+export const vulnSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"] as const;
+
+export type VulnSeverity = (typeof vulnSeverityList)[number];
 
 export const criticalityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
 

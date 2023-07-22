@@ -9,7 +9,7 @@ import {
 import { ThirdPartyProviderBase } from "./thirdPartyProviderBase";
 
 export abstract class ThirdPartyCodeAnalyzerProviderBase<
-		TProviderInfo extends CSProviderInfos = CSProviderInfos
+		TProviderInfo extends CSProviderInfos = CSProviderInfos,
 	>
 	extends ThirdPartyProviderBase<TProviderInfo>
 	implements ThirdPartyCodeAnalyzerProvider

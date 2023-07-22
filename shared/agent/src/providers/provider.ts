@@ -21,6 +21,8 @@ import {
 	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
+	FetchThirdPartyRepoMatchToFossaProjectRequest,
+	FetchThirdPartyRepoMatchToFossaProjectResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyCodeAnalyzersResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
@@ -44,6 +46,8 @@ import { Response } from "node-fetch";
 import { SessionContainer } from "../container";
 import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
+
+import { IssueParams } from "../../../util/src/protocol/agent/agent.protocol.fossa";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],
@@ -74,7 +78,7 @@ export interface ThirdPartyProviderSupportsIssues {
 	getCards(request: FetchThirdPartyCardsRequest): Promise<FetchThirdPartyCardsResponse>;
 
 	getCardWorkflow(
-		request: FetchThirdPartyCardWorkflowRequest
+		request: FetchThirdPartyCardWorkflowRequest,
 	): Promise<FetchThirdPartyCardWorkflowResponse>;
 
 	moveCard(request: MoveThirdPartyCardRequest): Promise<MoveThirdPartyCardResponse>;
@@ -82,7 +86,7 @@ export interface ThirdPartyProviderSupportsIssues {
 	getAssignableUsers(request: FetchAssignableUsersRequest): Promise<FetchAssignableUsersResponse>;
 
 	getAssignableUsersAutocomplete(
-		request: FetchAssignableUsersAutocompleteRequest
+		request: FetchAssignableUsersAutocompleteRequest,
 	): Promise<FetchAssignableUsersResponse>;
 
 	createCard(request: CreateThirdPartyCardRequest): Promise<CreateThirdPartyCardResponse>;
@@ -108,29 +112,29 @@ export interface ThirdPartyProviderSupportsPullRequests {
 	getOwnerFromRemote(remote: string): { owner: string; name: string };
 	getPullRequestsContainigSha(
 		repoIdentifier: { owner: string; name: string }[],
-		sha: string
+		sha: string,
 	): Promise<any[]>;
 }
 
 export interface ThirdPartyProviderSupportsCreatingPullRequests
 	extends ThirdPartyProviderSupportsPullRequests {
 	createPullRequest(
-		request: ProviderCreatePullRequestRequest
+		request: ProviderCreatePullRequestRequest,
 	): Promise<ProviderCreatePullRequestResponse | undefined>;
 }
 
 export interface ThirdPartyProviderSupportsViewingPullRequests
 	extends ThirdPartyProviderSupportsPullRequests {
 	getPullRequest(
-		request: FetchThirdPartyPullRequestRequest
+		request: FetchThirdPartyPullRequestRequest,
 	): Promise<FetchThirdPartyPullRequestResponse>;
 
 	getPullRequestCommits(
-		request: FetchThirdPartyPullRequestCommitsRequest
+		request: FetchThirdPartyPullRequestCommitsRequest,
 	): Promise<FetchThirdPartyPullRequestCommitsResponse>;
 
 	getMyPullRequests(
-		request: GetMyPullRequestsRequest
+		request: GetMyPullRequestsRequest,
 	): Promise<GetMyPullRequestsResponse[][] | undefined>;
 }
 
@@ -140,13 +144,18 @@ export interface ThirdPartyProviderSupportsBuilds {
 
 export interface ThirdPartyProviderSupportsCodeAnalyzers {
 	fetchCodeAnalysis(
-		request: FetchThirdPartyCodeAnalyzersRequest
+		request: FetchThirdPartyCodeAnalyzersRequest,
+		params: IssueParams,
 	): Promise<FetchThirdPartyCodeAnalyzersResponse>;
+
+	fetchRepoMatchToFossaProject(
+		request: FetchThirdPartyRepoMatchToFossaProjectRequest,
+	): Promise<FetchThirdPartyRepoMatchToFossaProjectResponse>;
 }
 
 export namespace ThirdPartyIssueProvider {
 	export function supportsIssues(
-		provider: ThirdPartyProvider
+		provider: ThirdPartyProvider,
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsIssues {
 		return (
 			(provider as any).getBoards !== undefined &&
@@ -156,13 +165,13 @@ export namespace ThirdPartyIssueProvider {
 	}
 
 	export function supportsViewingPullRequests(
-		provider: ThirdPartyProvider
+		provider: ThirdPartyProvider,
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
 		return (provider as any).getMyPullRequests !== undefined;
 	}
 
 	export function supportsCreatingPullRequests(
-		provider: ThirdPartyProvider
+		provider: ThirdPartyProvider,
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsPullRequests {
 		return (provider as any).createPullRequest !== undefined;
 	}
@@ -170,13 +179,13 @@ export namespace ThirdPartyIssueProvider {
 
 export namespace ThirdPartyPostProvider {
 	export function supportsSharing(
-		provider: ThirdPartyPostProvider
+		provider: ThirdPartyPostProvider,
 	): provider is ThirdPartyPostProvider & ThirdPartyProviderSupportsPosts {
 		return (provider as any).createPost !== undefined;
 	}
 
 	export function supportsStatus(
-		provider: ThirdPartyProvider
+		provider: ThirdPartyProvider,
 	): provider is ThirdPartyProvider & ThirdPartyProviderSupportsStatus {
 		return (provider as any).updateStatus !== undefined;
 	}
@@ -184,7 +193,7 @@ export namespace ThirdPartyPostProvider {
 
 export namespace ThirdPartyBuildProvider {
 	export function supportsBuilds(
-		provider: ThirdPartyBuildProvider
+		provider: ThirdPartyBuildProvider,
 	): provider is ThirdPartyBuildProvider & ThirdPartyProviderSupportsBuilds {
 		return (provider as any).fetchBuilds !== undefined;
 	}
@@ -192,7 +201,7 @@ export namespace ThirdPartyBuildProvider {
 
 export namespace ThirdPartyCodeAnalyzerProvider {
 	export function supportsCodeAnalysis(
-		provider: ThirdPartyCodeAnalyzerProvider
+		provider: ThirdPartyCodeAnalyzerProvider,
 	): provider is ThirdPartyCodeAnalyzerProvider & ThirdPartyProviderSupportsCodeAnalyzers {
 		return (provider as any).fetchCodeAnalysis !== undefined;
 	}
@@ -272,7 +281,7 @@ interface RefreshableProviderInfo {
 }
 
 export function isRefreshable<TProviderInfo extends CSProviderInfos>(
-	providerInfo: TProviderInfo
+	providerInfo: TProviderInfo,
 ): providerInfo is TProviderInfo & RefreshableProviderInfo {
 	return typeof (providerInfo as any).expiresAt === "number";
 }
@@ -351,7 +360,7 @@ export interface PullRequestComment {
 export async function getOpenedRepos<R>(
 	predicate: (remote: GitRemote) => boolean,
 	queryFn: (path: string) => Promise<ApiResponse<R>>,
-	remoteRepos: Map<string, R>
+	remoteRepos: Map<string, R>,
 ): Promise<Map<string, R>> {
 	const openRepos = new Map<string, R>();
 
@@ -389,7 +398,7 @@ export async function getOpenedRepos<R>(
 export async function getRemotePaths<R extends { path: string }>(
 	repo: GitRepository | undefined,
 	predicate: (remote: GitRemote) => boolean,
-	remoteRepos: Map<string, R>
+	remoteRepos: Map<string, R>,
 ): Promise<string[] | undefined> {
 	try {
 		if (repo === undefined) return undefined;

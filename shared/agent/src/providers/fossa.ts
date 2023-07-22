@@ -1,19 +1,38 @@
+import Cache from "timed-cache";
+import * as qs from "querystring";
+import { isEmpty as _isEmpty } from "lodash-es";
 import {
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyCodeAnalyzersResponse,
+	FetchThirdPartyRepoMatchToFossaProjectRequest,
+	FetchThirdPartyRepoMatchToFossaProjectResponse,
+	ReposScm,
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
 import { log, lspProvider } from "../system";
 import { CodeStreamSession } from "session";
+import { GitRemoteParser } from "../git/parsers/remoteParser";
 
+import {
+	FossaProject,
+	GetFossaProjectsResponse,
+	LicenseDependencyIssues,
+	VulnerabilityIssues,
+	IssueParams,
+} from "../../../util/src/protocol/agent/agent.protocol.fossa";
 import { ThirdPartyCodeAnalyzerProviderBase } from "./thirdPartyCodeAnalyzerProviderBase";
 import { CSFossaProviderInfo } from "@codestream/protocols/api";
+import { SessionContainer } from "../container";
+import { Logger } from "../logger";
 
 @lspProvider("fossa")
 export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaProviderInfo> {
+	private _fossaProjectCache = new Cache<GetFossaProjectsResponse>({ defaultTtl: 30000 * 1000 }); // 5 minutes
+	private _fossaProjectCacheKey = "projects";
+
 	constructor(
 		public readonly session: CodeStreamSession,
-		protected readonly providerConfig: ThirdPartyProviderConfig
+		protected readonly providerConfig: ThirdPartyProviderConfig,
 	) {
 		super(session, providerConfig);
 	}
@@ -30,7 +49,6 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		return {
 			Accept: "application/json",
 			Authorization: `Bearer ${this.accessToken}`,
-			"Content-Type": "application/json",
 		};
 	}
 
@@ -47,632 +65,132 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	}
 
 	get baseUrl() {
-		return `${this.apiUrl}/${this.apiPath}`;
+		return `${this.appUrl}${this.apiPath}`;
+	}
+
+	getIssuesUrl(params: any) {
+		const { category, page, sort, projectId, type } = params;
+		return `/issues?${qs.stringify({
+			category,
+			page,
+			sort,
+		})}&scope[id]=${encodeURIComponent(projectId)}&scope[type]=${type}`;
+	}
+
+	/**
+	 * Repos that are opened in the editor
+	 * @returns array of owner/repo strings
+	 */
+	protected async getCurrentRepo(repoId?: string): Promise<ReposScm[]> {
+		if (!repoId) return [];
+		const { scm } = SessionContainer.instance();
+		const reposResponse = await scm.getRepos({
+			inEditorOnly: true,
+			includeProviders: true,
+			includeCurrentBranches: true,
+		});
+		if (!reposResponse.repositories || !reposResponse.repositories.length) return [];
+		return reposResponse.repositories.filter(_ => _.id === repoId);
+	}
+
+	@log()
+	async matchRepoToFossaProject(
+		currentRepo: ReposScm,
+		fossaProjects: FossaProject[],
+		repoId?: string,
+	): Promise<FossaProject | Record<string, never>> {
+		if (repoId) {
+			for (const project of fossaProjects) {
+				let parsed;
+				try {
+					parsed = await GitRemoteParser.parseGitUrl(project.title);
+				} catch (ex) {}
+				if (parsed) {
+					const [, domain, path] = parsed;
+					const folderName = path.split("/").pop();
+					if (
+						currentRepo.folder.name === folderName &&
+						currentRepo.providerGuess &&
+						domain.includes(currentRepo.providerGuess)
+					) {
+						return project;
+					}
+				}
+			}
+		}
+		return {};
+	}
+
+	@log()
+	async getProjects(): Promise<FossaProject[]> {
+		const cached = this._fossaProjectCache.get(this._fossaProjectCacheKey);
+		let projects: FossaProject[] = [];
+		if (cached) {
+			projects = cached.projects;
+			Logger.log("getFossaProjects: from cache", {
+				cacheKey: this._fossaProjectCacheKey,
+			});
+		} else {
+			const projsResponse = await this.get<GetFossaProjectsResponse>("/projects");
+			if (projsResponse.body) {
+				this._fossaProjectCache.put(this._fossaProjectCacheKey, projsResponse.body);
+				projects = projsResponse.body.projects;
+				Logger.log(
+					`getFossaProjects: from Fossa API, project size ${projsResponse.body.projects}`,
+					{
+						cacheKey: this._fossaProjectCacheKey,
+					},
+				);
+			}
+		}
+		return projects;
+	}
+
+	@log()
+	async fetchRepoMatchToFossaProject(
+		request: FetchThirdPartyRepoMatchToFossaProjectRequest,
+	): Promise<FetchThirdPartyRepoMatchToFossaProjectResponse> {
+		const [currentRepo] = await this.getCurrentRepo(request.repoId);
+		if (!currentRepo) {
+			return { matchedRepoToFossaProject: false };
+		}
+		const projects: FossaProject[] = await this.getProjects();
+		const project = await this.matchRepoToFossaProject(currentRepo, projects, request.repoId);
+		if (_isEmpty(project)) {
+			return { matchedRepoToFossaProject: false };
+		}
+		return { matchedRepoToFossaProject: true };
 	}
 
 	@log()
 	async fetchCodeAnalysis(
-		request: FetchThirdPartyCodeAnalyzersRequest
+		request: FetchThirdPartyCodeAnalyzersRequest,
+		params: IssueParams,
 	): Promise<FetchThirdPartyCodeAnalyzersResponse> {
-		return {
-			issues: [
-				{
-					id: 3523803,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+DotNetBrowser32$1.20.0",
-						name: "DotNetBrowser32",
-						url: "https://www.teamdev.com/dotnetbrowser",
-						version: "1.20.0",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523805,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+DotNetBrowser64$1.20.0",
-						name: "DotNetBrowser64",
-						url: "https://www.teamdev.com/dotnetbrowser",
-						version: "1.20.0",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523807,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VisualStudio.CommandBars$8.0.0.1",
-						name: "Microsoft.VisualStudio.CommandBars",
-						url: "https://aka.ms/vsextensibility",
-						version: "8.0.0.1",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523806,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VisualStudio.LanguageServer.Client$16.2.1079",
-						name: "Microsoft.VisualStudio.LanguageServer.Client",
-						url: "https://aka.ms/vslsp",
-						version: "16.2.1079",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523810,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VisualStudio.LanguageServer.Protocol$17.2.8",
-						name: "Microsoft.VisualStudio.LanguageServer.Protocol",
-						url: "https://aka.ms/vslsp",
-						version: "17.2.8",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523804,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VisualStudio.LanguageServer.Protocol$16.2.1079",
-						name: "Microsoft.VisualStudio.LanguageServer.Protocol",
-						url: "https://aka.ms/vslsp",
-						version: "16.2.1079",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523808,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VisualStudio.SDK$16.0.206",
-						name: "Microsoft.VisualStudio.SDK",
-						url: "https://aka.ms/vsextensibility",
-						version: "16.0.206",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523824,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Microsoft.VSSDK.BuildTools$17.2.2186",
-						name: "Microsoft.VSSDK.BuildTools",
-						url: "https://aka.ms/vsextensibility",
-						version: "17.2.2186",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523809,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "nuget+Nerdbank.Streams$2.1.37",
-						name: "Nerdbank.Streams",
-						url: "https://github.com/AArnott/Nerdbank.Streams",
-						version: "2.1.37",
-						packageManager: "nuget",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "unlicensed_dependency",
-					license: null,
-				},
-				{
-					id: 3523825,
-					createdAt: "2023-06-23T19:32:05.784Z",
-					source: {
-						id: "npm+newrelic$9.8.1",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.8.1",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 2,
-						deep: 0,
-					},
-					statuses: {
-						active: 2,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream-server",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream-server.git",
-						},
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523822,
-					createdAt: "2023-06-23T19:32:05.784Z",
-					source: {
-						id: "npm+newrelic$9.8.1",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.8.1",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 2,
-						deep: 0,
-					},
-					statuses: {
-						active: 2,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream-server",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream-server.git",
-						},
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-				{
-					id: 3523814,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.14.1",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.14.1",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523815,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.15.0",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.15.0",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-				{
-					id: 3523816,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.15.0",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.15.0",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523817,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.7.1",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.7.1",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-				{
-					id: 3523818,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.7.1",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.7.1",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523819,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.7.4",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.7.4",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-				{
-					id: 3523820,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.7.5",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.7.5",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-				{
-					id: 3523821,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.7.4",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.7.4",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-only",
-				},
-				{
-					id: 3523811,
-					createdAt: "2023-06-23T19:06:36.425Z",
-					source: {
-						id: "npm+newrelic$9.13.0",
-						name: "newrelic",
-						url: "https://www.npmjs.com/package/newrelic",
-						version: "9.13.0",
-						packageManager: "npm",
-					},
-					depths: {
-						direct: 1,
-						deep: 0,
-					},
-					statuses: {
-						active: 1,
-						ignored: 0,
-					},
-					projects: [
-						{
-							id: "custom+38453/github.com/TeamCodeStream/codestream",
-							status: "active",
-							depth: 1,
-							title: "https://github.com/TeamCodeStream/codestream.git",
-						},
-					],
-					type: "policy_flag",
-					details:
-						"Requires you to (effectively) disclose your source code if the library is statically linked to your project. Not triggered if dynamically linked or a separate process.",
-					license: "LGPL-3.0-or-later",
-				},
-			],
-		};
+		try {
+			const [currentRepo] = await this.getCurrentRepo(request.repoId);
+			if (!currentRepo) {
+				return { issues: [] };
+			}
+
+			const projects: FossaProject[] = await this.getProjects();
+			const project = await this.matchRepoToFossaProject(currentRepo, projects, request.repoId);
+			if (_isEmpty(project)) {
+				return { issues: [] };
+			}
+
+			const issueResponse = await this.get<VulnerabilityIssues | LicenseDependencyIssues>(
+				this.getIssuesUrl({ projectId: project.id, ...params }),
+			);
+
+			return {
+				issues: issueResponse.body.issues,
+			};
+		} catch (error) {
+			Logger.error(error);
+			return {
+				error,
+			};
+		}
 	}
 }
