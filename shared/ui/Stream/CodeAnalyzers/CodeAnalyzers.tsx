@@ -2,19 +2,22 @@ import React, { useState, useEffect, useMemo } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import {
 	ReposScm,
-	FetchThirdPartyCodeAnalyzersRequestType,
-	LicenseDependency,
+	LicenseDependencyIssue,
+	VulnerabilityIssue,
+	FetchThirdPartyLicenseDependenciesRequestType,
+	FetchThirdPartyVulnerabilitiesRequestType,
+	FetchThirdPartyRepoMatchToFossaProjectRequestType,
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
-import { useMemoizedState } from "@codestream/webview/utilities/hooks";
+import { useMemoizedState, useDidMount } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import { PaneBody, PaneHeader, PaneState } from "@codestream/webview/src/components/Pane";
-import Icon from "../Icon";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaIssues } from "./FossaIssues";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
+import { FossaLoading } from "./FossaLoading";
 
 interface Props {
 	openRepos: ReposScm[];
@@ -22,9 +25,13 @@ interface Props {
 }
 
 export const CodeAnalyzers = (props: Props) => {
-	const [loading, setLoading] = useState(false);
-	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependency[]>([]);
+	const [loading, setLoading] = useState<boolean | undefined>(undefined);
+	const [licDeploading, setLicDepLoading] = useState<boolean>(false);
+	const [vulnLoading, setVulnLoading] = useState<boolean>(false);
+	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[]>([]);
+	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[]>([]);
 	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
+	const [isRepoMatched, setIsRepoMatched] = useState<boolean | undefined>(undefined);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { editorContext, providers } = state;
@@ -37,14 +44,29 @@ export const CodeAnalyzers = (props: Props) => {
 				if (userProvider) providerInfo[name] = userProvider;
 			}
 		}
-		const currentRepoId = editorContext.scmInfo?.scm?.repoId;
-		const currentRepo = props.openRepos.find(_ => _.id === currentRepoId);
+
+		let currentRepoId = editorContext.scmInfo?.scm?.repoId;
+		let currentRepo;
+		if (currentRepoId) {
+			currentRepo = props.openRepos.find(_ => _.id === editorContext.scmInfo?.scm?.repoId);
+		} else {
+			currentRepo = props.openRepos.find(_ => editorContext?.textEditorUri?.includes(_.folder.uri));
+			currentRepoId = currentRepo?.id;
+		}
+
+		const fossaProvider = Object.entries(providers).find(prov => {
+			const [, provider] = prov;
+			return Object.keys(providerInfo).includes(provider.name);
+		});
 
 		return {
 			bootstrapped: Object.keys(providerInfo).length > 0,
 			currentRepo,
+			currentRepoId,
 			providerInfo,
 			providers,
+			fossaProvider,
+			editorContext,
 		};
 	}, shallowEqual);
 
@@ -56,38 +78,119 @@ export const CodeAnalyzers = (props: Props) => {
 		[fossa],
 	);
 
-	useEffect(() => {
-		if (props.paneState === PaneState.Collapsed) return;
-		fetchCodeAnalysis().catch(error => {
-			console.error(error);
-		});
-	}, [derivedState.currentRepo, derivedState.providers, memoizedProviderInfo, props.paneState]);
-
-	const fetchCodeAnalysis = async () => {
-		if (loading) return;
+	useDidMount(() => {
 		setLoading(true);
+	});
+
+	useEffect(() => {
+		if (!(derivedState.currentRepo || currentRepoId) || props.paneState === PaneState.Collapsed)
+			return;
+
+		const fetchData = async (): Promise<void> => {
+			try {
+				const isRepoMatched: boolean | undefined = await fetchMatchRepoToFossaProject();
+				setIsRepoMatched(isRepoMatched);
+				setLoading(false);
+				if (isRepoMatched) {
+					const licenseDep: LicenseDependencyIssue[] = await fetchCodeAnalysis();
+					const vulnerabilities: VulnerabilityIssue[] = await fetchVulnerabilities();
+					setLicenseDepIssues(licenseDep);
+					setVulnIssues(vulnerabilities);
+					setLicDepLoading(false);
+					setVulnLoading(false);
+				}
+			} catch (error) {
+				console.error("Error fetching data:", error);
+			}
+		};
+		fetchData();
+	}, [
+		derivedState.currentRepo,
+		currentRepoId,
+		memoizedProviderInfo,
+		derivedState.providers,
+		props.paneState,
+	]);
+
+	const fetchMatchRepoToFossaProject = async (): Promise<boolean | undefined> => {
 		if (!derivedState.currentRepo) {
-			setLoading(false);
 			return;
 		}
-		let licenseDepIssues: LicenseDependency[] = [];
-		for (const [providerId, provider] of Object.entries(derivedState.providers)) {
-			if (!Object.keys(derivedState.providerInfo).includes(provider.name)) continue;
+		let matchedRepoToFossaProject;
+		const [providerId] = derivedState.fossaProvider ?? [];
+		try {
+			if (providerId) {
+				const result = await HostApi.instance.send(
+					FetchThirdPartyRepoMatchToFossaProjectRequestType,
+					{
+						providerId,
+						repoId: derivedState.currentRepoId || currentRepoId,
+					},
+				);
+				if (result.matchedRepoToFossaProject !== undefined) {
+					matchedRepoToFossaProject = result.matchedRepoToFossaProject;
+				}
+			}
+		} catch (error) {
+			console.error(error);
+		}
 
-			try {
-				const result = await HostApi.instance.send(FetchThirdPartyCodeAnalyzersRequestType, {
+		return matchedRepoToFossaProject;
+	};
+
+	const fetchVulnerabilities = async (): Promise<VulnerabilityIssue[]> => {
+		let vulnerabilities: VulnerabilityIssue[] = [];
+		if (vulnLoading) return vulnerabilities;
+		setVulnLoading(true);
+		if (!derivedState.currentRepo) {
+			setVulnLoading(false);
+			return vulnerabilities;
+		}
+
+		const [providerId] = derivedState.fossaProvider ?? [];
+		try {
+			if (providerId) {
+				const result = await HostApi.instance.send(FetchThirdPartyVulnerabilitiesRequestType, {
 					providerId,
+					repoId: derivedState.currentRepoId,
+				});
+				if (result.issues) {
+					vulnerabilities = result.issues;
+				}
+			}
+		} catch (error) {
+			console.error(error);
+		}
+
+		return vulnerabilities;
+	};
+
+	const fetchCodeAnalysis = async (): Promise<LicenseDependencyIssue[]> => {
+		let licenseDepIssues: LicenseDependencyIssue[] = [];
+		if (licDeploading) return licenseDepIssues;
+		setLicDepLoading(true);
+
+		if (!derivedState.currentRepo) {
+			setLicDepLoading(false);
+			return licenseDepIssues;
+		}
+
+		const [providerId] = derivedState.fossaProvider ?? [];
+		try {
+			if (providerId) {
+				const result = await HostApi.instance.send(FetchThirdPartyLicenseDependenciesRequestType, {
+					providerId,
+					repoId: derivedState.currentRepoId,
 				});
 				if (result.issues) {
 					licenseDepIssues = result.issues;
-					break;
 				}
-			} catch (error) {
-				console.error(error);
 			}
+		} catch (error) {
+			console.error(error);
 		}
-		setLicenseDepIssues(licenseDepIssues);
-		setLoading(false);
+
+		return licenseDepIssues;
 	};
 
 	return (
@@ -100,15 +203,29 @@ export const CodeAnalyzers = (props: Props) => {
 			{props.paneState != PaneState.Collapsed && (
 				<PaneBody key="fossa">
 					{!derivedState.bootstrapped && <ConnectFossa />}
-					{derivedState.bootstrapped && <FossaIssues issues={licenseDepIssues} />}
-					{derivedState.bootstrapped && !derivedState.currentRepo && (
-						<div style={{ padding: "0 20px 0 40px" }}>Open a source file to see FOSSA results.</div>
+					{derivedState.bootstrapped && loading && <FossaLoading />}
+					{derivedState.bootstrapped &&
+						derivedState.currentRepo &&
+						currentRepoId &&
+						isRepoMatched && <FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />}
+					{derivedState.bootstrapped && !derivedState.currentRepo && !loading && (
+						<div style={{ padding: "0 20px" }}>Open a source file to see FOSSA results.</div>
 					)}
 					{derivedState.bootstrapped &&
+						derivedState.currentRepo &&
+						currentRepoId &&
 						!loading &&
-						licenseDepIssues?.length === 0 &&
-						derivedState.currentRepo && (
-							<div style={{ padding: "0 20px 0 40px" }}>No code analysis found for this repo.</div>
+						isRepoMatched === false && (
+							<div style={{ padding: "0 20px" }}>No code analysis found for this repo.</div>
+						)}
+					{derivedState.bootstrapped &&
+						derivedState.currentRepo &&
+						isRepoMatched === false &&
+						!currentRepoId &&
+						!loading && (
+							<div style={{ padding: "0 20px" }}>
+								Repo does not have a git remote, try another repo.
+							</div>
 						)}
 				</PaneBody>
 			)}

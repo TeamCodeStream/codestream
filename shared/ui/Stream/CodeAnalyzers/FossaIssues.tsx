@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { lowerCase } from "lodash-es";
 import styled from "styled-components";
-import { LicenseDependency, riskSeverityList, RiskSeverity } from "@codestream/protocols/agent";
+import {
+	LicenseDependencyIssue,
+	VulnSeverity,
+	VulnerabilityIssue,
+} from "@codestream/protocols/agent";
 import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { Row } from "../CrossPostIssueControls/IssuesPane";
-import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 
 const StyledSpan = styled.span`
 	margin-left: 2px;
@@ -13,8 +16,17 @@ const StyledSpan = styled.span`
 `;
 
 interface Props {
-	issues: LicenseDependency[];
+	issues: LicenseDependencyIssue[];
+	vulnIssues: VulnerabilityIssue[];
 }
+
+const severityColorMap: Record<VulnSeverity, string> = {
+	CRITICAL: "#f52222",
+	HIGH: "#F5554B",
+	MEDIUM: "#F0B400",
+	LOW: "#0776e5",
+	UNKNOWN: "#ee8608",
+};
 
 function LicenseDependencyRow(props: { licenseDependency }) {
 	const { licenseDependency } = props;
@@ -36,32 +48,120 @@ function LicenseDependencyRow(props: { licenseDependency }) {
 	);
 }
 
+function Severity(props: { severity: VulnSeverity }) {
+	return (
+		<div className="icons" style={{ color: severityColorMap[props.severity] }}>
+			{lowerCase(props.severity)}
+		</div>
+	);
+}
+
+function criticalityToRiskSeverity(riskSeverity: VulnSeverity): VulnSeverity {
+	switch (riskSeverity) {
+		case "CRITICAL":
+			return "CRITICAL";
+		case "HIGH":
+			return "HIGH";
+		case "MEDIUM":
+			return "MEDIUM";
+		case "LOW":
+			return "LOW";
+		case "UNKNOWN":
+			return "UNKNOWN";
+		default:
+			return "LOW";
+	}
+}
+
+function LibraryRow(props: { vuln }) {
+	const [expanded, setExpanded] = useState<boolean>(false);
+	const { vuln } = props;
+
+	const subtleText = vuln.remediation
+		? `${vuln.source.version} -> ${vuln.remediation}`
+		: `${vuln.source.version}`;
+	const tooltipText = vuln.remediation
+		? `Recommended fix: upgrade ${vuln.source.version} to ${vuln.remediation}`
+		: undefined;
+
+	return (
+		<>
+			<Row
+				style={{ padding: "0 10px 0 30px" }}
+				className={"pr-row"}
+				onClick={() => {
+					setExpanded(!expanded);
+				}}
+			>
+				<div>
+					{expanded && <Icon name="chevron-down-thin" />}
+					{!expanded && <Icon name="chevron-right-thin" />}
+				</div>
+				<div>
+					{vuln.source.name}{" "}
+					<Tooltip placement="bottom" title={tooltipText} delay={1}>
+						<span className="subtle">{subtleText}</span>
+					</Tooltip>
+				</div>
+				<Severity severity={criticalityToRiskSeverity(vuln.severity)} />
+			</Row>
+			{expanded && <VulnRow vuln={vuln} />}
+		</>
+	);
+}
+
+function VulnRow(props: { vuln }) {
+	const [expanded, setExpanded] = useState<boolean>(false);
+
+	return (
+		<>
+			<Row
+				style={{ padding: "0 10px 0 40px" }}
+				className={"pr-row"}
+				onClick={() => {
+					setExpanded(!expanded);
+				}}
+			>
+				<div></div>
+				<div>{props.vuln.title}</div>
+			</Row>
+		</>
+	);
+}
+
 export const FossaIssues = React.memo((props: Props) => {
 	const [licenseDepExpanded, setLicenseDepExpanded] = useState<boolean>(false);
-	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(["CRITICAL", "HIGH"]);
-
-	function handleSelect(severity: RiskSeverity) {
-		if (selectedItems.includes(severity)) {
-			setSelectedItems(selectedItems.filter(_ => _ !== severity));
-		} else {
-			setSelectedItems([...selectedItems, severity]);
-		}
-	}
-
-	const menuItems: MenuItem[] = riskSeverityList.map(severity => {
-		return {
-			label: lowerCase(severity),
-			key: severity,
-			checked: selectedItems.includes(severity),
-			action: () => handleSelect(severity),
-		};
-	});
+	const [vulnExpanded, setVulnExpanded] = useState<boolean>(false);
 
 	return (
 		<>
 			<Row
 				style={{
-					padding: "0px 10px 0px 20px",
+					padding: "2px 10px 2px 20px",
+					alignItems: "baseline",
+				}}
+				className="vuln"
+				onClick={() => {
+					setVulnExpanded(!vulnExpanded);
+				}}
+			>
+				{vulnExpanded && <Icon name="chevron-down-thin" />}
+				{!vulnExpanded && <Icon name="chevron-right-thin" />}
+				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Vulnerabilities</span>
+			</Row>
+			{vulnExpanded && props.vulnIssues && props.vulnIssues.length > 0 && (
+				<>
+					{props.vulnIssues.map(vuln => {
+						return <LibraryRow vuln={vuln} />;
+					})}
+				</>
+			)}
+			{vulnExpanded && props.vulnIssues && props.vulnIssues.length === 0 && (
+				<Row style={{ padding: "0 10px 0 40px" }}>👍 No vulnerabilities found</Row>
+			)}
+			<Row
+				style={{
+					padding: "2px 10px 2px 20px",
 					alignItems: "baseline",
 				}}
 				className="licenseDep"
@@ -78,11 +178,10 @@ export const FossaIssues = React.memo((props: Props) => {
 					{props.issues.map(issue => {
 						return <LicenseDependencyRow licenseDependency={issue} />;
 					})}
-					{/* <Additional onClick={loadAll} additional={additional} /> */}
 				</>
 			)}
 			{licenseDepExpanded && props.issues?.length === 0 && (
-				<Row style={{ padding: "0 10px 0 49px" }}>👍 No license dependency issues found</Row>
+				<Row style={{ padding: "0 10px 0 40px" }}>👍 No license dependency issues found</Row>
 			)}
 		</>
 	);
