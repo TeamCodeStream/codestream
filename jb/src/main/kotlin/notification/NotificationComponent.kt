@@ -189,10 +189,10 @@ class NotificationComponent(val project: Project) {
                 }
                 project.clmService?.revealSymbol(firstAnomaly.codeFilepath, firstAnomaly.codeNamespace, firstAnomaly.codeFunction)
             }
-            telemetry(TelemetryEvent.TOAST_CLICKED, "Code-level Anomalies")
+            telemetry(TelemetryEvent.TOAST_CLICKED, "CLM Anomaly")
         })
 
-        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "Code-level Anomalies")
+        telemetry(TelemetryEvent.TOAST_NOTIFICATION, "CLM Anomaly")
         notification.notify(project)
     }
 

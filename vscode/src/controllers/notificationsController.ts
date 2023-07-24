@@ -144,7 +144,7 @@ export class NotificationsController implements Disposable {
 		];
 		const { duration, errorRate } = notification;
 
-		Container.agent.telemetry.track("Toast Notification", { Content: "Code-level Anomalies" });
+		Container.agent.telemetry.track("Toast Notification", { Content: "CLM Anomaly" });
 		const count = duration.length + errorRate.length;
 		const title = `${count} code-level performance issues found`;
 		const allAnomalies = [...duration, ...errorRate].sort((a, b) => b.ratio - a.ratio);
@@ -153,7 +153,7 @@ export class NotificationsController implements Disposable {
 		const result = await window.showInformationMessage(message, ...actions);
 
 		if (result === actions[0]) {
-			Container.agent.telemetry.track("Toast Clicked", { Content: "Code-level Anomalies" });
+			Container.agent.telemetry.track("Toast Clicked", { Content: "CLM Anomaly" });
 			Container.webview.viewAnomaly({
 				anomaly: firstAnomaly,
 				entityGuid: notification.entityGuid
