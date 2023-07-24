@@ -880,7 +880,7 @@ export class WebviewController implements Disposable {
 		}
 	}
 
-	private async goToClassMethodDefinition(
+	public async goToClassMethodDefinition(
 		codeFilepath: string | undefined,
 		codeNamespace: string | undefined,
 		codeFunction: string,

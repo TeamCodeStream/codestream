@@ -6,6 +6,7 @@ import { Container } from "../container";
 import {
 	CodemarkPlus,
 	CreateReviewsForUnreviewedCommitsRequestType,
+	DidDetectObservabilityAnomaliesNotification,
 	DidDetectUnreviewedCommitsNotification,
 	FollowReviewRequestType,
 	ReviewPlus
@@ -21,7 +22,8 @@ export class NotificationsController implements Disposable {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangePosts(this.onSessionPostsReceived, this),
 			Container.session.onDidChangePullRequests(this.onSessionPullRequestsReceived, this),
-			Container.agent.onDidDetectUnreviewedCommits(this.onUnreviewedCommitsDetected, this)
+			Container.agent.onDidDetectUnreviewedCommits(this.onUnreviewedCommitsDetected, this),
+			Container.agent.onDidDetectObservabilityAnomalies(this.onObservabilityAnomaliesDetected, this)
 		);
 	}
 
@@ -130,6 +132,38 @@ export class NotificationsController implements Disposable {
 					Container.webview.openReview(reviewId, { openFirstDiff: true });
 				}
 			}
+		}
+	}
+
+	private async onObservabilityAnomaliesDetected(
+		notification: DidDetectObservabilityAnomaliesNotification
+	) {
+		const actions: MessageItem[] = [
+			{ title: "Details" },
+			{ title: "Ignore", isCloseAffordance: true }
+		];
+		const { duration, errorRate } = notification;
+
+		Container.agent.telemetry.track("Toast Notification", { Content: "Code-level Anomalies" });
+		const count = duration.length + errorRate.length;
+		const title = `${count} code-level performance issues found`;
+		const allAnomalies = [...duration, ...errorRate].sort((a, b) => b.ratio - a.ratio);
+		const firstAnomaly = allAnomalies[0];
+		const message = `${title} - Issue #1: ${firstAnomaly.notificationText}`;
+		const result = await window.showInformationMessage(message, ...actions);
+
+		if (result === actions[0]) {
+			Container.agent.telemetry.track("Toast Clicked", { Content: "Code-level Anomalies" });
+			Container.webview.viewAnomaly({
+				anomaly: firstAnomaly,
+				entityGuid: notification.entityGuid
+			});
+			Container.webview.goToClassMethodDefinition(
+				firstAnomaly.codeFilepath,
+				firstAnomaly.codeNamespace,
+				firstAnomaly.codeFunction,
+				firstAnomaly.language
+			);
 		}
 	}
 
