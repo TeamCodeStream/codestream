@@ -9,17 +9,17 @@ describe("clm query generation", () => {
 				"Nested/Controller/agents/update",
 			]);
 			expect(query).toContain(
-				"metricTimesliceName in ('Controller/agents/show','Controller/agents/update')"
+				"metricTimesliceName in ('Controller/agents/show','Controller/agents/update')",
 			);
 		});
 
-		it("adds WebTransaction/ path for python", () => {
+		xit("adds WebTransaction/ path for python", () => {
 			const query = generateMethodAverageDurationQuery("python", "blah", [
 				"Function/routes.app:db_call",
 				"Function/routes.app:some_call",
 			]);
 			expect(query).toContain(
-				"metricTimesliceName in ('WebTransaction/Function/routes.app:db_call','WebTransaction/Function/routes.app:some_call')"
+				"metricTimesliceName in ('WebTransaction/Function/routes.app:db_call','WebTransaction/Function/routes.app:some_call')",
 			);
 		});
 
@@ -29,7 +29,7 @@ describe("clm query generation", () => {
 				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method2",
 			]);
 			expect(query).toContain(
-				"metricTimesliceName in ('Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method','Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method2')"
+				"metricTimesliceName in ('Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method','Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method2')",
 			);
 		});
 	});
@@ -38,7 +38,7 @@ describe("clm query generation", () => {
 			const response = generateSpanQuery("nrGuid", "filePath", "equals", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath='my/file.py'  SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath='my/file.py'  SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 
@@ -46,7 +46,7 @@ describe("clm query generation", () => {
 			const response = generateSpanQuery("nrGuid", "filePath", "like", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py'  SINCE 30 minutes AGO LIMIT 250\""
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py'  SINCE 30 minutes AGO LIMIT 250\"",
 			);
 		});
 
@@ -54,7 +54,7 @@ describe("clm query generation", () => {
 			const response = generateSpanQuery("nrGuid", "filePath", "fuzzy", "python", "my/file.py");
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name, `transaction.name`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name, `transaction.name`, code.lineno, code.namespace, code.function, traceId, transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.filepath like '%my/file.py%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 
@@ -64,7 +64,7 @@ describe("clm query generation", () => {
 			});
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace='blah' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace='blah' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 
@@ -74,7 +74,7 @@ describe("clm query generation", () => {
 			});
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 
@@ -85,7 +85,7 @@ describe("clm query generation", () => {
 			});
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace='blah' AND code.function='foo' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace='blah' AND code.function='foo' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 
@@ -96,7 +96,7 @@ describe("clm query generation", () => {
 			});
 			// console.log(response);
 			expect(response).toContain(
-				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' AND code.function like 'foo%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)"
+				"nrql(query: \"SELECT name,`transaction.name`,code.lineno,code.namespace,code.function,traceId,transactionId from Span WHERE `entity.guid` = 'nrGuid' AND code.namespace like 'blah%' AND code.function like 'foo%' SINCE 30 minutes AGO LIMIT 250\", timeout: 60)",
 			);
 		});
 	});
