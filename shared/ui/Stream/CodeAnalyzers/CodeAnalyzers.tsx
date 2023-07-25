@@ -182,10 +182,12 @@ export const CodeAnalyzers = (props: Props) => {
 					{!derivedState.bootstrapped && <ConnectFossa />}
 					{derivedState.bootstrapped && loading && <FossaLoading />}
 					{derivedState.bootstrapped &&
+						!loading &&
 						currentRepoId &&
 						isRepoMatched &&
-						derivedState.activeFile?.length &&
-						!loading && <FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />}
+						derivedState.activeFile?.length && (
+							<FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />
+						)}
 					{derivedState.bootstrapped && !derivedState.activeFile?.length && !loading && (
 						<div style={{ padding: "0 20px" }}>Open a source file to see FOSSA results.</div>
 					)}

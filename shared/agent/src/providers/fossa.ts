@@ -68,7 +68,11 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		return `${this.appUrl}${this.apiPath}`;
 	}
 
-	getIssuesUrl(params: any) {
+	/**
+	 * Query string for Fossa Issues API
+	 * @returns query string
+	 */
+	private _getIssuesUrl(params: any) {
 		const { category, page, sort, projectId, type } = params;
 		return `/issues?${qs.stringify({
 			category,
@@ -81,7 +85,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	 * Repos that are opened in the editor
 	 * @returns array of owner/repo strings
 	 */
-	protected async getCurrentRepo(repoId?: string): Promise<ReposScm[]> {
+	private async _getCurrentRepo(repoId?: string): Promise<ReposScm[]> {
 		if (!repoId) return [];
 		const { scm } = SessionContainer.instance();
 		const reposResponse = await scm.getRepos({
@@ -93,8 +97,39 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		return reposResponse.repositories.filter(_ => _.id === repoId);
 	}
 
-	@log()
-	async matchRepoToFossaProject(
+	/**
+	 * Projects that are uploaded to Fossa
+	 * @returns array of projects
+	 */
+	private async _getProjects(): Promise<FossaProject[]> {
+		const cached = this._fossaProjectCache.get(this._fossaProjectCacheKey);
+		let projects: FossaProject[] = [];
+		if (cached) {
+			projects = cached.projects;
+			Logger.log("getFossaProjects: from cache", {
+				cacheKey: this._fossaProjectCacheKey,
+			});
+		} else {
+			const projsResponse = await this.get<GetFossaProjectsResponse>("/projects");
+			if (projsResponse.body) {
+				this._fossaProjectCache.put(this._fossaProjectCacheKey, projsResponse.body);
+				projects = projsResponse.body.projects;
+				Logger.log(
+					`getFossaProjects: from Fossa API, project size ${projsResponse.body.projects}`,
+					{
+						cacheKey: this._fossaProjectCacheKey,
+					},
+				);
+			}
+		}
+		return projects;
+	}
+
+	/**
+	 * Matches current repo to Fossa project
+	 * @returns project object
+	 */
+	private async _matchRepoToFossaProject(
 		currentRepo: ReposScm,
 		fossaProjects: FossaProject[],
 		repoId?: string,
@@ -122,40 +157,15 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	}
 
 	@log()
-	async getProjects(): Promise<FossaProject[]> {
-		const cached = this._fossaProjectCache.get(this._fossaProjectCacheKey);
-		let projects: FossaProject[] = [];
-		if (cached) {
-			projects = cached.projects;
-			Logger.log("getFossaProjects: from cache", {
-				cacheKey: this._fossaProjectCacheKey,
-			});
-		} else {
-			const projsResponse = await this.get<GetFossaProjectsResponse>("/projects");
-			if (projsResponse.body) {
-				this._fossaProjectCache.put(this._fossaProjectCacheKey, projsResponse.body);
-				projects = projsResponse.body.projects;
-				Logger.log(
-					`getFossaProjects: from Fossa API, project size ${projsResponse.body.projects}`,
-					{
-						cacheKey: this._fossaProjectCacheKey,
-					},
-				);
-			}
-		}
-		return projects;
-	}
-
-	@log()
 	async fetchIsRepoMatch(
 		request: FetchThirdPartyRepoMatchToFossaRequest,
 	): Promise<FetchThirdPartyRepoMatchToFossaResponse> {
-		const [currentRepo] = await this.getCurrentRepo(request.repoId);
+		const [currentRepo] = await this._getCurrentRepo(request.repoId);
 		if (!currentRepo) {
 			return { isRepoMatch: false };
 		}
-		const projects: FossaProject[] = await this.getProjects();
-		const project = await this.matchRepoToFossaProject(currentRepo, projects, request.repoId);
+		const projects: FossaProject[] = await this._getProjects();
+		const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
 		if (_isEmpty(project)) {
 			return { isRepoMatch: false };
 		}
@@ -168,19 +178,19 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		params: IssueParams,
 	): Promise<FetchThirdPartyCodeAnalyzersResponse> {
 		try {
-			const [currentRepo] = await this.getCurrentRepo(request.repoId);
+			const [currentRepo] = await this._getCurrentRepo(request.repoId);
 			if (!currentRepo) {
 				return { issues: [] };
 			}
 
-			const projects: FossaProject[] = await this.getProjects();
-			const project = await this.matchRepoToFossaProject(currentRepo, projects, request.repoId);
+			const projects: FossaProject[] = await this._getProjects();
+			const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
 			if (_isEmpty(project)) {
 				return { issues: [] };
 			}
 
 			const issueResponse = await this.get<VulnerabilityIssues | LicenseDependencyIssues>(
-				this.getIssuesUrl({ projectId: project.id, ...params }),
+				this._getIssuesUrl({ projectId: project.id, ...params }),
 			);
 
 			return {
