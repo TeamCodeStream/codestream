@@ -82,6 +82,7 @@ import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { DEFAULT_CLM_SETTINGS } from "./CLMSettings";
+import { AnyObject } from "@codestream/webview/utils";
 
 interface Props {
 	paneState: PaneState;
@@ -169,6 +170,8 @@ const SubtleRight = styled.time`
 		padding-left: 0;
 	}
 `;
+
+type TelemetryState = "No Entities" | "No Services" | "Services" | "Not Connected";
 
 export const ErrorRow = (props: {
 	title: string;
@@ -538,7 +541,8 @@ export const Observability = React.memo((props: Props) => {
 		// than having this call be reliant on multiple variables to be set given the
 		// complicated nature of this component, and since its telemetry tracking, the delay
 		// is not user facing.
-		let telemetryStateValue;
+
+		let telemetryStateValue: TelemetryState | undefined = undefined;
 		// "No Entities" - We don’t find any entities on NR and are showing the instrument-your-app message.
 		console.debug(
 			`o11y: hasEntities ${hasEntities} and repoForEntityAssociator ${
@@ -567,9 +571,18 @@ export const Observability = React.memo((props: Props) => {
 
 		if (!isEmpty(telemetryStateValue)) {
 			console.debug("o11y: O11y Rendered", telemetryStateValue);
-			HostApi.instance.track("O11y Rendered", {
+			const properties: AnyObject = {
 				State: telemetryStateValue,
-			});
+			};
+			if (telemetryStateValue === "No Services") {
+				properties.Meta = {
+					hasEntities,
+					hasRepoForEntityAssociator: !_isEmpty(repoForEntityAssociator),
+					currentEntityAccounts: currentEntityAccounts?.length ?? -1,
+					observabilityRepoCount: observabilityRepos?.length ?? -1,
+				};
+			}
+			HostApi.instance.track("O11y Rendered", properties);
 		}
 	};
 
