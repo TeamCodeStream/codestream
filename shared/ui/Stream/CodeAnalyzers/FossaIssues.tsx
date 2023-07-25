@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { lowerCase } from "lodash-es";
+import { lowerCase, upperCase } from "lodash-es";
 import styled from "styled-components";
 import {
 	LicenseDependencyIssue,
@@ -57,7 +57,7 @@ function Severity(props: { severity: VulnSeverity }) {
 }
 
 function criticalityToRiskSeverity(riskSeverity: VulnSeverity): VulnSeverity {
-	switch (riskSeverity) {
+	switch (upperCase(riskSeverity)) {
 		case "CRITICAL":
 			return "CRITICAL";
 		case "HIGH":

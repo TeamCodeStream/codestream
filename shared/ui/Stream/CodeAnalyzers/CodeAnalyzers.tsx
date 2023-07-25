@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import {
 	ReposScm,
@@ -30,7 +30,7 @@ export const CodeAnalyzers = (props: Props) => {
 	const [vulnLoading, setVulnLoading] = useState<boolean>(false);
 	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[]>([]);
 	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[]>([]);
-	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined>(undefined);
+	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined | null>(null);
 	const [isRepoMatched, setIsRepoMatched] = useState<boolean | undefined>(undefined);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -44,15 +44,10 @@ export const CodeAnalyzers = (props: Props) => {
 				if (userProvider) providerInfo[name] = userProvider;
 			}
 		}
-
-		let currentRepoId = editorContext.scmInfo?.scm?.repoId;
-		let currentRepo;
-		if (currentRepoId) {
-			currentRepo = props.openRepos.find(_ => _.id === editorContext.scmInfo?.scm?.repoId);
-		} else {
-			currentRepo = props.openRepos.find(_ => editorContext?.textEditorUri?.includes(_.folder.uri));
-			currentRepoId = currentRepo?.id;
-		}
+		const activeFile = editorContext?.activeFile;
+		const currentRepo = props.openRepos.find(
+			_ => editorContext?.textEditorUri?.includes(_.folder.uri) && _.id === currentRepoId,
+		);
 
 		const fossaProvider = Object.entries(providers).find(prov => {
 			const [, provider] = prov;
@@ -62,58 +57,43 @@ export const CodeAnalyzers = (props: Props) => {
 		return {
 			bootstrapped: Object.keys(providerInfo).length > 0,
 			currentRepo,
-			currentRepoId,
-			providerInfo,
 			providers,
 			fossaProvider,
-			editorContext,
+			activeFile,
 		};
 	}, shallowEqual);
-
-	const { fossa } = derivedState.providerInfo;
-	const memoizedProviderInfo = useMemo(
-		() => ({
-			fossa,
-		}),
-		[fossa],
-	);
 
 	useDidMount(() => {
 		setLoading(true);
 	});
 
 	useEffect(() => {
-		if (!(derivedState.currentRepo || currentRepoId) || props.paneState === PaneState.Collapsed)
+		if (!derivedState.activeFile?.length || props.paneState === PaneState.Collapsed) {
+			setLoading(false);
 			return;
+		}
 
 		const fetchData = async (): Promise<void> => {
 			try {
-				const isRepoMatched: boolean | undefined = await fetchMatchRepoToFossaProject();
-				setIsRepoMatched(isRepoMatched);
-				setLoading(false);
-				if (isRepoMatched) {
-					const licenseDep: LicenseDependencyIssue[] = await fetchCodeAnalysis();
-					const vulnerabilities: VulnerabilityIssue[] = await fetchVulnerabilities();
-					setLicenseDepIssues(licenseDep);
-					setVulnIssues(vulnerabilities);
-					setLicDepLoading(false);
-					setVulnLoading(false);
+				if (currentRepoId !== null) {
+					setLoading(true);
+					const isRepoMatch: boolean | undefined = await fetchMatchRepoToFossa();
+					setIsRepoMatched(isRepoMatch);
+					if (isRepoMatch) {
+						await fetchCodeAnalysis();
+						await fetchVulnerabilities();
+					}
+					setLoading(false);
 				}
 			} catch (error) {
 				console.error("Error fetching data:", error);
 			}
 		};
 		fetchData();
-	}, [
-		derivedState.currentRepo,
-		currentRepoId,
-		memoizedProviderInfo,
-		derivedState.providers,
-		props.paneState,
-	]);
+	}, [currentRepoId, derivedState.providers, props.paneState]);
 
 	const fetchMatchRepoToFossa = async (): Promise<boolean | undefined> => {
-		if (!(derivedState.activeFile || currentRepoId === null)) return;
+		if (currentRepoId === null) return;
 
 		let isRepoMatch;
 		const [providerId] = derivedState.fossaProvider ?? [];
@@ -133,13 +113,13 @@ export const CodeAnalyzers = (props: Props) => {
 		return isRepoMatch;
 	};
 
-	const fetchVulnerabilities = async (): Promise<VulnerabilityIssue[]> => {
+	const fetchVulnerabilities = async (): Promise<void> => {
 		let vulnerabilities: VulnerabilityIssue[] = [];
-		if (vulnLoading) return vulnerabilities;
+		if (vulnLoading) return;
 		setVulnLoading(true);
-		if (!derivedState.currentRepo) {
+		if (!currentRepoId) {
 			setVulnLoading(false);
-			return vulnerabilities;
+			return;
 		}
 
 		const [providerId] = derivedState.fossaProvider ?? [];
@@ -147,7 +127,7 @@ export const CodeAnalyzers = (props: Props) => {
 			if (providerId) {
 				const result = await HostApi.instance.send(FetchThirdPartyVulnerabilitiesRequestType, {
 					providerId,
-					repoId: derivedState.currentRepoId,
+					repoId: currentRepoId,
 				});
 				if (result.issues) {
 					vulnerabilities = result.issues;
@@ -156,26 +136,26 @@ export const CodeAnalyzers = (props: Props) => {
 		} catch (error) {
 			console.error(error);
 		}
-
-		return vulnerabilities;
+		setVulnIssues(vulnerabilities);
+		setVulnLoading(false);
+		setLoading(false);
 	};
 
-	const fetchCodeAnalysis = async (): Promise<LicenseDependencyIssue[]> => {
-		let licenseDepIssues: LicenseDependencyIssue[] = [];
-		if (licDeploading) return licenseDepIssues;
+	const fetchCodeAnalysis = async (): Promise<void> => {
+		if (licDeploading) return;
 		setLicDepLoading(true);
 
-		if (!derivedState.currentRepo) {
+		if (!currentRepoId) {
 			setLicDepLoading(false);
-			return licenseDepIssues;
+			return;
 		}
-
+		let licenseDepIssues: LicenseDependencyIssue[] = [];
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
 				const result = await HostApi.instance.send(FetchThirdPartyLicenseDependenciesRequestType, {
 					providerId,
-					repoId: derivedState.currentRepoId,
+					repoId: currentRepoId,
 				});
 				if (result.issues) {
 					licenseDepIssues = result.issues;
@@ -184,8 +164,10 @@ export const CodeAnalyzers = (props: Props) => {
 		} catch (error) {
 			console.error(error);
 		}
-
-		return licenseDepIssues;
+		setLicenseDepIssues(licenseDepIssues);
+		setLicDepLoading(false);
+		setLoading(false);
+		return;
 	};
 
 	return (
@@ -200,24 +182,26 @@ export const CodeAnalyzers = (props: Props) => {
 					{!derivedState.bootstrapped && <ConnectFossa />}
 					{derivedState.bootstrapped && loading && <FossaLoading />}
 					{derivedState.bootstrapped &&
-						derivedState.currentRepo &&
 						currentRepoId &&
-						isRepoMatched && <FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />}
-					{derivedState.bootstrapped && !derivedState.currentRepo && !loading && (
+						isRepoMatched &&
+						derivedState.activeFile?.length &&
+						!loading && <FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />}
+					{derivedState.bootstrapped && !derivedState.activeFile?.length && !loading && (
 						<div style={{ padding: "0 20px" }}>Open a source file to see FOSSA results.</div>
 					)}
 					{derivedState.bootstrapped &&
-						derivedState.currentRepo &&
-						currentRepoId &&
 						!loading &&
-						isRepoMatched === false && (
+						currentRepoId &&
+						isRepoMatched === false &&
+						derivedState.activeFile?.length && (
 							<div style={{ padding: "0 20px" }}>No code analysis found for this repo.</div>
 						)}
 					{derivedState.bootstrapped &&
-						derivedState.currentRepo &&
+						!loading &&
+						currentRepoId === undefined &&
 						isRepoMatched === false &&
-						!currentRepoId &&
-						!loading && (
+						!derivedState.currentRepo?.remotes?.length &&
+						derivedState.activeFile?.length && (
 							<div style={{ padding: "0 20px" }}>
 								Repo does not have a git remote, try another repo.
 							</div>
