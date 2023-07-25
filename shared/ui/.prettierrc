@@ -1,14 +1,15 @@
 {
-  "printWidth": 100,
-  "tabWidth": 2,
-  "useTabs": true,
-  "arrowParens": "avoid",
-  "overrides": [
-    {
-      "files": ".prettierrc",
-      "options": {
-        "parser": "json"
-      }
-    }
-  ]
+	"printWidth": 100,
+	"tabWidth": 2,
+	"useTabs": true,
+	"arrowParens": "avoid",
+	"trailingComma": "es5",
+	"overrides": [
+		{
+			"files": ".prettierrc",
+			"options": {
+				"parser": "json"
+			}
+		}
+	]
 }

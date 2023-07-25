@@ -374,7 +374,7 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const doRefresh = async (force: boolean = false) => {
+	const doRefresh = async (force = false) => {
 		if (!derivedState.newRelicIsConnected) return;
 
 		console.debug(`o11y: doRefresh called`);
@@ -383,7 +383,7 @@ export const Observability = React.memo((props: Props) => {
 		setLoadingEntities(true);
 
 		try {
-			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount()]);
+			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount(true)]);
 		} finally {
 			setLoadingEntities(false);
 		}
@@ -429,9 +429,9 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
-	const getEntityCount = async () => {
+	const getEntityCount = async (force = false) => {
 		try {
-			const { entityCount } = await HostApi.instance.send(GetEntityCountRequestType, {});
+			const { entityCount } = await HostApi.instance.send(GetEntityCountRequestType, { force });
 			console.debug(`o11y: entityCount ${entityCount}`);
 			setHasEntities(entityCount > 0);
 		} catch (err) {
@@ -447,7 +447,7 @@ export const Observability = React.memo((props: Props) => {
 		setGenericError(undefined);
 		setLoadingEntities(true);
 		try {
-			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount()]);
+			await Promise.all([loadAssignments(), fetchObservabilityRepos(force), getEntityCount(true)]);
 			console.debug(`o11y: Promise.all finished`);
 		} finally {
 			setLoadingEntities(false);
@@ -576,9 +576,8 @@ export const Observability = React.memo((props: Props) => {
 	const callServiceClickedTelemetry = () => {
 		console.debug("o11y: callServiceClickedTelemetry");
 		try {
-			let currentRepoErrors = observabilityErrors?.find(
-				_ => _ && _.repoId === currentRepoId
-			)?.errors;
+			let currentRepoErrors = observabilityErrors?.find(_ => _ && _.repoId === currentRepoId)
+				?.errors;
 			let filteredCurrentRepoErrors = currentRepoErrors?.filter(_ => _.entityId === expandedEntity);
 			let filteredAssigments = observabilityAssignments?.filter(_ => _.entityId === expandedEntity);
 			const hasAnomalies =
