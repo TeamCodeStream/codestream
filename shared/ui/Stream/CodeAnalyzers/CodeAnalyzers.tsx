@@ -6,7 +6,7 @@ import {
 	VulnerabilityIssue,
 	FetchThirdPartyLicenseDependenciesRequestType,
 	FetchThirdPartyVulnerabilitiesRequestType,
-	FetchThirdPartyRepoMatchToFossaProjectRequestType,
+	FetchThirdPartyRepoMatchToFossaRequestType,
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -112,30 +112,25 @@ export const CodeAnalyzers = (props: Props) => {
 		props.paneState,
 	]);
 
-	const fetchMatchRepoToFossaProject = async (): Promise<boolean | undefined> => {
-		if (!derivedState.currentRepo) {
-			return;
-		}
-		let matchedRepoToFossaProject;
+	const fetchMatchRepoToFossa = async (): Promise<boolean | undefined> => {
+		if (!(derivedState.activeFile || currentRepoId === null)) return;
+
+		let isRepoMatch;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
-				const result = await HostApi.instance.send(
-					FetchThirdPartyRepoMatchToFossaProjectRequestType,
-					{
-						providerId,
-						repoId: derivedState.currentRepoId || currentRepoId,
-					},
-				);
-				if (result.matchedRepoToFossaProject !== undefined) {
-					matchedRepoToFossaProject = result.matchedRepoToFossaProject;
+				const result = await HostApi.instance.send(FetchThirdPartyRepoMatchToFossaRequestType, {
+					providerId,
+					repoId: currentRepoId,
+				});
+				if (result.isRepoMatch !== undefined) {
+					isRepoMatch = result.isRepoMatch;
 				}
 			}
 		} catch (error) {
 			console.error(error);
 		}
-
-		return matchedRepoToFossaProject;
+		return isRepoMatch;
 	};
 
 	const fetchVulnerabilities = async (): Promise<VulnerabilityIssue[]> => {

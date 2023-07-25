@@ -21,8 +21,8 @@ import {
 	FetchThirdPartyCardWorkflowResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
-	FetchThirdPartyRepoMatchToFossaProjectRequest,
-	FetchThirdPartyRepoMatchToFossaProjectResponse,
+	FetchThirdPartyRepoMatchToFossaRequest,
+	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyCodeAnalyzersResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
@@ -148,9 +148,9 @@ export interface ThirdPartyProviderSupportsCodeAnalyzers {
 		params: IssueParams,
 	): Promise<FetchThirdPartyCodeAnalyzersResponse>;
 
-	fetchRepoMatchToFossaProject(
-		request: FetchThirdPartyRepoMatchToFossaProjectRequest,
-	): Promise<FetchThirdPartyRepoMatchToFossaProjectResponse>;
+	fetchIsRepoMatch(
+		request: FetchThirdPartyRepoMatchToFossaRequest,
+	): Promise<FetchThirdPartyRepoMatchToFossaResponse>;
 }
 
 export namespace ThirdPartyIssueProvider {

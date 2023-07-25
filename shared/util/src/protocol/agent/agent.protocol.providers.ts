@@ -543,17 +543,17 @@ export const FetchThirdPartyVulnerabilitiesRequestType = new RequestType<
 	void
 >("codestream/provider/vulnerablitlies");
 
-export interface FetchThirdPartyRepoMatchToFossaProjectRequest {
+export interface FetchThirdPartyRepoMatchToFossaRequest {
 	providerId: string;
 	repoId?: string;
 }
-export interface FetchThirdPartyRepoMatchToFossaProjectResponse {
-	matchedRepoToFossaProject: boolean;
+export interface FetchThirdPartyRepoMatchToFossaResponse {
+	isRepoMatch: boolean;
 }
 
-export const FetchThirdPartyRepoMatchToFossaProjectRequestType = new RequestType<
-	FetchThirdPartyRepoMatchToFossaProjectRequest,
-	FetchThirdPartyRepoMatchToFossaProjectResponse,
+export const FetchThirdPartyRepoMatchToFossaRequestType = new RequestType<
+	FetchThirdPartyRepoMatchToFossaRequest,
+	FetchThirdPartyRepoMatchToFossaResponse,
 	void,
 	void
 >("codestream/provider/fossaRepoMatch");

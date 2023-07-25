@@ -4,8 +4,8 @@ import { isEmpty as _isEmpty } from "lodash-es";
 import {
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyCodeAnalyzersResponse,
-	FetchThirdPartyRepoMatchToFossaProjectRequest,
-	FetchThirdPartyRepoMatchToFossaProjectResponse,
+	FetchThirdPartyRepoMatchToFossaRequest,
+	FetchThirdPartyRepoMatchToFossaResponse,
 	ReposScm,
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
@@ -147,19 +147,19 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	}
 
 	@log()
-	async fetchRepoMatchToFossaProject(
-		request: FetchThirdPartyRepoMatchToFossaProjectRequest,
-	): Promise<FetchThirdPartyRepoMatchToFossaProjectResponse> {
+	async fetchIsRepoMatch(
+		request: FetchThirdPartyRepoMatchToFossaRequest,
+	): Promise<FetchThirdPartyRepoMatchToFossaResponse> {
 		const [currentRepo] = await this.getCurrentRepo(request.repoId);
 		if (!currentRepo) {
-			return { matchedRepoToFossaProject: false };
+			return { isRepoMatch: false };
 		}
 		const projects: FossaProject[] = await this.getProjects();
 		const project = await this.matchRepoToFossaProject(currentRepo, projects, request.repoId);
 		if (_isEmpty(project)) {
-			return { matchedRepoToFossaProject: false };
+			return { isRepoMatch: false };
 		}
-		return { matchedRepoToFossaProject: true };
+		return { isRepoMatch: true };
 	}
 
 	@log()

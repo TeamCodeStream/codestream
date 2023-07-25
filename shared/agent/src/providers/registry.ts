@@ -54,9 +54,9 @@ import {
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
 	FetchThirdPartyPullRequestRequestType,
-	FetchThirdPartyRepoMatchToFossaProjectRequest,
-	FetchThirdPartyRepoMatchToFossaProjectRequestType,
-	FetchThirdPartyRepoMatchToFossaProjectResponse,
+	FetchThirdPartyRepoMatchToFossaRequest,
+	FetchThirdPartyRepoMatchToFossaRequestType,
+	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyVulnerabilitiesRequestType,
 	FetchThirdPartyVulnerabilitiesResponse,
 	GetMyPullRequestsResponse,
@@ -862,10 +862,10 @@ export class ThirdPartyProviderRegistry {
 	}
 
 	@log()
-	@lspHandler(FetchThirdPartyRepoMatchToFossaProjectRequestType)
-	async fetchRepoMatchToFossaProject(
-		request: FetchThirdPartyRepoMatchToFossaProjectRequest,
-	): Promise<FetchThirdPartyRepoMatchToFossaProjectResponse> {
+	@lspHandler(FetchThirdPartyRepoMatchToFossaRequestType)
+	async fetchIsRepoMatch(
+		request: FetchThirdPartyRepoMatchToFossaRequest,
+	): Promise<FetchThirdPartyRepoMatchToFossaResponse> {
 		const provider = getProvider(request.providerId);
 		if (provider === undefined) {
 			throw new Error(`No registered provider for '${request.providerId}'`);
@@ -880,7 +880,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support code analyzers`);
 		}
 
-		const response = await codeAnalyzersProvider.fetchRepoMatchToFossaProject(request);
+		const response = await codeAnalyzersProvider.fetchIsRepoMatch(request);
 		return response;
 	}
 
