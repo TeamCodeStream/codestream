@@ -80,10 +80,12 @@ export const CodeAnalyzers = (props: Props) => {
 					const isRepoMatch: boolean | undefined = await fetchMatchRepoToFossa();
 					setIsRepoMatched(isRepoMatch);
 					if (isRepoMatch) {
-						await fetchCodeAnalysis();
+						await fetchLicenseDependencies();
 						await fetchVulnerabilities();
+						setLoading(false);
+					} else {
+						setLoading(false);
 					}
-					setLoading(false);
 				}
 			} catch (error) {
 				console.error("Error fetching data:", error);
@@ -114,7 +116,6 @@ export const CodeAnalyzers = (props: Props) => {
 	};
 
 	const fetchVulnerabilities = async (): Promise<void> => {
-		let vulnerabilities: VulnerabilityIssue[] = [];
 		if (vulnLoading) return;
 		setVulnLoading(true);
 		if (!currentRepoId) {
@@ -122,6 +123,7 @@ export const CodeAnalyzers = (props: Props) => {
 			return;
 		}
 
+		let vulnerabilities: VulnerabilityIssue[] = [];
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -138,10 +140,9 @@ export const CodeAnalyzers = (props: Props) => {
 		}
 		setVulnIssues(vulnerabilities);
 		setVulnLoading(false);
-		setLoading(false);
 	};
 
-	const fetchCodeAnalysis = async (): Promise<void> => {
+	const fetchLicenseDependencies = async (): Promise<void> => {
 		if (licDeploading) return;
 		setLicDepLoading(true);
 
@@ -166,7 +167,6 @@ export const CodeAnalyzers = (props: Props) => {
 		}
 		setLicenseDepIssues(licenseDepIssues);
 		setLicDepLoading(false);
-		setLoading(false);
 		return;
 	};
 
