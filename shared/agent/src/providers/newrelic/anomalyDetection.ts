@@ -185,6 +185,7 @@ export class AnomalyDetector {
 				"Since Days Ago": this._sinceDaysAgo,
 				"Baseline Days": this._request.baselineDays,
 				"Release Based": this._releaseBased,
+				Language: languageSupport.language,
 			};
 			telemetry?.track({
 				eventName: "CLM Anomalies Calculated",

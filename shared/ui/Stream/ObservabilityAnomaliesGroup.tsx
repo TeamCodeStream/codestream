@@ -79,6 +79,7 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 	function handleClickTelemetry() {
 		const event = {
 			"Detection Method": props.detectionMethod ?? "<unknown>",
+			Language: props.observabilityAnomalies[0]?.language ?? "<unknown>",
 		};
 
 		console.debug("CLM Anomaly Clicked", event);
