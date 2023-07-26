@@ -2184,10 +2184,6 @@ export const riskSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN",
 
 export type RiskSeverity = (typeof riskSeverityList)[number];
 
-export const vulnSeverityList = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"] as const;
-
-export type VulnSeverity = (typeof vulnSeverityList)[number];
-
 export const criticalityList = ["CRITICAL", "HIGH", "MODERATE", "LOW"] as const;
 
 export type CriticalityType = (typeof criticalityList)[number];

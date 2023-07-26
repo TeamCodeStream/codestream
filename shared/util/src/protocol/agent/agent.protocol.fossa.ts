@@ -53,6 +53,10 @@ export interface VulnerabilityIssue extends BaseIssueType {
 	references: string[];
 }
 
+export interface VulnerabilityIssues {
+	issues: VulnerabilityIssue[];
+}
+
 export interface FossaProject {
 	id: string;
 	title: string;
@@ -72,14 +76,6 @@ export interface FossaProject {
 
 export interface GetFossaProjectsResponse {
 	projects: FossaProject[];
-}
-
-export interface LicenseDependencyIssues {
-	issues: LicenseDependencyIssue[];
-}
-
-export interface VulnerabilityIssues {
-	issues: VulnerabilityIssue[];
 }
 
 export interface IssueParams {
