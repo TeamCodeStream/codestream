@@ -38,7 +38,6 @@ import {
 	EditorSelectRangeRequestType,
 } from "@codestream/protocols/webview";
 import { Checkbox } from "../src/components/Checkbox";
-import { LabeledSwitch } from "../src/components/controls/LabeledSwitch";
 import { CSText } from "../src/components/CSText";
 import { PanelHeader } from "../src/components/PanelHeader";
 import { CodeStreamState } from "../store";
@@ -2478,15 +2477,6 @@ class CodemarkForm extends React.Component<Props, State> {
 						)}
 						{this.renderTextHelp()}
 						{commentType === "link" &&
-							this.state.linkURI &&
-							this.state.isPermalinkPublic && [
-								<div key="permalink-warning" className="permalink-warning">
-									<Icon name="alert" />
-									Note that this is a public URL. Anyone with the link will be able to see the
-									quoted code snippet.
-								</div>,
-							]}
-						{commentType === "link" &&
 							this.state.linkURI && [
 								<textarea
 									key="link-offscreen"
@@ -2502,25 +2492,6 @@ class CodemarkForm extends React.Component<Props, State> {
 									style={{ position: "absolute", left: "-9999px" }}
 								/>,
 							]}
-						{commentType === "link" && !this.state.linkURI && (
-							<div id="privacy-controls" className="control-group" key="1">
-								<div className="public-private-hint" key="privacy-hint">
-									{this.state.isPermalinkPublic
-										? "Anyone can view this link, including the quoted codeblock."
-										: "Only members of your team can access this link."}
-								</div>
-								<LabeledSwitch
-									key="privacy"
-									colored
-									on={this.state.isPermalinkPublic}
-									offLabel="Private"
-									onLabel="Public"
-									onChange={this.togglePermalinkPrivacy}
-									height={28}
-									width={90}
-								/>
-							</div>
-						)}
 						{commentType !== "bookmark" && commentType !== "link" && this.renderMessageInput()}
 					</div>
 					{false && (commentType === "comment" || commentType === "question") && (
