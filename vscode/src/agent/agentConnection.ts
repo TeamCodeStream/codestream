@@ -71,6 +71,8 @@ import {
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotification,
 	DidChangeVersionCompatibilityNotificationType,
+	DidDetectObservabilityAnomaliesNotification,
+	DidDetectObservabilityAnomaliesNotificationType,
 	DidDetectUnreviewedCommitsNotification,
 	DidDetectUnreviewedCommitsNotificationType,
 	DidEncounterMaintenanceModeNotification,
@@ -258,6 +260,12 @@ export class CodeStreamAgentConnection implements Disposable {
 		new EventEmitter<DidDetectUnreviewedCommitsNotification>();
 	get onDidDetectUnreviewedCommits(): Event<DidDetectUnreviewedCommitsNotification> {
 		return this._onDidDetectUnreviewedCommits.event;
+	}
+
+	private _onDidDetectObservabilityAnomalies =
+		new EventEmitter<DidDetectObservabilityAnomaliesNotification>();
+	get onDidDetectObservabilityAnomalies(): Event<DidDetectObservabilityAnomaliesNotification> {
+		return this._onDidDetectObservabilityAnomalies.event;
 	}
 
 	private _onDidChangeRepositoryCommitHash =
@@ -1076,6 +1084,13 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._onDidDetectUnreviewedCommits.fire(e);
 	}
 
+	@log({
+		prefix: (context, _e: DidDetectObservabilityAnomaliesNotification) => `${context.prefix}`
+	})
+	private onObservabilityAnomaliesDetected(e: DidDetectObservabilityAnomaliesNotification) {
+		this._onDidDetectObservabilityAnomalies.fire(e);
+	}
+
 	@log()
 	private onLogout(e: DidLogoutNotification) {
 		Logger.log(`onLogout ${e.reason}`);
@@ -1323,6 +1338,10 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._client.onNotification(
 			DidDetectUnreviewedCommitsNotificationType,
 			this.onUnreviewedCommitsDetected.bind(this)
+		);
+		this._client.onNotification(
+			DidDetectObservabilityAnomaliesNotificationType,
+			this.onObservabilityAnomaliesDetected.bind(this)
 		);
 		this._client.onNotification(DidChangeRepositoryCommitHashNotificationType, e =>
 			this._onDidChangeRepositoryCommitHash.fire(e)
