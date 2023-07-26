@@ -17,6 +17,7 @@ export * from "./agent.protocol.codemarks";
 export * from "./agent.protocol.companies";
 export * from "./agent.protocol.documentMarkers";
 export * from "./agent.protocol.errors";
+export * from "./agent.protocol.fossa";
 export * from "./agent.protocol.github";
 export * from "./agent.protocol.gitlab";
 export * from "./agent.protocol.jira";

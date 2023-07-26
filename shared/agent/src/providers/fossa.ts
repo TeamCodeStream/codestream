@@ -6,20 +6,17 @@ import {
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyVulnerabilitiesResponse,
+	FossaProject,
+	GetFossaProjectsResponse,
+	IssueParams,
+	LicenseDependencyIssues,
 	ReposScm,
 	ThirdPartyProviderConfig,
+	VulnerabilityIssues,
 } from "@codestream/protocols/agent";
 import { log, lspProvider } from "../system";
 import { CodeStreamSession } from "session";
 import { GitRemoteParser } from "../git/parsers/remoteParser";
-
-import {
-	FossaProject,
-	GetFossaProjectsResponse,
-	LicenseDependencyIssues,
-	VulnerabilityIssues,
-	IssueParams,
-} from "../../../util/src/protocol/agent/agent.protocol.fossa";
 import { ThirdPartyCodeAnalyzerProviderBase } from "./thirdPartyCodeAnalyzerProviderBase";
 import { CSFossaProviderInfo } from "@codestream/protocols/api";
 import { SessionContainer } from "../container";
