@@ -1,8 +1,12 @@
 import { isEmpty } from "lodash";
-import fetch, { Request, RequestInfo, RequestInit, Response } from "node-fetch";
+import { fetch, RequestInit, Request, Response, RequestInfo } from "undici";
 import { Logger } from "../logger";
 import { Functions } from "./function";
 import { handleLimit, InternalRateError } from "../rateLimits";
+
+export interface ExtraRequestInit extends RequestInit {
+	timeout?: number;
+}
 
 const noLogRetries = ["reason: connect ECONNREFUSED", "reason: getaddrinfo ENOTFOUND"];
 
@@ -11,7 +15,7 @@ function shouldLogRetry(errorMsg: string): boolean {
 	return !result;
 }
 
-export async function customFetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
+export async function customFetch(url: string, init?: ExtraRequestInit): Promise<Response> {
 	const response = await fetchCore(0, url, init);
 	return response[0];
 }
@@ -43,11 +47,19 @@ function urlOrigin(requestInfo: RequestInfo): string {
 export async function fetchCore(
 	count: number,
 	url: RequestInfo,
-	init?: RequestInit
+	initIn?: Readonly<ExtraRequestInit>
 ): Promise<[Response, number]> {
 	const origin = urlOrigin(url);
+	let timeout: NodeJS.Timeout | undefined = undefined;
+	// Make sure original init is not modified
+	const init = { ...initIn };
 	try {
 		handleLimit(origin);
+		if (init.timeout) {
+			const controller = new AbortController();
+			timeout = setTimeout(() => controller.abort(), init.timeout);
+			init.signal = controller.signal;
+		}
 		const resp = await fetch(url, init);
 		if (resp.status < 200 || resp.status > 299) {
 			if (resp.status < 400 || resp.status >= 500) {
@@ -61,7 +73,12 @@ export async function fetchCore(
 						);
 					}
 					await Functions.wait(waitMs);
-					return fetchCore(count, url, init);
+					if (timeout) {
+						clearTimeout(timeout);
+						timeout = undefined;
+					}
+					// Use unmodified init
+					return fetchCore(count, url, initIn);
 				}
 			}
 		}
@@ -87,5 +104,9 @@ export async function fetchCore(
 			return fetchCore(count, url, init);
 		}
 		throw ex;
+	} finally {
+		if (timeout) {
+			clearTimeout(timeout);
+		}
 	}
 }

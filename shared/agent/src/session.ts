@@ -122,6 +122,7 @@ import { GitRepository } from "./git/models/repository";
 import { Logger } from "./logger";
 import { log, memoize, registerDecoratedHandlers, registerProviders, Strings } from "./system";
 import { testGroups } from "./testGroups";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
 
 const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost|(\w+))\.codestream\.(?:us|com)(?::\d+$)?/i;
 
@@ -318,6 +319,9 @@ export class CodeStreamSession {
 					...url.parse(_options.proxy.url),
 					rejectUnauthorized: _options.proxy.strictSSL,
 				} as any);
+				// Set proxy for fetchCore (undici and future native fetch)
+				const dispatcher = new ProxyAgent({ uri: new URL(_options.proxy.url).toString() });
+				setGlobalDispatcher(dispatcher);
 			} else {
 				Logger.log("Proxy support is in override, but no proxy settings were provided");
 			}

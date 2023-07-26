@@ -37,7 +37,7 @@ import {
 	UpdateThirdPartyStatusResponse,
 } from "@codestream/protocols/agent";
 import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
-import { Response } from "node-fetch";
+import { Response } from "undici";
 
 import { SessionContainer } from "../container";
 import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";

@@ -7,7 +7,7 @@ import {
 	ThirdPartyBuildStatus,
 } from "@codestream/protocols/agent";
 import { CSCircleCIProviderInfo } from "@codestream/protocols/api";
-import { Response } from "node-fetch";
+import { Response } from "undici";
 
 import { InternalError, ServerError } from "agentError";
 import { Logger } from "../logger";

@@ -1,4 +1,4 @@
-import { RequestInit, Response } from "node-fetch";
+import { RequestInit, Response } from "undici";
 import { Disposable, Event } from "vscode-languageserver";
 
 import { HistoryFetchInfo } from "broadcaster/broadcaster";

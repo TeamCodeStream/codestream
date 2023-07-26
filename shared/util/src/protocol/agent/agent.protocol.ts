@@ -1,5 +1,5 @@
 "use strict";
-import { RequestInit } from "node-fetch";
+import { RequestInit } from "undici";
 import { InitializeResult, RequestType, WorkspaceFolder } from "vscode-languageserver-protocol";
 
 import { LoginResponse } from "./agent.protocol.auth";

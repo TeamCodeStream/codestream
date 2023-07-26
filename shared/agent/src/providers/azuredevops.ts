@@ -234,8 +234,7 @@ export class AzureDevOpsProvider extends ThirdPartyIssueProviderBase<CSAzureDevO
 	private async getMe(): Promise<AzureDevOpsProfile> {
 		const userResponse = await this.get<AzureDevOpsProfile>(
 			"https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=5.0",
-			{},
-			{ absoluteUrl: true }
+			{}
 		);
 		return userResponse.body;
 	}

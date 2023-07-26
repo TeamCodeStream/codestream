@@ -4,7 +4,7 @@ import * as qs from "querystring";
 
 import { GraphQLClient } from "graphql-request";
 import { isEmpty as _isEmpty } from "lodash-es";
-import { Headers, Response } from "node-fetch";
+import { Headers, Response } from "undici";
 import semver from "semver";
 import { URI } from "vscode-uri";
 import {

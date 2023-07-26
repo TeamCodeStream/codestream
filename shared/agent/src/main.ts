@@ -29,24 +29,37 @@ export * from "./providers/trello";
 export * from "./providers/trunk";
 export * from "./providers/youtrack";
 
+function handleFatalError(err: Error) {
+	console.error("===--- fatal error ---===");
+	console.error(err);
+	process.exit(1);
+}
+
+process.on("uncaughtException", handleFatalError);
+process.on("unhandledRejection", handleFatalError);
+
 process.title = "CodeStream";
 
-let logPath;
-process.argv.forEach(function (val, index, array) {
-	if (val && val.indexOf("--log=") === 0) {
-		logPath = val.substring(6);
-	}
-});
-const logger = logPath != null ? new FileLspLogger(logPath) : undefined;
+try {
+	let logPath;
+	process.argv.forEach(function (val, index, array) {
+		if (val && val.indexOf("--log=") === 0) {
+			logPath = val.substring(6);
+		}
+	});
+	const logger = logPath != null ? new FileLspLogger(logPath) : undefined;
 
-const agentConfig = {
-	logger: logger,
-};
+	const agentConfig = {
+		logger: logger,
+	};
 
-// Create a connection for the server. The connection uses Node's IPC as a transport.
-// Also include all preview / proposed LSP features.
-const connection = createConnection(ProposedFeatures.all);
+	// Create a connection for the server. The connection uses Node's IPC as a transport.
+	// Also include all preview / proposed LSP features.
+	const connection = createConnection(ProposedFeatures.all);
 
-new CodeStreamAgent(connection, agentConfig);
+	new CodeStreamAgent(connection, agentConfig);
 
-connection.listen();
+	connection.listen();
+} catch (error) {
+	handleFatalError(error);
+}

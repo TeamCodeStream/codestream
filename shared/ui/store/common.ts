@@ -96,3 +96,12 @@ export function withExponentialConnectionRetry<T extends object>(
 		void execute();
 	});
 }
+
+// TODO fix
+// On full build this error is thrown by lsp. On esbuild dev mode it is not, hence this workaround
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function throwIfError(response: any) {
+	if (response?.exception?.responseError?.message) {
+		throw response.exception.responseError;
+	}
+}

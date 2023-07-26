@@ -81,6 +81,7 @@ import Tooltip from "./Tooltip";
 import { WarningBox } from "./WarningBox";
 import { ObservabilityAnomaliesWrapper } from "@codestream/webview/Stream/ObservabilityAnomaliesWrapper";
 import { CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
+import { throwIfError } from "@codestream/webview/store/common";
 import { AnyObject } from "@codestream/webview/utils";
 
 interface Props {
@@ -283,7 +284,8 @@ export const Observability = React.memo((props: Props) => {
 
 	const [noErrorsAccess, setNoErrorsAccess] = useState<string | undefined>(undefined);
 	const [loadingObservabilityErrors, setLoadingObservabilityErrors] = useState<boolean>(false);
-	const [genericError, setGenericError] = useState<string | undefined>(undefined);
+	const [genericError, setGenericError] = useState<string>();
+	const [errorInboxError, setErrorInboxError] = useState<string>();
 	const [loadingAssignmentErrorsClick, setLoadingAssignmentErrorsClick] = useState<{
 		[errorGroupGuid: string]: boolean;
 	}>({});
@@ -355,8 +357,10 @@ export const Observability = React.memo((props: Props) => {
 
 	const loadAssignments = async () => {
 		setLoadingAssignments(true);
+		setErrorInboxError(undefined);
 		try {
 			const response = await HostApi.instance.send(GetObservabilityErrorAssignmentsRequestType, {});
+			throwIfError(response);
 			setObservabilityAssignments(response.items);
 			setLoadingAssignments(false);
 			setNoErrorsAccess(undefined);
@@ -370,7 +374,7 @@ export const Observability = React.memo((props: Props) => {
 			} else if (ex.code === ERROR_GENERIC_USE_ERROR_MESSAGE) {
 				setNoErrorsAccess(ex.message || GENERIC_ERROR_MESSAGE);
 			} else {
-				setGenericError(ex.message || GENERIC_ERROR_MESSAGE);
+				setErrorInboxError(GENERIC_ERROR_MESSAGE);
 			}
 		} finally {
 			setLoadingAssignments(false);
@@ -1272,6 +1276,7 @@ export const Observability = React.memo((props: Props) => {
 																									) && (
 																										<>
 																											<ObservabilityErrorWrapper
+																												errorInboxError={errorInboxError}
 																												observabilityErrors={observabilityErrors}
 																												observabilityRepo={_observabilityRepo}
 																												observabilityAssignments={

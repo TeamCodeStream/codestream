@@ -36,6 +36,7 @@ import { applyPatch, ParsedDiff } from "diff";
 import * as eol from "eol";
 import { CSReviewCheckpoint } from "../../protocol/agent/api.protocol";
 import { Uri } from "vscode";
+import { convert } from "html-to-text";
 
 export const enum CharCode {
     /**
@@ -629,4 +630,9 @@ export function toTitleCase(s: string): string {
     if (!s) return s;
 
     return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+export function makeHtmlLoggable(s: string): string {
+    // Strip out HTML, remove redundant whitespace, and escape with JSON.stringify
+    return JSON.stringify(convert(s).replace(/\s+/g,' ').trim());
 }

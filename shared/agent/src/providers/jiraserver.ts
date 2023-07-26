@@ -44,7 +44,7 @@ import {
 	JiraProjectsMetaResponse,
 	JiraServerOauthParams,
 } from "./jiraserver.types";
-import { Response } from "node-fetch";
+import { Response } from "undici";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 
 export type jsonCallback = (

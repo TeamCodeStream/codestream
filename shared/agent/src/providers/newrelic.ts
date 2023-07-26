@@ -146,11 +146,35 @@ import {
 import { generateClmSpanDataExistsQuery } from "./newrelic/spanQuery";
 import { ThirdPartyIssueProviderBase } from "./thirdPartyIssueProviderBase";
 import { ClmManager } from "./newrelic/clm/clmManager";
+import * as Dom from "graphql-request/dist/types.dom";
+import { makeHtmlLoggable } from "@codestream/utils/system/string";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
 export function escapeNrql(nrql: string) {
 	return nrql.replace(/\\/g, "\\\\\\\\").replace(/\n/g, " ");
+}
+
+export interface HttpErrorResponse {
+	response: {
+		status: number;
+		error: string;
+		headers: Dom.Headers;
+	};
+	request: {
+		query: string;
+		variables: object;
+	};
+}
+
+function isHttpErrorResponse(ex: unknown): ex is HttpErrorResponse {
+	const httpErrorResponse = ex as HttpErrorResponse;
+	return (
+		httpErrorResponse?.response?.error !== undefined &&
+		httpErrorResponse?.response?.status !== undefined &&
+		httpErrorResponse?.response?.headers !== undefined &&
+		httpErrorResponse?.request?.query !== undefined
+	);
 }
 
 const ENTITY_CACHE_KEY = "entityCache";
@@ -481,6 +505,18 @@ export class NewRelicProvider
 				response = potentialResponse;
 				return true;
 			} catch (potentialEx) {
+				if (isHttpErrorResponse(potentialEx)) {
+					const contentType = potentialEx.response.headers.get("content-type");
+					const niceText = contentType?.toLocaleLowerCase()?.includes("text/html")
+						? makeHtmlLoggable(potentialEx.response.error)
+						: potentialEx.response.error;
+					const loggableError = `Error HTTP ${contentType} ${potentialEx.response.status}: ${niceText}`;
+					ex = new Error(
+						`Error HTTP ${contentType} ${potentialEx.response.status}: Internal Error`
+					);
+					Logger.warn(loggableError);
+					return false;
+				}
 				Logger.warn(potentialEx.message);
 				ex = potentialEx;
 				return false;

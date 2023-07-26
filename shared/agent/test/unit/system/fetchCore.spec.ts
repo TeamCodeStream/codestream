@@ -1,9 +1,9 @@
-import fetch, { Response } from "node-fetch";
+import { fetch, Response } from "undici";
 import { Logger } from "../../../src/logger";
 import { fetchCore } from "../../../src/system/fetchCore";
 import { Functions } from "../../../src/system/function";
 
-jest.mock("node-fetch");
+jest.mock("undici");
 const fetchMock = jest.mocked(fetch);
 jest.mock("../../../src/system/function");
 const waitMock = jest.mocked(Functions.wait);

@@ -5,13 +5,12 @@ import { Agent as HttpAgent } from "http";
 import { Agent as HttpsAgent } from "https";
 import * as qs from "querystring";
 import { ParsedUrlQueryInput } from "querystring";
-import { URLSearchParams } from "url";
 
 import { isEmpty, isEqual } from "lodash";
-import { Headers, RequestInit, Response } from "node-fetch";
+import { BodyInit, Headers, RequestInit, Response } from "undici";
 import sanitize from "sanitize-filename";
 import FormData from "form-data";
-import AbortController from "abort-controller";
+
 import { Emitter, Event } from "vscode-languageserver";
 import {
 	AccessToken,
@@ -2649,14 +2648,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 				}
 			}
 
-			if (this._httpsAgent !== undefined) {
-				if (init === undefined) {
-					init = {};
-				}
-
-				init.agent = this._httpsAgent;
-			}
-
 			const method = (init && init.method) || "GET";
 			const absoluteUrl = `${this.baseUrl}${url}`;
 
@@ -2776,7 +2767,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	private async handleErrorResponse(response: Response): Promise<Error> {
 		let message = response.statusText;
-		let data;
+		let data: any;
 		if (response.status >= 400 && response.status < 500) {
 			try {
 				data = await response.json();
@@ -2853,15 +2844,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return obj as R;
 	}
 
-	static sanitize(
-		body:
-			| string
-			| ArrayBuffer
-			| ArrayBufferView
-			| NodeJS.ReadableStream
-			| URLSearchParams
-			| undefined
-	) {
+	static sanitize(body: BodyInit | undefined) {
 		if (body === undefined || typeof body !== "string") return "";
 
 		return body.replace(
@@ -2888,7 +2871,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			Logger.log("Verifying API server connectivity");
 
 			const resp = await customFetch(this.baseUrl + "/no-auth/capabilities", {
-				agent: this._httpsAgent,
 				signal: controller.signal,
 			});
 
@@ -2900,7 +2882,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 					maintenanceMode: !!resp.headers.get("x-cs-api-maintenance-mode"),
 				};
 			} else {
-				const json = await resp.json();
+				const json: any = await resp.json();
 				response.capabilities = json.capabilities;
 				response.environment = json.environment;
 				response.isOnPrem = json.isOnPrem;
@@ -2942,7 +2924,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const nonJsonCapabilitiesResponse = await customFetch(
 				this.baseUrl + "/no-auth/capabilities",
 				{
-					agent: this._httpsAgent,
 					signal: controller.signal,
 				}
 			);

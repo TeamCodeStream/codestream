@@ -6,7 +6,7 @@ import { parsePatch } from "diff";
 import { print } from "graphql";
 import { GraphQLClient } from "graphql-request";
 import { groupBy, merge } from "lodash-es";
-import { Response } from "node-fetch";
+import { Response } from "undici";
 import semver from "semver";
 import { URI } from "vscode-uri";
 import {
@@ -1433,8 +1433,9 @@ export class GitLabProvider
 			).forEach(_ => response.project.mergeRequest.discussions.nodes.push(..._));
 
 			// sort all the nodes
-			response.project.mergeRequest.discussions.nodes.sort((a: DiscussionNode, b: DiscussionNode) =>
-				a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
+			response.project.mergeRequest.discussions.nodes.sort(
+				(a: DiscussionNode, b: DiscussionNode) =>
+					a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0
 			);
 
 			response.project.mergeRequest.supports =
@@ -4045,7 +4046,10 @@ interface GitLabReview {
 }
 
 class GitLabId {
-	constructor(private projectFullPath: string, private iid: string) {}
+	constructor(
+		private projectFullPath: string,
+		private iid: string
+	) {}
 
 	/**
 	 * creates a file-system safe path string

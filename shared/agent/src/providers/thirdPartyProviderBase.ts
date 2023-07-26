@@ -3,7 +3,7 @@ import url from "url";
 
 import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
-import { RequestInit, Response } from "node-fetch";
+import { Response } from "undici";
 
 import HttpsProxyAgent from "https-proxy-agent";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -22,7 +22,7 @@ import { Container, SessionContainer } from "../container";
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { log } from "../system/decorators/log";
-import { fetchCore } from "../system/fetchCore";
+import { ExtraRequestInit, fetchCore } from "../system/fetchCore";
 import { isApiError, isErrnoException } from "../system/object";
 import { Strings } from "../system";
 import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from "./provider";
@@ -30,7 +30,7 @@ import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from 
 const transitoryErrors = new Set(["ECONNREFUSED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND"]);
 
 export abstract class ThirdPartyProviderBase<
-	TProviderInfo extends CSProviderInfos = CSProviderInfos
+	TProviderInfo extends CSProviderInfos = CSProviderInfos,
 > implements ThirdPartyProvider
 {
 	private _readyPromise: Promise<void> | undefined;
@@ -343,7 +343,7 @@ export abstract class ThirdPartyProviderBase<
 	protected async get<R extends object>(
 		url: string,
 		headers: { [key: string]: string } = {},
-		options: { [key: string]: any } = {},
+		options: ExtraRequestInit = {},
 		ensureConnected = true
 	): Promise<ApiResponse<R>> {
 		if (ensureConnected) {
@@ -406,7 +406,7 @@ export abstract class ThirdPartyProviderBase<
 
 	private async fetch<R extends object>(
 		url: string,
-		init: RequestInit,
+		init: ExtraRequestInit,
 		options: { [key: string]: any } = {}
 	): Promise<ApiResponse<R>> {
 		if (this._providerInfo && this._providerInfo.tokenError) {
@@ -421,9 +421,6 @@ export abstract class ThirdPartyProviderBase<
 		try {
 			if (init === undefined) {
 				init = {};
-			}
-			if (this._httpsAgent) {
-				init.agent = this._httpsAgent;
 			}
 
 			method = (init && init.method) || "GET";
@@ -487,7 +484,7 @@ export abstract class ThirdPartyProviderBase<
 
 	protected async handleErrorResponse(response: Response): Promise<Error> {
 		let message = response.statusText;
-		let data;
+		let data: any;
 		Logger.debug("handleErrorResponse: ", JSON.stringify(response, null, 4));
 		if (response.status === 401) {
 			return new InternalError(ReportSuppressedMessages.Unauthorized);
