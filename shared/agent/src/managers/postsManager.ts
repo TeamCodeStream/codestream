@@ -698,11 +698,6 @@ export function trackCodeErrorPostCreation(
 				// rounds to 4 places
 				"Invitee Assignees": addedUsers ? addedUsers.length : 0,
 			};
-
-			telemetry.track({
-				eventName: "Code Error Created",
-				properties: codeErrorProperties,
-			});
 		} catch (ex) {
 			Logger.error(ex);
 		}
