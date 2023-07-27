@@ -498,7 +498,7 @@ export interface FetchThirdPartyCodeAnalyzersRequest {
 }
 export interface FetchThirdPartyLicenseDependenciesResponse {
 	issues?: LicenseDependencyIssue[];
-	error?: string; // CHECK THE TYPE! could be object
+	error?: string;
 }
 
 export const FetchThirdPartyLicenseDependenciesRequestType = new RequestType<
@@ -510,7 +510,7 @@ export const FetchThirdPartyLicenseDependenciesRequestType = new RequestType<
 
 export interface FetchThirdPartyVulnerabilitiesResponse {
 	issues?: VulnerabilityIssue[];
-	error?: string; // CHECK THE TYPE! could be object
+	error?: string;
 }
 
 export const FetchThirdPartyVulnerabilitiesRequestType = new RequestType<
@@ -527,7 +527,8 @@ export interface FetchThirdPartyRepoMatchToFossaRequest {
 	repoId?: string;
 }
 export interface FetchThirdPartyRepoMatchToFossaResponse {
-	isRepoMatch: boolean;
+	isRepoMatch?: boolean;
+	error?: string;
 }
 
 export const FetchThirdPartyRepoMatchToFossaRequestType = new RequestType<

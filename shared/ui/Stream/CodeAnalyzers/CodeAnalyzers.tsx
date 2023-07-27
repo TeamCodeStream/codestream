@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { shallowEqual, useSelector } from "react-redux";
 import {
-	ReposScm,
-	LicenseDependencyIssue,
-	VulnerabilityIssue,
 	FetchThirdPartyLicenseDependenciesRequestType,
 	FetchThirdPartyRepoMatchToFossaRequestType,
 	FetchThirdPartyVulnerabilitiesRequestType,
+	LicenseDependencyIssue,
+	ReposScm,
+	VulnerabilityIssue,
 } from "@codestream/protocols/agent";
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
@@ -20,6 +20,7 @@ import {
 	PaneState,
 	NoContent,
 } from "@codestream/webview/src/components/Pane";
+import { ErrorRow } from "@codestream/webview/Stream/Observability";
 import { ConnectFossa } from "./ConnectFossa";
 import { FossaIssues } from "./FossaIssues";
 import { CurrentRepoContext } from "@codestream/webview/Stream/CurrentRepoContext";
@@ -32,13 +33,16 @@ interface Props {
 }
 
 export const CodeAnalyzers = (props: Props) => {
-	const [loading, setLoading] = useState<boolean>(true);
+	const [loading, setLoading] = useState<boolean | undefined>(true);
+	const [error, setError] = useState<string | null>(null);
 	const [licDepLoading, setLicDepLoading] = useState<boolean>(false);
 	const [vulnLoading, setVulnLoading] = useState<boolean>(false);
-	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[]>([]);
-	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[]>([]);
+	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[] | null>(null);
+	const [licDepError, setLicDepError] = useState<string | null>(null);
+	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[] | null>(null);
+	const [vulnError, setVulnError] = useState<string | null>(null);
 	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined | null>(null);
-	const [isRepoMatched, setIsRepoMatched] = useState<boolean | undefined>(undefined);
+	const [isRepoMatch, setIsRepoMatch] = useState<boolean | undefined>(undefined);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { editorContext, providers } = state;
@@ -86,7 +90,6 @@ export const CodeAnalyzers = (props: Props) => {
 				if (currentRepoId !== null) {
 					setLoading(true);
 					const isRepoMatch: boolean | undefined = await fetchMatchRepoToFossa();
-					setIsRepoMatched(isRepoMatch);
 					if (isRepoMatch) {
 						await fetchLicenseDependencies();
 						await fetchVulnerabilities();
@@ -95,8 +98,10 @@ export const CodeAnalyzers = (props: Props) => {
 						setLoading(false);
 					}
 				}
-			} catch (error) {
-				console.error("Error fetching data:", error);
+			} catch (err) {
+				console.error("Error fetching data:", err);
+				setError(err.message);
+				setLoading(false);
 			}
 		};
 		fetchData();
@@ -106,6 +111,7 @@ export const CodeAnalyzers = (props: Props) => {
 		if (currentRepoId === null) return;
 
 		let isRepoMatch;
+		let error: string | null = null;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -116,10 +122,16 @@ export const CodeAnalyzers = (props: Props) => {
 				if (result.isRepoMatch !== undefined) {
 					isRepoMatch = result.isRepoMatch;
 				}
+				if (result.error) {
+					error = result.error;
+				}
 			}
-		} catch (error) {
-			console.error(error);
+		} catch (err) {
+			console.error("Error matching repo to FOSSA: ", err.message);
+			error = err.message;
 		}
+		setError(error);
+		setIsRepoMatch(isRepoMatch);
 		return isRepoMatch;
 	};
 
@@ -127,7 +139,8 @@ export const CodeAnalyzers = (props: Props) => {
 		if (vulnLoading || !currentRepoId) return;
 		setVulnLoading(true);
 
-		let vulnerabilities: VulnerabilityIssue[] = [];
+		let vulnerabilities: VulnerabilityIssue[] | null = null;
+		let error: string | null = null;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -138,11 +151,16 @@ export const CodeAnalyzers = (props: Props) => {
 				if (result.issues) {
 					vulnerabilities = result.issues;
 				}
+				if (result.error) {
+					error = result.error;
+				}
 			}
-		} catch (error) {
-			console.error(error);
+		} catch (err) {
+			error = err;
+			console.error("Error fetching vulnerabilities: ", err);
 		}
 		setVulnIssues(vulnerabilities);
+		setVulnError(error);
 		setVulnLoading(false);
 	};
 
@@ -151,6 +169,7 @@ export const CodeAnalyzers = (props: Props) => {
 		setLicDepLoading(true);
 
 		let licenseDepIssues: LicenseDependencyIssue[] = [];
+		let error: string | null = null;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -161,13 +180,17 @@ export const CodeAnalyzers = (props: Props) => {
 				if (result.issues) {
 					licenseDepIssues = result.issues;
 				}
+				if (result.error) {
+					error = result.error;
+				}
 			}
-		} catch (error) {
-			console.error(error);
+		} catch (err) {
+			console.error("Error fetching license dependencies", err);
+			error = err;
 		}
 		setLicenseDepIssues(licenseDepIssues);
+		setLicDepError(error);
 		setLicDepLoading(false);
-		return;
 	};
 
 	const loaded = derivedState.bootstrapped && !loading && !props.reposLoading;
@@ -176,7 +199,7 @@ export const CodeAnalyzers = (props: Props) => {
 		if (!derivedState.hasReposOpened) {
 			return "No repositories found";
 		}
-		if (currentRepoId && isRepoMatched === false) {
+		if (currentRepoId && isRepoMatch === false) {
 			return "Project not found on FOSSA";
 		}
 		if (derivedState.hasRemotes === false && derivedState.hasActiveFile) {
@@ -199,8 +222,13 @@ export const CodeAnalyzers = (props: Props) => {
 				<PaneBody key="fossa">
 					{!derivedState.bootstrapped && <ConnectFossa />}
 					{derivedState.bootstrapped && loading && <FossaLoading />}
-					{loaded && isRepoMatched && (
-						<FossaIssues issues={licenseDepIssues} vulnIssues={vulnIssues} />
+					{loaded && isRepoMatch && (
+						<FossaIssues
+							licDepIssues={licenseDepIssues}
+							licDepError={licDepError}
+							vulnIssues={vulnIssues}
+							vulnError={vulnError}
+						/>
 					)}
 					{loaded && derivedState.hasReposOpened && !derivedState.hasActiveFile && (
 						<NoContent>Open a source file to see FOSSA results.</NoContent>

@@ -164,16 +164,21 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	async fetchIsRepoMatch(
 		request: FetchThirdPartyRepoMatchToFossaRequest,
 	): Promise<FetchThirdPartyRepoMatchToFossaResponse> {
-		const [currentRepo] = await this._getCurrentRepo(request.repoId);
-		if (!currentRepo) {
-			return { isRepoMatch: false };
+		try {
+			const [currentRepo] = await this._getCurrentRepo(request.repoId);
+			if (!currentRepo) {
+				return { isRepoMatch: false };
+			}
+			const projects: FossaProject[] = await this._getProjects();
+			const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
+			if (!project) {
+				return { isRepoMatch: false };
+			}
+			return { isRepoMatch: true };
+		} catch (error) {
+			Logger.error(error);
+			return { error: error.message };
 		}
-		const projects: FossaProject[] = await this._getProjects();
-		const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
-		if (!project) {
-			return { isRepoMatch: false };
-		}
-		return { isRepoMatch: true };
 	}
 
 	@log()
@@ -236,9 +241,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			};
 		} catch (error) {
 			Logger.error(error);
-			return {
-				error,
-			};
+			return { error: error.message };
 		}
 	}
 }

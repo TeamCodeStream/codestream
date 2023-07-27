@@ -30,6 +30,7 @@ import {
 	FetchThirdPartyPullRequestResponse,
 	GetMyPullRequestsRequest,
 	GetMyPullRequestsResponse,
+	IssueParams,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardResponse,
 	ProviderConfigurationData,
@@ -47,8 +48,6 @@ import { Response } from "node-fetch";
 import { SessionContainer } from "../container";
 import { GitRemote, GitRemoteLike, GitRepository } from "../git/gitService";
 import { Logger } from "../logger";
-
-import { IssueParams } from "../../../util/src/protocol/agent/agent.protocol.fossa";
 
 export const providerDisplayNamesByNameKey = new Map<string, string>([
 	["asana", "Asana"],

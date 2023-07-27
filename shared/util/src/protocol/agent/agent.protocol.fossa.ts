@@ -32,6 +32,10 @@ export interface LicenseDependencyIssue extends BaseIssueType {
 	license: string;
 }
 
+export interface LicenseDependencyIssues {
+	issues: LicenseDependencyIssue[];
+}
+
 interface Metric {
 	name: string;
 	value: string;
