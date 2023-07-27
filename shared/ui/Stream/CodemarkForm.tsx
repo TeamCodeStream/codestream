@@ -653,7 +653,7 @@ class CodemarkForm extends React.Component<Props, State> {
 					// else offer to send the person an email
 					unregisteredAuthors.push(author);
 					// @ts-ignore
-					emailAuthors[author.email] = !this.props.skipEmailingAuthors;
+					emailAuthors[author.email] = false;
 				}
 			});
 		}
