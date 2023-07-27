@@ -828,10 +828,8 @@ export interface CSMePreferences {
 }
 
 export interface CLMSettings {
-	isChangeTrackingEnabled: boolean;
-	changeTrackingRadioValue: string;
 	compareDataLastValue: string;
-	compareDataLastReleaseValue: string;
+	compareDataLastReleaseValue: boolean;
 	againstDataPrecedingValue: string;
 	minimumChangeValue: string;
 	minimumBaselineValue: string;
@@ -840,10 +838,8 @@ export interface CLMSettings {
 }
 
 export const DEFAULT_CLM_SETTINGS: CLMSettings = {
-	isChangeTrackingEnabled: false,
-	changeTrackingRadioValue: "LATEST_RELEASE",
 	compareDataLastValue: "7",
-	compareDataLastReleaseValue: "7",
+	compareDataLastReleaseValue: true,
 	againstDataPrecedingValue: "21",
 	minimumChangeValue: "10",
 	minimumBaselineValue: "30",

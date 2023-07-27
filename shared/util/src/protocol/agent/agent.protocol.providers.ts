@@ -1325,7 +1325,7 @@ export interface GetObservabilityAnomaliesRequest {
 	entityGuid: string;
 	sinceDaysAgo: number;
 	baselineDays: number;
-	sinceReleaseAtLeastDaysAgo?: number;
+	sinceLastRelease: boolean;
 	minimumErrorRate: number;
 	minimumResponseTime: number;
 	minimumSampleRate: number;

@@ -98,7 +98,7 @@ export const ObservabilityAnomalyPanel = () => {
 	const [warningOrErrors, setWarningOrErrors] = useState<WarningOrError[] | undefined>(undefined);
 	const previousCurrentObservabilityAnomaly = usePrevious(derivedState.currentObservabilityAnomaly);
 	const [showGoldenSignalsInEditor, setshowGoldenSignalsInEditor] = useState<boolean>(
-		derivedState.showGoldenSignalsInEditor || false,
+		derivedState.showGoldenSignalsInEditor || false
 	);
 
 	const loadData = async (newRelicEntityGuid: string) => {
@@ -139,14 +139,8 @@ export const ObservabilityAnomalyPanel = () => {
 					}
 				});
 			});
-			const maxReleaseDate = new Date();
-			maxReleaseDate.setHours(0, 0, 0, 0);
-			const nDaysAgoRelease = derivedState?.clmSettings?.compareDataLastReleaseValue || 7;
-			maxReleaseDate.setDate(maxReleaseDate.getDate() - parseInt(nDaysAgoRelease as string));
-			let comparisonReleaseSeconds = 0;
 
 			const deploymentsObject = {};
-
 			response.deployments?.forEach(item => {
 				const { seconds, version } = item;
 
@@ -452,7 +446,7 @@ export const ObservabilityAnomalyPanel = () => {
 																	setIsLoadingErrorGroupGuid(indexedErrorGroupGuid);
 																	const response = (await HostApi.instance.send(
 																		GetObservabilityErrorGroupMetadataRequestType,
-																		{ errorGroupGuid: _.errorGroupGuid },
+																		{ errorGroupGuid: _.errorGroupGuid }
 																	)) as GetObservabilityErrorGroupMetadataResponse;
 																	dispatch(
 																		openErrorGroup(_.errorGroupGuid, _.occurrenceId, {
@@ -489,7 +483,7 @@ export const ObservabilityAnomalyPanel = () => {
 												const title = _.title + (_.extrapolated ? " (extrapolated)" : "");
 												const yValues = _.result.map(o => o[_.title as any]);
 												const sanitizedYValues = (yValues as (number | undefined)[]).map(_ =>
-													_ != undefined ? _ : 0,
+													_ != undefined ? _ : 0
 												);
 												const maxY = Math.max(...sanitizedYValues);
 												const redHeaderText =
@@ -544,7 +538,7 @@ export const ObservabilityAnomalyPanel = () => {
 																				label={e => renderCustomLabel(e, value.join(", "))}
 																			/>
 																		);
-																	},
+																	}
 																)}
 															</LineChart>
 														</ResponsiveContainer>
