@@ -416,7 +416,7 @@ export class NewRelicProvider
 						{
 							id: number;
 							name: string;
-						}
+						},
 					];
 				};
 			}>(`{
@@ -3412,7 +3412,7 @@ export class NewRelicProvider
 			"latest(fingerprint) AS 'fingerprintId',",
 			"count(id) AS 'length'",
 			"FROM ErrorTrace",
-			`WHERE fingerprint IS NOT NULL and entityGuid='${applicationGuid}'`,
+			`WHERE fingerprint IS NOT NULL AND NOT error.expected AND entityGuid='${applicationGuid}'`,
 			"FACET error.class, message", // group the results by identifiers
 			`SINCE ${since}`,
 			"LIMIT MAX",
