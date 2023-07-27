@@ -10,8 +10,16 @@ import Icon from "../Icon";
 import Tooltip from "../Tooltip";
 import { Link } from "@codestream/webview/Stream/Link";
 import { Row } from "../CrossPostIssueControls/IssuesPane";
+import { ErrorRow } from "@codestream/webview/Stream/Observability";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
+
+interface Props {
+	licDepIssues: LicenseDependencyIssue[] | null;
+	licDepError: string | null;
+	vulnIssues: VulnerabilityIssue[] | null;
+	vulnError: string | null;
+}
 
 const StyledSpan = styled.span`
 	margin-left: 2px;
@@ -51,10 +59,6 @@ const CardTitle = styled.div`
 		}
 	}
 `;
-interface Props {
-	issues: LicenseDependencyIssue[];
-	vulnIssues: VulnerabilityIssue[];
-}
 
 const severityColorMap: Record<VulnSeverity, string> = {
 	critical: "#f52222",
@@ -253,7 +257,7 @@ function LicenseDependencyRow(props: { licenseDependency: LicenseDependencyIssue
 export const FossaIssues = React.memo((props: Props) => {
 	const [licenseDepExpanded, setLicenseDepExpanded] = useState<boolean>(false);
 	const [vulnExpanded, setVulnExpanded] = useState<boolean>(false);
-
+	const { vulnIssues, vulnError, licDepIssues, licDepError } = props;
 	return (
 		<>
 			<Row
@@ -270,17 +274,18 @@ export const FossaIssues = React.memo((props: Props) => {
 				{!vulnExpanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Vulnerabilities</span>
 			</Row>
-			{vulnExpanded && props.vulnIssues && props.vulnIssues.length > 0 && (
+			{vulnExpanded && vulnIssues?.length && (
 				<>
-					{props.vulnIssues.map(vuln => {
+					{vulnIssues.map(vuln => {
 						return <LibraryWithVulnRow vuln={vuln} />;
 					})}
 				</>
 			)}
-			{vulnExpanded && props.vulnIssues && props.vulnIssues.length === 0 && (
-				<Row style={{ padding: "0 10px 0 30px" }}>
-					<div>👍 No vulnerability issues found</div>
-				</Row>
+			{vulnExpanded && vulnIssues && vulnIssues.length === 0 && (
+				<Row style={{ padding: "0 10px 0 40px" }}>👍 No vulnerabilities found</Row>
+			)}
+			{vulnExpanded && vulnError && (
+				<ErrorRow title="Error fetching data from FOSSA" customPadding={"0 10px 0 40px"} />
 			)}
 			<Row
 				style={{
@@ -296,17 +301,18 @@ export const FossaIssues = React.memo((props: Props) => {
 				{!licenseDepExpanded && <Icon name="chevron-right-thin" />}
 				<StyledSpan>License Dependencies</StyledSpan>
 			</Row>
-			{licenseDepExpanded && props.issues?.length > 0 && (
+			{licenseDepExpanded && licDepIssues && licDepIssues?.length && (
 				<>
-					{props.issues.map(issue => {
+					{licDepIssues.map(issue => {
 						return <LicenseDependencyRow licenseDependency={issue} />;
 					})}
 				</>
 			)}
-			{licenseDepExpanded && props.issues?.length === 0 && (
-				<Row style={{ padding: "0 10px 0 30px" }}>
-					<div>👍 No license dependency issues found</div>
-				</Row>
+			{licenseDepExpanded && licDepIssues && licDepIssues.length === 0 && (
+				<Row style={{ padding: "0 10px 0 40px" }}>👍 No license dependency issues found</Row>
+			)}
+			{licenseDepExpanded && licDepError && (
+				<ErrorRow title="Error fetching data from FOSSA" customPadding={"0 10px 0 40px"} />
 			)}
 		</>
 	);
