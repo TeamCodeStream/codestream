@@ -1,17 +1,20 @@
 "use strict";
 import { sortBy } from "lodash-es";
 import {
-	AgentOpenUrlRequestType,
 	CreateThirdPartyPostRequest,
 	CreateThirdPartyPostResponse,
 	FetchThirdPartyChannelsRequest,
 	FetchThirdPartyChannelsResponse,
 	ThirdPartyDisconnect,
+	GenerateMSTeamsConnectCodeRequestType,
+	GenerateMSTeamsConnectCodeRequest,
+	GenerateMSTeamsConnectCodeResponse,
+	AgentOpenUrlRequestType,
 } from "@codestream/protocols/agent";
 import { CSMSTeamsProviderInfo } from "@codestream/protocols/api";
 
 import { SessionContainer } from "../container";
-import { log, lspProvider } from "../system";
+import { log, lspHandler, lspProvider } from "../system";
 import { ThirdPartyPostProviderBase } from "./thirdPartyPostProviderBase";
 import { Logger } from "../logger";
 
@@ -47,6 +50,16 @@ export class MSTeamsProvider extends ThirdPartyPostProviderBase<CSMSTeamsProvide
 		void SessionContainer.instance().session.agent.sendRequest(AgentOpenUrlRequestType, {
 			url: `https://teams.microsoft.com/l/app/${appId}`,
 		});
+	}
+
+	@log()
+	@lspHandler(GenerateMSTeamsConnectCodeRequestType)
+	async generateMSTeamsConnectCode(
+		request: GenerateMSTeamsConnectCodeRequest
+	): Promise<GenerateMSTeamsConnectCodeResponse> {
+		const { session } = SessionContainer.instance();
+
+		return await session.api.generateMSTeamsConnectCode(request);
 	}
 
 	protected async onConnected(providerInfo: CSMSTeamsProviderInfo) {

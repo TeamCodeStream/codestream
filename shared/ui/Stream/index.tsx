@@ -78,6 +78,7 @@ import ConfigureNewRelicPanel from "./ConfigureNewRelicPanel";
 import { ConfigureOAuthOrPATPanel } from "./ConfigureOAuthOrPATPanel";
 import ConfigureTokenProviderPanel from "./ConfigureTokenProviderPanel";
 import ConfigureYouTrackPanel from "./ConfigureYouTrackPanel";
+import ConfigureMSTeamsPanel from "./ConfigureMSTeamsPanel";
 import { CreateCompanyPage } from "./CreateCompanyPage";
 import { CreatePullRequestPanel } from "./CreatePullRequestPanel";
 import { CreateTeamPage } from "./CreateTeamPage";
@@ -441,7 +442,7 @@ export class SimpleStream extends PureComponent<Props> {
 		const oauthOrPATProvider = activePanel.startsWith("oauthpat-provider-");
 		let [, , providerName, providerId, origin] = configureProviderInfo || [];
 		const customConfigureProvider = providerName
-			? ["azuredevops", "youtrack", "newrelic"].find(name => name === providerName)
+			? ["azuredevops", "youtrack", "newrelic", "msteams"].find(name => name === providerName)
 			: null;
 
 		// status and teams panels have been deprecated
@@ -580,6 +581,9 @@ export class SimpleStream extends PureComponent<Props> {
 							)}
 							{customConfigureProvider === "azuredevops" && (
 								<ConfigureAzureDevOpsPanel providerId={providerId} originLocation={origin} />
+							)}
+							{customConfigureProvider === "msteams" && (
+								<ConfigureMSTeamsPanel providerId={providerId} originLocation={origin} />
 							)}
 							{/*customConfigureProvider === "jiraserver" && (
 								<ConfigureJiraServerPanel providerId={providerId} originLocation={origin} />

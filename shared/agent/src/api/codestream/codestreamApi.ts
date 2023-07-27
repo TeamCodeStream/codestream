@@ -176,6 +176,8 @@ import {
 	UploadFileRequest,
 	UploadFileRequestType,
 	VerifyConnectivityResponse,
+	GenerateMSTeamsConnectCodeRequest,
+	GenerateMSTeamsConnectCodeResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSAddMarkersRequest,
@@ -635,6 +637,16 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 	async generateLoginCode(request: GenerateLoginCodeRequest): Promise<void> {
 		await this.post<GenerateLoginCodeRequest, {}>("/no-auth/generate-login-code", request);
+	}
+
+	async generateMSTeamsConnectCode(
+		request: GenerateMSTeamsConnectCodeRequest
+	): Promise<GenerateMSTeamsConnectCodeResponse> {
+		return await this.post<GenerateMSTeamsConnectCodeRequest, GenerateMSTeamsConnectCodeResponse>(
+			"/msteams/generate-connect-code",
+			request,
+			this._token
+		);
 	}
 
 	async register(request: CSRegisterRequest) {
