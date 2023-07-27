@@ -146,10 +146,16 @@ export class NotificationsController implements Disposable {
 
 		Container.agent.telemetry.track("Toast Notification", { Content: "CLM Anomaly" });
 		const count = duration.length + errorRate.length;
-		const title = `${count} code-level performance issues found`;
+		const title =
+			count === 1
+				? "Code-level performance issue found"
+				: `${count} code-level performance issues found`;
 		const allAnomalies = [...duration, ...errorRate].sort((a, b) => b.ratio - a.ratio);
 		const firstAnomaly = allAnomalies[0];
-		const message = `${title} - Issue #1: ${firstAnomaly.notificationText}`;
+		const message =
+			count === 1
+				? `${title} - ${firstAnomaly.notificationText}`
+				: `${title} - Issue #1: ${firstAnomaly.notificationText}`;
 		const result = await window.showInformationMessage(message, ...actions);
 
 		if (result === actions[0]) {
