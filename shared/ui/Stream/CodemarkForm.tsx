@@ -634,9 +634,11 @@ class CodemarkForm extends React.Component<Props, State> {
 				// don't mention yourself
 				if (author.id && author.id === this.props.currentUser.id) return;
 
+				// get ahead of any Grok issues
+				if (!author.email) return;
+
 				// see if this email address' code has been assigned to someone else
-				// @ts-ignore
-				const mappedId = blameMap[author.email.replaceAll(".", "*")];
+				const mappedId = blameMap[author.email.replace(/\./g, "*")];
 				const mappedPerson = mappedId && this.props.teamMembers.find(t => t.id === mappedId);
 
 				// found a mapped person, so mention them
