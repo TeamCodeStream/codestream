@@ -51,7 +51,6 @@ namespace CodeStream.VisualStudio.CodeLens
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
 			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
-			var namespaceFunction = $"{codeNamespace}.{functionName}";  // this is how we store data in NR1
 
 			try
 			{
@@ -80,18 +79,19 @@ namespace CodeStream.VisualStudio.CodeLens
 
 				_metrics = _metrics ?? new CodeLevelMetricsTelemetry();
 
-				var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
-					$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.AverageDuration;
-				var errors = _metrics.ErrorRate?.FirstOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.ErrorRate;
-				var sampleSize = _metrics.SampleSize?.FirstOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction))?.SampleSize;
-
-				// TODO - Probably gonna need a better case-insensitive string replace here
+				var avgDuration = _metrics.AverageDuration?.AverageDuration;
+				var errors = _metrics.ErrorRate?.ErrorRate;
+				var sampleSize = _metrics.SampleSize?.SampleSize;
+				
 				var formatted = Regex.Replace(_editorFormatString, Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate), errors is null ? "n/a" : $"{errors.ToFixed(3)}%", RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.Properties.SinceDateFormatted, RegexOptions.IgnoreCase);
 				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize), sampleSize is null ? "0" : $"{sampleSize}", RegexOptions.IgnoreCase);
+
+				if(sampleSize is null)
+				{
+					formatted = "no metrics found for this method in the last 30 minutes";
+				}
 
 				return new CodeLensDataPointDescriptor
 				{
@@ -104,7 +104,7 @@ namespace CodeStream.VisualStudio.CodeLens
 				Log.Error(ex, $"Unable to render Code Level Metrics for {fullyQualifiedName}");
 				return new CodeLensDataPointDescriptor
 				{
-					Description = "Sorry, we were unable to render Code Level Metrics for this method!"
+					Description = "we ran into an exception loading metrics for this method - please contact support"
 				};
 			}
 		}
@@ -120,16 +120,11 @@ namespace CodeStream.VisualStudio.CodeLens
 		{
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
-			var codeNamespace = fullyQualifiedName.Substring(0, splitLocation);
 			var functionName = fullyQualifiedName.Substring(splitLocation + 1);
-			var namespaceFunction = $"{codeNamespace}.{functionName}";
 
-			var errorRate = _metrics.ErrorRate?.FirstOrDefault(x =>
-				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
-			var avgDuration = _metrics.AverageDuration?.FirstOrDefault(x =>
-				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
-			var sampleSize = _metrics.SampleSize?.FirstOrDefault(x =>
-				$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+			var errorRate = _metrics.ErrorRate;
+			var avgDuration = _metrics.AverageDuration;
+			var sampleSize = _metrics.SampleSize;
 
 			var descriptor = new CodeLensDetailsDescriptor();
 			var data = new CodeLevelMetricsData
@@ -156,9 +151,9 @@ namespace CodeStream.VisualStudio.CodeLens
 
 			var configuredPositions = new List<CodeLevelMetricsDetail>
 			{
-				new CodeLevelMetricsDetail(averageDurationPosition, "avg duration", avgDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
-				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errorRate is null ? "n/a" : $"{errorRate.ErrorRate.ToFixed(3)}%"),
-				new CodeLevelMetricsDetail(sincePosition, "since", _metrics.Properties.SinceDateFormatted),
+				new CodeLevelMetricsDetail(averageDurationPosition, "avg duration", avgDuration?.AverageDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
+				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errorRate?.ErrorRate is null ? "n/a" : $"{errorRate.ErrorRate.ToFixed(3)}%"),
+				new CodeLevelMetricsDetail(sincePosition, "since", _metrics?.Properties?.SinceDateFormatted ?? "n/a"),
 				new CodeLevelMetricsDetail(sampleSizePosition, (sampleSize?.SampleSize ?? "0") == "1" ? "sample": "samples", sampleSize?.SampleSize ?? "0")
 			};
 
@@ -187,9 +182,9 @@ namespace CodeStream.VisualStudio.CodeLens
 			switch (currentStatus)
 			{
 				case CodeLevelMetricStatus.Loading:
-					return "Code Level Metrics Loading...";
+					return "New Relic CodeStream Code Level Metrics Loading...";
 				case CodeLevelMetricStatus.SignInRequired:
-					return "Please sign-in to CodeStream for Code Level Metrics";
+					return "Please sign-in to New Relic CodeStream to see Code Level Metrics";
 				case CodeLevelMetricStatus.Ready:
 				default:
 					return "";

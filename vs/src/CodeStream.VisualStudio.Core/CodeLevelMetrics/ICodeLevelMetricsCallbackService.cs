@@ -7,6 +7,6 @@ namespace CodeStream.VisualStudio.Core.CodeLevelMetrics {
 		CodeLevelMetricStatus GetClmStatus();
 		int GetVisualStudioPid();
 		Task InitializeRpcAsync(string dataPointId);
-		Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string functionName);
+		Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string codeFunction);
 	}
 }

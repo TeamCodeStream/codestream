@@ -1,20 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 namespace CodeStream.VisualStudio.Core.Models
 {
 	public class CodeLevelMetricsTelemetry
 	{
 		[JsonProperty("averageDuration", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<AverageDurationResponse> AverageDuration { get; }
+		public AverageDurationResponse AverageDuration { get; }
 
 		[JsonProperty("sampleSize", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<SampleSizeResponse> SampleSize { get; }
+		public SampleSizeResponse SampleSize { get; }
 
 		[JsonProperty("errorRate", NullValueHandling = NullValueHandling.Ignore)]
-		public IList<ErrorRateResponse> ErrorRate { get; }
+		public ErrorRateResponse ErrorRate { get; }
 
 		[JsonProperty("repo", NullValueHandling = NullValueHandling.Ignore)]
 		public RepoInfo Repo { get; }
@@ -25,25 +22,25 @@ namespace CodeStream.VisualStudio.Core.Models
 
 		public CodeLevelMetricsTelemetry()
 		{
-			AverageDuration = new List<AverageDurationResponse>();
-			SampleSize = new List<SampleSizeResponse>();
-			ErrorRate = new List<ErrorRateResponse>();
+			AverageDuration = new AverageDurationResponse();
+			SampleSize = new SampleSizeResponse();
+			ErrorRate = new ErrorRateResponse();
 			Repo = new RepoInfo();
 			Properties = new CodeLevelMetricsProperties();
 		}
 
 		public CodeLevelMetricsTelemetry(
-			IList<AverageDurationResponse> averageDuration,
-			IList<SampleSizeResponse> sampleSize,
-			IList<ErrorRateResponse> errorRate,
+			AverageDurationResponse averageDuration,
+			SampleSizeResponse sampleSize,
+			ErrorRateResponse errorRate,
 			string sinceDateFormatted,
 			RepoInfo repo,
 			string newRelicEntityGuid)
 		{
 
-			AverageDuration = averageDuration ?? new List<AverageDurationResponse>();
-			SampleSize = sampleSize ?? new List<SampleSizeResponse>();
-			ErrorRate = errorRate ?? new List<ErrorRateResponse>();
+			AverageDuration = averageDuration ?? new AverageDurationResponse();
+			SampleSize = sampleSize ?? new SampleSizeResponse();
+			ErrorRate = errorRate ?? new ErrorRateResponse();
 			Repo = repo ?? new RepoInfo();
 			Properties = new CodeLevelMetricsProperties
 			{

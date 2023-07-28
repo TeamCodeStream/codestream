@@ -18,6 +18,7 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.CodeLevelMetrics;
 using CodeStream.VisualStudio.Core.Enums;
 using CodeStream.VisualStudio.Core.Events;
+using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
 using Process = System.Diagnostics.Process;
@@ -70,7 +71,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			Assumes.Present(_vsSolution);
 		}
 
-		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string functionName) {
+		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string codeFunction) {
 			if (!_sessionService.IsReady)
 			{
 				return new CodeLevelMetricsTelemetry();
@@ -78,6 +79,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solution = new Uri(_vsSolution.GetSolutionFile());
+			var namespaceFunction = $"{codeNamespace}.{codeFunction}";
 
 			//example: "avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}"
 			var formatString = CSConstants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
@@ -90,7 +92,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					"csharp",
 					false,
 					codeNamespace,
-					functionName,
+					null,
 					includeAverageDuration, 
 					includeErrorRate
 				);
@@ -100,17 +102,24 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					return new CodeLevelMetricsTelemetry();
 				}
 
+				var avgDuration = metrics.AverageDuration?.SingleOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+				var errors = metrics.ErrorRate?.SingleOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+				var sampleSize = metrics.SampleSize?.SingleOrDefault(x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+
 				return new CodeLevelMetricsTelemetry(
-					metrics.AverageDuration,
-					metrics.SampleSize,
-					metrics.ErrorRate,
+					avgDuration,
+					sampleSize,
+					errors,
 					metrics.SinceDateFormatted,
 					metrics.Repo,
 					metrics.NewRelicEntityGuid);
 
 			}
 			catch (Exception ex) {
-				Log.Error(ex, $"Unable to obtain CLM for {codeNamespace}.{functionName}");
+				Log.Error(ex, $"Unable to obtain CLM for {codeNamespace}");
 				return new CodeLevelMetricsTelemetry();
 			}
 		}
