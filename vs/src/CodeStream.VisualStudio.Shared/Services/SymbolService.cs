@@ -62,7 +62,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 						if (symbols != null && symbols.Any())
 						{
 							var symbol = symbols.FirstOrDefault();
-							await _workspace.TryGoToDefinitionAsync(symbol, project, cancellationToken);
+							_ = await _workspace.TryGoToDefinitionAsync(symbol, project, cancellationToken);
 							break;
 						}
 					}
