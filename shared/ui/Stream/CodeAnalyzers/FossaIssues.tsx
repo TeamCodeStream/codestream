@@ -94,12 +94,12 @@ function criticalityToRiskSeverity(riskSeverity: VulnSeverity): VulnSeverity {
 }
 
 function ModalView(props: {
-	issue: VulnerabilityIssue | LicenseDependencyIssue;
 	displays: (string | boolean)[][];
 	title: string;
+	details: string;
 	onClose: () => void;
 }) {
-	const { issue, displays, title } = props;
+	const { displays, title, details } = props;
 
 	return (
 		<div className="codemark-form-container">
@@ -110,7 +110,7 @@ function ModalView(props: {
 							<Icon name="lock" className="ticket-icon" />
 							<div className="title">{title}</div>
 						</CardTitle>
-						<div style={{ margin: "10px 0" }}>
+						<div style={{ margin: "10px 0", whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
 							{displays.map(display => {
 								const [title, description, link] = display;
 								return (
@@ -123,7 +123,7 @@ function ModalView(props: {
 							})}
 						</div>
 						<div>
-							<MarkdownText className="less-space" text={issue.details ?? ""} inline={false} />
+							<MarkdownText className="less-space" text={details} inline={false} />
 						</div>
 					</div>
 				</div>
@@ -186,8 +186,8 @@ function VulnRow(props: { vuln: VulnerabilityIssue }) {
 					}}
 				>
 					<ModalView
-						issue={vuln}
 						title={vuln.title ?? ""}
+						details={vuln.details ?? ""}
 						displays={[
 							["Dependency:", "vuln.source?.name"],
 							["Remediation Advice:", vuln.remediation ?? ""],
@@ -237,8 +237,8 @@ function LicenseDependencyRow(props: { licenseDependency: LicenseDependencyIssue
 					}}
 				>
 					<ModalView
-						issue={licenseDependency}
 						title={`${capitalize(licenseDependency.source.name)}: ${licenseDependency.license}`}
+						details={licenseDependency.details ?? ""}
 						displays={[
 							["Dependency:", licenseDependency.source.name ?? ""],
 							["Issue Type: ", licenseDependency.type.split("_").join(" ")],
