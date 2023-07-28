@@ -274,14 +274,14 @@ export const FossaIssues = React.memo((props: Props) => {
 				{!vulnExpanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Vulnerabilities</span>
 			</Row>
-			{vulnExpanded && vulnIssues?.length && (
+			{vulnExpanded && vulnIssues && vulnIssues.length > 0 && (
 				<>
 					{vulnIssues.map(vuln => {
 						return <LibraryWithVulnRow vuln={vuln} />;
 					})}
 				</>
 			)}
-			{vulnExpanded && vulnIssues && vulnIssues.length === 0 && (
+			{vulnExpanded && vulnIssues?.length === 0 && (
 				<Row style={{ padding: "0 10px 0 40px" }}>👍 No vulnerabilities found</Row>
 			)}
 			{vulnExpanded && vulnError && (
@@ -301,14 +301,14 @@ export const FossaIssues = React.memo((props: Props) => {
 				{!licenseDepExpanded && <Icon name="chevron-right-thin" />}
 				<StyledSpan>License Dependencies</StyledSpan>
 			</Row>
-			{licenseDepExpanded && licDepIssues && licDepIssues?.length && (
+			{licenseDepExpanded && licDepIssues && licDepIssues.length > 0 && (
 				<>
 					{licDepIssues.map(issue => {
 						return <LicenseDependencyRow licenseDependency={issue} />;
 					})}
 				</>
 			)}
-			{licenseDepExpanded && licDepIssues && licDepIssues.length === 0 && (
+			{licenseDepExpanded && licDepIssues?.length === 0 && (
 				<Row style={{ padding: "0 10px 0 40px" }}>👍 No license dependency issues found</Row>
 			)}
 			{licenseDepExpanded && licDepError && (
