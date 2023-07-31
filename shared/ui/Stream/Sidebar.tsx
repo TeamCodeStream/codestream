@@ -115,7 +115,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		}
 		if (isFeatureEnabled(state, "PDIdev")) {
 			sidebarPaneOrder = sidebarPaneOrder.filter(
-				_ => _ !== WebviewPanels.OpenReviews && _ !== WebviewPanels.CodemarksForFile
+				_ => _ !== WebviewPanels.OpenReviews && _ !== WebviewPanels.CodemarksForFile,
 			);
 		}
 		return {
@@ -131,6 +131,7 @@ export const Sidebar = React.memo(function Sidebar() {
 	}, shallowEqual);
 	const { sidebarPanes } = derivedState;
 	const [openRepos, setOpenRepos] = useState<ReposScm[]>(EMPTY_ARRAY);
+	const [reposLoading, setReposLoading] = useState<boolean>(true);
 	const [dragCombinedHeight, setDragCombinedHeight] = useState<number | undefined>(undefined);
 	// const [previousSizes, setPreviousSizes] = useState(EMPTY_HASH);
 	const [sizes, setSizes] = useState(EMPTY_HASH);
@@ -154,6 +155,7 @@ export const Sidebar = React.memo(function Sidebar() {
 		if (response && response.repositories) {
 			setOpenRepos(response.repositories);
 		}
+		setReposLoading(false);
 		requestAnimationFrame(() => {
 			setInitialRender(false);
 		});
@@ -349,11 +351,11 @@ export const Sidebar = React.memo(function Sidebar() {
 		if (firstIndex === undefined || secondIndex === undefined) return;
 		const firstId = positions[firstIndex].id;
 		dispatch(
-			setUserPreference({ prefPath: ["sidebarPanes", firstId, "size"], value: sizes[firstId] })
+			setUserPreference({ prefPath: ["sidebarPanes", firstId, "size"], value: sizes[firstId] }),
 		);
 		const secondId = positions[secondIndex].id;
 		dispatch(
-			setUserPreference({ prefPath: ["sidebarPanes", secondId, "size"], value: sizes[secondId] })
+			setUserPreference({ prefPath: ["sidebarPanes", secondId, "size"], value: sizes[secondId] }),
 		);
 	};
 
@@ -411,7 +413,9 @@ export const Sidebar = React.memo(function Sidebar() {
 			case WebviewPanels.CICD:
 				return <CICD openRepos={openRepos} paneState={paneState} />;
 			case WebviewPanels.CodeAnalyzers:
-				return <CodeAnalyzers openRepos={openRepos} paneState={paneState} />;
+				return (
+					<CodeAnalyzers openRepos={openRepos} reposLoading={reposLoading} paneState={paneState} />
+				);
 		}
 		return null;
 	};

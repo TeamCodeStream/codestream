@@ -111,17 +111,9 @@ function LibraryRow(props: { vuln }) {
 }
 
 function VulnRow(props: { vuln }) {
-	const [expanded, setExpanded] = useState<boolean>(false);
-
 	return (
 		<>
-			<Row
-				style={{ padding: "0 10px 0 40px" }}
-				className={"pr-row"}
-				onClick={() => {
-					setExpanded(!expanded);
-				}}
-			>
+			<Row style={{ padding: "0 10px 0 40px" }} className={"pr-row"}>
 				<div></div>
 				<div>{props.vuln.title}</div>
 			</Row>
@@ -157,7 +149,9 @@ export const FossaIssues = React.memo((props: Props) => {
 				</>
 			)}
 			{vulnExpanded && props.vulnIssues && props.vulnIssues.length === 0 && (
-				<Row style={{ padding: "0 10px 0 40px" }}>👍 No vulnerabilities found</Row>
+				<Row style={{ padding: "0 10px 0 30px" }}>
+					<div>👍 No vulnerability issues found</div>
+				</Row>
 			)}
 			<Row
 				style={{
@@ -181,7 +175,9 @@ export const FossaIssues = React.memo((props: Props) => {
 				</>
 			)}
 			{licenseDepExpanded && props.issues?.length === 0 && (
-				<Row style={{ padding: "0 10px 0 40px" }}>👍 No license dependency issues found</Row>
+				<Row style={{ padding: "0 10px 0 30px" }}>
+					<div>👍 No license dependency issues found</div>
+				</Row>
 			)}
 		</>
 	);
