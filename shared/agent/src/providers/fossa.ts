@@ -72,8 +72,13 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	 * Query string for Fossa Issues API
 	 * @returns query string
 	 */
-	private _getIssuesUrl(params: any) {
-		const { category, page, sort, projectId, type } = params;
+	private _getIssuesUrl(
+		projectId: string,
+		type: string,
+		category: string,
+		page: number,
+		sort?: string,
+	) {
 		return `/issues?${qs.stringify({
 			category,
 			page,
@@ -189,8 +194,9 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				return { issues: [] };
 			}
 
+			const { type, category, page, sort } = params;
 			const issueResponse = await this.get<VulnerabilityIssues | LicenseDependencyIssues>(
-				this._getIssuesUrl({ projectId: project.id, ...params }),
+				this._getIssuesUrl(project.id, type, category, page, sort),
 			);
 
 			return {
