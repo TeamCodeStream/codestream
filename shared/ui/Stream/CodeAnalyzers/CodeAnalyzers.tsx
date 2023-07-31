@@ -58,6 +58,7 @@ export const CodeAnalyzers = (props: Props) => {
 		const hasActiveFile =
 			!editorContext?.textEditorUri?.includes("terminal") &&
 			editorContext?.activeFile &&
+			editorContext?.activeFile &&
 			editorContext?.activeFile.length > 0;
 
 		const hasRemotes = currentRepo?.remotes && currentRepo?.remotes.length > 0;
@@ -74,7 +75,7 @@ export const CodeAnalyzers = (props: Props) => {
 	}, shallowEqual);
 
 	useEffect(() => {
-		if (props.reposLoading || props.paneState === PaneState.Collapsed) {
+		if (props.paneState === PaneState.Collapsed) {
 			return;
 		}
 		if (!derivedState.hasActiveFile) {
@@ -180,7 +181,7 @@ export const CodeAnalyzers = (props: Props) => {
 		if (currentRepoId && isRepoMatched === false) {
 			return "Project not found on FOSSA";
 		}
-		if (!derivedState.hasRemotes && derivedState.hasActiveFile) {
+		if (derivedState.hasRemotes === false && derivedState.hasActiveFile) {
 			return "Repo does not have a git remote, try another repo.";
 		}
 		return "";
