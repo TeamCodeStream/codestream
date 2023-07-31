@@ -48,8 +48,8 @@ import {
 	FetchThirdPartyChannelsRequestType,
 	FetchThirdPartyChannelsResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyLicenseDependenciesRequestType,
 	FetchThirdPartyLicenseDependenciesResponse,
+	FetchThirdPartyLicenseDependenciesRequestType,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsType,
 	FetchThirdPartyPullRequestRequest,
@@ -57,8 +57,8 @@ import {
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaRequestType,
 	FetchThirdPartyRepoMatchToFossaResponse,
-	FetchThirdPartyVulnerabilitiesRequestType,
 	FetchThirdPartyVulnerabilitiesResponse,
+	FetchThirdPartyVulnerabilitiesRequestType,
 	GetMyPullRequestsResponse,
 	MoveThirdPartyCardRequest,
 	MoveThirdPartyCardRequestType,
@@ -824,7 +824,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support code analyzers`);
 		}
 
-		const response = await codeAnalyzersProvider.fetchCodeAnalysis(request, {
+		const response = await codeAnalyzersProvider.fetchLicenseDependencies(request, {
 			category: "licensing",
 			type: "project",
 			page: 1,
@@ -852,7 +852,7 @@ export class ThirdPartyProviderRegistry {
 			throw new Error(`Provider(${provider.name}) doesn't support code analyzers`);
 		}
 
-		const response = await codeAnalyzersProvider.fetchCodeAnalysis(request, {
+		const response = await codeAnalyzersProvider.fetchVulnerabilities(request, {
 			category: "vulnerability",
 			sort: "package_asc",
 			type: "project",

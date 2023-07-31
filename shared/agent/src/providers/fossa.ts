@@ -3,9 +3,10 @@ import * as qs from "querystring";
 import { isEmpty as _isEmpty } from "lodash-es";
 import {
 	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyCodeAnalyzersResponse,
+	FetchThirdPartyLicenseDependenciesResponse,
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaResponse,
+	FetchThirdPartyVulnerabilitiesResponse,
 	ReposScm,
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
@@ -144,7 +145,9 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				let parsed;
 				try {
 					parsed = await GitRemoteParser.parseGitUrl(project.title);
-				} catch (ex) {}
+				} catch (err) {
+					Logger.error(err);
+				}
 				if (parsed) {
 					const [, domain, path] = parsed;
 					const folderName = path.split("/").pop();
@@ -178,10 +181,10 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	}
 
 	@log()
-	async fetchCodeAnalysis(
+	async fetchLicenseDependencies(
 		request: FetchThirdPartyCodeAnalyzersRequest,
 		params: IssueParams,
-	): Promise<FetchThirdPartyCodeAnalyzersResponse> {
+	): Promise<FetchThirdPartyLicenseDependenciesResponse> {
 		try {
 			const [currentRepo] = await this._getCurrentRepo(request.repoId);
 			if (!currentRepo) {
@@ -195,7 +198,40 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			}
 
 			const { type, category, page, sort } = params;
-			const issueResponse = await this.get<VulnerabilityIssues | LicenseDependencyIssues>(
+			const issueResponse = await this.get<LicenseDependencyIssues>(
+				this._getIssuesUrl(project.id, type, category, page, sort),
+			);
+
+			return {
+				issues: issueResponse.body.issues,
+			};
+		} catch (error) {
+			Logger.error(error);
+			return {
+				error,
+			};
+		}
+	}
+
+	@log()
+	async fetchVulnerabilities(
+		request: FetchThirdPartyCodeAnalyzersRequest,
+		params: IssueParams,
+	): Promise<FetchThirdPartyVulnerabilitiesResponse> {
+		try {
+			const [currentRepo] = await this._getCurrentRepo(request.repoId);
+			if (!currentRepo) {
+				return { issues: [] };
+			}
+
+			const projects: FossaProject[] = await this._getProjects();
+			const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
+			if (_isEmpty(project)) {
+				return { issues: [] };
+			}
+
+			const { type, category, page, sort } = params;
+			const issueResponse = await this.get<VulnerabilityIssues>(
 				this._getIssuesUrl(project.id, type, category, page, sort),
 			);
 

@@ -495,23 +495,6 @@ export const FetchThirdPartyBuildsRequestType = new RequestType<
 export interface FetchThirdPartyCodeAnalyzersRequest {
 	providerId: string;
 	repoId?: string;
-	params: IssueParams;
-}
-export interface FetchThirdPartyCodeAnalyzersResponse {
-	issues?: LicenseDependencyIssue[] | VulnerabilityIssue[];
-	error?: string; // CHECK THE TYPE! could be object
-}
-
-export const FetchThirdPartyCodeAnalyzersRequestType = new RequestType<
-	FetchThirdPartyLicenseDependenciesRequest,
-	FetchThirdPartyLicenseDependenciesResponse,
-	void,
-	void
->("codestream/provider/codeAnalyzers");
-
-export interface FetchThirdPartyLicenseDependenciesRequest {
-	providerId: string;
-	repoId?: string;
 }
 export interface FetchThirdPartyLicenseDependenciesResponse {
 	issues?: LicenseDependencyIssue[];
@@ -519,29 +502,25 @@ export interface FetchThirdPartyLicenseDependenciesResponse {
 }
 
 export const FetchThirdPartyLicenseDependenciesRequestType = new RequestType<
-	FetchThirdPartyLicenseDependenciesRequest,
+	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyLicenseDependenciesResponse,
 	void,
 	void
 >("codestream/provider/licenseDependencies");
 
-export { LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
-
-export interface FetchThirdPartyVulnerabilitiesRequest {
-	providerId: string;
-	repoId?: string;
-}
 export interface FetchThirdPartyVulnerabilitiesResponse {
 	issues?: VulnerabilityIssue[];
 	error?: string; // CHECK THE TYPE! could be object
 }
 
 export const FetchThirdPartyVulnerabilitiesRequestType = new RequestType<
-	FetchThirdPartyVulnerabilitiesRequest,
+	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyVulnerabilitiesResponse,
 	void,
 	void
 >("codestream/provider/vulnerablitlies");
+
+export { LicenseDependencyIssue, VulnerabilityIssue } from "./agent.protocol.fossa";
 
 export interface FetchThirdPartyRepoMatchToFossaRequest {
 	providerId: string;

@@ -1,4 +1,4 @@
-export interface LicenseDependencyIssue {
+interface BaseIssueType {
 	id: number;
 	createdAt: string;
 	source: {
@@ -25,44 +25,32 @@ export interface LicenseDependencyIssue {
 		}
 	];
 	type: string;
-	details?: string;
-	license?: string;
 }
 
-export interface VulnerabilityIssue {
-	id: number;
-	createdAt: string;
-	source: {
-		id: string;
-		name: string;
-		url: string;
-		version: string;
-		packageManager: string;
-	};
-	depths: {
-		direct: number;
-		deep: number;
-	};
-	statuses: {
-		active: number;
-		ignored: number;
-	};
-	projects: [
-		{
-			id: string;
-			status: string;
-			depth: number;
-			title: string;
-		}
-	];
-	type: string;
-	vulnId?: string;
-	title?: string;
-	cve?: string;
-	cvss?: number;
-	severity?: string;
+export interface LicenseDependencyIssue extends BaseIssueType {
 	details?: string;
-	remediation?: string;
+	license: string;
+}
+
+interface Metric {
+	name: string;
+	value: string;
+}
+export interface VulnerabilityIssue extends BaseIssueType {
+	vulnId: string;
+	title: string;
+	cve: string;
+	cvss: number;
+	severity: string;
+	details: string;
+	remediation: string;
+	metrics: Metric[];
+	cveStatus: string;
+	cwes: string[];
+	published: string;
+	affectedVersionRanges: string[];
+	patchedVersionRanges: string[];
+	references: string[];
 }
 
 export interface FossaProject {
@@ -96,7 +84,7 @@ export interface VulnerabilityIssues {
 
 export interface IssueParams {
 	category: string;
-	sort?: string;
 	type: string;
 	page: number;
+	sort?: string;
 }

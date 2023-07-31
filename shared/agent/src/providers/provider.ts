@@ -24,7 +24,6 @@ import {
 	FetchThirdPartyRepoMatchToFossaRequest,
 	FetchThirdPartyRepoMatchToFossaResponse,
 	FetchThirdPartyCodeAnalyzersRequest,
-	FetchThirdPartyCodeAnalyzersResponse,
 	FetchThirdPartyPullRequestCommitsRequest,
 	FetchThirdPartyPullRequestCommitsResponse,
 	FetchThirdPartyPullRequestRequest,
@@ -39,6 +38,8 @@ import {
 	ThirdPartyProviderConfig,
 	UpdateThirdPartyStatusRequest,
 	UpdateThirdPartyStatusResponse,
+	FetchThirdPartyLicenseDependenciesResponse,
+	FetchThirdPartyVulnerabilitiesResponse,
 } from "@codestream/protocols/agent";
 import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
 import { Response } from "node-fetch";
@@ -143,10 +144,15 @@ export interface ThirdPartyProviderSupportsBuilds {
 }
 
 export interface ThirdPartyProviderSupportsCodeAnalyzers {
-	fetchCodeAnalysis(
+	fetchLicenseDependencies(
 		request: FetchThirdPartyCodeAnalyzersRequest,
 		params: IssueParams,
-	): Promise<FetchThirdPartyCodeAnalyzersResponse>;
+	): Promise<FetchThirdPartyLicenseDependenciesResponse>;
+
+	fetchVulnerabilities(
+		request: FetchThirdPartyCodeAnalyzersRequest,
+		params: IssueParams,
+	): Promise<FetchThirdPartyVulnerabilitiesResponse>;
 
 	fetchIsRepoMatch(
 		request: FetchThirdPartyRepoMatchToFossaRequest,
@@ -203,7 +209,11 @@ export namespace ThirdPartyCodeAnalyzerProvider {
 	export function supportsCodeAnalysis(
 		provider: ThirdPartyCodeAnalyzerProvider,
 	): provider is ThirdPartyCodeAnalyzerProvider & ThirdPartyProviderSupportsCodeAnalyzers {
-		return (provider as any).fetchCodeAnalysis !== undefined;
+		return (
+			(provider as any).fetchIsRepoMatch !== undefined &&
+			(provider as any).fetchLicenseDependencies !== undefined &&
+			(provider as any).fetchVulnerabilities !== undefined
+		);
 	}
 }
 
