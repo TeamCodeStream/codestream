@@ -1,6 +1,5 @@
 import Cache from "timed-cache";
 import * as qs from "querystring";
-import { isEmpty as _isEmpty } from "lodash-es";
 import {
 	FetchThirdPartyCodeAnalyzersRequest,
 	FetchThirdPartyLicenseDependenciesResponse,
@@ -139,7 +138,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		currentRepo: ReposScm,
 		fossaProjects: FossaProject[],
 		repoId?: string,
-	): Promise<FossaProject | Record<string, never>> {
+	): Promise<FossaProject | undefined> {
 		if (repoId) {
 			for (const project of fossaProjects) {
 				let parsed;
@@ -161,7 +160,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				}
 			}
 		}
-		return {};
+		return;
 	}
 
 	@log()
@@ -174,7 +173,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		}
 		const projects: FossaProject[] = await this._getProjects();
 		const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
-		if (_isEmpty(project)) {
+		if (!project) {
 			return { isRepoMatch: false };
 		}
 		return { isRepoMatch: true };
@@ -193,7 +192,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 			const projects: FossaProject[] = await this._getProjects();
 			const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
-			if (_isEmpty(project)) {
+			if (!project) {
 				return { issues: [] };
 			}
 
@@ -226,7 +225,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 			const projects: FossaProject[] = await this._getProjects();
 			const project = await this._matchRepoToFossaProject(currentRepo, projects, request.repoId);
-			if (_isEmpty(project)) {
+			if (!project) {
 				return { issues: [] };
 			}
 
