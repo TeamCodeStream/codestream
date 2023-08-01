@@ -26,7 +26,7 @@ import { deleteCodemark, editCodemark } from "@codestream/webview/store/codemark
 import cx from "classnames";
 import { isNil } from "lodash-es";
 import React from "react";
-import { connect } from "react-redux";
+import { connect, useSelector } from "react-redux";
 import { Range } from "vscode-languageserver-protocol";
 import { HeadshotName } from "../src/components/HeadshotName";
 import { CodeStreamState } from "../store";
@@ -85,7 +85,6 @@ import { SharingModal } from "./SharingModal";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
-import { useAppSelector } from "../utilities/hooks";
 
 interface State {
 	hover: boolean;
@@ -2180,7 +2179,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		unread,
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
-		isAdmin: useAppSelector(currentUserIsAdminSelector),
+		isAdmin: useSelector(currentUserIsAdminSelector),
 		teamTagsHash,
 		codeWasDeleted,
 		codeWillExist,
