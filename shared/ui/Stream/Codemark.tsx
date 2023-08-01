@@ -45,6 +45,7 @@ import { getPosts } from "../store/posts/actions";
 import { getPost } from "../store/posts/reducer";
 import { getReview } from "../store/reviews/reducer";
 import {
+	currentUserIsAdminSelector,
 	getTeamMembers,
 	getTeamTagsHash,
 	getUserByCsId,
@@ -84,6 +85,7 @@ import { SharingModal } from "./SharingModal";
 import Tag from "./Tag";
 import Timestamp from "./Timestamp";
 import Tooltip from "./Tooltip";
+import { useAppSelector } from "../utilities/hooks";
 
 interface State {
 	hover: boolean;
@@ -116,6 +118,7 @@ interface DispatchProps {
 
 interface ConnectedProps {
 	teammates: CSUser[];
+	isAdmin: boolean;
 	usernames: string[];
 	author: CSUser;
 	capabilities: Capabilities;
@@ -1317,6 +1320,7 @@ export class Codemark extends React.Component<Props, State> {
 		const type = codemark && codemark.type;
 
 		const mine = author && author.id === this.props.currentUser.id;
+		const isAdmin = this.props.isAdmin;
 
 		let menuItems: any[] = [
 			// { label: "Add Reaction", action: "react" },
@@ -1360,7 +1364,7 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (mine) {
+		if (mine || isAdmin) {
 			menuItems.push(
 				{ label: "Edit", action: () => this.setState({ isEditing: true }) },
 				{ label: "Delete", action: this.deleteCodemark }
@@ -2176,6 +2180,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		unread,
 		teammates: getTeamMembers(state),
 		usernames: getUsernames(state),
+		isAdmin: useAppSelector(currentUserIsAdminSelector),
 		teamTagsHash,
 		codeWasDeleted,
 		codeWillExist,
