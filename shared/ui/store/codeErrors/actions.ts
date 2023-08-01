@@ -42,6 +42,9 @@ export const setGrokRepliesLength = (length: number) =>
 export const setFunctionToEdit = (functionToEdit: FunctionToEdit | undefined) =>
 	action(CodeErrorsActionsTypes.SetFunctionToEdit, functionToEdit);
 
+export const setFunctionToEditFailed = (value: boolean) =>
+	action(CodeErrorsActionsTypes.SetFunctionToEditFailed, value);
+
 export const setGrokError = (grokError: CSAsyncError | undefined) =>
 	action(CodeErrorsActionsTypes.SetGrokError, grokError);
 

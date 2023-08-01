@@ -22,6 +22,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import {
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
+	setFunctionToEditFailed,
 	setGrokLoading,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
@@ -1179,8 +1180,10 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const [didJumpToFirstAvailableLine, setDidJumpToFirstAvailableLine] = useState(false);
 	const [didCopyMethod, setDidCopyMethod] = useState(false);
 	const [jumpLocation, setJumpLocation] = useState<number | undefined>();
+	const [loadGrokTimeout, setLoadGrokTimeout] = useState<NodeJS.Timeout | undefined>();
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
+	const functionToEditFailed = useAppSelector(state => state.codeErrors.functionToEditFailed);
 	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
 	const grokMarkRepliesLength = useAppSelector(state => state.codeErrors.grokRepliesLength);
 	const currentGrokRepliesLength = useAppSelector(state =>
@@ -1205,7 +1208,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 
 	if (derivedState.showGrok) {
 		useEffect(() => {
-			const submitGrok = async (codeBlock: string) => {
+			const submitGrok = async (codeBlock?: string) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
 				dispatch(startGrokLoading(props.codeError));
@@ -1227,14 +1230,13 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				// setText("");
 				// setAttachments([]);
 			};
-			// if (derivedState.replies?.length === 0 && functionToEdit) {
-			if (currentGrokRepliesLength === 0 && functionToEdit) {
+			if (currentGrokRepliesLength === 0 && (functionToEdit || functionToEditFailed)) {
 				// setIsLoading(true);
-				submitGrok(functionToEdit.codeBlock).catch(e => {
+				submitGrok(functionToEdit?.codeBlock).catch(e => {
 					console.error("submitGrok failed", e);
 				});
 			}
-		}, [functionToEdit]);
+		}, [functionToEdit, functionToEditFailed]);
 	}
 
 	const onClickStackLine = async (event, lineIndex) => {
@@ -1317,6 +1319,45 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			}
 		}
 	}, [codeError, jumpLocation, didJumpToFirstAvailableLine]);
+
+	// We keep getting events for resolved stack trace lines, so we have to wait for this to settle down
+	// When there are no more events for 2 seconds, we assume we're done and we can now handle the
+	// edge case when there are no user code lines in the stack trace
+	useEffect(() => {
+		if (functionToEdit || functionToEditFailed || currentGrokRepliesLength > 0) {
+			// If any of these are true, we're not in the edge case
+			console.debug("loadGrokTimeout clearing edge case", {
+				functionToEdit,
+				functionToEditFailed,
+				isGrokLoading,
+				currentGrokRepliesLength,
+			});
+			if (loadGrokTimeout) {
+				console.debug("loadGrokTimeout", loadGrokTimeout);
+				clearTimeout(loadGrokTimeout);
+				setLoadGrokTimeout(undefined);
+			}
+			return;
+		}
+		if (loadGrokTimeout || isGrokLoading) {
+			console.debug("loadGrokTimeout clearing timer 2", loadGrokTimeout);
+			clearTimeout(loadGrokTimeout);
+			setLoadGrokTimeout(undefined);
+		}
+		const timeout = setTimeout(() => {
+			// if (!functionToEdit && !functionToEditFailed && !isGrokLoading && currentGrokRepliesLength === 0) {
+			console.debug("useEffect no user code lines in stack trace setFunctionToEditFailed", {
+				functionToEdit,
+				functionToEditFailed,
+				isGrokLoading,
+				currentGrokRepliesLength,
+			});
+			dispatch(setFunctionToEditFailed(true));
+			// }
+		}, 3000);
+		setLoadGrokTimeout(timeout);
+		console.debug("loadGrokTimeout timer assigned", timeout);
+	}, [codeError, functionToEdit, functionToEditFailed, isGrokLoading]);
 
 	useEffect(() => {
 		if (!props.collapsed && !didJumpToFirstAvailableLine) {

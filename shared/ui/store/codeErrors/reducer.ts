@@ -22,6 +22,7 @@ const initialState: CodeErrorsState = {
 	grokLoading: false,
 	grokRepliesLength: 0,
 	grokError: undefined,
+	functionToEditFailed: false,
 };
 
 export function reduceCodeErrors(
@@ -36,6 +37,7 @@ export function reduceCodeErrors(
 				grokLoading: state.grokLoading,
 				grokRepliesLength: state.grokRepliesLength,
 				grokError: state.grokError,
+				functionToEditFailed: state.functionToEditFailed,
 				codeErrors: {
 					...state.codeErrors,
 					...toMapBy(
@@ -64,6 +66,7 @@ export function reduceCodeErrors(
 				errorGroups: state.errorGroups,
 				codeErrors: { ...state.codeErrors, ...newCodeErrors },
 				functionToEdit: state.functionToEdit,
+				functionToEditFailed: state.functionToEditFailed,
 			};
 		}
 		case CodeErrorsActionsTypes.UpdateCodeErrors:
@@ -76,6 +79,7 @@ export function reduceCodeErrors(
 				grokError: state.grokError,
 				codeErrors: { ...state.codeErrors, ...toMapBy("id", action.payload) },
 				functionToEdit: state.functionToEdit,
+				functionToEditFailed: state.functionToEditFailed,
 			};
 		}
 		case CodeErrorsActionsTypes.SetFunctionToEdit: {
@@ -83,6 +87,9 @@ export function reduceCodeErrors(
 				console.debug(`grokFunctionToEdit: ${JSON.stringify(action.payload).substring(0, 100)}`);
 			}
 			return { ...state, functionToEdit: action.payload };
+		}
+		case CodeErrorsActionsTypes.SetFunctionToEditFailed: {
+			return { ...state, functionToEditFailed: action.payload };
 		}
 		case CodeErrorsActionsTypes.SetGrokLoading: {
 			return { ...state, grokLoading: action.payload };
@@ -104,6 +111,7 @@ export function reduceCodeErrors(
 				grokLoading: state.grokLoading,
 				grokRepliesLength: state.grokRepliesLength,
 				grokError: state.grokError,
+				functionToEditFailed: state.functionToEditFailed,
 			};
 		}
 		case CodeErrorsActionsTypes.SetErrorGroup: {

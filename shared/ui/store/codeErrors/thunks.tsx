@@ -36,6 +36,7 @@ import {
 	setGrokLoading,
 	setGrokRepliesLength,
 	setGrokError,
+	setFunctionToEditFailed,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
@@ -577,6 +578,8 @@ export const copySymbolFromIde =
 					uri: lookupPath,
 				})
 			);
+		} else {
+			dispatch(setFunctionToEditFailed(true));
 		}
 	};
 
@@ -653,9 +656,10 @@ export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, get
 	// console.debug(
 	// 	`===--- startGrokLoading called, grokPostLength: ${grokPostLength}`
 	// );
+	dispatch(setGrokLoading(true));
+	dispatch(setFunctionToEditFailed(false));
 	dispatch(setGrokError(undefined));
 	dispatch(setGrokRepliesLength(grokPostLength));
-	dispatch(setGrokLoading(true));
 };
 
 export const handleGrokError = (grokError: CSAsyncError) => async dispatch => {

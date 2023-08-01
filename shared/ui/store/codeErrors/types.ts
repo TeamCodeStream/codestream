@@ -6,6 +6,7 @@ export enum CodeErrorsActionsTypes {
 	AddCodeErrors = "ADD_CODEERRORS",
 	SaveCodeErrors = "@codeErrors/SaveCodeErrors",
 	SetFunctionToEdit = "@codeErrors/SetFunctionToEdit",
+	SetFunctionToEditFailed = "@codeErrors/SetFunctionToEditFailed",
 	SetGrokError = "@codeErrors/SetGrokError",
 	SetGrokLoading = "@codeErrors/SetGrokLoading",
 	SetGrokRepliesLength = "@codeErrors/SetGrokRepliesLength",
@@ -38,4 +39,5 @@ export type CodeErrorsState = {
 	grokLoading: boolean;
 	grokRepliesLength: number;
 	grokError: CSAsyncError | undefined;
+	functionToEditFailed: boolean;
 };
