@@ -1364,10 +1364,14 @@ export class Codemark extends React.Component<Props, State> {
 		}
 
 		if (mine || isAdmin) {
-			menuItems.push(
-				{ label: "Edit", action: () => this.setState({ isEditing: true }) },
-				{ label: "Delete", action: this.deleteCodemark }
-			);
+			if (mine) {
+				menuItems.push(
+					{ label: "Edit", action: () => this.setState({ isEditing: true }) },
+					{ label: "Delete", action: this.deleteCodemark }
+				);
+			} else if (isAdmin) {
+				menuItems.push({ label: "Delete", action: this.deleteCodemark });
+			}
 		}
 
 		if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
