@@ -78,10 +78,6 @@ export const CodeAnalyzers = (props: Props) => {
 		if (props.paneState === PaneState.Collapsed) {
 			return;
 		}
-		if (!derivedState.hasActiveFile) {
-			setLoading(false);
-			return;
-		}
 
 		const fetchData = async (): Promise<void> => {
 			try {
