@@ -79,7 +79,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		category: string,
 		page: number,
 		sort?: string,
-	) {
+	): string {
 		return `/issues?${qs.stringify({
 			category,
 			page,
