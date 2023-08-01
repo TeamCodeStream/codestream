@@ -187,7 +187,7 @@ export const CodeAnalyzers = (props: Props) => {
 		return "";
 	};
 
-	const hasConditonalText = conditionalText();
+	const hasConditionalText = conditionalText();
 
 	return (
 		<>
@@ -206,8 +206,8 @@ export const CodeAnalyzers = (props: Props) => {
 					{loaded && derivedState.hasReposOpened && !derivedState.hasActiveFile && (
 						<NoContent>Open a source file to see FOSSA results.</NoContent>
 					)}
-					{loaded && hasConditonalText && (
-						<div style={{ padding: "0 20px" }}>{hasConditonalText}</div>
+					{loaded && hasConditionalText && (
+						<div style={{ padding: "0 20px" }}>{hasConditionalText}</div>
 					)}
 				</PaneBody>
 			)}
