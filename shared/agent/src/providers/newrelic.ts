@@ -336,6 +336,8 @@ export class NewRelicProvider
 			"Api-Key": this.accessToken!,
 			"Content-Type": "application/json",
 			"NewRelic-Requesting-Services": "CodeStream",
+			"X-Query-Source-Capability-Id": "CODESTREAM",
+			"X-Query-Source-Component-Id": "codestream|ide",
 		});
 		ContextLogger.setData({
 			nrUrl: this.graphQlBaseUrl,
@@ -372,6 +374,8 @@ export class NewRelicProvider
 			"Api-Key": accessToken!,
 			"Content-Type": "application/json",
 			"NewRelic-Requesting-Services": "CodeStream",
+			"X-Query-Source-Capability-Id": "CODESTREAM",
+			"X-Query-Source-Component-Id": "codestream|ide",
 		});
 
 		return client;
