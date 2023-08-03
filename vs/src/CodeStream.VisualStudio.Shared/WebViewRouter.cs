@@ -129,6 +129,19 @@ namespace CodeStream.VisualStudio.Shared {
 							}
 						case IpcRoutes.Host: {
 								switch (message.Method) {
+									case EditorCopySymbolRequestType.MethodName:
+									{
+										using (var scope = _browserService.CreateScope(message))
+										{
+											var request = message.Params?.ToObject<EditorCopySymbolRequest>();
+											
+											var response = await _symbolService.CopySymbolAsync(request, CancellationToken.None);
+
+											scope.FulfillRequest(response.ToJToken());
+										}
+
+										break;
+									}
 									case EditorRevealSymbolRequestType.MethodName:
 										{
 											using (var scope = _browserService.CreateScope(message))

@@ -87,4 +87,25 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public const string MethodName = "host/url/open";
 		public override string Method => MethodName;
 	}
+
+	public class EditorCopySymbolRequest
+	{
+		public string Uri { get; set; }
+		public string Namespace { get; set; }
+		public string SymbolName { get; set; }
+		public string Ref { get; set; }
+	}
+
+	public class EditorCopySymbolResponse
+	{
+		public bool Success { get; set; }
+		public string Text { get; set; }
+		public Range Range { get; set; }
+	}
+
+	public class EditorCopySymbolRequestType : RequestType<EditorCopySymbolRequest>
+	{
+		public const string MethodName = "host/editor/symbol/copy";
+		public override string Method => MethodName;
+	}
 }
