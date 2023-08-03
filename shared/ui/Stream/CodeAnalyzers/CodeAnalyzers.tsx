@@ -11,6 +11,7 @@ import {
 import { HostApi } from "@codestream/webview/webview-api";
 import { CodeStreamState } from "@codestream/webview/store";
 import { getUserProviderInfoFromState } from "@codestream/webview/store/providers/utils";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 import { useMemoizedState } from "@codestream/webview/utilities/hooks";
 import { WebviewPanels } from "@codestream/webview/ipc/webview.protocol.common";
 import {
@@ -71,11 +72,12 @@ export const CodeAnalyzers = (props: Props) => {
 			hasActiveFile,
 			hasRemotes,
 			hasReposOpened,
+			showCodeAnalyzers: isFeatureEnabled(state, "showCodeAnalyzers"),
 		};
 	}, shallowEqual);
 
 	useEffect(() => {
-		if (props.paneState === PaneState.Collapsed) {
+		if (!derivedState.showCodeAnalyzers || props.paneState === PaneState.Collapsed) {
 			return;
 		}
 
@@ -185,6 +187,7 @@ export const CodeAnalyzers = (props: Props) => {
 
 	const hasConditionalText = conditionalText();
 
+	if (!derivedState.showCodeAnalyzers) return null;
 	return (
 		<>
 			<PaneHeader
