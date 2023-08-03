@@ -5,6 +5,7 @@ using CodeStream.VisualStudio.Core.Logging;
 using Serilog;
 
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Threading;
 using Task = System.Threading.Tasks.Task;
 
@@ -15,6 +16,8 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Models;
 
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.VisualStudio.LanguageServices;
 using Microsoft.CodeAnalysis.FindSymbols;
 

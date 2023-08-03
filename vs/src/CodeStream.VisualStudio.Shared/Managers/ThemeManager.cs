@@ -108,7 +108,7 @@ namespace CodeStream.VisualStudio.Shared.Managers {
 					new ThemeColorMetadata { Key = "scrollbar-color", Color = VSColorTheme.GetThemedColor(EnvironmentColors.SystemScrollBarColorKey) },
 					new ThemeColorMetadata { Key = "scrollbar-color-hover", Color = VSColorTheme.GetThemedColor(EnvironmentColors.ScrollBarThumbMouseOverBackgroundColorKey) },
 
-					new ThemeColorMetadata { Key = "list-active-background", Color = VSColorTheme.GetThemedColor(backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.2f) },
+					new ThemeColorMetadata { Key = "list-active-background", Color = backgroundColor, DarkModifier = c => c.Opacity(60), LightModifier = c => c.Opacity(80) },//VSColorTheme.GetThemedColor(backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), DarkModifier = c => c.Lighten(0.1f), LightModifier = c => c.Darken(0.2f) },
 					new ThemeColorMetadata { Key = "list-active-foreground", Color = textColor, DarkModifier = c => c.Opacity(80), LightModifier = c => c.Opacity(80) },
 					new ThemeColorMetadata { Key = "list-active-outline", Color = VSColorTheme.GetThemedColor(backgroundIsDark ? EnvironmentColors.ToolWindowButtonDownColorKey : EnvironmentColors.ToolWindowBorderColorKey), LightModifier = c => c.Darken(0.3f) },
 					new ThemeColorMetadata { Key = "list-inactive-background", Color = backgroundColor, DarkModifier = c => c.Lighten(0.04f), LightModifier = c => c.Darken(0.03f) },
