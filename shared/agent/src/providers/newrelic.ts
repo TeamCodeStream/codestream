@@ -337,7 +337,7 @@ export class NewRelicProvider
 			"Content-Type": "application/json",
 			"NewRelic-Requesting-Services": "CodeStream",
 			"X-Query-Source-Capability-Id": "CODESTREAM",
-			"X-Query-Source-Component-Id": "codestream|ide",
+			"X-Query-Source-Component-Id": "codestream.ide",
 		});
 		ContextLogger.setData({
 			nrUrl: this.graphQlBaseUrl,
@@ -375,7 +375,7 @@ export class NewRelicProvider
 			"Content-Type": "application/json",
 			"NewRelic-Requesting-Services": "CodeStream",
 			"X-Query-Source-Capability-Id": "CODESTREAM",
-			"X-Query-Source-Component-Id": "codestream|ide",
+			"X-Query-Source-Component-Id": "codestream.ide",
 		});
 
 		return client;
