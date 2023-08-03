@@ -177,7 +177,10 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			return { isRepoMatch: true };
 		} catch (error) {
 			Logger.error(error);
-			return { error: error.message };
+			if (error.message === "Unauthorized") {
+				return { error: "API token is invalid" };
+			}
+			return { error: "Project not found on FOSSA" };
 		}
 	}
 
@@ -208,9 +211,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			};
 		} catch (error) {
 			Logger.error(error);
-			return {
-				error,
-			};
+			return { error: "Error fetching issues from FOSSA" };
 		}
 	}
 
@@ -241,7 +242,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			};
 		} catch (error) {
 			Logger.error(error);
-			return { error: error.message };
+			return { error: "Error fetching issues from FOSSA" };
 		}
 	}
 }
