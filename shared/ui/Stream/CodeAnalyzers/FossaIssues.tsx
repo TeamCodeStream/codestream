@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, Dispatch, SetStateAction } from "react";
 import { lowerCase, capitalize } from "lodash-es";
-import styled from "styled-components";
 import {
 	LicenseDependencyIssue,
 	VulnSeverity,
@@ -13,52 +12,17 @@ import { Row } from "../CrossPostIssueControls/IssuesPane";
 import { ErrorRow } from "@codestream/webview/Stream/Observability";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
+import { CardTitle } from "@codestream/webview/Stream/SecurityIssuesWrapper";
 
 interface Props {
-	licDepIssues: LicenseDependencyIssue[] | null;
-	licDepError: string | null;
-	vulnIssues: VulnerabilityIssue[] | null;
-	vulnError: string | null;
+	licDepIssues: LicenseDependencyIssue[];
+	licDepError: string | undefined;
+	vulnIssues: VulnerabilityIssue[];
+	vulnError: string | undefined;
 }
 
-const StyledSpan = styled.span`
-	margin-left: 2px;
-	margin-right: 5px;
-`;
-
-const CardTitle = styled.div`
-	font-size: 16px;
-	line-height: 20px;
-	display: flex;
-	justify-content: flex-start;
-	width: 100%;
-	margin-left: -28px;
-
-	.title {
-		flex-grow: 3;
-	}
-
-	.icon,
-	.stream .icon,
-	.ticket-icon {
-		display: block;
-		transform: scale(1.25);
-		margin-top: 2px;
-		padding: 0 8px 0 3px;
-		vertical-align: -2px;
-	}
-
-	& + & {
-		margin-left: 20px;
-	}
-
-	.link-to-ticket {
-		.icon {
-			padding: 0 8px;
-			margin-left: 0;
-		}
-	}
-`;
+type LibraryWithVulnRowFunction = (props: { issue: VulnerabilityIssue }) => JSX.Element;
+type LicenseDependencyRowFunction = (props: { issue: LicenseDependencyIssue }) => JSX.Element;
 
 const severityColorMap: Record<VulnSeverity, string> = {
 	critical: "#f52222",
@@ -94,7 +58,11 @@ function criticalityToRiskSeverity(riskSeverity: VulnSeverity): VulnSeverity {
 }
 
 function ModalView(props: {
-	displays: (string | boolean)[][];
+	displays: {
+		label: string;
+		description: string | string[];
+		link?: boolean;
+	}[];
 	title: string;
 	details: string;
 	onClose: () => void;
@@ -112,19 +80,43 @@ function ModalView(props: {
 						</CardTitle>
 						<div style={{ margin: "10px 0", whiteSpace: "pre-wrap", wordWrap: "break-word" }}>
 							{displays.map(display => {
-								const [title, description, link] = display;
+								const { label, description, link } = display;
 								return (
 									<div>
-										<b>{title} </b>
-										{link && <Link href={`${description}`}>{description}</Link>}
-										{!link && description}
+										<b>{label}: </b>
+										{description instanceof Array ? (
+											<ul style={{ paddingLeft: "15px", marginTop: "5px" }}>
+												{description.map(desc => {
+													return (
+														<>
+															{link && (
+																<li>
+																	<Link href={desc}>{desc}</Link>
+																</li>
+															)}
+															{!link && <li>{desc}</li>}
+														</>
+													);
+												})}
+											</ul>
+										) : (
+											<>
+												{link && <Link href={description}>{description}</Link>}
+												{!link && description}
+											</>
+										)}
 									</div>
 								);
 							})}
 						</div>
-						<div>
-							<MarkdownText className="less-space" text={details} inline={false} />
-						</div>
+						{details && (
+							<>
+								<h3 style={{ margin: 0 }}>Details</h3>
+								<div>
+									<MarkdownText className="less-space" text={details} inline={false} />
+								</div>
+							</>
+						)}
 					</div>
 				</div>
 			</div>
@@ -132,9 +124,55 @@ function ModalView(props: {
 	);
 }
 
-function LibraryWithVulnRow(props: { vuln: VulnerabilityIssue }) {
+const Issues = (props: {
+	cn: string;
+	expanded: boolean;
+	title: string;
+	issueType: string;
+	issues: VulnerabilityIssue[] | LicenseDependencyIssue[];
+	error: string | undefined;
+	setExpanded: Dispatch<SetStateAction<boolean>>;
+	IssueComponent: LibraryWithVulnRowFunction | LicenseDependencyRowFunction;
+}) => {
+	const { cn, expanded, title, issueType, issues, error, setExpanded, IssueComponent } = props;
+	return (
+		<>
+			<Row
+				style={{
+					padding: "2px 10px 2px 20px",
+					alignItems: "baseline",
+				}}
+				className={cn}
+				onClick={() => {
+					setExpanded(!expanded);
+				}}
+			>
+				{expanded && <Icon name="chevron-down-thin" />}
+				{!expanded && <Icon name="chevron-right-thin" />}
+				<span style={{ marginLeft: "2px", marginRight: "5px" }}>{title}</span>
+			</Row>
+			{expanded && issues.length > 0 && (
+				<>
+					{issues.map(issue => {
+						return <IssueComponent issue={issue} />;
+					})}
+				</>
+			)}
+			{expanded && !error && issues.length === 0 && (
+				<Row style={{ padding: "0 10px 0 30px" }}>
+					<div>{`👍 No ${issueType} issues found`}</div>
+				</Row>
+			)}
+			{expanded && error && issues.length === 0 && (
+				<ErrorRow title={error} customPadding={"0 10px 0 30px"} />
+			)}
+		</>
+	);
+};
+
+function LibraryWithVulnRow(props: { issue: VulnerabilityIssue }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const { vuln } = props;
+	const vuln = props.issue;
 
 	const subtleText = vuln.remediation
 		? `${vuln.source.version} -> ${vuln.remediation}`
@@ -174,7 +212,13 @@ function VulnRow(props: { vuln: VulnerabilityIssue }) {
 	const { vuln } = props;
 	return (
 		<>
-			<Row style={{ padding: "0 10px 0 40px" }} className={"pr-row"}>
+			<Row
+				style={{ padding: "0 10px 0 45px" }}
+				className={"pr-row"}
+				onClick={() => {
+					setExpanded(!expanded);
+				}}
+			>
 				<div></div>
 				<div>{props.vuln.title}</div>
 			</Row>
@@ -186,17 +230,25 @@ function VulnRow(props: { vuln: VulnerabilityIssue }) {
 					}}
 				>
 					<ModalView
-						title={vuln.title ?? ""}
-						details={vuln.details ?? ""}
+						title={vuln.title}
+						details={vuln.details}
 						displays={[
-							["Dependency:", "vuln.source?.name"],
-							["Remediation Advice:", vuln.remediation ?? ""],
-							["CVSS Severity:", capitalize(vuln.severity) ?? ""],
-							["CVE", vuln.cve ?? ""],
-							["CVSS score:", JSON.stringify(vuln.cvss) ?? ""],
-							["Affected Project:", vuln.projects[0]?.title ?? "", true],
-							["Reference(s):", vuln.source?.url, true],
-							["Dependency Depths:", vuln.depths?.direct ? "Direct" : "Transitive"],
+							{ label: "Dependency", description: vuln.source.name },
+							{ label: "Remediation Advice", description: vuln.remediation },
+							{ label: "CVE", description: vuln.cve },
+							{
+								label: "Affected Project:",
+								description: vuln.projects[0]?.title ?? "",
+								link: true,
+							},
+							{ label: "CWE", description: vuln.cwes.join(", ") },
+							{ label: "CVSS Score", description: JSON.stringify(vuln.cvss) },
+							{ label: "CVSS Severity", description: capitalize(vuln.severity) },
+							{
+								label: "Dependency Depths",
+								description: vuln.depths?.direct ? "Direct" : "Transitive",
+							},
+							{ label: "References", description: vuln.references, link: true },
 						]}
 						onClose={() => setExpanded(false)}
 					/>
@@ -206,9 +258,9 @@ function VulnRow(props: { vuln: VulnerabilityIssue }) {
 	);
 }
 
-function LicenseDependencyRow(props: { licenseDependency: LicenseDependencyIssue }) {
+function LicenseDependencyRow(props: { issue: LicenseDependencyIssue }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const { licenseDependency } = props;
+	const licenseDependency = props.issue;
 	const { source } = licenseDependency;
 	const licenseText = licenseDependency.license ? licenseDependency.license : "No license found";
 	const licenseIssueText = `${licenseText} in ${source.name} (${source.version})`;
@@ -240,11 +292,18 @@ function LicenseDependencyRow(props: { licenseDependency: LicenseDependencyIssue
 						title={`${capitalize(licenseDependency.source.name)}: ${licenseDependency.license}`}
 						details={licenseDependency.details ?? ""}
 						displays={[
-							["Dependency:", licenseDependency.source.name ?? ""],
-							["Issue Type: ", licenseDependency.type.split("_").join(" ")],
-							["License: ", licenseDependency.license ?? ""],
-							["Affected Project:", licenseDependency.projects[0]?.title ?? "", true],
-							["Dependency Depths:", licenseDependency.depths?.direct ? "Direct" : "Transitive"],
+							{ label: "Dependency", description: licenseDependency.source.name },
+							{ label: "Issue Type", description: licenseDependency.type.split("_").join(" ") },
+							{ label: "License", description: licenseDependency.license },
+							{
+								label: "Affected Project",
+								description: licenseDependency.projects[0]?.title ?? "",
+								link: true,
+							},
+							{
+								label: "Dependency Depths",
+								description: licenseDependency.depths.direct ? "Direct" : "Transitive",
+							},
 						]}
 						onClose={() => setExpanded(false)}
 					/>
@@ -258,62 +317,30 @@ export const FossaIssues = React.memo((props: Props) => {
 	const [licenseDepExpanded, setLicenseDepExpanded] = useState<boolean>(false);
 	const [vulnExpanded, setVulnExpanded] = useState<boolean>(false);
 	const { vulnIssues, vulnError, licDepIssues, licDepError } = props;
+
 	return (
 		<>
-			<Row
-				style={{
-					padding: "2px 10px 2px 20px",
-					alignItems: "baseline",
-				}}
-				className="vuln"
-				onClick={() => {
-					setVulnExpanded(!vulnExpanded);
-				}}
-			>
-				{vulnExpanded && <Icon name="chevron-down-thin" />}
-				{!vulnExpanded && <Icon name="chevron-right-thin" />}
-				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Vulnerabilities</span>
-			</Row>
-			{vulnExpanded && vulnIssues && vulnIssues.length > 0 && (
-				<>
-					{vulnIssues.map(vuln => {
-						return <LibraryWithVulnRow vuln={vuln} />;
-					})}
-				</>
-			)}
-			{vulnExpanded && vulnIssues?.length === 0 && (
-				<Row style={{ padding: "0 10px 0 40px" }}>👍 No vulnerabilities found</Row>
-			)}
-			{vulnExpanded && vulnError && (
-				<ErrorRow title="Error fetching data from FOSSA" customPadding={"0 10px 0 40px"} />
-			)}
-			<Row
-				style={{
-					padding: "2px 10px 2px 20px",
-					alignItems: "baseline",
-				}}
-				className="licenseDep"
-				onClick={() => {
-					setLicenseDepExpanded(!licenseDepExpanded);
-				}}
-			>
-				{licenseDepExpanded && <Icon name="chevron-down-thin" />}
-				{!licenseDepExpanded && <Icon name="chevron-right-thin" />}
-				<StyledSpan>License Dependencies</StyledSpan>
-			</Row>
-			{licenseDepExpanded && licDepIssues && licDepIssues.length > 0 && (
-				<>
-					{licDepIssues.map(issue => {
-						return <LicenseDependencyRow licenseDependency={issue} />;
-					})}
-				</>
-			)}
-			{licenseDepExpanded && licDepIssues?.length === 0 && (
-				<Row style={{ padding: "0 10px 0 40px" }}>👍 No license dependency issues found</Row>
-			)}
-			{licenseDepExpanded && licDepError && (
-				<ErrorRow title="Error fetching data from FOSSA" customPadding={"0 10px 0 40px"} />
-			)}
+			<Issues
+				cn={"vuln"}
+				expanded={vulnExpanded}
+				title={"Vulnerabilities"}
+				issueType={"vulnerability"}
+				issues={vulnIssues}
+				error={vulnError}
+				setExpanded={setVulnExpanded}
+				IssueComponent={LibraryWithVulnRow}
+			></Issues>
+
+			<Issues
+				cn={"licenseDep"}
+				expanded={licenseDepExpanded}
+				title={"License Dependencies"}
+				issueType={"license dependency"}
+				issues={licDepIssues}
+				error={licDepError}
+				setExpanded={setLicenseDepExpanded}
+				IssueComponent={LicenseDependencyRow}
+			></Issues>
 		</>
 	);
 });
