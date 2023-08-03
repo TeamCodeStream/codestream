@@ -45,6 +45,7 @@ import { getPosts } from "../store/posts/actions";
 import { getPost } from "../store/posts/reducer";
 import { getReview } from "../store/reviews/reducer";
 import {
+	currentUserIsAdminSelector,
 	getTeamMembers,
 	getTeamTagsHash,
 	getUserByCsId,
@@ -104,6 +105,7 @@ interface DispatchProps {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setCodemarkPinned: typeof setCodemarkPinned;
 	setUserPreference: (request: SetUserPreferenceRequest) => void;
+	currentUserIsAdminSelector: typeof currentUserIsAdminSelector;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
 	repositionCodemark: typeof repositionCodemark;
@@ -1360,11 +1362,15 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (mine) {
-			menuItems.push(
-				{ label: "Edit", action: () => this.setState({ isEditing: true }) },
-				{ label: "Delete", action: this.deleteCodemark }
-			);
+		if (mine || connect(this.props.currentUserIsAdminSelector)) {
+			if (mine) {
+				menuItems.push(
+					{ label: "Edit", action: () => this.setState({ isEditing: true }) },
+					{ label: "Delete", action: this.deleteCodemark }
+				);
+			} else if (connect(this.props.currentUserIsAdminSelector)) {
+				menuItems.push({ label: "Delete", action: this.deleteCodemark });
+			}
 		}
 
 		if (renderExpandedBody && codemark.markers && codemark.markers.length > 1) {
@@ -2206,6 +2212,7 @@ export default connect(
 		setCurrentReview,
 		setCurrentPullRequest,
 		setCurrentCodeError,
+		currentUserIsAdminSelector,
 	}
 	// @ts-ignore
 )(Codemark);
