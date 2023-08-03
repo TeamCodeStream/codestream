@@ -36,19 +36,18 @@ export interface LicenseDependencyIssues {
 	issues: LicenseDependencyIssue[];
 }
 
-interface Metric {
-	name: string;
-	value: string;
-}
+export const vulnSeverityList = ["critical", "high", "medium", "low", "unknown"] as const;
+
+export type VulnSeverity = (typeof vulnSeverityList)[number];
 export interface VulnerabilityIssue extends BaseIssueType {
 	vulnId: string;
 	title: string;
 	cve: string;
 	cvss: number;
-	severity: string;
+	severity: VulnSeverity;
 	details: string;
 	remediation: string;
-	metrics: Metric[];
+	metrics: { name: string; value: string }[];
 	cveStatus: string;
 	cwes: string[];
 	published: string;
