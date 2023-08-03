@@ -105,7 +105,6 @@ interface DispatchProps {
 	setCodemarkStatus: typeof setCodemarkStatus;
 	setCodemarkPinned: typeof setCodemarkPinned;
 	setUserPreference: (request: SetUserPreferenceRequest) => void;
-	currentUserIsAdminSelector: typeof currentUserIsAdminSelector;
 	getPosts: typeof getPosts;
 	setCurrentCodemark: typeof setCurrentCodemark;
 	repositionCodemark: typeof repositionCodemark;
