@@ -141,6 +141,7 @@ interface ConnectedProps {
 	post?: CSPost;
 	moveMarkersEnabled: boolean;
 	unread: boolean;
+	isAdmin: boolean;
 }
 
 export type DisplayType = "default" | "collapsed" | "activity";
@@ -1362,13 +1363,13 @@ export class Codemark extends React.Component<Props, State> {
 			});
 		}
 
-		if (mine || connect(this.props.currentUserIsAdminSelector)) {
+		if (mine || this.props.isAdmin) {
 			if (mine) {
 				menuItems.push(
 					{ label: "Edit", action: () => this.setState({ isEditing: true }) },
 					{ label: "Delete", action: this.deleteCodemark }
 				);
-			} else if (connect(this.props.currentUserIsAdminSelector)) {
+			} else if (this.props.isAdmin) {
 				menuItems.push({ label: "Delete", action: this.deleteCodemark });
 			}
 		}
@@ -2190,6 +2191,7 @@ const mapStateToProps = (state: CodeStreamState, props: InheritedProps): Connect
 		textEditorUri: editorContext.textEditorUri || "",
 		isRepositioning: context.isRepositioning,
 		moveMarkersEnabled: isFeatureEnabled(state, "moveMarkers2"),
+		isAdmin: currentUserIsAdminSelector(state),
 	};
 };
 
