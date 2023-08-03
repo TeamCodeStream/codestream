@@ -34,15 +34,16 @@ interface Props {
 
 export const CodeAnalyzers = (props: Props) => {
 	const [loading, setLoading] = useState<boolean | undefined>(true);
-	const [error, setError] = useState<string | null>(null);
-	const [licDepLoading, setLicDepLoading] = useState<boolean>(false);
-	const [vulnLoading, setVulnLoading] = useState<boolean>(false);
-	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[] | null>(null);
-	const [licDepError, setLicDepError] = useState<string | null>(null);
-	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[] | null>(null);
-	const [vulnError, setVulnError] = useState<string | null>(null);
-	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined | null>(null);
+	const [error, setError] = useState<string | undefined>(undefined);
+	const [repoMatchError, setRepoMatchError] = useState<string | undefined>(undefined);
 	const [isRepoMatch, setIsRepoMatch] = useState<boolean | undefined>(undefined);
+	const [licDepLoading, setLicDepLoading] = useState<boolean>(false);
+	const [licenseDepIssues, setLicenseDepIssues] = useState<LicenseDependencyIssue[]>([]);
+	const [licDepError, setLicDepError] = useState<string | undefined>(undefined);
+	const [vulnLoading, setVulnLoading] = useState<boolean>(false);
+	const [vulnIssues, setVulnIssues] = useState<VulnerabilityIssue[]>([]);
+	const [vulnError, setVulnError] = useState<string | undefined>(undefined);
+	const [currentRepoId, setCurrentRepoId] = useMemoizedState<string | undefined | null>(null);
 
 	const derivedState = useSelector((state: CodeStreamState) => {
 		const { editorContext, providers } = state;
@@ -86,6 +87,7 @@ export const CodeAnalyzers = (props: Props) => {
 		}
 
 		const fetchData = async (): Promise<void> => {
+			let error: string | undefined;
 			try {
 				if (currentRepoId !== null) {
 					setLoading(true);
@@ -99,10 +101,11 @@ export const CodeAnalyzers = (props: Props) => {
 					}
 				}
 			} catch (err) {
-				console.error("Error fetching data:", err);
-				setError(err.message);
+				console.error("Error fetching data: ", err);
+				error = err;
 				setLoading(false);
 			}
+			setError(error);
 		};
 		fetchData();
 	}, [currentRepoId, derivedState.providers, props.paneState]);
@@ -111,7 +114,7 @@ export const CodeAnalyzers = (props: Props) => {
 		if (currentRepoId === null) return;
 
 		let isRepoMatch;
-		let error: string | null = null;
+		let error: string | undefined;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -130,7 +133,7 @@ export const CodeAnalyzers = (props: Props) => {
 			console.error("Error matching repo to FOSSA: ", err.message);
 			error = err.message;
 		}
-		setError(error);
+		setRepoMatchError(error);
 		setIsRepoMatch(isRepoMatch);
 		return isRepoMatch;
 	};
@@ -139,8 +142,8 @@ export const CodeAnalyzers = (props: Props) => {
 		if (vulnLoading || !currentRepoId) return;
 		setVulnLoading(true);
 
-		let vulnerabilities: VulnerabilityIssue[] | null = null;
-		let error: string | null = null;
+		let vulnerabilities: VulnerabilityIssue[] = [];
+		let error: string | undefined;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -169,7 +172,7 @@ export const CodeAnalyzers = (props: Props) => {
 		setLicDepLoading(true);
 
 		let licenseDepIssues: LicenseDependencyIssue[] = [];
-		let error: string | null = null;
+		let error: string | undefined;
 		const [providerId] = derivedState.fossaProvider ?? [];
 		try {
 			if (providerId) {
@@ -185,7 +188,7 @@ export const CodeAnalyzers = (props: Props) => {
 				}
 			}
 		} catch (err) {
-			console.error("Error fetching license dependencies", err);
+			console.error("Error fetching license dependencies: ", err);
 			error = err;
 		}
 		setLicenseDepIssues(licenseDepIssues);
@@ -196,6 +199,12 @@ export const CodeAnalyzers = (props: Props) => {
 	const loaded = derivedState.bootstrapped && !loading && !props.reposLoading;
 
 	const conditionalText = (): string => {
+		if (error) {
+			return "Sorry an error occurred, please try again";
+		}
+		if (repoMatchError) {
+			return repoMatchError;
+		}
 		if (!derivedState.hasReposOpened) {
 			return "No repositories found";
 		}
@@ -234,7 +243,7 @@ export const CodeAnalyzers = (props: Props) => {
 						<NoContent>Open a source file to see FOSSA results.</NoContent>
 					)}
 					{loaded && hasConditionalText && (
-						<div style={{ padding: "0 20px" }}>{hasConditionalText}</div>
+						<ErrorRow title={hasConditionalText} customPadding={"0 10px 0 20px"} />
 					)}
 				</PaneBody>
 			)}
