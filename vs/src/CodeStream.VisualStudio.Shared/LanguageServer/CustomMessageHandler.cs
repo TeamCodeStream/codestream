@@ -377,11 +377,15 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				var request = e.ToObject<ResolveStackTracePathsRequest>();
 				var response = new ResolveStackTracePathsResponse() { NotImplemented = false };
 
-				foreach(var path in request.Paths.Where(p => p != null))
+				foreach (var path in request.Paths)
 				{
-					var resolvedFilePath = _fileResolutionService.ResolveLocal(path);
-					if (resolvedFilePath != null)
+					if (path is null)
 					{
+						response.ResolvedPaths.Add(null);
+					}
+					else
+					{
+						var resolvedFilePath = _fileResolutionService.ResolveLocal(path);
 						response.ResolvedPaths.Add(resolvedFilePath);
 					}
 				}
