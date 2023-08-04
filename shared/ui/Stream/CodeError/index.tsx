@@ -1634,9 +1634,53 @@ const renderMetaSectionCollapsed = (props: BaseCodeErrorProps) => {
 	);
 };
 
+const GrokSuggestion = (props: { query: string; onSelect: (text: string) => void }) => {
+	return (
+		<div
+			style={{
+				display: "flex",
+				justifyContent: "space-between",
+				alignItems: "center",
+				marginBottom: "10px",
+			}}
+		>
+			<div>{props.query}</div>
+			<Button onClick={() => props.onSelect(`@Grok ${props.query}`)}>Select</Button>
+		</div>
+	);
+};
+
+const AskGrok = (props: { setText: (text: string) => void; onClose: () => void }) => {
+	const onSelect = text => {
+		props.setText(text);
+		props.onClose();
+	};
+	return (
+		<Modal translucent>
+			<Dialog wide onClose={props.onClose} title="Grok - Your GenAI Assistant">
+				<p>
+					By default Grok will automatically provide an analysis of the error, and even a potential
+					code fix, so that you can save time and reduce MTTR.
+				</p>
+				<p>
+					But the conversation doesn't have to stop there! Mention Grok in any reply to ask followup
+					questions or have Grok do some work for you.
+				</p>
+				<MetaLabel>Examples</MetaLabel>
+				<GrokSuggestion query={"Write a test case for the suggested fix."} onSelect={onSelect} />
+				<GrokSuggestion
+					query={"Write a commit message for the suggested fix."}
+					onSelect={onSelect}
+				/>
+			</Dialog>
+		</Modal>
+	);
+};
+
 const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => void }) => {
 	const dispatch = useAppDispatch();
 	const [text, setText] = useState("");
+	const [isAskGrokOpen, setIsAskGrokOpen] = useState(false);
 	const [attachments, setAttachments] = useState<AttachmentField[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const teamMates = useAppSelector((state: CodeStreamState) => getTeamMates(state));
@@ -1681,6 +1725,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 
 	return (
 		<>
+			{isAskGrokOpen && <AskGrok setText={setText} onClose={() => setIsAskGrokOpen(false)} />}
 			<MessageInput
 				multiCompose
 				text={text}
@@ -1691,7 +1736,14 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 				attachmentContainerType="reply"
 				setAttachments={setAttachments}
 			/>
-			<ButtonRow style={{ marginTop: 0 }}>
+			<ButtonRow
+				style={{
+					margin: 0,
+					display: "flex",
+					flexDirection: "row-reverse",
+					justifyContent: "space-between",
+				}}
+			>
 				<Tooltip
 					title={
 						<span>
@@ -1708,6 +1760,11 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 						Comment
 					</Button>
 				</Tooltip>
+				{showGrok && (
+					<Button style={{ marginLeft: 0 }} onClick={() => setIsAskGrokOpen(true)}>
+						@ Ask Grok
+					</Button>
+				)}
 			</ButtonRow>
 		</>
 	);
