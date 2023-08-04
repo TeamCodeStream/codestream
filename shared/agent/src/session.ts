@@ -124,7 +124,8 @@ import { log, memoize, registerDecoratedHandlers, registerProviders, Strings } f
 import { testGroups } from "./testGroups";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
 
-const envRegex = /https?:\/\/((?:(\w+)-)?api|localhost|(\w+))\.codestream\.(?:us|com)(?::\d+$)?/i;
+// https://regex101.com/r/Yn5uqi/1
+const envRegex = /https?:\/\/(?:codestream)?-?([a-zA-Z]+)?(?:[0-9])?(?:\.)((\w+)-?(?:\w+)?)?/i;
 
 const FIRST_SESSION_TIMEOUT = 12 * 60 * 60 * 1000; // first session "times out" after 12 hours
 
@@ -1536,49 +1537,39 @@ export class CodeStreamSession {
 	private getEnvironmentFromServerUrl(url: string): CodeStreamEnvironmentInfo {
 		const match = envRegex.exec(url);
 
-		// if no match, then our server is not a CodeStream server, meaning we are on-prem
-		if (match == null) {
-			return {
-				environment: CodeStreamEnvironment.Unknown,
-				isOnPrem: true,
-				isProductionCloud: false,
-			};
-		}
+		let [env, host] = match || [];
+		let isProductionCloud = false;
 
-		// localhost translates into local development environment,
-		// whether we are on-prem or not comes from separate information
-		let [, subdomain, env] = match;
-		if (subdomain != null && subdomain.toLowerCase() === "localhost") {
+		// in these cases, the env will be something like "localhost" or "calvin" or....
+		if (
+			host != null &&
+			host.toLowerCase() !== "service" &&
+			host.toLowerCase() !== "staging-service"
+		) {
 			return {
 				environment: CodeStreamEnvironment.Local,
 				isOnPrem: false,
-				isProductionCloud: false,
+				isProductionCloud: isProductionCloud,
 			};
 		}
 
 		if (env) {
-			// a match of the form <env>-api.codestream.us, like PD and QA
 			env = env.toLowerCase();
-			return { environment: env.toLowerCase(), isOnPrem: false, isProductionCloud: false };
-		} else if (subdomain) {
-			// a match of the form <subdomain>.codestream.us, like OPPR, OPBETA, anything else
-			subdomain = subdomain.toLowerCase();
-			if (subdomain === "api") {
-				return {
-					environment: CodeStreamEnvironment.Production,
-					isOnPrem: false,
-					isProductionCloud: true,
-				};
-			} else {
-				// the need for this goes away when delivered from the server
-				const isOnPrem = subdomain === "opbeta" || subdomain === "oppr";
-				return { environment: subdomain.toLowerCase(), isOnPrem, isProductionCloud: false };
+
+			if (env === "us" || env === "eu") {
+				isProductionCloud = true;
 			}
+
+			return {
+				environment: env,
+				isOnPrem: false,
+				isProductionCloud: isProductionCloud,
+			};
 		} else {
 			return {
 				environment: CodeStreamEnvironment.Unknown,
 				isOnPrem: false,
-				isProductionCloud: false,
+				isProductionCloud: isProductionCloud,
 			};
 		}
 	}
