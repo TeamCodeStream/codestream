@@ -627,6 +627,7 @@ export const Observability = React.memo((props: Props) => {
 				"Errors Listed": !_isEmpty(filteredCurrentRepoErrors) || !_isEmpty(filteredAssigments),
 				"SLOs Listed": hasServiceLevelObjectives,
 				"CLM Anomalies Listed": hasAnomalies,
+				//TODO: add Vulnerabilities Listed boolean
 			};
 
 			console.debug(`o11y: NR Service Clicked`, event);

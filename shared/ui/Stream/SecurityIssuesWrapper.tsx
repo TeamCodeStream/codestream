@@ -270,7 +270,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 			rows,
 		},
 		[selectedItems, props.entityGuid, rows, expanded],
-		expanded
+		true
 	);
 
 	function handleSelect(severity: RiskSeverity) {
@@ -322,6 +322,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		[error]
 	);
 
+	const warningTooltip =
+		data && data.totalRecords > 0 && data.totalRecords === 1
+			? "1 vulnerability"
+			: `${data?.totalRecords} vulnerabilities`;
+
 	return (
 		<>
 			<Row
@@ -337,6 +342,16 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 				{expanded && <Icon name="chevron-down-thin" />}
 				{!expanded && <Icon name="chevron-right-thin" />}
 				<span style={{ marginLeft: "2px", marginRight: "5px" }}>Vulnerabilities</span>
+
+				{data && data.totalRecords > 0 && (
+					<Icon
+						name="alert"
+						style={{ color: "rgb(188,20,24)", paddingRight: "5px" }}
+						className="alert"
+						title={warningTooltip}
+						delay={1}
+					/>
+				)}
 				<InlineMenu
 					title="Filter Items"
 					preventMenuStopPropagation={true}
