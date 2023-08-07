@@ -328,9 +328,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	}
 
 	const warningTooltip =
-		data && data.totalRecords > 0 && data.totalRecords === 1
-			? "1 vulnerability"
-			: `${data?.totalRecords} vulnerabilities`;
+		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
 
 	return (
 		<>
