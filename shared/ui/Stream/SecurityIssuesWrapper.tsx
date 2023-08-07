@@ -30,6 +30,7 @@ interface Props {
 	currentRepoId: string;
 	entityGuid: string;
 	accountId: number;
+	setVal: Function;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
@@ -321,6 +322,10 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		},
 		[error]
 	);
+
+	if (data && data.totalRecords > 0) {
+		props.setVal(true);
+	}
 
 	const warningTooltip =
 		data && data.totalRecords > 0 && data.totalRecords === 1
