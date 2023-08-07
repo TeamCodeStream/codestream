@@ -30,7 +30,7 @@ interface Props {
 	currentRepoId: string;
 	entityGuid: string;
 	accountId: number;
-	setHasVulnerabilities: Function;
+	setHasVulnerabilities: (value: boolean) => void;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
