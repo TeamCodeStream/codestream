@@ -1297,7 +1297,7 @@ export const Observability = React.memo((props: Props) => {
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}
 																									accountId={ea.accountId}
-																									setVal={setIsVulnPresent}
+																									setHasVulnerabilities={setIsVulnPresent}
 																								/>
 																							)}
 																							{currentRepoId && (

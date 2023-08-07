@@ -30,7 +30,7 @@ interface Props {
 	currentRepoId: string;
 	entityGuid: string;
 	accountId: number;
-	setVal: Function;
+	setHasVulnerabilities: Function;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
@@ -324,7 +324,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	);
 
 	if (data && data.totalRecords > 0) {
-		props.setVal(true);
+		props.setHasVulnerabilities(true);
 	}
 
 	const warningTooltip =
