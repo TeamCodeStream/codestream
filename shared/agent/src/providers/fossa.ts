@@ -177,7 +177,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 			return { isRepoMatch: true };
 		} catch (error) {
 			Logger.error(error);
-			if (error.message === "Unauthorized") {
+			if (error.message.toLowerCase() === "unauthorized") {
 				return { error: "API token is invalid" };
 			}
 			return { error: "Project not found on FOSSA" };
