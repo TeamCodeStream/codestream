@@ -64,11 +64,10 @@ export const CodeAnalyzers = (props: Props) => {
 		const hasActiveFile =
 			!editorContext?.textEditorUri?.includes("terminal") &&
 			editorContext?.activeFile &&
-			editorContext?.activeFile &&
 			editorContext?.activeFile.length > 0;
 
 		const hasRemotes = currentRepo?.remotes && currentRepo?.remotes.length > 0;
-		const hasReposOpened = props.openRepos.length > 0;
+		const hasOpenRepos = props.openRepos.length > 0;
 
 		return {
 			bootstrapped: Object.keys(providerInfo).length > 0,
@@ -76,7 +75,7 @@ export const CodeAnalyzers = (props: Props) => {
 			fossaProvider,
 			hasActiveFile,
 			hasRemotes,
-			hasReposOpened,
+			hasOpenRepos,
 			showCodeAnalyzers: isFeatureEnabled(state, "showCodeAnalyzers"),
 		};
 	}, shallowEqual);
@@ -99,6 +98,8 @@ export const CodeAnalyzers = (props: Props) => {
 					} else {
 						setLoading(false);
 					}
+				} else {
+					setLoading(false);
 				}
 			} catch (err) {
 				console.error("Error fetching data: ", err);
@@ -196,28 +197,28 @@ export const CodeAnalyzers = (props: Props) => {
 		setLicDepLoading(false);
 	};
 
-	const loaded = derivedState.bootstrapped && !loading && !props.reposLoading;
-
-	const conditionalText = (): string => {
+	const errorText = (): string => {
 		if (error) {
 			return "Sorry an error occurred, please try again";
 		}
 		if (repoMatchError) {
 			return repoMatchError;
 		}
-		if (!derivedState.hasReposOpened) {
+		if (!derivedState.hasOpenRepos) {
 			return "No repositories found";
 		}
 		if (currentRepoId && isRepoMatch === false) {
 			return "Project not found on FOSSA";
 		}
-		if (derivedState.hasRemotes === false && derivedState.hasActiveFile) {
+		if (derivedState.hasRemotes === false) {
 			return "Repo does not have a git remote, try another repo.";
 		}
 		return "";
 	};
 
-	const hasConditionalText = conditionalText();
+	const hasError = errorText();
+
+	const loaded = derivedState.bootstrapped && !loading && !props.reposLoading;
 
 	if (!derivedState.showCodeAnalyzers) return null;
 	return (
@@ -239,11 +240,9 @@ export const CodeAnalyzers = (props: Props) => {
 							vulnError={vulnError}
 						/>
 					)}
-					{loaded && derivedState.hasReposOpened && !derivedState.hasActiveFile && (
+					{loaded && hasError && <ErrorRow title={hasError} customPadding={"0 10px 0 20px"} />}
+					{loaded && !derivedState.hasActiveFile && !hasError && !isRepoMatch && (
 						<NoContent>Open a source file to see FOSSA results.</NoContent>
-					)}
-					{loaded && hasConditionalText && (
-						<ErrorRow title={hasConditionalText} customPadding={"0 10px 0 20px"} />
 					)}
 				</PaneBody>
 			)}
