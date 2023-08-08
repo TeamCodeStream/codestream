@@ -10,6 +10,7 @@ export const MarkdownText = styled(
 		inline?: boolean;
 		excludeOnlyEmoji?: boolean;
 		isHtml?: boolean;
+		includeCodeBlockCopy?: boolean;
 	}) => {
 		const markdownifyToHtml = useMarkdownifyToHtml();
 
@@ -24,6 +25,7 @@ export const MarkdownText = styled(
 						: markdownifyToHtml(props.text, {
 								inline: !!props.inline,
 								excludeOnlyEmoji: !!props.excludeOnlyEmoji,
+								includeCodeBlockCopy: !!props.includeCodeBlockCopy,
 						  }),
 				},
 			},
@@ -53,6 +55,13 @@ export const MarkdownText = styled(
 				padding: 5px 0 !important;
 			}
 		}
+	}
+	.related {
+		position: relative;
+		margin-bottom: 0;
+	}
+	.copy-icon-display-none {
+		display: none;
 	}
 	.js-suggested-changes-blob {
 		white-space: normal;

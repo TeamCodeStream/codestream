@@ -460,12 +460,15 @@ class ReviewForm extends React.Component<Props, State> {
 			this.setState({ showCreateReviewOnCommitToggle: showCreateReviewOnCommitToggle });
 
 			if (isCreatingReviewOnCommit) {
-				this._dismissAutoFRTimeout = setTimeout(() => {
-					const { titleTouched, textTouched, reviewersTouched } = this.state;
-					if (!titleTouched && !textTouched && !reviewersTouched) {
-						this.props.closePanel();
-					}
-				}, 15 * 60 * 1000);
+				this._dismissAutoFRTimeout = setTimeout(
+					() => {
+						const { titleTouched, textTouched, reviewersTouched } = this.state;
+						if (!titleTouched && !textTouched && !reviewersTouched) {
+							this.props.closePanel();
+						}
+					},
+					15 * 60 * 1000
+				);
 			}
 		}
 
@@ -1738,7 +1741,11 @@ class ReviewForm extends React.Component<Props, State> {
 						{/* headshot */}
 						<span
 							dangerouslySetInnerHTML={{
-								__html: markdownify(title, { excludeOnlyEmoji: true, inline: true }),
+								__html: markdownify(title, {
+									excludeOnlyEmoji: true,
+									inline: true,
+									includeCodeBlockCopy: false,
+								}),
 							}}
 						/>
 					</label>

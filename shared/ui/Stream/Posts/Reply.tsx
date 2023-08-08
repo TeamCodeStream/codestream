@@ -438,7 +438,11 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				{emote || isEditing ? null : (
 					<>
 						<Content className="reply-content-container">
-							<MarkdownText text={postText} className="reply-markdown-content" />
+							<MarkdownText
+								text={postText}
+								includeCodeBlockCopy={props.author.username === "Grok"}
+								className="reply-markdown-content"
+							/>
 							<Attachments post={props.post as CSPost} />
 							{hasTags && (
 								<MetaDescriptionForTags>
