@@ -1,6 +1,7 @@
 import {
 	CreateShareableCodeErrorRequestType,
 	CSAsyncError,
+	CSGrokStream,
 	DidResolveStackTraceLineNotification,
 	ExecuteThirdPartyTypedType,
 	GetNewRelicErrorGroupRequest,
@@ -40,7 +41,7 @@ import {
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
-import { addPosts } from "@codestream/webview/store/posts/actions";
+import { addPosts, appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
 import { addStreams } from "@codestream/webview/store/streams/actions";
 import { createPostAndCodeError } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
@@ -665,4 +666,22 @@ export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, get
 export const handleGrokError = (grokError: CSAsyncError) => async dispatch => {
 	dispatch(setGrokLoading(false));
 	dispatch(setGrokError(grokError));
+};
+
+export const handleGrokChonk = (event: CSGrokStream[]) => async dispatch => {
+	// console.log("chonkEvent", event);
+	if (event.length === 0) return;
+	const postId = event[0].extra.postId;
+	const streamId = event[0].extra.streamId;
+	if (postId && streamId) {
+		const bigChonk = event.reduce((acc, curr) => {
+			acc += curr.content?.content;
+			return acc;
+		}, "");
+		dispatch(appendGrokStreamingResponse({ streamId, postId, content: bigChonk }));
+	}
+	const doneEvent = event.find(e => e.extra.done === true);
+	if (doneEvent) {
+		dispatch(setGrokLoading(false));
+	}
 };

@@ -9,9 +9,10 @@ import { PostPlus } from "@codestream/protocols/agent";
 
 type PostsActions = ActionType<typeof actions>;
 
-const initialState = {
+const initialState: PostsState = {
 	byStream: {},
 	pending: [],
+	streamingPosts: {},
 };
 
 const addPost = (byStream, post: CSPost) => {
@@ -27,16 +28,34 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 		case PostsActionsType.Bootstrap: {
 			if (action.payload.length === 0) return state;
 
-			const nextState = {
+			const nextState: PostsState = {
 				pending: [...state.pending],
 				byStream: { ...state.byStream },
+				streamingPosts: state.streamingPosts,
 			};
 			action.payload.forEach(post => {
 				if (isPending(post)) nextState.pending.push(post);
 				else {
 					nextState.byStream = addPost(nextState.byStream, post);
 				}
+				nextState.streamingPosts[post.id] = "";
 			});
+			return nextState;
+		}
+		case PostsActionsType.AppendGrokStreamingResponse: {
+			const nextState: PostsState = {
+				pending: [...state.pending],
+				byStream: { ...state.byStream },
+				streamingPosts: { ...state.streamingPosts },
+			};
+			const post = nextState.byStream[action.payload.streamId][action.payload.postId];
+			const existingText = nextState.streamingPosts[action.payload.postId] ?? "";
+			const nextText = existingText + action.payload.content;
+			// Post might not exist yet, so we accumulate the text in streamingPosts
+			nextState.streamingPosts[action.payload.postId] = nextText;
+			if (post) {
+				post.text = nextText;
+			}
 			return nextState;
 		}
 		case PostsActionsType.AddForStream: {
@@ -64,6 +83,7 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 			return {
 				byStream: addPost(state.byStream, post),
 				pending: state.pending.filter(post => post.id !== pendingId),
+				streamingPosts: state.streamingPosts,
 			};
 		}
 		case PostsActionsType.FailPendingPost: {

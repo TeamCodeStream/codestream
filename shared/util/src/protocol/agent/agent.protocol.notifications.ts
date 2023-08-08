@@ -73,6 +73,7 @@ export enum ChangeDataType {
 	ApiCapabilities = "apiCapabilities",
 	Workspace = "workspace",
 	AsyncError = "asyncError",
+	GrokStream = "grokStream",
 }
 
 export interface CodemarksChangedNotification {
@@ -100,6 +101,20 @@ export interface CSAsyncError {
 	errorMessage: string;
 	extra: {
 		[key: string]: string;
+	}
+}
+
+export interface CSGrokStream {
+	content?: {
+		content: string;
+		role: string;
+	},
+	extra: {
+		topmostPostId?: string;
+		codeErrorId?: string;
+		postId?: string;
+		streamId?: string;
+		done?: boolean;
 	}
 }
 
@@ -141,6 +156,11 @@ export interface CodeErrorsChangedNotification {
 export interface GrokExceptionChangedNotification {
 	type: ChangeDataType.AsyncError;
 	data: CSAsyncError[];
+}
+
+export interface GrokStreamChangedNotification {
+	type: ChangeDataType.GrokStream;
+	data: CSGrokStream[];
 }
 
 export interface StreamsChangedNotification {
@@ -239,7 +259,8 @@ export type DidChangeDataNotification =
 	| DocumentsChangedNotification
 	| CommitsChangedNotification
 	| WorkspaceChangedNotification
-	| GrokExceptionChangedNotification;
+	| GrokExceptionChangedNotification
+	| GrokStreamChangedNotification;
 
 export const DidChangeDataNotificationType = new NotificationType<DidChangeDataNotification, void>(
 	"codestream/didChangeData"

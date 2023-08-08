@@ -30,6 +30,9 @@ export interface PostsState {
 		[streamId: string]: Index<PostPlus>;
 	};
 	pending: PendingPost[];
+	streamingPosts: {
+		[postId: string]: string;
+	};
 }
 
 export enum PostsActionsType {
@@ -43,4 +46,5 @@ export enum PostsActionsType {
 	CancelPendingPost = "CANCEL_PENDING_POST",
 	Delete = "DELETE_POST",
 	Save = "@posts/Save",
+	AppendGrokStreamingResponse = "APPEND_GROK_STREAMING_RESPONSE",
 }

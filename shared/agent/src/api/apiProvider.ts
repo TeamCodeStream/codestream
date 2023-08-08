@@ -188,6 +188,7 @@ import {
 	VerifyConnectivityResponse,
 	PollForMaintenanceModeResponse,
 	CSAsyncError,
+	CSGrokStream,
 } from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
@@ -272,6 +273,7 @@ export enum MessageType {
 	Users = "users",
 	Echo = "echo",
 	AsyncError = "asyncError",
+	GrokStream = "grokStream",
 }
 
 export interface CompaniesRTMessage {
@@ -327,6 +329,11 @@ export interface CodeErrorsRTMessage {
 export interface AsyncErrorRTMessage {
 	type: MessageType.AsyncError;
 	data: CSAsyncError[];
+}
+
+export interface GrokStreamRTMessage {
+	type: MessageType.GrokStream;
+	data: CSGrokStream[];
 }
 
 export interface StreamsRTMessage {
@@ -387,6 +394,7 @@ export type RTMessage =
 	| UnreadsRTMessage
 	| UsersRTMessage
 	| AsyncErrorRTMessage
+	| GrokStreamRTMessage
 	| EchoMessage;
 
 export interface ApiProvider {

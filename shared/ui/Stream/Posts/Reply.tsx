@@ -33,6 +33,7 @@ import Tag from "../Tag";
 import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
+import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 
 export interface ReplyProps {
 	author: Partial<CSUser>;
@@ -173,7 +174,7 @@ const ParentPreview = styled.span`
 	white-space: pre;
 `;
 
-const Content = styled.div`
+const MarkdownContent = styled.div`
 	margin-left: 27px;
 	display: flex;
 	flex-direction: column;
@@ -321,6 +322,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 
 	const author = props.author || { username: "???" };
 
+	const showGrokLoader = !isPending(props.post) && props.post.forGrok && !postText;
+
 	return (
 		<Root ref={ref} className={props.className}>
 			{props.threadId && !props.lastNestedReply && <div className="bar-left-not-last-child" />}
@@ -437,7 +440,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				)}
 				{emote || isEditing ? null : (
 					<>
-						<Content className="reply-content-container">
+						{showGrokLoader && <GrokLoading />}
+						<MarkdownContent className="reply-content-container">
 							<MarkdownText text={postText} className="reply-markdown-content" />
 							<Attachments post={props.post as CSPost} />
 							{hasTags && (
@@ -450,7 +454,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 									})}
 								</MetaDescriptionForTags>
 							)}
-						</Content>
+						</MarkdownContent>
 						{markers}
 					</>
 				)}

@@ -23,7 +23,6 @@ import {
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
 	setFunctionToEditFailed,
-	setGrokLoading,
 } from "@codestream/webview/store/codeErrors/actions";
 import { getCodeError, getCodeErrorCreator } from "@codestream/webview/store/codeErrors/reducer";
 import {
@@ -54,7 +53,6 @@ import { HostApi } from "@codestream/webview/webview-api";
 import { createPost, deletePost, invite, markItemRead } from "../actions";
 import { Attachments } from "../Attachments";
 import {
-	AuthorInfo,
 	BigTitle,
 	Header,
 	HeaderActions,
@@ -81,8 +79,6 @@ import Timestamp from "../Timestamp";
 import Tooltip from "../Tooltip";
 import { ConditionalNewRelic } from "./ConditionalComponent";
 import { isFeatureEnabled } from "../../store/apiVersioning/reducer";
-import { ReplyBody } from "@codestream/webview/Stream/Posts/Reply";
-import { LoadingMessage } from "@codestream/webview/src/components/LoadingMessage";
 
 interface SimpleError {
 	/**
@@ -1185,26 +1181,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const functionToEditFailed = useAppSelector(state => state.codeErrors.functionToEditFailed);
 	const isGrokLoading = useAppSelector(state => state.codeErrors.grokLoading);
-	const grokMarkRepliesLength = useAppSelector(state => state.codeErrors.grokRepliesLength);
 	const currentGrokRepliesLength = useAppSelector(state =>
 		getGrokPostLength(state, codeError.streamId, codeError.postId)
 	);
-
-	useEffect(() => {
-		// console.debug(
-		// 	`===--- grok loading useEffect loading ${isGrokLoading} currentGrokRepliesLength: ${currentGrokRepliesLength} grokRepliesLength: ${grokMarkRepliesLength}`
-		// );
-		if (
-			grokMarkRepliesLength !== undefined &&
-			isGrokLoading &&
-			currentGrokRepliesLength > grokMarkRepliesLength
-		) {
-			// console.debug(
-			// 	`===--- setGrokLoading false ${currentGrokRepliesLength} > ${grokMarkRepliesLength}`
-			// );
-			dispatch(setGrokLoading(false));
-		}
-	}, [isGrokLoading, currentGrokRepliesLength]);
 
 	if (derivedState.showGrok) {
 		useEffect(() => {
@@ -1838,8 +1817,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		getGrokPostLength(state, props.codeError.streamId, props.codeError.postId)
 	);
 
-	const grokLoadingRef = useRef<HTMLDivElement>(null);
-
 	function scrollToNew() {
 		const target = scrollNewTarget?.current;
 		if (target) {
@@ -1851,21 +1828,11 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 	}
 
 	useEffect(() => {
-		if (isGrokLoading) {
-			const target = grokLoadingRef.current;
-			if (target) {
-				// console.debug("---=== grokLoadingRef calling scrollIntoView ===---");
-				target.scrollIntoView({ behavior: "smooth", block: "start", inline: "nearest" });
-			}
-		}
-	}, [isGrokLoading, grokLoadingRef.current]);
-
-	useEffect(() => {
-		if (isGrokRequested && currentGrokRepliesLength > 0) {
+		if ((isGrokRequested || isGrokLoading) && currentGrokRepliesLength > 0) {
 			// console.debug(`---=== useEffect calling scrollToNew ${currentGrokRepliesLength} ===---`);
 			scrollToNew();
 		}
-	}, [currentGrokRepliesLength]);
+	}, [currentGrokRepliesLength, isGrokLoading, derivedState.post]);
 
 	function scrollNewTargetCallback(ref: RefObject<HTMLElement>) {
 		// console.debug("===--- scrollNewTargetCallback setScrollNewTarget ", ref);
@@ -1890,12 +1857,7 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 		((Footer, InputContainer) => {
 			if (props.collapsed) return null;
 
-			const grokMessage =
-				currentGrokRepliesLength === 0
-					? "Hold on while I analyze this error for you..."
-					: "Hold on while I think about that...";
-
-			// console.debug(`===--- length: ${currentGrokRepliesLength} message: ${grokMessage} isGrokLoading: ${isGrokLoading} ---===`);
+			// console.debug(`===--- length: ${currentGrokRepliesLength} isGrokLoading: ${isGrokLoading} ---===`);
 
 			return (
 				<Footer className="replies-to-review" style={{ borderTop: "none", marginTop: 0 }}>
@@ -1917,25 +1879,6 @@ const CodeErrorForCodeError = (props: PropsWithCodeError) => {
 										<div>{grokError.message}</div>
 									</div>
 								</DelayedRender>
-							)}
-							{isGrokLoading && (
-								<div ref={grokLoadingRef}>
-									<ReplyBody style={{ marginTop: 13 }}>
-										<AuthorInfo style={{ fontWeight: 700 }}>
-											<Headshot
-												size={20}
-												person={{
-													username: "Grok",
-													avatar: { image: "https://images.codestream.com/icons/grok-green.png" },
-												}}
-											/>
-											<span>Grok</span>
-										</AuthorInfo>
-									</ReplyBody>
-									<LoadingMessage data-testid="grok-loading-message" align={"left"}>
-										{grokMessage}
-									</LoadingMessage>
-								</div>
 							)}
 						</>
 					)}
