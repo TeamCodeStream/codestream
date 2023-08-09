@@ -38,7 +38,7 @@ export function reducePosts(state: PostsState = initialState, action: PostsActio
 				else {
 					nextState.byStream = addPost(nextState.byStream, post);
 				}
-				nextState.streamingPosts[post.id] = "";
+				delete nextState.streamingPosts[post.id];
 			});
 			return nextState;
 		}

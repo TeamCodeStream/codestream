@@ -35,20 +35,6 @@ import { RepliesToPostContext } from "./RepliesToPost";
 import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
 import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 
-export interface ReplyProps {
-	author: Partial<CSUser>;
-	post: Post;
-	codeErrorId?: string;
-	nestedReplies?: PostPlus[];
-	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
-	className?: string;
-	showParentPreview?: boolean;
-	editingPostId?: string;
-	threadId?: string; // only set for nested replies
-	lastNestedReply?: boolean;
-	noReply?: boolean;
-}
-
 const AuthorInfo = styled.div`
 	display: flex;
 	align-items: flex-start;
@@ -219,6 +205,20 @@ const ComposeWrapper = styled.div.attrs(() => ({
 		padding-left: 25px !important;
 	}
 `;
+
+export interface ReplyProps {
+	author: Partial<CSUser>;
+	post: Post;
+	codeErrorId?: string;
+	nestedReplies?: PostPlus[];
+	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
+	className?: string;
+	showParentPreview?: boolean;
+	editingPostId?: string;
+	threadId?: string; // only set for nested replies
+	lastNestedReply?: boolean;
+	noReply?: boolean;
+}
 
 export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 	const dispatch = useAppDispatch();

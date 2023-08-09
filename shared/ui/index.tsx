@@ -24,6 +24,7 @@ import {
 	VerifyConnectivityResponse,
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
+	CSAsyncGrokError,
 } from "@codestream/protocols/agent";
 import { CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
 import React from "react";
@@ -270,7 +271,7 @@ function listenForEvents(store) {
 				break;
 			case ChangeDataType.AsyncError:
 				// Only 1 error type right now
-				store.dispatch(handleGrokError(data[0]));
+				store.dispatch(handleGrokError(data[0] as CSAsyncGrokError));
 				break;
 			case ChangeDataType.GrokStream:
 				// console.log("GrokStream", data);

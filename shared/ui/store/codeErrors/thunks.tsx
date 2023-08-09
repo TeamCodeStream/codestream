@@ -1,6 +1,6 @@
 import {
 	CreateShareableCodeErrorRequestType,
-	CSAsyncError,
+	CSAsyncGrokError,
 	CSGrokStream,
 	DidResolveStackTraceLineNotification,
 	ExecuteThirdPartyTypedType,
@@ -43,7 +43,7 @@ import { getCodeError } from "@codestream/webview/store/codeErrors/reducer";
 import { setCurrentCodeError } from "@codestream/webview/store/context/actions";
 import { addPosts, appendGrokStreamingResponse } from "@codestream/webview/store/posts/actions";
 import { addStreams } from "@codestream/webview/store/streams/actions";
-import { createPostAndCodeError } from "@codestream/webview/Stream/actions";
+import { createPostAndCodeError, deletePost } from "@codestream/webview/Stream/actions";
 import { highlightRange } from "@codestream/webview/Stream/api-functions";
 import { confirmPopup } from "@codestream/webview/Stream/Confirm";
 import { HostApi } from "@codestream/webview/webview-api";
@@ -663,9 +663,12 @@ export const startGrokLoading = (codeError: CSCodeError) => async (dispatch, get
 	dispatch(setGrokRepliesLength(grokPostLength));
 };
 
-export const handleGrokError = (grokError: CSAsyncError) => async dispatch => {
+export const handleGrokError = (grokError: CSAsyncGrokError) => async dispatch => {
 	dispatch(setGrokLoading(false));
 	dispatch(setGrokError(grokError));
+	if (grokError.extra.streamId && grokError.extra.postId) {
+		dispatch(deletePost(grokError.extra.streamId, grokError.extra.postId));
+	}
 };
 
 export const handleGrokChonk = (event: CSGrokStream[]) => async dispatch => {
