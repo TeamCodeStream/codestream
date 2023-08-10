@@ -8,7 +8,7 @@ import {
 	Vuln,
 } from "@codestream/protocols/agent";
 import { isEmpty, lowerCase } from "lodash-es";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { Link } from "@codestream/webview/Stream/Link";
@@ -323,9 +323,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		[error]
 	);
 
-	if (data && data.totalRecords > 0) {
-		props.setHasVulnerabilities(true);
-	}
+	useEffect(() => {
+		if (data && data.totalRecords > 0) {
+			props.setHasVulnerabilities(true);
+		}
+	}, [data, props.setHasVulnerabilities]);
 
 	const warningTooltip =
 		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
