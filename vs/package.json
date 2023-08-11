@@ -30,9 +30,6 @@
 		"webview:clean:ci": "pushd \"../shared/ui\" && npm run clean:ci && popd",
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
-	"dependencies": {
-		"core-js": "2.6.9"
-	},
 	"devDependencies": {
 		"@babel/cli": "7.15.7",
 		"@babel/core": "7.7.2",

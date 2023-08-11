@@ -29,7 +29,6 @@
 		"webview:verify": "pushd \"../shared/ui\" && npm run verify:compile && popd"
 	},
 	"dependencies": {
-		"core-js": "2.6.9"
 	},
 	"devDependencies": {
 		"@types/keytar": "4.4.2",
