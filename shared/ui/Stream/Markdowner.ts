@@ -25,13 +25,10 @@ interface MarkdownOptions {
 	includeCodeBlockCopy: boolean;
 }
 
-const copyIcon = (text: string) =>
-	`<div class="code-buttons copy-icon-display-none"><span class="icon clickable" onclick="navigator.clipboard.writeText(\`${text
-		.replace(/"/g, "\\x22")
-		.replace(
-			/'/g,
-			"\\x27"
-		)}\`).then(() => console.log('Successfully copied'), () => console.log('Copy failed'))">${Icons8.copy.toSVG()}</span></div>`;
+const copyIcon = (text: string) => {
+	const copyText = text.replace(/"/g, "\\x22").replace(/'/g, "\\x27");
+	return `<div class="code-buttons copy-icon-display-none"><span class="icon clickable" onclick="navigator.clipboard.writeText(\`${copyText}\`).then(() => console.log('Successfully copied'), () => { const textArea = document.createElement('textarea'); textArea.value = \`${copyText}\`; textArea.style.top = '0'; textArea.style.left = '0'; textArea.style.position = 'fixed'; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { document.execCommand('copy') ? console.log('Successfully copied (fallback)') : console('Copy failed'); } catch (e) { console.error('Copy error', e); } document.body.removeChild(textArea); })">${Icons8.copy.toSVG()}</span></div>`;
+};
 
 const md = new MarkdownIt({
 	breaks: true,
