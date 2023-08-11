@@ -33,20 +33,7 @@ import Tag from "../Tag";
 import Timestamp from "../Timestamp";
 import { RepliesToPostContext } from "./RepliesToPost";
 import { GrokFeedback } from "@codestream/webview/Stream/Posts/GrokFeedback";
-
-export interface ReplyProps {
-	author: Partial<CSUser>;
-	post: Post;
-	codeErrorId?: string;
-	nestedReplies?: PostPlus[];
-	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
-	className?: string;
-	showParentPreview?: boolean;
-	editingPostId?: string;
-	threadId?: string; // only set for nested replies
-	lastNestedReply?: boolean;
-	noReply?: boolean;
-}
+import { GrokLoading } from "@codestream/webview/Stream/CodeError/GrokLoading";
 
 const AuthorInfo = styled.div`
 	display: flex;
@@ -173,7 +160,7 @@ const ParentPreview = styled.span`
 	white-space: pre;
 `;
 
-const Content = styled.div`
+const MarkdownContent = styled.div`
 	margin-left: 27px;
 	display: flex;
 	flex-direction: column;
@@ -218,6 +205,20 @@ const ComposeWrapper = styled.div.attrs(() => ({
 		padding-left: 25px !important;
 	}
 `;
+
+export interface ReplyProps {
+	author: Partial<CSUser>;
+	post: Post;
+	codeErrorId?: string;
+	nestedReplies?: PostPlus[];
+	renderMenu?: (target: any, onClose: () => void) => React.ReactNode;
+	className?: string;
+	showParentPreview?: boolean;
+	editingPostId?: string;
+	threadId?: string; // only set for nested replies
+	lastNestedReply?: boolean;
+	noReply?: boolean;
+}
 
 export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 	const dispatch = useAppDispatch();
@@ -320,6 +321,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 	const checkpoint = props.post.reviewCheckpoint;
 
 	const author = props.author || { username: "???" };
+
+	const showGrokLoader = !isPending(props.post) && props.post.forGrok && !postText;
 
 	return (
 		<Root ref={ref} className={props.className}>
@@ -437,7 +440,8 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 				)}
 				{emote || isEditing ? null : (
 					<>
-						<Content className="reply-content-container">
+						{showGrokLoader && <GrokLoading />}
+						<MarkdownContent className="reply-content-container">
 							<MarkdownText
 								text={postText}
 								includeCodeBlockCopy={props.author.username === "Grok"}
@@ -454,7 +458,7 @@ export const Reply = forwardRef((props: ReplyProps, ref: Ref<any>) => {
 									})}
 								</MetaDescriptionForTags>
 							)}
-						</Content>
+						</MarkdownContent>
 						{markers}
 					</>
 				)}

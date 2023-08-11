@@ -2,7 +2,7 @@
 	"name": "codestream",
 	"displayName": "New Relic CodeStream",
 	"description": "Simplify your workflow by bringing performance data from New Relic, pull requests from GitHub, and issues from Jira together in your IDE. Also integrates with Slack, Teams, GitLab, Bitbucket and more.",
-	"version": "14.26.0",
+	"version": "14.26.1",
 	"author": "CodeStream",
 	"publisher": "CodeStream",
 	"extensionKind": [

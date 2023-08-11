@@ -32,6 +32,12 @@ export const updatePost = (post: CSPost) => action(PostsActionsType.Update, post
 
 export const deletePost = (post: CSPost) => action(PostsActionsType.Delete, post);
 
+export const appendGrokStreamingResponse = (event: {
+	streamId: string;
+	postId: string;
+	content: string;
+}) => action(PostsActionsType.AppendGrokStreamingResponse, event);
+
 export const getPosts =
 	(streamId: string, postIds: string[], parentPostId?: string) => async dispatch => {
 		try {

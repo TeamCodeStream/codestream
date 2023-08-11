@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-    <Identity Id="codestream-vs-22" Version="14.26.0.0" Language="en-US" Publisher="New Relic" />
+    <Identity Id="codestream-vs-22" Version="14.26.1.0" Language="en-US" Publisher="New Relic" />
     <!-- DisplayName maxLength=50 -->
     <DisplayName>New Relic CodeStream 2022</DisplayName>
     <Description xml:space="preserve">Simplify your workflow by bringing performance data from New Relic, pull requests from GitHub, and issues from Jira together in your IDE. Also integrates with Slack, Teams, GitLab, Bitbucket and more.</Description>

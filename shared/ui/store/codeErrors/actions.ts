@@ -1,6 +1,6 @@
 import {
 	ClaimCodeErrorRequestType,
-	CSAsyncError,
+	CSAsyncGrokError,
 	DeleteCodeErrorRequestType,
 	FetchCodeErrorsRequestType,
 	GetCodeErrorRequestType,
@@ -45,7 +45,7 @@ export const setFunctionToEdit = (functionToEdit: FunctionToEdit | undefined) =>
 export const setFunctionToEditFailed = (value: boolean) =>
 	action(CodeErrorsActionsTypes.SetFunctionToEditFailed, value);
 
-export const setGrokError = (grokError: CSAsyncError | undefined) =>
+export const setGrokError = (grokError: CSAsyncGrokError | undefined) =>
 	action(CodeErrorsActionsTypes.SetGrokError, grokError);
 
 export interface NewCodeErrorAttributes {

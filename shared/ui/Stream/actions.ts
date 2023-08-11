@@ -94,6 +94,7 @@ import { isNotOnDisk, uriToFilePath, uuid } from "../utils";
 import { HostApi } from "../webview-api";
 import { SetUserPreferenceRequest } from "./actions.types";
 import { confirmPopup } from "./Confirm";
+import { throwIfError } from "@codestream/webview/store/common";
 
 export {
 	openPanel,
@@ -617,7 +618,9 @@ export const reactToPost =
 export const deletePost =
 	(streamId: string, postId: string, sharedTo?: ShareTarget[]) => async (dispatch, getState) => {
 		try {
-			const { post } = await HostApi.instance.send(DeletePostRequestType, { streamId, postId });
+			const response = await HostApi.instance.send(DeletePostRequestType, { streamId, postId });
+			throwIfError(response);
+			const { post } = response;
 			try {
 				if (sharedTo) {
 					for (const shareTarget of sharedTo) {
@@ -680,7 +683,7 @@ export const setUserPreference = createAppAsyncThunk<void, SetUserPreferenceRequ
 	}
 );
 
-/* 
+/*
 Usage:
 	dispatch(
 		setUserPreferences([
