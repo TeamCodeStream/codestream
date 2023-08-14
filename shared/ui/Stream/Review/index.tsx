@@ -45,6 +45,7 @@ import { getThreadPosts } from "@codestream/webview/store/posts/reducer";
 import { getReview } from "@codestream/webview/store/reviews/reducer";
 import { deleteReview, fetchReview } from "@codestream/webview/store/reviews/thunks";
 import {
+	currentUserIsAdminSelector,
 	findMentionedUserIds,
 	getTeamMates,
 	getTeamTagsHash,
@@ -272,6 +273,7 @@ export const BaseReviewHeader = (props: PropsWithChildren<BaseReviewHeaderProps>
 
 export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 	const { review, post, collapsed, setIsAmending } = props;
+	const isAdmin = useSelector(currentUserIsAdminSelector);
 
 	const dispatch = useAppDispatch();
 	const derivedState = useSelector((state: CodeStreamState) => {
@@ -402,36 +404,41 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			});
 		}
 
-		if (review.creatorId === derivedState.currentUser.id) {
-			items.push(
-				{
-					label: "Edit",
-					key: "edit",
-					action: () => props.setIsEditing(true),
-				},
-				{
-					label: "Delete",
-					action: () => {
-						confirmPopup({
-							title: "Are you sure?",
-							message: "Deleting a feedback request cannot be undone.",
-							centered: true,
-							buttons: [
-								{ label: "Go Back", className: "control-button" },
-								{
-									label: "Delete Feedback Request",
-									className: "delete",
-									wait: true,
-									action: () => {
-										dispatch(deleteReview(review.id, post?.sharedTo));
-										dispatch(setCurrentReview());
-									},
-								},
-							],
-						});
-					},
-				}
-			);
+		const editLabel = {
+			label: "Edit",
+			key: "edit",
+			action: () => props.setIsEditing(true),
+		};
+
+		const deleteLabel = {
+			label: "Delete",
+			action: () => {
+				confirmPopup({
+					title: "Are you sure?",
+					message: "Deleting a feedback request cannot be undone.",
+					centered: true,
+					buttons: [
+						{ label: "Go Back", className: "control-button" },
+						{
+							label: "Delete Feedback Request",
+							className: "delete",
+							wait: true,
+							action: () => {
+								dispatch(deleteReview(review.id, post?.sharedTo));
+								dispatch(setCurrentReview());
+							},
+						},
+					],
+				});
+			},
+		};
+
+		if (review.creatorId === derivedState.currentUser.id || isAdmin) {
+			if (review.creatorId === derivedState.currentUser.id) {
+				items.push(editLabel, deleteLabel);
+			} else if (isAdmin) {
+				items.push(deleteLabel);
+			}
 		}
 
 		const { approvedBy = {}, creatorId, pullRequestUrl } = review;
@@ -933,26 +940,29 @@ const BaseReview = (props: BaseReviewProps) => {
 						</Meta>
 					)}
 					{!props.collapsed && checkpoint === undefined && renderCommitList()}
-					{!props.collapsed && props.post && props.post.sharedTo && props.post.sharedTo.length > 0 && (
-						<Meta key="shared-to">
-							<MetaLabel>Shared To</MetaLabel>
-							<MetaDescriptionForAssignees>
-								{props.post.sharedTo.map(target => {
-									const providerDisplay = PROVIDER_MAPPINGS[target.providerId];
-									return (
-										<Link className="external-link" href={target.url}>
-											{providerDisplay && providerDisplay.icon && (
-												<span>
-													<Icon name={providerDisplay.icon} />
-												</span>
-											)}
-											{target.channelName}
-										</Link>
-									);
-								})}
-							</MetaDescriptionForAssignees>
-						</Meta>
-					)}
+					{!props.collapsed &&
+						props.post &&
+						props.post.sharedTo &&
+						props.post.sharedTo.length > 0 && (
+							<Meta key="shared-to">
+								<MetaLabel>Shared To</MetaLabel>
+								<MetaDescriptionForAssignees>
+									{props.post.sharedTo.map(target => {
+										const providerDisplay = PROVIDER_MAPPINGS[target.providerId];
+										return (
+											<Link className="external-link" href={target.url}>
+												{providerDisplay && providerDisplay.icon && (
+													<span>
+														<Icon name={providerDisplay.icon} />
+													</span>
+												)}
+												{target.channelName}
+											</Link>
+										);
+									})}
+								</MetaDescriptionForAssignees>
+							</Meta>
+						)}
 				</MetaSection>
 				{props.collapsed && renderMetaSectionCollapsed(props)}
 			</CardBody>

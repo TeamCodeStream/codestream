@@ -712,60 +712,43 @@ export function Post(props: PostProps) {
 			menuItems.push({ label: `Archive ${typeString}`, action: "toggle-pinned" });
 		else menuItems.push({ label: `Unarchive ${typeString}`, action: "toggle-pinned" });
 	}
+
+	const deleteLabel = {
+		label: `Delete ${typeString}`,
+		action: () => {
+			confirmPopup({
+				title: "Are you sure?",
+				message: "Deleting a post cannot be undone.",
+				centered: true,
+				buttons: [
+					{
+						label: "Delete Post",
+						wait: true,
+						action: () => {
+							if (!post) {
+								return;
+							}
+							dispatch(deletePost(post.streamId, post.id));
+						},
+					},
+					{ label: "Cancel" },
+				],
+			});
+		},
+	};
+
+	const editLabel = { label: `Edit ${typeString}`, action: "edit-post" };
+
 	if (mine || isAdmin) {
 		if (mine) {
 			if (!derivedState.disableEdits) {
-				menuItems.push({ label: `Edit ${typeString}`, action: "edit-post" });
+				menuItems.push(editLabel);
 			}
 			if (!derivedState.disableDeletes) {
-				menuItems.push({
-					label: `Delete ${typeString}`,
-					action: () => {
-						confirmPopup({
-							title: "Are you sure?",
-							message: "Deleting a post cannot be undone.",
-							centered: true,
-							buttons: [
-								{
-									label: "Delete Post",
-									wait: true,
-									action: () => {
-										if (!post) {
-											return;
-										}
-										dispatch(deletePost(post.streamId, post.id));
-									},
-								},
-								{ label: "Cancel" },
-							],
-						});
-					},
-				});
+				menuItems.push(deleteLabel);
 			}
 		} else if (isAdmin) {
-			menuItems.push({
-				label: `Delete ${typeString}`,
-				action: () => {
-					confirmPopup({
-						title: "Are you sure?",
-						message: "Deleting a post cannot be undone.",
-						centered: true,
-						buttons: [
-							{
-								label: "Delete Post",
-								wait: true,
-								action: () => {
-									if (!post) {
-										return;
-									}
-									dispatch(deletePost(post.streamId, post.id));
-								},
-							},
-							{ label: "Cancel" },
-						],
-					});
-				},
-			});
+			menuItems.push(deleteLabel);
 		}
 	}
 
