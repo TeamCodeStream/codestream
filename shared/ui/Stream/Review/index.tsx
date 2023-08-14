@@ -433,17 +433,15 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 			},
 		};
 
-		if (review.creatorId === derivedState.currentUser.id || isAdmin) {
-			if (review.creatorId === derivedState.currentUser.id) {
-				items.push(editLabel, deleteLabel);
-			} else if (isAdmin) {
-				items.push(deleteLabel);
-			}
+		if (review.creatorId === derivedState.currentUser.id) {
+			items.unshift(editLabel, deleteLabel);
+		} else if (isAdmin) {
+			items.unshift(deleteLabel);
 		}
 
 		const { approvedBy = {}, creatorId, pullRequestUrl } = review;
 		const hasPullRequest = pullRequestUrl != null;
-		if (props.collapsed) {
+		if (collapsed) {
 			items.unshift({ label: "-" });
 			switch (review.status) {
 				case "open": {
