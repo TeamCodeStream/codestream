@@ -105,7 +105,6 @@ export function GrokFeedbackForm(props: GrokFeedbackFormProps) {
 			"Error Group ID": props.errorId,
 			"Post ID": props.postId,
 			Direction: thumbMap.get(props.feedbackType),
-			Feedback: text,
 		};
 
 		// Only want these telemetry parameters if true, otherwise exclude them from payload
