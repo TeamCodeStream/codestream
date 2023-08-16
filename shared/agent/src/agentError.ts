@@ -41,7 +41,7 @@ export enum ReportSuppressedMessages {
 }
 
 /**
- * InternalErrors thrown are ignored by Sentry
+ * InternalErrors thrown are not sent to New Relic
  * based on its class name (InternalError)
  */
 export class InternalError extends AgentError {

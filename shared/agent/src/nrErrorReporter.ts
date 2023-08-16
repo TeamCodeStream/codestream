@@ -13,6 +13,7 @@ import StackMapper, { Callsite } from "stack-mapper";
 import { Parser } from "./managers/stackTraceParsers/javascriptStackTraceParser";
 import { CSStackTraceInfo } from "@codestream/protocols/api";
 import { md5 } from "@codestream/utils/system/string";
+import { InternalError } from "agentError";
 
 const STACK_INDENT = "    ";
 
@@ -166,6 +167,9 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 				// eventually setting the stack _should_ show in NR...
 				error.stack = stack = deserializedError.stack;
 			} else {
+				if (request.error.constructor.name === InternalError.name) {
+					return;
+				}
 				error = request.error as Error;
 				stack = error.stack;
 			}
