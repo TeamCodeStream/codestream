@@ -167,7 +167,7 @@ export function reportErrorToNr(request: ReportMessageRequest, attributes?: Erro
 				// eventually setting the stack _should_ show in NR...
 				error.stack = stack = deserializedError.stack;
 			} else {
-				if (request.error.constructor.name === InternalError.name) {
+				if (request.error.constructor?.name === InternalError.name) {
 					return;
 				}
 				error = request.error as Error;
