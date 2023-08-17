@@ -137,6 +137,8 @@ class AgentService(private val project: Project) : Disposable {
     private var initialization = CompletableFuture<Unit>()
     private var isDisposing = false
     private var isRestarting = false
+    private var restartCount = 0
+    private var lastLaunchedNodePath: String? = null
 
     lateinit var initializeResult: InitializeResult
     lateinit var agent: CodeStreamLanguageServer
@@ -343,7 +345,7 @@ class AgentService(private val project: Project) : Disposable {
                     logger.info("xdg-open extracted to ${xdgOpen.absolutePath}")
                 }
             }
-
+            lastLaunchedNodePath = nodeDestFile.absolutePath
             return GeneralCommandLine(
                 nodeDestFile.absolutePath,
                 "--nolazy",
@@ -356,7 +358,10 @@ class AgentService(private val project: Project) : Disposable {
             "--nolazy",
             agentJsDestFile.absolutePath,
             "--stdio"
-        ).withEnvironment(agentEnv).createProcess().also { logger.info("Falling back to system-installed node") }
+        ).withEnvironment(agentEnv).createProcess().also {
+            logger.info("Falling back to system-installed node")
+            lastLaunchedNodePath = "node"
+        }
     }
 
     private fun createDebugProcess(agentEnv: Map<String, String>): Process {
@@ -388,6 +393,7 @@ class AgentService(private val project: Project) : Disposable {
         } else {
             debugPortSeed // fixed on 6010 so we can just keep "Attach to agent" running
         }
+        lastLaunchedNodePath = "node"
         return GeneralCommandLine(
             "node",
             "--nolazy",
@@ -407,12 +413,26 @@ class AgentService(private val project: Project) : Disposable {
         }).start()
     }
 
+    private fun getNodeVersion(): String {
+        if (lastLaunchedNodePath == null) return "<unknown>"
+        return try {
+            val process = GeneralCommandLine(lastLaunchedNodePath, "-v").createProcess()
+            val version = process.inputStream.bufferedReader().readLine()
+            process.waitFor()
+            version
+        } catch (e: Exception) {
+            "<unknown>"
+        }
+    }
+
     private fun captureExitCode(process: Process) {
         Thread(Runnable {
             val code = process.waitFor()
             logger.info("LSP agent terminated with exit code $code")
             if (!isDisposing && !isRestarting) {
-                logger.info("LSP agent will be restarted")
+                val nodeVersion = getNodeVersion()
+                logger.info("LSP agent will be restarted in 15 seconds (restart count: ${++restartCount}) (node version: $nodeVersion)")
+                Thread.sleep(15000)
                 appDispatcher.launch {
                     restart(null, true)
                     onDidStart {
@@ -420,7 +440,10 @@ class AgentService(private val project: Project) : Disposable {
                             "Exit Code" to code,
                             "OS Name" to SystemInfo.OS_NAME,
                             "OS Version" to SystemInfo.OS_VERSION,
-                            "OS Arch" to SystemInfo.OS_ARCH)))
+                            "OS Arch" to SystemInfo.OS_ARCH,
+                            "Node Version" to nodeVersion,
+                            "Restart Count" to restartCount,
+                        )))
                     }
                 }
             }
