@@ -18,6 +18,7 @@ import Icon from "./Icon";
 import { PrePRProviderInfoModal } from "./PrePRProviderInfoModal";
 import { currentUserIsAdminSelector } from "@codestream/webview/store/users/reducer";
 import { shallowEqual } from "react-redux";
+import { isFeatureEnabled } from "@codestream/webview/store/apiVersioning/reducer";
 
 export const Provider = styled(Button)`
 	width: 100%;
@@ -137,6 +138,7 @@ export const IntegrationsPanel = () => {
 			currentUser: user,
 			currentUserIsAdmin,
 			isOnPrem: configs.isOnPrem,
+			showCodeAnalyzers: isFeatureEnabled(state, "showCodeAnalyzers"),
 		};
 	}, shallowEqual);
 
@@ -360,7 +362,7 @@ export const IntegrationsPanel = () => {
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
 
-						{derivedState.codeAnalyzersProviders.length > 0 && (
+						{derivedState.codeAnalyzersProviders.length > 0 && derivedState.showCodeAnalyzers && (
 							<>
 								<h2>Code Analyzers</h2>
 								<IntegrationButtons>
