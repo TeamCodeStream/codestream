@@ -36,7 +36,29 @@ type Listener<NT extends NotificationType<any, any> = NotificationType<any, any>
 
 const ALERT_THRESHOLD = 20;
 
-const STALE_THRESHOLD = 300; // 5 minutes
+const STALE_THRESHOLD = 60; // 1 minute
+
+class StaleRequestGroup {
+	private _oldestDate: number | undefined = undefined;
+	private _deleteKeys: string[] = [];
+
+	get deleteKeys() {
+		return this._deleteKeys;
+	}
+
+	get oldestDate() {
+		return this._oldestDate;
+	}
+
+	addRequest(requestId: string, timestamp: number) {
+		this._deleteKeys.push(requestId);
+		if (!this._oldestDate) {
+			this._oldestDate = timestamp;
+		} else if (timestamp < this._oldestDate) {
+			this._oldestDate = timestamp;
+		}
+	}
+}
 
 const normalizeNotificationsMap = new Map<
 	NotificationType<any, any>,
@@ -153,22 +175,34 @@ export class RequestApiManager {
 	private pendingRequests = new Map<string, WebviewApiRequest>();
 	private historyCounter = new HistoryCounter("webview", 15, 25, console.debug, true);
 
-	constructor(enableStaleReport = true) {
-		if (enableStaleReport) {
-			setInterval(this.reportStaleRequests.bind(this), 60000);
+	constructor(enablePurge = true) {
+		if (enablePurge) {
+			setInterval(this.purgeStaleRequests.bind(this), 60000);
 		}
 	}
 
-	private reportStaleRequests() {
-		const report = this.collectStaleRequests();
-		for (const item of report) {
-			logError(item);
+	private purgeStaleRequests() {
+		const result = this.collectStaleRequests();
+		let report = "";
+		for (const [method, staleGroup] of result) {
+			const oldest = staleGroup?.oldestDate
+				? new Date(staleGroup.oldestDate).toISOString()
+				: "unknown";
+			report += `purging ${staleGroup.deleteKeys.length} stale requests for ${method} with oldest ${oldest}\n`;
+			for (const key of staleGroup.deleteKeys) {
+				const pending = this.get(key);
+				if (pending) {
+					this.delete(key);
+					pending.reject("agent request timed out");
+				}
+			}
 		}
+		logError(report);
 	}
 
-	public collectStaleRequests(): Array<string> {
+	public collectStaleRequests(): Map<string, StaleRequestGroup> {
 		const now = Date.now();
-		const staleRequests = new Map<string, { count: number; oldestDate: number }>();
+		const staleRequests = new Map<string, StaleRequestGroup>();
 		for (const [key, value] of this.pendingRequests) {
 			const parts = key.split(":");
 			if (parts.length < 3) {
@@ -177,25 +211,12 @@ export class RequestApiManager {
 			const timestamp = parseInt(parts[3]);
 			const timeAgo = (now - timestamp) / 1000;
 			if (timeAgo > STALE_THRESHOLD) {
-				const existing = staleRequests.get(value.method);
-				if (!existing) {
-					staleRequests.set(value.method, { count: 1, oldestDate: timestamp });
-				} else if (existing) {
-					existing.count = existing.count + 1;
-					if (timestamp < existing.oldestDate) {
-						existing.oldestDate = timestamp;
-					}
-				}
+				const staleGroup = staleRequests.get(value.method) ?? new StaleRequestGroup();
+				staleRequests.set(value.method, staleGroup);
+				staleGroup.addRequest(key, timestamp);
 			}
 		}
-		const stales = new Array<string>();
-		for (const [key, value] of staleRequests) {
-			const theDate = new Date(value.oldestDate);
-			stales.push(
-				`Found ${value.count} stale requests for ${key} with oldest at ${theDate.toISOString()}`
-			);
-		}
-		return stales;
+		return staleRequests;
 	}
 
 	public get(key: string): WebviewApiRequest | undefined {
@@ -237,7 +258,7 @@ export class HostApi extends EventEmitter {
 		port.onmessage = ({ data }: { data: WebviewIpcMessage }) => {
 			if (isIpcResponseMessage(data)) {
 				const pending = this.apiManager.get(data.id);
-				if (pending == null) {
+				if (!pending) {
 					console.debug(
 						`received response from host for ${data.id}; unable to find a pending request`,
 						data

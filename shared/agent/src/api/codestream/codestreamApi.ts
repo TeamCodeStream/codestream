@@ -2861,8 +2861,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	async verifyConnectivity() {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 5000);
 		const response: VerifyConnectivityResponse = {
 			ok: true,
 		};
@@ -2871,7 +2869,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			Logger.log("Verifying API server connectivity");
 
 			const resp = await customFetch(this.baseUrl + "/no-auth/capabilities", {
-				signal: controller.signal,
+				timeout: 5000,
 			});
 
 			Logger.log(`API server status: ${resp.status}`);
@@ -2904,16 +2902,12 @@ export class CodeStreamApiProvider implements ApiProvider {
 					message: err.message,
 				};
 			}
-		} finally {
-			clearTimeout(timeout);
 		}
 
 		return response;
 	}
 
 	async pollForMaintenanceMode() {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), 5000);
 		const response: PollForMaintenanceModeResponse = {
 			ok: true,
 		};
@@ -2924,7 +2918,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 			const nonJsonCapabilitiesResponse = await customFetch(
 				this.baseUrl + "/no-auth/capabilities",
 				{
-					signal: controller.signal,
+					timeout: 5000,
 				}
 			);
 
@@ -2943,8 +2937,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 					message: err.message,
 				};
 			}
-		} finally {
-			clearTimeout(timeout);
 		}
 
 		return response;

@@ -20,12 +20,12 @@ describe("RequestApiManager", () => {
 		});
 		jest.useFakeTimers().setSystemTime(new Date("2023-02-01T08:05:01"));
 		const stales = subject.collectStaleRequests();
-		expect(stales.length).toBe(1);
+		expect(stales.size).toBe(1);
 	});
 
-	it("should not detect stale requests at or under 5 minutes", () => {
+	it("should not detect stale requests at or under 1 minutes", () => {
 		const subject = new RequestApiManager(false);
-		jest.useFakeTimers().setSystemTime(new Date("2023-02-01T08:00:00"));
+		jest.useFakeTimers().setSystemTime(new Date("2023-02-01T08:04:00"));
 		const id = nextId();
 		subject.set(id, {
 			method: "/whatever",
@@ -34,7 +34,7 @@ describe("RequestApiManager", () => {
 		});
 		jest.useFakeTimers().setSystemTime(new Date("2023-02-01T08:05:00"));
 		const stales = subject.collectStaleRequests();
-		expect(stales.length).toBe(0);
+		expect(stales.size).toBe(0);
 	});
 
 	it("should alert when requests to same method > ALERT_THRESHOLD", () => {
@@ -125,11 +125,11 @@ describe("RequestApiManager", () => {
 		jest.spyOn(Date, "now").mockImplementation(() => theNow);
 		const staleRequests = subject.collectStaleRequests();
 		// expect(spyDateNow).toHaveBeenCalledTimes(6);
-		expect(staleRequests.sort()).toStrictEqual(
-			[
-				"Found 2 stale requests for /whenever with oldest at 2023-03-22T23:41:42.000Z",
-				"Found 5 stale requests for /whatever with oldest at 2023-03-22T23:41:42.000Z",
-			].sort()
-		);
+		const whatevers = staleRequests.get("/whatever");
+		expect(whatevers?.deleteKeys.length).toBe(5);
+		const whenevers = staleRequests.get("/whenever");
+		expect(whenevers?.deleteKeys.length).toBe(2);
+		expect(new Date(whatevers!.oldestDate!).toISOString()).toBe("2023-03-22T23:41:42.000Z");
+		expect(new Date(whenevers!.oldestDate!).toISOString()).toBe("2023-03-22T23:41:42.000Z");
 	});
 });
