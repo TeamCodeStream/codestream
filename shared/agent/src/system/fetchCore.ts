@@ -8,7 +8,11 @@ export interface ExtraRequestInit extends RequestInit {
 	timeout?: number;
 }
 
-const noLogRetries = ["reason: connect ECONNREFUSED", "reason: getaddrinfo ENOTFOUND"];
+const noLogRetries = [
+	"reason: connect ECONNREFUSED",
+	"reason: getaddrinfo ENOTFOUND",
+	"fetch failed",
+];
 
 function shouldLogRetry(errorMsg: string): boolean {
 	const result = noLogRetries.find(e => e.includes(errorMsg));
