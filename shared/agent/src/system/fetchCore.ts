@@ -56,7 +56,13 @@ export async function fetchCore(
 	try {
 		handleLimit(origin);
 		const controller = new AbortController();
-		timeout = setTimeout(() => controller.abort(), init.timeout ?? 30000);
+		timeout = setTimeout(() => {
+			try {
+				controller.abort();
+			} catch (e) {
+				Logger.warn("AbortController error", e);
+			}
+		}, init.timeout ?? 30000);
 		init.signal = controller.signal;
 		const resp = await fetch(url, init);
 		if (resp.status < 200 || resp.status > 299) {

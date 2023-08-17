@@ -6,6 +6,9 @@ import "source-map-support/register";
 import { createConnection, ProposedFeatures } from "vscode-languageserver";
 
 import { CodeStreamAgent, FileLspLogger } from "./agent";
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
 
 export * from "./providers/asana";
 export * from "./providers/azuredevops";
@@ -30,10 +33,25 @@ export * from "./providers/trello";
 export * from "./providers/trunk";
 export * from "./providers/youtrack";
 
+function dumpError(err: Error | string): Promise<void> {
+	return new Promise(resolve => {
+		const destFile = path.join(os.homedir(), ".codestream", "agent-crash.txt");
+		const content = err instanceof Error ? `${err.message}\n${err.stack}\n${err.cause ?? ""}` : err;
+		fs.writeFile(destFile, content)
+			.then(resolve)
+			.catch(e => {
+				console.error("Unable to make dump file", e);
+				resolve();
+			});
+	});
+}
+
 function handleFatalError(err: Error) {
 	console.error("===--- fatal error ---===");
 	console.error(err);
-	process.exit(1);
+	dumpError(err).then(() => {
+		process.exit(1);
+	});
 }
 
 process.on("uncaughtException", handleFatalError);

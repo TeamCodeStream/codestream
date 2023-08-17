@@ -107,6 +107,9 @@ import java.io.StringWriter
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.attribute.PosixFilePermissions
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.util.Collections
 import java.util.Scanner
 import java.util.concurrent.CompletableFuture
@@ -117,6 +120,8 @@ private val posixPermissions = setOf(
     PosixFilePermission.OWNER_WRITE,
     PosixFilePermission.OWNER_EXECUTE
 )
+
+data class CrashDetails (val details: String, val dateTime: OffsetDateTime)
 
 val TEST_MODE = System.getenv("TEST_MODE") == "true"
 
@@ -425,25 +430,42 @@ class AgentService(private val project: Project) : Disposable {
         }
     }
 
+    private fun getAgenCrashDetails(): CrashDetails? {
+        val file = File(System.getProperty("user.home"), ".codestream/agent-crash.txt")
+        if (!file.exists()) return null
+        return try {
+            val dateTime = OffsetDateTime.ofInstant(Instant.ofEpochMilli(file.lastModified()), ZoneId.systemDefault())
+            CrashDetails(file.readText(), dateTime)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
     private fun captureExitCode(process: Process) {
         Thread(Runnable {
             val code = process.waitFor()
             logger.info("LSP agent terminated with exit code $code")
             if (!isDisposing && !isRestarting) {
                 val nodeVersion = getNodeVersion()
+                val agentCrashDetails = getAgenCrashDetails()
                 logger.info("LSP agent will be restarted in 15 seconds (restart count: ${++restartCount}) (node version: $nodeVersion)")
                 Thread.sleep(15000)
                 appDispatcher.launch {
                     restart(null, true)
                     onDidStart {
-                        agent.telemetry(TelemetryParams("Agent Restarted", mapOf(
+                        val params = mutableMapOf(
                             "Exit Code" to code,
                             "OS Name" to SystemInfo.OS_NAME,
                             "OS Version" to SystemInfo.OS_VERSION,
                             "OS Arch" to SystemInfo.OS_ARCH,
                             "Node Version" to nodeVersion,
                             "Restart Count" to restartCount,
-                        )))
+                        )
+                        if (agentCrashDetails != null) {
+                            params["Crash Details"] = agentCrashDetails.details
+                            params["Crash Date"] = agentCrashDetails.dateTime.toString()
+                        }
+                        agent.telemetry(TelemetryParams("Agent Restarted", params))
                     }
                 }
             }

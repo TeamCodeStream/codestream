@@ -78,61 +78,65 @@ export class SocketClusterConnection implements BroadcasterConnection {
 
 	// confirm the connection to the SocketCluster server is good
 	async _confirmConnection(): Promise<void> {
-		if (this._connectionTimer) {
-			this._debug("Not confirming connection because we already have a connection timer");
-			return;
-		}
-		this._connectionPending = true;
-		this._connected = false;
-		this._debug("Confirming connection...");
-		this._connectionTimer = setTimeout(() => {
-			this._debug("Connection timed out");
-			this._connectionPending = false;
-			delete this._connectionTimer;
-			setTimeout(this._confirmConnection.bind(this), 0);
-		}, 5000);
-
-		this._debug(
-			`Authorizing the connection, host=${this._options!.host} port=${this._options!.port}...`
-		);
 		try {
-			await this._confirmAuth();
-		} catch (error) {
-			const message = error instanceof Error ? error.message : JSON.stringify(error);
-			this._debug(`Unable to authorize connection: ${message}`);
+			if (this._connectionTimer) {
+				this._debug("Not confirming connection because we already have a connection timer");
+				return;
+			}
+			this._connectionPending = true;
+			this._connected = false;
+			this._debug("Confirming connection...");
+			this._connectionTimer = setTimeout(() => {
+				this._debug("Connection timed out");
+				this._connectionPending = false;
+				delete this._connectionTimer;
+				setTimeout(this._confirmConnection.bind(this), 0);
+			}, 5000);
+
+			this._debug(
+				`Authorizing the connection, host=${this._options!.host} port=${this._options!.port}...`
+			);
+			try {
+				await this._confirmAuth();
+			} catch (error) {
+				const message = error instanceof Error ? error.message : JSON.stringify(error);
+				this._debug(`Unable to authorize connection: ${message}`);
+				if (this._connectionTimer) {
+					clearTimeout(this._connectionTimer);
+					delete this._connectionTimer;
+				}
+				this._debug("Trying again in 1000 ms...");
+				setTimeout(this._confirmConnection.bind(this), 1000);
+				return;
+			}
+			this._debug(`Connection was authorized, socket ${this._socket!.id}`);
 			if (this._connectionTimer) {
 				clearTimeout(this._connectionTimer);
 				delete this._connectionTimer;
 			}
-			this._debug("Trying again in 1000 ms...");
-			setTimeout(this._confirmConnection.bind(this), 1000);
-			return;
-		}
-		this._debug(`Connection was authorized, socket ${this._socket!.id}`);
-		if (this._connectionTimer) {
-			clearTimeout(this._connectionTimer);
-			delete this._connectionTimer;
-		}
-		this._connectionPending = false;
-		this._connected = true;
+			this._connectionPending = false;
+			this._connected = true;
 
-		(async () => {
-			for await (const { channel } of this._socket!.listener("subscribe")) {
-				this._handleSubscribe(channel);
-			}
-		})();
-
-		(async () => {
-			for await (const { error } of this._socket!.listener("error")) {
-				this._debug(`SOCKET ERROR, socket ${this._socket!.id}: ${JSON.stringify(error)}`);
-				if (this._connectionPending) {
-					const message = error instanceof Error ? error.message : JSON.stringify(error);
-					this._debug(`Received error during connection: ${message}`);
-				} else {
-					this.netHiccup();
+			(async () => {
+				for await (const { channel } of this._socket!.listener("subscribe")) {
+					this._handleSubscribe(channel);
 				}
-			}
-		})();
+			})();
+
+			(async () => {
+				for await (const { error } of this._socket!.listener("error")) {
+					this._debug(`SOCKET ERROR, socket ${this._socket!.id}: ${JSON.stringify(error)}`);
+					if (this._connectionPending) {
+						const message = error instanceof Error ? error.message : JSON.stringify(error);
+						this._debug(`Received error during connection: ${message}`);
+					} else {
+						this.netHiccup();
+					}
+				}
+			})();
+		} catch (e) {
+			this._debug("Error confirming connection", e);
+		}
 	}
 
 	disconnect(): void {

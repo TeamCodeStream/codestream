@@ -197,7 +197,9 @@ export class RequestApiManager {
 				}
 			}
 		}
-		logError(report);
+		if (report) {
+			logError(report);
+		}
 	}
 
 	public collectStaleRequests(): Map<string, StaleRequestGroup> {

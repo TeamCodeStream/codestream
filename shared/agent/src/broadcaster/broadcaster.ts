@@ -271,12 +271,16 @@ export class Broadcaster {
 
 	// one tick of the clock, if longer than 10 seconds, assume a network "hiccup" of some kind
 	private tick() {
-		const now = Date.now();
-		if (this._lastTick > 0 && now - this._lastTick > 10000) {
-			this._debug(`Long tick detected (${now - this._lastTick})`);
-			this.netHiccup();
+		try {
+			const now = Date.now();
+			if (this._lastTick > 0 && now - this._lastTick > 10000) {
+				this._debug(`Long tick detected (${now - this._lastTick})`);
+				this.netHiccup();
+			}
+			this._lastTick = now;
+		} catch (e) {
+			// ignore
 		}
-		this._lastTick = now;
 	}
 
 	// for test purposes, simulate a long tick (since we can't physically close a laptop!)
@@ -747,7 +751,11 @@ export class Broadcaster {
 			const interval = this.getThrottleInterval();
 			this._debug(`Resubscribing in ${interval} ms...`);
 			setTimeout(() => {
-				this.resubscribe(channels);
+				try {
+					this.resubscribe(channels);
+				} catch (e) {
+					// ignore
+				}
 			}, interval);
 		}
 	}

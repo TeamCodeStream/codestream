@@ -409,9 +409,13 @@ export class CodeStreamSession {
 						if (!this._broadcasterRecoveryTimer) {
 							Logger.log("Will check for recovery in 30s...");
 							this._broadcasterRecoveryTimer = setTimeout(() => {
-								delete this._broadcasterRecoveryTimer;
-								Logger.log("Calling API server to detect broadcaster recovery");
-								this.api.fetch("/no-auth/capabilities");
+								try {
+									delete this._broadcasterRecoveryTimer;
+									Logger.log("Calling API server to detect broadcaster recovery");
+									this.api.fetch("/no-auth/capabilities");
+								} catch (ex) {
+									Logger.warn("broadcast recovery error", ex);
+								}
 							}, 30000);
 						}
 					}
@@ -1808,16 +1812,20 @@ export class CodeStreamSession {
 	}
 
 	echoTimeout() {
-		Logger.warn(
-			"Have not received an echo for 10 seconds, setting connection status to Reconnecting"
-		);
-		this.agent.sendNotification(DidChangeConnectionStatusNotificationType, {
-			status: ConnectionStatus.Reconnecting,
-			code: ConnectionCode.EchoTimeout,
-		});
-		this._echoDidTimeout = true;
-		if (this.isOnPrem && this.apiCapabilities.echoes) {
-			this.listenForEchoes();
+		try {
+			Logger.warn(
+				"Have not received an echo for 10 seconds, setting connection status to Reconnecting"
+			);
+			this.agent.sendNotification(DidChangeConnectionStatusNotificationType, {
+				status: ConnectionStatus.Reconnecting,
+				code: ConnectionCode.EchoTimeout,
+			});
+			this._echoDidTimeout = true;
+			if (this.isOnPrem && this.apiCapabilities.echoes) {
+				this.listenForEchoes();
+			}
+		} catch (ex) {
+			Logger.warn("echoTimeout error", ex);
 		}
 	}
 

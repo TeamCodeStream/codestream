@@ -696,20 +696,24 @@ export class SlackSharingApiProvider {
 			try {
 				const timeoutMs = 30000;
 				const timer = setTimeout(async () => {
-					Logger.warn(
-						cc,
-						`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
-							deferred.stream.id
-						}' in the background`
-					);
+					try {
+						Logger.warn(
+							cc,
+							`TIMEOUT ${timeoutMs / 1000}s exceeded while fetching stream '${
+								deferred.stream.id
+							}' in the background`
+						);
 
-					if (completed.length !== 0) {
-						const message: StreamsRTMessage = { type: MessageType.Streams, data: completed };
-						message.data = await streams.resolve(message);
-						// this._onDidReceiveMessage.fire(message);
+						if (completed.length !== 0) {
+							const message: StreamsRTMessage = { type: MessageType.Streams, data: completed };
+							message.data = await streams.resolve(message);
+							// this._onDidReceiveMessage.fire(message);
 
-						completed.length = 0;
-						timeSinceLastNotification = new Date().getTime();
+							completed.length = 0;
+							timeSinceLastNotification = new Date().getTime();
+						}
+					} catch (e) {
+						Logger.warn("processPendingStreamsQueue error", e);
 					}
 				}, timeoutMs);
 
@@ -1196,7 +1200,7 @@ export class SlackSharingApiProvider {
 	})
 	protected async slackApiCall<
 		TRequest extends WebAPICallOptions,
-		TResponse extends WebAPICallResult
+		TResponse extends WebAPICallResult,
 	>(method: SlackMethods, request?: TRequest): Promise<TResponse> {
 		const cc = Logger.getCorrelationContext();
 
@@ -1266,7 +1270,7 @@ export class SlackSharingApiProvider {
 	})
 	protected async slackApiCallPaginated<
 		TRequest extends WebAPICallOptions,
-		TResponse extends WebAPICallResult
+		TResponse extends WebAPICallResult,
 	>(method: string, request: TRequest): Promise<AsyncIterableIterator<TResponse>> {
 		const cc = Logger.getCorrelationContext();
 

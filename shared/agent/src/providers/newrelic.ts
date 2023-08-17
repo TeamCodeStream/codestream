@@ -1378,46 +1378,50 @@ export class NewRelicProvider
 	}
 
 	private async pollObservabilityAnomaliesCore() {
-		const { repos, error } = await this.getObservabilityRepos({});
-		if (error) {
-			Logger.warn("pollObservabilityAnomalies: " + (error.error.message || error.error.type));
-			return;
-		}
-		if (!repos?.length) {
-			Logger.log("pollObservabilityAnomalies: no observability repos");
-			return;
-		}
-		const entityGuids = new Set<string>();
-		for (const observabilityRepo of repos) {
-			for (const account of observabilityRepo.entityAccounts) {
-				entityGuids.add(account.entityGuid);
+		try {
+			const { repos, error } = await this.getObservabilityRepos({});
+			if (error) {
+				Logger.warn("pollObservabilityAnomalies: " + (error.error.message || error.error.type));
+				return;
 			}
-		}
-
-		const me = await SessionContainer.instance().users.getMe();
-		const clmSettings = me.preferences?.clmSettings || DEFAULT_CLM_SETTINGS;
-		let didNotifyNewAnomalies = false;
-		for (const entityGuid of entityGuids) {
-			Logger.log("Getting observability anomalies for entity " + entityGuid);
-			const response = await this.getObservabilityAnomalies({
-				entityGuid,
-				sinceDaysAgo: parseInt(clmSettings.compareDataLastValue),
-				baselineDays: parseInt(clmSettings.againstDataPrecedingValue),
-				sinceLastRelease: clmSettings.compareDataLastReleaseValue,
-				minimumErrorRate: parseFloat(clmSettings.minimumErrorRateValue),
-				minimumResponseTime: parseFloat(clmSettings.minimumAverageDurationValue),
-				minimumSampleRate: parseFloat(clmSettings.minimumBaselineValue),
-				minimumRatio: parseFloat(clmSettings.minimumChangeValue) / 100 + 1,
-				notifyNewAnomalies: !didNotifyNewAnomalies,
-			});
-			if (response.didNotifyNewAnomalies) {
-				didNotifyNewAnomalies = true;
+			if (!repos?.length) {
+				Logger.log("pollObservabilityAnomalies: no observability repos");
+				return;
+			}
+			const entityGuids = new Set<string>();
+			for (const observabilityRepo of repos) {
+				for (const account of observabilityRepo.entityAccounts) {
+					entityGuids.add(account.entityGuid);
+				}
 			}
 
-			const pause = new Promise(resolve => {
-				setTimeout(resolve, 10 * 60 * 1000);
-			});
-			void (await pause);
+			const me = await SessionContainer.instance().users.getMe();
+			const clmSettings = me.preferences?.clmSettings || DEFAULT_CLM_SETTINGS;
+			let didNotifyNewAnomalies = false;
+			for (const entityGuid of entityGuids) {
+				Logger.log("Getting observability anomalies for entity " + entityGuid);
+				const response = await this.getObservabilityAnomalies({
+					entityGuid,
+					sinceDaysAgo: parseInt(clmSettings.compareDataLastValue),
+					baselineDays: parseInt(clmSettings.againstDataPrecedingValue),
+					sinceLastRelease: clmSettings.compareDataLastReleaseValue,
+					minimumErrorRate: parseFloat(clmSettings.minimumErrorRateValue),
+					minimumResponseTime: parseFloat(clmSettings.minimumAverageDurationValue),
+					minimumSampleRate: parseFloat(clmSettings.minimumBaselineValue),
+					minimumRatio: parseFloat(clmSettings.minimumChangeValue) / 100 + 1,
+					notifyNewAnomalies: !didNotifyNewAnomalies,
+				});
+				if (response.didNotifyNewAnomalies) {
+					didNotifyNewAnomalies = true;
+				}
+
+				const pause = new Promise(resolve => {
+					setTimeout(resolve, 10 * 60 * 1000);
+				});
+				void (await pause);
+			}
+		} catch (e) {
+			Logger.warn("pollObservabilityAnomaliesCore error", e);
 		}
 	}
 
