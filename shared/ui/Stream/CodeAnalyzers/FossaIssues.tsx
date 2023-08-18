@@ -73,6 +73,12 @@ const criticalityToRiskSeverity = (riskSeverity: VulnSeverity): VulnSeverity => 
 	}
 };
 
+const eventClicked = (
+	trackingData: { "Analyzer Service": string; Category: string } | undefined
+) => {
+	HostApi.instance.track("Analyzer Result Clicked", trackingData);
+};
+
 const ModalView = (props: {
 	displays: {
 		label: string;
@@ -81,11 +87,10 @@ const ModalView = (props: {
 	}[];
 	title: string;
 	details: string;
-	trackingData: { "Analyzer Service": string; Category: string };
+
 	onClose: () => void;
 }) => {
-	const { displays, title, details, trackingData } = props;
-	HostApi.instance.track("Analyzer Result Clicked", trackingData);
+	const { displays, title, details } = props;
 
 	return (
 		<div className="codemark-form-container">
@@ -220,6 +225,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 				className={"pr-row"}
 				onClick={() => {
 					setExpanded(!expanded);
+					eventClicked({ "Analyzer Service": "FOSSA", Category: "Vulnerability" });
 				}}
 			>
 				<Tooltip placement="bottom" title={tooltipText} delay={1}>
@@ -240,7 +246,6 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 					<ModalView
 						title={vuln.title}
 						details={vuln.details}
-						trackingData={{ "Analyzer Service": "FOSSA", Category: "Vulnerability" }}
 						displays={[
 							{ label: "Dependency", description: vuln.source.name },
 							{ label: "Remediation Advice", description: vuln.remediation },
@@ -281,6 +286,7 @@ const LicenseDependencyRow = (props: { issue: LicenseDependencyIssue }) => {
 				className={"pr-row"}
 				onClick={() => {
 					setExpanded(!expanded);
+					eventClicked({ "Analyzer Service": "FOSSA", Category: "License Dependency" });
 				}}
 			>
 				<div>
@@ -299,7 +305,6 @@ const LicenseDependencyRow = (props: { issue: LicenseDependencyIssue }) => {
 					<ModalView
 						title={`${capitalize(licenseDependency.source.name)}: ${licenseDependency.license}`}
 						details={licenseDependency.details ?? ""}
-						trackingData={{ "Analyzer Service": "FOSSA", Category: "License Dependency" }}
 						displays={[
 							{ label: "Dependency", description: licenseDependency.source.name },
 							{ label: "Issue Type", description: licenseDependency.type.split("_").join(" ") },
