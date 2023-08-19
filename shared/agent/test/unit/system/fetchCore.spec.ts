@@ -10,6 +10,8 @@ const waitMock = jest.mocked(Functions.wait);
 jest.mock("../../../src/logger");
 const loggerMock = jest.mocked(Logger);
 
+const undiciOriginal = jest.requireActual("undici");
+
 describe("fetchCore", () => {
 	beforeEach(() => {
 		jest.resetAllMocks();
@@ -91,10 +93,14 @@ describe("fetchCore", () => {
 	});
 
 	it("does not error log boring logs", async () => {
-		fetchMock.mockRejectedValue(new Error("reason: getaddrinfo ENOTFOUND"));
-		await expect(fetchCore(0, "https://somewhere")).rejects.toThrow(
-			"reason: getaddrinfo ENOTFOUND"
-		);
+		// Create unmocked ConnectTimeoutError but unfortunately still does not completely fix test
+		// (can't use instanceof in fetchCore.ts)
+		const cause = new undiciOriginal.errors.ConnectTimeoutError();
+		const error = Object.assign(new TypeError("fetch failed"), { cause });
+		fetchMock.mockImplementation(() => {
+			throw error;
+		});
+		await expect(fetchCore(0, "https://somewhere")).rejects.toThrow("Connect Timeout Error");
 		expect(waitMock).toHaveBeenCalledTimes(3);
 		expect(waitMock).toHaveBeenLastCalledWith(750);
 		expect(loggerMock.error).toHaveBeenCalledTimes(0);

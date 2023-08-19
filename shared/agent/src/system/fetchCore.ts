@@ -1,5 +1,5 @@
 import { isEmpty } from "lodash";
-import { fetch, RequestInit, Request, Response, RequestInfo } from "undici";
+import { errors, fetch, Request, RequestInfo, RequestInit, Response } from "undici";
 import { Logger } from "../logger";
 import { Functions } from "./function";
 import { handleLimit, InternalRateError } from "../rateLimits";
@@ -9,14 +9,30 @@ export interface ExtraRequestInit extends RequestInit {
 }
 
 const noLogRetries = [
-	"reason: connect ECONNREFUSED",
-	"reason: getaddrinfo ENOTFOUND",
-	"fetch failed",
+	"UND_ERR_CONNECT_TIMEOUT",
+	"UND_ERR_HEADERS_TIMEOUT",
+	"UND_ERR_ABORTED",
+	"UND_ERR_SOCKET",
+	"UND_ERR_RESPONSE_STATUS_CODE",
+	"ENOTFOUND",
+	"ECONNREFUSED",
 ];
 
-function shouldLogRetry(errorMsg: string): boolean {
-	const result = noLogRetries.find(e => e.includes(errorMsg));
-	return !result;
+function isUndiciError(error: unknown): error is errors.UndiciError {
+	const possible = error as errors.UndiciError;
+	if (!possible) {
+		return false;
+	}
+	return !!possible.code && !!possible.name;
+}
+
+function shouldLogRetry(error: Error): boolean {
+	const cause = error.cause;
+	if (isUndiciError(cause)) {
+		// Can't use instance of due to jest tests borking classes
+		return !noLogRetries.find(e => e.includes(cause.code));
+	}
+	return error.name !== "AbortError";
 }
 
 export async function customFetch(url: string, init?: ExtraRequestInit): Promise<Response> {
@@ -92,12 +108,16 @@ export async function fetchCore(
 		}
 		return [resp, count];
 	} catch (ex) {
+		if (timeout) {
+			clearTimeout(timeout);
+			timeout = undefined;
+		}
 		if (ex instanceof InternalRateError) {
 			throw ex;
 		}
-		const shouldLog = shouldLogRetry(ex.message);
+		const shouldLog = shouldLogRetry(ex);
 		if (shouldLog) {
-			Logger.error(ex);
+			ex.cause ? Logger.error(ex.cause) : Logger.error(ex);
 		}
 		count++;
 		if (count <= 3) {
@@ -105,13 +125,15 @@ export async function fetchCore(
 			if (Logger.isDebugging) {
 				const logUrl = `[${init?.method ?? "GET"}] ${origin}`;
 				Logger.debug(
-					`fetchCore: Retry ${count} for ${logUrl} due to Error ${ex.message} waiting ${waitMs}`
+					`fetchCore: Retry ${count} for ${logUrl} due to Error ${
+						ex.cause ? ex.cause.message : ex.message
+					} waiting ${waitMs}`
 				);
 			}
 			await Functions.wait(waitMs);
 			return fetchCore(count, url, init);
 		}
-		throw ex;
+		throw ex.cause ? ex.cause : ex;
 	} finally {
 		if (timeout) {
 			clearTimeout(timeout);
