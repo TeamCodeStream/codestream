@@ -87,8 +87,6 @@ const ModalView = (props: {
 	}[];
 	title: string;
 	details: string;
-
-	onClose: () => void;
 }) => {
 	const { displays, title, details } = props;
 
@@ -224,7 +222,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 				style={{ padding: "0 10px 0 30px" }}
 				className={"pr-row"}
 				onClick={() => {
-					setExpanded(!expanded);
+					setExpanded(true);
 					eventClicked({ "Analyzer Service": "FOSSA", Category: "Vulnerability" });
 				}}
 			>
@@ -264,7 +262,6 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 							},
 							{ label: "References", description: vuln.references, link: true },
 						]}
-						onClose={() => setExpanded(false)}
 					/>
 				</Modal>
 			)}
@@ -285,7 +282,7 @@ const LicenseDependencyRow = (props: { issue: LicenseDependencyIssue }) => {
 				style={{ padding: "0 10px 0 30px" }}
 				className={"pr-row"}
 				onClick={() => {
-					setExpanded(!expanded);
+					setExpanded(true);
 					eventClicked({ "Analyzer Service": "FOSSA", Category: "License Dependency" });
 				}}
 			>
@@ -319,7 +316,6 @@ const LicenseDependencyRow = (props: { issue: LicenseDependencyIssue }) => {
 								description: licenseDependency.depths.direct ? "Direct" : "Transitive",
 							},
 						]}
-						onClose={() => setExpanded(false)}
 					/>
 				</Modal>
 			)}
