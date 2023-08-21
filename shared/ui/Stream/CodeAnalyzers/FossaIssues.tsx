@@ -222,8 +222,10 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 				style={{ padding: "0 10px 0 30px" }}
 				className={"pr-row"}
 				onClick={() => {
+					if (!expanded) {
+						eventClicked({ "Analyzer Service": "FOSSA", Category: "Vulnerability" });
+					}
 					setExpanded(true);
-					eventClicked({ "Analyzer Service": "FOSSA", Category: "Vulnerability" });
 				}}
 			>
 				<Tooltip placement="bottom" title={tooltipText} delay={1}>
