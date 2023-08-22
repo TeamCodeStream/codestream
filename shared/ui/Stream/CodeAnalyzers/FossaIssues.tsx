@@ -225,7 +225,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 					if (!expanded) {
 						eventClicked({ "Analyzer Service": "FOSSA", Category: "Vulnerability" });
 					}
-					setExpanded(true);
+					setExpanded(!expanded);
 				}}
 			>
 				<Tooltip placement="bottom" title={tooltipText} delay={1}>
@@ -284,8 +284,10 @@ const LicenseDependencyRow = (props: { issue: LicenseDependencyIssue }) => {
 				style={{ padding: "0 10px 0 30px" }}
 				className={"pr-row"}
 				onClick={() => {
-					setExpanded(true);
-					eventClicked({ "Analyzer Service": "FOSSA", Category: "License Dependency" });
+					if (!expanded) {
+						eventClicked({ "Analyzer Service": "FOSSA", Category: "License Dependency" });
+					}
+					setExpanded(!expanded);
 				}}
 			>
 				<div>
