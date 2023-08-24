@@ -11,6 +11,7 @@ import {
 import { CSCodeError, CSStackTraceInfo } from "@codestream/protocols/api";
 import {
 	addCodeErrors,
+	bootstrapCodeErrors,
 	fetchCodeError,
 	PENDING_CODE_ERROR_ID_PREFIX,
 	resolveStackTrace,
@@ -289,13 +290,13 @@ export function CodeErrorNav(props: Props) {
 						});
 				}
 			};
-			// if (!derivedState.codeErrorStateBootstrapped) {
-			// 	dispatch(bootstrapCodeErrors()).then(() => {
-			// 		onDidMount();
-			// 	});
-			// } else {
-			// 	onDidMount();
-			// }
+			if (!derivedState.codeErrorStateBootstrapped) {
+				dispatch(bootstrapCodeErrors()).then(() => {
+					onDidMount();
+				});
+			} else {
+				onDidMount();
+			}
 		}
 	}, [derivedState.currentCodeErrorId]);
 
