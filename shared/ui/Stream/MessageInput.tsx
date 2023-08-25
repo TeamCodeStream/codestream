@@ -5,14 +5,7 @@ import ContentEditable from "react-contenteditable";
 import * as codemarkSelectors from "../store/codemarks/reducer";
 import * as actions from "./actions";
 const emojiData = require("../node_modules/markdown-it-emoji-mart/lib/data/full.json");
-import {
-	CSPost,
-	CSUser,
-	CSTeam,
-	CSTag,
-	CSMe,
-	Attachment,
-} from "@codestream/protocols/api";
+import { CSPost, CSUser, CSTeam, CSTag, CSMe, Attachment } from "@codestream/protocols/api";
 import KeystrokeDispatcher from "../utilities/keystroke-dispatcher";
 import {
 	createRange,
@@ -111,6 +104,7 @@ interface Props extends ConnectedProps {
 	submitOnEnter?: boolean;
 	placeholder?: string;
 	quotePost?: QuotePost;
+	suggestGrok?: boolean;
 	shouldShowRelatableCodemark?(codemark: CodemarkPlus): boolean;
 	onChange?(text: string, formatCode: boolean): any;
 	onKeypress?(event: React.KeyboardEvent): any;
@@ -485,12 +479,23 @@ export class MessageInput extends React.Component<Props, State> {
 					if (description) {
 						description += you;
 					}
-					itemsToShow.push({
-						id: person.id,
-						headshot: person,
-						identifier: person.username || person.email,
-						description: description,
-					});
+					if (person.username.toLowerCase() === "grok") {
+						if (this.props.suggestGrok) {
+							itemsToShow.unshift({
+								id: person.id,
+								headshot: person,
+								identifier: person.username || person.email,
+								description: description,
+							});
+						}
+					} else {
+						itemsToShow.push({
+							id: person.id,
+							headshot: person,
+							identifier: person.username || person.email,
+							description: description,
+						});
+					}
 				}
 			});
 			// } else if (type === "channels") {

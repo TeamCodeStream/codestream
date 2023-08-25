@@ -1715,6 +1715,7 @@ const ReplyInput = (props: { codeError: CSCodeError; setGrokRequested: () => voi
 				attachments={attachments}
 				attachmentContainerType="reply"
 				setAttachments={setAttachments}
+				suggestGrok={showGrok}
 			/>
 			<ButtonRow
 				style={{
