@@ -113,6 +113,7 @@ import {
 	GetFileScmInfoRequestType,
 	GetFileStreamRequestType,
 	GetFileStreamResponse,
+	GetLogsRequestType,
 	GetMarkerRequestType,
 	GetPostRequestType,
 	GetPreferencesRequestType,
@@ -310,6 +311,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	private _serverOptions: CSServerOptions;
 	private _restartCount = 0;
 	private _outputChannel: OutputChannel | undefined;
+	private _logsOutputChannel: OutputChannel | undefined;
 
 	constructor(context: ExtensionContext, options: BaseAgentOptions) {
 		const env = process.env;
@@ -413,6 +415,9 @@ export class CodeStreamAgentConnection implements Disposable {
 		if (this._outputChannel) {
 			this._outputChannel.dispose();
 		}
+		if (this._logsOutputChannel) {
+			this._logsOutputChannel.dispose();
+		}
 		this._disposable && this._disposable.dispose();
 		if (this._clientReadyCancellation !== undefined) {
 			this._clientReadyCancellation.dispose();
@@ -466,6 +471,35 @@ export class CodeStreamAgentConnection implements Disposable {
 		}
 		await Container.agent.start(newServerUrl);
 	}
+
+	get logs() {
+		return this._logs;
+	}
+	private readonly _logs = new (class {
+		constructor(private readonly _connection: CodeStreamAgentConnection) {}
+
+		async fetch(entityGuid: string) {
+			const logs = await this._connection.sendRequest(GetLogsRequestType, {
+				entityGuid,
+				limit: "MAX",
+				since: "3 HOURS AGO",
+				order: {
+					field: "timestamp",
+					direction: "DESC"
+				}
+			});
+
+			logs.map(log => {
+				let formattedLogLine: string = "";
+				for (const key in Object.keys(log)) {
+					const keyName = Object.keys(log)[key];
+					formattedLogLine += `${keyName}=${log[keyName]} | `;
+				}
+				this._connection?._logsOutputChannel?.appendLine(formattedLogLine);
+				this._connection?._logsOutputChannel?.appendLine("");
+			});
+		}
+	})(this);
 
 	get codemarks() {
 		return this._codemarks;
@@ -1017,6 +1051,8 @@ export class CodeStreamAgentConnection implements Disposable {
 			locator?: FunctionLocator,
 			options?: FileLevelTelemetryRequestOptions
 		) {
+			Container.agent.logs.fetch("MTExODkwMzh8QVBNfEFQUExJQ0FUSU9OfDIyNDIxODA5");
+
 			return this._connection.sendRequest(GetFileLevelTelemetryRequestType, {
 				fileUri,
 				languageId,
@@ -1192,6 +1228,8 @@ export class CodeStreamAgentConnection implements Disposable {
 		this._clientOptions.outputChannel = this._outputChannel =
 			window.createOutputChannel("CodeStream (Agent)");
 		this._clientOptions.revealOutputChannelOn = RevealOutputChannelOn.Never;
+
+		this._logsOutputChannel = window.createOutputChannel("New Relic Logs");
 
 		const initializationOptions = getInitializationOptions({
 			...this._clientOptions.initializationOptions
@@ -1407,6 +1445,10 @@ export class CodeStreamAgentConnection implements Disposable {
 
 		if (this._outputChannel) {
 			this._outputChannel.dispose();
+		}
+
+		if (this._logsOutputChannel) {
+			this._logsOutputChannel.dispose();
 		}
 
 		if (this._client === undefined) return;
