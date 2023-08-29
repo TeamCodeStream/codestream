@@ -139,11 +139,23 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		if (repoId) {
 			for (const project of fossaProjects) {
 				let parsed;
-				try {
-					parsed = await GitRemoteParser.parseGitUrl(project.title);
-				} catch (err) {
-					Logger.error(err);
+				let newUrl;
+				if (project.id.startsWith("git+")) {
+					newUrl = project.id.split("+");
+					try {
+						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl[1]}`);
+					} catch (err) {
+						Logger.error(err);
+					}
+				} else if (project.id.startsWith("custom+")) {
+					newUrl = project.id.split("/");
+					try {
+						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl[1]}`);
+					} catch (err) {
+						Logger.error(err);
+					}
 				}
+
 				if (parsed) {
 					const [, domain, path] = parsed;
 					const folderName = path.split("/").pop();
@@ -157,7 +169,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				}
 			}
 		}
-		return;
+		return undefined;
 	}
 
 	@log()
