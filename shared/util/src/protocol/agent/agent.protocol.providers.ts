@@ -2515,3 +2515,21 @@ export const DidDetectObservabilityAnomaliesNotificationType = new NotificationT
 	DidDetectObservabilityAnomaliesNotification,
 	void
 >("codestream/didDetectObservabilityAnomalies");
+
+export interface GetLogsRequest {
+	entityGuid: string;
+	order: {
+		field: string;
+		direction: string;
+	};
+	since: string;
+	limit: number | "MAX";
+}
+
+export interface GetLogsResponse {
+	[key: string]: string;
+}
+
+export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsResponse[], void, void>(
+	"codestream/newrelic/logs"
+);
