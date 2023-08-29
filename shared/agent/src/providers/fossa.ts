@@ -29,7 +29,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 	constructor(
 		public readonly session: CodeStreamSession,
-		protected readonly providerConfig: ThirdPartyProviderConfig,
+		protected readonly providerConfig: ThirdPartyProviderConfig
 	) {
 		super(session, providerConfig);
 	}
@@ -74,7 +74,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		type: string,
 		category: string,
 		page: number,
-		sort?: string,
+		sort?: string
 	): string {
 		return `/issues?${qs.stringify({
 			category,
@@ -120,7 +120,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 					`getFossaProjects: from Fossa API, project size ${projsResponse.body.projects}`,
 					{
 						cacheKey: this._fossaProjectCacheKey,
-					},
+					}
 				);
 			}
 		}
@@ -131,10 +131,10 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	 * Matches current repo to Fossa project
 	 * @returns project object
 	 */
-	private async _matchRepoToFossaProject(
+	async _matchRepoToFossaProject(
 		currentRepo: ReposScm,
 		fossaProjects: FossaProject[],
-		repoId?: string,
+		repoId?: string
 	): Promise<FossaProject | undefined> {
 		if (repoId) {
 			for (const project of fossaProjects) {
@@ -162,7 +162,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 	@log()
 	async fetchIsRepoMatch(
-		request: FetchThirdPartyRepoMatchToFossaRequest,
+		request: FetchThirdPartyRepoMatchToFossaRequest
 	): Promise<FetchThirdPartyRepoMatchToFossaResponse> {
 		try {
 			const [currentRepo] = await this._getCurrentRepo(request.repoId);
@@ -187,7 +187,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	@log()
 	async fetchLicenseDependencies(
 		request: FetchThirdPartyCodeAnalyzersRequest,
-		params: IssueParams,
+		params: IssueParams
 	): Promise<FetchThirdPartyLicenseDependenciesResponse> {
 		try {
 			const [currentRepo] = await this._getCurrentRepo(request.repoId);
@@ -203,7 +203,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 			const { type, category, page, sort } = params;
 			const issueResponse = await this.get<LicenseDependencyIssues>(
-				this._getIssuesUrl(project.id, type, category, page, sort),
+				this._getIssuesUrl(project.id, type, category, page, sort)
 			);
 
 			return {
@@ -218,7 +218,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	@log()
 	async fetchVulnerabilities(
 		request: FetchThirdPartyCodeAnalyzersRequest,
-		params: IssueParams,
+		params: IssueParams
 	): Promise<FetchThirdPartyVulnerabilitiesResponse> {
 		try {
 			const [currentRepo] = await this._getCurrentRepo(request.repoId);
@@ -234,7 +234,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 
 			const { type, category, page, sort } = params;
 			const issueResponse = await this.get<VulnerabilityIssues>(
-				this._getIssuesUrl(project.id, type, category, page, sort),
+				this._getIssuesUrl(project.id, type, category, page, sort)
 			);
 
 			return {

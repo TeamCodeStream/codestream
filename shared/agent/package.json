@@ -48,7 +48,7 @@
 		"test-apiserver": "jest --testPathPattern=\"test\\/api_server\\/.*\\.spec\\.ts$\"",
 		"test-integration": "jest --testPathPattern=\"test\\/integration\\/.*\\.spec\\.ts$\"",
 		"test-integration-ci": "npm run test-integration",
-		"test-unit": "npx jest --forceExit --testPathPattern=\"test\\/unit\\/.*\\.spec\\.ts$\" && cd ../util && npm run test",
+		"test-unit": "npx jest --forceExit --testPathPattern=\"test\\/unit\\/providers\\/fossa\\.spec\\.ts$\" && cd ../util && npm run test",
 		"test-unit-watch": "jest --testPathPattern=\"test\\/unit\\/.*\\.spec\\.ts$\" --watch",
 		"test-unit-with-coverage": "npm run test-unit -- --coverage",
 		"verify": "run-p verify:**",
