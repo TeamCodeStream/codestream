@@ -113,6 +113,9 @@ import {
 	GetClmRequest,
 	GetClmRequestType,
 	GetClmResponse,
+	GetLogsRequestType,
+	GetLogsRequest,
+	GetLogsResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -4658,6 +4661,20 @@ export class NewRelicProvider
 		return {
 			deployments,
 		};
+	}
+
+	@lspHandler(GetLogsRequestType)
+	@log()
+	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse[]> {
+		const { entityGuid, since, limit, order } = {
+			...request,
+		};
+
+		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const query = `SELECT * FROM Log WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' SINCE ${since} ORDER BY ${order.field} ${order.direction} LIMIT ${limit}`;
+		const result = await this.runNrql<GetLogsResponse>(parsedId.accountId, query, 400);
+
+		return result;
 	}
 }
 
