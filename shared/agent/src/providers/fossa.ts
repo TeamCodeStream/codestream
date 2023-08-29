@@ -148,9 +148,11 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 						Logger.error(err);
 					}
 				} else if (project.id.startsWith("custom+")) {
-					newUrl = project.id.split("/");
+					const thing = project.id.split("/");
+					const thing1 = thing.slice(1);
+					newUrl = thing1.join("/");
 					try {
-						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl[1]}`);
+						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl}`);
 					} catch (err) {
 						Logger.error(err);
 					}
