@@ -212,7 +212,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 	const vuln = props.issue;
 
 	const subtleText = vuln.remediation
-		? `${vuln.source.version} -> ${vuln.remediation}`
+		? `${vuln.source.version} -> ${vuln.remediation.completeFixDistance}`
 		: vuln.source.version;
 	const tooltipText = `Vulnerability: ${vuln.title}`;
 
@@ -248,7 +248,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 						details={vuln.details}
 						displays={[
 							{ label: "Dependency", description: vuln.source.name },
-							{ label: "Remediation Advice", description: vuln.remediation },
+							{ label: "Remediation Advice", description: vuln.remediation.completeFixDistance },
 							{ label: "CVE", description: vuln.cve },
 							{
 								label: "Affected Project:",
