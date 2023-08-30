@@ -156,6 +156,8 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 					} catch (err) {
 						Logger.error(err);
 					}
+				} else {
+					Logger.warn("couldn't parse project, ", project);
 				}
 
 				if (parsed) {
