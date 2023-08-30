@@ -8,7 +8,7 @@ import { ContextState } from "@codestream/webview/store/context/types";
 import * as providerSelectors from "@codestream/webview/store/providers/reducer";
 import { TeamsState } from "@codestream/webview/store/teams/types";
 import { HostApi } from "@codestream/webview/webview-api";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import * as React from "react";
 import { act } from "react-dom/test-utils";
 import { Provider } from "react-redux";
@@ -415,7 +415,7 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
-			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("O11y Rendered", { State: "Services" });
 		});
 	});
@@ -441,7 +441,7 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
-			expect(mockTrack).toHaveBeenCalledTimes(2);
+			expect(mockTrack).toHaveBeenCalledTimes(1);
 			expect(mockTrack).toHaveBeenCalledWith("O11y Rendered", { State: "No Entities" });
 		});
 	});
@@ -534,6 +534,23 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+		});
+
+		expect(mockTrack).toHaveBeenCalledTimes(1);
+
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
+
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
+
+		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
 			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
 				"Errors Listed": true,
@@ -571,6 +588,23 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+		});
+
+		expect(mockTrack).toHaveBeenCalledTimes(1);
+
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
+
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
+
+		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
 			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
 				"Errors Listed": false,
@@ -608,6 +642,23 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+		});
+
+		expect(mockTrack).toHaveBeenCalledTimes(1);
+
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
+
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
+
+		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
 			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
 				"Errors Listed": true,
@@ -648,6 +699,23 @@ describe("Observability", () => {
 
 		await waitFor(() => {
 			expect(screen.queryByTestId("observability-label-title")).toHaveTextContent("Observability");
+		});
+
+		expect(mockTrack).toHaveBeenCalledTimes(1);
+
+		// Close
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.queryByTestId("entity-name-abcd1234-collapsed")).toBeInTheDocument();
+		});
+
+		// And expand to trigger service clicked
+		fireEvent.click(screen.getByTestId("entity-name-abcd1234"));
+		await waitFor(() => {
+			expect(screen.getByTestId("entity-name-abcd1234-expanded")).toBeInTheDocument();
+		});
+
+		await waitFor(() => {
 			expect(mockTrack).toHaveBeenCalledTimes(2);
 			expect(mockTrack).toHaveBeenNthCalledWith(2, "NR Service Clicked", {
 				"Errors Listed": true,

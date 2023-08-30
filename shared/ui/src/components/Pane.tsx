@@ -46,6 +46,7 @@ interface PaneNodeNameProps {
 	forceExpand?: boolean;
 	showChildIconOnCollapse?: boolean;
 	customPadding?: string;
+	"data-testid"?: string;
 }
 export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>) => {
 	const dispatch = useAppDispatch();
@@ -84,6 +85,11 @@ export const PaneNodeName = styled((props: PropsWithChildren<PaneNodeNameProps>)
 				{props.isLoading && <Icon name="sync" className="spin" />}
 				{!props.isLoading && (
 					<Icon
+						data-testid={
+							props["data-testid"]
+								? `${props["data-testid"]}-${derivedState.collapsed ? "collapsed" : "expanded"}`
+								: undefined
+						}
 						name={derivedState.collapsed ? "chevron-right-thin" : "chevron-down-thin"}
 						className="expander"
 					/>
