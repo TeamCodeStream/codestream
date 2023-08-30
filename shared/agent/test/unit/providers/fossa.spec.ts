@@ -7,25 +7,25 @@ import { FossaProvider } from "../../../src/providers/fossa";
 describe("fossaProvider", () => {
 	it("matchRepoToFossaProject", async () => {
 		const fossa = new FossaProvider({} as any, {} as any);
-
 		const asdf = await fossa._matchRepoToFossaProject(
 			{
+				currentBranch: "develop",
 				folder: {
-					uri: "anything",
+					uri: "file:///Users/foo/bar",
 					name: "bar",
 				},
-				path: "foo/bar",
-				providerGuess: "example.com",
+				path: "/Users/foo/bar",
+				providerGuess: "example",
+				id: "1234",
 			},
 			[
 				{
-					id: "123",
-					title: "https://example.com/foo/bar.git",
+					id: "custom+1234/example.com/foobar/bar",
+					title: "https://example.com/foobar/bar.git",
 				},
 			] as any,
-			"123"
+			"1234"
 		);
-
-		expect(asdf!.id).toEqual("123");
+		expect(asdf!.id).toEqual("custom+1234/example.com/foobar/bar");
 	});
 });
