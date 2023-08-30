@@ -42,7 +42,7 @@ export interface PostsState {
 	streamingPosts: {
 		[postId: string]: RecombinedStream;
 	};
-	postThreadsLoading?: boolean;
+	postThreadsLoading: { [parentPostId: string]: boolean };
 }
 
 export enum PostsActionsType {

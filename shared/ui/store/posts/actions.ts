@@ -28,8 +28,8 @@ export const cancelPendingPost = (pendingId: string) =>
 export const addPostsForStream = (streamId: string, posts: CSPost[]) =>
 	action(PostsActionsType.AddForStream, { posts, streamId });
 
-export const setPostThreadsLoading = (loading: boolean) =>
-	action(PostsActionsType.SetPostThreadsLoading, { loading });
+export const setPostThreadsLoading = (parentPostId: string, loading: boolean) =>
+	action(PostsActionsType.SetPostThreadsLoading, { parentPostId, loading });
 
 export const updatePost = (post: CSPost) => action(PostsActionsType.Update, post);
 

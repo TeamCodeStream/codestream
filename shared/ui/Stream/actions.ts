@@ -953,7 +953,7 @@ export const fetchPosts =
 export const fetchThread =
 	(streamId: string, parentPostId: string) => async (dispatch, getState) => {
 		try {
-			dispatch(setPostThreadsLoading(true));
+			dispatch(setPostThreadsLoading(parentPostId, true));
 			const { posts, codemarks } = await HostApi.instance.send(FetchPostRepliesRequestType, {
 				streamId,
 				postId: parentPostId,
@@ -978,7 +978,7 @@ export const fetchThread =
 		} catch (error) {
 			logError(error, { detail: `There was an error fetching a thread`, parentPostId });
 		} finally {
-			dispatch(setPostThreadsLoading(false));
+			dispatch(setPostThreadsLoading(parentPostId, false));
 		}
 	};
 

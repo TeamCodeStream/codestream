@@ -1170,7 +1170,9 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
 	const { codeError, errorGroup } = derivedState;
-	const isPostThreadsLoading = useAppSelector(state => state.posts.postThreadsLoading === true);
+	const isPostThreadsLoading: boolean | undefined = useAppSelector(
+		state => state.posts.postThreadsLoading[codeError.postId]
+	);
 
 	const [currentSelectedLine, setCurrentSelectedLineIndex] = useState<number>(
 		derivedState.currentCodeErrorData?.lineIndex || 0
@@ -1179,6 +1181,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 	const [didCopyMethod, setDidCopyMethod] = useState(false);
 	const [jumpLocation, setJumpLocation] = useState<number | undefined>();
 	const [loadGrokTimeout, setLoadGrokTimeout] = useState<NodeJS.Timeout | undefined>();
+	const [grokRequested, setGrokRequested] = useState(false);
 
 	const functionToEdit = useAppSelector(state => state.codeErrors.functionToEdit);
 	const functionToEditFailed = useAppSelector(state => state.codeErrors.functionToEditFailed);
@@ -1192,6 +1195,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 			const submitGrok = async (codeBlock?: string) => {
 				// console.debug("===--- useEffect startGrokLoading");
 				props.setGrokRequested();
+				setGrokRequested(true);
 				dispatch(startGrokLoading(props.codeError));
 				const actualCodeError = (await dispatch(
 					upgradePendingCodeError(props.codeError.id, "Comment", codeBlock, true)
@@ -1211,12 +1215,27 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 				// setText("");
 				// setAttachments([]);
 			};
+			// Case 1 - pending post, will never try to fetch replies
 			if (
-				!isPostThreadsLoading &&
-				derivedState.replies.length === 0 &&
+				codeError.postId === undefined &&
+				!isGrokLoading &&
+				!grokRequested &&
 				(functionToEdit || functionToEditFailed)
 			) {
-				// setIsLoading(true);
+				submitGrok(functionToEdit?.codeBlock).catch(e => {
+					console.error("submitGrok failed", e);
+				});
+				return;
+			}
+			// Case 2 - give a chance for replies to load before deciding to submitGrok
+			if (
+				!isGrokLoading &&
+				isPostThreadsLoading !== undefined && // Hasn't attempted to load yet
+				!isPostThreadsLoading && // Not currently loading
+				!grokRequested &&
+				derivedState.replies.length === 0 && // Has loaded replies and they are empty
+				(functionToEdit || functionToEditFailed)
+			) {
 				submitGrok(functionToEdit?.codeBlock).catch(e => {
 					console.error("submitGrok failed", e);
 				});
