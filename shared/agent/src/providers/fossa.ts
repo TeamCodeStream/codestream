@@ -148,9 +148,9 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 						Logger.error(err);
 					}
 				} else if (project.id.startsWith("custom+")) {
-					const thing = project.id.split("/");
-					const thing1 = thing.slice(1);
-					newUrl = thing1.join("/");
+					const idSplit = project.id.split("/");
+					const idSliced = idSplit.slice(1);
+					newUrl = idSliced.join("/");
 					try {
 						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl}`);
 					} catch (err) {
@@ -171,7 +171,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				}
 			}
 		}
-		return undefined;
+		return;
 	}
 
 	@log()
