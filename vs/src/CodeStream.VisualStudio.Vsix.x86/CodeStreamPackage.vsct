@@ -232,8 +232,6 @@
 		            editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="c" />
 		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkIssueCommandId"
 					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="i" />
-		<KeyBinding guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkPermalinkCommandId"
-					editor="GUID_TextEditorFactory" mod1="Control Shift" key1="VK_OEM_2" key2="p" />
 	</KeyBindings>
 
 	<CommandPlacements>
