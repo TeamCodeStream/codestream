@@ -336,60 +336,6 @@
 				"when": "codestream:status == signedIn"
 			},
 			{
-				"command": "codestream.newReview",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ r",
-				"mac": "ctrl+/ r",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newReview",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ ctrl+shift+r",
-				"mac": "ctrl+/ ctrl+r",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPullRequest",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ m",
-				"mac": "ctrl+/ m",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPullRequest",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ p",
-				"mac": "ctrl+/ p",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPullRequest",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ ctrl+shift+m",
-				"mac": "ctrl+/ ctrl+m",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPullRequest",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ ctrl+shift+p",
-				"mac": "ctrl+/ ctrl+p",
-				"when": "codestream:status == signedIn"
-			},
-			{
 				"command": "codestream.showNextChangedFile",
 				"args": {
 					"source": "Shortcut"
@@ -406,33 +352,6 @@
 				"key": "alt+shift+f6",
 				"mac": "alt+shift+f6",
 				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPermalink",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ l",
-				"mac": "ctrl+/ l",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.newPermalink",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ ctrl+shift+l",
-				"mac": "ctrl+/ ctrl+l",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.copyPermalink",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ shift+l",
-				"mac": "ctrl+/ shift+l",
-				"when": "editorTextFocus && codestream:status == signedIn"
 			}
 		],
 		"menus": {
@@ -466,27 +385,11 @@
 					"when": "codestream:status == signedIn"
 				},
 				{
-					"command": "codestream.newReview",
-					"when": "codestream:status == signedIn"
-				},
-				{
 					"command": "codestream.showPreviousChangedFile",
 					"when": "codestream:status == signedIn"
 				},
 				{
 					"command": "codestream.showNextChangedFile",
-					"when": "codestream:status == signedIn"
-				},
-				{
-					"command": "codestream.newPermalink",
-					"when": "codestream:status == signedIn"
-				},
-				{
-					"command": "codestream.copyPermalink",
-					"when": "codestream:status == signedIn"
-				},
-				{
-					"command": "codestream.newPullRequest",
 					"when": "codestream:status == signedIn"
 				}
 			],
