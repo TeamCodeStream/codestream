@@ -11,22 +11,6 @@ const ComposeTitles = {
 			<span className="function">Add Comment</span>{" "}
 		</span>
 	),
-	// bookmark: (
-	// 	<span>
-	// 		<span className="function">Create Bookmark</span>{" "}
-	// 		<span className="keybinding extra-pad">{modifier}</span>
-	// 		<span className="keybinding">b</span>
-	// 	</span>
-	// ),
-	link: (
-		<span className="compose-title">
-			<span className="binding">
-				<span className="keybinding extra-pad">{modifier}</span>
-				<span className="keybinding">l</span>
-			</span>
-			<span className="function">Get Permalink</span>{" "}
-		</span>
-	),
 	issue: (
 		<span className="compose-title">
 			<span className="binding">
@@ -99,12 +83,6 @@ export const ComposeKeybindings = {
 		<span className="binding">
 			<span className="keybinding extra-pad">{modifier}</span>
 			<span className="keybinding">c</span>
-		</span>
-	),
-	link: (
-		<span className="binding">
-			<span className="keybinding extra-pad">{modifier}</span>
-			<span className="keybinding">l</span>
 		</span>
 	),
 	issue: (

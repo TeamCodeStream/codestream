@@ -18,7 +18,6 @@ export const Keybindings = (props: PropsWithChildren<Props>) => {
 					</FeatureFlag>
 					<div className="function-row">{ComposeTitles.comment}</div>
 					<div className="function-row">{ComposeTitles.issue}</div>
-					<div className="function-row">{ComposeTitles.link}</div>
 					<div className="function-row">{ComposeTitles.privatePermalink}</div>
 					<div className="function-row">{ComposeTitles.toggleCodeStreamPanel}</div>
 				</div>

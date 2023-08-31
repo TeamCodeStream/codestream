@@ -277,20 +277,6 @@ export const CreateCodemarkIcons = (props: Props) => {
 				offset: [-3, 10],
 				isVisible: () => showNonComments,
 			},
-			// {
-			// 	key: "thumbsup",
-			// 	title: ComposeTitles.react,
-			// 	codemarkType: CodemarkType.Reaction,
-			// 	offset: [3, 10],
-			// 	isVisible: () => true
-			// },
-			{
-				key: "link",
-				title: ComposeTitles.link,
-				codemarkType: CodemarkType.Link,
-				offset: [-3, 10],
-				isVisible: () => showNonComments,
-			},
 		];
 		let right = "";
 		if (sidebarLocation === "left") {
