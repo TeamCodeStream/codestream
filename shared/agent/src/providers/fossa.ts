@@ -173,7 +173,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 					}
 				}
 			}
-			return;
+			return undefined;
 		}
 	}
 
