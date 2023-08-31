@@ -163,11 +163,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 					if (parsed) {
 						const [, domain, path] = parsed;
 						const folderName = path.split("/").pop();
-						if (
-							currentRepo.folder.name === folderName &&
-							currentRepo.providerGuess &&
-							domain.includes(currentRepo.providerGuess)
-						) {
+						if (currentRepo.folder.name === folderName) {
 							return project;
 						}
 					}
