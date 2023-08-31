@@ -138,39 +138,38 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 	): Promise<FossaProject | undefined> {
 		if (!repoId) {
 			return undefined;
-		} else {
-			for (const project of fossaProjects) {
-				let parsed;
-				let newUrl;
-				if (project.id.startsWith("git+")) {
-					newUrl = project.id.split("+");
-					newUrl = newUrl[1];
-				} else if (project.id.startsWith("custom+")) {
-					const idSplit = project.id.split("/");
-					const idSliced = idSplit.slice(1);
-					newUrl = idSliced.join("/");
-				} else {
-					Logger.warn("couldn't parse project, ", project);
+		}
+		for (const project of fossaProjects) {
+			let parsed;
+			let newUrl;
+			if (project.id.startsWith("git+")) {
+				newUrl = project.id.split("+");
+				newUrl = newUrl[1];
+			} else if (project.id.startsWith("custom+")) {
+				const idSplit = project.id.split("/");
+				const idSliced = idSplit.slice(1);
+				newUrl = idSliced.join("/");
+			} else {
+				Logger.warn("couldn't parse project, ", project);
+			}
+
+			if (newUrl) {
+				try {
+					parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl}`);
+				} catch (err) {
+					Logger.error(err);
 				}
 
-				if (newUrl) {
-					try {
-						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl}`);
-					} catch (err) {
-						Logger.error(err);
-					}
-
-					if (parsed) {
-						const [, domain, path] = parsed;
-						const folderName = path.split("/").pop();
-						if (currentRepo.folder.name === folderName) {
-							return project;
-						}
+				if (parsed) {
+					const [, domain, path] = parsed;
+					const folderName = path.split("/").pop();
+					if (currentRepo.folder.name === folderName) {
+						return project;
 					}
 				}
 			}
-			return undefined;
 		}
+		return undefined;
 	}
 
 	@log()
