@@ -16,10 +16,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		private string _email;
 		private string _team;
 		private bool _autoSignIn = true;
-
-		private bool _autoHideMarkers;
 		private bool _showMarkerGlyphs = true;
-		private bool _showAvatars = true;
 		private TraceLevel _traceLevel = TraceLevel.Info;
 		
 #if DEBUG
@@ -191,19 +188,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		}
 
 		[Category("UI")]
-		[DisplayName()]
-		[Description("Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file")]
-		public bool AutoHideMarkers {
-			get => _autoHideMarkers;
-			set {
-				if (_autoHideMarkers != value) {
-					_autoHideMarkers = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("UI")]
 		[DisplayName("Show Marker Glyphs")]
 		[Description("Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor")]
 		public bool ShowMarkerGlyphs {
@@ -211,19 +195,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 			set {
 				if (_showMarkerGlyphs != value) {
 					_showMarkerGlyphs = value;
-					NotifyPropertyChanged();
-				}
-			}
-		}
-
-		[Category("UI")]
-		[DisplayName("Show Avatars")]
-		[Description("Specifies whether to show avatars")]
-		public bool ShowAvatars {
-			get => _showAvatars;
-			set {
-				if (_showAvatars != value) {
-					_showAvatars = value;
 					NotifyPropertyChanged();
 				}
 			}

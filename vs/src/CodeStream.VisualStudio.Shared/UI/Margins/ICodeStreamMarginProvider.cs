@@ -15,17 +15,13 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 
     public interface ICodeStreamWpfTextViewMargin : IWpfTextViewMargin
     {
-        bool IsReady();
         bool CanToggleMargin { get; }
         void OnSessionLogout();
         void OnSessionReady();
         void OnMarkerChanged();
 		void OnZoomChanged(double zoomLevel, Transform transform);
         bool TryHideMargin();
-		bool TryShowMargin();
-		void SetAutoHideMarkers(bool autoHideMarkers);
 		void ToggleMargin(bool requestingVisibility);
-        void RefreshMargin();
         void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e);
     }
 }

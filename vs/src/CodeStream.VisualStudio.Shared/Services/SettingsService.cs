@@ -92,11 +92,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			set => DialogPage.Team = value;
 		}
 
-		public bool ShowAvatars {
-			get => DialogPage.ShowAvatars;
-			set => DialogPage.ShowAvatars = value;
-		}
-
 		public string ServerUrl {
 			get => DialogPage.ServerUrl;
 			set => DialogPage.ServerUrl = value;
@@ -115,11 +110,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public bool AutoSignIn {
 			get => DialogPage.AutoSignIn;
 			set => DialogPage.AutoSignIn = value;
-		}
-
-		public bool AutoHideMarkers {
-			get => DialogPage.AutoHideMarkers;
-			set => DialogPage.AutoHideMarkers = value;
 		}
 
 		public bool ProxyStrictSsl {

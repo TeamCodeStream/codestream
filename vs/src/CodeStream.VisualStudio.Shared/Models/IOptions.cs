@@ -5,10 +5,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	public interface IOptions {
 		string Email { get; set; }
 		string Team { get; set; }
-		bool ShowAvatars { get; set; }
 		bool AutoSignIn { get; set; }
 
-		bool AutoHideMarkers { get; set; }
 		bool ShowMarkerGlyphs { get; set; }
 
 		string ServerUrl { get; set; }

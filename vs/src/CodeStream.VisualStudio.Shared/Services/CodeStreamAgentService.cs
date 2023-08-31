@@ -352,7 +352,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						Configs = new Configs
 						{
 							Email = settingsManager.Email,
-							ShowAvatars = settingsManager.ShowAvatars,
+							ShowAvatars = true,	// TODO O11y-Only
 							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
 							ServerUrl = settingsManager.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()
@@ -413,7 +413,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						Configs = new Configs
 						{
 							Email = (string)state["email"],
-							ShowAvatars = settings.Options.ShowAvatars,
+							ShowAvatars = true,	// TODO: O11y-Only
 							ShowGoldenSignalsInEditor = _vsSettingsManager.IsCodeLevelMetricsEnabled(),
 							ServerUrl = settings.Options.ServerUrl,
 							TraceLevel = settingsManager.GetAgentTraceLevel()

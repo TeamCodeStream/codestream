@@ -129,7 +129,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
 
 						InitializeMargin();
-						if (_sessionService.AreMarkerGlyphsVisible || !_codeStreamSettingsManager.AutoHideMarkers) {
+						if (_sessionService.AreMarkerGlyphsVisible) {
 							TryShowMargin();
 							RefreshMargin();
 						}
@@ -162,8 +162,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 
 		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
 			ThreadHelper.ThrowIfNotOnUIThread();
-			
-			if (_codeStreamSettingsManager.AutoHideMarkers) return;
 
 			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
 
@@ -180,24 +178,7 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 
 		public bool TryShowMargin() => this.TryShow();
 
-		public bool TryHideMargin() {
-			if (!_codeStreamSettingsManager.AutoHideMarkers) return false;
-
-			return this.TryHide();
-		}
-
-		public void SetAutoHideMarkers(bool autoHideMarkers) {
-			if (autoHideMarkers == true) {
-				if ( _sessionService.IsWebViewVisible) {
-					TryHideMargin();
-				}
-			}
-			else {
-				if (_sessionService.IsWebViewVisible) {
-					TryShowMargin();
-				}
-			}
-		}
+		public bool TryHideMargin() => this.TryHide();
 
 		public void ToggleMargin(bool requestingVisibility) {
 			try {

@@ -135,20 +135,6 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 					LogManager.SetTraceLevel(_codeStreamSettingsManager.GetExtensionTraceLevel());
 					break;
 
-				case nameof(_codeStreamSettingsManager.AutoHideMarkers):
-				{
-					if (!(sender is OptionsDialogPage odp))
-					{
-						return;
-					}
-
-					var eventAggregator = _componentModel.GetService<IEventAggregator>();
-					eventAggregator?.Publish(new AutoHideMarkersEvent { Value = odp.AutoHideMarkers });
-
-					break;
-				}
-
-				case nameof(_codeStreamSettingsManager.ShowAvatars):
 				case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
 				{
 					if (!(sender is OptionsDialogPage odp))
@@ -161,14 +147,8 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 						_componentModel.GetService<IBrowserService>()
 					);
 
-					switch (args.PropertyName) {
-						case nameof(_codeStreamSettingsManager.ShowAvatars):
-							configurationController.ToggleShowAvatars(odp.ShowAvatars);
-							break;
-						case nameof(_codeStreamSettingsManager.ShowMarkerGlyphs):
-							configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
-							break;
-					}
+
+					configurationController.ToggleShowMarkerGlyphs(odp.ShowMarkerGlyphs);
 
 					break;
 				}

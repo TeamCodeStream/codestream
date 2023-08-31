@@ -20,11 +20,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 				}
 			});
 
-		public static void SetAutoHideMarkers(this List<ICodeStreamWpfTextViewMargin> items, bool autoHideMarkers)
-		=> items.ForEach(_ => {
-			_.SetAutoHideMarkers(autoHideMarkers);
-		});
-
 		public static void Hide(this List<ICodeStreamWpfTextViewMargin> items) =>
 			items.ForEach(_ => _.TryHideMargin());
 

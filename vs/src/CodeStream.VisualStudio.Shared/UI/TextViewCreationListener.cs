@@ -189,10 +189,6 @@ namespace CodeStream.VisualStudio.Shared.UI {
 								.ObserveOnApplicationDispatcher()
 								.Subscribe(_ => textViewMarginProviders.Toggle(_.IsVisible)),
 
-							EventAggregator.GetEvent<AutoHideMarkersEvent>()
-								.ObserveOnApplicationDispatcher()
-								.Subscribe(_ => textViewMarginProviders.SetAutoHideMarkers(_.Value)),
-
 							textViewLayoutChangedSubject.Throttle(TimeSpan.FromMilliseconds(150))
 								.ObserveOn(Scheduler.Default)
 								.Subscribe(subject => { _ = OnTextViewLayoutChangedSubjectHandlerAsync(subject); }),
