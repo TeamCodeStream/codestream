@@ -5,9 +5,9 @@ import { describe, expect, it } from "@jest/globals";
 import { FossaProvider } from "../../../src/providers/fossa";
 
 describe("fossaProvider", () => {
-	it("matchRepoToFossaProject", async () => {
+	it("matchRepoToFossaProjectUsingPlusCustom", async () => {
 		const fossa = new FossaProvider({} as any, {} as any);
-		const asdf = await fossa._matchRepoToFossaProject(
+		const response = await fossa._matchRepoToFossaProject(
 			{
 				currentBranch: "develop",
 				folder: {
@@ -26,12 +26,12 @@ describe("fossaProvider", () => {
 			] as any,
 			"1234"
 		);
-		expect(asdf!.id).toEqual("custom+1234/example.com/foobar/bar");
+		expect(response!.id).toEqual("custom+1234/example.com/foobar/bar");
 	});
 
-	it("matchRepoToFossaProject", async () => {
+	it("matchRepoToFossaProjectUsingPlusGit", async () => {
 		const fossa = new FossaProvider({} as any, {} as any);
-		const asdf = await fossa._matchRepoToFossaProject(
+		const response = await fossa._matchRepoToFossaProject(
 			{
 				currentBranch: "develop",
 				folder: {
@@ -50,12 +50,12 @@ describe("fossaProvider", () => {
 			] as any,
 			"1234"
 		);
-		expect(asdf!.id).toEqual("git+example.com/foobar/bar");
+		expect(response!.id).toEqual("git+example.com/foobar/bar");
 	});
 
-	it("matchRepoToFossaProject", async () => {
+	it("matchRepoToFossaProjectWithNeitherCustomNorGit", async () => {
 		const fossa = new FossaProvider({} as any, {} as any);
-		const asdf = await fossa._matchRepoToFossaProject(
+		const response = await fossa._matchRepoToFossaProject(
 			{
 				currentBranch: "develop",
 				folder: {
@@ -74,6 +74,6 @@ describe("fossaProvider", () => {
 			] as any,
 			"1234"
 		);
-		expect(asdf).toEqual(undefined);
+		expect(response).toEqual(undefined);
 	});
 });

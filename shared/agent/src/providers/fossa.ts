@@ -136,44 +136,45 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		fossaProjects: FossaProject[],
 		repoId?: string
 	): Promise<FossaProject | undefined> {
-		if (repoId) {
+		if (!repoId) {
+			return undefined;
+		} else {
 			for (const project of fossaProjects) {
 				let parsed;
 				let newUrl;
 				if (project.id.startsWith("git+")) {
 					newUrl = project.id.split("+");
-					try {
-						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl[1]}`);
-					} catch (err) {
-						Logger.error(err);
-					}
+					newUrl = newUrl[1];
 				} else if (project.id.startsWith("custom+")) {
 					const idSplit = project.id.split("/");
 					const idSliced = idSplit.slice(1);
 					newUrl = idSliced.join("/");
+				} else {
+					Logger.warn("couldn't parse project, ", project);
+				}
+
+				if (newUrl) {
 					try {
 						parsed = await GitRemoteParser.parseGitUrl(`https://${newUrl}`);
 					} catch (err) {
 						Logger.error(err);
 					}
-				} else {
-					Logger.warn("couldn't parse project, ", project);
-				}
 
-				if (parsed) {
-					const [, domain, path] = parsed;
-					const folderName = path.split("/").pop();
-					if (
-						currentRepo.folder.name === folderName &&
-						currentRepo.providerGuess &&
-						domain.includes(currentRepo.providerGuess)
-					) {
-						return project;
+					if (parsed) {
+						const [, domain, path] = parsed;
+						const folderName = path.split("/").pop();
+						if (
+							currentRepo.folder.name === folderName &&
+							currentRepo.providerGuess &&
+							domain.includes(currentRepo.providerGuess)
+						) {
+							return project;
+						}
 					}
 				}
 			}
+			return;
 		}
-		return;
 	}
 
 	@log()

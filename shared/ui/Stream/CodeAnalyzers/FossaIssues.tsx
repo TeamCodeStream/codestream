@@ -212,7 +212,9 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 	const vuln = props.issue;
 
 	const subtleText = vuln.remediation
-		? `${vuln.source.version} -> ${vuln.remediation.completeFixDistance}`
+		? `${vuln.source.version} -> ${
+				vuln.remediation.completeFixDistance ? vuln.remediation.completeFixDistance : "Unknown Fix"
+		  }`
 		: vuln.source.version;
 	const tooltipText = `Vulnerability: ${vuln.title}`;
 

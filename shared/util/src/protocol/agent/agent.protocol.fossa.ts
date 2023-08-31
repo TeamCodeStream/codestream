@@ -48,7 +48,12 @@ export interface VulnerabilityIssue extends BaseIssueType {
 	cvss: number;
 	severity: VulnSeverity;
 	details: string;
-	remediation: string;
+	remediation: {
+		partialFix: string;
+		completeFix: string;
+		completeFixDistance: string;
+		partialFixDistance: string;
+	};
 	metrics: { name: string; value: string }[];
 	cveStatus: string;
 	cwes: string[];
