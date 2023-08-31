@@ -124,7 +124,7 @@ export class CodemarkDecorationProvider implements HoverProvider, Disposable {
 	}
 
 	suspend() {
-		if (this._suspended || !Container.config.autoHideMarkers) return;
+		if (this._suspended) return;
 
 		this._suspended = true;
 		this.ensure(true);

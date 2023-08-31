@@ -62,12 +62,6 @@
 			"type": "object",
 			"title": "CodeStream",
 			"properties": {
-				"codestream.autoHideMarkers": {
-					"type": "boolean",
-					"default": false,
-					"description": "Specifies whether to automatically hide editor marker glyphs when the CodeStream panel is showing codemarks in the current file",
-					"scope": "window"
-				},
 				"codestream.autoSignIn": {
 					"type": "boolean",
 					"default": true,
@@ -108,12 +102,6 @@
 					"description": "Specifies the url to use to connect to the CodeStream service",
 					"scope": "window"
 				},
-				"codestream.showAvatars": {
-					"type": "boolean",
-					"default": true,
-					"description": "Specifies whether to show avatars",
-					"scope": "window"
-				},
 				"codestream.showInStatusBar": {
 					"type": "string",
 					"enum": [
@@ -136,22 +124,10 @@
 					"description": "Specifies whether to show git blame information at the end of lines",
 					"scope": "window"
 				},
-				"codestream.showMarkerCodeLens": {
-					"type": "boolean",
-					"default": false,
-					"description": "Specifies whether to show code lens above lines with associated codemarks in the editor",
-					"scope": "window"
-				},
 				"codestream.showMarkerGlyphs": {
 					"type": "boolean",
 					"default": true,
 					"description": "Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor",
-					"scope": "window"
-				},
-				"codestream.showShortcutTipOnSelection": {
-					"type": "boolean",
-					"default": false,
-					"description": "Specifies whether to show a shortcut key tip attached to the selection when you select code",
 					"scope": "window"
 				},
 				"codestream.traceLevel": {
