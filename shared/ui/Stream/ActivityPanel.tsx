@@ -55,7 +55,6 @@ import { Reply } from "./Posts/Reply";
 import { LoadingMessage } from "../src/components/LoadingMessage";
 import { Headshot } from "../src/components/Headshot";
 import { ProfileLink } from "../src/components/ProfileLink";
-import { Keybindings } from "./Keybindings";
 import { Dialog } from "../src/components/Dialog";
 
 interface MenuItem {
@@ -500,13 +499,9 @@ export const ActivityPanel = () => {
 	const renderActivity = () => {
 		if (activity.length === 0 && !derivedState.hasMoreActivity) {
 			return (
-				<div style={{ height: "75vh" }}>
-					<Keybindings>
-						The activity feed will let you know when your teammates create codemarks, assign issues,
-						request reviews, or add replies.
-						<br />
-						<br />
-					</Keybindings>
+				<div style={{ height: "75vh", padding: "0 20px" }}>
+					The activity feed will let you know when your teammates start new discussions or there are
+					new replies to existing discussions.
 				</div>
 			);
 		}
