@@ -69,27 +69,7 @@ export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposa
 				title: "Create Issue",
 				command: "codestream.newIssue",
 				arguments: [args]
-			},
-			// {
-			// 	title: `Create Bookmark`,
-			// 	command: "codestream.newBookmark",
-			// 	arguments: [args]
-			// },
-			{
-				title: "Get Permalink",
-				command: "codestream.newPermalink",
-				arguments: [args]
 			}
-			// {
-			// 	title: "Request Feedback",
-			// 	command: "codestream.newReview",
-			// 	arguments: [args]
-			// },
-			// {
-			// 	title: "Open a Pull Request",
-			// 	command: "codestream.newPullRequest",
-			// 	arguments: [args]
-			// }
 		];
 		return commands;
 	}
