@@ -7,7 +7,6 @@ import React from "react";
 import styled from "styled-components";
 import {
 	WebviewModals,
-	WebviewPanelNames,
 	OpenUrlRequestType,
 } from "@codestream/protocols/webview";
 import {
@@ -21,12 +20,12 @@ import { CodeStreamState } from "../store";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { openModal, setCurrentOrganizationInvite, setProfileUser } from "../store/context/actions";
 import { HostApi } from "../webview-api";
-import { openPanel, setUserPreference } from "./actions";
+import { openPanel } from "./actions";
 import Icon from "./Icon";
 import { MarkdownText } from "./MarkdownText";
 import Menu from "./Menu";
 import { multiStageConfirmPopup } from "./MultiStageConfirm";
-import { AVAILABLE_PANES, DEFAULT_PANE_SETTINGS } from "./Sidebar";
+import { AVAILABLE_PANES } from "./Sidebar";
 import { EMPTY_STATUS } from "./StartWork";
 
 const RegionSubtext = styled.div`
@@ -368,38 +367,10 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			],
 		},
 		{
-			label: "View",
-			action: "view",
-			submenu: derivedState.sidebarPaneOrder
-				.filter(id => AVAILABLE_PANES.includes(id))
-				.map(id => {
-					const settings =
-						derivedState.sidebarPanePreferences[id] || DEFAULT_PANE_SETTINGS[id] || {};
-					return {
-						key: id,
-						label: WebviewPanelNames[id],
-						checked: !settings.removed,
-						action: () => {
-							dispatch(
-								setUserPreference({
-									prefPath: ["sidebarPanes", id, "removed"],
-									value: !settings.removed,
-								})
-							);
-							if (!settings.removed) {
-								HostApi.instance.track("Sidebar Adjusted", {
-									Section: id,
-									Adjustment: "Hidden",
-								});
-							}
-						},
-					};
-				}),
-		},
-		{
 			label: "Notifications",
 			action: () => dispatch(openModal(WebviewModals.Notifications)),
-		}
+		},
+		{ label: "Integrations", action: () => dispatch(openPanel(WebviewPanels.Integrations)) }
 	);
 
 	menuItems.push(
@@ -439,12 +410,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 	// - Keybindings
 	// - FAQ
 	menuItems.push(
-		{ label: "Integrations", action: () => dispatch(openPanel(WebviewPanels.Integrations)) },
-		{
-			label: "New Relic Setup",
-			key: "onboard-newrelic",
-			action: () => go(WebviewPanels.OnboardNewRelic),
-		},
 		{ label: "-" },
 		{
 			label: "Feedback",
@@ -460,11 +425,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => openUrl("https://docs.newrelic.com/docs/codestream"),
 				},
 				{
-					label: "Video Library",
-					key: "videos",
-					action: () => openUrl("https://www.codestream.com/video-library"),
-				},
-				{
 					label: "Keybindings",
 					key: "keybindings",
 					action: () => dispatch(openModal(WebviewModals.Keybindings)),
@@ -474,17 +434,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				// 	key: "getting-started",
 				// 	action: () => dispatch(openPanel(WebviewPanels.GettingStarted))
 				// },
-				{
-					label: "CodeStream Flow",
-					key: "flow",
-					action: () => dispatch(openPanel(WebviewPanels.Flow)),
-				},
-				// { label: "Onboard", key: "onboard", action: () => go(WebviewPanels.Onboard) },
-				{
-					label: "What's New",
-					key: "whats-new",
-					action: () => openUrl("https://www.codestream.com/blog"),
-				},
 				{
 					label: "Report an Issue",
 					key: "issue",

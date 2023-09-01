@@ -88,24 +88,8 @@ export const IntegrationsPanel = () => {
 			.filter(id => ["newrelic"].includes(providers[id].name))
 			.filter(id => !connectedProviders.includes(id))
 			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
-
-		const codeHostProviders = Object.keys(providers)
-			.filter(id =>
-				[
-					"github",
-					"github_enterprise",
-					"bitbucket",
-					"bitbucket_server",
-					"gitlab",
-					"gitlab_enterprise",
-				].includes(providers[id].name)
-			)
-			.filter(id => !connectedProviders.includes(id))
-			.filter(id => !teamSettings.limitCodeHost || teamCodeHostProviders[id])
-			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
 		const issueProviders = Object.keys(providers)
 			.filter(id => providers[id].hasIssues)
-			.filter(id => !codeHostProviders.includes(id))
 			.filter(id => !connectedProviders.includes(id))
 			.filter(id => !teamSettings.limitIssues || teamIssuesProviders[id])
 			.sort((a, b) => providers[a].name.localeCompare(providers[b].name));
@@ -126,7 +110,6 @@ export const IntegrationsPanel = () => {
 		return {
 			webviewFocused: state.context.hasFocus,
 			providers,
-			codeHostProviders,
 			observabilityProviders,
 			issueProviders,
 			messagingProviders,
@@ -354,11 +337,6 @@ export const IntegrationsPanel = () => {
 							</>
 						)}
 
-						<h2>Code Host &amp; Issue Providers</h2>
-						<IntegrationButtons>
-							{renderProviders(derivedState.codeHostProviders)}
-						</IntegrationButtons>
-
 						<h2>Issue Providers</h2>
 						<IntegrationButtons>{renderProviders(derivedState.issueProviders)}</IntegrationButtons>
 
@@ -367,15 +345,6 @@ export const IntegrationsPanel = () => {
 								<h2>Code Analyzers</h2>
 								<IntegrationButtons>
 									{renderProviders(derivedState.codeAnalyzersProviders)}
-								</IntegrationButtons>
-							</>
-						)}
-
-						{derivedState.cicdProviders.length > 0 && (
-							<>
-								<h2>CI/CD Providers</h2>
-								<IntegrationButtons>
-									{renderProviders(derivedState.cicdProviders)}
 								</IntegrationButtons>
 							</>
 						)}

@@ -135,8 +135,8 @@ export const Notifications = props => {
 					)}
 					<p className="explainer">
 						{derivedState.hasDesktopNotifications
-							? "Follow codemarks and feedback requests to receive desktop and email notifications."
-							: "Follow codemarks and feedback requests to receive email notifications."}
+							? "Follow discussions to receive desktop and email notifications."
+							: "Follow discussions to receive email notifications."}
 					</p>
 					<div id="controls">
 						<RadioGroup
@@ -145,16 +145,11 @@ export const Notifications = props => {
 							onChange={handleChange}
 							loading={loading}
 						>
-							<Radio value="all">
-								Automatically follow all new codemarks and feedback requests
-							</Radio>
+							<Radio value="all">Automatically follow all new discussions</Radio>
 							<Radio value="involveMe">
-								Follow codemarks and feedback requests I have created, I have been mentioned in, or
-								I have replied to
+								Follow discussions I have created, I have been mentioned in, or I have replied to
 							</Radio>
-							<Radio value="off">
-								Don't automatically follow any codemarks or feedback requests
-							</Radio>
+							<Radio value="off">Don't automatically follow any discussions</Radio>
 						</RadioGroup>
 						{derivedState.hasDesktopNotifications && derivedState.notificationDeliverySupported && (
 							<div style={{ marginTop: "20px" }}>
@@ -188,7 +183,7 @@ export const Notifications = props => {
 							</div>
 						)}
 						<h3>Email Notifications</h3>
-						<div style={{ marginTop: "20px" }}>
+						{/* <div style={{ marginTop: "20px" }}>
 							<Checkbox
 								name="frReminders"
 								checked={derivedState.reviewReminderDelivery}
@@ -197,7 +192,7 @@ export const Notifications = props => {
 							>
 								Send me an email reminder for outstanding feedback requests
 							</Checkbox>
-						</div>
+						</div> */}
 						<div style={{ marginTop: "20px" }}>
 							<Checkbox
 								name="weeklyEmails"
@@ -221,7 +216,7 @@ export const Notifications = props => {
 										Notify me about performance issues
 									</Checkbox>
 								</div>
-								<div style={{ marginTop: "20px" }}>
+								{/* <div style={{ marginTop: "20px" }}>
 									<Checkbox
 										name="createReviewOnDetectUnreviewedCommits"
 										checked={derivedState.createReviewOnDetectUnreviewedCommits}
@@ -230,8 +225,8 @@ export const Notifications = props => {
 									>
 										Notify me about new unreviewed commits from teammates when I pull
 									</Checkbox>
-								</div>
-								{derivedState.showPRNotificationSetting && (
+								</div> */}
+								{/* {derivedState.showPRNotificationSetting && (
 									<div style={{ marginTop: "20px" }}>
 										<Checkbox
 											name="toastPrNotify"
@@ -242,7 +237,7 @@ export const Notifications = props => {
 											Notify me about pull requests assigned to me
 										</Checkbox>
 									</div>
-								)}
+								)} */}
 							</div>
 						)}
 						<p>&nbsp;</p>

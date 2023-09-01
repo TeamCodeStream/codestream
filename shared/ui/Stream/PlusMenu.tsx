@@ -111,7 +111,7 @@ export function PlusMenu(props: PlusMenuProps) {
 			label: "Request Feedback",
 			subtextWide: "Get quick feedback on your WIP",
 			action: () => go(WebviewPanels.NewReview),
-			shortcut: ComposeKeybindings.review,
+			// shortcut: ComposeKeybindings.review,
 			key: "review",
 		});
 	}
@@ -122,7 +122,7 @@ export function PlusMenu(props: PlusMenuProps) {
 		label: `New ${derivedState.prLabel.PullRequest}`,
 		subtextWide: `Open a ${derivedState.prLabel.PullRequest}`,
 		action: () => go(WebviewPanels.NewPullRequest),
-		shortcut: ComposeKeybindings.pr,
+		// shortcut: ComposeKeybindings.pr,
 		key: "pr",
 	});
 
