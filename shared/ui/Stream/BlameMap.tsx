@@ -163,7 +163,7 @@ export function BlameMap() {
 			<p className="explainer">
 				Your organization's blame map allows you to reassign code responsibility for coworkers with
 				multiple email addresses, or who have left your organization. This impacts who gets
-				at-mentioned in code comments, and suggested as reviewers for Feedback Requests.
+				at-mentioned in code comments.
 			</p>
 			{!isCurrentUserAdmin && (
 				<p className="explainer">
