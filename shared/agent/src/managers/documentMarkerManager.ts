@@ -266,18 +266,6 @@ export class DocumentMarkerManager {
 		}
 	}
 
-	private async getFilters() {
-		const { users } = SessionContainer.instance();
-		const preferences = (await users.getMe()).preferences;
-		if (!preferences) return {};
-
-		return {
-			excludeArchived: !preferences.codemarksShowArchived,
-			excludeResolved: !!preferences.codemarksHideResolved,
-			excludeReviews: !!preferences.codemarksHideReviews,
-		};
-	}
-
 	private async getDocumentMarkersForPullRequestDiff({
 		textDocument: documentId,
 	}: FetchDocumentMarkersRequest) {
@@ -570,15 +558,12 @@ export class DocumentMarkerManager {
 
 			const { markers, markersNotLocated } = await this.getCodemarkDocumentMarkers(request);
 
-			const filters = await this.getFilters();
-
 			const filteredMarkers = request.applyFilters
 				? markers.filter(marker => {
 						const { codemark } = marker;
 						if (!codemark) return false;
-						if (filters.excludeArchived && !codemark.pinned) return false;
-						if (filters.excludeReviews && codemark.reviewId) return false;
-						if (filters.excludeResolved && codemark.status === "closed") return false;
+						if (!codemark.pinned) return false;
+						if (codemark.reviewId) return false;
 						return true;
 				  })
 				: markers;

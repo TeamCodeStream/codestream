@@ -810,8 +810,8 @@ export type SidebarPanes = {
 		maximized?: boolean;
 		removed?: boolean;
 		size?: number;
-	}
-}
+	};
+};
 
 export interface CSMePreferences {
 	telemetryConsent?: boolean; // legacy
@@ -848,11 +848,6 @@ export interface CSMePreferences {
 
 	//current repo in o11y pane
 	currentO11yRepoId?: string;
-
-	// which icons to show in the editor gutters
-	codemarksHideReviews?: boolean;
-	codemarksHideResolved?: boolean;
-	codemarksShowArchived?: boolean;
 
 	defaultResolveAction?: "resolve" | "archive";
 
