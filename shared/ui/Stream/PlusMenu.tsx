@@ -104,28 +104,6 @@ export function PlusMenu(props: PlusMenuProps) {
 		);
 	}
 
-	if (derivedState.lightningCodeReviewsEnabled && !derivedState.isPDIdev) {
-		if (menuItems.length > 0) menuItems.push({ label: "-" });
-		menuItems.push({
-			icon: <Icon name="review" />,
-			label: "Request Feedback",
-			subtextWide: "Get quick feedback on your WIP",
-			action: () => go(WebviewPanels.NewReview),
-			shortcut: ComposeKeybindings.review,
-			key: "review",
-		});
-	}
-
-	if (menuItems.length > 0) menuItems.push({ label: "-" });
-	menuItems.push({
-		icon: <Icon name="pull-request" />,
-		label: `New ${derivedState.prLabel.PullRequest}`,
-		subtextWide: `Open a ${derivedState.prLabel.PullRequest}`,
-		action: () => go(WebviewPanels.NewPullRequest),
-		shortcut: ComposeKeybindings.pr,
-		key: "pr",
-	});
-
 	return (
 		<Menu
 			items={menuItems}
