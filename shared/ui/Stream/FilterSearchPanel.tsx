@@ -25,7 +25,6 @@ import { setUserPreference } from "./actions";
 import { SetUserPreferenceRequest } from "./actions.types";
 import Icon from "./Icon";
 import Menu from "./Menu";
-import { ProTip } from "./ProTip";
 import ScrollBox from "./ScrollBox";
 import SearchResult from "./SearchResult";
 import { withSearchableItems, WithSearchableItemsProps } from "./withSearchableItems";
@@ -786,12 +785,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				action: () => this.props.setQuery("is:open type:comment"),
 				lightningOnly: true,
 			},
-			{
-				label: "Open Feedback Requests",
-				key: "open-frs",
-				action: () => this.props.setQuery("is:open type:fr"),
-				lightningOnly: true,
-			},
 			{ label: "-" },
 			{
 				label: "Your Issues",
@@ -802,12 +795,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 				label: "Your Code Comments",
 				key: "comments",
 				action: () => this.props.setQuery("is:comment author:@me "),
-			},
-			{
-				label: "Your Feedback Requests",
-				key: "reviews",
-				action: () => this.props.setQuery("is:fr author:@me "),
-				lightningOnly: true,
 			},
 			{ label: "-" },
 			{
@@ -959,7 +946,6 @@ export class SimpleFilterSearchPanel extends Component<Props, State> {
 							{!this.state.totalItems && (
 								<div className="no-matches">No results match your search.</div>
 							)}
-							<ProTip />
 						</div>
 					</ScrollBox>
 				</div>
