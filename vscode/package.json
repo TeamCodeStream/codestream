@@ -379,11 +379,6 @@
 					"command": "codestream.newIssue",
 					"when": "codestream:status == signedIn && resourceScheme == file",
 					"group": "9_zcodestream@2"
-				},
-				{
-					"command": "codestream.newPermalink",
-					"when": "codestream:status == signedIn && resourceScheme == file",
-					"group": "9_zcodestream@4"
 				}
 			]
 		},
