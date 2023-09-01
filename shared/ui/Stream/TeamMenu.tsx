@@ -144,12 +144,6 @@ export function TeamMenu(props: TeamMenuProps) {
 				action: () => go(WebviewModals.TeamSetup),
 				disabled: !derivedState.autoJoinSupported,
 			},
-			{
-				icon: <Icon name="gear" />,
-				label: "Feedback Request Settings...",
-				key: "review-settings",
-				action: () => go(WebviewModals.ReviewSettings),
-			},
 			{ label: "-" },
 			{
 				icon: <Icon name="download" />,

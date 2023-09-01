@@ -314,42 +314,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 					action: () => dispatch(openModal(WebviewModals.TeamSetup)),
 					disabled: !derivedState.autoJoinSupported,
 				},
-				{
-					label: "Feedback Request Settings...",
-					key: "feedback-request-settings",
-					action: () => dispatch(openModal(WebviewModals.ReviewSettings)),
-					disabled: !derivedState.multipleReviewersApprove,
-				},
-				// {
-				// 	label: "Live View Settings",
-				// 	key: "live-view-settings",
-				// 	submenu: [
-				// 		{
-				// 			label: "Always On",
-				// 			checked: xraySetting === "on",
-				// 			action: () => changeXray("on")
-				// 		},
-				// 		{
-				// 			label: "Always Off",
-				// 			checked: xraySetting === "off",
-				// 			action: () => changeXray("off")
-				// 		},
-				// 		{
-				// 			label: "User Selectable",
-				// 			checked: !xraySetting || xraySetting === "user",
-				// 			action: () => changeXray("user")
-				// 		},
-				// 		{ label: "-", action: () => {} },
-				// 		{
-				// 			label: "What is Live View?",
-				// 			action: () => {
-				// 				HostApi.instance.send(OpenUrlRequestType, {
-				// 					url: "https://docs.newrelic.com/docs/codestream/how-use-codestream/my-organization/"
-				// 				});
-				// 			}
-				// 		}
-				// 	]
-				// },
 				{ label: "-" },
 				{ label: "Export Data", action: () => go(WebviewPanels.Export) },
 				{ label: "-" },

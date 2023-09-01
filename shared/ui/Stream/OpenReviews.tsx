@@ -13,7 +13,6 @@ import {
 	setCurrentReview,
 	setNewPostEntry,
 	openPanel,
-	openModal,
 	setCreatePullRequest,
 	clearCurrentPullRequest,
 } from "../store/context/actions";
@@ -30,7 +29,6 @@ import {
 	PaneNode,
 	PaneNodeName,
 } from "../src/components/Pane";
-import { WebviewModals } from "../ipc/webview.protocol.common";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { Link } from "./Link";
 import { ReviewsLoading } from "@codestream/webview/Stream/ReviewsLoading";
@@ -123,13 +121,6 @@ export const OpenReviews = React.memo(function OpenReviews(props: Props) {
 					}}
 					name="plus"
 					title="Request Feedback"
-					placement="bottom"
-					delay={1}
-				/>
-				<Icon
-					onClick={() => dispatch(openModal(WebviewModals.ReviewSettings))}
-					name="gear"
-					title="Feedback Request Settings"
 					placement="bottom"
 					delay={1}
 				/>

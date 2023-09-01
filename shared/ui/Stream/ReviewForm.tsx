@@ -46,7 +46,6 @@ import {
 import { SelectPeople } from "@codestream/webview/src/components/SelectPeople";
 import HeadshotMenu from "@codestream/webview/src/components/HeadshotMenu";
 import { Headshot } from "@codestream/webview/src/components/Headshot";
-import { LabeledSwitch } from "@codestream/webview/src/components/controls/LabeledSwitch";
 import { WebviewPanels } from "@codestream/protocols/api";
 import { ReviewShowLocalDiffRequestType } from "@codestream/protocols/webview";
 import { EditorRevealRangeRequestType } from "../ipc/host.protocol.editor";
@@ -168,9 +167,6 @@ interface ConnectedProps {
 	statusLabel: string;
 	statusIcon: string;
 	currentRepoPath?: string;
-	ideSupportsCreateReviewOnCommit: boolean;
-	isAutoFREnabled: boolean;
-	createReviewOnCommit?: boolean;
 }
 
 interface State {
@@ -238,8 +234,6 @@ interface State {
 	currentFile?: string;
 	editingReviewBranch?: string;
 	addressesIssues: { [codemarkId: string]: boolean };
-	createReviewOnCommit: boolean;
-	showCreateReviewOnCommitToggle: boolean;
 	attachments: AttachmentField[];
 	isDragging: number;
 }
@@ -438,39 +432,10 @@ class ReviewForm extends React.Component<Props, State> {
 	}
 
 	componentDidMount() {
-		const {
-			isEditing,
-			isAmending,
-			textEditorUri,
-			currentRepoPath,
-			ideSupportsCreateReviewOnCommit,
-			createReviewOnCommit,
-			isAutoFREnabled,
-		} = this.props;
+		const { isEditing, isAmending, textEditorUri, currentRepoPath } = this.props;
 		if (isEditing && !isAmending) return;
 
 		this.setState({ mountedTimestamp: new Date().getTime() });
-		if (!isEditing && !isAmending) {
-			const isCreatingReviewOnCommit =
-				this.props.currentReviewOptions && this.props.currentReviewOptions.includeLatestCommit;
-			const showCreateReviewOnCommitToggle =
-				ideSupportsCreateReviewOnCommit &&
-				isAutoFREnabled &&
-				(isCreatingReviewOnCommit || !createReviewOnCommit);
-			this.setState({ showCreateReviewOnCommitToggle: showCreateReviewOnCommitToggle });
-
-			if (isCreatingReviewOnCommit) {
-				this._dismissAutoFRTimeout = setTimeout(
-					() => {
-						const { titleTouched, textTouched, reviewersTouched } = this.state;
-						if (!titleTouched && !textTouched && !reviewersTouched) {
-							this.props.closePanel();
-						}
-					},
-					15 * 60 * 1000
-				);
-			}
-		}
 
 		if (isAmending) this.getScmInfoForRepo();
 		else {
@@ -1352,26 +1317,6 @@ class ReviewForm extends React.Component<Props, State> {
 						>
 							{!isAmending && <CancelButton onClick={this.confirmCancel} />}
 							<div className={cx({ "review-container": !isAmending })}>
-								{this.state.showCreateReviewOnCommitToggle && (
-									<div style={{ margin: "-30px 30px 10px 0", display: "flex" }}>
-										<span className="subhead muted">Auto-prompt for feedback when committing </span>
-										<span
-											key="toggle-review-create-on-commit"
-											className="headline-flex"
-											style={{ display: "inline-block", marginLeft: "10px" }}
-										>
-											<LabeledSwitch
-												key="review-create-on-commit-toggle"
-												on={this.props.createReviewOnCommit}
-												offLabel="No"
-												onLabel="Yes"
-												onChange={this.toggleCreateReviewOnCommitEnabled}
-												height={20}
-												width={60}
-											/>
-										</span>
-									</div>
-								)}
 								<div style={{ height: "5px" }}></div>
 
 								<div className="codemark-form-container">{this.renderReviewForm()}</div>
@@ -2196,11 +2141,6 @@ class ReviewForm extends React.Component<Props, State> {
 		this.setState({ title, titleTouched: true });
 	}
 
-	toggleCreateReviewOnCommitEnabled = (value: boolean) => {
-		this.props.setUserPreference({ prefPath: ["reviewCreateOnCommit"], value });
-		this.setState({ createReviewOnCommit: value });
-	};
-
 	renderReviewForm() {
 		const { isEditing, isAmending, currentUser, repos } = this.props;
 		const {
@@ -2660,9 +2600,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 		statusLabel,
 		statusIcon,
 		currentRepoPath: context.currentRepo && context.currentRepo.path,
-		ideSupportsCreateReviewOnCommit: ide.name === "JETBRAINS" || ide.name === "VSC",
-		isAutoFREnabled: isFeatureEnabled(state, "autoFR"),
-		createReviewOnCommit: state.preferences.reviewCreateOnCommit !== false,
 	};
 };
 
