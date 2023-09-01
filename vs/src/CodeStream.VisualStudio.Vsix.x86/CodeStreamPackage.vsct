@@ -106,17 +106,6 @@
 					<LocCanonicalName>CodeStream.ReloadCodeStream</LocCanonicalName>
 				</Strings>
 			</Button>
-			<Button guid="guidWebViewPackageCmdSet" id="WebViewDevToolsCommandId" priority="0x0102" type="Button">
-				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
-				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<CommandFlag>DontCache</CommandFlag>
-				<Strings>
-					<ButtonText>Developer: Open Webview Developer Tools</ButtonText>
-					<CanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</CanonicalName>
-					<LocCanonicalName>CodeStream.DeveloperOpenWebviewDeveloperTools</LocCanonicalName>
-				</Strings>
-			</Button>
 
 			<Button guid="guidWebViewPackageCmdSet" id="AuthenticationCommandId" priority="0x9999" type="Button">
 				<Parent guid="guidWebViewPackageCmdSet" id="CodeStreamMenuControllerGroup200" />
@@ -153,16 +142,6 @@
 					<LocCanonicalName>CodeStream.CreateIssue</LocCanonicalName>
 				</Strings>
 			</Button>
-			<Button guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
-				<Icon guid="guidImagesCommands" id="permalink" />
-				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>Get Permalink</ButtonText>
-					<CanonicalName>CodeStream.GetPermalink</CanonicalName>
-					<LocCanonicalName>CodeStream.GetPermalink</LocCanonicalName>
-				</Strings>
-			</Button>
 
 			<Button guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkCommentCommandId" type="Button">
 				<Icon guid="guidImages" id="logo" />
@@ -174,6 +153,7 @@
 					<LocCanonicalName>CodeStream.AddCommentShortcut</LocCanonicalName>
 				</Strings>
 			</Button>
+
 			<Button guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkIssueCommandId" type="Button">
 				<CommandFlag>DynamicVisibility</CommandFlag>
 				<CommandFlag>DefaultInvisible</CommandFlag>
@@ -183,16 +163,6 @@
 					<LocCanonicalName>CodeStream.CreateIssueShortcut</LocCanonicalName>
 				</Strings>
 			</Button>
-			<Button guid="guidWebViewPackageShortcutCmdSet" id="AddCodemarkPermalinkCommandId" type="Button">
-				<CommandFlag>DynamicVisibility</CommandFlag>
-				<CommandFlag>DefaultInvisible</CommandFlag>
-				<Strings>
-					<ButtonText>Get Permalink</ButtonText>
-					<CanonicalName>CodeStream.GetPermalinkShortcut</CanonicalName>
-					<LocCanonicalName>CodeStream.GetPermalinkShortcut</LocCanonicalName>
-				</Strings>
-			</Button>
-
 
 			<Button guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenuToggleCommand" type="Button">
 				<Icon guid="guidImages" id="logo" />
@@ -219,7 +189,7 @@
 
 		<Bitmaps>
 			<Bitmap guid="guidImages" href="..\resources\Sprites.png" usedList="logo, auth, user, empty4, empty5, empty6" />
-			<Bitmap guid="guidImagesCommands" href="..\resources\CommandsSprites.png" usedList="comment, issue, bookmark, permalink" />
+			<Bitmap guid="guidImagesCommands" href="..\resources\CommandsSprites.png" usedList="comment, issue" />
 		</Bitmaps>
 	</Commands>
 
@@ -254,9 +224,6 @@
 			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkIssueCommandId" priority="0x0002" >
-			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
-		</CommandPlacement>
-		<CommandPlacement guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="AddCodemarkPermalinkCommandId" priority="0x0004" >
 			<Parent guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextCommandGroup"/>
 		</CommandPlacement>
 
@@ -310,7 +277,6 @@
 			<IDSymbol name="AuthenticationCommandId" value="0x0200" />
 			<IDSymbol name="UserCommandId" value="0x0300" />
 			<IDSymbol name="WebViewReloadCommandId" value="0x0400" />
-			<IDSymbol name="WebViewDevToolsCommandId" value="0x0600" />
 		</GuidSymbol>
 
 		<!-- https://social.msdn.microsoft.com/Forums/vstudio/en-US/7c5eb211-3985-426c-a3a2-9da4473dbaf4/my-context-menu-item-made-by-menu-command-in-visual-studio-package-is-not-shown-in-cshtml-files?forum=vsx -->
@@ -327,14 +293,12 @@
 			<IDSymbol name="CodeStreamEditorCommands" value="0x1023" />
 			<IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
 			<IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
-			<IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
 		</GuidSymbol>
 
 		<GuidSymbol name="guidWebViewPackageShortcutCmdSet" value="{A72BBF5D-23D2-4A8A-939E-12C4651DD341}">
 			<IDSymbol name="CodeStreamShortcutCommands" value="0x1023" />
 			<IDSymbol name="AddCodemarkCommentCommandId" value="0x0400" />
 			<IDSymbol name="AddCodemarkIssueCommandId" value="0x0401" />
-			<IDSymbol name="AddCodemarkPermalinkCommandId" value="0x0403" />
 		</GuidSymbol>
 
 		<GuidSymbol name="guidImages" value="{f2c8ef6d-3257-4e0a-8ae0-ef6298dd22c5}" >
@@ -348,8 +312,6 @@
 		<GuidSymbol name="guidImagesCommands" value="{C438D577-2A1C-4CEE-8B33-E056C2281595}" >
 			<IDSymbol name="comment" value="1" />
 			<IDSymbol name="issue" value="2" />
-			<IDSymbol name="bookmark" value="3" />
-			<IDSymbol name="permalink" value="4" />
 		</GuidSymbol>
 	</Symbols>
 </CommandTable>

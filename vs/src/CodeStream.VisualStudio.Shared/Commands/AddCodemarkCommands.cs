@@ -46,22 +46,5 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 				&& IdeService.GetActiveDiffEditor() == null;
 		}
 	}
-
-	internal class AddCodemarkPermalinkCommand : AddCodemarkCommandBase {
-		public AddCodemarkPermalinkCommand(
-			ISessionService sessionService,
-			IIdeService ideService,
-			ICodeStreamSettingsManager codeStreamSettingsManager,
-			Guid commandSet) : base(sessionService, ideService,codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkPermalinkCommandId) { }
-		protected override CodemarkType CodemarkType => CodemarkType.Link;
-
-		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
-			base.OnBeforeQueryStatus(sender, e);
-
-			sender.Visible =
-				CodeStreamSettingsManager.ShowContextMenuCommands
-				&& sender.Visible
-				&& IdeService.GetActiveDiffEditor() == null;
-		}
-	}
+	
 }

@@ -56,7 +56,6 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const int AuthenticationCommandId = 0x0200;
         public const int UserCommandId = 0x0300;
         public const int WebViewReloadCommandId = 0x0400;
-        public const int WebViewDevToolsCommandId = 0x0600;
         public const int IDM_HTMLCTXMENU = 0x0001;
         public const int CodeWindowContextSubMenuGroup = 0x9000;
         public const int CodeWindowContextCommandGroup = 0x9001;
@@ -64,7 +63,6 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const int CodeStreamEditorCommands = 0x1023;
         public const int AddCodemarkCommentCommandId = 0x0400;
         public const int AddCodemarkIssueCommandId = 0x0401;
-        public const int AddCodemarkPermalinkCommandId = 0x0403;
         public const int CodeStreamShortcutCommands = 0x1023;
         public const int logo = 0x0001;
         public const int auth = 0x0002;
@@ -74,7 +72,5 @@ namespace CodeStream.VisualStudio.Vsix.x64
         public const int empty6 = 0x0006;
         public const int comment = 0x0001;
         public const int issue = 0x0002;
-        public const int bookmark = 0x0003;
-        public const int permalink = 0x0004;
     }
 }

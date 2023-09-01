@@ -128,7 +128,6 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 				if (!isDiffViewerActive)
 				{
 					applicableActions.Add(new CodemarkIssueSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument));
-					applicableActions.Add(new CodemarkPermalinkSuggestedAction(_componentModel, wpfTextView, _virtualTextDocument));
 				}
 
 				return new[]
@@ -165,12 +164,6 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		public CodemarkIssueSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument) : base(componentModel, wpfTextView, textDocument) { }
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 		public override string DisplayText { get; } = $"Create Issue";
-	}
-
-	internal class CodemarkPermalinkSuggestedAction : CodemarkSuggestedActionBase {
-		public CodemarkPermalinkSuggestedAction(IComponentModel componentModel, IWpfTextView wpfTextView, IVirtualTextDocument textDocument) : base(componentModel, wpfTextView, textDocument) { }
-		protected override CodemarkType CodemarkType => CodemarkType.Link;
-		public override string DisplayText { get; } = $"Get Permalink";
 	}
 
 	internal abstract class CodemarkSuggestedActionBase : ISuggestedAction {

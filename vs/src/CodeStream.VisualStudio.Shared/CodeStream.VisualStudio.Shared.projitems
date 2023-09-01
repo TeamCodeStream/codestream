@@ -19,7 +19,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Commands\UserCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommandBase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewDevToolsCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewReloadCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewToggleCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\AuthenticationController.cs" />

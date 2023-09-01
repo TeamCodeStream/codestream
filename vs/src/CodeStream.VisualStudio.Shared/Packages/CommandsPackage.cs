@@ -76,17 +76,12 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 					var userCommand = new UserCommand(_sessionService, _codeStreamSettingsManager);
 
 					_commands = new List<VsCommandBase> {
-#if DEBUG
-						new WebViewDevToolsCommand(),
-#endif
 						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
 
 						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
 						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkPermalinkCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
-
+						
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),
 						new WebViewToggleTopLevelMenuCommand(),
