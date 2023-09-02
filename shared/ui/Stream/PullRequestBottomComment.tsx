@@ -15,7 +15,7 @@ import { replaceHtml } from "../utils";
 import { HostApi } from "../webview-api";
 import { DropdownButton, DropdownButtonItems } from "./DropdownButton";
 import Icon from "./Icon";
-import MessageInput from "./MessageInput";
+import { MessageInput } from "./MessageInput";
 import { PRComment, PRCommentCard } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
 

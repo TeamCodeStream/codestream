@@ -5,7 +5,6 @@ import {
 } from "@codestream/protocols/agent";
 import createClassString from "classnames";
 import React, { ReactElement, useEffect, useRef, useState } from "react";
-import ContentEditable from "react-contenteditable";
 import { useIntl } from "react-intl";
 import { shallowEqual } from "react-redux";
 import { EditorSelectRangeRequestType } from "../ipc/webview.protocol";
@@ -48,6 +47,7 @@ import {
 import { CSUser } from "@codestream/protocols/api";
 import { isPending } from "@codestream/webview/store/posts/types";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
+import { AutoHeightTextArea } from "@codestream/webview/src/components/AutoHeightTextArea";
 
 export type PostProps = {
 	id: string;
@@ -153,7 +153,7 @@ export function Post(props: PostProps) {
 	const previousEditing = usePrevious(props.editing);
 	const previousThreadId = usePrevious(derivedState.threadId);
 	const previousCodemark = usePrevious(derivedState.codemark);
-	const contentEditableRef = useRef<ContentEditable>(null);
+	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	const isAdmin = useAppSelector(currentUserIsAdminSelector);
 
 	async function showCode(preserveFocus = false) {
@@ -361,8 +361,7 @@ export function Post(props: PostProps) {
 			const { id } = props;
 			const { post, teamMembers } = derivedState;
 
-			const rawText: string =
-				contentEditableRef?.current?.innerHTML ?? contentEditableRef?.current?.lastHtml ?? "";
+			const rawText: string = textAreaRef?.current?.value ?? "";
 
 			const text = replaceHtml(rawText) ?? "";
 			if (post?.streamId) {
@@ -384,13 +383,13 @@ export function Post(props: PostProps) {
 
 		return (
 			<div className="edit-post">
-				<ContentEditable
+				<AutoHeightTextArea
 					className="message-input"
 					id={id}
-					rows="1"
-					tabIndex="-1"
-					html={escapeHtml(post.text)}
-					ref={contentEditableRef}
+					onChange={() => {}}
+					tabIndex={-1}
+					value={escapeHtml(post.text)}
+					ref={textAreaRef}
 				/>
 				<div className="button-group">
 					<Button

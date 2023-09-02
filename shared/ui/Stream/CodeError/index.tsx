@@ -70,7 +70,7 @@ import { DropdownButton, DropdownButtonItems } from "../DropdownButton";
 import Icon from "../Icon";
 import { Link } from "../Link";
 import Menu from "../Menu";
-import MessageInput, { AttachmentField } from "../MessageInput";
+import { MessageInput, AttachmentField } from "../MessageInput";
 import { Modal } from "../Modal";
 import { RepliesToPost } from "../Posts/RepliesToPost";
 import { AddReactionIcon, Reactions } from "../Reactions";

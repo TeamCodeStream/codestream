@@ -16,7 +16,7 @@ import { createPost, deletePost, fetchThread, markItemRead } from "../actions";
 import Button from "../Button";
 import { confirmPopup } from "../Confirm";
 import Menu from "../Menu";
-import MessageInput, { AttachmentField } from "../MessageInput";
+import { MessageInput, AttachmentField } from "../MessageInput";
 import { Reply } from "./Reply";
 import { MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 

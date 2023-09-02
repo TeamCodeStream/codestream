@@ -1,6 +1,5 @@
 import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
 	PRButtonRowFlex,
@@ -9,7 +8,7 @@ import {
 } from "./PullRequestComponents";
 import { HostApi } from "../webview-api";
 import { FetchThirdPartyPullRequestPullRequest } from "@codestream/protocols/agent";
-import MessageInput from "./MessageInput";
+import { MessageInput } from "./MessageInput";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
 import { PRHeadshot } from "../src/components/Headshot";

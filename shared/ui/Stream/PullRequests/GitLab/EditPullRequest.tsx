@@ -1,7 +1,6 @@
 import { CodeStreamState } from "@codestream/webview/store";
 
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import Icon from "../../Icon";
 import { Button } from "../../../src/components/Button";
@@ -10,13 +9,11 @@ import { Link } from "../../Link";
 import { replaceHtml } from "../../../utils";
 import { PRBranch, PRError } from "../../PullRequestComponents";
 import { api, getMyPullRequests } from "../../../store/providerPullRequests/thunks";
-import MessageInput from "../../MessageInput";
+import { MessageInput } from "../../MessageInput";
 import { TextInput } from "@codestream/webview/Authentication/TextInput";
 import { Modal } from "../../Modal";
 import { Dialog } from "@codestream/webview/src/components/Dialog";
 import { PullRequestRoot } from "./PullRequest";
-import { confirmPopup } from "../../Confirm";
-import { closeAllModals } from "@codestream/webview/store/context/actions";
 import { DropdownButton } from "../../DropdownButton";
 import { Checkbox } from "@codestream/webview/src/components/Checkbox";
 import { SmartFormattedList } from "../../SmartFormattedList";

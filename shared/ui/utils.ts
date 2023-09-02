@@ -289,48 +289,6 @@ export const shortUuid = () => {
 		.substring(0, 22); // Drop '==' padding;
 };
 
-export const isChildOf = (node: any, parentId: string) => {
-	while (node !== null) {
-		if (node.id === parentId) {
-			return true;
-		}
-		node = node.parentNode;
-	}
-
-	return false;
-};
-
-export const getCurrentCursorPosition = (parentId: string) => {
-	const selection = window.getSelection();
-	let charCount = -1;
-	let node: any;
-
-	// console.log(selection);
-	if (selection != null && selection.focusNode) {
-		if (isChildOf(selection.focusNode, parentId)) {
-			node = selection.focusNode;
-			charCount = selection.focusOffset;
-
-			while (node) {
-				if (node.id === parentId) {
-					break;
-				}
-
-				if (node.previousSibling) {
-					node = node.previousSibling;
-					charCount += node.textContent.length;
-				} else {
-					node = node.parentNode;
-					if (node === null) {
-						break;
-					}
-				}
-			}
-		}
-	}
-	return charCount;
-};
-
 export const createRange = (node: any, chars: any, range?: any) => {
 	if (!range) {
 		range = document.createRange();

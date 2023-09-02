@@ -27,7 +27,7 @@ import Icon from "../Icon";
 import { MarkdownText } from "../MarkdownText";
 import MarkerActions from "../MarkerActions";
 import Menu from "../Menu";
-import MessageInput from "../MessageInput";
+import { MessageInput } from "../MessageInput";
 import { AddReactionIcon, Reactions } from "../Reactions";
 import Tag from "../Tag";
 import Timestamp from "../Timestamp";

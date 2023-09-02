@@ -6,7 +6,7 @@ import {
 	FetchThirdPartyPullRequestPullRequest,
 	GitLabMergeRequest,
 } from "@codestream/protocols/agent";
-import MessageInput from "./MessageInput";
+import { MessageInput } from "./MessageInput";
 import { Button } from "../src/components/Button";
 import { confirmPopup } from "./Confirm";
 import { api } from "../store/providerPullRequests/thunks";

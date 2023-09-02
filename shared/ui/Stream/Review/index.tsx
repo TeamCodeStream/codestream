@@ -81,7 +81,7 @@ import { Link } from "../Link";
 import { LocateRepoButton } from "../LocateRepoButton";
 import { MarkdownText } from "../MarkdownText";
 import Menu from "../Menu";
-import MessageInput, { AttachmentField } from "../MessageInput";
+import { MessageInput, AttachmentField } from "../MessageInput";
 import { RepliesToPost } from "../Posts/RepliesToPost";
 import { PRErrorBox } from "../PullRequestComponents";
 import { AddReactionIcon, Reactions } from "../Reactions";

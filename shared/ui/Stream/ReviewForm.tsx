@@ -98,7 +98,7 @@ import { FeatureFlag } from "./FeatureFlag";
 import Icon from "./Icon";
 import { markdownify } from "./Markdowner";
 import { MarkdownText } from "./MarkdownText";
-import MessageInput, { AttachmentField } from "./MessageInput";
+import { MessageInput, AttachmentField } from "./MessageInput";
 import { Modal } from "./Modal";
 import { MetaCheckboxWithHoverIcon } from "./Review";
 import { ChangesetFileList } from "./Review/ChangesetFileList";

@@ -29,7 +29,7 @@ import { SetUserPreferenceRequest } from "./actions.types";
 import CodemarkActions from "./CodemarkActions";
 import { DropdownButton } from "./DropdownButton";
 import Icon from "./Icon";
-import MessageInput, { AttachmentField } from "./MessageInput";
+import { MessageInput, AttachmentField } from "./MessageInput";
 import PostList from "./PostList";
 import Tooltip from "./Tooltip";
 

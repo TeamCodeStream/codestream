@@ -88,7 +88,7 @@ import Headshot from "./Headshot";
 import Icon from "./Icon";
 import { Link } from "./Link";
 import Menu from "./Menu";
-import MessageInput, { AttachmentField } from "./MessageInput";
+import { MessageInput, AttachmentField } from "./MessageInput";
 import { Modal } from "./Modal";
 import { SharingAttributes, SharingControls } from "./SharingControls";
 import { SmartFormattedList } from "./SmartFormattedList";

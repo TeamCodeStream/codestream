@@ -5,17 +5,16 @@ import Headshot from "./Headshot";
 import Icon from "./Icon";
 import { ModalContext } from "./Modal";
 
-interface Mention {
-	id: string;
+export interface Mention {
+	id?: string;
 	headshot?: {
 		email?: string;
 		username?: string;
 		fullName?: string;
-		avatar?: string;
 	};
 	description?: string;
 	help?: string;
-	identifier: string;
+	identifier?: string;
 }
 
 // AtMentionsPopup expects an on/off switch determined by the on property
@@ -26,8 +25,9 @@ interface Mention {
 // and a prefix, which is used to filter/match against the list
 export interface AtMentionsPopupProps {
 	items: Mention[];
-	handleSelectAtMention(selection: string): void;
-	handleHoverAtMention(selection: string): void;
+	handleSelectAtMention(selection?: string): void;
+	handleHoverAtMention(selection?: string): void;
+	childRef: React.RefObject<HTMLElement>;
 	selected?: string;
 	on?: string;
 	prefix?: string;
@@ -36,7 +36,6 @@ export interface AtMentionsPopupProps {
 export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupProps>) => {
 	const [renderTarget] = React.useState(() => document.createElement("div"));
 	const rootRef = React.useRef<HTMLDivElement>(null);
-	const childRef = React.useRef<any>(null);
 
 	useDidMount(() => {
 		const modalRoot = document.getElementById("modal-root");
@@ -47,8 +46,8 @@ export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupPr
 	});
 
 	React.useLayoutEffect(() => {
-		if (props.on && childRef.current != null && rootRef.current != null) {
-			const childRect = (childRef.current.htmlEl as HTMLElement).getBoundingClientRect();
+		if (props.on && props.childRef.current && rootRef.current) {
+			const childRect = props.childRef.current.getBoundingClientRect();
 			const height = window.innerHeight;
 			rootRef.current.style.width = `${childRect.width}px`;
 			rootRef.current.style.left = `${childRect.left}px`;
@@ -64,20 +63,7 @@ export const AtMentionsPopup = (props: React.PropsWithChildren<AtMentionsPopupPr
 
 	return (
 		<>
-			{React.Children.map(props.children, (child: any) =>
-				React.cloneElement(
-					child,
-					{
-						...child.props,
-						ref: node => {
-							childRef.current = node;
-							// if the child already has a ref, make sure to invoke it
-							if (typeof child.ref === "function") child.ref(node);
-						},
-					},
-					child.children
-				)
-			)}
+			{props.children}
 			{props.on && (
 				<ModalContext.Consumer>
 					{({ zIndex }) =>

@@ -1,6 +1,6 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { HostApi } from "@codestream/webview/webview-api";
-import React, { useState } from "react";
+import React, { SyntheticEvent, useState } from "react";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { Radio, RadioGroup } from "../src/components/RadioGroup";
@@ -10,7 +10,7 @@ import { api } from "../store/providerPullRequests/thunks";
 import { replaceHtml } from "../utils";
 import { closeModal } from "./actions";
 import { confirmPopup } from "./Confirm";
-import MessageInput from "./MessageInput";
+import { MessageInput } from "./MessageInput";
 import { ButtonRow } from "./PullRequestComponents";
 import Tooltip from "./Tooltip";
 
@@ -35,7 +35,7 @@ export const FinishReview = (props: { fetch?: Function }) => {
 
 	const supportsFinishReviewTypes = pr && !pr.providerId.includes("gitlab");
 
-	const submitReview = async e => {
+	const submitReview = async (e: SyntheticEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		setSubmittingReview(true);

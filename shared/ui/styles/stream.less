@@ -661,7 +661,10 @@
 			margin: 0 10% 0 10%;
 			cursor: pointer !important;
 			user-select: none;
-			transition: top 0.2s, bottom 0.2s, background-color 0.2s;
+			transition:
+				top 0.2s,
+				bottom 0.2s,
+				background-color 0.2s;
 			// display: none;
 		}
 		.unreads {
@@ -1036,7 +1039,7 @@
 		.active-drag .message-input {
 			opacity: 0;
 		}
-		.message-input:empty {
+		.message-input:placeholder-shown {
 			white-space: nowrap;
 		}
 
@@ -1792,7 +1795,9 @@
 			top: 0;
 			left: 0;
 			height: 100%;
-			transition: transform 0.2s, opacity 0.2s;
+			transition:
+				transform 0.2s,
+				opacity 0.2s;
 			display: flex;
 			flex-direction: column;
 		}
@@ -1807,7 +1812,9 @@
 			width: 100%;
 			height: 100%;
 			position: relative;
-			transition: transform 0.2s, opacity 0.2s;
+			transition:
+				transform 0.2s,
+				opacity 0.2s;
 		}
 		.vscroll {
 			overflow: auto;
