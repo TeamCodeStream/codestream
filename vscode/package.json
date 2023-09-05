@@ -164,26 +164,6 @@
 		},
 		"commands": [
 			{
-				"command": "codestream.showReviewDiff",
-				"title": "Show Review Diff",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.showNextChangedFile",
-				"title": "Show Next Changed File",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.showPreviousChangedFile",
-				"title": "Show Previous Changed File",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.closeReviewDiff",
-				"title": "Close Review Diff",
-				"category": "CodeStream"
-			},
-			{
 				"command": "codestream.goOffline",
 				"title": "Go Offline",
 				"category": "CodeStream"
@@ -204,11 +184,6 @@
 				"category": "CodeStream"
 			},
 			{
-				"command": "codestream.startWork",
-				"title": "Start Work",
-				"category": "CodeStream"
-			},
-			{
 				"command": "codestream.newComment",
 				"title": "Add Comment",
 				"category": "CodeStream"
@@ -217,30 +192,6 @@
 				"command": "codestream.newIssue",
 				"title": "Create Issue",
 				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.newReview",
-				"title": "Request Feedback",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.newPermalink",
-				"title": "Get Permalink",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.copyPermalink",
-				"title": "Copy Permalink to Clipboard",
-				"category": "CodeStream"
-			},
-			{
-				"command": "codestream.newPullRequest",
-				"title": "New Pull Request",
-				"category": "CodeStream",
-				"icon": {
-					"light": "assets/images/light/pull-request.svg",
-					"dark": "assets/images/dark/pull-request.svg"
-				}
 			},
 			{
 				"command": "codestream.viewMethodLevelTelemetry",
@@ -264,15 +215,6 @@
 				},
 				"key": "ctrl+shift+/ ctrl+shift+/",
 				"mac": "ctrl+/ ctrl+/",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.startWork",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "ctrl+shift+/ w",
-				"mac": "ctrl+/ w",
 				"when": "codestream:status == signedIn"
 			},
 			{
@@ -310,24 +252,6 @@
 				"key": "ctrl+shift+/ ctrl+shift+i",
 				"mac": "ctrl+/ ctrl+i",
 				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.showNextChangedFile",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "alt+f6",
-				"mac": "alt+f6",
-				"when": "codestream:status == signedIn"
-			},
-			{
-				"command": "codestream.showPreviousChangedFile",
-				"args": {
-					"source": "Shortcut"
-				},
-				"key": "alt+shift+f6",
-				"mac": "alt+shift+f6",
-				"when": "codestream:status == signedIn"
 			}
 		],
 		"menus": {
@@ -349,23 +273,11 @@
 					"when": "codestream:status == signedIn"
 				},
 				{
-					"command": "codestream.startWork",
-					"when": "codestream:status == signedIn"
-				},
-				{
 					"command": "codestream.newComment",
 					"when": "codestream:status == signedIn"
 				},
 				{
 					"command": "codestream.newIssue",
-					"when": "codestream:status == signedIn"
-				},
-				{
-					"command": "codestream.showPreviousChangedFile",
-					"when": "codestream:status == signedIn"
-				},
-				{
-					"command": "codestream.showNextChangedFile",
 					"when": "codestream:status == signedIn"
 				}
 			],
