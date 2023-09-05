@@ -16,7 +16,6 @@ export interface Config {
 	proxySupport: "override" | "on" | "off" | null;
 	serverUrl: string;
 	showInStatusBar: "left" | "right" | false;
-	showLineLevelBlame: boolean;
 	showMarkerGlyphs: boolean;
 	goldenSignalsInEditor: boolean;
 	traceLevel: TraceLevel;
