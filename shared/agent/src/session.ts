@@ -36,7 +36,6 @@ import {
 	DidChangeConnectionStatusNotification,
 	DidChangeConnectionStatusNotificationType,
 	DidChangeDataNotificationType,
-	DidChangeRepositoryCommitHashNotificationType,
 	DidChangeServerUrlNotificationType,
 	DidChangeVersionCompatibilityNotificationType,
 	DidEncounterMaintenanceModeNotificationType,
@@ -72,7 +71,6 @@ import {
 	TokenLoginRequest,
 	TokenLoginRequestType,
 	UIStateRequestType,
-	UserDidCommitNotificationType,
 	VerifyConnectivityRequestType,
 	VerifyConnectivityResponse,
 	PollForMaintenanceModeRequestType,
@@ -118,7 +116,6 @@ import {
 } from "./api/middleware/versionMiddleware";
 import { Container, SessionContainer } from "./container";
 import { DocumentEventHandler } from "./documentEventHandler";
-import { GitRepository } from "./git/models/repository";
 import { Logger } from "./logger";
 import { log, memoize, registerDecoratedHandlers, registerProviders, Strings } from "./system";
 import { testGroups } from "./testGroups";
@@ -1252,10 +1249,6 @@ export class CodeStreamSession {
 			SessionContainer.instance().session.agent.documents
 		);
 
-		SessionContainer.instance().git.onRepositoryCommitHashChanged(repo => {
-			this.repositoryCommitHashChanged(repo);
-		});
-
 		SessionContainer.instance().git.onRepositoryChanged(data => {
 			SessionContainer.instance().session.agent.sendNotification(DidChangeDataNotificationType, {
 				type: ChangeDataType.Commits,
@@ -1751,49 +1744,6 @@ export class CodeStreamSession {
 			return this.api.setCompanyTestGroups(company.id, set);
 		}
 		return undefined;
-	}
-
-	private async repositoryCommitHashChanged(repo: GitRepository) {
-		const { git, markerLocations, reviews, users } = SessionContainer.instance();
-		markerLocations.flushUncommittedLocations(repo);
-
-		const commit = await git.getCommit(repo.path, "HEAD");
-		this.agent.sendNotification(DidChangeRepositoryCommitHashNotificationType, {
-			sha: commit?.ref,
-			repoPath: repo.path,
-		});
-
-		const me = await users.getMe();
-		// disable FROP for new users by default
-		let createReviewOnDetectUnreviewedCommits;
-		if (me.createdAt > 1641405000000) {
-			createReviewOnDetectUnreviewedCommits =
-				me.preferences?.reviewCreateOnDetectUnreviewedCommits === true ? true : false;
-		} else {
-			createReviewOnDetectUnreviewedCommits =
-				me.preferences?.reviewCreateOnDetectUnreviewedCommits === false ? false : true;
-		}
-		if (createReviewOnDetectUnreviewedCommits) {
-			reviews.checkUnreviewedCommits(repo).then(unreviewedCommitCount => {
-				Logger.log(`Detected ${unreviewedCommitCount} unreviewed commits`);
-			});
-		}
-
-		if (!this.apiCapabilities.autoFR) {
-			return;
-		}
-		const userEmail = await git.getConfig(repo.path, "user.email");
-		const twentySeconds = 20 * 1000;
-		if (
-			userEmail !== undefined &&
-			userEmail === commit?.email &&
-			commit.authorDate !== undefined &&
-			new Date().getTime() - commit.authorDate.getTime() < twentySeconds
-		) {
-			this.agent.sendNotification(UserDidCommitNotificationType, {
-				sha: commit.ref,
-			});
-		}
 	}
 
 	inBroadcasterFailureMode() {
