@@ -17,7 +17,6 @@ import { Strings } from "../system";
 import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
 import { Container } from "../container";
-import { configuration } from "../configuration";
 
 function allEmpty(arrays: (any[] | undefined)[]) {
 	for (const arr of arrays) {
@@ -73,58 +72,6 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			document: document,
 			tracked: false
 		};
-		if (document.uri.scheme === "codestream-diff") {
-			this.promptToEnableCodeLens(document);
-		}
-	}
-
-	private _isShowingPromptToEnableCodeLens = false;
-	private async promptToEnableCodeLens(document: TextDocument) {
-		try {
-			if (this._isShowingPromptToEnableCodeLens) return;
-			const promptToEnableCodeLensInDiffsSection = configuration.name(
-				"promptToEnableCodeLensInDiffs"
-			).value;
-			const promptToEnableCodeLensInDiffs = configuration.get<boolean>(
-				promptToEnableCodeLensInDiffsSection
-			);
-			const config = vscode.workspace.getConfiguration();
-			if (promptToEnableCodeLensInDiffs && !config.get("diffEditor.codeLens")) {
-				const codeLenses = await this.provideCodeLenses(document, {} as vscode.CancellationToken);
-				if (
-					codeLenses.length === 0 ||
-					codeLenses.every(_ => (_ as ErrorCodeLens).isErrorCodeLens)
-				) {
-					return;
-				}
-
-				const actions: vscode.MessageItem[] = [
-					{ title: "Yes" },
-					{ title: "No", isCloseAffordance: true },
-					{ title: "Don't ask me again" }
-				];
-
-				this._isShowingPromptToEnableCodeLens = true;
-				vscode.window
-					.showInformationMessage("Enable CodeLens in diffs to view code-level metrics", ...actions)
-					.then(result => {
-						if (result?.title === "Yes") {
-							config.update("diffEditor.codeLens", true, true);
-						} else if (result?.title === "Don't ask me again") {
-							configuration.update(
-								promptToEnableCodeLensInDiffsSection,
-								false,
-								vscode.ConfigurationTarget.Global
-							);
-						}
-						this._isShowingPromptToEnableCodeLens = false;
-					});
-			}
-		} catch (ex) {
-			Logger.error(ex, "promptToEnableCodeLens", {
-				uri: document.uri.toString(true)
-			});
-		}
 	}
 
 	documentClosed(document: TextDocument) {

@@ -22,7 +22,6 @@ export interface Config {
 	traceLevel: TraceLevel;
 	showInstrumentationGlyphs?: boolean;
 	goldenSignalsInEditorFormat?: string;
-	promptToEnableCodeLensInDiffs?: boolean;
 }
 
 export const ConfigSettingsNeedingReload = [

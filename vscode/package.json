@@ -153,12 +153,6 @@
 					"default": "avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}",
 					"description": "Specifies how to format code-level metrics in the editor",
 					"scope": "window"
-				},
-				"codestream.promptToEnableCodeLensInDiffs": {
-					"type": "boolean",
-					"default": true,
-					"description": "Specifies whether to prompt to enable Code Lens in diffs in order to show golden signals",
-					"scope": "window"
 				}
 			}
 		},
