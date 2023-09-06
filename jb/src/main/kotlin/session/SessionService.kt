@@ -12,8 +12,8 @@ import com.codestream.protocols.agent.PullRequestNotification
 import com.codestream.protocols.agent.Stream
 import com.codestream.protocols.agent.UserLoggedIn
 import com.google.gson.JsonObject
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import com.intellij.profiler.eventtrace.parser.panels.logger
 import kotlin.properties.Delegates
 
 typealias UserLoggedInObserver = (UserLoggedIn?) -> Unit
@@ -24,7 +24,7 @@ typealias PullRequestsObserver = (List<PullRequestNotification>) -> Unit
 typealias UnitObserver = () -> Unit
 
 class SessionService(val project: Project) {
-
+    private val logger = Logger.getInstance(SessionService::class.java)
     val userLoggedIn: UserLoggedIn? get() = _userLoggedIn
     val eligibleJoinCompanies: List<JsonObject> get() = _eligibleJoinCompanies ?: emptyList()
     var environmentInfo: EnvironmentInfo
