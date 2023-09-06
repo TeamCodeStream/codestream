@@ -13,7 +13,6 @@ import React from "react";
 import { Provider } from "react-redux";
 import configureStore from "redux-mock-store";
 import thunk from "redux-thunk";
-import * as providerSelectors from "@codestream/webview/store/providers/reducer";
 
 jest.mock("@codestream/webview/store/apiVersioning/reducer");
 jest.mock("@codestream/webview/webview-api");
@@ -21,8 +20,6 @@ jest.mock("@codestream/webview/store/providers/reducer");
 
 const mockIsFeatureEnabled = jest.mocked(isFeatureEnabled);
 mockIsFeatureEnabled.mockReturnValue(true);
-
-const mockProviderSelectors = jest.mocked(providerSelectors);
 
 const spySetUserPreference = jest.spyOn(storeActions, "setUserPreference");
 
@@ -54,123 +51,27 @@ const baseState: Partial<CodeStreamState> = {
 	users: {
 		abcd1234: user as CSUser,
 	},
-	preferences: {
-		reviewCreateOnDetectUnreviewedCommits: true,
-	},
+	preferences: {},
 	ide: {
 		name: "JETBRAINS",
 	},
 };
 
 describe("Notifications UI", () => {
-	it("Should show PR notification settings for supported providers", async () => {
-		const mockStore = configureStore();
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "github*com",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
-		render(
-			<Provider store={mockStore(baseState)}>
-				<Notifications />
-			</Provider>
-		);
-
-		expect(screen.queryByText("Notify me about pull requests assigned to me")).toBeInTheDocument();
-		expect(
-			screen.queryByText("Notify me about new unreviewed commits from teammates when I pull")
-		).toBeInTheDocument();
-	});
-
-	it("Should not show PR notification settings for unsupported providers", async () => {
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "bitbucket",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
-		const mockStore = configureStore();
-		render(
-			<Provider store={mockStore(baseState)}>
-				<Notifications />
-			</Provider>
-		);
-
-		expect(
-			screen.queryByText("Notify me about pull requests assigned to me")
-		).not.toBeInTheDocument();
-		expect(
-			screen.queryByText("Notify me about new unreviewed commits from teammates when I pull")
-		).toBeInTheDocument();
-	});
-
-	it("Should not show PR notification settings for unsupported IDE", async () => {
-		const state = { ...baseState, ide: "VS" };
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "github*com",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
-		const mockStore = configureStore();
-		render(
-			<Provider store={mockStore(state)}>
-				<Notifications />
-			</Provider>
-		);
-
-		expect(
-			screen.queryByText("Notify me about pull requests assigned to me")
-		).not.toBeInTheDocument();
-		expect(
-			screen.queryByText("Notify me about new unreviewed commits from teammates when I pull")
-		).not.toBeInTheDocument();
-	});
-
 	it("shows desktop and email explainer when hasDesktopNotifications", async () => {
 		const mockStore = configureStore();
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "github*com",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
 		render(
 			<Provider store={mockStore(baseState)}>
 				<Notifications />
 			</Provider>
 		);
 		expect(
-			screen.queryByText(
-				"Follow codemarks and feedback requests to receive desktop and email notifications."
-			)
+			screen.queryByText("Follow discussions to receive desktop and email notifications.")
 		).toBeInTheDocument();
 	});
 
 	it("shows only email explainer when not hasDesktopNotifications", async () => {
 		const state = { ...baseState, ide: "VS" };
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "github*com",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
 		const mockStore = configureStore();
 		render(
 			<Provider store={mockStore(state)}>
@@ -178,21 +79,12 @@ describe("Notifications UI", () => {
 			</Provider>
 		);
 		expect(
-			screen.queryByText("Follow codemarks and feedback requests to receive email notifications.")
+			screen.queryByText("Follow discussions to receive email notifications.")
 		).toBeInTheDocument();
 	});
 
 	it("selects correct radio button for notificationDeliveryPreference", async () => {
 		const mockStore = configureStore(middlewares);
-		mockProviderSelectors.getConnectedSupportedPullRequestHosts.mockReturnValue([
-			{
-				id: "github*com",
-				isConnected: true,
-				name: "name",
-				host: "host",
-				hasAccessTokenError: false,
-			},
-		]);
 		let state = baseState;
 		const store = mockStore(() => state);
 		render(
