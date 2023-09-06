@@ -403,7 +403,7 @@ abstract class CLMEditorManager(
     private fun updateInlayNotAssociated() {
         val (result, project, path, editor) = displayDeps() ?: return
         val presentationFactory = HintsPresentationWorkaround.newPresentationFactory(editor)
-        val text = "Click to configure golden signals from New Relic"
+        val text = "Click to configure code-level metrics from New Relic"
         val textPresentation = presentationFactory.text(text)
         val referenceOnHoverPresentation =
             presentationFactory.referenceOnHover(textPresentation, object : InlayPresentationFactory.ClickListener {
@@ -429,7 +429,7 @@ abstract class CLMEditorManager(
                 }
             })
         val withTooltipPresentation = presentationFactory.withTooltip(
-            "Associate this repository with an entity from New Relic so that you can see golden signals right in your editor",
+            "Select the service on New Relic that is built from this repository to see how it's performing.",
             referenceOnHoverPresentation
         )
         val renderer = CLMCustomRenderer(withTooltipPresentation)

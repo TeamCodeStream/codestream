@@ -169,7 +169,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 		assert.strictEqual(codeLenses[0].command!.title!.includes("Click to configure"), true);
 		assert.strictEqual(
 			codeLenses[0].command!.tooltip,
-			"Associate this repository with an entity from New Relic so that you can see golden signals right in your editor"
+			"Select the service on New Relic that is built from this repository to see how it's performing."
 		);
 	});
 
@@ -328,7 +328,7 @@ suite("InstrumentationCodeLensProvider Test Suite", () => {
 		assert.strictEqual(codeLenses.length, 1);
 		assert.strictEqual(
 			codeLenses[0].command!.title!,
-			"Click to configure golden signals from New Relic"
+			"Click to configure code-level metrics from New Relic"
 		);
 		const args = JSON.parse(codeLenses[0].command?.arguments![0]);
 

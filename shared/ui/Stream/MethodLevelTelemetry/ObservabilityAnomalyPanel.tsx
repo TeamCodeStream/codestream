@@ -225,8 +225,8 @@ export const ObservabilityAnomalyPanel = () => {
 
 				<div className="embedded-panel">
 					<EntityAssociator
-						title="Method-Level Telemetry"
-						label="Associate this repository with an entity from New Relic so that you can see golden signals right in your editor, and errors in the Observability section."
+						title="Code-Level Metrics"
+						label="Select the service on New Relic that is built from this repository to see how it's performing."
 						onSuccess={async e => {
 							// HostApi.instance.track("MLT Repo Association", {
 							// 	"NR Account ID": derivedState.currentMethodLevelTelemetry.newRelicAccountId + "",
