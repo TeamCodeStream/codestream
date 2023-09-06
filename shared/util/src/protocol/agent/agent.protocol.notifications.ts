@@ -401,19 +401,23 @@ export const AgentInitializedNotificationType = new NotificationType<void, void>
 	"codestream/agentInitialized"
 );
 
+// TODO: O11y-Only AutoFR Cleanup (start here then extensions, too)
 export interface UserDidCommitNotification {
 	sha: string;
 }
 
+// TODO: O11y-Only AutoFR Cleanup (start here then extensions, too)
 export const UserDidCommitNotificationType = new NotificationType<UserDidCommitNotification, void>(
 	"codestream/userDidCommit"
 );
 
+// TODO: O11y-Only AutoFR Cleanup (start here then extensions, too)
 export interface DidChangeRepositoryCommitHashNotification {
 	sha?: string;
 	repoPath: string;
 }
 
+// TODO: O11y-Only AutoFR Cleanup (start here then extensions, too)
 export const DidChangeRepositoryCommitHashNotificationType = new NotificationType<
 	DidChangeRepositoryCommitHashNotification,
 	void
