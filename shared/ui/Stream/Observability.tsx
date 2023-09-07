@@ -19,6 +19,7 @@ import {
 	ServiceLevelObjectiveResult,
 	isNRErrorResponse,
 	GetIssuesResponse,
+	GetLogsRequestType,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
@@ -85,6 +86,7 @@ import { throwIfError } from "@codestream/webview/store/common";
 import { AnyObject } from "@codestream/webview/utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
 import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
+import { ObservabilityLogsWrapper } from "./ObservabilityLogsWrapper";
 
 interface Props {
 	paneState: PaneState;
@@ -352,6 +354,11 @@ export const Observability = React.memo((props: Props) => {
 	const [anomalyDetectionSupported, setAnomalyDetectionSupported] = useState<boolean>(true);
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
 
+	const [loadingLogs, setLoadingLogs] = useState<boolean>(false);
+	const [hasLogs, setHasLogs] = useState<boolean>(false);
+	const [logs, setLogs] = useState<string[] | undefined>([]);
+	const [logError, setLogError] = useState<string>();
+
 	const buildFilters = (repoIds: string[]) => {
 		return repoIds.map(repoId => {
 			const repoEntity = derivedState.observabilityRepoEntities.find(_ => _.repoId === repoId);
@@ -503,6 +510,7 @@ export const Observability = React.memo((props: Props) => {
 						fetchGoldenMetrics(e.data.entityGuid);
 						fetchServiceLevelObjectives(e.data.entityGuid);
 						fetchAnomalies(e.data.entityGuid, e.data.repoId);
+						fetchLogs(e.data.entityGuid);
 					}, 2500);
 				}
 			}
@@ -562,6 +570,7 @@ export const Observability = React.memo((props: Props) => {
 	useInterval(() => {
 		fetchGoldenMetrics(expandedEntity, true);
 		fetchServiceLevelObjectives(expandedEntity);
+		fetchLogs(expandedEntity);
 		// fetchAnomalies(expandedEntity || "", currentRepoId);
 	}, 300000);
 
@@ -849,6 +858,58 @@ export const Observability = React.memo((props: Props) => {
 		}
 	};
 
+	const fetchLogs = async (entityGuid?: string | null) => {
+		setLoadingLogs(true);
+		try {
+			if (entityGuid) {
+				const response = await HostApi.instance.send(GetLogsRequestType, {
+					entityGuid,
+					limit: "MAX",
+					since: "3 HOURS AGO",
+					order: {
+						field: "timestamp",
+						direction: "DESC",
+					},
+				});
+
+				if (response) {
+					if (isNRErrorResponse(response?.error)) {
+						setLogError(response.error?.error?.message ?? response.error?.error?.type);
+					} else {
+						setLogError(undefined);
+					}
+
+					if (response.logs && response.logs.length > 0) {
+						let formattedLogLines: string[] = [];
+
+						response.logs.map(log => {
+							let formattedLogLine: string = "";
+							for (const key in Object.keys(log)) {
+								const keyName = Object.keys(log)[key];
+								formattedLogLine += `${log[keyName]} | `;
+							}
+
+							formattedLogLines.push(formattedLogLine);
+						});
+
+						setLogs(formattedLogLines);
+						setHasLogs(true);
+					}
+				} else {
+					console.debug(`o11y: no logs`);
+					setLogs([]);
+					setHasLogs(false);
+				}
+			} else {
+				console.debug(`o11y: no logs (no entityGuid)`);
+				setLogs([]);
+				setHasLogs(false);
+			}
+		} finally {
+			setLoadingLogs(false);
+		}
+	};
+
 	const fetchServiceLevelObjectives = async (entityGuid?: string | null) => {
 		setLoadingServiceLevelObjectives(true);
 		try {
@@ -944,6 +1005,7 @@ export const Observability = React.memo((props: Props) => {
 			fetchServiceLevelObjectives(expandedEntity);
 			fetchObservabilityErrors(expandedEntity, currentRepoId);
 			fetchAnomalies(expandedEntity, currentRepoId);
+			fetchLogs(expandedEntity);
 			handleClickCLMBroadcast(expandedEntity);
 		}
 	}, [expandedEntity]);
@@ -1326,6 +1388,15 @@ export const Observability = React.memo((props: Props) => {
 																								<ObservabilityRelatedWrapper
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}
+																								/>
+																							)}
+
+																							{hasLogs && (
+																								<ObservabilityLogsWrapper
+																									logs={logs}
+																									logsError={logError}
+																									entityGuid={ea.entityGuid}
+																									loadingLogs={loadingLogs}
 																								/>
 																							)}
 																						</>
