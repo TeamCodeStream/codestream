@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { debounce } from "lodash-es";
-import { useDispatch, connect } from "react-redux";
+import { connect } from "react-redux";
 import Icon from "./Icon";
 import { Dialog } from "../src/components/Dialog";
 import { SetUserPreferenceRequest } from "./actions.types";
@@ -86,18 +86,18 @@ interface State {
 
 export const LogRow = (props: { logEntry: string }) => {
 	return (
-		<tr>
-			<td></td>
-			<td colSpan={4}>{props.logEntry}</td>
-			<td></td>
-			<td></td>
-		</tr>
+		<>
+			<tr>
+				<td colSpan={4}>{props.logEntry}</td>
+			</tr>
+			<tr>
+				<td colSpan={4}>&nbsp;</td>
+			</tr>
+		</>
 	);
 };
 
 export class ObservabilityLogsPanel extends Component<Props, State> {
-	dispatch = useDispatch<any>();
-
 	readonly disposables: Disposable[] = [];
 	_searchInput: any;
 
@@ -127,7 +127,6 @@ export class ObservabilityLogsPanel extends Component<Props, State> {
 	}
 
 	async fetchLogs(entityGuid?: string, query?: string) {
-		let displayItems = {};
 		let totalItems = 0;
 
 		const filters = this.getFilters(query);
@@ -314,23 +313,9 @@ export class ObservabilityLogsPanel extends Component<Props, State> {
 
 		return (
 			<>
-				<tr>
-					<td colSpan={4}>
-						<div className="section">
-							<div className="header">
-								<Icon name="chevron-right-thin" className="triangle-right" />
-								<span className="clickable">({results.length})</span>
-							</div>
-						</div>
-					</td>
-				</tr>
-				{
-					<>
-						{results.map(r => (
-							<LogRow logEntry={r} />
-						))}
-					</>
-				}
+				{results.map(r => (
+					<LogRow logEntry={r} />
+				))}
 			</>
 		);
 	};
@@ -369,7 +354,10 @@ export class ObservabilityLogsPanel extends Component<Props, State> {
 					}}
 				>
 					<ScrollBox>
-						<div className="channel-list vscroll" style={{ paddingTop: "10px" }}>
+						<div
+							className="channel-list vscroll"
+							style={{ paddingTop: "10px", paddingLeft: "10px" }}
+						>
 							{this.state.totalItems > 0 && (
 								<table style={{ width: "100%", tableLayout: "fixed", borderCollapse: "collapse" }}>
 									<tbody>
@@ -380,7 +368,7 @@ export class ObservabilityLogsPanel extends Component<Props, State> {
 											<td style={{ width: "25%", padding: "0" }}></td>
 											<td style={{ width: "40px", padding: "0" }}></td>
 										</tr>
-										{this.renderResults([])}
+										{this.renderResults(this.state.displayItems || [])}
 									</tbody>
 								</table>
 							)}
