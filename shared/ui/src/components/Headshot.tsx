@@ -112,9 +112,6 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const person = props.person;
 	if (!person) return null;
 
-	if (person == undefined || person.username === "CodeStream")
-		return <CodeStreamHeadshot {...props} />;
-
 	useEffect(() => {
 		setImageError(false);
 	}, [person.avatar]);
@@ -133,27 +130,6 @@ export const Headshot = styled((props: HeadshotProps) => {
 	const className =
 		(props.className || "") +
 		(props.addThumbsUp && !props.hardRightBorder ? " make-room-for-thumbs-up" : "");
-	if (person.avatar && !imageError) {
-		const uri = size > 48 ? person.avatar.image : person.avatar.image48 || person.avatar.image;
-
-		if (uri)
-			return (
-				<Root
-					size={size}
-					display={display}
-					hardRightBorder={props.hardRightBorder}
-					className={className}
-					onClick={props.onClick}
-				>
-					<Image size={size} src={uri} onError={() => setImageError(true)} />
-					{props.addThumbsUp && (
-						<ThumbsUp>
-							<Icon name="thumbsup" />
-						</ThumbsUp>
-					)}
-				</Root>
-			);
-	}
 
 	return (
 		<Root

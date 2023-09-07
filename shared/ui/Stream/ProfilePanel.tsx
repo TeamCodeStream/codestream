@@ -214,12 +214,8 @@ export const ProfilePanel = () => {
 			<Root>
 				<PanelHeader title={title} />
 				<div className="channel-list vscroll" style={{ padding: "0 20px 20px 20px" }}>
-					<div
-						className={isMe ? "edit-headshot" : "headshot-wrap"}
-						onClick={isMe ? editAvatar : noop}
-					>
+					<div className={"headshot-wrap"}>
 						<Headshot person={person} size={128} />
-						{isMe && <RowIcon name="pencil" title="Edit Profile Photo" onClick={editAvatar} />}
 					</div>
 					<Row>
 						<MetaLabel>Username</MetaLabel>

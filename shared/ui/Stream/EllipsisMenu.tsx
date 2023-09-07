@@ -395,7 +395,6 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 						popup(WebviewModals.Profile);
 					},
 				},
-				{ label: "Change Profile Photo", action: () => popup(WebviewModals.ChangeAvatar) },
 				{ label: "Change Email", action: () => popup(WebviewModals.ChangeEmail) },
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
 				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
