@@ -287,6 +287,13 @@ export function reduceContext(
 			};
 		}
 
+		case ContextActionsType.SetCurrentObservabilityLogEntity: {
+			return {
+				...state,
+				currentObservabilityLogEntityGuid: action.payload.entityGuid,
+			};
+		}
+
 		case "RESET":
 			return {
 				...initialState,

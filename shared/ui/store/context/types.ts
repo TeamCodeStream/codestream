@@ -63,6 +63,7 @@ export enum ContextActionsType {
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
 	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
+	SetCurrentObservabilityLogEntity = "@context/SetCurrentObservabilityLogEntity",
 }
 
 /**
@@ -140,6 +141,8 @@ export interface ContextState extends WebviewContext {
 	currentObservabilityAnomalyEntityGuid?: string;
 	currentObservabilityAnomalyEntityName?: string;
 	currentTransactionSpan?: CurrentTransactionSpan;
+
+	currentObservabilityLogEntityGuid?: string;
 
 	selectedRegion?: string;
 }

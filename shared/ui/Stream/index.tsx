@@ -110,6 +110,7 @@ import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
 import { ObservabilityAnomalyPanel } from "@codestream/webview/Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
 import { TransactionSpanPanel } from "./TransactionSpanPanel";
+import ObservabilityLogsPanel from "./ObservabilityLogsPanel";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;
@@ -562,6 +563,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
 							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
 							{activePanel === WebviewPanels.ObservabilityAnomaly && <ObservabilityAnomalyPanel />}
+							{activePanel === WebviewPanels.ObservabilityLogsSearch && <ObservabilityLogsPanel />}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
 							{activePanel === WebviewPanels.NewPullRequest && (
