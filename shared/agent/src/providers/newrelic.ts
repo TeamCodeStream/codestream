@@ -116,6 +116,11 @@ import {
 	GetLogsRequestType,
 	GetLogsRequest,
 	GetLogsResponse,
+	LogResult,
+	GetLogFieldDefinitionsRequestType,
+	GetLogFieldDefinitionsRequest,
+	GetLogFieldDefinitionsResponse,
+	LogFieldDefinition,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -4665,16 +4670,52 @@ export class NewRelicProvider
 
 	@lspHandler(GetLogsRequestType)
 	@log()
-	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse[]> {
-		const { entityGuid, since, limit, order } = {
-			...request,
-		};
+	public async getLogs(request: GetLogsRequest): Promise<GetLogsResponse> {
+		try {
+			const { entityGuid, since, limit, order } = {
+				...request,
+			};
 
-		const parsedId = NewRelicProvider.parseId(entityGuid)!;
-		const query = `SELECT * FROM Log WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' SINCE ${since} ORDER BY ${order.field} ${order.direction} LIMIT ${limit}`;
-		const result = await this.runNrql<GetLogsResponse>(parsedId.accountId, query, 400);
+			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+			const query = `SELECT * FROM Log WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' SINCE ${since} ORDER BY ${order.field} ${order.direction} LIMIT ${limit}`;
+			const logs = await this.runNrql<LogResult>(parsedId.accountId, query, 400);
 
-		return result;
+			return {
+				logs,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getLogs failure", {
+				request,
+				error: ex,
+			});
+			return { error: this.mapNRErrorResponse(ex) };
+		}
+	}
+
+	@lspHandler(GetLogFieldDefinitionsRequestType)
+	@log()
+	public async getLogFieldDefinitions(
+		request: GetLogFieldDefinitionsRequest
+	): Promise<GetLogFieldDefinitionsResponse> {
+		try {
+			const { entityGuid } = {
+				...request,
+			};
+
+			const parsedId = NewRelicProvider.parseId(entityGuid)!;
+			const query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
+			const logDefinitions = await this.runNrql<LogFieldDefinition>(parsedId.accountId, query, 400);
+
+			return {
+				logDefinitions,
+			};
+		} catch (ex) {
+			ContextLogger.warn("getLogFieldDefinitions failure", {
+				request,
+				error: ex,
+			});
+			return { error: this.mapNRErrorResponse(ex) };
+		}
 	}
 }
 
