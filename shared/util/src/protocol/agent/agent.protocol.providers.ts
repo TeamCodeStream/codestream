@@ -2526,10 +2526,38 @@ export interface GetLogsRequest {
 	limit: number | "MAX";
 }
 
-export interface GetLogsResponse {
+export interface LogResult {
 	[key: string]: string;
 }
 
-export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsResponse[], void, void>(
+export interface GetLogsResponse {
+	logs?: LogResult[];
+	error?: NRErrorResponse;
+}
+
+export const GetLogsRequestType = new RequestType<GetLogsRequest, GetLogsResponse, void, void>(
 	"codestream/newrelic/logs"
 );
+
+export interface GetLogFieldDefinitionsRequest {
+	entityGuid: string;
+}
+
+export interface LogFieldDefinition {
+	stringKeys?: string[];
+	numericKeys?: string[];
+	booleanKeys?: string[];
+	allKeys?: string[];
+}
+
+export interface GetLogFieldDefinitionsResponse {
+	logDefinitions?: LogFieldDefinition[];
+	error?: NRErrorResponse;
+}
+
+export const GetLogFieldDefinitionsRequestType = new RequestType<
+	GetLogFieldDefinitionsRequest,
+	GetLogFieldDefinitionsResponse,
+	void,
+	void
+>("codestream/newrelic/logs/fieldDefinitions");
