@@ -15,7 +15,7 @@ import {
 	setCurrentReview,
 } from "../store/context/actions";
 import { HostApi } from "../webview-api";
-import { openPanel, setUserPreference } from "./actions";
+import { openPanel } from "./actions";
 import { EllipsisMenu } from "./EllipsisMenu";
 import Icon from "./Icon";
 import { Link } from "./Link";
@@ -40,8 +40,6 @@ export function GlobalNav() {
 			});
 		}
 		return {
-			clickedPlus: preferences.clickedPlus,
-			clickedInvite: preferences.clickedInvite,
 			currentUserId: state.session.userId,
 			activePanel: state.context.panelStack[0],
 			totalUnread: Object.values(umis.unreads).reduce(sum, 0),
@@ -84,22 +82,15 @@ export function GlobalNav() {
 		<div className="unread-badge">.</div>
 	) : null;
 
-	const plusUMI = derivedState.clickedPlus ? null : <div className="unread-badge">.</div>;
-	const teamUMI = derivedState.clickedInvite ? null : <div className="unread-badge">.</div>;
-
 	const toggleEllipsisMenu = event => {
 		setEllipsisMenuOpen(ellipsisMenuOpen ? undefined : event.target.closest("label"));
 	};
 
 	const togglePlusMenu = event => {
-		if (!derivedState.clickedPlus)
-			dispatch(setUserPreference({ prefPath: ["clickedPlus"], value: true }));
 		setPlusMenuOpen(plusMenuOpen ? undefined : event.target.closest("label"));
 	};
 
 	const toggleTeamMenu = event => {
-		if (!derivedState.clickedInvite)
-			dispatch(setUserPreference({ prefPath: ["clickedInvite"], value: true }));
 		setTeamMenuOpen(teamMenuOpen ? undefined : event.target.closest("label"));
 	};
 
@@ -207,7 +198,6 @@ export function GlobalNav() {
 								delay={1}
 								trigger={["hover"]}
 							/>
-							<span className="unread">{plusUMI}</span>
 						</span>
 						{plusMenuOpen && (
 							<PlusMenu closeMenu={() => setPlusMenuOpen(undefined)} menuTarget={plusMenuOpen} />
@@ -257,7 +247,6 @@ export function GlobalNav() {
 								trigger={["hover"]}
 								align={{ offset: [16, 0] }}
 							/>
-							<span className="unread">{teamUMI}</span>
 						</span>
 						{teamMenuOpen && (
 							<TeamMenu closeMenu={() => setTeamMenuOpen(undefined)} menuTarget={teamMenuOpen} />
