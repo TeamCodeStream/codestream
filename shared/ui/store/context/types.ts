@@ -62,6 +62,7 @@ export enum ContextActionsType {
 	SetClearNewRelicOptions = "@context/SetClearNewRelicOptions",
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
+	SetCurrentObservabilityLogEntity = "@context/SetCurrentObservabilityLogEntity",
 }
 
 /**
@@ -137,6 +138,8 @@ export interface ContextState extends WebviewContext {
 	currentMethodLevelTelemetry?: CurrentMethodLevelTelemetry;
 	currentObservabilityAnomaly?: ObservabilityAnomaly;
 	currentObservabilityAnomalyEntityGuid?: string;
+
+	currentObservabilityLogEntityGuid?: string;
 
 	selectedRegion?: string;
 }

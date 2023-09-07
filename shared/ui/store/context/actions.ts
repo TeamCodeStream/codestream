@@ -147,6 +147,9 @@ export const setCurrentObservabilityAnomaly = (
 	entityGuid?: string
 ) => action(ContextActionsType.SetCurrentObservabilityAnomaly, { anomaly, entityGuid });
 
+export const setCurrentObservabilityLogEntity = (entityGuid?: string) =>
+	action(ContextActionsType.SetCurrentObservabilityLogEntity, { entityGuid });
+
 export const setComposeCodemarkActive = (type: CodemarkType | undefined) =>
 	action(ContextActionsType.SetComposeCodemarkActive, { type });
 

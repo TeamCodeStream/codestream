@@ -46,6 +46,7 @@ export enum WebviewPanels {
 	ObservabilityAnomaly = "observability-anomaly",
 	CICD = "ci-cd",
 	CodeAnalyzers = "code-analyzers",
+	ObservabilityLogsSearch = "observability-logs-search",
 }
 export interface CSEntity {
 	deactivated?: boolean;
