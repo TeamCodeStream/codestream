@@ -125,7 +125,7 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 				cacheKey: this._fossaProjectCacheKey,
 			});
 		} else {
-			const projsResponse = await this.get<GetFossaProjectsResponse>("/projects");
+			const projsResponse = await this.get<GetFossaProjectsResponse>("/projects?page=1&count=1000");
 			if (projsResponse.body) {
 				this._fossaProjectCache.put(this._fossaProjectCacheKey, projsResponse.body);
 				projects = projsResponse.body.projects;
