@@ -4677,7 +4677,36 @@ export class NewRelicProvider
 			};
 
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
-			const query = `SELECT * FROM Log WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM' SINCE ${since} ORDER BY ${order.field} ${order.direction} LIMIT ${limit}`;
+
+			let queryWhere = `WHERE entity.guid = '${entityGuid}' AND newrelic.source = 'logs.APM'`;
+			const querySince = `SINCE ${since}`;
+			const queryOrder = `ORDER BY ${order.field} ${order.direction}`;
+			const queryLimit = `LIMIT ${limit}`;
+
+			if (request.filters.levels && request.filters.levels.length > 0) {
+				queryWhere += ` AND level IN ('${request.filters.levels.join("','")}')`;
+			}
+
+			if (request.filters.codes && request.filters.codes.length > 0) {
+				queryWhere += ` AND code IN ('${request.filters.codes.join("','")}')`;
+			}
+
+			if (request.filters.missing && request.filters.missing.length > 0) {
+				request.filters.missing.map(m => {
+					queryWhere += ` AND ${m} IS NULL`;
+				});
+			}
+
+			if (request.filters.has && request.filters.has.length > 0) {
+				request.filters.has.map(h => {
+					queryWhere += ` AND ${h} IS NOT NULL`;
+				});
+			}
+
+			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
+
+			ContextLogger.log(`getLogs query: ${query}`);
+
 			const logs = await this.runNrql<LogResult>(parsedId.accountId, query, 400);
 
 			return {
@@ -4705,6 +4734,20 @@ export class NewRelicProvider
 			const parsedId = NewRelicProvider.parseId(entityGuid)!;
 			const query = `SELECT keyset() FROM Log WHERE entity.guid = '${entityGuid}'`;
 			const logDefinitions = await this.runNrql<LogFieldDefinition>(parsedId.accountId, query, 400);
+
+			if (!logDefinitions || logDefinitions.length === 0) {
+				ContextLogger.warn("getLogFieldDefinitions unable to query Logs for field definitions", {
+					request,
+				});
+				return {
+					error: {
+						error: {
+							message: "Unable to query Logs for field definitions",
+							type: "NR_UNKNOWN",
+						},
+					},
+				};
+			}
 
 			return {
 				logDefinitions,

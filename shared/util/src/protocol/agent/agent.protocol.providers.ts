@@ -2524,8 +2524,17 @@ export const DidDetectObservabilityAnomaliesNotificationType = new NotificationT
 	void
 >("codestream/didDetectObservabilityAnomalies");
 
+export interface LogRequestFilter {
+	levels?: string[];
+	codes?: string[];
+
+	missing?: string[];
+	has?: string[];
+}
+
 export interface GetLogsRequest {
 	entityGuid: string;
+	filters: LogRequestFilter;
 	order: {
 		field: string;
 		direction: string;
@@ -2552,10 +2561,8 @@ export interface GetLogFieldDefinitionsRequest {
 }
 
 export interface LogFieldDefinition {
-	stringKeys?: string[];
-	numericKeys?: string[];
-	booleanKeys?: string[];
-	allKeys?: string[];
+	key?: string;
+	type?: "string" | "boolean" | "numeric";
 }
 
 export interface GetLogFieldDefinitionsResponse {
