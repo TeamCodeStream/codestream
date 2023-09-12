@@ -242,7 +242,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 
 			var result = _messageInterceptorService.InterceptAndModify(message);
 
-			Assert.NotEqual(message.Params, result["params"]);
+			Assert.Equal(message.Params, result["params"]); //collection structure unchanged
 			Assert.Equal(result["params"]?["uri"], realFile);
 		}
 
@@ -279,7 +279,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 
 			var result = _messageInterceptorService.InterceptAndModify(message);
 
-			Assert.NotEqual(message.Params, result["params"]);
+			Assert.Equal(result["params"], message.Params); //collection structure unchanged
 			Assert.Equal(result["params"]?["someParam"]?["anotherParam"]?["uri"], realFile);
 		}
 
