@@ -6,24 +6,36 @@ using System;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.Core.Extensions;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-	public interface IServiceFactory<T> {
+namespace CodeStream.VisualStudio.Shared.Services
+{
+	public interface IServiceFactory<T>
+	{
 		T Create();
 	}
 
-	public abstract class ServiceFactory<T> : IServiceFactory<T> where T : class {
+	public abstract class ServiceFactory<T> : IServiceFactory<T>
+		where T : class
+	{
 		private static readonly ILogger Log = LogManager.ForContext<ServiceFactory<T>>();
 		private readonly IServiceProvider _serviceProvider;
 
-		protected ServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+		protected ServiceFactory(
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
+		)
+		{
 			_serviceProvider = serviceProvider;
 		}
 
-		public virtual T Create() {
-			try {
-				using (var metrics = Log.WithMetrics($"{nameof(ServiceFactory<T>)} {typeof(T)}")) {
-					var componentModel = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-					if (componentModel == null) {
+		public virtual T Create()
+		{
+			try
+			{
+				using (var metrics = Log.WithMetrics($"{nameof(ServiceFactory<T>)} {typeof(T)}"))
+				{
+					var componentModel =
+						_serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+					if (componentModel == null)
+					{
 						Log.Error($"missing ComponentModel");
 					}
 					Microsoft.Assumes.Present(componentModel);
@@ -33,11 +45,13 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					return service;
 				}
 			}
-			catch (CompositionException ex) {
+			catch (CompositionException ex)
+			{
 				Log.Fatal(ex.UnwrapCompositionException(), nameof(Create) + " (Composition)");
 				throw;
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex.UnwrapCompositionException(), nameof(Create));
 				throw;
 			}

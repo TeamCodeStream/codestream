@@ -9,61 +9,81 @@ using System.Net.Http;
 using CodeStream.VisualStudio.Shared.Exceptions;
 using CodeStream.VisualStudio.Shared.Models;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	[Export(typeof(IHttpClientService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class HttpClientService : IHttpClientService {
+	public class HttpClientService : IHttpClientService
+	{
 		private static readonly ILogger Log = LogManager.ForContext<HttpClientService>();
 
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 		private NREnvironmentSettings _nrEnvironmentSettings;
 
 		[ImportingConstructor]
-		public HttpClientService(ISettingsServiceFactory settingsServiceFactory) {
+		public HttpClientService(ISettingsServiceFactory settingsServiceFactory)
+		{
 			_settingsServiceFactory = settingsServiceFactory;
 		}
 
 		/// <summary>
 		/// Gets the settings from the API for enabling telemetry in the agent
 		/// </summary>
-		public NREnvironmentSettings GetNREnvironmentSettings() {
-			if (_nrEnvironmentSettings != null) {
+		public NREnvironmentSettings GetNREnvironmentSettings()
+		{
+			if (_nrEnvironmentSettings != null)
+			{
 				return _nrEnvironmentSettings;
 			}
 
-			try {
-				var settingsManager = _settingsServiceFactory.GetOrCreate(nameof(HttpClientService));
+			try
+			{
+				var settingsManager = _settingsServiceFactory.GetOrCreate(
+					nameof(HttpClientService)
+				);
 				var handler = new HttpClientHandler();
 
-				if (settingsManager.ProxySupport == ProxySupport.Off || settingsManager.Proxy == null) {
+				if (
+					settingsManager.ProxySupport == ProxySupport.Off
+					|| settingsManager.Proxy == null
+				)
+				{
 					handler.UseProxy = false;
 				}
-				else {
+				else
+				{
 					handler.UseProxy = true;
-					handler.Proxy = new WebProxy(
-						settingsManager.Proxy.Url
-					);
+					handler.Proxy = new WebProxy(settingsManager.Proxy.Url);
 				}
 
 				var client = HttpClientFactory.Create(handler);
-				client.DefaultRequestHeaders.Add("X-CS-Plugin-IDE", settingsManager.GetIdeInfo().Name);
+				client.DefaultRequestHeaders.Add(
+					"X-CS-Plugin-IDE",
+					settingsManager.GetIdeInfo().Name
+				);
 				client.BaseAddress = new Uri(settingsManager.ServerUrl);
 
 				Log.Information("Calling API for Ingest Keys");
-				var response = client.GetStringAsync("no-auth/nr-ingest-key").GetAwaiter().GetResult();
+				var response = client
+					.GetStringAsync("no-auth/nr-ingest-key")
+					.GetAwaiter()
+					.GetResult();
 				Log.Information("Ingest Key Response: OK");
 
-				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(response);
+				_nrEnvironmentSettings = JsonConvert.DeserializeObject<NREnvironmentSettings>(
+					response
+				);
 
-				if (!string.IsNullOrEmpty(_nrEnvironmentSettings.Error)) {
+				if (!string.IsNullOrEmpty(_nrEnvironmentSettings.Error))
+				{
 					throw new NRApiErrorException(_nrEnvironmentSettings.Error);
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				// if we get this far and have failed, just instantiate the settings so the next calls
 				// to this method get a default / telemetry "off" state.
-				_nrEnvironmentSettings = new NREnvironmentSettings(); 
+				_nrEnvironmentSettings = new NREnvironmentSettings();
 				Log.Error(ex, "Unable to obtain settings for New Relic telemetry.");
 			}
 

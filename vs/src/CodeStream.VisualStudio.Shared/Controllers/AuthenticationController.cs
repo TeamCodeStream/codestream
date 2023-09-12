@@ -14,8 +14,10 @@ using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
-namespace CodeStream.VisualStudio.Shared.Controllers {
-	public class AuthenticationController {
+namespace CodeStream.VisualStudio.Shared.Controllers
+{
+	public class AuthenticationController
+	{
 		private static readonly ILogger Log = LogManager.ForContext<AuthenticationController>();
 
 		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
@@ -31,7 +33,9 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService,
-			IWebviewUserSettingsService webviewUserSettingsService) {
+			IWebviewUserSettingsService webviewUserSettingsService
+		)
+		{
 			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
@@ -45,7 +49,9 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			ISessionService sessionService,
 			IEventAggregator eventAggregator,
 			ICredentialsService credentialsService,
-			IWebviewUserSettingsService webviewUserSettingsService) {
+			IWebviewUserSettingsService webviewUserSettingsService
+		)
+		{
 			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_eventAggregator = eventAggregator;
@@ -53,84 +59,111 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			_webviewUserSettingsService = webviewUserSettingsService;
 		}
 
-		public async Task<bool> TryAutoSignInAsync() {
-			try {
+		public async Task<bool> TryAutoSignInAsync()
+		{
+			try
+			{
 				if (
-					!_codeStreamSettingsManager.AutoSignIn 
-					|| _codeStreamSettingsManager.Email.IsNullOrWhiteSpace()) {
+					!_codeStreamSettingsManager.AutoSignIn
+					|| _codeStreamSettingsManager.Email.IsNullOrWhiteSpace()
+				)
+				{
 					Log.Debug("AutoSignIn or Email is missing");
 					return false;
 				}
 
 				var teamId = _codeStreamSettingsManager.Team;
 				var token = await _credentialsService.LoadJsonAsync(
-					_codeStreamSettingsManager.ServerUrl.ToUri(), 
-					_codeStreamSettingsManager.Email, 
+					_codeStreamSettingsManager.ServerUrl.ToUri(),
+					_codeStreamSettingsManager.Email,
 					teamId
 				);
-				
-				if (token != null) {
+
+				if (token != null)
+				{
 					Log.Debug("Attempting to AutoSignIn");
 
-					try {
-						var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(token, teamId);
+					try
+					{
+						var loginResponse = await _codeStreamAgent.LoginViaTokenAsync(
+							token,
+							teamId
+						);
 						var processResponse = ProcessLoginError(loginResponse);
-						
+
 						Log.Debug($"{nameof(processResponse)} Success={processResponse?.Success}");
 
 						if (processResponse?.Success ?? false)
 						{
 							return true;
 						}
-						
 
-						if (Enum.TryParse(processResponse?.ErrorMessage, out LoginResult loginResult) && loginResult != LoginResult.VERSION_UNSUPPORTED) 
+						if (
+							Enum.TryParse(
+								processResponse?.ErrorMessage,
+								out LoginResult loginResult
+							)
+							&& loginResult != LoginResult.VERSION_UNSUPPORTED
+						)
 						{
-							await _credentialsService.DeleteAsync(_codeStreamSettingsManager.ServerUrl.ToUri(), _codeStreamSettingsManager.Email, teamId);
+							await _credentialsService.DeleteAsync(
+								_codeStreamSettingsManager.ServerUrl.ToUri(),
+								_codeStreamSettingsManager.Email,
+								teamId
+							);
 						}
 
 						return false;
-
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Warning(ex, $"{nameof(TryAutoSignInAsync)}");
 					}
 				}
-				else {
+				else
+				{
 					Log.Debug("Missing token");
 				}
 
 				return false;
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(TryAutoSignInAsync));
 			}
 
 			return false;
 		}
 
-		public bool CompleteSignin(JToken loginResponse) {
+		public bool CompleteSignin(JToken loginResponse)
+		{
 			ProcessLoginResponse processResponse = null;
-			try {
-				try {
+			try
+			{
+				try
+				{
 					processResponse = ProcessLogin(loginResponse);
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, $"{nameof(CompleteSignin)}");
 				}
 
-				if (processResponse?.Success == true) {
+				if (processResponse?.Success == true)
+				{
 					OnSuccess(loginResponse, processResponse.Email, processResponse.TeamId);
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(CompleteSignin));
 			}
 
 			return processResponse?.Success == true;
 		}
 
-		private void OnSuccess(JToken loginResponse, string email, string teamId) {
+		private void OnSuccess(JToken loginResponse, string email, string teamId)
+		{
 			_sessionService.SetState(SessionState.UserSignedIn);
 			_eventAggregator.Publish(new SessionReadyEvent());
 
@@ -139,48 +172,66 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 				return;
 			}
 
-			if (_codeStreamSettingsManager.AutoSignIn) {
-				_credentialsService.SaveJson(_codeStreamSettingsManager.ServerUrl.ToUri(), email, GetAccessToken(loginResponse), teamId);
+			if (_codeStreamSettingsManager.AutoSignIn)
+			{
+				_credentialsService.SaveJson(
+					_codeStreamSettingsManager.ServerUrl.ToUri(),
+					email,
+					GetAccessToken(loginResponse),
+					teamId
+				);
 			}
 
 			_webviewUserSettingsService.SaveTeamId(_sessionService.SolutionName, teamId);
 			Log.Debug("OnSuccessAsync ThreadHelper.JoinableTaskFactory.Run...");
 
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				Log.Debug("ThreadHelper.JoinableTaskFactory.Run... About to SwitchToMainThreadAsync...");					
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-				Log.Debug("SwitchedToMainThreadAsync");
-				using (var scope = SettingsScope.Create(_codeStreamSettingsManager)) {
-					scope.CodeStreamSettingsManager.Email = email;
-					scope.CodeStreamSettingsManager.Team = teamId;
+			ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					Log.Debug(
+						"ThreadHelper.JoinableTaskFactory.Run... About to SwitchToMainThreadAsync..."
+					);
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
+						CancellationToken.None
+					);
+					Log.Debug("SwitchedToMainThreadAsync");
+					using (var scope = SettingsScope.Create(_codeStreamSettingsManager))
+					{
+						scope.CodeStreamSettingsManager.Email = email;
+						scope.CodeStreamSettingsManager.Team = teamId;
+					}
 				}
-			});
-		}	 
+			);
+		}
 
-		private static ProcessLoginResponse ProcessLoginError(JToken loginResponse) {
+		private static ProcessLoginResponse ProcessLoginError(JToken loginResponse)
+		{
 			var response = new ProcessLoginResponse();
 			var error = GetError(loginResponse);
 
-			if (error != null) {
-				 
+			if (error != null)
+			{
 				response.ErrorMessage = error.Value<string>();
 			}
-			else if (loginResponse != null) {
-				 
+			else if (loginResponse != null)
+			{
 				response.Success = true;
 			}
 
 			return response;
 		}
 
-		private ProcessLoginResponse ProcessLogin(JToken loginResponse) {
+		private ProcessLoginResponse ProcessLogin(JToken loginResponse)
+		{
 			var response = new ProcessLoginResponse();
 			var error = GetError(loginResponse);
 
-			if (error != null) {
+			if (error != null)
+			{
 				response.ErrorMessage = error.Value<string>();
 			}
-			else if (loginResponse != null) {
+			else if (loginResponse != null)
+			{
 				response.Email = GetEmail(loginResponse);
 				response.TeamId = GetTeamId(loginResponse);
 
@@ -200,45 +251,61 @@ namespace CodeStream.VisualStudio.Shared.Controllers {
 			return response;
 		}
 
-		private static User CreateUser(JToken token) {
+		private static User CreateUser(JToken token)
+		{
 			var user = token?["loginResponse"]?["user"]?.ToObject<CsUser>();
-			var teamId =  GetTeamId(token);
+			var teamId = GetTeamId(token);
 
-			var availableTeams = (token?["loginResponse"]?["teams"]?.ToObject<List<CsTeam>>()
-			                      ?? Enumerable.Empty<CsTeam>()).ToList();
+			var availableTeams = (
+				token?["loginResponse"]?["teams"]?.ToObject<List<CsTeam>>()
+				?? Enumerable.Empty<CsTeam>()
+			).ToList();
 			var currentTeam = availableTeams.FirstOrDefault(_ => _.Id == teamId.ToString());
 
-			var availableCompanies = (token?["loginResponse"]?["companies"]?.ToObject<List<CsCompany>>()
-			                      ?? Enumerable.Empty<CsCompany>()).ToList();
-			var currentCompany = availableCompanies.FirstOrDefault(x => x.Id == currentTeam?.CompanyId);
+			var availableCompanies = (
+				token?["loginResponse"]?["companies"]?.ToObject<List<CsCompany>>()
+				?? Enumerable.Empty<CsCompany>()
+			).ToList();
+			var currentCompany = availableCompanies.FirstOrDefault(
+				x => x.Id == currentTeam?.CompanyId
+			);
 
-			return new User(user?.Id, user?.Username, user?.Email, currentTeam?.Name, availableTeams.Count, currentCompany?.CompanyName, availableCompanies.Count);
+			return new User(
+				user?.Id,
+				user?.Username,
+				user?.Email,
+				currentTeam?.Name,
+				availableTeams.Count,
+				currentCompany?.CompanyName,
+				availableCompanies.Count
+			);
 		}
 
-		private static string GetTeamId(JToken token) 
-			=> token?["state"]?["token"]?["teamId"]?.ToString();
+		private static string GetTeamId(JToken token) =>
+			token?["state"]?["token"]?["teamId"]?.ToString();
 
-		private static JToken GetState(JToken token) 
-			=> token?["state"];
+		private static JToken GetState(JToken token) => token?["state"];
 
-		private static JToken GetEligibleJoinCompanies(JToken token) 
-			=> token?["loginResponse"]?["user"]?["eligibleJoinCompanies"];
+		private static JToken GetEligibleJoinCompanies(JToken token) =>
+			token?["loginResponse"]?["user"]?["eligibleJoinCompanies"];
 
-		private static string GetEmail(JToken token) 
-			=> token?["loginResponse"]?["user"]?["email"]?.ToString();
+		private static string GetEmail(JToken token) =>
+			token?["loginResponse"]?["user"]?["email"]?.ToString();
 
-		private static JToken GetAccessToken(JToken token) 
-			=> token?["state"]?["token"];
+		private static JToken GetAccessToken(JToken token) => token?["state"]?["token"];
 
-		private static JToken GetError(JToken token) {
-			if (token != null && token.HasValues && token["error"] != null) {
+		private static JToken GetError(JToken token)
+		{
+			if (token != null && token.HasValues && token["error"] != null)
+			{
 				return token["error"] ?? new JValue(LoginResult.UNKNOWN.ToString());
 			}
 
 			return null;
 		}
 
-		private class ProcessLoginResponse {
+		private class ProcessLoginResponse
+		{
 			public bool Success { get; set; }
 			public string ErrorMessage { get; set; }
 			public string Email { get; set; }

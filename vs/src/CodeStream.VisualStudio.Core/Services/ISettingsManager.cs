@@ -1,11 +1,13 @@
 ﻿using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
 
-namespace CodeStream.VisualStudio.Core.Services {
-	public interface ICodeStreamSettingsManager : IOptions {
+namespace CodeStream.VisualStudio.Core.Services
+{
+	public interface ICodeStreamSettingsManager : IOptions
+	{
 		void SaveSettingsToStorage();
 		Settings GetSettings();
-		TraceLevel TraceLevel {  set; }
+		TraceLevel TraceLevel { set; }
 		IOptionsDialogPage DialogPage { get; }
 		string GetEnvironmentName();
 		string GetUsefulEnvironmentName();
@@ -16,6 +18,7 @@ namespace CodeStream.VisualStudio.Core.Services {
 
 		TraceLevel GetAgentTraceLevel();
 		TraceLevel GetExtensionTraceLevel();
+
 		/// <summary>
 		/// Stop the propertyChanged notifications from happening
 		/// </summary>

@@ -10,8 +10,10 @@ using CodeStream.VisualStudio.Shared.Services;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Shared.UI {
-	public class DocumentMarkerManager : IDisposable {
+namespace CodeStream.VisualStudio.Shared.UI
+{
+	public class DocumentMarkerManager : IDisposable
+	{
 		private readonly ICodeStreamAgentService _agentService;
 		private readonly IWpfTextView _wpfTextView;
 		private readonly IVirtualTextDocument _virtualTextDocument;
@@ -20,7 +22,12 @@ namespace CodeStream.VisualStudio.Shared.UI {
 
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkerManager>();
 
-		public DocumentMarkerManager(ICodeStreamAgentService agentService, IWpfTextView wpfTextView, IVirtualTextDocument virtualTextDocument) {
+		public DocumentMarkerManager(
+			ICodeStreamAgentService agentService,
+			IWpfTextView wpfTextView,
+			IVirtualTextDocument virtualTextDocument
+		)
+		{
 			_agentService = agentService;
 			_wpfTextView = wpfTextView;
 			_virtualTextDocument = virtualTextDocument;
@@ -31,10 +38,14 @@ namespace CodeStream.VisualStudio.Shared.UI {
 		/// </summary>
 		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
-		public void TrySetMarkers(bool forceUpdate = false) {
-			_ = System.Threading.Tasks.Task.Run(async delegate {
-				_ = TrySetMarkersAsync(forceUpdate);
-			});
+		public void TrySetMarkers(bool forceUpdate = false)
+		{
+			_ = System.Threading.Tasks.Task.Run(
+				async delegate
+				{
+					_ = TrySetMarkersAsync(forceUpdate);
+				}
+			);
 		}
 
 		/// <summary>
@@ -42,59 +53,89 @@ namespace CodeStream.VisualStudio.Shared.UI {
 		/// </summary>
 		/// <param name="forceUpdate">When set to true, ignores if the collection is empty</param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task<bool> TrySetMarkersAsync(bool forceUpdate = false) {
+		public async System.Threading.Tasks.Task<bool> TrySetMarkersAsync(bool forceUpdate = false)
+		{
 			Uri uri = null;
 			bool result = false;
-			using (var metrics = Log.WithMetrics($"{nameof(DocumentMarkerManager)}:{nameof(TrySetMarkersAsync)}")) {
-				try {
-					if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate) {
-						Log.Verbose($"Codemarks are empty and forceUpdate={forceUpdate}", forceUpdate);
+			using (
+				var metrics = Log.WithMetrics(
+					$"{nameof(DocumentMarkerManager)}:{nameof(TrySetMarkersAsync)}"
+				)
+			)
+			{
+				try
+				{
+					if (_markers != null && _markers.Markers.AnySafe() == false && !forceUpdate)
+					{
+						Log.Verbose(
+							$"Codemarks are empty and forceUpdate={forceUpdate}",
+							forceUpdate
+						);
 						return false;
 					}
 
 					uri = _virtualTextDocument.Uri;
-					if (uri == null) {
+					if (uri == null)
+					{
 						Log.Verbose($"Could not get virtual text document");
 						return false;
 					}
 
 					_markers = await _agentService.GetMarkersForDocumentAsync(uri);
 					bool? previousResult = null;
-					if (_markers?.Markers.AnySafe() == true || forceUpdate) {
-						if (_wpfTextView.Properties.TryGetProperty(PropertyNames
-							.DocumentMarkers, out List<DocumentMarker> previousMarkersResponse)) {
+					if (_markers?.Markers.AnySafe() == true || forceUpdate)
+					{
+						if (
+							_wpfTextView.Properties.TryGetProperty(
+								PropertyNames.DocumentMarkers,
+								out List<DocumentMarker> previousMarkersResponse
+							)
+						)
+						{
 							previousResult = previousMarkersResponse.AnySafe();
 						}
 						_wpfTextView.Properties.RemovePropertySafe(PropertyNames.DocumentMarkers);
-						_wpfTextView.Properties.AddProperty(PropertyNames.DocumentMarkers, _markers?.Markers);
+						_wpfTextView.Properties.AddProperty(
+							PropertyNames.DocumentMarkers,
+							_markers?.Markers
+						);
 						Log.Verbose($"Setting Markers({_markers?.Markers.Count}) for {uri}");
 
 						var current = _markers?.Markers.Any() == true;
-						if (previousResult == true && current == false) {
+						if (previousResult == true && current == false)
+						{
 							result = true;
 						}
-						else if (current) {
+						else if (current)
+						{
 							result = true;
 						}
 					}
-					else {
+					else
+					{
 						Log.Verbose("No Codemarks from agent");
 					}
-					if (_markers?.MarkersNotLocated?.AnySafe() == true) {
-						Log.Verbose($"There are {_markers?.MarkersNotLocated.Count()} markers not located");
+					if (_markers?.MarkersNotLocated?.AnySafe() == true)
+					{
+						Log.Verbose(
+							$"There are {_markers?.MarkersNotLocated.Count()} markers not located"
+						);
 					}
 				}
-				catch (OverflowException ex) {
+				catch (OverflowException ex)
+				{
 					Log.Error(ex, uri?.ToString());
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, nameof(TrySetMarkersAsync));
 				}
 			}
 			return result;
 		}
 
-		public void Reset() {
+		public void Reset()
+		{
 			_markers = null;
 		}
 
@@ -102,17 +143,23 @@ namespace CodeStream.VisualStudio.Shared.UI {
 
 		public bool IsInitialized() => _markers != null;
 
-		public void Dispose() {
+		public void Dispose()
+		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing)
+		{
 			if (_disposed)
 				return;
 
-			if (disposing) {
-				if (_wpfTextView?.Properties.ContainsProperty(PropertyNames.DocumentMarkers) == true) {
+			if (disposing)
+			{
+				if (
+					_wpfTextView?.Properties.ContainsProperty(PropertyNames.DocumentMarkers) == true
+				)
+				{
 					_wpfTextView.Properties.RemoveProperty(PropertyNames.DocumentMarkers);
 				}
 

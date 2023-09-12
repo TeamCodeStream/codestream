@@ -5,15 +5,19 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
-namespace CodeStream.VisualStudio.Shared.UI.Glyphs {
+namespace CodeStream.VisualStudio.Shared.UI.Glyphs
+{
 	[Export(typeof(IGlyphFactoryProvider))]
 	[Name(PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider)]
 	[ContentType(ContentTypes.Text)]
 	[TagType(typeof(DocumentMarkGlyphTag))]
-	internal sealed class DocumentMarkGlyphFactoryProvider : IGlyphFactoryProvider {
-		public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin) {
+	internal sealed class DocumentMarkGlyphFactoryProvider : IGlyphFactoryProvider
+	{
+		public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin)
+		{
 			// only return the factory for our custom margin
-			if (margin.GetType() != typeof(DocumentMarkMargin)) return null;
+			if (margin.GetType() != typeof(DocumentMarkMargin))
+				return null;
 
 			return new DocumentMarkGlyphFactory();
 		}

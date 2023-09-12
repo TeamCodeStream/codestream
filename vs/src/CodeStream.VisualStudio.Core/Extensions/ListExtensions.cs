@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace CodeStream.VisualStudio.Core.Extensions {
+namespace CodeStream.VisualStudio.Core.Extensions
+{
 	public class ListExtensionsDummy { }
 
-	public static class ListExtensions {
-		public static void AddMany<T>(this List<T> list, params T[] t) {
+	public static class ListExtensions
+	{
+		public static void AddMany<T>(this List<T> list, params T[] t)
+		{
 			list.AddRange(t);
 		}
 
@@ -17,7 +20,8 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 		/// <param name="a"></param>
 		/// <param name="b"></param>
 		/// <returns></returns>
-		public static List<T> Combine<T>(this List<T> a, List<T> b) {
+		public static List<T> Combine<T>(this List<T> a, List<T> b)
+		{
 			var c = new List<T>();
 
 			c.AddRange(a);
@@ -28,10 +32,13 @@ namespace CodeStream.VisualStudio.Core.Extensions {
 
 		public static bool AnySafe<T>(this List<T> list) => list != null && list.Any();
 
-		public static void DisposeAll(this List<IDisposable> disposables) {
-			if (!disposables.AnySafe()) return;
+		public static void DisposeAll(this List<IDisposable> disposables)
+		{
+			if (!disposables.AnySafe())
+				return;
 
-			foreach (IDisposable disposable in disposables) {
+			foreach (IDisposable disposable in disposables)
+			{
 				disposable?.Dispose();
 			}
 		}

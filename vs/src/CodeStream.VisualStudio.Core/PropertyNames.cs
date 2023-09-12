@@ -1,4 +1,5 @@
-﻿namespace CodeStream.VisualStudio.Core {
+﻿namespace CodeStream.VisualStudio.Core
+{
 	/// <summary>
 	/// Property key names that appear in a TextBuffer property collection
 	/// </summary>
@@ -13,9 +14,12 @@
 		public static string TextViewEvents = $"{Prefix}{nameof(TextViewEvents)}";
 		public static string TextViewLocalEvents = $"{Prefix}{nameof(TextViewLocalEvents)}";
 		public static string AdornmentManager = $"{Prefix}{nameof(AdornmentManager)}";
-		public static string TextViewLayoutChangedSubject = $"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
-		public static string CaretPositionChangedSubject = $"{Prefix}{nameof(CaretPositionChangedSubject)}";
-		public static string TextSelectionChangedSubject = $"{Prefix}{nameof(TextSelectionChangedSubject)}";
+		public static string TextViewLayoutChangedSubject =
+			$"{Prefix}{nameof(TextViewLayoutChangedSubject)}";
+		public static string CaretPositionChangedSubject =
+			$"{Prefix}{nameof(CaretPositionChangedSubject)}";
+		public static string TextSelectionChangedSubject =
+			$"{Prefix}{nameof(TextSelectionChangedSubject)}";
 		public const string TextViewCreationListenerLayerName = "CodeStreamHighlightColor";
 
 		public static string IsDiff = $"{Prefix}{nameof(IsDiff)}";

@@ -5,14 +5,19 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Process;
 using CodeStream.VisualStudio.Shared.Services;
 
-namespace CodeStream.VisualStudio.Shared.LanguageServer {
-
-	public class LanguageServerClientProcess : ILanguageServerClientProcess {
+namespace CodeStream.VisualStudio.Shared.LanguageServer
+{
+	public class LanguageServerClientProcess : ILanguageServerClientProcess
+	{
 		/// <summary>
 		/// Creates the lsp server process object
 		/// </summary>
 		/// <returns></returns>
-		public System.Diagnostics.Process Create(ICodeStreamSettingsManager codeStreamSettingsManager, IHttpClientService httpClient) {
+		public System.Diagnostics.Process Create(
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			IHttpClientService httpClient
+		)
+		{
 			var assembly = Assembly.GetAssembly(typeof(LanguageServerClientProcess));
 			string arguments = null;
 			var exe = @"node.exe";
@@ -29,18 +34,26 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 
 			var nrSettings = httpClient.GetNREnvironmentSettings();
 
-			var additionalEnv = new StringDictionary {
-				{ "NODE_TLS_REJECT_UNAUTHORIZED", codeStreamSettingsManager.DisableStrictSSL ? "0" : "1" },
+			var additionalEnv = new StringDictionary
+			{
+				{
+					"NODE_TLS_REJECT_UNAUTHORIZED",
+					codeStreamSettingsManager.DisableStrictSSL ? "0" : "1"
+				},
 				// do not want to release with NEW_RELIC_LOG_ENABLED=true
-				{ "NEW_RELIC_LOG_ENABLED", "false"}
+				{ "NEW_RELIC_LOG_ENABLED", "false" }
 			};
 
 			if (!string.IsNullOrEmpty(codeStreamSettingsManager.ExtraCertificates))
 			{
-				additionalEnv.Add("NODE_EXTRA_CA_CERTS", codeStreamSettingsManager.ExtraCertificates);
+				additionalEnv.Add(
+					"NODE_EXTRA_CA_CERTS",
+					codeStreamSettingsManager.ExtraCertificates
+				);
 			}
 
-			if (nrSettings.HasValidSettings) {
+			if (nrSettings.HasValidSettings)
+			{
 				additionalEnv.Add("NEW_RELIC_HOST", nrSettings.Host);
 				additionalEnv.Add("NEW_RELIC_APP_NAME", nrSettings.AppName);
 				additionalEnv.Add("NEW_RELIC_LICENSE_KEY", nrSettings.LicenseKey);

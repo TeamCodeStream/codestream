@@ -25,8 +25,8 @@ using Process = System.Diagnostics.Process;
 using Microsoft;
 using CSConstants = CodeStream.VisualStudio.Core.Constants;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	/// <summary>
 	/// Service gets injected into the CodeLensProvider in the OOP service and allows the CodeLens datapoints to communicate
 	/// back to Visual Studio.
@@ -34,14 +34,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 	[Export(typeof(ICodeLensCallbackListener))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
 	[ContentType("CSharp")]
-	public class CodeLevelMetricsCallbackService : ICodeLensCallbackListener, ICodeLevelMetricsCallbackService {
-		private static readonly ILogger Log = LogManager.ForContext<CodeLevelMetricsCallbackService>();
+	public class CodeLevelMetricsCallbackService
+		: ICodeLensCallbackListener,
+			ICodeLevelMetricsCallbackService
+	{
+		private static readonly ILogger Log =
+			LogManager.ForContext<CodeLevelMetricsCallbackService>();
 
 		private readonly ICodeStreamAgentService _codeStreamAgentService;
 		private readonly ISessionService _sessionService;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 
-		public static readonly ConcurrentDictionary<string, CodeLensConnection> Connections = new ConcurrentDictionary<string, CodeLensConnection>();
+		public static readonly ConcurrentDictionary<string, CodeLensConnection> Connections =
+			new ConcurrentDictionary<string, CodeLensConnection>();
 		private readonly IVsSolution _vsSolution;
 
 		[ImportingConstructor]
@@ -50,20 +55,26 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			ISessionService sessionService,
 			ISettingsServiceFactory settingsServiceFactory,
 			IEventAggregator eventAggregator,
-			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
+		)
+		{
 			_codeStreamAgentService = codeStreamAgentService;
 			_sessionService = sessionService;
 			_settingsServiceFactory = settingsServiceFactory;
 
-			eventAggregator.GetEvent<SessionReadyEvent>()
+			eventAggregator
+				.GetEvent<SessionReadyEvent>()
 				.ObserveOn(Scheduler.Default)
-				.Subscribe(e => {
+				.Subscribe(e =>
+				{
 					_ = RefreshAllCodeLensDataPointsAsync();
 				});
 
-			eventAggregator.GetEvent<SessionLogoutEvent>()
+			eventAggregator
+				.GetEvent<SessionLogoutEvent>()
 				.ObserveOn(Scheduler.Default)
-				.Subscribe(e => {
+				.Subscribe(e =>
+				{
 					_ = RefreshAllCodeLensDataPointsAsync();
 				});
 
@@ -71,29 +82,38 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			Assumes.Present(_vsSolution);
 		}
 
-		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(string codeNamespace, string codeFunction) {
+		public async Task<CodeLevelMetricsTelemetry> GetTelemetryAsync(
+			string codeNamespace,
+			string codeFunction
+		)
+		{
 			if (!_sessionService.IsReady)
 			{
 				return new CodeLevelMetricsTelemetry();
 			}
-		
+
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solution = new Uri(_vsSolution.GetSolutionFile());
 			var namespaceFunction = $"{codeNamespace}.{codeFunction}";
 
 			//example: "avg duration: ${averageDuration} | error rate: ${errorRate} - ${sampleSize} samples in the last ${since}"
 			var formatString = CSConstants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
-			var includeAverageDuration = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.AverageDuration);
-			var includeErrorRate = formatString.Contains(CSConstants.CodeLevelMetrics.Tokens.ErrorRate);
+			var includeAverageDuration = formatString.Contains(
+				CSConstants.CodeLevelMetrics.Tokens.AverageDuration
+			);
+			var includeErrorRate = formatString.Contains(
+				CSConstants.CodeLevelMetrics.Tokens.ErrorRate
+			);
 
-			try {
+			try
+			{
 				var metrics = await _codeStreamAgentService.GetFileLevelTelemetryAsync(
 					solution.AbsoluteUri,
 					"csharp",
 					false,
 					codeNamespace,
 					null,
-					includeAverageDuration, 
+					includeAverageDuration,
 					includeErrorRate
 				);
 
@@ -102,12 +122,24 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					return new CodeLevelMetricsTelemetry();
 				}
 
-				var avgDuration = metrics.AverageDuration?.SingleOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
-				var errors = metrics.ErrorRate?.SingleOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
-				var sampleSize = metrics.SampleSize?.SingleOrDefault(x =>
-						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(namespaceFunction));
+				var avgDuration = metrics.AverageDuration?.SingleOrDefault(
+					x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							namespaceFunction
+						)
+				);
+				var errors = metrics.ErrorRate?.SingleOrDefault(
+					x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							namespaceFunction
+						)
+				);
+				var sampleSize = metrics.SampleSize?.SingleOrDefault(
+					x =>
+						$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+							namespaceFunction
+						)
+				);
 
 				return new CodeLevelMetricsTelemetry(
 					avgDuration,
@@ -115,21 +147,28 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					errors,
 					metrics.SinceDateFormatted,
 					metrics.Repo,
-					metrics.NewRelicEntityGuid);
-
+					metrics.NewRelicEntityGuid
+				);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, $"Unable to obtain CLM for {codeNamespace}");
 				return new CodeLevelMetricsTelemetry();
 			}
 		}
 
-		public CodeLevelMetricStatus GetClmStatus() {
-			if (!_sessionService.IsAgentReady || _sessionService.SessionState == SessionState.UserSigningIn) {
+		public CodeLevelMetricStatus GetClmStatus()
+		{
+			if (
+				!_sessionService.IsAgentReady
+				|| _sessionService.SessionState == SessionState.UserSigningIn
+			)
+			{
 				return CodeLevelMetricStatus.Loading;
 			}
 
-			if (_sessionService.SessionState != SessionState.UserSignedIn) {
+			if (_sessionService.SessionState != SessionState.UserSignedIn)
+			{
 				return CodeLevelMetricStatus.SignInRequired;
 			}
 
@@ -138,21 +177,25 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		public int GetVisualStudioPid() => Process.GetCurrentProcess().Id;
 
-		public async Task InitializeRpcAsync(string dataPointId) {
-			try {
+		public async Task InitializeRpcAsync(string dataPointId)
+		{
+			try
+			{
 				var stream = new NamedPipeServerStream(
 					RpcPipeNames.ForCodeLens(Process.GetCurrentProcess().Id),
 					PipeDirection.InOut,
 					NamedPipeServerStream.MaxAllowedServerInstances,
 					PipeTransmissionMode.Byte,
-					PipeOptions.Asynchronous);
+					PipeOptions.Asynchronous
+				);
 
 				await stream.WaitForConnectionAsync().ConfigureAwait(false);
 
 				var connection = new CodeLensConnection(stream);
 				Connections[dataPointId] = connection;
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, "Unable to bind CallbackService and RPC");
 			}
 		}
@@ -160,21 +203,26 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Refresh a SPECIFIC CodeLens datapoint through RPC
 		/// </summary>
-		public static async Task RefreshCodeLensDataPointAsync(string dataPointId) {
-			if (!Connections.TryGetValue(dataPointId, out var connectionHandler)) {
-				throw new InvalidOperationException($"CodeLens data point {dataPointId} was not registered.");
+		public static async Task RefreshCodeLensDataPointAsync(string dataPointId)
+		{
+			if (!Connections.TryGetValue(dataPointId, out var connectionHandler))
+			{
+				throw new InvalidOperationException(
+					$"CodeLens data point {dataPointId} was not registered."
+				);
 			}
 
-			await connectionHandler.Rpc.InvokeAsync(nameof(IRemoteCodeLens.Refresh)).ConfigureAwait(false);
+			await connectionHandler.Rpc
+				.InvokeAsync(nameof(IRemoteCodeLens.Refresh))
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
 		/// All RPC connections to the CodeLens datapoints are tracked, therefore
 		/// we can trigger them ALL to refresh using this.
 		/// </summary>
-		public static async Task RefreshAllCodeLensDataPointsAsync()
-			=> await Task
-				.WhenAll(Connections.Keys.Select(RefreshCodeLensDataPointAsync))
+		public static async Task RefreshAllCodeLensDataPointsAsync() =>
+			await Task.WhenAll(Connections.Keys.Select(RefreshCodeLensDataPointAsync))
 				.ConfigureAwait(false);
 	}
 }

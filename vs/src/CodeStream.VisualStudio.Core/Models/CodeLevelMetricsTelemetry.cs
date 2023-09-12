@@ -19,7 +19,6 @@ namespace CodeStream.VisualStudio.Core.Models
 		[JsonProperty("properties", NullValueHandling = NullValueHandling.Ignore)]
 		public CodeLevelMetricsProperties Properties { get; }
 
-
 		public CodeLevelMetricsTelemetry()
 		{
 			AverageDuration = new AverageDurationResponse();
@@ -35,9 +34,9 @@ namespace CodeStream.VisualStudio.Core.Models
 			ErrorRateResponse errorRate,
 			string sinceDateFormatted,
 			RepoInfo repo,
-			string newRelicEntityGuid)
+			string newRelicEntityGuid
+		)
 		{
-
 			AverageDuration = averageDuration ?? new AverageDurationResponse();
 			SampleSize = sampleSize ?? new SampleSizeResponse();
 			ErrorRate = errorRate ?? new ErrorRateResponse();

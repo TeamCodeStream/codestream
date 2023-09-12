@@ -15,8 +15,10 @@ using CodeStream.VisualStudio.Shared.Services;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
-namespace CodeStream.VisualStudio.Shared.LanguageServer {
-	public abstract class LanguageServerClientBase : ILanguageServerClientManager {
+namespace CodeStream.VisualStudio.Shared.LanguageServer
+{
+	public abstract class LanguageServerClientBase : ILanguageServerClientManager
+	{
 		private readonly ILogger Log;
 		private Guid _uiContextGuid = new Guid(Guids.ServiceProviderPackageAutoLoadId);
 		protected readonly IEventAggregator EventAggregator;
@@ -27,6 +29,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 		protected readonly IHttpClientService HttpClientService;
 
 		protected bool isReloading { get; set; }
+
 		protected LanguageServerClientBase(
 			IServiceProvider serviceProvider,
 			ISessionService sessionService,
@@ -35,10 +38,12 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 			ISettingsServiceFactory settingsServiceFactory,
 			IHttpClientService httpClientService,
 			IFileResolutionService fileResolutionService,
-			ILogger logger) {
-
+			ILogger logger
+		)
+		{
 			Log = logger;
-			try {
+			try
+			{
 				ServiceProvider = serviceProvider;
 				SessionService = sessionService;
 				EventAggregator = eventAggregator;
@@ -46,36 +51,51 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				HttpClientService = httpClientService;
 
 				LanguageServerProcess = new LanguageServerClientProcess();
-				CustomMessageTargetBase = new CustomMessageHandler(serviceProvider, EventAggregator, browserServiceFactory, SettingsServiceFactory, fileResolutionService);
+				CustomMessageTargetBase = new CustomMessageHandler(
+					serviceProvider,
+					EventAggregator,
+					browserServiceFactory,
+					SettingsServiceFactory,
+					fileResolutionService
+				);
 
 				Log.Ctor();
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex, nameof(LanguageServerClientBase));
 			}
 		}
 
-		public virtual async System.Threading.Tasks.Task RestartAsync() {
+		public virtual async System.Threading.Tasks.Task RestartAsync()
+		{
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
-		public virtual async System.Threading.Tasks.Task TryStopAsync() {
+		public virtual async System.Threading.Tasks.Task TryStopAsync()
+		{
 			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
 		public object CustomMessageTargetBase { get; }
 
-		public object InitializationOptionsBase {
-			get {
-				var settingsManager = SettingsServiceFactory.GetOrCreate(nameof(LanguageServerClientBase));
+		public object InitializationOptionsBase
+		{
+			get
+			{
+				var settingsManager = SettingsServiceFactory.GetOrCreate(
+					nameof(LanguageServerClientBase)
+				);
 
-				if (settingsManager == null) {
+				if (settingsManager == null)
+				{
 					Log.Fatal($"{nameof(settingsManager)} is null");
 				}
 
 				var nrSettings = HttpClientService.GetNREnvironmentSettings();
 
-				var initializationOptions = new InitializationOptions {
+				var initializationOptions = new InitializationOptions
+				{
 					ServerUrl = settingsManager.ServerUrl,
 					Extension = settingsManager.GetExtensionInfo(),
 					Ide = settingsManager.GetIdeInfo(),
@@ -83,85 +103,130 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 					TraceLevel = TraceLevel.Verbose.ToJsonValue(),
 					IsDebugging = true,
 #else
-                    TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
+					TraceLevel = settingsManager.GetAgentTraceLevel().ToJsonValue(),
 #endif
 					Proxy = settingsManager.Proxy,
-					ProxySupport = settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false ? "override" : settingsManager.ProxySupport.ToJsonValue(),
+					ProxySupport =
+						settingsManager.Proxy?.Url?.IsNullOrWhiteSpace() == false
+							? "override"
+							: settingsManager.ProxySupport.ToJsonValue(),
 					DisableStrictSSL = settingsManager.DisableStrictSSL,
 					NewRelicTelemetryEnabled = nrSettings.HasValidSettings
 				};
 
-				if (Log.IsDebugEnabled()) {
-					Log.Debug(nameof(InitializationOptions) + " {@InitializationOptions}", initializationOptions);
+				if (Log.IsDebugEnabled())
+				{
+					Log.Debug(
+						nameof(InitializationOptions) + " {@InitializationOptions}",
+						initializationOptions
+					);
 				}
-				else {
-					Log.Information(nameof(InitializationOptions) + " {@InitializationOptions}", new {
-						TraceLevel = initializationOptions.TraceLevel,
-						Proxy = initializationOptions.Proxy != null
-					});
+				else
+				{
+					Log.Information(
+						nameof(InitializationOptions) + " {@InitializationOptions}",
+						new
+						{
+							TraceLevel = initializationOptions.TraceLevel,
+							Proxy = initializationOptions.Proxy != null
+						}
+					);
 				}
 
 				return initializationOptions;
 			}
 		}
 
-		protected async Task OnAttachedForCustomMessageAsync() {
-			try {
+		protected async Task OnAttachedForCustomMessageAsync()
+		{
+			try
+			{
 				await Microsoft.VisualStudio.Shell.ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 				// Sets the UI context so the custom commands will be available.
 				var monitorSelection =
-					Microsoft.VisualStudio.Shell.Package.GetGlobalService(typeof(IVsMonitorSelection)) as
-						IVsMonitorSelection;
-				if (monitorSelection != null) {
-					if (monitorSelection.GetCmdUIContextCookie(ref this._uiContextGuid, out uint cookie) ==
-						VSConstants.S_OK) {
+					Microsoft.VisualStudio.Shell.Package.GetGlobalService(
+						typeof(IVsMonitorSelection)
+					) as IVsMonitorSelection;
+				if (monitorSelection != null)
+				{
+					if (
+						monitorSelection.GetCmdUIContextCookie(
+							ref this._uiContextGuid,
+							out uint cookie
+						) == VSConstants.S_OK
+					)
+					{
 						monitorSelection.SetCmdUIContext(cookie, 1);
 					}
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(OnAttachedForCustomMessageAsync));
 			}
 
 			Log.Debug(nameof(OnAttachedForCustomMessageAsync));
 		}
 
-		protected virtual void OnStopping() {
-			try {
+		protected virtual void OnStopping()
+		{
+			try
+			{
 				SessionService.SetAgentDisconnected();
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(OnStopping));
 			}
 		}
 
 		protected virtual void OnStopped() { }
 
-		protected void OnRpcDisconnected(JsonRpcDisconnectedEventArgs e) {
-			try {
-				Log.Debug(e.Exception, $"RPC Disconnected: LastMessage={e.LastMessage} Description={e.Description} Reason={e.Reason} Exception={e.Exception}");
+		protected void OnRpcDisconnected(JsonRpcDisconnectedEventArgs e)
+		{
+			try
+			{
+				Log.Debug(
+					e.Exception,
+					$"RPC Disconnected: LastMessage={e.LastMessage} Description={e.Description} Reason={e.Reason} Exception={e.Exception}"
+				);
 
 				SessionService.SetAgentDisconnected();
 
-				EventAggregator?.Publish(new LanguageServerDisconnectedEvent(e.LastMessage?.ToString() ?? "No Last Message", e.Description, e.Reason.ToString(), e.Exception) {
-					IsReloading = isReloading
-				});
+				EventAggregator?.Publish(
+					new LanguageServerDisconnectedEvent(
+						e.LastMessage?.ToString() ?? "No Last Message",
+						e.Description,
+						e.Reason.ToString(),
+						e.Exception
+					)
+					{
+						IsReloading = isReloading
+					}
+				);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(OnRpcDisconnected));
 			}
 		}
 
-		protected async System.Threading.Tasks.Task OnServerInitializedBaseAsync(JsonRpc rpc, IComponentModel componentModel) {
-			try {
+		protected async System.Threading.Tasks.Task OnServerInitializedBaseAsync(
+			JsonRpc rpc,
+			IComponentModel componentModel
+		)
+		{
+			try
+			{
 				Log.Debug($"{nameof(OnServerInitializedBaseAsync)} starting...");
 
 				var codeStreamAgentService = componentModel.GetService<ICodeStreamAgentService>();
 				await codeStreamAgentService.SetRpcAsync(rpc);
 
 				bool autoSignInResult = false;
-				try {
+				try
+				{
 					Log.Debug($"TryAutoSignInAsync starting...");
 					var authenticationController = new AuthenticationController(
 						SettingsServiceFactory.GetOrCreate(),
@@ -170,10 +235,11 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 						EventAggregator,
 						componentModel.GetService<ICredentialsService>(),
 						componentModel.GetService<IWebviewUserSettingsService>()
-						);
+					);
 					autoSignInResult = await authenticationController.TryAutoSignInAsync();
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, nameof(OnServerInitializedBaseAsync));
 				}
 
@@ -182,7 +248,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer {
 				EventAggregator.Publish(new LanguageServerReadyEvent { IsReady = true });
 				Log.Debug($"Published {nameof(LanguageServerReadyEvent)}");
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex, nameof(OnServerInitializedBaseAsync));
 				throw;
 			}

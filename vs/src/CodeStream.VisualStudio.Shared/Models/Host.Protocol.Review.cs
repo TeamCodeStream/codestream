@@ -5,8 +5,8 @@ using CodeStream.VisualStudio.Core.Models;
 
 using Newtonsoft.Json;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-
+namespace CodeStream.VisualStudio.Shared.Models
+{
 	public class PullRequestCloseDiffRequest { }
 
 	public class PullRequestCloseDiffRequestType : RequestType<PullRequestCloseDiffRequest>
@@ -15,8 +15,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public override string Method => MethodName;
 	}
 
-
-	public class PullRequestShowDiffRequestType : RequestType<PullRequestShowDiffRequest> {
+	public class PullRequestShowDiffRequestType : RequestType<PullRequestShowDiffRequest>
+	{
 		public const string MethodName = "host/files/compare";
 		public override string Method => MethodName;
 	}
@@ -44,8 +44,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		[JsonProperty("context", NullValueHandling = NullValueHandling.Ignore)]
 		public PullRequestDiffUri.PullRequestContext Context { get; set; }
 	}
-	
-	public class ReviewShowLocalDiffRequest {
+
+	public class ReviewShowLocalDiffRequest
+	{
 		public string RepoId { get; set; }
 		public string Path { get; set; }
 		public bool? IncludeSaved { get; set; }
@@ -54,39 +55,46 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string BaseSha { get; set; }
 	}
 
-	public class ReviewShowLocalDiffRequestType : RequestType<ReviewShowLocalDiffRequest> {
+	public class ReviewShowLocalDiffRequestType : RequestType<ReviewShowLocalDiffRequest>
+	{
 		public const string MethodName = "host/review/showLocalDiff";
 		public override string Method => MethodName;
 	}
 
-	public class ReviewShowDiffRequest {
+	public class ReviewShowDiffRequest
+	{
 		public string ReviewId { get; set; }
 		public int? Checkpoint { get; set; }
 		public string RepoId { get; set; }
 		public string Path { get; set; }
 	}
 
-	public class ReviewShowDiffRequestType : RequestType<ReviewShowDiffRequest> {
+	public class ReviewShowDiffRequestType : RequestType<ReviewShowDiffRequest>
+	{
 		public const string MethodName = "host/review/showDiff";
 		public override string Method => MethodName;
 	}
 
 	public class ReviewCloseDiffRequest { }
-	public class ReviewCloseDiffRequestType : RequestType<ReviewCloseDiffRequest> {
+
+	public class ReviewCloseDiffRequestType : RequestType<ReviewCloseDiffRequest>
+	{
 		public const string MethodName = "host/review/closeDiff";
 		public override string Method => MethodName;
 	}
 
 	public class ShowPreviousChangedFileRequest { }
 
-	public class ShowPreviousChangedFileRequestType : RequestType<ShowPreviousChangedFileRequest> {
+	public class ShowPreviousChangedFileRequestType : RequestType<ShowPreviousChangedFileRequest>
+	{
 		public const string MethodName = "host/review/changedFiles/previous";
 		public override string Method => MethodName;
 	}
 
 	public class ShowNextChangedFileRequest { }
 
-	public class ShowNextChangedFileRequestType : RequestType<ShowNextChangedFileRequest> {
+	public class ShowNextChangedFileRequestType : RequestType<ShowNextChangedFileRequest>
+	{
 		public const string MethodName = "host/review/changedFiles/next";
 		public override string Method => MethodName;
 	}

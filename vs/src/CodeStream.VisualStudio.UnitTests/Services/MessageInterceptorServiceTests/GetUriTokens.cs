@@ -27,12 +27,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		{
 			var token = new JValue("");
 
-			var container = new JObject
-			{
-				{
-					tokenName, token
-				}
-			};
+			var container = new JObject { { tokenName, token } };
 
 			var result = _messageInterceptorService.GetUriTokens(container);
 
@@ -47,12 +42,7 @@ namespace CodeStream.VisualStudio.UnitTests.Services.MessageInterceptorServiceTe
 		{
 			var token = new JValue("");
 
-			var container = new JObject
-			{
-				{
-					tokenName, token
-				}
-			};
+			var container = new JObject { { tokenName, token } };
 
 			var result = _messageInterceptorService.GetUriTokens(container);
 

@@ -8,21 +8,26 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-
-	public class ActiveTextEditorSelection {
-		public ActiveTextEditorSelection(Uri uri, Range range) {
+namespace CodeStream.VisualStudio.Shared.Models
+{
+	public class ActiveTextEditorSelection
+	{
+		public ActiveTextEditorSelection(Uri uri, Range range)
+		{
 			Uri = uri;
 			Range = range;
 		}
+
 		public Uri Uri { get; }
 		public Range Range { get; }
 	}
 
-	public class ActiveTextEditor : ICanHighlightRange, ICanSelectRange {
+	public class ActiveTextEditor : ICanHighlightRange, ICanSelectRange
+	{
 		private static readonly ILogger Log = LogManager.ForContext<ActiveTextEditor>();
 
-		public ActiveTextEditor(IWpfTextView wpfTextView, string fileName, Uri uri, int? totalLines) {
+		public ActiveTextEditor(IWpfTextView wpfTextView, string fileName, Uri uri, int? totalLines)
+		{
 			WpfTextView = wpfTextView;
 			FileName = fileName;
 			Uri = uri;
@@ -40,18 +45,24 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// <param name="range"></param>
 		/// <param name="highlight"></param>
 		/// <returns></returns>
-		public bool Highlight(Range range, bool highlight) {
-			try {
+		public bool Highlight(Range range, bool highlight)
+		{
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 				var adornmentManager = this.GetHighlightAdornmentManager();
-				if (adornmentManager == null) {
-					Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FileName={FileName} Uri={Uri}");
+				if (adornmentManager == null)
+				{
+					Log.LocalWarning(
+						$"{nameof(adornmentManager)}:{nameof(Highlight)} not found for FileName={FileName} Uri={Uri}"
+					);
 					return false;
 				}
 
 				return adornmentManager.Highlight(range, highlight);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.LocalWarning(ex.ToString());
 				return false;
 			}
@@ -60,10 +71,14 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// <summary>
 		/// Removes all highlight adornments
 		/// </summary>
-		public void RemoveAllHighlights() {
+		public void RemoveAllHighlights()
+		{
 			var adornmentManager = this.GetHighlightAdornmentManager();
-			if (adornmentManager == null) {
-				Log.LocalWarning($"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FileName={FileName} Uri={Uri}");
+			if (adornmentManager == null)
+			{
+				Log.LocalWarning(
+					$"{nameof(adornmentManager)}:{nameof(RemoveAllHighlights)} not found for FileName={FileName} Uri={Uri}"
+				);
 				return;
 			}
 
@@ -76,9 +91,11 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		/// <param name="selection"></param>
 		/// <param name="focus">if True, focus the editor</param>
 		/// <returns></returns>
-		public bool SelectRange(EditorSelection selection, bool? focus) {
+		public bool SelectRange(EditorSelection selection, bool? focus)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
-			try {
+			try
+			{
 				if (WpfTextView == null || selection == null)
 				{
 					return false;
@@ -88,45 +105,79 @@ namespace CodeStream.VisualStudio.Shared.Models {
 				var log = "";
 				var rangeLines = WpfTextView.GetLinesFromRange(range.Start.Line, range.End.Line);
 
-				if (rangeLines != null) {
+				if (rangeLines != null)
+				{
 					WpfTextView.Selection.Clear();
 					VirtualSnapshotPoint anchorPoint;
 					VirtualSnapshotPoint activePoint;
 					var startPoint = rangeLines.Item1.Extent.Start + range.Start.Character;
 
-					if (range.IsPoint()) {
-						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
-						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
+					if (range.IsPoint())
+					{
+						anchorPoint = new VirtualSnapshotPoint(
+							new SnapshotPoint(WpfTextView.TextSnapshot, startPoint)
+						);
+						activePoint = new VirtualSnapshotPoint(
+							new SnapshotPoint(WpfTextView.TextSnapshot, startPoint)
+						);
 					}
-					else {
+					else
+					{
 						int endPosition = rangeLines.Item2.Extent.End;
-						if (range.End.Character != int.MaxValue && rangeLines.Item2.Extent.Start + range.End.Character < endPosition) {
+						if (
+							range.End.Character != int.MaxValue
+							&& rangeLines.Item2.Extent.Start + range.End.Character < endPosition
+						)
+						{
 							endPosition = rangeLines.Item2.Extent.Start + range.End.Character;
 						}
-						anchorPoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPoint));
-						activePoint = new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, endPosition));
+						anchorPoint = new VirtualSnapshotPoint(
+							new SnapshotPoint(WpfTextView.TextSnapshot, startPoint)
+						);
+						activePoint = new VirtualSnapshotPoint(
+							new SnapshotPoint(WpfTextView.TextSnapshot, endPosition)
+						);
 					}
 					WpfTextView.Selection.Select(anchorPoint, activePoint);
-					log += $"Selecting {nameof(FileName)}={FileName} From {anchorPoint} to {activePoint}";
+					log +=
+						$"Selecting {nameof(FileName)}={FileName} From {anchorPoint} to {activePoint}";
 
-					var span = new SnapshotSpan(WpfTextView.TextSnapshot, Span.FromBounds(rangeLines.Item1.Start, rangeLines.Item2.End));
-					WpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
+					var span = new SnapshotSpan(
+						WpfTextView.TextSnapshot,
+						Span.FromBounds(rangeLines.Item1.Start, rangeLines.Item2.End)
+					);
+					WpfTextView.ViewScroller.EnsureSpanVisible(
+						span,
+						EnsureSpanVisibleOptions.MinimumScroll
+					);
 					log += $", ensuring Visible";
-					if (selection.Cursor != null) {
+					if (selection.Cursor != null)
+					{
 						var caretLine = WpfTextView.GetLine(selection.Cursor);
-						if (caretLine != null) {
+						if (caretLine != null)
+						{
 							int startPosition = caretLine.Extent.Start;
-							if (selection.Cursor.Character != int.MaxValue && caretLine.Extent.Start + selection.Cursor.Character < caretLine.Extent.End) {
+							if (
+								selection.Cursor.Character != int.MaxValue
+								&& caretLine.Extent.Start + selection.Cursor.Character
+									< caretLine.Extent.End
+							)
+							{
 								startPosition = caretLine.Extent.Start + selection.Cursor.Character;
 							}
-							WpfTextView.Caret.MoveTo(new VirtualSnapshotPoint(new SnapshotPoint(WpfTextView.TextSnapshot, startPosition)));
+							WpfTextView.Caret.MoveTo(
+								new VirtualSnapshotPoint(
+									new SnapshotPoint(WpfTextView.TextSnapshot, startPosition)
+								)
+							);
 							WpfTextView.Caret.EnsureVisible();
 							log += $", caret to ActivePoint={activePoint.Position}";
 						}
 					}
 				}
 
-				if (focus == true) {
+				if (focus == true)
+				{
 					WpfTextView.VisualElement.Focus();
 				}
 
@@ -135,7 +186,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 				return true;
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Warning(ex, $"{nameof(SelectRange)} Range={@selection} Focus={focus}");
 			}
 

@@ -2,11 +2,11 @@
 
 namespace CodeStream.VisualStudio.Core
 {
-    public class CamelCaseStringEnumConverter : StringEnumConverter
-    {
-        public CamelCaseStringEnumConverter()
-        {
-            this.CamelCaseText = true;
-        }
-    }
+	public class CamelCaseStringEnumConverter : StringEnumConverter
+	{
+		public CamelCaseStringEnumConverter()
+		{
+			this.CamelCaseText = true;
+		}
+	}
 }

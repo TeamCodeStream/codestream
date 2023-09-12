@@ -7,12 +7,22 @@ using CodeStream.VisualStudio.Shared.Models;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-	public interface ICodeStreamAgentService {
+namespace CodeStream.VisualStudio.Shared.Services
+{
+	public interface ICodeStreamAgentService
+	{
 		Task SetRpcAsync(JsonRpc rpc);
-		Task<T> SendAsync<T>(string name, object arguments, CancellationToken? cancellationToken = null);
+		Task<T> SendAsync<T>(
+			string name,
+			object arguments,
+			CancellationToken? cancellationToken = null
+		);
 		Task<JToken> ReinitializeAsync(string newServerUrl = null);
-		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(Range range, string uri, string privacy);
+		Task<CreateDocumentMarkerPermalinkResponse> CreatePermalinkAsync(
+			Range range,
+			string uri,
+			string privacy
+		);
 		Task<CreatePostResponse> CreatePostAsync(string streamId, string threadId, string text);
 		Task<GetFileStreamResponse> GetFileStreamAsync(Uri uri);
 		Task<GetPostResponse> GetPostAsync(string streamId, string postId);
@@ -23,10 +33,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		Task<JToken> OtcLoginRequestAsync(OtcLoginRequest request);
 		Task<JToken> LoginAsync(string email, string password, string serverUrl, string teamId);
 		Task<JToken> LogoutAsync(string newServerUrl = null);
-		Task<JToken> GetBootstrapAsync(Settings settings, JToken state = null, bool isAuthenticated = false);
+		Task<JToken> GetBootstrapAsync(
+			Settings settings,
+			JToken state = null,
+			bool isAuthenticated = false
+		);
 		Task<FetchCodemarksResponse> GetMarkersAsync(string streamId);
-		Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(DocumentFromMarkerRequest request);
-		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(Uri uri, CancellationToken? cancellationToken = null);
+		Task<DocumentFromMarkerResponse> GetDocumentFromMarkerAsync(
+			DocumentFromMarkerRequest request
+		);
+		Task<DocumentMarkersResponse> GetMarkersForDocumentAsync(
+			Uri uri,
+			CancellationToken? cancellationToken = null
+		);
 		Task<FetchStreamsResponse> FetchStreamsAsync(FetchStreamsRequest request);
 		Task TrackAsync(string key, TelemetryProperties properties = null);
 		Task SetServerUrlAsync(string serverUrl, bool? disableStrictSSL, string environment = null);
@@ -34,17 +53,23 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		Task<GetFileContentsAtRevisionResponse> GetFileContentsAtRevisionAsync(
 			string repoId,
 			string path,
-			string sha);
+			string sha
+		);
 
-		Task<GetReviewContentsResponse> GetReviewContentsAsync(string reviewId, int? checkpoint, string repoId,
-			string path);
+		Task<GetReviewContentsResponse> GetReviewContentsAsync(
+			string reviewId,
+			int? checkpoint,
+			string repoId,
+			string path
+		);
 
 		Task<GetReviewContentsLocalResponse> GetReviewContentsLocalAsync(
 			string repoId,
 			string path,
 			string editingReviewId,
 			string baseSha,
-			string rightVersion);
+			string rightVersion
+		);
 
 		Task<GetReviewResponse> GetReviewAsync(string reviewId);
 
@@ -55,6 +80,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			string codeNamespace,
 			string functionName,
 			bool includeAverageDuration,
-			bool includeErrorRate);
+			bool includeErrorRate
+		);
 	}
 }

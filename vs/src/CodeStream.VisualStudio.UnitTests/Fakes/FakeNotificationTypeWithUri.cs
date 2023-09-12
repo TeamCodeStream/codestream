@@ -12,9 +12,7 @@ namespace CodeStream.VisualStudio.UnitTests.Fakes
 		public override string Method => MethodName;
 		public const string MethodName = "fake/message";
 
-		public FakeNotificationTypeWithUri() 
-			=> Params = new FakeNotificationTypeParamsWithUri {
-				Uri = @"C:\Not\A\Temp\File.txt"
-			};
+		public FakeNotificationTypeWithUri() =>
+			Params = new FakeNotificationTypeParamsWithUri { Uri = @"C:\Not\A\Temp\File.txt" };
 	}
 }

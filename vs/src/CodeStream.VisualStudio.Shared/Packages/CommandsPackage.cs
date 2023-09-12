@@ -19,12 +19,13 @@ using CodeStream.VisualStudio.Shared.UI;
 using Task = System.Threading.Tasks.Task;
 
 #if X86
-	using CodeStream.VisualStudio.Vsix.x86;
+using CodeStream.VisualStudio.Vsix.x86;
 #else
-	using CodeStream.VisualStudio.Vsix.x64;
+using CodeStream.VisualStudio.Vsix.x64;
 #endif
 
-namespace CodeStream.VisualStudio.Shared.Packages {
+namespace CodeStream.VisualStudio.Shared.Packages
+{
 	/// <summary>
 	/// Pseudo-package to allow for a custom service provider
 	/// </summary>
@@ -34,7 +35,12 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 	[Guid(PackageGuids.guidCodeStreamPackageString)]
 	[ProvideAutoLoad(Guids.ServiceProviderPackageAutoLoadId, PackageAutoLoadFlags.BackgroundLoad)]
 	// ReSharper disable once RedundantExtendsListEntry
-	public sealed class CommandsPackage : AsyncPackage, IServiceContainer, IToolWindowProvider, SToolWindowProvider {
+	public sealed class CommandsPackage
+		: AsyncPackage,
+			IServiceContainer,
+			IToolWindowProvider,
+			SToolWindowProvider
+	{
 		private static readonly ILogger Log = LogManager.ForContext<CommandsPackage>();
 
 		private IComponentModel _componentModel;
@@ -44,44 +50,83 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		private List<VsCommandBase> _commands;
 		private IIdeService _ideService;
 
-		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
-			try {
+		protected override async Task InitializeAsync(
+			CancellationToken cancellationToken,
+			IProgress<ServiceProgressData> progress
+		)
+		{
+			try
+			{
 				await JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-				((IServiceContainer)this).AddService(typeof(SToolWindowProvider), CreateService, true);
+				((IServiceContainer)this).AddService(
+					typeof(SToolWindowProvider),
+					CreateService,
+					true
+				);
 
 				_componentModel = await GetServiceAsync(typeof(SComponentModel)) as IComponentModel;
 				_sessionService = _componentModel.GetService<ISessionService>();
 				_ideService = _componentModel.GetService<IIdeService>();
 
 				var settingsServiceFactory = _componentModel?.GetService<ISettingsServiceFactory>();
-				_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(nameof(CommandsPackage));
+				_codeStreamSettingsManager = settingsServiceFactory.GetOrCreate(
+					nameof(CommandsPackage)
+				);
 
-				AsyncPackageHelper.InitializeLogging(_codeStreamSettingsManager.GetExtensionTraceLevel());
+				AsyncPackageHelper.InitializeLogging(
+					_codeStreamSettingsManager.GetExtensionTraceLevel()
+				);
 				AsyncPackageHelper.InitializePackage(GetType().Name);
 
 				await base.InitializeAsync(cancellationToken, progress);
 
-				await JoinableTaskFactory.RunAsync(VsTaskRunContext.UIThreadNormalPriority, InitializeCommandsAsync);
+				await JoinableTaskFactory.RunAsync(
+					VsTaskRunContext.UIThreadNormalPriority,
+					InitializeCommandsAsync
+				);
 				Log.Debug($"{nameof(CommandsPackage)} {nameof(InitializeAsync)} completed");
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex, nameof(InitializeAsync));
 			}
 		}
 
-		private async Task InitializeCommandsAsync() {
-			try {
-				using (Log.WithMetrics(nameof(InitializeCommandsAsync))) {
+		private async Task InitializeCommandsAsync()
+		{
+			try
+			{
+				using (Log.WithMetrics(nameof(InitializeCommandsAsync)))
+				{
 					var userCommand = new UserCommand(_sessionService, _codeStreamSettingsManager);
 
-					_commands = new List<VsCommandBase> {
-						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet),
-
-						new AddCodemarkCommentCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						new AddCodemarkIssueCommand(_sessionService, _ideService, _codeStreamSettingsManager, PackageGuids.guidWebViewPackageShortcutCmdSet),
-						
+					_commands = new List<VsCommandBase>
+					{
+						new AddCodemarkCommentCommand(
+							_sessionService,
+							_ideService,
+							_codeStreamSettingsManager,
+							PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet
+						),
+						new AddCodemarkIssueCommand(
+							_sessionService,
+							_ideService,
+							_codeStreamSettingsManager,
+							PackageGuids.guidWebViewPackageCodeWindowContextMenuCmdSet
+						),
+						new AddCodemarkCommentCommand(
+							_sessionService,
+							_ideService,
+							_codeStreamSettingsManager,
+							PackageGuids.guidWebViewPackageShortcutCmdSet
+						),
+						new AddCodemarkIssueCommand(
+							_sessionService,
+							_ideService,
+							_codeStreamSettingsManager,
+							PackageGuids.guidWebViewPackageShortcutCmdSet
+						),
 						new WebViewReloadCommand(_sessionService),
 						new WebViewToggleCommand(),
 						new WebViewToggleTopLevelMenuCommand(),
@@ -92,58 +137,84 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 					await JoinableTaskFactory.SwitchToMainThreadAsync();
 					await InfoBarProvider.InitializeAsync(this);
 
-					var menuCommandService = (IMenuCommandService)(await GetServiceAsync(typeof(IMenuCommandService)));
-					foreach (var command in _commands) {
+					var menuCommandService = (IMenuCommandService)(
+						await GetServiceAsync(typeof(IMenuCommandService))
+					);
+					foreach (var command in _commands)
+					{
 						menuCommandService.AddCommand(command);
 					}
 
 					var eventAggregator = _componentModel.GetService<IEventAggregator>();
-					_disposables = new List<IDisposable> {
+					_disposables = new List<IDisposable>
+					{
 						//when a user has logged in/out we alter the text of some of the commands
-						eventAggregator?.GetEvent<SessionReadyEvent>()
+						eventAggregator
+							?.GetEvent<SessionReadyEvent>()
 							.ObserveOnApplicationDispatcher()
-							.Subscribe(_ => {
+							.Subscribe(_ =>
+							{
 								userCommand.Update();
-						}),
-						eventAggregator?.GetEvent<SessionLogoutEvent>()
+							}),
+						eventAggregator
+							?.GetEvent<SessionLogoutEvent>()
 							.ObserveOnApplicationDispatcher()
-							.Subscribe(_ => {
+							.Subscribe(_ =>
+							{
 								userCommand.Update();
-						}),
-						eventAggregator?.GetEvent<LanguageServerDisconnectedEvent>()
+							}),
+						eventAggregator
+							?.GetEvent<LanguageServerDisconnectedEvent>()
 							.ObserveOnApplicationDispatcher()
-							.Subscribe(_ => {
+							.Subscribe(_ =>
+							{
 								userCommand.Update();
-						}),
-						eventAggregator?.GetEvent<UserUnreadsChangedEvent>()
+							}),
+						eventAggregator
+							?.GetEvent<UserUnreadsChangedEvent>()
 							.ObserveOnApplicationDispatcher()
-							.Subscribe(e => {
+							.Subscribe(e =>
+							{
 								userCommand.UpdateAfterLogin(e);
-						})
+							})
 					};
 
-					if (_sessionService.IsAgentReady) {
+					if (_sessionService.IsAgentReady)
+					{
 						userCommand.Update();
 					}
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(InitializeCommandsAsync));
 			}
 		}
 
-		private object CreateService(IServiceContainer container, Type serviceType) {
+		private object CreateService(IServiceContainer container, Type serviceType)
+		{
 			if (typeof(SToolWindowProvider) == serviceType)
 				return this;
 
 			return null;
 		}
 
-		private static bool TryGetWindowFrame(Guid toolWindowId, out IVsWindowFrame frame) {
+		private static bool TryGetWindowFrame(Guid toolWindowId, out IVsWindowFrame frame)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			var shell = GetGlobalService(typeof(SVsUIShell)) as IVsUIShell;
-			if (shell == null || ErrorHandler.Failed(shell.FindToolWindow((uint)__VSCREATETOOLWIN.CTW_fForceCreate, ref toolWindowId, out frame))) {
+			if (
+				shell == null
+				|| ErrorHandler.Failed(
+					shell.FindToolWindow(
+						(uint)__VSCREATETOOLWIN.CTW_fForceCreate,
+						ref toolWindowId,
+						out frame
+					)
+				)
+			)
+			{
 				frame = null;
 				return false;
 			}
@@ -157,23 +228,26 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		/// <param name="toolWindowId"></param>
 		/// <returns>true if visible</returns>
 		/// <remarks>
-		/// IVsWindowFrame.IsOnScreen checks to see if a window hosted by the Visual Studio IDE has 
-		/// been autohidden, or if the window is part of a tabbed display and currently obscured by 
-		/// another tab. IsOnScreen also checks to see whether the instance of the Visual Studio IDE 
-		/// is minimized or obscured. IsOnScreen differs from the behavior of IsWindowVisible a 
-		/// method that may return true even if the window is completely obscured or minimized. 
-		/// IsOnScreen also differs from IsVisible which does not check to see if the Visual Studio 
-		/// IDE has autohidden the window, or if the window is tabbed and currently obscured by 
+		/// IVsWindowFrame.IsOnScreen checks to see if a window hosted by the Visual Studio IDE has
+		/// been autohidden, or if the window is part of a tabbed display and currently obscured by
+		/// another tab. IsOnScreen also checks to see whether the instance of the Visual Studio IDE
+		/// is minimized or obscured. IsOnScreen differs from the behavior of IsWindowVisible a
+		/// method that may return true even if the window is completely obscured or minimized.
+		/// IsOnScreen also differs from IsVisible which does not check to see if the Visual Studio
+		/// IDE has autohidden the window, or if the window is tabbed and currently obscured by
 		/// another window.
 		/// </remarks>
-		public bool IsVisible(Guid toolWindowId) {
+		public bool IsVisible(Guid toolWindowId)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) {
+			if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
+			{
 				return false;
 			}
 
-			if (frame.IsOnScreen(out int pfOnScreen) == VSConstants.S_OK) {
+			if (frame.IsOnScreen(out int pfOnScreen) == VSConstants.S_OK)
+			{
 				return pfOnScreen == 1;
 			}
 
@@ -185,31 +259,39 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 		/// </summary>
 		/// <param name="toolWindowId">the guid of the window</param>
 		/// <returns>true if it is about to show the frame</returns>
-		public bool ShowToolWindowSafe(Guid toolWindowId) {
-			try {
+		public bool ShowToolWindowSafe(Guid toolWindowId)
+		{
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) return false;
+				if (!TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
+					return false;
 
 				frame.Show();
 				return true;
 			}
-			catch (Exception) {
+			catch (Exception)
+			{
 				//suffer
 			}
 
 			return false;
 		}
 
-		public bool? ToggleToolWindowVisibility(Guid toolWindowId) {
+		public bool? ToggleToolWindowVisibility(Guid toolWindowId)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame)) {
-				if (frame.IsVisible() == VSConstants.S_OK) {
+			if (TryGetWindowFrame(toolWindowId, out IVsWindowFrame frame))
+			{
+				if (frame.IsVisible() == VSConstants.S_OK)
+				{
 					frame.Hide();
 					return false;
 				}
-				else {
+				else
+				{
 					frame.Show();
 					return true;
 				}
@@ -218,16 +300,20 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 			return null;
 		}
 
-		protected override void Dispose(bool isDisposing) {
-			if (isDisposing) {
-				try {
+		protected override void Dispose(bool isDisposing)
+		{
+			if (isDisposing)
+			{
+				try
+				{
 #pragma warning disable VSTHRD108
 					ThreadHelper.ThrowIfNotOnUIThread();
 #pragma warning restore VSTHRD108
 
 					_disposables.DisposeAll();
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, nameof(Dispose));
 				}
 			}

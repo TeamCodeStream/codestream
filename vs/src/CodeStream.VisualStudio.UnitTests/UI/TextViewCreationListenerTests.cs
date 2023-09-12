@@ -18,19 +18,25 @@ using Microsoft.VisualStudio.Text.Projection;
 
 using Xunit;
 
-namespace CodeStream.VisualStudio.UnitTests.UI {
-	
-	public class TextViewCreationListenerTests {
+namespace CodeStream.VisualStudio.UnitTests.UI
+{
+	public class TextViewCreationListenerTests
+	{
 		[Fact]
-		public void TextViewCreationListenerTest() {
-
+		public void TextViewCreationListenerTest()
+		{
 			var textView = new Mock<IVsTextView>();
 			var wpfTextViewMock = new Mock<IWpfTextView>();
-			wpfTextViewMock.Setup(_ => _.Roles).Returns(new FakeTextViewRoleSet(TextViewRoles.DefaultDocumentRoles));
+			wpfTextViewMock
+				.Setup(_ => _.Roles)
+				.Returns(new FakeTextViewRoleSet(TextViewRoles.DefaultDocumentRoles));
 			wpfTextViewMock.Setup(_ => _.Selection).Returns(new Mock<ITextSelection>().Object);
 			var codeStreamMarginProviderMock = new Mock<ICodeStreamMarginProvider>();
-			codeStreamMarginProviderMock.Setup(_ => _.TextViewMargin).Returns(new Mock<ICodeStreamWpfTextViewMargin>().Object);
-			var textViewMarginProviders = new List<IWpfTextViewMarginProvider> {
+			codeStreamMarginProviderMock
+				.Setup(_ => _.TextViewMargin)
+				.Returns(new Mock<ICodeStreamWpfTextViewMargin>().Object);
+			var textViewMarginProviders = new List<IWpfTextViewMarginProvider>
+			{
 				codeStreamMarginProviderMock.Object
 			};
 
@@ -43,43 +49,56 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			var textDocument = new Mock<ITextDocument>();
 			textDocument.Setup(_ => _.FilePath).Returns(@"C:\cheese.cs");
 			var td = textDocument.Object;
-			textDocumentFactoryServiceMock.Setup(_ => _.TryGetTextDocument(It.IsAny<ITextBuffer>(), out td)).Returns(true);
+			textDocumentFactoryServiceMock
+				.Setup(_ => _.TryGetTextDocument(It.IsAny<ITextBuffer>(), out td))
+				.Returns(true);
 
 			var editorAdaptersFactoryServiceMock = new Mock<IVsEditorAdaptersFactoryService>();
-			editorAdaptersFactoryServiceMock.Setup(_ => _.GetWpfTextView(textView.Object))
+			editorAdaptersFactoryServiceMock
+				.Setup(_ => _.GetWpfTextView(textView.Object))
 				.Returns(wpfTextViewMock.Object);
 
-			var bufferCollection = new Collection<ITextBuffer>(new List<ITextBuffer> { new Mock<ITextBuffer>().Object });
+			var bufferCollection = new Collection<ITextBuffer>(
+				new List<ITextBuffer> { new Mock<ITextBuffer>().Object }
+			);
 			var reason = ConnectionReason.TextViewLifetime;
 			var textViewCache = new WpfTextViewCache();
 			var eventAggregator = new Mock<IEventAggregator>();
-			eventAggregator.Setup(_ => _.GetEvent<DocumentMarkerChangedEvent>(
+			eventAggregator
+				.Setup(_ => _.GetEvent<DocumentMarkerChangedEvent>(
 #if DEBUG
-				"", 0,""
+							"", 0, ""
 #endif
-				)).Returns(new Subject<DocumentMarkerChangedEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<SessionReadyEvent>(
+						))
+				.Returns(new Subject<DocumentMarkerChangedEvent>());
+			eventAggregator
+				.Setup(_ => _.GetEvent<SessionReadyEvent>(
 #if DEBUG
-				"", 0, ""
+							"", 0, ""
 #endif
-				)).Returns(new Subject<SessionReadyEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<SessionLogoutEvent>(
+						))
+				.Returns(new Subject<SessionReadyEvent>());
+			eventAggregator
+				.Setup(_ => _.GetEvent<SessionLogoutEvent>(
 #if DEBUG
-				"", 0, ""
+							"", 0, ""
 #endif
-				)).Returns(new Subject<SessionLogoutEvent>());
-			eventAggregator.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>(
+						))
+				.Returns(new Subject<SessionLogoutEvent>());
+			eventAggregator
+				.Setup(_ => _.GetEvent<MarkerGlyphVisibilityEvent>(
 #if DEBUG
-				"", 0, ""
+							"", 0, ""
 #endif
-				)).Returns(new Subject<MarkerGlyphVisibilityEvent>());
+						))
+				.Returns(new Subject<MarkerGlyphVisibilityEvent>());
 
 			var codeStreamAgentService = new Mock<ICodeStreamAgentServiceFactory>();
 
 			var codeStreamServiceMock = new Mock<ICodeStreamService>();
-			
 
-			var listener = new TextViewCreationListener() {
+			var listener = new TextViewCreationListener()
+			{
 				CodeStreamService = codeStreamServiceMock.Object,
 				EditorAdaptersFactoryService = editorAdaptersFactoryServiceMock.Object,
 				TextDocumentFactoryService = textDocumentFactoryServiceMock.Object,
@@ -88,11 +107,14 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 				TextViewCache = new WpfTextViewCache(),
 				EventAggregator = eventAggregator.Object,
 				CodeStreamAgentServiceFactory = codeStreamAgentService.Object,
-				SessionService= new Mock<ISessionService>().Object,
-			
+				SessionService = new Mock<ISessionService>().Object,
 			};
 
-			((IWpfTextViewConnectionListener)listener).SubjectBuffersConnected(wpfTextViewMock.Object, reason, bufferCollection);
+			((IWpfTextViewConnectionListener)listener).SubjectBuffersConnected(
+				wpfTextViewMock.Object,
+				reason,
+				bufferCollection
+			);
 			var propertyCount = wpfTextViewMock.Object.Properties.PropertyList.Count;
 			Assert.Equal(1, textViewCache.Count());
 			Assert.True(propertyCount > 0);
@@ -101,7 +123,11 @@ namespace CodeStream.VisualStudio.UnitTests.UI {
 			listener.OnSessionReadyAsync(wpfTextViewMock.Object);
 			Assert.True(wpfTextViewMock.Object.Properties.PropertyList.Count > propertyCount);
 
-			((IWpfTextViewConnectionListener)listener).SubjectBuffersDisconnected(wpfTextViewMock.Object, reason, bufferCollection);
+			((IWpfTextViewConnectionListener)listener).SubjectBuffersDisconnected(
+				wpfTextViewMock.Object,
+				reason,
+				bufferCollection
+			);
 			Assert.Equal(0, textViewCache.Count());
 			Assert.True(wpfTextViewMock.Object.Properties.PropertyList.Count == 0);
 		}

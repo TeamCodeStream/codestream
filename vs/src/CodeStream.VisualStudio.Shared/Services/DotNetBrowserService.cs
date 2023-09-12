@@ -32,12 +32,15 @@ using static CodeStream.VisualStudio.Core.Extensions.FileSystemExtensions;
 using Application = CodeStream.VisualStudio.Core.Application;
 using Task = System.Threading.Tasks.Task;
 
-namespace CodeStream.VisualStudio.Shared.Services {
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	/// <summary>
 	/// This class handles communication between javascript and .NET
 	/// </summary>
-	public class PostMessageInterop {
-		public void Handle(string message) {
+	public class PostMessageInterop
+	{
+		public void Handle(string message)
+		{
 			if (MessageHandler == null)
 			{
 				return;
@@ -49,7 +52,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public static WindowMessageHandler MessageHandler;
 	}
 
-	public enum WebviewState {
+	public enum WebviewState
+	{
 		Unknown,
 		Waiting,
 		Loaded,
@@ -58,11 +62,13 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 	[Export(typeof(IBrowserServiceFactory))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class BrowserServiceFactory : ServiceFactory<IBrowserService>, IBrowserServiceFactory {
+	public class BrowserServiceFactory : ServiceFactory<IBrowserService>, IBrowserServiceFactory
+	{
 		[ImportingConstructor]
-		public BrowserServiceFactory([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) :
-			base(serviceProvider) {
-		}
+		public BrowserServiceFactory(
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
+		)
+			: base(serviceProvider) { }
 	}
 
 	/// <summary>
@@ -70,7 +76,13 @@ namespace CodeStream.VisualStudio.Shared.Services {
 	/// </summary>
 	[Export(typeof(IBrowserService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class DotNetBrowserService : IBrowserService, IDisposable, DialogHandler, LoadHandler, ResourceHandler {
+	public class DotNetBrowserService
+		: IBrowserService,
+			IDisposable,
+			DialogHandler,
+			LoadHandler,
+			ResourceHandler
+	{
 		private static readonly ILogger Log = LogManager.ForContext<IBrowserService>();
 
 		/// <summary>
@@ -107,99 +119,146 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		[ImportingConstructor]
 		public DotNetBrowserService(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
-				IEventAggregator eventAggregator,
-				IHttpClientService httpClientService,
-			IMessageInterceptorService messageInterceptorService) {
-
+			IEventAggregator eventAggregator,
+			IHttpClientService httpClientService,
+			IMessageInterceptorService messageInterceptorService
+		)
+		{
 			_serviceProvider = serviceProvider;
-			
+
 			_httpClientService = httpClientService;
 			_messageInterceptorService = messageInterceptorService;
 
-			try {
+			try
+			{
 				Queue = new BlockingCollection<string>(new ConcurrentQueue<string>());
 				_manualResetEvent = new ManualResetEvent(false);
-				_disposables = new List<IDisposable>() {
-					eventAggregator.GetEvent<WebviewDidInitializeEvent>().Subscribe(_ => {
-						Log.Debug($"{nameof(WebviewDidInitializeEvent)} Message QueueCount={QueueCount}");
-						_manualResetEvent.Set();
+				_disposables = new List<IDisposable>()
+				{
+					eventAggregator
+						.GetEvent<WebviewDidInitializeEvent>()
+						.Subscribe(_ =>
+						{
+							Log.Debug(
+								$"{nameof(WebviewDidInitializeEvent)} Message QueueCount={QueueCount}"
+							);
+							_manualResetEvent.Set();
 
-						_disposable = eventAggregator.GetEvent<SessionReadyEvent>().Subscribe(nested => {
-							Log.Debug($"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}");
-							if (!_manualResetEvent.WaitOne(0)) {
-								_manualResetEvent.Set();
-							}
-						});
-					}),
-					eventAggregator.GetEvent<SessionLogoutEvent>().Subscribe(_ => {
-						Log.Debug($"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}");
-						_queueTokenSource?.Cancel();
-						Queue.ClearAll();
-						_manualResetEvent.Reset();
-					})
+							_disposable = eventAggregator
+								.GetEvent<SessionReadyEvent>()
+								.Subscribe(nested =>
+								{
+									Log.Debug(
+										$"{nameof(SessionReadyEvent)} Message QueueCount={QueueCount}"
+									);
+									if (!_manualResetEvent.WaitOne(0))
+									{
+										_manualResetEvent.Set();
+									}
+								});
+						}),
+					eventAggregator
+						.GetEvent<SessionLogoutEvent>()
+						.Subscribe(_ =>
+						{
+							Log.Debug(
+								$"{nameof(SessionLogoutEvent)} Message QueueCount={QueueCount}"
+							);
+							_queueTokenSource?.Cancel();
+							Queue.ClearAll();
+							_manualResetEvent.Reset();
+						})
 				};
 
 				_processorTokenSource = new CancellationTokenSource();
 				var processorToken = _processorTokenSource.Token;
 
-				_processor = Task.Factory.StartNew(() => {
-					try {
-						while (_manualResetEvent.WaitOne()) {
-							if (processorToken.IsCancellationRequested) {
-								break;
-							}
+				_processor = Task.Factory.StartNew(
+					() =>
+					{
+						try
+						{
+							while (_manualResetEvent.WaitOne())
+							{
+								if (processorToken.IsCancellationRequested)
+								{
+									break;
+								}
 
-							_queueTokenSource = new CancellationTokenSource();
-							var queueToken = _queueTokenSource.Token;
-							try {
-								foreach (var value in Queue.GetConsumingEnumerable(_queueTokenSource.Token)) {
-									if (queueToken.IsCancellationRequested) {
-										break;
-									}
+								_queueTokenSource = new CancellationTokenSource();
+								var queueToken = _queueTokenSource.Token;
+								try
+								{
+									foreach (
+										var value in Queue.GetConsumingEnumerable(
+											_queueTokenSource.Token
+										)
+									)
+									{
+										if (queueToken.IsCancellationRequested)
+										{
+											break;
+										}
 
-									if (Queue.Count > QueueLimit) {
-										Queue.ClearAll();
-										_manualResetEvent.Reset();
+										if (Queue.Count > QueueLimit)
+										{
+											Queue.ClearAll();
+											_manualResetEvent.Reset();
 #pragma warning disable VSTHRD010
-										ReloadWebView();
+											ReloadWebView();
 #pragma warning restore VSTHRD010
-										break;
-									}
+											break;
+										}
 
-									Send(value);
+										Send(value);
+									}
+								}
+								catch (OperationCanceledException ex)
+								{
+									//no need to pass the error, this exception is expected
+									Log.Verbose(ex.Message);
+								}
+								catch (Exception ex)
+								{
+									Log.Error(ex, ex.Message);
 								}
 							}
-							catch (OperationCanceledException ex) {
-								//no need to pass the error, this exception is expected
-								Log.Verbose(ex.Message);
-							}
-							catch (Exception ex) {
-								Log.Error(ex, ex.Message);
-							}
 						}
-					}
-					catch (Exception ex) {
-						Log.Error(ex.Message);
-					}
-				}, processorToken, TaskCreationOptions.None, TaskScheduler.Default);
+						catch (Exception ex)
+						{
+							Log.Error(ex.Message);
+						}
+					},
+					processorToken,
+					TaskCreationOptions.None,
+					TaskScheduler.Default
+				);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex, nameof(DotNetBrowserService));
 			}
 		}
 
-		public virtual Task InitializeAsync() {
-			return Task.Run(async delegate {
-				using (var metrics = Log.WithMetrics(nameof(OnInitialized))) {
-					OnInitialized();
+		public virtual Task InitializeAsync()
+		{
+			return Task.Run(
+				async delegate
+				{
+					using (var metrics = Log.WithMetrics(nameof(OnInitialized)))
+					{
+						OnInitialized();
+					}
+					using (var metrics = Log.WithMetrics(nameof(InitializeWpfViewAsync)))
+					{
+						await InitializeWpfViewAsync();
+					}
 				}
-				using (var metrics = Log.WithMetrics(nameof(InitializeWpfViewAsync))) {
-					await InitializeWpfViewAsync();
-				}
-			});
+			);
 		}
-		
-		protected void OnInitialized() {
+
+		protected void OnInitialized()
+		{
 			var switches = DotNetBrowserSwitches.Create(BrowserType);
 
 			BrowserPreferences.SetChromiumSwitches(switches.ToArray());
@@ -228,7 +287,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			_browser.ScriptContextCreated += Browser_ScriptContextCreated;
 		}
 
-		protected async Task InitializeWpfViewAsync() {
+		protected async Task InitializeWpfViewAsync()
+		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			_browserView = new WPFBrowserView(_browser);
@@ -236,23 +296,25 @@ namespace CodeStream.VisualStudio.Shared.Services {
 #if DEBUG
 			Log.Debug(GetDevToolsUrl());
 #endif
-
 		}
 
-		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e) {
+		private void Browser_RenderGoneEvent(object sender, RenderEventArgs e)
+		{
 			Log.Verbose(nameof(Browser_RenderGoneEvent));
 #pragma warning disable VSTHRD010
 			ReloadWebView();
 #pragma warning restore VSTHRD010
 		}
 
-		private void Browser_ScriptContextCreated(object sender, ScriptContextEventArgs e) {
+		private void Browser_ScriptContextCreated(object sender, ScriptContextEventArgs e)
+		{
 			var jsValue = _browserView.Browser.ExecuteJavaScriptAndReturnValue("window");
 			jsValue.AsObject().SetProperty("PostMessageInterop", new PostMessageInterop());
 
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} set window object");
 
-			_browserView.Browser.ExecuteJavaScript(@"
+			_browserView.Browser.ExecuteJavaScript(
+				@"
 				  window.acquireHostApi = function() {
 					  return {
 						  postMessage: function(message) {
@@ -260,39 +322,47 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						 }
 					 }
 				  }
-			   ");
+			   "
+			);
 
 			Log.Verbose($"{nameof(Browser_ScriptContextCreated)} ExecuteJavaScript");
 		}
 
-		public void AddWindowMessageEvent(WindowMessageHandler messageHandler) {
+		public void AddWindowMessageEvent(WindowMessageHandler messageHandler)
+		{
 			PostMessageInterop.MessageHandler = messageHandler;
 			Log.Verbose($"{nameof(AddWindowMessageEvent)}");
 		}
 
-		private void Send(string message) {
-			if (_browserView?.Browser == null) {
-				#if DEBUG
+		private void Send(string message)
+		{
+			if (_browserView?.Browser == null)
+			{
+#if DEBUG
 				Log.Warning($"Browser is null Message={message}");
-				#endif
+#endif
 				return;
 			}
 
 			_browserView.Browser.ExecuteJavaScript(@"window.postMessage(" + message + @",""*"");");
 		}
 
-		private void LoadHtml(string html) {
-			if (_browserView?.Browser == null) {
+		private void LoadHtml(string html)
+		{
+			if (_browserView?.Browser == null)
+			{
 				Log.Verbose($"{nameof(LoadHtml)} browserView or browser is null");
 				return;
 			}
 
-			using (Log.CriticalOperation($"{nameof(LoadHtml)}")) {
+			using (Log.CriticalOperation($"{nameof(LoadHtml)}"))
+			{
 				_browserView.Browser.LoadHTML(html);
 			}
 		}
 
-		public void AttachControl(FrameworkElement frameworkElement) {
+		public void AttachControl(FrameworkElement frameworkElement)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
 			if (!(frameworkElement is Grid grid))
@@ -304,7 +374,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			grid.Children.Add(_browserView);
 		}
 
-		public string GetDevToolsUrl() {
+		public string GetDevToolsUrl()
+		{
 			var url = _browserView.Browser.GetRemoteDebuggingURL();
 			Log.Verbose($"DevTools Url={url}");
 			return url;
@@ -317,10 +388,16 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <param name="lockInfo"></param>
 		/// <param name="fileKnownToBeLocked">this is a known file name that lives in the DotNetBrowserDir that is known to hold a file lock</param>
 		/// <returns></returns>
-		private static bool TryCheckUsage(string directoryPath, out DirectoryLockInfo lockInfo, string fileKnownToBeLocked = "History") {
+		private static bool TryCheckUsage(
+			string directoryPath,
+			out DirectoryLockInfo lockInfo,
+			string fileKnownToBeLocked = "History"
+		)
+		{
 			lockInfo = new DirectoryLockInfo(directoryPath);
 
-			try {
+			try
+			{
 				// this dir, doesn't exist... good to go!
 				if (!Directory.Exists(directoryPath))
 				{
@@ -328,20 +405,25 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				}
 
 				var di = new DirectoryInfo(directoryPath);
-				foreach (var file in di.GetFiles()) {
-					if (file.Extension.EqualsIgnoreCase(".lock")) {
+				foreach (var file in di.GetFiles())
+				{
+					if (file.Extension.EqualsIgnoreCase(".lock"))
+					{
 						lockInfo.LockFile = file.FullName;
 						return true;
 					}
-					if (file.Name.EqualsIgnoreCase(fileKnownToBeLocked)) {
-						if (IsFileLocked(file.FullName)) {
+					if (file.Name.EqualsIgnoreCase(fileKnownToBeLocked))
+					{
+						if (IsFileLocked(file.FullName))
+						{
 							lockInfo.LockFile = file.FullName;
 							return true;
 						}
 					}
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Warning(ex, "IsInUse?");
 				return true;
 			}
@@ -349,7 +431,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return false;
 		}
 
-		private static string GetOrCreateContextParamsPath() {
+		private static string GetOrCreateContextParamsPath()
+		{
 			// the default directory from DotNetBrowser looks something like this:
 			// C:\Users\<UserName>\AppData\Local\Temp\dotnetbrowser-chromium\64.0.3282.24.1.19.0.0.642\32bit\data
 			// get it with BrowserPreferences.GetDefaultDataDir();
@@ -357,8 +440,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			var defaultPath = Application.TempDataPath + "Browser-0";
 			Log.Verbose($"DefaultPath={defaultPath}");
 
-			if (!TryCheckUsage(defaultPath, out var info)) {
-				if (!info.HasLocked) {
+			if (!TryCheckUsage(defaultPath, out var info))
+			{
+				if (!info.HasLocked)
+				{
 					Log.Debug($"Reusing {defaultPath} (not locked)");
 					return defaultPath;
 				}
@@ -369,11 +454,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			string path = null;
 
 			// this is mainly for dev / DEBUG -- users should never get this high
-			for (var i = 1; i < 2000; i++) {
+			for (var i = 1; i < 2000; i++)
+			{
 				path = Path.Combine(Application.TempDataPath, $"Browser-{i}");
-				if (Directory.Exists(path)) {
+				if (Directory.Exists(path))
+				{
 					var isLocked = TryCheckUsage(path, out var lockInfo);
-					if (lockInfo.HasLocked) {
+					if (lockInfo.HasLocked)
+					{
 						// this path/file exists, but it is locked, try another
 						Log.Verbose($"{path}|{lockInfo.LockFile} IsLocked={isLocked}");
 						continue;
@@ -383,7 +471,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					// not locked... use it!
 					break;
 				}
-				else {
+				else
+				{
 					Log.Debug($"Using {path} -- (Doesn't exist)");
 					// doesn't exist -- use it!
 					break;
@@ -396,28 +485,52 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Reloads the Webview. Requires the UI thread
 		/// </summary>
-		public virtual void ReloadWebView() {
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				Log.Debug($"{nameof(ReloadWebView)}...");
-				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
-				_state = WebviewState.Restarting;
-			});
+		public virtual void ReloadWebView()
+		{
+			ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					Log.Debug($"{nameof(ReloadWebView)}...");
+					LoadHtml(
+						CreateWebViewHarness(
+							Assembly.GetAssembly(typeof(IBrowserService)),
+							"webview"
+						)
+					);
+					_state = WebviewState.Restarting;
+				}
+			);
 		}
 
 		/// <summary>
 		/// Loads the Webview. Requires the UI thread
 		/// </summary>
-		public void LoadWebView() {
-			if (_state == WebviewState.Unknown || _state == WebviewState.Waiting || _state == WebviewState.Restarting) {
+		public void LoadWebView()
+		{
+			if (
+				_state == WebviewState.Unknown
+				|| _state == WebviewState.Waiting
+				|| _state == WebviewState.Restarting
+			)
+			{
 				Log.Debug($"{nameof(LoadWebView)} State={_state}");
-				ThreadHelper.JoinableTaskFactory.Run(async delegate {
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-					LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "webview"));
-					_state = WebviewState.Loaded;
-				});
+				ThreadHelper.JoinableTaskFactory.Run(
+					async delegate
+					{
+						await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+						LoadHtml(
+							CreateWebViewHarness(
+								Assembly.GetAssembly(typeof(IBrowserService)),
+								"webview"
+							)
+						);
+						_state = WebviewState.Loaded;
+					}
+				);
 			}
-			else {
+			else
+			{
 				Log.Debug($"Ignoring {nameof(LoadWebView)} State={_state}");
 			}
 		}
@@ -425,40 +538,57 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Loads the Splash view. Requires the UI thread
 		/// </summary>
-		public void LoadSplashView() {
+		public void LoadSplashView()
+		{
 			Log.Debug($"{nameof(LoadSplashView)} State={_state}");
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-				LoadHtml(CreateWebViewHarness(Assembly.GetAssembly(typeof(IBrowserService)), "waiting"));
-				_state = WebviewState.Waiting;
-			});
+			ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+					LoadHtml(
+						CreateWebViewHarness(
+							Assembly.GetAssembly(typeof(IBrowserService)),
+							"waiting"
+						)
+					);
+					_state = WebviewState.Waiting;
+				}
+			);
 		}
-		
-		private static string FormatConsoleMessage(ConsoleEventArgs e) 
-			=> $"Browser: Message={e?.Message} Source={e?.Source} Line={e?.LineNumber} Level={e.Level}";
 
-		private void Browser_ConsoleMessageEvent(object sender, ConsoleEventArgs e) {
-			if (e.Level == ConsoleEventArgs.MessageLevel.DEBUG && Log.IsVerboseEnabled()) {
+		private static string FormatConsoleMessage(ConsoleEventArgs e) =>
+			$"Browser: Message={e?.Message} Source={e?.Source} Line={e?.LineNumber} Level={e.Level}";
+
+		private void Browser_ConsoleMessageEvent(object sender, ConsoleEventArgs e)
+		{
+			if (e.Level == ConsoleEventArgs.MessageLevel.DEBUG && Log.IsVerboseEnabled())
+			{
 				Log.Verbose(FormatConsoleMessage(e));
 			}
-			if (e.Level == ConsoleEventArgs.MessageLevel.LOG && Log.IsDebugEnabled()) {
+			if (e.Level == ConsoleEventArgs.MessageLevel.LOG && Log.IsDebugEnabled())
+			{
 				Log.Debug(FormatConsoleMessage(e));
 			}
-			else if (e.Level == ConsoleEventArgs.MessageLevel.WARNING) {
+			else if (e.Level == ConsoleEventArgs.MessageLevel.WARNING)
+			{
 				Log.Warning(FormatConsoleMessage(e));
 			}
-			else if (e.Level == ConsoleEventArgs.MessageLevel.ERROR) {
+			else if (e.Level == ConsoleEventArgs.MessageLevel.ERROR)
+			{
 				Log.Error(FormatConsoleMessage(e));
 			}
-			else {
+			else
+			{
 				Log.Verbose(FormatConsoleMessage(e));
 			}
 		}
 
 		private bool _isDisposed;
 
-		public void Dispose() {
-			if (!_isDisposed) {
+		public void Dispose()
+		{
+			if (!_isDisposed)
+			{
 				Log.Debug(nameof(Dispose));
 
 				Dispose(true);
@@ -466,38 +596,48 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		}
 
-		protected void Dispose(bool disposing) {
+		protected void Dispose(bool disposing)
+		{
 			if (_isDisposed)
 			{
 				return;
 			}
 
 			var success = true;
-			if (disposing) {
-				try {
-					try {
+			if (disposing)
+			{
+				try
+				{
+					try
+					{
 						_queueTokenSource?.Cancel();
 						_processorTokenSource?.Cancel();
 						_manualResetEvent.Set();
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Warning(ex, "aux component failed to dispose");
 					}
-					if (_browserView == null) {
+					if (_browserView == null)
+					{
 						Log.Verbose("DotNetBrowser is null");
 						return;
 					}
-					if (_browserView?.IsDisposed == true) {
+					if (_browserView?.IsDisposed == true)
+					{
 						Log.Verbose("DotNetBrowser already disposed");
 						return;
 					}
-					try {
+					try
+					{
 						_browserView.Browser.ConsoleMessageEvent -= Browser_ConsoleMessageEvent;
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Error(ex, nameof(Browser_ConsoleMessageEvent));
 					}
-					try {
+					try
+					{
 						_browserView.InputBindings.Clear();
 						_disposable?.Dispose();
 						_disposables?.DisposeAll();
@@ -505,7 +645,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						_browserView.Browser.RenderGoneEvent -= Browser_RenderGoneEvent;
 						_browserView.Browser.ScriptContextCreated -= Browser_ScriptContextCreated;
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Warning(ex, "aux component failed to dispose");
 					}
 
@@ -522,28 +663,33 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					_browserView = null;
 
 					var deleted = false;
-					for (var i = 0; i < 5; i++) {
+					for (var i = 0; i < 5; i++)
+					{
 						if (deleted)
 						{
 							break;
 						}
 
-						try {
+						try
+						{
 							Directory.Delete(_path, true);
 							deleted = true;
 							Log.Verbose($"Cleaned up {_path} on {i + 1} attempt");
 						}
-						catch (Exception ex) {
+						catch (Exception ex)
+						{
 							Log.Warning(ex, $"Could not delete attempt ({i + 1}) {_path}");
 						}
 					}
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Warning(ex, "DotNetBrowser dispose failure");
 					success = false;
 				}
 
-				if (success) {
+				if (success)
+				{
 					Log.Verbose("DotNetBrowser Disposed");
 				}
 
@@ -551,16 +697,21 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		}
 
-		protected void SendInternal(IAbstractMessageType message, bool canEnqueue = false) {
-			using (IpcLogger.CriticalOperation(Log, "RES", message, canEnqueue)) {
+		protected void SendInternal(IAbstractMessageType message, bool canEnqueue = false)
+		{
+			using (IpcLogger.CriticalOperation(Log, "RES", message, canEnqueue))
+			{
 				var messageToken = _messageInterceptorService.InterceptAndModify(message);
 				var messageJson = messageToken.ToJson();
-				if (canEnqueue) {
-					if (!Queue.TryAdd(messageJson)) {
+				if (canEnqueue)
+				{
+					if (!Queue.TryAdd(messageJson))
+					{
 						Log.Verbose($"failed to add: {messageJson}");
 					}
 				}
-				else {
+				else
+				{
 					//not a deferred and not triggered -- work as normal
 					Send(messageJson);
 				}
@@ -568,7 +719,9 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public void Send(IAbstractMessageType message) => SendInternal(message);
+
 		public void Notify(INotificationType message) => SendInternal(message);
+
 		public void EnqueueNotification(INotificationType message) => SendInternal(message, true);
 
 		/// <summary>
@@ -576,10 +729,17 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// </summary>
 		/// <param name="message"></param>
 		/// <returns></returns>
-		public Task NotifyAsync(INotificationType message) {
-			return Task.Factory.StartNew(() => {
-				SendInternal(message);
-			}, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.Current);
+		public Task NotifyAsync(INotificationType message)
+		{
+			return Task.Factory.StartNew(
+				() =>
+				{
+					SendInternal(message);
+				},
+				CancellationToken.None,
+				TaskCreationOptions.None,
+				TaskScheduler.Current
+			);
 		}
 
 		/// <summary>
@@ -588,12 +748,17 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <param name="assembly"></param>
 		/// <param name="resourceName"></param>
 		/// <returns></returns>
-		private string CreateWebViewHarness(Assembly assembly, string resourceName) {
+		private string CreateWebViewHarness(Assembly assembly, string resourceName)
+		{
 			string harness = null;
-			try {
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				var resourceManager = new ResourceManager("VSPackage", Assembly.GetExecutingAssembly());
+				var resourceManager = new ResourceManager(
+					"VSPackage",
+					Assembly.GetExecutingAssembly()
+				);
 				var dir = Path.GetDirectoryName(assembly.Location);
 				Debug.Assert(dir != null, nameof(dir) + " != null");
 
@@ -605,41 +770,53 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				// ReSharper disable once ResourceItemNotResolved
 				var styleSheet = resourceManager.GetString("theme");
 
-
 				var theme = ThemeManager.Generate();
 				var isDebuggingEnabled = Log.IsDebugEnabled();
 
 				var outputDebug = new Dictionary<string, Tuple<string, string>>();
-				harness = harness.Replace("{bodyClass}", theme.IsDark ? "vscode-dark" : "vscode-light");
+				harness = harness.Replace(
+					"{bodyClass}",
+					theme.IsDark ? "vscode-dark" : "vscode-light"
+				);
 
-				if (styleSheet != null) {
-					foreach (var item in theme.ThemeResources) {
+				if (styleSheet != null)
+				{
+					foreach (var item in theme.ThemeResources)
+					{
 						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", item.Value);
 
-						if (isDebuggingEnabled) {
+						if (isDebuggingEnabled)
+						{
 							outputDebug[item.Key] = Tuple.Create(item.Key, item.Value);
 						}
 					}
 
-					foreach (var item in theme.ThemeColors) {
+					foreach (var item in theme.ThemeColors)
+					{
 						var color = theme.IsDark
 							? item.DarkModifier?.Invoke(item.Color) ?? item.Color
 							: item.LightModifier?.Invoke(item.Color) ?? item.Color;
 
 						styleSheet = styleSheet.Replace($"--cs--{item.Key}--", color.ToRgba());
 
-						if (isDebuggingEnabled) {
+						if (isDebuggingEnabled)
+						{
 							outputDebug[item.Key] = Tuple.Create(item.Key, color.ToRgba());
 						}
 					}
 				}
-				
-				harness = harness.Replace(@"<style id=""theme""></style>", $@"<style id=""theme"">{styleSheet}</style>");
+
+				harness = harness.Replace(
+					@"<style id=""theme""></style>",
+					$@"<style id=""theme"">{styleSheet}</style>"
+				);
 
 				//NR telemetry injection
 				var nrSettings = _httpClientService.GetNREnvironmentSettings();
-				if (nrSettings.HasValidSettings) {
-					var browserFile = Path.GetDirectoryName(assembly.Location) + @"/webview/newrelic-browser.js";
+				if (nrSettings.HasValidSettings)
+				{
+					var browserFile =
+						Path.GetDirectoryName(assembly.Location) + @"/webview/newrelic-browser.js";
 					var newRelicTelemetryJs = System.IO.File.ReadAllText(browserFile);
 					newRelicTelemetryJs = newRelicTelemetryJs
 						.Replace("{{accountID}}", nrSettings.AccountId)
@@ -647,22 +824,30 @@ namespace CodeStream.VisualStudio.Shared.Services {
 						.Replace("{{licenseKey}}", nrSettings.BrowserLicenseKey)
 						.Replace("{{applicationID}}", nrSettings.ApplicationId);
 
-					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", $@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>");
+					harness = harness.Replace(
+						@"<script id=""newrelic-browser""></script>",
+						$@"<script id=""newrelic-browser"">{newRelicTelemetryJs}</script>"
+					);
 				}
-				else {
-					harness = harness.Replace(@"<script id=""newrelic-browser""></script>", "<!-- No Telemetry -->");
+				else
+				{
+					harness = harness.Replace(
+						@"<script id=""newrelic-browser""></script>",
+						"<!-- No Telemetry -->"
+					);
 				}
 
 #if !DEBUG
-			if (isDebuggingEnabled)
-			{
-				Log.Debug(outputDebug.ToJson(format: true));
-				Log.Debug(styleSheet);
-			}
-			Log.Verbose(harness);
+				if (isDebuggingEnabled)
+				{
+					Log.Debug(outputDebug.ToJson(format: true));
+					Log.Debug(styleSheet);
+				}
+				Log.Verbose(harness);
 #endif
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(CreateWebViewHarness));
 			}
 			return harness;
@@ -676,18 +861,27 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		bool LoadHandler.OnCertificateError(CertificateErrorParams errorParams) => false;
 
-		bool ResourceHandler.CanLoadResource(ResourceParams parameters) {
-			if (parameters.ResourceType == ResourceType.IMAGE || parameters.URL.StartsWith("file://")) {
+		bool ResourceHandler.CanLoadResource(ResourceParams parameters)
+		{
+			if (
+				parameters.ResourceType == ResourceType.IMAGE
+				|| parameters.URL.StartsWith("file://")
+			)
+			{
 				return true;
 			}
 
-			if (parameters.ResourceType == ResourceType.MAIN_FRAME) {
-				try {
-					var componentModel = _serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
+			if (parameters.ResourceType == ResourceType.MAIN_FRAME)
+			{
+				try
+				{
+					var componentModel =
+						_serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
 					Assumes.Present(componentModel);
 					componentModel.GetService<IIdeService>().Navigate(parameters.URL);
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, "CanLoadResource");
 				}
 			}
@@ -695,10 +889,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return false;
 		}
 
-		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters) => CloseStatus.CANCEL;
+		CloseStatus DialogHandler.OnBeforeUnload(UnloadDialogParams parameters) =>
+			CloseStatus.CANCEL;
 
-		void DialogHandler.OnAlert(DialogParams parameters) {
-		}
+		void DialogHandler.OnAlert(DialogParams parameters) { }
 
 		CloseStatus DialogHandler.OnConfirmation(DialogParams parameters) => CloseStatus.CANCEL;
 
@@ -706,14 +900,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		CloseStatus DialogHandler.OnPrompt(PromptDialogParams parameters) => CloseStatus.CANCEL;
 
-		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters) => CloseStatus.CANCEL;
+		CloseStatus DialogHandler.OnReloadPostData(ReloadPostDataParams parameters) =>
+			CloseStatus.CANCEL;
 
-		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters) => CloseStatus.CANCEL;
+		CloseStatus DialogHandler.OnColorChooser(ColorChooserParams parameters) =>
+			CloseStatus.CANCEL;
 
-		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) => CloseStatus.CANCEL;
+		CloseStatus DialogHandler.OnSelectCertificate(CertificatesDialogParams parameters) =>
+			CloseStatus.CANCEL;
 
 		private double _lastZoomPercentage = 0;
-		public void SetZoomInBackground(double zoomPercentage) {
+
+		public void SetZoomInBackground(double zoomPercentage)
+		{
 			if (_lastZoomPercentage == zoomPercentage)
 			{
 				return;
@@ -724,23 +923,32 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				return;
 			}
 
-			try {
-				_ = System.Threading.Tasks.Task.Run(() => {
+			try
+			{
+				_ = System.Threading.Tasks.Task.Run(() =>
+				{
 					// https://dotnetbrowser.support.teamdev.com/support/solutions/articles/9000139467-zoom-level
 					var zoomLevel = Math.Log(zoomPercentage / 100) / Math.Log(1.2);
 					_browserView.Browser.ZoomLevel = zoomLevel;
-					Log.Verbose($"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}");
+					Log.Verbose(
+						$"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}"
+					);
 					_lastZoomPercentage = zoomPercentage;
 				});
 			}
-			catch (Exception ex) {
-				Log.Error(ex, $"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}");
+			catch (Exception ex)
+			{
+				Log.Error(
+					ex,
+					$"{nameof(SetZoomInBackground)} {nameof(zoomPercentage)}={zoomPercentage}"
+				);
 			}
 		}
 
 		#endregion
 
-		private static class DotNetBrowserSwitches {
+		private static class DotNetBrowserSwitches
+		{
 			/// <summary>
 			/// These switches must be used in either rendering
 			/// </summary>
@@ -767,9 +975,11 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				"--software-rendering-fps=60"
 			};
 
-			public static List<string> Create(BrowserType browserType) {
+			public static List<string> Create(BrowserType browserType)
+			{
 				var switches = new List<string>(DefaultSwitches);
-				if (browserType == BrowserType.LIGHTWEIGHT) {
+				if (browserType == BrowserType.LIGHTWEIGHT)
+				{
 					switches = switches.Combine(LightweightSwitches);
 				}
 				return switches;

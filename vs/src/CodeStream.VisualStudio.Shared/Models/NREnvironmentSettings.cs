@@ -1,9 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-
-	public class NREnvironmentSettings {
-
+namespace CodeStream.VisualStudio.Shared.Models
+{
+	public class NREnvironmentSettings
+	{
 		[JsonProperty("error")]
 		public string Error { get; set; }
 
@@ -25,7 +25,6 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		[JsonProperty("accountId")]
 		public string AccountId { get; set; }
 
-
 		[JsonIgnore]
 		public string AppName = "lsp-agent";
 
@@ -33,11 +32,11 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string LogLevel = "info";
 
 		[JsonIgnore]
-		public bool HasValidSettings
-			=> !string.IsNullOrEmpty(Host)
-			   && !string.IsNullOrEmpty(LicenseKey)
-			   && !string.IsNullOrEmpty(ApplicationId)
-			   && !string.IsNullOrEmpty(AgentId)
-			   && !string.IsNullOrEmpty(AccountId);
+		public bool HasValidSettings =>
+			!string.IsNullOrEmpty(Host)
+			&& !string.IsNullOrEmpty(LicenseKey)
+			&& !string.IsNullOrEmpty(ApplicationId)
+			&& !string.IsNullOrEmpty(AgentId)
+			&& !string.IsNullOrEmpty(AccountId);
 	}
 }

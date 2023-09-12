@@ -9,13 +9,15 @@ using Serilog;
 using Microsoft.VisualStudio.Shell.Interop;
 
 #if X86
-	using CodeStream.VisualStudio.Vsix.x86;
+using CodeStream.VisualStudio.Vsix.x86;
 #else
-	using CodeStream.VisualStudio.Vsix.x64;
+using CodeStream.VisualStudio.Vsix.x64;
 #endif
 
-namespace CodeStream.VisualStudio.Shared.Commands {
-	public class UserCommand : VsCommandBase {
+namespace CodeStream.VisualStudio.Shared.Commands
+{
+	public class UserCommand : VsCommandBase
+	{
 		private static readonly ILogger Log = LogManager.ForContext<UserCommand>();
 
 		private const string DefaultText = "Sign In...";
@@ -25,7 +27,12 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 
 		private static bool DefaultVisibility = false;
 
-		public UserCommand(ISessionService sessionService, ICodeStreamSettingsManager codeStreamSettingManager) : base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId) {
+		public UserCommand(
+			ISessionService sessionService,
+			ICodeStreamSettingsManager codeStreamSettingManager
+		)
+			: base(PackageGuids.guidWebViewPackageCmdSet, PackageIds.UserCommandId)
+		{
 			_sessionService = sessionService;
 			_codeStreamSettingsManager = codeStreamSettingManager;
 
@@ -38,48 +45,64 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 			Text = DefaultText;
 		}
 
-		public void Update() {
+		public void Update()
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
-			using (Log.WithMetrics($"{nameof(UserCommand)} {nameof(Update)}")) {
+			using (Log.WithMetrics($"{nameof(UserCommand)} {nameof(Update)}"))
+			{
 				var state = _sessionService.SessionState;
 				var agentReady = _sessionService.IsAgentReady;
-				Log.Debug($"Updating {nameof(UserCommand)} SessionState={_sessionService.SessionState} AgentReady={agentReady} state={state}...");
+				Log.Debug(
+					$"Updating {nameof(UserCommand)} SessionState={_sessionService.SessionState} AgentReady={agentReady} state={state}..."
+				);
 
-				if (!agentReady) {
+				if (!agentReady)
+				{
 					Visible = false;
 					Enabled = false;
-					Text = DefaultText;					
+					Text = DefaultText;
 					return;
 				}
 
-				try {
-					switch (state) {
-						case SessionState.UserSignInFailed: {
+				try
+				{
+					switch (state)
+					{
+						case SessionState.UserSignInFailed:
+						{
 							UpdateStatusBar("Ready");
 							break;
 						}
-						case SessionState.UserSigningIn: {
+						case SessionState.UserSigningIn:
+						{
 							UpdateStatusBar("CodeStream: Signing In...");
 							break;
 						}
-						case SessionState.UserSigningOut: {
+						case SessionState.UserSigningOut:
+						{
 							UpdateStatusBar("CodeStream: Signing Out...");
 							break;
 						}
-						case SessionState.UserSignedIn: {
+						case SessionState.UserSignedIn:
+						{
 							var user = _sessionService.User;
 							var env = _codeStreamSettingsManager?.GetUsefulEnvironmentName();
-							var label = env.IsNullOrWhiteSpace() ? user.UserName : $"{env}: {user.UserName}";
+							var label = env.IsNullOrWhiteSpace()
+								? user.UserName
+								: $"{env}: {user.UserName}";
 
 							Visible = true;
 							Enabled = true;
 
-							Text = _loggedInLabel = user.HasSingleOrg ? label : $"{label} - {user.OrgName}";
-							
+							Text = _loggedInLabel = user.HasSingleOrg
+								? label
+								: $"{label} - {user.OrgName}";
+
 							UpdateStatusBar("Ready");
 							break;
 						}
-						default: {
+						default:
+						{
 							Visible = false;
 							Enabled = false;
 							Text = DefaultText;
@@ -87,39 +110,47 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 						}
 					}
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, nameof(UserCommand));
 				}
 			}
 		}
 
-		protected override void ExecuteUntyped(object parameter) {
+		protected override void ExecuteUntyped(object parameter)
+		{
 			//noop
 		}
 
-		public void UpdateAfterLogin(UserUnreadsChangedEvent eventArgs) {
+		public void UpdateAfterLogin(UserUnreadsChangedEvent eventArgs)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
-			
+
 			var totalMentions = eventArgs.Data?.TotalMentions ?? 0;
 			var totalUnreads = eventArgs.Data?.TotalUnreads ?? 0;
 
-			if (totalMentions > 0) {
+			if (totalMentions > 0)
+			{
 				Text = $"{_loggedInLabel} ({totalMentions})";
 			}
-			else if (totalUnreads > 0) {
+			else if (totalUnreads > 0)
+			{
 				Text = $"{_loggedInLabel} ·";
 			}
-			else {
+			else
+			{
 				Text = _loggedInLabel;
 			}
-			
+
 			UpdateStatusBar("Ready");
 		}
 
-		private static void UpdateStatusBar(string text) {
+		private static void UpdateStatusBar(string text)
+		{
 			var statusBar = (IVsStatusbar)Package.GetGlobalService(typeof(SVsStatusbar));
 			statusBar.IsFrozen(out var frozen);
-			if (frozen != 0) {
+			if (frozen != 0)
+			{
 				statusBar.FreezeOutput(0);
 			}
 			statusBar.SetText(text);

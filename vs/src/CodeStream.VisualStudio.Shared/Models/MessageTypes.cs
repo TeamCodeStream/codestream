@@ -4,8 +4,10 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-	public interface IAbstractMessageType {
+namespace CodeStream.VisualStudio.Shared.Models
+{
+	public interface IAbstractMessageType
+	{
 		string Id { get; }
 		string Method { get; }
 		JToken Error { get; set; }
@@ -16,8 +18,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	public interface IRequestType : IAbstractMessageType { }
 
 	[DebuggerDisplay("Method={Method}")]
-	public abstract class AbstractMessageType<T> : IAbstractMessageType {
-		
+	public abstract class AbstractMessageType<T> : IAbstractMessageType
+	{
 		[JsonProperty("method", NullValueHandling = NullValueHandling.Ignore)]
 		public abstract string Method { get; }
 
@@ -26,7 +28,7 @@ namespace CodeStream.VisualStudio.Shared.Models {
 
 		[JsonProperty("params", NullValueHandling = NullValueHandling.Ignore)]
 		public T Params { get; set; }
-		
+
 		[JsonProperty("error", NullValueHandling = NullValueHandling.Ignore)]
 		public JToken Error { get; set; }
 

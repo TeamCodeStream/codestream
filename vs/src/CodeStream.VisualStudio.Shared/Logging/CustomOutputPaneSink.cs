@@ -12,35 +12,47 @@ using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Core.Extensions;
 using Serilog.Formatting.Json;
 
-namespace CodeStream.VisualStudio.Shared.Logging {
-	internal class CustomOutputPaneSink : ILogEventSink {
+namespace CodeStream.VisualStudio.Shared.Logging
+{
+	internal class CustomOutputPaneSink : ILogEventSink
+	{
 		private readonly ITextFormatter _textFormatter;
 		private readonly IVsOutputWindowPane _customOutputWindowPane;
 
-		public CustomOutputPaneSink(Guid id, string title, ITextFormatter textFormatter) {
-			try {
-				if (id == Guid.Empty) throw new ArgumentException(nameof(id));
-				if (title.IsNullOrWhiteSpace()) throw new ArgumentNullException(nameof(title));
-				_textFormatter = textFormatter ?? throw new ArgumentNullException(nameof(textFormatter));
+		public CustomOutputPaneSink(Guid id, string title, ITextFormatter textFormatter)
+		{
+			try
+			{
+				if (id == Guid.Empty)
+					throw new ArgumentException(nameof(id));
+				if (title.IsNullOrWhiteSpace())
+					throw new ArgumentNullException(nameof(title));
+				_textFormatter =
+					textFormatter ?? throw new ArgumentNullException(nameof(textFormatter));
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				var outWindow = Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
-				if (outWindow == null) return;
-				
+				var outWindow =
+					Package.GetGlobalService(typeof(SVsOutputWindow)) as IVsOutputWindow;
+				if (outWindow == null)
+					return;
+
 				outWindow.CreatePane(ref id, title, 1, 1);
 				outWindow.GetPane(ref id, out _customOutputWindowPane);
-				if (_customOutputWindowPane == null) return;
+				if (_customOutputWindowPane == null)
+					return;
 #if DEBUG
 				// Brings this pane into view
 				_customOutputWindowPane.Activate();
 #endif
 			}
-			catch (COMException) {
+			catch (COMException)
+			{
 #if DEBUG
-				
+
 #endif
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 #if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
@@ -48,22 +60,29 @@ namespace CodeStream.VisualStudio.Shared.Logging {
 			}
 		}
 
-		public void Emit(LogEvent logEvent) {
-			if (logEvent == null || _customOutputWindowPane == null) return;
+		public void Emit(LogEvent logEvent)
+		{
+			if (logEvent == null || _customOutputWindowPane == null)
+				return;
 
-			try {
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
 				var stringWriter = new StringWriter();
 				_textFormatter.Format(logEvent, stringWriter);
-				_customOutputWindowPane.OutputString(stringWriter.ToString().Trim() + Environment.NewLine);
+				_customOutputWindowPane.OutputString(
+					stringWriter.ToString().Trim() + Environment.NewLine
+				);
 			}
-			catch (COMException) {
+			catch (COMException)
+			{
 #if DEBUG
-				
+
 #endif
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 #if DEBUG
 				System.Diagnostics.Debug.WriteLine(ex);
 				System.Diagnostics.Debugger.Break();
@@ -72,8 +91,10 @@ namespace CodeStream.VisualStudio.Shared.Logging {
 		}
 	}
 
-	internal static class CustomOutputPaneSinkConfigurationExtensions {
-		const string DefaultOutputTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message}{NewLine}{Exception}";
+	internal static class CustomOutputPaneSinkConfigurationExtensions
+	{
+		const string DefaultOutputTemplate =
+			"{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level}] {Message}{NewLine}{Exception}";
 
 		/// <summary>
 		/// Write log events to a CustomOutput in VisualStudio.
@@ -94,12 +115,23 @@ namespace CodeStream.VisualStudio.Shared.Logging {
 			LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
 			string outputTemplate = DefaultOutputTemplate,
 			IFormatProvider formatProvider = null,
-			LoggingLevelSwitch levelSwitch = null) {
-			if (sinkConfiguration == null) throw new ArgumentNullException(nameof(sinkConfiguration));
-			if (outputTemplate == null) throw new ArgumentNullException(nameof(outputTemplate));
+			LoggingLevelSwitch levelSwitch = null
+		)
+		{
+			if (sinkConfiguration == null)
+				throw new ArgumentNullException(nameof(sinkConfiguration));
+			if (outputTemplate == null)
+				throw new ArgumentNullException(nameof(outputTemplate));
 			var formatter = new MessageTemplateTextFormatter(outputTemplate, formatProvider);
 
-			return CustomOutput(sinkConfiguration, id, title, formatter, restrictedToMinimumLevel, levelSwitch);
+			return CustomOutput(
+				sinkConfiguration,
+				id,
+				title,
+				formatter,
+				restrictedToMinimumLevel,
+				levelSwitch
+			);
 		}
 
 		/// <summary>
@@ -120,11 +152,19 @@ namespace CodeStream.VisualStudio.Shared.Logging {
 			string title,
 			ITextFormatter formatter,
 			LogEventLevel restrictedToMinimumLevel = LevelAlias.Minimum,
-			LoggingLevelSwitch levelSwitch = null) {
-			if (sinkConfiguration == null) throw new ArgumentNullException(nameof(sinkConfiguration));
-			if (formatter == null) throw new ArgumentNullException(nameof(formatter));
+			LoggingLevelSwitch levelSwitch = null
+		)
+		{
+			if (sinkConfiguration == null)
+				throw new ArgumentNullException(nameof(sinkConfiguration));
+			if (formatter == null)
+				throw new ArgumentNullException(nameof(formatter));
 
-			return sinkConfiguration.Sink(new CustomOutputPaneSink(id, title, formatter), restrictedToMinimumLevel, levelSwitch);
+			return sinkConfiguration.Sink(
+				new CustomOutputPaneSink(id, title, formatter),
+				restrictedToMinimumLevel,
+				levelSwitch
+			);
 		}
 	}
 }

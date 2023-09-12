@@ -14,7 +14,8 @@ using Microsoft.VisualStudio.Utilities;
 using Serilog;
 using Serilog.Events;
 
-namespace CodeStream.VisualStudio.Shared.UI.Margins {
+namespace CodeStream.VisualStudio.Shared.UI.Margins
+{
 	[Export(typeof(IWpfTextViewMarginProvider))]
 	[Name(PredefinedCodestreamNames.DocumentMarkTextViewMargin)]
 	[Order(After = PredefinedMarginNames.Glyph)]
@@ -24,19 +25,30 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 	[TextViewRole(PredefinedTextViewRoles.Document)]
 	[TextViewRole(PredefinedTextViewRoles.PrimaryDocument)]
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
-	internal sealed class DocumentMarkMarginProvider : ICodeStreamMarginProvider {
+	internal sealed class DocumentMarkMarginProvider : ICodeStreamMarginProvider
+	{
 		private readonly ILogger Log = LogManager.ForContext<DocumentMarkMarginProvider>();
 		private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
 		private readonly Lazy<IGlyphFactoryProvider, IGlyphMetadata>[] _glyphFactoryProviders;
 
 		[ImportingConstructor]
-		public DocumentMarkMarginProvider(IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
-			[ImportMany] IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders) {
+		public DocumentMarkMarginProvider(
+			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
+			[ImportMany]
+				IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders
+		)
+		{
 			_viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
 
 			// only get _our_ glyph factory
-			_glyphFactoryProviders = Orderer.Order(glyphFactoryProviders)
-				.Where(_ => _.Metadata.Name == PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider).ToArray();
+			_glyphFactoryProviders = Orderer
+				.Order(glyphFactoryProviders)
+				.Where(
+					_ =>
+						_.Metadata.Name
+						== PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider
+				)
+				.ToArray();
 		}
 
 		[Import]
@@ -48,26 +60,46 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 		[Import]
 		public Lazy<ISettingsServiceFactory> SettingsServiceFactory { get; set; }
 
-		public IWpfTextViewMargin CreateMargin(IWpfTextViewHost wpfTextViewHost, IWpfTextViewMargin parent) {
-			try {
-				if (wpfTextViewHost == null || !wpfTextViewHost.TextView.HasValidMarginRoles()) return null;
-				if (!TextDocumentExtensions.TryGetTextDocument(TextDocumentFactoryService,
-					wpfTextViewHost.TextView, out var textDocument)) {
+		public IWpfTextViewMargin CreateMargin(
+			IWpfTextViewHost wpfTextViewHost,
+			IWpfTextViewMargin parent
+		)
+		{
+			try
+			{
+				if (wpfTextViewHost == null || !wpfTextViewHost.TextView.HasValidMarginRoles())
+					return null;
+				if (
+					!TextDocumentExtensions.TryGetTextDocument(
+						TextDocumentFactoryService,
+						wpfTextViewHost.TextView,
+						out var textDocument
+					)
+				)
+				{
 					return null;
 				}
 
-				using (Log.CriticalOperation($"{nameof(DocumentMarkMarginProvider)} {nameof(CreateMargin)}", LogEventLevel.Debug)) {
+				using (
+					Log.CriticalOperation(
+						$"{nameof(DocumentMarkMarginProvider)} {nameof(CreateMargin)}",
+						LogEventLevel.Debug
+					)
+				)
+				{
 					TextViewMargin = new DocumentMarkMargin(
 						_viewTagAggregatorFactoryService,
 						_glyphFactoryProviders,
-						wpfTextViewHost, SessionService.Value, SettingsServiceFactory.Value.GetOrCreate
-							(nameof(DocumentMarkMarginProvider))
+						wpfTextViewHost,
+						SessionService.Value,
+						SettingsServiceFactory.Value.GetOrCreate(nameof(DocumentMarkMarginProvider))
 					);
 
 					return TextViewMargin;
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(CreateMargin));
 				System.Diagnostics.Debug.WriteLine(ex);
 #if DEBUG

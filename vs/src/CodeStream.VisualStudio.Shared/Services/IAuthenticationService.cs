@@ -1,8 +1,15 @@
 ﻿using CodeStream.VisualStudio.Core.Models;
 using Newtonsoft.Json.Linq;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-	public interface IAuthenticationService {
-		System.Threading.Tasks.Task LogoutAsync(SessionSignedOutReason reason, string newServerUrl = null, string newEnvironment = null, JToken payload = null);
+namespace CodeStream.VisualStudio.Shared.Services
+{
+	public interface IAuthenticationService
+	{
+		System.Threading.Tasks.Task LogoutAsync(
+			SessionSignedOutReason reason,
+			string newServerUrl = null,
+			string newEnvironment = null,
+			JToken payload = null
+		);
 	}
 }

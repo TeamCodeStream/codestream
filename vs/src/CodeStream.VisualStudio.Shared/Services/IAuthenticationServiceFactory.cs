@@ -1,5 +1,7 @@
-﻿namespace CodeStream.VisualStudio.Shared.Services {
-	public interface IAuthenticationServiceFactory {
+﻿namespace CodeStream.VisualStudio.Shared.Services
+{
+	public interface IAuthenticationServiceFactory
+	{
 		IAuthenticationService Create();
 	}
 }

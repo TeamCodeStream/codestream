@@ -1,8 +1,10 @@
 ﻿using System;
 using CodeStream.VisualStudio.Shared.Services;
 
-namespace CodeStream.VisualStudio.Shared.Packages {
-	public interface IToolWindowProvider {
+namespace CodeStream.VisualStudio.Shared.Packages
+{
+	public interface IToolWindowProvider
+	{
 		bool? ToggleToolWindowVisibility(Guid toolWindowId);
 		bool ShowToolWindowSafe(Guid toolWindowId);
 		bool IsVisible(Guid toolWindowId);
@@ -11,16 +13,23 @@ namespace CodeStream.VisualStudio.Shared.Packages {
 	public interface SToolWindowProvider { }
 
 	public interface SSettingsManagerAccessor { }
-	public interface ISettingsManagerAccessor {
+
+	public interface ISettingsManagerAccessor
+	{
 		ICodeStreamSettingsManager GetSettingsManager();
 	}
 
-	public class SettingsManagerAccessor : ISettingsManagerAccessor, SSettingsManagerAccessor {
+	public class SettingsManagerAccessor : ISettingsManagerAccessor, SSettingsManagerAccessor
+	{
 		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
-		public SettingsManagerAccessor(ICodeStreamSettingsManager codeStreamSettingsManager) {
+
+		public SettingsManagerAccessor(ICodeStreamSettingsManager codeStreamSettingsManager)
+		{
 			_codeStreamSettingsManager = codeStreamSettingsManager;
 		}
-		public ICodeStreamSettingsManager GetSettingsManager() {
+
+		public ICodeStreamSettingsManager GetSettingsManager()
+		{
 			return _codeStreamSettingsManager;
 		}
 	}

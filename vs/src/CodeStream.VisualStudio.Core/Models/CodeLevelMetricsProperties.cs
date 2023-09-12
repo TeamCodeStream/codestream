@@ -2,7 +2,8 @@
 
 namespace CodeStream.VisualStudio.Core.Models
 {
-	public class CodeLevelMetricsProperties {
+	public class CodeLevelMetricsProperties
+	{
 		[JsonProperty("sinceDateFormatted", NullValueHandling = NullValueHandling.Ignore)]
 		public string SinceDateFormatted { get; set; }
 

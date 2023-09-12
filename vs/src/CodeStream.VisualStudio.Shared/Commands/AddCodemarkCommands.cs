@@ -6,18 +6,29 @@ using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
 #if X86
-	using CodeStream.VisualStudio.Vsix.x86;
+using CodeStream.VisualStudio.Vsix.x86;
 #else
-	using CodeStream.VisualStudio.Vsix.x64;
+using CodeStream.VisualStudio.Vsix.x64;
 #endif
 
-namespace CodeStream.VisualStudio.Shared.Commands {
-	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase {
+namespace CodeStream.VisualStudio.Shared.Commands
+{
+	internal class AddCodemarkCommentCommand : AddCodemarkCommandBase
+	{
 		public AddCodemarkCommentCommand(
-			ISessionService sessionService, 
+			ISessionService sessionService,
 			IIdeService ideService,
 			ICodeStreamSettingsManager codeStreamSettingsManager,
-			Guid commandSet) : base(sessionService, ideService, codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkCommentCommandId) { }
+			Guid commandSet
+		)
+			: base(
+				sessionService,
+				ideService,
+				codeStreamSettingsManager,
+				commandSet,
+				PackageIds.AddCodemarkCommentCommandId
+			) { }
+
 		protected override CodemarkType CodemarkType => CodemarkType.Comment;
 
 		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
@@ -28,23 +39,32 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 		}
 	}
 
-	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase {
+	internal class AddCodemarkIssueCommand : AddCodemarkCommandBase
+	{
 		public AddCodemarkIssueCommand(
-			ISessionService sessionService, 
+			ISessionService sessionService,
 			IIdeService ideService,
 			ICodeStreamSettingsManager codeStreamSettingsManager,
 			Guid commandSet
-			) : base(sessionService, ideService, codeStreamSettingsManager, commandSet, PackageIds.AddCodemarkIssueCommandId) { }
+		)
+			: base(
+				sessionService,
+				ideService,
+				codeStreamSettingsManager,
+				commandSet,
+				PackageIds.AddCodemarkIssueCommandId
+			) { }
+
 		protected override CodemarkType CodemarkType => CodemarkType.Issue;
 
-		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e) {
+		protected override void OnBeforeQueryStatus(OleMenuCommand sender, EventArgs e)
+		{
 			base.OnBeforeQueryStatus(sender, e);
 
-			sender.Visible = 
+			sender.Visible =
 				CodeStreamSettingsManager.ShowContextMenuCommands
 				&& sender.Visible
 				&& IdeService.GetActiveDiffEditor() == null;
 		}
 	}
-	
 }

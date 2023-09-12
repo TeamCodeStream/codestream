@@ -17,20 +17,29 @@ using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Text.Tagging;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Shared.UI.Margins {
+namespace CodeStream.VisualStudio.Shared.UI.Margins
+{
 	internal class DocumentMarkMarginDummy { }
-	internal sealed class DocumentMarkMargin : Canvas, ICodeStreamWpfTextViewMargin {
+
+	internal sealed class DocumentMarkMargin : Canvas, ICodeStreamWpfTextViewMargin
+	{
 		private static readonly ILogger Log = LogManager.ForContext<DocumentMarkMarginDummy>();
 		private static readonly int DefaultMarginWidth = 20;
 
 		public static readonly DependencyProperty ZoomProperty =
-			DependencyProperty.RegisterAttached("Zoom", typeof(double), typeof(DocumentMark),
-				new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits));
+			DependencyProperty.RegisterAttached(
+				"Zoom",
+				typeof(double),
+				typeof(DocumentMark),
+				new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.Inherits)
+			);
 
 		private static readonly object InitializeLock = new object();
 
 		private readonly Dictionary<Type, GlyphFactoryInfo> _glyphFactories;
-		private readonly IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> _glyphFactoryProviders;
+		private readonly IEnumerable<
+			Lazy<IGlyphFactoryProvider, IGlyphMetadata>
+		> _glyphFactoryProviders;
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamSettingsManager _codeStreamSettingsManager;
 
@@ -42,7 +51,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 		private bool _initialized;
 		private bool _isDisposed;
 		private Dictionary<object, LineInfo> _lineInfos;
-
 
 		/// <summary>
 		///     Initializes a new instance of the <see cref="DocumentMarkMargin" /> class for a given textView
@@ -57,20 +65,26 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 			IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders,
 			IWpfTextViewHost wpfTextViewHost,
 			ISessionService sessionService,
-			ICodeStreamSettingsManager codeStreamSettingsManager) {
+			ICodeStreamSettingsManager codeStreamSettingsManager
+		)
+		{
 			_glyphFactoryProviders = glyphFactoryProviders;
 			_wpfTextViewHost = wpfTextViewHost;
 			_sessionService = sessionService;
 			_codeStreamSettingsManager = codeStreamSettingsManager;
-			try {
+			try
+			{
 				Assumes.Present(_sessionService);
 				Assumes.Present(_codeStreamSettingsManager);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(DocumentMarkMargin));
 			}
 			_iconCanvas = new Canvas { Background = Brushes.Transparent };
-			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(_wpfTextViewHost.TextView);
+			_tagAggregator = viewTagAggregatorFactoryService.CreateTagAggregator<IGlyphTag>(
+				_wpfTextViewHost.TextView
+			);
 
 			Width = DefaultMarginWidth;
 			ClipToBounds = true;
@@ -83,57 +97,84 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 			TryInitialize();
 		}
 
-		private void InitializeMargin() {
+		private void InitializeMargin()
+		{
 			Children.Add(_iconCanvas);
 
 			var order = 0;
-			foreach (var lazy in _glyphFactoryProviders) {
-				foreach (var type in lazy.Metadata.TagTypes) {
-					if (type == null) break;
+			foreach (var lazy in _glyphFactoryProviders)
+			{
+				foreach (var type in lazy.Metadata.TagTypes)
+				{
+					if (type == null)
+						break;
 
-					if (_glyphFactories.ContainsKey(type) || !typeof(IGlyphTag).IsAssignableFrom(type)) continue;
-					if (type == typeof(DocumentMarkGlyphTag)) {
-						var glyphFactory = lazy.Value.GetGlyphFactory(_wpfTextViewHost.TextView, this);
-						_glyphFactories.Add(type, new GlyphFactoryInfo(order++, glyphFactory, lazy.Value));
+					if (
+						_glyphFactories.ContainsKey(type)
+						|| !typeof(IGlyphTag).IsAssignableFrom(type)
+					)
+						continue;
+					if (type == typeof(DocumentMarkGlyphTag))
+					{
+						var glyphFactory = lazy.Value.GetGlyphFactory(
+							_wpfTextViewHost.TextView,
+							this
+						);
+						_glyphFactories.Add(
+							type,
+							new GlyphFactoryInfo(order++, glyphFactory, lazy.Value)
+						);
 					}
 				}
 			}
 
-			_childCanvases = _glyphFactories.Values.OrderBy(a => a.Order).Select(a => a.Canvas).ToArray();
+			_childCanvases = _glyphFactories.Values
+				.OrderBy(a => a.Order)
+				.Select(a => a.Canvas)
+				.ToArray();
 			_iconCanvas.Children.Clear();
 
-			foreach (var c in _childCanvases) {
+			foreach (var c in _childCanvases)
+			{
 				_iconCanvas.Children.Add(c);
 			}
 		}
 
-		public bool IsReady() {
+		public bool IsReady()
+		{
 			return _sessionService?.IsReady == true;
 		}
 
 		public bool CanToggleMargin => true;
 
-		public void OnSessionLogout() {
+		public void OnSessionLogout()
+		{
 			Children.Clear();
 			_lineInfos?.Clear();
 			_iconCanvas?.Children.Clear();
 			_initialized = false;
 		}
 
-		public void OnSessionReady() {
-			if (!_initialized) {
-				lock (InitializeLock) {
-					if (!_initialized) {
+		public void OnSessionReady()
+		{
+			if (!_initialized)
+			{
+				lock (InitializeLock)
+				{
+					if (!_initialized)
+					{
 						_initialized = true;
 
 						_wpfTextViewHost.TextView.ZoomLevelChanged += TextView_ZoomLevelChanged;
 
 						InitializeMargin();
-						if (_sessionService.AreMarkerGlyphsVisible) {
+						if (_sessionService.AreMarkerGlyphsVisible)
+						{
 							TryShowMargin();
 							RefreshMargin();
 						}
-						else {
+						else
+						{
 							TryHideMargin();
 						}
 					}
@@ -141,36 +182,53 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 			}
 		}
 
-		public void OnMarkerChanged() {
-			ThreadHelper.JoinableTaskFactory.Run(async delegate {
-				await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+		public void OnMarkerChanged()
+		{
+			ThreadHelper.JoinableTaskFactory.Run(
+				async delegate
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
+						CancellationToken.None
+					);
 
-				RefreshMargin();
-			});
+					RefreshMargin();
+				}
+			);
 		}
 
-		public void RefreshMargin() {
-			if (_lineInfos == null || _isDisposed) return;
+		public void RefreshMargin()
+		{
+			if (_lineInfos == null || _isDisposed)
+				return;
 
 			_lineInfos.Clear();
-			foreach (var c in _childCanvases) {
+			foreach (var c in _childCanvases)
+			{
 				c.Children.Clear();
 			}
 
 			OnNewLayout(_wpfTextViewHost.TextView.TextViewLines, Array.Empty<ITextViewLine>());
 		}
 
-		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e) {
+		public void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed) return;
+			if (Visibility == Visibility.Hidden || Visibility == Visibility.Collapsed)
+				return;
 
-			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop) {
+			if (e.OldViewState.ViewportTop != e.NewViewState.ViewportTop)
+			{
 				SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
-				Debug.WriteLine($"SetTop Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+				Debug.WriteLine(
+					$"SetTop Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}"
+				);
 			}
-			else {
-				Debug.WriteLine($"Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}");
+			else
+			{
+				Debug.WriteLine(
+					$"Old={e.OldViewState.ViewportTop} New={e.NewViewState.ViewportTop}"
+				);
 			}
 
 			RefreshMargin();
@@ -180,40 +238,52 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 
 		public bool TryHideMargin() => this.TryHide();
 
-		public void ToggleMargin(bool requestingVisibility) {
-			try {
-				if (requestingVisibility) {
-					if (TryShowMargin()) {
+		public void ToggleMargin(bool requestingVisibility)
+		{
+			try
+			{
+				if (requestingVisibility)
+				{
+					if (TryShowMargin())
+					{
 						//set top, as the buffer might have been scrolled
 						SetTop(_iconCanvas, -_wpfTextViewHost.TextView.ViewportTop);
 						RefreshMargin();
 					}
 				}
-				else {
+				else
+				{
 					TryHideMargin();
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Warning(ex, nameof(DocumentMarkMargin));
 			}
 		}
 
-		public FrameworkElement VisualElement {
-			get {
+		public FrameworkElement VisualElement
+		{
+			get
+			{
 				ThrowIfDisposed();
 				return this;
 			}
 		}
 
-		public double MarginSize {
-			get {
+		public double MarginSize
+		{
+			get
+			{
 				ThrowIfDisposed();
 				return ActualWidth;
 			}
 		}
 
-		public bool Enabled {
-			get {
+		public bool Enabled
+		{
+			get
+			{
 				ThrowIfDisposed();
 				return true;
 			}
@@ -229,10 +299,14 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 		///     forwards the call to its children. Margin name comparisons are case-insensitive.
 		/// </remarks>
 		/// <exception cref="ArgumentNullException"><paramref name="marginName" /> is null.</exception>
-		public ITextViewMargin GetTextViewMargin(string marginName) {
+		public ITextViewMargin GetTextViewMargin(string marginName)
+		{
 			// ReSharper disable once ArrangeStaticMemberQualifier
-			return string.Equals(marginName, PredefinedCodestreamNames.DocumentMarkTextViewMargin,
-				StringComparison.OrdinalIgnoreCase)
+			return string.Equals(
+				marginName,
+				PredefinedCodestreamNames.DocumentMarkTextViewMargin,
+				StringComparison.OrdinalIgnoreCase
+			)
 				? this
 				: null;
 		}
@@ -240,8 +314,10 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 		/// <summary>
 		///     Disposes an instance of <see cref="DocumentMarkMargin" /> class.
 		/// </summary>
-		public void Dispose() {
-			if (!_isDisposed) {
+		public void Dispose()
+		{
+			if (!_isDisposed)
+			{
 				_wpfTextViewHost.TextView.ZoomLevelChanged -= TextView_ZoomLevelChanged;
 				_tagAggregator?.Dispose();
 
@@ -253,13 +329,17 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 			}
 		}
 
-		private List<IconInfo> CreateIconInfos(IWpfTextViewLine line) {
+		private List<IconInfo> CreateIconInfos(IWpfTextViewLine line)
+		{
 			var icons = new List<IconInfo>();
 
-			try {
-				foreach (var mappingSpan in _tagAggregator.GetTags(line.ExtentAsMappingSpan)) {
+			try
+			{
+				foreach (var mappingSpan in _tagAggregator.GetTags(line.ExtentAsMappingSpan))
+				{
 					var tag = mappingSpan.Tag;
-					if (tag == null) {
+					if (tag == null)
+					{
 						Log.Verbose("Tag is null");
 						continue;
 					}
@@ -267,12 +347,18 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 					// Fails if someone forgot to Export(typeof(IGlyphFactoryProvider)) with the correct tag types
 					var tagType = tag.GetType();
 					var b = _glyphFactories.TryGetValue(tag.GetType(), out var factoryInfo);
-					if (!b) {
+					if (!b)
+					{
 						Log.Verbose($"Could not find glyph factory for {tagType}");
 						continue;
 					}
 
-					foreach (var span in mappingSpan.Span.GetSpans(_wpfTextViewHost.TextView.TextSnapshot)) {
+					foreach (
+						var span in mappingSpan.Span.GetSpans(
+							_wpfTextViewHost.TextView.TextSnapshot
+						)
+					)
+					{
 						if (!line.IntersectsBufferSpan(span))
 							continue;
 
@@ -290,36 +376,54 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 					}
 				}
 			}
-			catch (ObjectDisposedException ex) {
-				Log.Error(ex, nameof(CreateIconInfos) + " " + nameof(ObjectDisposedException) + $" AgentReady={ _sessionService?.IsAgentReady} IsReady={_sessionService?.IsReady} _isDisposed={_isDisposed}");
+			catch (ObjectDisposedException ex)
+			{
+				Log.Error(
+					ex,
+					nameof(CreateIconInfos)
+						+ " "
+						+ nameof(ObjectDisposedException)
+						+ $" AgentReady={_sessionService?.IsAgentReady} IsReady={_sessionService?.IsReady} _isDisposed={_isDisposed}"
+				);
 			}
-
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(CreateIconInfos));
 			}
 
 			return icons;
 		}
 
-		void AddLine(Dictionary<object, LineInfo> newInfos, ITextViewLine line) {
-			if (!(line is IWpfTextViewLine wpfLine)) return;
+		void AddLine(Dictionary<object, LineInfo> newInfos, ITextViewLine line)
+		{
+			if (!(line is IWpfTextViewLine wpfLine))
+				return;
 
 			var info = new LineInfo(line, CreateIconInfos(wpfLine));
 			newInfos.Add(line.IdentityTag, info);
-			foreach (var iconInfo in info.Icons) {
+			foreach (var iconInfo in info.Icons)
+			{
 				_childCanvases[iconInfo.Order].Children.Add(iconInfo.Element);
 			}
 		}
 
-		void OnNewLayout(IList<ITextViewLine> newOrReformattedLines, IList<ITextViewLine> translatedLines) {
-			using (Log.WithMetrics(nameof(OnNewLayout))) {
+		void OnNewLayout(
+			IList<ITextViewLine> newOrReformattedLines,
+			IList<ITextViewLine> translatedLines
+		)
+		{
+			using (Log.WithMetrics(nameof(OnNewLayout)))
+			{
 				var newInfos = new Dictionary<object, LineInfo>();
-				foreach (var line in newOrReformattedLines) {
+				foreach (var line in newOrReformattedLines)
+				{
 					AddLine(newInfos, line);
 				}
 
-				foreach (var line in translatedLines) {
-					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) {
+				foreach (var line in translatedLines)
+				{
+					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info))
+					{
 						//#if DEBUG
 						//					// why are we here?
 						//					Debugger.Break();
@@ -329,22 +433,28 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 
 					_lineInfos.Remove(line.IdentityTag);
 					newInfos.Add(line.IdentityTag, info);
-					foreach (var iconInfo in info.Icons) {
+					foreach (var iconInfo in info.Icons)
+					{
 						SetTop(iconInfo.Element, iconInfo.BaseTopValue + line.TextTop);
 					}
 				}
 
-				foreach (var line in _wpfTextViewHost.TextView.TextViewLines) {
-					if (newInfos.ContainsKey(line.IdentityTag)) continue;
+				foreach (var line in _wpfTextViewHost.TextView.TextViewLines)
+				{
+					if (newInfos.ContainsKey(line.IdentityTag))
+						continue;
 
-					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info)) continue;
+					if (!_lineInfos.TryGetValue(line.IdentityTag, out var info))
+						continue;
 
 					_lineInfos.Remove(line.IdentityTag);
 					newInfos.Add(line.IdentityTag, info);
 				}
 
-				foreach (var info in _lineInfos.Values) {
-					foreach (var iconInfo in info.Icons) {
+				foreach (var info in _lineInfos.Values)
+				{
+					foreach (var iconInfo in info.Icons)
+					{
 						_childCanvases[iconInfo.Order].Children.Remove(iconInfo.Element);
 					}
 				}
@@ -353,26 +463,33 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 			}
 		}
 
-		public void TryInitialize() {
-			try {
-				if (IsReady()) {
+		public void TryInitialize()
+		{
+			try
+			{
+				if (IsReady())
+				{
 					OnSessionReady();
 				}
-				else {
+				else
+				{
 					TryHideMargin();
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(TryInitialize));
 			}
 		}
 
-		void TextView_ZoomLevelChanged(object sender, ZoomLevelChangedEventArgs e) {
+		void TextView_ZoomLevelChanged(object sender, ZoomLevelChangedEventArgs e)
+		{
 			LayoutTransform = e.ZoomTransform;
 			SetValue(ZoomProperty, e.NewZoomLevel / 100);
 		}
 
-		public void OnZoomChanged(double zoomLevel, Transform transform) {
+		public void OnZoomChanged(double zoomLevel, Transform transform)
+		{
 			LayoutTransform = transform;
 			SetValue(ZoomProperty, zoomLevel / 100);
 		}
@@ -380,48 +497,65 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins {
 		/// <summary>
 		///     Checks and throws <see cref="ObjectDisposedException" /> if the object is disposed.
 		/// </summary>
-		private void ThrowIfDisposed() {
-			if (_isDisposed) {
-				throw new ObjectDisposedException(PredefinedCodestreamNames.DocumentMarkTextViewMargin);
+		private void ThrowIfDisposed()
+		{
+			if (_isDisposed)
+			{
+				throw new ObjectDisposedException(
+					PredefinedCodestreamNames.DocumentMarkTextViewMargin
+				);
 			}
 		}
 
-		struct GlyphFactoryInfo {
+		struct GlyphFactoryInfo
+		{
 			public int Order { get; }
 			public IGlyphFactory Factory { get; }
 			public IGlyphFactoryProvider FactoryProvider { get; }
 			public Canvas Canvas { get; }
 
-			public GlyphFactoryInfo(int order, IGlyphFactory factory, IGlyphFactoryProvider glyphFactoryProvider) {
+			public GlyphFactoryInfo(
+				int order,
+				IGlyphFactory factory,
+				IGlyphFactoryProvider glyphFactoryProvider
+			)
+			{
 				Order = order;
 				Factory = factory ?? throw new ArgumentNullException(nameof(factory));
-				FactoryProvider = glyphFactoryProvider ?? throw new ArgumentNullException(nameof(glyphFactoryProvider));
+				FactoryProvider =
+					glyphFactoryProvider
+					?? throw new ArgumentNullException(nameof(glyphFactoryProvider));
 				Canvas = new Canvas { Background = Brushes.Transparent };
 			}
 		}
 
-		struct LineInfo {
+		struct LineInfo
+		{
 			public ITextViewLine Line { get; }
 			public List<IconInfo> Icons { get; }
 
-			public LineInfo(ITextViewLine textViewLine, List<IconInfo> icons) {
+			public LineInfo(ITextViewLine textViewLine, List<IconInfo> icons)
+			{
 				Line = textViewLine ?? throw new ArgumentNullException(nameof(textViewLine));
 				Icons = icons ?? throw new ArgumentNullException(nameof(icons));
 			}
 		}
 
-		struct IconInfo {
+		struct IconInfo
+		{
 			public UIElement Element { get; }
 			public double BaseTopValue { get; }
 			public int Order { get; }
 
-			public IconInfo(int order, UIElement element) {
+			public IconInfo(int order, UIElement element)
+			{
 				Element = element ?? throw new ArgumentNullException(nameof(element));
 				BaseTopValue = GetBaseTopValue(element);
 				Order = order;
 			}
 
-			static double GetBaseTopValue(UIElement element) {
+			static double GetBaseTopValue(UIElement element)
+			{
 				var top = GetTop(element);
 				return double.IsNaN(top) ? 0 : top;
 			}

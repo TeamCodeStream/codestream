@@ -7,11 +7,12 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.Shared.Models;
 
-namespace CodeStream.VisualStudio.Shared.Services {
-
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	[Export(typeof(ISessionService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class SessionService : ISessionService, IDisposable {
+	public class SessionService : ISessionService, IDisposable
+	{
 		private static readonly ILogger Log = LogManager.ForContext<SessionService>();
 		private AgentState _agentState;
 
@@ -22,6 +23,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		public List<string> PanelStack { get; set; }
 		public bool IsWebViewVisible { get; set; }
 		public bool AreMarkerGlyphsVisible { get; set; } = true;
+
 		/// <summary>
 		/// Also known as Spatial view
 		/// </summary>
@@ -32,78 +34,92 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 		private bool _disposed = false;
 
-		public SessionService() {
+		public SessionService()
+		{
 			// for breakpointing
 		}
 
 		public string StateString => SessionState.ToString();
 		private static readonly object locker = new object();
 
-		public void SetAgentConnected() {
+		public void SetAgentConnected()
+		{
 			Log.Debug($"{nameof(SetState)}");
-			if (_agentState != AgentState.Ready) {
-				lock (locker) {
-					if (_agentState != AgentState.Ready) {
+			if (_agentState != AgentState.Ready)
+			{
+				lock (locker)
+				{
+					if (_agentState != AgentState.Ready)
+					{
 						_agentState = AgentState.Ready;
 					}
 				}
 			}
 		}
 
-		public void SetAgentDisconnected() {
+		public void SetAgentDisconnected()
+		{
 			Log.Debug($"{nameof(SetAgentDisconnected)}");
-			if (_agentState != AgentState.Disconnected) {
-				lock (locker) {
-					if (_agentState != AgentState.Disconnected) {
+			if (_agentState != AgentState.Disconnected)
+			{
+				lock (locker)
+				{
+					if (_agentState != AgentState.Disconnected)
+					{
 						_agentState = AgentState.Disconnected;
 					}
 				}
 			}
 		}
 
-		public void SetState(SessionState sessionState) {
-			lock (locker) {
+		public void SetState(SessionState sessionState)
+		{
+			lock (locker)
+			{
 				SessionState = sessionState;
 			}
 		}
 
-		public void SetUser(User user, JToken state) {
+		public void SetUser(User user, JToken state)
+		{
 			User = user;
 			State = state;
 		}
 
-		public void Logout(SessionSignedOutReason reason) {
+		public void Logout(SessionSignedOutReason reason)
+		{
 			User = null;
 			State = null;
 			TeamId = null;
 			SetState(SessionState.UserSignedOut);
 		}
 
-		public bool IsAgentReady {
-			get {
-				return _agentState == AgentState.Ready;
-			}
+		public bool IsAgentReady
+		{
+			get { return _agentState == AgentState.Ready; }
 		}
 
-		public bool IsReady => _agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
+		public bool IsReady =>
+			_agentState == AgentState.Ready && SessionState == SessionState.UserSignedIn;
 		public string SolutionName { get; set; }
 
-		public void Dispose() {
+		public void Dispose()
+		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
-		protected virtual void Dispose(bool disposing) {
+		protected virtual void Dispose(bool disposing)
+		{
 			if (_disposed)
 				return;
 
-			if (disposing) {
+			if (disposing)
+			{
 				SessionState = SessionState.Unknown;
 			}
 
 			_disposed = true;
 		}
 	}
-
-
 }

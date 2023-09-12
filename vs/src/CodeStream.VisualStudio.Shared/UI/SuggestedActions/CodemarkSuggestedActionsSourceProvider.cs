@@ -12,11 +12,13 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
-namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
+namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions
+{
 	[Export(typeof(ISuggestedActionsSourceProvider))]
 	[Name(PredefinedCodestreamNames.CodemarkSuggestedActionsSourceProvider)]
 	[ContentType(ContentTypes.Text)]
-	internal class CodemarkSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider {
+	internal class CodemarkSuggestedActionsSourceProvider : ISuggestedActionsSourceProvider
+	{
 		private readonly IServiceProvider _serviceProvider;
 		private readonly ITextDocumentFactoryService _textDocumentFactoryService;
 		private readonly IIdeService _ideService;
@@ -25,13 +27,19 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 		internal CodemarkSuggestedActionsSourceProvider(
 			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
 			ITextDocumentFactoryService textDocumentFactoryService,
-			IIdeService ideService) {
+			IIdeService ideService
+		)
+		{
 			_serviceProvider = serviceProvider;
 			_textDocumentFactoryService = textDocumentFactoryService;
 			_ideService = ideService;
 		}
 
-		public ISuggestedActionsSource CreateSuggestedActionsSource(ITextView textView, ITextBuffer textBuffer) {
+		public ISuggestedActionsSource CreateSuggestedActionsSource(
+			ITextView textView,
+			ITextBuffer textBuffer
+		)
+		{
 			if (textBuffer == null || textView == null)
 			{
 				return null;
@@ -42,19 +50,26 @@ namespace CodeStream.VisualStudio.Shared.UI.SuggestedActions {
 				return null;
 			}
 
-			if (!_textDocumentFactoryService.TryGetTextDocument(wpfTextView, out var virtualTextDocument))
+			if (
+				!_textDocumentFactoryService.TryGetTextDocument(
+					wpfTextView,
+					out var virtualTextDocument
+				)
+			)
 			{
 				return null;
 			}
 
-			var componentModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+			var componentModel = (IComponentModel)
+				_serviceProvider.GetService(typeof(SComponentModel));
 
 			return new CodemarkSuggestedActionsSource(
 				componentModel,
 				_ideService,
-				textView, 
+				textView,
 				textBuffer,
-				virtualTextDocument);
+				virtualTextDocument
+			);
 		}
 	}
 }

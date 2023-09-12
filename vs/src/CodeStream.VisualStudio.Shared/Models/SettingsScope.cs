@@ -1,33 +1,47 @@
 ﻿using System;
 using CodeStream.VisualStudio.Shared.Services;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-	public class SettingsScope : IDisposable {
+namespace CodeStream.VisualStudio.Shared.Models
+{
+	public class SettingsScope : IDisposable
+	{
 		public ICodeStreamSettingsManager CodeStreamSettingsManager { get; }
 
 		private readonly bool _pauseNotifyPropertyChanged;
-		private SettingsScope(ICodeStreamSettingsManager codeStreamSettingsManager, bool pauseNotifyPropertyChanged) {
+
+		private SettingsScope(
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			bool pauseNotifyPropertyChanged
+		)
+		{
 			CodeStreamSettingsManager = codeStreamSettingsManager;
 			_pauseNotifyPropertyChanged = pauseNotifyPropertyChanged;
 		}
 
 		private bool _disposed;
 
-		public void Dispose() {
+		public void Dispose()
+		{
 			Dispose(true);
 		}
 
-		protected virtual void Dispose(bool disposing) {
-			if (_disposed) return;
+		protected virtual void Dispose(bool disposing)
+		{
+			if (_disposed)
+				return;
 
-			if (disposing) {
-				try {
+			if (disposing)
+			{
+				try
+				{
 					// attempt to save the settings to storage
 					CodeStreamSettingsManager?.SaveSettingsToStorage();
 				}
-				finally {
+				finally
+				{
 					// if we're paused, attempt to un-pause
-					if (_pauseNotifyPropertyChanged) {
+					if (_pauseNotifyPropertyChanged)
+					{
 						CodeStreamSettingsManager?.ResumeNotifications();
 					}
 				}
@@ -36,8 +50,13 @@ namespace CodeStream.VisualStudio.Shared.Models {
 			_disposed = true;
 		}
 
-		public static SettingsScope Create(ICodeStreamSettingsManager codeStreamSettingsManager, bool pauseNotifyPropertyChanged = false) {
-			if (pauseNotifyPropertyChanged) {
+		public static SettingsScope Create(
+			ICodeStreamSettingsManager codeStreamSettingsManager,
+			bool pauseNotifyPropertyChanged = false
+		)
+		{
+			if (pauseNotifyPropertyChanged)
+			{
 				codeStreamSettingsManager.PauseNotifications();
 			}
 			return new SettingsScope(codeStreamSettingsManager, pauseNotifyPropertyChanged);

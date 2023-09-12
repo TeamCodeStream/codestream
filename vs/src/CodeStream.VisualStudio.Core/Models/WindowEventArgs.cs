@@ -1,6 +1,9 @@
-﻿namespace CodeStream.VisualStudio.Core.Models {
-	public class WindowEventArgs {
-		public WindowEventArgs(string message) {
+﻿namespace CodeStream.VisualStudio.Core.Models
+{
+	public class WindowEventArgs
+	{
+		public WindowEventArgs(string message)
+		{
 			Message = message;
 		}
 

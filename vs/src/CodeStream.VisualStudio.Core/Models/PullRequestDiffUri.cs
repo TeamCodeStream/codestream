@@ -11,7 +11,10 @@ namespace CodeStream.VisualStudio.Core.Models
 {
 	public class PullRequestDiffUri
 	{
-		private static readonly Regex Regex = new Regex(@"codestream-diff[:\\/\\/]-0-[\\/](?<payload>.+)[\\/]-0-[\\/](?<filePath>.+)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		private static readonly Regex Regex = new Regex(
+			@"codestream-diff[:\\/\\/]-0-[\\/](?<payload>.+)[\\/]-0-[\\/](?<filePath>.+)",
+			RegexOptions.IgnoreCase | RegexOptions.Compiled
+		);
 
 		[JsonIgnore]
 		public Uri Uri { get; set; }
@@ -41,14 +44,15 @@ namespace CodeStream.VisualStudio.Core.Models
 		public PullRequestContext Context { get; }
 
 		public PullRequestDiffUri(
-			string path, 
-			string repoId, 
-			string baseBranch, 
-			string headBranch, 
-			string leftSha, 
-			string rightSha, 
+			string path,
+			string repoId,
+			string baseBranch,
+			string headBranch,
+			string leftSha,
+			string rightSha,
 			string side,
-			PullRequestContext context)
+			PullRequestContext context
+		)
 		{
 			Path = path;
 			RepoId = repoId;
@@ -66,15 +70,18 @@ namespace CodeStream.VisualStudio.Core.Models
 			Uri = new Uri($"codestream-diff://-0-/{base64Content}/-0-/{Path}");
 		}
 
-		public static bool TryParse(string str, out PullRequestDiffUri prDiffUri) {
+		public static bool TryParse(string str, out PullRequestDiffUri prDiffUri)
+		{
 			prDiffUri = null;
 
-			if (str.IsNullOrWhiteSpace()) {
+			if (str.IsNullOrWhiteSpace())
+			{
 				return false;
 			}
 
 			var match = Regex.Match(str);
-			if (!match.Success) {
+			if (!match.Success)
+			{
 				return false;
 			}
 

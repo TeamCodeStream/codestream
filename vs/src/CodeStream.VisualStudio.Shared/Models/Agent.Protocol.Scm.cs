@@ -3,7 +3,8 @@ using CodeStream.VisualStudio.Core.Models;
 
 using Newtonsoft.Json;
 
-namespace CodeStream.VisualStudio.Shared.Models {
+namespace CodeStream.VisualStudio.Shared.Models
+{
 	public class GetFileContentsAtRevisionRequest
 	{
 		[JsonProperty("repoId", NullValueHandling = NullValueHandling.Ignore)]
@@ -31,31 +32,35 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string Error { get; set; }
 	}
 
-	public class GetFileContentsAtRevisionRequestType : RequestType<GetFileContentsAtRevisionRequest>
+	public class GetFileContentsAtRevisionRequestType
+		: RequestType<GetFileContentsAtRevisionRequest>
 	{
 		public const string MethodName = "codestream/scm/file/diff";
 		public override string Method => MethodName;
 	}
 
-
-	public class GetRangeScmInfoRequest {
+	public class GetRangeScmInfoRequest
+	{
 		public string Uri { get; set; }
 		public Range Range { get; set; }
 		public bool Dirty { get; set; }
 		public string Contents { get; set; }
 	}
 
-	public class Author {
+	public class Author
+	{
 		public string Id { get; set; }
 		public string Username { get; set; }
 	}
 
-	public class Remote {
+	public class Remote
+	{
 		public string Name { get; set; }
 		public string Url { get; set; }
 	}
 
-	public class Scm {
+	public class Scm
+	{
 		public string File { get; set; }
 		public string RepoPath { get; set; }
 		public string Revision { get; set; }
@@ -63,7 +68,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public List<Remote> Remotes { get; set; }
 	}
 
-	public class GetRangeScmInfoResponse {
+	public class GetRangeScmInfoResponse
+	{
 		public string Uri { get; set; }
 		public Range Range { get; set; }
 		public string Contents { get; set; }
@@ -71,9 +77,9 @@ namespace CodeStream.VisualStudio.Shared.Models {
 		public string Error { get; set; }
 	}
 
-	public class GetRangeScmInfoRequestType : RequestType<GetRangeScmInfoRequest> {
+	public class GetRangeScmInfoRequestType : RequestType<GetRangeScmInfoRequest>
+	{
 		public static string MethodName = "codestream/scm/range/info";
 		public override string Method => MethodName;
 	}
-
 }

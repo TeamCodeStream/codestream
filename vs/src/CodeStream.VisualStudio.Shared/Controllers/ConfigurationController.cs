@@ -6,48 +6,63 @@ using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 using Serilog;
 
-namespace CodeStream.VisualStudio.Shared.Controllers {
-	public class ConfigurationController {
+namespace CodeStream.VisualStudio.Shared.Controllers
+{
+	public class ConfigurationController
+	{
 		private static readonly ILogger Log = LogManager.ForContext<ConfigurationController>();
 
 		private readonly IEventAggregator _eventAggregator;
 		private readonly IBrowserService _browserService;
 
-		public ConfigurationController(IEventAggregator eventAggregator, IBrowserService browserService) {
+		public ConfigurationController(
+			IEventAggregator eventAggregator,
+			IBrowserService browserService
+		)
+		{
 			_eventAggregator = eventAggregator;
 			_browserService = browserService;
 		}
 
-		public void ToggleShowMarkerGlyphs(bool value) {
+		public void ToggleShowMarkerGlyphs(bool value)
+		{
 			_eventAggregator.Publish(new MarkerGlyphVisibilityEvent { IsVisible = value });
 
 			Log.Debug($"{nameof(ToggleShowMarkerGlyphs)} Value={value}");
 
-			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
-					ShowMarkerGlyphs = value
+			_browserService.Notify(
+				new HostDidChangeConfigNotificationType
+				{
+					Params = new HostDidChangeConfigNotification { ShowMarkerGlyphs = value }
 				}
-			});
+			);
 		}
 
-		public void ToggleShowAvatars(bool value) {
+		public void ToggleShowAvatars(bool value)
+		{
 			Log.Debug($"{nameof(ToggleShowAvatars)} Value={value}");
 
-			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
-					ShowHeadshots = value
+			_browserService.Notify(
+				new HostDidChangeConfigNotificationType
+				{
+					Params = new HostDidChangeConfigNotification { ShowHeadshots = value }
 				}
-			});
+			);
 		}
 
-		public void ToggleCodeLens(bool value) {
+		public void ToggleCodeLens(bool value)
+		{
 			Log.Debug($"{nameof(ToggleCodeLens)} Value={value}");
 
-			_browserService.Notify(new HostDidChangeConfigNotificationType {
-				Params = new HostDidChangeConfigNotification {
-					ShowGoldenSignalsInEditor = value
+			_browserService.Notify(
+				new HostDidChangeConfigNotificationType
+				{
+					Params = new HostDidChangeConfigNotification
+					{
+						ShowGoldenSignalsInEditor = value
+					}
 				}
-			});
+			);
 		}
 	}
 }

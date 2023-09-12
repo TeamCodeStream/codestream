@@ -12,11 +12,12 @@ using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Serilog;
 
-
-namespace CodeStream.VisualStudio.Shared.Services {
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	[Export(typeof(IVisualStudioSettingsManager))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class VisualStudioSettingsManager : IVisualStudioSettingsManager {
+	public class VisualStudioSettingsManager : IVisualStudioSettingsManager
+	{
 		private static readonly ILogger Log = LogManager.ForContext<VisualStudioSettingsManager>();
 		private readonly ISettingsManager _roamingSettingsManager;
 
@@ -28,47 +29,61 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		private class SVsSettingsPersistenceManager { }
 
 		[ImportingConstructor]
-		public VisualStudioSettingsManager([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-			_roamingSettingsManager = serviceProvider.GetService(typeof(SVsSettingsPersistenceManager)) as ISettingsManager;
+		public VisualStudioSettingsManager(
+			[Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
+		)
+		{
+			_roamingSettingsManager =
+				serviceProvider.GetService(typeof(SVsSettingsPersistenceManager))
+				as ISettingsManager;
 		}
 
-		private T GetSetting<T>(VisualStudioSetting setting) {
+		private T GetSetting<T>(VisualStudioSetting setting)
+		{
 			var attribute = setting.GetAttribute();
 
 			var result = _roamingSettingsManager.TryGetValue(attribute.Path, out T value);
 
-			if (result != GetValueResult.Success) {
+			if (result != GetValueResult.Success)
+			{
 				throw new VisualStudioSettingException(setting, result);
 			}
 
 			return value;
 		}
 
-		public ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting) {
+		public ISettingsSubset GetPropertyToMonitor(VisualStudioSetting setting)
+		{
 			var attribute = setting.GetAttribute();
 
 			return _roamingSettingsManager.GetSubset(attribute.Path);
 		}
 
-		public bool IsCodeLevelMetricsEnabled(bool defaultVal = true) {
-			try {
+		public bool IsCodeLevelMetricsEnabled(bool defaultVal = true)
+		{
+			try
+			{
 				return IsCodeLensEnabled() && !IsCodeLevelMetricsDisabled();
 			}
-			catch (VisualStudioSettingException vsse) {
+			catch (VisualStudioSettingException vsse)
+			{
 				Log.Information(vsse.Message);
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, ex.Message);
 			}
-			
+
 			return defaultVal;
 		}
 
-		private bool IsCodeLensEnabled() {
+		private bool IsCodeLensEnabled()
+		{
 			return GetSetting<bool>(VisualStudioSetting.IsCodeLensEnabled);
 		}
 
-		private bool IsCodeLevelMetricsDisabled() {
+		private bool IsCodeLevelMetricsDisabled()
+		{
 			return GetSetting<string[]>(VisualStudioSetting.CodeLensDisabledProviders)
 				.Any(x => x.Equals(Constants.CodeLevelMetrics.Provider.Id));
 		}

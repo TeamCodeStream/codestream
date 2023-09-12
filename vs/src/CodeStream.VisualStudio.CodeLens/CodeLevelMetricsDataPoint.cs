@@ -33,19 +33,25 @@ namespace CodeStream.VisualStudio.CodeLens
 		public event AsyncEventHandler InvalidatedAsync;
 		public CodeLensDescriptor Descriptor { get; }
 
-		public CodeLevelMetricDataPoint(CodeLensDescriptor descriptor, ICodeLensCallbackService callbackService)
+		public CodeLevelMetricDataPoint(
+			CodeLensDescriptor descriptor,
+			ICodeLensCallbackService callbackService
+		)
 		{
 			_callbackService = callbackService;
 			Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
 		}
 
 		/// <summary>
-		/// Populates the actual "CodeLens" entry using the CallbackService. 
+		/// Populates the actual "CodeLens" entry using the CallbackService.
 		/// </summary>
 		/// <remarks>
 		/// There is some duplication between this method and <see cref="GetDetailsAsync" />, but with slight variations.
 		/// </remarks>
-		public async Task<CodeLensDataPointDescriptor> GetDataAsync(CodeLensDescriptorContext context, CancellationToken token)
+		public async Task<CodeLensDataPointDescriptor> GetDataAsync(
+			CodeLensDescriptorContext context,
+			CancellationToken token
+		)
 		{
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
@@ -55,8 +61,11 @@ namespace CodeStream.VisualStudio.CodeLens
 			try
 			{
 				var clmStatus = await _callbackService
-					.InvokeAsync<CodeLevelMetricStatus>(this, nameof(ICodeLevelMetricsCallbackService.GetClmStatus),
-						cancellationToken: token)
+					.InvokeAsync<CodeLevelMetricStatus>(
+						this,
+						nameof(ICodeLevelMetricsCallbackService.GetClmStatus),
+						cancellationToken: token
+					)
 					.ConfigureAwait(false);
 
 				if (clmStatus != CodeLevelMetricStatus.Ready)
@@ -74,7 +83,8 @@ namespace CodeStream.VisualStudio.CodeLens
 						this,
 						nameof(ICodeLevelMetricsCallbackService.GetTelemetryAsync),
 						new object[] { codeNamespace, functionName },
-						cancellationToken: token)
+						cancellationToken: token
+					)
 					.ConfigureAwait(false);
 
 				_metrics = _metrics ?? new CodeLevelMetricsTelemetry();
@@ -82,13 +92,33 @@ namespace CodeStream.VisualStudio.CodeLens
 				var avgDuration = _metrics.AverageDuration?.AverageDuration;
 				var errors = _metrics.ErrorRate?.ErrorRate;
 				var sampleSize = _metrics.SampleSize?.SampleSize;
-				
-				var formatted = Regex.Replace(_editorFormatString, Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration), avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate), errors is null ? "n/a" : $"{errors.ToFixed(3)}%", RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since), _metrics.Properties.SinceDateFormatted, RegexOptions.IgnoreCase);
-				formatted = Regex.Replace(formatted, Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize), sampleSize is null ? "0" : $"{sampleSize}", RegexOptions.IgnoreCase);
 
-				if(sampleSize is null)
+				var formatted = Regex.Replace(
+					_editorFormatString,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration),
+					avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms",
+					RegexOptions.IgnoreCase
+				);
+				formatted = Regex.Replace(
+					formatted,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate),
+					errors is null ? "n/a" : $"{errors.ToFixed(3)}%",
+					RegexOptions.IgnoreCase
+				);
+				formatted = Regex.Replace(
+					formatted,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since),
+					_metrics.Properties.SinceDateFormatted,
+					RegexOptions.IgnoreCase
+				);
+				formatted = Regex.Replace(
+					formatted,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize),
+					sampleSize is null ? "0" : $"{sampleSize}",
+					RegexOptions.IgnoreCase
+				);
+
+				if (sampleSize is null)
 				{
 					formatted = "no metrics found for this method in the last 30 minutes";
 				}
@@ -104,7 +134,8 @@ namespace CodeStream.VisualStudio.CodeLens
 				Log.Error(ex, $"Unable to render Code Level Metrics for {fullyQualifiedName}");
 				return new CodeLensDataPointDescriptor
 				{
-					Description = "we ran into an exception loading metrics for this method - please contact support"
+					Description =
+						"we ran into an exception loading metrics for this method - please contact support"
 				};
 			}
 		}
@@ -116,7 +147,10 @@ namespace CodeStream.VisualStudio.CodeLens
 		/// <remarks>
 		/// There is some duplication between this method and <see cref="GetDataAsync" />, but with slight variations.
 		/// </remarks>
-		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(CodeLensDescriptorContext context, CancellationToken token)
+		public Task<CodeLensDetailsDescriptor> GetDetailsAsync(
+			CodeLensDescriptorContext context,
+			CancellationToken token
+		)
 		{
 			var fullyQualifiedName = context.Properties["FullyQualifiedName"].ToString();
 			var splitLocation = fullyQualifiedName.LastIndexOfAny(new[] { '.', '+' });
@@ -144,17 +178,47 @@ namespace CodeStream.VisualStudio.CodeLens
 			//Using string positions of the tokens, figure out an "order" of the tokens. Since IndexOf is a positive integer if its there,
 			//we're assuming that will be sufficient
 			var formatString = _editorFormatString.ToLower();
-			var averageDurationPosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.AverageDuration, StringComparison.OrdinalIgnoreCase);
-			var errorRatePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.ErrorRate, StringComparison.OrdinalIgnoreCase);
-			var sincePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.Since, StringComparison.OrdinalIgnoreCase);
-			var sampleSizePosition = formatString.IndexOf(Constants.CodeLevelMetrics.Tokens.SampleSize, StringComparison.OrdinalIgnoreCase);
+			var averageDurationPosition = formatString.IndexOf(
+				Constants.CodeLevelMetrics.Tokens.AverageDuration,
+				StringComparison.OrdinalIgnoreCase
+			);
+			var errorRatePosition = formatString.IndexOf(
+				Constants.CodeLevelMetrics.Tokens.ErrorRate,
+				StringComparison.OrdinalIgnoreCase
+			);
+			var sincePosition = formatString.IndexOf(
+				Constants.CodeLevelMetrics.Tokens.Since,
+				StringComparison.OrdinalIgnoreCase
+			);
+			var sampleSizePosition = formatString.IndexOf(
+				Constants.CodeLevelMetrics.Tokens.SampleSize,
+				StringComparison.OrdinalIgnoreCase
+			);
 
 			var configuredPositions = new List<CodeLevelMetricsDetail>
 			{
-				new CodeLevelMetricsDetail(averageDurationPosition, "avg duration", avgDuration?.AverageDuration is null ? "n/a" : $"{avgDuration.AverageDuration.ToFixed(3)}ms"),
-				new CodeLevelMetricsDetail(errorRatePosition, "error rate", errorRate?.ErrorRate is null ? "n/a" : $"{errorRate.ErrorRate.ToFixed(3)}%"),
-				new CodeLevelMetricsDetail(sincePosition, "since", _metrics?.Properties?.SinceDateFormatted ?? "n/a"),
-				new CodeLevelMetricsDetail(sampleSizePosition, (sampleSize?.SampleSize ?? "0") == "1" ? "sample": "samples", sampleSize?.SampleSize ?? "0")
+				new CodeLevelMetricsDetail(
+					averageDurationPosition,
+					"avg duration",
+					avgDuration?.AverageDuration is null
+						? "n/a"
+						: $"{avgDuration.AverageDuration.ToFixed(3)}ms"
+				),
+				new CodeLevelMetricsDetail(
+					errorRatePosition,
+					"error rate",
+					errorRate?.ErrorRate is null ? "n/a" : $"{errorRate.ErrorRate.ToFixed(3)}%"
+				),
+				new CodeLevelMetricsDetail(
+					sincePosition,
+					"since",
+					_metrics?.Properties?.SinceDateFormatted ?? "n/a"
+				),
+				new CodeLevelMetricsDetail(
+					sampleSizePosition,
+					(sampleSize?.SampleSize ?? "0") == "1" ? "sample" : "samples",
+					sampleSize?.SampleSize ?? "0"
+				)
 			};
 
 			foreach (var entry in configuredPositions.OrderBy(x => x.Order))
@@ -175,7 +239,8 @@ namespace CodeStream.VisualStudio.CodeLens
 			return Task.FromResult(descriptor);
 		}
 
-		public void Refresh() => _ = InvalidatedAsync?.InvokeAsync(this, EventArgs.Empty).ConfigureAwait(false);
+		public void Refresh() =>
+			_ = InvalidatedAsync?.InvokeAsync(this, EventArgs.Empty).ConfigureAwait(false);
 
 		private static string GetStatusText(CodeLevelMetricStatus currentStatus)
 		{

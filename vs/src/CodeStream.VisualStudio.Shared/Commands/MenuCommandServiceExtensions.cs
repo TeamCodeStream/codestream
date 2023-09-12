@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.Design;
 using CodeStream.VisualStudio.Core.Extensions;
 
-namespace CodeStream.VisualStudio.Shared.Commands {
+namespace CodeStream.VisualStudio.Shared.Commands
+{
 	/// <summary>
 	/// Extension methods for <see cref="IMenuCommandService"/>.
 	/// </summary>
-	public static class MenuCommandServiceExtensions {
+	public static class MenuCommandServiceExtensions
+	{
 		/// <summary>
 		/// Adds <see cref="IVsCommand"/>s or <see cref="IVsCommand{TParam}"/>s to a menu.
 		/// </summary>
@@ -13,13 +15,17 @@ namespace CodeStream.VisualStudio.Shared.Commands {
 		/// <param name="commands">The commands to add.</param>
 		public static void AddCommands(
 			this IMenuCommandService service,
-			params IVsCommandBase[] commands) {
+			params IVsCommandBase[] commands
+		)
+		{
 			Guard.ArgumentNotNull(service, nameof(service));
 			Guard.ArgumentNotNull(commands, nameof(commands));
 
-			foreach (var vsCommandBase in commands) {
+			foreach (var vsCommandBase in commands)
+			{
 				var command = vsCommandBase as MenuCommand;
-				if (command != null) {
+				if (command != null)
+				{
 					service.AddCommand(command);
 				}
 			}

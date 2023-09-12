@@ -10,49 +10,77 @@ using CodeStream.VisualStudio.Core.Events;
 using System.Runtime.CompilerServices;
 #endif
 
-namespace CodeStream.VisualStudio.Shared.Services {
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	[Export(typeof(IEventAggregator))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class EventAggregator : IEventAggregator {
+	public class EventAggregator : IEventAggregator
+	{
 		private static readonly ILogger Log = LogManager.ForContext<EventAggregator>();
 
-		private readonly ConcurrentDictionary<Type, object> _subjects = new ConcurrentDictionary<Type, object>();
+		private readonly ConcurrentDictionary<Type, object> _subjects =
+			new ConcurrentDictionary<Type, object>();
 
 		public IObservable<TEvent> GetEvent<TEvent>(
 #if DEBUG
-		[CallerFilePath] string callerFilePath = "",
-		[CallerLineNumber] long callerLineNumber = 0,
-		[CallerMemberName] string callerMember = ""
+			[CallerFilePath] string callerFilePath = "",
+			[CallerLineNumber] long callerLineNumber = 0,
+			[CallerMemberName] string callerMember = ""
 #endif
-			) where TEvent : EventBase {
+		)
+			where TEvent : EventBase
+		{
 #if DEBUG
-			Log.DebugWithCaller($"Subscribed={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+			Log.DebugWithCaller(
+				$"Subscribed={typeof(TEvent)}",
+				callerFilePath,
+				callerLineNumber,
+				callerMember
+			);
 #else
 			Log.Debug($"Subscribed={typeof(TEvent)}");
 #endif
-			return ((ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent), t => new Subject<TEvent>())).AsObservable();
+			return (
+				(ISubject<TEvent>)_subjects.GetOrAdd(typeof(TEvent), t => new Subject<TEvent>())
+			).AsObservable();
 		}
 
-		public void Publish<TEvent>(TEvent sampleEvent
+		public void Publish<TEvent>(
+			TEvent sampleEvent
 #if DEBUG
-	, [CallerFilePath] string callerFilePath = "",
-	[CallerLineNumber] long callerLineNumber = 0,
-	[CallerMemberName] string callerMember = ""
+			,
+			[CallerFilePath] string callerFilePath = "",
+			[CallerLineNumber] long callerLineNumber = 0,
+			[CallerMemberName] string callerMember = ""
 #endif
 
-			) where TEvent : EventBase {
-			if (_subjects.TryGetValue(typeof(TEvent), out var subject)) {
+		)
+			where TEvent : EventBase
+		{
+			if (_subjects.TryGetValue(typeof(TEvent), out var subject))
+			{
 #if DEBUG
-				Log.DebugWithCaller($"Published={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+				Log.DebugWithCaller(
+					$"Published={typeof(TEvent)}",
+					callerFilePath,
+					callerLineNumber,
+					callerMember
+				);
 #else
 				Log.Debug($"Published={typeof(TEvent)}");
 #endif
 
 				((ISubject<TEvent>)subject).OnNext(sampleEvent);
 			}
-			else {
+			else
+			{
 #if DEBUG
-				Log.DebugWithCaller($"Subjects Not Found={typeof(TEvent)}", callerFilePath, callerLineNumber, callerMember);
+				Log.DebugWithCaller(
+					$"Subjects Not Found={typeof(TEvent)}",
+					callerFilePath,
+					callerLineNumber,
+					callerMember
+				);
 #else
 				Log.Debug($"Event Not Found={typeof(TEvent)}");
 #endif

@@ -9,20 +9,21 @@ using CodeStream.VisualStudio.Core.Logging;
 using System.Runtime.InteropServices;
 using CodeStream.VisualStudio.Shared.Models;
 
-namespace CodeStream.VisualStudio.Shared.UI.Settings {
+namespace CodeStream.VisualStudio.Shared.UI.Settings
+{
 	[ComVisible(true)]
-	public class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage {	
-
+	public class OptionsDialogPage : Microsoft.VisualStudio.Shell.DialogPage, IOptionsDialogPage
+	{
 		private string _email;
 		private string _team;
 		private bool _autoSignIn = true;
 		private bool _showMarkerGlyphs = true;
 		private TraceLevel _traceLevel = TraceLevel.Info;
-		
+
 #if DEBUG
 		private string _serverUrl = "https://codestream-pd.staging-service.nr-ops.net";
 #else
-        private string _serverUrl = "https://codestream-us1.service.newrelic.com";
+		private string _serverUrl = "https://codestream-us1.service.newrelic.com";
 #endif
 		private bool _disableStrictSsl;
 		private bool _proxyStrictSsl;
@@ -33,7 +34,8 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public OptionsDialogPage() {
+		public OptionsDialogPage()
+		{
 			ProxySetup();
 		}
 
@@ -43,7 +45,8 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Browsable(false)]
 		public bool PauseNotifyPropertyChanged { get; set; }
 
-		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "") {
+		private void NotifyPropertyChanged([CallerMemberName] string propertyName = "")
+		{
 			if (PauseNotifyPropertyChanged)
 			{
 				return;
@@ -52,26 +55,31 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
-		private void ProxySetup() {
+		private void ProxySetup()
+		{
 			if (ProxySupport == ProxySupport.Off)
 			{
 				return;
 			}
 
-			try {
+			try
+			{
 				var webProxy = WebRequest.GetSystemWebProxy();
 				var serverUri = new Uri(ServerUrl);
 				var possibleProxyUri = webProxy.GetProxy(new Uri(ServerUrl));
 
-				if (!possibleProxyUri.EqualsIgnoreCase(serverUri)) {
+				if (!possibleProxyUri.EqualsIgnoreCase(serverUri))
+				{
 					// has a system proxy
-					Proxy = new Proxy {
+					Proxy = new Proxy
+					{
 						Url = possibleProxyUri.ToString(),
 						StrictSSL = ProxyStrictSsl
 					};
 				}
 			}
-			catch {
+			catch
+			{
 				// suffer silently
 			}
 		}
@@ -79,10 +87,13 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Authentication")]
 		[DisplayName("Email")]
 		[Description("Specifies the email address to use to connect to the CodeStream service")]
-		public string Email {
+		public string Email
+		{
 			get => _email;
-			set {
-				if (_email != value) {
+			set
+			{
+				if (_email != value)
+				{
 					_email = value;
 					NotifyPropertyChanged();
 				}
@@ -92,10 +103,13 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Authentication")]
 		[DisplayName("Team")]
 		[Description("Specifies the team to use to connect to the CodeStream service")]
-		public string Team {
+		public string Team
+		{
 			get => _team;
-			set {
-				if (_team != value) {
+			set
+			{
+				if (_team != value)
+				{
 					_team = value;
 					NotifyPropertyChanged();
 				}
@@ -105,10 +119,13 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Authentication")]
 		[DisplayName("Auto Sign In")]
 		[Description("Specifies whether to automatically sign in to CodeStream")]
-		public bool AutoSignIn {
+		public bool AutoSignIn
+		{
 			get => _autoSignIn;
-			set {
-				if (_autoSignIn != value) {
+			set
+			{
+				if (_autoSignIn != value)
+				{
 					_autoSignIn = value;
 					NotifyPropertyChanged();
 				}
@@ -118,26 +135,32 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Connectivity")]
 		[DisplayName("Server Url")]
 		[Description("Specifies the url to use to connect to the CodeStream service")]
-		public string ServerUrl {
+		public string ServerUrl
+		{
 			get => _serverUrl;
 			set
 			{
 				value = value?.TrimEnd('/');
-				if (_serverUrl != value) {
+				if (_serverUrl != value)
+				{
 					_serverUrl = value;
 					NotifyPropertyChanged();
 				}
 			}
 		}
 
-
 		[Category("Connectivity")]
 		[DisplayName("Proxy Strict SSL")]
-		[Description("Specifies where the proxy server certificate should be verified against the list of supplied CAs")]
-		public bool ProxyStrictSsl {
+		[Description(
+			"Specifies where the proxy server certificate should be verified against the list of supplied CAs"
+		)]
+		public bool ProxyStrictSsl
+		{
 			get => _proxyStrictSsl;
-			set {
-				if (_proxyStrictSsl != value) {
+			set
+			{
+				if (_proxyStrictSsl != value)
+				{
 					_proxyStrictSsl = value;
 					ProxySetup();
 					NotifyPropertyChanged();
@@ -147,11 +170,16 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 
 		[Category("Connectivity")]
 		[DisplayName("Proxy Support")]
-		[Description("Specifies how proxies are handled. [On] Your system-level proxy will be used, if set. [Off] No support.")]
-		public ProxySupport ProxySupport {
+		[Description(
+			"Specifies how proxies are handled. [On] Your system-level proxy will be used, if set. [Off] No support."
+		)]
+		public ProxySupport ProxySupport
+		{
 			get => _proxySupport;
-			set {
-				if (_proxySupport != value) {
+			set
+			{
+				if (_proxySupport != value)
+				{
 					_proxySupport = value;
 					ProxySetup();
 					NotifyPropertyChanged();
@@ -162,12 +190,15 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Connectivity")]
 		[DisplayName("Disable Strict SSL")]
 		[Description("Allow self-signed certificates to be used in network requests")]
-		public bool DisableStrictSSL {
+		public bool DisableStrictSSL
+		{
 			get => _disableStrictSsl;
-			set {
-				if (_disableStrictSsl != value) {
+			set
+			{
+				if (_disableStrictSsl != value)
+				{
 					_disableStrictSsl = value;
-					 
+
 					NotifyPropertyChanged();
 				}
 			}
@@ -175,11 +206,16 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 
 		[Category("Connectivity")]
 		[DisplayName("Extra Certificates")]
-		[Description("Specify path to file containing any certificate(s) you wish CodeStream connections to trust")]
-		public string ExtraCertificates {
+		[Description(
+			"Specify path to file containing any certificate(s) you wish CodeStream connections to trust"
+		)]
+		public string ExtraCertificates
+		{
 			get => _extraCertificates;
-			set {
-				if (_extraCertificates != value) {
+			set
+			{
+				if (_extraCertificates != value)
+				{
 					_extraCertificates = value;
 
 					NotifyPropertyChanged();
@@ -189,11 +225,16 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 
 		[Category("UI")]
 		[DisplayName("Show Marker Glyphs")]
-		[Description("Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor")]
-		public bool ShowMarkerGlyphs {
+		[Description(
+			"Specifies whether to show glyph indicators at the start of lines with associated codemarks in the editor"
+		)]
+		public bool ShowMarkerGlyphs
+		{
 			get => _showMarkerGlyphs;
-			set {
-				if (_showMarkerGlyphs != value) {
+			set
+			{
+				if (_showMarkerGlyphs != value)
+				{
 					_showMarkerGlyphs = value;
 					NotifyPropertyChanged();
 				}
@@ -219,15 +260,17 @@ namespace CodeStream.VisualStudio.Shared.UI.Settings {
 		[Category("Other")]
 		[DisplayName("Trace Level")]
 		[Description("Specifies how much (if any) output will be sent to the CodeStream log")]
-		public TraceLevel TraceLevel {
+		public TraceLevel TraceLevel
+		{
 			get { return _traceLevel; }
-			set {
-				if (_traceLevel != value) {
+			set
+			{
+				if (_traceLevel != value)
+				{
 					_traceLevel = value;
 					NotifyPropertyChanged();
 				}
 			}
 		}
-
 	}
 }

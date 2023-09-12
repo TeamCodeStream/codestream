@@ -1,7 +1,9 @@
 ﻿using System;
 
-namespace CodeStream.VisualStudio.Core {
-	public static class Guids {
+namespace CodeStream.VisualStudio.Core
+{
+	public static class Guids
+	{
 		// Window Ids
 		public static Guid WebViewToolWindowGuid = new Guid(WebViewToolWindowId);
 		public const string WebViewToolWindowId = "882ebf5e-eccc-49c1-a303-b113742c8bf5";
@@ -16,6 +18,7 @@ namespace CodeStream.VisualStudio.Core {
 
 		// Others
 		public const string LanguageClientId = "4d480d5e-ab28-4e9c-b0be-32cd08f3b8ea";
-		public const string ServiceProviderPackageAutoLoadId = "2f119bc4-4580-442f-994d-975644125ef2";
+		public const string ServiceProviderPackageAutoLoadId =
+			"2f119bc4-4580-442f-994d-975644125ef2";
 	}
 }

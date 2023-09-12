@@ -5,8 +5,8 @@ using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.CodeLevelMetrics;
 using StreamJsonRpc;
 
-namespace CodeStream.VisualStudio.CodeLens {
-
+namespace CodeStream.VisualStudio.CodeLens
+{
 	/// <summary>
 	/// Sets up RPC communication between the CodeLens provider and Visual Studio
 	/// </summary>
@@ -14,27 +14,31 @@ namespace CodeStream.VisualStudio.CodeLens {
 	/// This would slightly make more sense in the Shared project, but since it needs the
 	/// CodeLevelMetricsDataPoint class to coordinate the Owner, it has to stay here.
 	/// </remarks>
-	public class VisualStudioConnection : IRemoteCodeLens {
-
+	public class VisualStudioConnection : IRemoteCodeLens
+	{
 		private readonly NamedPipeClientStream _stream;
 		private readonly CodeLevelMetricDataPoint _owner;
 		public JsonRpc Rpc;
 
-		public VisualStudioConnection(CodeLevelMetricDataPoint owner, int vsPid) {
+		public VisualStudioConnection(CodeLevelMetricDataPoint owner, int vsPid)
+		{
 			_owner = owner;
 			_stream = new NamedPipeClientStream(
 				serverName: ".",
 				RpcPipeNames.ForCodeLens(vsPid),
 				PipeDirection.InOut,
-				PipeOptions.Asynchronous);
+				PipeOptions.Asynchronous
+			);
 		}
 
-		public async Task ConnectAsync(CancellationToken cancellationToken) {
+		public async Task ConnectAsync(CancellationToken cancellationToken)
+		{
 			await _stream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 			Rpc = JsonRpc.Attach(_stream, this);
 		}
 
-		public void Refresh() {
+		public void Refresh()
+		{
 			_owner.Refresh();
 		}
 	}

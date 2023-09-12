@@ -2,7 +2,8 @@
 
 namespace CodeStream.VisualStudio.Core.Models
 {
-	public class AverageDurationResponse {
+	public class AverageDurationResponse
+	{
 		[JsonProperty("averageDuration", NullValueHandling = NullValueHandling.Ignore)]
 		public string AverageDuration { get; set; }
 
@@ -11,10 +12,10 @@ namespace CodeStream.VisualStudio.Core.Models
 
 		[JsonProperty("className", NullValueHandling = NullValueHandling.Ignore)]
 		public string ClassName { get; set; }
-		
+
 		[JsonProperty("functionName", NullValueHandling = NullValueHandling.Ignore)]
 		public string FunctionName { get; set; }
-		
+
 		[JsonProperty("metricTimesliceName", NullValueHandling = NullValueHandling.Ignore)]
 		public string MetricTimesliceName { get; set; }
 	}

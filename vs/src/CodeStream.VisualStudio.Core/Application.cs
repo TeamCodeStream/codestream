@@ -9,8 +9,10 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Properties;
 using Newtonsoft.Json;
 
-namespace CodeStream.VisualStudio.Core {
-	public class Application {
+namespace CodeStream.VisualStudio.Core
+{
+	public class Application
+	{
 		public const string Name = "CodeStream";
 
 		/// <summary>
@@ -76,30 +78,46 @@ namespace CodeStream.VisualStudio.Core {
 		public static string LogNameExtension { get; set; } = "vs-extension.log";
 		public static string LogNameAgent { get; set; } = "vs-agent.log";
 
-		private static readonly Regex VersionPathRegex = new Regex(@"Microsoft Visual Studio\\(\w+)\\(\w+)\\Common7\\IDE\\devenv.exe$",
-					RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private static readonly Regex VersionPathRegex = new Regex(
+			@"Microsoft Visual Studio\\(\w+)\\(\w+)\\Common7\\IDE\\devenv.exe$",
+			RegexOptions.Compiled | RegexOptions.IgnoreCase
+		);
 
-		static Application() {
+		static Application()
+		{
 			BuildEnv = SolutionInfo.BuildEnv;
 
 			var versionFull = Version.Parse(SolutionInfo.Version);
 			BuildNumber = versionFull.Revision;
 
-			if (versionFull.Revision > 0) {
-				ExtensionVersionSemVer = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}-{versionFull.Revision}";
+			if (versionFull.Revision > 0)
+			{
+				ExtensionVersionSemVer =
+					$"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}-{versionFull.Revision}";
 			}
-			else {
-				ExtensionVersionSemVer = $"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
+			else
+			{
+				ExtensionVersionSemVer =
+					$"{versionFull.Major}.{versionFull.Minor}.{versionFull.Build}";
 			}
 
 			// this is nullable, but should always be here...
-			var fileVersionInfo = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileVersionInfo;
+			var fileVersionInfo = System.Diagnostics.Process
+				.GetCurrentProcess()
+				.MainModule.FileVersionInfo;
 
 			// Extension versions
 
-			ExtensionVersionShort = new Version(versionFull.Major, versionFull.Minor, versionFull.Build);
+			ExtensionVersionShort = new Version(
+				versionFull.Major,
+				versionFull.Minor,
+				versionFull.Build
+			);
 
-			var localApplicationData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Name);
+			var localApplicationData = Path.Combine(
+				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+				Name
+			);
 			var tempData = Path.Combine(Path.GetTempPath(), Name);
 
 			VisualStudioName = fileVersionInfo.FileDescription;
@@ -108,9 +126,12 @@ namespace CodeStream.VisualStudio.Core {
 			// normally I wouldn't condone having a ctor with side-effects, especially not
 			// one that starts a process, but since this is a static ctor (only fires once) and is
 			// essentially a static class of semi-primitive types that all others rely on, it's ok.
-			VisualStudioDisplayName = (TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName).ToAplhaNumericPlusSafe();
+			VisualStudioDisplayName = (
+				TryGetDisplayNameFromProcess(fileVersionInfo.FileName) ?? VisualStudioName
+			).ToAplhaNumericPlusSafe();
 
-			switch (VisualStudioVersion.Major) {
+			switch (VisualStudioVersion.Major)
+			{
 				case 15:
 					VisualStudioVersionYear = "2017";
 					break;
@@ -138,9 +159,12 @@ namespace CodeStream.VisualStudio.Core {
 		/// <param name="path"></param>
 		/// <param name="arguments"></param>
 		/// <returns></returns>
-		private static T GetProcessOutput<T>(string path, string arguments) {
-			try {
-				var info = new ProcessStartInfo {
+		private static T GetProcessOutput<T>(string path, string arguments)
+		{
+			try
+			{
+				var info = new ProcessStartInfo
+				{
 					FileName = path,
 					Arguments = arguments,
 					RedirectStandardInput = true,
@@ -150,20 +174,20 @@ namespace CodeStream.VisualStudio.Core {
 					CreateNoWindow = true
 				};
 
-				var process = new System.Diagnostics.Process() {
-					StartInfo = info
-				};
+				var process = new System.Diagnostics.Process() { StartInfo = info };
 				process.Start();
 				string output = process.StandardOutput.ReadToEnd();
 				string err = process.StandardError.ReadToEnd();
-				if (!err.IsNullOrWhiteSpace()) {
+				if (!err.IsNullOrWhiteSpace())
+				{
 					return default(T);
 				}
 
 				process.WaitForExit(2000);
 				return JsonConvert.DeserializeObject<T>(output);
 			}
-			catch {
+			catch
+			{
 				// suffer because logs aren't setup yet.
 			}
 			return default(T);
@@ -175,40 +199,52 @@ namespace CodeStream.VisualStudio.Core {
 		/// </summary>
 		/// <param name="productPath">is a string like C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\Common7\\IDE\\devenv.exe</param>
 		/// <returns></returns>
-		private static string TryGetDisplayNameFromProcess(string productPath) {
-			if (productPath.IsNullOrWhiteSpace()) return null;
+		private static string TryGetDisplayNameFromProcess(string productPath)
+		{
+			if (productPath.IsNullOrWhiteSpace())
+				return null;
 
 			string displayName = null;
-			try {
+			try
+			{
 				displayName = GetProcessOutput<List<VsWhereResult>>(
 						"C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
 						"-all -format json"
-					).FirstOrDefault(_ => _.ProductPath.EqualsIgnoreCase(productPath))?.DisplayName;
+					)
+					.FirstOrDefault(_ => _.ProductPath.EqualsIgnoreCase(productPath))
+					?.DisplayName;
 			}
-			catch (Exception) {
+			catch (Exception)
+			{
 				// suffer because logs aren't setup yet.
 			}
 
-			if (!displayName.IsNullOrWhiteSpace()) return displayName;
+			if (!displayName.IsNullOrWhiteSpace())
+				return displayName;
 
-			try {
+			try
+			{
 				// If the displayName could not be retrieved from vswhere.exe
 				// attempt to parse it from the path of the running .exe.
 				// It is possible that this does not work, because the user
 				// might have installed VS into a non-standard location
 				var matches = VersionPathRegex.Matches(productPath);
-				if (matches.Count == 1) {
+				if (matches.Count == 1)
+				{
 					var match = matches[0];
-					if (match.Groups.Count > 1) {
+					if (match.Groups.Count > 1)
+					{
 						var year = match.Groups[1].Value;
 						var edition = match.Groups[2].Value;
-						if (!year.IsNullOrWhiteSpace() && !edition.IsNullOrWhiteSpace()) {
+						if (!year.IsNullOrWhiteSpace() && !edition.IsNullOrWhiteSpace())
+						{
 							return $"Visual Studio ${edition} ${year}";
 						}
 					}
 				}
 			}
-			catch {
+			catch
+			{
 				// suffer because logs aren't setup yet.
 				return null;
 			}
@@ -217,12 +253,14 @@ namespace CodeStream.VisualStudio.Core {
 		}
 
 		// ReSharper disable once ClassNeverInstantiated.Local
-		class VsWhereResult {
+		class VsWhereResult
+		{
 			public string ProductPath { get; set; }
 			public string DisplayName { get; set; }
 		}
 
-		public class DeveloperSettings {
+		public class DeveloperSettings
+		{
 			/// <summary>
 			/// Run in the immediate window to enable or disable this
 			/// </summary>

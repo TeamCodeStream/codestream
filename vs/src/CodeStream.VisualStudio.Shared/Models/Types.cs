@@ -1,8 +1,10 @@
 ﻿using CodeStream.VisualStudio.Core;
 using Newtonsoft.Json;
 
-namespace CodeStream.VisualStudio.Shared.Models {
-	public enum LoginResult {
+namespace CodeStream.VisualStudio.Shared.Models
+{
+	public enum LoginResult
+	{
 		// ReSharper disable InconsistentNaming
 		SUCCESS,
 		INVALID_CREDENTIALS,
@@ -15,24 +17,29 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	}
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
-	public enum LogoutReason {
+	public enum LogoutReason
+	{
 		Token,
 		Unknown,
 		UnsupportedVersion
 	}
 
-	public enum ProviderType {
+	public enum ProviderType
+	{
 		MSTeams,
 		Slack
 	}
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
-	public enum CodemarkType {
+	public enum CodemarkType
+	{
 		Comment,
 		Issue,
+
 		// Obsolete
 		// Bookmark,
 		Question,
+
 		// Obsolete
 		// Trap,
 		Link,
@@ -40,13 +47,15 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	}
 
 	[JsonConverter(typeof(CamelCaseStringEnumConverter))]
-	public enum ConnectionStatus {
+	public enum ConnectionStatus
+	{
 		Disconnected,
 		Reconnected,
 		Reconnecting,
 	}
 
-	public enum StreamType {
+	public enum StreamType
+	{
 		channel,
 		direct,
 		file
@@ -60,7 +69,8 @@ namespace CodeStream.VisualStudio.Shared.Models {
 	//    UNKNOWN = "unknown"
 	//}
 
-	public static class ChangeDataType {
+	public static class ChangeDataType
+	{
 		public const string Codemarks = "codemarks";
 		public const string MarkerLocations = "markerLocations";
 		public const string Markers = "markers";

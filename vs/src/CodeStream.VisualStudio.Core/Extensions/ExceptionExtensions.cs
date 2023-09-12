@@ -3,33 +3,44 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Linq;
 
-namespace CodeStream.VisualStudio.Core.Extensions {
-	public static class ExceptionExtensions {
-
-		public static Exception UnwrapCompositionException(this Exception exception) {
+namespace CodeStream.VisualStudio.Core.Extensions
+{
+	public static class ExceptionExtensions
+	{
+		public static Exception UnwrapCompositionException(this Exception exception)
+		{
 			var compositionException = exception as CompositionException;
-			if (compositionException == null) {
+			if (compositionException == null)
+			{
 				return exception;
 			}
 
 			var unwrapped = compositionException;
-			while (unwrapped != null) {
+			while (unwrapped != null)
+			{
 				var firstError = unwrapped.Errors.FirstOrDefault();
-				if (firstError == null) {
+				if (firstError == null)
+				{
 					break;
 				}
 				var currentException = firstError.Exception;
 
-				if (currentException == null) {
+				if (currentException == null)
+				{
 					break;
 				}
 
 				var composablePartException = currentException as ComposablePartException;
 
-				if (composablePartException != null
-				    && composablePartException.InnerException != null) {
-					var innerCompositionException = composablePartException.InnerException as CompositionException;
-					if (innerCompositionException == null) {
+				if (
+					composablePartException != null
+					&& composablePartException.InnerException != null
+				)
+				{
+					var innerCompositionException =
+						composablePartException.InnerException as CompositionException;
+					if (innerCompositionException == null)
+					{
 						return currentException.InnerException ?? exception;
 					}
 					currentException = innerCompositionException;

@@ -4,8 +4,10 @@ using System;
 using System.Collections.Specialized;
 using System.Diagnostics;
 
-namespace CodeStream.VisualStudio.Core.Process {
-	public class ProcessFactory {
+namespace CodeStream.VisualStudio.Core.Process
+{
+	public class ProcessFactory
+	{
 		private static readonly ILogger Log = LogManager.ForContext<ProcessFactory>();
 
 		/// <summary>
@@ -14,8 +16,14 @@ namespace CodeStream.VisualStudio.Core.Process {
 		/// <param name="fileName"></param>
 		/// <param name="arguments"></param>
 		/// <returns></returns>
-		public static System.Diagnostics.Process Create(string fileName, string arguments, StringDictionary additionalEnv = null) {
-			var info = new ProcessStartInfo {
+		public static System.Diagnostics.Process Create(
+			string fileName,
+			string arguments,
+			StringDictionary additionalEnv = null
+		)
+		{
+			var info = new ProcessStartInfo
+			{
 				FileName = fileName,
 				Arguments = arguments,
 				RedirectStandardInput = true,
@@ -24,27 +32,31 @@ namespace CodeStream.VisualStudio.Core.Process {
 				CreateNoWindow = true
 			};
 
-			try {
+			try
+			{
 				info.EnvironmentVariables.Remove("NODE_OPTIONS");
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, "Could not remove NODE_OPTIONS");
 			}
 
-			if (additionalEnv != null) {
-				foreach (string key in additionalEnv.Keys) {
-					try {
+			if (additionalEnv != null)
+			{
+				foreach (string key in additionalEnv.Keys)
+				{
+					try
+					{
 						info.EnvironmentVariables[key] = additionalEnv[key];
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Error(ex, $"Error setting environment variable: {key}");
 					}
 				}
 			}
 
-			return new System.Diagnostics.Process() {
-				StartInfo = info
-			};
+			return new System.Diagnostics.Process() { StartInfo = info };
 		}
 	}
 }

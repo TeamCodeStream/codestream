@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
@@ -17,20 +17,15 @@ namespace CodeStream.VisualStudio.Shared.Services
 	public class MessageInterceptorService : IMessageInterceptorService
 	{
 		private readonly IIdeService _ideService;
-		
+
 		[ImportingConstructor]
-		public MessageInterceptorService(IIdeService ideService) 
-			=> _ideService = ideService;
+		public MessageInterceptorService(IIdeService ideService) => _ideService = ideService;
 
-		public bool DoesMessageContainTempFiles(List<JToken> uriTokens)
-			=> uriTokens
-				.Where(x => x is JValue)
-				.Any(x => x.Value<string>().IsTempFile());
+		public bool DoesMessageContainTempFiles(List<JToken> uriTokens) =>
+			uriTokens.Where(x => x is JValue).Any(x => x.Value<string>().IsTempFile());
 
-		public List<JToken> GetUriTokens(JToken messageToken) 
-			=> messageToken?
-				.SelectTokens("$..uri")
-				.ToList() ?? new List<JToken>();
+		public List<JToken> GetUriTokens(JToken messageToken) =>
+			messageToken?.SelectTokens("$..uri").ToList() ?? new List<JToken>();
 
 		public JToken InterceptAndModify(IAbstractMessageType message)
 		{
@@ -55,9 +50,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 			var uriTokens = GetUriTokens(originalToken);
 			var hasTempFiles = DoesMessageContainTempFiles(uriTokens);
 
-			return !hasTempFiles
-				? originalToken
-				: UpdateMessage(originalToken, uriTokens);
+			return !hasTempFiles ? originalToken : UpdateMessage(originalToken, uriTokens);
 		}
 
 		private JToken UpdateMessage(JToken message, IEnumerable<JToken> tokensToUpdate)
@@ -78,19 +71,28 @@ namespace CodeStream.VisualStudio.Shared.Services
 				// 3. DiffViewer must contain the original temp file URI, and it must match our token path
 
 				var codeStreamDiffUri = string.Empty;
-				if(!diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out codeStreamDiffUri) ?? false){
-					continue;
-				}
-
-				var tempFileUri = string.Empty;
-				if(!diffViewer.Properties?.TryGetProperty(PropertyNames.OriginalTempFileUri, out tempFileUri) ?? false)
+				if (
+					!diffViewer.Properties?.TryGetProperty(
+						PropertyNames.OverrideFileUri,
+						out codeStreamDiffUri
+					) ?? false
+				)
 				{
 					continue;
 				}
 
+				var tempFileUri = string.Empty;
 				if (
-					uri.IsTempFile() 
-					&& tempFileUri.ToUri().EqualsIgnoreCase(uri.ToUri()))
+					!diffViewer.Properties?.TryGetProperty(
+						PropertyNames.OriginalTempFileUri,
+						out tempFileUri
+					) ?? false
+				)
+				{
+					continue;
+				}
+
+				if (uri.IsTempFile() && tempFileUri.ToUri().EqualsIgnoreCase(uri.ToUri()))
 				{
 					message?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));
 				}

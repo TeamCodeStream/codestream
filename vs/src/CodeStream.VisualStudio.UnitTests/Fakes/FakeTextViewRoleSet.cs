@@ -5,10 +5,12 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace CodeStream.VisualStudio.UnitTests.Stubs
 {
-	public class FakeTextViewRoleSet : ITextViewRoleSet {
+	public class FakeTextViewRoleSet : ITextViewRoleSet
+	{
 		private readonly List<string> _roles;
 
-		public FakeTextViewRoleSet(List<string> roles) {
+		public FakeTextViewRoleSet(List<string> roles)
+		{
 			_roles = roles;
 		}
 
@@ -24,7 +26,8 @@ namespace CodeStream.VisualStudio.UnitTests.Stubs
 		public bool ContainsAny(IEnumerable<string> textViewRoles) =>
 			textViewRoles.Any(textViewRole => _roles.Contains(textViewRole));
 
-		public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet) {
+		public ITextViewRoleSet UnionWith(ITextViewRoleSet roleSet)
+		{
 			throw new System.NotImplementedException();
 		}
 	}

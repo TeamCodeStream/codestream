@@ -2,7 +2,8 @@
 
 namespace CodeStream.VisualStudio.Core.Models
 {
-	public class MetricTimesliceNameMapping {
+	public class MetricTimesliceNameMapping
+	{
 		[JsonProperty("duration", NullValueHandling = NullValueHandling.Ignore)]
 		public string Duration { get; set; }
 

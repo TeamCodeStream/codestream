@@ -4,8 +4,8 @@ using Xunit;
 
 namespace CodeStream.VisualStudio.UnitTests.Services
 {
-    public class SettingsServiceTests
-    {
+	public class SettingsServiceTests
+	{
 		//[Fact]
 		//[InlineData("https://localhost.codestream.us", "local")]
 		//[InlineData("https://codestream-us1.service.newrelic.com", "prod")]

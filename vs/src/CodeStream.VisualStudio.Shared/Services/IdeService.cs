@@ -29,58 +29,83 @@ using File = System.IO.File;
 using IComponentModel = Microsoft.VisualStudio.ComponentModelHost.IComponentModel;
 using ILogger = Serilog.ILogger;
 
-namespace CodeStream.VisualStudio.Shared.Services {
+namespace CodeStream.VisualStudio.Shared.Services
+{
 	[Export(typeof(IIdeService))]
 	[PartCreationPolicy(CreationPolicy.Shared)]
-	public class IdeService : IIdeService {
+	public class IdeService : IIdeService
+	{
 		private static readonly ILogger Log = LogManager.ForContext<IdeService>();
 
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IComponentModel _componentModel;
-		
+
 		[ImportingConstructor]
-		public IdeService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
-			try {
+		public IdeService([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider)
+		{
+			try
+			{
 				_serviceProvider = serviceProvider;
-				_componentModel = serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
+				_componentModel =
+					serviceProvider?.GetService(typeof(SComponentModel)) as IComponentModel;
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Fatal(ex, nameof(IdeService));
 			}
 		}
 
-		public IdeService() {
+		public IdeService()
+		{
 			//unit testing ctor
 		}
 
-		public async System.Threading.Tasks.Task<OpenEditorResult> OpenEditorAndRevealAsync(Uri fileUri, int? scrollTo = null, bool? atTop = false, bool? focus = false) {
-			using (Log.CriticalOperation($"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}")) {
+		public async System.Threading.Tasks.Task<OpenEditorResult> OpenEditorAndRevealAsync(
+			Uri fileUri,
+			int? scrollTo = null,
+			bool? atTop = false,
+			bool? focus = false
+		)
+		{
+			using (
+				Log.CriticalOperation(
+					$"{nameof(OpenEditorAndRevealAsync)} {fileUri} scrollTo={scrollTo}"
+				)
+			)
+			{
 				if (scrollTo == null)
 				{
 					return null;
 				}
 
 				var scrollToLine = scrollTo.Value;
-				try {
+				try
+				{
 					var wpfTextView = await AssertWpfTextViewAsync(fileUri);
-					if (wpfTextView != null) {
-						if (atTop == true) {
+					if (wpfTextView != null)
+					{
+						if (atTop == true)
+						{
 							ScrollViewportVerticallyByPixels(wpfTextView, scrollToLine);
 						}
-						else {
+						else
+						{
 							EnsureTargetSpanVisible(wpfTextView, scrollToLine);
 						}
 
-						if (focus == true) {
+						if (focus == true)
+						{
 							wpfTextView.VisualElement.Focus();
 						}
 					}
-					return new OpenEditorResult() {
+					return new OpenEditorResult()
+					{
 						Success = wpfTextView != null,
 						VisualElement = wpfTextView?.VisualElement
 					};
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, $"{nameof(OpenEditorAndRevealAsync)} failed for {fileUri}");
 					return null;
 				}
@@ -94,22 +119,41 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <param name="range"></param>
 		/// <param name="forceOpen"></param>
 		/// <returns></returns>
-		public async System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(Uri fileUri, Range range, bool forceOpen = false) {
+		public async System.Threading.Tasks.Task<IWpfTextView> OpenEditorAtLineAsync(
+			Uri fileUri,
+			Range range,
+			bool forceOpen = false
+		)
+		{
 			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-			using (Log.CriticalOperation($"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}")) {
-				try {
+			using (
+				Log.CriticalOperation(
+					$"{nameof(OpenEditorAtLineAsync)} {fileUri} range={range?.Start?.Line}, {range?.End?.Line}"
+				)
+			)
+			{
+				try
+				{
 					var wpfTextView = await AssertWpfTextViewAsync(fileUri, forceOpen);
-					if (wpfTextView != null) {
+					if (wpfTextView != null)
+					{
 						var span = EnsureSnapshotSpanVisible(wpfTextView, range);
-						if (span != null) {
-							wpfTextView.Caret.MoveTo(new SnapshotPoint(wpfTextView.TextSnapshot, span.Value.Start + range.Start.Character));
+						if (span != null)
+						{
+							wpfTextView.Caret.MoveTo(
+								new SnapshotPoint(
+									wpfTextView.TextSnapshot,
+									span.Value.Start + range.Start.Character
+								)
+							);
 							wpfTextView.Caret.EnsureVisible();
 						}
 						return wpfTextView;
 					}
 					return null;
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, $"{nameof(OpenEditorAtLineAsync)} failed for {fileUri}");
 					return null;
 				}
@@ -119,55 +163,93 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Scrolls an editor, only if it is already open
 		/// </summary>
-		public void ScrollEditor(Uri fileUri, int? scrollTo = null, int? deltaPixels = null, bool? atTop = false) {
+		public void ScrollEditor(
+			Uri fileUri,
+			int? scrollTo = null,
+			int? deltaPixels = null,
+			bool? atTop = false
+		)
+		{
 			if (scrollTo == null || scrollTo.Value < 0)
 			{
 				return;
 			}
 
-			using (var metrics = Log.WithMetrics($"{nameof(ScrollEditor)} {fileUri} scrollTo={scrollTo} atTop={atTop}")) {
-				try {
+			using (
+				var metrics = Log.WithMetrics(
+					$"{nameof(ScrollEditor)} {fileUri} scrollTo={scrollTo} atTop={atTop}"
+				)
+			)
+			{
+				try
+				{
 					var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
-					if (!textViewCache.TryGetValue(VirtualTextDocument.FromUri(fileUri), out var wpfTextView) || wpfTextView == null)
+					if (
+						!textViewCache.TryGetValue(
+							VirtualTextDocument.FromUri(fileUri),
+							out var wpfTextView
+						)
+						|| wpfTextView == null
+					)
 					{
 						return;
 					}
 
-					if (deltaPixels != null) {
-						wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels(-deltaPixels.Value);
+					if (deltaPixels != null)
+					{
+						wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels(
+							-deltaPixels.Value
+						);
 						return;
 					}
 
 					var scrollToLine = scrollTo.Value;
 
-					if (atTop == true) {
-						using (metrics.Measure("ScrollViewportVerticallyByPixels")) {
+					if (atTop == true)
+					{
+						using (metrics.Measure("ScrollViewportVerticallyByPixels"))
+						{
 							ScrollViewportVerticallyByPixels(wpfTextView, scrollToLine);
 						}
 					}
-					else {
+					else
+					{
 						EnsureTargetSpanVisible(wpfTextView, scrollToLine);
 					}
 				}
-				catch (Exception ex) {
+				catch (Exception ex)
+				{
 					Log.Error(ex, $"{nameof(ScrollEditor)} failed for {fileUri}");
 				}
 			}
 		}
 
-		public FolderBrowserDialog FolderPrompt(string message, string initialDirectory = null, bool multiSelect = false) {
-			ThreadHelper.ThrowIfNotOnUIThread();		 
-		 
+		public FolderBrowserDialog FolderPrompt(
+			string message,
+			string initialDirectory = null,
+			bool multiSelect = false
+		)
+		{
+			ThreadHelper.ThrowIfNotOnUIThread();
+
 			return new FolderBrowserDialog();
 		}
 
-		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(Uri fileUri, bool forceOpen = false) {
+		private async System.Threading.Tasks.Task<IWpfTextView> AssertWpfTextViewAsync(
+			Uri fileUri,
+			bool forceOpen = false
+		)
+		{
 			var textViewCache = _componentModel.GetService<IWpfTextViewCache>();
 			var virtualDoc = VirtualTextDocument.FromUri(fileUri);
-			if (forceOpen || !textViewCache.TryGetValue(virtualDoc, out var wpfTextView)) {
+			if (forceOpen || !textViewCache.TryGetValue(virtualDoc, out var wpfTextView))
+			{
 				var view = _componentModel.GetService<IEditorService>().GetActiveTextEditor();
-				if (view == null || (!view.Uri.EqualsIgnoreCase(fileUri) && !view.Uri.IsTempFile())) {
-					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+				if (view == null || (!view.Uri.EqualsIgnoreCase(fileUri) && !view.Uri.IsTempFile()))
+				{
+					await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync(
+						CancellationToken.None
+					);
 					var localPath = fileUri.NormalizePath();
 					var window = TryOpenFile(localPath);
 					if (window == null)
@@ -178,7 +260,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 					// the TextView/WpfTextView may not be immediately available -- try to get it.
 					wpfTextView = TryGetPendingWpfTextView(localPath);
 				}
-				else {
+				else
+				{
 					wpfTextView = view.WpfTextView;
 				}
 			}
@@ -186,43 +269,65 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			return wpfTextView;
 		}
 
-		private Window TryOpenFile(string localPath, string viewKind = EnvDTE.Constants.vsViewKindCode) {
-			try {
+		private Window TryOpenFile(
+			string localPath,
+			string viewKind = EnvDTE.Constants.vsViewKindCode
+		)
+		{
+			try
+			{
 				ThreadHelper.ThrowIfNotOnUIThread();
 
-				if (!(_serviceProvider.GetService(typeof(DTE)) is DTE dte)) {
+				if (!(_serviceProvider.GetService(typeof(DTE)) is DTE dte))
+				{
 					Log.Error($"{nameof(dte)} is null for {localPath}");
 					return null;
 				}
 				var window = dte.ItemOperations.OpenFile(localPath, viewKind);
 				return window;
 			}
-			catch (ArgumentException ex) {
-				if (ex.Message?.Contains("The parameter is incorrect") == true) {
+			catch (ArgumentException ex)
+			{
+				if (ex.Message?.Contains("The parameter is incorrect") == true)
+				{
 					Log.Warning(ex, $"{localPath} may not exist");
 				}
-				else {
+				else
+				{
 					Log.Warning(ex, $"{localPath}");
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, $"{localPath}");
 			}
 			return null;
 		}
 
-		private void EnsureTargetSpanVisible(IWpfTextView wpfTextView, int scrollToLine) {
+		private void EnsureTargetSpanVisible(IWpfTextView wpfTextView, int scrollToLine)
+		{
 			var lines = wpfTextView.VisualSnapshot.Lines;
 			var startLine = lines.FirstOrDefault(_ => _.LineNumber == scrollToLine);
-			if (startLine == null) {
+			if (startLine == null)
+			{
 				Log.Warning($"{nameof(EnsureTargetSpanVisible)} failed for line={scrollToLine}");
 				return;
 			}
-			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(startLine.Start, Math.Min(startLine.Start + 1, wpfTextView.VisualSnapshot.Length)));
-			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
+			var span = new SnapshotSpan(
+				wpfTextView.TextSnapshot,
+				Span.FromBounds(
+					startLine.Start,
+					Math.Min(startLine.Start + 1, wpfTextView.VisualSnapshot.Length)
+				)
+			);
+			wpfTextView.ViewScroller.EnsureSpanVisible(
+				span,
+				EnsureSpanVisibleOptions.MinimumScroll
+			);
 		}
 
-		private SnapshotSpan? EnsureSnapshotSpanVisible(IWpfTextView wpfTextView, Range range) {
+		private SnapshotSpan? EnsureSnapshotSpanVisible(IWpfTextView wpfTextView, Range range)
+		{
 			if (range == null)
 			{
 				return null;
@@ -234,44 +339,67 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				return null;
 			}
 
-			var span = new SnapshotSpan(wpfTextView.TextSnapshot, Span.FromBounds(lines.Item1.Start, lines.Item2.End));
+			var span = new SnapshotSpan(
+				wpfTextView.TextSnapshot,
+				Span.FromBounds(lines.Item1.Start, lines.Item2.End)
+			);
 			if (wpfTextView.InLayout)
 			{
 				return null;
 			}
 
-			wpfTextView.ViewScroller.EnsureSpanVisible(span, EnsureSpanVisibleOptions.MinimumScroll);
+			wpfTextView.ViewScroller.EnsureSpanVisible(
+				span,
+				EnsureSpanVisibleOptions.MinimumScroll
+			);
 			return span;
 		}
 
-		private static Tuple<ITextSnapshotLine, ITextSnapshotLine> GetStartAndEndLines(ITextView wpfTextView, int startLine, int endLine) {
+		private static Tuple<ITextSnapshotLine, ITextSnapshotLine> GetStartAndEndLines(
+			ITextView wpfTextView,
+			int startLine,
+			int endLine
+		)
+		{
 			ITextSnapshotLine start = null;
 			ITextSnapshotLine end = null;
-			foreach (var line in wpfTextView.VisualSnapshot.Lines) {
-				if (line.LineNumber == startLine) {
+			foreach (var line in wpfTextView.VisualSnapshot.Lines)
+			{
+				if (line.LineNumber == startLine)
+				{
 					start = line;
 				}
-				if (line.LineNumber == endLine) {
+				if (line.LineNumber == endLine)
+				{
 					end = line;
 				}
 			}
-			if (start != null && end != null) {
+			if (start != null && end != null)
+			{
 				return Tuple.Create(start, end);
 			}
 			return null;
 		}
-		
+
 		/// <summary>
 		/// Moves the target scrollToLine to the top of the editor
 		/// </summary>
 		/// <param name="wpfTextView"></param>
 		/// <param name="scrollToLine"></param>
-		private static void ScrollViewportVerticallyByPixels(IWpfTextView wpfTextView, int scrollToLine) {
+		private static void ScrollViewportVerticallyByPixels(
+			IWpfTextView wpfTextView,
+			int scrollToLine
+		)
+		{
 			var firstTextViewLine = wpfTextView.TextViewLines.FirstOrDefault();
-			var startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(firstTextViewLine.Extent.Start.Position);
-			wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels((startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight);
+			var startingVisibleLineNumber = wpfTextView.TextSnapshot.GetLineNumberFromPosition(
+				firstTextViewLine.Extent.Start.Position
+			);
+			wpfTextView.ViewScroller.ScrollViewportVerticallyByPixels(
+				(startingVisibleLineNumber - scrollToLine + 1) * wpfTextView.LineHeight
+			);
 		}
-		
+
 		/// <summary>
 		/// Tries to get an active text view for a file that may have just opened.
 		/// Uses a naive exponential backoff algorithm against the IsDocumentOpen VSShell utility
@@ -279,20 +407,27 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <param name="filePath"></param>
 		/// <returns></returns>
 		/// <remarks>https://stackoverflow.com/a/7373385/208022</remarks>
-		internal IWpfTextView TryGetPendingWpfTextView(string filePath) {
-			var editorAdapterFactoryService = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
+		internal IWpfTextView TryGetPendingWpfTextView(string filePath)
+		{
+			var editorAdapterFactoryService =
+				_componentModel.GetService<IVsEditorAdaptersFactoryService>();
 			IVsUIHierarchy uiHierarchy;
 			uint itemID;
 			IVsWindowFrame windowFrame = null;
 
-			if (Retry.WithExponentialBackoff(() => VsShellUtilities.IsDocumentOpen(
-				    _serviceProvider,
-				    filePath,
-				    Guid.Empty,
-				    out uiHierarchy,
-				    out itemID,
-				    out windowFrame)
-			    )) 
+			if (
+				Retry.WithExponentialBackoff(
+					() =>
+						VsShellUtilities.IsDocumentOpen(
+							_serviceProvider,
+							filePath,
+							Guid.Empty,
+							out uiHierarchy,
+							out itemID,
+							out windowFrame
+						)
+				)
+			)
 			{
 				if (windowFrame == null)
 				{
@@ -306,13 +441,15 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			return null;
 		}
-		
+
 		/// <summary>
 		/// Uses built in process handler for navigating to an external url
 		/// </summary>
 		/// <param name="url">an absolute url</param>
-		public void Navigate(string url) {
-			if (url.IsNullOrWhiteSpace()) {
+		public void Navigate(string url)
+		{
+			if (url.IsNullOrWhiteSpace())
+			{
 				Log.Warning("Url is missing");
 				return;
 			}
@@ -320,7 +457,8 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			System.Diagnostics.Process.Start(url);
 		}
 
-		public System.Threading.Tasks.Task SetClipboardAsync(string text) {
+		public System.Threading.Tasks.Task SetClipboardAsync(string text)
+		{
 			var thread = new System.Threading.Thread(() => System.Windows.Clipboard.SetText(text));
 			thread.SetApartmentState(ApartmentState.STA); //Set the thread to STA
 			thread.Start();
@@ -332,7 +470,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Compares the contents of two files. Requires UI thread.
 		/// </summary>
-		public void CompareTempFiles(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title)
+		public void CompareTempFiles(
+			string filePath,
+			string content,
+			ITextBuffer textBuffer,
+			Span span,
+			string markerContent,
+			string title
+		)
 		{
 			var tempFile1 = string.Empty;
 			var tempFile2 = string.Empty;
@@ -342,10 +487,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				tempFile1 = CreateTempFileFromData(filePath, content, ComparisonSide.Left);
 				tempFile2 = CreateTempFileFromData(filePath, content, ComparisonSide.Right);
 
-				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions =
+					__VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-				CompareFiles(tempFile1, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+				CompareFiles(
+					tempFile1,
+					tempFile2,
+					textBuffer,
+					span,
+					markerContent,
+					grfDiffOptions,
+					title
+				);
 			}
 			catch (Exception ex)
 			{
@@ -358,7 +512,14 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		}
 
-		public void CompareWithRightTempFile(string filePath, string content, ITextBuffer textBuffer, Span span, string markerContent, string title)
+		public void CompareWithRightTempFile(
+			string filePath,
+			string content,
+			ITextBuffer textBuffer,
+			Span span,
+			string markerContent,
+			string title
+		)
 		{
 			var tempFile2 = string.Empty;
 
@@ -368,7 +529,15 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
-				CompareFiles(filePath, tempFile2, textBuffer, span, markerContent, grfDiffOptions, title);
+				CompareFiles(
+					filePath,
+					tempFile2,
+					textBuffer,
+					span,
+					markerContent,
+					grfDiffOptions,
+					title
+				);
 			}
 			catch (Exception ex)
 			{
@@ -380,24 +549,35 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			}
 		}
 
-		private void CompareFiles(string filePath1, string filePath2, ITextBuffer textBuffer, Span span, string markerContent, __VSDIFFSERVICEOPTIONS diffOptions, string title = null) {
+		private void CompareFiles(
+			string filePath1,
+			string filePath2,
+			ITextBuffer textBuffer,
+			Span span,
+			string markerContent,
+			__VSDIFFSERVICEOPTIONS diffOptions,
+			string title = null
+		)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			try {
-				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
+			try
+			{
+				var diffService = (IVsDifferenceService)
+					_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
 
 				var grfDefaultDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles;
 
 				var frame = diffService.OpenComparisonWindow2(
-					filePath1, 
+					filePath1,
 					filePath2,
 					title ?? "Your version vs Codemark version",
 					filePath1 + Environment.NewLine + filePath2,
 					filePath1,
-					filePath2, 
-					null, 
-					null, 
+					filePath2,
+					null,
+					null,
 					(uint)(grfDefaultDiffOptions | diffOptions)
 				);
 
@@ -407,30 +587,37 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 				var text = textBuffer.CurrentSnapshot.GetText();
 
-				using (var edit = diffViewer.RightView.TextBuffer.CreateEdit()) {
+				using (var edit = diffViewer.RightView.TextBuffer.CreateEdit())
+				{
 					//replace everything with the original buffer (it might have edits)
-					if (edit.Delete(0, diffViewer.RightView.TextBuffer.CurrentSnapshot.Length)) {
-						if (edit.Insert(0, text)) {
+					if (edit.Delete(0, diffViewer.RightView.TextBuffer.CurrentSnapshot.Length))
+					{
+						if (edit.Insert(0, text))
+						{
 							edit.Apply();
 						}
 					}
 				}
 
-				using (var edit = diffViewer.RightView.TextBuffer.CreateEdit()) {
+				using (var edit = diffViewer.RightView.TextBuffer.CreateEdit())
+				{
 					// replace the span with the marker's code
-					if (edit.Replace(span, markerContent)) {
+					if (edit.Replace(span, markerContent))
+					{
 						edit.Apply();
 					}
 				}
 				var documentRight = diffViewer.RightView.TextBuffer.GetDocument();
 
-				if (documentRight.IsDirty) {
+				if (documentRight.IsDirty)
+				{
 					documentRight.Save();
 				}
 
 				frame.Show();
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(CompareFiles));
 			}
 		}
@@ -440,8 +627,12 @@ namespace CodeStream.VisualStudio.Shared.Services {
 			Left,
 			Right
 		}
-		
-		private static string CreateTempFileFromData(string originalFilePath, string content, ComparisonSide direction)
+
+		private static string CreateTempFileFromData(
+			string originalFilePath,
+			string content,
+			ComparisonSide direction
+		)
 		{
 			if (content.IsNullOrWhiteSpace())
 			{
@@ -453,46 +644,65 @@ namespace CodeStream.VisualStudio.Shared.Services {
 
 			var codeStreamDiffPath = UriExtensions.CodeStreamTempPath;
 			Directory.CreateDirectory(codeStreamDiffPath);
-			
-			var tempFileForComparison = Path.Combine(codeStreamDiffPath, $"{tempFileName}-{direction.ToString().ToLower()}{originalFileExtension}");
+
+			var tempFileForComparison = Path.Combine(
+				codeStreamDiffPath,
+				$"{tempFileName}-{direction.ToString().ToLower()}{originalFileExtension}"
+			);
 			File.WriteAllText(tempFileForComparison, content.NormalizeLineEndings(), Encoding.UTF8);
 
 			return tempFileForComparison;
 		}
 
 		public void PullRequestDiff(
-			string originalFilePath, 
-			string leftContent, 
-			PullRequestDiffUri leftData, 
-			string rightContent, 
-			PullRequestDiffUri rightData, 
-			string title)
+			string originalFilePath,
+			string leftContent,
+			PullRequestDiffUri leftData,
+			string rightContent,
+			PullRequestDiffUri rightData,
+			string title
+		)
 		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var leftFile = CreateTempFileFromData(originalFilePath, leftContent, ComparisonSide.Left);
-			var rightFile = CreateTempFileFromData(originalFilePath, rightContent, ComparisonSide.Right);
+			var leftFile = CreateTempFileFromData(
+				originalFilePath,
+				leftContent,
+				ComparisonSide.Left
+			);
+			var rightFile = CreateTempFileFromData(
+				originalFilePath,
+				rightContent,
+				ComparisonSide.Right
+			);
 
 			try
 			{
-				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
+				var diffService = (IVsDifferenceService)
+					_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
 
-				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions =
+					__VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
 				IVsWindowFrame frame;
 
-				using (new NewDocumentStateScope(__VSNEWDOCUMENTSTATE.NDS_Provisional, VSConstants.NewDocumentStateReason.SolutionExplorer))
+				using (
+					new NewDocumentStateScope(
+						__VSNEWDOCUMENTSTATE.NDS_Provisional,
+						VSConstants.NewDocumentStateReason.SolutionExplorer
+					)
+				)
 				{
 					frame = diffService.OpenComparisonWindow2(
 						leftFile,
 						rightFile,
 						title ?? "Your version vs Other version",
 						leftFile + Environment.NewLine + rightFile,
-						$"{originalFilePath}@{leftData.LeftSha.Substring(0,8)}",
-						$"{originalFilePath}@{rightData.RightSha.Substring(0,8)}",
+						$"{originalFilePath}@{leftData.LeftSha.Substring(0, 8)}",
+						$"{originalFilePath}@{rightData.RightSha.Substring(0, 8)}",
 						null,
 						null,
 						(uint)grfDiffOptions
@@ -503,7 +713,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				diffViewer.Properties.AddProperty(PropertyNames.IsDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.IsPRDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
-				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, rightData.Uri.ToString());
+				diffViewer.Properties.AddProperty(
+					PropertyNames.OverrideFileUri,
+					rightData.Uri.ToString()
+				);
 				diffViewer.ViewMode = DifferenceViewMode.SideBySide;
 
 				frame.Show();
@@ -520,30 +733,46 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public void FeedbackRequestDiff(
-			string originalFilePath, 
-			string leftContent, 
+			string originalFilePath,
+			string leftContent,
 			FeedbackRequestDiffUri leftData,
-			string rightContent, 
+			string rightContent,
 			FeedbackRequestDiffUri rightData,
-			string title) {
-
+			string title
+		)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var leftFile = CreateTempFileFromData(originalFilePath, leftContent, ComparisonSide.Left);
-			var rightFile = CreateTempFileFromData(originalFilePath, rightContent, ComparisonSide.Right);
+			var leftFile = CreateTempFileFromData(
+				originalFilePath,
+				leftContent,
+				ComparisonSide.Left
+			);
+			var rightFile = CreateTempFileFromData(
+				originalFilePath,
+				rightContent,
+				ComparisonSide.Right
+			);
 
 			try
 			{
-				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
+				var diffService = (IVsDifferenceService)
+					_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
 
-				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions =
+					__VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
 				IVsWindowFrame frame;
 
-				using (new NewDocumentStateScope(__VSNEWDOCUMENTSTATE.NDS_Provisional, VSConstants.NewDocumentStateReason.SolutionExplorer))
+				using (
+					new NewDocumentStateScope(
+						__VSNEWDOCUMENTSTATE.NDS_Provisional,
+						VSConstants.NewDocumentStateReason.SolutionExplorer
+					)
+				)
 				{
 					frame = diffService.OpenComparisonWindow2(
 						leftFile,
@@ -564,7 +793,10 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				diffViewer.Properties.AddProperty(PropertyNames.IsDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.IsFRDiff, true);
 				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
-				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, rightData.Uri.ToString());
+				diffViewer.Properties.AddProperty(
+					PropertyNames.OverrideFileUri,
+					rightData.Uri.ToString()
+				);
 
 				frame.Show();
 			}
@@ -580,28 +812,44 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		}
 
 		public void DiffTextBlocks(
-			string originalFilePath, 
-			string leftContent, 
-			string rightContent, 
-			string title) {
-
+			string originalFilePath,
+			string leftContent,
+			string rightContent,
+			string title
+		)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			var leftFile = CreateTempFileFromData(originalFilePath, leftContent, ComparisonSide.Left);
-			var rightFile = CreateTempFileFromData(originalFilePath, rightContent, ComparisonSide.Right);
+			var leftFile = CreateTempFileFromData(
+				originalFilePath,
+				leftContent,
+				ComparisonSide.Left
+			);
+			var rightFile = CreateTempFileFromData(
+				originalFilePath,
+				rightContent,
+				ComparisonSide.Right
+			);
 
 			try
 			{
-				var diffService = (IVsDifferenceService)_serviceProvider.GetService(typeof(SVsDifferenceService));
+				var diffService = (IVsDifferenceService)
+					_serviceProvider.GetService(typeof(SVsDifferenceService));
 				Assumes.Present(diffService);
 
-				var grfDiffOptions = __VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary |
-				                     __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
+				var grfDiffOptions =
+					__VSDIFFSERVICEOPTIONS.VSDIFFOPT_DetectBinaryFiles
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_LeftFileIsTemporary
+					| __VSDIFFSERVICEOPTIONS.VSDIFFOPT_RightFileIsTemporary;
 
 				IVsWindowFrame frame;
 
-				using (new NewDocumentStateScope(__VSNEWDOCUMENTSTATE.NDS_Provisional, VSConstants.NewDocumentStateReason.SolutionExplorer))
+				using (
+					new NewDocumentStateScope(
+						__VSNEWDOCUMENTSTATE.NDS_Provisional,
+						VSConstants.NewDocumentStateReason.SolutionExplorer
+					)
+				)
 				{
 					frame = diffService.OpenComparisonWindow2(
 						leftFile,
@@ -624,7 +872,6 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				diffViewer.Properties.AddProperty(PropertyNames.OriginalTempFileUri, rightFile);
 				diffViewer.Properties.AddProperty(PropertyNames.OverrideFileUri, originalFilePath);
 
-
 				frame.Show();
 			}
 			catch (Exception ex)
@@ -637,6 +884,7 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				RemoveTempFileSafe(rightFile);
 			}
 		}
+
 		/// <summary>
 		/// Gets a reference to an open Diff Editor for a CodeStream Diff
 		/// </summary>
@@ -658,7 +906,12 @@ namespace CodeStream.VisualStudio.Shared.Services {
 							{
 								var diffViewer = GetDiffViewer(iVsWindowFrame);
 
-								if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true)
+								if (
+									diffViewer?.Properties?.TryGetProperty(
+										PropertyNames.IsDiff,
+										out bool result
+									) == true
+								)
 								{
 									return diffViewer;
 								}
@@ -682,36 +935,55 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// <summary>
 		/// Tries to close any CodeStream-created diff windows
 		/// </summary>
-		public void TryCloseDiffs() {
+		public void TryCloseDiffs()
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			try {
-				foreach (var iVsWindowFrame in GetDocumentWindowFrames()) {
-					try {
+			try
+			{
+				foreach (var iVsWindowFrame in GetDocumentWindowFrames())
+				{
+					try
+					{
 						var diffViewer = GetDiffViewer(iVsWindowFrame);
-						if (diffViewer?.Properties?.TryGetProperty(PropertyNames.IsDiff, out bool result) == true) {
+						if (
+							diffViewer?.Properties?.TryGetProperty(
+								PropertyNames.IsDiff,
+								out bool result
+							) == true
+						)
+						{
 							iVsWindowFrame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
 						}
 					}
-					catch (Exception ex) {
+					catch (Exception ex)
+					{
 						Log.Warning(ex, nameof(TryCloseDiffs));
 					}
 				}
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Error(ex, nameof(TryCloseDiffs));
 			}
 		}
 
-		private static IEnumerable<IVsWindowFrame> GetDocumentWindowFrames() {
+		private static IEnumerable<IVsWindowFrame> GetDocumentWindowFrames()
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 
-			if (Package.GetGlobalService(typeof(SVsUIShell)) is IVsUIShell shell) {
+			if (Package.GetGlobalService(typeof(SVsUIShell)) is IVsUIShell shell)
+			{
 				var hr = shell.GetDocumentWindowEnum(out var framesEnum);
-				if (hr == VSConstants.S_OK && framesEnum != null) {
+				if (hr == VSConstants.S_OK && framesEnum != null)
+				{
 					var frames = new IVsWindowFrame[1];
 
-					while (framesEnum.Next(1, frames, out var fetched) == VSConstants.S_OK && fetched == 1) {
+					while (
+						framesEnum.Next(1, frames, out var fetched) == VSConstants.S_OK
+						&& fetched == 1
+					)
+					{
 						yield return frames[0];
 					}
 				}
@@ -730,44 +1002,63 @@ namespace CodeStream.VisualStudio.Shared.Services {
 		/// the first item being the side that currently has focus. If there is no active text view,
 		/// an empty collection will be returned.
 		/// </remarks>
-		public CurrentTextViews GetCurrentTextViews() {
+		public CurrentTextViews GetCurrentTextViews()
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
 			CurrentTextViews results = null;
 
-			try {
-				var monitorSelection = (IVsMonitorSelection)_serviceProvider.GetService(typeof(SVsShellMonitorSelection));
-				if (monitorSelection == null) {
+			try
+			{
+				var monitorSelection = (IVsMonitorSelection)
+					_serviceProvider.GetService(typeof(SVsShellMonitorSelection));
+				if (monitorSelection == null)
+				{
 					return results;
 				}
 
 				object curDocument;
-				if (ErrorHandler.Failed(monitorSelection.GetCurrentElementValue((uint)VSConstants.VSSELELEMID.SEID_DocumentFrame, out curDocument))) {
+				if (
+					ErrorHandler.Failed(
+						monitorSelection.GetCurrentElementValue(
+							(uint)VSConstants.VSSELELEMID.SEID_DocumentFrame,
+							out curDocument
+						)
+					)
+				)
+				{
 					return results;
 				}
 
 				IVsWindowFrame frame = curDocument as IVsWindowFrame;
-				if (frame == null) {
+				if (frame == null)
+				{
 					return results;
 				}
 
 				object docView = null;
-				if (ErrorHandler.Failed(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView))) {
+				if (
+					ErrorHandler.Failed(
+						frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out docView)
+					)
+				)
+				{
 					return results;
 				}
 
-				results = new CurrentTextViews {
-					DocumentView = docView
-				};
+				results = new CurrentTextViews { DocumentView = docView };
 				var textViews = new List<ITextView>();
-				if (docView is IVsDifferenceCodeWindow) {
+				if (docView is IVsDifferenceCodeWindow)
+				{
 					var diffWindow = (IVsDifferenceCodeWindow)docView;
 
-					switch (diffWindow.DifferenceViewer.ViewMode) {
+					switch (diffWindow.DifferenceViewer.ViewMode)
+					{
 						case DifferenceViewMode.Inline:
 							textViews.Add(diffWindow.DifferenceViewer.InlineView);
 							break;
 						case DifferenceViewMode.SideBySide:
-							switch (diffWindow.DifferenceViewer.ActiveViewType) {
+							switch (diffWindow.DifferenceViewer.ActiveViewType)
+							{
 								case DifferenceViewType.LeftView:
 									textViews.Add(diffWindow.DifferenceViewer.LeftView);
 									textViews.Add(diffWindow.DifferenceViewer.RightView);
@@ -784,12 +1075,19 @@ namespace CodeStream.VisualStudio.Shared.Services {
 							break;
 					}
 				}
-				else if (docView is IVsCodeWindow) {
-					if (ErrorHandler.Failed(((IVsCodeWindow)docView).GetPrimaryView(out var textView))) {
+				else if (docView is IVsCodeWindow)
+				{
+					if (
+						ErrorHandler.Failed(
+							((IVsCodeWindow)docView).GetPrimaryView(out var textView)
+						)
+					)
+					{
 						return results;
 					}
 
-					var model = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+					var model = (IComponentModel)
+						_serviceProvider.GetService(typeof(SComponentModel));
 					Assumes.Present(model);
 
 					var adapterFactory = model.GetService<IVsEditorAdaptersFactoryService>();
@@ -800,25 +1098,33 @@ namespace CodeStream.VisualStudio.Shared.Services {
 				results.TextViews = textViews;
 				return results;
 			}
-			catch (Exception e) {
+			catch (Exception e)
+			{
 				Log.Error(e, nameof(GetCurrentTextViews));
 			}
 
 			return results;
 		}
 
-		public static IDifferenceViewer GetDiffViewer(IVsWindowFrame frame) {
+		public static IDifferenceViewer GetDiffViewer(IVsWindowFrame frame)
+		{
 			ThreadHelper.ThrowIfNotOnUIThread();
-			return ErrorHandler.Succeeded(frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out object docView))
-				? (docView as IVsDifferenceCodeWindow)?.DifferenceViewer : null;
+			return ErrorHandler.Succeeded(
+				frame.GetProperty((int)__VSFPROPID.VSFPROPID_DocView, out object docView)
+			)
+				? (docView as IVsDifferenceCodeWindow)?.DifferenceViewer
+				: null;
 		}
 
-		private static void RemoveTempFileSafe(string fileName) {
-			try {
+		private static void RemoveTempFileSafe(string fileName)
+		{
+			try
+			{
 				System.IO.File.Delete(fileName);
 				Log.Verbose($"Removed temp file {fileName}");
 			}
-			catch (Exception ex) {
+			catch (Exception ex)
+			{
 				Log.Warning(ex, $"Failed to remove temp file {fileName}");
 			}
 		}

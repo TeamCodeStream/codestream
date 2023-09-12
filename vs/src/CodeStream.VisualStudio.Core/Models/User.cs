@@ -1,6 +1,17 @@
-﻿namespace CodeStream.VisualStudio.Core.Models {
-	public class User {
-		public User(string id, string userName, string emailAddress, string teamName, int teamCount, string orgName, int orgCount) {
+﻿namespace CodeStream.VisualStudio.Core.Models
+{
+	public class User
+	{
+		public User(
+			string id,
+			string userName,
+			string emailAddress,
+			string teamName,
+			int teamCount,
+			string orgName,
+			int orgCount
+		)
+		{
 			Id = id;
 			UserName = userName;
 			EmailAddress = emailAddress;

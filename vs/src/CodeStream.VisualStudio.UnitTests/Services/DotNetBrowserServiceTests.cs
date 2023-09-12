@@ -13,9 +13,10 @@ using Newtonsoft.Json.Linq;
 
 using Xunit;
 
-namespace CodeStream.VisualStudio.UnitTests.Services {
-	public class DotNetBrowserServiceTests {
-		
+namespace CodeStream.VisualStudio.UnitTests.Services
+{
+	public class DotNetBrowserServiceTests
+	{
 		private readonly DotNetBrowserServiceStub _browserService;
 		private readonly EventAggregator _eventAggregator;
 
@@ -25,11 +26,10 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			var httpServiceMock = new Mock<IHttpClientService>();
 			var ideServiceMock = new Mock<IIdeService>();
 
-			ideServiceMock.Setup(x => x.GetActiveDiffEditor())
-				.Returns(() => null);
+			ideServiceMock.Setup(x => x.GetActiveDiffEditor()).Returns(() => null);
 
 			var messageInterceptorMock = new MessageInterceptorService(ideServiceMock.Object);
-			
+
 			_eventAggregator = new EventAggregator();
 
 			_browserService = new DotNetBrowserServiceStub(
@@ -41,7 +41,8 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		}
 
 		[Fact]
-		public void DotNetBrowserServiceTest() {
+		public void DotNetBrowserServiceTest()
+		{
 			_browserService.Send("lsp1", true);
 			_browserService.Send("lsp2", true);
 			_browserService.Send("lsp3", true);
@@ -58,11 +59,10 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 
 			_browserService.Dispose();
 		}
-		
 
 		[Fact]
-		public void DotNetBrowserServiceNormalTest() {
-
+		public void DotNetBrowserServiceNormalTest()
+		{
 			_browserService.Send("bootstrap1");
 			Assert.True(_browserService.QueueCount == 0);
 			_eventAggregator.Publish(new WebviewDidInitializeEvent());
@@ -70,21 +70,21 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 			_browserService.Send("bootstrap2");
 			Assert.True(_browserService.QueueCount == 0);
 			_eventAggregator.Publish(new SessionLogoutEvent());
-			
+
 			_browserService.Send("bootstrap3");
 			Assert.True(_browserService.QueueCount == 0);
 			_eventAggregator.Publish(new WebviewDidInitializeEvent());
-			
-			
+
 			_browserService.Dispose();
 		}
 
 		[Fact]
-		public void DotNetBrowserServiceReloadTest() {
-
+		public void DotNetBrowserServiceReloadTest()
+		{
 			_browserService.Send("bootstrap1");
 			Assert.True(_browserService.QueueCount == 0);
-			for (var i = 0; i < 200; i++) {
+			for (var i = 0; i < 200; i++)
+			{
 				_browserService.Send($"data{i}", true);
 			}
 
@@ -99,20 +99,22 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		}
 	}
 
-	public class DotNetBrowserServiceStub : DotNetBrowserService {
+	public class DotNetBrowserServiceStub : DotNetBrowserService
+	{
 		public DotNetBrowserServiceStub(
 			IServiceProvider serviceProvider,
 			IEventAggregator eventAggregator,
 			IHttpClientService httpClientService,
 			IMessageInterceptorService messageInterceptor
-			) : base(serviceProvider, eventAggregator, httpClientService, messageInterceptor) {
-		}
+		)
+			: base(serviceProvider, eventAggregator, httpClientService, messageInterceptor) { }
 
 		public string this[int index]
 		{
 			get => base.Queue.ToArray()[index];
 			set => base.Queue.ToArray()[index] = value;
 		}
+
 		public void Send(string message, bool canEnqueue = false)
 		{
 			var notification = new StringNotification(message);
@@ -120,7 +122,9 @@ namespace CodeStream.VisualStudio.UnitTests.Services {
 		}
 
 		public bool WasReloaded { get; private set; }
-		public override void ReloadWebView() {
+
+		public override void ReloadWebView()
+		{
 			WasReloaded = true;
 		}
 	}
