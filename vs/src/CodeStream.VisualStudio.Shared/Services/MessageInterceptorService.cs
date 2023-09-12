@@ -73,13 +73,23 @@ namespace CodeStream.VisualStudio.Shared.Services
 			{
 				var uri = uriToken.Value<string>();
 
-				// 1. Must be a temp file URI
+				// 1. Must be a temp file URId
 				// 2. DiffViewer must contain the OverrideFileUri
 				// 3. DiffViewer must contain the original temp file URI, and it must match our token path
-				if(
+
+				var codeStreamDiffUri = string.Empty;
+				if(!diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out codeStreamDiffUri) ?? false){
+					continue;
+				}
+
+				var tempFileUri = string.Empty;
+				if(!diffViewer.Properties?.TryGetProperty(PropertyNames.OriginalTempFileUri, out tempFileUri) ?? false)
+				{
+					continue;
+				}
+
+				if (
 					uri.IsTempFile() 
-					&& (diffViewer.Properties?.TryGetProperty(PropertyNames.OverrideFileUri, out string codeStreamDiffUri) ?? false)
-					&& (diffViewer.Properties?.TryGetProperty(PropertyNames.OriginalTempFileUri, out string tempFileUri) ?? false)
 					&& tempFileUri.ToUri().EqualsIgnoreCase(uri.ToUri()))
 				{
 					message?.SelectToken(uriToken.Path)?.Replace(new JValue(codeStreamDiffUri));

@@ -66,8 +66,11 @@ namespace CodeStream.VisualStudio.Shared.Services
 							continue;
 						}
 
-						_ = await _workspace.TryGoToDefinitionAsync(symbol, project, cancellationToken);
-
+						#if X86
+							_workspace.TryGoToDefinition(symbol, project, cancellationToken);
+						#else
+							_ = await _workspace.TryGoToDefinitionAsync(symbol, project, cancellationToken);
+						#endif
 						break;
 					}
 				}
