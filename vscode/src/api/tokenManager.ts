@@ -1,6 +1,4 @@
 import { AccessToken } from "@codestream/protocols/agent";
-// Using esbuild.ts externals to make sure keytar is not bundled and uses vscode keytar
-import keychain from "keytar";
 
 import { Logger } from "../logger";
 import { GlobalState } from "../common";
@@ -37,6 +35,16 @@ function getTokenMap() {
 		Container.context.globalState.get<TokenMap>(GlobalState.AccessTokens) ||
 		(Object.create(null) as TokenMap)
 	);
+}
+
+function getKeychain() {
+	try {
+		// Using esbuild.ts externals to make sure keytar is not bundled and uses vscode keytar
+		return require("keytar");
+	} catch (e) {
+		// ignore
+	}
+	return undefined;
 }
 
 export async function addOrUpdate(
@@ -104,6 +112,7 @@ export async function clear(
 	delete tokens[key];
 	await Container.context.globalState.update(GlobalState.AccessTokens, tokens);
 
+	const keychain = getKeychain();
 	if (keychain) {
 		try {
 			await keychain.deletePassword(CredentialService, key);
@@ -140,6 +149,7 @@ export async function get(
 	}
 
 	let token: undefined | AccessToken = undefined;
+	const keychain = getKeychain();
 	if (keychain) {
 		Logger.log(`TokenManager.get: Checking keytar storage; migrate=${migrate}`);
 		const tokenJson = (await keychain.getPassword(CredentialService, key)) ?? undefined;
@@ -181,6 +191,7 @@ async function migrateTokenToSecretStorage(
 
 	await Container.context.globalState.update(GlobalState.AccessTokens, tokens);
 
+	const keychain = getKeychain();
 	if (keychain) {
 		await keychain.deletePassword(CredentialService, key);
 	}
