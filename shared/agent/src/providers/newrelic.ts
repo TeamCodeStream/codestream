@@ -1298,6 +1298,7 @@ export class NewRelicProvider
 						return { error: repositoryEntitiesResponse };
 					}
 					let gotoEnd = false;
+					const builtFromApplications: (RelatedEntity & { urlValue?: string })[] = [];
 					if (repositoryEntitiesResponse?.entities?.length) {
 						const entityFilter = request.filters?.find(_ => _.repoId === repo.id!);
 						for (const entity of repositoryEntitiesResponse.entities) {
@@ -1307,68 +1308,73 @@ export class NewRelicProvider
 								});
 								continue;
 							}
-							const relatedEntities = await this.findRelatedEntityByRepositoryGuid(entity.guid);
-
-							const builtFromApplications =
-								relatedEntities.actor.entity.relatedEntities.results.filter(
+							const relatedEntitiesResponse = await this.findRelatedEntityByRepositoryGuid(
+								entity.guid
+							);
+							const relatedEntities =
+								relatedEntitiesResponse.actor.entity.relatedEntities.results.filter(
 									r =>
 										r.type === "BUILT_FROM" &&
 										(entityFilter?.entityGuid
 											? r.source?.entity.guid === entityFilter.entityGuid
 											: true)
 								);
-
 							const urlValue = entity.tags?.find(_ => _.key === "url")?.values[0];
-							for (const application of builtFromApplications) {
+
+							for (const app of relatedEntities) {
 								if (
-									!application.source.entity.guid ||
-									!application.source.entity.account?.id ||
-									application.source.entity.domain !== "APM"
+									!builtFromApplications.find(_ => app.source.entity.guid === _.source.entity.guid)
 								) {
-									continue;
+									builtFromApplications.push({ ...app, urlValue });
 								}
+							}
+						}
 
-								const errorTraces = await this.findFingerprintedErrorTraces(
-									application.source.entity.account.id,
-									application.source.entity.guid,
-									application.source.entity.entityType,
-									request.timeWindow
-								);
-								for (const errorTrace of errorTraces) {
-									try {
-										const response = await this.getErrorGroupFromNameMessageEntity(
-											errorTrace.errorClass,
-											errorTrace.message,
-											errorTrace.entityGuid
-										);
+						for (const application of builtFromApplications) {
+							if (
+								!application.source.entity.guid ||
+								!application.source.entity.account?.id ||
+								application.source.entity.domain !== "APM"
+							) {
+								continue;
+							}
 
-										if (response && response.actor.errorsInbox.errorGroup) {
-											observabilityErrors.push({
-												entityId: errorTrace.entityGuid,
-												appName: errorTrace.appName,
-												errorClass: errorTrace.errorClass,
-												message: errorTrace.message,
-												remote: urlValue!,
-												errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
-												occurrenceId: errorTrace.occurrenceId,
-												count: errorTrace.count,
-												lastOccurrence: errorTrace.lastOccurrence,
-												errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
-											});
-											if (observabilityErrors.length > 4) {
-												gotoEnd = true;
-												break;
-											}
-										}
-									} catch (ex) {
-										ContextLogger.warn("internal error getErrorGroupGuid", {
-											ex: ex,
+							const errorTraces = await this.findFingerprintedErrorTraces(
+								application.source.entity.account.id,
+								application.source.entity.guid,
+								application.source.entity.entityType,
+								request.timeWindow
+							);
+							for (const errorTrace of errorTraces) {
+								try {
+									const response = await this.getErrorGroupFromNameMessageEntity(
+										errorTrace.errorClass,
+										errorTrace.message,
+										errorTrace.entityGuid
+									);
+
+									if (response && response.actor.errorsInbox.errorGroup) {
+										observabilityErrors.push({
+											entityId: errorTrace.entityGuid,
+											appName: errorTrace.appName,
+											errorClass: errorTrace.errorClass,
+											message: errorTrace.message,
+											remote: application.urlValue!,
+											errorGroupGuid: response.actor.errorsInbox.errorGroup.id,
+											occurrenceId: errorTrace.occurrenceId,
+											count: errorTrace.count,
+											lastOccurrence: errorTrace.lastOccurrence,
+											errorGroupUrl: response.actor.errorsInbox.errorGroup.url,
 										});
+										if (observabilityErrors.length > 4) {
+											gotoEnd = true;
+											break;
+										}
 									}
-								}
-
-								if (gotoEnd) {
-									break;
+								} catch (ex) {
+									ContextLogger.warn("internal error getErrorGroupGuid", {
+										ex: ex,
+									});
 								}
 							}
 
