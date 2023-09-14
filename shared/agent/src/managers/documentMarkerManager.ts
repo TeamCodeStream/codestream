@@ -390,7 +390,7 @@ export class DocumentMarkerManager {
 						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
 					}
 					const gotoLine = comment.inline.to;
-					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
+					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
 					documentMarkers.push({
 						createdAt: new Date(comment.created_on).getTime(),
 						modifiedAt: new Date(comment.updated_on).getTime(),

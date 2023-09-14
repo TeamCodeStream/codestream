@@ -179,8 +179,8 @@ export interface CSLocationMeta {
 
 export type CSLocation = {
 	coordinates: [number, number, number, number];
-	locationMeta?: CSLocationMeta
-}
+	locationMeta?: CSLocationMeta;
+};
 
 export interface CSReferenceLocation {
 	commitHash?: string;

@@ -13,7 +13,8 @@ import {
 	CSCodemark,
 	CSCompany,
 	CSDirectStream,
-	CSFileStream, CSLocation,
+	CSFileStream,
+	CSLocation,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -30,7 +31,7 @@ import {
 	CSUser,
 	ProviderType,
 	ReviewChangesetFileInfo,
-	StreamType
+	StreamType,
 } from "./api.protocol.models";
 
 export * from "./api.protocol.models";

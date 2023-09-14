@@ -1,7 +1,11 @@
 "use strict";
 import * as path from "path";
 
-import { MarkerNotLocatedReason } from "@codestream/protocols/agent";
+import {
+	Markerish,
+	MarkerLocationsById,
+	MarkerNotLocatedReason,
+} from "@codestream/protocols/agent";
 import {
 	CSLocation,
 	CSMarker,
@@ -12,7 +16,7 @@ import {
 import { applyPatch, createPatch, ParsedDiff, parsePatch, structuredPatch } from "diff";
 import { URI } from "vscode-uri";
 
-import { MarkerLocation, MarkerLocationsById } from "../api/extensions";
+import { MarkerLocation } from "../api/extensions";
 import { getStorage } from "../storage";
 import { Container, SessionContainer } from "../container";
 import { GitRepository } from "../git/models/repository";

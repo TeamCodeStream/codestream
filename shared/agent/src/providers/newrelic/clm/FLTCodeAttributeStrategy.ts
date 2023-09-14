@@ -376,19 +376,26 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			const additionalMetadata: AdditionalMetadataInfo = {};
 			const metadata = groupedByTransactionName[this.timesliceNameMap(_.metricTimesliceName)];
 			if (metadata) {
-				["code.lineno", "traceId", "transactionId", "code.namespace", "code.function"].forEach(
-					_ => {
-						// TODO this won't work for lambdas
-						if (_) {
-							additionalMetadata[_ as keyof AdditionalMetadataInfo] = (metadata[0] as any)[_];
-						}
+				[
+					"tags.commit",
+					"code.lineno",
+					"code.column",
+					"traceId",
+					"transactionId",
+					"code.namespace",
+					"code.function",
+				].forEach(_ => {
+					// TODO this won't work for lambdas
+					if (_) {
+						additionalMetadata[_ as keyof AdditionalMetadataInfo] = (metadata[0] as any)[_];
 					}
-				);
+				});
 			}
 
 			let functionInfo: FunctionInfo | undefined = undefined;
 			const codeNamespace = additionalMetadata["code.namespace"];
 			const codeFunction = additionalMetadata["code.function"];
+			const commit = additionalMetadata["tags.commit"];
 			switch (this.languageId) {
 				case "ruby":
 					functionInfo = this.parseRubyFunctionCoordinates(_.metricTimesliceName, codeNamespace);
@@ -412,6 +419,13 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					functionInfo = {
 						functionName: additionalMetadata["code.function"],
 						className: additionalMetadata["code.namespace"],
+						lineno: additionalMetadata["code.lineno"]
+							? Number(additionalMetadata["code.lineno"])
+							: undefined,
+						column: additionalMetadata["code.column"]
+							? Number(additionalMetadata["code.column"])
+							: undefined,
+						commit,
 					};
 					break;
 			}
@@ -420,7 +434,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				return enhTimslices;
 			}
 
-			let { className, functionName, namespace } = functionInfo;
+			let { className, functionName, namespace, lineno, column } = functionInfo;
 
 			// Use Agent provided function name if available
 			if (additionalMetadata["code.function"] && additionalMetadata["code.function"]?.length > 0) {
@@ -437,6 +451,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				namespace: additionalMetadata["code.namespace"],
 				className,
 				functionName,
+				lineno,
+				column,
+				commit,
 			});
 			return enhTimslices;
 		}, []);
