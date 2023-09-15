@@ -550,7 +550,7 @@ class AgentService(private val project: Project) : Disposable {
             .request("codestream/textDocument/currentLocation", request)
             .await() as JsonObject
         val result = gson.fromJson<ComputeCurrentLocationsResult>(json)
-        logger.info("computeCurrentLocations did something $result")
+//        logger.info("computeCurrentLocations did something $result")
         return result
     }
 

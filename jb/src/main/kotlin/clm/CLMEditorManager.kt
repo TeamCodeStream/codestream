@@ -9,8 +9,10 @@ import com.codestream.extensions.uri
 import com.codestream.protocols.agent.ClmParams
 import com.codestream.protocols.agent.ClmResult
 import com.codestream.protocols.agent.CSLocation
+import com.codestream.protocols.agent.CSMarkerLocation
 import com.codestream.protocols.agent.CSReferenceLocation
 import com.codestream.protocols.agent.ComputeCurrentLocationsRequest
+import com.codestream.protocols.agent.ComputeCurrentLocationsResult
 import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
@@ -18,6 +20,7 @@ import com.codestream.protocols.agent.FileLevelTelemetryResultError
 import com.codestream.protocols.agent.FunctionLocator
 import com.codestream.protocols.agent.Markerish
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
+import com.codestream.protocols.agent.MethodLevelTelemetryData
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetrySampleSize
 import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
@@ -42,7 +45,9 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
+import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.impl.EditorImpl
@@ -63,8 +68,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.eclipse.lsp4j.Position
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Range
 import java.awt.Point
@@ -89,12 +96,27 @@ data class ClmElements(
     val type: String?
 )
 
+data class MetricLocation(
+    val metrics: Metrics,
+    var range: Range, // TODO val
+)
+
+data class MetricSource(
+    val column: Long,
+    val lineno: Long,
+    val commit: String,
+    val functionName: String,
+    val uri: String,
+)
+
 class Metrics {
     var errorRate: MethodLevelTelemetryErrorRate? = null
     var averageDuration: MethodLevelTelemetryAverageDuration? = null
     var sampleSize: MethodLevelTelemetrySampleSize? = null
 
     fun format(template: String, since: String): Pair<String, Boolean> {
+        val functionName = errorRate?.functionName ?: averageDuration?.functionName ?: sampleSize?.functionName
+        ?: "<unknown>"
         if (errorRate?.anomaly != null || averageDuration?.anomaly != null) {
             val anomalyTexts = mutableListOf<String>()
             errorRate?.anomaly?.let {
@@ -115,7 +137,7 @@ class Metrics {
         val text = template.replace("\${averageDuration}", averageDurationStr)
             .replace("\${errorRate}", errorRateStr)
             .replace("\${sampleSize}", sampleSizeStr)
-            .replace("\${since}", since)
+            .replace("\${since}", since) + " - $functionName"
         return Pair(text, false)
     }
 
@@ -137,7 +159,10 @@ abstract class CLMEditorManager(
     private val project = editor.project
     private var metricsBySymbol = mapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
     private var clmResult: ClmResult? = null
-    private val inlays = mutableSetOf<Inlay<*>>()
+    // Todo - don't key on range - key on colno / lineno / commit
+    // Store range in value so we can update locations when file changes
+    private var metricsByLocation = mapOf<MetricSource, MetricLocation>()
+    private val inlays = mutableSetOf<Inlay< out EditorCustomElementRenderer>>()
     private var lastResult: FileLevelTelemetryResult? = null
     private var currentError: FileLevelTelemetryResultError? = null
     private var analyticsTracked = false
@@ -172,6 +197,31 @@ abstract class CLMEditorManager(
 
     fun runInBackground(toExecute: Callable<Unit>) {
         ReadAction.nonBlocking(toExecute).submit(NonUrgentExecutor.getInstance())
+    }
+
+    private suspend fun updateLocations() {
+        if (project == null) return
+        for (item in metricsByLocation) {
+            val metricSource = item.key
+            val currentLocations = computeCurrentLocationsResult(
+                metricSource.column,
+                metricSource.lineno,
+                metricSource.commit,
+                metricSource.functionName,
+                metricSource.uri,
+                project
+            )
+            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
+                // TODO multiple results
+                val location = currentLocations.locations.entries.first()
+                val range = Range(
+                    Position(location.value.lineStart.toInt() - 1,
+                        0), //location.value.colStart.toInt()),
+                    Position(location.value.lineEnd.toInt() - 1,
+                        0)) //location.value.colEnd.toInt()))
+                item.value.range = range // TODO Mutable update
+            }
+        }
     }
 
     fun loadInlays(resetCache: Boolean = false, skipStaleCheck: Boolean = false) {
@@ -214,12 +264,6 @@ abstract class CLMEditorManager(
 
                 logger.info("spanSuffixes $spanSuffixes")
 
-                // GlobalScope.launch {
-                //     val fileUri = editor.document.uri ?: return@launch
-                //     val result = project.agentService?.responseTimes(ResponseTimesParams(fileUri)) ?: return@launch
-                //     val symbols = findSymbols(psiFile, result.responseTimes.map { it.name })
-                // }
-
                 try {
                     lastFetchAttempt = System.currentTimeMillis()
                     if (project.sessionService?.userLoggedIn?.user == null) {
@@ -256,49 +300,88 @@ abstract class CLMEditorManager(
                     metricsBySymbol = mapOf()
 
                     val updatedMetrics = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
+                    val updatedMetricsByLocation = mutableMapOf<MetricSource, MetricLocation>()
 
                     lastResult?.errorRate?.forEach { errorRate ->
-                        val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
-                        metrics.errorRate = errorRate
+                        if (errorRate.functionName == "(anonymous)" && errorRate.column != null &&
+                            errorRate.lineno != null && errorRate.commit != null) {
+                            val currentLocations = computeCurrentLocationsResult(errorRate.column,
+                                errorRate.lineno,
+                                errorRate.commit,
+                                errorRate.functionName,
+                                uri,
+                                project)
+                            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
+                                // TODO multiple results
+                                val location = currentLocations.locations.entries.first()
+                                val range = Range(
+                                    Position(location.value.lineStart.toInt() - 1,
+                                        0), //location.value.colStart.toInt()),
+                                    Position(location.value.lineEnd.toInt() - 1,
+                                        0)) //location.value.colEnd.toInt()))
+                                // TODO multiple per same line (map to array)
+                                val metricSource = MetricSource(errorRate.column,
+                                    errorRate.lineno,
+                                    errorRate.commit,
+                                    errorRate.functionName,
+                                    uri)
+                                val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
+                                metricLocation.metrics.errorRate = errorRate
+                                logger.info("*** added anonymous errorRate $errorRate to $range")
+                            } else {
+                                logger.info("*** no currentLocations for anonymous errorRate $errorRate")
+                            }
+                        } else {
+                            val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
+                            metrics.errorRate = errorRate
+                        }
                     }
                     lastResult?.averageDuration?.forEach { averageDuration ->
-                        val metrics = updatedMetrics.getOrPut(averageDuration.symbolIdentifier) { Metrics() }
-                        metrics.averageDuration = averageDuration
-                            if (averageDuration.column != null && averageDuration.lineno != null && averageDuration.commit != null) {
-                                val currentLocations = project.agentService?.computeCurrentLocations(
-                                    ComputeCurrentLocationsRequest(
-                                        uri,
-                                        averageDuration.commit,
-                                        arrayOf(
-                                            Markerish(
-                                                "blah",
-                                                arrayOf(
-                                                    CSReferenceLocation(
-                                                        averageDuration.commit,
-                                                        CSLocation(
-                                                            arrayOf(averageDuration.lineno,
-                                                                averageDuration.column,
-                                                                0,
-                                                                0), null)
-                                                    )
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                                logger.info("got some currentLocations $currentLocations")
+                        if (averageDuration.functionName == "(anonymous)" && averageDuration.column != null
+                            && averageDuration.lineno != null && averageDuration.commit != null) {
+                            val currentLocations = computeCurrentLocationsResult(
+                                averageDuration.column,
+                                averageDuration.lineno,
+                                averageDuration.commit,
+                                averageDuration.functionName,
+                                uri,
+                                project)
+                            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
+                                // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart.toInt(), it.value.colStart.toInt()))
+                                // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd.toInt(), it.value.colEnd.toInt()))
+                                val location = currentLocations.locations.entries.first()
+                                val range = Range(
+                                    Position(location.value.lineStart.toInt() - 1,
+                                        0), //location.value.colStart.toInt()),
+                                    Position(location.value.lineEnd.toInt() - 1,
+                                        0)) //location.value.colEnd.toInt()))
+                                // TODO multiple per same line (map to array)
+                                val metricSource = MetricSource(averageDuration.column,
+                                    averageDuration.lineno,
+                                    averageDuration.commit,
+                                    averageDuration.functionName,
+                                    uri)
+                                val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
+                                metricLocation.metrics.averageDuration = averageDuration
+                                logger.info("*** added anonymous averageDuration $averageDuration to $range")
+                            } else {
+                                logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
                             }
+                        } else {
+                            val metrics = updatedMetrics.getOrPut(averageDuration.symbolIdentifier) { Metrics() }
+                            metrics.averageDuration = averageDuration
+                        }
+
                     }
                     lastResult?.sampleSize?.forEach { sampleSize ->
                         val metrics = updatedMetrics.getOrPut(sampleSize.symbolIdentifier) { Metrics() }
                         metrics.sampleSize = sampleSize
                     }
                     metricsBySymbol = updatedMetrics.toImmutableMap()
-
+                    metricsByLocation = updatedMetricsByLocation.toImmutableMap()
                     clmResult = project.agentService?.clm(ClmParams(
                         result.newRelicEntityGuid!!
                     ))
-
                     updateInlays()
                 } catch (ex: Exception) {
                     logger.error("Error getting fileLevelTelemetry", ex)
@@ -307,11 +390,48 @@ abstract class CLMEditorManager(
         }
     }
 
+    private suspend fun computeCurrentLocationsResult(
+        column: Long,
+        lineno: Long,
+        commit: String,
+        functionName: String,
+        uri: String,
+        project: Project): ComputeCurrentLocationsResult? {
+        val id = "$uri:${lineno}:${column}:${commit}:${functionName}"
+        val currentLocations = project.agentService?.computeCurrentLocations(
+            ComputeCurrentLocationsRequest(
+                uri,
+                commit,
+                arrayOf(
+                    Markerish(
+                        id,
+                        arrayOf(
+                            CSReferenceLocation(
+                                commit,
+                                CSLocation(
+                                    // lineStart, colStart, lineEnd, colEnd
+                                    arrayOf(
+                                        lineno,
+                                        0, //averageDuration.column,
+                                        lineno + 1,
+                                        0), null)
+                            )
+                        )
+                    )
+                )
+            )
+        )
+        logger.info("*** got some currentLocations $currentLocations")
+        return currentLocations
+    }
+
     private var debouncedRenderBlame: Job? = null
     override fun documentChanged(event: DocumentEvent) {
+        logger.info("*** documentChanged")
         debouncedRenderBlame?.cancel()
         debouncedRenderBlame = tasksCoroutineScope.launch {
             delay(750L)
+            logger.info("*** debouncedRenderBlame updateInlays")
             updateInlays()
         }
     }
@@ -336,8 +456,11 @@ abstract class CLMEditorManager(
     }
 
     private fun updateInlays() {
-        runInBackground {
-            _updateInlays()
+        val thing = tasksCoroutineScope.async { updateLocations() }
+        thing.invokeOnCompletion {
+            runInBackground {
+                _updateInlays()
+            }
         }
     }
 
@@ -380,6 +503,7 @@ abstract class CLMEditorManager(
         if (project.isDisposed) {
             return
         }
+        logger.info("*** updateInlaysCore actual")
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
 
         val clmElements: List<ClmElements> = symbolResolver.clmElements(psiFile, clmResult)
@@ -392,6 +516,9 @@ abstract class CLMEditorManager(
             val formatted = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val anomaly = metrics.averageDuration?.anomaly ?: metrics.errorRate?.anomaly
             val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)
+//            logger.info("got range $range for function ${symbolIdentifier.functionName} and textRange " +
+//                "${symbol.textRange} and lspPosition ${editor.document.lspPosition(symbol.textRange.startOffset)} " +
+//                "${editor.document.lspPosition(symbol.textRange.endOffset)}")
             val smartElement = SmartPointerManager.createPointer(symbol)
             val textPresentation = presentationFactory.text(formatted.first)
             val referenceOnHoverPresentation =
@@ -442,6 +569,48 @@ abstract class CLMEditorManager(
         }
 
 
+        val toRenderByLocation: List<RenderElements> = metricsByLocation.mapNotNull { (metricSource, metricLocation) ->
+            val range = metricLocation.range
+            val metrics = metricLocation.metrics
+            val formatted = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
+            val anomaly = metrics.averageDuration?.anomaly ?: metrics.errorRate?.anomaly
+            val textPresentation = presentationFactory.text(formatted.first)
+            val referenceOnHoverPresentation =
+                presentationFactory.referenceOnHover(textPresentation, object : InlayPresentationFactory.ClickListener {
+                    override fun onClick(event: MouseEvent, translated: Point) {
+                        project.codeStream?.show {
+                            val notification = if (anomaly != null) {
+                                ObservabilityAnomalyNotifications.View(
+                                    anomaly,
+                                    result.newRelicEntityGuid!!
+                                )
+                            } else {
+                                MethodLevelTelemetryNotifications.View(
+                                    result.error,
+                                    result.repo,
+                                    result.codeNamespace,
+                                    path,
+                                    result.relativeFilePath,
+                                    languageId,
+                                    range,
+                                    "(anonymous)", // TODO Get for "real"
+                                    result.newRelicAccountId,
+                                    result.newRelicEntityGuid,
+                                    OPTIONS,
+                                    metrics.nameMapping
+                                )
+                            }
+                            project.webViewService?.postNotification(notification)
+                        }
+                    }
+                }
+                )
+            val textRange = TextRange.create(
+                editor.logicalPositionToOffset(LogicalPosition(range.start.line, range.start.character)),
+                editor.logicalPositionToOffset(LogicalPosition(range.end.line, range.end.character)))
+            RenderElements(textRange, referenceOnHoverPresentation, anomaly != null, null)
+        }
+
         ApplicationManager.getApplication().invokeLaterOnWriteThread {
             if (!analyticsTracked && toRender.isNotEmpty()) {
                 val params = TelemetryParams(
@@ -456,6 +625,15 @@ abstract class CLMEditorManager(
             }
             _clearInlays()
             for ((range, referenceOnHoverPresentation, isAnomaly) in toRender) {
+                val renderer = CLMCustomRenderer(referenceOnHoverPresentation, isAnomaly)
+
+                val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
+
+                inlay.let {
+                    inlays.add(it)
+                }
+            }
+            for ((range, referenceOnHoverPresentation, isAnomaly) in toRenderByLocation) {
                 val renderer = CLMCustomRenderer(referenceOnHoverPresentation, isAnomaly)
 
                 val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)

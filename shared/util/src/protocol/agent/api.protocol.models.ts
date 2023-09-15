@@ -177,6 +177,7 @@ export interface CSLocationMeta {
 
 // export type CSLocationArray = [number, number, number, number, CSLocationMeta | undefined];
 
+// lineStart, colStart, lineEnd, colEnd,
 export type CSLocation = {
 	coordinates: [number, number, number, number];
 	locationMeta?: CSLocationMeta;
