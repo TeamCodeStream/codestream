@@ -25,7 +25,7 @@ import java.util.concurrent.Future
 class CodeStreamCommand : JBProtocolCommand("codestream") {
     private val logger = Logger.getInstance(CodeStreamCommand::class.java)
 
-    override fun perform(target: String?, parameters: MutableMap<String, String>, fragment: String?): Future<String?> {
+    override fun perform(target: String?, parameters: Map<String, String>, fragment: String?): Future<String?> {
         val future = CompletableFuture<String?>()
         WindowFocusWorkaround.bringToFront()
 
@@ -78,7 +78,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                         var posted = false
                         override fun projectOpened(project: Project) {
                             if (!posted) {
-                                project.handleUrlWhenReady(project, target, parameters)
+                                project.handleUrlWhenReady(project, target, parameters.toMutableMap())
                                 posted = true
                                 future.complete(null)
                             }
@@ -86,7 +86,7 @@ class CodeStreamCommand : JBProtocolCommand("codestream") {
                     })
             } else {
                 project.ensureOpened()
-                project.handleUrlWhenReady(project, target, parameters)
+                project.handleUrlWhenReady(project, target, parameters.toMutableMap())
                 future.complete(null)
             }
         }

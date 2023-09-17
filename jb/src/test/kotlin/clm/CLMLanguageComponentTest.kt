@@ -17,10 +17,10 @@ import com.codestream.sessionService
 import com.codestream.webview.JxBrowserEngineService
 import com.codestream.webview.WebViewService
 import com.google.gson.JsonObject
-import com.intellij.codeInsight.hints.presentation.DynamicDelegatePresentation
-import com.intellij.codeInsight.hints.presentation.OnHoverPresentation
+import com.intellij.codeInsight.hints.presentation.ChangeOnHoverPresentation
 import com.intellij.codeInsight.hints.presentation.TextInlayPresentation
 import com.intellij.codeInsight.hints.presentation.WithAttributesPresentation
+import com.intellij.codeInsight.hints.presentation.WithCursorOnHoverPresentation
 import com.intellij.openapi.editor.Inlay
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -122,7 +122,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
 
         myFixture.configureByFile("app.py")
 
-        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.gradle
+        myFixture.doHighlighting() // Force inlays to resolve (requires 'java' plugin in build.gradle)
 
         val inlayBlock = myFixture.editor.inlayModel.getBlockElementsInRange(
             0, 1000
@@ -217,9 +217,9 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
     }
 
     private fun extractTextFromInlay(inlayBlock: Inlay<*>): String {
-        val presentation = (inlayBlock.renderer as CLMCustomRenderer).presentation as OnHoverPresentation
-        val dynamicDelegatePresentation = presentation.presentation as DynamicDelegatePresentation
-        val withAttributesPresentation = dynamicDelegatePresentation.delegate as WithAttributesPresentation
+        val presentation = (inlayBlock.renderer as CLMCustomRenderer).presentation as WithCursorOnHoverPresentation
+        val dynamicDelegatePresentation = presentation.presentation as ChangeOnHoverPresentation
+        val withAttributesPresentation = dynamicDelegatePresentation.currentPresentation as WithAttributesPresentation
         val textPresentation = withAttributesPresentation.presentation as TextInlayPresentation
         return textPresentation.text.trim()
     }

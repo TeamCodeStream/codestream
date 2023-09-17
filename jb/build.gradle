@@ -1,8 +1,8 @@
 plugins {
     id "java"
     id "idea"
-    id "org.jetbrains.intellij" version "1.12.0"
-    id "org.jetbrains.kotlin.jvm" version "1.6.10"
+    id "org.jetbrains.intellij" version "1.15.0"
+    id "org.jetbrains.kotlin.jvm" version "1.9.10"
     id "de.undercouch.download" version "5.1.0"
 }
 
@@ -10,8 +10,8 @@ group "com.codestream"
 
 version "14.30.2"
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 repositories {
     mavenCentral()
@@ -24,9 +24,6 @@ ext {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.10"
-
     implementation "com.teamdev.jxbrowser:jxbrowser:${jxBrowserVersion}"
     implementation "com.teamdev.jxbrowser:jxbrowser-swing:${jxBrowserVersion}"
 
@@ -45,11 +42,11 @@ dependencies {
 }
 
 compileKotlin {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_17
 }
 
 compileTestKotlin {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_11
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_17
 }
 
 patchPluginXml {
@@ -70,7 +67,7 @@ intellij {
     type = "IU"
     // the version parameter dictates which jars will be used at compilation time
 
-    version = "2022.1.1" // earliest version we support
+    version = "2022.3.3" // earliest version we support
     // version = "2022.1.1" // Rider version
 
     // version = "231.5920-EAP-CANDIDATE-SNAPSHOT"
@@ -94,12 +91,13 @@ intellij {
     plugins = [
         'java',
         'Git4Idea',
-        'org.jetbrains.plugins.go:221.5591.52',
-        'Pythonid:221.5591.52',
-        'org.jetbrains.plugins.ruby:221.5591.52',
-        'com.jetbrains.php:221.5591.58',
-        'org.jetbrains.kotlin:221-1.8.0-release-345-IJ5591.52',
-        'JavaScript'
+        'org.jetbrains.plugins.go:223.8836.7',
+        'Pythonid:223.8836.41',
+        'intellij.grid.impl', // For `test python method` unit test
+        'org.jetbrains.plugins.ruby:223.8836.39',
+        'com.jetbrains.php:223.8836.42',
+        'org.jetbrains.kotlin:223-1.8.21-release-380-IJ8836.35',
+        'JavaScript',
     ]
 }
 

@@ -15,6 +15,7 @@ import com.codestream.webview.JxBrowserEngineService
 import com.codestream.webview.WebViewService
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.intellij.openapi.vfs.newvfs.impl.VfsRootAccess
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.testFramework.fixtures.IdeaTestFixtureFactory
@@ -24,6 +25,7 @@ import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import which
 import kotlin.io.path.Path
 
 @Suppress("UnstableApiUsage")
@@ -54,6 +56,12 @@ class CodeStreamLanguageClientTest : BasePlatformTestCase() {
         myFixture = IdeaTestFixtureFactory.getFixtureFactory().createCodeInsightFixture(fixture, LightTempDirTestFixtureImpl(true))
 
         myFixture.testDataPath = testDataPath
+
+        val pythonPath = which("python3") ?: which("python")
+        if (pythonPath != null) {
+            println("Adding $pythonPath to allowedRoots")
+            VfsRootAccess.allowRootAccess(myFixture.testRootDisposable, pythonPath)
+        }
         myFixture.setUp()
     }
 
