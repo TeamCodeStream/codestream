@@ -211,10 +211,26 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const vuln = props.issue;
 
+	function remediationFix() {
+		if (vuln.remediation.partialFix === vuln.remediation.completeFix) {
+			if (vuln.remediation.partialFixDistance) {
+				return `${vuln.remediation.partialFixDistance} : ${vuln.remediation.partialFix}`;
+			} else {
+				return vuln.remediation.partialFix;
+			}
+		} else {
+			if (vuln.remediation.partialFixDistance && vuln.remediation.completeFixDistance) {
+				return `Partial Remediation: ${vuln.remediation.partialFixDistance} : ${vuln.remediation.partialFix} Complete Remediation: ${vuln.remediation.completeFixDistance} : ${vuln.remediation.completeFix}`;
+			} else {
+				return `Partial Remediation: ${vuln.remediation.partialFix} Complete Remediation: ${vuln.remediation.completeFix}`;
+			}
+		}
+	}
+
+	const remedFix = remediationFix();
+
 	const subtleText = vuln.remediation
-		? `${vuln.source.version} -> ${
-				vuln.remediation.completeFixDistance ? vuln.remediation.completeFixDistance : "Unknown Fix"
-		  }`
+		? `${vuln.source.version} -> ${remedFix}`
 		: vuln.source.version;
 	const tooltipText = `Vulnerability: ${vuln.title}`;
 
@@ -250,7 +266,7 @@ const VulnerabilityRow = (props: { issue: VulnerabilityIssue }) => {
 						details={vuln.details}
 						displays={[
 							{ label: "Dependency", description: vuln.source.name },
-							{ label: "Remediation Advice", description: vuln.remediation.completeFixDistance },
+							{ label: "Remediation Advice", description: remedFix },
 							{ label: "CVE", description: vuln.cve },
 							{
 								label: "Affected Project:",
