@@ -136,7 +136,7 @@ val serverUrlMigrations = hashMapOf(
 class AgentService(private val project: Project) : Disposable {
 
     companion object {
-        private var debugPortSeed = AtomicInteger(6010)
+        private var debugPortSeed = AtomicInteger(6014)
         private val debugPort get() = debugPortSeed.getAndAdd(1)
     }
 

@@ -18,8 +18,8 @@ export interface NewRelicId {
 }
 
 export interface MetricTimeslice {
-	facet: string;
-	metricTimesliceName: string;
+	facet: string[];
+	// metricTimesliceName: string;
 	averageDuration?: number;
 	requestsPerMinute?: number;
 }
@@ -35,7 +35,11 @@ export interface AdditionalMetadataInfo {
 }
 
 export class AccessTokenError extends Error {
-	constructor(public text: string, public innerError: any, public isAccessTokenError: boolean) {
+	constructor(
+		public text: string,
+		public innerError: any,
+		public isAccessTokenError: boolean
+	) {
 		super(text);
 	}
 }

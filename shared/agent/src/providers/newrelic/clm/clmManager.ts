@@ -28,6 +28,7 @@ import { ContextLogger, INewRelicProvider } from "../../newrelic";
 import Cache from "timed-cache";
 import { GitRepository } from "../../../git/models/repository";
 import { FLTStrategyFactory } from "./FLTStrategy";
+import { keyFromFacet } from "./FLTCodeAttributeStrategy";
 
 export class ClmManager {
 	constructor(private provider: INewRelicProvider) {}
@@ -396,8 +397,9 @@ export class ClmManager {
 		const consolidated = new Map<string, T>();
 		for (const resultSet of averageDurationResultSets) {
 			for (const result of resultSet) {
-				if (!consolidated.has(result.metricTimesliceName)) {
-					consolidated.set(result.metricTimesliceName, result);
+				const metricTimesliceKey = keyFromFacet(result.facet);
+				if (!consolidated.has(metricTimesliceKey)) {
+					consolidated.set(metricTimesliceKey, result);
 				}
 			}
 		}
@@ -412,7 +414,7 @@ export class ClmManager {
 			// is also based) is the name of the concrete class
 			const parts = anomaly.metricTimesliceName.split("/");
 			const altClassName = parts[parts.length - 2];
-			const metricMatch1 = metrics.find(_ => _.metricTimesliceName === anomaly.metricTimesliceName);
+			const metricMatch1 = metrics.find(_ => _.facet[0] === anomaly.metricTimesliceName[0]);
 			const metricMatch2 = metrics.find(
 				_ =>
 					(_.className === anomaly.codeAttrs?.codeNamespace || _.className === altClassName) &&
@@ -422,11 +424,11 @@ export class ClmManager {
 				(metricMatch1 || metricMatch2)!.anomaly = anomaly;
 			} else {
 				const metric: FileLevelTelemetryMetric = {
-					metricTimesliceName: anomaly.metricTimesliceName,
-					functionName: anomaly.codeAttrs?.codeFunction,
-					className: anomaly.codeAttrs?.codeNamespace,
-					namespace: anomaly.codeAttrs?.codeNamespace,
-					anomaly: anomaly,
+					facet: [anomaly.metricTimesliceName],
+          functionName: anomaly.codeAttrs?.codeFunction,
+          className: anomaly.codeAttrs?.codeNamespace,
+          namespace: anomaly.codeAttrs?.codeNamespace,
+          anomaly: anomaly,
 				};
 				metrics.push(metric);
 			}

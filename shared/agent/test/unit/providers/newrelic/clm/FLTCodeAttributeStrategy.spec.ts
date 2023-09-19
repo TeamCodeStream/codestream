@@ -35,7 +35,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			);
 			const results = strategy.addMethodName(
 				{
-					"Function/routes.app:hello_world": [
+					"Function/routes.app:hello_world:undefined:undefined": [
 						{
 							traceId: "123",
 							transactionId: "abc",
@@ -45,7 +45,7 @@ describe("FLTCodeAttributeStrategy", () => {
 							"code.function": "hello_world",
 						},
 					],
-					"Function/routes.app:MyClass.my_method": [
+					"Function/routes.app:MyClass.my_method:undefined:undefined": [
 						{
 							traceId: "456",
 							transactionId: "def",
@@ -58,14 +58,14 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "Function/routes.app:hello_world",
+						facet: ["Function/routes.app:hello_world:undefined:undefined"],
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:hello_world",
+						// metricTimesliceName: "Function/routes.app:hello_world",
 					},
 					{
-						facet: "Function/routes.app:MyClass.my_method",
+						facet: ["Function/routes.app:MyClass.my_method"],
 						averageDuration: 3.2,
-						metricTimesliceName: "Function/routes.app:MyClass.my_method",
+						// metricTimesliceName: "Function/routes.app:MyClass.my_method",
 					},
 				]
 			);
@@ -74,8 +74,8 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					averageDuration: 3.2,
 					className: undefined,
-					facet: "Function/routes.app:hello_world",
-					metricTimesliceName: "Function/routes.app:hello_world",
+					facet: ["Function/routes.app:hello_world"],
+					// metricTimesliceName: "Function/routes.app:hello_world",
 					namespace: null,
 					metadata: {
 						"code.lineno": 1,
@@ -88,7 +88,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					averageDuration: 3.2,
-					facet: "Function/routes.app:MyClass.my_method",
+					facet: ["Function/routes.app:MyClass.my_method"],
 					className: "MyClass",
 					metricTimesliceName: "Function/routes.app:MyClass.my_method",
 					namespace: null,
@@ -132,10 +132,10 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+						facet: ["OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item"],
 						averageDuration: 3.2,
-						metricTimesliceName:
-							"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+						// metricTimesliceName:
+						// 	"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
 					},
 				]
 			);
@@ -144,7 +144,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					averageDuration: 3.2,
 					className: undefined,
-					facet: "OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
+					facet: ["OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item"],
 					metricTimesliceName:
 						"OtherTransaction/Carrot/foo_bar.system.tasks.bill_credit_payment_item",
 					namespace: "foo_bar.system.tasks",
@@ -215,18 +215,18 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Controller/agents/create",
-					metricTimesliceName: "Controller/agents/create",
+					facet: ["Controller/agents/create"],
+					// metricTimesliceName: "Controller/agents/create",
 					requestsPerMinute: 22.2,
 				},
 				{
-					facet: "Controller/agents/show",
-					metricTimesliceName: "Controller/agents/show",
+					facet: ["Controller/agents/show"],
+					// metricTimesliceName: "Controller/agents/show",
 					requestsPerMinute: 22.2,
 				},
 				{
-					facet: "Controller/agents/destroy",
-					metricTimesliceName: "Controller/agents/destroy",
+					facet: ["Controller/agents/destroy"],
+					// metricTimesliceName: "Controller/agents/destroy",
 					requestsPerMinute: 22.23,
 				},
 			];
@@ -235,7 +235,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/create",
+					facet: ["Controller/agents/create"],
 					metricTimesliceName: "Controller/agents/create",
 					namespace: "AgentsController",
 					requestsPerMinute: 22.2,
@@ -250,7 +250,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/show",
+					facet: ["Controller/agents/show"],
 					metricTimesliceName: "Controller/agents/show",
 					requestsPerMinute: 22.2,
 					namespace: "AgentsController",
@@ -265,7 +265,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "AgentsController",
-					facet: "Controller/agents/destroy",
+					facet: ["Controller/agents/destroy"],
 					metricTimesliceName: "Controller/agents/destroy",
 					requestsPerMinute: 22.23,
 					namespace: "AgentsController",
@@ -325,9 +325,9 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default"],
 					requestsPerMinute: 24.1,
-					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+					// metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
 				},
 			];
 
@@ -335,7 +335,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "NotifierJob",
-					facet: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
+					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default"],
 					metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
 					namespace: "NotifierJob",
 					requestsPerMinute: 24.1,
@@ -458,26 +458,26 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method"],
 					averageDuration: 1.1,
-					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					// metricTimesliceName:
+					// 	"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
 				},
 				{
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method"],
 					averageDuration: 1.2,
-					metricTimesliceName:
-						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
+					// metricTimesliceName:
+					// 	"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
 				},
 				{
-					facet: "Custom/CLMtesting/ClassMethod",
+					facet: ["Custom/CLMtesting/ClassMethod"],
 					averageDuration: 1.3,
-					metricTimesliceName: "Custom/CLMtesting/ClassMethod",
+					// metricTimesliceName: "Custom/CLMtesting/ClassMethod",
 				},
 				{
-					facet: "Custom/CLMtesting/InstanceMethod",
+					facet: ["Custom/CLMtesting/InstanceMethod"],
 					averageDuration: 1.4,
-					metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
+					// metricTimesliceName: "Custom/CLMtesting/InstanceMethod",
 				},
 			];
 
@@ -486,7 +486,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "Helpers",
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method"],
 					metricTimesliceName:
 						"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method",
 					averageDuration: 1.1,
@@ -502,7 +502,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "Helpers",
-					facet: "Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
+					facet: ["Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method"],
 					metricTimesliceName:
 						"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method",
 					averageDuration: 1.2,
@@ -517,7 +517,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					functionName: "custom_instance_method",
 				},
 				{
-					facet: "Custom/CLMtesting/ClassMethod",
+					facet: ["Custom/CLMtesting/ClassMethod"],
 					averageDuration: 1.3,
 					className: "Helpers",
 					functionName: "self.custom_class_method_too",
@@ -532,7 +532,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					},
 				},
 				{
-					facet: "Custom/CLMtesting/InstanceMethod",
+					facet: ["Custom/CLMtesting/InstanceMethod"],
 					averageDuration: 1.4,
 					className: "Helpers",
 					functionName: "custom_instance_method_too",
@@ -592,14 +592,14 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename"],
 					averageDuration: 1.1,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					// metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 				},
 				{
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename"],
 					averageDuration: 1.2,
-					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					// metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 				},
 			];
 
@@ -608,7 +608,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			expect(results).toEqual([
 				{
 					className: "WhichIsWhich",
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename"],
 					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 					averageDuration: 1.1,
 					namespace: "WhichIsWhich",
@@ -623,7 +623,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				{
 					className: "WhichIsWhich",
-					facet: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
+					facet: ["Nested/OtherTransaction/Background/WhichIsWhich/samename"],
 					metricTimesliceName: "Nested/OtherTransaction/Background/WhichIsWhich/samename",
 					averageDuration: 1.2,
 					namespace: "WhichIsWhich",
@@ -668,9 +668,9 @@ describe("FLTCodeAttributeStrategy", () => {
 				},
 				[
 					{
-						facet: "Function/apis.v2.superheros:superheros_superhero_by_slug",
+						facet: ["Function/apis.v2.superheros:superheros_superhero_by_slug"],
 						averageDuration: 0.0025880090121565193,
-						metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug",
+						// metricTimesliceName: "Function/apis.v2.superheros:superheros_superhero_by_slug",
 					},
 				]
 			);
@@ -1311,12 +1311,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					metrics: {
 						results: [
 							{
-								facet: "Function/routes.app:error",
+								facet: ["Function/routes.app:error"],
 								metricTimesliceName: "Function/routes.app:error",
 								requestsPerMinute: 0.2,
 							},
 							{
-								facet: "Function/routes.app:hello_world",
+								facet: ["Function/routes.app:hello_world"],
 								metricTimesliceName: "Function/routes.app:hello_world",
 								requestsPerMinute: 0.06666666666666667,
 							},
@@ -1325,12 +1325,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					spans: {
 						results: [
 							{
-								facet: "Function/routes.app:error",
+								facet: ["Function/routes.app:error"],
 								metricTimesliceName: "Function/routes.app:error",
 								requestsPerMinute: 0.2,
 							},
 							{
-								facet: "Function/routes.app:hello_world",
+								facet: ["Function/routes.app:hello_world"],
 								metricTimesliceName: "Function/routes.app:hello_world",
 								requestsPerMinute: 0.06666666666666667,
 							},
@@ -1348,12 +1348,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					metrics: {
 						results: [
 							{
-								facet: "WebTransaction/Function/routes.app:error",
+								facet: ["WebTransaction/Function/routes.app:error"],
 								averageDuration: 0.0025880090121565193,
 								metricTimesliceName: "WebTransaction/Function/routes.app:error",
 							},
 							{
-								facet: "WebTransaction/Function/routes.app:hello_world",
+								facet: ["WebTransaction/Function/routes.app:hello_world"],
 								averageDuration: 0.0015958845615386963,
 								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world",
 							},
@@ -1362,12 +1362,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					spans: {
 						results: [
 							{
-								facet: "WebTransaction/Function/routes.app:error",
+								facet: ["WebTransaction/Function/routes.app:error"],
 								averageDuration: 0.0025880090121565193,
 								metricTimesliceName: "WebTransaction/Function/routes.app:error",
 							},
 							{
-								facet: "WebTransaction/Function/routes.app:hello_world",
+								facet: ["WebTransaction/Function/routes.app:hello_world"],
 								averageDuration: 0.0015958845615386963,
 								metricTimesliceName: "WebTransaction/Function/routes.app:hello_world",
 							},
@@ -1385,7 +1385,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					metrics: {
 						results: [
 							{
-								facet: "Errors/WebTransaction/Function/routes.app:error",
+								facet: ["Errors/WebTransaction/Function/routes.app:error"],
 								errorsPerMinute: 0.48333333333333334,
 								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error",
 							},
@@ -1394,7 +1394,7 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 					spans: {
 						results: [
 							{
-								facet: "Errors/WebTransaction/Function/routes.app:error",
+								facet: ["Errors/WebTransaction/Function/routes.app:error"],
 								errorsPerMinute: 0.48333333333333334,
 								metricTimesliceName: "Errors/WebTransaction/Function/routes.app:error",
 							},

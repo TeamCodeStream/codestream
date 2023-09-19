@@ -663,7 +663,11 @@ class MethodLevelTelemetryAverageDuration(
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
     val averageDuration: Float
-) : MethodLevelTelemetryData(namespace, className, functionName, metricTimesliceName, anomaly, lineno, column, commit)
+) : MethodLevelTelemetryData(namespace, className, functionName, metricTimesliceName, anomaly, lineno, column, commit) {
+    override fun toString(): String {
+        return "MethodLevelTelemetryAverageDuration(namespace=$namespace, className=$className, functionName=$functionName, lineno=$lineno, column=$column, commit=$commit, metricTimesliceName=$metricTimesliceName, anomaly=$anomaly, averageDuration=$averageDuration)"
+    }
+}
 
 class MethodLevelTelemetryErrorRate(
     namespace: String?,

@@ -10,7 +10,7 @@ export function generateMethodSampleSizeQuery(
 	const spansLookup = metricTimesliceNames?.length
 		? `name in (${metricTimesliceNames.map(metric => `'${metric}'`).join(",")})`
 		: `name LIKE '${codeNamespace}%'`;
-	const spansQuery = `FROM Span SELECT count(*) AS 'sampleSize' WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${spansLookup} FACET name AS metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
+	const spansQuery = `FROM Span SELECT count(*) AS 'sampleSize' WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
 	const metricsLookup = metricTimesliceNames?.length
 		? `(metricTimesliceName in ( ${metricTimesliceNames
 				.map(mtsn => `'${mtsn}'`)

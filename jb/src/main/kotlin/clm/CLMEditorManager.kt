@@ -82,6 +82,10 @@ import java.util.concurrent.Callable
 
 private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 
+fun prettyRange(range: Range): String {
+    return "${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}"
+}
+
 data class RenderElements(
     val range: TextRange,
     val referenceOnHoverPresentation: InlayPresentation,
@@ -327,7 +331,7 @@ abstract class CLMEditorManager(
                                     uri)
                                 val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
                                 metricLocation.metrics.errorRate = errorRate
-                                logger.info("*** added anonymous errorRate $errorRate to $range")
+                                    logger.info("*** added anonymous errorRate $errorRate to ${prettyRange(range)}")
                             } else {
                                 logger.info("*** no currentLocations for anonymous errorRate $errorRate")
                             }
@@ -363,7 +367,7 @@ abstract class CLMEditorManager(
                                     uri)
                                 val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
                                 metricLocation.metrics.averageDuration = averageDuration
-                                logger.info("*** added anonymous averageDuration $averageDuration to $range")
+                                    logger.info("*** added anonymous averageDuration $averageDuration to ${prettyRange(range)}")
                             } else {
                                 logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
                             }
@@ -500,7 +504,7 @@ abstract class CLMEditorManager(
 
     private fun updateInlaysCore() {
         val (result, project, path, editor) = displayDeps() ?: return
-        if (project.isDisposed) {
+        if (project.isDisposed || editor.isDisposed) {
             return
         }
         logger.info("*** updateInlaysCore actual")

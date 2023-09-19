@@ -29,7 +29,7 @@ export function generateMethodAverageDurationQuery(
 	const spansLookup = mappedTimesliceNames?.length
 		? `name in (${mappedTimesliceNames.map(metric => `'${metric}'`).join(",")})`
 		: `name LIKE '${codeNamespace}%'`;
-	const spansQuery = `SELECT average(duration) * 1000 AS 'averageDuration' FROM Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${spansLookup} FACET name as metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
+	const spansQuery = `SELECT average(duration) * 1000 AS 'averageDuration' FROM Span WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
 	const metricsLookup = mappedTimesliceNames?.length
 		? `metricTimesliceName in (${mappedTimesliceNames.map(metric => `'${metric}'`).join(",")})`
 		: `metricTimesliceName LIKE '${codeNamespace}%'`;

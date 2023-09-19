@@ -14,6 +14,71 @@ import { generateMethodAverageDurationQuery } from "../methodAverageDurationQuer
 import { generateMethodErrorRateQuery } from "../methodErrorRateQuery";
 import { Index } from "@codestream/utils/types";
 
+export type MethodAverageDurationResponse = {
+	actor: {
+		account: {
+			metrics: {
+				metadata: {
+					timeWindow: {
+						begin: number;
+						end: number;
+					};
+				};
+				results: any; // TODO not any
+			};
+			spans: {
+				metadata: {
+					timeWindow: {
+						begin: number;
+						end: number;
+					};
+				};
+				results: [
+					{
+						facet: string[];
+						averageDuration: number;
+					},
+				];
+			};
+			nrql: any; // TODO not any - this is not part of the response so maybe shouldn't be here
+			extrapolations: any; // TODO not any
+		};
+	};
+};
+
+export function keyFromFacet(facet: string[]) {
+	return facet.join(":");
+}
+
+export function facetFromKey(key: string) {
+	return key.split(":");
+}
+
+export type MetricSpanCount = {
+	metric?: number;
+	span?: number;
+};
+
+class SampleSizeHolder {
+	private sampleSizeMap = new Map<string, MetricSpanCount>();
+
+	set(metricFacet: string[], value: MetricSpanCount) {
+		this.sampleSizeMap.set(keyFromFacet(metricFacet), value);
+	}
+
+	has(metricFacet: string[]) {
+		return this.sampleSizeMap.has(keyFromFacet(metricFacet));
+	}
+
+	get(metricFacet: string[]) {
+		return this.sampleSizeMap.get(keyFromFacet(metricFacet));
+	}
+
+	keys(): string[][] {
+		return Array.from(this.sampleSizeMap.keys()).map(key => facetFromKey(key));
+	}
+}
+
 export class FLTCodeAttributeStrategy implements FLTStrategy {
 	constructor(
 		protected entityGuid: string,
@@ -27,11 +92,15 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 
 	async execute() {
 		// get a list of file-based method telemetry
-		const spanResponse = (await this.getSpans()) || [];
+		const spanResponse = await this.getSpans();
 
 		const spans = this.applyLanguageFilter(spanResponse);
-		const groupedByTransactionName = spans ? _groupBy(spans, _ => _.name) : {};
-		const metricTimesliceNames = Object.keys(groupedByTransactionName);
+		const groupedByTransactionName = _groupBy(
+			spans,
+			(_: Span) => `${_.name}:${_["code.lineno"]}:${_["code.column"]}`
+		);
+		const metricTimesliceNames = spans.flatMap(_ => (_.name ? [_.name] : [])); // Filter out undefined without having to typecast
+		const metricTimesliceKeys = Object.keys(groupedByTransactionName);
 		this.request.options = this.request.options || {};
 
 		const [averageDurationResponse, sampleSizeResponse, errorRateResponse] = await Promise.all([
@@ -46,16 +115,16 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		]);
 
 		// Consolidate throughput per method
-		const sampleSizeMap = new Map<string, { metric?: number; span?: number }>();
+		const sampleSizeHolder = new SampleSizeHolder();
 		if (sampleSizeResponse) {
 			sampleSizeResponse.actor.account.spans.results.forEach((e: any) => {
-				sampleSizeMap.set(e.metricTimesliceName, { span: e.sampleSize });
+				sampleSizeHolder.set(e.facet, { span: e.sampleSize });
 			});
 			sampleSizeResponse.actor.account.metrics.results.forEach((e: any) => {
-				if (!sampleSizeMap.has(e.metricTimesliceName)) {
-					sampleSizeMap.set(e.metricTimesliceName, {});
+				if (!sampleSizeHolder.has(e.facet)) {
+					sampleSizeHolder.set(e.facet, {});
 				}
-				const sampleSize = sampleSizeMap.get(e.metricTimesliceName);
+				const sampleSize = sampleSizeHolder.get(e.facet);
 				sampleSize!.metric = e.sampleSize;
 			});
 		}
@@ -69,8 +138,8 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		const sampleSizesMetric = sampleSizeResponse?.actor?.account?.metrics;
 		const sampleSizesSpan = sampleSizeResponse?.actor?.account?.spans;
 		const sampleSizesConsolidated = [];
-		for (const methodName of sampleSizeMap.keys()) {
-			const sampleSizeInfo = sampleSizeMap.get(methodName);
+		for (const metricTimesliceFacet of sampleSizeHolder.keys()) {
+			const sampleSizeInfo = sampleSizeHolder.get(metricTimesliceFacet);
 			const sampleSizeMetricValue = sampleSizeInfo?.metric || 0;
 			const sampleSizeSpanValue = sampleSizeInfo?.span || 0;
 			const canUseMetric = true; // sampleSizeMetric > 30;
@@ -83,13 +152,13 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			let sampleSize;
 			if (preferMetric && canUseMetric) {
 				const sampleSizeMetric = sampleSizesMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				const durationMetric = durationsMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				const errorCountMetric = errorCountsMetric?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				if (sampleSizeMetric) {
 					sampleSize = {
@@ -107,13 +176,13 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			}
 			if (canUseSpan && (!preferMetric || !duration)) {
 				const sampleSizeSpan = sampleSizesSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				const durationSpan = durationsSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				const errorCountSpan = errorCountsSpan?.results?.find((_: any) =>
-					isSameMethod(_.metricTimesliceName, methodName)
+					isSameMethod(_.facet, metricTimesliceFacet)
 				);
 				if (sampleSizeSpan) {
 					sampleSize = {
@@ -149,10 +218,12 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					averageDurationResponse.actor.account.metrics.metadata ||
 					averageDurationResponse.actor.account.extrapolations.metadata,
 			};
-			averageDurationResponse.actor.account.nrql.results = this.addMethodName(
+			const addedMethodName = this.addMethodName(
 				groupedByTransactionName,
 				averageDurationResponse.actor.account.nrql.results
-			).filter(_ => _ !== null && _.functionName);
+			);
+			const addedMethodNameFiltered = addedMethodName.filter(_ => _ !== null && _.functionName);
+			averageDurationResponse.actor.account.nrql.results = addedMethodNameFiltered;
 
 			if (this.request?.locator?.functionName) {
 				averageDurationResponse.actor.account.nrql.results =
@@ -199,15 +270,16 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					);
 			}
 		}
-		return {
+		const response = {
 			averageDuration: averageDurationResponse?.actor?.account?.nrql?.results || [],
 			sampleSize: sampleSizeResponse?.actor?.account?.nrql?.results || [],
 			errorRate: errorRateResponse?.actor?.account?.nrql?.results || [],
 		};
+		return response;
 	}
 
-	async getSpans(): Promise<Span[] | undefined> {
-		if (!this.relativeFilePath) return undefined;
+	async getSpans(): Promise<Span[]> {
+		if (!this.relativeFilePath) return [];
 		try {
 			let bestMatchingCodeFilePath;
 			if (this.resolutionMethod === "hybrid") {
@@ -247,7 +319,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			relativeFilePath: this.relativeFilePath,
 			accountId: this.accountId,
 		});
-		return undefined;
+		return [];
 	}
 
 	private async getBestMatchingCodeFilePath(): Promise<string | undefined> {
@@ -307,7 +379,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		return undefined;
 	}
 
-	async getMethodAverageDuration(metricTimesliceNames: string[]) {
+	async getMethodAverageDuration(
+		metricTimesliceNames: string[]
+	): Promise<MethodAverageDurationResponse | undefined> {
 		const query = generateMethodAverageDurationQuery(
 			this.languageId,
 			this.entityGuid,
@@ -374,7 +448,8 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 	): EnhancedMetricTimeslice[] {
 		return metricTimesliceNames.reduce<EnhancedMetricTimeslice[]>((enhTimslices, _) => {
 			const additionalMetadata: AdditionalMetadataInfo = {};
-			const metadata = groupedByTransactionName[this.timesliceNameMap(_.metricTimesliceName)];
+			const facetKey = `${this.timesliceNameMap(_.facet[0])}:${_.facet[1]}:${_.facet[2]}`;
+			const metadata = groupedByTransactionName[facetKey];
 			if (metadata) {
 				[
 					"tags.commit",
@@ -398,10 +473,10 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			const commit = additionalMetadata["tags.commit"];
 			switch (this.languageId) {
 				case "ruby":
-					functionInfo = this.parseRubyFunctionCoordinates(_.metricTimesliceName, codeNamespace);
+					functionInfo = this.parseRubyFunctionCoordinates(_.facet[0], codeNamespace);
 					break;
 				case "python":
-					functionInfo = this.parsePythonFunctionCoordinates(_.metricTimesliceName);
+					functionInfo = this.parsePythonFunctionCoordinates(_.facet[0]);
 					break;
 				case "csharp":
 					if (codeNamespace && codeFunction) {
@@ -445,7 +520,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				additionalMetadata["code.namespace"] = namespace;
 			}
 
-			enhTimslices.push({
+			const enhTimeslice = {
 				..._,
 				metadata: additionalMetadata,
 				namespace: additionalMetadata["code.namespace"],
@@ -454,7 +529,8 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 				lineno,
 				column,
 				commit,
-			});
+			};
+			enhTimslices.push(enhTimeslice);
 			return enhTimslices;
 		}, []);
 	}
@@ -561,14 +637,23 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 }
 
 function isSameMethod(
-	method1: string,
-	method2: string,
+	method1: string[],
+	method2: string[],
 	language: LanguageId | undefined = undefined
 ) {
-	if (method1 === method2) return true;
+	const method1Key = keyFromFacet(method1);
+	const method2Key = keyFromFacet(method2);
+	// Span name, code.linno and code.column are same
+	if (method1Key === method2Key) return true;
 
 	// probably need some language-specific logic here
-	const method1Parts = method1.split("/");
-	const method2Parts = method2.split("/");
-	return method1Parts[method1Parts.length - 1] === method2Parts[method2Parts.length - 1];
+	const [spanName1, lineNo1, colNo1] = method1;
+	const [spanName2, lineNo2, colNo2] = method2;
+	const method1Parts = spanName1.split("/");
+	const method2Parts = spanName2.split("/");
+	return (
+		method1Parts[method1Parts.length - 1] === method2Parts[method2Parts.length - 1] &&
+		lineNo1 === lineNo2 &&
+		colNo1 === colNo2
+	);
 }
