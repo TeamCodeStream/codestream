@@ -3,6 +3,9 @@ package com.codestream.clm
 import com.codestream.agent.TEST_MODE
 import com.codestream.agentService
 import com.codestream.codeStream
+import com.codestream.editor.aqua
+import com.codestream.editor.green
+import com.codestream.editor.orange
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.uri
@@ -37,6 +40,8 @@ import com.codestream.webViewService
 import com.codestream.workaround.HintsPresentationWorkaround
 import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.InlayPresentation
+import com.intellij.lang.javascript.psi.impl.JSFunctionExpressionImpl
+import com.intellij.codeInsight.hints.presentation.PresentationFactory
 import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
@@ -48,9 +53,14 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.editor.markup.HighlighterLayer
+import com.intellij.openapi.editor.markup.HighlighterTargetArea
+import com.intellij.openapi.editor.markup.RangeHighlighter
+import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiComment
@@ -60,8 +70,10 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiWhiteSpace
 import com.intellij.psi.SmartPointerManager
 import com.intellij.psi.SyntaxTraverser
+import com.intellij.psi.util.findParentOfType
 import com.intellij.refactoring.suggested.endOffset
 import com.intellij.refactoring.suggested.startOffset
+import com.intellij.ui.JBColor
 import com.intellij.util.concurrency.NonUrgentExecutor
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.coroutines.CoroutineScope
@@ -74,6 +86,7 @@ import kotlinx.coroutines.launch
 import org.eclipse.lsp4j.Position
 import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Range
+import java.awt.Font
 import java.awt.Point
 import java.awt.event.FocusEvent
 import java.awt.event.FocusListener
@@ -218,6 +231,9 @@ abstract class CLMEditorManager(
             if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
                 // TODO multiple results
                 val location = currentLocations.locations.entries.first()
+                // TODO computeCurrentLocationsResult tries to grab whole line so it has something good to track when the
+                //  code is repositioned. Somehow need to keep this range more precise and hit the symbol rather
+                //  than the whole line for the highlighting to work
                 val range = Range(
                     Position(location.value.lineStart.toInt() - 1,
                         0), //location.value.colStart.toInt()),
@@ -332,41 +348,41 @@ abstract class CLMEditorManager(
                                 val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
                                 metricLocation.metrics.errorRate = errorRate
                                     logger.info("*** added anonymous errorRate $errorRate to ${prettyRange(range)}")
+                                } else {
+                                    logger.info("*** no currentLocations for anonymous errorRate $errorRate")
+                                }
                             } else {
-                                logger.info("*** no currentLocations for anonymous errorRate $errorRate")
+                                val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
+                                metrics.errorRate = errorRate
                             }
-                        } else {
-                            val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
-                            metrics.errorRate = errorRate
                         }
-                    }
-                    lastResult?.averageDuration?.forEach { averageDuration ->
-                        if (averageDuration.functionName == "(anonymous)" && averageDuration.column != null
-                            && averageDuration.lineno != null && averageDuration.commit != null) {
-                            val currentLocations = computeCurrentLocationsResult(
-                                averageDuration.column,
-                                averageDuration.lineno,
-                                averageDuration.commit,
-                                averageDuration.functionName,
-                                uri,
-                                project)
-                            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
-                                // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart.toInt(), it.value.colStart.toInt()))
-                                // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd.toInt(), it.value.colEnd.toInt()))
-                                val location = currentLocations.locations.entries.first()
-                                val range = Range(
-                                    Position(location.value.lineStart.toInt() - 1,
-                                        0), //location.value.colStart.toInt()),
-                                    Position(location.value.lineEnd.toInt() - 1,
-                                        0)) //location.value.colEnd.toInt()))
-                                // TODO multiple per same line (map to array)
-                                val metricSource = MetricSource(averageDuration.column,
+                        lastResult?.averageDuration?.forEach { averageDuration ->
+                            if (averageDuration.functionName == "(anonymous)" && averageDuration.column != null
+                                && averageDuration.lineno != null && averageDuration.commit != null) {
+                                val currentLocations = computeCurrentLocationsResult(
+                                    averageDuration.column,
                                     averageDuration.lineno,
                                     averageDuration.commit,
                                     averageDuration.functionName,
-                                    uri)
-                                val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
-                                metricLocation.metrics.averageDuration = averageDuration
+                                    uri,
+                                    project)
+                                if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
+                                    // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart.toInt(), it.value.colStart.toInt()))
+                                    // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd.toInt(), it.value.colEnd.toInt()))
+                                    val location = currentLocations.locations.entries.first()
+                                    val range = Range(
+                                        Position(location.value.lineStart.toInt() - 1,
+                                            0), //location.value.colStart.toInt()),
+                                        Position(location.value.lineEnd.toInt() - 1,
+                                            0)) //location.value.colEnd.toInt()))
+                                    // TODO multiple per same line (map to array)
+                                    val metricSource = MetricSource(averageDuration.column,
+                                        averageDuration.lineno,
+                                        averageDuration.commit,
+                                        averageDuration.functionName,
+                                        uri)
+                                    val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
+                                    metricLocation.metrics.averageDuration = averageDuration
                                     logger.info("*** added anonymous averageDuration $averageDuration to ${prettyRange(range)}")
                             } else {
                                 logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
@@ -580,31 +596,75 @@ abstract class CLMEditorManager(
             val anomaly = metrics.averageDuration?.anomaly ?: metrics.errorRate?.anomaly
             val textPresentation = presentationFactory.text(formatted.first)
             val referenceOnHoverPresentation =
-                presentationFactory.referenceOnHover(textPresentation, object : InlayPresentationFactory.ClickListener {
-                    override fun onClick(event: MouseEvent, translated: Point) {
-                        project.codeStream?.show {
-                            val notification = if (anomaly != null) {
-                                ObservabilityAnomalyNotifications.View(
-                                    anomaly,
-                                    result.newRelicEntityGuid!!
-                                )
-                            } else {
-                                MethodLevelTelemetryNotifications.View(
-                                    result.error,
-                                    result.repo,
-                                    result.codeNamespace,
-                                    path,
-                                    result.relativeFilePath,
-                                    languageId,
-                                    range,
-                                    "(anonymous)", // TODO Get for "real"
-                                    result.newRelicAccountId,
-                                    result.newRelicEntityGuid,
-                                    OPTIONS,
-                                    metrics.nameMapping
-                                )
-                            }
-                            project.webViewService?.postNotification(notification)
+                CLMInlayPresentation(editor, textPresentation, { event, translated ->
+                    project.codeStream?.show {
+                        val notification = if (anomaly != null) {
+                            ObservabilityAnomalyNotifications.View(
+                                anomaly,
+                                result.newRelicEntityGuid!!
+                            )
+                        } else {
+                            MethodLevelTelemetryNotifications.View(
+                                result.error,
+                                result.repo,
+                                result.codeNamespace,
+                                path,
+                                result.relativeFilePath,
+                                languageId,
+                                range,
+                                "(anonymous)", // TODO Get for "real"
+                                result.newRelicAccountId,
+                                result.newRelicEntityGuid,
+                                OPTIONS,
+                                metrics.nameMapping
+                            )
+                        }
+                        project.webViewService?.postNotification(notification)
+                    }
+                }, object : InlayPresentationFactory.HoverListener {
+                    var highlighter: RangeHighlighter? = null
+                    override fun onHover(event: MouseEvent, translated: Point) {
+                        // TODO better in gathering section above (find the element)
+//                        val offset = metricLocation.
+                        val offset = editor.logicalPositionToOffset(LogicalPosition(metricSource.lineno.toInt() - 1, metricSource.column.toInt() - 1))
+                        val element = psiFile.findElementAt(offset)
+                        val parentFunction = element?.findParentOfType<JSFunctionExpressionImpl<*>>()
+//                        if (element != null) {
+//                            logger.info("hovered element ${element.text} at ${element.textRange}")
+//                        }
+//                        val parent = element?.parent
+//                        if (parent != null) {
+//                            logger.info("hovered parent ${parent.text} at ${parent.textRange}")
+//                        }
+//
+//                        val grandParent = parent?.parent
+                        if (parentFunction != null) {
+                            logger.info("hovered parentFunction ${parentFunction.text} at ${parentFunction.textRange}")
+                            highlighter = editor.markupModel.addRangeHighlighter(
+                                parentFunction.textRange.startOffset,
+                                parentFunction.textRange.endOffset,
+                                HighlighterLayer.LAST,
+                                TextAttributes(
+                                    null,
+                                    JBColor(0x447F7F7F, 0x447F7F7F),
+                                    null,
+                                    null,
+                                    Font.PLAIN
+                                ),
+                                HighlighterTargetArea.EXACT_RANGE,
+                            )
+//                            highlighter?.errorStripeMarkColor = green
+//                            highlighter?.isThinErrorStripeMark = true
+                        }
+
+                        logger.info("onHover ${metricSource.lineno}:${metricSource.column} ${metricSource.functionName}")
+                    }
+
+                    override fun onHoverFinished() {
+                        logger.info("onHoverFinished ${metricSource.lineno}:${metricSource.column} ${metricSource.functionName}")
+                        highlighter?.let {
+                            editor.markupModel.removeHighlighter(it)
+                            highlighter = null
                         }
                     }
                 }
