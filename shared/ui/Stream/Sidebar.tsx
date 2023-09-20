@@ -132,10 +132,6 @@ export const Sidebar = React.memo(function Sidebar() {
 
 	useDidMount(() => {
 		fetchOpenRepos();
-		HostApi.instance.track("Sidebar Rendered", {
-			Width: window.innerWidth,
-			Height: window.innerHeight,
-		});
 	});
 
 	useEffect(() => {

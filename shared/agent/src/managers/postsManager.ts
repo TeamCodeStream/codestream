@@ -524,7 +524,6 @@ function trackPostCreation(
 						const properties = {
 							"Parent ID": request.codemark.reviewId,
 							"Parent Type": "Review",
-							"Change Request": !!request.codemark.isChangeRequest,
 						};
 						telemetry.track({ eventName: "Reply Created", properties: properties });
 					} else if (request.codemark) {
@@ -541,10 +540,6 @@ function trackPostCreation(
 							Markers: markers.length,
 							"Invitee Mentions": request.addedUsers ? request.addedUsers.length : 0,
 						};
-						if (request.codemark.reviewId) {
-							codemarkProperties["Code Review"] = true;
-							codemarkProperties["Change Request"] = request.codemark.isChangeRequest;
-						}
 						if (request.codemark.codeErrorId) {
 							codemarkProperties["Code Error"] = true;
 						}

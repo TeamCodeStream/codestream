@@ -71,12 +71,6 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                     "errorText" to errorText,
                     "failedUrl" to failedUrl
                 )
-                val eventName = "JCEF load error"
-                logger.warn("$eventName (${properties.entries.joinToString()})")
-                project.agentService?.agent?.telemetry(TelemetryParams(
-                    eventName,
-                    properties
-                ))
             }
 
             override fun onLoadingStateChange(
@@ -86,20 +80,7 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                 canGoForward: Boolean
             ) {
                 if (isLoading || jbCefBrowser.cefBrowser.url == "about:blank") return
-                if (routerConnected) {
-                    val isOwnBrowser = jbCefBrowser.cefBrowser == browser
-                    val eventName = "Unexpected JCEF loading state changed"
-                    val properties = mapOf(
-                        "url" to browser?.url,
-                        "isOwnBrowser" to isOwnBrowser
-                    )
-                    logger.warn("$eventName (${properties.entries.joinToString()})")
-                    project.agentService?.agent?.telemetry(TelemetryParams(
-                        eventName,
-                        properties
-                    ))
-                    return
-                }
+                
 
                 browser?.executeJavaScript(
                     """

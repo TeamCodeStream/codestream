@@ -1193,25 +1193,10 @@ export const updateTeamTag =
 				tag.id = Date.now() + Object.keys(team.tags).length + tag.color;
 				tag.sortOrder = Date.now();
 				response = HostApi.instance.send(CreateTeamTagRequestType, { team, tag });
-				HostApi.instance.track("Tags Updated", {
-					"Tag Action": "New",
-					Label: tag.label,
-					Color: tag.color,
-				});
 			} else if (tag.deactivated) {
 				response = HostApi.instance.send(DeleteTeamTagRequestType, { team, tag });
-				HostApi.instance.track("Tags Updated", {
-					"Tag Action": "Delete",
-					Label: tag.label,
-					Color: tag.color,
-				});
 			} else {
 				response = HostApi.instance.send(UpdateTeamTagRequestType, { team, tag });
-				HostApi.instance.track("Tags Updated", {
-					"Tag Action": "Edit",
-					Label: tag.label,
-					Color: tag.color,
-				});
 			}
 
 			// update the team in real-time in the reducer

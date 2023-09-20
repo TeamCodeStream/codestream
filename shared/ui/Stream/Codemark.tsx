@@ -855,10 +855,6 @@ export class Codemark extends React.Component<Props, State> {
 			codemarkId: codemark!.id,
 			value: true,
 		});
-		HostApi.instance.track("Notification Change", {
-			Change: "Codemark Followed",
-			"Source of Change": "Codemark menu",
-		});
 	};
 
 	unfollowCodemark = () => {
@@ -866,10 +862,6 @@ export class Codemark extends React.Component<Props, State> {
 		HostApi.instance.send(FollowCodemarkRequestType, {
 			codemarkId: codemark!.id,
 			value: false,
-		});
-		HostApi.instance.track("Notification Change", {
-			Change: "Codemark Unfollowed",
-			"Source of Change": "Codemark menu",
 		});
 	};
 

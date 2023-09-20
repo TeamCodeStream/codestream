@@ -39,14 +39,6 @@ class CodeStreamConfigurable : SearchableConfigurable {
                 if (gui.serverUrl.text.isNullOrEmpty()) gui.serverUrl.text else gui.serverUrl.text.trimEnd('/')
             val proxySupport = gui.proxySupport.selectedItem as ProxySupport
             val showNewCodemarkGutterIconOnHover = gui.showNewCodemarkGutterIconOnHover.isSelected
-            if (state.showNewCodemarkGutterIconOnHover != showNewCodemarkGutterIconOnHover) {
-                val params = TelemetryParams(
-                    "Hover Compose Setting Changed",
-                    mapOf("Enabled" to showNewCodemarkGutterIconOnHover)
-                )
-                ProjectManager.getInstance().openProjects.firstOrNull()?.agentService?.agent?.telemetry(params)
-            }
-
             settingsService.autoSignIn = gui.autoSignIn.isSelected
             settingsService.serverUrl = serverUrl
             settingsService.disableStrictSSL = gui.disableStrictSSL.isSelected

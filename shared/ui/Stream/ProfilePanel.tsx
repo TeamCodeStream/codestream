@@ -137,7 +137,6 @@ export const ProfilePanel = () => {
 		searchLabel: timeZone,
 		action: async () => {
 			await HostApi.instance.send(UpdateUserRequestType, { timeZone });
-			HostApi.instance.track("TimeZone Change Request", {});
 		},
 	})) as any;
 	timeZoneItems.unshift({ type: "search" }, { label: "-" });
