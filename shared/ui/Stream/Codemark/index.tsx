@@ -148,10 +148,6 @@ function CodemarkForCodemark(props: PropsWithCodemark) {
 						codemarkId: codemark.id,
 						value,
 					});
-					HostApi.instance.track("Notification Change", {
-						Change: `Codemark ${changeType}`,
-						"Source of Change": "Codemark menu",
-					});
 				},
 			},
 			{
