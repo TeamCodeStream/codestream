@@ -388,10 +388,6 @@ export const BaseReviewMenu = (props: BaseReviewMenuProps) => {
 						id: review.id,
 						value,
 					});
-					HostApi.instance.track("Notification Change", {
-						Change: `Review ${changeType}`,
-						"Source of Change": "Review menu",
-					});
 				},
 			},
 		];

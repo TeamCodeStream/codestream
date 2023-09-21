@@ -80,7 +80,17 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                 canGoForward: Boolean
             ) {
                 if (isLoading || jbCefBrowser.cefBrowser.url == "about:blank") return
-                
+                if (routerConnected) {
+                    val isOwnBrowser = jbCefBrowser.cefBrowser == browser
+                    val eventName = "Unexpected JCEF loading state changed"
+                    val properties = mapOf(
+                        "url" to browser?.url,
+                        "isOwnBrowser" to isOwnBrowser
+                    )
+                    logger.warn("$eventName (${properties.entries.joinToString()})")
+                    
+                    return
+                }
 
                 browser?.executeJavaScript(
                     """
