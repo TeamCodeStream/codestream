@@ -71,6 +71,8 @@ class JBCefWebView(val jbCefBrowser: JBCefBrowserBase, val router: WebViewRouter
                     "errorText" to errorText,
                     "failedUrl" to failedUrl
                 )
+                val eventName = "JCEF load error"
+                logger.warn("$eventName (${properties.entries.joinToString()})")
             }
 
             override fun onLoadingStateChange(
