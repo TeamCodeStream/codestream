@@ -221,7 +221,7 @@ data class CSLocationMeta(
     val canonicalCommitDoesNotExist: Boolean?)
 
 // coordinates: lineStart, colStart, lineEnd, colEnd,
-data class CSLocation(val coordinates: Array<Long>, val locationMeta: CSLocationMeta?);
+data class CSLocation(val coordinates: Array<Int>, val locationMeta: CSLocationMeta?)
 
 class CSReferenceLocation(val commitHash: String?, val location: CSLocation)
 
@@ -601,6 +601,8 @@ class ResponseTimesResult(
 )
 
 data class MethodLevelTelemetrySymbolIdentifier(
+    val lineno: Int?,
+    val column: Int?,
     val namespace: String?,
     val className: String?,
     val functionName: String?
@@ -632,20 +634,20 @@ open class MethodLevelTelemetryData(
     val functionName: String?,
     val metricTimesliceName: String,
     val anomaly: ObservabilityAnomaly?,
-    val lineno: Long?,
-    val column: Long?,
+    val lineno: Int?,
+    val column: Int?,
     val commit: String?,
 ) {
     val symbolIdentifier: MethodLevelTelemetrySymbolIdentifier
-        get() = MethodLevelTelemetrySymbolIdentifier(namespace, className, functionName)
+        get() = MethodLevelTelemetrySymbolIdentifier(lineno, column, namespace, className, functionName)
 }
 
 class MethodLevelTelemetrySampleSize(
     namespace: String?,
     className: String?,
     functionName: String,
-    lineno: Long?,
-    column: Long?,
+    lineno: Int?,
+    column: Int?,
     commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
@@ -657,8 +659,8 @@ class MethodLevelTelemetryAverageDuration(
     namespace: String?,
     className: String?,
     functionName: String,
-    lineno: Long?,
-    column: Long?,
+    lineno: Int?,
+    column: Int?,
     commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,
@@ -673,8 +675,8 @@ class MethodLevelTelemetryErrorRate(
     namespace: String?,
     className: String?,
     functionName: String,
-    lineno: Long?,
-    column: Long?,
+    lineno: Int?,
+    column: Int?,
     commit: String?,
     metricTimesliceName: String,
     anomaly: ObservabilityAnomaly?,

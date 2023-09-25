@@ -3,9 +3,6 @@ package com.codestream.clm
 import com.codestream.agent.TEST_MODE
 import com.codestream.agentService
 import com.codestream.codeStream
-import com.codestream.editor.aqua
-import com.codestream.editor.green
-import com.codestream.editor.orange
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.uri
@@ -21,9 +18,7 @@ import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
 import com.codestream.protocols.agent.FileLevelTelemetryResultError
 import com.codestream.protocols.agent.FunctionLocator
-import com.codestream.protocols.agent.Markerish
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
-import com.codestream.protocols.agent.MethodLevelTelemetryData
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetrySampleSize
 import com.codestream.protocols.agent.MethodLevelTelemetrySymbolIdentifier
@@ -53,7 +48,6 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.editor.LogicalPosition
-import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
 import com.intellij.openapi.editor.impl.EditorImpl
@@ -115,12 +109,12 @@ data class ClmElements(
 
 data class MetricLocation(
     val metrics: Metrics,
-    var range: Range, // TODO val
+    val range: Range,
 )
 
 data class MetricSource(
-    val column: Long,
-    val lineno: Long,
+    val lineno: Int,
+    val column: Int,
     val commit: String,
     val functionName: String,
     val uri: String,
@@ -160,7 +154,10 @@ class Metrics {
 
     val nameMapping: MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping
         get() = MethodLevelTelemetryNotifications.View.MetricTimesliceNameMapping(
-            averageDuration?.metricTimesliceName, sampleSize?.metricTimesliceName, errorRate?.metricTimesliceName, sampleSize?.source
+            averageDuration?.metricTimesliceName,
+            sampleSize?.metricTimesliceName,
+            errorRate?.metricTimesliceName,
+            sampleSize?.source
         )
 }
 
@@ -174,6 +171,7 @@ abstract class CLMEditorManager(
     private val tasksCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.EDT)
     private val path = editor.document.getUserData(LOCAL_PATH) ?: editor.document.file?.path
     private val project = editor.project
+    private val metricsByLocationManager = MetricsByLocationManager()
     private var metricsBySymbol = mapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
     private var clmResult: ClmResult? = null
     // Todo - don't key on range - key on colno / lineno / commit
@@ -217,31 +215,40 @@ abstract class CLMEditorManager(
     }
 
     private suspend fun updateLocations() {
-        if (project == null) return
-        for (item in metricsByLocation) {
-            val metricSource = item.key
-            val currentLocations = computeCurrentLocationsResult(
-                metricSource.column,
-                metricSource.lineno,
-                metricSource.commit,
-                metricSource.functionName,
-                metricSource.uri,
-                project
-            )
-            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
-                // TODO multiple results
-                val location = currentLocations.locations.entries.first()
-                // TODO computeCurrentLocationsResult tries to grab whole line so it has something good to track when the
-                //  code is repositioned. Somehow need to keep this range more precise and hit the symbol rather
-                //  than the whole line for the highlighting to work
-                val range = Range(
-                    Position(location.value.lineStart.toInt() - 1,
-                        0), //location.value.colStart.toInt()),
-                    Position(location.value.lineEnd.toInt() - 1,
-                        0)) //location.value.colEnd.toInt()))
-                item.value.range = range // TODO Mutable update
-            }
-        }
+        val (result, project, path) = displayDeps() ?: return
+        logger.info("*** calling getMetricsByLocation")
+        logger.info("*** metricsByLocation before $metricsByLocation")
+        metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, path, project)
+        logger.info("*** metricsByLocation after $metricsByLocation")
+//        val updatedLocations = mutableMapOf<MetricSource, MetricLocation>()
+//        for (item in metricsByLocation) {
+//            val metricSource = item.key
+//            val currentLocations = computeCurrentLocationsResult(
+//                metricSource.lineno,
+//                metricSource.column,
+//                metricSource.commit,
+//                metricSource.functionName,
+//                metricSource.uri,
+//                project
+//            )
+//            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
+//                // TODO multiple results
+//                val location = currentLocations.locations.entries.first()
+//                // TODO computeCurrentLocationsResult tries to grab whole line so it has something good to track when the
+//                //  code is repositioned. Somehow need to keep this range more precise and hit the symbol rather
+//                //  than the whole line for the highlighting to work
+//                val range = Range(
+//                    Position(location.value.lineStart.toInt() - 1,
+//                        0), //location.value.colStart.toInt()),
+//                    Position(location.value.lineEnd.toInt() - 1,
+//                        0)) //location.value.colEnd.toInt()))
+//                val metricLocation = MetricLocation(item.value.metrics, range)
+//                updatedLocations[metricSource] = metricLocation
+//            }
+//            // ugh - this lets me delete items but then when they come back they never make it back into the map
+//            // so i should go back to the lastResult and recompute the locations?
+//            this.metricsByLocation = updatedLocations.toImmutableMap()
+//        }
     }
 
     fun loadInlays(resetCache: Boolean = false, skipStaleCheck: Boolean = false) {
@@ -320,77 +327,16 @@ abstract class CLMEditorManager(
                     metricsBySymbol = mapOf()
 
                     val updatedMetrics = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
-                    val updatedMetricsByLocation = mutableMapOf<MetricSource, MetricLocation>()
 
                     lastResult?.errorRate?.forEach { errorRate ->
-                        if (errorRate.functionName == "(anonymous)" && errorRate.column != null &&
-                            errorRate.lineno != null && errorRate.commit != null) {
-                            val currentLocations = computeCurrentLocationsResult(errorRate.column,
-                                errorRate.lineno,
-                                errorRate.commit,
-                                errorRate.functionName,
-                                uri,
-                                project)
-                            if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
-                                // TODO multiple results
-                                val location = currentLocations.locations.entries.first()
-                                val range = Range(
-                                    Position(location.value.lineStart.toInt() - 1,
-                                        0), //location.value.colStart.toInt()),
-                                    Position(location.value.lineEnd.toInt() - 1,
-                                        0)) //location.value.colEnd.toInt()))
-                                // TODO multiple per same line (map to array)
-                                val metricSource = MetricSource(errorRate.column,
-                                    errorRate.lineno,
-                                    errorRate.commit,
-                                    errorRate.functionName,
-                                    uri)
-                                val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
-                                metricLocation.metrics.errorRate = errorRate
-                                    logger.info("*** added anonymous errorRate $errorRate to ${prettyRange(range)}")
-                                } else {
-                                    logger.info("*** no currentLocations for anonymous errorRate $errorRate")
-                                }
-                            } else {
-                                val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
-                                metrics.errorRate = errorRate
-                            }
+
+                            val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
+                            metrics.errorRate = errorRate
                         }
                         lastResult?.averageDuration?.forEach { averageDuration ->
-                            if (averageDuration.functionName == "(anonymous)" && averageDuration.column != null
-                                && averageDuration.lineno != null && averageDuration.commit != null) {
-                                val currentLocations = computeCurrentLocationsResult(
-                                    averageDuration.column,
-                                    averageDuration.lineno,
-                                    averageDuration.commit,
-                                    averageDuration.functionName,
-                                    uri,
-                                    project)
-                                if (currentLocations != null && currentLocations.locations.isNotEmpty()) {
-                                    // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart.toInt(), it.value.colStart.toInt()))
-                                    // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd.toInt(), it.value.colEnd.toInt()))
-                                    val location = currentLocations.locations.entries.first()
-                                    val range = Range(
-                                        Position(location.value.lineStart.toInt() - 1,
-                                            0), //location.value.colStart.toInt()),
-                                        Position(location.value.lineEnd.toInt() - 1,
-                                            0)) //location.value.colEnd.toInt()))
-                                    // TODO multiple per same line (map to array)
-                                    val metricSource = MetricSource(averageDuration.column,
-                                        averageDuration.lineno,
-                                        averageDuration.commit,
-                                        averageDuration.functionName,
-                                        uri)
-                                    val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) { MetricLocation(Metrics(), range) }
-                                    metricLocation.metrics.averageDuration = averageDuration
-                                    logger.info("*** added anonymous averageDuration $averageDuration to ${prettyRange(range)}")
-                            } else {
-                                logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
-                            }
-                        } else {
+
                             val metrics = updatedMetrics.getOrPut(averageDuration.symbolIdentifier) { Metrics() }
                             metrics.averageDuration = averageDuration
-                        }
 
                     }
                     lastResult?.sampleSize?.forEach { sampleSize ->
@@ -398,7 +344,7 @@ abstract class CLMEditorManager(
                         metrics.sampleSize = sampleSize
                     }
                     metricsBySymbol = updatedMetrics.toImmutableMap()
-                    metricsByLocation = updatedMetricsByLocation.toImmutableMap()
+                    metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, uri, project)
                     clmResult = project.agentService?.clm(ClmParams(
                         result.newRelicEntityGuid!!
                     ))
@@ -408,41 +354,6 @@ abstract class CLMEditorManager(
                 }
             }
         }
-    }
-
-    private suspend fun computeCurrentLocationsResult(
-        column: Long,
-        lineno: Long,
-        commit: String,
-        functionName: String,
-        uri: String,
-        project: Project): ComputeCurrentLocationsResult? {
-        val id = "$uri:${lineno}:${column}:${commit}:${functionName}"
-        val currentLocations = project.agentService?.computeCurrentLocations(
-            ComputeCurrentLocationsRequest(
-                uri,
-                commit,
-                arrayOf(
-                    Markerish(
-                        id,
-                        arrayOf(
-                            CSReferenceLocation(
-                                commit,
-                                CSLocation(
-                                    // lineStart, colStart, lineEnd, colEnd
-                                    arrayOf(
-                                        lineno,
-                                        0, //averageDuration.column,
-                                        lineno + 1,
-                                        0), null)
-                            )
-                        )
-                    )
-                )
-            )
-        )
-        logger.info("*** got some currentLocations $currentLocations")
-        return currentLocations
     }
 
     private var debouncedRenderBlame: Job? = null
@@ -626,7 +537,9 @@ abstract class CLMEditorManager(
                     override fun onHover(event: MouseEvent, translated: Point) {
                         // TODO better in gathering section above (find the element)
 //                        val offset = metricLocation.
-                        val offset = editor.logicalPositionToOffset(LogicalPosition(metricSource.lineno.toInt() - 1, metricSource.column.toInt() - 1))
+                        val currentLineNumber = metricLocation.range.start.line
+                        val offset = editor.logicalPositionToOffset(LogicalPosition(currentLineNumber,
+                            metricSource.column - 1))
                         val element = psiFile.findElementAt(offset)
                         val parentFunction = element?.findParentOfType<JSFunctionExpressionImpl<*>>()
 //                        if (element != null) {
@@ -655,6 +568,8 @@ abstract class CLMEditorManager(
                             )
 //                            highlighter?.errorStripeMarkColor = green
 //                            highlighter?.isThinErrorStripeMark = true
+                        } else {
+                            logger.info("*** no parentFunction for ${metricSource.lineno}")
                         }
 
                         logger.info("onHover ${metricSource.lineno}:${metricSource.column} ${metricSource.functionName}")
