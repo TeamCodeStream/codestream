@@ -76,10 +76,15 @@ export class FossaProvider extends ThirdPartyCodeAnalyzerProviderBase<CSFossaPro
 		page: number,
 		sort?: string
 	): string {
+		if (!sort) {
+			sort = "package_asc";
+		}
+		const count = 1000;
 		return `/issues?${qs.stringify({
 			category,
 			page,
 			sort,
+			count,
 		})}&scope[id]=${encodeURIComponent(projectId)}&scope[type]=${type}`;
 	}
 
