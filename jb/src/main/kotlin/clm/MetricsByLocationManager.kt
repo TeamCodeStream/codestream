@@ -53,15 +53,15 @@ class MetricsByLocationManager {
                     project)
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
-                    currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true &&
-                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true) {
+                    currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true) {
+//                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true) {
                     // TODO multiple results
                     val location = currentLocations.locations.entries.first()
                     val range = Range(
-                        Position(location.value.lineStart.toInt() - 1,
-                            0), //location.value.colStart.toInt()),
-                        Position(location.value.lineEnd.toInt() - 1,
-                            0)) //location.value.colEnd.toInt()))
+                        Position(location.value.lineStart - 1,
+                            0), //location.value.colStart),
+                        Position(location.value.lineEnd - 1,
+                            0)) //location.value.colEnd))
                     // TODO multiple per same line (map to array) - but already working?
                     val metricSource = MetricSource(errorRate.lineno,
                         errorRate.column,
@@ -98,17 +98,17 @@ class MetricsByLocationManager {
                     project)
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
-                    currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true &&
-                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true
-                    ) {
-                    // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart.toInt(), it.value.colStart.toInt()))
-                    // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd.toInt(), it.value.colEnd.toInt()))
+                    currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true)// &&
+//                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true)
+                {
+                    // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart, it.value.colStart))
+                    // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd, it.value.colEnd))
                     val location = currentLocations.locations.entries.first()
                     val range = Range(
-                        Position(location.value.lineStart.toInt() - 1,
-                            0), //location.value.colStart.toInt()),
-                        Position(location.value.lineEnd.toInt() - 1,
-                            0)) //location.value.colEnd.toInt()))
+                        Position(location.value.lineStart - 1,
+                            0), //location.value.colStart),
+                        Position(location.value.lineEnd - 1,
+                            0)) //location.value.colEnd))
                     // TODO multiple per same line? (map to array)
                     val metricSource = MetricSource(averageDuration.lineno,
                         averageDuration.column,
@@ -126,7 +126,6 @@ class MetricsByLocationManager {
             }
         }
     }
-
 
     private fun processSampleSize(
         sampleSizes: List<MethodLevelTelemetrySampleSize>,
@@ -177,7 +176,8 @@ class MetricsByLocationManager {
                                     arrayOf(
                                         lineno,
                                         0, //averageDuration.column,
-                                        lineno + 1,
+//                                        lineno + 1,
+                                        lineno,
                                         0), null)
                             )
                         )

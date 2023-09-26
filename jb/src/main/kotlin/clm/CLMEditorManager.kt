@@ -128,6 +128,11 @@ class Metrics {
     fun format(template: String, since: String): Pair<String, Boolean> {
         val functionName = errorRate?.functionName ?: averageDuration?.functionName ?: sampleSize?.functionName
         ?: "<unknown>"
+        val functionNameFormatted = if (functionName == "(anonymous)") {
+            " - $functionName"
+        } else {
+            ""
+        }
         if (errorRate?.anomaly != null || averageDuration?.anomaly != null) {
             val anomalyTexts = mutableListOf<String>()
             errorRate?.anomaly?.let {
@@ -148,7 +153,7 @@ class Metrics {
         val text = template.replace("\${averageDuration}", averageDurationStr)
             .replace("\${errorRate}", errorRateStr)
             .replace("\${sampleSize}", sampleSizeStr)
-            .replace("\${since}", since) + " - $functionName"
+            .replace("\${since}", since) + functionNameFormatted
         return Pair(text, false)
     }
 
@@ -238,10 +243,10 @@ abstract class CLMEditorManager(
 //                //  code is repositioned. Somehow need to keep this range more precise and hit the symbol rather
 //                //  than the whole line for the highlighting to work
 //                val range = Range(
-//                    Position(location.value.lineStart.toInt() - 1,
-//                        0), //location.value.colStart.toInt()),
-//                    Position(location.value.lineEnd.toInt() - 1,
-//                        0)) //location.value.colEnd.toInt()))
+//                    Position(location.value.lineStart - 1,
+//                        0), //location.value.colStart),
+//                    Position(location.value.lineEnd - 1,
+//                        0)) //location.value.colEnd))
 //                val metricLocation = MetricLocation(item.value.metrics, range)
 //                updatedLocations[metricSource] = metricLocation
 //            }

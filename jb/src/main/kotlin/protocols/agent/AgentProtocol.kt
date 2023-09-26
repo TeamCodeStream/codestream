@@ -229,10 +229,10 @@ data class Markerish(val id: String, val referenceLocations: Array<CSReferenceLo
 
 data class CSMarkerLocation(
     val id: String,
-    val lineStart: Long,
-    val colStart: Long,
-    val lineEnd: Long,
-    val colEnd: Long,
+    val lineStart: Int,
+    val colStart: Int,
+    val lineEnd: Int,
+    val colEnd: Int,
     val meta: CSLocationMeta?,
 )
 
