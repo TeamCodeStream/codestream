@@ -7,7 +7,7 @@ import {
 	MarkerNotLocatedReason,
 } from "@codestream/protocols/agent";
 import {
-	CSLocation,
+	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -74,8 +74,8 @@ function compareReferenceLocations(a: CSReferenceLocation, b: CSReferenceLocatio
 		return canonicalComparison;
 	}
 
-	const aIsEntirelyDeleted = Number(!!a.location.locationMeta?.entirelyDeleted);
-	const bIsEntirelyDeleted = Number(!!b.location.locationMeta?.entirelyDeleted);
+	const aIsEntirelyDeleted = Number(!!a.location[4]?.entirelyDeleted);
+	const bIsEntirelyDeleted = Number(!!b.location[4]?.entirelyDeleted);
 
 	return aIsEntirelyDeleted - bIsEntirelyDeleted;
 }
@@ -297,7 +297,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				location.colStart === location.colEnd
 			) {
 				const [lineStartWhenCreated, colStartWhenCreated, lineEndWhenCreated, colEndWhenCreated] =
-					marker.referenceLocations[0].location.coordinates;
+					marker.referenceLocations[0].location;
 				if (
 					lineStartWhenCreated !== lineEndWhenCreated ||
 					colStartWhenCreated !== colEndWhenCreated
@@ -470,13 +470,13 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			let canCalculate = false;
 			for (const referenceLocation of missingMarker.referenceLocations) {
 				const referenceCommitHash = referenceLocation.commitHash;
-				if (referenceLocation.location.coordinates[2] === -1) {
+				if (referenceLocation.location[2] === -1) {
 					// This should never happen, but we have some faulty reference locations
 					// in the database with lineEnd === -1 because the end of the marker range
 					// was deleted but not properly trimmed to the edge of the preserved region.
 					// In this case we pretend it ends at the end of its lineStart.
-					referenceLocation.location.coordinates[2] = referenceLocation.location.coordinates[0];
-					referenceLocation.location.coordinates[3] = MAX_RANGE_VALUE;
+					referenceLocation.location[2] = referenceLocation.location[0];
+					referenceLocation.location[3] = MAX_RANGE_VALUE;
 				}
 				if (referenceCommitHash == null) {
 					const { baseCommit, diff: diffToCanonicalContents } = referenceLocation.flags || {};
@@ -640,7 +640,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				continue;
 			}
 			const locationArraysById = {} as {
-				[id: string]: CSLocation;
+				[id: string]: CSLocationArray;
 			};
 			locationArraysById[id] = MarkerLocation.toArray(location);
 			Logger.log(
@@ -733,10 +733,10 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 				const location = marker.referenceLocations[0].location;
 				locationsToCalculate[marker.id] = {
 					id: marker.id,
-					lineStart: location.coordinates[0],
-					colStart: location.coordinates[1],
-					lineEnd: location.coordinates[2],
-					colEnd: location.coordinates[3],
+					lineStart: location[0],
+					colStart: location[1],
+					lineEnd: location[2],
+					colEnd: location[3],
 				};
 			}
 

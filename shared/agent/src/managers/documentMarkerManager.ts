@@ -29,7 +29,7 @@ import {
 import {
 	CodemarkType,
 	CSCodemark,
-	CSLocation,
+	CSLocationArray,
 	CSMarker,
 	CSMe,
 	CSUser,
@@ -339,7 +339,7 @@ export class DocumentMarkerManager {
 
 					const gotoLine = comment.position.newLine;
 
-					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
+					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 					documentMarkers.push({
 						createdAt: +new Date(comment.createdAt),
 						modifiedAt: +new Date(comment.createdAt),
@@ -390,7 +390,7 @@ export class DocumentMarkerManager {
 						summary = summary.replace(emojiRegex, (s: string, code: string) => emojiMap[code] || s);
 					}
 					const gotoLine = comment.inline.to;
-					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
+					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 					documentMarkers.push({
 						createdAt: new Date(comment.created_on).getTime(),
 						modifiedAt: new Date(comment.updated_on).getTime(),
@@ -466,7 +466,7 @@ export class DocumentMarkerManager {
 						return;
 					}
 
-					const location: CSLocation = { coordinates: [gotoLine, 0, gotoLine, 0] };
+					const location: CSLocationArray = [gotoLine, 0, gotoLine, 0, undefined];
 					documentMarkers.push({
 						createdAt: +new Date(comment.createdAt),
 						modifiedAt: +new Date(comment.createdAt),
@@ -727,7 +727,7 @@ export class DocumentMarkerManager {
 							const line = await findBestMatchingLine(
 								contents,
 								marker.code,
-								marker.locationWhenCreated ? marker.locationWhenCreated.coordinates[0] : 0
+								marker.locationWhenCreated ? marker.locationWhenCreated[0] : 0
 							);
 							if (line > 0) {
 								locations[marker.id] = {

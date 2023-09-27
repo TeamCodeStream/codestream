@@ -762,8 +762,8 @@ export function toSlackPostBlocks(
 					marker.referenceLocations[0];
 				if (markerLocation) {
 					const location = markerLocation.location;
-					if (location && location.coordinates.length) {
-						[start, , end] = location.coordinates!;
+					if (location && location.length) {
+						[start, , end] = location!;
 						filename = `${marker.file} (Line${start === end ? ` ${start}` : `s ${start}-${end}`})`;
 					}
 				}

@@ -2,7 +2,7 @@
 import {
 	CSCodeError,
 	CSCodemark,
-	CSLocation,
+	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -17,10 +17,13 @@ import {
 import { Range } from "vscode-languageserver";
 
 import { Logger } from "../logger";
-import { MarkerLocationsById } from "@codestream/protocols/agent";
 
 export interface MarkerLocationArraysById {
-	[id: string]: CSLocation;
+	[id: string]: CSLocationArray;
+}
+
+export interface MarkerLocationsById {
+	[id: string]: CSMarkerLocation;
 }
 
 export namespace MarkerLocation {
@@ -39,14 +42,14 @@ export namespace MarkerLocation {
 		};
 	}
 
-	export function fromArray(array: CSLocation, id: string): CSMarkerLocation {
+	export function fromArray(array: CSLocationArray, id: string): CSMarkerLocation {
 		return {
 			id,
-			lineStart: array.coordinates[0],
-			colStart: array.coordinates[1],
-			lineEnd: array.coordinates[2],
-			colEnd: array.coordinates[3],
-			meta: array.locationMeta,
+			lineStart: array[0],
+			colStart: array[1],
+			lineEnd: array[2],
+			colEnd: array[3],
+			meta: array[4],
 		};
 	}
 
@@ -60,22 +63,24 @@ export namespace MarkerLocation {
 		};
 	}
 
-	export function toArray(location: CSMarkerLocation): CSLocation {
-		return {
-			coordinates: [location.lineStart, location.colStart, location.lineEnd, location.colEnd],
-			locationMeta: location.meta,
-		};
+	export function toArray(location: CSMarkerLocation): CSLocationArray {
+		return [
+			location.lineStart,
+			location.colStart,
+			location.lineEnd,
+			location.colEnd,
+			location.meta,
+		];
 	}
 
-	export function toArrayFromRange(range: Range): CSLocation {
-		return {
-			coordinates: [
-				range.start.line + 1,
-				range.start.character + 1,
-				range.end.line + 1,
-				range.end.character + 1,
-			],
-		};
+	export function toArrayFromRange(range: Range): CSLocationArray {
+		return [
+			range.start.line + 1,
+			range.start.character + 1,
+			range.end.line + 1,
+			range.end.character + 1,
+			undefined,
+		];
 	}
 
 	export function toArraysById(locations: MarkerLocationsById): MarkerLocationArraysById {
@@ -94,10 +99,10 @@ export namespace MarkerLocation {
 	): MarkerLocationsById {
 		if (markerLocations == null || markerLocations.locations == null) return {};
 
-		return Object.entries(markerLocations.locations).reduce((m, [id, array]) => {
-			m[id] = fromArray(array, id);
-			return m;
-		}, Object.create(null));
+		return Object.entries(markerLocations.locations).reduce((markerLocations, [id, csLocation]) => {
+			markerLocations[id] = fromArray(csLocation, id);
+			return markerLocations;
+		}, {} as MarkerLocationsById);
 	}
 
 	export function toRange(location: CSMarkerLocation): Range {
@@ -109,12 +114,12 @@ export namespace MarkerLocation {
 		);
 	}
 
-	export function toRangeFromArray(locationLike: CSLocation): Range {
+	export function toRangeFromArray(locationLike: CSLocationArray): Range {
 		return Range.create(
-			Math.max(locationLike.coordinates[0] - 1, 0),
-			Math.max(locationLike.coordinates[1] - 1, 0),
-			Math.max(locationLike.coordinates[2] - 1, 0),
-			Math.max(locationLike.coordinates[3] - 1, 0)
+			Math.max(locationLike[0] - 1, 0),
+			Math.max(locationLike[1] - 1, 0),
+			Math.max(locationLike[2] - 1, 0),
+			Math.max(locationLike[3] - 1, 0)
 		);
 	}
 }
@@ -123,7 +128,7 @@ const remoteProviders: [
 	string,
 	string,
 	RegExp,
-	(remote: string, ref: string, file: string, start: number, end: number) => string
+	(remote: string, ref: string, file: string, start: number, end: number) => string,
 ][] = [
 	[
 		"github",

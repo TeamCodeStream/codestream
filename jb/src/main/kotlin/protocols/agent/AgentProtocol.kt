@@ -220,10 +220,11 @@ data class CSLocationMeta(
     val isDescendant: Boolean?,
     val canonicalCommitDoesNotExist: Boolean?)
 
-// coordinates: lineStart, colStart, lineEnd, colEnd,
-data class CSLocation(val coordinates: Array<Int>, val locationMeta: CSLocationMeta?)
 
-class CSReferenceLocation(val commitHash: String?, val location: CSLocation)
+//class CSLocation(val coordinates: Array<Int>, val locationMeta: CSLocationMeta?)
+
+// location coordinates: lineStart, colStart, lineEnd, colEnd, CSLocationMeta
+class CSReferenceLocation(val commitHash: String?, val location: Array<*>)
 
 data class Markerish(val id: String, val referenceLocations: Array<CSReferenceLocation>)
 
@@ -238,7 +239,7 @@ data class CSMarkerLocation(
 
 typealias MarkerLocationsById = Map<String, CSMarkerLocation>
 
-class ComputeCurrentLocationsRequest(val uri: String, val commit: String, val markers: Array<Markerish>)
+data class ComputeCurrentLocationsRequest(val uri: String, val commit: String, val markers: Array<Markerish>)
 
 data class ComputeCurrentLocationsResult(val locations: MarkerLocationsById) {
     override fun toString(): String {

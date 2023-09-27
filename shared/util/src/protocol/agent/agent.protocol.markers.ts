@@ -3,7 +3,7 @@ import { Range, RequestType, TextDocumentIdentifier } from "vscode-languageserve
 import { CodeBlockSource } from "./agent.protocol.posts";
 import {
 	CSCodemark,
-	CSLocation,
+	CSLocationArray,
 	CSMarker,
 	CSMarkerLocation,
 	CSMarkerLocations,
@@ -14,7 +14,7 @@ export interface CreateMarkerLocationRequest {
 	streamId: string;
 	commitHash: string;
 	locations: {
-		[id: string]: CSLocation;
+		[id: string]: CSLocationArray;
 	};
 }
 
@@ -130,7 +130,7 @@ export const AddMarkersRequestType = new RequestType<
 export interface AddReferenceLocationRequest {
 	markerId: string;
 	commitHash: string;
-	location: CSLocation;
+	location: CSLocationArray;
 	flags: { [id: string]: boolean };
 }
 

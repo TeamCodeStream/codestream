@@ -356,11 +356,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 
 	static getMarkerStartLine = (marker: CSMarker | undefined) => {
 		if (!marker) return 0;
-		if (marker.locationWhenCreated && marker.locationWhenCreated.coordinates.length)
+		if (marker.locationWhenCreated && marker.locationWhenCreated.length)
 			return marker.locationWhenCreated[0] - 1;
 		if (marker.referenceLocations) {
 			const item = marker.referenceLocations.find(_ => _.flags && _.flags.canonical);
-			if (item && item.location && item.location.coordinates.length) {
+			if (item && item.location && item.location.length) {
 				return item.location[0];
 			}
 		}
@@ -375,11 +375,11 @@ export class SimpleCodemarksForFile extends Component<Props, State> {
 			return markerLike.range.start.line;
 		}
 
-		if (markerLike.locationWhenCreated && markerLike.locationWhenCreated.coordinates.length)
+		if (markerLike.locationWhenCreated && markerLike.locationWhenCreated.length)
 			return markerLike.locationWhenCreated[0] - 1;
 		if (markerLike.referenceLocations) {
 			const item = markerLike.referenceLocations.find(_ => _.flags && _.flags.canonical);
-			if (item && item.location && item.location.coordinates.length) {
+			if (item && item.location && item.location.length) {
 				return item.location[0];
 			}
 		}

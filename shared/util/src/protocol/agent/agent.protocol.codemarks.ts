@@ -11,7 +11,7 @@ import {
 	CSCodemark,
 	CSCreateCodemarkRequest,
 	CSDirectStream,
-	CSLocation,
+	CSLocationArray,
 	CSMarker,
 	CSMarkerLocations,
 	CSObjectStream,
@@ -46,7 +46,7 @@ export interface CreateMarkerRequest {
 	fileStreamId?: string;
 	referenceLocations?: CSReferenceLocation[];
 	commitHash?: string;
-	location?: CSLocation;
+	location?: CSLocationArray;
 	branchWhenCreated?: string;
 	remoteCodeUrl?: { displayName: string; name: string; url: string };
 	knownCommitHashes?: string[];

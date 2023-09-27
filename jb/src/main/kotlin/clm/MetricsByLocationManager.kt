@@ -1,7 +1,6 @@
 package com.codestream.clm
 
 import com.codestream.agentService
-import com.codestream.protocols.agent.CSLocation
 import com.codestream.protocols.agent.CSReferenceLocation
 import com.codestream.protocols.agent.ComputeCurrentLocationsRequest
 import com.codestream.protocols.agent.ComputeCurrentLocationsResult
@@ -171,14 +170,14 @@ class MetricsByLocationManager {
                         arrayOf(
                             CSReferenceLocation(
                                 commit,
-                                CSLocation(
-                                    // lineStart, colStart, lineEnd, colEnd
-                                    arrayOf(
-                                        lineno,
-                                        0, //averageDuration.column,
-//                                        lineno + 1,
-                                        lineno,
-                                        0), null)
+                                // lineStart, colStart, lineEnd, colEnd, meta
+                                arrayOf(
+                                    lineno,
+                                    0, //averageDuration.column,
+                                    lineno, // lineno + 1,
+                                    0,
+                                    null)
+
                             )
                         )
                     )
