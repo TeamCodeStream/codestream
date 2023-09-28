@@ -225,17 +225,17 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					facet: ["Controller/agents/create", "16"],
 					// metricTimesliceName: "Controller/agents/create",
-					requestsPerMinute: 22.2,
+					// requestsPerMinute: 22.2,
 				},
 				{
 					facet: ["Controller/agents/show", "16"],
 					// metricTimesliceName: "Controller/agents/show",
-					requestsPerMinute: 22.2,
+					// requestsPerMinute: 22.2,
 				},
 				{
 					facet: ["Controller/agents/destroy", "55"],
 					// metricTimesliceName: "Controller/agents/destroy",
-					requestsPerMinute: 22.23,
+					// requestsPerMinute: 22.23,
 				},
 			];
 
@@ -246,7 +246,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					facet: ["Controller/agents/create", "16"],
 					// metricTimesliceName: "Controller/agents/create",
 					namespace: "AgentsController",
-					requestsPerMinute: 22.2,
+					// requestsPerMinute: 22.2,
 					metadata: {
 						"code.lineno": 16,
 						traceId: "67e121ac35ff1cbe191fd1da94e50012",
@@ -259,7 +259,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					className: "AgentsController",
 					facet: ["Controller/agents/show", "16"],
-					requestsPerMinute: 22.2,
+					// requestsPerMinute: 22.2,
 					namespace: "AgentsController",
 					metadata: {
 						"code.lineno": 16,
@@ -273,7 +273,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				{
 					className: "AgentsController",
 					facet: ["Controller/agents/destroy", "55"],
-					requestsPerMinute: 22.23,
+					// requestsPerMinute: 22.23,
 					namespace: "AgentsController",
 					metadata: {
 						"code.lineno": 55,
@@ -332,7 +332,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			const metricTimesliceNames: MetricTimeslice[] = [
 				{
 					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default", "8"],
-					requestsPerMinute: 24.1,
+					// requestsPerMinute: 24.1,
 					// metricTimesliceName: "MessageBroker/ActiveJob::Async/Queue/Produce/Named/default",
 				},
 			];
@@ -343,7 +343,7 @@ describe("FLTCodeAttributeStrategy", () => {
 					className: "NotifierJob",
 					facet: ["MessageBroker/ActiveJob::Async/Queue/Produce/Named/default", "8"],
 					namespace: "NotifierJob",
-					requestsPerMinute: 24.1,
+					// requestsPerMinute: 24.1,
 					metadata: {
 						"code.lineno": 8,
 						traceId: "2d2a1cfae193394b121427ff11df5fc5",
@@ -1317,12 +1317,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 							{
 								facet: ["Function/routes.app:error"],
 								metricTimesliceName: "Function/routes.app:error",
-								requestsPerMinute: 0.2,
+								// requestsPerMinute: 0.2,
 							},
 							{
 								facet: ["Function/routes.app:hello_world"],
 								metricTimesliceName: "Function/routes.app:hello_world",
-								requestsPerMinute: 0.06666666666666667,
+								// requestsPerMinute: 0.06666666666666667,
 							},
 						],
 					},
@@ -1331,12 +1331,12 @@ class NewRelicProviderStub extends NewRelicProviderStubBase {
 							{
 								facet: ["Function/routes.app:error"],
 								metricTimesliceName: "Function/routes.app:error",
-								requestsPerMinute: 0.2,
+								// requestsPerMinute: 0.2,
 							},
 							{
 								facet: ["Function/routes.app:hello_world"],
 								metricTimesliceName: "Function/routes.app:hello_world",
-								requestsPerMinute: 0.06666666666666667,
+								// requestsPerMinute: 0.06666666666666667,
 							},
 						],
 					},

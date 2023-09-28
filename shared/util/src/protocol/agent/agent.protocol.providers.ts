@@ -1717,12 +1717,13 @@ export interface FileLevelTelemetryMetric {
 	className?: string;
 	lineno?: number;
 	column?: number;
+	commit?: string;
 	functionName?: string;
 	anomaly?: ObservabilityAnomaly;
 }
 
 export interface FileLevelTelemetryAverageDuration extends FileLevelTelemetryMetric {
-	averageDuration: any;
+	averageDuration: number;
 }
 
 export interface FileLevelTelemetrySampleSize extends FileLevelTelemetryMetric {
@@ -1731,7 +1732,7 @@ export interface FileLevelTelemetrySampleSize extends FileLevelTelemetryMetric {
 }
 
 export interface FileLevelTelemetryErrorRate extends FileLevelTelemetryMetric {
-	errorRate: any;
+	errorRate: number;
 }
 
 export interface GetFileLevelTelemetryResponse {

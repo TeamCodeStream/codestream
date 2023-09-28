@@ -21,7 +21,10 @@ export interface MetricTimeslice {
 	facet: string[];
 	// metricTimesliceName: string;
 	averageDuration?: number;
-	requestsPerMinute?: number;
+	errorRate?: number; // TODO WHY
+	sampleSize?: number;
+	source?: "metric" | "span";
+	// requestsPerMinute?: number;
 }
 
 export interface AdditionalMetadataInfo {
@@ -51,6 +54,7 @@ export interface Span {
 	"code.lineno"?: number | string | null;
 	"code.column"?: number | string | null;
 	"transaction.name"?: string | null;
+	"tags.commit"?: string | null;
 	name?: string;
 	traceId?: string;
 	transactionId?: string;

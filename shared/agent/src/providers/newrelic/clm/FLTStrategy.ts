@@ -12,12 +12,14 @@ import { INewRelicProvider } from "../../newrelic";
 import { FLTCodeAttributeStrategy } from "./FLTCodeAttributeStrategy";
 import { FLTNameInferenceKotlinStrategy } from "./FLTNameInferenceKotlinStrategy";
 
+export type FLTResponse = {
+	averageDuration: FileLevelTelemetryAverageDuration[];
+	errorRate: FileLevelTelemetryErrorRate[];
+	sampleSize: FileLevelTelemetrySampleSize[];
+};
+
 export interface FLTStrategy {
-	execute(): Promise<{
-		averageDuration: FileLevelTelemetryAverageDuration[];
-		errorRate: FileLevelTelemetryErrorRate[];
-		sampleSize: FileLevelTelemetrySampleSize[];
-	}>;
+	execute(): Promise<FLTResponse>;
 }
 
 export class FLTStrategyFactory {
