@@ -61,6 +61,9 @@ export interface Capabilities {
 	providerSupportsRealtimeEvents?: boolean;
 	reviewDiffs?: boolean;
 	services?: {
+		/**
+		 * deprecated
+		 */
 		vsls?: boolean;
 	};
 	vsCodeGithubSignin?: boolean;

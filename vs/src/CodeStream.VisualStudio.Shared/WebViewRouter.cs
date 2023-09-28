@@ -824,16 +824,6 @@ namespace CodeStream.VisualStudio.Shared
 									}
 									break;
 								}
-								case LiveShareStartSessionRequestType.MethodName:
-								case LiveShareInviteToSessionRequestType.MethodName:
-								case LiveShareJoinSessionRequestType.MethodName:
-								{
-									using (_browserService.CreateScope(message))
-									{
-										Log.Warning($"Unknown LiveShare method {message.Method}");
-									}
-									break;
-								}
 								case OpenUrlRequestType.MethodName:
 								{
 									var @params = message.Params?.ToObject<OpenUrlRequest>();

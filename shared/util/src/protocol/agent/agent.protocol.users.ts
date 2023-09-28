@@ -65,6 +65,9 @@ export interface UpdateUserRequest {
 		image?: string;
 		image48?: string;
 	};
+	/**
+	 * deprecated
+	 */
 	hasGitLens?: boolean;
 }
 

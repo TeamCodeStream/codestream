@@ -15,11 +15,7 @@ import { SessionStatus, SessionStatusChangedEvent } from "../api/session";
 import { Container } from "../container";
 
 export class CodeStreamCodeActionProvider implements CodeActionProvider, Disposable {
-	static selector: DocumentSelector = [
-		{ scheme: "file" },
-		{ scheme: "untitled" },
-		{ scheme: "vsls" }
-	];
+	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "untitled" }];
 
 	private readonly _disposable: Disposable;
 	private _disposableSignedIn: Disposable | undefined;

@@ -272,6 +272,7 @@ namespace CodeStream.VisualStudio.Shared.Models
 
 	public class Services
 	{
+		// deprecated
 		[JsonProperty("vsls", NullValueHandling = NullValueHandling.Ignore)]
 		public bool? Vsls { get; set; }
 	}

@@ -725,8 +725,6 @@ export class SimpleStream extends PureComponent<Props> {
 				return this.togglePinned(post);
 			// case "direct-message":
 			// 	return this.sendDirectMessage(post.author.username);
-			// case "live-share":
-			// 	return this.inviteToLiveShare(post.creatorId);
 		}
 	};
 

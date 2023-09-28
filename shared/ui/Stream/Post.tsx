@@ -132,7 +132,6 @@ export function Post(props: PostProps) {
 			usernamesById: getUsernamesById(state),
 			userNamesNormalized: getNormalizedUsernames(state),
 			repoName,
-			canLiveshare: state.services.vsls,
 			post,
 			author,
 			hasMarkers: codemark && codemark.markers && codemark.markers.length > 0,

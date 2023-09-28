@@ -7,7 +7,6 @@ import fetch, { RequestInit } from "node-fetch";
 import { ProtocolHandler } from "./protocolHandler";
 import { AbortController } from "node-abort-controller";
 import {
-	Disposable,
 	env,
 	ExtensionContext,
 	extensions,
@@ -20,16 +19,10 @@ import {
 import { WebviewLike } from "./webviews/webviewLike";
 import { CodeStreamWebviewSidebar } from "./webviews/webviewSidebar";
 
-import { CodemarkType } from "@codestream/protocols/api";
 
 import { GitExtension } from "./@types/git";
-import {
-	CreatePullRequestActionContext,
-	GitLensApi,
-	HoverCommandsActionContext,
-	OpenPullRequestActionContext
-} from "./@types/gitlens";
-import { SessionStatus, SessionStatusChangedEvent } from "./api/session";
+
+import { SessionStatusChangedEvent } from "./api/session";
 import { ContextKeys, GlobalState, setContext, WorkspaceState } from "./common";
 import { Config, configuration, Configuration } from "./configuration";
 import { extensionQualifiedId } from "./constants";
@@ -41,10 +34,6 @@ import { SaveTokenReason } from "./api/tokenManager";
 
 const extension = extensions.getExtension(extensionQualifiedId);
 export const extensionVersion = extension?.packageJSON?.version ?? "1.0.0";
-
-const gitLensDisposables: Disposable[] = [];
-let gitLensApiLocatorPromise: Promise<GitLensApi> | undefined;
-let gitLensLastHoverContext: { timestamp: Date; context: HoverCommandsActionContext } | undefined;
 
 interface BuildInfoMetadata {
 	buildNumber: string;
@@ -210,227 +199,6 @@ export async function activate(context: ExtensionContext) {
 			start
 		)} ms`
 	);
-
-	gitLensApiLocatorPromise = locateGitLensIntegration();
-	gitLensApiLocatorPromise
-		.then(api => {
-			if (!api) {
-				Logger.warn("GitLens: missing api");
-				return;
-			}
-
-			api.registerActionRunner<HoverCommandsActionContext>("hover.commands", {
-				partnerId: "codestream",
-				name: "CodeStream",
-				label: "$(comment) Leave a Comment",
-				run: function (context: HoverCommandsActionContext) {
-					try {
-						if (!Container.session.signedIn) {
-							// store the last context with a timestamp
-							// to try and re-run it later
-							gitLensLastHoverContext = { timestamp: new Date(), context: context };
-						}
-						// run it anyway -- it will pop open
-						runGitLensHoverCommand(context);
-					} catch (e) {
-						Logger.warn(`GitLens: hover.commands. Failed to handle actionRunner e=${e}`);
-					}
-				}
-			});
-		})
-		.catch(_ => {
-			Logger.warn(`GitLens: catch ${_}`);
-		});
-
-	context.subscriptions.push(
-		Container.agent.onUserDidCommit(e => {
-			const preferences = Container.session.user.preferences;
-			if (!preferences || preferences.reviewCreateOnCommit !== false) {
-				Logger.log(`User committed ${e.sha} - opening feedback request form`);
-				Container.webview.newReviewRequest(undefined, "VSC Commit Detected", true);
-			}
-		}),
-		Container.session.onDidChangeSessionStatus(event => {
-			const status = event.getStatus();
-			if (status === SessionStatus.SignedOut) {
-				if (gitLensDisposables && gitLensDisposables.length) {
-					gitLensDisposables.forEach(_ => _.dispose());
-					return;
-				}
-			}
-			if (status === SessionStatus.SignedIn) {
-				if (gitLensDisposables && gitLensDisposables.length) {
-					gitLensDisposables.forEach(_ => _.dispose());
-				}
-
-				registerGitLensIntegration();
-
-				setTimeout(() => {
-					if (!gitLensLastHoverContext || !gitLensLastHoverContext.context) return;
-
-					const now = new Date();
-					now.setMinutes(now.getMinutes() - 5);
-					// only re-run this if it happened in the last N minutes
-					if (gitLensLastHoverContext.timestamp >= now) {
-						runGitLensHoverCommand(gitLensLastHoverContext.context);
-					}
-					gitLensLastHoverContext = undefined;
-				}, 1000);
-			}
-		})
-	);
-}
-
-function runGitLensHoverCommand(context: HoverCommandsActionContext) {
-	if (!context) return;
-
-	Container.webview.newCodemarkRequest(
-		CodemarkType.Comment,
-		context.file
-			? ({
-					document: {
-						uri: Uri.parse(context.file.uri)
-					} as any,
-					selection: {
-						start: {
-							line: context.file.line
-						} as any
-					} as any
-			  } as any)
-			: undefined,
-		"VSC GitLens",
-		false
-	);
-}
-
-function locateGitLensIntegration() {
-	return new Promise<GitLensApi>((resolve, reject) => {
-		try {
-			const getGitLens = () =>
-				extensions.getExtension<Promise<GitLensApi>>("eamodio.gitlens") ||
-				extensions.getExtension<Promise<GitLensApi>>("eamodio.gitlens-insiders");
-
-			let gitlens = getGitLens();
-			if (!gitlens) {
-				Logger.log("GitLens: Not installed.");
-				if (Container.session.user.hasGitLens !== false) {
-					Container.agent.users.updateUser({ hasGitLens: false });
-				}
-				reject();
-				return;
-			}
-
-			let i = 0;
-			// NOTE: there's no event to listen to when another extension has activated
-			// so we have to poll to keep checking it. Open issue for that is:
-			// https://github.com/microsoft/vscode/issues/113783
-			const timeout = setTimeout(async _ => {
-				gitlens = getGitLens();
-				if (!gitlens) {
-					Logger.log(`GitLens: Not detected. Returning. attempt=${i}`);
-					clearInterval(timeout);
-					if (Container.session.user.hasGitLens !== false) {
-						Container.agent.users.updateUser({ hasGitLens: false });
-					}
-					reject();
-					return;
-				}
-				if (gitlens.isActive) {
-					try {
-						const api: GitLensApi = await gitlens.exports;
-						resolve(api);
-					} catch (e) {
-						Logger.warn(`GitLens: Failed to register. Giving up. attempt=${i} e=${e}`);
-						reject();
-					} finally {
-						clearInterval(timeout);
-					}
-				} else {
-					Logger.log(`GitLens: Not detected yet. attempt=${i}`);
-					i++;
-					if (i === 60) {
-						Logger.warn(`GitLens: Activation giving up. attempt=${i}`);
-						clearInterval(timeout);
-						reject();
-						return;
-					}
-				}
-			}, 10000);
-		} catch (e) {
-			Logger.warn(`GitLens: generic error e=${e}`);
-			reject();
-		}
-	});
-}
-
-async function registerGitLensIntegration() {
-	try {
-		const api = await gitLensApiLocatorPromise;
-		if (!api) {
-			return;
-		}
-
-		gitLensDisposables.push(
-			api.registerActionRunner<OpenPullRequestActionContext>("openPullRequest", {
-				partnerId: "codestream",
-				name: "CodeStream",
-				label: "Open Pull Request in VS Code",
-				run: function (context: OpenPullRequestActionContext) {
-					try {
-						let providerName;
-						if (typeof (context.pullRequest as any).provider === "string") {
-							providerName = (context.pullRequest as any).provider;
-						} else if (typeof (context.pullRequest as any).provider === "object") {
-							providerName = (context.pullRequest as any).provider.name;
-						} else if (context.provider) {
-							// later this won't be a string in the next GitLens version
-							providerName = context.provider.name;
-						}
-
-						const isGitHub = providerName === "GitHub";
-						if (isGitHub) {
-							Container.webview.openPullRequestByUrl(context.pullRequest.url, "VSC GitLens");
-						} else {
-							Logger.log(`GitLens: openPullRequest. No provider for ${providerName}`);
-						}
-					} catch (e) {
-						Logger.warn(
-							`GitLens: openPullRequest. Failed to handle actionRunner openPullRequest e=${e}`
-						);
-					}
-				}
-			}),
-			api.registerActionRunner<CreatePullRequestActionContext>("createPullRequest", {
-				partnerId: "codestream",
-				name: "CodeStream",
-				label: "Create Pull Request in VS Code",
-				run: function (context: CreatePullRequestActionContext) {
-					try {
-						if (context.branch) {
-							const editor = window.activeTextEditor;
-							Container.webview.newPullRequestRequest(
-								editor && editor.selection && !editor.selection.isEmpty ? editor : undefined,
-								"VSC GitLens",
-								{
-									name: context.branch.name,
-									repoPath: context.repoPath,
-									remote: (context.branch as any).remote || context.remote
-								}
-							);
-						} else {
-							Logger.log("GitLens: createPullRequest. No branch and/or remote");
-						}
-					} catch (e) {
-						Logger.warn(
-							`GitLens: createPullRequest. Failed to handle actionRunner createPullRequest e=${e}`
-						);
-					}
-				}
-			})
-		);
-	} catch (e) {
-		Logger.warn(`GitLens: generic error e=${e}`);
-	}
 }
 
 export async function deactivate(): Promise<void> {

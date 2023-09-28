@@ -402,8 +402,7 @@ export class CodeStreamAgentConnection implements Disposable {
 			// Register the server for file-based text documents
 			documentSelector: [
 				{ scheme: "file", language: "*" },
-				{ scheme: "untitled", language: "*" },
-				{ scheme: "vsls", language: "*" }
+				{ scheme: "untitled", language: "*" }
 			]
 		};
 	}

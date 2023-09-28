@@ -4,11 +4,6 @@ namespace CodeStream.VisualStudio.Core
 {
 	public static class RegularExpressions
 	{
-		public static readonly Regex LiveShareUrl = new Regex(
-			@"https:\/\/(?:.*?\.)?liveshare\.vsengsaas\.visualstudio\.com\/join\?",
-			RegexOptions.Compiled | RegexOptions.IgnoreCase
-		);
-
 		public static Regex Number = new Regex(@"^\d+$", RegexOptions.Compiled);
 
 		public static readonly Regex ApiKeyRegex = new Regex(

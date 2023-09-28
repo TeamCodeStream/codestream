@@ -67,8 +67,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Editor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Notifications.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Review.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Vsls.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Review.cs" />    
     <Compile Include="$(MSBuildThisFileDirectory)Models\IOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\IpcScope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MessageTypes.cs" />
