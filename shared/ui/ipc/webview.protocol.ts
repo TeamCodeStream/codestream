@@ -160,6 +160,12 @@ export interface ViewMethodLevelTelemetryNotification {
 	methodName: string;
 	newRelicAccountId?: number;
 	newRelicEntityGuid?: string;
+	languageId: string;
+	error: ViewMethodLevelTelemetryError;
+}
+
+export interface ViewMethodLevelTelemetryError {
+	type?: string;
 }
 
 export const ViewMethodLevelTelemetryNotificationType = new NotificationType<

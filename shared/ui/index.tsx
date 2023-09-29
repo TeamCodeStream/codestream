@@ -45,6 +45,7 @@ import { updateConfigs } from "@codestream/webview/store/configs/slice";
 import { fetchReview } from "@codestream/webview/store/reviews/thunks";
 import { switchToTeam } from "@codestream/webview/store/session/thunks";
 import "@formatjs/intl-listformat/polyfill-locales";
+import { isEmpty as _isEmpty } from "lodash-es";
 
 import Container from "./Container";
 import {
@@ -836,6 +837,9 @@ function listenForEvents(store) {
 	api.on(ViewMethodLevelTelemetryNotificationType, async e => {
 		store.dispatch(closeAllPanels());
 		store.dispatch(setCurrentMethodLevelTelemetry(e));
+		if (_isEmpty(e?.error?.type)) {
+			store.dispatch(openPanel(WebviewPanels.MethodLevelTelemetry));
+		}
 	});
 
 	api.on(ViewAnomalyNotificationType, async e => {
