@@ -10,7 +10,8 @@ export function generateMethodErrorRateQuery(
 	const spansLookup = metricTimesliceNames?.length
 		? `name in (${metricTimesliceNames.map(metric => `'${metric}'`).join(",")})`
 		: `name LIKE '${codeNamespace}%'`;
-	const spansQuery = `FROM Span SELECT count(*) AS 'errorCount' WHERE \`entity.guid\` = '${newRelicEntityGuid}' AND \`error.group.guid\` IS NOT NULL AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 1 day AGO LIMIT 100`;
+	const languageCrap = languageId === "python" ? " AND code.function != '__call__' " : "";
+	const spansQuery = `FROM Span SELECT count(*) AS 'errorCount' WHERE \`entity.guid\` = '${newRelicEntityGuid}' ${languageCrap} AND \`error.group.guid\` IS NOT NULL AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 1 day AGO LIMIT 100`;
 	const metricsLookup = metricTimesliceNames?.length
 		? `metricTimesliceName in (${metricTimesliceNames
 				.map(z => `'Errors/WebTransaction/${z}'`)

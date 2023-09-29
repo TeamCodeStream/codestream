@@ -112,7 +112,7 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			streamId,
 			commitHash,
 		});
-		this.cacheResponse(response);
+		this.cacheResponse([response]);
 		return response.markerLocations;
 	}
 

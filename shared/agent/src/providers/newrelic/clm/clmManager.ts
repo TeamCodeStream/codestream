@@ -29,6 +29,7 @@ import Cache from "timed-cache";
 import { GitRepository } from "../../../git/models/repository";
 import { FLTStrategyFactory } from "./FLTStrategy";
 import { keyFromFacet } from "./FLTCodeAttributeStrategy";
+import { isEmpty } from "lodash";
 
 export class ClmManager {
 	constructor(private provider: INewRelicProvider) {}
@@ -97,7 +98,7 @@ export class ClmManager {
 			resolutionMethod === "locator" &&
 			!request.locator?.functionName &&
 			!request.locator?.namespace &&
-			!request.locator?.namespaces
+			isEmpty(request.locator?.namespaces)
 		) {
 			ContextLogger.warn("getFileLevelTelemetry: Missing locator for resolutionMethod 'locator'");
 			return undefined;

@@ -331,13 +331,13 @@ export class CodeStreamAgent implements Disposable {
 		}
 	}
 
-	@log({
-		args: { 0: type => type.method },
-		prefix: (context, type, params) =>
-			`${context.prefix}(${type.method}${
-				type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
-			})`,
-	})
+	// @log({
+	// 	args: { 0: type => type.method },
+	// 	prefix: (context, type, params) =>
+	// 		`${context.prefix}(${type.method}${
+	// 			type.method === DidChangeDataNotificationType.method ? `:${params.type}` : ""
+	// 		})`,
+	// })
 	sendNotification<NT extends NotificationType<any, any>>(
 		type: NT,
 		params: NotificationParamsOf<NT>

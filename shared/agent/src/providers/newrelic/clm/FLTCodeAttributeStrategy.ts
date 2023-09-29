@@ -156,12 +156,18 @@ export type MethodAverageDurationResponse = {
 	};
 };
 
+const ANONYMOUS_IDENTIFIER = "<anonymous>";
+
 export function keyFromFacet(facet: string[]) {
-	return facet.join(":");
+	// Only create a key entry with lineno / colno level detail for non-anonymous functions
+	if (facet.length > 1 && facet[0].endsWith(ANONYMOUS_IDENTIFIER)) {
+		return facet.join("|");
+	}
+	return facet[0];
 }
 
 export function facetFromKey(key: string) {
-	return key.split(":");
+	return key.split("|");
 }
 
 export type MetricSpanCount = {
@@ -176,9 +182,20 @@ class SampleSizeHolder {
 		this.sampleSizeMap.set(keyFromFacet(metricFacet), value);
 	}
 
-	has(metricFacet: string[]) {
+	has(metricFacet: string[]): boolean {
 		return this.sampleSizeMap.has(keyFromFacet(metricFacet));
 	}
+
+	// Consider only the metricTimesliceName - no lineno / colno
+	// hasTimesliceName(metricFacet: string): boolean {
+	// 	const keys = this.keys();
+	// 	for (const key of keys) {
+	// 		if (key[0] === metricFacet) {
+	// 			return true
+	// 		}
+	// 	}
+	// 	return false;
+	// }
 
 	get(metricFacet: string[]) {
 		return this.sampleSizeMap.get(keyFromFacet(metricFacet));
@@ -217,9 +234,10 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		const spans = this.applyLanguageFilter(spanResponse);
 		const groupedByTransactionName = _groupBy(
 			spans,
-			(_: Span) => `${_.name}:${_["code.lineno"]}:${_["code.column"]}`
+			// (_: Span) => _.name?.endsWith(ANONYMOUS_IDENTIFIER) ? `${_.name}|${_["code.lineno"]}|${_["code.column"]}` : _.name
+			(_: Span) => `${_.name}|${_["code.lineno"] ?? "null"}|${_["code.column"] ?? "null"}`
 		);
-		const metricTimesliceNames = spans.flatMap(_ => (_.name ? [_.name] : [])); // Filter out undefined without having to typecast
+		const metricTimesliceNames = Array.from(new Set(spans.flatMap(_ => (_.name ? [_.name] : [])))); // Filter out undefined without having to typecast
 		this.request.options = this.request.options || {};
 
 		const [averageDurationResponse, sampleSizeResponse, errorRateResponse] = await Promise.all([
@@ -616,12 +634,24 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 
 	addMethodName(
 		groupedByTransactionName: Index<Span[]>,
-		metricTimesliceNames: MetricTimeslice[]
+		metricTimeslices: MetricTimeslice[]
 	): EnhancedMetricTimeslice[] {
-		return metricTimesliceNames.reduce<EnhancedMetricTimeslice[]>((enhTimslices, _) => {
+		return metricTimeslices.reduce<EnhancedMetricTimeslice[]>((enhTimslices, metricTimeslice) => {
 			const additionalMetadata: AdditionalMetadataInfo = {};
-			const facetKey = `${this.timesliceNameMap(_.facet[0])}:${_.facet[1]}:${_.facet[2]}`;
-			const metadata = groupedByTransactionName[facetKey];
+			const facetKey = `${this.timesliceNameMap(metricTimeslice.facet[0])}|${
+				metricTimeslice.facet[1] ?? "null"
+			}|${metricTimeslice.facet[2] ?? "null"}`;
+			let metadata = groupedByTransactionName[facetKey];
+			if (!metadata) {
+				// Search on just the metricTimesliceName without lineno / colno for metrics source
+				const key = Object.keys(groupedByTransactionName).find(facetKeys => {
+					const parts = facetKeys.split("|");
+					return parts[0] === this.timesliceNameMap(metricTimeslice.facet[0]);
+				});
+				if (key) {
+					metadata = groupedByTransactionName[key];
+				}
+			}
 			if (metadata) {
 				[
 					"tags.commit",
@@ -645,10 +675,10 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			const commit = additionalMetadata["tags.commit"];
 			switch (this.languageId) {
 				case "ruby":
-					functionInfo = this.parseRubyFunctionCoordinates(_.facet[0], codeNamespace);
+					functionInfo = this.parseRubyFunctionCoordinates(metricTimeslice.facet[0], codeNamespace);
 					break;
 				case "python":
-					functionInfo = this.parsePythonFunctionCoordinates(_.facet[0]);
+					functionInfo = this.parsePythonFunctionCoordinates(metricTimeslice.facet[0]);
 					break;
 				case "csharp":
 					if (codeNamespace && codeFunction) {
@@ -694,7 +724,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 			}
 
 			const enhTimeslice = {
-				..._,
+				...metricTimeslice,
 				metadata: additionalMetadata,
 				namespace: additionalMetadata["code.namespace"],
 				className,
