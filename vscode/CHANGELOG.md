@@ -1,5 +1,11 @@
 # Change Log
 
+## [14.30.1] - 2023-09-29
+
+### Fixed
+
+- Fixes an issue that prevented the CLM panel from showing
+
 ## [14.30.0] - 2023-09-27
 
 ### Added
