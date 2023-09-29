@@ -35,7 +35,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			);
 			const results = strategy.addMethodName(
 				{
-					"Function/routes.app:hello_world:1:undefined": [
+					"Function/routes.app:hello_world|1|null": [
 						{
 							traceId: "123",
 							transactionId: "abc",
@@ -45,7 +45,7 @@ describe("FLTCodeAttributeStrategy", () => {
 							"code.function": "hello_world",
 						},
 					],
-					"Function/routes.app:MyClass.my_method:4:undefined": [
+					"Function/routes.app:MyClass.my_method|4|null": [
 						{
 							traceId: "456",
 							transactionId: "def",
@@ -128,7 +128,7 @@ describe("FLTCodeAttributeStrategy", () => {
 			);
 			const results = strategy.addMethodName(
 				{
-					"Carrot/foo_bar.system.tasks.bill_credit_payment_item:27:undefined": [
+					"Carrot/foo_bar.system.tasks.bill_credit_payment_item|27|null": [
 						{
 							"code.filepath": "/app/foo_bar/system/tasks.py",
 							"code.function": "bill_credit_payment_item",
@@ -183,7 +183,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				provider
 			);
 			const groupedByTransactionName = {
-				"Controller/agents/show:16:undefined": [
+				"Controller/agents/show|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "AgentsController",
@@ -195,7 +195,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "5195e0f31cf1fce4",
 					},
 				],
-				"Controller/agents/create:16:undefined": [
+				"Controller/agents/create|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "AgentsController",
@@ -207,7 +207,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2ac9f995b004df82",
 					},
 				],
-				"Controller/agents/destroy:55:undefined": [
+				"Controller/agents/destroy|55|null": [
 					{
 						"code.lineno": 55,
 						"code.namespace": "AgentsController",
@@ -303,7 +303,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				provider
 			);
 			const groupedByTransactionName = {
-				"MessageBroker/ActiveJob::Async/Queue/Produce/Named/default:8:undefined": [
+				"MessageBroker/ActiveJob::Async/Queue/Produce/Named/default|8|null": [
 					{
 						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb",
 						"code.function": "perform",
@@ -316,7 +316,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "5154409dd464aad1",
 					},
 					{
-						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb:8:undefined",
+						"code.filepath": "/usr/src/app/app/jobs/notifier_job.rb|8|null",
 						"code.function": "perform",
 						"code.lineno": 8,
 						"code.namespace": "NotifierJob",
@@ -371,7 +371,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				provider
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
-				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method:11:undefined": [
+				"Nested/OtherTransaction/Background/Custom::Helpers/custom_class_method|11|null": [
 					{
 						"code.lineno": "11",
 						"code.namespace": "Custom::Helpers",
@@ -393,7 +393,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "a0627ed02eb626c0",
 					},
 				],
-				"Custom/CLMtesting/InstanceMethod:33:undefined": [
+				"Custom/CLMtesting/InstanceMethod|33|null": [
 					{
 						"code.lineno": 33,
 						"code.namespace": "Custom::Helpers",
@@ -415,7 +415,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2e1a7d60f6a4400d",
 					},
 				],
-				"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method:27:undefined": [
+				"Nested/OtherTransaction/Background/Custom::Helpers/custom_instance_method|27|null": [
 					{
 						"code.lineno": "27",
 						"code.namespace": "Custom::Helpers",
@@ -437,7 +437,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "2e1a7d60f6a4400d",
 					},
 				],
-				"Custom/CLMtesting/ClassMethod:16:undefined": [
+				"Custom/CLMtesting/ClassMethod|16|null": [
 					{
 						"code.lineno": 16,
 						"code.namespace": "Custom::Helpers",
@@ -569,7 +569,7 @@ describe("FLTCodeAttributeStrategy", () => {
 				provider
 			);
 			const groupedByTransactionName: Dictionary<Span[]> = {
-				"Nested/OtherTransaction/Background/WhichIsWhich/samename:20:undefined": [
+				"Nested/OtherTransaction/Background/WhichIsWhich/samename|20|null": [
 					{
 						"code.filepath": "/usr/src/app/lib/which_is_which.rb",
 						"code.function": "samename",
@@ -582,7 +582,7 @@ describe("FLTCodeAttributeStrategy", () => {
 						transactionId: "90b4cb9daa96f88b",
 					},
 				],
-				"Nested/OtherTransaction/Background/WhichIsWhich/samename:9:undefined": [
+				"Nested/OtherTransaction/Background/WhichIsWhich/samename|9|null": [
 					{
 						"code.filepath": "/usr/src/app/lib/which_is_which.rb",
 						"code.function": "self.samename",
@@ -660,7 +660,7 @@ describe("FLTCodeAttributeStrategy", () => {
 
 			const results = await strategy.addMethodName(
 				{
-					"Function/apis.v2.superheros:superheros_superhero_by_slug:undefined:undefined": [
+					"Function/apis.v2.superheros:superheros_superhero_by_slug|null|null": [
 						{
 							"code.filepath": "/superheros/apis/v2/superheroes.py",
 							"code.function": "SuperheroBySlug",
