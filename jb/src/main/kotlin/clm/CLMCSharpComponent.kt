@@ -36,9 +36,9 @@ class CSharpSymbolResolver : SymbolResolver {
         val elements = traverseForElementsOfType(psiFile, "CLASS_KEYWORD")
         val elementList = mutableListOf<String>();
         for (element in elements) {
-            val classNameNode = findFirstSiblingOfType(element, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER"))
+            val classNameNode = findFirstSiblingOfType(element, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "cs:id-role"))
                 ?: continue
-            val namespaceNode = findParentOfType(classNameNode, "NAMESPACE_DECLARATION") ?: continue
+            val namespaceNode = findParentOfType(classNameNode, setOf("NAMESPACE_DECLARATION", "cs:namespace-block-declaration")) ?: continue
             val namespaceText = getNamespaceQualifiedName(namespaceNode) ?: continue
             elementList.add("${namespaceText}.${classNameNode.text}")
         }
@@ -214,12 +214,12 @@ class CSharpSymbolResolver : SymbolResolver {
     private fun isCsharpNamespace(psiElement: PsiElement): Boolean =
         "NAMESPACE_DECLARATION" === psiElement.elementType.toString()
 
-    private fun findParentOfType(element: PsiElement, elementType: String): PsiElement? {
+    private fun findParentOfType(element: PsiElement, searchElements: Set<String>): PsiElement? {
         var searchNode: PsiElement? = element
         do {
             searchNode = searchNode?.parent
-        } while (searchNode != null && searchNode.elementType.toString() != elementType)
-        return if (searchNode.elementType.toString() == elementType) {
+        } while (searchNode != null && searchNode !is PsiFile && !searchElements.contains(searchNode.elementType.toString()))
+        return if (searchElements.contains(searchNode.elementType.toString())) {
             searchNode
         } else {
             null
@@ -231,7 +231,7 @@ class CSharpSymbolResolver : SymbolResolver {
     }
 
     private fun getNamespaceQualifiedNameMethodTwo(namespaceNode: PsiElement): String? {
-        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT"))
+        val elements = findAllSiblingsOfType(namespaceNode.firstChild, setOf("IDENTIFIER", "DECLARATION_IDENTIFIER", "DOT", "cs:id-role"))
         return elements.joinToString("") { it.text }
     }
 
