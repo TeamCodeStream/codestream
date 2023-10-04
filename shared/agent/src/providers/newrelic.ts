@@ -4707,7 +4707,7 @@ export class NewRelicProvider
 				queryWhere += ` AND message = '${request.filters.message}'`;
 			}
 
-			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
+			const query = `SELECT timestamp, level, message FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
 
 			ContextLogger.log(`getLogs query: ${query}`);
 

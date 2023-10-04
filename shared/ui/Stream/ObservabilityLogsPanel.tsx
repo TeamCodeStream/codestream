@@ -18,11 +18,25 @@ import { closePanel } from "./actions";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import Button from "./Button";
 import Select from "react-select";
+import { ObservabilityLoadingLogs } from "./ObservabilityLoading";
+import Timestamp from "./Timestamp";
+import Draggable from "react-draggable";
 
 interface SelectedOption {
 	value: string;
 	label: string;
 }
+
+const LogSeverity = styled.span`
+	border-radius: 1px;
+	box-sizing: border-box;
+	display: flex;
+	height: 8px;
+	position: relative;
+	width: 8px;
+	overflow: hidden;
+	margin: 3.5px auto;
+`;
 
 const SearchBar = styled.div`
 	display: flex;
@@ -77,30 +91,17 @@ const SearchBar = styled.div`
 	}
 `;
 
-export const LogRow = (props: {
-	logResult: LogResult;
-	fieldDefinitions: LogFieldDefinition[];
-	evenRow: boolean;
-}) => {
-	return (
-		<tr
-			style={{
-				backgroundColor: props.evenRow ? "transparent" : "lightgray",
-				color: props.evenRow ? "lightgray" : "initial",
-			}}
-		>
-			{props.logResult &&
-				props.fieldDefinitions &&
-				props.fieldDefinitions.length > 0 &&
-				props.fieldDefinitions.map(fd => {
-					return (
-						<td style={{ wordWrap: "break-word", overflowX: "visible" }}>
-							{props.logResult[fd.key!]}
-						</td>
-					);
-				})}
-		</tr>
-	);
+const logSeverityToColor = {
+	fatal: "#df2d24",
+	error: "#df2d24",
+	warn: "#ffd23d",
+	info: "#0c74df",
+	trace: "",
+	debug: "",
+};
+
+const columnSpanMapping = {
+	level: 2,
 };
 
 export default function ObservabilityLogsPanel() {
@@ -108,6 +109,7 @@ export default function ObservabilityLogsPanel() {
 	const searchInput = useRef<HTMLInputElement>(null);
 
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
+	const [sortedFieldDefinitions, setSortedFieldDefinitions] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
 
@@ -163,6 +165,9 @@ export default function ObservabilityLogsPanel() {
 
 					if (response.logDefinitions) {
 						setFieldDefinitions(response.logDefinitions);
+
+						// TODO: Don't always do this when a preference is found instead.
+						setSortedFieldDefinitions(["level", "timestamp", "message"]);
 					}
 				}
 			}
@@ -173,6 +178,8 @@ export default function ObservabilityLogsPanel() {
 
 	const fetchLogs = async (entityGuid?: string) => {
 		try {
+			setIsLoading(true);
+
 			if (entityGuid) {
 				setResults([]);
 				setTotalItems(0);
@@ -211,7 +218,7 @@ export default function ObservabilityLogsPanel() {
 				setTotalItems(0);
 			}
 		} finally {
-			//setLoadingLogs(false);
+			setIsLoading(false);
 		}
 	};
 
@@ -261,9 +268,80 @@ export default function ObservabilityLogsPanel() {
 		return (
 			<>
 				{results.map((r, idx) => (
-					<LogRow logResult={r} fieldDefinitions={fieldDefinitions} evenRow={idx % 2 === 0} />
+					<LogRow logResult={r} evenRow={idx % 2 === 0} />
 				))}
 			</>
+		);
+	};
+
+	const renderHeaderRow = () => {
+		const handleStop = oldIndex => (e, data) => {
+			const newIndex = Math.round(data.x / 100);
+			if (newIndex === 0) return;
+
+			const updatedColumns = [...sortedFieldDefinitions];
+			const [removed] = updatedColumns.splice(oldIndex, 1);
+			updatedColumns.splice(oldIndex + newIndex, 0, removed);
+			setSortedFieldDefinitions(updatedColumns);
+		};
+
+		return (
+			<tr>
+				{sortedFieldDefinitions &&
+					sortedFieldDefinitions.length > 0 &&
+					sortedFieldDefinitions.map((fd, idx) => {
+						return (
+							<Draggable axis="x" key={idx} onStop={handleStop(idx)}>
+								<th
+									colSpan={columnSpanMapping[fd] || 1}
+									style={{ border: "1px solid darkgray", padding: "3px 8px 3px 8px" }}
+								>
+									{fd}
+								</th>
+							</Draggable>
+						);
+					})}
+			</tr>
+		);
+	};
+
+	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
+		const formatRowValue = (fieldName, fieldValue) => {
+			if (fieldName === "timestamp") {
+				return (
+					<td>
+						<Timestamp time={fieldValue}></Timestamp>
+					</td>
+				);
+			}
+
+			if (fieldName === "level") {
+				return (
+					<>
+						<td>
+							<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
+						</td>
+						<td>{fieldValue}</td>
+					</>
+				);
+			}
+
+			return <td>{fieldValue}</td>;
+		};
+
+		return (
+			<tr
+				style={{
+					color: "lightgray",
+					borderBottom: "1px solid lightgray",
+				}}
+			>
+				{props.logResult &&
+					sortedFieldDefinitions &&
+					sortedFieldDefinitions.map(fd => {
+						return formatRowValue(fd, props.logResult[fd]);
+					})}
+			</tr>
 		);
 	};
 
@@ -308,6 +386,7 @@ export default function ObservabilityLogsPanel() {
 					<Button
 						style={{ paddingLeft: "8px", paddingRight: "8px" }}
 						onClick={() => fetchLogs(derivedState.entityGuid)}
+						loading={isLoading}
 					>
 						Query Logs
 					</Button>
@@ -317,24 +396,29 @@ export default function ObservabilityLogsPanel() {
 				style={{
 					height: maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
 					overflow: "hidden",
+					padding: "0px 20px 20px 20px",
 				}}
 			>
+				{!isLoading && totalItems > 0 && (
+					<div style={{ fontSize: "14px", fontWeight: "bold", paddingBottom: "10px" }}>
+						{totalItems.toLocaleString()} Logs
+					</div>
+				)}
+
 				<ScrollBox>
-					<div className="vscroll" style={{ paddingTop: "10px", paddingLeft: "10px" }}>
+					<div className="vscroll">
 						{totalItems > 0 && (
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
-								<thead>
-									<tr style={{ borderBottom: "1px solid lightgray" }}>
-										{fieldDefinitions &&
-											fieldDefinitions.map((fd, idx) => {
-												return <th>{fd.key}</th>;
-											})}
-									</tr>
-								</thead>
+								<thead>{renderHeaderRow()}</thead>
 								<tbody>{renderResults()}</tbody>
 							</table>
 						)}
-						{!totalItems && <div className="no-matches">No results match your search.</div>}
+						{!totalItems && isLoading && <ObservabilityLoadingLogs />}
+						{!totalItems && !isLoading && (
+							<div className="no-matches" style={{ margin: "0" }}>
+								No results match your search.
+							</div>
+						)}
 					</div>
 				</ScrollBox>
 			</div>
