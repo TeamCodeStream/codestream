@@ -100,3 +100,26 @@ export const ObservabilityLoadingVulnerabilities = () => {
 		</>
 	);
 };
+
+export const ObservabilityLoadingLogs = () => {
+	return (
+		<>
+			<SkeletonFlexContainer>
+				<SkeletonLoader style={{ width: "65%", margin: "0px 10px 3px 40px" }} />
+				<SkeletonLoader style={{ width: "6%", margin: "0px 10px 3px 0px" }} />
+			</SkeletonFlexContainer>
+			<SkeletonFlexContainer>
+				<SkeletonLoader style={{ width: "45%", margin: "3px 10px 3px 40px" }} />
+				<SkeletonLoader style={{ width: "6%", margin: "3px 10px 3px 0px" }} />
+			</SkeletonFlexContainer>
+			<SkeletonFlexContainer>
+				<SkeletonLoader style={{ width: "45%", margin: "3px 10px 3px 40px" }} />
+				<SkeletonLoader style={{ width: "6%", margin: "3px 10px 3px 0px" }} />
+			</SkeletonFlexContainer>
+			<SkeletonFlexContainer>
+				<SkeletonLoader style={{ width: "55%", margin: "3px 10px 3px 40px" }} />
+				<SkeletonLoader style={{ width: "6%", margin: "3px 10px 3px 0px" }} />
+			</SkeletonFlexContainer>
+		</>
+	);
+};
