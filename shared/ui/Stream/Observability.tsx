@@ -1341,14 +1341,11 @@ export const Observability = React.memo((props: Props) => {
 
 																							{
 																								<>
-																									<Icon
-																										name="search"
-																										className={cx("clickable", {
-																											"icon-override-actions-visible": true,
-																										})}
-																										title="Search Entity Logs"
-																										placement="bottomLeft"
-																										delay={1}
+																									<Row
+																										style={{
+																											padding: "2px 10px 2px 30px",
+																										}}
+																										className={"pr-row"}
 																										onClick={e => {
 																											e.preventDefault();
 																											e.stopPropagation();
@@ -1363,7 +1360,19 @@ export const Observability = React.memo((props: Props) => {
 																												)
 																											);
 																										}}
-																									/>
+																									>
+																										<span
+																											data-testid={`view-logs-${ea.entityGuid}`}
+																											style={{ marginLeft: "2px" }}
+																										>
+																											<Icon
+																												name="search"
+																												title="View Logs"
+																												onClick={e => {}}
+																											/>
+																											View Logs
+																										</span>
+																									</Row>
 																								</>
 																							}
 																						</>
