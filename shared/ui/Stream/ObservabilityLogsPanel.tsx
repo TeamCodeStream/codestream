@@ -16,6 +16,13 @@ import {
 import { CodeStreamState } from "../store";
 import { closePanel } from "./actions";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
+import Button from "./Button";
+import Select from "react-select";
+
+interface SelectedOption {
+	value: string;
+	label: string;
+}
 
 const SearchBar = styled.div`
 	display: flex;
@@ -31,7 +38,7 @@ const SearchBar = styled.div`
 			// make space for the search icon
 			padding-left: 32px !important;
 			// the bookmark icon is narrower so requires less space
-			padding-right: 45px !important;
+			padding-right: 32px !important;
 			height: 100%;
 			border: 1px solid var(--base-border-color);
 			border-left: none;
@@ -40,6 +47,12 @@ const SearchBar = styled.div`
 		.icon.search {
 			position: absolute;
 			left: 8px;
+			top: 6px;
+			opacity: 0.5;
+		}
+		.icon.clear {
+			position: absolute;
+			right: 18px;
 			top: 6px;
 			opacity: 0.5;
 		}
@@ -97,6 +110,11 @@ export default function ObservabilityLogsPanel() {
 	const [fieldDefinitions, setFieldDefinitions] = useState<LogFieldDefinition[]>([]);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [query, setQuery] = useState<string>("");
+
+	const [selectedSinceOption, setSelectedSinceOption] = useState<SelectedOption | undefined>(
+		undefined
+	);
+	const [selectSinceOptions, setSelectSinceOptions] = useState<SelectedOption[]>([]);
 	const [maximized, setMaximized] = useState<boolean>(false);
 	const [results, setResults] = useState<LogResult[]>([]);
 	const [totalItems, setTotalItems] = useState<number>(0);
@@ -109,8 +127,24 @@ export default function ObservabilityLogsPanel() {
 	});
 
 	useDidMount(() => {
+		const defaultOption: SelectedOption = {
+			value: "30 MINUTES AGO",
+			label: "30 Minutes Ago",
+		};
+
+		const sinceOptions: SelectedOption[] = [
+			defaultOption,
+			{ value: "60 MINUTES AGO", label: "60 Minutes Ago" },
+			{ value: "3 HOURS AGO", label: "3 Hours Ago" },
+			{ value: "8 HOURS AGO", label: "8 Hours Ago" },
+			{ value: "1 DAY AGO", label: "1 Day Ago" },
+			{ value: "3 DAYS AGO", label: "3 Days Ago" },
+			{ value: "7 DAYS AGO", label: "7 Days Ago" },
+		];
+
+		setSelectSinceOptions(sinceOptions);
+		setSelectedSinceOption(defaultOption);
 		fetchFieldDefinitions(derivedState.entityGuid);
-		fetchLogs(derivedState.entityGuid);
 	});
 
 	const fetchFieldDefinitions = async (entityGuid?: string) => {
@@ -148,7 +182,7 @@ export default function ObservabilityLogsPanel() {
 					entityGuid,
 					filters,
 					limit: "MAX",
-					since: "3 HOURS AGO",
+					since: selectedSinceOption?.value || "30 MINUTES AGO",
 					order: {
 						field: "timestamp",
 						direction: "DESC",
@@ -210,106 +244,11 @@ export default function ObservabilityLogsPanel() {
 			text = text.replace(/\s*has:\"(.*?)\"\s*/, " ");
 		}
 
-		// if (text.match(/\b(is|status):approved\b/)) {
-		// 	filters.status = "approved";
-		// 	text = text.replace(/\s*(is|status):approved\s*/, " ");
-		// }
-		// if (text.match(/\b(is|type):issue\b/)) {
-		// 	filters.type = "issue";
-		// 	text = text.replace(/\s*(is|type):issue\s*/, " ");
-		// }
-		// if (text.match(/\b(is|type):comment\b/)) {
-		// 	filters.type = "comment";
-		// 	text = text.replace(/\s*(is|type):comment\s*/, " ");
-		// }
-		// if (text.match(/\b(is|type):fr\b/)) {
-		// 	filters.type = "review";
-		// 	text = text.replace(/\s*(is|type):fr\s*/, " ");
-		// }
-		// if (text.match(/\b(is|type):cr\b/)) {
-		// 	filters.type = "review";
-		// 	text = text.replace(/\s*(is|type):cr\s*/, " ");
-		// }
-
-		// while ((match = text.match(/\btag:(\S+)(\s|$)/))) {
-		// 	if (!filters.tags) filters.tags = [];
-		// 	filters.tags.push(match[1]);
-		// 	text = text.replace(/\s*tag:(\S+)\s*/, " ");
-		// }
-		// if (text.match(/\bno:tag\b/)) {
-		// 	filters.noTag = true;
-		// 	text = text.replace(/\s*no:tag\s*/, " ");
-		// }
-
-		// match = text.match(/\bbranch:\"(.*?)\"(\s|$)/);
-		// if (match) {
-		// 	filters.branch = match[1];
-		// 	text = text.replace(/\s*branch:\"(.*?)\"\s*/, " ");
-		// }
-		// match = text.match(/\bbranch:(\S+)(\s|$)/);
-		// if (match) {
-		// 	filters.branch = match[1];
-		// 	text = text.replace(/\s*branch:(\S+)\s*/, " ");
-		// }
-
-		// match = text.match(/\bcommit:\"(.*?)\"(\s|$)/);
-		// if (match) {
-		// 	filters.commit = match[1];
-		// 	text = text.replace(/\s*commit:\"(.*?)\"\s*/, " ");
-		// }
-		// match = text.match(/\bcommit:(\S+)(\s|$)/);
-		// if (match) {
-		// 	filters.commit = match[1];
-		// 	text = text.replace(/\s*commit:(\S+)\s*/, " ");
-		// }
-
-		// match = text.match(/\brepo:\"(.*?)\"(\s|$)/);
-		// if (match) {
-		// 	filters.repo = match[1];
-		// 	text = text.replace(/\s*repo:\"(.*?)\"\s*/, " ");
-		// }
-		// match = text.match(/\brepo:(\S+)(\s|$)/);
-		// if (match) {
-		// 	filters.repo = match[1];
-		// 	text = text.replace(/\s*repo:(\S+)\s*/, " ");
-		// }
-
-		// match = text.match(/\bupdated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
-		// if (match) {
-		// 	const date = new Date(match[2], match[3] - 1, match[4]);
-		// 	if (match[1] === "<") filters.updatedBefore = date.getTime();
-		// 	if (match[1] === ">") filters.updatedAfter = date.getTime();
-		// 	if (!match[1]) filters.updatedOn = date;
-		// 	text = text.replace(/\s*updated:[<>]?(\S+)\s*/, " ");
-		// }
-		// match = text.match(/\bcreated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
-		// if (match) {
-		// 	const date = new Date(match[2], match[3] - 1, match[4]);
-		// 	if (match[1] === "<") filters.createdBefore = date.getTime();
-		// 	if (match[1] === ">") filters.createdAfter = date.getTime();
-		// 	if (!match[1]) filters.createdOn = date;
-		// 	text = text.replace(/\s*created:[<>]?(\S+)\s*/, " ");
-		// }
-		// match = text.match(/\bupdated:([<>]?)(\d\d\d\d)-(\d+)-(\d+)(\s|$)/);
-		// if (match) {
-		// 	const date = new Date();
-		// 	date.setHours(0, 0, 0, 0);
-		// 	if (match[2] === "yesterday") date.setDate(date.getDate() - 1);
-		// 	if (match[1] === "<") filters.updatedBefore = date.getTime();
-		// 	if (match[1] === ">") filters.updatedAfter = date.getTime();
-		// 	if (!match[1]) filters.updatedOn = date;
-		// 	text = text.replace(/\s*updated:[<>]?(\S+)\s*/, " ");
-		// }
-		// match = text.match(/\bcreated:([<>]?)(yesterday|today)(\s|$)/);
-		// if (match) {
-		// 	const date = new Date();
-		// 	date.setHours(0, 0, 0, 0);
-		// 	if (match[2] === "yesterday") date.setDate(date.getDate() - 1);
-		// 	if (match[1] === "<") filters.createdBefore = date.getTime();
-		// 	if (match[1] === ">") filters.createdAfter = date.getTime();
-		// 	if (!match[1]) filters.createdOn = date;
-		// 	text = text.replace(/\s*created:[<>]?(\S+)\s*/, " ");
-		// }
+		match = text.match(/\message:\"(.*?)\"(\s|$)/);
+		if (match) {
+			filters.message = match[1];
+			text = text.replace(/\s*message:\"(.*?)\"\s*/, " ");
+		}
 
 		return filters;
 	};
@@ -339,12 +278,8 @@ export default function ObservabilityLogsPanel() {
 		>
 			<PanelHeader title="Logs">
 				<SearchBar className="search-bar">
-					<div className="search-input">
-						<Icon
-							name="search"
-							className="search"
-							onClick={() => fetchLogs(derivedState.entityGuid)}
-						/>
+					<div className="search-input" style={{ width: "70%", paddingRight: "10px" }}>
+						<Icon name="search" className="search" />
 						<input
 							name="q"
 							ref={searchInput}
@@ -354,10 +289,28 @@ export default function ObservabilityLogsPanel() {
 							onChange={e => {
 								setQuery(e.target.value);
 							}}
-							placeholder="Search entity logs"
+							placeholder="Query logs in the selected entity"
 							autoFocus
 						/>
+						<Icon name="x" className="clear" onClick={e => setQuery("")} />
 					</div>
+					<div style={{ width: "25%", paddingRight: "10px" }}>
+						<Select
+							id="input-since"
+							name="since"
+							classNamePrefix="react-select"
+							value={selectedSinceOption}
+							placeholder="Since"
+							options={selectSinceOptions}
+							onChange={value => setSelectedSinceOption(value)}
+						/>
+					</div>
+					<Button
+						style={{ paddingLeft: "8px", paddingRight: "8px" }}
+						onClick={() => fetchLogs(derivedState.entityGuid)}
+					>
+						Query Logs
+					</Button>
 				</SearchBar>
 			</PanelHeader>
 			<div

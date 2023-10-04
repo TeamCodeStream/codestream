@@ -4703,6 +4703,10 @@ export class NewRelicProvider
 				});
 			}
 
+			if (request.filters.message && request.filters.message.length > 0) {
+				queryWhere += ` AND message = '${request.filters.message}'`;
+			}
+
 			const query = `SELECT * FROM Log ${queryWhere} ${querySince} ${queryOrder} ${queryLimit}`;
 
 			ContextLogger.log(`getLogs query: ${query}`);
