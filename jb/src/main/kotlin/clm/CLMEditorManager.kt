@@ -89,10 +89,6 @@ import java.util.concurrent.Callable
 
 private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 
-fun prettyRange(range: Range): String {
-    return "${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}"
-}
-
 data class RenderElements(
     val range: TextRange,
     val referenceOnHoverPresentation: InlayPresentation,
@@ -546,7 +542,7 @@ abstract class CLMEditorManager(
                         val offset = editor.logicalPositionToOffset(LogicalPosition(currentLineNumber,
                             metricSource.column - 1))
                         val element = psiFile.findElementAt(offset)
-                        val parentFunction = element?.findParentOfType<JSFunctionExpressionImpl<*>>()
+                        val parentFunction = if (element != null) symbolResolver.findParentFunction(element) else null
 //                        if (element != null) {
 //                            logger.info("hovered element ${element.text} at ${element.textRange}")
 //                        }

@@ -52,6 +52,7 @@ interface SymbolResolver {
     ): PsiElement?
 
     fun findTopLevelFunction(psiFile: PsiFile, functionName: String): PsiElement?
+    fun findParentFunction(psiElement: PsiElement): PsiElement?
     fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements>
 }
 

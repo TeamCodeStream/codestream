@@ -1,6 +1,8 @@
 package com.codestream.clm
 
 import com.codestream.agentService
+import com.codestream.extensions.prettyRange
+import com.codestream.extensions.toRangeIgnoreColumn
 import com.codestream.protocols.agent.CSReferenceLocation
 import com.codestream.protocols.agent.ComputeCurrentLocationsRequest
 import com.codestream.protocols.agent.ComputeCurrentLocationsResult
@@ -13,8 +15,6 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.toImmutableMap
-import org.eclipse.lsp4j.Position
-import org.eclipse.lsp4j.Range
 
 class MetricsByLocationManager {
     private val logger = Logger.getInstance(MetricsByLocationManager::class.java)
@@ -56,12 +56,7 @@ class MetricsByLocationManager {
 //                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true) {
                     // TODO multiple results
                     val location = currentLocations.locations.entries.first()
-                    val range = Range(
-                        Position(location.value.lineStart - 1,
-                            0), //location.value.colStart),
-                        Position(location.value.lineEnd - 1,
-                            0)) //location.value.colEnd))
-                    // TODO multiple per same line (map to array) - but already working?
+                    val range = location.value.toRangeIgnoreColumn()
                     val metricSource = MetricSource(errorRate.lineno,
                         errorRate.column,
                         errorRate.commit,
@@ -71,7 +66,7 @@ class MetricsByLocationManager {
                         MetricLocation(Metrics(), range)
                     }
                     metricLocation.metrics.errorRate = errorRate
-                    logger.info("*** added anonymous errorRate $errorRate to ${prettyRange(range)}")
+                    logger.info("*** added anonymous errorRate $errorRate to ${range.prettyRange()}")
                 } else {
                     logger.info("*** no currentLocations for anonymous errorRate $errorRate")
                 }
@@ -98,16 +93,12 @@ class MetricsByLocationManager {
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
                     currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true)// &&
-//                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true)
+                    // currentLocations.locations.entries.first().value.meta?.startWasDeleted != true)
                 {
                     // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart, it.value.colStart))
                     // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd, it.value.colEnd))
                     val location = currentLocations.locations.entries.first()
-                    val range = Range(
-                        Position(location.value.lineStart - 1,
-                            0), //location.value.colStart),
-                        Position(location.value.lineEnd - 1,
-                            0)) //location.value.colEnd))
+                    val range = location.value.toRangeIgnoreColumn()
                     // TODO multiple per same line? (map to array)
                     val metricSource = MetricSource(averageDuration.lineno,
                         averageDuration.column,
@@ -118,7 +109,7 @@ class MetricsByLocationManager {
                         MetricLocation(Metrics(), range)
                     }
                     metricLocation.metrics.averageDuration = averageDuration
-                    logger.info("*** added anonymous averageDuration $averageDuration to ${prettyRange(range)}")
+                    logger.info("*** added anonymous averageDuration $averageDuration to ${range.prettyRange()}")
                 } else {
                     logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
                 }
@@ -142,7 +133,7 @@ class MetricsByLocationManager {
                 val metricLocation = updatedMetricsByLocation.get(metricSource)
                 if (metricLocation != null) {
                     metricLocation.metrics.sampleSize = sampleSize
-                    logger.info("*** added anonymous sampleSize $sampleSize to ${prettyRange(metricLocation.range)}")
+                    logger.info("*** added anonymous sampleSize $sampleSize to ${metricLocation.range.prettyRange()}")
                 } else {
                     logger.info("*** no metricLocation for anonymous sampleSize $sampleSize")
                 }
@@ -157,7 +148,7 @@ class MetricsByLocationManager {
         functionName: String,
         uri: String,
         project: Project): ComputeCurrentLocationsResult? {
-        // TODO determine if agent caches these lookups, otherwise we should cache per invokation since each error,
+        // TODO determine if agent caches these lookups, otherwise we should cache per invocation since each error,
         //  duration, and sampleSize will be for the same location
         val id = "$uri:${lineno}:${column}:${commit}:${functionName}"
         val currentLocations = project.agentService?.computeCurrentLocations(
