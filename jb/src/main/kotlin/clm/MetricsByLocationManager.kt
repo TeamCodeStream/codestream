@@ -24,10 +24,10 @@ class MetricsByLocationManager {
                                      project: Project): ImmutableMap<MetricSource, MetricLocation> {
         val updatedMetricsByLocation = mutableMapOf<MetricSource, MetricLocation>()
         if (fileLevelTelemetry.errorRate != null) {
-            processErrorRate(fileLevelTelemetry.errorRate, uri, project, updatedMetricsByLocation)
+            processErrorRate(fileLevelTelemetry.errorRate, uri, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
         }
         if (fileLevelTelemetry.averageDuration != null) {
-            processAverageDuration(fileLevelTelemetry.averageDuration, uri, project, updatedMetricsByLocation)
+            processAverageDuration(fileLevelTelemetry.averageDuration, uri, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
         }
         if (fileLevelTelemetry.sampleSize != null) {
             processSampleSize(fileLevelTelemetry.sampleSize, uri, updatedMetricsByLocation)
@@ -39,14 +39,16 @@ class MetricsByLocationManager {
         errorRates: List<MethodLevelTelemetryErrorRate>,
         uri: String,
         project: Project,
-        updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>) {
+        updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>,
+        deploymentCommit: String?) {
         for (errorRate in errorRates) {
+            val theCommit = errorRate.commit ?: deploymentCommit
             if (errorRate.functionName == "(anonymous)" && errorRate.column != null &&
-                errorRate.lineno != null && errorRate.commit != null) {
+                errorRate.lineno != null && theCommit != null) {
                 val currentLocations = computeCurrentLocationsResult(
                     errorRate.lineno,
                     errorRate.column,
-                    errorRate.commit,
+                    theCommit,
                     errorRate.functionName,
                     uri,
                     project)
@@ -59,7 +61,7 @@ class MetricsByLocationManager {
                     val range = location.value.toRangeIgnoreColumn()
                     val metricSource = MetricSource(errorRate.lineno,
                         errorRate.column,
-                        errorRate.commit,
+                        theCommit,
                         errorRate.functionName,
                         uri)
                     val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) {
@@ -78,22 +80,24 @@ class MetricsByLocationManager {
         averageDurations: List<MethodLevelTelemetryAverageDuration>,
         uri: String,
         project: Project,
-        updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>
+        updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>,
+        deploymentCommit: String?
     ) {
         for (averageDuration in averageDurations) {
+            val theCommit = averageDuration.commit ?: deploymentCommit
             if (averageDuration.functionName == "(anonymous)" && averageDuration.column != null
-                && averageDuration.lineno != null && averageDuration.commit != null) {
+                && averageDuration.lineno != null && theCommit != null) {
                 val currentLocations = computeCurrentLocationsResult(
                     averageDuration.lineno,
                     averageDuration.column,
-                    averageDuration.commit,
+                    theCommit,
                     averageDuration.functionName,
                     uri,
                     project)
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
                     currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true)// &&
-                    // currentLocations.locations.entries.first().value.meta?.startWasDeleted != true)
+                // currentLocations.locations.entries.first().value.meta?.startWasDeleted != true)
                 {
                     // val startOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineStart, it.value.colStart))
                     // val endOffset = editor.logicalPositionToOffset(LogicalPosition(it.value.lineEnd, it.value.colEnd))
@@ -102,7 +106,7 @@ class MetricsByLocationManager {
                     // TODO multiple per same line? (map to array)
                     val metricSource = MetricSource(averageDuration.lineno,
                         averageDuration.column,
-                        averageDuration.commit,
+                        theCommit,
                         averageDuration.functionName,
                         uri)
                     val metricLocation = updatedMetricsByLocation.getOrPut(metricSource) {
@@ -175,7 +179,6 @@ class MetricsByLocationManager {
                 )
             )
         )
-        logger.info("*** got some currentLocations $currentLocations")
         return currentLocations
     }
 

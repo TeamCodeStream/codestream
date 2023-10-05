@@ -7,7 +7,10 @@ import * as NewRelic from "newrelic";
 import {
 	CodeStreamDiffUriData,
 	EntityAccount,
+	FileLevelTelemetryAverageDuration,
+	FileLevelTelemetryErrorRate,
 	FileLevelTelemetryMetric,
+	FileLevelTelemetrySampleSize,
 	GetFileLevelTelemetryRequest,
 	GetFileLevelTelemetryResponse,
 	GetObservabilityResponseTimesRequest,
@@ -162,6 +165,12 @@ export class ClmManager {
 				this.addAnomalies(errorRate, anomalies.errorRate);
 			}
 
+			const deploymentCommit = await this.getDeploymentCommitIfNeeded(newRelicEntityGuid, {
+				averageDuration,
+				errorRate,
+				sampleSize,
+			});
+
 			const hasAnyData = sampleSize.length || averageDuration.length || errorRate.length;
 			const response: GetFileLevelTelemetryResponse = {
 				codeNamespace: request?.locator?.namespace,
@@ -184,6 +193,7 @@ export class ClmManager {
 				},
 				relativeFilePath: relativeFilePath,
 				newRelicUrl: `${this.provider.getProductUrl()}/redirect/entity/${newRelicEntityGuid}`,
+				deploymentCommit,
 			};
 
 			if (sampleSize?.length > 0) {
@@ -434,6 +444,27 @@ export class ClmManager {
 				metrics.push(metric);
 			}
 		}
+	}
+
+	private async getDeploymentCommitIfNeeded(
+		newRelicEntityGuid: string,
+		results: {
+			errorRate: FileLevelTelemetryErrorRate[];
+			sampleSize: FileLevelTelemetrySampleSize[];
+			averageDuration: FileLevelTelemetryAverageDuration[];
+		}
+	) {
+		const missingCommit =
+			results.errorRate.find(_ => !_.commit) !== undefined ||
+			results.sampleSize.find(_ => !_.commit) !== undefined ||
+			results.averageDuration.find(_ => !_.commit) !== undefined;
+		if (!missingCommit) return undefined;
+		Logger.log("getDeploymentCommitIfNeeded: missing commit - calling getLatestDeployment");
+		const result = await this.provider.getLatestDeployment({ entityGuid: newRelicEntityGuid });
+		Logger.log(
+			`getDeploymentCommitIfNeeded: getLatestDeployment found commit ${result?.deployment.commit}`
+		);
+		return result?.deployment.commit;
 	}
 }
 

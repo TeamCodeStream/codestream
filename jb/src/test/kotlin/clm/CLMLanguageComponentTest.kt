@@ -120,6 +120,7 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
             sinceDateFormatted = null,
             newRelicEntityName = null,
             newRelicUrl = null,
+            deploymentCommit = null,
         )
 
         coEvery { mockAgentService.fileLevelTelemetry(any()) } coAnswers {
@@ -205,7 +206,8 @@ class CLMLanguageComponentTest : BasePlatformTestCase() {
             sinceDateFormatted = null,
             newRelicEntityName = null,
             newRelicUrl = null,
-            relativeFilePath = null
+            relativeFilePath = null,
+            deploymentCommit = null,
         )
 
         coEvery { mockAgentService.fileLevelTelemetry(any()) } coAnswers {

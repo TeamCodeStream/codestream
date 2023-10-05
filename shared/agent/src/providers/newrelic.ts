@@ -2,9 +2,10 @@
 import fs from "fs";
 import { sep } from "path";
 import {
+	AgentValidateLanguageExtensionRequestType,
 	BuiltFromResult,
-	RelatedRepoWithRemotes,
 	CrashOrException,
+	DidChangeCodelensesNotificationType,
 	Entity,
 	EntityAccount,
 	EntityGoldenMetrics,
@@ -35,6 +36,8 @@ import {
 	GetFileLevelTelemetryRequest,
 	GetFileLevelTelemetryRequestType,
 	GetFileLevelTelemetryResponse,
+	GetLatestDeploymentRequest,
+	GetLatestDeploymentResponse,
 	GetMethodLevelTelemetryRequest,
 	GetMethodLevelTelemetryRequestType,
 	GetMethodLevelTelemetryResponse,
@@ -98,16 +101,15 @@ import {
 	ProviderConfigurationData,
 	RelatedEntity,
 	RelatedEntityByRepositoryGuidsResult,
+	RelatedRepoWithRemotes,
 	ReposScm,
 	ServiceLevelObjectiveResult,
 	StackTraceResponse,
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
-	UpdateNewRelicOrgIdRequestType,
 	UpdateNewRelicOrgIdRequest,
+	UpdateNewRelicOrgIdRequestType,
 	UpdateNewRelicOrgIdResponse,
-	DidChangeCodelensesNotificationType,
-	AgentValidateLanguageExtensionRequestType,
 	GetIssuesResponse,
 	GetIssuesQueryResult,
 	GetClmRequest,
@@ -234,6 +236,9 @@ export interface INewRelicProvider {
 	getObservabilityRepos(
 		request: GetObservabilityReposRequest
 	): Promise<GetObservabilityReposResponse>;
+	getLatestDeployment(
+		request: GetLatestDeploymentRequest
+	): Promise<GetLatestDeploymentResponse | undefined>;
 }
 
 @lspProvider("newrelic")
@@ -2874,13 +2879,13 @@ export class NewRelicProvider
 				{
 					metricQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS 'Errors (per minute)'
 												FROM Metric
-                  WHERE \`entity.guid\` = '${entityGuid}'
-                    AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET metricTimesliceName TIMESERIES`,
+												WHERE \`entity.guid\` = '${entityGuid}'
+													AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET metricTimesliceName TIMESERIES`,
 					spanQuery: `SELECT rate(count(*), 1 minute) AS 'Errors (per minute)'
-                               FROM Span
-                               WHERE entity.guid IN ('${entityGuid}')
-                                 AND name = '${metricTimesliceNameMapping["errorRate"]}'
-                                 AND \`error.group.guid\` IS NOT NULL FACET name TIMESERIES`,
+											FROM Span
+											WHERE entity.guid IN ('${entityGuid}')
+												AND name = '${metricTimesliceNameMapping["errorRate"]}'
+												AND \`error.group.guid\` IS NOT NULL FACET name TIMESERIES`,
 					scopesQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS value
 												FROM Metric
                   			WHERE \`entity.guid\` = '${entityGuid}'
@@ -2892,12 +2897,12 @@ export class NewRelicProvider
 				{
 					metricQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Average duration (ms)'
 												FROM Metric
-                  WHERE entity.guid IN ('${entityGuid}')
-                    AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' TIMESERIES`,
+												WHERE entity.guid IN ('${entityGuid}')
+													AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' TIMESERIES`,
 					spanQuery: `SELECT average(duration) * 1000 AS 'Average duration (ms)'
-                               FROM Span
-                               WHERE entity.guid IN ('${entityGuid}')
-                                 AND name = '${metricTimesliceNameMapping["duration"]}' FACET name TIMESERIES`,
+											FROM Span
+											WHERE entity.guid IN ('${entityGuid}')
+												AND name = '${metricTimesliceNameMapping["duration"]}' FACET name TIMESERIES`,
 					scopesQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
@@ -2909,12 +2914,12 @@ export class NewRelicProvider
 				{
 					metricQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'Samples (per minute)'
 												FROM Metric
-                  WHERE entity.guid IN ('${entityGuid}')
-                    AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' TIMESERIES`,
+												WHERE entity.guid IN ('${entityGuid}')
+													AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' TIMESERIES`,
 					spanQuery: `SELECT rate(count(*), 1 minute) AS 'Samples (per minute)'
-                               FROM Span
-                               WHERE entity.guid IN ('${entityGuid}')
-                                 AND name = '${metricTimesliceNameMapping["sampleSize"]}' FACET name TIMESERIES`,
+											FROM Span
+											WHERE entity.guid IN ('${entityGuid}')
+												AND name = '${metricTimesliceNameMapping["sampleSize"]}' FACET name TIMESERIES`,
 					scopesQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
@@ -4136,25 +4141,23 @@ export class NewRelicProvider
 		entityGuid: string
 	) {
 		try {
-			return this.query(
-				`query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
-				actor {
-				  errorsInbox {
-					errorGroup(errorEvent: {name: $name,
-					  message: $message,
-					  entityGuid: $entityGuid}) {
-					  id
-					  url
-					}
-				  }
+			const theQuery = `query getErrorGroupGuid($name: String!, $message:String!, $entityGuid:EntityGuid!) {
+			actor {
+				errorsInbox {
+				errorGroup(errorEvent: {name: $name,
+					message: $message,
+					entityGuid: $entityGuid}) {
+					id
+					url
 				}
-			  }`,
-				{
-					name: name,
-					message: message,
-					entityGuid: entityGuid,
 				}
-			);
+			}
+			}`;
+			return this.query(theQuery, {
+				name: name,
+				message: message,
+				entityGuid: entityGuid,
+			});
 		} catch (ex) {
 			ContextLogger.error(ex, "getErrorGroupFromNameMessageEntity", {
 				name,
@@ -4649,14 +4652,42 @@ export class NewRelicProvider
 		const result = await this.runNrql<{
 			timestamp: number;
 			version: string;
+			commit: string;
 		}>(parsedId.accountId, query, 400);
 
 		const deployments = result.map(_ => ({
 			seconds: Math.round(_.timestamp / 1000),
 			version: _.version,
+			commit: _.commit,
 		}));
 		return {
 			deployments,
+		};
+	}
+
+	@log({ timed: true })
+	public async getLatestDeployment(
+		request: GetLatestDeploymentRequest
+	): Promise<GetLatestDeploymentResponse | undefined> {
+		const { entityGuid } = request;
+		const parsedId = NewRelicProvider.parseId(entityGuid)!;
+		const query = `SELECT timestamp, commit, entity.name FROM Deployment WHERE entity.guid='${entityGuid}' AND timestamp = (SELECT latest(timestamp) from Deployment WHERE entity.guid='${entityGuid}') SINCE 1 year ago`;
+		const result = await this.runNrql<{
+			timestamp: number;
+			version: string;
+			commit: string;
+		}>(parsedId.accountId, query, 400);
+
+		const deployments = result.map(_ => ({
+			seconds: Math.round(_.timestamp / 1000),
+			version: _.version,
+			commit: _.commit,
+		}));
+		if (deployments.length === 0) {
+			return undefined;
+		}
+		return {
+			deployment: deployments[0],
 		};
 	}
 }

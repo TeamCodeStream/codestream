@@ -217,8 +217,8 @@ abstract class CLMEditorManager(
 
     private suspend fun updateLocations() {
         val (result, project, path) = displayDeps() ?: return
-        logger.info("*** calling getMetricsByLocation")
-        logger.info("*** metricsByLocation before $metricsByLocation")
+//        logger.info("*** calling getMetricsByLocation")
+//        logger.info("*** metricsByLocation before $metricsByLocation")
         metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, path, project)
         logger.info("*** metricsByLocation after $metricsByLocation")
 //        val updatedLocations = mutableMapOf<MetricSource, MetricLocation>()

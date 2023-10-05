@@ -699,7 +699,8 @@ class FileLevelTelemetryResult(
     val newRelicUrl: String?,
     // val newRelicEntityAccounts: EntityAccount[];
     val codeNamespace: String?,
-    val relativeFilePath: String?
+    val relativeFilePath: String?,
+    val deploymentCommit: String?,
 )
 
 class ClmParams(

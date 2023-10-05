@@ -621,6 +621,7 @@ class Calculation {
 // 1st attempt: " bar)" => found, with mid "r" at columns 19 and 36
 //
 // Therefore, since specificIndex is 1, newCol = 36
+// TODO pass boolean beginning or end
 function calculateColumn(oldCol: number, oldContent: string, newContent: string) {
 	if (!oldContent || !newContent || oldContent === newContent) {
 		return oldCol;
