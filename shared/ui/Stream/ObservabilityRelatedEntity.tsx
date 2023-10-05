@@ -1,6 +1,6 @@
 import {
 	EntityGoldenMetrics,
-	GetAlertViolationsResponse,
+	GetIssuesResponse,
 	GetNewRelicUrlRequestType,
 	GetServiceLevelTelemetryRequestType,
 	isNRErrorResponse,
@@ -30,9 +30,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 	const [entityGoldenMetrics, setEntityGoldenMetrics] = useState<EntityGoldenMetrics>();
 	const [entityGoldenMetricsErrors, setEntityGoldenMetricsErrors] = useState<Array<string>>([]);
 	const [newRelicUrl, setNewRelicUrl] = useState<string>("");
-	const [recentAlertViolations, setRecentAlertViolations] = useState<
-		GetAlertViolationsResponse | undefined
-	>();
+	const [recentIssues, setRecentIssues] = useState<GetIssuesResponse | undefined>();
 
 	const { relatedEntity } = props;
 	const alertSeverityColor = ALERT_SEVERITY_COLORS[relatedEntity?.alertSeverity];
@@ -73,7 +71,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				newRelicEntityGuid: entityGuid,
 				repoId: props.currentRepoId,
 				skipRepoFetch: true,
-				fetchRecentAlertViolations: true,
+				fetchRecentIssues: true,
 			});
 
 			const errors: string[] = [];
@@ -86,12 +84,10 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 				setEntityGoldenMetrics(response.entityGoldenMetrics);
 			}
 
-			if (isNRErrorResponse(response.recentAlertViolations)) {
-				errors.push(
-					response.recentAlertViolations.error.message ?? response.recentAlertViolations.error.type
-				);
+			if (isNRErrorResponse(response.recentIssues)) {
+				errors.push(response.recentIssues.error.message ?? response.recentIssues.error.type);
 			} else {
-				setRecentAlertViolations(response.recentAlertViolations);
+				setRecentIssues(response.recentIssues);
 			}
 
 			setEntityGoldenMetricsErrors(errors);
@@ -155,9 +151,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 						noDropdown={true}
 						entityGuid={relatedEntity.guid}
 					/>
-					<ObservabilityAlertViolations
-						alertViolations={recentAlertViolations?.recentAlertViolations}
-					/>
+					<ObservabilityAlertViolations issues={recentIssues?.recentIssues} />
 				</>
 			)}
 		</>

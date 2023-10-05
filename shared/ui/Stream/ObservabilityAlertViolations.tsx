@@ -1,20 +1,19 @@
-import { forEach as _forEach, isEmpty as _isEmpty } from "lodash-es";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { RecentAlertViolation } from "@codestream/protocols/agent";
+import { RecentIssue } from "@codestream/protocols/agent";
 import Tooltip from "./Tooltip";
 
 interface Props {
-	alertViolations?: RecentAlertViolation[];
+	issues?: RecentIssue[];
 	customPadding?: string;
 }
 
 export const ObservabilityAlertViolations = React.memo((props: Props) => {
-	const { alertViolations, customPadding } = props;
+	const { issues, customPadding } = props;
 
 	const EntityHealth = styled.div<{ backgroundColor: string }>`
 		background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
@@ -32,7 +31,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 
 	return (
 		<>
-			{alertViolations?.map(_ => {
+			{issues?.map(_ => {
 				return (
 					<Row
 						style={{
@@ -40,12 +39,12 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 						}}
 						className={"pr-row"}
 						onClick={e => {
-							handleRowClick(e, _.violationUrl);
+							handleRowClick(e, _.deepLinkUrl);
 						}}
 					>
-						<EntityHealth backgroundColor={ALERT_SEVERITY_COLORS[_.alertSeverity]} />
-						<Tooltip placement="topRight" title={_.label} delay={1}>
-							<div style={{ minWidth: "0", padding: "0" }}>{_.label}</div>
+						<EntityHealth backgroundColor={ALERT_SEVERITY_COLORS[_.priority!]} />
+						<Tooltip placement="topRight" title={_.title} delay={1}>
+							<div style={{ minWidth: "0", padding: "0" }}>{_.title}</div>
 						</Tooltip>
 					</Row>
 				);

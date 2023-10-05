@@ -4,7 +4,6 @@ import {
 	EntityGoldenMetrics,
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 	ERROR_NR_INSUFFICIENT_API_KEY,
-	GetAlertViolationsResponse,
 	GetEntityCountRequestType,
 	GetObservabilityAnomaliesRequestType,
 	GetObservabilityErrorAssignmentsRequestType,
@@ -19,6 +18,7 @@ import {
 	ObservabilityRepoError,
 	ServiceLevelObjectiveResult,
 	isNRErrorResponse,
+	GetIssuesResponse,
 } from "@codestream/protocols/agent";
 import cx from "classnames";
 import { head as _head, isEmpty, isEmpty as _isEmpty, isNil as _isNil } from "lodash-es";
@@ -338,10 +338,8 @@ export const Observability = React.memo((props: Props) => {
 		[]
 	);
 	const [currentObsRepo, setCurrentObsRepo] = useState<ObservabilityRepo | undefined>();
-	const [recentAlertViolations, setRecentAlertViolations] = useState<
-		GetAlertViolationsResponse | undefined
-	>();
-	const [recentAlertViolationsError, setRecentAlertViolationsError] = useState<string>();
+	const [recentIssues, setRecentIssues] = useState<GetIssuesResponse | undefined>();
+	const [recentIssuesError, setRecentIssuesError] = useState<string>();
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 	const [anomalyDetectionSupported, setAnomalyDetectionSupported] = useState<boolean>(true);
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
@@ -809,7 +807,7 @@ export const Observability = React.memo((props: Props) => {
 			const response = await HostApi.instance.send(GetServiceLevelTelemetryRequestType, {
 				newRelicEntityGuid: entityGuid,
 				repoId: currentRepoId,
-				fetchRecentAlertViolations: true,
+				fetchRecentIssues: true,
 				force,
 			});
 
@@ -824,14 +822,11 @@ export const Observability = React.memo((props: Props) => {
 					setEntityGoldenMetrics(response.entityGoldenMetrics);
 				}
 
-				if (isNRErrorResponse(response.recentAlertViolations)) {
-					errors.push(
-						response.recentAlertViolations.error.message ??
-							response.recentAlertViolations.error.type
-					);
+				if (isNRErrorResponse(response.recentIssues)) {
+					errors.push(response.recentIssues.error.message ?? response.recentIssues.error.type);
 				} else {
-					setRecentAlertViolations(response.recentAlertViolations);
-					setRecentAlertViolationsError(undefined);
+					setRecentIssues(response.recentIssues);
+					setRecentIssuesError(undefined);
 				}
 				setEntityGoldenMetricsErrors(errors);
 			} else {
@@ -1256,9 +1251,7 @@ export const Observability = React.memo((props: Props) => {
 																								entityGoldenMetrics={entityGoldenMetrics}
 																								loadingGoldenMetrics={loadingGoldenMetrics}
 																								errors={entityGoldenMetricsErrors}
-																								recentAlertViolations={
-																									recentAlertViolations ? recentAlertViolations : {}
-																								}
+																								recentIssues={recentIssues ? recentIssues : {}}
 																								entityGuid={ea.entityGuid}
 																							/>
 																							{hasServiceLevelObjectives && (
