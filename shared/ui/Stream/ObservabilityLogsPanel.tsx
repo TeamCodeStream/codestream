@@ -20,7 +20,7 @@ import Button from "./Button";
 import Select from "react-select";
 import { ObservabilityLoadingLogs } from "./ObservabilityLoading";
 import Timestamp from "./Timestamp";
-import Draggable from "react-draggable";
+import { Link } from "./Link";
 
 interface SelectedOption {
 	value: string;
@@ -275,30 +275,21 @@ export default function ObservabilityLogsPanel() {
 	};
 
 	const renderHeaderRow = () => {
-		const handleStop = oldIndex => (e, data) => {
-			const newIndex = Math.round(data.x / 100);
-			if (newIndex === 0) return;
-
-			const updatedColumns = [...sortedFieldDefinitions];
-			const [removed] = updatedColumns.splice(oldIndex, 1);
-			updatedColumns.splice(oldIndex + newIndex, 0, removed);
-			setSortedFieldDefinitions(updatedColumns);
-		};
-
 		return (
 			<tr>
 				{sortedFieldDefinitions &&
 					sortedFieldDefinitions.length > 0 &&
 					sortedFieldDefinitions.map((fd, idx) => {
 						return (
-							<Draggable axis="x" key={idx} onStop={handleStop(idx)}>
-								<th
-									colSpan={columnSpanMapping[fd] || 1}
-									style={{ border: "1px solid darkgray", padding: "3px 8px 3px 8px" }}
-								>
-									{fd}
-								</th>
-							</Draggable>
+							<th
+								colSpan={columnSpanMapping[fd] || 1}
+								style={{
+									border: "1px solid darkgray",
+									padding: "3px 8px 3px 8px",
+								}}
+							>
+								{fd}
+							</th>
 						);
 					})}
 			</tr>
@@ -396,7 +387,8 @@ export default function ObservabilityLogsPanel() {
 				style={{
 					height: maximized ? "calc(100vh - 100px)" : "calc(100vh - 200px)",
 					overflow: "hidden",
-					padding: "0px 20px 20px 20px",
+					padding: "0px 20px 0px 20px",
+					marginBottom: "20px",
 				}}
 			>
 				{!isLoading && totalItems > 0 && (
@@ -413,10 +405,20 @@ export default function ObservabilityLogsPanel() {
 								<tbody>{renderResults()}</tbody>
 							</table>
 						)}
+
+						{/* TODO: This skeleton loader never appears */}
 						{!totalItems && isLoading && <ObservabilityLoadingLogs />}
 						{!totalItems && !isLoading && (
-							<div className="no-matches" style={{ margin: "0" }}>
-								No results match your search.
+							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
+								<h4>No logs found</h4>
+								<span>
+									Either expand the time range window or enable sending logs. Collect, search, and
+									correlate detailed logs from applications, infrastructure, and network devices for
+									faster troubleshooting and investigation.{" "}
+									<Link href="https://docs.newrelic.com/docs/logs/forward-logs/enable-log-management-new-relic/">
+										See our docs
+									</Link>
+								</span>
 							</div>
 						)}
 					</div>
