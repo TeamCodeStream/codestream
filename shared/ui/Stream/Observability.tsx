@@ -84,6 +84,7 @@ import { CLMSettings, DEFAULT_CLM_SETTINGS } from "@codestream/protocols/api";
 import { throwIfError } from "@codestream/webview/store/common";
 import { AnyObject } from "@codestream/webview/utils";
 import { isFeatureEnabled } from "../store/apiVersioning/reducer";
+import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 
 interface Props {
 	paneState: PaneState;
@@ -1247,6 +1248,10 @@ export const Observability = React.memo((props: Props) => {
 																				) : (
 																					<>
 																						<>
+																							<ObservabilityAlertViolations
+																								issues={recentIssues?.recentIssues}
+																								customPadding={"2px 10px 2px 42px"}
+																							/>
 																							<ObservabilityGoldenMetricDropdown
 																								entityGoldenMetrics={entityGoldenMetrics}
 																								loadingGoldenMetrics={loadingGoldenMetrics}

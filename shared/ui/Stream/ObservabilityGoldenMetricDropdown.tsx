@@ -3,7 +3,6 @@ import { isEmpty as _isEmpty } from "lodash-es";
 import React, { useState } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
-import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 import Tooltip from "./Tooltip";
 import { ObservabilityLoadingGoldenMetrics } from "@codestream/webview/Stream/ObservabilityLoading";
 
@@ -113,15 +112,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 			{expanded && loadingGoldenMetrics && <ObservabilityLoadingGoldenMetrics />}
 			{(noDropdown || expanded) &&
 				!loadingGoldenMetrics &&
-				!_isEmpty(entityGoldenMetrics?.metrics) && (
-					<>
-						{goldenMetricOutput()}
-						<ObservabilityAlertViolations
-							issues={recentIssues?.recentIssues}
-							customPadding={"2px 10px 2px 42px"}
-						/>
-					</>
-				)}
+				!_isEmpty(entityGoldenMetrics?.metrics) && <>{goldenMetricOutput()}</>}
 		</>
 	);
 });

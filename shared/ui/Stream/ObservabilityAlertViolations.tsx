@@ -1,11 +1,11 @@
 import React from "react";
-import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { RecentIssue } from "@codestream/protocols/agent";
+import { RecentIssue, RiskSeverity } from "@codestream/protocols/agent";
 import Tooltip from "./Tooltip";
+import { lowerCase } from "lodash-es";
 
 interface Props {
 	issues?: RecentIssue[];
@@ -23,6 +23,40 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 		margin-right: 4px;
 		margin-top: 4px;
 	`;
+
+	const severityColorMap: Record<RiskSeverity, string> = {
+		CRITICAL: "#f52222",
+		HIGH: "#F5554B",
+		MEDIUM: "#F0B400",
+		INFO: "#0776e5",
+		LOW: "#0776e5",
+		UNKNOWN: "#ee8608",
+	};
+
+	function criticalityToRiskSeverity(riskSeverity): RiskSeverity {
+		switch (riskSeverity) {
+			case "CRITICAL":
+				return "CRITICAL";
+			case "HIGH":
+				return "HIGH";
+			case "MODERATE":
+				return "MEDIUM";
+			case "LOW":
+				return "LOW";
+			default:
+				return "LOW";
+		}
+	}
+
+	function Severity(props: { severity: RiskSeverity }) {
+		// const riskSeverity = calculateRisk(props.score);
+		// style={{color: severityColorMap[props.severity]}}
+		return (
+			<div className="icons" style={{ color: severityColorMap[props.severity] }}>
+				{lowerCase(props.severity)}
+			</div>
+		);
+	}
 
 	const handleRowClick = (e, violationUrl) => {
 		e.preventDefault();
@@ -42,7 +76,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 							handleRowClick(e, _.deepLinkUrl);
 						}}
 					>
-						<EntityHealth backgroundColor={ALERT_SEVERITY_COLORS[_.priority!]} />
+						<Severity severity={criticalityToRiskSeverity(_.priority!)} />
 						<Tooltip placement="topRight" title={_.title} delay={1}>
 							<div style={{ minWidth: "0", padding: "0" }}>{_.title}</div>
 						</Tooltip>
