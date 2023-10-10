@@ -14,13 +14,22 @@ interface Props {
 export const ObservabilityAlertViolations = React.memo((props: Props) => {
 	const { issues, customPadding } = props;
 
-	const severityColorMap: Record<RiskSeverity, string> = {
-		CRITICAL: "#FF0000",
-		HIGH: "#ee8608",
-		MEDIUM: "#f1c232",
-		INFO: "#0776e5",
+	const severityBackgroundColorMap: Record<RiskSeverity, string> = {
+		CRITICAL: "#f8a6a6",
+		HIGH: "#e0b484",
+		MEDIUM: "#fae29a",
+		INFO: "#9ec9f5",
 		LOW: "#bcbcbc",
-		UNKNOWN: "#ee8608",
+		UNKNOWN: "#ffffff",
+	};
+
+	const severityColorMap: Record<RiskSeverity, string> = {
+		CRITICAL: "#8d0d04",
+		HIGH: "#513405",
+		MEDIUM: "#8c6b05",
+		INFO: "#0776e5",
+		LOW: "#444444",
+		UNKNOWN: "#000000",
 	};
 
 	function criticalityToRiskSeverity(riskSeverity): RiskSeverity {
@@ -35,6 +44,10 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 				return "MEDIUM";
 			case "LOW":
 				return "LOW";
+			case "INFO":
+				return "INFO";
+			case "UNKNOWN":
+				return "UNKNOWN";
 			default:
 				return "LOW";
 		}
@@ -47,9 +60,9 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 			<div
 				className="icons"
 				style={{
-					color: "white",
+					color: severityColorMap[props.severity],
 					borderRadius: "3px",
-					backgroundColor: severityColorMap[props.severity],
+					backgroundColor: severityBackgroundColorMap[props.severity],
 					marginRight: "5px",
 					marginLeft: "5px",
 				}}
