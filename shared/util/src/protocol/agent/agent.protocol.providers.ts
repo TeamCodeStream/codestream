@@ -2065,9 +2065,9 @@ export interface GetIssuesQueryResult {
 	actor?: {
 		account?: {
 			aiIssues?: {
-				issuesEvents?: {
+				issues?: {
 					issues?: {
-						title?: string[];
+						title?: string;
 						eventType?: string;
 						mergeReason?: string;
 						deepLinkUrl?: string[];
@@ -2123,7 +2123,7 @@ export interface RecentAlertViolation {
 }
 
 export interface RecentIssue {
-	title?: string[];
+	title?: string;
 	deepLinkUrl?: string[];
 	closedAt?: number;
 	updatedAt?: number;

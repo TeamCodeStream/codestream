@@ -2511,7 +2511,7 @@ export class NewRelicProvider
 					actor {
 						account(id: $id) {
 						  aiIssues {
-							issuesEvents(filter: {entityGuids: $entityGuids }) {
+							issues(filter: {entityGuids: $entityGuids }) {
 							  issues {
 								title
 								deepLinkUrl
@@ -2532,17 +2532,22 @@ export class NewRelicProvider
 				}
 			);
 
-			if (response?.actor?.account?.aiIssues?.issuesEvents?.issues?.length) {
-				const issueArray = response.actor.account.aiIssues.issuesEvents.issues;
+			if (response?.actor?.account?.aiIssues?.issues?.issues?.length) {
+				const issueArray = response.actor.account.aiIssues.issues.issues;
 				const recentIssuesArray = issueArray.filter(_ => _.closedAt === null);
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = ["", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
 				// get unique labels
+				recentIssuesArray.forEach(issue => {
+					const firstTitle = issue.title![0]; //this gives me the first title
+					issue.title = firstTitle;
+				});
+
 				const recentIssuesArrayUnique = _uniqBy(recentIssuesArray, "title");
 
 				// sort based on openedAt time
-				recentIssuesArrayUnique.sort((a, b) =>
+				recentIssuesArrayUnique!.sort((a, b) =>
 					a.createdAt! > b.createdAt! ? 1 : b.createdAt! > a.createdAt! ? -1 : 0
 				);
 

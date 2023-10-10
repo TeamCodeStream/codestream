@@ -78,8 +78,8 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 						}}
 					>
 						<Severity severity={criticalityToRiskSeverity(_.priority!)} />
-						<Tooltip placement="topRight" title={_.title![0]} delay={1}>
-							<div style={{ minWidth: "0", padding: "5" }}>{_.title![0]}</div>
+						<Tooltip placement="topRight" title={_.title!} delay={1}>
+							<div style={{ minWidth: "0", padding: "5" }}>{_.title!}</div>
 						</Tooltip>
 					</Row>
 				);
