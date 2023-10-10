@@ -27,6 +27,47 @@ interface SelectedOption {
 	label: string;
 }
 
+const GridContainer = styled.div`
+	display: grid;
+	grid-template-rows: auto;
+	overflow-x: auto;
+`;
+
+const GridHeaderRow = styled.div`
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	grid-auto-rows: minmax(50px, auto);
+	overflow-x: auto;
+	white-space: nowrap;
+`;
+
+const GridDataRow = styled.div`
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+	grid-auto-rows: minmax(50px, auto);
+	overflow-x: auto;
+	white-space: nowrap;
+`;
+
+const GridHeaderItem = styled.div`
+	border: 1px solid #ccc;
+	text-align: center;
+	padding: 10px;
+	background-color: #f1f1f1;
+	font-weight: bold;
+	overflow: visible;
+	white-space: nowrap;
+`;
+
+const GridRowItem = styled.div`
+	border: 1px solid #ccc;
+	text-align: center;
+	padding: 10px;
+	overflow: visible;
+	white-space: nowrap;
+	width: fit-content;
+`;
+
 const LogSeverity = styled.span`
 	border-radius: 1px;
 	box-sizing: border-box;
@@ -296,6 +337,23 @@ export default function ObservabilityLogsPanel() {
 		);
 	};
 
+	const formatRowValue = (fieldName: string, fieldValue: string) => {
+		if (fieldName === "timestamp") {
+			return <Timestamp time={fieldValue}></Timestamp>;
+		}
+
+		if (fieldName === "level") {
+			return (
+				<>
+					<LogSeverity style={{ backgroundColor: logSeverityToColor[fieldValue] }} />
+					{fieldValue}
+				</>
+			);
+		}
+
+		return fieldValue;
+	};
+
 	const LogRow = (props: { logResult: LogResult; evenRow: boolean }) => {
 		const formatRowValue = (fieldName, fieldValue) => {
 			if (fieldName === "timestamp") {
@@ -399,7 +457,26 @@ export default function ObservabilityLogsPanel() {
 
 				<ScrollBox>
 					<div className="vscroll">
-						{totalItems > 0 && (
+						{!isLoading && results && totalItems > 0 && sortedFieldDefinitions && (
+							// <GridContainer>
+							// 	<GridHeaderRow>
+							// 		{sortedFieldDefinitions.map((fd, idx) => {
+							// 			return <GridHeaderItem>{fd}</GridHeaderItem>;
+							// 		})}
+							// 	</GridHeaderRow>
+
+							// 	{results.map((r, idx) => {
+							// 		return (
+							// 			<GridDataRow>
+							// 				{r &&
+							// 					sortedFieldDefinitions.map(fd => {
+							// 						return <GridRowItem>{formatRowValue(fd, r[fd])}</GridRowItem>;
+							// 					})}
+							// 			</GridDataRow>
+							// 		);
+							// 	})}
+							// </GridContainer>
+
 							<table style={{ width: "100%", borderCollapse: "collapse" }}>
 								<thead>{renderHeaderRow()}</thead>
 								<tbody>{renderResults()}</tbody>
@@ -408,6 +485,7 @@ export default function ObservabilityLogsPanel() {
 
 						{/* TODO: This skeleton loader never appears */}
 						{!totalItems && isLoading && <ObservabilityLoadingLogs />}
+
 						{!totalItems && !isLoading && (
 							<div className="no-matches" style={{ margin: "0", fontStyle: "unset" }}>
 								<h4>No logs found</h4>
