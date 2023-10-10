@@ -17,6 +17,7 @@ import { useDidMount, useInterval } from "../utilities/hooks";
 import { ALERT_SEVERITY_COLORS } from "./CodeError/index";
 import Icon from "./Icon";
 import { ObservabilityGoldenMetricDropdown } from "./ObservabilityGoldenMetricDropdown";
+import { ObservabilityAlertViolations } from "./ObservabilityAlertViolations";
 
 interface Props {
 	relatedEntity: RelatedEntityByType;
@@ -143,6 +144,7 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 			</PaneNodeName>
 			{expanded && (
 				<>
+					<ObservabilityAlertViolations issues={recentIssues?.recentIssues} />
 					<ObservabilityGoldenMetricDropdown
 						entityGoldenMetrics={entityGoldenMetrics}
 						errors={entityGoldenMetricsErrors}
@@ -150,7 +152,6 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 						noDropdown={true}
 						entityGuid={relatedEntity.guid}
 					/>
-					{/* <ObservabilityAlertViolations issues={recentIssues?.recentIssues} /> */}
 				</>
 			)}
 		</>

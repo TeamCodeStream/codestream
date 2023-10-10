@@ -2480,7 +2480,7 @@ export class NewRelicProvider
 
 			id = id.actor?.entity?.accountId;
 			if (id !== null) {
-				recentIssuesResponse = await this.getIssues(id);
+				recentIssuesResponse = await this.getIssues(id, request.newRelicEntityGuid);
 			}
 
 			const validEntityGuid: string = entity?.entityGuid ?? request.newRelicEntityGuid;
@@ -2501,49 +2501,24 @@ export class NewRelicProvider
 		return undefined;
 	}
 
-	async getIssues(id: number): Promise<GetIssuesResponse | NRErrorResponse | undefined> {
+	async getIssues(
+		id: number,
+		entityGuid: string
+	): Promise<GetIssuesResponse | NRErrorResponse | undefined> {
 		try {
 			const response = await this.query<GetIssuesQueryResult>(
-				`query getRecentIssues($id: id!) {
+				`query getRecentIssues($id: id!, $entityGuids: [EntityGuid!]) {
 					actor {
 						account(id: $id) {
 						  aiIssues {
-							issues {
+							issuesEvents(filter: {entityGuids: $entityGuids }) {
 							  issues {
-								acknowledgedAt
-								acknowledgedBy
-								activatedAt
-								closedAt
-								closedBy
-								mergeReason
-								mutingState
-								parentMergeId
-								unAcknowledgedAt
-								unAcknowledgedBy
-								conditionFamilyId
-								conditionName
-								conditionProduct
-								description
-								entityGuids
-								incidentIds
-								eventType
-								issueId
-								isIdle
-								isCorrelated
-								origins
-								policyIds
-								policyName
-								priority
-								sources
-								state
 								title
-								totalIncidents
-								updatedAt
-								entityTypes
-								entityNames
 								deepLinkUrl
+								closedAt
+								updatedAt
 								createdAt
-								accountIds
+								priority
 							  }
 							}
 						  }
@@ -2553,11 +2528,12 @@ export class NewRelicProvider
 				`,
 				{
 					id: id,
+					entityGuids: entityGuid,
 				}
 			);
 
-			if (response?.actor?.account?.aiIssues?.issues?.issues?.length) {
-				const issueArray = response.actor.account.aiIssues.issues.issues;
+			if (response?.actor?.account?.aiIssues?.issuesEvents?.issues?.length) {
+				const issueArray = response.actor.account.aiIssues.issuesEvents.issues;
 				const recentIssuesArray = issueArray.filter(_ => _.closedAt === null);
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = ["", "CRITICAL", "HIGH", "MEDIUM", "LOW"];

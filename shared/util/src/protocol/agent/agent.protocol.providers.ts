@@ -2065,7 +2065,7 @@ export interface GetIssuesQueryResult {
 	actor?: {
 		account?: {
 			aiIssues?: {
-				issues?: {
+				issuesEvents?: {
 					issues?: {
 						title?: string[];
 						eventType?: string;
