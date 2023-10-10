@@ -16,6 +16,7 @@ import {
 import { INewRelicProvider, NewRelicProvider } from "../newrelic";
 import { Logger } from "../../logger";
 import { getStorage } from "../../storage";
+import { getAnomalyDetectionMockResponse } from "./anomalyDetectionMockResults";
 
 export class AnomalyDetector {
 	constructor(
@@ -43,6 +44,12 @@ export class AnomalyDetector {
 	private _releaseBased = false;
 
 	async execute(): Promise<GetObservabilityAnomaliesResponse> {
+		const mockResponse = getAnomalyDetectionMockResponse(this._request);
+		if (mockResponse) {
+			await this.notifyNewAnomalies(mockResponse.responseTime, mockResponse.errorRate, true);
+			return mockResponse;
+		}
+
 		const languageSupport = await this.getLanguageSupport();
 		if (!languageSupport) {
 			return {
@@ -714,7 +721,8 @@ export class AnomalyDetector {
 
 	private async notifyNewAnomalies(
 		durationAnomalies: ObservabilityAnomaly[],
-		errorRateAnomalies: ObservabilityAnomaly[]
+		errorRateAnomalies: ObservabilityAnomaly[],
+		force = false
 	): Promise<boolean> {
 		const { entityGuid } = this._request;
 		const { git, users } = SessionContainer.instance();
@@ -741,7 +749,7 @@ export class AnomalyDetector {
 		const newDurationAnomalies: ObservabilityAnomaly[] = [];
 		for (const anomaly of durationAnomalies) {
 			const lastNotification = anomalyNotificationsOld?.duration[anomaly.name];
-			if (!lastNotification) {
+			if (!lastNotification || force) {
 				newDurationAnomalies.push(anomaly);
 				anomalyNotificationsNew.duration[anomaly.name] = {
 					lastNotified: now,
@@ -754,7 +762,7 @@ export class AnomalyDetector {
 		const newErrorRateAnomalies: ObservabilityAnomaly[] = [];
 		for (const anomaly of errorRateAnomalies) {
 			const lastNotification = anomalyNotificationsOld?.errorRate[anomaly.name];
-			if (!lastNotification) {
+			if (!lastNotification || force) {
 				newErrorRateAnomalies.push(anomaly);
 				anomalyNotificationsNew.errorRate[anomaly.name] = {
 					lastNotified: now,
@@ -1077,7 +1085,7 @@ class PhpLanguageSupport implements LanguageSupport {
 	}
 
 	get spanNrqlPrefixes() {
-		return ["Custom"];
+		return ["WebTransaction", "Custom"];
 	}
 
 	filterMetrics(metrics: NameValue[], benchmarkSpans: SpanWithCodeAttrs[]): NameValue[] {
@@ -1092,7 +1100,7 @@ class PhpLanguageSupport implements LanguageSupport {
 				.replace(otherTransactionPrefixRe, customPrefix)
 				.replace("->", "::");
 
-			return benchmarkSpans.find(s => s.name === spanName && s.codeFunction);
+			return benchmarkSpans.find(s => s.name === m.name || (s.name === spanName && s.codeFunction));
 		});
 	}
 

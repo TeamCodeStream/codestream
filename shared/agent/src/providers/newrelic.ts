@@ -156,6 +156,9 @@ import { ClmManager } from "./newrelic/clm/clmManager";
 import * as Dom from "graphql-request/dist/types.dom";
 import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import semver from "semver";
+import {
+	getMethodLevelTelemetryMockResponse,
+} from "./newrelic/anomalyDetectionMockResults";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -2367,6 +2370,11 @@ export class NewRelicProvider
 	async getMethodLevelTelemetry(
 		request: GetMethodLevelTelemetryRequest
 	): Promise<GetMethodLevelTelemetryResponse | undefined> {
+		const mockResponse = getMethodLevelTelemetryMockResponse(request);
+		if (mockResponse) {
+			return mockResponse;
+		}
+
 		let observabilityRepo: ObservabilityRepo | undefined;
 		let entity: EntityAccount | undefined;
 		let entityAccounts: EntityAccount[] = [];
