@@ -1,5 +1,4 @@
 import React from "react";
-import styled from "styled-components";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
@@ -15,21 +14,12 @@ interface Props {
 export const ObservabilityAlertViolations = React.memo((props: Props) => {
 	const { issues, customPadding } = props;
 
-	const EntityHealth = styled.div<{ backgroundColor: string }>`
-		background-color: ${props => (props.backgroundColor ? props.backgroundColor : "white")};
-		width: 10px;
-		height: 10px;
-		display: inline-block;
-		margin-right: 4px;
-		margin-top: 4px;
-	`;
-
 	const severityColorMap: Record<RiskSeverity, string> = {
-		CRITICAL: "#f52222",
-		HIGH: "#F5554B",
-		MEDIUM: "#F0B400",
+		CRITICAL: "#FF0000",
+		HIGH: "#ee8608",
+		MEDIUM: "#f1c232",
 		INFO: "#0776e5",
-		LOW: "#0776e5",
+		LOW: "#bcbcbc",
 		UNKNOWN: "#ee8608",
 	};
 
@@ -40,6 +30,8 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 			case "HIGH":
 				return "HIGH";
 			case "MODERATE":
+				return "MEDIUM";
+			case "MEDIUM":
 				return "MEDIUM";
 			case "LOW":
 				return "LOW";
@@ -52,7 +44,16 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 		// const riskSeverity = calculateRisk(props.score);
 		// style={{color: severityColorMap[props.severity]}}
 		return (
-			<div className="icons" style={{ color: severityColorMap[props.severity] }}>
+			<div
+				className="icons"
+				style={{
+					color: "white",
+					borderRadius: "3px",
+					backgroundColor: severityColorMap[props.severity],
+					marginRight: "5px",
+					marginLeft: "5px",
+				}}
+			>
 				{lowerCase(props.severity)}
 			</div>
 		);
@@ -73,12 +74,12 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 						}}
 						className={"pr-row"}
 						onClick={e => {
-							handleRowClick(e, _.deepLinkUrl);
+							handleRowClick(e, _.deepLinkUrl![0]);
 						}}
 					>
 						<Severity severity={criticalityToRiskSeverity(_.priority!)} />
-						<Tooltip placement="topRight" title={_.title} delay={1}>
-							<div style={{ minWidth: "0", padding: "0" }}>{_.title}</div>
+						<Tooltip placement="topRight" title={_.title![0]} delay={1}>
+							<div style={{ minWidth: "0", padding: "5" }}>{_.title![0]}</div>
 						</Tooltip>
 					</Row>
 				);
