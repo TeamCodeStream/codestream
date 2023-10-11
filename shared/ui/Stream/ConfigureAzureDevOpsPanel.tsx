@@ -2,7 +2,6 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useAppSelector, useDidMount } from "@codestream/webview/utilities/hooks";
 import { isWordy } from "@codestream/webview/utilities/strings";
 import React, { useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { configureProvider, connectProvider, ViewLocation } from "../store/providers/actions";
 import { closePanel } from "./actions";
 import Button from "./Button";

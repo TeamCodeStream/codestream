@@ -1,7 +1,6 @@
 import React from "react";
-import styled from "styled-components";
-import { default as RCTooltip, RCTooltip as RCT } from "rc-tooltip";
-import { AnyObject, emptyObject } from "../../utils";
+import { RCTooltip as RCT } from "rc-tooltip";
+import { AnyObject } from "../../utils";
 import Tooltip from "@codestream/webview/Stream/Tooltip";
 
 export interface Props {

@@ -14,6 +14,7 @@ export function removeSymlinks(baseDir: string) {
 		"Ensuring extension symlink to the webview protocol folder..."
 	);
 
+	//protocolPath = path.resolve(baseDir, "../shared/webviews/sidebar/protocols");
 	protocolPath = path.resolve(baseDir, "../shared/ui/protocols");
 	if (!fs.existsSync(protocolPath)) {
 		fs.mkdirSync(protocolPath);

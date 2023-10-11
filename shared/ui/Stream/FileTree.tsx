@@ -2,7 +2,6 @@ import cx from "classnames";
 import * as path from "path-browserify";
 import React, { useState } from "react";
 import styled from "styled-components";
-import { useSelector, useDispatch } from "react-redux";
 import Icon from "./Icon";
 
 interface Props {

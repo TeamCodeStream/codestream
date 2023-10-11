@@ -10,7 +10,7 @@ export class ProtocolHandler implements UriHandler {
 	}
 
 	async handleUri(uri: Uri) {
-		await Container.webview.handleProtocol(uri);
+		await Container.sidebar.handleProtocol(uri);
 	}
 
 	dispose(): void {

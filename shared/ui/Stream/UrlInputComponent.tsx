@@ -1,6 +1,6 @@
 import { parseHost } from "@codestream/webview/utilities/urls";
 import * as React from "react";
-import { LegacyRef, MutableRefObject, Ref, useEffect, useState } from "react";
+import { LegacyRef, useEffect, useState } from "react";
 
 interface Props {
 	providerShortName: string;

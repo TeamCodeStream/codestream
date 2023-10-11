@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import React from "react";
-import styled, { CSSProperties } from "styled-components";
+import styled from "styled-components";
 import Icon from "../../Stream/Icon";
 
 interface CarouselProps {

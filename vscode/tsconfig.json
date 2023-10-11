@@ -29,6 +29,6 @@
 		"tsBuildInfoFile": ".tsbuildinfo",
 		"useUnknownInCatchVariables": false
 	},
-	"exclude": ["node_modules", "src/webviews/app", ".vscode-test"],
+	"exclude": ["node_modules", "src/webviews/sidebar", "src/webviews/editor", ".vscode-test"],
 	"include": ["src/**/*.ts", "../shared/util/src/**/*", "../shared/build/src/**/*", "esbuild.ts"]
 }

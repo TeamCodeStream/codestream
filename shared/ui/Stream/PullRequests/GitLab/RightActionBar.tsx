@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import Icon from "../../Icon";
-import { Button } from "@codestream/webview/src/components/Button";
 import { Link } from "../../Link";
 import styled from "styled-components";
 import copy from "copy-to-clipboard";

@@ -1,14 +1,7 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Icon from "../../Icon";
-import { Button } from "@codestream/webview/src/components/Button";
-import { OutlineBox, FlexRow } from "./PullRequest";
-import { Checkbox } from "@codestream/webview/src/components/Checkbox";
+import React from "react";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "../../actions";
-import { Link } from "../../Link";
-import { CommandLineInstructions } from "./CommandLineInstructions";
 import styled from "styled-components";
 import { PullRequestReactions } from "./PullRequestReactions";
 import { DropdownButton } from "../../DropdownButton";

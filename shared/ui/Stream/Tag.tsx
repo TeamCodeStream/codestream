@@ -1,7 +1,6 @@
 import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
 import Tooltip, { Placement } from "./Tooltip";
-import { useDispatch } from "react-redux";
 import { setCurrentCodemark, setCurrentReview } from "../store/context/actions";
 import { SearchContext } from "./SearchContextProvider";
 import { lightOrDark } from "../utils";

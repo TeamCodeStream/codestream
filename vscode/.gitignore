@@ -2,7 +2,8 @@ dist
 out
 .vscode-test
 src/protocols/
-webview.html
+editor.html
+sidebar.html
 node_modules
 npm-debug.log
 codestream-*.vsix

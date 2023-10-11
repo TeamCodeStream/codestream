@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"baseUrl": ".",
+		"esModuleInterop": true,
+		"experimentalDecorators": true,
+		"forceConsistentCasingInFileNames": true,
+		"jsx": "react",
+		"lib": ["es2017", "dom", "dom.iterable"],
+		"module": "esnext",
+		"moduleResolution": "node",
+		"noFallthroughCasesInSwitch": true,
+		"noEmit": true,
+		"noImplicitReturns": false,
+		"noImplicitAny": false,
+		"noUnusedLocals": false,
+		"outDir": "../../dist",
+		"paths": {
+			"@codestream/protocols/agent": ["../../../../shared/ui/protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["../../../../shared/ui/protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["../../../../shared/ui/ipc/webview.protocol.ts"],
+			"@codestream/webview/*": ["../../../../shared/ui/*"],
+			"vscode-jsonrpc": ["../../../../shared/webviews/vscode-jsonrpc.shim.ts"]
+		},
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2017",
+		"rootDir": "."
+	}
+}

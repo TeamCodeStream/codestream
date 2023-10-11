@@ -1,0 +1,21 @@
+{
+	"extends": "../../../tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"baseUrl": ".",
+		"forceConsistentCasingInFileNames": false,
+		"paths": {
+			"@codestream/protocols/agent": ["../../util/src/protocol/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["../../util/src/protocol/agent/api.protocol.ts"],
+			"@codestream/utils/*": ["../../util/src/utils/*"],
+			"vscode-jsonrpc": ["../vscode-jsonrpc.shim.ts"]
+		},
+		"jsx": "react",
+		"lib": ["es2019", "dom", "dom.iterable"],
+		"noImplicitAny": false,
+		"resolveJsonModule": false,
+		"types": ["styled-components", "jest"]
+	},
+	"exclude": ["dist", "node_modules", "coverage"],
+	"include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "../../util/src/**/*"]
+}

@@ -2,7 +2,7 @@ import { CodeStreamState } from "@codestream/webview/store";
 import { useAppDispatch, useDidMount } from "@codestream/webview/utilities/hooks";
 import { normalizeUrl } from "@codestream/webview/utilities/urls";
 import React, { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { configureProvider, disconnectProvider, ViewLocation } from "../store/providers/actions";
 import { isConnected } from "../store/providers/reducer";
 import { closePanel } from "./actions";

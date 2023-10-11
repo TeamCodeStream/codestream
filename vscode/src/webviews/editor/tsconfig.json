@@ -17,22 +17,17 @@
 		"noUnusedLocals": false,
 		"outDir": "../../../dist",
 		"paths": {
-			"@codestream/protocols/agent": [
-				"../../../../shared/ui/protocols/agent/agent.protocol.ts"
-			],
-			"@codestream/protocols/api": [
-				"../../../../shared/ui/protocols/agent/api.protocol.ts"
-			],
-			"@codestream/protocols/webview": [
-				"../../../../shared/ui/ipc/webview.protocol.ts"
-			],
+			"@codestream/protocols/agent": ["../../../../shared/ui/protocols/agent/agent.protocol.ts"],
+			"@codestream/protocols/api": ["../../../../shared/ui/protocols/agent/api.protocol.ts"],
+			"@codestream/protocols/webview": ["../../../../shared/ui/ipc/sidebar.protocol.ts"],
 			"@codestream/webview/*": ["../../../../shared/ui/*"],
-			"vscode-jsonrpc": ["../../../../shared/ui/vscode-jsonrpc.shim.ts"]
+			"@codestream/editor/*": ["../../../../shared/webviews/editor/*"],
+			"vscode-jsonrpc": ["../../../../shared/webviews/vscode-jsonrpc.shim.ts"]
 		},
-		"rootDir": ".",
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"target": "es2017"
+		"target": "es2017",
+		"rootDir": "."
 	}
 }

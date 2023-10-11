@@ -579,13 +579,13 @@ export class CodeStreamSession implements Disposable {
 
 	goOffline(hideWebview: boolean = true) {
 		if (hideWebview) {
-			Container.webview.hide();
+			Container.sidebar.hide();
 		}
 		return this.logout(SessionSignedOutReason.UserWentOffline);
 	}
 
 	async reconnect() {
-		Container.webview.hide();
+		Container.sidebar.hide();
 		await this.logout(SessionSignedOutReason.UserWentOffline);
 		return Container.commands.signIn();
 	}

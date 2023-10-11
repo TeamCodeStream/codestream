@@ -19,7 +19,6 @@ import {
 import { WebviewLike } from "./webviews/webviewLike";
 import { CodeStreamWebviewSidebar } from "./webviews/webviewSidebar";
 
-
 import { GitExtension } from "./@types/git";
 
 import { SessionStatusChangedEvent } from "./api/session";
@@ -140,16 +139,20 @@ export async function activate(context: ExtensionContext) {
 		Logger.warn(`no NewRelic telemetry - ${ex.message}`);
 	}
 
-	let webviewLikeSidebar: (WebviewLike & CodeStreamWebviewSidebar) | undefined = undefined;
+	let webviewSidebar: (WebviewLike & CodeStreamWebviewSidebar) | undefined = undefined;
+	//let webviewEditor: (WebviewViewProvider & WebviewEditor) | undefined = undefined;
+
 	// this plumping lives here rather than the WebviewController as it needs to get activated here
-	webviewLikeSidebar = new CodeStreamWebviewSidebar(Container.session, context.extensionUri);
+	webviewSidebar = new CodeStreamWebviewSidebar(Container.session, context.extensionUri);
+
 	context.subscriptions.push(
-		window.registerWebviewViewProvider(CodeStreamWebviewSidebar.viewType, webviewLikeSidebar, {
+		window.registerWebviewViewProvider(CodeStreamWebviewSidebar.viewType, webviewSidebar, {
 			webviewOptions: {
 				retainContextWhenHidden: true
 			}
 		})
 	);
+
 	// const codelensProvider = new CodelensProvider();
 
 	// languages.registerCodeLensProvider("*", codelensProvider);
@@ -178,7 +181,7 @@ export async function activate(context: ExtensionContext) {
 			traceLevel: Logger.level,
 			machineId: env.machineId
 		},
-		webviewLikeSidebar,
+		webviewSidebar,
 		telemetryOptions
 	);
 
@@ -189,7 +192,7 @@ export async function activate(context: ExtensionContext) {
 	showStartupUpgradeMessage(extensionVersion, previousVersion);
 	if (previousVersion === undefined) {
 		// show CS on initial install
-		await Container.webview.show();
+		await Container.sidebar.show();
 	}
 
 	context.globalState.update(GlobalState.Version, extensionVersion);

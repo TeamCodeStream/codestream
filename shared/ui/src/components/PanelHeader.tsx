@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import React from "react";
-import styled, { CSSProperties } from "styled-components";
+import styled from "styled-components";
 
 const Header = styled.div`
 	padding: 15px 20px 5px 20px;

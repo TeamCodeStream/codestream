@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { isConnected } from "../store/providers/reducer";
 import { CodeStreamState } from "../store";

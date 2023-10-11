@@ -147,7 +147,7 @@ export interface WebviewState {
 	teamless?: TeamlessContext;
 }
 
-export class WebviewController implements Disposable {
+export class SidebarController implements Disposable {
 	private _bootstrapPromise: Promise<BootstrapResponse> | undefined;
 	private _context: WebviewContext | undefined;
 	private _disposable: Disposable | undefined;
@@ -160,20 +160,23 @@ export class WebviewController implements Disposable {
 
 	private readonly _notifyActiveEditorChangedDebounced: (e: TextEditor | undefined) => void;
 
-	constructor(public readonly session: CodeStreamSession, private _webview?: WebviewLike) {
+	constructor(
+		public readonly session: CodeStreamSession,
+		private _sidebar?: WebviewLike
+	) {
 		this._disposable = Disposable.from(
 			this.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this),
 			window.onDidChangeActiveTextEditor(this.onActiveEditorChanged, this),
 			window.onDidChangeVisibleTextEditors(this.onVisibleEditorsChanged, this),
 			workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this),
 			Container.agent.onDidEncounterMaintenanceMode(e => {
-				if (this._webview) this._webview.notify(DidEncounterMaintenanceModeNotificationType, e);
+				if (this._sidebar) this._sidebar.notify(DidEncounterMaintenanceModeNotificationType, e);
 			}),
 			Container.agent.onRefreshMaintenancePoll(e => {
-				if (this._webview) this._webview.notify(RefreshMaintenancePollNotificationType, e);
+				if (this._sidebar) this._sidebar.notify(RefreshMaintenancePollNotificationType, e);
 			}),
 			Container.agent.onDidResolveStackTraceLine(e => {
-				if (this._webview) this._webview.notify(DidResolveStackTraceLineNotificationType, e);
+				if (this._sidebar) this._sidebar.notify(DidResolveStackTraceLineNotificationType, e);
 			})
 		);
 
@@ -223,11 +226,11 @@ export class WebviewController implements Disposable {
 				}
 
 				if (
-					this._webview !== undefined &&
+					this._sidebar !== undefined &&
 					e.reason === SessionSignedOutReason.UserSignedOutFromExtension
 				) {
-					if (this._webview !== undefined) {
-						this._webview.notify(HostDidLogoutNotificationType, {});
+					if (this._sidebar !== undefined) {
+						this._sidebar.notify(HostDidLogoutNotificationType, {});
 					}
 					break;
 				}
@@ -255,7 +258,7 @@ export class WebviewController implements Disposable {
 				// only show if the state is explicitly set to false
 				// (ignore if it's undefined)
 				if (state.hidden === false) {
-					if (!this._webview || this._webview.type === "panel") {
+					if (!this._sidebar || this._sidebar.type === "panel") {
 						// don't auto show when in the sidebar -- let the IDE dictate its state
 						this.show();
 					}
@@ -266,8 +269,8 @@ export class WebviewController implements Disposable {
 	}
 
 	private onVisibleEditorsChanged(e: TextEditor[]) {
-		if (this._webview) {
-			this._webview.notify(HostDidChangeVisibleEditorsNotificationType, { count: e.length });
+		if (this._sidebar) {
+			this._sidebar.notify(HostDidChangeVisibleEditorsNotificationType, { count: e.length });
 		}
 
 		// If the last editor is still in the visible list do nothing
@@ -277,8 +280,8 @@ export class WebviewController implements Disposable {
 	}
 
 	private onWorkspaceFoldersChanged() {
-		if (this._webview) {
-			this._webview.notify(HostDidChangeWorkspaceFoldersNotificationType, {});
+		if (this._sidebar) {
+			this._sidebar.notify(HostDidChangeWorkspaceFoldersNotificationType, {});
 		}
 	}
 
@@ -293,18 +296,18 @@ export class WebviewController implements Disposable {
 	}
 
 	get viewColumn(): ViewColumn | undefined {
-		return this._webview === undefined ? undefined : this._webview.viewColumn;
+		return this._sidebar === undefined ? undefined : this._sidebar.viewColumn;
 	}
 
 	get visible() {
-		return this._webview === undefined ? false : this._webview.visible;
+		return this._sidebar === undefined ? false : this._sidebar.visible;
 	}
 
 	@log()
 	hide() {
-		if (this._webview === undefined) return;
+		if (this._sidebar === undefined) return;
 
-		this._webview.dispose();
+		this._sidebar.dispose();
 	}
 
 	@log()
@@ -313,18 +316,18 @@ export class WebviewController implements Disposable {
 		source: string
 	): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(StartWorkNotificationType, {
+		this._sidebar!.notify(StartWorkNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			source: source
 		});
@@ -338,7 +341,7 @@ export class WebviewController implements Disposable {
 		ignoreLastEditor?: boolean
 	): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
@@ -346,12 +349,12 @@ export class WebviewController implements Disposable {
 			editor = undefined;
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(NewCodemarkNotificationType, {
+		this._sidebar!.notify(NewCodemarkNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			type: type,
@@ -366,18 +369,18 @@ export class WebviewController implements Disposable {
 		includeLatestCommit?: boolean
 	): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(NewReviewNotificationType, {
+		this._sidebar!.notify(NewReviewNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			source: source,
@@ -392,18 +395,18 @@ export class WebviewController implements Disposable {
 		branch?: NewPullRequestBranch
 	): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(NewPullRequestNotificationType, {
+		this._sidebar!.notify(NewPullRequestNotificationType, {
 			uri: editor ? editor.document.uri.toString() : undefined,
 			range: editor ? Editor.toSerializableRange(editor.selection) : undefined,
 			source: source,
@@ -413,12 +416,12 @@ export class WebviewController implements Disposable {
 
 	@log()
 	async showNextChangedFile(): Promise<void> {
-		this._webview!.notify(ShowNextChangedFileNotificationType, {});
+		this._sidebar!.notify(ShowNextChangedFileNotificationType, {});
 	}
 
 	@log()
 	async showPreviousChangedFile(): Promise<void> {
-		this._webview!.notify(ShowPreviousChangedFileNotificationType, {});
+		this._sidebar!.notify(ShowPreviousChangedFileNotificationType, {});
 	}
 
 	@log()
@@ -432,13 +435,13 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(ShowCodemarkNotificationType, {
+		this._sidebar!.notify(ShowCodemarkNotificationType, {
 			codemarkId: codemarkId,
 			sourceUri: options.sourceUri && options.sourceUri.toString()
 		});
@@ -455,13 +458,13 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(ShowReviewNotificationType, {
+		this._sidebar!.notify(ShowReviewNotificationType, {
 			reviewId: reviewId,
 			sourceUri: options.sourceUri && options.sourceUri.toString(),
 			openFirstDiff: options.openFirstDiff
@@ -478,13 +481,13 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(ShowPullRequestNotificationType, {
+		this._sidebar!.notify(ShowPullRequestNotificationType, {
 			providerId,
 			id: pullRequestId,
 			commentId: commentId
@@ -497,13 +500,13 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(ShowPullRequestNotificationType, {
+		this._sidebar!.notify(ShowPullRequestNotificationType, {
 			providerId: "",
 			id: "",
 			url: url,
@@ -514,42 +517,42 @@ export class WebviewController implements Disposable {
 	@log()
 	async viewMethodLevelTelemetry(args: any): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
-		this._webview!.notify(ViewMethodLevelTelemetryNotificationType, args);
+		this._sidebar!.notify(ViewMethodLevelTelemetryNotificationType, args);
 	}
 
 	@log()
 	async viewAnomaly(args: ViewAnomalyNotification): Promise<void> {
 		if (this.visible) {
-			await this._webview!.show();
+			await this._sidebar!.show();
 		} else {
 			await this.show();
 		}
 
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
-		this._webview!.notify(ViewAnomalyNotificationType, args);
+		this._sidebar!.notify(ViewAnomalyNotificationType, args);
 	}
 
 	@log()
 	async layoutChanged(): Promise<void> {
-		if (!this._webview) {
+		if (!this._sidebar) {
 			// it's possible that the webview is closing...
 			return;
 		}
 
 		// TODO: Change this to be a request vs a notification
-		this._webview!.notify(HostDidChangeLayoutNotificationType, {
+		this._sidebar!.notify(HostDidChangeLayoutNotificationType, {
 			sidebar: {
 				location: this.tryGetSidebarLocation()
 			}
@@ -558,18 +561,18 @@ export class WebviewController implements Disposable {
 
 	@log()
 	reload(reset = false) {
-		if (this._webview === undefined || !this.visible) return;
+		if (this._sidebar === undefined || !this.visible) return;
 
 		if (reset) {
 			this._context = undefined;
 		}
-		return this._webview.reload();
+		return this._sidebar.reload();
 	}
 
 	@gate()
 	@log()
 	private async ensureWebView() {
-		if (this._webview === undefined) {
+		if (this._sidebar === undefined) {
 			// // Kick off the bootstrap compute to be ready for later
 			// this._bootstrapPromise = this.getBootstrap();
 			//
@@ -584,12 +587,12 @@ export class WebviewController implements Disposable {
 	}
 
 	onWebviewInitialized() {
-		const webview = this._webview!;
+		const webview = this._sidebar!;
 
 		this._disposableWebview = Disposable.from(
-			this._webview!.onDidClose(this.onWebviewClosed, this),
+			this._sidebar!.onDidClose(this.onWebviewClosed, this),
 			// this._webview!.onDidChangeVisibility(this.onWebviewChangeVisibility, this),
-			this._webview!.onDidMessageReceive(
+			this._sidebar!.onDidMessageReceive(
 				(...args) => this.onWebviewMessageReceived(webview, ...args),
 				this
 			),
@@ -619,7 +622,7 @@ export class WebviewController implements Disposable {
 			configuration.onDidChange((...args) => this.onConfigurationChanged(webview, ...args), this),
 
 			// Keep this at the end otherwise the above subscriptions can fire while disposing
-			this._webview!
+			this._sidebar!
 		);
 	}
 
@@ -630,7 +633,7 @@ export class WebviewController implements Disposable {
 		await this.ensureWebView();
 
 		this.updateState();
-		await this._webview!.show();
+		await this._sidebar!.show();
 
 		return this.activeStreamThread as StreamThread | undefined;
 	}
@@ -647,7 +650,7 @@ export class WebviewController implements Disposable {
 			await this.show();
 			this._hasShownAfterOnVersionChanged = true;
 		}
-		this._webview!.notify(DidChangeVersionCompatibilityNotificationType, e);
+		this._sidebar!.notify(DidChangeVersionCompatibilityNotificationType, e);
 	}
 
 	@log({
@@ -658,7 +661,7 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		this._webview!.notify(HostDidReceiveRequestNotificationType, {
+		this._sidebar!.notify(HostDidReceiveRequestNotificationType, {
 			url: uri.toString()
 		});
 	}
@@ -676,12 +679,12 @@ export class WebviewController implements Disposable {
 			await this.show();
 		}
 
-		this._webview!.notify(DidChangeApiVersionCompatibilityNotificationType, e);
+		this._sidebar!.notify(DidChangeApiVersionCompatibilityNotificationType, e);
 	}
 
 	@log()
 	async onServerUrlChanged(e: DidChangeServerUrlNotification) {
-		this._webview!.notify(DidChangeServerUrlNotificationType, e);
+		this._sidebar!.notify(DidChangeServerUrlNotificationType, e);
 	}
 
 	@log({
@@ -691,7 +694,7 @@ export class WebviewController implements Disposable {
 		if (!this.visible) {
 			await this.show();
 		}
-		this._webview!.notify(DidChangeProcessBufferNotificationType, e);
+		this._sidebar!.notify(DidChangeProcessBufferNotificationType, e);
 	}
 
 	@log()
@@ -803,7 +806,7 @@ export class WebviewController implements Disposable {
 
 	private async onWebviewMessageReceived(webview: WebviewLike, e: WebviewIpcMessage) {
 		try {
-			Logger.log(`Webview: Received message ${toLoggableIpcMessage(e)} from the webview`);
+			Logger.log(`WebviewController: Received message ${toLoggableIpcMessage(e)} from the webview`);
 
 			if (isIpcResponseMessage(e)) {
 				webview.onCompletePendingIpcRequest(e);
@@ -833,7 +836,6 @@ export class WebviewController implements Disposable {
 					this.onWebviewNotification(webview, e);
 			}
 		} catch (ex) {
-			debugger;
 			Container.agent.reportMessage(ReportingMessageType.Error, ex.message);
 			Logger.error(ex);
 		}
@@ -872,7 +874,6 @@ export class WebviewController implements Disposable {
 				break;
 			}
 			default: {
-				debugger;
 				throw new Error(`Unhandled webview notification: ${e.method}`);
 			}
 		}
@@ -1002,7 +1003,10 @@ export class WebviewController implements Disposable {
 	private async onWebviewRequest(webview: WebviewLike, e: WebviewIpcRequestMessage) {
 		switch (e.method) {
 			case BootstrapInHostRequestType.method: {
-				Logger.log("WebviewPanel: Bootstrapping webview...", `SignedIn=${this.session.signedIn}`);
+				Logger.log(
+					"WebviewController: Bootstrapping sidebar...",
+					`SignedIn=${this.session.signedIn}`
+				);
 				webview.onIpcRequest(
 					BootstrapInHostRequestType,
 					e,
@@ -1343,8 +1347,8 @@ export class WebviewController implements Disposable {
 				} catch {}
 				this._disposableWebview = undefined;
 			}
-			if (this._webview && this._webview.type === "panel") {
-				this._webview = undefined;
+			if (this._sidebar && this._sidebar.type === "panel") {
+				this._sidebar = undefined;
 			}
 		}
 	}
@@ -1416,7 +1420,7 @@ export class WebviewController implements Disposable {
 	}
 
 	private notifyActiveEditorChanged(e: TextEditor | undefined) {
-		if (this._webview === undefined) return;
+		if (this._sidebar === undefined) return;
 
 		let editor: ActiveEditorInfo | undefined;
 
@@ -1467,11 +1471,11 @@ export class WebviewController implements Disposable {
 			}
 		}
 
-		this._webview.notify(HostDidChangeActiveEditorNotificationType, { editor: editor });
+		this._sidebar.notify(HostDidChangeActiveEditorNotificationType, { editor: editor });
 	}
 
 	private updateState(hidden: boolean | undefined = undefined) {
-		if (hidden === undefined && this._webview && this._webview.type === "sidebar") {
+		if (hidden === undefined && this._sidebar && this._sidebar.type === "sidebar") {
 			// default the sidebar to hidden
 			hidden = true;
 		}
@@ -1557,6 +1561,6 @@ export class WebviewController implements Disposable {
 
 	@log()
 	async onConfigChangeReload() {
-		this._webview!.notify(ConfigChangeReloadNotificationType, {});
+		this._sidebar!.notify(ConfigChangeReloadNotificationType, {});
 	}
 }

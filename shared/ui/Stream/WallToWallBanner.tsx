@@ -1,6 +1,5 @@
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import { CodeStreamState } from "../store";
 import Icon from "./Icon";
 import { setUserPreference } from "./actions";

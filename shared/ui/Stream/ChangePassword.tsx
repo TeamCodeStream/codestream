@@ -1,10 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import CancelButton from "./CancelButton";
 import { CodeStreamState } from "../store";
 import { HostApi } from "../webview-api";
 import { Button } from "../src/components/Button";
-import styled from "styled-components";
 import { Dialog } from "../src/components/Dialog";
 import { closeModal } from "./actions";
 import { ButtonRow } from "./ChangeUsername";

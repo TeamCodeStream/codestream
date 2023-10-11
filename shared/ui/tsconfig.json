@@ -8,10 +8,10 @@
 			"@codestream/protocols/agent": ["../util/src/protocol/agent/agent.protocol.ts"],
 			"@codestream/protocols/api": ["../util/src/protocol/agent/api.protocol.ts"],
 			"@codestream/protocols/webview": ["ipc/webview.protocol.ts"],
-			"@codestream/webview/webview-api": ["./webview-api.ts"],
+			"@codestream/webview/webview-api": ["webview-api.ts"],
 			"@codestream/webview/*": ["./*"],
 			"@codestream/utils/*": ["../util/src/utils/*"],
-			"vscode-jsonrpc": ["./vscode-jsonrpc.shim.ts"]
+			"vscode-jsonrpc": ["../webviews/vscode-jsonrpc.shim.ts"]
 		},
 		"jsx": "react",
 		"lib": ["es2019", "dom", "dom.iterable"],

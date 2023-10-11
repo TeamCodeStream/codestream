@@ -128,7 +128,7 @@ import { HostApi } from "./webview-api";
 // import translationsEs from "./translations/es";
 
 export function setupCommunication(host: { postMessage: (message: any) => void }) {
-	Object.defineProperty(window, "acquireCodestreamHost", {
+	Object.defineProperty(window, "acquireCodestreamHostForSidebar", {
 		value() {
 			return host;
 		},

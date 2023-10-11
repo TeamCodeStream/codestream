@@ -40,7 +40,7 @@ export class WebviewSidebarActivator implements TreeDataProvider<object>, Dispos
 
 	private async activate() {
 		await commands.executeCommand("workbench.action.toggleSidebarVisibility");
-		Container.webview.toggle();
+		Container.sidebar.toggle();
 
 		// Ensure getChildren will get called again
 		this._onDidChangeTreeData.fire(undefined);

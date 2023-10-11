@@ -20,7 +20,7 @@ import { Namespaces } from "@codestream/webview/Stream/PixieDynamicLogging/Names
 import { Pods } from "@codestream/webview/Stream/PixieDynamicLogging/Pods";
 import { HostApi } from "@codestream/webview/webview-api";
 import React, { useEffect } from "react";
-import { shallowEqual, useDispatch, useSelector } from "react-redux";
+import { shallowEqual } from "react-redux";
 import styled from "styled-components";
 import { Dialog } from "../../src/components/Dialog";
 import { PanelHeader } from "../../src/components/PanelHeader";

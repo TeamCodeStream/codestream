@@ -1,11 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import Menu from "../../Stream/Menu";
-import { CSUser, CSMe } from "@codestream/protocols/api";
-import { CodeStreamState } from "@codestream/webview/store";
-import { getTeamMembers } from "@codestream/webview/store/users/reducer";
-import { connect } from "react-redux";
-import Icon from "@codestream/webview/Stream/Icon";
 import { Button } from "./Button";
 
 const StyledButton = styled(Button)`

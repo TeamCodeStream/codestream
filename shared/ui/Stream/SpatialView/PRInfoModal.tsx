@@ -7,7 +7,6 @@ import { connectProvider } from "@codestream/webview/store/providers/actions";
 import { useAppDispatch, useAppSelector } from "@codestream/webview/utilities/hooks";
 import { mapFilter } from "@codestream/webview/utils";
 import React from "react";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { Button } from "../../src/components/Button";
 import { ButtonGroup } from "../../src/components/ButtonGroup";

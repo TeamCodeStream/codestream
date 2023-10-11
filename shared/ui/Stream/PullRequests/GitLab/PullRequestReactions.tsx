@@ -1,6 +1,5 @@
 import { useAppDispatch } from "@codestream/webview/utilities/hooks";
 import React from "react";
-import { useDispatch } from "react-redux";
 import Icon from "../../Icon";
 import { emojify } from "../../Markdowner";
 import styled from "styled-components";

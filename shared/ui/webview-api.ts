@@ -16,7 +16,6 @@ import {
 } from "./ipc/webview.protocol";
 import { AnyObject, Disposable, shortUuid } from "./utils";
 import {
-	findHost,
 	IpcHost,
 	isIpcRequestMessage,
 	isIpcResponseMessage,
@@ -241,17 +240,39 @@ export class RequestApiManager {
 	}
 }
 
+declare function acquireCodestreamHostForSidebar(): IpcHost;
+
+let host: IpcHost;
+const findHost = (webview: string): IpcHost => {
+	try {
+		if (webview === "sidebar") {
+			host = acquireCodestreamHostForSidebar();
+		}
+	} catch (e) {
+		throw new Error("Host needs to provide global `acquireCodestreamHostForSidebar` function");
+	}
+	return host;
+};
+
 export class HostApi extends EventEmitter {
 	private apiManager = new RequestApiManager();
 	private port: IpcHost;
 
-	private static _instance: HostApi;
+	private static _sidebarInstance: HostApi;
 	static get instance(): HostApi {
-		if (this._instance === undefined) {
-			this._instance = new HostApi(findHost());
+		if (this._sidebarInstance === undefined) {
+			this._sidebarInstance = new HostApi(findHost("sidebar"));
 		}
-		return this._instance;
+		return this._sidebarInstance;
 	}
+
+	// private static _editorInstance: HostApi;
+	// static locator(): HostApi {
+	// 	if (this._editorInstance === undefined) {
+	// 		this._editorInstance = new HostApi(findHost("editor"));
+	// 	}
+	// 	return this._editorInstance;
+	// }
 
 	protected constructor(port: any) {
 		super();

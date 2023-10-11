@@ -132,7 +132,7 @@ export class Commands implements Disposable {
 				commands.registerCommand(name, (...args: any[]) => method.apply(this, args))
 			),
 			commands.registerCommand("workbench.view.extension.codestream", () =>
-				Container.webview.show()
+				Container.sidebar.show()
 			)
 		);
 	}
@@ -210,7 +210,7 @@ export class Commands implements Disposable {
 
 		// Try to designate the diff view in the column to the left the webview
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		// let column = Container.webview.viewColumn as number | undefined;
+		// let column = Container.sidebar.viewColumn as number | undefined;
 		// if (column !== undefined) {
 		// 	column--;
 		// 	if (column <= 0) {
@@ -481,7 +481,7 @@ export class Commands implements Disposable {
 	// 		}
 	// 	);
 
-	// 	await Container.webview.openCodemark(response.marker.codemarkId, {
+	// 	await Container.sidebar.openCodemark(response.marker.codemarkId, {
 	// 		onlyWhenVisible: true,
 	// 		sourceUri: uri
 	// 	});
@@ -494,7 +494,7 @@ export class Commands implements Disposable {
 		Container.agent.telemetry.track("Codemark Clicked", { "Codemark Location": "Source File" });
 
 		const { codemarkId: _codemarkId, ...options } = args;
-		return Container.webview.openCodemark(args.codemarkId, options);
+		return Container.sidebar.openCodemark(args.codemarkId, options);
 	}
 
 	@command("openPullRequest", { showErrorMessage: "Unable to open pull request" })
@@ -517,7 +517,7 @@ export class Commands implements Disposable {
 		if (args.externalUrl) {
 			return openUrl(args.externalUrl);
 		}
-		return Container.webview.openPullRequest(args.providerId, args.pullRequestId, args.commentId);
+		return Container.sidebar.openPullRequest(args.providerId, args.pullRequestId, args.commentId);
 	}
 
 	@command("openReview", { showErrorMessage: "Unable to open review" })
@@ -525,7 +525,7 @@ export class Commands implements Disposable {
 		if (args === undefined) return;
 
 		const { reviewId: _reviewId, ...options } = args;
-		return Container.webview.openReview(args.reviewId, options);
+		return Container.sidebar.openReview(args.reviewId, options);
 	}
 
 	@command("signIn", { customErrorHandling: true })
@@ -540,7 +540,7 @@ export class Commands implements Disposable {
 				);
 				if (!token) {
 					await Container.context.workspaceState.update(WorkspaceState.TeamId, undefined);
-					await Container.webview.show();
+					await Container.sidebar.show();
 				} else {
 					await Container.session.login(
 						SaveTokenReason.SIGN_IN_COMMAND,
@@ -563,7 +563,7 @@ export class Commands implements Disposable {
 	) {
 		try {
 			if (reason === SessionSignedOutReason.UserSignedOutFromExtension) {
-				Container.webview.hide();
+				Container.sidebar.hide();
 			}
 			await Container.session.logout(reason, newServerUrl, newEnvironment);
 		} catch (ex) {
@@ -574,7 +574,7 @@ export class Commands implements Disposable {
 	@command("toggle")
 	async toggle() {
 		try {
-			return await Container.webview.toggle();
+			return await Container.sidebar.toggle();
 		} catch (ex) {
 			Logger.error(ex);
 		}
@@ -598,12 +598,12 @@ export class Commands implements Disposable {
 			}
 
 			if (parsedArgs.anomaly) {
-				await Container.webview.viewAnomaly({
+				await Container.sidebar.viewAnomaly({
 					anomaly: parsedArgs.anomaly,
 					entityGuid: parsedArgs.newRelicEntityGuid!!
 				});
 			} else {
-				await Container.webview.viewMethodLevelTelemetry(parsedArgs);
+				await Container.sidebar.viewMethodLevelTelemetry(parsedArgs);
 			}
 		} catch (ex) {
 			Logger.error(ex);
@@ -616,11 +616,11 @@ export class Commands implements Disposable {
 	}
 
 	private async startWorkRequest() {
-		await Container.webview.startWorkRequest(window.activeTextEditor, "Context Menu");
+		await Container.sidebar.startWorkRequest(window.activeTextEditor, "Context Menu");
 	}
 
 	private async newCodemarkRequest(type: CodemarkType, args: NewCodemarkCommandArgs = {}) {
-		await Container.webview.newCodemarkRequest(
+		await Container.sidebar.newCodemarkRequest(
 			type,
 			window.activeTextEditor,
 			args.source || "Context Menu"
@@ -628,25 +628,25 @@ export class Commands implements Disposable {
 	}
 
 	private async newReviewRequest(args: NewCodemarkCommandArgs = {}) {
-		await Container.webview.newReviewRequest(
+		await Container.sidebar.newReviewRequest(
 			window.activeTextEditor,
 			args.source || "Context Menu"
 		);
 	}
 
 	private async newPullRequestRequest(args: NewPullRequestCommandArgs = {}) {
-		await Container.webview.newPullRequestRequest(
+		await Container.sidebar.newPullRequestRequest(
 			window.activeTextEditor,
 			args.source || "Context Menu"
 		);
 	}
 
 	private async showNextChangedFileRequest() {
-		await Container.webview.showNextChangedFile();
+		await Container.sidebar.showNextChangedFile();
 	}
 
 	private async showPreviousChangedFileRequest() {
-		await Container.webview.showPreviousChangedFile();
+		await Container.sidebar.showPreviousChangedFile();
 	}
 
 	private async openWorkingFileForMarkerCore(marker: CSMarkerIdentifier) {
@@ -668,7 +668,7 @@ export class Commands implements Disposable {
 		}
 
 		// FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		// let column = Container.webview.viewColumn as number | undefined;
+		// let column = Container.sidebar.viewColumn as number | undefined;
 		// if (column !== undefined) {
 		// 	column--;
 		// 	if (column <= 0) {
@@ -696,7 +696,7 @@ export class Commands implements Disposable {
 		// 	const editor = window.activeTextEditor;
 		// 	if (editor === undefined) {
 		// 		void (await commands.executeCommand(BuiltInCommands.NextEditor));
-		// 		await Container.webview.show();
+		// 		await Container.sidebar.show();
 		// 	}
 		// } catch {}
 		// // </HACK>
@@ -704,7 +704,7 @@ export class Commands implements Disposable {
 		// // FYI, see showMarkerDiff() above
 		// // Try to designate the diff view in the column to the left the webview
 		// // FYI, this doesn't always work, see https://github.com/Microsoft/vscode/issues/56097
-		// let column = Container.webview.viewColumn as number | undefined;
+		// let column = Container.sidebar.viewColumn as number | undefined;
 
 		// if (column !== undefined) {
 		// 	column--;

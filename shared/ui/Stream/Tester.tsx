@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { Button } from "../src/components/Button";
 import { Dialog } from "../src/components/Dialog";
 import { CodeStreamState } from "../store";
-import { RequestType } from "../vscode-jsonrpc.shim";
+import { RequestType } from "vscode-jsonrpc";
 import { HostApi } from "../webview-api";
 import { closeModal } from "./actions";
 

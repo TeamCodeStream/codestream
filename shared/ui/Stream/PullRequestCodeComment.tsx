@@ -20,7 +20,6 @@ import { PullRequestEditingComment } from "./PullRequestEditingComment";
 import { PullRequestReplyComment } from "./PullRequestReplyComment";
 import { Button } from "../src/components/Button";
 import { api } from "../store/providerPullRequests/thunks";
-import { useDispatch } from "react-redux";
 import { GHOST } from "./PullRequestTimelineItems";
 
 const ReviewIcons = {
