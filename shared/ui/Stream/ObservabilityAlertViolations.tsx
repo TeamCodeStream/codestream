@@ -2,9 +2,8 @@ import React from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import { HostApi } from "@codestream/webview/webview-api";
 import { OpenUrlRequestType } from "@codestream/protocols/webview";
-import { RecentIssue, RiskSeverity } from "@codestream/protocols/agent";
+import { RecentIssue } from "@codestream/protocols/agent";
 import Tooltip from "./Tooltip";
-import { lowerCase } from "lodash-es";
 
 interface Props {
 	issues?: RecentIssue[];
@@ -14,66 +13,59 @@ interface Props {
 export const ObservabilityAlertViolations = React.memo((props: Props) => {
 	const { issues, customPadding } = props;
 
-	const severityBackgroundColorMap: Record<RiskSeverity, string> = {
-		CRITICAL: "#f8a6a6",
-		HIGH: "#e0b484",
-		MEDIUM: "#fae29a",
-		INFO: "#9ec9f5",
-		LOW: "#bcbcbc",
-		UNKNOWN: "#ffffff",
+	const severityBackgroundColorMap = {
+		Critical: "#fee5e5",
+		High: "#f7dfca",
+		Medium: "#fdf2c4",
+		Low: "#e7e9e9",
 	};
 
-	const severityColorMap: Record<RiskSeverity, string> = {
-		CRITICAL: "#8d0d04",
-		HIGH: "#513405",
-		MEDIUM: "#8c6b05",
-		INFO: "#0776e5",
-		LOW: "#444444",
-		UNKNOWN: "#000000",
+	const severityColorMap = {
+		Critical: "#b00f0a",
+		High: "#a14e02",
+		Medium: "#8e6806",
+		Low: "#535e65",
 	};
 
-	function criticalityToRiskSeverity(riskSeverity): RiskSeverity {
+	function criticalityToRiskSeverity(riskSeverity) {
 		switch (riskSeverity) {
 			case "CRITICAL":
-				return "CRITICAL";
+				return "Critical";
 			case "HIGH":
-				return "HIGH";
+				return "High";
 			case "MODERATE":
-				return "MEDIUM";
+				return "Medium";
 			case "MEDIUM":
-				return "MEDIUM";
+				return "Medium";
 			case "LOW":
-				return "LOW";
-			case "INFO":
-				return "INFO";
-			case "UNKNOWN":
-				return "UNKNOWN";
+				return "Low";
 			default:
-				return "LOW";
+				return "Low";
 		}
 	}
 
-	function Severity(props: { severity: RiskSeverity }) {
+	function Severity(props: { severity }) {
 		// const riskSeverity = calculateRisk(props.score);
 		// style={{color: severityColorMap[props.severity]}}
 		return (
-			<div
-				className="icons"
-				style={{
-					color: severityColorMap[props.severity],
-					borderRadius: "3px",
-					backgroundColor: severityBackgroundColorMap[props.severity],
-					marginRight: "5px",
-					marginLeft: "5px",
-				}}
-			>
-				{lowerCase(props.severity)}
+			<div>
+				<span
+					style={{
+						color: severityColorMap[props.severity],
+						borderRadius: "3px",
+						backgroundColor: severityBackgroundColorMap[props.severity],
+						padding: "1px 2px 1px 2px",
+					}}
+				>
+					{props.severity}
+				</span>
 			</div>
 		);
 	}
 
 	const handleRowClick = (e, violationUrl) => {
 		e.preventDefault();
+		HostApi.instance.track("Issue Clicked", {});
 		HostApi.instance.send(OpenUrlRequestType, { url: violationUrl });
 	};
 
