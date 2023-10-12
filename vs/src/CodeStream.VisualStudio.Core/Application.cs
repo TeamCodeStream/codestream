@@ -13,7 +13,7 @@ namespace CodeStream.VisualStudio.Core
 {
 	public class Application
 	{
-		public const string Name = "CodeStream";
+		public const string Name = "New Relic CodeStream";
 
 		/// <summary>
 		/// Returns Major.Minor.Build for the Extension

@@ -7,8 +7,7 @@
              Background="{DynamicResource {x:Static vsshell:VsBrushes.WindowKey}}"
              Foreground="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"
              mc:Ignorable="d"
-             d:DesignHeight="300" d:DesignWidth="300"
-             Name="CodeStream">
+             d:DesignHeight="300" d:DesignWidth="300">
     <Grid Name="Grid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>

@@ -30,13 +30,13 @@
 
 			<Menu guid="guidWebViewPackageCodeWindowContextMenuCmdSet" id="CodeWindowContextSubMenu" priority="0x0110" type="Menu">
 				<Strings>
-					<ButtonText>CodeStream</ButtonText>
+					<ButtonText>New Relic CodeStream</ButtonText>
 				</Strings>
 			</Menu>
 
 			<Menu guid="guidVSPackageCommandTopMenuCmdSet" id="CodeStreamTopLevelMenu" type="Menu">
 				<Strings>
-					<ButtonText>CodeStream</ButtonText>
+					<ButtonText>New Relic CodeStream</ButtonText>
 				</Strings>
 			</Menu>
 
