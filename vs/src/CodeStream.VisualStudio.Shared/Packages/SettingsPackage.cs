@@ -26,7 +26,7 @@ using CodeStream.VisualStudio.Core.Extensions;
 namespace CodeStream.VisualStudio.Shared.Packages
 {
 	[ProvideService(typeof(SSettingsManagerAccessor))]
-	[ProvideOptionPage(typeof(OptionsDialogPage), "CodeStream", "Settings", 0, 0, true)]
+	[ProvideOptionPage(typeof(OptionsDialogPage), Application.ShortName, "Settings", 0, 0, true)]
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 	[InstalledProductRegistration("#110", "#112", SolutionInfo.Version)]
 	[Guid(Guids.CodeStreamSettingsPackageId)]

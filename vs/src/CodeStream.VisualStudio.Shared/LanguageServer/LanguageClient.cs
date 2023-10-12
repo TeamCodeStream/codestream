@@ -113,7 +113,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 		}
 #endif
 
-		public string Name => Application.Name;
+		public string Name => Application.ShortName;
 
 		public IEnumerable<string> ConfigurationSections => null;
 

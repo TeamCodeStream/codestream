@@ -13,7 +13,8 @@ namespace CodeStream.VisualStudio.Core
 {
 	public class Application
 	{
-		public const string Name = "New Relic CodeStream";
+		public const string FullName = "New Relic CodeStream";
+		public const string ShortName = "CodeStream";
 
 		/// <summary>
 		/// Returns Major.Minor.Build for the Extension
@@ -116,9 +117,9 @@ namespace CodeStream.VisualStudio.Core
 
 			var localApplicationData = Path.Combine(
 				Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-				Name
+				ShortName
 			);
-			var tempData = Path.Combine(Path.GetTempPath(), Name);
+			var tempData = Path.Combine(Path.GetTempPath(), ShortName);
 
 			VisualStudioName = fileVersionInfo.FileDescription;
 			VisualStudioVersionString = fileVersionInfo.ProductVersion;

@@ -71,7 +71,7 @@ namespace CodeStream.VisualStudio.Shared.Packages
 				if (_codeStreamSettingsManager?.AutoSignIn != true)
 				{
 					InfoBarProvider.Instance.ShowInfoBar(
-						$"Please enable {Application.Name}'s AutoSignin feature (Tools > Options > CodeStream > Settings) to open this file"
+						$"Please enable {Application.ShortName}'s AutoSignin feature (Tools > Options > CodeStream > Settings) to open this file"
 					);
 					return;
 				}

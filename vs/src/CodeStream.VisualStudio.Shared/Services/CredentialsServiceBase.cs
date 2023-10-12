@@ -23,7 +23,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 				string.IsNullOrEmpty(teamId) ? $"{uri}|{email}" : $"{uri}|{email}|{teamId}"
 			).ToLowerInvariant();
 
-		protected virtual string GetKey(string key) => $"{Application.Name}|" + key;
+		protected virtual string GetKey(string key) => $"{Application.ShortName}|" + key;
 
 		protected Task<Tuple<string, string, string>> LoadAsync(
 			string uri,
