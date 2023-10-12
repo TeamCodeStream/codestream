@@ -8,6 +8,7 @@ import Tooltip from "./Tooltip";
 interface Props {
 	issues?: RecentIssue[];
 	customPadding?: string;
+	entityGuid?: string;
 }
 
 export const ObservabilityAlertViolations = React.memo((props: Props) => {
@@ -65,7 +66,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 
 	const handleRowClick = (e, violationUrl) => {
 		e.preventDefault();
-		HostApi.instance.track("Issue Clicked", {});
+		HostApi.instance.track("Issue Clicked", { entityGuid: props.entityGuid });
 		HostApi.instance.send(OpenUrlRequestType, { url: violationUrl });
 	};
 
@@ -79,7 +80,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 						}}
 						className={"pr-row"}
 						onClick={e => {
-							handleRowClick(e, _.deepLinkUrl![0]);
+							handleRowClick(e, _.url);
 						}}
 					>
 						<Severity severity={criticalityToRiskSeverity(_.priority!)} />

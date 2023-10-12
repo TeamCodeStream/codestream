@@ -1736,6 +1736,7 @@ export interface GetServiceLevelTelemetryResponse {
 export interface GetAlertViolationsResponse {
 	name?: string;
 	guid?: string;
+	permalink?: string;
 	recentAlertViolations?: RecentAlertViolation[];
 }
 
@@ -2056,6 +2057,7 @@ export interface GetAlertViolationsQueryResult {
 	actor: {
 		entity: {
 			name: string;
+			permalink: string;
 			recentAlertViolations: RecentAlertViolation[];
 		};
 	};
@@ -2070,7 +2072,7 @@ export interface GetIssuesQueryResult {
 						title?: string;
 						eventType?: string;
 						mergeReason?: string;
-						deepLinkUrl?: string[];
+						url?: string;
 						conditionName?: string[];
 						unAcknowledgedBy?: string | null;
 						totalIncidents?: number;
@@ -2124,7 +2126,7 @@ export interface RecentAlertViolation {
 
 export interface RecentIssue {
 	title?: string;
-	deepLinkUrl?: string[];
+	url?: string;
 	closedAt?: number;
 	updatedAt?: number;
 	createdAt: number;

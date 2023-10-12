@@ -144,7 +144,10 @@ export const ObservabilityRelatedEntity = React.memo((props: Props) => {
 			</PaneNodeName>
 			{expanded && (
 				<>
-					<ObservabilityAlertViolations issues={recentIssues?.recentIssues} />
+					<ObservabilityAlertViolations
+						issues={recentIssues?.recentIssues}
+						entityGuid={relatedEntity.guid}
+					/>
 					<ObservabilityGoldenMetricDropdown
 						entityGoldenMetrics={entityGoldenMetrics}
 						errors={entityGoldenMetricsErrors}

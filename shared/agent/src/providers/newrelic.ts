@@ -105,6 +105,7 @@ import {
 	AgentValidateLanguageExtensionRequestType,
 	GetIssuesResponse,
 	GetIssuesQueryResult,
+	GetAlertViolationsQueryResult,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -2511,7 +2512,7 @@ export class NewRelicProvider
 					actor {
 						account(id: $id) {
 						  aiIssues {
-							issues(filter: {entityGuids: $entityGuids }) {
+							issues(filter: {entityGuids: $entityGuids, states: ACTIVATED}) {
 							  issues {
 								title
 								deepLinkUrl
@@ -2532,6 +2533,28 @@ export class NewRelicProvider
 				}
 			);
 
+			//get the url
+
+			const urlResponse = await this.query<GetAlertViolationsQueryResult>(
+				`query getRecentAlertViolations($entityGuid: EntityGuid!) {
+							actor {
+							  entity(guid: $entityGuid) {
+								name
+								guid
+								permalink
+								recentAlertViolations(count: 50) {
+								  violationId
+								  violationUrl
+								}
+							  }
+							}
+						  }				  
+						`,
+				{
+					entityGuid: entityGuid,
+				}
+			);
+
 			if (response?.actor?.account?.aiIssues?.issues?.issues?.length) {
 				const issueArray = response.actor.account.aiIssues.issues.issues;
 				const recentIssuesArray = issueArray.filter(_ => _.closedAt === null);
@@ -2542,6 +2565,7 @@ export class NewRelicProvider
 				recentIssuesArray.forEach(issue => {
 					const firstTitle = issue.title![0]; //this gives me the first title
 					issue.title = firstTitle;
+					issue.url = urlResponse.actor.entity.permalink;
 				});
 
 				const recentIssuesArrayUnique = _uniqBy(recentIssuesArray, "title");
