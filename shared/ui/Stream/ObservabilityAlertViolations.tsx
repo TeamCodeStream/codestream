@@ -66,7 +66,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 
 	const handleRowClick = (e, violationUrl) => {
 		e.preventDefault();
-		HostApi.instance.track("Issue Clicked", { entityGuid: props.entityGuid });
+		HostApi.instance.track("Issue Clicked", { "Entity GUID": props.entityGuid });
 		HostApi.instance.send(OpenUrlRequestType, { url: violationUrl });
 	};
 

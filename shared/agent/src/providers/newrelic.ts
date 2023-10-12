@@ -105,7 +105,6 @@ import {
 	AgentValidateLanguageExtensionRequestType,
 	GetIssuesResponse,
 	GetIssuesQueryResult,
-	GetAlertViolationsQueryResult,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -2533,39 +2532,18 @@ export class NewRelicProvider
 				}
 			);
 
-			//get the url
-
-			const urlResponse = await this.query<GetAlertViolationsQueryResult>(
-				`query getRecentAlertViolations($entityGuid: EntityGuid!) {
-							actor {
-							  entity(guid: $entityGuid) {
-								name
-								guid
-								permalink
-								recentAlertViolations(count: 50) {
-								  violationId
-								  violationUrl
-								}
-							  }
-							}
-						  }				  
-						`,
-				{
-					entityGuid: entityGuid,
-				}
-			);
-
 			if (response?.actor?.account?.aiIssues?.issues?.issues?.length) {
 				const issueArray = response.actor.account.aiIssues.issues.issues;
 				const recentIssuesArray = issueArray.filter(_ => _.closedAt === null);
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = ["", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
+				const url = this.issueUrl(entityGuid);
 				// get unique labels
 				recentIssuesArray.forEach(issue => {
 					const firstTitle = issue.title![0]; //this gives me the first title
 					issue.title = firstTitle;
-					issue.url = urlResponse.actor.entity.permalink;
+					issue.url = url;
 				});
 
 				const recentIssuesArrayUnique = _uniqBy(recentIssuesArray, "title");
@@ -4198,6 +4176,10 @@ export class NewRelicProvider
 
 	private productEntityRedirectUrl(entityGuid: string) {
 		return `${this.productUrl}/redirect/entity/${entityGuid}`;
+	}
+
+	private issueUrl(entityGuid: string) {
+		return `${this.productUrl}/nr1-core/alerts-ai/filtered-feed/${entityGuid}`;
 	}
 
 	private findRelatedReposFromServiceEntity(
