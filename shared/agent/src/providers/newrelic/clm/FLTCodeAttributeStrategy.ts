@@ -450,7 +450,7 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 					column: metric.column,
 					functionName: metric.functionName!,
 					commit: metric.commit,
-					sampleSize: metric.sampleSize,
+					sampleSize: metric.sampleSize ?? 0,
 					source: metric.source!,
 				};
 				return response;

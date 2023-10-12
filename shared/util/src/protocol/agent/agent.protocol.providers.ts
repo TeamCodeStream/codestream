@@ -1727,7 +1727,7 @@ export interface FileLevelTelemetryAverageDuration extends FileLevelTelemetryMet
 }
 
 export interface FileLevelTelemetrySampleSize extends FileLevelTelemetryMetric {
-	sampleSize: any;
+	sampleSize: number;
 	source: string;
 }
 

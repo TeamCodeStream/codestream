@@ -48,6 +48,8 @@ import {
 	CalculateNonLocalRangesRequestType,
 	CloseStreamRequestType,
 	CodeStreamEnvironmentInfo,
+	ComputeCurrentLocationResponse,
+	ComputeCurrentLocationsRequestType,
 	CreateChannelStreamRequestType,
 	CreateDirectStreamRequestType,
 	CreateDocumentMarkerPermalinkRequestType,
@@ -110,6 +112,7 @@ import {
 	GetFileContentsAtRevisionRequestType,
 	GetFileContentsAtRevisionResponse,
 	GetFileLevelTelemetryRequestType,
+	GetFileLevelTelemetryResponse,
 	GetFileScmInfoRequestType,
 	GetFileStreamRequestType,
 	GetFileStreamResponse,
@@ -186,6 +189,25 @@ export const isWindows = process.platform === "win32";
 interface CSServerOptions {
 	run: NodeModule;
 	debug: NodeModule;
+}
+
+export interface IObservabilityService {
+	getFileLevelTelemetry(
+		fileUri: string,
+		languageId: string,
+		resetCache?: boolean,
+		locator?: FunctionLocator,
+		options?: FileLevelTelemetryRequestOptions | undefined
+	): Promise<GetFileLevelTelemetryResponse>;
+
+	computeCurrentLocation(
+		id: string,
+		lineno: number,
+		column: number,
+		commit: string,
+		functionName: string,
+		uri: string
+	): Promise<ComputeCurrentLocationResponse>;
 }
 
 export class CodeStreamAgentConnection implements Disposable {
@@ -1007,7 +1029,7 @@ export class CodeStreamAgentConnection implements Disposable {
 	get observability() {
 		return this._observability;
 	}
-	private readonly _observability = new (class {
+	private readonly _observability: IObservabilityService = new (class {
 		constructor(private readonly _connection: CodeStreamAgentConnection) {}
 
 		getFileLevelTelemetry(
@@ -1023,6 +1045,31 @@ export class CodeStreamAgentConnection implements Disposable {
 				resetCache,
 				locator,
 				options
+			});
+		}
+
+		computeCurrentLocation(
+			id: string,
+			lineno: number,
+			column: number,
+			commit: string,
+			functionName: string,
+			uri: string
+		): Promise<ComputeCurrentLocationResponse> {
+			return this._connection.sendRequest(ComputeCurrentLocationsRequestType, {
+				uri,
+				commit,
+				markers: [
+					{
+						id,
+						referenceLocations: [
+							{
+								commitHash: commit,
+								location: [lineno, 0, lineno, 0, undefined]
+							}
+						]
+					}
+				]
 			});
 		}
 	})(this);
