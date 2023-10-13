@@ -16,7 +16,7 @@ git clone https://github.com/TeamCodeStream/codestream.git
     - .NET 5+ (to manage local/global tool installs)
     - Desktop Development with C++
 - [Git](https://git-scm.com/) >=2.32.0
-- [NodeJS](https://nodejs.org/en/) = 16.17.1
+- [NodeJS](https://nodejs.org/en/) = 18.15.0
 - [npm](https://npmjs.com/) = 9.6.2
 - [DotNetBrowser](https://www.teamdev.com/dotnetbrowser) license. (it must be put into the git-ignored folder `\licenses\{Configuration}` where `{Configuration}` is Debug (dev license) or Release (runtime license)). It will be picked up by msbuild and put into the correct location at build time. These licenses should _not_ be commited to source control.
 

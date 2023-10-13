@@ -130,9 +130,9 @@ export class Broadcaster {
 	private _messageEmitter = new Emitter<{ [key: string]: any }[]>();
 	private _statusEmitter = new Emitter<BroadcasterStatus>();
 	private _queuedChannels: string[] = [];
-	private _statusTimeout: NodeJS.Timer | undefined;
+	private _statusTimeout: NodeJS.Timeout | undefined;
 	private _lastTick: number = 0;
-	private _tickInterval: NodeJS.Timer | undefined;
+	private _tickInterval: NodeJS.Timeout | undefined;
 	private _needConnectedMessage: boolean = false;
 	private _hadTrouble: boolean = false;
 	private _testMode: boolean = false;

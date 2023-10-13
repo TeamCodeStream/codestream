@@ -42,7 +42,7 @@ export class SocketClusterConnection implements BroadcasterConnection {
 	private _logger: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;
-	private _connectionTimer: NodeJS.Timer | undefined;
+	private _connectionTimer: NodeJS.Timeout | undefined;
 	private _connectionPending: boolean = false;
 	private _connected: boolean = false;
 	private _options: SocketClusterInitializer | undefined;

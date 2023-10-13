@@ -272,8 +272,8 @@ export class CodeStreamSession {
 	private _documentEventHandler: DocumentEventHandler | undefined;
 
 	private _activeServerAlerts: string[] = [];
-	private _broadcasterRecoveryTimer: NodeJS.Timer | undefined;
-	private _echoTimer: NodeJS.Timer | undefined;
+	private _broadcasterRecoveryTimer: NodeJS.Timeout | undefined;
+	private _echoTimer: NodeJS.Timeout | undefined;
 	private _echoDidTimeout: boolean = false;
 
 	// HACK in certain scenarios the agent may want to use more performance-intensive

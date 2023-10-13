@@ -159,7 +159,7 @@ task copyProtobuf(type: Copy) {
 def createCopyNodeTask(String platform) {
     String taskName = "copyNode-" + platform
     String supplementalSoftwarePath = System.getenv("TCBUILD_SUPPLEMENTAL_SOFTWARE_PATH")
-    String nodeVersion = 'v16.17.1'
+    String nodeVersion = 'v18.15.0'
     return tasks.create(taskName, Copy) {
         from "$supplementalSoftwarePath/node/node-$nodeVersion-${platform}"
         include "**/*"

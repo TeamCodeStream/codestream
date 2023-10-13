@@ -79,7 +79,10 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	private _disposable: Disposable | undefined;
 	private _ipcReadyDeferred = new Deferred<boolean>();
 
-	constructor(public readonly session: CodeStreamSession, private readonly _extensionUri: Uri) {
+	constructor(
+		public readonly session: CodeStreamSession,
+		private readonly _extensionUri: Uri
+	) {
 		this._ipcPending = new Map();
 	}
 
@@ -465,7 +468,7 @@ export class CodeStreamWebviewSidebar implements WebviewLike, Disposable, Webvie
 	@gate()
 	private async waitForWebviewIpcReadyNotification(): Promise<boolean> {
 		// Wait until the webview is ready
-		let timer: NodeJS.Timer | undefined = undefined;
+		let timer: NodeJS.Timeout | undefined = undefined;
 		if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) {
 			timer = setTimeout(() => {
 				Logger.warn("WebviewPanel: FAILED waiting for webview ready event; closing webview...");

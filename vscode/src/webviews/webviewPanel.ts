@@ -412,7 +412,7 @@ export class CodeStreamWebviewPanel implements WebviewLike, Disposable {
 	private waitForWebviewIpcReadyNotification() {
 		// Wait until the webview is ready
 		return new Promise(resolve => {
-			let timer: NodeJS.Timer;
+			let timer: NodeJS.Timeout;
 			if (Logger.level !== TraceLevel.Debug && !Logger.isDebugging) {
 				timer = setTimeout(() => {
 					Logger.warn("WebviewPanel: FAILED waiting for webview ready event; closing webview...");

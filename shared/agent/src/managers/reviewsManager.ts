@@ -141,7 +141,7 @@ export class ReviewsManager extends CachedEntityManagerBase<CSReview> {
 		string,
 		{ version: number; responses: FetchReviewCheckpointDiffsResponse }
 	>();
-	private diffsCacheTimeout: NodeJS.Timer | undefined;
+	private diffsCacheTimeout: NodeJS.Timeout | undefined;
 
 	@gate()
 	async getAllDiffs(

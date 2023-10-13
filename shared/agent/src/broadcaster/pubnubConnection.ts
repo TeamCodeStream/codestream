@@ -60,7 +60,7 @@ export class PubnubConnection implements BroadcasterConnection {
 	private _userId: string | undefined;
 	private _pubnub: Pubnub | undefined;
 	private _listener: Pubnub.ListenerParameters | undefined;
-	private _statusTimeout: NodeJS.Timer | undefined;
+	private _statusTimeout: NodeJS.Timeout | undefined;
 	private _logger: (msg: string, info?: any) => void = () => {};
 	private _messageCallback: MessageCallback | undefined;
 	private _statusCallback: StatusCallback | undefined;

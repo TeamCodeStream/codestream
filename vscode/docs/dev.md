@@ -11,7 +11,7 @@ git clone https://github.com/TeamCodeStream/codestream.git
 Prerequisites
 
 - [Git](https://git-scm.com/), >=2.32.0
-- [NodeJS](https://nodejs.org/en/), =16.17.1
+- [NodeJS](https://nodejs.org/en/), =18.15.0
 - [npm](https://npmjs.com/), >=8.13.1
 
 Extensions
