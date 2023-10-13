@@ -38,8 +38,6 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 				return "Medium";
 			case "MEDIUM":
 				return "Medium";
-			case "LOW":
-				return "Low";
 			default:
 				return "Low";
 		}

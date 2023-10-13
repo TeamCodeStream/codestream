@@ -2465,22 +2465,10 @@ export class NewRelicProvider
 		let recentIssuesResponse;
 
 		if (request.fetchRecentIssues) {
-			let id = await this.query<any>(
-				`query getAccountId($entityGuid: EntityGuid!) {
-						actor {
-							entity(guid: $entityGuid) {
-							  accountId
-							}
-						  }
-					}`,
-				{
-					entityGuid: request.newRelicEntityGuid,
-				}
-			);
+			const accountId = NewRelicProvider.parseId(request.newRelicEntityGuid)?.accountId;
 
-			id = id.actor?.entity?.accountId;
-			if (id !== null) {
-				recentIssuesResponse = await this.getIssues(id, request.newRelicEntityGuid);
+			if (accountId !== null) {
+				recentIssuesResponse = await this.getIssues(accountId!, request.newRelicEntityGuid);
 			}
 
 			const validEntityGuid: string = entity?.entityGuid ?? request.newRelicEntityGuid;
@@ -2502,7 +2490,7 @@ export class NewRelicProvider
 	}
 
 	async getIssues(
-		id: number,
+		accountId: number,
 		entityGuid: string
 	): Promise<GetIssuesResponse | NRErrorResponse | undefined> {
 		try {
@@ -2527,14 +2515,16 @@ export class NewRelicProvider
 				  }				  
 				`,
 				{
-					id: id,
+					id: accountId,
 					entityGuids: entityGuid,
 				}
 			);
 
 			if (response?.actor?.account?.aiIssues?.issues?.issues?.length) {
 				const issueArray = response.actor.account.aiIssues.issues.issues;
-				const recentIssuesArray = issueArray.filter(_ => _.closedAt === null);
+				const recentIssuesArray = issueArray.filter(
+					_ => _.closedAt === null || _.closedAt === undefined
+				);
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = ["", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
@@ -2571,7 +2561,7 @@ export class NewRelicProvider
 			return undefined;
 		} catch (ex) {
 			ContextLogger.warn("getIssues failure", {
-				accountId: id,
+				accountId: accountId,
 				error: ex,
 			});
 			const accessTokenError = ex as {
