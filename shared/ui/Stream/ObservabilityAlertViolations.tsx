@@ -49,7 +49,7 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 		// const riskSeverity = calculateRisk(props.score);
 		// style={{color: severityColorMap[props.severity]}}
 		return (
-			<div>
+			<div className="icons">
 				<span
 					style={{
 						color: severityColorMap[props.severity],
@@ -83,10 +83,12 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 							handleRowClick(e, _.url);
 						}}
 					>
-						<Severity severity={criticalityToRiskSeverity(_.priority!)} />
+						<div></div>{" "}
+						{/* this extra div is for the inherited flexbox properties; we need the 3 */}
 						<Tooltip placement="topRight" title={_.title!} delay={1}>
 							<div style={{ minWidth: "0", padding: "5" }}>{_.title!}</div>
 						</Tooltip>
+						<Severity severity={criticalityToRiskSeverity(_.priority!)} />
 					</Row>
 				);
 			})}
