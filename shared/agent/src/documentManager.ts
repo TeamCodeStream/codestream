@@ -22,11 +22,6 @@ export class DocumentManager implements Disposable {
 		return this._onDidChangeContent.event;
 	}
 
-	private _onDidSave = new Emitter<TextDocumentChangeEvent>();
-	get onDidSave(): Event<TextDocumentChangeEvent> {
-		return this._onDidSave.event;
-	}
-
 	private _onDidOpen = new Emitter<TextDocumentChangeEvent>();
 	get onDidOpen(): Event<TextDocumentChangeEvent> {
 		return this._onDidOpen.event;
@@ -41,21 +36,20 @@ export class DocumentManager implements Disposable {
 
 	private readonly _normalizedUriLookup = new Map<string, string>();
 
-	constructor(private readonly _documents: TextDocuments, connection: Connection) {
+	constructor(
+		private readonly _documents: TextDocuments,
+		connection: Connection
+	) {
 		this._disposable = Disposables.from(
 			this._documents.onDidChangeContent(async e => {
 				this._onDidChangeContent.fire(e);
 			}),
-			this._documents.onDidSave(e => {
-				Logger.log(`Document saved: ${e.document.uri}`);
-				this._onDidSave.fire(e);
-			}),
 			this._documents.onDidOpen(e => {
-				Logger.log(`Document opened: ${e.document.uri}`);
+				Logger.debug(`Document opened: ${e.document.uri}`);
 				this._onDidOpen.fire(e);
 			}),
 			this._documents.onDidClose(e => {
-				Logger.log(`Document closed: ${e.document.uri}`);
+				Logger.debug(`Document closed: ${e.document.uri}`);
 				this._onDidClose.fire(e);
 			})
 		);

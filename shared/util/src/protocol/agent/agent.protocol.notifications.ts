@@ -1,6 +1,6 @@
 "use strict";
 import { NotificationType, TextDocumentIdentifier } from "vscode-languageserver-protocol";
-import { CodeStreamEnvironmentInfo, Document, GetMyPullRequestsResponse } from "./agent.protocol";
+import { CodeStreamEnvironmentInfo, GetMyPullRequestsResponse } from "./agent.protocol";
 import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
@@ -57,7 +57,6 @@ export enum ChangeDataType {
 	CodeErrors = "codeErrors",
 	Commits = "commits",
 	Companies = "companies",
-	Documents = "documents",
 	MarkerLocations = "markerLocations",
 	Markers = "markers",
 	Posts = "posts",
@@ -217,15 +216,6 @@ export interface ApiCapabilitiesChangedNotification {
 	data: CSApiCapabilities;
 }
 
-export interface DocumentData {
-	reason: "saved" | "changed" | "removed";
-	document: Document;
-}
-
-export interface DocumentsChangedNotification {
-	type: ChangeDataType.Documents;
-	data: DocumentData;
-}
 
 export interface CommitsChangedData {
 	type: string;
@@ -266,7 +256,6 @@ export type DidChangeDataNotification =
 	| UsersChangedNotification
 	| ProvidersChangedNotification
 	| ApiCapabilitiesChangedNotification
-	| DocumentsChangedNotification
 	| CommitsChangedNotification
 	| WorkspaceChangedNotification
 	| GrokExceptionChangedNotification

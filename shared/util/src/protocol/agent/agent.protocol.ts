@@ -43,11 +43,6 @@ export * from "./agent.protocol.trello";
 export * from "./agent.protocol.users";
 export * from "./agent.protocol.youtrack";
 
-export interface Document {
-	uri: string;
-	isDirty?: boolean;
-}
-
 export interface Capabilities {
 	channelMute?: boolean;
 	codemarkApply?: boolean;
@@ -386,16 +381,6 @@ export const AgentFilterNamespacesRequestType = new RequestType<
 	void,
 	void
 >("codestream/namespaces/filter");
-
-export interface UIStateRequest {
-	context?: {
-		panelStack?: string[];
-	};
-}
-
-export const UIStateRequestType = new RequestType<UIStateRequest, void, void, void>(
-	"codestream/ui/state"
-);
 
 export interface SetServerUrlRequest {
 	serverUrl: string;

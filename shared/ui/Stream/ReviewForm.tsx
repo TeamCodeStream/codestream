@@ -27,7 +27,6 @@ import {
 } from "@codestream/protocols/api";
 import cx from "classnames";
 // https://github.com/kaelzhang/node-ignore
-import { DocumentData } from "@codestream/protocols/agent";
 import ignore from "ignore";
 import { debounce as _debounce } from "lodash-es";
 import * as path from "path-browserify";
@@ -35,7 +34,6 @@ import React, { ReactElement } from "react";
 import { connect } from "react-redux";
 import styled from "styled-components";
 import { Range } from "vscode-languageserver-types";
-import { URI } from "vscode-uri";
 
 import { editReview } from "@codestream/webview/store/reviews/thunks";
 import {
@@ -151,7 +149,6 @@ interface ConnectedProps {
 	) => UpdateReviewResponse | undefined;
 	repos: any;
 	shouldShare: boolean;
-	unsavedFiles: string[];
 	reviewsByCommit: {
 		[commit: string]: CSReview;
 	};
@@ -289,7 +286,6 @@ class ReviewForm extends React.Component<Props, State> {
 			excludeCommit: {},
 			startCommit: undefined,
 			prevEndCommit: "",
-			unsavedFiles: props.unsavedFiles,
 			commitListLength: 10,
 			allReviewersMustApprove: false,
 			currentFile: "",
@@ -567,13 +563,6 @@ class ReviewForm extends React.Component<Props, State> {
 					// if we have a change to scm OR a file has been saved, update
 					let update = false;
 					if (
-						e.type === ChangeDataType.Documents &&
-						e.data &&
-						(e.data as DocumentData).reason === "saved" &&
-						(this.state.includeSaved || this.state.includeStaged)
-					) {
-						update = true;
-					} else if (
 						e.type === ChangeDataType.Commits &&
 						e.data.repo &&
 						this.state.repoStatus &&
@@ -1738,20 +1727,7 @@ class ReviewForm extends React.Component<Props, State> {
 		if (!scm) return null;
 		const { commits = [] } = scm;
 
-		const { unsavedFiles, isAmending } = this.props;
-		let unsavedFilesInThisRepo: string[] = [];
-
-		if (scm.repoPath) {
-			for (let path of unsavedFiles) {
-				const uri = URI.parse(path);
-				const uriPath = uri.path;
-				const index = uriPath.indexOf(scm.repoPath);
-				if (index === 0 || index === 1) {
-					// windows leads with a / before the drive letter
-					unsavedFilesInThisRepo.push(uriPath);
-				}
-			}
-		}
+		const { isAmending } = this.props;
 
 		const numSavedFiles = scm.savedFiles.length;
 		const numStagedFiles = scm.stagedFiles.length;
@@ -1767,15 +1743,6 @@ class ReviewForm extends React.Component<Props, State> {
 				{(numSavedFiles > 0 || numStagedFiles > 0) && (
 					<div className="related-label">
 						Changes to {isAmending ? "Add To" : "Include In"} Review
-					</div>
-				)}
-				{unsavedFilesInThisRepo.length > 0 && (
-					<div style={{ display: "flex", padding: "0 0 2px 2px" }}>
-						<Icon name="alert" muted />
-						<span style={{ paddingLeft: "5px" }}>
-							You have unsaved changes. If you want to include any of those changes in this review,
-							save them first.
-						</span>
 					</div>
 				)}
 				{numSavedFiles > 0 &&
@@ -2525,8 +2492,7 @@ class ReviewForm extends React.Component<Props, State> {
 const EMPTY_OBJECT = {};
 
 const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
-	const { context, editorContext, users, teams, session, preferences, repos, documents, ide } =
-		state;
+	const { context, editorContext, users, teams, session, preferences, repos } = state;
 	const user = users[session.userId!] as CSMe;
 	const channel = context.currentStreamId
 		? getStreamForId(state.streams, context.currentTeamId, context.currentStreamId) ||
@@ -2536,13 +2502,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 	const teamMates = getTeamMates(state).filter(_ => !_.email?.match(/noreply/));
 	const teamMembers = getTeamMembers(state).filter(_ => !_.email?.match(/noreply/));
 	const teamTagsArray = getTeamTagsArray(state);
-
-	let unsavedFiles: string[] = [];
-	if (documents) {
-		unsavedFiles = Object.keys(documents).filter(uri => {
-			return documents[uri].isDirty;
-		});
-	}
 
 	const team = teams[context.currentTeamId];
 	const activeMemberIds = getActiveMemberIds(team);
@@ -2573,7 +2532,6 @@ const mapStateToProps = (state: CodeStreamState, props): ConnectedProps => {
 			? user.status[context.currentTeamId].ticketProvider || "ticket"
 			: "";
 	return {
-		unsavedFiles: unsavedFiles,
 		reviewsByCommit,
 		teamReviewCount: teamReviewCount(state),
 		shouldShare:

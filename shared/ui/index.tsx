@@ -105,7 +105,6 @@ import {
 	setStartWorkCard,
 } from "./store/context/actions";
 import { ContextState } from "./store/context/types";
-import { removeDocument, resetDocuments, updateDocument } from "./store/documents/actions";
 import {
 	appendProcessBuffer,
 	setEditorContext,
@@ -246,14 +245,7 @@ function listenForEvents(store) {
 	api.on(DidChangeDataNotificationType, ({ type, data }) => {
 		switch (type) {
 			case ChangeDataType.Commits:
-				store.dispatch(resetDocuments());
-				break;
-			case ChangeDataType.Documents:
-				if (data.reason === "removed") {
-					store.dispatch(removeDocument(data.document));
-				} else {
-					store.dispatch(updateDocument(data.document));
-				}
+				// noop
 				break;
 			case ChangeDataType.Preferences:
 				store.dispatch(updatePreferences(data));

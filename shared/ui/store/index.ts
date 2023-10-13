@@ -26,7 +26,6 @@ import { reduceBootstrapped } from "./bootstrapped/reducer";
 import reduceCapabilities from "./capabilities/slice";
 import { reduceCompanies } from "./companies/reducer";
 import reduceConfigs from "./configs/slice";
-import { reduceDocuments } from "./documents/reducer";
 import { reduceDynamicLogging } from "./dynamicLogging/reducer";
 import { reduceEditorContext } from "./editorContext/reducer";
 import reduceIde from "./ide/slice";
@@ -49,7 +48,6 @@ export const store = configureStore({
 		configs: reduceConfigs,
 		connectivity: reduceConnectivity,
 		context: reduceContext,
-		documents: reduceDocuments,
 		documentMarkers: reduceDocumentMarkers,
 		editorContext: reduceEditorContext,
 		ide: reduceIde,
