@@ -44,8 +44,6 @@ export const ObservabilityAlertViolations = React.memo((props: Props) => {
 	}
 
 	function Severity(props: { severity }) {
-		// const riskSeverity = calculateRisk(props.score);
-		// style={{color: severityColorMap[props.severity]}}
 		return (
 			<div className="icons">
 				<span
