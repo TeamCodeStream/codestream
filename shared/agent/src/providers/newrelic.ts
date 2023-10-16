@@ -2467,7 +2467,7 @@ export class NewRelicProvider
 		if (request.fetchRecentIssues) {
 			const accountId = NewRelicProvider.parseId(request.newRelicEntityGuid)?.accountId;
 
-			if (accountId !== null) {
+			if (accountId) {
 				recentIssuesResponse = await this.getIssues(accountId!, request.newRelicEntityGuid);
 			}
 
