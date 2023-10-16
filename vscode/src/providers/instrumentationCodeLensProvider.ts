@@ -579,51 +579,100 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				// }
 			}
 
+			const lineLevelLensMap = new Map<string, CollatedMetric[]>();
+			for (const value of locationLensMap.values()) {
+				const lineKey = `${value.currentLocation.start.line}`;
+				let collatedMetrics = lineLevelLensMap.get(lineKey);
+				if (!collatedMetrics) {
+					collatedMetrics = [];
+					lineLevelLensMap.set(lineKey, collatedMetrics);
+				}
+				collatedMetrics.push(value);
+			}
+
 			const locationLenses: vscode.CodeLens[] = [];
 
-			for (const value of locationLensMap.values()) {
-				const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
-					repo: fileLevelTelemetryResponse.repo,
-					codeNamespace: fileLevelTelemetryResponse.codeNamespace!,
-					metricTimesliceNameMapping: {
-						sampleSize: value.sampleSize ? value.sampleSize.facet[0] : "",
-						duration: value.duration ? value.duration.facet[0] : "",
-						errorRate: value.errorRate ? value.errorRate.facet[0] : "",
-						source: value.sampleSize ? value.sampleSize.source : ""
-					},
-					filePath: document.fileName,
-					relativeFilePath: fileLevelTelemetryResponse.relativeFilePath,
-					languageId: document.languageId,
-					range: value.currentLocation,
-					// Strip off any trailing () for function (csharp and java) - undo this if we get types in agent
-					functionName: "(anonymous)",
-					newRelicAccountId: fileLevelTelemetryResponse.newRelicAccountId,
-					newRelicEntityGuid: fileLevelTelemetryResponse.newRelicEntityGuid,
-					methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions
-					// TODO anomaly?
-				};
-				const text =
-					Strings.interpolate(this.codeLensTemplate, {
-						averageDuration:
-							value.duration && value.duration.averageDuration
-								? `${value.duration.averageDuration.toFixed(3) || "0.00"}ms`
-								: "n/a",
-						sampleSize:
-							value.sampleSize && value.sampleSize.sampleSize
-								? `${value.sampleSize.sampleSize}`
-								: "n/a",
-						errorRate:
-							value.errorRate && value.errorRate.errorRate
-								? `${(value.errorRate.errorRate * 100).toFixed(2)}%`
-								: "0.00%",
-						since: fileLevelTelemetryResponse.sinceDateFormatted,
-						date: date
-					}) + " (anonymous)";
+			for (const lineLevelMetrics of lineLevelLensMap.values()) {
+				if (lineLevelMetrics.length === 1) {
+					const lineLevelMetric = lineLevelMetrics[0];
+					const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
+						repo: fileLevelTelemetryResponse.repo,
+						codeNamespace: fileLevelTelemetryResponse.codeNamespace!,
+						metricTimesliceNameMapping: {
+							sampleSize: lineLevelMetric.sampleSize ? lineLevelMetric.sampleSize.facet[0] : "",
+							duration: lineLevelMetric.duration ? lineLevelMetric.duration.facet[0] : "",
+							errorRate: lineLevelMetric.errorRate ? lineLevelMetric.errorRate.facet[0] : "",
+							source: lineLevelMetric.sampleSize ? lineLevelMetric.sampleSize.source : ""
+						},
+						filePath: document.fileName,
+						relativeFilePath: fileLevelTelemetryResponse.relativeFilePath,
+						languageId: document.languageId,
+						range: lineLevelMetric.currentLocation,
+						functionName: "(anonymous)",
+						newRelicAccountId: fileLevelTelemetryResponse.newRelicAccountId,
+						newRelicEntityGuid: fileLevelTelemetryResponse.newRelicEntityGuid,
+						methodLevelTelemetryRequestOptions: methodLevelTelemetryRequestOptions
+						// TODO anomaly?
+					};
+					const text =
+						Strings.interpolate(this.codeLensTemplate, {
+							averageDuration:
+								lineLevelMetric.duration && lineLevelMetric.duration.averageDuration
+									? `${lineLevelMetric.duration.averageDuration.toFixed(3) || "0.00"}ms`
+									: "n/a",
+							sampleSize:
+								lineLevelMetric.sampleSize && lineLevelMetric.sampleSize.sampleSize
+									? `${lineLevelMetric.sampleSize.sampleSize}`
+									: "n/a",
+							errorRate:
+								lineLevelMetric.errorRate && lineLevelMetric.errorRate.errorRate
+									? `${(lineLevelMetric.errorRate.errorRate * 100).toFixed(2)}%`
+									: "0.00%",
+							since: fileLevelTelemetryResponse.sinceDateFormatted,
+							date: date
+						}) + " (anonymous)";
+
+					const lens = new vscode.CodeLens(
+						lineLevelMetric.currentLocation,
+						new InstrumentableSymbolCommand(text, "codestream.viewMethodLevelTelemetry", tooltip, [
+							JSON.stringify(viewCommandArgs)
+						])
+					);
+					locationLenses.push(lens);
+					continue;
+				}
+
+				// Multiple anon functions on same line
+				// TODO viewCommandArgs needs to disambiguate which metric clicked on
+				const theTooltip = lineLevelMetrics
+					.map(_ => {
+						return (
+							Strings.interpolate(this.codeLensTemplate, {
+								averageDuration:
+									_.duration && _.duration.averageDuration
+										? `${_.duration.averageDuration.toFixed(3) || "0.00"}ms`
+										: "n/a",
+								sampleSize:
+									_.sampleSize && _.sampleSize.sampleSize ? `${_.sampleSize.sampleSize}` : "n/a",
+								errorRate:
+									_.errorRate && _.errorRate.errorRate
+										? `${(_.errorRate.errorRate * 100).toFixed(2)}%`
+										: "0.00%",
+								since: fileLevelTelemetryResponse.sinceDateFormatted,
+								date: date
+							}) + " (anonymous)"
+						);
+					})
+					.join("\n");
+				const text = `${lineLevelMetrics.length} anonymous functions`;
 				const lens = new vscode.CodeLens(
-					value.currentLocation,
-					new InstrumentableSymbolCommand(text, "codestream.viewMethodLevelTelemetry", tooltip, [
-						JSON.stringify(viewCommandArgs)
-					])
+					lineLevelMetrics[0].currentLocation,
+					new InstrumentableSymbolCommand(
+						text,
+						"codestream.viewMethodLevelTelemetry",
+						theTooltip,
+						[]
+					)
 				);
 				locationLenses.push(lens);
 			}
