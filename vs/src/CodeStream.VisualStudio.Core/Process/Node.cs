@@ -21,9 +21,9 @@ namespace CodeStream.VisualStudio.Core.Process
 		/// <returns></returns>
 		public static bool EnsureVersion(
 			string nodeExe,
-			int major = 16,
-			int minor = 17,
-			int build = 1
+			int major = 18,
+			int minor = 5,
+			int build = 0
 		)
 		{
 			var sb = new StringBuilder();
