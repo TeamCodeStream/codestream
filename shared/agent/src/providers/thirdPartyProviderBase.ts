@@ -29,6 +29,8 @@ import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from 
 
 const transitoryErrors = new Set(["ECONNREFUSED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND"]);
 
+const TOKEN_EXPIRATION_TOLERANCE_SECONDS = 60;
+
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos,
 > implements ThirdPartyProvider
@@ -38,6 +40,7 @@ export abstract class ThirdPartyProviderBase<
 	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	protected _client: GraphQLClient | undefined;
 	private _refreshLock = new Mutex();
+	private _refreshTimer: NodeJS.Timer | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
@@ -270,6 +273,10 @@ export abstract class ThirdPartyProviderBase<
 			this._ensuringConnection = this.ensureConnectedCore(request);
 		}
 		await this._ensuringConnection;
+
+		if (this._providerInfo && isRefreshable(this._providerInfo)) {
+			this.setRefreshTimer();
+		}
 	}
 
 	async refreshToken(request?: { providerTeamId?: string }): Promise<void> {
@@ -278,14 +285,22 @@ export abstract class ThirdPartyProviderBase<
 				return;
 			}
 
-			const oneMinuteBeforeExpiration = this._providerInfo.expiresAt - 1000 * 60;
-			if (oneMinuteBeforeExpiration > new Date().getTime()) return;
+			const expirationTriggerTime =
+				this._providerInfo.expiresAt - 1000 * TOKEN_EXPIRATION_TOLERANCE_SECONDS;
+			if (expirationTriggerTime > new Date().getTime()) {
+				return;
+			}
 
 			try {
 				await this.session.api.refreshThirdPartyProvider({
 					providerId: this.providerConfig.id,
 					subId: request && request.providerTeamId,
 				});
+				if (this._refreshTimer) {
+					clearTimeout(this._refreshTimer);
+					delete this._refreshTimer;
+				}
+				this.setRefreshTimer();
 			} catch (error) {
 				if (isErrnoException(error)) {
 					if (error.code && transitoryErrors.has(error.code)) {
@@ -306,6 +321,20 @@ export abstract class ThirdPartyProviderBase<
 				Logger.error(error, `Unexpected error refreshing token for ${this.providerConfig.id}`);
 			}
 		});
+	}
+
+	async setRefreshTimer() {
+		if (!this._providerInfo || !isRefreshable(this._providerInfo)) return;
+		if (this._refreshTimer) return;
+		const expirationTriggerTime =
+			this._providerInfo.expiresAt - 1000 * TOKEN_EXPIRATION_TOLERANCE_SECONDS;
+		const triggerExpirationInterval = expirationTriggerTime - Date.now();
+		if (triggerExpirationInterval > 0) {
+			this._refreshTimer = setTimeout(() => {
+				delete this._refreshTimer;
+				this.refreshToken();
+			}, triggerExpirationInterval);
+		}
 	}
 
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
