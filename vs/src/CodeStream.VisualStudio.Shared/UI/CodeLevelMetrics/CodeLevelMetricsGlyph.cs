@@ -6,19 +6,18 @@ using Microsoft.VisualStudio.Text.Editor;
 using System.Windows.Media.Imaging;
 using System.Reflection;
 
-using CodeStream.VisualStudio.Shared.Services;
-
 namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
 	public class CodeLevelMetricsGlyph : IGlyphTag
 	{
-		private readonly Assembly _assembly;
 		public BitmapSource Icon { get; }
+		public string Tooltip { get; }
 
-		public CodeLevelMetricsGlyph()
+		public CodeLevelMetricsGlyph(string tooltip)
 		{
-			_assembly = Assembly.GetAssembly(typeof(CodeLevelMetricsGlyphFactoryProvider));
-			Icon = LoadImageFromFile(_assembly);
+			var assembly = Assembly.GetAssembly(typeof(CodeLevelMetricsGlyphFactoryProvider));
+			Icon = LoadImageFromFile(assembly);
+			Tooltip = tooltip;
 		}
 
 		private static BitmapSource LoadImageFromFile(Assembly assembly)
@@ -28,7 +27,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			bitmapImage.BeginInit();
 			bitmapImage.UriSource = new Uri(
 				Path.GetDirectoryName(assembly.Location)
-					+ "/resources/assets/new-relic-logo-small.png",
+					+ "/resources/assets/new-relic-logo-small-red.png",
 				UriKind.Absolute
 			);
 			bitmapImage.CacheOption = BitmapCacheOption.OnLoad;

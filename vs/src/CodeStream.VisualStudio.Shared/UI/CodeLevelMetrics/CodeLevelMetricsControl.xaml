@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics.CodeLevelMetricsControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             d:DesignHeight="205" d:DesignWidth="250">
+
+	<StackPanel>
+		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
+			<StackPanel>
+				<TextBlock Padding="25,25,25,25" Background="Transparent" Foreground="White" Text="{Binding Tooltip}" />
+				<TextBlock Foreground="Red">I could be anything.</TextBlock>
+			</StackPanel>
+		</Popup>
+		<Image Cursor="Hand"  Name="Glyph" Source="{Binding Icon}" Width="16" Height="16"/>
+	</StackPanel>
+</UserControl>

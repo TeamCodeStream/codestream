@@ -253,6 +253,11 @@
     <Content Include="..\resources\assets\light\review.svg">
       <Link>resources\assets\light\review.svg</Link>
     </Content>
+    <Content Include="..\resources\assets\new-relic-logo-small-red.png">
+      <Link>resources\assets\new-relic-logo-small-red.png</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\resources\assets\new-relic-logo-small.png">
       <Link>resources\assets\new-relic-logo-small.png</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

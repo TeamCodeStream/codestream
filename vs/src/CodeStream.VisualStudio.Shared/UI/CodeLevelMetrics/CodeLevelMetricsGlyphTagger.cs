@@ -26,24 +26,38 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var tree = CSharpSyntaxTree.ParseText(text);
 			var root = tree.GetCompilationUnitRoot();
 
-			// Find all method declarations in the syntax tree
-			var methodDeclarations = root.DescendantNodes()
-				.OfType<ClassDeclarationSyntax>()
-				.SelectMany(x => x.ChildNodes().OfType<MethodDeclarationSyntax>());
+			// get the namespace
+			var namespaceDeclarations = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>();
 
-			foreach (var methodDeclaration in methodDeclarations)
+			foreach (var namespaceDeclaration in namespaceDeclarations)
 			{
-				var methodStartLine = methodDeclaration.Identifier
-					.GetLocation()
-					.GetLineSpan()
-					.StartLinePosition.Line;
-				var line = snapshot.GetLineFromLineNumber(methodStartLine);
-				var glyphSpan = new SnapshotSpan(snapshot, line.Start, line.Length);
+				var classDeclarations = namespaceDeclaration
+					.ChildNodes()
+					.OfType<ClassDeclarationSyntax>();
 
-				yield return new TagSpan<CodeLevelMetricsGlyph>(
-					glyphSpan,
-					new CodeLevelMetricsGlyph()
-				);
+				foreach (var classDeclaration in classDeclarations)
+				{
+					var methodDeclarations = classDeclaration
+						.ChildNodes()
+						.OfType<MethodDeclarationSyntax>();
+
+					foreach (var methodDeclaration in methodDeclarations)
+					{
+						var methodStartLine = methodDeclaration.Identifier
+							.GetLocation()
+							.GetLineSpan()
+							.StartLinePosition.Line;
+						var line = snapshot.GetLineFromLineNumber(methodStartLine);
+						var glyphSpan = new SnapshotSpan(snapshot, line.Start, line.Length);
+
+						yield return new TagSpan<CodeLevelMetricsGlyph>(
+							glyphSpan,
+							new CodeLevelMetricsGlyph(
+								$"{namespaceDeclaration.Name}.{classDeclaration.Identifier}.{methodDeclaration.Identifier}"
+							)
+						);
+					}
+				}
 			}
 		}
 
