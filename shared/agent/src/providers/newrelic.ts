@@ -156,9 +156,7 @@ import { ClmManager } from "./newrelic/clm/clmManager";
 import * as Dom from "graphql-request/dist/types.dom";
 import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import semver from "semver";
-import {
-	getMethodLevelTelemetryMockResponse,
-} from "./newrelic/anomalyDetectionMockResults";
+import { getMethodLevelTelemetryMockResponse } from "./newrelic/anomalyDetectionMockResults";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -2515,6 +2513,7 @@ export class NewRelicProvider
 								updatedAt
 								createdAt
 								priority
+								issueId
 							  }
 							}
 						  }
@@ -2536,12 +2535,11 @@ export class NewRelicProvider
 
 				const ALERT_SEVERITY_SORTING_ORDER: string[] = ["", "CRITICAL", "HIGH", "MEDIUM", "LOW"];
 
-				const url = this.issueUrl(entityGuid);
 				// get unique labels
 				recentIssuesArray.forEach(issue => {
 					const firstTitle = issue.title![0]; //this gives me the first title
 					issue.title = firstTitle;
-					issue.url = url;
+					issue.url = this.issueUrl(accountId, issue.issueId!);
 				});
 
 				const recentIssuesArrayUnique = _uniqBy(recentIssuesArray, "title");
@@ -4175,11 +4173,22 @@ export class NewRelicProvider
 	private productEntityRedirectUrl(entityGuid: string) {
 		return `${this.productUrl}/redirect/entity/${entityGuid}`;
 	}
+	private issueUrl(accountId: number, issueId: string) {
+		let bUrl = "";
 
-	private issueUrl(entityGuid: string) {
-		return `${this.productUrl}/nr1-core/alerts-ai/filtered-feed/${entityGuid}`;
+		if (this.productUrl.includes("staging")) {
+			// Staging: https://radar-api.staging-service.newrelic.com
+			bUrl = "https://radar-api.staging-service.newrelic.com";
+		} else if (this.productUrl.includes("eu")) {
+			// EU: https://radar-api.service.eu.newrelic.com
+			bUrl = "https://radar-api.service.eu.newrelic.com";
+		} else {
+			// Prod: https://radar-api.service.newrelic.com
+			bUrl = "https://radar-api.service.newrelic.com";
+		}
+
+		return `${bUrl}/accounts/${accountId}/issues/${issueId}?notifierType=codestream`;
 	}
-
 	private findRelatedReposFromServiceEntity(
 		relatedEntities: RelatedEntity[]
 	): BuiltFromResult[] | undefined {

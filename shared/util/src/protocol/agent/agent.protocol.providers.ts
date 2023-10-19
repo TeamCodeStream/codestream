@@ -2131,6 +2131,7 @@ export interface RecentIssue {
 	updatedAt?: number;
 	createdAt: number;
 	priority?: string;
+	issueId?: string;
 }
 
 export interface EntityGoldenMetricsQueries {
