@@ -136,6 +136,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\WebviewUserSettingsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\WpfTextViewCache.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ActiveTextEditorExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsGlyph.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsGlyphFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsGlyphFactoryProvider.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsGlyphTagger.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsGlyphTaggerProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentMarkerManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Extensions\AnimationExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Glyphs\DocumentMarkGlyphFactory.cs" />
