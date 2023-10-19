@@ -1643,8 +1643,8 @@ export class CodeStreamSession {
 						key => `${key}|${company.testGroups![key]}`
 					);
 				}
-				props["CodeStream Only"] = !!company.codestreamOnly;
-				props["Org Origination"] = company.orgOrigination || "";
+				//props["CodeStream Only"] = !!company.codestreamOnly;
+				//props["Org Origination"] = company.orgOrigination || "";
 				props["NR Organization ID"] = company.linkedNROrgId || "";
 			}
 		}
