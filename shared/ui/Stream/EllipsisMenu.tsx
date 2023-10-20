@@ -81,6 +81,11 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			sidebarPaneOrder = sidebarPaneOrder.filter(_ => _ !== WebviewPanels.CodeAnalyzers);
 		}
 
+		const possibleAuthDomains = _sortBy(user?.possibleAuthDomains, "authentication_domain_name");
+		const currentOrg = possibleAuthDomains.find(
+			company => company.organization_id === currentCompanyId
+		);
+
 		return {
 			sidebarPanePreferences: sidebarPanes,
 			sidebarPaneOrder: sidebarPaneOrder,
@@ -90,6 +95,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 				"name"
 			),
 			currentCompanyId,
+			currentOrg,
 			currentTeamId: teamId,
 			serverUrl: state.configs.serverUrl,
 			company: state.companies[team.companyId] || {},
@@ -108,7 +114,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			isProductionCloud,
 			supportsMultiRegion,
 			eligibleJoinCompanies: _sortBy(user?.eligibleJoinCompanies, "name"),
-			possibleAuthDomains: _sortBy(user?.possibleAuthDomains, "authentication_domain_name"),
+			possibleAuthDomains,
 		};
 	});
 
@@ -338,9 +344,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 						popup(WebviewModals.Profile);
 					},
 				},
-				{ label: "Change Email", action: () => popup(WebviewModals.ChangeEmail) },
 				{ label: "Change Username", action: () => popup(WebviewModals.ChangeUsername) },
-				{ label: "Change Full Name", action: () => popup(WebviewModals.ChangeFullName) },
 				{ label: "-" },
 				{ label: "Sign Out", action: () => dispatch(logout()) },
 			],
@@ -362,7 +366,7 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 			{
 				label: (
 					<>
-						<h3>{derivedState.company.name}</h3>
+						<h3>{derivedState.currentOrg?.organization_name}</h3>
 						{derivedState.currentHost && derivedState.hasMultipleEnvironments && (
 							<small>{derivedState.currentHost.name}</small>
 						)}
