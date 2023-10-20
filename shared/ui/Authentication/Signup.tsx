@@ -20,7 +20,6 @@ import {
 	goToCompanyCreation,
 	goToEmailConfirmation,
 	goToOldLogin,
-	goToOktaConfig,
 	goToTeamCreation,
 } from "../store/context/actions";
 import { confirmPopup } from "../Stream/Confirm";
@@ -29,7 +28,7 @@ import { ModalRoot } from "../Stream/Modal"; // HACK ALERT: including this compo
 import Tooltip from "../Stream/Tooltip";
 import { useAppDispatch, useAppSelector, useDidMount } from "../utilities/hooks";
 import { HostApi, Server } from "../webview-api";
-import { completeSignup, SignupType, startIDESignin, startSSOSignin } from "./actions";
+import { completeSignup, SignupType, startSSOSignin } from "./actions";
 import { PresentTOS } from "./PresentTOS";
 import { TextInput } from "./TextInput";
 
@@ -385,7 +384,7 @@ export const Signup = (props: Props) => {
 	// 	[props.type]
 	// );
 
-	const buildSignupInfo = (fromSignup = true) => {
+	const buildSignupInfo = (fromSignup = true, domain?) => {
 		const info: any = {};
 
 		if (props.inviteCode) {
@@ -406,78 +405,18 @@ export const Signup = (props: Props) => {
 			info.joinCompanyId = props.joinCompanyId;
 		}
 
+		if (domain) {
+			info.domain = domain;
+		}
+
 		info.fromSignup = fromSignup;
 		return info;
 	};
 
 	const onClickNewRelicSignup = useCallback(
-		(event: React.SyntheticEvent) => {
+		(event: React.SyntheticEvent, domain?: string) => {
 			event.preventDefault();
-			//@TODO: Change to idp signup page event
-			dispatch(startSSOSignin("newrelicidp", buildSignupInfo(false)));
-			//dispatch(goToNewRelicSignup({}));
-		},
-		[props.type]
-	);
-
-	const onClickGithubSignup = useCallback(
-		(event: React.SyntheticEvent) => {
-			event.preventDefault();
-			HostApi.instance.track("Signup Method Selected", {
-				Provider: "GitHub",
-				Email: email,
-			});
-			if (false /*derivedState.isInVSCode*/) {
-				// per Unified Identity, IDE sign-in is deprecated
-				return dispatch(startIDESignin("github", buildSignupInfo()));
-			} else {
-				return dispatch(startSSOSignin("github", buildSignupInfo()));
-			}
-		},
-		[props.type]
-	);
-
-	const onClickGitlabSignup = useCallback(
-		(event: React.SyntheticEvent) => {
-			event.preventDefault();
-			HostApi.instance.track("Signup Method Selected", {
-				Provider: "GitLab",
-				Email: email,
-			});
-			return dispatch(startSSOSignin("gitlab", buildSignupInfo()));
-		},
-		[props.type]
-	);
-
-	const onClickBitbucketSignup = useCallback(
-		(event: React.SyntheticEvent) => {
-			event.preventDefault();
-			HostApi.instance.track("Signup Method Selected", {
-				Provider: "Bitbucket",
-				Email: email,
-			});
-			return dispatch(startSSOSignin("bitbucket", buildSignupInfo()));
-		},
-		[props.type]
-	);
-
-	const onClickOktaSignup = useCallback(
-		(event: React.SyntheticEvent) => {
-			return dispatch(
-				goToOktaConfig({ fromSignup: true, inviteCode: props.inviteCode, email: email })
-			);
-		},
-		[props.type]
-	);
-
-	const onClickEmailSignup = useCallback(
-		(event: React.SyntheticEvent) => {
-			event.preventDefault();
-			HostApi.instance.track("Signup Method Selected", {
-				Provider: "Email",
-				Email: email,
-			});
-			setShowEmailForm(true);
+			dispatch(startSSOSignin("newrelicidp", buildSignupInfo(false, domain)));
 		},
 		[props.type]
 	);
@@ -511,17 +450,52 @@ export const Signup = (props: Props) => {
 								{(props.newOrg || props.joinCompanyId) && <h2>Create an account</h2>}
 								{!props.newOrg && !props.joinCompanyId && (
 									<>
-										<h3>Sign in to CodeStream with your New Relic account</h3>
+										<h3>Sign in to CodeStream</h3>
 										{!limitAuthentication && (
-											<Button
-												style={{ marginBottom: "30px" }}
-												className="row-button no-top-margin"
-												onClick={onClickNewRelicSignup}
-											>
-												<Icon name="newrelic" />
-												<div className="copy">Sign in to New Relic</div>
-												<Icon name="chevron-right" />
-											</Button>
+											<>
+												<Button
+													style={{ marginTop: "10px" }}
+													className="row-button no-top-margin"
+													onClick={event => onClickNewRelicSignup(event)}
+												>
+													<Icon name="newrelic" />
+													<div className="copy">New Relic</div>
+													<Icon name="chevron-right" />
+												</Button>
+												<Button
+													className="row-button no-top-margin"
+													onClick={event => onClickNewRelicSignup(event, "google.com")}
+												>
+													<Icon name="google" />
+													<div className="copy">Google</div>
+													<Icon name="chevron-right" />
+												</Button>
+												<Button
+													className="row-button no-top-margin"
+													onClick={event => onClickNewRelicSignup(event, "github.com")}
+												>
+													<Icon name="mark-github" />
+													<div className="copy">GitHub</div>
+													<Icon name="chevron-right" />
+												</Button>
+												<Button
+													className="row-button no-top-margin"
+													onClick={event => onClickNewRelicSignup(event, "gitlab.com")}
+												>
+													<Icon name="gitlab" />
+													<div className="copy">GitLab</div>
+													<Icon name="chevron-right" />
+												</Button>
+												<Button
+													style={{ marginBottom: "30px" }}
+													className="row-button no-top-margin"
+													onClick={event => onClickNewRelicSignup(event, "bitbucket.com")}
+												>
+													<Icon name="bitbucket" />
+													<div className="copy">Bitbucket</div>
+													<Icon name="chevron-right" />
+												</Button>
+											</>
 										)}
 									</>
 								)}
@@ -534,7 +508,9 @@ export const Signup = (props: Props) => {
 											{!props.newOrg && !props.joinCompanyId && (
 												<>
 													Don't have a New Relic account?{" "}
-													<Link href="https://newrelic.com/signup?utm_source=codestream&utm_medium=programmatic&utm_campaign=global-ever-green-codestream-signin-form">Sign up for free.</Link>
+													<Link href="https://newrelic.com/signup?utm_source=codestream&utm_medium=programmatic&utm_campaign=global-ever-green-codestream-signin-form">
+														Sign up for free.
+													</Link>
 												</>
 											)}
 										</div>

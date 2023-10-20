@@ -69,6 +69,7 @@ export interface SSOAuthInfo {
 	};
 	joinCompanyId?: string;
 	loginUrl?: string;
+	domain?: string;
 }
 
 export const ProviderNames = {
@@ -110,6 +111,9 @@ export const startSSOSignin =
 		}
 		if (info && info.joinCompanyId) {
 			query.joinCompanyId = info.joinCompanyId;
+		}
+		if (info && info.domain) {
+			query.domain = info.domain;
 		}
 		query.enableUId = "1"; // operating under Unified Identity
 
