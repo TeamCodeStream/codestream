@@ -58,6 +58,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.eclipse.lsp4j.Range
 import java.awt.Point
 import java.awt.event.FocusEvent
@@ -160,24 +161,37 @@ abstract class CLMEditorManager(
     fun loadInlays(resetCache: Boolean = false, skipStaleCheck: Boolean = false) {
         if (path == null) return
         if (editor !is EditorImpl) return
+        if (project == null || project.isDisposed) return
         if (!skipStaleCheck && !isStale()) return
 
-        project?.agentService?.onDidStart {
+        // Slow operations are prohibited on EDT
+        val psiFile = ApplicationManager.getApplication().runReadAction<PsiFile> {
+            PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+        } ?: return
+
+        project.agentService?.onDidStart {
             tasksCoroutineScope.launch {
                 if (project.isDisposed) return@launch
                 if (!TEST_MODE && !editor.component.isShowing) return@launch
                 logger.info("loadInlays $path didStart launch isShowing")
-                val psiFile =
-                    PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return@launch
 
                 val classNames = if (lookupByClassName) {
-                    symbolResolver.getLookupClassNames(psiFile) ?: return@launch
+                    withContext(Dispatchers.Default) { // Switch out of EDT thread
+                        ApplicationManager.getApplication().runReadAction<List<String>> { // Requires read action
+                            // Kotlin psi internals run stuff not compatible with EDT thread
+                            symbolResolver.getLookupClassNames(psiFile)
+                        }
+                    }
                 } else {
                     null
                 }
 
                 val spanSuffixes = if (lookupBySpan) {
-                    symbolResolver.getLookupSpanSuffixes(psiFile)
+                    withContext(Dispatchers.Default) { // Switch out of EDT thread
+                        ApplicationManager.getApplication().runReadAction<List<String>> { // Requires read action
+                            symbolResolver.getLookupSpanSuffixes(psiFile)
+                        }
+                    }
                 } else {
                     null
                 }
@@ -190,61 +204,59 @@ abstract class CLMEditorManager(
                 //     val symbols = findSymbols(psiFile, result.responseTimes.map { it.name })
                 // }
 
-                tasksCoroutineScope.launch {
-                    try {
-                        lastFetchAttempt = System.currentTimeMillis()
-                        if (project.sessionService?.userLoggedIn?.user == null) {
-                            return@launch
-                        }
-                        // logger.info("=== Calling fileLevelTelemetry for ${editor.document.uri} resetCache: $resetCache")
-                        // next.js file path is like posts/[id].tsx - IntelliJ won't create an uri for this file name!
-                        val uri = editor.document.uri ?: "file://${editor.document.file?.path}"
-                        val result = project.agentService?.fileLevelTelemetry(
-                            FileLevelTelemetryParams(
-                                uri,
-                                languageId,
-                                FunctionLocator(classNames, null),
-                                null,
-                                null,
-                                resetCache,
-                                OPTIONS
-                            )
-                        ) ?: return@launch
-                        // result guaranteed to be non-null, don't overwrite previous result if we get a NR timeout
-                        if (result.error != null) {
-                            currentError = result.error
-                            if (result.error?.type == NOT_ASSOCIATED || result.error?.type == NOT_CONNECTED) {
-                                metricsBySymbol = mapOf()
-                                updateInlays()
-                            }
-                            logger.info("Not updating CLM metrics due to error ${result.error?.type}")
-                            return@launch
-                        } else {
-                            currentError = null
-                        }
-
-                        lastResult = result
-                        metricsBySymbol = mapOf()
-
-                        val updatedMetrics = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
-
-                        lastResult?.errorRate?.forEach { errorRate ->
-                            val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
-                            metrics.errorRate = errorRate
-                        }
-                        lastResult?.averageDuration?.forEach { averageDuration ->
-                            val metrics = updatedMetrics.getOrPut(averageDuration.symbolIdentifier) { Metrics() }
-                            metrics.averageDuration = averageDuration
-                        }
-                        lastResult?.sampleSize?.forEach { sampleSize ->
-                            val metrics = updatedMetrics.getOrPut(sampleSize.symbolIdentifier) { Metrics() }
-                            metrics.sampleSize = sampleSize
-                        }
-                        metricsBySymbol = updatedMetrics.toImmutableMap()
-                        updateInlays()
-                    } catch (ex: Exception) {
-                        logger.error("Error getting fileLevelTelemetry", ex)
+                try {
+                    lastFetchAttempt = System.currentTimeMillis()
+                    if (project.sessionService?.userLoggedIn?.user == null) {
+                        return@launch
                     }
+                    // logger.info("=== Calling fileLevelTelemetry for ${editor.document.uri} resetCache: $resetCache")
+                    // next.js file path is like posts/[id].tsx - IntelliJ won't create an uri for this file name!
+                    val uri = editor.document.uri ?: "file://${editor.document.file?.path}"
+                    val result = project.agentService?.fileLevelTelemetry(
+                        FileLevelTelemetryParams(
+                            uri,
+                            languageId,
+                            FunctionLocator(classNames, null),
+                            null,
+                            null,
+                            resetCache,
+                            OPTIONS
+                        )
+                    ) ?: return@launch
+                    // result guaranteed to be non-null, don't overwrite previous result if we get a NR timeout
+                    if (result.error != null) {
+                        currentError = result.error
+                        if (result.error?.type == NOT_ASSOCIATED || result.error?.type == NOT_CONNECTED) {
+                            metricsBySymbol = mapOf()
+                            updateInlays()
+                        }
+                        logger.info("Not updating CLM metrics due to error ${result.error?.type}")
+                        return@launch
+                    } else {
+                        currentError = null
+                    }
+
+                    lastResult = result
+                    metricsBySymbol = mapOf()
+
+                    val updatedMetrics = mutableMapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
+
+                    lastResult?.errorRate?.forEach { errorRate ->
+                        val metrics = updatedMetrics.getOrPut(errorRate.symbolIdentifier) { Metrics() }
+                        metrics.errorRate = errorRate
+                    }
+                    lastResult?.averageDuration?.forEach { averageDuration ->
+                        val metrics = updatedMetrics.getOrPut(averageDuration.symbolIdentifier) { Metrics() }
+                        metrics.averageDuration = averageDuration
+                    }
+                    lastResult?.sampleSize?.forEach { sampleSize ->
+                        val metrics = updatedMetrics.getOrPut(sampleSize.symbolIdentifier) { Metrics() }
+                        metrics.sampleSize = sampleSize
+                    }
+                    metricsBySymbol = updatedMetrics.toImmutableMap()
+                    updateInlays()
+                } catch (ex: Exception) {
+                    logger.error("Error getting fileLevelTelemetry", ex)
                 }
             }
         }
