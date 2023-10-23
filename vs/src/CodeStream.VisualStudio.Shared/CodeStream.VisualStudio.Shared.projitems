@@ -144,6 +144,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsControl.xaml.cs">
       <DependentUpon>CodeLevelMetricsControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsMargin.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\CodeLevelMetrics\CodeLevelMetricsMarginProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\DocumentMarkerManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Extensions\AnimationExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\Glyphs\DocumentMarkGlyphFactory.cs" />

@@ -18,5 +18,8 @@ namespace CodeStream.VisualStudio.Core.Models
 
 		[JsonProperty("metricTimesliceName", NullValueHandling = NullValueHandling.Ignore)]
 		public string MetricTimesliceName { get; set; }
+
+		[JsonProperty("anomaly", NullValueHandling = NullValueHandling.Ignore)]
+		public ObservabilityAnomaly Anomaly { get; set; }
 	}
 }
