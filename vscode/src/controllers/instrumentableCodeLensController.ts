@@ -33,7 +33,7 @@ export class InstrumentableCodeLensController implements Disposable {
 	}
 
 	private onAnyChanged() {
-		const cfg = configuration.get<Boolean>(configuration.name("goldenSignalsInEditor").value);
+		const cfg = configuration.get<boolean>(configuration.name("goldenSignalsInEditor").value);
 		if (cfg) {
 			if (this._status === SessionStatus.SignedIn) {
 				this.ensureProvider();

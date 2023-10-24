@@ -7,6 +7,7 @@ import {
 	FileLevelTelemetryAverageDuration,
 	FileLevelTelemetryErrorRate,
 	FileLevelTelemetryMetric,
+	FileLevelTelemetryRequestOptions,
 	FileLevelTelemetrySampleSize,
 	FunctionLocator
 } from "@codestream/protocols/agent";
@@ -21,14 +22,14 @@ import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
 import { Container } from "../container";
 import { IObservabilityService } from "../agent/agentConnection";
 
-type CollatedMetric = {
+export type CollatedMetric = {
 	duration?: FileLevelTelemetryAverageDuration;
 	sampleSize?: FileLevelTelemetrySampleSize;
 	errorRate?: FileLevelTelemetryErrorRate;
 	currentLocation: vscode.Range;
 };
 
-function isFileLevelTelemetryAverageDuration(
+export function isFileLevelTelemetryAverageDuration(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	value: any
 ): value is FileLevelTelemetryAverageDuration {
@@ -39,7 +40,7 @@ function isFileLevelTelemetryAverageDuration(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isFileLevelTelemetrySampleSize(value: any): value is FileLevelTelemetrySampleSize {
+export function isFileLevelTelemetrySampleSize(value: any): value is FileLevelTelemetrySampleSize {
 	if (!value) {
 		return false;
 	}
@@ -47,7 +48,7 @@ function isFileLevelTelemetrySampleSize(value: any): value is FileLevelTelemetry
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function isFileLevelTelemetryErrorRate(value: any): value is FileLevelTelemetryErrorRate {
+export function isFileLevelTelemetryErrorRate(value: any): value is FileLevelTelemetryErrorRate {
 	if (!value) {
 		return false;
 	}
@@ -74,9 +75,14 @@ class ErrorCodeLens extends vscode.CodeLens {
 	isErrorCodeLens = true;
 }
 
+type DocumentInfo = {
+	document: TextDocument;
+	tracked: boolean;
+};
+
 export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider {
-	private documentManager: any = {};
-	private resetCache: boolean = false;
+	private trackingCache: { [key: string]: DocumentInfo } = {};
+	private resetCache = false;
 
 	constructor(
 		private codeLensTemplate: string,
@@ -96,14 +102,14 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	}
 
 	documentOpened(document: TextDocument) {
-		this.documentManager[document.uri.toString()] = {
+		this.trackingCache[document.uri.toString()] = {
 			document: document,
 			tracked: false
 		};
 	}
 
 	documentClosed(document: TextDocument) {
-		delete this.documentManager[document.uri.toString()];
+		delete this.trackingCache[document.uri.toString()];
 	}
 
 	update(template: string) {
@@ -386,9 +392,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 		try {
 			const cacheKey = document.uri.toString();
-			const cache = this.documentManager[cacheKey];
+			const cache = this.trackingCache[cacheKey];
 			if (!cache) {
-				this.documentManager[cacheKey] = {
+				this.trackingCache[cacheKey] = {
 					document: document,
 					tracked: false
 				};
@@ -411,7 +417,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 				return [];
 			}
 
-			const methodLevelTelemetryRequestOptions = {
+			const methodLevelTelemetryRequestOptions: FileLevelTelemetryRequestOptions = {
 				includeAverageDuration: this.codeLensTemplate.indexOf("${averageDuration}") > -1,
 				includeThroughput: this.codeLensTemplate.indexOf("${sampleSize}") > -1,
 				includeErrorRate: this.codeLensTemplate.indexOf("${errorRate}") > -1
@@ -800,7 +806,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	}
 
 	private tryTrack(cacheKey: string, accountId: string, languageId: string, codeLensCount: number) {
-		const doc = this.documentManager[cacheKey];
+		const doc = this.trackingCache[cacheKey];
 		if (doc && !doc.tracked) {
 			try {
 				this.telemetryService.track("MLT Codelenses Rendered", {
@@ -818,7 +824,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 	}
 }
 
-class InstrumentableSymbolCommand implements vscode.Command {
+export class InstrumentableSymbolCommand implements vscode.Command {
 	arguments: string[] | undefined;
 	constructor(
 		public title: string,

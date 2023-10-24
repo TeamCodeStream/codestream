@@ -22,6 +22,7 @@ import { CodemarkDecorationProvider } from "./providers/markerDecorationProvider
 import { CodemarkPatchContentProvider } from "./providers/patchContentProvider";
 import { SetServerUrlRequestType } from "@codestream/protocols/agent";
 import { EditorController } from "controllers/editorController";
+import { InlayHintsController } from "controllers/inlayHintsController";
 // import { WebviewSidebarActivator } from "./views/webviewSidebarActivator";
 
 export class Container {
@@ -56,9 +57,10 @@ export class Container {
 		context.subscriptions.push((this._diffContents = new ReviewDiffContentProvider()));
 		context.subscriptions.push((this._gitContents = new GitContentProvider()));
 		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
-		context.subscriptions.push(
-			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
-		);
+		// context.subscriptions.push(
+		// 	(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
+		// );
+		context.subscriptions.push((this._inlayHintsController = new InlayHintsController()));
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));
 
@@ -131,6 +133,11 @@ export class Container {
 	private static _agent: CodeStreamAgentConnection;
 	static get agent() {
 		return this._agent;
+	}
+
+	private static _inlayHintsController: InlayHintsController;
+	static get inlayHintsController() {
+		return this._inlayHintsController;
 	}
 
 	private static _codeActions: CodeStreamCodeActionProvider;
