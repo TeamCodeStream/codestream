@@ -78,6 +78,7 @@ import {
 	PollForMaintenanceModeResponse,
 	RefreshMaintenancePollNotificationType,
 	VersionCompatibility,
+	DidRefreshAccessTokenNotificationType,
 } from "@codestream/protocols/agent";
 import {
 	CSApiCapabilities,
@@ -523,6 +524,16 @@ export class CodeStreamSession {
 		this.verifyConnectivity();
 	}
 
+	onAccessTokenChanged(token: string) {
+		this._codestreamAccessToken = token;
+		this.agent.sendNotification(DidRefreshAccessTokenNotificationType, {
+			url: this._options.serverUrl,
+			email: this._email!,
+			teamId: this._teamId!,
+			token: token,
+		});
+	}
+
 	private _didEncounterMaintenanceMode() {
 		this.agent.sendNotification(DidEncounterMaintenanceModeNotificationType, {
 			teamId: this._teamId,
@@ -675,13 +686,6 @@ export class CodeStreamSession {
 					if (me.inMaintenanceMode) {
 						return this._didEncounterMaintenanceMode();
 					}
-
-					const newToken = me.accessTokens?.web?.token;
-					if (newToken) {
-						this._codestreamAccessToken = newToken;
-						this._api?.setAccessToken(newToken);
-					}
-
 					this._onDidChangeCurrentUser.fire(me as CSMe);
 				}
 
@@ -1310,6 +1314,11 @@ export class CodeStreamSession {
 
 		if (this.isOnPrem && this.apiCapabilities.echoes) {
 			this.listenForEchoes();
+		}
+
+		if (this.api.usingServiceGatewayAuth) {
+			Logger.log("Service Gateway authentication is active, changing access token...");
+			this.onAccessTokenChanged(token.value);
 		}
 
 		return loginResponse;

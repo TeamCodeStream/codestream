@@ -210,6 +210,7 @@ import {
 	CSMePreferences,
 	CSMsTeamsConversationRequest,
 	CSMsTeamsConversationResponse,
+	CSNewRelicProviderInfo,
 	CSObjectStream,
 	CSPost,
 	CSRepository,
@@ -578,6 +579,7 @@ export interface ApiProvider {
 		sharing?: boolean;
 		subId?: string;
 	}): Promise<CSMe>;
+	refreshNewRelicToken(providerInfo: CSNewRelicProviderInfo): Promise<CSNewRelicProviderInfo>;
 
 	getNewRelicSignupJwtToken(
 		request: GetNewRelicSignupJwtTokenRequest
@@ -596,6 +598,7 @@ export interface ApiProvider {
 
 	fetchBuilds(request: FetchThirdPartyBuildsRequest): Promise<FetchThirdPartyBuildsResponse>;
 
+	get usingServiceGatewayAuth(): boolean;
 	setUsingServiceGatewayAuth(): void;
 
 	get<R extends object>(url: string, token?: string): Promise<R>;

@@ -100,16 +100,16 @@ export interface CSAsyncError {
 	errorMessage: string;
 	extra: {
 		[key: string]: string;
-	}
+	};
 }
 
 export interface CSAsyncGrokError extends CSAsyncError {
 	extra: {
-		codeErrorId: string,
-		topmostPostId: string,
-		postId?: string,
-		streamId?: string,
-	}
+		codeErrorId: string;
+		topmostPostId: string;
+		postId?: string;
+		streamId?: string;
+	};
 }
 
 export interface CSGrokStream {
@@ -117,14 +117,14 @@ export interface CSGrokStream {
 	content?: {
 		content: string;
 		role: string;
-	},
+	};
 	extra: {
 		topmostPostId: string;
 		codeErrorId: string;
 		postId: string;
 		streamId: string;
 		done?: boolean;
-	}
+	};
 }
 
 export interface PostsChangedNotification {
@@ -385,6 +385,18 @@ export const DidChangeServerUrlNotificationType = new NotificationType<
 	DidChangeServerUrlNotification,
 	void
 >("codestream/didChangeServerUrl");
+
+export interface DidRefreshAccessTokenNotification {
+	url: string;
+	email: string;
+	teamId: string;
+	token: string;
+}
+
+export const DidRefreshAccessTokenNotificationType = new NotificationType<
+	DidRefreshAccessTokenNotification,
+	void
+>("codestream/didRefreshAccessToken");
 
 export const AgentInitializedNotificationType = new NotificationType<void, void>(
 	"codestream/agentInitialized"

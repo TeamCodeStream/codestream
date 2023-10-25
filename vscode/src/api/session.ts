@@ -5,6 +5,7 @@ import {
 	ChangeDataType,
 	CodeStreamEnvironment,
 	CodeStreamEnvironmentInfo,
+	DidRefreshAccessTokenNotification,
 	DidChangeDataNotification,
 	DidChangeDocumentMarkersNotification,
 	DidChangePullRequestCommentsNotification,
@@ -378,6 +379,15 @@ export class CodeStreamSession implements Disposable {
 		if (environment && this._environmentInfo) {
 			this._environmentInfo.environment = environment;
 		}
+	}
+
+	onAccessTokenRefreshed(e: DidRefreshAccessTokenNotification) {
+		TokenManager.addOrUpdate(SaveTokenReason.REFRESH, e.url, e.email, e.teamId, {
+			url: e.url,
+			email: e.email,
+			value: e.token,
+			teamId: e.teamId
+		});
 	}
 
 	get signedIn() {

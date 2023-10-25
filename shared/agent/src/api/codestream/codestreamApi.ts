@@ -262,6 +262,7 @@ import {
 	CSMeStatus,
 	CSMsTeamsConversationRequest,
 	CSMsTeamsConversationResponse,
+	CSNewRelicProviderInfo,
 	CSNRRegisterRequest,
 	CSNRRegisterResponse,
 	CSObjectStream,
@@ -272,7 +273,6 @@ import {
 	CSProviderShareResponse,
 	CSReactions,
 	CSReactToPostResponse,
-	CSRefreshableProviderInfos,
 	CSRegisterRequest,
 	CSRegisterResponse,
 	CSRemoveProviderHostResponse,
@@ -315,7 +315,7 @@ import { Team, User } from "../../api/extensions";
 import { HistoryFetchInfo } from "../../broadcaster/broadcaster";
 import { Container, SessionContainer } from "../../container";
 import { Logger } from "../../logger";
-import { isDirective, resolve, safeDecode, safeEncode } from "../../managers/operations";
+import { safeDecode, safeEncode } from "../../managers/operations";
 import { NewRelicProvider } from "../../providers/newrelic";
 import { getProvider, log, lsp, lspHandler, Objects, Strings } from "../../system";
 import { customFetch, fetchCore } from "../../system/fetchCore";
@@ -410,6 +410,10 @@ export class CodeStreamApiProvider implements ApiProvider {
 				this._middleware.splice(i, 1);
 			},
 		};
+	}
+
+	get usingServiceGatewayAuth() {
+		return this._usingServiceGatewayAuth;
 	}
 
 	setUsingServiceGatewayAuth() {
@@ -2411,43 +2415,32 @@ export class CodeStreamApiProvider implements ApiProvider {
 		}
 	}
 
-	@log({
-		args: { 1: () => false },
-	})
-	async refreshAuthProvider<T extends CSRefreshableProviderInfos>(
-		providerId: string,
-		providerInfo: T
-	): Promise<T> {
+	@log()
+	async refreshNewRelicToken(
+		providerInfo: CSNewRelicProviderInfo
+	): Promise<CSNewRelicProviderInfo> {
 		const cc = Logger.getCorrelationContext();
 
 		try {
 			// For refresh of token behind Service Gateway, use a separate no-auth request to pass through
 			// Service Gateway without authentication
-			let response;
-			if (providerId === "newrelic" && this._usingServiceGatewayAuth) {
-				const url = "/no-auth/provider-refresh/newrelic";
-				response = await this.put<{ teamId: string; refreshToken: string }, { user: any }>(url, {
-					teamId: this.teamId,
-					refreshToken: providerInfo.refreshToken,
+			const url = "/no-auth/provider-refresh/newrelic";
+			const response = await this.put<
+				{ provider: string; refreshToken: string },
+				CSNewRelicProviderInfo
+			>(url, {
+				provider: providerInfo.provider!,
+				refreshToken: providerInfo.refreshToken!,
+			});
+			if (response.accessToken && this._usingServiceGatewayAuth) {
+				Logger.log("New Relic access token successfully refreshed, setting...");
+				this.setAccessToken(response.accessToken, {
+					expiresAt: response.expiresAt!,
+					refreshToken: response.refreshToken!,
 				});
-			} else {
-				const url = `/provider-refresh/${providerId}?teamId=${this.teamId}&refreshToken=${providerInfo.refreshToken}`;
-				response = await this.get<{ user: any }>(url, this._token);
+				SessionContainer.instance().session.onAccessTokenChanged(response.accessToken);
 			}
-
-			// Since we are dealing with identity auth don't try to resolve this with the users
-			// The "me" user will get updated via the pubnub message
-			let user: Partial<CSMe>;
-			if (isDirective(response.user)) {
-				user = {
-					id: response.user.id,
-					providerInfo: { [this.teamId]: { [providerId]: { ...providerInfo } } },
-				};
-				user = resolve(user as any, response.user);
-			} else {
-				user = response.user;
-			}
-			return user.providerInfo![this.teamId][providerId] as T;
+			return response;
 		} catch (ex) {
 			Logger.error(ex, cc);
 			throw ex;
