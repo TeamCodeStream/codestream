@@ -680,7 +680,9 @@ export interface CSShortcutProviderInfo extends CSProviderInfo {}
 
 export interface CSLinearProviderInfo extends CSProviderInfo {}
 
-export interface CSNewRelicProviderInfo extends CSProviderInfo {}
+export interface CSNewRelicProviderInfo extends CSProviderInfo {
+	provider?: string;
+}
 
 export interface CSCircleCIProviderInfo extends CSProviderInfo {}
 

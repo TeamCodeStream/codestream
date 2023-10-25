@@ -29,7 +29,7 @@ import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from 
 
 const transitoryErrors = new Set(["ECONNREFUSED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND"]);
 
-const TOKEN_EXPIRATION_TOLERANCE_SECONDS = 60;
+const TOKEN_EXPIRATION_TOLERANCE_SECONDS = 60 * 5;
 
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos,
@@ -274,9 +274,13 @@ export abstract class ThirdPartyProviderBase<
 		}
 		await this._ensuringConnection;
 
-		if (this._providerInfo && isRefreshable(this._providerInfo)) {
-			this.setRefreshTimer();
+		if (this._providerInfo && this.isNewRelicAuth()) {
+			this.setNewRelicRefreshTimer();
 		}
+	}
+
+	private isNewRelicAuth() {
+		return this.providerConfig.id === "newrelic*com" && this.session.api.usingServiceGatewayAuth;
 	}
 
 	async refreshToken(request?: { providerTeamId?: string }): Promise<void> {
@@ -285,22 +289,31 @@ export abstract class ThirdPartyProviderBase<
 				return;
 			}
 
+			if (this._refreshTimer) {
+				clearTimeout(this._refreshTimer);
+				delete this._refreshTimer;
+			}
+
 			const expirationTriggerTime =
 				this._providerInfo.expiresAt - 1000 * TOKEN_EXPIRATION_TOLERANCE_SECONDS;
-			if (expirationTriggerTime > new Date().getTime()) {
+			if (expirationTriggerTime > Date.now()) {
+				if (this.isNewRelicAuth()) {
+					this.setNewRelicRefreshTimer();
+				}
 				return;
 			}
 
 			try {
-				await this.session.api.refreshThirdPartyProvider({
-					providerId: this.providerConfig.id,
-					subId: request && request.providerTeamId,
-				});
-				if (this._refreshTimer) {
-					clearTimeout(this._refreshTimer);
-					delete this._refreshTimer;
+				if (this.isNewRelicAuth()) {
+					Logger.log("New Relic access token will expire soon, refreshing...");
+					await this.session.api.refreshNewRelicToken(this._providerInfo);
+					this.setNewRelicRefreshTimer();
+				} else {
+					await this.session.api.refreshThirdPartyProvider({
+						providerId: this.providerConfig.id,
+						subId: request && request.providerTeamId,
+					});
 				}
-				this.setRefreshTimer();
 			} catch (error) {
 				if (isErrnoException(error)) {
 					if (error.code && transitoryErrors.has(error.code)) {
@@ -319,22 +332,19 @@ export abstract class ThirdPartyProviderBase<
 				}
 				// Track unknown errors but do not disconnect - assume error is temporary
 				Logger.error(error, `Unexpected error refreshing token for ${this.providerConfig.id}`);
+				if (this.isNewRelicAuth()) {
+					this.setNewRelicRefreshTimer();
+				}
 			}
 		});
 	}
 
-	async setRefreshTimer() {
-		if (!this._providerInfo || !isRefreshable(this._providerInfo)) return;
+	private async setNewRelicRefreshTimer() {
 		if (this._refreshTimer) return;
-		const expirationTriggerTime =
-			this._providerInfo.expiresAt - 1000 * TOKEN_EXPIRATION_TOLERANCE_SECONDS;
-		const triggerExpirationInterval = expirationTriggerTime - Date.now();
-		if (triggerExpirationInterval > 0) {
-			this._refreshTimer = setTimeout(() => {
-				delete this._refreshTimer;
-				this.refreshToken();
-			}, triggerExpirationInterval);
-		}
+		this._refreshTimer = setTimeout(() => {
+			delete this._refreshTimer;
+			this.refreshToken();
+		}, 60000);
 	}
 
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
