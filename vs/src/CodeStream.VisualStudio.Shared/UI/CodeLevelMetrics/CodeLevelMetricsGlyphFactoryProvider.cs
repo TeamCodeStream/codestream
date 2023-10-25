@@ -9,10 +9,13 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 	[Export(typeof(IGlyphFactoryProvider))]
 	[Name("CodeLevelMetricsGlyph")]
 	[ContentType("code")]
+	[Order(After = "VsTextMarker")]
 	[TagType(typeof(CodeLevelMetricsGlyph))]
 	internal sealed class CodeLevelMetricsGlyphFactoryProvider : IGlyphFactoryProvider
 	{
 		public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin) =>
-			!(margin is CodeLevelMetricsMargin) ? null : new CodeLevelMetricsGlyphFactory();
+			margin.GetType() == typeof(CodeLevelMetricsMargin)
+				? new CodeLevelMetricsGlyphFactory()
+				: null;
 	}
 }

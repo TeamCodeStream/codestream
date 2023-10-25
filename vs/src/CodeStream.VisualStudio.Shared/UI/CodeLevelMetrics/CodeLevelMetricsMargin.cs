@@ -1,38 +1,53 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Shapes;
+
+using CodeStream.VisualStudio.Shared.Extensions;
 
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Internal.VisualStudio.PlatformUI;
+using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
 using Microsoft.VisualStudio.Text.Tagging;
 
+using UIElement = System.Windows.UIElement;
+
 namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
+	internal class LineElement
+	{
+		public UIElement Element { get; set; }
+		public double LineTop { get; set; }
+	}
+
 	internal class CodeLevelMetricsMargin : Canvas, IWpfTextViewMargin
 	{
-		private readonly IWpfTextView _textView;
-		private readonly IWpfTextViewHost _wpfTextViewHost;
-		private readonly IGlyphFactoryProvider _glyphFactoryProvider;
+		private readonly IWpfTextView _wpfTextView;
 		private readonly ITagAggregator<CodeLevelMetricsGlyph> _tagAggregator;
+		private readonly IGlyphFactory _glyphFactory;
+		private readonly IWpfTextViewHost _wpfTextViewHost;
+
+		private readonly ConcurrentDictionary<int, LineElement> _uiElements =
+			new ConcurrentDictionary<int, LineElement>();
 
 		public CodeLevelMetricsMargin(
 			IWpfTextViewHost wpfTextViewHost,
-			IGlyphFactoryProvider glyphFactoryProvider,
-			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService
+			ITagAggregator<CodeLevelMetricsGlyph> tagAggregator,
+			IGlyphFactoryProvider glyphFactoryProvider
 		)
 		{
-			_textView = wpfTextViewHost.TextView;
 			_wpfTextViewHost = wpfTextViewHost;
-			_glyphFactoryProvider = glyphFactoryProvider;
+			_wpfTextView = _wpfTextViewHost.TextView;
+			_tagAggregator = tagAggregator;
+			_glyphFactory = glyphFactoryProvider.GetGlyphFactory(_wpfTextView, this);
 
-			_tagAggregator =
-				viewTagAggregatorFactoryService.CreateTagAggregator<CodeLevelMetricsGlyph>(
-					_textView
-				);
-
-			_textView.LayoutChanged += OnLayoutChanged;
-
+			_wpfTextView.LayoutChanged += OnLayoutChanged;
 			Width = MarginSize;
 		}
 
@@ -43,38 +58,24 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 
 		private void OnLayoutChanged(object sender, TextViewLayoutChangedEventArgs e)
 		{
-			var spans = e.NewOrReformattedSpans;
+			var lines = e.NewOrReformattedLines;
 
-			if (spans is null || spans.Count == 0)
+			if (lines.Any())
 			{
-				return;
+				Children.Clear();
 			}
 
-			var snapshot = spans[0].Snapshot;
-			var text = snapshot.GetText();
-			var tree = CSharpSyntaxTree.ParseText(text);
-			var root = tree.GetCompilationUnitRoot();
-
-			var glyphFactory = _glyphFactoryProvider.GetGlyphFactory(_textView, this);
-
-			// Iterate through the lines in the view
-			foreach (var line in e.NewOrReformattedLines)
+			foreach (var line in lines)
 			{
-				// Get the custom glyph tags for the line
-				var tags = _tagAggregator.GetTags(line.ExtentAsMappingSpan);
+				var wpfLine = (IWpfTextViewLine)line;
 
-				foreach (var tag in tags)
+				foreach (var mappingSpan in _tagAggregator.GetTags(wpfLine.ExtentAsMappingSpan))
 				{
-					// Create a glyph for the custom tag
-					var glyph = glyphFactory.GenerateGlyph((IWpfTextViewLine)(line), tag.Tag);
+					var element = _glyphFactory.GenerateGlyph(wpfLine, mappingSpan.Tag);
 
-					if (glyph != null)
-					{
-						// Position the glyph and add it to the margin
-						Canvas.SetLeft(glyph, line.Left);
-						Canvas.SetTop(glyph, line.Top);
-						Children.Add(glyph);
-					}
+					SetLeft(element, 0);
+					SetTop(element, wpfLine.TextTop);
+					Children.Add(element);
 				}
 			}
 		}
@@ -83,6 +84,9 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 		public bool Enabled => true;
 		public FrameworkElement VisualElement => this;
 
-		public void Dispose() { }
+		public void Dispose()
+		{
+			_wpfTextView.LayoutChanged -= OnLayoutChanged;
+		}
 	}
 }

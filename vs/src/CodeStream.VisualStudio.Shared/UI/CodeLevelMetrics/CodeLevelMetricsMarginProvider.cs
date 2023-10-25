@@ -13,8 +13,8 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
 	[Export(typeof(IWpfTextViewMarginProvider))]
 	[Name("CodeLevelMetricsMargin")]
-	[Order(After = PredefinedMarginNames.Glyph)]
 	[MarginContainer(PredefinedMarginNames.Left)]
+	[Order(After = PredefinedMarginNames.Glyph)]
 	[ContentType("text")]
 	[TextViewRole(PredefinedTextViewRoles.Interactive)]
 	[TextViewRole(PredefinedTextViewRoles.Document)]
@@ -22,32 +22,41 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 	[TextViewRole(PredefinedTextViewRoles.Editable)]
 	public class CodeLevelMetricsMarginProvider : IWpfTextViewMarginProvider
 	{
-		private readonly IGlyphFactoryProvider _glyphFactoryProvider;
 		private readonly IViewTagAggregatorFactoryService _viewTagAggregatorFactoryService;
+		private readonly IGlyphFactoryProvider _glyphFactoryProvider;
 
 		[ImportingConstructor]
 		public CodeLevelMetricsMarginProvider(
 			IViewTagAggregatorFactoryService viewTagAggregatorFactoryService,
-			[ImportMany] IEnumerable<IGlyphFactoryProvider> glyphFactoryProviders
+			[ImportMany]
+				IEnumerable<Lazy<IGlyphFactoryProvider, IGlyphMetadata>> glyphFactoryProviders
 		)
 		{
 			_viewTagAggregatorFactoryService = viewTagAggregatorFactoryService;
 
 			// only get _our_ glyph factory
-			_glyphFactoryProvider = glyphFactoryProviders.SingleOrDefault(
-				gfp => gfp.GetType().Name == nameof(CodeLevelMetricsGlyphFactoryProvider)
-			);
+			_glyphFactoryProvider = glyphFactoryProviders
+				.Where(x => x.Value is CodeLevelMetricsGlyphFactoryProvider)
+				.Select(x => x.Value)
+				.SingleOrDefault();
 		}
 
 		// Implement the IWpfTextViewMarginProvider interface
 		public IWpfTextViewMargin CreateMargin(
 			IWpfTextViewHost wpfTextViewHost,
 			IWpfTextViewMargin marginContainer
-		) =>
-			new CodeLevelMetricsMargin(
+		)
+		{
+			var tagAggregator =
+				_viewTagAggregatorFactoryService.CreateTagAggregator<CodeLevelMetricsGlyph>(
+					wpfTextViewHost.TextView
+				);
+
+			return new CodeLevelMetricsMargin(
 				wpfTextViewHost,
-				_glyphFactoryProvider,
-				_viewTagAggregatorFactoryService
+				tagAggregator,
+				_glyphFactoryProvider
 			);
+		}
 	}
 }
