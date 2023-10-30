@@ -12,7 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		..\docs\dev.md = ..\docs\dev.md
 		..\package.json = ..\package.json
-		..\webpack.config.js = ..\webpack.config.js
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.CodeLens", "CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj", "{31EB1B96-34E8-4E37-872D-4ED7363C95D9}"

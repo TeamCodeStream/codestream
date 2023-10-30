@@ -9,6 +9,7 @@ using System.Windows.Media;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Shared.Services;
+using CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics;
 using CodeStream.VisualStudio.Shared.UI.Glyphs;
 using Microsoft;
 using Microsoft.VisualStudio.Shell;
@@ -115,6 +116,17 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 					)
 						continue;
 					if (type == typeof(DocumentMarkGlyphTag))
+					{
+						var glyphFactory = lazy.Value.GetGlyphFactory(
+							_wpfTextViewHost.TextView,
+							this
+						);
+						_glyphFactories.Add(
+							type,
+							new GlyphFactoryInfo(order++, glyphFactory, lazy.Value)
+						);
+					}
+					if (type == typeof(CodeLevelMetricsGlyph))
 					{
 						var glyphFactory = lazy.Value.GetGlyphFactory(
 							_wpfTextViewHost.TextView,
