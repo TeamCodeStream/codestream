@@ -579,7 +579,7 @@ export interface ApiProvider {
 		sharing?: boolean;
 		subId?: string;
 	}): Promise<CSMe>;
-	refreshNewRelicToken(providerInfo: CSNewRelicProviderInfo): Promise<CSNewRelicProviderInfo>;
+	refreshNewRelicToken(refreshToken: string): Promise<CSNewRelicProviderInfo>;
 
 	getNewRelicSignupJwtToken(
 		request: GetNewRelicSignupJwtTokenRequest

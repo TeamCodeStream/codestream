@@ -487,6 +487,40 @@ export class NewRelicProvider
 		};
 	}
 
+	private async clientRequestWrap<T>(query: string, variables: any, useOtherRegion?: boolean) {
+		let resp;
+		const client = await this.client(useOtherRegion);
+		let triedRefresh = false;
+		while (!resp) {
+			try {
+				resp = await (await this.client()).request<T>(query, variables);
+			} catch (ex) {
+				if (
+					this.session.api.usingServiceGatewayAuth &&
+					!triedRefresh &&
+					this._providerInfo &&
+					this._providerInfo.refreshToken
+				) {
+					Logger.log("NerdGraph call failed, attempting to refresh NR access token...");
+					let tokenInfo;
+					try {
+						tokenInfo = await this.session.api.refreshNewRelicToken(
+							this._providerInfo.refreshToken
+						);
+						Logger.log("NR access token successfully refreshed, trying request again...");
+						client.setHeader("Authorization", `Bearer ${tokenInfo.accessToken}`);
+						triedRefresh = true;
+						resp = undefined;
+					} catch (refreshEx) {
+						Logger.warn("Exception thrown refreshing New Relic access token", refreshEx);
+						// rethrow the original exception, more meaningful than the exception on refresh
+					}
+				}
+			}
+		}
+		return resp;
+	}
+
 	private async validateApiKey(client: GraphQLClient): Promise<{
 		userId: number;
 		organizationId?: number;
@@ -536,7 +570,7 @@ export class NewRelicProvider
 	async mutate<T>(query: string, variables: any = undefined) {
 		await this.ensureConnected();
 
-		return (await this.client()).request<T>(query, variables);
+		return this.clientRequestWrap<T>(query, variables); //(await this.client()).request<T>(query, variables);
 	}
 
 	async query<T = any>(
@@ -559,14 +593,14 @@ export class NewRelicProvider
 			try {
 				let potentialResponse, potentialOtherResponse;
 				if (isMultiRegion) {
-					const currentRegionPromise = (await this.client(false)).request<T>(query, variables);
-					const otherRegionPromise = (await this.client(true)).request<T>(query, variables);
+					const currentRegionPromise = await this.clientRequestWrap<T>(query, variables, false); //(await this.client(false)).request<T>(query, variables);
+					const otherRegionPromise = await this.clientRequestWrap<T>(query, variables, true); //(await this.client(true)).request<T>(query, variables);
 					[potentialResponse, potentialOtherResponse] = await Promise.all([
 						currentRegionPromise,
 						otherRegionPromise,
 					]);
 				} else {
-					potentialResponse = await (await this.client(false)).request<T>(query, variables);
+					potentialResponse = await this.clientRequestWrap<T>(query, variables, false); // await (await this.client(false)).request<T>(query, variables);
 				}
 				// GraphQL returns happy HTTP 200 response for api level errors
 				if (potentialOtherResponse) {

@@ -386,6 +386,7 @@ export class CodeStreamSession implements Disposable {
 			url: e.url,
 			email: e.email,
 			value: e.token,
+			refreshToken: e.refreshToken,
 			teamId: e.teamId
 		});
 	}

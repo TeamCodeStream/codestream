@@ -524,13 +524,15 @@ export class CodeStreamSession {
 		this.verifyConnectivity();
 	}
 
-	onAccessTokenChanged(token: string) {
+	onAccessTokenChanged(token: string, refreshToken?: string) {
+		Logger.log("Session access token was changed, notifying extension...");
 		this._codestreamAccessToken = token;
 		this.agent.sendNotification(DidRefreshAccessTokenNotificationType, {
 			url: this._options.serverUrl,
 			email: this._email!,
 			teamId: this._teamId!,
 			token: token,
+			refreshToken,
 		});
 	}
 
@@ -968,6 +970,7 @@ export class CodeStreamSession {
 		Logger.log("Got environment from connectivity response:", this._environmentInfo);
 		this.agent.sendNotification(DidSetEnvironmentNotificationType, this._environmentInfo);
 		if (response.capabilities.serviceGatewayAuth) {
+			Logger.log("Service Gateway auth is enabled");
 			this._api.setUsingServiceGatewayAuth();
 		}
 		return response;
@@ -1187,6 +1190,9 @@ export class CodeStreamSession {
 		}
 
 		const token = response.token;
+		if (response.accessTokenInfo?.refreshToken) {
+			token.refreshToken = response.accessTokenInfo.refreshToken;
+		}
 		this._codestreamAccessToken = token.value;
 		this.api.setAccessToken(token.value, response.accessTokenInfo);
 		this._teamId = (this._options as any).teamId = token.teamId;
@@ -1318,7 +1324,7 @@ export class CodeStreamSession {
 
 		if (this.api.usingServiceGatewayAuth) {
 			Logger.log("Service Gateway authentication is active, changing access token...");
-			this.onAccessTokenChanged(token.value);
+			this.onAccessTokenChanged(token.value, response.accessTokenInfo?.refreshToken);
 		}
 
 		return loginResponse;

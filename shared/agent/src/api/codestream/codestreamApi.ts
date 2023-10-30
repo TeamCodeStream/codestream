@@ -365,6 +365,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	private _features: CSApiFeatures | undefined;
 	private _messageProcessingPromise: Promise<void> | undefined;
 	private _usingServiceGatewayAuth: boolean = false;
+	private _refreshNRTokenPromise: Promise<CSNewRelicProviderInfo> | undefined;
 
 	readonly capabilities: Capabilities = {
 		channelMute: true,
@@ -461,7 +462,29 @@ export class CodeStreamApiProvider implements ApiProvider {
 					);
 				}
 
-				response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
+				let triedRefresh = false;
+				while (!response) {
+					try {
+						response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
+					} catch (ex) {
+						if (ex.info?.error.match(/id token expired/) && !triedRefresh) {
+							Logger.log("Attempted token login with an expired token, attempting to refresh...");
+							let tokenInfo;
+							try {
+								tokenInfo = await this.refreshNewRelicToken(options.token.refreshToken!);
+							} catch (refreshEx) {
+								Logger.warn("Exception thrown refreshing NR access token", refreshEx);
+								// rethrow the original exception, more meaningful than the exception on refresh
+								throw ex;
+							}
+							Logger.log("Expired token successfully refreshed");
+							options.token.value = tokenInfo.accessToken;
+							triedRefresh = true;
+						} else {
+							throw ex;
+						}
+					}
+				}
 
 				response.provider = options.token.provider;
 				response.providerAccess = options.token.providerAccess;
@@ -708,6 +731,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	setAccessToken(token: string, tokenInfo?: CSAccessTokenInfo) {
 		this._token = token;
 		this._tokenInfo = tokenInfo;
+		Logger.log("CodeStream API access token was set");
 	}
 
 	@log()
@@ -2416,35 +2440,39 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	@log()
-	async refreshNewRelicToken(
-		providerInfo: CSNewRelicProviderInfo
-	): Promise<CSNewRelicProviderInfo> {
+	refreshNewRelicToken(refreshToken: string): Promise<CSNewRelicProviderInfo> {
 		const cc = Logger.getCorrelationContext();
 
-		try {
-			// For refresh of token behind Service Gateway, use a separate no-auth request to pass through
-			// Service Gateway without authentication
-			const url = "/no-auth/provider-refresh/newrelic";
-			const response = await this.put<
-				{ provider: string; refreshToken: string },
-				CSNewRelicProviderInfo
-			>(url, {
-				provider: providerInfo.provider!,
-				refreshToken: providerInfo.refreshToken!,
-			});
-			if (response.accessToken && this._usingServiceGatewayAuth) {
-				Logger.log("New Relic access token successfully refreshed, setting...");
-				this.setAccessToken(response.accessToken, {
-					expiresAt: response.expiresAt!,
-					refreshToken: response.refreshToken!,
-				});
-				SessionContainer.instance().session.onAccessTokenChanged(response.accessToken);
-			}
-			return response;
-		} catch (ex) {
-			Logger.error(ex, cc);
-			throw ex;
+		if (this._refreshNRTokenPromise) {
+			return this._refreshNRTokenPromise;
 		}
+		this._refreshNRTokenPromise = new Promise(async resolve => {
+			try {
+				const url = "/no-auth/provider-refresh/newrelic";
+				const response = await this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
+					refreshToken,
+				});
+				if (response.accessToken) {
+					Logger.log("New Relic access token successfully refreshed, setting...");
+					this.setAccessToken(response.accessToken, {
+						expiresAt: response.expiresAt!,
+						refreshToken: response.refreshToken!,
+					});
+					if (SessionContainer.isInitialized()) {
+						SessionContainer.instance().session.onAccessTokenChanged(
+							response.accessToken,
+							response.refreshToken
+						);
+					}
+				}
+				delete this._refreshNRTokenPromise;
+				resolve(response);
+			} catch (ex) {
+				Logger.error(ex, cc);
+				throw ex;
+			}
+		});
+		return this._refreshNRTokenPromise;
 	}
 
 	@log({
@@ -2751,8 +2779,40 @@ export class CodeStreamApiProvider implements ApiProvider {
 			let id;
 			let resp;
 			let retryCount = 0;
+			let triedRefresh = false;
 			if (json === undefined) {
-				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
+				while (!resp) {
+					[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
+					if (
+						!triedRefresh &&
+						!resp.ok &&
+						resp.status === 403 &&
+						this._tokenInfo &&
+						this._tokenInfo.refreshToken &&
+						init?.headers instanceof Headers
+					) {
+						const resp2 = resp.clone();
+						const jsonData = (await resp2.json()) as { error: string };
+						if (jsonData?.error && jsonData.error.match(/service gateway: id token expired/)) {
+							Logger.log(
+								"On CodeStream API request, token was found to be expired, attempting to refresh..."
+							);
+							let tokenInfo;
+							try {
+								tokenInfo = await this.refreshNewRelicToken(this._tokenInfo.refreshToken!);
+								Logger.log("NR access token successfully refreshed, trying request again...");
+								token = tokenInfo.accessToken;
+								init.headers.set("Authorization", `Bearer ${token}`);
+								triedRefresh = true;
+								resp = undefined;
+							} catch (ex) {
+								Logger.warn("Exception thrown refreshing NR access token:", ex);
+								// allow the original (failed) flow to continue, more meaningful than throwing an exception on refresh
+							}
+						}
+					}
+				}
+
 				if (context !== undefined) {
 					context.response = resp;
 				}

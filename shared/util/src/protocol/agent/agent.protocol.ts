@@ -82,6 +82,7 @@ export interface AccessToken {
 	teamId: string;
 	provider?: string;
 	providerAccess?: "strict";
+	refreshToken?: string;
 }
 
 export enum CodeStreamEnvironment {

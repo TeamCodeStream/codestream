@@ -3,7 +3,7 @@ import url from "url";
 
 import { Mutex } from "async-mutex";
 import { GraphQLClient } from "graphql-request";
-import { Response } from "undici";
+import { Headers, Response } from "undici";
 
 import HttpsProxyAgent from "https-proxy-agent";
 import { InternalError, ReportSuppressedMessages } from "../agentError";
@@ -29,7 +29,7 @@ import { ApiResponse, isRefreshable, ProviderVersion, ThirdPartyProvider } from 
 
 const transitoryErrors = new Set(["ECONNREFUSED", "ETIMEDOUT", "ECONNRESET", "ENOTFOUND"]);
 
-const TOKEN_EXPIRATION_TOLERANCE_SECONDS = 60 * 5;
+const TOKEN_EXPIRATION_TOLERANCE_SECONDS = 60 * 1;
 
 export abstract class ThirdPartyProviderBase<
 	TProviderInfo extends CSProviderInfos = CSProviderInfos,
@@ -40,7 +40,6 @@ export abstract class ThirdPartyProviderBase<
 	protected _httpsAgent: HttpsAgent | HttpsProxyAgent | undefined;
 	protected _client: GraphQLClient | undefined;
 	private _refreshLock = new Mutex();
-	private _refreshTimer: NodeJS.Timer | undefined;
 
 	constructor(
 		public readonly session: CodeStreamSession,
@@ -273,14 +272,14 @@ export abstract class ThirdPartyProviderBase<
 			this._ensuringConnection = this.ensureConnectedCore(request);
 		}
 		await this._ensuringConnection;
-
-		if (this._providerInfo && this.isNewRelicAuth()) {
-			this.setNewRelicRefreshTimer();
-		}
 	}
 
 	private isNewRelicAuth() {
-		return this.providerConfig.id === "newrelic*com" && this.session.api.usingServiceGatewayAuth;
+		return (
+			this.providerConfig.id === "newrelic*com" &&
+			this.session.api.usingServiceGatewayAuth &&
+			this._providerInfo?.refreshToken
+		);
 	}
 
 	async refreshToken(request?: { providerTeamId?: string }): Promise<void> {
@@ -289,25 +288,16 @@ export abstract class ThirdPartyProviderBase<
 				return;
 			}
 
-			if (this._refreshTimer) {
-				clearTimeout(this._refreshTimer);
-				delete this._refreshTimer;
-			}
-
 			const expirationTriggerTime =
 				this._providerInfo.expiresAt - 1000 * TOKEN_EXPIRATION_TOLERANCE_SECONDS;
 			if (expirationTriggerTime > Date.now()) {
-				if (this.isNewRelicAuth()) {
-					this.setNewRelicRefreshTimer();
-				}
 				return;
 			}
 
 			try {
 				if (this.isNewRelicAuth()) {
 					Logger.log("New Relic access token will expire soon, refreshing...");
-					await this.session.api.refreshNewRelicToken(this._providerInfo);
-					this.setNewRelicRefreshTimer();
+					await this.session.api.refreshNewRelicToken(this._providerInfo.refreshToken);
 				} else {
 					await this.session.api.refreshThirdPartyProvider({
 						providerId: this.providerConfig.id,
@@ -332,19 +322,8 @@ export abstract class ThirdPartyProviderBase<
 				}
 				// Track unknown errors but do not disconnect - assume error is temporary
 				Logger.error(error, `Unexpected error refreshing token for ${this.providerConfig.id}`);
-				if (this.isNewRelicAuth()) {
-					this.setNewRelicRefreshTimer();
-				}
 			}
 		});
-	}
-
-	private async setNewRelicRefreshTimer() {
-		if (this._refreshTimer) return;
-		this._refreshTimer = setTimeout(() => {
-			delete this._refreshTimer;
-			this.refreshToken();
-		}, 60000);
 	}
 
 	private async ensureConnectedCore(request?: { providerTeamId?: string }) {
@@ -471,7 +450,38 @@ export abstract class ThirdPartyProviderBase<
 			let json: Promise<R> | undefined;
 			let resp: Response | undefined;
 			let retryCount = 0;
+			let triedRefresh = false;
 			if (json === undefined) {
+				while (!resp) {
+					[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
+					if (
+						this.isNewRelicAuth() &&
+						!triedRefresh &&
+						!resp.ok &&
+						resp.status === 403 &&
+						this._providerInfo &&
+						this._providerInfo.refreshToken &&
+						init?.headers instanceof Headers
+					) {
+						let tokenInfo;
+						try {
+							Logger.log(
+								"On New Relic API request, token was found to be expired, attempting to refresh..."
+							);
+							tokenInfo = await this.session.api.refreshNewRelicToken(
+								this._providerInfo.refreshToken
+							);
+							Logger.log("NR access token successfully refreshed, trying request again...");
+							init.headers.set("Authorization", `Bearer ${tokenInfo.accessToken}`);
+							triedRefresh = true;
+							resp = undefined;
+						} catch (ex) {
+							Logger.warn("Exception thrown refreshing New Relic access token", ex);
+							// allow the original (failed) flow to continue, more meaningful than throwing an exception on refresh
+						}
+					}
+				}
+
 				[resp, retryCount] = await fetchCore(0, absoluteUrl, init);
 
 				if (resp.ok) {

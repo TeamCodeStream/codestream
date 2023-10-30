@@ -216,7 +216,6 @@ export interface ApiCapabilitiesChangedNotification {
 	data: CSApiCapabilities;
 }
 
-
 export interface CommitsChangedData {
 	type: string;
 	path: string;
@@ -391,6 +390,7 @@ export interface DidRefreshAccessTokenNotification {
 	email: string;
 	teamId: string;
 	token: string;
+	refreshToken?: string;
 }
 
 export const DidRefreshAccessTokenNotificationType = new NotificationType<
