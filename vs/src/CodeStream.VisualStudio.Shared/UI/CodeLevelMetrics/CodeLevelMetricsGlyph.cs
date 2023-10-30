@@ -15,7 +15,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 
 		public CodeLevelMetricsGlyph(string tooltip)
 		{
-			var assembly = Assembly.GetAssembly(typeof(CodeLevelMetricsGlyphFactoryProvider));
+			var assembly = Assembly.GetAssembly(typeof(CodeLevelMetricsGlyphFactory));
 			Icon = LoadImageFromFile(assembly);
 			Tooltip = tooltip;
 		}

@@ -7,6 +7,8 @@ using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.Services;
+using CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics;
+
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
@@ -45,8 +47,10 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 				.Order(glyphFactoryProviders)
 				.Where(
 					_ =>
-						_.Metadata.Name
-						== PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider
+						(
+							_.Metadata.Name
+							== PredefinedCodestreamNames.DocumentMarkGlyphFactoryProvider
+						) || (_.Value is CodeLevelMetricsGlyphFactoryProvider)
 				)
 				.ToArray();
 		}
