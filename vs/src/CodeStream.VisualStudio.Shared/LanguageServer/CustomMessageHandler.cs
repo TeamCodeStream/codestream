@@ -34,6 +34,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 		private readonly IBrowserServiceFactory _browserServiceFactory;
 		private readonly ISettingsServiceFactory _settingsServiceFactory;
 		private readonly IFileResolutionService _fileResolutionService;
+		private readonly ICredentialsService _credentialsService;
 		private readonly Subject<DocumentMarkerChangedSubjectArgs> _documentMarkerChangedSubject;
 		private readonly Subject<UserPreferencesChangedSubjectArgs> _userPreferencesChangedSubject;
 		private readonly IDisposable _documentMarkerChangedSubscription;
@@ -44,7 +45,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			IEventAggregator eventAggregator,
 			IBrowserServiceFactory browserServiceFactory,
 			ISettingsServiceFactory settingsServiceFactory,
-			IFileResolutionService fileResolutionService
+			IFileResolutionService fileResolutionService,
+			ICredentialsService credentialsService
 		)
 		{
 			_serviceProvider = serviceProvider;
@@ -52,7 +54,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			_browserServiceFactory = browserServiceFactory;
 			_settingsServiceFactory = settingsServiceFactory;
 			_fileResolutionService = fileResolutionService;
-
+			_credentialsService = credentialsService;
 			_documentMarkerChangedSubject = new Subject<DocumentMarkerChangedSubjectArgs>();
 			_userPreferencesChangedSubject = new Subject<UserPreferencesChangedSubjectArgs>();
 
@@ -560,6 +562,34 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 				{
 					Log.Error(ex, $"Problem with {nameof(OnDidResolveStackTraceLine)}");
 				}
+			}
+		}
+
+		[JsonRpcMethod(DidRefreshAccessTokenNotificationType.MethodName)]
+		public async System.Threading.Tasks.Task OnDidRefreshAccessTokenNotificationAsync(JToken e)
+		{
+			try
+			{
+				var notification = new DidRefreshAccessTokenNotificationType(
+					e.ToObject<DidRefreshAccessTokenNotification>()
+				);
+
+				await _credentialsService.DeleteAsync(
+					notification.Params.Url.ToUri(),
+					notification.Params.Email,
+					notification.Params.TeamId
+				);
+
+				await _credentialsService.SaveJsonAsync(
+					notification.Params.Url.ToUri(),
+					notification.Params.Email,
+					e,
+					notification.Params.TeamId
+				);
+			}
+			catch (Exception ex)
+			{
+				Log.Error(ex, nameof(OnDidRefreshAccessTokenNotificationAsync));
 			}
 		}
 

@@ -11,6 +11,7 @@ using StreamJsonRpc;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -69,7 +70,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			ISettingsServiceFactory settingsServiceFactory,
 			IHttpClientService httpClientService,
 			IMessageInterceptorService messageInterceptorService,
-			IFileResolutionService fileResolutionService
+			IFileResolutionService fileResolutionService,
+			ICredentialsService credentialsService
 		)
 			: base(
 				serviceProvider,
@@ -79,6 +81,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 				settingsServiceFactory,
 				httpClientService,
 				fileResolutionService,
+				credentialsService,
 				Log
 			)
 		{
