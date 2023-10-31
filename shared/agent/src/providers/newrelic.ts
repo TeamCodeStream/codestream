@@ -493,7 +493,7 @@ export class NewRelicProvider
 		let triedRefresh = false;
 		while (!resp) {
 			try {
-				resp = await (await this.client()).request<T>(query, variables);
+				resp = client.request<T>(query, variables);
 			} catch (ex) {
 				if (
 					this.session.api.usingServiceGatewayAuth &&

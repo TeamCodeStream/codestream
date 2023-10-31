@@ -2446,31 +2446,32 @@ export class CodeStreamApiProvider implements ApiProvider {
 		if (this._refreshNRTokenPromise) {
 			return this._refreshNRTokenPromise;
 		}
-		this._refreshNRTokenPromise = new Promise(async resolve => {
-			try {
-				const url = "/no-auth/provider-refresh/newrelic";
-				const response = await this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
-					refreshToken,
-				});
-				if (response.accessToken) {
-					Logger.log("New Relic access token successfully refreshed, setting...");
-					this.setAccessToken(response.accessToken, {
-						expiresAt: response.expiresAt!,
-						refreshToken: response.refreshToken!,
-					});
-					if (SessionContainer.isInitialized()) {
-						SessionContainer.instance().session.onAccessTokenChanged(
-							response.accessToken,
-							response.refreshToken
-						);
+		this._refreshNRTokenPromise = new Promise((resolve, reject) => {
+			const url = "/no-auth/provider-refresh/newrelic";
+			this.put<{ refreshToken: string }, CSNewRelicProviderInfo>(url, {
+				refreshToken,
+			})
+				.then(response => {
+					if (response.accessToken) {
+						Logger.log("New Relic access token successfully refreshed, setting...");
+						this.setAccessToken(response.accessToken, {
+							expiresAt: response.expiresAt!,
+							refreshToken: response.refreshToken!,
+						});
+						if (SessionContainer.isInitialized()) {
+							SessionContainer.instance().session.onAccessTokenChanged(
+								response.accessToken,
+								response.refreshToken
+							);
+						}
 					}
-				}
-				delete this._refreshNRTokenPromise;
-				resolve(response);
-			} catch (ex) {
-				Logger.error(ex, cc);
-				throw ex;
-			}
+					delete this._refreshNRTokenPromise;
+					resolve(response);
+				})
+				.catch(ex => {
+					Logger.error(ex, cc);
+					reject(ex);
+				});
 		});
 		return this._refreshNRTokenPromise;
 	}
