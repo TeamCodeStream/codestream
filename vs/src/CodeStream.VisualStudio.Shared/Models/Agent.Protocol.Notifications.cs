@@ -17,10 +17,23 @@ namespace CodeStream.VisualStudio.Shared.Models
 
 	public class DidRefreshAccessTokenNotification
 	{
+		[JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
 		public string Url { get; set; }
+
+		[JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
 		public string Email { get; set; }
+
+		[JsonProperty("teamId", NullValueHandling = NullValueHandling.Ignore)]
 		public string TeamId { get; set; }
-		public string Token { get; set; }
+
+		/// <summary>
+		/// Everywhere this is used in the application needs to be "Value", but
+		/// the notification type in the agent uses "Token". Remapping here for ease.
+		/// </summary>
+		[JsonProperty("token", NullValueHandling = NullValueHandling.Ignore)]
+		public string Value { get; set; }
+
+		[JsonProperty("refreshToken", NullValueHandling = NullValueHandling.Ignore)]
 		public string RefreshToken { get; set; }
 	}
 
