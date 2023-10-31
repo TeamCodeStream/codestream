@@ -66,14 +66,24 @@ class LoginResponse(
     val accessToken: String
 )
 
-class LoginState(
+data class AccessToken(
+    val email: String,
+    val url: String,
+    val value: String,
+    val teamId: String,
+    val provider: String?,
+    val providerAccess: String?,
+    val refreshToken: String?,
+)
+
+data class LoginState(
     val userId: String,
     val teamId: String,
     val email: String,
     val capabilities: JsonObject,
     val environmentInfo: EnvironmentInfo,
     val serverUrl: String,
-    val token: JsonObject?
+    val token: AccessToken?
 )
 
 class UserLoggedIn(

@@ -2,10 +2,12 @@ package com.codestream.authentication
 
 import com.codestream.agent.ApiVersionCompatibility
 import com.codestream.agent.DidChangeApiVersionCompatibilityNotification
+import com.codestream.agent.DidRefreshAccessTokenNotification
 import com.codestream.agentService
 import com.codestream.codeStream
 import com.codestream.extensions.merge
 import com.codestream.gson
+import com.codestream.protocols.agent.AccessToken
 import com.codestream.protocols.agent.Ide
 import com.codestream.protocols.agent.LoginResult
 import com.codestream.protocols.agent.LoginWithTokenParams
@@ -36,6 +38,7 @@ enum class SaveTokenReason {
     LOGOUT,
     LOGIN_ERROR,
     AUTO_SIGN_IN,
+    REFRESH,
 }
 
 enum class CSLogoutReason {
@@ -161,6 +164,7 @@ class AuthenticationService(val project: Project) {
     }
 
     private var upgradeRequiredShown = false
+
     fun onApiVersionChanged(notification: DidChangeApiVersionCompatibilityNotification) {
         apiVersionCompatibility = notification.compatibility
         if (notification.compatibility == ApiVersionCompatibility.API_UPGRADE_RECOMMENDED) {
@@ -176,6 +180,19 @@ class AuthenticationService(val project: Project) {
         }
     }
 
+    fun onDidRefreshAccessToken(notification: DidRefreshAccessTokenNotification) {
+        //  Not that provider and providerAccess not provided on this notification, but it doesn't seem to be used
+        val token = AccessToken(
+            email = notification.email,
+            url = notification.url,
+            value = notification.token,
+            teamId = notification.teamId,
+            provider = null,
+            providerAccess = null,
+            notification.refreshToken)
+        saveAccessToken(SaveTokenReason.REFRESH, token, notification.url, notification.teamId)
+    }
+
     fun copyInternalAccessToken(fromServerUrl: String?, toServerUrl: String?) {
         project.settingsService?.storedTeamId()?.let {
             copyAccessToken(fromServerUrl, toServerUrl, it, it)
@@ -187,12 +204,12 @@ class AuthenticationService(val project: Project) {
         val tokenStr = PasswordSafe.instance.getPassword(settings.credentialAttributes(true, fromServerUrl, fromTeamId))
             ?: PasswordSafe.instance.getPassword(settings.credentialAttributes(false, fromServerUrl))
             ?: return
-        val token = gson.fromJson<JsonObject>(tokenStr)
-        token["url"] = toServerUrl
-        saveAccessToken(SaveTokenReason.COPY, token, toServerUrl, toTeamId)
+        val token = gson.fromJson<AccessToken>(tokenStr)
+        val updatedToken = if (toServerUrl != null) token.copy(url = toServerUrl) else token
+        saveAccessToken(SaveTokenReason.COPY, updatedToken, toServerUrl, toTeamId)
     }
 
-    private fun saveAccessToken(reason: SaveTokenReason, accessToken: JsonObject?, serverUrl: String? = null, teamId: String? = null) {
+    private fun saveAccessToken(reason: SaveTokenReason, accessToken: AccessToken?, serverUrl: String? = null, teamId: String? = null) {
         val settings = project.settingsService ?: return
         if (accessToken != null) {
             logger.info("Saving access token to password safe reason: $reason with provided teamid $teamId")
@@ -201,7 +218,8 @@ class AuthenticationService(val project: Project) {
         }
 
         val credentials = accessToken?.let {
-            Credentials(null, it.toString())
+            val toSave = gson.toJson(it)
+            Credentials(null, toSave)
         }
 
         val credentialAttributes = settings.credentialAttributes(true, serverUrl, teamId)
