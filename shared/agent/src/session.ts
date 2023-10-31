@@ -1322,11 +1322,6 @@ export class CodeStreamSession {
 			this.listenForEchoes();
 		}
 
-		if (this.api.usingServiceGatewayAuth) {
-			Logger.log("Service Gateway authentication is active, changing access token...");
-			this.onAccessTokenChanged(token.value, response.accessTokenInfo?.refreshToken);
-		}
-
 		return loginResponse;
 	}
 
