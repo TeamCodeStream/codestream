@@ -2372,7 +2372,26 @@ export type GetLibraryDetailsRequest = {
 	rows?: number | "all";
 };
 
+export type GetCsecLibraryDetailsRequest = {
+	entityGuid: string;
+	accountId: number;
+	severityFilter?: Array<RiskSeverity>;
+	rows?: number | "all";
+};
+
 export type Vuln = {
+	remediation: Array<string>;
+	issueId: string; // cve
+	title: string;
+	url: string;
+	source: string;
+	vector: string;
+	description: string;
+	score: number;
+	criticality: CriticalityType;
+};
+
+export type CsecVuln = {
 	remediation: Array<string>;
 	issueId: string; // cve
 	title: string;
@@ -2394,8 +2413,24 @@ export type LibraryDetails = {
 	vulns: Array<Vuln>;
 };
 
+export type CsecLibraryDetails = {
+	name: string;
+	version: string;
+	suggestedVersion?: string;
+	highestScore: number;
+	highestCriticality: CriticalityType;
+	language?: string;
+	vulns: Array<CsecVuln>;
+};
+
 export type GetLibraryDetailsResponse = {
 	libraries: Array<LibraryDetails>;
+	recordCount: number;
+	totalRecords: number;
+};
+
+export type GetCsecLibraryDetailsResponse = {
+	libraries: Array<CsecLibraryDetails>;
 	recordCount: number;
 	totalRecords: number;
 };
@@ -2406,6 +2441,13 @@ export const GetLibraryDetailsType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/libraryDetails");
+
+export const GetCsecLibraryDetailsType = new RequestType<
+	GetCsecLibraryDetailsRequest,
+	GetCsecLibraryDetailsResponse,
+	void,
+	void
+>("codestream/newrelic/csecLibraryDetails");
 
 export interface CheckTrunkRequest {
 	cwd: string;

@@ -62,6 +62,11 @@ interface UseRequestTypeResult<T, E = T> {
 	loading: boolean;
 	error: E | undefined;
 }
+interface UseCsecRequestTypeResult<T, E = T> {
+	csecData: T | undefined;
+	csecLoading: boolean;
+	csecError: E | undefined;
+}
 
 /**
  * @param requestType<Req, Resp>
@@ -102,6 +107,40 @@ export function useRequestType<RT extends RequestType<any, any, any, any>, E = R
 	}, dependencies);
 
 	return { loading, data, error } as UseRequestTypeResult<RequestResponseOf<RT>, E>;
+}
+
+export function useCsecRequestType<RT extends RequestType<any, any, any, any>, E = RT>(
+	requestType: RT,
+	payload: RequestParamsOf<RT>,
+	dependencies: DependencyList = [],
+	enabled = true
+): UseCsecRequestTypeResult<RequestResponseOf<RT>, E> {
+	const [csecLoading, setCsecLoading] = useState(true);
+	const [csecData, setCsecData] = useState<RequestResponseOf<RT> | undefined>(undefined);
+	const [csecError, setCsecError] = useState<E | undefined>(undefined);
+
+	const fetch = async () => {
+		if (enabled) {
+			try {
+				setCsecLoading(true);
+				const response = (await HostApi.instance.send(
+					requestType,
+					payload
+				)) as RequestResponseOf<RT>;
+				setCsecData(response);
+				setCsecLoading(false);
+			} catch (error) {
+				setCsecLoading(false);
+				setCsecError(error);
+			}
+		}
+	};
+
+	useEffect(() => {
+		fetch();
+	}, dependencies);
+
+	return { csecLoading, csecData, csecError } as UseCsecRequestTypeResult<RequestResponseOf<RT>, E>;
 }
 
 export function useTimeout(callback: Fn, delay: number) {

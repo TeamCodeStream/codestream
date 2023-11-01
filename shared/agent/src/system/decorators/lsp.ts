@@ -90,6 +90,13 @@ function mergeLocalProviders(providers: ThirdPartyProviders): ThirdPartyProvider
 		};
 		localProviders[newrelicVulnProvider.id] = newrelicVulnProvider;
 		newrelicProvider.subProviders = [newrelicVulnProvider];
+		const newrelicCSECProvider = {
+			id: "newrelic-csec*com",
+			name: "newrelic-csec",
+			host: "", // Provided in apiCapabilities
+		};
+		localProviders[newrelicCSECProvider.id] = newrelicCSECProvider;
+		newrelicProvider.subProviders = [newrelicCSECProvider];
 	}
 
 	return { ...providers, ...localProviders };

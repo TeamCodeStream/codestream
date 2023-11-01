@@ -351,6 +351,7 @@ export const Observability = React.memo((props: Props) => {
 	const previousNewRelicIsConnected = usePrevious(derivedState.newRelicIsConnected);
 	const [anomalyDetectionSupported, setAnomalyDetectionSupported] = useState<boolean>(true);
 	const [isVulnPresent, setIsVulnPresent] = useState(false);
+	const [isCsecVulnPresent, setIsCsecVulnPresent] = useState(false);
 
 	const buildFilters = (repoIds: string[]) => {
 		return repoIds.map(repoId => {
@@ -648,6 +649,7 @@ export const Observability = React.memo((props: Props) => {
 				"SLOs Listed": hasServiceLevelObjectives,
 				"CLM Anomalies Listed": hasAnomalies,
 				"Vulnerabilities Listed": isVulnPresent,
+				"Csec Vulnerabilities Listed": isCsecVulnPresent,
 			};
 
 			console.debug(`o11y: NR Service Clicked`, event);
@@ -1320,6 +1322,7 @@ export const Observability = React.memo((props: Props) => {
 																									entityGuid={ea.entityGuid}
 																									accountId={ea.accountId}
 																									setHasVulnerabilities={setIsVulnPresent}
+																									setHasCsecVulnerabilities={setIsCsecVulnPresent}
 																								/>
 																							)}
 																							{currentRepoId && (

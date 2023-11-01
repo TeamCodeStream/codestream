@@ -1,6 +1,9 @@
 import {
 	CriticalityType,
+	CsecLibraryDetails,
+	CsecVuln,
 	ERROR_VM_NOT_SETUP,
+	GetCsecLibraryDetailsType,
 	GetLibraryDetailsType,
 	LibraryDetails,
 	RiskSeverity,
@@ -19,7 +22,7 @@ import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { InlineMenu, MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import { SmartFormattedList } from "@codestream/webview/Stream/SmartFormattedList";
-import { useRequestType } from "@codestream/webview/utilities/hooks";
+import { useCsecRequestType, useRequestType } from "@codestream/webview/utilities/hooks";
 import { ResponseError } from "vscode-jsonrpc";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -31,6 +34,7 @@ interface Props {
 	entityGuid: string;
 	accountId: number;
 	setHasVulnerabilities: (value: boolean) => void;
+	setHasCsecVulnerabilities: (value: boolean) => void;
 }
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
@@ -130,6 +134,22 @@ function Additional(props: { onClick: () => void; additional?: number }) {
 	) : null;
 }
 
+function CsecAdditional(props: { onClick: () => void; csecAdditional?: number }) {
+	return props.csecAdditional && props.csecAdditional > 0 ? (
+		<Row
+			onClick={props.onClick}
+			style={{
+				padding: "0 10px 0 42px",
+			}}
+		>
+			<div>
+				<Icon style={{ transform: "scale(0.9)" }} name="plus" />
+			</div>
+			<div>See additional {props.csecAdditional} exploitable vulnerabilities</div>
+		</Row>
+	) : null;
+}
+
 function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	const { vuln } = props;
 	HostApi.instance.track("Vulnerability Clicked");
@@ -186,6 +206,62 @@ function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	);
 }
 
+function CsecVulnView(props: { csecVuln: CsecVuln; onClose: () => void }) {
+	const { csecVuln } = props;
+	HostApi.instance.track("Csec Vulnerability Clicked");
+	return (
+		<div className="codemark-form-container">
+			<div className="codemark-form standard-form vscroll">
+				<div className="form-body" style={{ padding: "20px 5px 20px 28px" }}>
+					<div className="contents">
+						<CardTitle>
+							<Icon name="lock" className="ticket-icon" />
+							<div className="title">{csecVuln.title}</div>
+							<div
+								className="link-to-ticket"
+								onClick={() => {
+									if (csecVuln.url) {
+										HostApi.instance.send(OpenUrlRequestType, {
+											url: csecVuln.url,
+										});
+									}
+								}}
+							>
+								<Icon title="Open on web" className="clickable" name="globe" />
+							</div>
+						</CardTitle>
+						<div style={{ margin: "10px 0" }}>
+							<div>
+								<b>Fix version(s): </b>
+								{csecVuln.remediation.join(", ")}
+							</div>
+							<div>
+								<b>Criticality: </b>
+								{csecVuln.criticality}
+							</div>
+							<div>
+								<b>Issue Id: </b> {csecVuln.issueId}
+							</div>
+							<div>
+								<b>Source: </b> {csecVuln.source}
+							</div>
+							<div>
+								<b>CVSS score: </b> {csecVuln.score}
+							</div>
+							<div>
+								<b>CVSS vector: </b> <span style={{ fontSize: "80%" }}>{csecVuln.vector}</span>
+							</div>
+						</div>
+						<div>
+							<MarkdownText className="less-space" text={csecVuln.description} inline={false} />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
 function VulnRow(props: { vuln: Vuln }) {
 	const [expanded, setExpanded] = useState<boolean>(false);
 
@@ -212,6 +288,38 @@ function VulnRow(props: { vuln: Vuln }) {
 					}}
 				>
 					<VulnView vuln={props.vuln} onClose={() => setExpanded(false)} />
+				</Modal>
+			)}
+		</>
+	);
+}
+
+function CsecVulnRow(props: { csecVuln: CsecVuln }) {
+	const [csecExpanded, setCsecExpanded] = useState<boolean>(false);
+
+	return (
+		<>
+			<Row
+				style={{ padding: "0 10px 0 64px" }}
+				className={"pr-row"}
+				onClick={() => {
+					setCsecExpanded(!csecExpanded);
+				}}
+			>
+				<div>
+					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
+				</div>
+				<div>{props.csecVuln.title}</div>
+				<Severity severity={criticalityToRiskSeverity(props.csecVuln.criticality)} />
+			</Row>
+			{csecExpanded && (
+				<Modal
+					translucent
+					onClose={() => {
+						setCsecExpanded(false);
+					}}
+				>
+					<CsecVulnView csecVuln={props.csecVuln} onClose={() => setCsecExpanded(false)} />
 				</Modal>
 			)}
 		</>
@@ -254,10 +362,49 @@ function LibraryRow(props: { library: LibraryDetails }) {
 	);
 }
 
+function CsecLibraryRow(props: { csecLibrary: CsecLibraryDetails }) {
+	const [csecExpanded, setCsecExpanded] = useState<boolean>(false);
+	const { csecLibrary } = props;
+	const subtleText = csecLibrary.suggestedVersion
+		? `${csecLibrary.version} -> ${csecLibrary.suggestedVersion} (${csecLibrary.vulns.length})`
+		: `${csecLibrary.version} (${csecLibrary.vulns.length})`;
+	const tooltipText = csecLibrary.suggestedVersion
+		? `Recommended fix: upgrade ${csecLibrary.version} to ${csecLibrary.suggestedVersion}`
+		: undefined;
+
+	return (
+		<>
+			<Row
+				style={{ padding: "0 10px 0 42px" }}
+				className={"pr-row"}
+				onClick={() => {
+					setCsecExpanded(!csecExpanded);
+				}}
+			>
+				<div>
+					{csecExpanded && <Icon name="chevron-down-thin" />}
+					{!csecExpanded && <Icon name="chevron-right-thin" />}
+				</div>
+				<div>
+					{csecLibrary.name}{" "}
+					<Tooltip placement="bottom" title={tooltipText} delay={1}>
+						<span className="subtle">{subtleText}</span>
+					</Tooltip>
+				</div>
+				<Severity severity={criticalityToRiskSeverity(csecLibrary.highestCriticality)} />
+			</Row>
+			{csecExpanded && csecLibrary.vulns.map(vuln => <CsecVulnRow csecVuln={vuln} />)}
+		</>
+	);
+}
+
 export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(["CRITICAL", "HIGH"]);
 	const [rows, setRows] = useState<number | undefined | "all">(undefined);
+	const [csecExpanded, setCsecExpanded] = useState<boolean>(false);
+	const [csecSelectedItems, setCsecSelectedItems] = useState<RiskSeverity[]>(["CRITICAL", "HIGH"]);
+	const [csecRows, setCsecRows] = useState<number | undefined | "all">(undefined);
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
@@ -274,6 +421,21 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		true
 	);
 
+	const { csecLoading, csecData, csecError } = useCsecRequestType<
+		typeof GetCsecLibraryDetailsType,
+		ResponseError<void>
+	>(
+		GetCsecLibraryDetailsType,
+		{
+			entityGuid: props.entityGuid,
+			accountId: props.accountId,
+			severityFilter: isEmpty(csecSelectedItems) ? undefined : csecSelectedItems,
+			rows,
+		},
+		[csecSelectedItems, props.entityGuid, csecRows, csecExpanded],
+		true
+	);
+
 	function handleSelect(severity: RiskSeverity) {
 		if (selectedItems.includes(severity)) {
 			setSelectedItems(selectedItems.filter(_ => _ !== severity));
@@ -282,7 +444,17 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		}
 	}
 
+	function handleCsecSelect(severity: RiskSeverity) {
+		if (csecSelectedItems.includes(severity)) {
+			setCsecSelectedItems(csecSelectedItems.filter(_ => _ !== severity));
+		} else {
+			setCsecSelectedItems([...csecSelectedItems, severity]);
+		}
+	}
+
 	const additional = data ? data.totalRecords - data.recordCount : undefined;
+
+	const csecAdditional = csecData ? csecData.totalRecords - csecData.recordCount : undefined;
 
 	const menuItems: MenuItem[] = riskSeverityList.map(severity => {
 		return {
@@ -293,8 +465,21 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		};
 	});
 
+	const csecMenuItems: MenuItem[] = riskSeverityList.map(severity => {
+		return {
+			label: lowerCase(severity),
+			key: severity,
+			checked: csecSelectedItems.includes(severity),
+			action: () => handleCsecSelect(severity),
+		};
+	});
+
 	function loadAll() {
 		setRows("all");
+	}
+
+	function csecLoadAll() {
+		setCsecRows("all");
 	}
 
 	const getErrorDetails = React.useCallback(
@@ -323,14 +508,53 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		[error]
 	);
 
+	const getCsecErrorDetails = React.useCallback(
+		(csecError: Error): JSX.Element => {
+			const unexpectedError = (
+				<ErrorRow title="Error fetching data from New Relic" customPadding={"0 10px 0 42px"} />
+			);
+			if (isResponseUrlError(csecError)) {
+				if (csecError.code === ERROR_VM_NOT_SETUP) {
+					return (
+						<div
+							style={{
+								padding: "0px 10px 0px 49px",
+							}}
+						>
+							<span>Get started with </span>
+							<Link href={csecError.data!.url}>vulnerability management</Link>
+						</div>
+					);
+				} else {
+					return unexpectedError;
+				}
+			}
+			return unexpectedError;
+		},
+		[csecError]
+	);
+
 	useEffect(() => {
 		if (data && data.totalRecords > 0) {
 			props.setHasVulnerabilities(true);
 		}
 	}, [data, props.setHasVulnerabilities]);
 
+	useEffect(() => {
+		if (csecData && csecData.totalRecords > 0) {
+			props.setHasCsecVulnerabilities(true);
+		}
+	}, [csecData, props.setHasCsecVulnerabilities]);
+
 	const warningTooltip =
-		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
+		data && data.totalRecords === 1
+			? "1 vulnerable library"
+			: `${data?.totalRecords} vulnerable libraries`;
+
+	const csecWarningTooltip =
+		csecData && csecData.totalRecords === 1
+			? "1 exploitable vulnerability"
+			: `${csecData?.totalRecords} exploitable vulnerabilities`;
 
 	return (
 		<>
@@ -351,7 +575,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					data-testid={`vulnerabilities-${props.entityGuid}`}
 					style={{ marginLeft: "2px", marginRight: "5px" }}
 				>
-					Vulnerabilities
+					Vulnerable Libraries
 				</span>
 
 				{data && data.totalRecords > 0 && (
@@ -388,9 +612,68 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					<Additional onClick={loadAll} additional={additional} />
 				</>
 			)}
+			<Row
+				style={{
+					padding: "2px 10px 2px 30px",
+					alignItems: "baseline",
+				}}
+				className="vuln"
+				onClick={() => {
+					setCsecExpanded(!csecExpanded);
+				}}
+				data-testid={`security-issues-dropdown`}
+			>
+				{csecExpanded && <Icon name="chevron-down-thin" />}
+				{!csecExpanded && <Icon name="chevron-right-thin" />}
+				<span
+					data-testid={`vulnerabilities-${props.entityGuid}`}
+					style={{ marginLeft: "2px", marginRight: "5px" }}
+				>
+					Exploitable Vulnerabilities
+				</span>
+
+				{csecData && csecData.totalRecords > 0 && (
+					<Icon
+						name="alert"
+						style={{ color: "rgb(188,20,24)", paddingRight: "5px" }}
+						className="alert"
+						title={csecWarningTooltip}
+						delay={1}
+						data-testid={`vulnerabilities-alert-icon`}
+					/>
+				)}
+				<InlineMenu
+					title="Filter Items"
+					preventMenuStopPropagation={true}
+					items={csecMenuItems}
+					align="bottomRight"
+					isMultiSelect={true}
+					dontCloseOnSelect={true}
+					className="dropdown"
+				>
+					<SmartFormattedList
+						value={isEmpty(csecSelectedItems) ? ["All"] : csecSelectedItems.map(lowerCase)}
+					/>
+				</InlineMenu>
+			</Row>
+			{csecLoading && csecExpanded && <ObservabilityLoadingVulnerabilities />}
+			{csecError && csecExpanded && getCsecErrorDetails(csecError)}
+			{csecExpanded && !csecLoading && csecData && csecData.totalRecords > 0 && (
+				<>
+					{csecData.libraries.map(library => {
+						return <CsecLibraryRow csecLibrary={library} />;
+					})}
+					<CsecAdditional onClick={csecLoadAll} csecAdditional={csecAdditional} />
+				</>
+			)}
 			{expanded && !loading && data && data.totalRecords === 0 && (
 				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
-					👍 No vulnerabilities found
+					👍 No vulnerable libraries found
+				</Row>
+			)}
+			{csecExpanded && !csecLoading && csecData && csecData.totalRecords === 0 && (
+				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
+					👍 No exploitable vulnerabilities found
 				</Row>
 			)}
 		</>

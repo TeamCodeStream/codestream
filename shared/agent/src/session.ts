@@ -831,6 +831,10 @@ export class CodeStreamSession {
 		return this.environmentInfo.newRelicSecApiUrl;
 	}
 
+	get csecApiUrl() {
+		return this.environmentInfo.csecApiUrl;
+	}
+
 	get disableStrictSSL(): boolean {
 		return this._options.disableStrictSSL != null ? this._options.disableStrictSSL : false;
 	}
@@ -967,6 +971,7 @@ export class CodeStreamSession {
 			newRelicLandingServiceUrl: response.newRelicLandingServiceUrl,
 			newRelicApiUrl: response.newRelicApiUrl,
 			newRelicSecApiUrl: response.newRelicSecApiUrl,
+			csecApiUrl: response.csecApiUrl,
 			environmentHosts: response.environmentHosts,
 		};
 		Logger.log("Got environment from connectivity response:", this._environmentInfo);
