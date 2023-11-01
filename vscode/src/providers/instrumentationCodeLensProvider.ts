@@ -418,9 +418,9 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			}
 
 			const methodLevelTelemetryRequestOptions: FileLevelTelemetryRequestOptions = {
-				includeAverageDuration: this.codeLensTemplate.indexOf("${averageDuration}") > -1,
-				includeThroughput: this.codeLensTemplate.indexOf("${sampleSize}") > -1,
-				includeErrorRate: this.codeLensTemplate.indexOf("${errorRate}") > -1
+				includeAverageDuration: this.codeLensTemplate.includes("${averageDuration}"),
+				includeThroughput: this.codeLensTemplate.includes("${sampleSize}"),
+				includeErrorRate: this.codeLensTemplate.includes("${errorRate}")
 			};
 
 			let functionLocator: FunctionLocator | undefined = undefined;
