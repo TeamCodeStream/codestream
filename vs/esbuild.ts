@@ -11,7 +11,7 @@ const agentDistTarget = path.resolve(__dirname, "../shared/agent/dist");
 const copy = copyPlugin({
 	onEnd: [
 		{
-			from: path.resolve(__dirname, "../shared/ui/newrelic-browser.js"),
+			from: path.resolve(__dirname, "../shared/webviews/newrelic-browser.js"),
 			to: path.resolve(__dirname, "src/resources/webview"),
 		},
 		{
