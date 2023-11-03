@@ -9,6 +9,8 @@ using Serilog;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+
+using CodeStream.VisualStudio.Shared.Authentication;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Services;
 
@@ -104,7 +106,9 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 			_sessionService.IsWebViewVisible = newValue;
 
 			if (!_sessionService.IsReady)
+			{
 				return;
+			}
 
 			if (!newValue && e.OldValue.AsBool())
 			{
@@ -202,7 +206,7 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 									_componentModel.GetService<IEditorService>(),
 									_componentModel.GetService<IAuthenticationServiceFactory>(),
 									_componentModel.GetService<IMessageInterceptorService>(),
-									_componentModel.GetService<ICredentialsService>(),
+									_componentModel.GetService<ICredentialManager>(),
 									_componentModel.GetService<ISymbolService>()
 								);
 
@@ -235,7 +239,9 @@ namespace CodeStream.VisualStudio.Shared.UI.ToolWindows
 		protected virtual void Dispose(bool disposing)
 		{
 			if (_disposed)
+			{
 				return;
+			}
 
 			if (disposing)
 			{

@@ -1,20 +1,24 @@
-﻿using CodeStream.VisualStudio.Core.Events;
-using CodeStream.VisualStudio.Core.Logging;
-using CodeStream.VisualStudio.Core.Models;
-using Microsoft.VisualStudio.Shell;
-using Newtonsoft.Json.Linq;
-using Serilog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Core.Logging;
+using CodeStream.VisualStudio.Core.Models;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
 using CodeStream.VisualStudio.Shared.Services;
 
-namespace CodeStream.VisualStudio.Shared.Controllers
+using Microsoft.VisualStudio.Shell;
+
+using Newtonsoft.Json.Linq;
+
+using Serilog;
+
+namespace CodeStream.VisualStudio.Shared.Authentication
 {
 	public class AuthenticationController
 	{
@@ -24,39 +28,39 @@ namespace CodeStream.VisualStudio.Shared.Controllers
 		private readonly ISessionService _sessionService;
 		private readonly ICodeStreamAgentService _codeStreamAgent;
 		private readonly IEventAggregator _eventAggregator;
-		private readonly ICredentialsService _credentialsService;
 		private readonly IWebviewUserSettingsService _webviewUserSettingsService;
+		private readonly ICredentialManager _credentialManager;
 
 		public AuthenticationController(
 			ICodeStreamSettingsManager codeStreamSettingManager,
 			ISessionService sessionService,
 			ICodeStreamAgentService codeStreamAgent,
 			IEventAggregator eventAggregator,
-			ICredentialsService credentialsService,
-			IWebviewUserSettingsService webviewUserSettingsService
+			IWebviewUserSettingsService webviewUserSettingsService,
+			ICredentialManager credentialManager
 		)
 		{
 			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_codeStreamAgent = codeStreamAgent;
 			_eventAggregator = eventAggregator;
-			_credentialsService = credentialsService;
 			_webviewUserSettingsService = webviewUserSettingsService;
+			_credentialManager = credentialManager;
 		}
 
 		public AuthenticationController(
 			ICodeStreamSettingsManager codeStreamSettingManager,
 			ISessionService sessionService,
 			IEventAggregator eventAggregator,
-			ICredentialsService credentialsService,
-			IWebviewUserSettingsService webviewUserSettingsService
+			IWebviewUserSettingsService webviewUserSettingsService,
+			ICredentialManager credentialManager
 		)
 		{
 			_codeStreamSettingsManager = codeStreamSettingManager;
 			_sessionService = sessionService;
 			_eventAggregator = eventAggregator;
-			_credentialsService = credentialsService;
 			_webviewUserSettingsService = webviewUserSettingsService;
+			_credentialManager = credentialManager;
 		}
 
 		public async Task<bool> TryAutoSignInAsync()
@@ -73,11 +77,17 @@ namespace CodeStream.VisualStudio.Shared.Controllers
 				}
 
 				var teamId = _codeStreamSettingsManager.Team;
-				var token = await _credentialsService.LoadJsonAsync(
-					_codeStreamSettingsManager.ServerUrl.ToUri(),
+
+				var token = _credentialManager.GetCredential(
+					_codeStreamSettingsManager.ServerUrl,
 					_codeStreamSettingsManager.Email,
 					teamId
 				);
+				//var token = await _credentialsService.LoadJsonAsync(
+				//	_codeStreamSettingsManager.ServerUrl.ToUri(),
+				//	_codeStreamSettingsManager.Email,
+				//	teamId
+				//);
 
 				if (token != null)
 				{
@@ -106,11 +116,16 @@ namespace CodeStream.VisualStudio.Shared.Controllers
 							&& loginResult != LoginResult.VERSION_UNSUPPORTED
 						)
 						{
-							await _credentialsService.DeleteAsync(
-								_codeStreamSettingsManager.ServerUrl.ToUri(),
+							_credentialManager.DeleteCredential(
+								_codeStreamSettingsManager.ServerUrl,
 								_codeStreamSettingsManager.Email,
 								teamId
 							);
+							//await _credentialsService.DeleteAsync(
+							//	_codeStreamSettingsManager.ServerUrl.ToUri(),
+							//	_codeStreamSettingsManager.Email,
+							//	teamId
+							//);
 						}
 
 						return false;
@@ -174,12 +189,18 @@ namespace CodeStream.VisualStudio.Shared.Controllers
 
 			if (_codeStreamSettingsManager.AutoSignIn)
 			{
-				_credentialsService.SaveJson(
-					_codeStreamSettingsManager.ServerUrl.ToUri(),
-					email,
-					GetAccessToken(loginResponse),
-					teamId
+				_credentialManager.StoreCredential(
+					_codeStreamSettingsManager.ServerUrl,
+					_codeStreamSettingsManager.Email,
+					teamId,
+					GetAccessToken(loginResponse)
 				);
+				//_credentialsService.SaveJson(
+				//	_codeStreamSettingsManager.ServerUrl.ToUri(),
+				//	email,
+				//	GetAccessToken(loginResponse),
+				//	teamId
+				//);
 			}
 
 			_webviewUserSettingsService.SaveTeamId(_sessionService.SolutionName, teamId);

@@ -10,6 +10,7 @@ using CodeStream.VisualStudio.Core.Events;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Logging;
 using CodeStream.VisualStudio.Core.Models;
+using CodeStream.VisualStudio.Shared.Authentication;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Extensions;
 using CodeStream.VisualStudio.Shared.LanguageServer;
@@ -44,7 +45,7 @@ namespace CodeStream.VisualStudio.Shared
 		private readonly IEditorService _editorService;
 		private readonly IAuthenticationServiceFactory _authenticationServiceFactory;
 		private readonly IMessageInterceptorService _messageInterceptorService;
-		private readonly ICredentialsService _credentialsService;
+		private readonly ICredentialManager _credentialManager;
 		private readonly ISymbolService _symbolService;
 
 		public WebViewRouter(
@@ -60,7 +61,7 @@ namespace CodeStream.VisualStudio.Shared
 			IEditorService editorService,
 			IAuthenticationServiceFactory authenticationServiceFactory,
 			IMessageInterceptorService messageInterceptorService,
-			ICredentialsService credentialsService,
+			ICredentialManager credentialManager,
 			ISymbolService symbolService
 		)
 		{
@@ -76,7 +77,7 @@ namespace CodeStream.VisualStudio.Shared
 			_editorService = editorService;
 			_authenticationServiceFactory = authenticationServiceFactory;
 			_messageInterceptorService = messageInterceptorService;
-			_credentialsService = credentialsService;
+			_credentialManager = credentialManager;
 			_symbolService = symbolService;
 		}
 
@@ -776,19 +777,19 @@ namespace CodeStream.VisualStudio.Shared
 												&& @params.CurrentTeamId != null
 											)
 											{
-												var token = await _credentialsService.LoadAsync(
-													_codeStreamSettingsManager.ServerUrl.ToUri(),
+												var token = _credentialManager.GetCredential(
+													_codeStreamSettingsManager.ServerUrl,
 													_codeStreamSettingsManager.Email,
 													@params.CurrentTeamId
 												);
 
 												if (token != null)
 												{
-													await _credentialsService.SaveAsync(
-														@params.ServerUrl.ToUri(),
+													_credentialManager.StoreCredential(
+														@params.ServerUrl,
 														_codeStreamSettingsManager.Email,
-														token.Item2,
-														@params.CurrentTeamId
+														@params.CurrentTeamId,
+														token
 													);
 												}
 											}

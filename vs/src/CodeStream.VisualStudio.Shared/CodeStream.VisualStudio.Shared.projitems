@@ -9,6 +9,7 @@
     <Import_RootNamespace>CodeStream.VisualStudio.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)authentication\CredentialManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)CamelCaseStringEnumConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\AddCodemarkCommandBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\AddCodemarkCommands.cs" />
@@ -21,7 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Commands\VsCommandBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewReloadCommand.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Commands\WebViewToggleCommand.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Controllers\AuthenticationController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Authentication\AuthenticationController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Controllers\ConfigurationController.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\NRApiErrorException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Exceptions\VisualStudioSettingException.cs" />
@@ -67,7 +68,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Editor.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Notifications.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Review.cs" />    
+    <Compile Include="$(MSBuildThisFileDirectory)Models\Host.Protocol.Review.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\IOptions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\IpcScope.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Models\MessageTypes.cs" />
@@ -211,5 +212,8 @@
     <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\index.ts" />
     <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\theme.css" />
     <Content Include="$(MSBuildThisFileDirectory)UI\WebViews\waiting.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Authentication\" />
   </ItemGroup>
 </Project>

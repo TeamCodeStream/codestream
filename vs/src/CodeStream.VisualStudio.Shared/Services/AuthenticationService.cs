@@ -7,6 +7,7 @@ using Serilog;
 using System;
 using System.ComponentModel.Composition;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Shared.Authentication;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.LanguageServer;
 using CodeStream.VisualStudio.Shared.Models;
@@ -37,7 +38,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 		public IEventAggregator EventAggregator { get; set; }
 
 		[Import]
-		public ICredentialsService CredentialsService { get; set; }
+		public ICredentialManager CredentialManager { get; set; }
 
 		[Import]
 		public ICodeStreamAgentService CodeStreamAgentService { get; set; }
@@ -94,8 +95,9 @@ namespace CodeStream.VisualStudio.Shared.Services
 						var settingsService = SettingsServiceFactory.GetOrCreate(
 							nameof(AuthenticationService)
 						);
-						await CredentialsService.DeleteAsync(
-							settingsService.ServerUrl.ToUri(),
+
+						CredentialManager.DeleteCredential(
+							settingsService.ServerUrl,
 							settingsService.Email,
 							settingsService.Team
 						);

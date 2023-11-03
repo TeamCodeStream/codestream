@@ -8,6 +8,7 @@ using StreamJsonRpc;
 using System;
 using System.Threading.Tasks;
 using CodeStream.VisualStudio.Core;
+using CodeStream.VisualStudio.Shared.Authentication;
 using CodeStream.VisualStudio.Shared.Controllers;
 using CodeStream.VisualStudio.Shared.Events;
 using CodeStream.VisualStudio.Shared.Models;
@@ -38,7 +39,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 			ISettingsServiceFactory settingsServiceFactory,
 			IHttpClientService httpClientService,
 			IFileResolutionService fileResolutionService,
-			ICredentialsService credentialsService,
+			ICredentialManager credentialManager,
 			ILogger logger
 		)
 		{
@@ -58,7 +59,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 					browserServiceFactory,
 					SettingsServiceFactory,
 					fileResolutionService,
-					credentialsService
+					credentialManager
 				);
 
 				Log.Ctor();
@@ -235,8 +236,8 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 						componentModel.GetService<ISessionService>(),
 						codeStreamAgentService,
 						EventAggregator,
-						componentModel.GetService<ICredentialsService>(),
-						componentModel.GetService<IWebviewUserSettingsService>()
+						componentModel.GetService<IWebviewUserSettingsService>(),
+						componentModel.GetService<ICredentialManager>()
 					);
 					autoSignInResult = await authenticationController.TryAutoSignInAsync();
 				}

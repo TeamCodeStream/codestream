@@ -22,6 +22,7 @@ using System.Security.Policy;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using CodeStream.VisualStudio.Core.Extensions;
+using CodeStream.VisualStudio.Shared.Authentication;
 
 namespace CodeStream.VisualStudio.Shared.Packages
 {
@@ -100,8 +101,8 @@ namespace CodeStream.VisualStudio.Shared.Packages
 				return;
 			}
 
-			var credentialService = _componentModel.GetService<ICredentialsService>();
-			Assumes.Present(credentialService);
+			var credentialManager = _componentModel.GetService<ICredentialManager>();
+			Assumes.Present(credentialManager);
 
 			var oldServerUrl = _codeStreamSettingsManager.ServerUrl.Trim();
 			var newServerUrl = tempUrlMap[_codeStreamSettingsManager.ServerUrl];
@@ -111,19 +112,19 @@ namespace CodeStream.VisualStudio.Shared.Packages
 
 			if (_codeStreamSettingsManager.Email != null && _codeStreamSettingsManager.Team != null)
 			{
-				var token = await credentialService.LoadAsync(
-					oldServerUrl.ToUri(),
+				var token = credentialManager.GetCredential(
+					oldServerUrl,
 					_codeStreamSettingsManager.Email,
 					_codeStreamSettingsManager.Team
 				);
 
 				if (token != null)
 				{
-					await credentialService.SaveAsync(
-						newServerUrl.ToUri(),
+					credentialManager.StoreCredential(
+						newServerUrl,
 						_codeStreamSettingsManager.Email,
-						token.Item2,
-						_codeStreamSettingsManager.Team
+						_codeStreamSettingsManager.Team,
+						token
 					);
 				}
 			}
