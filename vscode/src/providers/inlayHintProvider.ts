@@ -1,4 +1,3 @@
-"use strict";
 import {
 	CancellationToken,
 	Disposable,
@@ -19,7 +18,7 @@ import { Strings } from "../system";
 import {
 	FileLevelTelemetryMetric,
 	FileLevelTelemetryRequestOptions
-} from "../../../shared/util/src/protocol/agent/agent.protocol.providers";
+} from "@codestream/protocols/agent";
 import { ISymbolLocator, SymbolLocator } from "./symbolLocator";
 import { IObservabilityService } from "agent/agentConnection";
 import {
@@ -36,8 +35,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "untitled" }];
 
 	private readonly _disposable: Disposable;
+	private readonly codeLensTemplate: string;
 	private _disposableSignedIn: Disposable | undefined;
-	private codeLensTemplate: string;
 
 	constructor(
 		private symbolLocator: ISymbolLocator = new SymbolLocator(),
@@ -73,8 +72,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 	}
 
 	// The symbol provider has doesn't differentiate between anonymous functions and named functions via the kind field
-	// and it pretty much returns random crap for the "name" of an anonymous function. So we can hopefully detect anonymous
-	// functions by the fact that they are invalid javascript varialbe names
+	// and it pretty much returns random crap for the "name" of an anonymous function. So we can hopefully detect
+	// anonymous functions by the fact that they are invalid javascript varialbe names
 	private isValidJavascriptFunctionName(functionName: string): boolean {
 		return functionName.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/) != null;
 	}
@@ -249,7 +248,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			});
 			const inlayHintLabelPart = new InlayHintLabelPart("(stats)");
 			inlayHintLabelPart.command = new InstrumentableSymbolCommand(
-				"show MLT stats",
+				"show telemetry details",
 				"codestream.viewMethodLevelTelemetry",
 				undefined,
 				[JSON.stringify(viewCommandArgs)]
