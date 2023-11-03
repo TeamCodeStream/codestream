@@ -1,9 +1,6 @@
 import {
 	CriticalityType,
-	CsecLibraryDetails,
-	CsecVuln,
 	ERROR_VM_NOT_SETUP,
-	GetCsecLibraryDetailsType,
 	GetLibraryDetailsType,
 	LibraryDetails,
 	RiskSeverity,
@@ -22,7 +19,7 @@ import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { InlineMenu, MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import { SmartFormattedList } from "@codestream/webview/Stream/SmartFormattedList";
-import { useCsecRequestType, useRequestType } from "@codestream/webview/utilities/hooks";
+import { useRequestType } from "@codestream/webview/utilities/hooks";
 import { ResponseError } from "vscode-jsonrpc";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -36,6 +33,36 @@ interface Props {
 	setHasVulnerabilities: (value: boolean) => void;
 	setHasCsecVulnerabilities: (value: boolean) => void;
 }
+
+export type CsecData = {
+	libraries: CsecDataLibrary[];
+	totalRecords: 1;
+	recordCount: 1;
+};
+
+export type CsecDataLibrary = {
+	accountId: string;
+	collectorType: string;
+	timestamp: number;
+	eventType: string;
+	applicationSHA256: string;
+	applicationUUID: string;
+	sourceMethod: string;
+	userFileName: string;
+	userMethodName: string;
+	lineNumber: number;
+	vulnerabilityCaseType: string;
+	incidentId: string;
+	traceId: string;
+	status: string;
+	severityLevel: CriticalityType;
+	vulnerabilityDetectionTimestamp: number;
+	entityName: string;
+	entityGuid: string;
+	payload?: any;
+	url: string;
+	vulnerabilityType: string;
+};
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
 	if (!obj) {
@@ -206,7 +233,7 @@ function VulnView(props: { vuln: Vuln; onClose: () => void }) {
 	);
 }
 
-function CsecVulnView(props: { csecVuln: CsecVuln; onClose: () => void }) {
+function CsecVulnView(props: { csecVuln: CsecDataLibrary; onClose: () => void }) {
 	const { csecVuln } = props;
 	HostApi.instance.track("Csec Vulnerability Clicked");
 	return (
@@ -216,7 +243,7 @@ function CsecVulnView(props: { csecVuln: CsecVuln; onClose: () => void }) {
 					<div className="contents">
 						<CardTitle>
 							<Icon name="lock" className="ticket-icon" />
-							<div className="title">{csecVuln.title}</div>
+							<div className="title">{csecVuln.vulnerabilityType}</div>
 							<div
 								className="link-to-ticket"
 								onClick={() => {
@@ -232,28 +259,35 @@ function CsecVulnView(props: { csecVuln: CsecVuln; onClose: () => void }) {
 						</CardTitle>
 						<div style={{ margin: "10px 0" }}>
 							<div>
-								<b>Fix version(s): </b>
-								{csecVuln.remediation.join(", ")}
+								<b>Severity: </b>
+								{csecVuln.severityLevel}
 							</div>
 							<div>
-								<b>Criticality: </b>
-								{csecVuln.criticality}
+								<b>Issue Id: </b>
+								{csecVuln.incidentId}
 							</div>
 							<div>
-								<b>Issue Id: </b> {csecVuln.issueId}
+								<b>Trace: </b> {csecVuln.traceId}
 							</div>
 							<div>
-								<b>Source: </b> {csecVuln.source}
+								<b>Detection Time: </b> {csecVuln.vulnerabilityDetectionTimestamp}
 							</div>
 							<div>
-								<b>CVSS score: </b> {csecVuln.score}
+								<b>File Name: </b> {csecVuln.userFileName}
 							</div>
 							<div>
-								<b>CVSS vector: </b> <span style={{ fontSize: "80%" }}>{csecVuln.vector}</span>
+								<b>Url: </b> <span style={{ fontSize: "80%" }}>{csecVuln.url}</span>
+							</div>
+							<div>
+								<b>Line Number: </b> <span style={{ fontSize: "80%" }}>{csecVuln.lineNumber}</span>
+							</div>
+							<div>
+								<b>Method Name: </b>{" "}
+								<span style={{ fontSize: "80%" }}>{csecVuln.userMethodName}</span>
 							</div>
 						</div>
 						<div>
-							<MarkdownText className="less-space" text={csecVuln.description} inline={false} />
+							<MarkdownText className="less-space" text={csecVuln.status} inline={false} />
 						</div>
 					</div>
 				</div>
@@ -294,7 +328,7 @@ function VulnRow(props: { vuln: Vuln }) {
 	);
 }
 
-function CsecVulnRow(props: { csecVuln: CsecVuln }) {
+function CsecVulnRow(props: { csecVuln: CsecDataLibrary }) {
 	const [csecExpanded, setCsecExpanded] = useState<boolean>(false);
 
 	return (
@@ -309,8 +343,8 @@ function CsecVulnRow(props: { csecVuln: CsecVuln }) {
 				<div>
 					<Icon style={{ transform: "scale(0.9)" }} name="lock" />
 				</div>
-				<div>{props.csecVuln.title}</div>
-				<Severity severity={criticalityToRiskSeverity(props.csecVuln.criticality)} />
+				<div>{props.csecVuln.vulnerabilityType}</div>
+				<Severity severity={criticalityToRiskSeverity(props.csecVuln.severityLevel)} />
 			</Row>
 			{csecExpanded && (
 				<Modal
@@ -362,15 +396,11 @@ function LibraryRow(props: { library: LibraryDetails }) {
 	);
 }
 
-function CsecLibraryRow(props: { csecLibrary: CsecLibraryDetails }) {
+function CsecLibraryRow(props: { csecLibrary: CsecDataLibrary }) {
 	const [csecExpanded, setCsecExpanded] = useState<boolean>(false);
 	const { csecLibrary } = props;
-	const subtleText = csecLibrary.suggestedVersion
-		? `${csecLibrary.version} -> ${csecLibrary.suggestedVersion} (${csecLibrary.vulns.length})`
-		: `${csecLibrary.version} (${csecLibrary.vulns.length})`;
-	const tooltipText = csecLibrary.suggestedVersion
-		? `Recommended fix: upgrade ${csecLibrary.version} to ${csecLibrary.suggestedVersion}`
-		: undefined;
+	const subtleText = csecLibrary.vulnerabilityCaseType;
+	const tooltipText = csecLibrary.sourceMethod;
 
 	return (
 		<>
@@ -386,14 +416,14 @@ function CsecLibraryRow(props: { csecLibrary: CsecLibraryDetails }) {
 					{!csecExpanded && <Icon name="chevron-right-thin" />}
 				</div>
 				<div>
-					{csecLibrary.name}{" "}
+					{csecLibrary.vulnerabilityType}{" "}
 					<Tooltip placement="bottom" title={tooltipText} delay={1}>
 						<span className="subtle">{subtleText}</span>
 					</Tooltip>
 				</div>
-				<Severity severity={criticalityToRiskSeverity(csecLibrary.highestCriticality)} />
+				<Severity severity={criticalityToRiskSeverity(csecLibrary.severityLevel)} />
 			</Row>
-			{csecExpanded && csecLibrary.vulns.map(vuln => <CsecVulnRow csecVuln={vuln} />)}
+			{csecExpanded && <CsecVulnRow csecVuln={csecLibrary} />}
 		</>
 	);
 }
@@ -421,20 +451,52 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		true
 	);
 
-	const { csecLoading, csecData, csecError } = useCsecRequestType<
-		typeof GetCsecLibraryDetailsType,
-		ResponseError<void>
-	>(
-		GetCsecLibraryDetailsType,
-		{
-			entityGuid: props.entityGuid,
-			accountId: props.accountId,
-			severityFilter: isEmpty(csecSelectedItems) ? undefined : csecSelectedItems,
-			rows,
-		},
-		[csecSelectedItems, props.entityGuid, csecRows, csecExpanded],
-		true
-	);
+	// const responseCsec = useRequestType<typeof GetCsecLibraryDetailsType, ResponseError<void>>(
+	// 	GetCsecLibraryDetailsType,
+	// 	{
+	// 		entityGuid: props.entityGuid,
+	// 		accountId: props.accountId,
+	// 		severityFilter: isEmpty(csecSelectedItems) ? undefined : csecSelectedItems,
+	// 		rows,
+	// 	},
+	// 	[csecSelectedItems, props.entityGuid, csecRows, csecExpanded],
+	// 	true
+	// );
+
+	const csecLoading = false;
+	// const csecData = responseCsec.data;
+	const csecError = false;
+
+	const csecData: CsecData = {
+		libraries: [
+			{
+				accountId: "11188139",
+				collectorType: "JAVA",
+				timestamp: 1698823850644,
+				eventType: "sec_iast_record",
+				applicationSHA256: "",
+				applicationUUID: "dec2869a-266f-4a06-b94d-fe437d1f57d5",
+				sourceMethod: "java.io.FileOutputStream.open(FileOutputStream.java:59)",
+				userFileName: "com.k2.testapp.k2javavulnerableperf.controller.FileOperation",
+				userMethodName: "writeFilePathByBodyBlind",
+				lineNumber: 245,
+				vulnerabilityCaseType: "FILE_INTEGRITY",
+				incidentId:
+					"FILE_INTEGRITY-2125583191856551835MTExODgxMzl8QVBNfEFQUExJQ0FUSU9OfDk3ODUxMzY51f2a679f-6736-48d4-ad80-63dab8edfd6e1",
+				traceId: "FILE_INTEGRITY-2125583191856551835",
+				status: "VULNERABLE",
+				severityLevel: "CRITICAL",
+				vulnerabilityDetectionTimestamp: 1698823850636,
+				entityName: "ic-k2-java-vulnerable-perf-codestream",
+				entityGuid: "MTExODgxMzl8QVBNfEFQUExJQ0FUSU9OfDk3ODUxMzY5",
+				payload: null,
+				url: "/file/write/blind",
+				vulnerabilityType: "Application Integrity Violation",
+			},
+		],
+		totalRecords: 1,
+		recordCount: 1,
+	};
 
 	function handleSelect(severity: RiskSeverity) {
 		if (selectedItems.includes(severity)) {
@@ -671,7 +733,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					👍 No vulnerable libraries found
 				</Row>
 			)}
-			{csecExpanded && !csecLoading && csecData && csecData.totalRecords === 0 && (
+			{csecExpanded && !csecLoading && csecData && !csecData.totalRecords && (
 				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
 					👍 No exploitable vulnerabilities found
 				</Row>
