@@ -78,16 +78,11 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 
 				var teamId = _codeStreamSettingsManager.Team;
 
-				var token = _credentialManager.GetCredential(
+				var token = await _credentialManager.GetCredentialAsync(
 					_codeStreamSettingsManager.ServerUrl,
 					_codeStreamSettingsManager.Email,
 					teamId
 				);
-				//var token = await _credentialsService.LoadJsonAsync(
-				//	_codeStreamSettingsManager.ServerUrl.ToUri(),
-				//	_codeStreamSettingsManager.Email,
-				//	teamId
-				//);
 
 				if (token != null)
 				{
@@ -116,16 +111,11 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 							&& loginResult != LoginResult.VERSION_UNSUPPORTED
 						)
 						{
-							_credentialManager.DeleteCredential(
+							await _credentialManager.DeleteCredentialAsync(
 								_codeStreamSettingsManager.ServerUrl,
 								_codeStreamSettingsManager.Email,
 								teamId
 							);
-							//await _credentialsService.DeleteAsync(
-							//	_codeStreamSettingsManager.ServerUrl.ToUri(),
-							//	_codeStreamSettingsManager.Email,
-							//	teamId
-							//);
 						}
 
 						return false;
@@ -189,18 +179,12 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 
 			if (_codeStreamSettingsManager.AutoSignIn)
 			{
-				_credentialManager.StoreCredential(
+				_ = _credentialManager.StoreCredentialAsync(
 					_codeStreamSettingsManager.ServerUrl,
 					_codeStreamSettingsManager.Email,
 					teamId,
 					GetAccessToken(loginResponse)
 				);
-				//_credentialsService.SaveJson(
-				//	_codeStreamSettingsManager.ServerUrl.ToUri(),
-				//	email,
-				//	GetAccessToken(loginResponse),
-				//	teamId
-				//);
 			}
 
 			_webviewUserSettingsService.SaveTeamId(_sessionService.SolutionName, teamId);

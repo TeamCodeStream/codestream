@@ -80,12 +80,6 @@
     <Compile Include="Enums\CodeLevelMetricStatus.cs" />
     <Compile Include="CodeLevelMetrics\ICodeLevelMetricsCallbackService.cs" />
     <Compile Include="CodeLevelMetrics\IRemoteCodeLens.cs" />
-    <Compile Include="Credentials\Credential.cs" />
-    <Compile Include="Credentials\CredentialSet.cs" />
-    <Compile Include="Credentials\CredentialType.cs" />
-    <Compile Include="Credentials\NativeMethods.cs" />
-    <Compile Include="Credentials\PersistanceType.cs" />
-    <Compile Include="Credentials\SecureStringHelper.cs" />
     <Compile Include="Enums\VisualStudioSetting.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventBase.cs" />

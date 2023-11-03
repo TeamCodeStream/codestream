@@ -777,15 +777,16 @@ namespace CodeStream.VisualStudio.Shared
 												&& @params.CurrentTeamId != null
 											)
 											{
-												var token = _credentialManager.GetCredential(
-													_codeStreamSettingsManager.ServerUrl,
-													_codeStreamSettingsManager.Email,
-													@params.CurrentTeamId
-												);
+												var token =
+													await _credentialManager.GetCredentialAsync(
+														_codeStreamSettingsManager.ServerUrl,
+														_codeStreamSettingsManager.Email,
+														@params.CurrentTeamId
+													);
 
 												if (token != null)
 												{
-													_credentialManager.StoreCredential(
+													await _credentialManager.StoreCredentialAsync(
 														@params.ServerUrl,
 														_codeStreamSettingsManager.Email,
 														@params.CurrentTeamId,

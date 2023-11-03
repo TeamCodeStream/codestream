@@ -96,7 +96,7 @@ namespace CodeStream.VisualStudio.Shared.Services
 							nameof(AuthenticationService)
 						);
 
-						CredentialManager.DeleteCredential(
+						await CredentialManager.DeleteCredentialAsync(
 							settingsService.ServerUrl,
 							settingsService.Email,
 							settingsService.Team

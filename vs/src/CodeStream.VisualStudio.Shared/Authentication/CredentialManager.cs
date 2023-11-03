@@ -1,14 +1,12 @@
 using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell;
 using System.ComponentModel.Composition;
 using System;
-using Microsoft.VisualStudio;
 using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using CodeStream.VisualStudio.Shared.Extensions;
 using System.Text;
-
+using Task = System.Threading.Tasks.Task;
 using CodeStream.VisualStudio.Core.Logging;
 
 using Microsoft;
@@ -16,13 +14,15 @@ using Microsoft;
 using Serilog;
 using Microsoft.VisualStudio.Shell.Settings;
 
+using System.Threading.Tasks;
+
 namespace CodeStream.VisualStudio.Shared.Authentication
 {
 	public interface ICredentialManager
 	{
-		void DeleteCredential(string serverUrl, string email, string teamId);
-		JToken GetCredential(string serverUrl, string email, string teamId);
-		void StoreCredential(string serverUrl, string email, string teamId, JToken token);
+		Task DeleteCredentialAsync(string serverUrl, string email, string teamId);
+		Task<JToken> GetCredentialAsync(string serverUrl, string email, string teamId);
+		Task StoreCredentialAsync(string serverUrl, string email, string teamId, JToken token);
 	}
 
 	[Export(typeof(ICredentialManager))]
@@ -60,16 +60,21 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 				? $"{serverUrl}|{email}"
 				: $"{serverUrl}|{email}|{teamId}".ToLowerInvariant();
 
-		public void StoreCredential(string serverUrl, string email, string teamId, JToken token)
+		public async Task StoreCredentialAsync(
+			string serverUrl,
+			string email,
+			string teamId,
+			JToken token
+		)
 		{
 			var usernameKey = FormatKey(serverUrl, email, teamId);
 
-			StoreCredential(usernameKey, token.ToJson());
+			await StoreCredentialAsync(usernameKey, token.ToJson());
 		}
 
-		private void StoreCredential(string usernameKey, string token)
+		private async Task StoreCredentialAsync(string usernameKey, string token)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			try
 			{
@@ -87,20 +92,20 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, $"{nameof(StoreCredential)}|Unable to store credential");
+				Log.Error(ex, $"{nameof(StoreCredentialAsync)}|Unable to store credential");
 			}
 		}
 
-		public JToken GetCredential(string serverUrl, string email, string teamId)
+		public async Task<JToken> GetCredentialAsync(string serverUrl, string email, string teamId)
 		{
 			var usernameKey = FormatKey(serverUrl, email, teamId);
 
-			return GetCredential(usernameKey);
+			return await GetCredentialAsync(usernameKey);
 		}
 
-		private JToken GetCredential(string usernameKey)
+		private async Task<JToken> GetCredentialAsync(string usernameKey)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			try
 			{
@@ -119,21 +124,21 @@ namespace CodeStream.VisualStudio.Shared.Authentication
 			}
 			catch (Exception ex)
 			{
-				Log.Error(ex, $"{nameof(GetCredential)}|Unable to acquire credential");
+				Log.Error(ex, $"{nameof(GetCredentialAsync)}|Unable to acquire credential");
 
 				return null;
 			}
 		}
 
-		public void DeleteCredential(string serverUrl, string email, string teamId)
+		public async Task DeleteCredentialAsync(string serverUrl, string email, string teamId)
 		{
 			var usernameKey = FormatKey(serverUrl, email, teamId);
-			DeleteCredential(usernameKey);
+			await DeleteCredentialAsync(usernameKey);
 		}
 
-		private void DeleteCredential(string usernameKey)
+		private async Task DeleteCredentialAsync(string usernameKey)
 		{
-			ThreadHelper.ThrowIfNotOnUIThread();
+			await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			_settingsStore.DeleteProperty(CollectionName, usernameKey);
 		}

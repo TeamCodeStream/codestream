@@ -99,8 +99,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\CredentialsService.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\CredentialsServiceBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\DotNetBrowserService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EditorService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\EventAggregator.cs" />
@@ -114,7 +112,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamAgentServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\ICodeStreamSettingsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\ICredentialsService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IdeService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Providers\ShellSettingsProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\IEditorService.cs" />

@@ -225,7 +225,9 @@ namespace CodeStream.VisualStudio.Shared.Packages
 			await JoinableTaskFactory.SwitchToMainThreadAsync();
 			var solService = await GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
 			if (solService == null)
+			{
 				return false;
+			}
 			ErrorHandler.ThrowOnFailure(
 				solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value)
 			);

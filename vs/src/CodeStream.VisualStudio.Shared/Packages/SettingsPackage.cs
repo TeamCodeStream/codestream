@@ -112,7 +112,7 @@ namespace CodeStream.VisualStudio.Shared.Packages
 
 			if (_codeStreamSettingsManager.Email != null && _codeStreamSettingsManager.Team != null)
 			{
-				var token = credentialManager.GetCredential(
+				var token = await credentialManager.GetCredentialAsync(
 					oldServerUrl,
 					_codeStreamSettingsManager.Email,
 					_codeStreamSettingsManager.Team
@@ -120,7 +120,7 @@ namespace CodeStream.VisualStudio.Shared.Packages
 
 				if (token != null)
 				{
-					credentialManager.StoreCredential(
+					await credentialManager.StoreCredentialAsync(
 						newServerUrl,
 						_codeStreamSettingsManager.Email,
 						_codeStreamSettingsManager.Team,

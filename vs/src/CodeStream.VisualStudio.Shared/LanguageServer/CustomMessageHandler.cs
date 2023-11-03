@@ -576,13 +576,13 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 					e.ToObject<DidRefreshAccessTokenNotification>()
 				);
 
-				_credentialManager.DeleteCredential(
+				await _credentialManager.DeleteCredentialAsync(
 					notification.Params.Url,
 					notification.Params.Email,
 					notification.Params.TeamId
 				);
 
-				_credentialManager.StoreCredential(
+				await _credentialManager.StoreCredentialAsync(
 					notification.Params.Url,
 					notification.Params.Email,
 					notification.Params.TeamId,
