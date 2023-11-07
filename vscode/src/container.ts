@@ -57,9 +57,9 @@ export class Container {
 		context.subscriptions.push((this._diffContents = new ReviewDiffContentProvider()));
 		context.subscriptions.push((this._gitContents = new GitContentProvider()));
 		context.subscriptions.push((this._markerDecorations = new CodemarkDecorationProvider()));
-		// context.subscriptions.push(
-		// 	(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
-		// );
+		context.subscriptions.push(
+			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
+		);
 		// context.subscriptions.push((this._inlayHintsController = new InlayHintsController()));
 		context.subscriptions.push((this._inlayHintsProvider = new CodeStreamInlayHintsProvider()));
 		context.subscriptions.push(new CodemarkPatchContentProvider());

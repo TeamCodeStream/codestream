@@ -20,7 +20,7 @@ import {
 	FileLevelTelemetryRequestOptions
 } from "@codestream/protocols/agent";
 import { ISymbolLocator, SymbolLocator } from "./symbolLocator";
-import { IObservabilityService } from "agent/agentConnection";
+import { IObservabilityService, observabilityService } from "agent/ObservabilityService";
 import {
 	CollatedMetric,
 	InstrumentableSymbolCommand,
@@ -30,6 +30,8 @@ import {
 } from "./instrumentationCodeLensProvider";
 import { configuration } from "configuration";
 import { ViewMethodLevelTelemetryCommandArgs } from "commands";
+import { Stopwatch } from "@codestream/utils/system/stopwatch";
+import Cache from "timed-cache";
 
 export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposable {
 	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "untitled" }];
@@ -37,14 +39,16 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 	private readonly _disposable: Disposable;
 	private readonly codeLensTemplate: string;
 	private _disposableSignedIn: Disposable | undefined;
+	private _cache = new Cache<Map<string, CollatedMetric>>();
 
 	constructor(
 		private symbolLocator: ISymbolLocator = new SymbolLocator(),
-		private observabilityService: IObservabilityService = Container.agent.observability!
+		private _observabilityService: IObservabilityService = observabilityService
 	) {
 		this._disposable = Disposable.from(
 			Container.session.onDidChangeSessionStatus(this.onSessionStatusChanged, this)
 		);
+
 		// TODO handle null
 		this.codeLensTemplate = configuration.get<string>(
 			configuration.name("goldenSignalsInEditorFormat").value
@@ -83,6 +87,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 		range: Range,
 		token: CancellationToken
 	): Promise<InlayHint[]> {
+		const overallStopwatch = new Stopwatch("provideInlayHints total");
 		Logger.log(
 			`*** provideInlayHints called with ${document.fileName} ${range.start.line}:${range.start.character} ${range.end.line}:${range.end.character}`
 		);
@@ -93,7 +98,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			includeErrorRate: this.codeLensTemplate.includes("${errorRate}")
 		};
 
-		const fileLevelTelemetryResponse = await this.observabilityService.getFileLevelTelemetry(
+		const fileLevelTelemetryStopwatch = new Stopwatch("getFileLevelTelemetry");
+		const fileLevelTelemetryResponse = await this._observabilityService.getFileLevelTelemetry(
 			document.uri.toString(),
 			document.languageId,
 			false,
@@ -101,6 +107,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			methodLevelTelemetryRequestOptions
 		);
 		// this.resetCache = false;
+		fileLevelTelemetryStopwatch.stop();
+		Logger.log(`*** provideInlayHints ${fileLevelTelemetryStopwatch.report()}`);
 
 		if (fileLevelTelemetryResponse == null) {
 			Logger.log("provideCodeLenses no response", {
@@ -138,52 +146,85 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			return [];
 		}
 
-		const locationLensMap = new Map<string, CollatedMetric>();
-		for (const metric of allValidAnonymousMetrics) {
-			const commit = metric.commit ?? fileLevelTelemetryResponse.deploymentCommit;
-			if (!commit) {
-				continue;
-			}
-			const id = `${document.uri.toString()}:${metric.lineno}:${metric.column}:${commit}:${
-				metric.functionName
-			}`;
-			let collatedMetric = locationLensMap.get(id);
-			if (!collatedMetric && metric.lineno && metric.column) {
-				const currentLocation = await this.observabilityService.computeCurrentLocation(
-					id,
-					metric.lineno,
-					metric.column,
-					commit,
-					metric.functionName,
-					document.uri.toString()
-				);
-				for (const [_key, value] of Object.entries(currentLocation.locations)) {
-					Logger.log(`*** currentLocation ${value.lineStart} / ${value.colStart}`);
-					// Not the currentLocation column - we'd have to get the symbols from the commit sha but that is too expensive
-					// But the column does give us the order of anonymous functions on the same line so we can find anonymous functions with
-					// symbol provider and put them in the same order (assuming user didn't refactor the code too much)
-					const currentLocation = new Range(
-						new Position(value.lineStart - 1, metric.column),
-						new Position(value.lineStart - 1, metric.column)
+		const computeLoopStopwatch = new Stopwatch("computeCurrentLocationLoop");
+		let loopCount = 0;
+		const locationMapKey = `${document.uri.toString()}:${document.version}`;
+		let locationLensMap = this._cache.get(locationMapKey) ?? new Map<string, CollatedMetric>();
+		if (!this._cache.get(locationMapKey)) {
+			for (const metric of allValidAnonymousMetrics) {
+				const commit = metric.commit ?? fileLevelTelemetryResponse.deploymentCommit;
+				if (!commit) {
+					continue;
+				}
+				const id = `${document.uri.toString()}|${metric.lineno}|${metric.column}|${commit}|${
+					metric.functionName
+				}`;
+
+				let collatedMetric = locationLensMap.get(id);
+				if (!collatedMetric && metric.lineno && metric.column) {
+					const currentLocationStopwatch = new Stopwatch(`computeCurrentLocation ${loopCount++}`);
+					const currentLocation = await this._observabilityService.computeCurrentLocation(
+						id,
+						metric.lineno,
+						metric.column,
+						commit,
+						metric.functionName,
+						document.uri.toString()
 					);
-					collatedMetric = { currentLocation };
-					locationLensMap.set(id, collatedMetric);
+					currentLocationStopwatch.stop();
+					Logger.log(`*** provideInlayHints ${currentLocationStopwatch.report()}`);
+					for (const [_key, value] of Object.entries(currentLocation.locations)) {
+						Logger.log(`*** currentLocation ${value.lineStart} / ${value.colStart}`);
+						// Not the currentLocation column - we'd have to get the symbols from the commit sha but that is too expensive
+						// But the column does give us the order of anonymous functions on the same line so we can find anonymous functions with
+						// symbol provider and put them in the same order (assuming user didn't refactor the code too much)
+						const currentLocation = new Range(
+							new Position(value.lineStart - 1, metric.column),
+							new Position(value.lineStart - 1, metric.column)
+						);
+						collatedMetric = { currentLocation };
+						locationLensMap.set(id, collatedMetric);
+					}
 				}
-			}
 
-			if (collatedMetric) {
-				if (isFileLevelTelemetryAverageDuration(metric)) {
-					collatedMetric.duration = metric;
-				} else if (isFileLevelTelemetrySampleSize(metric)) {
-					collatedMetric.sampleSize = metric;
-				} else if (isFileLevelTelemetryErrorRate(metric)) {
-					collatedMetric.errorRate = metric;
+				if (collatedMetric) {
+					if (isFileLevelTelemetryAverageDuration(metric)) {
+						collatedMetric.duration = metric;
+					} else if (isFileLevelTelemetrySampleSize(metric)) {
+						collatedMetric.sampleSize = metric;
+					} else if (isFileLevelTelemetryErrorRate(metric)) {
+						collatedMetric.errorRate = metric;
+					}
 				}
 			}
+			// Remove entries that have more than one metrics per lineno
+			const finalLocationLensMap = new Map<string, CollatedMetric>();
+			const keyArray = Array.from(locationLensMap.keys());
+			for (const key of keyArray) {
+				// [0] is the document uri, [1] is the line number
+				const lineCount = keyArray.filter(_ => _.split("|")[1] === key.split("|")[1]).length;
+				if (lineCount > 1) {
+					// lineCount === 1 handled in instrumentationCodeLensProvider
+					// TODO did I just realize there can be multiple named functions on the same line?
+					Logger.log(`*** adding ${key} to finalLocationLensMap`);
+					finalLocationLensMap.set(key, locationLensMap.get(key)!);
+				}
+			}
+			locationLensMap = finalLocationLensMap;
+			this._cache.put(locationMapKey, locationLensMap);
+		} else {
+			Logger.log(`*** provideInlayHints cache hit ${locationMapKey}`);
 		}
+		computeLoopStopwatch.stop();
+		Logger.log(`*** provideInlayHints ${computeLoopStopwatch.report()}`);
 
+		const computePhaseStopwatch = new Stopwatch("computePhase");
 		const inlayHints: InlayHint[] = [];
+		const symbolLocatorStopwatch = new Stopwatch("symbolLocator");
 		const symbols = await this.symbolLocator.locate(document, token);
+		symbolLocatorStopwatch.stop();
+		Logger.log(`*** provideInlayHints ${symbolLocatorStopwatch.report()}`);
+
 		const sortedKeys: string[] = Array.from(locationLensMap.entries())
 			.sort((a, b) => {
 				const aLine = a[1].currentLocation.start.line;
@@ -201,9 +242,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			if (!lineLevelMetric) {
 				continue;
 			}
-			Logger.log(`*** processing lineLevelMetric ${key}`);
+			// Logger.log(`*** processing lineLevelMetric ${key}`);
 			const { currentLocation, duration, sampleSize, errorRate } = lineLevelMetric;
-			// TODO get symbol at currentLocation to calculate correct InlayHint position
 			const { start } = currentLocation;
 			const symbolsForLine = symbols.allSymbols
 				.filter(_ => _.range.start.line === start.line)
@@ -211,9 +251,9 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			const lineCount = lineTracker.get(start.line) ?? 0;
 			lineTracker.set(start.line, lineCount + 1);
 			const symbol = symbolsForLine[lineCount];
-			symbolsForLine.forEach(_ => {
-				Logger.log(`*** symbol for line ${JSON.stringify(_)}`);
-			});
+			// symbolsForLine.forEach(_ => {
+			// 	Logger.log(`*** symbol for line ${JSON.stringify(_)}`);
+			// });
 
 			const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
 				repo: fileLevelTelemetryResponse.repo,
@@ -255,9 +295,13 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			);
 			inlayHintLabelPart.tooltip = text;
 			const inlayHint = new InlayHint(symbol.range.start, [inlayHintLabelPart], InlayHintKind.Type);
-			Logger.log(`*** inlayHint ${inlayHint.position.line}:${inlayHint.position.character}`);
+			// Logger.log(`*** inlayHint ${inlayHint.position.line}:${inlayHint.position.character}`);
 			inlayHints.push(inlayHint);
 		}
+		computePhaseStopwatch.stop();
+		Logger.log(`*** provideInlayHints ${computePhaseStopwatch.report()}`);
+		overallStopwatch.stop();
+		Logger.log(`*** provideInlayHints ${overallStopwatch.report()}`);
 		return inlayHints;
 
 		// if (currentLocation[id]) {

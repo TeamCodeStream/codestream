@@ -3,11 +3,31 @@ import {
 	ComputeCurrentLocationsRequestType,
 	FileLevelTelemetryRequestOptions,
 	FunctionLocator,
-	GetFileLevelTelemetryRequestType
+	GetFileLevelTelemetryRequestType,
+	GetFileLevelTelemetryResponse
 } from "@codestream/protocols/agent";
 import { Container } from "../container";
 
-class ObservabilityService {
+export interface IObservabilityService {
+	getFileLevelTelemetry(
+		fileUri: string,
+		languageId: string,
+		resetCache?: boolean,
+		locator?: FunctionLocator,
+		options?: FileLevelTelemetryRequestOptions | undefined
+	): Promise<GetFileLevelTelemetryResponse>;
+
+	computeCurrentLocation(
+		id: string,
+		lineno: number,
+		column: number,
+		commit: string,
+		functionName: string,
+		uri: string
+	): Promise<ComputeCurrentLocationResponse>;
+}
+
+class ObservabilityService implements IObservabilityService {
 	getFileLevelTelemetry(
 		fileUri: string,
 		languageId: string,

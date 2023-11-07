@@ -19,7 +19,7 @@ import {
 	SymboslLocated
 } from "../../providers/symbolLocator";
 import { InstrumentationCodeLensProvider } from "../../providers/instrumentationCodeLensProvider";
-import { IObservabilityService } from "../../agent/agentConnection";
+import { IObservabilityService } from "../../agent/ObservabilityService";
 
 const stubComputeCurrentLocation = (
 	id: string,

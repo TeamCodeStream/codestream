@@ -1,5 +1,3 @@
-"use strict";
-
 import * as vscode from "vscode";
 import { EventEmitter, extensions, TextDocument } from "vscode";
 import { Event, SymbolKind } from "vscode-languageclient";
@@ -20,7 +18,7 @@ import { Strings } from "../system";
 import { Logger } from "../logger";
 import { InstrumentableSymbol, ISymbolLocator } from "./symbolLocator";
 import { Container } from "../container";
-import { IObservabilityService } from "../agent/agentConnection";
+import { IObservabilityService } from "../agent/ObservabilityService";
 
 export type CollatedMetric = {
 	duration?: FileLevelTelemetryAverageDuration;
@@ -647,40 +645,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					locationLenses.push(lens);
 					continue;
 				}
-
-				// Multiple anon functions on same line
-				// TODO viewCommandArgs needs to disambiguate which metric clicked on
-				const theTooltip = lineLevelMetrics
-					.map(_ => {
-						return (
-							Strings.interpolate(this.codeLensTemplate, {
-								averageDuration:
-									_.duration && _.duration.averageDuration
-										? `${_.duration.averageDuration.toFixed(3) || "0.00"}ms`
-										: "n/a",
-								sampleSize:
-									_.sampleSize && _.sampleSize.sampleSize ? `${_.sampleSize.sampleSize}` : "n/a",
-								errorRate:
-									_.errorRate && _.errorRate.errorRate
-										? `${(_.errorRate.errorRate * 100).toFixed(2)}%`
-										: "0.00%",
-								since: fileLevelTelemetryResponse.sinceDateFormatted,
-								date: date
-							}) + " (anonymous)"
-						);
-					})
-					.join("\n");
-				const text = `${lineLevelMetrics.length} anonymous functions`;
-				const lens = new vscode.CodeLens(
-					lineLevelMetrics[0].currentLocation,
-					new InstrumentableSymbolCommand(
-						text,
-						"codestream.viewMethodLevelTelemetry",
-						theTooltip,
-						[]
-					)
-				);
-				locationLenses.push(lens);
+				// Skipping lineLevelMetrics.length > 1 as it is handled in inlayHintProvider.ts
 			}
 
 			const lenses = instrumentableSymbols.map(_ => {
