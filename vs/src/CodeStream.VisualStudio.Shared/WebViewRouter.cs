@@ -195,7 +195,8 @@ namespace CodeStream.VisualStudio.Shared
 								{
 									using (var scope = _browserService.CreateScope(message))
 									{
-										await CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
+										// TODO CODE LEVEL METRICS?
+										//await CodeLevelMetricsCallbackService.RefreshAllCodeLensDataPointsAsync();
 
 										var response = new RefreshEditorsCodeLensResponse
 										{

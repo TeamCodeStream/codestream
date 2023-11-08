@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.Composition;
 
+using CodeStream.VisualStudio.Shared.Services;
 using CodeStream.VisualStudio.Shared.UI.Margins;
 
 using Microsoft.VisualStudio.Text.Editor;
@@ -15,9 +16,22 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 	[TagType(typeof(CodeLevelMetricsGlyph))]
 	internal sealed class CodeLevelMetricsGlyphFactoryProvider : IGlyphFactoryProvider
 	{
+		private readonly ISessionService _sessionService;
+		private readonly ICodeStreamService _codeStreamService;
+
+		[ImportingConstructor]
+		public CodeLevelMetricsGlyphFactoryProvider(
+			ISessionService sessionService,
+			ICodeStreamService codeStreamService
+		)
+		{
+			_sessionService = sessionService;
+			_codeStreamService = codeStreamService;
+		}
+
 		public IGlyphFactory GetGlyphFactory(IWpfTextView view, IWpfTextViewMargin margin) =>
-			margin.GetType() == typeof(DocumentMarkMargin)
-				? new CodeLevelMetricsGlyphFactory()
+			margin is DocumentMarkMargin
+				? new CodeLevelMetricsGlyphFactory(_sessionService, _codeStreamService)
 				: null;
 	}
 }

@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Serilog;
 using System;
+using System.CodeDom;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -39,6 +40,7 @@ namespace CodeStream.VisualStudio.Shared.Packages
 		typeof(WebViewToolWindowPane),
 		UIContextGuids.SolutionHasSingleProject
 	)]
+	[ProvideToolWindowVisibility(typeof(WebViewToolWindowPane), UIContextGuids.Debugging)]
 	public sealed class WebViewPackage : AsyncPackage
 	{
 		private static readonly ILogger Log = LogManager.ForContext<WebViewPackage>();
