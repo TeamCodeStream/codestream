@@ -61,7 +61,10 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var solution = new Uri(_vsSolution.GetSolutionFile());
 
 			// get the namespace
-			var namespaceDeclarations = root.DescendantNodes().OfType<NamespaceDeclarationSyntax>();
+			//use Base to get traditional and file scoped
+			var namespaceDeclarations = root.DescendantNodes()
+				.OfType<BaseNamespaceDeclarationSyntax>()
+				.ToList();
 
 			foreach (var namespaceDeclaration in namespaceDeclarations)
 			{
@@ -76,15 +79,17 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 
 					var classMetrics = ThreadHelper.JoinableTaskFactory.Run(
 						async () =>
-							await _codeStreamAgentService.GetFileLevelTelemetryAsync(
-								solution.AbsoluteUri,
-								"csharp",
-								false,
-								classAndNamespace,
-								null,
-								true,
-								true
-							)
+							await _codeStreamAgentService
+								.GetFileLevelTelemetryAsync(
+									solution.AbsoluteUri,
+									"csharp",
+									false,
+									classAndNamespace,
+									null,
+									true,
+									true
+								)
+								.ConfigureAwait(false)
 					);
 
 					var methodDeclarations = classDeclaration
@@ -96,19 +101,19 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 						var namespaceFunction =
 							$"{namespaceDeclaration.Name}.{classDeclaration.Identifier}.{methodDeclaration.Identifier}";
 
-						var avgDuration = classMetrics.AverageDuration?.SingleOrDefault(
+						var avgDuration = classMetrics?.AverageDuration?.SingleOrDefault(
 							x =>
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
 								)
 						);
-						var errors = classMetrics.ErrorRate?.SingleOrDefault(
+						var errors = classMetrics?.ErrorRate?.SingleOrDefault(
 							x =>
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
 								)
 						);
-						var sampleSize = classMetrics.SampleSize?.SingleOrDefault(
+						var sampleSize = classMetrics?.SampleSize?.SingleOrDefault(
 							x =>
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
@@ -127,7 +132,7 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 							glyphSpan,
 							new CodeLevelMetricsGlyph(
 								namespaceFunction,
-								classMetrics.SinceDateFormatted,
+								classMetrics?.SinceDateFormatted,
 								avgDuration,
 								errors,
 								sampleSize
