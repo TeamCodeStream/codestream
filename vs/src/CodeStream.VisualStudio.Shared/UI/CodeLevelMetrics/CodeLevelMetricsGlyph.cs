@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
 using CodeStream.VisualStudio.Core.Models;
-using Microsoft.CodeAnalysis.Elfie.Serialization;
 
 namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
@@ -47,30 +46,40 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var sampleSize = SampleSizeResponse?.SampleSize;
 			var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
 
-			Tooltip = Regex.Replace(
-				formatString,
-				Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration),
-				avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms",
-				RegexOptions.IgnoreCase
-			);
-			Tooltip = Regex.Replace(
-				Tooltip,
-				Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate),
-				errors is null ? "n/a" : $"{errors.ToFixed(3)}%",
-				RegexOptions.IgnoreCase
-			);
-			Tooltip = Regex.Replace(
-				Tooltip,
-				Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since),
-				SinceDateFormatted,
-				RegexOptions.IgnoreCase
-			);
-			Tooltip = Regex.Replace(
-				Tooltip,
-				Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize),
-				sampleSize is null ? "0" : $"{sampleSize}",
-				RegexOptions.IgnoreCase
-			);
+			if (sampleSize is null)
+			{
+				Tooltip = "No metrics found for this method in the last 30 minutes";
+			}
+			else
+			{
+				Tooltip = Regex.Replace(
+					formatString,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration),
+					avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms",
+					RegexOptions.IgnoreCase
+				);
+
+				Tooltip = Regex.Replace(
+					Tooltip,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate),
+					errors is null ? "n/a" : $"{errors.ToFixed(3)}%",
+					RegexOptions.IgnoreCase
+				);
+
+				Tooltip = Regex.Replace(
+					Tooltip,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since),
+					SinceDateFormatted,
+					RegexOptions.IgnoreCase
+				);
+
+				Tooltip = Regex.Replace(
+					Tooltip,
+					Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize),
+					$"{sampleSize}",
+					RegexOptions.IgnoreCase
+				);
+			}
 
 			var hasAnomaly = false;
 			if (AvgDurationResponse?.Anomaly != null)
