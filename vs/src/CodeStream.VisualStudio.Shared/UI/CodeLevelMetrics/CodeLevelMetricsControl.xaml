@@ -10,7 +10,7 @@
 		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
 			<StackPanel>
 				<TextBlock Padding="25,25,25,25" Background="Transparent" Foreground="White" Text="{Binding Tooltip}" />
-				<TextBlock Foreground="Red">I could be anything.</TextBlock>
+				<TextBlock Foreground="Red" Text="{Binding Anomaly}"/>
 			</StackPanel>
 		</Popup>
 		<Image Cursor="Hand"  Name="Glyph" Source="{Binding Icon}" Width="16" Height="16"/>
