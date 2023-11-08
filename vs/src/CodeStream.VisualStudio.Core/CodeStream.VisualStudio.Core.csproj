@@ -78,8 +78,6 @@
     <Compile Include="Constants.cs" />
     <Compile Include="ContentTypes.cs" />
     <Compile Include="Enums\CodeLevelMetricStatus.cs" />
-    <Compile Include="CodeLevelMetrics\ICodeLevelMetricsCallbackService.cs" />
-    <Compile Include="CodeLevelMetrics\IRemoteCodeLens.cs" />
     <Compile Include="Enums\VisualStudioSetting.cs" />
     <Compile Include="Events\EventAggregator.cs" />
     <Compile Include="Events\EventBase.cs" />
@@ -110,8 +108,6 @@
     <Compile Include="Logging\Sanitizer\TextProcessor.cs" />
     <Compile Include="Logging\TraceLevel.cs" />
     <Compile Include="Models\AverageDurationResponse.cs" />
-    <Compile Include="Models\CodeLevelMetricsData.cs" />
-    <Compile Include="Models\CodeLevelMetricsDetail.cs" />
     <Compile Include="Models\CodeLevelMetricsProperties.cs" />
     <Compile Include="Models\CodeLevelMetricsTelemetry.cs" />
     <Compile Include="Models\FeedbackRequestDiffUri.cs" />

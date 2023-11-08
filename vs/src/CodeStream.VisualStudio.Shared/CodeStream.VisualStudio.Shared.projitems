@@ -95,7 +95,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\AuthenticationService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\AuthenticationServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\BrowserServiceExtensions.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\CodeLevelMetricsCallbackService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamAgentServiceFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\CodeStreamService.cs" />
@@ -176,10 +175,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewCreationListener.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\TextViewRoles.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetails.xaml.cs">
-      <DependentUpon>CodeLevelMetricsDetails.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetailsViewFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)UI\ToolWindows\WebViewControl.xaml.cs">
       <DependentUpon>WebViewControl.xaml</DependentUpon>
     </Compile>
@@ -193,10 +188,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="$(MSBuildThisFileDirectory)UI\Margins\DocumentMark.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="$(MSBuildThisFileDirectory)UI\ToolWindows\CodeLevelMetricsDetails.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

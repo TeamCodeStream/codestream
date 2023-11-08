@@ -3,16 +3,18 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d"
+             xmlns:glyph="clr-namespace:CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics" 
+             d:DataContext="{d:DesignInstance Type=glyph:CodeLevelMetricsGlyph}"
+			 mc:Ignorable="d"
              d:DesignHeight="205" d:DesignWidth="250">
-
 	<StackPanel>
 		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
-			<StackPanel>
-				<TextBlock Padding="25,25,25,25" Background="Transparent" Foreground="White" Text="{Binding Tooltip}" />
+			<StackPanel Margin="10,10,10,10">
+				<TextBlock Foreground="White" Text="{Binding Tooltip}" />
 				<TextBlock Foreground="Red" Text="{Binding Anomaly}"/>
+				<TextBlock Text="(click icon to view more)" TextAlignment="Center"></TextBlock>
 			</StackPanel>
 		</Popup>
-		<Image Cursor="Hand"  Name="Glyph" Source="{Binding Icon}" Width="16" Height="16"/>
+		<Image Cursor="Hand"  Name="Glyph" Source="{Binding Icon}" Width="16" Height="16" MouseDown="Glyph_OnMouseDown"/>
 	</StackPanel>
 </UserControl>

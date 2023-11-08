@@ -14,8 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\package.json = ..\package.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.CodeLens", "CodeStream.VisualStudio.CodeLens\CodeStream.VisualStudio.CodeLens.csproj", "{31EB1B96-34E8-4E37-872D-4ED7363C95D9}"
-EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CodeStream.VisualStudio.Shared", "CodeStream.VisualStudio.Shared\CodeStream.VisualStudio.Shared.shproj", "{85C56160-88EA-4BBF-ACFD-62045E76ADCD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CodeStream.VisualStudio.Vsix.x86", "CodeStream.VisualStudio.Vsix.x86\CodeStream.VisualStudio.Vsix.x86.csproj", "{EB360D87-8769-44A4-B837-8BC3279070C9}"
@@ -40,14 +38,6 @@ Global
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x64.Build.0 = Release|x64
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x86.ActiveCfg = Release|x86
 		{1A29B558-C55A-4769-AD37-69F903ED6EB3}.Release|x86.Build.0 = Release|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x64.ActiveCfg = Debug|x64
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x64.Build.0 = Debug|x64
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x86.ActiveCfg = Debug|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Debug|x86.Build.0 = Debug|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x64.ActiveCfg = Release|x64
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x64.Build.0 = Release|x64
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x86.ActiveCfg = Release|x86
-		{31EB1B96-34E8-4E37-872D-4ED7363C95D9}.Release|x86.Build.0 = Release|x86
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x64.ActiveCfg = Debug|x64
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.ActiveCfg = Debug|x86
 		{EB360D87-8769-44A4-B837-8BC3279070C9}.Debug|x86.Build.0 = Debug|x86

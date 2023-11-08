@@ -21,30 +21,46 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 		public string Tooltip { get; }
 		public string Anomaly { get; }
 		public BitmapSource Icon { get; }
-		public string NamespaceFunction { get; }
+		public string FullyQualifiedFunctionName { get; }
+		public string FunctionName { get; }
 		public string SinceDateFormatted { get; }
+		public string NewRelicEntityGuid { get; }
+		public RepoInfo Repo { get; }
+		public MetricTimesliceNameMapping MetricTimesliceNameMapping { get; }
 		public AverageDurationResponse AvgDurationResponse { get; }
 		public ErrorRateResponse ErrorRateResponse { get; }
 		public SampleSizeResponse SampleSizeResponse { get; }
 
 		public CodeLevelMetricsGlyph(
-			string namespaceFunction,
+			string fullyQualifiedFunctionName,
+			string functionName,
 			string sinceDateFormatted,
+			string newRelicEntityGuid,
+			RepoInfo repo,
 			AverageDurationResponse avgDurationResponse,
 			ErrorRateResponse errorRateResponse,
 			SampleSizeResponse sampleSizeResponse
 		)
 		{
-			NamespaceFunction = namespaceFunction;
+			FullyQualifiedFunctionName = fullyQualifiedFunctionName;
+			FunctionName = functionName;
 			SinceDateFormatted = sinceDateFormatted;
+			NewRelicEntityGuid = newRelicEntityGuid;
+			Repo = repo;
 			AvgDurationResponse = avgDurationResponse;
 			ErrorRateResponse = errorRateResponse;
 			SampleSizeResponse = sampleSizeResponse;
+			MetricTimesliceNameMapping = new MetricTimesliceNameMapping
+			{
+				Duration = AvgDurationResponse?.MetricTimesliceName ?? "",
+				ErrorRate = ErrorRateResponse?.MetricTimesliceName ?? "",
+				SampleSize = SampleSizeResponse?.MetricTimesliceName ?? "",
+				Source = SampleSizeResponse?.Source ?? ""
+			};
 
 			var avgDuration = AvgDurationResponse?.AverageDuration;
 			var errors = ErrorRateResponse?.ErrorRate;
 			var sampleSize = SampleSizeResponse?.SampleSize;
-			var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat.ToLower();
 
 			if (sampleSize is null)
 			{
@@ -52,32 +68,26 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			}
 			else
 			{
-				Tooltip = Regex.Replace(
-					formatString,
-					Regex.Escape(Constants.CodeLevelMetrics.Tokens.AverageDuration),
-					avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms",
-					RegexOptions.IgnoreCase
+				var formatString = Constants.CodeLevelMetrics.GoldenSignalsFormat;
+
+				Tooltip = formatString.Replace(
+					Constants.CodeLevelMetrics.Tokens.AverageDuration,
+					avgDuration is null ? "n/a" : $"{avgDuration.ToFixed(3)}ms"
 				);
 
-				Tooltip = Regex.Replace(
-					Tooltip,
-					Regex.Escape(Constants.CodeLevelMetrics.Tokens.ErrorRate),
-					errors is null ? "n/a" : $"{errors.ToFixed(3)}%",
-					RegexOptions.IgnoreCase
+				Tooltip = Tooltip.Replace(
+					Constants.CodeLevelMetrics.Tokens.ErrorRate,
+					errors is null ? "n/a" : $"{errors.ToFixed(3)}%"
 				);
 
-				Tooltip = Regex.Replace(
-					Tooltip,
-					Regex.Escape(Constants.CodeLevelMetrics.Tokens.Since),
-					SinceDateFormatted,
-					RegexOptions.IgnoreCase
+				Tooltip = Tooltip.Replace(
+					Constants.CodeLevelMetrics.Tokens.Since,
+					SinceDateFormatted
 				);
 
-				Tooltip = Regex.Replace(
-					Tooltip,
-					Regex.Escape(Constants.CodeLevelMetrics.Tokens.SampleSize),
-					$"{sampleSize}",
-					RegexOptions.IgnoreCase
+				Tooltip = Tooltip.Replace(
+					Constants.CodeLevelMetrics.Tokens.SampleSize,
+					$"{sampleSize}"
 				);
 			}
 
