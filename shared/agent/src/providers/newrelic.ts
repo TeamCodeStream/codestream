@@ -110,6 +110,9 @@ import {
 	AgentValidateLanguageExtensionRequestType,
 	GetIssuesResponse,
 	GetIssuesQueryResult,
+	GetClmRequest,
+	GetClmRequestType,
+	GetClmResponse,
 } from "@codestream/protocols/agent";
 import {
 	CSBitbucketProviderInfo,
@@ -162,6 +165,7 @@ import * as Dom from "graphql-request/dist/types.dom";
 import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import semver from "semver";
 import { getMethodLevelTelemetryMockResponse } from "./newrelic/anomalyDetectionMockResults";
+import { ClmManagerNew } from "./newrelic/clm/clmManagerNew";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -1684,6 +1688,43 @@ export class NewRelicProvider
 		return response;
 	}
 
+	private _clmTimedCache = new Cache<GetClmResponse>({
+		defaultTtl: 120 * 1000,
+	});
+
+	@lspHandler(GetClmRequestType)
+	@log({
+		timed: true,
+	})
+	async getClm(request: GetClmRequest): Promise<GetClmResponse> {
+		const cached = this._clmTimedCache.get(request);
+		if (cached) {
+			return cached;
+		}
+
+		let lastEx;
+		const fn = async () => {
+			try {
+				const clmExperiment = new ClmManagerNew(request, this);
+				const result = await clmExperiment.execute();
+				this._clmTimedCache.put(request, result);
+				return true;
+			} catch (ex) {
+				Logger.warn(ex.message);
+				lastEx = ex.message;
+				return false;
+			}
+		};
+		await Functions.withExponentialRetryBackoff(fn, 5, 1000);
+		const response = this._clmTimedCache.get(request) || {
+			codeLevelMetrics: [],
+			isSupported: false,
+			error: lastEx,
+		};
+
+		return response;
+	}
+
 	@log()
 	async getPixieToken(accountId: number) {
 		try {
@@ -2830,6 +2871,10 @@ export class NewRelicProvider
                                WHERE entity.guid IN ('${entityGuid}')
                                  AND name = '${metricTimesliceNameMapping["errorRate"]}'
                                  AND \`error.group.guid\` IS NOT NULL FACET name TIMESERIES`,
+					scopesQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS value
+												FROM Metric
+                  			WHERE \`entity.guid\` = '${entityGuid}'
+                    		AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET scope as name`,
 					title: "Errors (per minute)",
 					name: "errorsPerMinute",
 				},
@@ -2843,6 +2888,10 @@ export class NewRelicProvider
                                FROM Span
                                WHERE entity.guid IN ('${entityGuid}')
                                  AND name = '${metricTimesliceNameMapping["duration"]}' FACET name TIMESERIES`,
+					scopesQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS value
+												FROM Metric
+                  			WHERE entity.guid IN ('${entityGuid}')
+                    		AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' FACET scope as name`,
 					title: "Average duration (ms)",
 					name: "responseTimeMs",
 				},
@@ -2856,6 +2905,10 @@ export class NewRelicProvider
                                FROM Span
                                WHERE entity.guid IN ('${entityGuid}')
                                  AND name = '${metricTimesliceNameMapping["sampleSize"]}' FACET name TIMESERIES`,
+					scopesQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS value
+												FROM Metric
+                  			WHERE entity.guid IN ('${entityGuid}')
+                    		AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' FACET scope as name`,
 					title: "Samples (per minute)",
 					name: "samplesPerMinute",
 				},
@@ -2925,10 +2978,43 @@ export class NewRelicProvider
 			})
 		);
 
+		const scopes = await Promise.all(
+			queries.metricQueries.map(_ => {
+				let _query = _.scopesQuery;
+				_query = _query?.replace(/\n/g, "");
+
+				if (since) {
+					_query = `${_query} SINCE ${since}`;
+				}
+
+				const q = `query getMetric($accountId: Int!) {
+					actor {
+					  account(id: $accountId) {
+							nrql(query: "${escapeNrql(_query || "")}", timeout: 60) {
+								results
+								metadata {
+									timeWindow {
+										end
+									}
+								}
+							}
+					  }
+					}
+				}`;
+				return this.query(q, {
+					accountId: parsedId.accountId,
+				}).catch(ex => {
+					Logger.warn(ex);
+				});
+			})
+		);
+
 		const response = queries.metricQueries.map((_, i) => {
 			const nrql = results[i].actor.account.nrql;
+			const scopesNrql = scopes[i].actor.account.nrql;
 			return {
 				..._,
+				scopes: scopesNrql.results,
 				result: nrql.results.map((r: any) => {
 					const ms = r.endTimeSeconds * 1000;
 					const date = new Date(ms);

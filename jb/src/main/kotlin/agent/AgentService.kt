@@ -9,6 +9,8 @@ import com.codestream.extensions.baseUri
 import com.codestream.extensions.workspaceFolders
 import com.codestream.gson
 import com.codestream.protocols.agent.CSUser
+import com.codestream.protocols.agent.ClmParams
+import com.codestream.protocols.agent.ClmResult
 import com.codestream.protocols.agent.CreatePermalinkParams
 import com.codestream.protocols.agent.CreatePermalinkResult
 import com.codestream.protocols.agent.CreateShareableCodemarkParams
@@ -687,6 +689,14 @@ class AgentService(private val project: Project) : Disposable {
     suspend fun fileLevelTelemetry(params: FileLevelTelemetryParams): FileLevelTelemetryResult? {
         val json: JsonObject = remoteEndpoint
             .request("codestream/newrelic/fileLevelTelemetry", params)
+            .await() as JsonObject? ?: return null
+        return gson.fromJson(json)
+    }
+
+    suspend fun clm(params: ClmParams): ClmResult? {
+        if (System.getProperty("com.codestream.debug") != "true") return null
+        val json: JsonObject = remoteEndpoint
+            .request("codestream/newrelic/clm", params)
             .await() as JsonObject? ?: return null
         return gson.fromJson(json)
     }

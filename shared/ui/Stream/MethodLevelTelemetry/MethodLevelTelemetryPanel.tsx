@@ -259,6 +259,10 @@ export const MethodLevelTelemetryPanel = () => {
 			return <RubyPluginLanguageServer />;
 	}
 
+	const ScopeText = styled.span`
+		color: var(--text-color-subtle);
+	`;
+
 	return (
 		<Root className="full-height-codemark-form">
 			{!loading && (
@@ -458,51 +462,97 @@ export const MethodLevelTelemetryPanel = () => {
 												);
 												const maxY = Math.max(...sanitizedYValues);
 												return (
-													<div
-														key={"chart-" + index}
-														style={{ marginLeft: "0px", marginBottom: "20px" }}
-													>
-														<MetaLabel>{title}</MetaLabel>
-														<ResponsiveContainer width="100%" height={300} debounce={1}>
-															<LineChart
-																width={500}
-																height={300}
-																data={_.result}
-																margin={{
-																	top: 5,
-																	right: 0,
-																	left: 0,
-																	bottom: 5,
-																}}
-															>
-																<CartesianGrid strokeDasharray="3 3" />
-																<XAxis
-																	dataKey="endDate"
-																	tick={{ fontSize: 12 }}
-																	tickFormatter={label =>
-																		new Date(label).toLocaleTimeString(undefined, {
-																			hour: "2-digit",
-																			minute: "2-digit",
-																		})
-																	}
-																/>
-																<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
-																<ReTooltip
-																	content={<CustomTooltip />}
-																	contentStyle={{ color: colorLine, textAlign: "center" }}
-																/>
-																<Line
-																	type="monotone"
-																	dataKey={_.title}
-																	stroke={colorLine}
-																	activeDot={{ r: 8 }}
-																	connectNulls={true}
-																	name={title}
-																	dot={{ style: { fill: colorLine } }}
-																/>
-															</LineChart>
-														</ResponsiveContainer>
-													</div>
+													<>
+														<div
+															key={"chart-" + index}
+															style={{ marginLeft: "0px", marginBottom: "20px" }}
+														>
+															<MetaLabel>{title}</MetaLabel>
+															<ResponsiveContainer width="100%" height={300} debounce={1}>
+																<LineChart
+																	width={500}
+																	height={300}
+																	data={_.result}
+																	margin={{
+																		top: 5,
+																		right: 0,
+																		left: 0,
+																		bottom: 5,
+																	}}
+																>
+																	<CartesianGrid strokeDasharray="3 3" />
+																	<XAxis
+																		dataKey="endDate"
+																		tick={{ fontSize: 12 }}
+																		tickFormatter={label =>
+																			new Date(label).toLocaleTimeString(undefined, {
+																				hour: "2-digit",
+																				minute: "2-digit",
+																			})
+																		}
+																	/>
+																	<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
+																	<ReTooltip
+																		content={<CustomTooltip />}
+																		contentStyle={{ color: colorLine, textAlign: "center" }}
+																	/>
+																	<Line
+																		type="monotone"
+																		dataKey={_.title}
+																		stroke={colorLine}
+																		activeDot={{ r: 8 }}
+																		connectNulls={true}
+																		name={title}
+																		dot={{ style: { fill: colorLine } }}
+																	/>
+																</LineChart>
+															</ResponsiveContainer>
+														</div>
+														{(_.scopes?.length || 0) > 0 && (
+															<div style={{ marginBottom: "30px" }}>
+																<table style={{ borderCollapse: "collapse", width: "100%" }}>
+																	<tr style={{ borderBottom: "1px solid #888" }}>
+																		<td
+																			style={{
+																				width: "100%",
+																				padding: "3px 1px",
+																				whiteSpace: "nowrap",
+																			}}
+																		>
+																			<ScopeText>
+																				<b>Scopes</b>
+																			</ScopeText>
+																		</td>
+																	</tr>
+																	{_.scopes?.map(scope => {
+																		return (
+																			<tr style={{ borderBottom: "1px solid #888" }}>
+																				<td
+																					style={{
+																						width: "75%",
+																						padding: "3px 1px",
+																						whiteSpace: "nowrap",
+																					}}
+																				>
+																					<ScopeText>{scope.name}</ScopeText>
+																				</td>
+																				<td
+																					style={{
+																						width: "25%",
+																						padding: "3px 1px",
+																						whiteSpace: "nowrap",
+																						textAlign: "right",
+																					}}
+																				>
+																					<ScopeText>{scope.value.toFixed(3)}</ScopeText>
+																				</td>
+																			</tr>
+																		);
+																	})}
+																</table>
+															</div>
+														)}
+													</>
 												);
 											})}
 									</div>

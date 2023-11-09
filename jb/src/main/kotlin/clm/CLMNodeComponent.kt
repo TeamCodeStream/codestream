@@ -1,5 +1,6 @@
 package com.codestream.clm
 
+import com.codestream.protocols.agent.ClmResult
 import com.intellij.lang.javascript.psi.JSFile
 import com.intellij.lang.javascript.psi.JSFunction
 import com.intellij.lang.javascript.psi.ecmal4.JSClass
@@ -85,6 +86,10 @@ class NodeSymbolResolver : SymbolResolver {
             return result
         }
         return null
+    }
+
+    override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
+        return listOf()
     }
 }
 

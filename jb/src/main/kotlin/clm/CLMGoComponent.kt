@@ -1,5 +1,6 @@
 package com.codestream.clm
 
+import com.codestream.protocols.agent.ClmResult
 import com.goide.psi.GoFile
 import com.goide.psi.GoFunctionDeclaration
 import com.goide.psi.GoPackageClause
@@ -67,6 +68,10 @@ class GoSymbolResolver : SymbolResolver {
         if (psiFile !is GoFile) return null
         val function = psiFile.children.find { it is GoFunctionDeclaration && it.name == functionName }
         return function
+    }
+
+    override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
+        return listOf()
     }
 }
 

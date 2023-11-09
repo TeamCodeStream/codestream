@@ -565,7 +565,7 @@ class ResponseTimesResult(
 data class MethodLevelTelemetrySymbolIdentifier(
     val namespace: String?,
     val className: String?,
-    val functionName: String
+    val functionName: String?
 )
 
 class ObservabilityAnomaly(
@@ -591,7 +591,7 @@ class ObservabilityAnomaly(
 open class MethodLevelTelemetryData(
     val namespace: String?,
     val className: String?,
-    val functionName: String,
+    val functionName: String?,
     val metricTimesliceName: String,
     val anomaly: ObservabilityAnomaly?
 ) {
@@ -643,6 +643,30 @@ class FileLevelTelemetryResult(
     // val newRelicEntityAccounts: EntityAccount[];
     val codeNamespace: String?,
     val relativeFilePath: String?
+)
+
+class ClmParams(
+    val entityGuid: String
+)
+
+class ClmResult(
+    val codeLevelMetrics: List<CodeLevelMetric>,
+    val isSupported: Boolean,
+    val error: String?
+)
+
+class CodeLevelMetric(
+    val name: String,
+    val scope: String?,
+    val codeAttrs: CodeAttributes?,
+    val duration: Float?,
+    val errorRate: Float?
+)
+
+class CodeAttributes(
+    val codeFilepath: String?,
+    val codeNamespace: String?,
+    val codeFunction: String
 )
 
 const val NOT_ASSOCIATED = "NOT_ASSOCIATED"

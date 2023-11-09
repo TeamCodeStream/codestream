@@ -6,6 +6,8 @@ import com.codestream.codeStream
 import com.codestream.extensions.file
 import com.codestream.extensions.lspPosition
 import com.codestream.extensions.uri
+import com.codestream.protocols.agent.ClmParams
+import com.codestream.protocols.agent.ClmResult
 import com.codestream.protocols.agent.FileLevelTelemetryOptions
 import com.codestream.protocols.agent.FileLevelTelemetryParams
 import com.codestream.protocols.agent.FileLevelTelemetryResult
@@ -28,6 +30,8 @@ import com.codestream.webViewService
 import com.codestream.workaround.HintsPresentationWorkaround
 import com.intellij.codeInsight.hints.InlayPresentationFactory
 import com.intellij.codeInsight.hints.presentation.InlayPresentation
+import com.intellij.codeInsight.hints.presentation.PresentationFactory
+import com.intellij.codeInsight.hints.presentation.PresentationRenderer
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
@@ -71,7 +75,15 @@ private val OPTIONS = FileLevelTelemetryOptions(true, true, true)
 data class RenderElements(
     val range: TextRange,
     val referenceOnHoverPresentation: InlayPresentation,
-    val isAnomaly: Boolean
+    val isAnomaly: Boolean,
+    val type: String?
+)
+
+data class ClmElements(
+    val range: TextRange,
+    val text: String,
+    val isAnomaly: Boolean,
+    val type: String?
 )
 
 class Metrics {
@@ -121,7 +133,8 @@ abstract class CLMEditorManager(
     private val path = editor.document.getUserData(LOCAL_PATH) ?: editor.document.file?.path
     private val project = editor.project
     private var metricsBySymbol = mapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
-    private val inlays = mutableSetOf<Inlay<CLMCustomRenderer>>()
+    private var clmResult: ClmResult? = null
+    private val inlays = mutableSetOf<Inlay<*>>()
     private var lastResult: FileLevelTelemetryResult? = null
     private var currentError: FileLevelTelemetryResultError? = null
     private var analyticsTracked = false
@@ -254,6 +267,11 @@ abstract class CLMEditorManager(
                         metrics.sampleSize = sampleSize
                     }
                     metricsBySymbol = updatedMetrics.toImmutableMap()
+
+                        clmResult = project.agentService?.clm(ClmParams(
+                            result.newRelicEntityGuid!!
+                        ))
+
                     updateInlays()
                 } catch (ex: Exception) {
                     logger.error("Error getting fileLevelTelemetry", ex)
@@ -317,18 +335,16 @@ abstract class CLMEditorManager(
         return mapOf<String, String>()
     }
 
-    fun resolveSymbol(symbolIdentifier: MethodLevelTelemetrySymbolIdentifier, psiFile: PsiFile): PsiElement? {
-        return if (symbolIdentifier.className != null) {
-            symbolResolver.findClassFunctionFromFile(
-                psiFile,
-                symbolIdentifier.namespace,
-                symbolIdentifier.className,
-                symbolIdentifier.functionName
-            ) ?:
+    fun resolveSymbol(
+        symbolIdentifier: MethodLevelTelemetrySymbolIdentifier,
+        psiFile: PsiFile
+    ): PsiElement? {
+        val functionName = symbolIdentifier.functionName ?: return null
+        return symbolIdentifier.className?.let { className ->
+            symbolResolver.findClassFunctionFromFile(psiFile, symbolIdentifier.namespace, className, functionName)
+        } ?: run {
             // Metrics can have custom name in which case we don't get Module or Class names - just best effort match function name
-            symbolResolver.findTopLevelFunction(psiFile, symbolIdentifier.functionName)
-        } else {
-            symbolResolver.findTopLevelFunction(psiFile, symbolIdentifier.functionName)
+            symbolResolver.findTopLevelFunction(psiFile, functionName)
         }
     }
 
@@ -338,6 +354,9 @@ abstract class CLMEditorManager(
             return
         }
         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
+
+        val clmElements: List<ClmElements> = symbolResolver.clmElements(psiFile, clmResult)
+
         val presentationFactory = HintsPresentationWorkaround.newPresentationFactory(editor)
         val since = result.sinceDateFormatted?.replace(" ago", "") ?: "30 minutes"
         val toRender: List<RenderElements> = metricsBySymbol.mapNotNull { (symbolIdentifier, metrics) ->
@@ -384,8 +403,17 @@ abstract class CLMEditorManager(
                     }
                 }
                 )
-            RenderElements(range, referenceOnHoverPresentation, anomaly != null)
+            RenderElements(range, referenceOnHoverPresentation, anomaly != null, null)
         }
+
+        val clmPresentationFactory = PresentationFactory(editor)
+        val clmToRender: List<RenderElements> = clmElements.map {
+            val textPresentation = clmPresentationFactory.text(it.text)
+            val smallPresentation = clmPresentationFactory.roundWithBackgroundAndSmallInset(textPresentation)
+            val insetPresentation = clmPresentationFactory.inset(smallPresentation)
+            RenderElements(it.range, insetPresentation, false, it.type)
+        }
+
 
         ApplicationManager.getApplication().invokeLaterOnWriteThread {
             if (!analyticsTracked && toRender.isNotEmpty()) {
@@ -406,6 +434,20 @@ abstract class CLMEditorManager(
                 val inlay = editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
 
                 inlay.let {
+                    inlays.add(it)
+                }
+            }
+            for ((range, referenceOnHoverPresentation, isAnomaly, type) in clmToRender) {
+                val inlay = if (type == "methodCall") {
+                    val renderer = PresentationRenderer(referenceOnHoverPresentation)
+                    editor.inlayModel.addInlineElement(range.startOffset, false, renderer)
+                } else if (type === "class") {
+                    val renderer = CLMCustomRenderer(referenceOnHoverPresentation, isAnomaly)
+                    editor.inlayModel.addBlockElement(range.startOffset, false, true, 1, renderer)
+                } else {
+                    null
+                }
+                inlay?.let {
                     inlays.add(it)
                 }
             }

@@ -280,22 +280,9 @@ export const ObservabilityAnomalyPanel = () => {
 		return subtext;
 	};
 
-	// switch (derivedState.currentMethodLevelTelemetry?.error?.type) {
-	// 	case "NO_RUBY_VSCODE_EXTENSION":
-	// 		return <MissingRubyExtension />;
-	// 	case "NO_JAVA_VSCODE_EXTENSION":
-	// 		return <MissingJavaExtension />;
-	// 	case "NO_PYTHON_VSCODE_EXTENSION":
-	// 		return <MissingPythonExtension />;
-	// 	case "NO_CSHARP_VSCODE_EXTENSION":
-	// 		return <MissingCsharpExtension />;
-	// 	case "NO_GO_VSCODE_EXTENSION":
-	// 		return <MissingGoExtension />;
-	// 	case "NO_PHP_VSCODE_EXTENSION":
-	// 		return <MissingPhpExtension />;
-	// 	case "RUBY_PLUGIN_NO_LANGUAGE_SERVER":
-	// 		return <RubyPluginLanguageServer />;
-	// }
+	const ScopeText = styled.span`
+		color: var(--text-color-subtle);
+	`;
 
 	return (
 		<Root className="full-height-codemark-form">
@@ -307,7 +294,7 @@ export const ObservabilityAnomalyPanel = () => {
 						textOverflow: "ellipsis",
 					}}
 				>
-					<PanelHeader title={derivedState.currentObservabilityAnomaly.codeFunction}></PanelHeader>
+					<PanelHeader title={derivedState.currentObservabilityAnomaly.name}></PanelHeader>
 				</div>
 			)}
 			<CancelButton
@@ -333,105 +320,6 @@ export const ObservabilityAnomalyPanel = () => {
 								</>
 							) : (
 								<div>
-									{/*{telemetryResponse && (*/}
-									{/*	<EntityDropdownContainer>*/}
-									{/*		<b>Entity: </b>*/}
-									{/*		<DropdownButton*/}
-									{/*			items={*/}
-									{/*				[*/}
-									{/*					{*/}
-									{/*						type: "search",*/}
-									{/*						placeholder: "Search...",*/}
-									{/*						action: "search",*/}
-									{/*						key: "search",*/}
-									{/*					},*/}
-									{/*				] as any*/}
-									{/*				// .concat(*/}
-									{/*				// telemetryResponse.newRelicEntityAccounts!.map((item, i) => {*/}
-									{/*				// 	return {*/}
-									{/*				// 		label: item.entityName,*/}
-									{/*				// 		subtextWide: renderEntityDropdownSubtext(item),*/}
-									{/*				// 		searchLabel: item.entityName,*/}
-									{/*				// 		key: item.entityGuid + "-" + i,*/}
-									{/*				// 		checked: item.entityGuid === telemetryResponse.newRelicEntityGuid!,*/}
-									{/*				// 		action: async () => {*/}
-									{/*				// 			const repoId = derivedState.currentMethodLevelTelemetry?.repo?.id;*/}
-									{/*				// 			const newPreferences =*/}
-									{/*				// 				derivedState.observabilityRepoEntities.filter(*/}
-									{/*				// 					_ => _.repoId !== repoId*/}
-									{/*				// 				);*/}
-									{/*				// 			if (repoId) {*/}
-									{/*				// 				newPreferences.push({*/}
-									{/*				// 					repoId: repoId,*/}
-									{/*				// 					entityGuid: item.entityGuid,*/}
-									{/*				// 				});*/}
-									{/*				// 				dispatch(*/}
-									{/*				// 					setUserPreference({*/}
-									{/*				// 						prefPath: ["observabilityRepoEntities"],*/}
-									{/*				// 						value: newPreferences,*/}
-									{/*				// 					})*/}
-									{/*				// 				);*/}
-									{/*				// 			}*/}
-									{/*				//*/}
-									{/*				// 			// update the IDEs*/}
-									{/*				// 			HostApi.instance.send(RefreshEditorsCodeLensRequestType, {});*/}
-									{/*				// 			// tell other parts of the webview that we updated this*/}
-									{/*				// 			HostApi.instance.emit(*/}
-									{/*				// 				DidChangeObservabilityDataNotificationType.method,*/}
-									{/*				// 				{*/}
-									{/*				// 					type: "Entity",*/}
-									{/*				// 					data: {*/}
-									{/*				// 						entityGuid: item.entityGuid,*/}
-									{/*				// 						repoId: repoId,*/}
-									{/*				// 					},*/}
-									{/*				// 				}*/}
-									{/*				// 			);*/}
-									{/*				// 			loadData(item.entityGuid);*/}
-									{/*				// 		},*/}
-									{/*				// 	};*/}
-									{/*				// })*/}
-									{/*				// )*/}
-									{/*			}*/}
-									{/*			selectedKey={telemetryResponse.newRelicEntityName!}*/}
-									{/*			variant={"secondary"}*/}
-									{/*			wrap*/}
-									{/*		>*/}
-									{/*			{telemetryResponse.newRelicEntityName!}*/}
-									{/*		</DropdownButton>*/}
-									{/*		{telemetryResponse && telemetryResponse.newRelicUrl && (*/}
-									{/*			<Tooltip*/}
-									{/*				title="View service summary on New Relic"*/}
-									{/*				placement="bottom"*/}
-									{/*				delay={1}*/}
-									{/*			>*/}
-									{/*				<ApmServiceTitle>*/}
-									{/*					<Link*/}
-									{/*						onClick={e => {*/}
-									{/*							e.preventDefault();*/}
-									{/*							HostApi.instance.track("Open Service Summary on NR", {*/}
-									{/*								Section: "Code-level Metrics",*/}
-									{/*							});*/}
-									{/*							HostApi.instance.send(OpenUrlRequestType, {*/}
-									{/*								url: telemetryResponse.newRelicUrl!,*/}
-									{/*							});*/}
-									{/*						}}*/}
-									{/*					>*/}
-									{/*						{" "}*/}
-									{/*						<Icon name="link-external" className="open-external"></Icon>*/}
-									{/*					</Link>*/}
-									{/*				</ApmServiceTitle>*/}
-									{/*			</Tooltip>*/}
-									{/*		)}*/}
-									{/*	</EntityDropdownContainer>*/}
-									{/*)}*/}
-									{/*<div style={{ margin: "0 0 11px 0" }}>*/}
-									{/*	<b>Repo:</b> {derivedState.currentMethodLevelTelemetry.repo?.name}*/}
-									{/*</div>*/}
-									{/*{derivedState?.currentMethodLevelTelemetry.relativeFilePath && (*/}
-									{/*	<div>*/}
-									{/*		<b>File:</b> {derivedState?.currentMethodLevelTelemetry.relativeFilePath}*/}
-									{/*	</div>*/}
-									{/*)}*/}
 									{telemetryResponse?.errors && telemetryResponse.errors.length > 0 && (
 										<div>
 											<br />
@@ -497,60 +385,106 @@ export const ObservabilityAnomalyPanel = () => {
 												const redHeaderText =
 													derivedState.currentObservabilityAnomaly.chartHeaderTexts[title];
 												return (
-													<div
-														key={"chart-" + index}
-														style={{ marginLeft: "0px", marginBottom: "20px" }}
-													>
-														<MetaLabel>{title}</MetaLabel>
-														<div style={{ color: "red" }}>{redHeaderText}</div>
-														<ResponsiveContainer width="100%" height={300} debounce={1}>
-															<LineChart
-																width={500}
-																height={300}
-																data={_.result}
-																margin={{
-																	top: 25,
-																	right: 0,
-																	left: 0,
-																	bottom: 5,
-																}}
-															>
-																<CartesianGrid strokeDasharray="3 3" />
-																<XAxis
-																	dataKey="endTimeSeconds"
-																	tick={{ fontSize: 12 }}
-																	tickFormatter={label =>
-																		new Date(label * 1000).toLocaleDateString()
-																	}
-																/>
-																<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
-																<ReTooltip
-																	content={<CustomTooltip />}
-																	contentStyle={{ color: colorLine, textAlign: "center" }}
-																/>
-																<Line
-																	type="monotone"
-																	dataKey={_.title}
-																	stroke={colorLine}
-																	activeDot={{ r: 8 }}
-																	connectNulls={true}
-																	name={title}
-																	dot={{ style: { fill: colorLine } }}
-																/>
-																{Object.entries(remappedDeployments).map(
-																	([key, value]: [string, any]) => {
+													<>
+														<div
+															key={"chart-" + index}
+															style={{ marginLeft: "0px", marginBottom: "20px" }}
+														>
+															<MetaLabel>{title}</MetaLabel>
+															<div style={{ color: "red" }}>{redHeaderText}</div>
+															<ResponsiveContainer width="100%" height={300} debounce={1}>
+																<LineChart
+																	width={500}
+																	height={300}
+																	data={_.result}
+																	margin={{
+																		top: 25,
+																		right: 0,
+																		left: 0,
+																		bottom: 5,
+																	}}
+																>
+																	<CartesianGrid strokeDasharray="3 3" />
+																	<XAxis
+																		dataKey="endTimeSeconds"
+																		tick={{ fontSize: 12 }}
+																		tickFormatter={label =>
+																			new Date(label * 1000).toLocaleDateString()
+																		}
+																	/>
+																	<YAxis tick={{ fontSize: 12 }} domain={[0, maxY]} />
+																	<ReTooltip
+																		content={<CustomTooltip />}
+																		contentStyle={{ color: colorLine, textAlign: "center" }}
+																	/>
+																	<Line
+																		type="monotone"
+																		dataKey={_.title}
+																		stroke={colorLine}
+																		activeDot={{ r: 8 }}
+																		connectNulls={true}
+																		name={title}
+																		dot={{ style: { fill: colorLine } }}
+																	/>
+																	{Object.entries(remappedDeployments).map(
+																		([key, value]: [string, any]) => {
+																			return (
+																				<ReferenceLine
+																					x={parseInt(key)}
+																					stroke={value?.length ? colorPrimary : colorSubtle}
+																					label={e => renderCustomLabel(e, value.join(", "))}
+																				/>
+																			);
+																		}
+																	)}
+																</LineChart>
+															</ResponsiveContainer>
+														</div>
+														{(_.scopes?.length || 0) > 0 && (
+															<div style={{ marginBottom: "30px" }}>
+																<table style={{ borderCollapse: "collapse", width: "100%" }}>
+																	<tr style={{ borderBottom: "1px solid #888" }}>
+																		<td
+																			style={{
+																				width: "100%",
+																				padding: "3px 1px",
+																				whiteSpace: "nowrap",
+																			}}
+																		>
+																			<ScopeText>
+																				<b>Scopes</b>
+																			</ScopeText>
+																		</td>
+																	</tr>
+																	{_.scopes?.map(scope => {
 																		return (
-																			<ReferenceLine
-																				x={parseInt(key)}
-																				stroke={value?.length ? colorPrimary : colorSubtle}
-																				label={e => renderCustomLabel(e, value.join(", "))}
-																			/>
+																			<tr style={{ borderBottom: "1px solid #888" }}>
+																				<td
+																					style={{
+																						width: "75%",
+																						padding: "3px 1px",
+																						whiteSpace: "nowrap",
+																					}}
+																				>
+																					<ScopeText>{scope.name}</ScopeText>
+																				</td>
+																				<td
+																					style={{
+																						width: "25%",
+																						padding: "3px 1px",
+																						whiteSpace: "nowrap",
+																						textAlign: "right",
+																					}}
+																				>
+																					<ScopeText>{scope.value.toFixed(3)}</ScopeText>
+																				</td>
+																			</tr>
 																		);
-																	}
-																)}
-															</LineChart>
-														</ResponsiveContainer>
-													</div>
+																	})}
+																</table>
+															</div>
+														)}
+													</>
 												);
 											})}
 									</div>

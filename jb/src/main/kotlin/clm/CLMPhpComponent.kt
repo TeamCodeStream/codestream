@@ -1,5 +1,6 @@
 package com.codestream.clm
 
+import com.codestream.protocols.agent.ClmResult
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
@@ -102,6 +103,10 @@ class PhpSymbolResolver : SymbolResolver {
         if (psiFile !is PhpFileImpl) return null
         val entry = psiFile.topLevelDefs.entrySet().find { it.key.substring(1) == functionName && it.value.any { it is FunctionImpl } } ?: return null
         return entry.value.find { it is FunctionImpl }
+    }
+
+    override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
+        return listOf()
     }
 }
 

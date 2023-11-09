@@ -415,17 +415,17 @@ export class ClmManager {
 			const metricMatch1 = metrics.find(_ => _.metricTimesliceName === anomaly.metricTimesliceName);
 			const metricMatch2 = metrics.find(
 				_ =>
-					(_.className === anomaly.codeNamespace || _.className === altClassName) &&
-					_.functionName === anomaly.codeFunction
+					(_.className === anomaly.codeAttrs?.codeNamespace || _.className === altClassName) &&
+					_.functionName === anomaly.codeAttrs?.codeFunction
 			);
 			if (metricMatch1 || metricMatch2) {
 				(metricMatch1 || metricMatch2)!.anomaly = anomaly;
 			} else {
 				const metric: FileLevelTelemetryMetric = {
 					metricTimesliceName: anomaly.metricTimesliceName,
-					functionName: anomaly.codeFunction,
-					className: anomaly.codeNamespace,
-					namespace: anomaly.codeNamespace,
+					functionName: anomaly.codeAttrs?.codeFunction,
+					className: anomaly.codeAttrs?.codeNamespace,
+					namespace: anomaly.codeAttrs?.codeNamespace,
 					anomaly: anomaly,
 				};
 				metrics.push(metric);

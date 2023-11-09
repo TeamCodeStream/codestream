@@ -1,14 +1,22 @@
 package com.codestream.clm
 
+import com.codestream.clm.java.CLMJavaSpringDatastore
+import com.codestream.protocols.agent.ClmResult
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.Project
 import com.intellij.psi.JavaPsiFacade
 import com.intellij.psi.NavigatablePsiElement
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiMethodCallExpression
 import com.intellij.psi.impl.source.PsiJavaFileImpl
 import com.intellij.psi.impl.source.tree.java.PsiMethodCallExpressionImpl
 import com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.idea.core.util.range
+import org.jetbrains.kotlin.idea.editor.fixers.range
 
 class CLMJavaComponent(project: Project) :
     CLMLanguageComponent<CLMJavaEditorManager>(project, PsiJavaFileImpl::class.java, ::CLMJavaEditorManager, JavaSymbolResolver()) {
@@ -72,6 +80,55 @@ class JavaSymbolResolver : SymbolResolver {
         return null
     }
 
+    private val clmElementsProviders: List<CLMElementsProvider> = listOf(
+        CLMJavaSpringDatastore()
+    )
+
+    override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
+        if (psiFile !is PsiJavaFile) return listOf()
+        if (clmResult == null) return listOf()
+
+        val infoBySymbol = mutableMapOf<PsiElement, MutableList<String>>()
+
+        val elementsAndMetrics = clmElementsProviders.map { it.provideElements(psiFile, clmResult.codeLevelMetrics) }.flatten()
+        for ((element, codeLevelMetric) in elementsAndMetrics) {
+            val infos = infoBySymbol.getOrDefault(element, mutableListOf())
+            if (element is PsiMethodCallExpression) {
+                infos += "%.2fms".format(codeLevelMetric.duration)
+            } else if (element is PsiClass) {
+                val operation = codeLevelMetric.name.split("/")[4]
+                infos += "$operation: %.2fms ".format(codeLevelMetric.duration)
+            }
+            infoBySymbol.set(element, infos)
+        }
+
+        val clmElements: List<ClmElements> = infoBySymbol.map {
+            val type = if (it.key is PsiMethodCallExpression) {
+                "methodCall"
+            } else if (it.key is PsiClass) {
+                "class"
+            } else {
+                null
+            }
+            val range = if (it.key is PsiMethodCallExpression) {
+                it.key.children[0].children[3].textRange
+            } else if (it.key is PsiClass) {
+                it.key.textRange
+            } else {
+                it.key.textRange
+            }
+
+
+            ClmElements(
+                range,
+                it.value.joinToString("\n"),
+                false,
+                type
+            )
+        }
+
+        return clmElements
+    }
 }
 
 class CLMJavaEditorManager(editor: Editor) : CLMEditorManager(editor, "java", true, false, JavaSymbolResolver()) {

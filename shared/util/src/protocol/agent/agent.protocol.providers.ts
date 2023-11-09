@@ -1401,9 +1401,10 @@ export interface GetObservabilityAnomaliesRequest {
 	notifyNewAnomalies?: boolean;
 }
 
-export interface ObservabilityAnomaly extends CodeAttributes {
+export interface ObservabilityAnomaly {
 	language: string;
 	name: string;
+	codeAttrs?: CodeAttributes;
 	oldValue: number;
 	newValue: number;
 	ratio: number;
@@ -1458,6 +1459,31 @@ export const GetObservabilityAnomaliesRequestType = new RequestType<
 	void,
 	void
 >("codestream/newrelic/anomalies");
+
+export interface GetClmRequest {
+	entityGuid: string;
+}
+
+export interface GetClmResponse {
+	codeLevelMetrics: CodeLevelMetrics[];
+	isSupported: boolean;
+	error?: string;
+}
+
+export interface CodeLevelMetrics {
+	name: string;
+	scope?: string;
+	codeAttrs?: CodeAttributes;
+	duration?: number;
+	errorRate?: number;
+}
+
+export const GetClmRequestType = new RequestType<
+	GetClmRequest,
+	GetClmResponse,
+	void,
+	void
+>("codestream/newrelic/clm");
 
 export interface GetObservabilityResponseTimesRequest {
 	fileUri: string;
@@ -1688,7 +1714,7 @@ export interface FileLevelTelemetryMetric {
 	metricTimesliceName: string;
 	namespace?: string;
 	className?: string;
-	functionName: string;
+	functionName?: string;
 	anomaly?: ObservabilityAnomaly;
 }
 
@@ -2085,6 +2111,7 @@ export interface MethodLevelGoldenMetricQueryResult {
 	metricQueries: {
 		metricQuery: string;
 		spanQuery?: string;
+		scopesQuery: string;
 		title: string;
 		name: string;
 	}[];
@@ -2272,6 +2299,10 @@ export interface MethodGoldenMetrics {
 		errorRate?: number;
 		responseTimeMs?: number;
 		/* end new  */
+	}[];
+	scopes?: {
+		name: string;
+		value: number;
 	}[];
 	timeWindow: number;
 	extrapolated?: boolean;
