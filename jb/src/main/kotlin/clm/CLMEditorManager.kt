@@ -214,7 +214,11 @@ abstract class CLMEditorManager(
 //        logger.info("*** calling getMetricsByLocation")
 //        logger.info("*** metricsByLocation before $metricsByLocation")
         val stopwatch = startWithName("getMetricsByLocation")
-        metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, path, project)
+        // Slow operations are prohibited on EDT
+        val psiFile = ApplicationManager.getApplication().runReadAction<PsiFile> {
+            PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+        } ?: return
+        metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, path, psiFile.modificationStamp, project)
         stopwatch.stop()
         logger.debug(stopwatch.stats())
     }
@@ -312,7 +316,7 @@ abstract class CLMEditorManager(
                         metrics.sampleSize = sampleSize
                     }
                     metricsBySymbol = updatedMetrics.toImmutableMap()
-                    metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, uri, project)
+                    metricsByLocation = metricsByLocationManager.getMetricsByLocation(result, uri, psiFile.modificationStamp, project)
                     metricsCollectionStopWatch.stop()
                     logger.debug(metricsCollectionStopWatch.stats())
                     clmResult = project.agentService?.clm(ClmParams(

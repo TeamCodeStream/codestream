@@ -13,6 +13,7 @@ import com.codestream.protocols.agent.Markerish
 import com.codestream.protocols.agent.MethodLevelTelemetryAverageDuration
 import com.codestream.protocols.agent.MethodLevelTelemetryErrorRate
 import com.codestream.protocols.agent.MethodLevelTelemetrySampleSize
+import com.codestream.system.LRUMap
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import kotlinx.collections.immutable.ImmutableMap
@@ -20,17 +21,19 @@ import kotlinx.collections.immutable.toImmutableMap
 
 class MetricsByLocationManager {
     private val logger = Logger.getInstance(MetricsByLocationManager::class.java)
+    private val currentLocationCache = LRUMap<String, ComputeCurrentLocationsResult>(250)
 
     suspend fun getMetricsByLocation(fileLevelTelemetry: FileLevelTelemetryResult,
                                      uri: String,
+                                     modificationStamp: Long,
                                      project: Project): ImmutableMap<MetricSource, MetricLocation> {
         val updatedMetricsByLocation = mutableMapOf<MetricSource, MetricLocation>()
         val metricsByLocationCalculationsStopwatch = startWithName("metricsByLocationCalculations")
         if (fileLevelTelemetry.errorRate != null) {
-            processErrorRate(fileLevelTelemetry.errorRate, uri, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
+            processErrorRate(fileLevelTelemetry.errorRate, uri, modificationStamp, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
         }
         if (fileLevelTelemetry.averageDuration != null) {
-            processAverageDuration(fileLevelTelemetry.averageDuration, uri, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
+            processAverageDuration(fileLevelTelemetry.averageDuration, uri, modificationStamp, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
         }
         if (fileLevelTelemetry.sampleSize != null) {
             processSampleSize(fileLevelTelemetry.sampleSize, uri, updatedMetricsByLocation)
@@ -43,6 +46,7 @@ class MetricsByLocationManager {
     private suspend fun processErrorRate(
         errorRates: List<MethodLevelTelemetryErrorRate>,
         uri: String,
+        modificationStamp: Long,
         project: Project,
         updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>,
         deploymentCommit: String?) {
@@ -56,6 +60,7 @@ class MetricsByLocationManager {
                     theCommit,
                     errorRate.functionName,
                     uri,
+                    modificationStamp,
                     project)
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
@@ -84,6 +89,7 @@ class MetricsByLocationManager {
     private suspend fun processAverageDuration(
         averageDurations: List<MethodLevelTelemetryAverageDuration>,
         uri: String,
+        modificationStamp: Long,
         project: Project,
         updatedMetricsByLocation: MutableMap<MetricSource, MetricLocation>,
         deploymentCommit: String?
@@ -98,6 +104,7 @@ class MetricsByLocationManager {
                     theCommit,
                     averageDuration.functionName,
                     uri,
+                    modificationStamp,
                     project)
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
@@ -156,10 +163,16 @@ class MetricsByLocationManager {
         commit: String,
         functionName: String,
         uri: String,
+        modificationStamp: Long,
         project: Project): ComputeCurrentLocationsResult? {
-        // TODO determine if agent caches these lookups, otherwise we should cache per invocation since each error,
-        //  duration, and sampleSize will be for the same location
-        val id = "$uri:${lineno}:${column}:${commit}:${functionName}"
+        val id = "$uri|$modificationStamp|$lineno|$commit|$functionName"
+        val computeCurrentLocationsStopwatch = startWithName("computeCurrentLocations $id")
+        val cached = currentLocationCache[id]
+        if (cached != null) {
+            computeCurrentLocationsStopwatch.stop()
+            logger.debug(computeCurrentLocationsStopwatch.stats())
+            return cached
+        }
         val currentLocations = project.agentService?.computeCurrentLocations(
             ComputeCurrentLocationsRequest(
                 uri,
@@ -177,13 +190,17 @@ class MetricsByLocationManager {
                                     lineno, // lineno + 1,
                                     0,
                                     null)
-
                             )
                         )
                     )
                 )
             )
         )
+        if (currentLocations != null) {
+            currentLocationCache[id] = currentLocations
+        }
+        computeCurrentLocationsStopwatch.stop()
+        logger.debug(computeCurrentLocationsStopwatch.stats())
         return currentLocations
     }
 }
