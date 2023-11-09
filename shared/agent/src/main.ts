@@ -32,6 +32,7 @@ export * from "./providers/slack";
 export * from "./providers/trello";
 export * from "./providers/trunk";
 export * from "./providers/youtrack";
+export * from "./providers/newrelic/vuln/csecVulnerability";
 
 function dumpError(err: Error | string): Promise<void> {
 	return new Promise(resolve => {

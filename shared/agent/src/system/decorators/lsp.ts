@@ -89,14 +89,14 @@ function mergeLocalProviders(providers: ThirdPartyProviders): ThirdPartyProvider
 			host: "", // Provided in apiCapabilities
 		};
 		localProviders[newrelicVulnProvider.id] = newrelicVulnProvider;
-		newrelicProvider.subProviders = [newrelicVulnProvider];
+		// newrelicProvider.subProviders = [newrelicVulnProvider];
 		const newrelicCSECProvider = {
 			id: "newrelic-csec*com",
 			name: "newrelic-csec",
 			host: "", // Provided in apiCapabilities
 		};
 		localProviders[newrelicCSECProvider.id] = newrelicCSECProvider;
-		newrelicProvider.subProviders = [newrelicCSECProvider];
+		newrelicProvider.subProviders = [newrelicVulnProvider, newrelicCSECProvider];
 	}
 
 	return { ...providers, ...localProviders };

@@ -2391,18 +2391,6 @@ export type Vuln = {
 	criticality: CriticalityType;
 };
 
-export type CsecVuln = {
-	remediation: Array<string>;
-	issueId: string; // cve
-	title: string;
-	url: string;
-	source: string;
-	vector: string;
-	description: string;
-	score: number;
-	criticality: CriticalityType;
-};
-
 export type LibraryDetails = {
 	name: string;
 	version: string;
@@ -2413,24 +2401,53 @@ export type LibraryDetails = {
 	vulns: Array<Vuln>;
 };
 
-export type CsecLibraryDetails = {
-	name: string;
-	version: string;
-	suggestedVersion?: string;
-	highestScore: number;
-	highestCriticality: CriticalityType;
-	language?: string;
-	vulns: Array<CsecVuln>;
-};
-
 export type GetLibraryDetailsResponse = {
 	libraries: Array<LibraryDetails>;
 	recordCount: number;
 	totalRecords: number;
 };
 
+export type CsecApplicationUUIDs = {
+	entityGuid: string;
+	accountId: number;
+	timestamp?: number;
+	entityName?: string;
+	applicationUUID: string;
+	totalTraceCount?: number;
+	totalVulnerableTraceCount?: number;
+	totalUrlCount?: number;
+	totalVulnerableUrlCount?: number;
+	totalSourceMethodCount?: number;
+	totalVulnerableSourceMethodCount?: number;
+	collectorType?: string;
+}[];
+
+export type CsecDataLibrary = {
+	accountId: string;
+	collectorType: string;
+	timestamp: number;
+	eventType: string;
+	applicationSHA256: string;
+	applicationUUID: string;
+	sourceMethod: string;
+	userFileName: string;
+	userMethodName: string;
+	lineNumber: number;
+	vulnerabilityCaseType: string;
+	incidentId: string;
+	traceId: string;
+	status: string;
+	severityLevel: any; //TODO: change to correct type
+	vulnerabilityDetectionTimestamp: number;
+	entityName: string;
+	entityGuid: string;
+	payload?: any;
+	url: string;
+	vulnerabilityType: string;
+};
+
 export type GetCsecLibraryDetailsResponse = {
-	libraries: Array<CsecLibraryDetails>;
+	libraries: CsecDataLibrary[];
 	recordCount: number;
 	totalRecords: number;
 };

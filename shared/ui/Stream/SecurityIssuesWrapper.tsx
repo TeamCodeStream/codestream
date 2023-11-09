@@ -1,6 +1,8 @@
 import {
 	CriticalityType,
+	CsecDataLibrary,
 	ERROR_VM_NOT_SETUP,
+	GetCsecLibraryDetailsType,
 	GetLibraryDetailsType,
 	LibraryDetails,
 	RiskSeverity,
@@ -19,7 +21,7 @@ import { MarkdownText } from "@codestream/webview/Stream/MarkdownText";
 import { Modal } from "@codestream/webview/Stream/Modal";
 import { InlineMenu, MenuItem } from "@codestream/webview/src/components/controls/InlineMenu";
 import { SmartFormattedList } from "@codestream/webview/Stream/SmartFormattedList";
-import { useRequestType } from "@codestream/webview/utilities/hooks";
+import { useCsecRequestType, useRequestType } from "@codestream/webview/utilities/hooks";
 import { ResponseError } from "vscode-jsonrpc";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -33,36 +35,6 @@ interface Props {
 	setHasVulnerabilities: (value: boolean) => void;
 	setHasCsecVulnerabilities: (value: boolean) => void;
 }
-
-export type CsecData = {
-	libraries: CsecDataLibrary[];
-	totalRecords: 1;
-	recordCount: 1;
-};
-
-export type CsecDataLibrary = {
-	accountId: string;
-	collectorType: string;
-	timestamp: number;
-	eventType: string;
-	applicationSHA256: string;
-	applicationUUID: string;
-	sourceMethod: string;
-	userFileName: string;
-	userMethodName: string;
-	lineNumber: number;
-	vulnerabilityCaseType: string;
-	incidentId: string;
-	traceId: string;
-	status: string;
-	severityLevel: CriticalityType;
-	vulnerabilityDetectionTimestamp: number;
-	entityName: string;
-	entityGuid: string;
-	payload?: any;
-	url: string;
-	vulnerabilityType: string;
-};
 
 function isResponseUrlError<T>(obj: unknown): obj is ResponseError<{ url: string }> {
 	if (!obj) {
@@ -451,52 +423,20 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		true
 	);
 
-	// const responseCsec = useRequestType<typeof GetCsecLibraryDetailsType, ResponseError<void>>(
-	// 	GetCsecLibraryDetailsType,
-	// 	{
-	// 		entityGuid: props.entityGuid,
-	// 		accountId: props.accountId,
-	// 		severityFilter: isEmpty(csecSelectedItems) ? undefined : csecSelectedItems,
-	// 		rows,
-	// 	},
-	// 	[csecSelectedItems, props.entityGuid, csecRows, csecExpanded],
-	// 	true
-	// );
-
-	const csecLoading = false;
-	// const csecData = responseCsec.data;
-	const csecError = false;
-
-	const csecData: CsecData = {
-		libraries: [
-			{
-				accountId: "11188139",
-				collectorType: "JAVA",
-				timestamp: 1698823850644,
-				eventType: "sec_iast_record",
-				applicationSHA256: "",
-				applicationUUID: "dec2869a-266f-4a06-b94d-fe437d1f57d5",
-				sourceMethod: "java.io.FileOutputStream.open(FileOutputStream.java:59)",
-				userFileName: "com.k2.testapp.k2javavulnerableperf.controller.FileOperation",
-				userMethodName: "writeFilePathByBodyBlind",
-				lineNumber: 245,
-				vulnerabilityCaseType: "FILE_INTEGRITY",
-				incidentId:
-					"FILE_INTEGRITY-2125583191856551835MTExODgxMzl8QVBNfEFQUExJQ0FUSU9OfDk3ODUxMzY51f2a679f-6736-48d4-ad80-63dab8edfd6e1",
-				traceId: "FILE_INTEGRITY-2125583191856551835",
-				status: "VULNERABLE",
-				severityLevel: "CRITICAL",
-				vulnerabilityDetectionTimestamp: 1698823850636,
-				entityName: "ic-k2-java-vulnerable-perf-codestream",
-				entityGuid: "MTExODgxMzl8QVBNfEFQUExJQ0FUSU9OfDk3ODUxMzY5",
-				payload: null,
-				url: "/file/write/blind",
-				vulnerabilityType: "Application Integrity Violation",
-			},
-		],
-		totalRecords: 1,
-		recordCount: 1,
-	};
+	const { csecLoading, csecData, csecError } = useCsecRequestType<
+		typeof GetCsecLibraryDetailsType,
+		ResponseError<void>
+	>(
+		GetCsecLibraryDetailsType,
+		{
+			entityGuid: props.entityGuid,
+			accountId: props.accountId,
+			severityFilter: isEmpty(csecSelectedItems) ? undefined : csecSelectedItems,
+			rows,
+		},
+		[csecSelectedItems, props.entityGuid, csecRows, csecExpanded],
+		true
+	);
 
 	function handleSelect(severity: RiskSeverity) {
 		if (selectedItems.includes(severity)) {
@@ -674,6 +614,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					<Additional onClick={loadAll} additional={additional} />
 				</>
 			)}
+			{expanded && !loading && data && !data.totalRecords && (
+				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
+					👍 No vulnerable libraries found
+				</Row>
+			)}
 			<Row
 				style={{
 					padding: "2px 10px 2px 30px",
@@ -727,11 +672,6 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					})}
 					<CsecAdditional onClick={csecLoadAll} csecAdditional={csecAdditional} />
 				</>
-			)}
-			{expanded && !loading && data && data.totalRecords === 0 && (
-				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
-					👍 No vulnerable libraries found
-				</Row>
 			)}
 			{csecExpanded && !csecLoading && csecData && !csecData.totalRecords && (
 				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
