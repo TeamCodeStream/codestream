@@ -213,7 +213,7 @@ abstract class CLMEditorManager(
         val (result, project, path) = displayDeps() ?: return
 //        logger.info("*** calling getMetricsByLocation")
 //        logger.info("*** metricsByLocation before $metricsByLocation")
-        val stopwatch = startWithName("getMetricsByLocation")
+        val stopwatch = startWithName("metricsByLocationManager.getMetricsByLocation")
         // Slow operations are prohibited on EDT
         val psiFile = ApplicationManager.getApplication().runReadAction<PsiFile> {
             PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
