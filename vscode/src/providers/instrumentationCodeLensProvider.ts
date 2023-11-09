@@ -1,3 +1,4 @@
+"use strict";
 import * as vscode from "vscode";
 import { EventEmitter, extensions, TextDocument } from "vscode";
 import { Event, SymbolKind } from "vscode-languageclient";
@@ -326,8 +327,11 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 
 	private symbolMatcherFn(
 		symbol: InstrumentableSymbol,
-		data: { namespace?: string; className?: string; functionName: string }
+		data: { namespace?: string; className?: string; functionName?: string }
 	) {
+		if (!data.functionName) {
+			return false;
+		}
 		let result: boolean;
 		// Strip off any trailing () for function (csharp and java) - undo this if we get types in agent
 		const simpleSymbolName = symbol.symbol.name.replace(/\(.*?\)$/, "");
@@ -546,7 +550,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					metric.functionName
 				}`;
 				let collatedMetric = locationLensMap.get(id);
-				if (!collatedMetric) {
+				if (!collatedMetric && metric.functionName) {
 					const currentLocation = await this.observabilityService.computeCurrentLocation(
 						id,
 						metric.lineno!, // Was filtered earlier
@@ -556,7 +560,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 						document.uri.toString()
 					);
 					for (const [_key, value] of Object.entries(currentLocation.locations)) {
-						Logger.log(`*** currentLocation ${value.lineStart} / ${value.colStart}`);
+						Logger.debug(`currentLocation ${value.lineStart} / ${value.colStart}`);
 						const currentLocation = new vscode.Range(
 							new vscode.Position(value.lineStart - 1, 0),
 							new vscode.Position(value.lineStart - 1, 0)

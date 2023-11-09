@@ -60,7 +60,6 @@ export class Container {
 		context.subscriptions.push(
 			(this._instrumentableCodeLensController = new InstrumentableCodeLensController())
 		);
-		// context.subscriptions.push((this._inlayHintsController = new InlayHintsController()));
 		context.subscriptions.push((this._inlayHintsProvider = new CodeStreamInlayHintsProvider()));
 		context.subscriptions.push(new CodemarkPatchContentProvider());
 		context.subscriptions.push((this._statusBar = new StatusBarController()));

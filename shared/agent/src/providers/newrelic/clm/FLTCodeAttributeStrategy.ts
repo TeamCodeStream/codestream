@@ -76,6 +76,7 @@ export type SampleSizeResponse = {
 					},
 				];
 			};
+			extrapolations: any;
 			spans: {
 				metadata: {
 					timeWindow: TimeWindow;
@@ -109,6 +110,7 @@ export type ErrorRateResponse = {
 					},
 				];
 			};
+			extrapolations: any;
 			spans: {
 				metadata: {
 					timeWindow: TimeWindow;
@@ -141,6 +143,7 @@ export type MethodAverageDurationResponse = {
 					},
 				];
 			};
+			extrapolations: any;
 			spans: {
 				metadata: {
 					timeWindow: TimeWindow;
@@ -355,15 +358,15 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		if (averageDurationResponse) {
 			averageDurationApiResponse = {
 				results: durationsConsolidated,
-				metadata: averageDurationResponse.actor.account.metrics.metadata,
-				// || averageDurationResponse.actor.account.extrapolations.metadata,
+				metadata:
+					averageDurationResponse.actor.account.metrics.metadata ||
+					averageDurationResponse.actor.account.extrapolations.metadata,
 			};
 			const addedMethodName = this.addMethodName(
 				groupedByTransactionName,
 				averageDurationApiResponse.results
 			);
 			averageDurationEnhancedTimeslices = addedMethodName.filter(_ => _ !== null && _.functionName);
-			// averageDurationResponse.actor.account.nrql.results = addedMethodNameFiltered;
 
 			if (this.request?.locator?.functionName) {
 				averageDurationEnhancedTimeslices = averageDurationEnhancedTimeslices.filter(
@@ -377,8 +380,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		if (errorRateResponse) {
 			errorRateApiResponse = {
 				results: errorRatesConsolidated,
-				metadata: errorRateResponse.actor.account.metrics.metadata,
-				// || errorRateResponse.actor.account.extrapolations.metadata,
+				metadata:
+					errorRateResponse.actor.account.metrics.metadata ||
+					errorRateResponse.actor.account.extrapolations.metadata,
 			};
 			errorRateEnhancedTimeslices = this.addMethodName(
 				groupedByTransactionName,
@@ -396,8 +400,9 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 		if (sampleSizeResponse) {
 			sampleSizeApiResponse = {
 				results: sampleSizesConsolidated,
-				metadata: sampleSizeResponse.actor.account.metrics.metadata,
-				// || sampleSizeResponse.actor.account.extrapolations.metadata,
+				metadata:
+					sampleSizeResponse.actor.account.metrics.metadata ||
+					sampleSizeResponse.actor.account.extrapolations.metadata,
 			};
 			sampleSizeEnhancedTimeslices = this.addMethodName(
 				groupedByTransactionName,
@@ -839,14 +844,10 @@ export class FLTCodeAttributeStrategy implements FLTStrategy {
 	}
 }
 
-function isSameMethod(
-	method1: string[],
-	method2: string[]
-	// language: LanguageId | undefined = undefined
-) {
+function isSameMethod(method1: string[], method2: string[]) {
 	const method1Key = keyFromFacet(method1);
 	const method2Key = keyFromFacet(method2);
-	// Span name, code.linno and code.column are same
+	// Span name, code.lineno and code.column are same
 	if (method1Key === method2Key) return true;
 
 	// probably need some language-specific logic here

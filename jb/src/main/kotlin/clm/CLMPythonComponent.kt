@@ -101,7 +101,7 @@ class PythonSymbolResolver : SymbolResolver {
     override fun clmElements(psiFile: PsiFile, clmResult: ClmResult?): List<ClmElements> {
         return listOf()
     }
-      }
+}
 
 class CLMPythonEditorManager(editor: Editor) : CLMEditorManager(editor, "python", false, false, PythonSymbolResolver()) {
 

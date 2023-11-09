@@ -139,7 +139,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		return {
 			...symbol,
 			averageDuration: record.value,
-			facet: [record.name], // TODO right now facet is metricTimesliceName, lineno, colno
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 		};
 	}
 
@@ -177,7 +177,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		return {
 			...symbol,
 			errorRate,
-			facet: [record.name], // TODO right now facet is metricTimesliceName, lineno, colno
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 		};
 	}
 
@@ -205,7 +205,7 @@ export abstract class FLTNameInferenceStrategy implements FLTStrategy {
 		return {
 			...symbol,
 			sampleSize: record.value,
-			facet: [record.name], // TODO right now facet is metricTimesliceName, lineno, colno
+			facet: [record.name], // facet is [metricTimesliceName, lineno, colno]
 			source,
 		};
 	}

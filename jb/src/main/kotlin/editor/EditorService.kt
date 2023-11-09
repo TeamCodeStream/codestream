@@ -383,7 +383,6 @@ class EditorService(val project: Project) {
         }
 
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
-//        logger.info("*** Editor.renderMarkers")
         if (isDisposed) return@invokeLater
 
         markerHighlighters[this]?.let { highlighters ->
@@ -491,7 +490,6 @@ class EditorService(val project: Project) {
             return@invokeLater
         }
 
-        logger.info("*** toggleRangeHighlight")
         synchronized(highlighters) {
             for (highlighter in highlighters) {
                 editor.markupModel.removeHighlighter(highlighter)

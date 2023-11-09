@@ -1313,12 +1313,12 @@ export class SidebarController implements Disposable {
 				break;
 			}
 			case RefreshEditorsCodeLensRequestType.method: {
-				// webview.onIpcRequest(RefreshEditorsCodeLensRequestType, e, async (_type, _params) => {
-				// 	await Container.commands.updateEditorCodeLens();
-				// 	return {
-				// 		success: true
-				// 	};
-				// });
+				webview.onIpcRequest(RefreshEditorsCodeLensRequestType, e, async (_type, _params) => {
+					await Container.commands.updateEditorCodeLens();
+					return {
+						success: true
+					};
+				});
 				break;
 			}
 			case EditorRevealSymbolRequestType.method: {

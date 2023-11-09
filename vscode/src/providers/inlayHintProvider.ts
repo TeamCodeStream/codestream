@@ -34,6 +34,7 @@ import { Stopwatch } from "@codestream/utils/system/stopwatch";
 import Cache from "timed-cache";
 
 export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposable {
+	// TODO limit to languages we support?
 	static selector: DocumentSelector = [{ scheme: "file" }, { scheme: "untitled" }];
 
 	private readonly _disposable: Disposable;
@@ -77,7 +78,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 
 	// The symbol provider has doesn't differentiate between anonymous functions and named functions via the kind field
 	// and it pretty much returns random crap for the "name" of an anonymous function. So we can hopefully detect
-	// anonymous functions by the fact that they are invalid javascript varialbe names
+	// anonymous functions by the fact that they are invalid javascript variable names
 	private isValidJavascriptFunctionName(functionName: string): boolean {
 		return functionName.match(/^[a-zA-Z_$][0-9a-zA-Z_$]*$/) != null;
 	}
@@ -168,16 +169,17 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 						metric.lineno,
 						metric.column,
 						commit,
-						metric.functionName,
+						metric.functionName ?? "(anonymous)",
 						document.uri.toString()
 					);
 					currentLocationStopwatch.stop();
-					Logger.log(`*** provideInlayHints ${currentLocationStopwatch.report()}`);
+					Logger.debug(`provideInlayHints ${currentLocationStopwatch.report()}`);
 					for (const [_key, value] of Object.entries(currentLocation.locations)) {
-						Logger.log(`*** currentLocation ${value.lineStart} / ${value.colStart}`);
-						// Not the currentLocation column - we'd have to get the symbols from the commit sha but that is too expensive
-						// But the column does give us the order of anonymous functions on the same line so we can find anonymous functions with
-						// symbol provider and put them in the same order (assuming user didn't refactor the code too much)
+						Logger.debug(`currentLocation ${value.lineStart} / ${value.colStart}`);
+						// Not the currentLocation column - we'd have to get the symbols from the commit sha but that is too
+						// expensive But the column does give us the order of anonymous functions on the same line so we can find
+						// anonymous functions with symbol provider and put them in the same order (assuming user didn't refactor
+						// the code too much)
 						const currentLocation = new Range(
 							new Position(value.lineStart - 1, metric.column),
 							new Position(value.lineStart - 1, metric.column)
@@ -206,24 +208,24 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 				if (lineCount > 1) {
 					// lineCount === 1 handled in instrumentationCodeLensProvider
 					// TODO did I just realize there can be multiple named functions on the same line?
-					Logger.log(`*** adding ${key} to finalLocationLensMap`);
+					Logger.debug(`adding ${key} to finalLocationLensMap`);
 					finalLocationLensMap.set(key, locationLensMap.get(key)!);
 				}
 			}
 			locationLensMap = finalLocationLensMap;
 			this._cache.put(locationMapKey, locationLensMap);
 		} else {
-			Logger.log(`*** provideInlayHints cache hit ${locationMapKey}`);
+			Logger.debug(`provideInlayHints cache hit ${locationMapKey}`);
 		}
 		computeLoopStopwatch.stop();
-		Logger.log(`*** provideInlayHints ${computeLoopStopwatch.report()}`);
+		Logger.debug(`provideInlayHints ${computeLoopStopwatch.report()}`);
 
 		const computePhaseStopwatch = new Stopwatch("computePhase");
 		const inlayHints: InlayHint[] = [];
 		const symbolLocatorStopwatch = new Stopwatch("symbolLocator");
 		const symbols = await this.symbolLocator.locate(document, token);
 		symbolLocatorStopwatch.stop();
-		Logger.log(`*** provideInlayHints ${symbolLocatorStopwatch.report()}`);
+		Logger.debug(`provideInlayHints ${symbolLocatorStopwatch.report()}`);
 
 		const sortedKeys: string[] = Array.from(locationLensMap.entries())
 			.sort((a, b) => {
@@ -242,7 +244,6 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			if (!lineLevelMetric) {
 				continue;
 			}
-			// Logger.log(`*** processing lineLevelMetric ${key}`);
 			const { currentLocation, duration, sampleSize, errorRate } = lineLevelMetric;
 			const { start } = currentLocation;
 			const symbolsForLine = symbols.allSymbols
@@ -252,7 +253,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			lineTracker.set(start.line, lineCount + 1);
 			const symbol = symbolsForLine[lineCount];
 			// symbolsForLine.forEach(_ => {
-			// 	Logger.log(`*** symbol for line ${JSON.stringify(_)}`);
+			// 	Logger.debug(`symbol for line ${JSON.stringify(_)}`);
 			// });
 
 			const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
@@ -295,13 +296,13 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			);
 			inlayHintLabelPart.tooltip = text;
 			const inlayHint = new InlayHint(symbol.range.start, [inlayHintLabelPart], InlayHintKind.Type);
-			// Logger.log(`*** inlayHint ${inlayHint.position.line}:${inlayHint.position.character}`);
+			// Logger.debug(`inlayHint ${inlayHint.position.line}:${inlayHint.position.character}`);
 			inlayHints.push(inlayHint);
 		}
 		computePhaseStopwatch.stop();
-		Logger.log(`*** provideInlayHints ${computePhaseStopwatch.report()}`);
+		Logger.debug(`provideInlayHints ${computePhaseStopwatch.report()}`);
 		overallStopwatch.stop();
-		Logger.log(`*** provideInlayHints ${overallStopwatch.report()}`);
+		Logger.debug(`provideInlayHints ${overallStopwatch.report()}`);
 		return inlayHints;
 
 		// if (currentLocation[id]) {

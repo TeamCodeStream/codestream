@@ -77,7 +77,6 @@ class CodeStreamConfigurable : SearchableConfigurable {
         val gui = CodeStreamConfigurableGUI()
         val settingsService = ServiceManager.getService(ApplicationSettingsService::class.java)
         val state = settingsService.state
-        logger.info("disableStrictSSL: ${state.disableStrictSSL}")
 
         state.let {
             gui.apply {

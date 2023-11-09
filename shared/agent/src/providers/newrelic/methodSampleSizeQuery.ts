@@ -1,5 +1,6 @@
 import { escapeNrql } from "../newrelic";
 import { LanguageId } from "./clm/clmManager";
+import { getLanguageFilter } from "./metricsLanguageNrqlFilter";
 
 export function generateMethodSampleSizeQuery(
 	languageId: LanguageId,
@@ -10,8 +11,8 @@ export function generateMethodSampleSizeQuery(
 	const spansLookup = metricTimesliceNames?.length
 		? `name in (${metricTimesliceNames.map(metric => `'${metric}'`).join(",")})`
 		: `name LIKE '${codeNamespace}%'`;
-	const languageCrap = languageId === "python" ? " AND code.function != '__call__' " : "";
-	const spansQuery = `FROM Span SELECT count(*) AS 'sampleSize' WHERE \`entity.guid\` = '${newRelicEntityGuid}' ${languageCrap} AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
+	const languageExtra = getLanguageFilter(languageId);
+	const spansQuery = `FROM Span SELECT count(*) AS 'sampleSize' WHERE \`entity.guid\` = '${newRelicEntityGuid}' ${languageExtra} AND ${spansLookup} FACET name, code.lineno, code.column as metricTimesliceName SINCE 30 minutes AGO LIMIT 100`;
 	const metricsLookup = metricTimesliceNames?.length
 		? `(metricTimesliceName in ( ${metricTimesliceNames
 				.map(mtsn => `'${mtsn}'`)

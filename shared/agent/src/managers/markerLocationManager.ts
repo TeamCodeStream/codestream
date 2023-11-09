@@ -707,43 +707,34 @@ export class MarkerLocationManager extends ManagerBase<CSMarkerLocations> {
 			return { locations, orphans };
 		}
 
-		let fetchIfCommitNotFound = true;
-		for (const marker of markers) {
-			const diff = await git.getDiffBetweenCommits(
-				commit,
-				currentFileRevision,
-				filePath,
-				fetchIfCommitNotFound
-			);
-			fetchIfCommitNotFound = false;
-			if (!diff) {
-				const details = `cannot obtain diff - skipping calculation from ${commit} to ${currentFileRevision}`;
-				for (const marker of markers) {
-					orphans[marker.id] = {
-						reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
-						details,
-					};
-				}
-
-				continue;
-			}
-
-			const locationsToCalculate: MarkerLocationsById = Object.create(null);
+		const parsedDiff = await git.getDiffBetweenCommits(commit, currentFileRevision, filePath, true);
+		if (!parsedDiff) {
+			const details = `cannot obtain diff - skipping calculation from ${commit} to ${currentFileRevision}`;
 			for (const marker of markers) {
-				const location = marker.referenceLocations[0].location;
-				locationsToCalculate[marker.id] = {
-					id: marker.id,
-					lineStart: location[0],
-					colStart: location[1],
-					lineEnd: location[2],
-					colEnd: location[3],
+				orphans[marker.id] = {
+					reason: MarkerNotLocatedReason.MISSING_ORIGINAL_COMMIT,
+					details,
 				};
 			}
 
-			const calculatedLocations = await calculateLocations(locationsToCalculate, diff);
-			for (const [id, location] of Object.entries(calculatedLocations)) {
-				locations[id] = location;
-			}
+			return { locations, orphans };
+		}
+
+		const locationsToCalculate: MarkerLocationsById = Object.create(null);
+		for (const marker of markers) {
+			const location = marker.referenceLocations[0].location;
+			locationsToCalculate[marker.id] = {
+				id: marker.id,
+				lineStart: location[0],
+				colStart: location[1],
+				lineEnd: location[2],
+				colEnd: location[3],
+			};
+		}
+
+		const calculatedLocations = await calculateLocations(locationsToCalculate, parsedDiff);
+		for (const [id, location] of Object.entries(calculatedLocations)) {
+			locations[id] = location;
 		}
 
 		const locationsInCurrentCommit = {

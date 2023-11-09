@@ -169,7 +169,6 @@ abstract class CLMEditorManager(
     private val metricsByLocationManager = MetricsByLocationManager()
     private var metricsBySymbol = mapOf<MethodLevelTelemetrySymbolIdentifier, Metrics>()
     private var clmResult: ClmResult? = null
-    // Todo - don't key on range - key on colno / lineno / commit
     // Store range in value so we can update locations when file changes
     private var metricsByLocation = mapOf<MetricSource, MetricLocation>()
     private val inlays = mutableSetOf<Inlay< out EditorCustomElementRenderer>>()
@@ -211,8 +210,8 @@ abstract class CLMEditorManager(
 
     private suspend fun updateLocations() {
         val (result, project, path) = displayDeps() ?: return
-//        logger.info("*** calling getMetricsByLocation")
-//        logger.info("*** metricsByLocation before $metricsByLocation")
+        // logger.info("*** calling getMetricsByLocation")
+        // logger.info("*** metricsByLocation before $metricsByLocation")
         val stopwatch = startWithName("metricsByLocationManager.getMetricsByLocation")
         // Slow operations are prohibited on EDT
         val psiFile = ApplicationManager.getApplication().runReadAction<PsiFile> {
@@ -332,7 +331,6 @@ abstract class CLMEditorManager(
 
     private var debouncedRenderBlame: Job? = null
     override fun documentChanged(event: DocumentEvent) {
-//        logger.info("*** documentChanged")
         debouncedRenderBlame?.cancel()
         debouncedRenderBlame = tasksCoroutineScope.launch {
             delay(750L)
@@ -422,9 +420,9 @@ abstract class CLMEditorManager(
             val formatted = metrics.format(appSettings.goldenSignalsInEditorFormat, since)
             val anomaly = metrics.averageDuration?.anomaly ?: metrics.errorRate?.anomaly
             val range = getTextRangeWithoutLeadingCommentsAndWhitespaces(symbol)
-//            logger.info("got range $range for function ${symbolIdentifier.functionName} and textRange " +
-//                "${symbol.textRange} and lspPosition ${editor.document.lspPosition(symbol.textRange.startOffset)} " +
-//                "${editor.document.lspPosition(symbol.textRange.endOffset)}")
+            // logger.info("got range $range for function ${symbolIdentifier.functionName} and textRange " +
+            // "${symbol.textRange} and lspPosition ${editor.document.lspPosition(symbol.textRange.startOffset)} " +
+            // "${editor.document.lspPosition(symbol.textRange.endOffset)}")
             val smartElement = SmartPointerManager.createPointer(symbol)
             val textPresentation = presentationFactory.text(formatted.first)
             val referenceOnHoverPresentation =
@@ -502,7 +500,7 @@ abstract class CLMEditorManager(
                                 result.relativeFilePath,
                                 languageId,
                                 range,
-                                "(anonymous)", // TODO Get for "real"
+                                "(anonymous)",
                                 result.newRelicAccountId,
                                 result.newRelicEntityGuid,
                                 OPTIONS,

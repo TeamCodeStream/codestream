@@ -30,7 +30,6 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import org.junit.BeforeClass
 
 @Suppress("UnstableApiUsage")
 @TestDataPath("csTestData/simple")
