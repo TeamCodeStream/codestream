@@ -383,7 +383,7 @@ class EditorService(val project: Project) {
         }
 
     private fun Editor.renderMarkers(markers: List<DocumentMarker>) = ApplicationManager.getApplication().invokeLater {
-        logger.info("*** Editor.renderMarkers")
+//        logger.info("*** Editor.renderMarkers")
         if (isDisposed) return@invokeLater
 
         markerHighlighters[this]?.let { highlighters ->

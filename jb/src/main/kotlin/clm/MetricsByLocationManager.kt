@@ -2,6 +2,8 @@ package com.codestream.clm
 
 import com.codestream.agentService
 import com.codestream.extensions.prettyRange
+import com.codestream.extensions.startWithName
+import com.codestream.extensions.stats
 import com.codestream.extensions.toRangeIgnoreColumn
 import com.codestream.protocols.agent.CSReferenceLocation
 import com.codestream.protocols.agent.ComputeCurrentLocationsRequest
@@ -23,6 +25,7 @@ class MetricsByLocationManager {
                                      uri: String,
                                      project: Project): ImmutableMap<MetricSource, MetricLocation> {
         val updatedMetricsByLocation = mutableMapOf<MetricSource, MetricLocation>()
+        val metricsByLocationCalculationsStopwatch = startWithName("metricsByLocationCalculations")
         if (fileLevelTelemetry.errorRate != null) {
             processErrorRate(fileLevelTelemetry.errorRate, uri, project, updatedMetricsByLocation, fileLevelTelemetry.deploymentCommit)
         }
@@ -32,6 +35,8 @@ class MetricsByLocationManager {
         if (fileLevelTelemetry.sampleSize != null) {
             processSampleSize(fileLevelTelemetry.sampleSize, uri, updatedMetricsByLocation)
         }
+        metricsByLocationCalculationsStopwatch.stop()
+        logger.debug(metricsByLocationCalculationsStopwatch.stats())
         return updatedMetricsByLocation.toImmutableMap()
     }
 
@@ -68,9 +73,9 @@ class MetricsByLocationManager {
                         MetricLocation(Metrics(), range)
                     }
                     metricLocation.metrics.errorRate = errorRate
-                    logger.info("*** added anonymous errorRate $errorRate to ${range.prettyRange()}")
+                    logger.debug("added anonymous errorRate $errorRate to ${range.prettyRange()}")
                 } else {
-                    logger.info("*** no currentLocations for anonymous errorRate $errorRate")
+                    logger.debug("no currentLocations for anonymous errorRate $errorRate")
                 }
             }
         }
@@ -113,9 +118,9 @@ class MetricsByLocationManager {
                         MetricLocation(Metrics(), range)
                     }
                     metricLocation.metrics.averageDuration = averageDuration
-                    logger.info("*** added anonymous averageDuration $averageDuration to ${range.prettyRange()}")
+                    logger.debug("added anonymous averageDuration $averageDuration to ${range.prettyRange()}")
                 } else {
-                    logger.info("*** no currentLocations for anonymous averageDuration $averageDuration")
+                    logger.debug("no currentLocations for anonymous averageDuration $averageDuration")
                 }
             }
         }
@@ -137,9 +142,9 @@ class MetricsByLocationManager {
                 val metricLocation = updatedMetricsByLocation.get(metricSource)
                 if (metricLocation != null) {
                     metricLocation.metrics.sampleSize = sampleSize
-                    logger.info("*** added anonymous sampleSize $sampleSize to ${metricLocation.range.prettyRange()}")
+                    logger.debug("added anonymous sampleSize $sampleSize to ${metricLocation.range.prettyRange()}")
                 } else {
-                    logger.info("*** no metricLocation for anonymous sampleSize $sampleSize")
+                    logger.debug("no metricLocation for anonymous sampleSize $sampleSize")
                 }
             }
         }
@@ -181,5 +186,4 @@ class MetricsByLocationManager {
         )
         return currentLocations
     }
-
 }
