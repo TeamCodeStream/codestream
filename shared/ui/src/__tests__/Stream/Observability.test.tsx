@@ -199,8 +199,10 @@ describe("Observability", () => {
 					responseTime: [
 						{
 							name: "responsename",
-							codeNamespace: "myclassname",
-							codeFunction: "myfunctionname",
+							codeAttrs: {
+								codeNamespace: "myclassname",
+								codeFunction: "myfunctionname",
+							},
 							language: "java",
 							newValue: 500,
 							oldValue: 300,
