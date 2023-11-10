@@ -1,15 +1,12 @@
 "use strict";
+import * as NewRelic from "newrelic";
 import uuid from "uuid/v4";
 import { Logger } from "../logger";
 import { CodeStreamSession, SessionStatusChangedEvent } from "../session";
 import { SessionStatus } from "../types";
-
-// FIXME: sorry, typescript purists: i simply gave up trying to get the type definitions for this module to work
-import Analytics from "analytics-node";
 import { debug } from "../system";
 
-export class TelemetryService {
-	private _segmentInstance: Analytics | undefined;
+export class NewRelicTelemetryService {
 	private _superProps: { [key: string]: any };
 	private _distinctId?: string;
 	private _anonymousId: string;
@@ -18,10 +15,7 @@ export class TelemetryService {
 	private _readyPromise: Promise<void>;
 	private _firstSessionStartedAt?: number;
 	private _firstSessionTimesOutAfter?: number;
-	private _eventQueue: {
-		event: string;
-		data?: { [key: string]: string | number | boolean };
-	}[] = [];
+	private _enabled?: boolean;
 
 	private _onReady: () => void = () => {};
 
@@ -34,8 +28,7 @@ export class TelemetryService {
 		hasOptedOut: boolean,
 		opts?: { [key: string]: string | number | boolean }
 	) {
-		Logger.debug("Telemetry created");
-
+		Logger.debug(`Telemetry[NewRelic] created`);
 		this._session = session;
 		this._superProps = {};
 		this._hasOptedOut = false;
@@ -55,7 +48,12 @@ export class TelemetryService {
 
 		this._readyPromise = new Promise<void>(resolve => {
 			this._onReady = () => {
-				Logger.debug("Telemetry is ready");
+				this._enabled = this._session?.agent?.agentOptions?.newRelicTelemetryEnabled;
+				if (this._enabled) {
+					Logger.debug("Telemetry[NewRelic] is ready");
+				} else {
+					Logger.debug("Telemetry[NewRelic] is disabled");
+				}
 				resolve();
 			};
 		});
@@ -66,20 +64,7 @@ export class TelemetryService {
 	}
 
 	async initialize() {
-		Logger.debug("Telemetry initializing...");
-		let token = "";
-		try {
-			token = await this._session.api.getTelemetryKey();
-		} catch (ex) {
-			Logger.error(ex);
-		}
-
-		try {
-			this._segmentInstance = new Analytics(token);
-		} catch (ex) {
-			Logger.error(ex);
-		}
-		Logger.debug("Telemetry initialized");
+		Logger.debug("Telemetry[NewRelic] initialized");
 		this._onReady();
 	}
 
@@ -98,39 +83,11 @@ export class TelemetryService {
 
 	identify(id: string, props?: { [key: string]: any }) {
 		this._distinctId = id;
-		if (this._hasOptedOut || this._segmentInstance == null) {
-			return;
-		}
-
-		try {
-			Logger.debug(`Telemetry identify ${this._distinctId}`);
-			this._segmentInstance.identify({
-				userId: this._distinctId,
-				anonymousId: this._anonymousId,
-				traits: props,
-			});
-			this._segmentInstance.flush();
-		} catch (ex) {
-			Logger.error(ex);
-		}
 	}
 
 	setAnonymousId(id: string) {
-		if (this._hasOptedOut || this._segmentInstance == null) {
-			return;
-		}
-		try {
-			Logger.debug(`Telemetry setAnonymousId ${id}`);
-			this._anonymousId = id;
-			this._segmentInstance.identify({
-				anonymousId: id,
-			});
-			this._segmentInstance.flush();
-		} catch (ex) {
-			Logger.error(ex);
-		}
+		this._anonymousId = id;
 	}
-
 	getAnonymousId() {
 		return this._anonymousId;
 	}
@@ -157,10 +114,12 @@ export class TelemetryService {
 
 	@debug()
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
+		if (!this._enabled) return;
+
 		const cc = Logger.getCorrelationContext();
 
-		if (this._hasOptedOut || this._segmentInstance == null) {
-			Logger.debug("Cannot track, user has opted out or no segment instance");
+		if (this._hasOptedOut || !this._session?.agent?.agentOptions?.newRelicTelemetryEnabled) {
+			Logger.debug("Cannot track, user has opted out");
 			return;
 		}
 
@@ -172,7 +131,7 @@ export class TelemetryService {
 			this._superProps["First Session"] = false;
 		}
 
-		const payload: { [key: string]: any } = { ...data, ...this._superProps };
+		let payload: { [key: string]: any } = { ...data, ...this._superProps };
 
 		if (this._distinctId != null) {
 			payload["distinct_id"] = this._distinctId;
@@ -184,15 +143,40 @@ export class TelemetryService {
 			payload
 		);
 		try {
-			this._segmentInstance.track({
-				userId: this._distinctId,
-				anonymousId: this._anonymousId,
-				event,
-				properties: payload,
-			});
-			this._segmentInstance.flush();
+			// New Relic doesn't support nested objects as values... try to flatten them out (1-level only),
+			// transforming foo = { bar: 1} into foo.bar = 1
+			const toAdd = this.flatten(payload);
+			payload = { ...payload, ...toAdd };
+			// replacing spaces with nothing, since spaces are not allowed in New Relic custom event names.
+			// adding an "CodeStream_" prefix, since without, the name of the event becomes a collection name.
+			// that makes it _very_ hard to distinguish from other built-in, New Relic-supplied data collections.
+			NewRelic.recordCustomEvent(`CodeStream_${event.replace(/ /g, "")}`, payload);
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
+	}
+
+	private flatten(payload: any): any {
+		const toAdd: any = {};
+		try {
+			const keys = Object.keys(payload);
+			keys.forEach(k => {
+				const data = payload[k];
+				if (typeof data === "object") {
+					Object.keys(data).forEach(_ => {
+						const newKey = `${k}.${_}`;
+						if (typeof data[_] !== "object") {
+							toAdd[newKey] = data[_];
+						} else {
+							Logger.debug(`Ignoring nested object: ${newKey}`);
+						}
+					});
+					delete payload[k];
+				}
+			});
+		} catch (ex) {
+			Logger.warn("Unable to flatten", ex);
+		}
+		return toAdd;
 	}
 }

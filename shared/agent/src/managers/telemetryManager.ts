@@ -9,64 +9,77 @@ import {
 import { Logger } from "../logger";
 import { CodeStreamSession } from "../session";
 import { debug, lsp, lspHandler } from "../system";
-import { TelemetryService } from "../telemetry/telemetry";
-
+import { TelemetryService } from "../telemetry/telemetryService";
+import { SegmentTelemetryService } from "../telemetry/segmentTelemetry";
+import { NewRelicTelemetryService } from "../telemetry/newRelicTelemetry";
 @lsp
 export class TelemetryManager {
-	private readonly _telemetry: TelemetryService;
+	private readonly _providers: TelemetryService[];
 
 	constructor(session: CodeStreamSession) {
-		// TODO: Respect VSCode telemetry opt out
-		this._telemetry = new TelemetryService(session, false);
+		this._providers = [
+			new SegmentTelemetryService(session, false),
+			new NewRelicTelemetryService(session, false),
+		];
 	}
 
 	setConsent(hasConsented: boolean) {
-		this._telemetry.setConsent(hasConsented);
+		this._providers.forEach(provider => provider.setConsent(hasConsented));
 	}
 
 	identify(id: string, props: { [key: string]: any }) {
-		this._telemetry.identify(id, props);
+		this._providers.forEach(provider => provider.identify(id, props));
 	}
 
 	setSuperProps(props: { [key: string]: string | number | boolean }) {
-		this._telemetry.setSuperProps(props);
+		this._providers.forEach(provider => provider.setSuperProps(props));
 	}
 
 	addSuperProps(props: { [key: string]: string | number | boolean }) {
-		this._telemetry.addSuperProps(props);
+		this._providers.forEach(provider => provider.addSuperProps(props));
 	}
 
 	setFirstSessionProps(firstSessionStartedAt: number, firstSessionTimesOutAfter: number) {
-		this._telemetry.setFirstSessionProps(firstSessionStartedAt, firstSessionTimesOutAfter);
+		this._providers.forEach(provider =>
+			provider.setFirstSessionProps(firstSessionStartedAt, firstSessionTimesOutAfter)
+		);
 	}
 
-	ready(): Promise<void> {
-		return this._telemetry.ready();
+	ready(): Promise<void[]> {
+		return Promise.all(
+			this._providers.map(provider => {
+				return provider.ready();
+			})
+		);
 	}
 
 	@debug()
 	@lspHandler(TelemetryRequestType)
 	track(request: TelemetryRequest) {
 		const cc = Logger.getCorrelationContext();
-		try {
-			void this._telemetry.track(request.eventName, request.properties);
-		} catch (ex) {
-			Logger.error(ex, cc);
-		}
+		this._providers.forEach(provider => {
+			try {
+				void provider.track(request.eventName, request.properties);
+			} catch (ex) {
+				Logger.error(ex, cc);
+			}
+		});
 	}
 
 	@lspHandler(GetAnonymousIdRequestType)
 	getAnonymousId() {
-		return this._telemetry.getAnonymousId();
+		return this._providers[0].getAnonymousId();
 	}
 
 	@lspHandler(TelemetrySetAnonymousIdRequestType)
 	setAnonymousId(request: TelemetrySetAnonymousIdRequest) {
 		const cc = Logger.getCorrelationContext();
-		try {
-			void this._telemetry.setAnonymousId(request.anonymousId);
-		} catch (ex) {
-			Logger.error(ex, cc);
-		}
+		this._providers.forEach(provider => {
+			try {
+				void provider.setAnonymousId(request.anonymousId);
+			} catch (ex) {
+				Logger.error(ex, cc);
+			}
+		});
 	}
 }
