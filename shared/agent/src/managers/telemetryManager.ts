@@ -68,7 +68,10 @@ export class TelemetryManager {
 
 	@lspHandler(GetAnonymousIdRequestType)
 	getAnonymousId() {
-		return this._providers[0].getAnonymousId();
+		// all providers have the same anonymousId
+		return this._providers && this._providers.length
+			? this._providers[0].getAnonymousId()
+			: undefined;
 	}
 
 	@lspHandler(TelemetrySetAnonymousIdRequestType)
