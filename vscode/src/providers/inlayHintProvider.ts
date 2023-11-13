@@ -89,8 +89,8 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 		token: CancellationToken
 	): Promise<InlayHint[]> {
 		const overallStopwatch = new Stopwatch("provideInlayHints total");
-		Logger.log(
-			`*** provideInlayHints called with ${document.fileName} ${range.start.line}:${range.start.character} ${range.end.line}:${range.end.character}`
+		Logger.debug(
+			`provideInlayHints called with ${document.fileName} ${range.start.line}:${range.start.character} ${range.end.line}:${range.end.character}`
 		);
 
 		const methodLevelTelemetryRequestOptions: FileLevelTelemetryRequestOptions = {
@@ -109,7 +109,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 		);
 		// this.resetCache = false;
 		fileLevelTelemetryStopwatch.stop();
-		Logger.log(`*** provideInlayHints ${fileLevelTelemetryStopwatch.report()}`);
+		Logger.debug(`provideInlayHints ${fileLevelTelemetryStopwatch.report()}`);
 
 		if (fileLevelTelemetryResponse == null) {
 			Logger.log("provideCodeLenses no response", {

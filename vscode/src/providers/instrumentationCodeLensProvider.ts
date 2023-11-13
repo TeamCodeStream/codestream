@@ -601,8 +601,14 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 			const locationLenses: vscode.CodeLens[] = [];
 
 			for (const lineLevelMetrics of lineLevelLensMap.values()) {
+				// Skipping lineLevelMetrics.length > 1 as it is handled in inlayHintProvider.ts
 				if (lineLevelMetrics.length === 1) {
 					const lineLevelMetric = lineLevelMetrics[0];
+					// Don't show the inlay if there is presently no code at the location
+					// (otherwise you get phantom inlays for removed code)
+					if (!this.lineHasAnonymousFunction(allSymbols, lineLevelMetric.currentLocation)) {
+						continue;
+					}
 					const viewCommandArgs: ViewMethodLevelTelemetryCommandArgs = {
 						repo: fileLevelTelemetryResponse.repo,
 						codeNamespace: fileLevelTelemetryResponse.codeNamespace!,
@@ -666,7 +672,7 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 					: undefined;
 
 				if (!sampleSizeForFunction && !averageDurationForFunction && !errorRateForFunction) {
-					Logger.warn(`provideCodeLenses no data for ${_.symbol.name}`);
+					Logger.warn(`provideCodeLenses no data for ${_.symbol.name} (might be anon function)`);
 					return undefined;
 				}
 
@@ -772,6 +778,19 @@ export class InstrumentationCodeLensProvider implements vscode.CodeLensProvider 
 		}
 
 		return codeLenses;
+	}
+
+	private lineHasAnonymousFunction(
+		allSymbols: vscode.DocumentSymbol[],
+		currentLocation: vscode.Range
+	): boolean {
+		const symbolsForLine = allSymbols.filter(symbol => {
+			return (
+				symbol.range.start.line === currentLocation.start.line && symbol.name.endsWith(" callback")
+			);
+		});
+		Logger.debug(`symbolsForLine ${JSON.stringify(symbolsForLine, null, 2)}`);
+		return symbolsForLine.length > 0;
 	}
 
 	private tryTrack(cacheKey: string, accountId: string, languageId: string, codeLensCount: number) {
