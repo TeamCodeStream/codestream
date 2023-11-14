@@ -111,7 +111,10 @@ export class NRManager {
 			return exists;
 		} catch (e) {
 			// OK if rev doesn't exist - ganbaru!
-			if (e.message && e.message.includes("invalid object name")) {
+			if (
+				e.message &&
+				(e.message.includes("invalid object name") || e.message.includes("Not a valid object name"))
+			) {
 				return fs.existsSync(resolvedPath);
 			}
 		}
