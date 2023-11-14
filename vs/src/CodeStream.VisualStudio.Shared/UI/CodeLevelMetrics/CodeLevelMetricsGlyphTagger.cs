@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 
 using System;
@@ -13,11 +12,7 @@ using CodeStream.VisualStudio.Shared.Services;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft;
-using CSConstants = CodeStream.VisualStudio.Core.Constants;
 using CodeStream.VisualStudio.Core.Extensions;
-using CodeStream.VisualStudio.Core.Models;
-
-using Microsoft.VisualStudio.Threading;
 
 namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 {
@@ -116,16 +111,25 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
 								)
+								|| $"{x.Namespace}.{x.FunctionName}".EqualsIgnoreCase(
+									namespaceFunction
+								)
 						);
 						var errors = classMetrics?.ErrorRate?.SingleOrDefault(
 							x =>
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
 								)
+								|| $"{x.Namespace}.{x.FunctionName}".EqualsIgnoreCase(
+									namespaceFunction
+								)
 						);
 						var sampleSize = classMetrics?.SampleSize?.SingleOrDefault(
 							x =>
 								$"{x.Namespace}.{x.ClassName}.{x.FunctionName}".EqualsIgnoreCase(
+									namespaceFunction
+								)
+								|| $"{x.Namespace}.{x.FunctionName}".EqualsIgnoreCase(
 									namespaceFunction
 								)
 						);
