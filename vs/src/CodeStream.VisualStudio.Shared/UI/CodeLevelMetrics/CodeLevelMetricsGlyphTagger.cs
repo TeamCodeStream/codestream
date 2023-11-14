@@ -144,8 +144,8 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 								namespaceFunction,
 								methodDeclaration.Identifier.ToString(),
 								classMetrics?.SinceDateFormatted,
-								classMetrics.NewRelicEntityGuid,
-								classMetrics.Repo,
+								classMetrics?.NewRelicEntityGuid,
+								classMetrics?.Repo,
 								avgDuration,
 								errors,
 								sampleSize

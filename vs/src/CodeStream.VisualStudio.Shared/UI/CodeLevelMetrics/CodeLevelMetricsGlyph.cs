@@ -5,7 +5,6 @@ using Microsoft.VisualStudio.Text.Editor;
 
 using System.Windows.Media.Imaging;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 using CodeStream.VisualStudio.Core;
 using CodeStream.VisualStudio.Core.Extensions;
@@ -94,13 +93,13 @@ namespace CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics
 			var hasAnomaly = false;
 			if (AvgDurationResponse?.Anomaly != null)
 			{
-				Anomaly += AvgDurationResponse.Anomaly.Text;
+				Anomaly += AvgDurationResponse.Anomaly.NotificationText;
 				hasAnomaly = true;
 			}
 
 			if (ErrorRateResponse?.Anomaly != null)
 			{
-				Anomaly += ErrorRateResponse.Anomaly.Text;
+				Anomaly += ErrorRateResponse.Anomaly.NotificationText;
 				hasAnomaly = true;
 			}
 

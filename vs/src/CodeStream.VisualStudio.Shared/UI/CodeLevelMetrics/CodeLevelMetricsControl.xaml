@@ -3,18 +3,25 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:glyph="clr-namespace:CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics" 
+             xmlns:glyph="clr-namespace:CodeStream.VisualStudio.Shared.UI.CodeLevelMetrics"
+             xmlns:converters="clr-namespace:CodeStream.VisualStudio.Shared.UI.Converters"
              d:DataContext="{d:DesignInstance Type=glyph:CodeLevelMetricsGlyph}"
 			 mc:Ignorable="d"
-             d:DesignHeight="205" d:DesignWidth="250">
+             d:DesignHeight="205" d:DesignWidth="250"
+             Height="16" Width="16">
+	<UserControl.Resources>
+		<converters:StringNullToVisibilityConverter x:Key="StringNullToVisibilityConverter" />
+	</UserControl.Resources>
+
 	<StackPanel>
-		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}">
-			<StackPanel Margin="10,10,10,10">
-				<TextBlock Foreground="White" Text="{Binding Tooltip}" />
-				<TextBlock Foreground="Red" Text="{Binding Anomaly}"/>
-				<TextBlock Text="(click icon to view more)" TextAlignment="Center"></TextBlock>
+		<Popup IsOpen="{Binding ElementName=Glyph, Path=IsMouseOver, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}" Margin="10,10,10,10">
+			<StackPanel Background="Gray">
+				<TextBlock Foreground="White" Text="{Binding Tooltip}" TextAlignment="Center" Padding="10,10,10,0" />
+				<TextBlock Foreground="White" Text="{Binding Anomaly}" FontWeight="ExtraBold" FontStyle="Italic" TextAlignment="Center" Padding="10,10,10,0" Visibility="{Binding Converter={StaticResource StringNullToVisibilityConverter}, 
+                              Path=Anomaly}"/>
+				<TextBlock Foreground="White" Text="(click icon to view more)" TextAlignment="Center" Padding="10,10,10,10"></TextBlock>
 			</StackPanel>
 		</Popup>
-		<Image Cursor="Hand"  Name="Glyph" Source="{Binding Icon}" Width="16" Height="16" MouseDown="Glyph_OnMouseDown"/>
+		<Image Cursor="Hand" Name="Glyph" Source="{Binding Icon}" Width="16" Height="16" MouseDown="Glyph_OnMouseDown"/>
 	</StackPanel>
 </UserControl>
