@@ -794,7 +794,7 @@ export class NewRelicProvider
 
 			const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "type='APPLICATION' and ${statement}", 
+				  entitySearch(query: "type IN ('APPLICATION', 'SERVICE') and ${statement}", 
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count

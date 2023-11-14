@@ -84,9 +84,8 @@ export const IntegrationsPanel = () => {
 		const user = users[session.userId!];
 		const currentUserIsAdmin = currentUserIsAdminSelector(state);
 
-		const connectedProviders = Object.keys(providers)
-			.filter(id => isConnected(state, { id }))
-			.filter(id => providers[id].name !== "newrelic");
+		const connectedProviders = Object.keys(providers).filter(id => isConnected(state, { id }));
+		// .filter(id => providers[id].name !== "newrelic");
 
 		const observabilityProviders = Object.keys(providers)
 			.filter(id => ["newrelic"].includes(providers[id].name))
@@ -142,7 +141,7 @@ export const IntegrationsPanel = () => {
 	const renderConnectedProviders = providerIds => {
 		const { providers } = derivedState;
 		return providerIds.map(providerId => {
-			if (providerId === "newrelic*com") return null;
+			// if (providerId === "newrelic*com") return null;
 			const provider = providers[providerId];
 			const { name, isEnterprise, host } = provider;
 			const display = PROVIDER_MAPPINGS[name];
