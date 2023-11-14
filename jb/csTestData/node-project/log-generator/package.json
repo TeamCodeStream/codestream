@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "faker": "^5.5.3",
-    "newrelic": "^10.4.0",
+    "newrelic": "^11.5.0",
     "pino": "^7.11.0",
     "winston": "^3.8.1",
     "yargs": "^17.6.2"
