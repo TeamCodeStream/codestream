@@ -101,7 +101,7 @@ export class EntityProvider implements Disposable {
 
 			const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "type='APPLICATION' and ${statement}", 
+				  entitySearch(query: "type IN ('APPLICATION', 'SERVICE', 'AWSLAMBDAFUNCTION') and ${statement}", 
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count

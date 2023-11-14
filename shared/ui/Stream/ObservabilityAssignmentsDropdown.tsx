@@ -101,6 +101,7 @@ export const ObservabilityAssignmentsDropdown = React.memo((props: Props) => {
 															pendingErrorGroupGuid: _.errorGroupGuid,
 															openType: "Observability Section",
 															remote: _?.remote || undefined,
+															stackSourceMap: response?.stackSourceMap,
 														})
 													);
 												} else {

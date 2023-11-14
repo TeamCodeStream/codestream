@@ -654,6 +654,7 @@ function listenForEvents(store) {
 								pendingErrorGroupGuid: definedQuery.query.errorGroupGuid,
 								openType: "Open in IDE Flow",
 								environment: definedQuery.query.env,
+								stackSourceMap: response?.stackSourceMap,
 							})
 						);
 						break;

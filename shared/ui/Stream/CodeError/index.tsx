@@ -1180,7 +1180,7 @@ const BaseCodeError = (props: BaseCodeErrorProps) => {
 		};
 	}, shallowEqual);
 	const renderedFooter = props.renderFooter && props.renderFooter(CardFooter, ComposeWrapper);
-	const { codeError, errorGroup } = derivedState;
+	const { codeError, errorGroup, currentCodeErrorData } = derivedState;
 	const isPostThreadsLoading: boolean | undefined = useAppSelector(
 		state => state.posts.postThreadsLoading[codeError.postId]
 	);

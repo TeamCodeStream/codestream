@@ -106,7 +106,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	const observabilityErrorsProvider = new ObservabilityErrorsProvider(
 		reposProvider,
 		newRelicGraphqlClient,
-		nrApiConfig
+		nrApiConfig,
+		newRelicProviderInfo,
 	);
 
 	const entityProvider = new EntityProvider(newRelicGraphqlClient);

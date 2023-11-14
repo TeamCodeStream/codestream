@@ -164,11 +164,12 @@ export class ReposProvider implements Disposable {
 					const entitiesReponse = await this.findRelatedEntityByRepositoryGuids(
 						repositoryEntitiesResponse?.entities?.map(_ => _.guid)
 					);
-					// find the APPLICATION entities themselves
+					// find the APPLICATION, SERVICE (otel), and AWSLAMBDA entities themselves
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
-							_?.relatedEntities?.results?.filter(r => r.source?.entity?.type === "APPLICATION")
-								.length
+							_?.relatedEntities?.results?.filter(
+								r => r.source?.entity?.type === "APPLICATION" || "SERVICE" || "AWSLAMBDAFUNCTION"
+							).length
 					);
 					hasRepoAssociation = applicationAssociations?.length > 0;
 
@@ -212,7 +213,10 @@ export class ReposProvider implements Disposable {
 
 						for (const relatedResult of entity.relatedEntities.results) {
 							if (
-								relatedResult?.source?.entity?.type === "APPLICATION" &&
+								relatedResult?.source?.entity?.type &&
+								["APPLICATION", "SERVICE", "AWSLAMBDAFUNCTION"].includes(
+									relatedResult?.source?.entity?.type
+								) &&
 								relatedResult?.target?.entity?.type === "REPOSITORY"
 							) {
 								// we can't use the target.tags.account since the Repo entity might have been

@@ -252,6 +252,8 @@ export const ErrorRow = (props: {
 	);
 };
 
+// EXT for Otel, INFRA for AWSLambda
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER"];
 const EMPTY_ARRAY = [];
 
 export const Observability = React.memo((props: Props) => {
@@ -1189,6 +1191,9 @@ export const Observability = React.memo((props: Props) => {
 																	});
 																const isSelectedCLM =
 																	ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
+																const showErrors = ea?.domain
+																	? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
+																	: false;
 																return (
 																	<>
 																		<PaneNodeName
@@ -1271,12 +1276,13 @@ export const Observability = React.memo((props: Props) => {
 																								recentIssues={recentIssues ? recentIssues : {}}
 																								entityGuid={ea.entityGuid}
 																							/>
-																							{hasServiceLevelObjectives && (
-																								<ObservabilityServiceLevelObjectives
-																									serviceLevelObjectives={serviceLevelObjectives}
-																									errorMsg={serviceLevelObjectiveError}
-																								/>
-																							)}
+																							{hasServiceLevelObjectives &&
+																								ea?.domain !== "INFRA" && (
+																									<ObservabilityServiceLevelObjectives
+																										serviceLevelObjectives={serviceLevelObjectives}
+																										errorMsg={serviceLevelObjectiveError}
+																									/>
+																								)}
 																							{anomalyDetectionSupported && (
 																								<ObservabilityAnomaliesWrapper
 																									observabilityAnomalies={observabilityAnomalies}
@@ -1293,7 +1299,7 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 																							)}
 
-																							{ea.domain === "APM" && (
+																							{showErrors && (
 																								<>
 																									{observabilityErrors?.find(
 																										oe => oe?.repoId === _observabilityRepo?.repoId
@@ -1314,7 +1320,7 @@ export const Observability = React.memo((props: Props) => {
 																									)}
 																								</>
 																							)}
-																							{currentRepoId && (
+																							{currentRepoId && ea?.domain === "APM" && (
 																								<SecurityIssuesWrapper
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}
@@ -1322,7 +1328,7 @@ export const Observability = React.memo((props: Props) => {
 																									setHasVulnerabilities={setIsVulnPresent}
 																								/>
 																							)}
-																							{currentRepoId && (
+																							{currentRepoId && ea?.domain !== "INFRA" && (
 																								<ObservabilityRelatedWrapper
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}

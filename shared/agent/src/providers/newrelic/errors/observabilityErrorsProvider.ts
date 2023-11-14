@@ -38,13 +38,18 @@ import { NrApiConfig } from "../nrApiConfig";
 import { isEmpty as _isEmpty } from "lodash";
 import { mapNRErrorResponse, parseId } from "../utils";
 import { ContextLogger } from "../../contextLogger";
+import { CSNewRelicProviderInfo } from "@codestream/protocols/api";
+import { customFetch } from "../../../system/fetchCore";
+
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "EXT", "INFRA"];
 
 @lsp
 export class ObservabilityErrorsProvider {
 	constructor(
 		private reposProvider: ReposProvider,
 		private graphqlClient: NewRelicGraphqlClient,
-		private nrApiConfig: NrApiConfig
+		private nrApiConfig: NrApiConfig,
+		private providerInfo: CSNewRelicProviderInfo | undefined
 	) {}
 
 	/**
@@ -132,7 +137,10 @@ export class ObservabilityErrorsProvider {
 							if (
 								!application.source.entity.guid ||
 								!application.source.entity.account?.id ||
-								application.source.entity.domain !== "APM"
+								!application.source.entity.domain ||
+								!ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(
+									application.source.entity.domain
+								)
 							) {
 								continue;
 							}
@@ -327,6 +335,7 @@ export class ObservabilityErrorsProvider {
 		| {
 				entityGuid: string;
 				traceId?: string;
+				stackSourceMap?: string;
 		  }
 		| undefined
 	> {
@@ -379,7 +388,12 @@ export class ObservabilityErrorsProvider {
 						nrql: {
 							results: {
 								entityGuid: string;
-								id: string;
+								id?: string;
+								stackHash?: string;
+								stackTrace?: string;
+								monitorAccountId?: string;
+								appId?: number;
+								releaseIds?: string;
 							}[];
 						};
 					};
@@ -389,7 +403,15 @@ export class ObservabilityErrorsProvider {
 			});
 
 			if (errorTraceResponse) {
-				const errorTraceResult = errorTraceResponse.actor.account.nrql.results[0];
+				const errorTraceResult: {
+					stackHash?: string | number;
+					browserStackHash?: string | number;
+					id?: string;
+					stackTrace?: string;
+					monitorAccountId?: string;
+					appId?: number;
+					releaseIds?: string;
+				} = errorTraceResponse.actor.account.nrql.results[0];
 				if (!errorTraceResult) {
 					ContextLogger.warn("getMetricData missing errorTraceResult", {
 						accountId: accountId,
@@ -401,9 +423,40 @@ export class ObservabilityErrorsProvider {
 					};
 				}
 				if (errorTraceResult) {
+					let stackSourceMap;
+
+					if (
+						errorTraceResult.stackTrace &&
+						errorTraceResult.monitorAccountId &&
+						errorTraceResult.appId &&
+						errorTraceResult.releaseIds
+					) {
+						stackSourceMap = await this.fetchSourceMap(
+							errorTraceResult.stackTrace,
+							errorTraceResult.monitorAccountId,
+							errorTraceResult.appId,
+							errorTraceResult.releaseIds
+						);
+					}
+					let returnTraceId;
+
+					// Use ID if available
+					// otherwise use stackHash unless its negative
+					// then use browserStackHash
+					// make sure they are stringified
+					if (errorTraceResult.id) {
+						returnTraceId = errorTraceResult.id;
+					} else {
+						let stringifiedBrowserStackHash = errorTraceResult.stackTrace?.toString() || "";
+						let stringifiedStackHash = errorTraceResult.stackTrace?.toString() || "";
+						returnTraceId = stringifiedStackHash.startsWith("-")
+							? stringifiedBrowserStackHash
+							: stringifiedStackHash;
+					}
 					return {
 						entityGuid: entityGuid || errorGroupResponse.entityGuid,
-						traceId: errorTraceResult.id,
+						traceId: returnTraceId,
+						stackSourceMap,
 					};
 				}
 			}
@@ -412,6 +465,53 @@ export class ObservabilityErrorsProvider {
 				errorGroupGuid: errorGroupGuid,
 			});
 		}
+		return undefined;
+	}
+
+	private async fetchSourceMap(
+		stackTrace: string,
+		monitorAccountId: string,
+		appId: number,
+		releaseIds: string
+	): Promise<any> {
+		let serviceUrlChunk = "service";
+		if (this.nrApiConfig.productUrl.includes("staging")) {
+			serviceUrlChunk = "staging-service";
+		}
+
+		const url = `https://sourcemaps.${serviceUrlChunk}.newrelic.com/ui/accounts/${monitorAccountId}/applications/${appId}/stacktraces?releaseIds=${encodeURIComponent(
+			releaseIds
+		)}`;
+
+		let headers: { [key: string]: string } = {
+			"Content-Type": "text/plain",
+		};
+
+		const token = this.providerInfo?.accessToken;
+		if (token) {
+			if (this.providerInfo?.tokenType === "access") {
+				headers["x-access-token"] = token;
+			} else {
+				headers["x-id-token"] = token;
+			}
+		}
+
+		try {
+			const response = await customFetch(url, {
+				method: "POST",
+				headers: headers,
+				body: stackTrace,
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! Status: ${response.status}`);
+			}
+			const responseData = await response.json();
+			return responseData;
+		} catch (error) {
+			ContextLogger.error(error, "fetchSourceMap");
+		}
+
 		return undefined;
 	}
 
@@ -441,7 +541,7 @@ export class ObservabilityErrorsProvider {
 
 		const browserNrql = [
 			"SELECT",
-			"count(guid) as 'count',", // first field is used to sort with FACET
+			"count(*) as 'count',", // first field is used to sort with FACET
 			"latest(timestamp) AS 'lastOccurrence',",
 			"latest(stackHash) AS 'occurrenceId',",
 			"latest(appName) AS 'appName',",
@@ -911,6 +1011,7 @@ export class ObservabilityErrorsProvider {
 				return {
 					entityId: metricResponse?.entityGuid,
 					occurrenceId: metricResponse?.traceId,
+					stackSourceMap: metricResponse?.stackSourceMap,
 					relatedRepos: mappedRepoEntities || [],
 				} as GetObservabilityErrorGroupMetadataResponse;
 			}

@@ -30,11 +30,23 @@ export interface ResolveStackTraceRequest {
 	repoId: string;
 	ref: string;
 	codeErrorId: string;
+	stackSourceMap: any;
 }
 
 export interface WarningOrError {
 	message: string;
 	helpUrl?: string;
+}
+
+export interface SourceMapEntry {
+	original: {
+		fileName: string;
+	};
+	mapped?: {
+		fileName: string;
+		columnNumber: number;
+		lineNumber: number;
+	};
 }
 
 export interface ResolveStackTraceResponse {

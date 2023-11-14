@@ -123,7 +123,8 @@ export const resolveStackTrace = (
 	ref: string,
 	occurrenceId: string,
 	stackTrace: string[],
-	codeErrorId: string
+	codeErrorId: string,
+	stackSourceMap: any
 ) => {
 	return HostApi.instance.send(ResolveStackTraceRequestType, {
 		errorGroupGuid,
@@ -132,6 +133,7 @@ export const resolveStackTrace = (
 		ref,
 		occurrenceId,
 		codeErrorId,
+		stackSourceMap,
 	});
 };
 

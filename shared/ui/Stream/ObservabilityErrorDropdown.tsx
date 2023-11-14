@@ -140,6 +140,7 @@ export const ObservabilityErrorDropdown = React.memo((props: Props) => {
 															pendingErrorGroupGuid: err.errorGroupGuid,
 															openType: "Observability Section",
 															remote: err?.remote || undefined,
+															stackSourceMap: response?.stackSourceMap,
 														})
 													);
 												} catch (ex) {

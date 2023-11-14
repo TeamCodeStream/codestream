@@ -1586,6 +1586,7 @@ export interface GetObservabilityErrorGroupMetadataResponse {
 	entityId?: string;
 	remote?: string;
 	relatedRepos: RelatedRepository;
+	stackSourceMap?: any;
 }
 
 export const GetObservabilityErrorGroupMetadataRequestType = new RequestType<
@@ -1929,6 +1930,7 @@ export type EntityType =
 	| "APM_DATABASE_INSTANCE_ENTITY"
 	| "APM_EXTERNAL_SERVICE_ENTITY"
 	| "BROWSER_APPLICATION_ENTITY"
+	| "THIRD_PARTY_SERVICE_ENTITY"
 	| "DASHBOARD_ENTITY"
 	| "EXTERNAL_ENTITY"
 	| "GENERIC_ENTITY"

@@ -28,6 +28,7 @@ import {
 	ResolveStackTraceRequestType,
 	ResolveStackTraceResponse,
 	WarningOrError,
+	SourceMapEntry,
 } from "@codestream/protocols/agent";
 import { CSStackTraceInfo, CSStackTraceLine } from "@codestream/protocols/api";
 import { structuredPatch } from "diff";
@@ -192,6 +193,7 @@ export class NRManager {
 		ref,
 		occurrenceId,
 		codeErrorId,
+		stackSourceMap,
 	}: ResolveStackTraceRequest): Promise<ResolveStackTraceResponse> {
 		const { git, repos } = SessionContainer.instance();
 		const matchingRepo = await git.getRepositoryById(repoId);
@@ -283,6 +285,20 @@ export class NRManager {
 		};
 
 		if (parsedStackInfo.lines) {
+			if (stackSourceMap?.stackTrace?.length > 0) {
+				parsedStackInfo.lines.forEach(entry => {
+					const matchingEntry = stackSourceMap.stackTrace.find((sourceMapEntry: SourceMapEntry) => {
+						return sourceMapEntry.original.fileName === entry.fileFullPath;
+					});
+
+					if (matchingEntry && matchingEntry.mapped) {
+						entry.fileFullPath = matchingEntry.mapped.fileName;
+						entry.column = matchingEntry.mapped.columnNumber;
+						entry.line = matchingEntry.mapped.lineNumber;
+					}
+				});
+			}
+
 			void this.resolveStackTraceLines(
 				parsedStackInfo,
 				resolvedStackInfo,

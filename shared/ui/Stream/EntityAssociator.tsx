@@ -77,6 +77,10 @@ export const EntityAssociator = React.memo((props: PropsWithChildren<EntityAssoc
 						return "Browser";
 					case "MOBILE_APPLICATION_ENTITY":
 						return "Mobile";
+					case "THIRD_PARTY_SERVICE_ENTITY":
+						return "OTEL";
+					case "INFRASTRUCTURE_AWS_LAMBDA_FUNCTION_ENTITY":
+						return "Lambda";
 					default:
 						return "APM";
 				}
