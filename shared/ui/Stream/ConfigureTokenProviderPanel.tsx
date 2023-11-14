@@ -63,7 +63,12 @@ export default function ConfigureTokenProviderPanel(props: Props) {
 
 	const renderTokenHelp = () => {
 		if (tokenTouched || submitAttempted) {
-			if (token.length === 0) return <small className="error-message">Required</small>;
+			if (token.length === 0)
+				return (
+					<small style={{ position: "initial" }} className="error-message">
+						Required
+					</small>
+				);
 		}
 		return;
 	};
