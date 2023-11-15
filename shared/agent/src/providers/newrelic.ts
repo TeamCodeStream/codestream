@@ -1016,7 +1016,7 @@ export class NewRelicProvider
 					const entitiesReponse = await this.findRelatedEntityByRepositoryGuids(
 						repositoryEntitiesResponse?.entities?.map(_ => _.guid)
 					);
-					// find the APPLICATION and SERVICE (otel) entities themselves
+					// find the APPLICATIONm, SERVICE (otel), and AWSLAMBDA entities themselves
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(
@@ -1065,8 +1065,11 @@ export class NewRelicProvider
 
 						for (const relatedResult of entity.relatedEntities.results) {
 							if (
-								relatedResult?.source?.entity?.type === "APPLICATION" ||
-								("SERVICE" && relatedResult?.target?.entity?.type === "REPOSITORY")
+								relatedResult?.source?.entity?.type &&
+								["APPLICATION", "SERVICE", "AWSLAMBDAFUNCTION"].includes(
+									relatedResult?.source?.entity?.type
+								) &&
+								relatedResult?.target?.entity?.type === "REPOSITORY"
 							) {
 								// we can't use the target.tags.account since the Repo entity might have been
 								// created in _another_ account (under the same trustedAccountId).
