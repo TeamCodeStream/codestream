@@ -252,7 +252,7 @@ export const ErrorRow = (props: {
 	);
 };
 
-const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT"];
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT", "INFRA"];
 const EMPTY_ARRAY = [];
 
 export const Observability = React.memo((props: Props) => {
