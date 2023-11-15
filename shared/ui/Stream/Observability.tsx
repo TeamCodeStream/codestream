@@ -252,6 +252,7 @@ export const ErrorRow = (props: {
 	);
 };
 
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT"];
 const EMPTY_ARRAY = [];
 
 export const Observability = React.memo((props: Props) => {
@@ -1189,6 +1190,9 @@ export const Observability = React.memo((props: Props) => {
 																	});
 																const isSelectedCLM =
 																	ea.entityGuid === currentObservabilityRepoEntity?.entityGuid;
+																const showErrors = ea?.domain
+																	? ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(ea.domain)
+																	: false;
 																return (
 																	<>
 																		<PaneNodeName
@@ -1293,7 +1297,7 @@ export const Observability = React.memo((props: Props) => {
 																								/>
 																							)}
 
-																							{ea.domain === "APM" && (
+																							{showErrors && (
 																								<>
 																									{observabilityErrors?.find(
 																										oe => oe?.repoId === _observabilityRepo?.repoId
@@ -1314,7 +1318,7 @@ export const Observability = React.memo((props: Props) => {
 																									)}
 																								</>
 																							)}
-																							{currentRepoId && (
+																							{currentRepoId && ea?.domain === "APM" && (
 																								<SecurityIssuesWrapper
 																									currentRepoId={currentRepoId}
 																									entityGuid={ea.entityGuid}
