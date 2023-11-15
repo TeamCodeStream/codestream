@@ -133,7 +133,7 @@ export class GitRepositories {
 		}
 
 		const tree = this._repositoryTree;
-		const reposToMap = [];
+		const reposToMap: RepoMap[] = [];
 		for (const repo of tree.values()) {
 			Logger.debug(`RepositoryTree repo=${repo.path} repoId=${repo.id}`);
 			// TODO: Probably should update the repo even for ones that have matches, but right now we are only using the repo id
@@ -147,6 +147,7 @@ export class GitRepositories {
 					reposToMap.push({
 						repoId: repo.id,
 						path: repo.path,
+						isInWorkspace: repo.isInWorkspace,
 					});
 				}
 			}
@@ -214,6 +215,9 @@ export class GitRepositories {
 					for (const existingRepo of existingRepositories) {
 						// "upgrade the objects" to GitRepository with remoteToRepoMap objects
 						// so we can get IDs if necessary
+						Logger.log(
+							`onWorkspaceFoldersChanged existingRepositories run with isInWorkspace=true ${existingRepo.path}`
+						);
 						const repo = await new GitRepository(
 							existingRepo.path,
 							existingRepo.root,
@@ -245,6 +249,9 @@ export class GitRepositories {
 
 						const repos = [];
 						for (const foundRepo of repositories) {
+							Logger.log(
+								`onWorkspaceFoldersChanged run with isInWorkspace=true foundRepo ${foundRepo.path}`
+							);
 							const repo = await new GitRepository(
 								foundRepo.path,
 								foundRepo.root,
@@ -380,9 +387,7 @@ export class GitRepositories {
 		});
 	}
 
-	async setKnownRepository(
-		repos: { repoId: string; path: string }[]
-	): Promise<{ [key: string]: boolean } | undefined> {
+	async setKnownRepository(repos: RepoMap[]): Promise<{ [key: string]: boolean } | undefined> {
 		if (!repos || !repos.length) return undefined;
 
 		if (this._repositoryMappingSyncPromise !== undefined) {
@@ -394,27 +399,33 @@ export class GitRepositories {
 		return await this._repositoryMappingSyncPromise;
 	}
 
-	async setKnownRepositoryCore(
-		repos: { repoId: string; path: string }[]
-	): Promise<{ [key: string]: boolean }> {
+	async setKnownRepositoryCore(repos: RepoMap[]): Promise<{ [key: string]: boolean }> {
 		const found: { [key: string]: boolean } = {};
 		const remoteToRepoMap = await this.getKnownRepositories();
 
 		for (const r in repos) {
 			const repo = repos[r];
 
-			const repositories = await this.repoLocator.repositorySearch({
-				uri: repo.path,
-				name: path.basename(repo.path),
-			});
+			const repositories = await this.repoLocator.repositorySearch(
+				{
+					uri: repo.path,
+					name: path.basename(repo.path),
+				},
+				null,
+				false,
+				repo.isInWorkspace
+			);
 
 			const reposWithIds: GitRepository[] = [];
 			for (const foundRepo of repositories) {
+				Logger.log(
+					`setKnownRepositoryCore run with isInWorkspace=${foundRepo.isInWorkspace} ${foundRepo.path}`
+				);
 				const repoWithId = await new GitRepository(
 					foundRepo.path,
 					foundRepo.root,
 					foundRepo.folder,
-					false
+					foundRepo.isInWorkspace
 				).withKnownRepo(remoteToRepoMap);
 				reposWithIds.push(repoWithId);
 			}

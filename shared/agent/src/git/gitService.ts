@@ -32,7 +32,7 @@ SOFTWARE.
 import * as fs from "fs";
 import * as path from "path";
 
-import { CommitsChangedData, WorkspaceChangedData } from "@codestream/protocols/agent";
+import { CommitsChangedData, RepoMap, WorkspaceChangedData } from "@codestream/protocols/agent";
 import { FileStatus } from "@codestream/protocols/api";
 import { Iterables } from "@codestream/utils/system/iterable";
 import { createPatch, ParsedDiff, parsePatch } from "diff";
@@ -1648,7 +1648,7 @@ export class GitService implements IGitService, Disposable {
 		return result;
 	}
 
-	async setKnownRepository(repos: { repoId: string; path: string }[]) {
+	async setKnownRepository(repos: RepoMap[]) {
 		return this._repositories.setKnownRepository(repos);
 	}
 

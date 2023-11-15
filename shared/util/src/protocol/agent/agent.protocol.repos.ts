@@ -48,6 +48,7 @@ export const GetRepoRequestType = new RequestType<GetRepoRequest, GetRepoRespons
 export interface RepoMap {
 	path: string;
 	repoId: string;
+	isInWorkspace?: boolean;
 }
 
 export interface MapReposRequest {

@@ -19,7 +19,10 @@ export class RepositoryLocator {
 	private readonly _searchPromise: Promise<GitRepository[]> | undefined;
 	private _startCorePromise: Promise<any> | undefined;
 
-	constructor(public readonly session: CodeStreamSession, private readonly _git: GitServiceLite) {
+	constructor(
+		public readonly session: CodeStreamSession,
+		private readonly _git: GitServiceLite
+	) {
 		this._repositoryTree = TernarySearchTree.forPaths();
 
 		this._searchPromise = this.start();
@@ -138,8 +141,10 @@ export class RepositoryLocator {
 			rootPath = await this._git.getRepoRoot(folderUri.fsPath);
 		} catch {}
 		if (rootPath) {
-			Logger.log(`repositorySearch: Repository found in '${rootPath}'`);
-			const repo = new GitRepository(rootPath, true, folder);
+			Logger.log(
+				`repositorySearch: Repository found in rootPath '${rootPath}' isInWorkspace=${isInWorkspace}`
+			);
+			const repo = new GitRepository(rootPath, true, folder, isInWorkspace);
 			repositories.push(repo);
 		}
 
@@ -180,10 +185,13 @@ export class RepositoryLocator {
 				}),
 			];
 
-			excludes = excludedPaths.reduce((accumulator, current) => {
-				accumulator[current] = true;
-				return accumulator;
-			}, Object.create(null) as any);
+			excludes = excludedPaths.reduce(
+				(accumulator, current) => {
+					accumulator[current] = true;
+					return accumulator;
+				},
+				Object.create(null) as any
+			);
 		}
 
 		let paths;
@@ -220,8 +228,10 @@ export class RepositoryLocator {
 			} catch {}
 			if (!rp) continue;
 
-			Logger.log(`repositorySearch: Repository found in '${rp}'`);
-			const repo = new GitRepository(rp, false, folder);
+			Logger.log(
+				`repositorySearch: Repository found in subdir '${rp}' isInWorkspace=${isInWorkspace}`
+			);
+			const repo = new GitRepository(rp, false, folder, isInWorkspace);
 			repositories.push(repo);
 		}
 

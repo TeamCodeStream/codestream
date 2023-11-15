@@ -94,6 +94,7 @@ export class RepositoryMappingManager {
 							return {
 								repoId: _.repoId,
 								path: URI.file(_.path).toString(),
+								isInWorkspace: _.isInWorkspace,
 							};
 						})
 					);

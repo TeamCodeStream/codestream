@@ -81,7 +81,7 @@ export const CurrentRepoContext = React.memo((props: Props) => {
 
 			setCurrentRepoName(repoName);
 			console.debug(
-				`o11y: setting currentRepoCallback currentRepo?.id  ${repo.id} scmInfo?.scm?.repoId ${scmInfo?.scm?.repoId}`
+				`o11y: currentRepoContext: setting currentRepoCallback currentRepo?.id  ${repo.id} scmInfo?.scm?.repoId ${scmInfo?.scm?.repoId}`
 			);
 			props.currentRepoCallback(currentRepoId);
 			dispatch(
