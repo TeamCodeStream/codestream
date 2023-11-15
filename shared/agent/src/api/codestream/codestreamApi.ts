@@ -183,6 +183,7 @@ import {
 	ERROR_GENERIC_USE_ERROR_MESSAGE,
 } from "@codestream/protocols/agent";
 import {
+	CSAccessTokenType,
 	CSAccessTokenInfo,
 	CSAddMarkersRequest,
 	CSAddMarkersResponse,
@@ -465,7 +466,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 				let triedRefresh = false;
 				while (!response) {
 					try {
-						response = await this.put<{}, CSLoginResponse>("/login", {}, options.token.value);
+						response = await this.put<{}, CSLoginResponse>("/login", {}, options.token);
 					} catch (ex) {
 						if (ex.info?.error.match(/id token expired/) && !triedRefresh) {
 							Logger.log("Attempted token login with an expired token, attempting to refresh...");
@@ -652,6 +653,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		Logger.log(`Using team '${team.name}' (${team.id})${pickedTeamReason || ""}`);
 
 		this._token = response.accessToken;
+		this._tokenInfo = response.accessTokenInfo;
 		this._pubnubSubscribeKey = response.pubnubKey;
 		this._broadcasterToken = response.broadcasterToken || response.pubnubToken;
 		this._socketCluster = response.socketCluster;
@@ -2457,11 +2459,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 						this.setAccessToken(response.accessToken, {
 							expiresAt: response.expiresAt!,
 							refreshToken: response.refreshToken!,
+							tokenType: response.tokenType! as CSAccessTokenType,
 						});
 						if (SessionContainer.isInitialized()) {
 							SessionContainer.instance().session.onAccessTokenChanged(
 								response.accessToken,
-								response.refreshToken
+								response.refreshToken,
+								response.tokenType as CSAccessTokenType
 							);
 						}
 					}
@@ -2594,8 +2598,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 			formData.append("file", new Blob([await Buffer.from(bareString, "base64")]), request.name);
 		}
 		const url = `${this.baseUrl}/upload-file/${this.teamId}`;
+		const tokenHeader =
+			this._tokenInfo?.tokenType === CSAccessTokenType.ACCESS_TOKEN
+				? "x-access-token"
+				: "x-id-token";
 		const headers = new Headers({
-			Authorization: `Bearer ${this._token}`,
+			//Authorization: `Bearer ${this._token}`,
+			[tokenHeader]: this._token!,
 		});
 
 		const response = await customFetch(url, { method: "post", body: formData, headers });
@@ -2650,7 +2659,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		throw new Error("Not supported");
 	}
 
-	async delete<R extends object>(url: string, token?: string): Promise<R> {
+	async delete<R extends object>(url: string, token?: string | AccessToken): Promise<R> {
 		if (!token && url.indexOf("/no-auth/") === -1) token = this._token;
 		let resp = undefined;
 		if (resp === undefined) {
@@ -2659,7 +2668,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 		return resp;
 	}
 
-	async get<R extends object>(url: string, token?: string): Promise<R> {
+	async get<R extends object>(url: string, token?: string | AccessToken): Promise<R> {
 		if (!token && url.indexOf("/no-auth/") === -1) token = this._token;
 		return this.fetch<R>(url, { method: "GET" }, token) as Promise<R>;
 	}
@@ -2667,7 +2676,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async post<RQ extends object, R extends object>(
 		url: string,
 		body: RQ,
-		token?: string
+		token?: string | AccessToken
 	): Promise<R> {
 		if (!token && url.indexOf("/no-auth/") === -1) token = this._token;
 		return this.fetch<R>(
@@ -2683,7 +2692,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 	async put<RQ extends object, R extends object>(
 		url: string,
 		body: RQ,
-		token?: string
+		token?: string | AccessToken
 	): Promise<R> {
 		if (!token && url.indexOf("/no-auth/") === -1) token = this._token;
 		return this.fetch<R>(
@@ -2697,9 +2706,23 @@ export class CodeStreamApiProvider implements ApiProvider {
 	}
 
 	/*private*/
-	async fetch<R extends object>(url: string, init?: RequestInit, token?: string): Promise<R> {
+	async fetch<R extends object>(
+		url: string,
+		init?: RequestInit,
+		accessToken?: string | AccessToken
+	): Promise<R> {
 		const start = process.hrtime();
 
+		let token, tokenType, refreshToken;
+		if (typeof accessToken === "object") {
+			token = accessToken.value;
+			tokenType = accessToken.tokenType;
+			refreshToken = accessToken.refreshToken;
+		} else {
+			token = accessToken;
+			tokenType = this._tokenInfo?.tokenType;
+			refreshToken = this._tokenInfo?.refreshToken;
+		}
 		const sanitizedUrl = CodeStreamApiProvider.sanitizeUrl(url);
 		let traceResult;
 		try {
@@ -2717,7 +2740,13 @@ export class CodeStreamApiProvider implements ApiProvider {
 					init.headers.append("Content-Type", "application/json");
 
 					if (token !== undefined) {
-						init.headers.append("Authorization", `Bearer ${token}`);
+						//init.headers.append("Authorization", `Bearer ${token}`);
+						console.warn("COLIN: USING " + tokenType + " TOKEN:", token);
+						if (tokenType === CSAccessTokenType.ACCESS_TOKEN) {
+							init.headers.append("x-access-token", token);
+						} else {
+							init.headers.append("x-id-token", token);
+						}
 					}
 
 					// for Unified Identity, set this header ... eventually we can remove this,
@@ -2788,8 +2817,7 @@ export class CodeStreamApiProvider implements ApiProvider {
 						!triedRefresh &&
 						!resp.ok &&
 						resp.status === 403 &&
-						this._tokenInfo &&
-						this._tokenInfo.refreshToken &&
+						refreshToken &&
 						init?.headers instanceof Headers
 					) {
 						const resp2 = resp.clone();
@@ -2800,10 +2828,15 @@ export class CodeStreamApiProvider implements ApiProvider {
 							);
 							let tokenInfo;
 							try {
-								tokenInfo = await this.refreshNewRelicToken(this._tokenInfo.refreshToken!);
+								tokenInfo = await this.refreshNewRelicToken(refreshToken);
 								Logger.log("NR access token successfully refreshed, trying request again...");
 								token = tokenInfo.accessToken;
-								init.headers.set("Authorization", `Bearer ${token}`);
+								if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
+									init.headers.set("x-access-token", token);
+								} else {
+									init.headers.set("x-id-token", token);
+								}
+								//init.headers.set("Authorization", `Bearer ${token}`);
 								triedRefresh = true;
 								resp = undefined;
 							} catch (ex) {

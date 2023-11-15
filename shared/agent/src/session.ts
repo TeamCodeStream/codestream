@@ -81,6 +81,7 @@ import {
 	DidRefreshAccessTokenNotificationType,
 } from "@codestream/protocols/agent";
 import {
+	CSAccessTokenType,
 	CSApiCapabilities,
 	CSCodemark,
 	CSCompany,
@@ -524,7 +525,7 @@ export class CodeStreamSession {
 		this.verifyConnectivity();
 	}
 
-	onAccessTokenChanged(token: string, refreshToken?: string) {
+	onAccessTokenChanged(token: string, refreshToken?: string, tokenType?: CSAccessTokenType) {
 		Logger.log("Session access token was changed, notifying extension...");
 		this._codestreamAccessToken = token;
 		this.agent.sendNotification(DidRefreshAccessTokenNotificationType, {
@@ -533,6 +534,7 @@ export class CodeStreamSession {
 			teamId: this._teamId!,
 			token: token,
 			refreshToken,
+			tokenType,
 		});
 	}
 
@@ -1192,6 +1194,9 @@ export class CodeStreamSession {
 		const token = response.token;
 		if (response.accessTokenInfo?.refreshToken) {
 			token.refreshToken = response.accessTokenInfo.refreshToken;
+		}
+		if (response.accessTokenInfo?.tokenType) {
+			token.tokenType = response.accessTokenInfo.tokenType;
 		}
 		this._codestreamAccessToken = token.value;
 		this.api.setAccessToken(token.value, response.accessTokenInfo);

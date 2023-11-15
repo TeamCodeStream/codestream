@@ -287,7 +287,12 @@ export class NewRelicProvider
 		const token = this.accessToken;
 		if (token) {
 			if (this._providerInfo?.bearerToken) {
-				headers["Authorization"] = `Bearer ${token}`;
+				if (this._providerInfo?.tokenType === "access") {
+					headers["x-access-token"] = token;
+				} else {
+					headers["x-id-token"] = token;
+				}
+				//headers["Authorization"] = `Bearer ${token}`;
 			} else {
 				headers["Api-Key"] = token;
 			}
@@ -512,7 +517,12 @@ export class NewRelicProvider
 							this._providerInfo.refreshToken
 						);
 						Logger.log("NR access token successfully refreshed, trying request again...");
-						client.setHeader("Authorization", `Bearer ${tokenInfo.accessToken}`);
+						//client.setHeader("Authorization", `Bearer ${tokenInfo.accessToken}`);
+						if (tokenInfo.tokenType === "access") {
+							client.setHeader("x-access-token", tokenInfo.accessToken);
+						} else {
+							client.setHeader("x-id-token", tokenInfo.accessToken);
+						}
 						triedRefresh = true;
 						resp = undefined;
 					} catch (refreshEx) {

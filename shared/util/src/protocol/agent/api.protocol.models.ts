@@ -608,6 +608,7 @@ export interface CSProviderInfo {
 	userId?: string;
 	isApiToken?: boolean;
 	bearerToken?: boolean;
+	tokenType?: string;
 	hosts?: { [host: string]: CSProviderInfos };
 	orgIds?: number[];
 	data?: {

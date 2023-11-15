@@ -6,7 +6,15 @@ import { LoginResponse } from "./agent.protocol.auth";
 import { CreateCompanyRequest, CreateCompanyResponse } from "./agent.protocol.companies";
 import { Unreads } from "./agent.protocol.notifications";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
-import { CSCompany, CSMePreferences, CSRepository, CSStream, CSTeam, CSUser } from "./api.protocol";
+import {
+	CSAccessTokenType,
+	CSCompany,
+	CSMePreferences,
+	CSRepository,
+	CSStream,
+	CSTeam,
+	CSUser,
+} from "./api.protocol";
 
 export * from "./agent.protocol.asana";
 export * from "./agent.protocol.auth";
@@ -83,6 +91,7 @@ export interface AccessToken {
 	provider?: string;
 	providerAccess?: "strict";
 	refreshToken?: string;
+	tokenType?: CSAccessTokenType;
 }
 
 export enum CodeStreamEnvironment {

@@ -112,9 +112,15 @@ export interface CSPossibleAuthDomain {
 	useDomainName: boolean;
 }
 
+export enum CSAccessTokenType {
+	ACCESS_TOKEN = "access",
+	ID_TOKEMN = "id",
+}
+
 export interface CSAccessTokenInfo {
 	refreshToken: string;
 	expiresAt: number;
+	tokenType: CSAccessTokenType;
 }
 
 export interface CSLoginResponse {

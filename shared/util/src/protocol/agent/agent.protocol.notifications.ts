@@ -5,6 +5,7 @@ import { LoginSuccessResponse, TokenLoginRequest } from "./agent.protocol.auth";
 import { CodemarkPlus } from "./agent.protocol.codemarks";
 import { ThirdPartyProviders } from "./agent.protocol.providers";
 import {
+	CSAccessTokenType,
 	CSApiCapabilities,
 	CSCodeError,
 	CSCompany,
@@ -391,6 +392,7 @@ export interface DidRefreshAccessTokenNotification {
 	teamId: string;
 	token: string;
 	refreshToken?: string;
+	tokenType?: CSAccessTokenType;
 }
 
 export const DidRefreshAccessTokenNotificationType = new NotificationType<

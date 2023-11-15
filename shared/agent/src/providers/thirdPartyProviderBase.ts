@@ -15,7 +15,7 @@ import {
 	ThirdPartyDisconnect,
 	ThirdPartyProviderConfig,
 } from "@codestream/protocols/agent";
-import { CSMe, CSProviderInfos } from "@codestream/protocols/api";
+import { CSMe, CSAccessTokenType, CSProviderInfos } from "@codestream/protocols/api";
 
 import { User } from "../api/extensions";
 import { Container, SessionContainer } from "../container";
@@ -472,7 +472,12 @@ export abstract class ThirdPartyProviderBase<
 								this._providerInfo.refreshToken
 							);
 							Logger.log("NR access token successfully refreshed, trying request again...");
-							init.headers.set("Authorization", `Bearer ${tokenInfo.accessToken}`);
+							if (tokenInfo.tokenType === CSAccessTokenType.ACCESS_TOKEN) {
+								init.headers.set("x-access-token", tokenInfo.accessToken);
+							} else {
+								init.headers.set("x-id-token", tokenInfo.accessToken);
+							}
+							//init.headers.set("Authorization", `Bearer ${tokenInfo.accessToken}`);
 							triedRefresh = true;
 							resp = undefined;
 						} catch (ex) {
