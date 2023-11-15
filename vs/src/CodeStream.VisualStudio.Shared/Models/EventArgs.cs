@@ -36,6 +36,8 @@ namespace CodeStream.VisualStudio.Shared.Events
 
 	public sealed class SessionLogoutEvent : EventBase { }
 
+	public sealed class RefreshMarginEvent : EventBase { }
+
 	public sealed class SessionDidStartSignInEvent : EventBase { }
 
 	public sealed class SessionDidStartSignOutEvent : EventBase { }
