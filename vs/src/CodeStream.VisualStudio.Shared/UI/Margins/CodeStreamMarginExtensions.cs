@@ -65,5 +65,13 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 				margin.OnTextViewLayoutChanged(sender, e);
 			}
 		}
+
+		public static void OnRefreshMargins(this List<ICodeStreamWpfTextViewMargin> margins)
+		{
+			foreach (var margin in margins)
+			{
+				margin.RefreshMargin();
+			}
+		}
 	}
 }

@@ -23,5 +23,6 @@ namespace CodeStream.VisualStudio.Shared.UI.Margins
 		bool TryHideMargin();
 		void ToggleMargin(bool requestingVisibility);
 		void OnTextViewLayoutChanged(object sender, TextViewLayoutChangedEventArgs e);
+		void RefreshMargin();
 	}
 }
