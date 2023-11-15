@@ -2741,7 +2741,6 @@ export class CodeStreamApiProvider implements ApiProvider {
 
 					if (token !== undefined) {
 						//init.headers.append("Authorization", `Bearer ${token}`);
-						console.warn("COLIN: USING " + tokenType + " TOKEN:", token);
 						if (tokenType === CSAccessTokenType.ACCESS_TOKEN) {
 							init.headers.append("x-access-token", token);
 						} else {
