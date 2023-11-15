@@ -208,6 +208,7 @@ export const REQUIRED_AGENT_VERSIONS = {
 
 const PRODUCTION_US_GRAPHQL_URL = "https://api.newrelic.com/graphql";
 const PRODUCTION_EU_GRAPHQL_URL = "https://api-eu.newrelic.com/graphql";
+const ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS = ["APM", "BROWSER", "MOBILE", "EXT"];
 
 export interface INewRelicProvider {
 	getProductUrl: () => string;
@@ -794,7 +795,7 @@ export class NewRelicProvider
 
 			const query = `query search($cursor:String){
 				actor {
-				  entitySearch(query: "type IN ('APPLICATION', 'SERVICE') and ${statement}", 
+				  entitySearch(query: "type IN ('APPLICATION', 'SERVICE', 'AWSLAMBDAFUNCTION') and ${statement}", 
 				  sortByWithDirection: { attribute: NAME, direction: ASC },
 				  options: { limit: ${limit} }) {
 					count
@@ -1019,7 +1020,7 @@ export class NewRelicProvider
 					applicationAssociations = entitiesReponse?.actor?.entities?.filter(
 						_ =>
 							_?.relatedEntities?.results?.filter(
-								r => r.source?.entity?.type === "APPLICATION" || "SERVICE"
+								r => r.source?.entity?.type === "APPLICATION" || "SERVICE" || "AWSLAMBDAFUNCTION"
 							).length
 					);
 					hasRepoAssociation = applicationAssociations?.length > 0;
@@ -1485,7 +1486,10 @@ export class NewRelicProvider
 							if (
 								!application.source.entity.guid ||
 								!application.source.entity.account?.id ||
-								application.source.entity.domain !== "APM"
+								!application.source.entity.domain ||
+								!ALLOWED_ENTITY_ACCOUNT_DOMAINS_FOR_ERRORS.includes(
+									application.source.entity.domain
+								)
 							) {
 								continue;
 							}
