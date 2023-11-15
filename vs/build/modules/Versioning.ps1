@@ -49,7 +49,6 @@ New-Module -ScriptBlock {
         Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x86"
 		Write-AssemblyInfo $version "CodeStream.VisualStudio.Vsix.x64"
         Write-AssemblyInfo $version "CodeStream.VisualStudio.Core"
-        Write-AssemblyInfo $version "CodeStream.VisualStudio.CodeLens"
     }
 
     function Commit-Version([System.Version]$version) {
