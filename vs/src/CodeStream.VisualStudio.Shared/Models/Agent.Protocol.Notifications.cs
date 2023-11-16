@@ -26,12 +26,11 @@ namespace CodeStream.VisualStudio.Shared.Models
 		[JsonProperty("teamId", NullValueHandling = NullValueHandling.Ignore)]
 		public string TeamId { get; set; }
 
-		/// <summary>
-		/// Everywhere this is used in the application needs to be "Value", but
-		/// the notification type in the agent uses "Token". Remapping here for ease.
-		/// </summary>
 		[JsonProperty("token", NullValueHandling = NullValueHandling.Ignore)]
 		public string Token { get; set; }
+
+		[JsonProperty("tokenType", NullValueHandling = NullValueHandling.Ignore)]
+		public string TokenType { get; set; }
 
 		[JsonProperty("refreshToken", NullValueHandling = NullValueHandling.Ignore)]
 		public string RefreshToken { get; set; }

@@ -581,6 +581,7 @@ namespace CodeStream.VisualStudio.Shared.LanguageServer
 					token.TeamId,
 					token.RefreshToken,
 					Value = token.Token,
+					token.TokenType
 				};
 
 				await _credentialManager.StoreCredentialAsync(
