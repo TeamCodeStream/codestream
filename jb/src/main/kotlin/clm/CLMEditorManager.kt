@@ -176,11 +176,6 @@ abstract class CLMEditorManager(
         if (project == null || project.isDisposed) return
         if (!skipStaleCheck && !isStale()) return
 
-        // Slow operations are prohibited on EDT
-        val psiFile = ApplicationManager.getApplication().runReadAction<PsiFile> {
-            PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
-        } ?: return
-
         project.agentService?.onDidStart {
             tasksCoroutineScope.launch {
                 if (project.isDisposed) return@launch
@@ -191,6 +186,11 @@ abstract class CLMEditorManager(
                     withContext(Dispatchers.Default) { // Switch out of EDT thread
                         ApplicationManager.getApplication().runReadAction<List<String>> { // Requires read action
                             // Kotlin psi internals run stuff not compatible with EDT thread
+                            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+                            if (psiFile == null) {
+                                logger.warn("No psiFile for ${editor.document.uri}")
+                                return@runReadAction listOf<String>()
+                            }
                             symbolResolver.getLookupClassNames(psiFile)
                         }
                     }
@@ -201,6 +201,11 @@ abstract class CLMEditorManager(
                 val spanSuffixes = if (lookupBySpan) {
                     withContext(Dispatchers.Default) { // Switch out of EDT thread
                         ApplicationManager.getApplication().runReadAction<List<String>> { // Requires read action
+                            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(editor.document)
+                            if (psiFile == null) {
+                                logger.warn("No psiFile for ${editor.document.uri}")
+                                return@runReadAction listOf<String>()
+                            }
                             symbolResolver.getLookupSpanSuffixes(psiFile)
                         }
                     }
