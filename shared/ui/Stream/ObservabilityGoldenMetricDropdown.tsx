@@ -27,7 +27,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		const goldenMetricsDropdownExpanded =
 			preferences?.goldenMetricsDropdownExpanded && props?.entityGuid
 				? preferences.goldenMetricsDropdownExpanded[props?.entityGuid]
-				: false;
+				: true;
 
 		return {
 			goldenMetricsDropdownExpanded,

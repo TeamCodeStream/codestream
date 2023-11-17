@@ -26,6 +26,7 @@ import {
 } from "./MethodLevelTelemetry/MissingExtension";
 import { WarningBoxRoot } from "./WarningBox";
 import { HostApi } from "@codestream/webview/webview-api";
+import { setUserPreference } from "./actions";
 
 interface Props {
 	observabilityAnomalies: GetObservabilityAnomaliesResponse;
@@ -39,8 +40,16 @@ interface Props {
 
 export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		const anomaliesDropdownExpanded =
+			preferences?.anomaliesDropdownExpanded && props?.entityGuid
+				? preferences.anomaliesDropdownExpanded[props?.entityGuid]
+				: true;
+
 		const clmSettings = state.preferences.clmSettings || {};
 		return {
+			anomaliesDropdownExpanded,
 			clmSettings,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
@@ -133,6 +142,17 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 		}
 	}, [props.distributedTracingEnabled]);
 
+	const handleRowOnClick = () => {
+		const { anomaliesDropdownExpanded } = derivedState;
+
+		dispatch(
+			setUserPreference({
+				prefPath: ["anomaliesDropdownExpanded", props.entityGuid],
+				value: !anomaliesDropdownExpanded,
+			})
+		);
+	};
+
 	return (
 		<>
 			<Row
@@ -140,12 +160,12 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 					padding: "0px 10px 0px 30px",
 				}}
 				className={"pr-row"}
-				onClick={() => setExpanded(!expanded)}
+				onClick={() => handleRowOnClick()}
 				data-testid={`anomalies-dropdown`}
 			>
 				<span style={{ paddingTop: "3px" }}>
-					{expanded && <Icon name="chevron-down-thin" />}
-					{!expanded && <Icon name="chevron-right-thin" />}
+					{derivedState.anomaliesDropdownExpanded && <Icon name="chevron-down-thin" />}
+					{!derivedState.anomaliesDropdownExpanded && <Icon name="chevron-right-thin" />}
 				</span>
 				<div className="label">
 					<span style={{ margin: "0px 5px 0px 2px" }}>Code-Level Metrics</span>
@@ -178,84 +198,92 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 					</span>
 				</div>
 			</Row>
-			{expanded && props.observabilityAnomalies.error && !props.calculatingAnomalies && (
-				<>
-					<ErrorRow customPadding={"0 10px 0 50px"} title={props.observabilityAnomalies.error} />
-				</>
-			)}
+			{derivedState.anomaliesDropdownExpanded &&
+				props.observabilityAnomalies.error &&
+				!props.calculatingAnomalies && (
+					<>
+						<ErrorRow customPadding={"0 10px 0 50px"} title={props.observabilityAnomalies.error} />
+					</>
+				)}
 
 			{/* Agent Version Warning */}
-			{expanded && !props.calculatingAnomalies && showAgentWarning && (
-				<>
-					{props.languageAndVersionValidation?.language &&
-						props.languageAndVersionValidation?.required && (
-							<Row
-								style={{
-									padding: "0px 0px 0px 0px",
-								}}
-								className={"pr-row"}
-							>
-								<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>
-									<WarningBoxRoot style={{ margin: "0px 1px 0px 0px" }}>
-										<Icon name="alert" className="alert" />
-										<div className="message">
-											<div>
-												Requires {props.languageAndVersionValidation?.language} agent version{" "}
-												{props.languageAndVersionValidation?.required} or higher.
+			{derivedState.anomaliesDropdownExpanded &&
+				!props.calculatingAnomalies &&
+				showAgentWarning && (
+					<>
+						{props.languageAndVersionValidation?.language &&
+							props.languageAndVersionValidation?.required && (
+								<Row
+									style={{
+										padding: "0px 0px 0px 0px",
+									}}
+									className={"pr-row"}
+								>
+									<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>
+										<WarningBoxRoot style={{ margin: "0px 1px 0px 0px" }}>
+											<Icon name="alert" className="alert" />
+											<div className="message">
+												<div>
+													Requires {props.languageAndVersionValidation?.language} agent version{" "}
+													{props.languageAndVersionValidation?.required} or higher.
+												</div>
 											</div>
-										</div>
-									</WarningBoxRoot>
-								</span>
-							</Row>
-						)}
-				</>
-			)}
+										</WarningBoxRoot>
+									</span>
+								</Row>
+							)}
+					</>
+				)}
 
 			{/* Distrubuted Tracing Warning */}
-			{expanded && !props.calculatingAnomalies && showDistributedTracingWarning && (
-				<Row
-					style={{
-						padding: "0px 0px 0px 0px",
-					}}
-					className={"pr-row"}
-				>
-					<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>
-						<WarningBoxRoot style={{ margin: "0px 1px 0px 0px" }}>
-							<Icon name="alert" className="alert" />
-							<div className="message">
-								<div>
-									Enable{" "}
-									<Link href="https://docs.newrelic.com/docs/distributed-tracing/concepts/quick-start/">
-										distributed tracing
-									</Link>{" "}
-									for this service to see code-level metrics.
+			{derivedState.anomaliesDropdownExpanded &&
+				!props.calculatingAnomalies &&
+				showDistributedTracingWarning && (
+					<Row
+						style={{
+							padding: "0px 0px 0px 0px",
+						}}
+						className={"pr-row"}
+					>
+						<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>
+							<WarningBoxRoot style={{ margin: "0px 1px 0px 0px" }}>
+								<Icon name="alert" className="alert" />
+								<div className="message">
+									<div>
+										Enable{" "}
+										<Link href="https://docs.newrelic.com/docs/distributed-tracing/concepts/quick-start/">
+											distributed tracing
+										</Link>{" "}
+										for this service to see code-level metrics.
+									</div>
 								</div>
-							</div>
-						</WarningBoxRoot>
-					</span>
-				</Row>
-			)}
+							</WarningBoxRoot>
+						</span>
+					</Row>
+				)}
 
 			{/* Extension Warning */}
-			{expanded && !props.calculatingAnomalies && showExtensionWarning && (
-				<Row
-					style={{
-						padding: "0px 0px 0px 0px",
-					}}
-					className={"pr-row"}
-				>
-					<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>{missingExtension}</span>
-				</Row>
-			)}
+			{derivedState.anomaliesDropdownExpanded &&
+				!props.calculatingAnomalies &&
+				showExtensionWarning && (
+					<Row
+						style={{
+							padding: "0px 0px 0px 0px",
+						}}
+						className={"pr-row"}
+					>
+						<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>{missingExtension}</span>
+					</Row>
+				)}
 
-			{expanded &&
+			{derivedState.anomaliesDropdownExpanded &&
 				(props.noAccess ? (
 					<Row
 						style={{
 							padding: "2px 10px 2px 40px",
 						}}
 						className={"pr-row"}
-						onClick={() => setExpanded(!expanded)}
+						onClick={() => handleRowOnClick()}
 					>
 						<span style={{ marginLeft: "2px", whiteSpace: "normal" }}>
 							{props.noAccess === "403" ? (
