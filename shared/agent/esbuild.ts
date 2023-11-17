@@ -83,6 +83,20 @@ const postBuildCopy: CopyStuff[] = [
 		from: path.resolve(`${outputDir}/node_modules/**`),
 		to: path.resolve(__dirname, "../../vscode/dist/node_modules/"),
 	},
+	{
+		from: path.resolve(`${outputDir}/node_modules/**`),
+		to: path.resolve(
+			__dirname,
+			"../../vs/src/CodeStream.VisualStudio.Vsix.x86/agent/node_modules/"
+		),
+	},
+	{
+		from: path.resolve(`${outputDir}/node_modules/**`),
+		to: path.resolve(
+			__dirname,
+			"../../vs/src/CodeStream.VisualStudio.Vsix.x64/agent/node_modules/"
+		),
+	},
 ];
 
 (async function () {
