@@ -1,10 +1,13 @@
 import { EntityGoldenMetrics, GetIssuesResponse } from "@codestream/protocols/agent";
 import { isEmpty as _isEmpty } from "lodash-es";
-import React, { useState } from "react";
+import React from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import { ObservabilityLoadingGoldenMetrics } from "@codestream/webview/Stream/ObservabilityLoading";
+import { useAppSelector, useAppDispatch } from "../utilities/hooks";
+import { CodeStreamState } from "@codestream/webview/store";
+import { setUserPreference } from "./actions";
 
 interface Props {
 	entityGoldenMetrics: EntityGoldenMetrics | undefined;
@@ -16,15 +19,22 @@ interface Props {
 }
 
 export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
-	const [expanded, setExpanded] = useState<boolean>(true);
-	const {
-		errors,
-		entityGuid,
-		entityGoldenMetrics,
-		loadingGoldenMetrics,
-		noDropdown,
-		recentIssues,
-	} = props;
+	const dispatch = useAppDispatch();
+
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		const goldenMetricsDropdownExpanded =
+			preferences?.goldenMetricsDropdownExpanded && props?.entityGuid
+				? preferences.goldenMetricsDropdownExpanded[props?.entityGuid]
+				: false;
+
+		return {
+			goldenMetricsDropdownExpanded,
+		};
+	});
+
+	const { errors, entityGuid, entityGoldenMetrics, loadingGoldenMetrics, noDropdown } = props;
 
 	const errorTitle: string | undefined =
 		errors.length === 0 ? undefined : `Last request failed:\n${errors.join("\n")}`;
@@ -64,6 +74,17 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 		);
 	};
 
+	const handleRowOnClick = () => {
+		const { goldenMetricsDropdownExpanded } = derivedState;
+
+		dispatch(
+			setUserPreference({
+				prefPath: ["goldenMetricsDropdownExpanded", entityGuid],
+				value: !goldenMetricsDropdownExpanded,
+			})
+		);
+	};
+
 	return (
 		<>
 			{!noDropdown && (
@@ -73,11 +94,11 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 							padding: "2px 10px 2px 30px",
 						}}
 						className={"pr-row"}
-						onClick={() => setExpanded(!expanded)}
+						onClick={() => handleRowOnClick()}
 						data-testid={`golden-metrics-dropdown`}
 					>
-						{expanded && <Icon name="chevron-down-thin" />}
-						{!expanded && <Icon name="chevron-right-thin" />}
+						{derivedState.goldenMetricsDropdownExpanded && <Icon name="chevron-down-thin" />}
+						{!derivedState.goldenMetricsDropdownExpanded && <Icon name="chevron-right-thin" />}
 						<span data-testid={`golden-metrics-${entityGuid}`} style={{ margin: "0 5px 0 2px" }}>
 							Golden Metrics
 						</span>
@@ -109,8 +130,10 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 				</>
 			)}
 
-			{expanded && loadingGoldenMetrics && <ObservabilityLoadingGoldenMetrics />}
-			{(noDropdown || expanded) &&
+			{derivedState.goldenMetricsDropdownExpanded && loadingGoldenMetrics && (
+				<ObservabilityLoadingGoldenMetrics />
+			)}
+			{(noDropdown || derivedState.goldenMetricsDropdownExpanded) &&
 				!loadingGoldenMetrics &&
 				!_isEmpty(entityGoldenMetrics?.metrics) && <>{goldenMetricOutput()}</>}
 		</>
