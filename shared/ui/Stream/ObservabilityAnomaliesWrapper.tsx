@@ -2,7 +2,7 @@ import {
 	GetObservabilityAnomaliesResponse,
 	LanguageAndVersionValidation,
 } from "@codestream/protocols/agent";
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { Link } from "./Link";
@@ -55,8 +55,6 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				{}) as CurrentMethodLevelTelemetry,
 		};
 	}, shallowEqual);
-
-	const [expanded, setExpanded] = useState<boolean>(true);
 
 	const dispatch = useAppDispatch();
 
