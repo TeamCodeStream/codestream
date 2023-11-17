@@ -88,14 +88,18 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 		}
 	}
 
-	const showAgentWarning =
-		!_isEmpty(props.languageAndVersionValidation?.language) &&
-		!_isEmpty(props.languageAndVersionValidation?.required);
-	const showDistributedTracingWarning = !showAgentWarning && !props.distributedTracingEnabled;
-	const showExtensionWarning =
-		!showDistributedTracingWarning &&
-		!_isEmpty(props.languageAndVersionValidation?.languageExtensionValidation) &&
-		props.languageAndVersionValidation?.languageExtensionValidation !== "VALID";
+	// const showAgentWarning =
+	// 	!_isEmpty(props.languageAndVersionValidation?.language) &&
+	// 	!_isEmpty(props.languageAndVersionValidation?.required);
+	// const showDistributedTracingWarning = !showAgentWarning && !props.distributedTracingEnabled;
+	// const showExtensionWarning =
+	// 	!showDistributedTracingWarning &&
+	// 	!_isEmpty(props.languageAndVersionValidation?.languageExtensionValidation) &&
+	// 	props.languageAndVersionValidation?.languageExtensionValidation !== "VALID";
+
+	const showAgentWarning = false;
+	const showDistributedTracingWarning = false;
+	const showExtensionWarning = false;
 
 	useEffect(() => {
 		if (!_isEmpty(props.languageAndVersionValidation)) {
