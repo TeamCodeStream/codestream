@@ -3,7 +3,13 @@ export class Stopwatch {
 	private _stop: [number, number] | undefined;
 
 	constructor(private readonly _name: string) {
-		this.start();
+
+	}
+
+	static createAndStart(name: string): Stopwatch {
+		const stopwatch = Stopwatch.createAndStart(name);
+		stopwatch.start();
+		return stopwatch;
 	}
 
 	start(): void {

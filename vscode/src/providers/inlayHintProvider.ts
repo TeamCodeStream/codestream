@@ -88,7 +88,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 		range: Range,
 		token: CancellationToken
 	): Promise<InlayHint[]> {
-		const overallStopwatch = new Stopwatch("provideInlayHints total");
+		const overallStopwatch = Stopwatch.createAndStart("provideInlayHints total");
 		Logger.debug(
 			`provideInlayHints called with ${document.fileName} ${range.start.line}:${range.start.character} ${range.end.line}:${range.end.character}`
 		);
@@ -99,7 +99,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			includeErrorRate: this.codeLensTemplate.includes("${errorRate}")
 		};
 
-		const fileLevelTelemetryStopwatch = new Stopwatch("getFileLevelTelemetry");
+		const fileLevelTelemetryStopwatch = Stopwatch.createAndStart("getFileLevelTelemetry");
 		const fileLevelTelemetryResponse = await this._observabilityService.getFileLevelTelemetry(
 			document.uri.toString(),
 			document.languageId,
@@ -147,7 +147,7 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 			return [];
 		}
 
-		const computeLoopStopwatch = new Stopwatch("computeCurrentLocationLoop");
+		const computeLoopStopwatch = Stopwatch.createAndStart("computeCurrentLocationLoop");
 		let loopCount = 0;
 		const locationMapKey = `${document.uri.toString()}:${document.version}`;
 		let locationLensMap = this._cache.get(locationMapKey) ?? new Map<string, CollatedMetric>();
@@ -163,7 +163,9 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 
 				let collatedMetric = locationLensMap.get(id);
 				if (!collatedMetric && metric.lineno && metric.column) {
-					const currentLocationStopwatch = new Stopwatch(`computeCurrentLocation ${loopCount++}`);
+					const currentLocationStopwatch = Stopwatch.createAndStart(
+						`computeCurrentLocation ${loopCount++}`
+					);
 					const currentLocation = await this._observabilityService.computeCurrentLocation(
 						id,
 						metric.lineno,
@@ -220,9 +222,9 @@ export class CodeStreamInlayHintsProvider implements InlayHintsProvider, Disposa
 		computeLoopStopwatch.stop();
 		Logger.debug(`provideInlayHints ${computeLoopStopwatch.report()}`);
 
-		const computePhaseStopwatch = new Stopwatch("computePhase");
+		const computePhaseStopwatch = Stopwatch.createAndStart("computePhase");
 		const inlayHints: InlayHint[] = [];
-		const symbolLocatorStopwatch = new Stopwatch("symbolLocator");
+		const symbolLocatorStopwatch = Stopwatch.createAndStart("symbolLocator");
 		const symbols = await this.symbolLocator.locate(document, token);
 		symbolLocatorStopwatch.stop();
 		Logger.debug(`provideInlayHints ${symbolLocatorStopwatch.report()}`);

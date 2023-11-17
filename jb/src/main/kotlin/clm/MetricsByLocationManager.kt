@@ -65,7 +65,7 @@ class MetricsByLocationManager {
                 if (currentLocations != null &&
                     currentLocations.locations.isNotEmpty() &&
                     currentLocations.locations.entries.first().value.meta?.entirelyDeleted != true) {
-//                    currentLocations.locations.entries.first().value.meta?.startWasDeleted != true) {
+                    // currentLocations.locations.entries.first().value.meta?.startWasDeleted != true) {
                     // TODO multiple results
                     val location = currentLocations.locations.entries.first()
                     val range = location.value.toRangeIgnoreColumn()
