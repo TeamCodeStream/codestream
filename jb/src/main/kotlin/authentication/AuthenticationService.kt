@@ -21,7 +21,6 @@ import com.codestream.settings.SettingsService
 import com.codestream.settingsService
 import com.codestream.webViewService
 import com.github.salomonbrys.kotson.fromJson
-import com.github.salomonbrys.kotson.set
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.intellij.credentialStore.Credentials
@@ -181,7 +180,7 @@ class AuthenticationService(val project: Project) {
     }
 
     fun onDidRefreshAccessToken(notification: DidRefreshAccessTokenNotification) {
-        //  Not that provider and providerAccess not provided on this notification, but it doesn't seem to be used
+        //  Note that provider and providerAccess not provided on this notification, but it doesn't seem to be used
         val token = AccessToken(
             email = notification.email,
             url = notification.url,
@@ -189,7 +188,9 @@ class AuthenticationService(val project: Project) {
             teamId = notification.teamId,
             provider = null,
             providerAccess = null,
-            notification.refreshToken)
+            notification.refreshToken,
+            tokenType = notification.tokenType,
+        )
         saveAccessToken(SaveTokenReason.REFRESH, token, notification.url, notification.teamId)
     }
 

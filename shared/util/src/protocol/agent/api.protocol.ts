@@ -114,7 +114,7 @@ export interface CSPossibleAuthDomain {
 
 export enum CSAccessTokenType {
 	ACCESS_TOKEN = "access",
-	ID_TOKEMN = "id",
+	ID_TOKEN = "id",
 }
 
 export interface CSAccessTokenInfo {

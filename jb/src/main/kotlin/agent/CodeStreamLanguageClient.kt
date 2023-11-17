@@ -355,6 +355,7 @@ class DidRefreshAccessTokenNotification(
     val teamId: String,
     val token: String,
     val refreshToken: String?,
+    val tokenType: String?, // Tried enum but doesn't work with whatever serialization is on CodeStreamLanguageServer.loginToken
 )
 
 enum class LogoutReason {
