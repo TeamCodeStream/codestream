@@ -25,6 +25,9 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import Tooltip from "./Tooltip";
 import { ObservabilityLoadingVulnerabilities } from "@codestream/webview/Stream/ObservabilityLoading";
+import { setUserPreference } from "./actions";
+import { useAppSelector, useAppDispatch } from "../utilities/hooks";
+import { CodeStreamState } from "@codestream/webview/store";
 
 interface Props {
 	currentRepoId: string;
@@ -258,6 +261,20 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
 	const [selectedItems, setSelectedItems] = useState<RiskSeverity[]>(["CRITICAL", "HIGH"]);
 	const [rows, setRows] = useState<number | undefined | "all">(undefined);
+	const dispatch = useAppDispatch();
+
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		const securityIssuesDropdownExpanded =
+			preferences?.securityIssuesDropdownExpanded && props?.entityGuid
+				? preferences.securityIssuesDropdownExpanded[props?.entityGuid]
+				: true;
+
+		return {
+			securityIssuesDropdownExpanded,
+		};
+	});
 
 	const { loading, data, error } = useRequestType<
 		typeof GetLibraryDetailsType,
@@ -332,6 +349,17 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const warningTooltip =
 		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
 
+	const handleRowOnClick = () => {
+		const { securityIssuesDropdownExpanded } = derivedState;
+
+		dispatch(
+			setUserPreference({
+				prefPath: ["securityIssuesDropdownExpanded", props.entityGuid],
+				value: !securityIssuesDropdownExpanded,
+			})
+		);
+	};
+
 	return (
 		<>
 			<Row
@@ -340,13 +368,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					alignItems: "baseline",
 				}}
 				className="vuln"
-				onClick={() => {
-					setExpanded(!expanded);
-				}}
+				onClick={() => handleRowOnClick()}
 				data-testid={`security-issues-dropdown`}
 			>
-				{expanded && <Icon name="chevron-down-thin" />}
-				{!expanded && <Icon name="chevron-right-thin" />}
+				{derivedState.securityIssuesDropdownExpanded && <Icon name="chevron-down-thin" />}
+				{!derivedState.securityIssuesDropdownExpanded && <Icon name="chevron-right-thin" />}
 				<span
 					data-testid={`vulnerabilities-${props.entityGuid}`}
 					style={{ marginLeft: "2px", marginRight: "5px" }}
@@ -378,9 +404,11 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					/>
 				</InlineMenu>
 			</Row>
-			{loading && expanded && <ObservabilityLoadingVulnerabilities />}
-			{error && expanded && getErrorDetails(error)}
-			{expanded && !loading && data && data.totalRecords > 0 && (
+			{loading && derivedState.securityIssuesDropdownExpanded && (
+				<ObservabilityLoadingVulnerabilities />
+			)}
+			{error && derivedState.securityIssuesDropdownExpanded && getErrorDetails(error)}
+			{derivedState.securityIssuesDropdownExpanded && !loading && data && data.totalRecords > 0 && (
 				<>
 					{data.libraries.map(library => {
 						return <LibraryRow library={library} />;
@@ -388,11 +416,14 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					<Additional onClick={loadAll} additional={additional} />
 				</>
 			)}
-			{expanded && !loading && data && data.totalRecords === 0 && (
-				<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
-					👍 No vulnerabilities found
-				</Row>
-			)}
+			{derivedState.securityIssuesDropdownExpanded &&
+				!loading &&
+				data &&
+				data.totalRecords === 0 && (
+					<Row data-testid={`no-vulnerabilties-found`} style={{ padding: "0 10px 0 49px" }}>
+						👍 No vulnerabilities found
+					</Row>
+				)}
 		</>
 	);
 });

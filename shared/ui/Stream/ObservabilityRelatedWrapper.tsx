@@ -3,7 +3,9 @@ import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
 import { ObservabilityRelatedCalledBy } from "./ObservabilityRelatedCalledBy";
 import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
-
+import { setUserPreference } from "./actions";
+import { useAppSelector, useAppDispatch } from "../utilities/hooks";
+import { CodeStreamState } from "@codestream/webview/store";
 interface Props {
 	currentRepoId: string;
 	entityGuid: string;
@@ -11,6 +13,31 @@ interface Props {
 
 export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const [expanded, setExpanded] = useState<boolean>(false);
+	const dispatch = useAppDispatch();
+
+	const derivedState = useAppSelector((state: CodeStreamState) => {
+		const { preferences } = state;
+
+		const relatedServicesExpanded =
+			preferences?.relatedServicesExpanded && props?.entityGuid
+				? preferences.relatedServicesExpanded[props?.entityGuid]
+				: true;
+
+		return {
+			relatedServicesExpanded,
+		};
+	});
+
+	const handleRowOnClick = () => {
+		const { relatedServicesExpanded } = derivedState;
+
+		dispatch(
+			setUserPreference({
+				prefPath: ["relatedServicesExpanded", props.entityGuid],
+				value: !relatedServicesExpanded,
+			})
+		);
+	};
 
 	return (
 		<>
@@ -19,15 +46,15 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 					padding: "2px 10px 2px 30px",
 				}}
 				className={"pr-row"}
-				onClick={() => setExpanded(!expanded)}
+				onClick={() => handleRowOnClick()}
 			>
-				{expanded && <Icon name="chevron-down-thin" />}
-				{!expanded && <Icon name="chevron-right-thin" />}
+				{derivedState.relatedServicesExpanded && <Icon name="chevron-down-thin" />}
+				{!derivedState.relatedServicesExpanded && <Icon name="chevron-right-thin" />}
 				<span data-testid={`related-services-${props.entityGuid}`} style={{ marginLeft: "2px" }}>
 					Related Services
 				</span>
 			</Row>
-			{expanded && (
+			{derivedState.relatedServicesExpanded && (
 				<>
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}
