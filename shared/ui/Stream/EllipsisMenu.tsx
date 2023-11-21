@@ -119,14 +119,12 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		derivedState.eligibleJoinCompanies.some(company => company.byInvite && !company.accessToken);
 
 	const trackSwitchOrg = (isCurrentCompany, company) => {
-		const { nrUserId } = derivedState;
-
 		HostApi.instance.track("Switched Organizations", {});
 		// slight delay so tracking call completes
 		setTimeout(() => {
 			if (isCurrentCompany) return;
 
-			dispatch(switchToTeamSSO({ nrUserId }));
+			dispatch(switchToTeamSSO({ nrUserId: company.user_id }));
 		}, 500);
 
 		return;
