@@ -13,6 +13,9 @@ import {
 	FindCandidateMainFilesRequest,
 	FindCandidateMainFilesRequestType,
 	FindCandidateMainFilesResponse,
+	GetRepoFileFromAbsolutePathRequest,
+	GetRepoFileFromAbsolutePathRequestType,
+	GetRepoFileFromAbsolutePathResponse,
 	InstallNewRelicRequest,
 	InstallNewRelicRequestType,
 	InstallNewRelicResponse,
@@ -554,6 +557,33 @@ export class NRManager {
 			Logger.warn(response.error);
 		}
 		return response;
+	}
+
+	@lspHandler(GetRepoFileFromAbsolutePathRequestType)
+	@log()
+	async getRepoFileFromAbsolutePath(
+		request: GetRepoFileFromAbsolutePathRequest
+	): Promise<GetRepoFileFromAbsolutePathResponse> {
+		const { git } = SessionContainer.instance();
+
+		const matchingRepo = await git.getRepositoryById(request.repo.id);
+		const matchingRepoPath = matchingRepo?.path;
+		const fileSearchResponse =
+			matchingRepoPath &&
+			(await SessionContainer.instance().session.onFileSearch(
+				matchingRepoPath,
+				request.absoluteFilePath
+			));
+		const bestPath =
+			fileSearchResponse &&
+			NRManager.getBestMatchingPath(request.absoluteFilePath, fileSearchResponse.files);
+		if (!bestPath) {
+			return { error: `Unable to find matching file for path ${request.absoluteFilePath}` };
+		}
+
+		return {
+			uri: bestPath,
+		};
 	}
 
 	static getBestMatchingPath(pathSuffix: string, allFilePaths: string[]) {

@@ -23,6 +23,7 @@ import { ClmProvider } from "./clm/clmProvider";
 import { NrDirectives } from "./directives/nrDirectives";
 import { Disposable } from "../../system/disposable";
 import { CodeStreamAgent } from "../../agent";
+import { SpansProvider } from "./spans/spansProvider";
 
 let nrDirectives: NrDirectives | undefined;
 let disposables: Disposable[] = [];
@@ -107,7 +108,7 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 		reposProvider,
 		newRelicGraphqlClient,
 		nrApiConfig,
-		newRelicProviderInfo,
+		newRelicProviderInfo
 	);
 
 	const entityProvider = new EntityProvider(newRelicGraphqlClient);
@@ -175,6 +176,8 @@ export async function injectNR(sessionServiceContainer: SessionServiceContainer)
 	const vulnHttpClient = new HttpClient(newRelicVulnProviderConfig, session, newRelicProviderInfo);
 
 	disposables.push(vulnHttpClient);
+
+	const spansProvider = new SpansProvider(newRelicGraphqlClient);
 
 	const newRelicVulnerabilitiesProvider = new NewRelicVulnerabilitiesProvider(
 		newRelicProviderInfo,

@@ -25,8 +25,12 @@ import {
 	GetObservabilityErrorGroupMetadataRequestType,
 	GetObservabilityErrorGroupMetadataResponse,
 	CSAsyncGrokError,
+	RelatedRepository,
+	MatchReposResponse,
+	MatchReposRequestType,
+	GetRepoFileFromAbsolutePathRequestType,
 } from "@codestream/protocols/agent";
-import { CodemarkType, CSCodeError, CSMe } from "@codestream/protocols/api";
+import { CodemarkType, CSCodeError, CSMe, CSRepository } from "@codestream/protocols/api";
 import React from "react";
 import * as path from "path-browserify";
 import { render } from "react-dom";
@@ -100,6 +104,7 @@ import {
 	setCurrentPullRequest,
 	setCurrentReview,
 	setCurrentStream,
+	setCurrentTransactionSpan,
 	setForceRegion,
 	setPendingProtocolHandlerUrl,
 	setStartWorkCard,
@@ -120,7 +125,7 @@ import { setMaintenanceMode } from "./store/session/actions";
 import { updateUnreads } from "./store/unreads/actions";
 import { upgradeRecommended, upgradeRequired } from "./store/versioning/actions";
 import { fetchCodemarks, openPanel } from "./Stream/actions";
-import { moveCursorToLine } from "./Stream/api-functions";
+import { highlightRange, moveCursorToLine } from "./Stream/api-functions";
 import { confirmPopup } from "./Stream/Confirm";
 import translations from "./translations/en";
 import { parseProtocol } from "./utilities/urls";
@@ -657,6 +662,130 @@ function listenForEvents(store) {
 								stackSourceMap: response?.stackSourceMap,
 							})
 						);
+						break;
+					}
+
+					case "span": {
+						store.dispatch(closeAllPanels());
+
+						const definedQuery = route as RouteWithQuery<{
+							accountId?: string;
+							spanName?: string;
+							spanHost?: string;
+							entityId?: string;
+							src?: string;
+							env?: string;
+							filepath?: string;
+							function?: string;
+							namespace?: string;
+							lineno?: string;
+							commitSha?: string;
+							releaseTag?: string;
+						}>;
+
+						const spanId = route.id;
+						if (!spanId || !definedQuery.query.accountId) break;
+
+						// if the user isn't logged in we'll queue this url
+						// up for post-login processing
+						if (!store.getState().session.userId) {
+							store.dispatch(
+								setPendingProtocolHandlerUrl({ url: e.url, query: definedQuery.query })
+							);
+							if (definedQuery.query.env) {
+								store.dispatch(setForceRegion({ region: definedQuery.query.env }));
+							}
+							if (route.query["anonymousId"]) {
+								await HostApi.instance.send(TelemetrySetAnonymousIdRequestType, {
+									anonymousId: route.query["anonymousId"],
+								});
+							}
+							store.dispatch(goToSignup({}));
+							break;
+						}
+
+						if (!definedQuery.query.entityId) break;
+						const metadataResponse = await HostApi.instance.send(
+							GetObservabilityErrorGroupMetadataRequestType,
+							{
+								entityGuid: definedQuery.query.entityId,
+							}
+						);
+						const relatedRepos = metadataResponse?.relatedRepos as RelatedRepository[];
+
+						const repoUrls = (
+							await Promise.all(
+								relatedRepos.map(_ =>
+									_.url ? HostApi.instance.send(NormalizeUrlRequestType, { url: _.url }) : undefined
+								)
+							)
+						)
+							.filter(Boolean)
+							.map(_ => _!.normalizedUrl);
+
+						const repoResponse = (await HostApi.instance.send(MatchReposRequestType, {
+							repos: [
+								{
+									remotes: repoUrls,
+									knownCommitHashes: definedQuery.query.commitSha
+										? [definedQuery.query.commitSha]
+										: [],
+								},
+							],
+						})) as MatchReposResponse;
+
+						let repo: CSRepository;
+						if (repoResponse.repos.length === 1 && definedQuery.query.filepath) {
+							repo = repoResponse.repos[0];
+							const { uri, error } = await HostApi.instance.send(
+								GetRepoFileFromAbsolutePathRequestType,
+								{
+									repo,
+									absoluteFilePath: definedQuery.query.filepath,
+								}
+							);
+							if (uri) {
+								highlightRange({
+									uri,
+									//ref: definedQuery.query.commitSha || definedQuery.query.releaseTag,
+									range: Range.create(
+										parseInt(definedQuery.query.lineno || "0"),
+										0,
+										parseInt(definedQuery.query.lineno || "0"),
+										9999
+									),
+									highlight: true,
+								});
+								/*HostApi.instance.send(EditorRevealRangeRequestType, {
+									uri,
+									range: Range.create(
+										parseInt(definedQuery.query.lineno || "0"),
+										0,
+										parseInt(definedQuery.query.lineno || "0"),
+										9999
+									),
+									atTop: true,
+								});*/
+							}
+						}
+
+						store.dispatch(
+							setCurrentTransactionSpan({
+								spanId,
+								newRelicAccountId: parseInt(definedQuery.query.accountId),
+								newRelicEntityGuid: definedQuery.query.entityId,
+								spanName: definedQuery.query.spanName,
+								spanHost: definedQuery.query.spanHost,
+								codeNamespace: definedQuery.query.namespace,
+								functionName: definedQuery.query.function,
+								filePath: definedQuery.query.filepath,
+								lineNumber: definedQuery.query.lineno,
+								commitSha: definedQuery.query.commitSha,
+								releaseTag: definedQuery.query.releaseTag,
+							})
+						);
+
+						store.dispatch();
 						break;
 					}
 

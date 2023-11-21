@@ -109,6 +109,7 @@ import { Team } from "./Team";
 import { TeamSetup } from "./TeamSetup";
 import { Tester } from "./Tester";
 import { ObservabilityAnomalyPanel } from "@codestream/webview/Stream/MethodLevelTelemetry/ObservabilityAnomalyPanel";
+import { TransactionSpanPanel } from "./TransactionSpanPanel";
 
 interface DispatchProps {
 	clearDynamicLogging: Function;
@@ -142,6 +143,7 @@ interface ConnectedProps {
 	currentPullRequestId?: string;
 	currentPullRequestView?: string;
 	currentReviewId?: string;
+	currentTransactionSpanId?: string;
 	currentUser: CSUser;
 	currentUserId: string;
 	// even though we don't use hasFocus, leave this in here because of a re-render
@@ -382,6 +384,10 @@ export class SimpleStream extends PureComponent<Props> {
 		if (this.props.currentPullRequestId && this.props.currentPullRequestView !== "sidebar-diffs")
 			activePanel = WebviewPanels.CodemarksForFile;
 
+		if (this.props.currentTransactionSpanId) {
+			activePanel = WebviewPanels.TransactionSpan;
+		}
+
 		if (!isConfigurationPanel && this.props.composeCodemarkActive) {
 			// don't override the activePanel if user is trying to configure a provider
 			// from the codemark (issue) form
@@ -554,6 +560,7 @@ export class SimpleStream extends PureComponent<Props> {
 							{activePanel === WebviewPanels.NewReview && <ReviewForm />}
 							{activePanel === WebviewPanels.PixieDynamicLogging && <PixieDynamicLoggingPanel />}
 							{activePanel === WebviewPanels.MethodLevelTelemetry && <MethodLevelTelemetryPanel />}
+							{activePanel === WebviewPanels.TransactionSpan && <TransactionSpanPanel />}
 							{activePanel === WebviewPanels.ObservabilityAnomaly && <ObservabilityAnomalyPanel />}
 							{activePanel === WebviewPanels.Integrations && <IntegrationsPanel />}
 							{activePanel === WebviewPanels.Profile && <ProfilePanel />}
@@ -809,6 +816,7 @@ const mapStateToProps = (state: CodeStreamState): ConnectedProps => {
 			? context.currentPullRequest.view
 			: undefined,
 		currentReviewId: context.currentReviewId,
+		currentTransactionSpanId: context.currentTransactionSpan?.spanId,
 		currentUser: users[session.userId!] as CSMe,
 		currentUserId: session.userId!,
 		isFirstPageview: context.isFirstPageview,

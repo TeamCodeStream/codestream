@@ -280,6 +280,13 @@ export function reduceContext(
 			};
 		}
 
+		case ContextActionsType.SetCurrentTransactionSpan: {
+			return {
+				...state,
+				currentTransactionSpan: action.payload.data,
+			};
+		}
+
 		case "RESET":
 			return {
 				...initialState,

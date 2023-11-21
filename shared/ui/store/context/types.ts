@@ -62,6 +62,7 @@ export enum ContextActionsType {
 	SetClearNewRelicOptions = "@context/SetClearNewRelicOptions",
 	SetCurrentMethodLevelTelemetry = "@context/SetCurrentMethodLevelTelemetry",
 	SetCurrentObservabilityAnomaly = "@context/SetCurrentObservabilityAnomaly",
+	SetCurrentTransactionSpan = "@context/SetCurrentTransactionSpan",
 }
 
 /**
@@ -138,6 +139,8 @@ export interface ContextState extends WebviewContext {
 	currentObservabilityAnomaly?: ObservabilityAnomaly;
 	currentObservabilityAnomalyEntityGuid?: string;
 	currentObservabilityAnomalyEntityName?: string;
+	currentTransactionSpan?: CurrentTransactionSpan;
+
 	selectedRegion?: string;
 }
 
@@ -182,5 +185,55 @@ export interface CurrentMethodLevelTelemetry {
 		id: string;
 		name: string;
 		remote: string;
+	};
+}
+
+export interface CurrentTransactionSpan {
+	newRelicEntityGuid?: string;
+	newRelicAccountId?: number;
+	spanId?: string;
+	spanName?: string;
+	spanHost?: string;
+	url?: string;
+	codeNamespace?: string;
+	functionName?: string;
+	filePath?: string;
+	relativeFilePath?: string;
+	lineNumber?: string;
+	commitSha?: string;
+	releaseTag?: string;
+	responseTimeChartData?: {
+		thisHost: {
+			value: number;
+			beginTime: number;
+			endTime: number;
+			inspectedCount: number;
+		}[];
+		allHosts: {
+			value: number;
+			beginTime: number;
+			endTime: number;
+			inspectedCount: number;
+		}[];
+	};
+	throughputChartData?: {
+		thisHost: {
+			value: number;
+			beginTime: number;
+			endTime: number;
+			inspectedCount: number;
+		}[];
+		allHosts: {
+			value: number;
+			beginTime: number;
+			endTime: number;
+			inspectedCount: number;
+		}[];
+	};
+	spanDurationChartData?: {
+		histogram: number[];
+		bucketSize: number;
+		minValue: number;
+		maxValue: number;
 	};
 }

@@ -3,7 +3,8 @@
 import { NotificationType, RequestType } from "vscode-languageserver-protocol";
 
 import { Project, RepoProjectType } from "./agent.protocol.scm";
-import { CSStackTraceInfo, CSStackTraceLine } from "./api.protocol.models";
+import { CSRepository, CSStackTraceInfo, CSStackTraceLine } from "./api.protocol.models";
+import { Uri } from "vscode";
 
 export interface ParseStackTraceRequest {
 	errorGroupGuid: string;
@@ -180,6 +181,23 @@ export const AddNewRelicIncludeRequestType = new RequestType<
 	void,
 	void
 >("codestream/nr/addNewRelicInclude");
+
+export interface GetRepoFileFromAbsolutePathRequest {
+	repo: CSRepository;
+	absoluteFilePath: string;
+}
+
+export interface GetRepoFileFromAbsolutePathResponse {
+	uri?: string;
+	error?: string;
+}
+
+export const GetRepoFileFromAbsolutePathRequestType = new RequestType<
+	GetRepoFileFromAbsolutePathRequest,
+	GetRepoFileFromAbsolutePathResponse,
+	void,
+	void
+>("codestream/nr/getRepoFileFromAbsolutePath");
 
 export interface GetNewRelicSignupJwtTokenRequest {}
 

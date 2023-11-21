@@ -1810,6 +1810,58 @@ export interface GetIssuesResponse {
 	recentIssues?: RecentIssue[];
 }
 
+export interface SpanLineChartDataValue {
+	beginTimeSeconds: number;
+	endTimeSeconds: number;
+	value: number;
+}
+
+/*export interface SpanLineChartData {
+	thisHost: SpanLineChartDataValue[];
+	allHosts: SpanLineChartDataValue[];
+}*/
+export type SpanLineChartData = SpanLineChartDataPoint[];
+
+export interface SpanLineChartDataPoint {
+	endTimeMs: number;
+	thisHost?: number;
+	allHosts?: number;
+}
+
+/*export interface SpanHistogramData {
+	bucketSize: number;
+	minValue: number;
+	maxValue: number;
+	values: number[];
+}*/
+export type SpanHistogramData = SpanHistogramDataPoint[];
+
+export interface SpanHistogramDataPoint {
+	durationRange: string;
+	count: number;
+}
+
+export interface GetSpanChartDataRequest {
+	accountId: number;
+	entityGuid: string;
+	spanName: string;
+	spanHost: string;
+	timeRange: string;
+}
+
+export interface GetSpanChartDataResponse {
+	responseTime: SpanLineChartDataPoint[];
+	throughput: SpanLineChartDataPoint[];
+	duration: SpanHistogramDataPoint[];
+}
+
+export const GetSpanChartDataRequestType = new RequestType<
+	GetSpanChartDataRequest,
+	GetSpanChartDataResponse,
+	void,
+	void
+>("codestream/newrelic/spanChartData");
+
 export interface Deployment {
 	seconds: number;
 	version: string;
