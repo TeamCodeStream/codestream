@@ -112,11 +112,11 @@ interface SubscriptionMap {
 	};
 }
 
-// the retention time is one month ... to avoid missing messages on the edge, we'll
+// the retention time is one day ... to avoid missing messages on the edge, we'll
 // not try to catch up if we are within ten minutes of that
-const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+const ONE_DAY = 24 * 60 * 60 * 1000;
 const TEN_MINUTES = 10 * 60 * 1000;
-const THRESHOLD_FOR_CATCHUP = ONE_MONTH - TEN_MINUTES;
+const THRESHOLD_FOR_CATCHUP = ONE_DAY - TEN_MINUTES;
 const THRESHOLD_BUFFER = 12000;
 const MAX_HISTORY_FETCHES_PER_MINUTE = 10;
 const MAX_HISTORY_FETCHES_PER_HOUR = 100;
