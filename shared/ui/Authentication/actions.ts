@@ -71,6 +71,8 @@ export interface SSOAuthInfo {
 	loginUrl?: string;
 	domain?: string;
 	nrUserId?: string | number;
+	email?: string;
+	authDomainId?: string;
 }
 
 export const ProviderNames = {
@@ -120,6 +122,13 @@ export const startSSOSignin =
 			const stringifiedNrUserId = info.nrUserId.toString();
 			query.nrUserId = stringifiedNrUserId;
 		}
+		if (info && info.email) {
+			query.email = info.email;
+		}
+		if (info && info.authDomainId) {
+			query.authDomainId = info.authDomainId;
+		}
+
 		query.enableUId = "1"; // operating under Unified Identity
 
 		const anonymousId = await HostApi.instance.getAnonymousId();
