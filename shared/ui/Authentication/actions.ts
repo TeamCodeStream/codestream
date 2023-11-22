@@ -137,14 +137,14 @@ export const startSSOSignin =
 		}
 
 		const queryString = Object.keys(query)
-			.map(key => `${key}=${query[key]}`)
+			.map(key => `${key}=${encodeURIComponent(query[key])}`)
 			.join("&");
 
 		try {
 			await HostApi.instance.send(OpenUrlRequestType, {
 				url: info?.loginUrl
 					? info.loginUrl
-					: encodeURI(`${configs.serverUrl}/web/provider-auth/${provider}?${queryString}`),
+					: `${configs.serverUrl}/web/provider-auth/${provider}?${queryString}`,
 			});
 			return dispatch(goToSSOAuth(provider, { ...(info || emptyObject), mode: access }));
 		} catch (error) {
