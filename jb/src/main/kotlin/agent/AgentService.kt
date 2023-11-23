@@ -114,6 +114,7 @@ import java.util.Collections
 import java.util.Scanner
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.io.path.createTempDirectory
 
 private val posixPermissions = setOf(
     PosixFilePermission.OWNER_READ,
@@ -287,6 +288,32 @@ class AgentService(private val project: Project) : Disposable {
         }
     }
 
+    private fun extractExtraLibs(targetDir: File) {
+        try {
+            logger.info("Extracting extraLibs")
+            val reflections = Reflections(ConfigurationBuilder()
+                .forPackage("agent.node_modules")
+                .filterInputsBy(FilterBuilder().includePackage("agent.node_modules"))
+                .setScanners(Scanners.Resources))
+            val resourceList = reflections.getResources(".*")
+            logger.info("Copying ${resourceList.size} files to node_modules")
+            resourceList.forEach {
+                val destStr = it.replace("agent/", "")
+                val dest = targetDir.resolve(destStr)
+                if (!dest.parentFile.exists()) {
+                    Files.createDirectories(dest.parentFile.toPath())
+                }
+                FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/$it"), dest)
+                if (platform.isPosix && it.endsWith(".node")) {
+                    val executable = PosixFilePermissions.fromString("rwxr-xr-x")
+                    Files.setPosixFilePermissions(dest.toPath(), executable)
+                }
+            }
+        } catch (t: Throwable) {
+            logger.error("Error copying extra libs", t)
+        }
+    }
+
     private fun createProductionProcess(agentEnv: Map<String, String>): Process {
         val settings = ServiceManager.getService(ApplicationSettingsService::class.java)
         val agentVersion = settings.environmentVersion
@@ -306,31 +333,8 @@ class AgentService(private val project: Project) : Disposable {
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/agent/agent.js.map"), agentJsMap)
         FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/webview/index.js.map"), webJsMap)
 
-        if (platform == Platform.MAC_X64 || platform == Platform.MAC_ARM64) {
-            try {
-                logger.info("Extracting extraLibs")
-                val reflections = Reflections(ConfigurationBuilder()
-                    .forPackage("agent.node_modules")
-                    .filterInputsBy(FilterBuilder().includePackage("agent.node_modules"))
-                    .setScanners(Scanners.Resources))
-                val resourceList = reflections.getResources(".*")
-                logger.info("Copying ${resourceList.size} files to node_modules")
-                val baseDir = userHomeDir.resolve(".codestream")
-                resourceList.forEach {
-                    val dest = baseDir.resolve(it)
-                    if (!dest.parentFile.exists()) {
-                        Files.createDirectories(dest.parentFile.toPath())
-                    }
-                    FileUtils.copyToFile(AgentService::class.java.getResourceAsStream("/$it"), dest)
-                    if (platform.isPosix && it.endsWith(".node")) {
-                        val executable = PosixFilePermissions.fromString("rwxr-xr-x")
-                        Files.setPosixFilePermissions(dest.toPath(), executable)
-                    }
-                }
-            } catch (t: Throwable) {
-                logger.error("Error copying extra libs", t)
-            }
-        }
+        val targetDir = userHomeDir.resolve(".codestream").resolve("agent")
+        extractExtraLibs(targetDir)
 
         getNodeResourcePath()?.let {
             val nodeDestFile = getNodeDestFile(agentDir, agentVersion)
@@ -373,7 +377,7 @@ class AgentService(private val project: Project) : Disposable {
         val agentDir = if (AGENT_PATH != null) {
             File(AGENT_PATH)
         } else {
-            createTempDir("codestream").also {
+            createTempDirectory("codestream").toFile().also {
                 it.deleteOnExit()
             }
         }
@@ -391,6 +395,7 @@ class AgentService(private val project: Project) : Disposable {
                 logger.warn("Could not extract agent.js.map", ex)
             }
             logger.info("CodeStream LSP agent extracted to ${agentJs.absolutePath}")
+            extractExtraLibs(agentDir)
         }
 
         val port = if (AGENT_PATH == null) {
