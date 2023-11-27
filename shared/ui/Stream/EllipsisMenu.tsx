@@ -126,10 +126,14 @@ export function EllipsisMenu(props: EllipsisMenuProps) {
 		setTimeout(() => {
 			if (isCurrentCompany) return;
 
+			const url = decodeURIComponent(company.login_url);
+			const params = new URLSearchParams(new URL(url).search);
+			const emailParam = params.get("email") || currentUserEmail || undefined;
+
 			dispatch(
 				switchToTeamSSO({
 					nrUserId: company.user_id,
-					email: currentUserEmail,
+					email: emailParam,
 					authDomainId: company.authentication_domain_id,
 				})
 			);
