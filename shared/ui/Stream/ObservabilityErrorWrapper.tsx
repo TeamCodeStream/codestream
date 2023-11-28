@@ -7,6 +7,8 @@ import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
+import { isUndefined as _isUndefined } from "lodash-es";
+
 interface Props {
 	observabilityErrors: any;
 	observabilityRepo: any;
@@ -25,23 +27,22 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const errorDropdownExpanded =
-			preferences?.errorDropdownExpanded && props?.entityGuid
-				? preferences.errorDropdownExpanded[props?.entityGuid]
-				: true;
+		const errorDropdownIsExpanded = _isUndefined(preferences?.errorDropdownIsExpanded)
+			? true
+			: preferences?.errorDropdownIsExpanded;
 
 		return {
-			errorDropdownExpanded,
+			errorDropdownIsExpanded,
 		};
 	});
 
 	const handleRowOnClick = () => {
-		const { errorDropdownExpanded } = derivedState;
+		const { errorDropdownIsExpanded } = derivedState;
 
 		dispatch(
 			setUserPreference({
-				prefPath: ["errorDropdownExpanded", props.entityGuid],
-				value: !errorDropdownExpanded,
+				prefPath: ["errorDropdownIsExpanded"],
+				value: !errorDropdownIsExpanded,
 			})
 		);
 	};
@@ -56,8 +57,8 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 				onClick={() => handleRowOnClick()}
 				data-testid={`observabilty-errors-dropdown`}
 			>
-				{derivedState.errorDropdownExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.errorDropdownExpanded && <Icon name="chevron-right-thin" />}
+				{derivedState.errorDropdownIsExpanded && <Icon name="chevron-down-thin" />}
+				{!derivedState.errorDropdownIsExpanded && <Icon name="chevron-right-thin" />}
 				<span style={{ margin: "0 5px 0 2px" }}>Errors</span>
 				{errorMsg && (
 					<Icon
@@ -70,7 +71,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 					/>
 				)}
 			</Row>
-			{derivedState.errorDropdownExpanded &&
+			{derivedState.errorDropdownIsExpanded &&
 				(props.noAccess ? (
 					<Row
 						style={{

@@ -7,7 +7,7 @@ import {
 	riskSeverityList,
 	Vuln,
 } from "@codestream/protocols/agent";
-import { isEmpty, lowerCase } from "lodash-es";
+import { isEmpty, lowerCase, isUndefined } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
@@ -266,13 +266,14 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const securityIssuesDropdownExpanded =
-			preferences?.securityIssuesDropdownExpanded && props?.entityGuid
-				? preferences.securityIssuesDropdownExpanded[props?.entityGuid]
-				: true;
+		const securityIssuesDropdownIsExpanded = isUndefined(
+			preferences?.securityIssuesDropdownIsExpanded
+		)
+			? true
+			: preferences?.securityIssuesDropdownIsExpanded;
 
 		return {
-			securityIssuesDropdownExpanded,
+			securityIssuesDropdownIsExpanded,
 		};
 	});
 
@@ -350,12 +351,12 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 		data && data.totalRecords === 1 ? "1 vulnerability" : `${data?.totalRecords} vulnerabilities`;
 
 	const handleRowOnClick = () => {
-		const { securityIssuesDropdownExpanded } = derivedState;
+		const { securityIssuesDropdownIsExpanded } = derivedState;
 
 		dispatch(
 			setUserPreference({
-				prefPath: ["securityIssuesDropdownExpanded", props.entityGuid],
-				value: !securityIssuesDropdownExpanded,
+				prefPath: ["securityIssuesDropdownIsExpanded"],
+				value: !securityIssuesDropdownIsExpanded,
 			})
 		);
 	};
@@ -371,8 +372,8 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 				onClick={() => handleRowOnClick()}
 				data-testid={`security-issues-dropdown`}
 			>
-				{derivedState.securityIssuesDropdownExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.securityIssuesDropdownExpanded && <Icon name="chevron-right-thin" />}
+				{derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-down-thin" />}
+				{!derivedState.securityIssuesDropdownIsExpanded && <Icon name="chevron-right-thin" />}
 				<span
 					data-testid={`vulnerabilities-${props.entityGuid}`}
 					style={{ marginLeft: "2px", marginRight: "5px" }}
@@ -404,19 +405,22 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 					/>
 				</InlineMenu>
 			</Row>
-			{loading && derivedState.securityIssuesDropdownExpanded && (
+			{loading && derivedState.securityIssuesDropdownIsExpanded && (
 				<ObservabilityLoadingVulnerabilities />
 			)}
-			{error && derivedState.securityIssuesDropdownExpanded && getErrorDetails(error)}
-			{derivedState.securityIssuesDropdownExpanded && !loading && data && data.totalRecords > 0 && (
-				<>
-					{data.libraries.map(library => {
-						return <LibraryRow library={library} />;
-					})}
-					<Additional onClick={loadAll} additional={additional} />
-				</>
-			)}
-			{derivedState.securityIssuesDropdownExpanded &&
+			{error && derivedState.securityIssuesDropdownIsExpanded && getErrorDetails(error)}
+			{derivedState.securityIssuesDropdownIsExpanded &&
+				!loading &&
+				data &&
+				data.totalRecords > 0 && (
+					<>
+						{data.libraries.map(library => {
+							return <LibraryRow library={library} />;
+						})}
+						<Additional onClick={loadAll} additional={additional} />
+					</>
+				)}
+			{derivedState.securityIssuesDropdownIsExpanded &&
 				!loading &&
 				data &&
 				data.totalRecords === 0 && (

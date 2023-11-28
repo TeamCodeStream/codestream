@@ -6,6 +6,8 @@ import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
+import { isUndefined as _isUndefined } from "lodash-es";
+
 interface Props {
 	currentRepoId: string;
 	entityGuid: string;
@@ -18,23 +20,22 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const relatedServicesExpanded =
-			preferences?.relatedServicesExpanded && props?.entityGuid
-				? preferences.relatedServicesExpanded[props?.entityGuid]
-				: true;
+		const relatedServicesIsExpanded = _isUndefined(preferences?.relatedServicesIsExpanded)
+			? true
+			: preferences?.relatedServicesIsExpanded;
 
 		return {
-			relatedServicesExpanded,
+			relatedServicesIsExpanded,
 		};
 	});
 
 	const handleRowOnClick = () => {
-		const { relatedServicesExpanded } = derivedState;
+		const { relatedServicesIsExpanded } = derivedState;
 
 		dispatch(
 			setUserPreference({
-				prefPath: ["relatedServicesExpanded", props.entityGuid],
-				value: !relatedServicesExpanded,
+				prefPath: ["relatedServicesIsExpanded"],
+				value: !relatedServicesIsExpanded,
 			})
 		);
 	};
@@ -48,13 +49,13 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 				className={"pr-row"}
 				onClick={() => handleRowOnClick()}
 			>
-				{derivedState.relatedServicesExpanded && <Icon name="chevron-down-thin" />}
-				{!derivedState.relatedServicesExpanded && <Icon name="chevron-right-thin" />}
+				{derivedState.relatedServicesIsExpanded && <Icon name="chevron-down-thin" />}
+				{!derivedState.relatedServicesIsExpanded && <Icon name="chevron-right-thin" />}
 				<span data-testid={`related-services-${props.entityGuid}`} style={{ marginLeft: "2px" }}>
 					Related Services
 				</span>
 			</Row>
-			{derivedState.relatedServicesExpanded && (
+			{derivedState.relatedServicesIsExpanded && (
 				<>
 					<ObservabilityRelatedCalls
 						currentRepoId={props.currentRepoId}

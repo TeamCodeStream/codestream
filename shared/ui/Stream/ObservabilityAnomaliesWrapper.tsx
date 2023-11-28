@@ -14,7 +14,7 @@ import { WebviewModals } from "@codestream/protocols/webview";
 import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { isEmpty as _isEmpty } from "lodash-es";
+import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash-es";
 import {
 	MissingCsharpExtension,
 	MissingGoExtension,
@@ -42,14 +42,13 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const anomaliesDropdownExpanded =
-			preferences?.anomaliesDropdownExpanded && props?.entityGuid
-				? preferences.anomaliesDropdownExpanded[props?.entityGuid]
-				: true;
+		const anomaliesDropdownIsExpanded = _isUndefined(preferences?.anomaliesDropdownIsExpanded)
+			? true
+			: preferences?.anomaliesDropdownIsExpanded;
 
 		const clmSettings = state.preferences.clmSettings || {};
 		return {
-			anomaliesDropdownExpanded,
+			anomaliesDropdownIsExpanded,
 			clmSettings,
 			currentMethodLevelTelemetry: (state.context.currentMethodLevelTelemetry ||
 				{}) as CurrentMethodLevelTelemetry,
@@ -145,12 +144,12 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 	}, [props.distributedTracingEnabled]);
 
 	const handleRowOnClick = () => {
-		const { anomaliesDropdownExpanded } = derivedState;
+		const { anomaliesDropdownIsExpanded } = derivedState;
 
 		dispatch(
 			setUserPreference({
-				prefPath: ["anomaliesDropdownExpanded", props.entityGuid],
-				value: !anomaliesDropdownExpanded,
+				prefPath: ["anomaliesDropdownIsExpanded"],
+				value: !anomaliesDropdownIsExpanded,
 			})
 		);
 	};
@@ -172,8 +171,8 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				data-testid={`anomalies-dropdown`}
 			>
 				<span style={{ paddingTop: "3px" }}>
-					{derivedState.anomaliesDropdownExpanded && <Icon name="chevron-down-thin" />}
-					{!derivedState.anomaliesDropdownExpanded && <Icon name="chevron-right-thin" />}
+					{derivedState.anomaliesDropdownIsExpanded && <Icon name="chevron-down-thin" />}
+					{!derivedState.anomaliesDropdownIsExpanded && <Icon name="chevron-right-thin" />}
 				</span>
 				<div className="label">
 					<span style={{ margin: "0px 5px 0px 2px" }}>Code-Level Metrics</span>
@@ -206,7 +205,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 					</span>
 				</div>
 			</Row>
-			{derivedState.anomaliesDropdownExpanded &&
+			{derivedState.anomaliesDropdownIsExpanded &&
 				props.observabilityAnomalies.error &&
 				!props.calculatingAnomalies && (
 					<>
@@ -215,7 +214,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				)}
 
 			{/* Agent Version Warning */}
-			{derivedState.anomaliesDropdownExpanded &&
+			{derivedState.anomaliesDropdownIsExpanded &&
 				!props.calculatingAnomalies &&
 				showAgentWarning && (
 					<>
@@ -244,7 +243,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				)}
 
 			{/* Distrubuted Tracing Warning */}
-			{derivedState.anomaliesDropdownExpanded &&
+			{derivedState.anomaliesDropdownIsExpanded &&
 				!props.calculatingAnomalies &&
 				showDistributedTracingWarning && (
 					<Row
@@ -271,7 +270,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 				)}
 
 			{/* Extension Warning */}
-			{derivedState.anomaliesDropdownExpanded &&
+			{derivedState.anomaliesDropdownIsExpanded &&
 				!props.calculatingAnomalies &&
 				showExtensionWarning && (
 					<Row
@@ -284,7 +283,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 					</Row>
 				)}
 
-			{derivedState.anomaliesDropdownExpanded &&
+			{derivedState.anomaliesDropdownIsExpanded &&
 				(props.noAccess ? (
 					<Row
 						style={{
