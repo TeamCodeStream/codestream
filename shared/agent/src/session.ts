@@ -1602,13 +1602,13 @@ export class CodeStreamSession {
 			$email: user.email,
 			name: user.fullName,
 			"Team ID": this._teamId,
-			"Join Method": user.joinMethod,
-			"Last Invite Type": user.lastInviteType,
+			//"Join Method": user.joinMethod,
+			//"Last Invite Type": user.lastInviteType,
 			"Plugin Version": this.versionInfo.extension.versionFormatted,
 			Endpoint: this.versionInfo.ide.name,
 			"Endpoint Detail": this.versionInfo.ide.detail,
 			"IDE Version": this.versionInfo.ide.version,
-			Deployment: this.isOnPrem ? "OnPrem" : "Cloud",
+			//Deployment: this.isOnPrem ? "OnPrem" : "Cloud",
 			Country: user.countryCode,
 			"NR User ID": user.nrUserId,
 			"NR Tier": user.nrUserInfo && user.nrUserInfo.userTier,
@@ -1618,22 +1618,22 @@ export class CodeStreamSession {
 			const company = companies.find(c => c.id === team.companyId);
 			props["Company ID"] = team.companyId;
 			props["Team Created Date"] = new Date(team.createdAt!).toISOString();
-			props["Team Name"] = team.name;
+			//props["Team Name"] = team.name;
 			if (company) {
 				props["Team Size"] = company.memberCount || team.memberIds.length;
-				props["Plan"] = company.plan;
+				//props["Plan"] = company.plan;
 				props["Reporting Group"] = company.reportingGroup;
 				props["Company Name"] = company.name;
-				props["company"] = {
-					id: company.id,
-					name: company.name,
-					plan: company.plan,
-					created_at: new Date(company.createdAt!).toISOString(),
-				};
-				if (company.trialStartDate && company.trialEndDate) {
-					props["company"]["trialStart_at"] = new Date(company.trialStartDate).toISOString();
-					props["company"]["trialEnd_at"] = new Date(company.trialEndDate).toISOString();
-				}
+				//props["company"] = {
+				//	id: company.id,
+				//	name: company.name,
+				//	plan: company.plan,
+				//	created_at: new Date(company.createdAt!).toISOString(),
+				//};
+				//if (company.trialStartDate && company.trialEndDate) {
+				//	props["company"]["trialStart_at"] = new Date(company.trialStartDate).toISOString();
+				//	props["company"]["trialEnd_at"] = new Date(company.trialEndDate).toISOString();
+				//}
 
 				if (company.testGroups) {
 					props["AB Test"] = Object.keys(company.testGroups).map(
@@ -1650,9 +1650,9 @@ export class CodeStreamSession {
 			props.$created = new Date(user.registeredAt).toISOString();
 		}
 
-		if (user.lastPostCreatedAt) {
-			props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
-		}
+		//if (user.lastPostCreatedAt) {
+		//	props["Date of Last Post"] = new Date(user.lastPostCreatedAt).toISOString();
+		//}
 
 		props["First Session"] =
 			!!user.firstSessionStartedAt &&
