@@ -6,7 +6,6 @@ import { ObservabilityRelatedCalls } from "./ObservabilityRelatedCalls";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
 import { CodeStreamState } from "@codestream/webview/store";
-import { isUndefined as _isUndefined } from "lodash-es";
 
 interface Props {
 	currentRepoId: string;
@@ -20,9 +19,7 @@ export const ObservabilityRelatedWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const relatedServicesIsExpanded = _isUndefined(preferences?.relatedServicesIsExpanded)
-			? true
-			: preferences?.relatedServicesIsExpanded;
+		const relatedServicesIsExpanded = preferences?.relatedServicesIsExpanded ?? true;
 
 		return {
 			relatedServicesIsExpanded,

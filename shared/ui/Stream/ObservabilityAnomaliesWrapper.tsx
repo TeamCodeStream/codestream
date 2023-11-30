@@ -14,7 +14,7 @@ import { WebviewModals } from "@codestream/protocols/webview";
 import { shallowEqual } from "react-redux";
 import { CodeStreamState } from "../store";
 import { CurrentMethodLevelTelemetry } from "@codestream/webview/store/context/types";
-import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash-es";
+import { isEmpty as _isEmpty } from "lodash-es";
 import {
 	MissingCsharpExtension,
 	MissingGoExtension,
@@ -42,9 +42,7 @@ export const ObservabilityAnomaliesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const anomaliesDropdownIsExpanded = _isUndefined(preferences?.anomaliesDropdownIsExpanded)
-			? true
-			: preferences?.anomaliesDropdownIsExpanded;
+		const anomaliesDropdownIsExpanded = preferences?.anomaliesDropdownIsExpanded ?? true;
 
 		const clmSettings = state.preferences.clmSettings || {};
 		return {

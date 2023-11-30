@@ -7,7 +7,7 @@ import {
 	riskSeverityList,
 	Vuln,
 } from "@codestream/protocols/agent";
-import { isEmpty, lowerCase, isUndefined } from "lodash-es";
+import { isEmpty, lowerCase } from "lodash-es";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
@@ -266,11 +266,7 @@ export const SecurityIssuesWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const securityIssuesDropdownIsExpanded = isUndefined(
-			preferences?.securityIssuesDropdownIsExpanded
-		)
-			? true
-			: preferences?.securityIssuesDropdownIsExpanded;
+		const securityIssuesDropdownIsExpanded = preferences?.securityIssuesDropdownIsExpanded ?? true;
 
 		return {
 			securityIssuesDropdownIsExpanded,

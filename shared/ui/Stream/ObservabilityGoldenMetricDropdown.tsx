@@ -1,5 +1,5 @@
 import { EntityGoldenMetrics, GetIssuesResponse } from "@codestream/protocols/agent";
-import { isEmpty as _isEmpty, isUndefined as _isUndefined } from "lodash-es";
+import { isEmpty as _isEmpty } from "lodash-es";
 import React from "react";
 import { Row } from "./CrossPostIssueControls/IssuesPane";
 import Icon from "./Icon";
@@ -24,11 +24,7 @@ export const ObservabilityGoldenMetricDropdown = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const goldenMetricsDropdownIsExpanded = _isUndefined(
-			preferences?.goldenMetricsDropdownIsExpanded
-		)
-			? true
-			: preferences?.goldenMetricsDropdownIsExpanded;
+		const goldenMetricsDropdownIsExpanded = preferences?.goldenMetricsDropdownIsExpanded ?? true;
 
 		return {
 			goldenMetricsDropdownIsExpanded,

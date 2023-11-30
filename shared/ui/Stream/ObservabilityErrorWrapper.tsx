@@ -7,7 +7,6 @@ import { ObservabilityErrorDropdown } from "./ObservabilityErrorDropdown";
 import { CodeStreamState } from "@codestream/webview/store";
 import { setUserPreference } from "./actions";
 import { useAppSelector, useAppDispatch } from "../utilities/hooks";
-import { isUndefined as _isUndefined } from "lodash-es";
 
 interface Props {
 	observabilityErrors: any;
@@ -27,9 +26,7 @@ export const ObservabilityErrorWrapper = React.memo((props: Props) => {
 	const derivedState = useAppSelector((state: CodeStreamState) => {
 		const { preferences } = state;
 
-		const errorDropdownIsExpanded = _isUndefined(preferences?.errorDropdownIsExpanded)
-			? true
-			: preferences?.errorDropdownIsExpanded;
+		const errorDropdownIsExpanded = preferences?.errorDropdownIsExpanded ?? true;
 
 		return {
 			errorDropdownIsExpanded,
