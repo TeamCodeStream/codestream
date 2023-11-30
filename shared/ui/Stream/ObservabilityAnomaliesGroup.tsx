@@ -132,34 +132,78 @@ export const ObservabilityAnomaliesGroup = React.memo((props: Props) => {
 						<>
 							{props.observabilityAnomalies.slice(0, numToShow).map((anomaly, index) => {
 								return (
-									<Row
-										style={{
-											padding: "0 10px 0 42px",
-										}}
-										className={"pr-row"}
-										onClick={e => {
-											handleClick(anomaly);
-										}}
-									>
-										<Tooltip
-											title={<div style={{ overflowWrap: "break-word" }}>{anomaly.text}</div>}
-											placement="topRight"
-											delay={1}
+									<>
+										<Row
+											style={{
+												padding: "0 10px 0 42px",
+											}}
+											className={"pr-row"}
+											onClick={e => {
+												handleClick(anomaly);
+											}}
 										>
-											<div
-												style={{
-													width: "60%",
-													textAlign: "left",
-													marginRight: "auto",
-													direction: "rtl",
-												}}
+											<Tooltip
+												title={<div style={{ overflowWrap: "break-word" }}>{anomaly.text}</div>}
+												placement="topRight"
+												delay={1}
 											>
-												<span>&#x200e;{anomaly.text}</span>
-											</div>
-										</Tooltip>
+												<div
+													style={{
+														width: "60%",
+														textAlign: "left",
+														marginRight: "auto",
+														direction: "rtl",
+													}}
+												>
+													<bdi>
+														<span>&#x200e;{anomaly.text}</span>
+													</bdi>
+												</div>
+											</Tooltip>
 
-										<div>{getTypeAndValueOutput(anomaly.type, anomaly.ratio)}</div>
-									</Row>
+											<div>{getTypeAndValueOutput(anomaly.type, anomaly.ratio)}</div>
+										</Row>
+										{anomaly.children &&
+											anomaly.children
+												.sort((a, b) => b.ratio - a.ratio)
+												.map(child => {
+													return (
+														<Row
+															style={{
+																padding: "0 10px 0 42px",
+															}}
+															className={"pr-row"}
+															onClick={e => {
+																handleClick(child);
+															}}
+														>
+															<Tooltip
+																title={
+																	<div style={{ overflowWrap: "break-word" }}>{child.text}</div>
+																}
+																placement="topRight"
+																delay={1}
+															>
+																<div
+																	style={{
+																		width: "60%",
+																		marginLeft: "10px",
+																		textAlign: "left",
+																		marginRight: "auto",
+																		direction: "rtl",
+																	}}
+																>
+																	<bdi>
+																		<span>&#x200e;{child.text}</span>
+																	</bdi>
+																</div>
+															</Tooltip>
+
+															<div>{getTypeAndValueOutput(child.type, child.ratio)}</div>
+														</Row>
+													);
+												})}
+									</>
 								);
 							})}
 						</>

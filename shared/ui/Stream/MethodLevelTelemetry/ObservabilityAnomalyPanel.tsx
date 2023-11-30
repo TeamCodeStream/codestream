@@ -127,6 +127,7 @@ export const ObservabilityAnomalyPanel = () => {
 					errorRate: anomaly.errorMetricTimesliceName,
 					sampleSize: anomaly.metricTimesliceName,
 				},
+				scope: anomaly.scope,
 				since,
 				includeDeployments: true,
 				includeErrors: true,
@@ -366,6 +367,13 @@ export const ObservabilityAnomalyPanel = () => {
 											</div>
 										</div>
 									)}
+									{derivedState.currentObservabilityAnomaly.scope && (
+										<div>
+											<ScopeText>
+												<b>Scope: {derivedState.currentObservabilityAnomaly.scope}</b>
+											</ScopeText>
+										</div>
+									)}
 									<div>
 										<br />
 										{telemetryResponse &&
@@ -437,50 +445,51 @@ export const ObservabilityAnomalyPanel = () => {
 																</LineChart>
 															</ResponsiveContainer>
 														</div>
-														{(_.scopes?.length || 0) > 0 && (
-															<div style={{ marginBottom: "30px" }}>
-																<table style={{ borderCollapse: "collapse", width: "100%" }}>
-																	<tr style={{ borderBottom: "1px solid #888" }}>
-																		<td
-																			style={{
-																				width: "100%",
-																				padding: "3px 1px",
-																				whiteSpace: "nowrap",
-																			}}
-																		>
-																			<ScopeText>
-																				<b>Scopes</b>
-																			</ScopeText>
-																		</td>
-																	</tr>
-																	{_.scopes?.map(scope => {
-																		return (
-																			<tr style={{ borderBottom: "1px solid #888" }}>
-																				<td
-																					style={{
-																						width: "75%",
-																						padding: "3px 1px",
-																						whiteSpace: "nowrap",
-																					}}
-																				>
-																					<ScopeText>{scope.name}</ScopeText>
-																				</td>
-																				<td
-																					style={{
-																						width: "25%",
-																						padding: "3px 1px",
-																						whiteSpace: "nowrap",
-																						textAlign: "right",
-																					}}
-																				>
-																					<ScopeText>{scope.value.toFixed(3)}</ScopeText>
-																				</td>
-																			</tr>
-																		);
-																	})}
-																</table>
-															</div>
-														)}
+														{(_.scopes?.length || 0) > 0 &&
+															!derivedState.currentObservabilityAnomaly.scope && (
+																<div style={{ marginBottom: "30px" }}>
+																	<table style={{ borderCollapse: "collapse", width: "100%" }}>
+																		<tr style={{ borderBottom: "1px solid #888" }}>
+																			<td
+																				style={{
+																					width: "100%",
+																					padding: "3px 1px",
+																					whiteSpace: "nowrap",
+																				}}
+																			>
+																				<ScopeText>
+																					<b>Scopes</b>
+																				</ScopeText>
+																			</td>
+																		</tr>
+																		{_.scopes?.map(scope => {
+																			return (
+																				<tr style={{ borderBottom: "1px solid #888" }}>
+																					<td
+																						style={{
+																							width: "75%",
+																							padding: "3px 1px",
+																							whiteSpace: "nowrap",
+																						}}
+																					>
+																						<ScopeText>{scope.name}</ScopeText>
+																					</td>
+																					<td
+																						style={{
+																							width: "25%",
+																							padding: "3px 1px",
+																							whiteSpace: "nowrap",
+																							textAlign: "right",
+																						}}
+																					>
+																						<ScopeText>{scope.value.toFixed(3)}</ScopeText>
+																					</td>
+																				</tr>
+																			);
+																		})}
+																	</table>
+																</div>
+															)}
 													</>
 												);
 											})}

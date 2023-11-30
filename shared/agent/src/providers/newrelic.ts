@@ -149,7 +149,6 @@ import {
 	isGraphqlNrqlError,
 	RepoEntitiesByRemotesResponse,
 } from "./newrelic.types";
-import { AnomalyDetector } from "./newrelic/anomalyDetection";
 import {
 	AccessTokenError,
 	Directives,
@@ -166,6 +165,7 @@ import { makeHtmlLoggable } from "@codestream/utils/system/string";
 import semver from "semver";
 import { getMethodLevelTelemetryMockResponse } from "./newrelic/anomalyDetectionMockResults";
 import { ClmManagerNew } from "./newrelic/clm/clmManagerNew";
+import { AnomalyDetectorDrillDown } from "./newrelic/anomalyDetectionDrillDown";
 
 const ignoredErrors = [GraphqlNrqlTimeoutError];
 
@@ -1672,7 +1672,8 @@ export class NewRelicProvider
 		let lastEx;
 		const fn = async () => {
 			try {
-				const anomalyDetector = new AnomalyDetector(request, this);
+				// const anomalyDetector = new AnomalyDetector(request, this);
+				const anomalyDetector = new AnomalyDetectorDrillDown(request, this);
 				const promise = anomalyDetector.execute();
 				this._observabilityAnomaliesTimedCache.put(cacheKey, promise);
 				const response = await promise;
@@ -2617,7 +2618,8 @@ export class NewRelicProvider
 				request.newRelicEntityGuid || entity!.entityGuid!,
 				request.metricTimesliceNameMapping,
 				request.since,
-				request.timeseriesGroup
+				request.timeseriesGroup,
+				request.scope
 			);
 
 			let deployments;
@@ -2862,11 +2864,14 @@ export class NewRelicProvider
 
 	private async getMethodLevelGoldenMetricQueries(
 		entityGuid: string,
-		metricTimesliceNameMapping?: MetricTimesliceNameMapping
+		metricTimesliceNameMapping?: MetricTimesliceNameMapping,
+		scope?: string
 	): Promise<MethodLevelGoldenMetricQueryResult | undefined> {
 		if (!metricTimesliceNameMapping) {
 			return undefined;
 		}
+
+		const scopeClause = scope ? `AND scope = '${scope}'` : "";
 
 		return {
 			metricQueries: [
@@ -2875,6 +2880,7 @@ export class NewRelicProvider
 					metricQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS 'Errors (per minute)'
 												FROM Metric
                   WHERE \`entity.guid\` = '${entityGuid}'
+                    ${scopeClause}
                     AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET metricTimesliceName TIMESERIES`,
 					spanQuery: `SELECT rate(count(*), 1 minute) AS 'Errors (per minute)'
                                FROM Span
@@ -2883,7 +2889,8 @@ export class NewRelicProvider
                                  AND \`error.group.guid\` IS NOT NULL FACET name TIMESERIES`,
 					scopesQuery: `SELECT rate(count(apm.service.transaction.error.count), 1 minute) AS value
 												FROM Metric
-                  			WHERE \`entity.guid\` = '${entityGuid}'
+                  			WHERE \`entity.guid\` = '${entityGuid}' 
+                  			${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["errorRate"]}' FACET scope as name`,
 					title: "Errors (per minute)",
 					name: "errorsPerMinute",
@@ -2893,6 +2900,7 @@ export class NewRelicProvider
 					metricQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS 'Average duration (ms)'
 												FROM Metric
                   WHERE entity.guid IN ('${entityGuid}')
+                    ${scopeClause}
                     AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' TIMESERIES`,
 					spanQuery: `SELECT average(duration) * 1000 AS 'Average duration (ms)'
                                FROM Span
@@ -2901,6 +2909,7 @@ export class NewRelicProvider
 					scopesQuery: `SELECT average(newrelic.timeslice.value) * 1000 AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
+                    		${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["duration"]}' FACET scope as name`,
 					title: "Average duration (ms)",
 					name: "responseTimeMs",
@@ -2910,6 +2919,7 @@ export class NewRelicProvider
 					metricQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS 'Samples (per minute)'
 												FROM Metric
                   WHERE entity.guid IN ('${entityGuid}')
+                    ${scopeClause}
                     AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' TIMESERIES`,
 					spanQuery: `SELECT rate(count(*), 1 minute) AS 'Samples (per minute)'
                                FROM Span
@@ -2918,6 +2928,7 @@ export class NewRelicProvider
 					scopesQuery: `SELECT rate(count(newrelic.timeslice.value), 1 minute) AS value
 												FROM Metric
                   			WHERE entity.guid IN ('${entityGuid}')
+                    		${scopeClause}
                     		AND metricTimesliceName = '${metricTimesliceNameMapping["sampleSize"]}' FACET scope as name`,
 					title: "Samples (per minute)",
 					name: "samplesPerMinute",
@@ -2930,9 +2941,14 @@ export class NewRelicProvider
 		entityGuid: string,
 		metricTimesliceNames?: MetricTimesliceNameMapping,
 		since?: string,
-		timeseriesGroup?: string
+		timeseriesGroup?: string,
+		scope?: string
 	): Promise<MethodGoldenMetrics[] | undefined> {
-		const queries = await this.getMethodLevelGoldenMetricQueries(entityGuid, metricTimesliceNames);
+		const queries = await this.getMethodLevelGoldenMetricQueries(
+			entityGuid,
+			metricTimesliceNames,
+			scope
+		);
 
 		if (!queries?.metricQueries) {
 			Logger.log("getMethodLevelGoldenMetrics no response", {
