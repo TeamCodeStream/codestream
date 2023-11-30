@@ -115,6 +115,10 @@ export class NewRelicTelemetryService {
 	@debug()
 	track(event: string, data?: { [key: string]: string | number | boolean }) {
 		if (!this._enabled) return;
+		if (!event) {
+			Logger.debug(`Tracking event missing`);
+			return;
+		}
 
 		const cc = Logger.getCorrelationContext();
 
@@ -147,10 +151,20 @@ export class NewRelicTelemetryService {
 			// transforming foo = { bar: 1} into foo.bar = 1
 			const toAdd = this.flatten(payload);
 			payload = { ...payload, ...toAdd };
-			// replacing spaces with nothing, since spaces are not allowed in New Relic custom event names.
-			// adding an "CodeStream_" prefix, since without, the name of the event becomes a collection name.
-			// that makes it _very_ hard to distinguish from other built-in, New Relic-supplied data collections.
-			NewRelic.recordCustomEvent(`CodeStream_${event.replace(/ /g, "")}`, payload);
+
+			NewRelic.recordCustomEvent(`CodeStream_Events`, {
+				EventName: event.replace(/ /g, ""),
+				Email: payload["$email"],
+				"Company Name": payload["Company Name"],
+				"NR Organization ID": payload["NR Organization ID"],
+				"NR User ID": payload["NR User ID"],
+				"Meta Data 1": JSON.stringify({
+					EndPoint: payload["Endpoint"],
+					"Endpoint Detail": payload["Endpoint Detail"],
+					"IDE Version": payload["IDE Version"],
+					"Plugin Version": payload["Plugin Version"],
+				}),
+			});
 		} catch (ex) {
 			Logger.error(ex, cc);
 		}
