@@ -1410,6 +1410,8 @@ export interface GetObservabilityAnomaliesRequest {
 export interface ObservabilityAnomaly {
 	language: string;
 	name: string;
+	scope?: string;
+	children?: ObservabilityAnomaly[];
 	type: "duration" | "errorRate";
 	codeAttrs?: CodeAttributes;
 	oldValue: number;
@@ -1436,7 +1438,11 @@ export interface NameValue extends Named {
 	value: number;
 }
 
-export interface Comparison extends Named {
+export interface Scoped {
+	scope?: string;
+}
+
+export interface Comparison extends Named, Scoped {
 	oldValue: number;
 	newValue: number;
 	ratio: number;
@@ -1632,6 +1638,7 @@ export interface GetMethodLevelTelemetryRequest {
 		functionName?: string;
 		relativeFilePath?: string;
 	};
+	scope?: string;
 	since?: string;
 	timeseriesGroup?: string;
 	includeDeployments?: boolean;
